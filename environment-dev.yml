@@ -1,0 +1,9 @@
+name: xparrow
+channels:
+  - conda-forge
+dependencies:
+  # Build
+  - cmake
+  - ninja
+  # Tests
+  - doctest
