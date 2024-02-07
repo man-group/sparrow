@@ -30,6 +30,6 @@ endif()
 set(XPARROW_TESTS
     main.cpp
 )
-set(test_target "test_xsparrow_lib")
+set(test_target "test_xparrow_lib")
 add_executable(${test_target} ${XPARROW_TESTS})
 target_link_libraries(${test_target} PRIVATE doctest::doctest)
