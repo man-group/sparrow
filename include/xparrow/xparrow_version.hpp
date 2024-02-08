@@ -5,11 +5,10 @@
 *                                                                          *
 * The full license is in the file LICENSE, distributed with this software. *
 ***************************************************************************/
-#ifndef XPARROW_VERSION_HPP
-#define XPARROW_VERSION_HPP
+
+#pragma once
 
 #define XPARROW_VERSION_MAJOR 0
 #define XPARROW_VERSION_MINOR 0
 #define XPARROW_VERSION_PATCH 1
 
-#endif

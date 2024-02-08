@@ -37,7 +37,8 @@ OPTION(BUILD_TESTS "xparrow test suite" OFF)
 # =====
 
 set(XPARROW_HEADERS
-    ${XPARROW_INCLUDE_DIR}/xparrow/xparrow_version.pp
+    ${XPARROW_INCLUDE_DIR}/xparrow/xbuffer.hpp
+    ${XPARROW_INCLUDE_DIR}/xparrow/xparrow_version.hpp
 )
 
 add_library(xparrow INTERFACE)
@@ -65,7 +66,7 @@ install(TARGETS xparrow
 export(EXPORT ${PROJECT_NAME}-targets
        FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
 
-install(FILES ${Xparrow_HEADERS}
+   install(FILES ${XPARROW_HEADERS}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/xparrow)
 
 set(XPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
