@@ -16,3 +16,11 @@
 #include "doctest/doctest.h"
 
 #include <format>
+
+#include <sparrow/sparrow_version.hpp>
+
+TEST_CASE("version is readable")
+{
+    using namespace sparrow;
+    [[maybe_unused]] const std::string printable_version = std::format("sparrow version : {}.{}.{}", SPARROW_VERSION_MAJOR, SPARROW_VERSION_MINOR, SPARROW_VERSION_PATCH);
+}

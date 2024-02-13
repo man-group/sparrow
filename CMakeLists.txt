@@ -28,9 +28,9 @@ set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # ===========
 
 file(STRINGS "${SPARROW_INCLUDE_DIR}/sparrow/sparrow_version.hpp" sparrow_version_defines
-     REGEX "#define SPARROW_VERSION_(MAJOR|MINOR|PATCH)")
+     REGEX "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH)")
 foreach(ver ${sparrow_version_defines})
-    if(ver MATCHES "#define SPARROW_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
+    if(ver MATCHES "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
         set(SPARROW_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
     endif()
 endforeach()
