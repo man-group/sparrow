@@ -14,6 +14,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
+
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     project(sparrow-test CXX)
 
@@ -40,3 +41,7 @@ set(SPARROW_TESTS
 set(test_target "test_sparrow_lib")
 add_executable(${test_target} ${SPARROW_TESTS})
 target_link_libraries(${test_target} PRIVATE sparrow doctest::doctest)
+
+# We do not use non-standard C++
+set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
+target_compile_features(${test_target} PRIVATE cxx_std_20)

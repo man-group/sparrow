@@ -53,6 +53,8 @@ target_include_directories(sparrow INTERFACE
     $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>)
 
+# We do not use non-standard C++
+set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(sparrow INTERFACE cxx_std_20)
 
 if (BUILD_TESTS)
