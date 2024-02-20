@@ -7,28 +7,28 @@
 ############################################################################
 
 cmake_minimum_required(VERSION 3.8)
-project(xparrow CXX)
+project(sparrow CXX)
 
-set(XPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Versionning
 # ===========
 
-file(STRINGS "${XPARROW_INCLUDE_DIR}/xparrow/xparrow_version.hpp" xparrow_version_defines
-     REGEX "#define XPARROW_VERSION_(MAJOR|MINOR|PATCH)")
-foreach(ver ${xparrow_version_defines})
-    if(ver MATCHES "#define XPARROW_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
-        set(XPARROW_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
+file(STRINGS "${SPARROW_INCLUDE_DIR}/sparrow/sparrow_version.hpp" sparrow_version_defines
+     REGEX "#define SPARROW_VERSION_(MAJOR|MINOR|PATCH)")
+foreach(ver ${sparrow_version_defines})
+    if(ver MATCHES "#define SPARROW_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
+        set(SPARROW_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
     endif()
 endforeach()
 set(${PROJECT_NAME}_VERSION
-    ${XPARROW_VERSION_MAJOR}.${XPARROW_VERSION_MINOR}.${XPARROW_VERSION_PATCH})
-message(STATUS "Building xparrow v${${PROJECT_NAME}_VERSION}")
+    ${SPARROW_VERSION_MAJOR}.${SPARROW_VERSION_MINOR}.${SPARROW_VERSION_PATCH})
+message(STATUS "Building sparrow v${${PROJECT_NAME}_VERSION}")
 
 # Build options
 # =============
 
-OPTION(BUILD_TESTS "xparrow test suite" OFF)
+OPTION(BUILD_TESTS "sparrow test suite" OFF)
 
 # Dependencies
 # ============
@@ -36,18 +36,18 @@ OPTION(BUILD_TESTS "xparrow test suite" OFF)
 # Build
 # =====
 
-set(XPARROW_HEADERS
-    ${XPARROW_INCLUDE_DIR}/xparrow/xbuffer.hpp
-    ${XPARROW_INCLUDE_DIR}/xparrow/xparrow_version.hpp
+set(SPARROW_HEADERS
+    ${SPARROW_INCLUDE_DIR}/sparrow/spbuffer.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/sparrow_version.hpp
 )
 
-add_library(xparrow INTERFACE)
+add_library(sparrow INTERFACE)
 
-target_include_directories(xparrow INTERFACE
-    $<BUILD_INTERFACE:${XPARROW_INCLUDE_DIR}>
+target_include_directories(sparrow INTERFACE
+    $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>)
 
-target_compile_features(xparrow INTERFACE cxx_std_20)
+target_compile_features(sparrow INTERFACE cxx_std_20)
 
 if (BUILD_TESTS)
     add_subdirectory(test)
@@ -59,36 +59,36 @@ endif ()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-install(TARGETS xparrow
+install(TARGETS sparrow
         EXPORT ${PROJECT_NAME}-targets)
 
 # Makes the project importable from the build directory
 export(EXPORT ${PROJECT_NAME}-targets
        FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
 
-   install(FILES ${XPARROW_HEADERS}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/xparrow)
+   install(FILES ${SPARROW_HEADERS}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sparrow)
 
-set(XPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
-    STRING "install path for xparrowConfig.cmake")
+set(SPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
+    STRING "install path for sparrowConfig.cmake")
 
 configure_package_config_file(${PROJECT_NAME}Config.cmake.in
                               "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-                              INSTALL_DESTINATION ${XPARROW_CMAKECONFIG_INSTALL_DIR})
+                              INSTALL_DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
 
-# xparrow is header-only and does not depend on the architecture.
-# Remove CMAKE_SIZEOF_VOID_P from xparrowConfigVersion.cmake so that an xparrowConfig.cmake
+# sparrow is header-only and does not depend on the architecture.
+# Remove CMAKE_SIZEOF_VOID_P from sparrowConfigVersion.cmake so that an sparrowConfig.cmake
 # generated for a 64 bit target can be used for 32 bit targets and vice versa.
-set(_XPARROW_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
+set(_SPARROW_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 unset(CMAKE_SIZEOF_VOID_P)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
                                  VERSION ${${PROJECT_NAME}_VERSION}
                                  COMPATIBILITY AnyNewerVersion)
-set(CMAKE_SIZEOF_VOID_P ${_XPARROW_CMAKE_SIZEOF_VOID_P})
+set(CMAKE_SIZEOF_VOID_P ${_SPARROW_CMAKE_SIZEOF_VOID_P})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-        DESTINATION ${XPARROW_CMAKECONFIG_INSTALL_DIR})
+        DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
 install(EXPORT ${PROJECT_NAME}-targets
         FILE ${PROJECT_NAME}Targets.cmake
-        DESTINATION ${XPARROW_CMAKECONFIG_INSTALL_DIR})
+        DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
 

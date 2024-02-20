@@ -10,11 +10,11 @@
 
 #include <numeric>
 
-#include "xparrow/xbuffer.hpp"
+#include "sparrow/spbuffer.hpp"
 
-namespace xparrow
+namespace sparrow
 {
-    using buffer_test_type = xbuffer<uint8_t>;
+    using buffer_test_type = spbuffer<uint8_t>;
 
     namespace
     {
@@ -26,7 +26,7 @@ namespace xparrow
         }
     }
 
-    TEST_SUITE("xbuffer")
+    TEST_SUITE("spbuffer")
     {
         TEST_CASE("constructors")
         {

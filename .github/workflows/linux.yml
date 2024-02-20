@@ -78,8 +78,8 @@ jobs:
 
     - name: Build
       working-directory: build
-      run: cmake --build . --target test_xparrow_lib --parallel 8
+      run: cmake --build . --target test_sparrow_lib --parallel 8
 
     - name: Run tests
       working-directory: build
-      run: ./test/test_xparrow_lib
+      run: ./test/test_sparrow_lib

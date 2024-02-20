@@ -9,12 +9,12 @@
 cmake_minimum_required(VERSION 3.8)
 
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    project(xtensor-test CXX)
+    project(sparrow-test CXX)
 
     enable_testing()
 
-    find_package(xparrowREQUIRED CONFIG)
-    set(XPARROW_INCLUDE_DIR ${xparrow_INCLUDE_DIRS})
+    find_package(sparrowREQUIRED CONFIG)
+    set(SPARROW_INCLUDE_DIR ${sparrow_INCLUDE_DIRS})
 endif ()
 
 find_package(doctest REQUIRED)
@@ -27,10 +27,10 @@ else()
     message(STATUS "Tests build type is ${CMAKE_BUILD_TYPE}")
 endif()
 
-set(XPARROW_TESTS
+set(SPARROW_TESTS
     main.cpp
-    test_xbuffer.cpp
+    test_spbuffer.cpp
 )
-set(test_target "test_xparrow_lib")
-add_executable(${test_target} ${XPARROW_TESTS})
-target_link_libraries(${test_target} PRIVATE xparrow doctest::doctest)
+set(test_target "test_sparrow_lib")
+add_executable(${test_target} ${SPARROW_TESTS})
+target_link_libraries(${test_target} PRIVATE sparrow doctest::doctest)
