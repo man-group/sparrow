@@ -1,20 +1,26 @@
-############################################################################
-# Copyright (c) QuantStack                                                 #
-#                                                                          #
-# Distributed under the terms of the BSD 3-Clause License.                 #
-#                                                                          #
-# The full license is in the file LICENSE, distributed with this software. #
-############################################################################
+# Copyright 2024 Man Group Operations Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 cmake_minimum_required(VERSION 3.8)
 
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    project(xtensor-test CXX)
+    project(sparrow-test CXX)
 
     enable_testing()
 
-    find_package(xparrowREQUIRED CONFIG)
-    set(XPARROW_INCLUDE_DIR ${xparrow_INCLUDE_DIRS})
+    find_package(sparrowREQUIRED CONFIG)
+    set(SPARROW_INCLUDE_DIR ${sparrow_INCLUDE_DIRS})
 endif ()
 
 find_package(doctest REQUIRED)
@@ -27,10 +33,10 @@ else()
     message(STATUS "Tests build type is ${CMAKE_BUILD_TYPE}")
 endif()
 
-set(XPARROW_TESTS
+set(SPARROW_TESTS
     main.cpp
-    test_xbuffer.cpp
+    test_spbuffer.cpp
 )
-set(test_target "test_xparrow_lib")
-add_executable(${test_target} ${XPARROW_TESTS})
-target_link_libraries(${test_target} PRIVATE xparrow doctest::doctest)
+set(test_target "test_sparrow_lib")
+add_executable(${test_target} ${SPARROW_TESTS})
+target_link_libraries(${test_target} PRIVATE sparrow doctest::doctest)

@@ -1,10 +1,16 @@
-/***************************************************************************
-* Copyright (c) QuantStack                                                 *
-*                                                                          *
-* Distributed under the terms of the BSD 3-Clause License.                 *
-*                                                                          *
-* The full license is in the file LICENSE, distributed with this software. *
-***************************************************************************/
+// Copyright 2024 Man Group Operations Limited
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #pragma once
 
@@ -12,12 +18,12 @@
 #include <concepts>
 #include <cstdint>
 
-namespace xparrow
+namespace sparrow
 {
     namespace impl
     {
         template <class T>
-        struct xbuffer_data
+        struct spbuffer_data
         {
             using value_type = T;
             using pointer = T*;
@@ -32,8 +38,8 @@ namespace xparrow
             template <class U = T>
             const U* data() const noexcept;
 
-            void swap(xbuffer_data& rhs) noexcept;
-            bool equal(const xbuffer_data& rhs) const;
+            void swap(spbuffer_data& rhs) noexcept;
+            bool equal(const spbuffer_data& rhs) const;
 
             pointer p_data = nullptr;
             size_type m_size = 0;
@@ -41,30 +47,30 @@ namespace xparrow
     }
 
     /**
-     * @class xbuffer
+     * @class spbuffer
      * @brief Object that owns a piece of contiguous memory
      */
     template <class T>
-    class xbuffer : private impl::xbuffer_data<T>
+    class spbuffer : private impl::spbuffer_data<T>
     {
     public:
 
-        using base_type = impl::xbuffer_data<T>;
+        using base_type = impl::spbuffer_data<T>;
         using value_type = typename base_type::value_type;
         using pointer = typename base_type::pointer;
         using size_type = typename base_type::size_type;
 
-        xbuffer() = default;
-        explicit xbuffer(size_type size);
-        xbuffer(pointer data, size_type size);
+        spbuffer() = default;
+        explicit spbuffer(size_type size);
+        spbuffer(pointer data, size_type size);
         
-        ~xbuffer();
+        ~spbuffer();
         
-        xbuffer(const xbuffer&);
-        xbuffer& operator=(const xbuffer&);
+        spbuffer(const spbuffer&);
+        spbuffer& operator=(const spbuffer&);
 
-        xbuffer(xbuffer&&);
-        xbuffer& operator=(xbuffer&&);
+        spbuffer(spbuffer&&);
+        spbuffer& operator=(spbuffer&&);
 
         using base_type::empty;
         using base_type::size;
@@ -72,8 +78,8 @@ namespace xparrow
 
         void resize(size_type new_size);
 
-        void swap(xbuffer&) noexcept;
-        bool equal(const xbuffer& rhs) const;
+        void swap(spbuffer&) noexcept;
+        bool equal(const spbuffer& rhs) const;
 
     private:
 
@@ -82,96 +88,96 @@ namespace xparrow
     };
 
     template <class T>
-    bool operator==(const xbuffer<T>& lhs, const xbuffer<T>& rhs);
+    bool operator==(const spbuffer<T>& lhs, const spbuffer<T>& rhs);
 
     /******************************
-     * xbuffer_data implementation *
+     * spbuffer_data implementation *
      ******************************/
 
     namespace impl
     {
         template <class T>
-        bool xbuffer_data<T>::empty() const noexcept
+        bool spbuffer_data<T>::empty() const noexcept
         {
             return size() == size_type(0);
         }
 
         template <class T>
-        auto xbuffer_data<T>::size() const noexcept -> size_type
+        auto spbuffer_data<T>::size() const noexcept -> size_type
         {
             return m_size;
         }
 
         template <class T>
         template <class U>
-        U* xbuffer_data<T>::data() noexcept
+        U* spbuffer_data<T>::data() noexcept
         {
             return reinterpret_cast<U*>(p_data);
         }
 
         template <class T>
         template <class U>
-        const U* xbuffer_data<T>::data() const noexcept
+        const U* spbuffer_data<T>::data() const noexcept
         {
             return reinterpret_cast<const U*>(p_data);
         }
 
         template <class T>
-        void xbuffer_data<T>::swap(xbuffer_data<T>& rhs) noexcept
+        void spbuffer_data<T>::swap(spbuffer_data<T>& rhs) noexcept
         {
             std::swap(p_data, rhs.p_data);
             std::swap(m_size, rhs.m_size);
         }
 
         template <class T>
-        bool xbuffer_data<T>::equal(const xbuffer_data<T>& rhs) const
+        bool spbuffer_data<T>::equal(const spbuffer_data<T>& rhs) const
         {
             return m_size == rhs.m_size && std::equal(p_data, p_data + m_size, rhs.p_data);
         }
     }
 
     /*************************
-     * xbuffer implementation *
+     * spbuffer implementation *
      *************************/
 
     template <class T>
-    xbuffer<T>::xbuffer(size_type size)
+    spbuffer<T>::spbuffer(size_type size)
         : base_type{allocate(size), size}
     {
     }
 
     template <class T>
-    xbuffer<T>::xbuffer(pointer data, size_type size)
+    spbuffer<T>::spbuffer(pointer data, size_type size)
         : base_type{data, size}
     {
     }
         
     template <class T>
-    xbuffer<T>::~xbuffer()
+    spbuffer<T>::~spbuffer()
     {
         deallocate(this->p_data);
     }
         
     template <class T>
-    xbuffer<T>::xbuffer(const xbuffer<T>& rhs)
+    spbuffer<T>::spbuffer(const spbuffer<T>& rhs)
         : base_type{allocate(rhs.m_size), rhs.size()}
     {
         std::copy(rhs.data(), rhs.data() + rhs.size(), data());
     }
 
     template <class T>
-    xbuffer<T>& xbuffer<T>::operator=(const xbuffer<T>& rhs)
+    spbuffer<T>& spbuffer<T>::operator=(const spbuffer<T>& rhs)
     {
         if (this != &rhs)
         {
-            xbuffer<T> tmp(rhs);
+            spbuffer<T> tmp(rhs);
             swap(tmp);
         }
         return *this;
     }
 
     template <class T>
-    xbuffer<T>::xbuffer(xbuffer&& rhs)
+    spbuffer<T>::spbuffer(spbuffer&& rhs)
         : base_type{rhs.data(), rhs.size()}
     {
         rhs.p_data = nullptr;
@@ -179,50 +185,50 @@ namespace xparrow
     }
 
     template <class T>
-    xbuffer<T>& xbuffer<T>::operator=(xbuffer<T>&& rhs)
+    spbuffer<T>& spbuffer<T>::operator=(spbuffer<T>&& rhs)
     {
         swap(rhs);
         return *this;
     }
 
     template <class T>
-    void xbuffer<T>::resize(size_type n)
+    void spbuffer<T>::resize(size_type n)
     {
         // TODO: add capacity, resize if growing only and define a shrink_to_fit method
         if (n != size())
         {
-            xbuffer<T> tmp(n);
+            spbuffer<T> tmp(n);
             std::copy(data(), data() + size(), tmp.data());
             swap(tmp);
         }
     }
 
     template <class T>
-    void xbuffer<T>::swap(xbuffer<T>& rhs) noexcept
+    void spbuffer<T>::swap(spbuffer<T>& rhs) noexcept
     {
         base_type::swap(rhs);
     }
 
     template <class T>
-    bool xbuffer<T>::equal(const xbuffer<T>& rhs) const
+    bool spbuffer<T>::equal(const spbuffer<T>& rhs) const
     {
         return base_type::equal(rhs);
     }
 
     template <class T>
-    auto xbuffer<T>::allocate(size_type size) const -> pointer
+    auto spbuffer<T>::allocate(size_type size) const -> pointer
     {
         return new T[size];
     }
 
     template <class T>
-    void xbuffer<T>::deallocate(pointer mem) const
+    void spbuffer<T>::deallocate(pointer mem) const
     {
         delete[] mem;
     }
 
     template <class T>
-    bool operator==(const xbuffer<T>& lhs, const xbuffer<T>& rhs)
+    bool operator==(const spbuffer<T>& lhs, const spbuffer<T>& rhs)
     {
         return lhs.equal(rhs);
     }

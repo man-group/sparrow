@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "doctest/doctest.h"
+#pragma once
+
+#define SPARROW_VERSION_MAJOR 0
+#define SPARROW_VERSION_MINOR 0
+#define SPARROW_VERSION_PATCH 1
 
