@@ -18,8 +18,9 @@ jobs:
       fail-fast: false
       matrix:
         sys:
-        - {compiler: clang, version: '17'}
-        - {compiler: gcc, version: '13'}
+        - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++'}
+        - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++'}
+        - {compiler: gcc, version: '13', config-flags: ''}
 
     steps:
 
@@ -49,7 +50,7 @@ jobs:
         cache-downloads: true
 
     - name: Configure using CMake
-      run: cmake -G Ninja -Bbuild -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
+      run: cmake -G Ninja -Bbuild ${{matrix.sys.config-flags}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
 
     - name: Install
       working-directory: build
