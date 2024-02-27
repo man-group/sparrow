@@ -49,10 +49,7 @@ jobs:
         cache-downloads: true
 
     - name: Configure using CMake
-      #      env:
-      #        CC: ${{ env.CC }}
-      #        CXX: ${{ env.CXX }}
-      run: cmake -G Ninja -Bbuild -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
+      run: cmake -G Ninja -Bbuild -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
 
     - name: Install
       working-directory: build
