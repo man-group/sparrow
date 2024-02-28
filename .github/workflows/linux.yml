@@ -33,12 +33,9 @@ jobs:
         platform: x64
 
     # We need a recent gcc install for clang too to find it's standard library by default
-    - name: Install GCC
-      if: matrix.sys.compiler == 'clang'
-      uses: egor-tensin/setup-gcc@v1
-      with:
-        version: ${{matrix.sys.gcc_toolchain_version}}
-        platform: x64
+    # - name: Install libstdc++
+    #   if: matrix.sys.compiler == 'clang'
+    #   run: libstdc++-13-dev
 
 
     - name: Install LLVM and Clang
