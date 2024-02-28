@@ -13,6 +13,14 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 3.8)
+
+# This is better specified per target, but cmake keeps ignoring these language version
+# specification when building this project by itself, in particular the gnu extensions,
+# so here we go.
+# This will affects all following targets being defined.
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD 20)
+
 project(sparrow CXX)
 
 set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
