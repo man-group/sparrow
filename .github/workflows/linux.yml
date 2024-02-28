@@ -18,9 +18,11 @@ jobs:
       fail-fast: false
       matrix:
         sys:
-        - {compiler: clang, version: '16', config-flags: '' }
-        - {compiler: clang, version: '17', config-flags: '' }
-        - {compiler: gcc, version: '13', config-flags: ''}
+        - {compiler: clang, version: '16', config-flags: '', stdlib: 'libstdc++-13' }
+        - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17' }
+        - {compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-13' }
+        - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17' }
+        - {compiler: gcc, version: '13', config-flags: '' }
 
     steps:
 
@@ -33,9 +35,9 @@ jobs:
         platform: x64
 
     # We need a recent gcc install for clang too to find it's standard library by default
-    - name: Install libstdc++
+    - name: Install the specified standard library for clang
       if: matrix.sys.compiler == 'clang'
-      run: sudo apt install libstdc++-13-dev -y
+      run: sudo apt install ${{matrix.sys.stdlib}}-dev -y
 
 
     - name: Install LLVM and Clang
