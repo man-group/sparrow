@@ -18,18 +18,26 @@ jobs:
       fail-fast: false
       matrix:
         sys:
-        - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++'}
-        - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++'}
+        - {compiler: clang, version: '16', config-flags: '', gcc_toolchain_version: 13 }
+        - {compiler: clang, version: '17', config-flags: '', gcc_toolchain_version: 13 }
         - {compiler: gcc, version: '13', config-flags: ''}
 
     steps:
 
 
-    # We need a recent gcc install for clang too to find it's standard library by default
     - name: Install GCC
+      if: matrix.sys.compiler == 'gcc'
       uses: egor-tensin/setup-gcc@v1
       with:
         version: ${{matrix.sys.version}}
+        platform: x64
+
+    # We need a recent gcc install for clang too to find it's standard library by default
+    - name: Install GCC
+      if: matrix.sys.compiler == 'clang'
+      uses: egor-tensin/setup-gcc@v1
+      with:
+        version: ${{matrix.sys.gcc_toolchain_version}}
         platform: x64
 
 
