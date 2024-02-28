@@ -18,8 +18,8 @@ jobs:
       fail-fast: false
       matrix:
         sys:
-        - {compiler: clang, version: '16', config-flags: '', gcc_toolchain_version: 13 }
-        - {compiler: clang, version: '17', config-flags: '', gcc_toolchain_version: 13 }
+        - {compiler: clang, version: '16', config-flags: '' }
+        - {compiler: clang, version: '17', config-flags: '' }
         - {compiler: gcc, version: '13', config-flags: ''}
 
     steps:
