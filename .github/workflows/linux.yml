@@ -13,15 +13,15 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    name: ${{ matrix.sys.compiler }} ${{ matrix.sys.version }}
+    name: ${{ matrix.sys.compiler }} ${{ matrix.sys.version }} ${{ matrix.sys.stdlib }}
     strategy:
       fail-fast: false
       matrix:
         sys:
         - {compiler: clang, version: '16', config-flags: '', stdlib: 'libstdc++-13' }
-        - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17' }
+        - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++1-17 ' }
         - {compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-13' }
-        - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17' }
+        - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++1-17' }
         - {compiler: gcc, version: '13', config-flags: '' }
 
     steps:
