@@ -33,9 +33,9 @@ jobs:
         platform: x64
 
     # We need a recent gcc install for clang too to find it's standard library by default
-    # - name: Install libstdc++
-    #   if: matrix.sys.compiler == 'clang'
-    #   run: libstdc++-13-dev
+    - name: Install libstdc++
+      if: matrix.sys.compiler == 'clang'
+      run: libstdc++-13-dev
 
 
     - name: Install LLVM and Clang
