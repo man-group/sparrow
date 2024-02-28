@@ -35,7 +35,7 @@ jobs:
     # We need a recent gcc install for clang too to find it's standard library by default
     - name: Install libstdc++
       if: matrix.sys.compiler == 'clang'
-      run: libstdc++-13-dev
+      run: sudo apt install libstdc++-13-dev -y
 
 
     - name: Install LLVM and Clang
