@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.28)
 # specification when building this project by itself, in particular the gnu extensions,
 # so here we go.
 # This will affects all following targets being defined.
-# set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS OFF)
 # set(CMAKE_CXX_STANDARD 20)
 
 project(sparrow CXX)
