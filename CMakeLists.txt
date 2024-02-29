@@ -12,7 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.28)
+
+# This is better specified per target, but cmake keeps ignoring these language version
+# specification when building this project by itself, in particular the gnu extensions,
+# so here we go.
+# This will affects all following targets being defined.
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 project(sparrow CXX)
 
 set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -53,6 +60,8 @@ target_include_directories(sparrow INTERFACE
     $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>)
 
+# We do not use non-standard C++
+set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(sparrow INTERFACE cxx_std_20)
 
 if (BUILD_TESTS)
