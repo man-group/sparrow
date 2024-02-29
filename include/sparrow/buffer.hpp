@@ -23,7 +23,7 @@ namespace sparrow
     namespace impl
     {
         template <class T>
-        struct spbuffer_data
+        struct buffer_data
         {
             using value_type = T;
             using pointer = T*;
@@ -38,8 +38,8 @@ namespace sparrow
             template <class U = T>
             const U* data() const noexcept;
 
-            void swap(spbuffer_data& rhs) noexcept;
-            bool equal(const spbuffer_data& rhs) const;
+            void swap(buffer_data& rhs) noexcept;
+            bool equal(const buffer_data& rhs) const;
 
             pointer p_data = nullptr;
             size_type m_size = 0;
@@ -47,30 +47,30 @@ namespace sparrow
     }
 
     /**
-     * @class spbuffer
+     * @class buffer
      * @brief Object that owns a piece of contiguous memory
      */
     template <class T>
-    class spbuffer : private impl::spbuffer_data<T>
+    class buffer : private impl::buffer_data<T>
     {
     public:
 
-        using base_type = impl::spbuffer_data<T>;
+        using base_type = impl::buffer_data<T>;
         using value_type = typename base_type::value_type;
         using pointer = typename base_type::pointer;
         using size_type = typename base_type::size_type;
 
-        spbuffer() = default;
-        explicit spbuffer(size_type size);
-        spbuffer(pointer data, size_type size);
+        buffer() = default;
+        explicit buffer(size_type size);
+        buffer(pointer data, size_type size);
         
-        ~spbuffer();
+        ~buffer();
         
-        spbuffer(const spbuffer&);
-        spbuffer& operator=(const spbuffer&);
+        buffer(const buffer&);
+        buffer& operator=(const buffer&);
 
-        spbuffer(spbuffer&&);
-        spbuffer& operator=(spbuffer&&);
+        buffer(buffer&&);
+        buffer& operator=(buffer&&);
 
         using base_type::empty;
         using base_type::size;
@@ -78,8 +78,8 @@ namespace sparrow
 
         void resize(size_type new_size);
 
-        void swap(spbuffer&) noexcept;
-        bool equal(const spbuffer& rhs) const;
+        void swap(buffer&) noexcept;
+        bool equal(const buffer& rhs) const;
 
     private:
 
@@ -88,96 +88,96 @@ namespace sparrow
     };
 
     template <class T>
-    bool operator==(const spbuffer<T>& lhs, const spbuffer<T>& rhs);
+    bool operator==(const buffer<T>& lhs, const buffer<T>& rhs);
 
     /******************************
-     * spbuffer_data implementation *
+     * buffer_data implementation *
      ******************************/
 
     namespace impl
     {
         template <class T>
-        bool spbuffer_data<T>::empty() const noexcept
+        bool buffer_data<T>::empty() const noexcept
         {
             return size() == size_type(0);
         }
 
         template <class T>
-        auto spbuffer_data<T>::size() const noexcept -> size_type
+        auto buffer_data<T>::size() const noexcept -> size_type
         {
             return m_size;
         }
 
         template <class T>
         template <class U>
-        U* spbuffer_data<T>::data() noexcept
+        U* buffer_data<T>::data() noexcept
         {
             return reinterpret_cast<U*>(p_data);
         }
 
         template <class T>
         template <class U>
-        const U* spbuffer_data<T>::data() const noexcept
+        const U* buffer_data<T>::data() const noexcept
         {
             return reinterpret_cast<const U*>(p_data);
         }
 
         template <class T>
-        void spbuffer_data<T>::swap(spbuffer_data<T>& rhs) noexcept
+        void buffer_data<T>::swap(buffer_data<T>& rhs) noexcept
         {
             std::swap(p_data, rhs.p_data);
             std::swap(m_size, rhs.m_size);
         }
 
         template <class T>
-        bool spbuffer_data<T>::equal(const spbuffer_data<T>& rhs) const
+        bool buffer_data<T>::equal(const buffer_data<T>& rhs) const
         {
             return m_size == rhs.m_size && std::equal(p_data, p_data + m_size, rhs.p_data);
         }
     }
 
     /*************************
-     * spbuffer implementation *
+     * buffer implementation *
      *************************/
 
     template <class T>
-    spbuffer<T>::spbuffer(size_type size)
+    buffer<T>::buffer(size_type size)
         : base_type{allocate(size), size}
     {
     }
 
     template <class T>
-    spbuffer<T>::spbuffer(pointer data, size_type size)
+    buffer<T>::buffer(pointer data, size_type size)
         : base_type{data, size}
     {
     }
         
     template <class T>
-    spbuffer<T>::~spbuffer()
+    buffer<T>::~buffer()
     {
         deallocate(this->p_data);
     }
         
     template <class T>
-    spbuffer<T>::spbuffer(const spbuffer<T>& rhs)
+    buffer<T>::buffer(const buffer<T>& rhs)
         : base_type{allocate(rhs.m_size), rhs.size()}
     {
         std::copy(rhs.data(), rhs.data() + rhs.size(), data());
     }
 
     template <class T>
-    spbuffer<T>& spbuffer<T>::operator=(const spbuffer<T>& rhs)
+    buffer<T>& buffer<T>::operator=(const buffer<T>& rhs)
     {
         if (this != &rhs)
         {
-            spbuffer<T> tmp(rhs);
+            buffer<T> tmp(rhs);
             swap(tmp);
         }
         return *this;
     }
 
     template <class T>
-    spbuffer<T>::spbuffer(spbuffer&& rhs)
+    buffer<T>::buffer(buffer&& rhs)
         : base_type{rhs.data(), rhs.size()}
     {
         rhs.p_data = nullptr;
@@ -185,50 +185,50 @@ namespace sparrow
     }
 
     template <class T>
-    spbuffer<T>& spbuffer<T>::operator=(spbuffer<T>&& rhs)
+    buffer<T>& buffer<T>::operator=(buffer<T>&& rhs)
     {
         swap(rhs);
         return *this;
     }
 
     template <class T>
-    void spbuffer<T>::resize(size_type n)
+    void buffer<T>::resize(size_type n)
     {
         // TODO: add capacity, resize if growing only and define a shrink_to_fit method
         if (n != size())
         {
-            spbuffer<T> tmp(n);
+            buffer<T> tmp(n);
             std::copy(data(), data() + size(), tmp.data());
             swap(tmp);
         }
     }
 
     template <class T>
-    void spbuffer<T>::swap(spbuffer<T>& rhs) noexcept
+    void buffer<T>::swap(buffer<T>& rhs) noexcept
     {
         base_type::swap(rhs);
     }
 
     template <class T>
-    bool spbuffer<T>::equal(const spbuffer<T>& rhs) const
+    bool buffer<T>::equal(const buffer<T>& rhs) const
     {
         return base_type::equal(rhs);
     }
 
     template <class T>
-    auto spbuffer<T>::allocate(size_type size) const -> pointer
+    auto buffer<T>::allocate(size_type size) const -> pointer
     {
         return new T[size];
     }
 
     template <class T>
-    void spbuffer<T>::deallocate(pointer mem) const
+    void buffer<T>::deallocate(pointer mem) const
     {
         delete[] mem;
     }
 
     template <class T>
-    bool operator==(const spbuffer<T>& lhs, const spbuffer<T>& rhs)
+    bool operator==(const buffer<T>& lhs, const buffer<T>& rhs)
     {
         return lhs.equal(rhs);
     }

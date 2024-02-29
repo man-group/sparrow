@@ -1,4 +1,4 @@
-name: xparrow
+name: sparrow
 channels:
   - conda-forge
 dependencies:
