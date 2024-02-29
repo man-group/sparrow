@@ -36,7 +36,7 @@ endif()
 
 set(SPARROW_TESTS
     main.cpp
-    test_spbuffer.cpp
+    test_buffer.cpp
 )
 set(test_target "test_sparrow_lib")
 add_executable(${test_target} ${SPARROW_TESTS})

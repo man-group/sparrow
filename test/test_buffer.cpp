@@ -16,11 +16,11 @@
 
 #include <numeric>
 
-#include "sparrow/spbuffer.hpp"
+#include "sparrow/buffer.hpp"
 
 namespace sparrow
 {
-    using buffer_test_type = spbuffer<uint8_t>;
+    using buffer_test_type = buffer<uint8_t>;
 
     namespace
     {
@@ -32,7 +32,7 @@ namespace sparrow
         }
     }
 
-    TEST_SUITE("spbuffer")
+    TEST_SUITE("buffer")
     {
         TEST_CASE("constructors")
         {
