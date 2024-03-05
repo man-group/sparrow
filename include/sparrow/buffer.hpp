@@ -90,6 +90,34 @@ namespace sparrow
     template <class T>
     bool operator==(const buffer<T>& lhs, const buffer<T>& rhs);
 
+    /*
+     * @class buffer_view
+     * @brief Object that references but does not own a piece of contiguous memory
+     */
+    template <class T>
+    class buffer_view : private impl::buffer_data<T>
+    {
+    public:
+
+        using base_type = impl::buffer_data<T>;
+        using value_type = typename base_type::value_type;
+        using pointer = typename base_type::pointer;
+        using size_type = typename base_type::size_type;
+
+        explicit buffer_view(buffer<T>& buffer);
+        buffer_view(pointer data, size_type size);
+
+        using base_type::empty;
+        using base_type::size;
+        using base_type::data;
+
+        void swap(buffer_view&) noexcept;
+        bool equal(const buffer_view& rhs) const;
+    };
+
+    template <class T>
+    bool operator==(const buffer_view<T>& lhs, const buffer_view<T>& rhs);
+
     /******************************
      * buffer_data implementation *
      ******************************/
@@ -229,6 +257,40 @@ namespace sparrow
 
     template <class T>
     bool operator==(const buffer<T>& lhs, const buffer<T>& rhs)
+    {
+        return lhs.equal(rhs);
+    }
+
+    /******************************
+     * buffer_view implementation *
+     ******************************/
+
+    template <class T>
+    buffer_view<T>::buffer_view(buffer<T>& buffer)
+        : base_type{buffer.data(), buffer.size()}
+    {
+    }
+
+    template <class T>
+    buffer_view<T>::buffer_view(pointer data, size_type size)
+        : base_type{data, size}
+    {
+    }
+
+    template <class T>
+    void buffer_view<T>::swap(buffer_view& rhs) noexcept
+    {
+        base_type::swap(rhs);
+    }
+
+    template <class T>
+    bool buffer_view<T>::equal(const buffer_view& rhs) const
+    {
+        return base_type::equal(rhs);
+    }
+
+    template <class T>
+    bool operator==(const buffer_view<T>& lhs, const buffer_view<T>& rhs)
     {
         return lhs.equal(rhs);
     }
