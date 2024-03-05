@@ -95,6 +95,16 @@ namespace sparrow
             CHECK_EQ(b4, control);
         }
 
+        TEST_CASE("empty")
+        {
+           buffer_test_type b1;
+           CHECK(b1.empty());
+
+           const std::size_t size = 4u;
+           buffer_test_type b2(make_test_buffer(size), size);
+           CHECK(!b2.empty());
+        }
+
         TEST_CASE("data")
         {
             const std::size_t size = 4u;
@@ -216,6 +226,17 @@ namespace sparrow
             view_test_type v3(b2);
             v2 = std::move(v3);
             CHECK_EQ(v2, v3);
+        }
+
+        TEST_CASE("empty")
+        {
+            view_test_type v1(nullptr, 0u);
+            CHECK(v1.empty());
+
+            const std::size_t size = 4u;
+            buffer_test_type b(make_test_buffer(size), size);
+            view_test_type v2(b);
+            CHECK(!v2.empty());
         }
 
         TEST_CASE("data")
