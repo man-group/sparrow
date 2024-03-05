@@ -343,6 +343,11 @@ namespace sparrow
     {
     public:
 
+#ifdef __APPLE__
+        // Apple Clang wrong implementation of contiguous_iterator concept
+        using base_type = iterator_root_base<Derived, Element, std::random_access_iterator_tag, Reference, Difference>;
+        using element_type = typename base_type::value_type;
+#endif
         using iterator_concept = std::contiguous_iterator_tag;
     };
 
