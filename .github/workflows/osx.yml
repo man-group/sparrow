@@ -13,14 +13,40 @@ defaults:
 jobs:
   build:
     runs-on: macos-${{ matrix.os }}
-    name: macos-${{ matrix.os }}
+    name: macos-${{ matrix.os }} ${{ matrix.sys.compiler }} ${{ matrix.sys.version }} ${{ matrix.sys.stdlib }}
     strategy:
       fail-fast: false
       matrix:
         os:
         - 12
+        sys:
+        - {compiler: clang, version: '16', config-flags: '', stdlib: 'libstdc++-13' }
+        # - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17' }
+        - {compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-13' }
+        # - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17' }
+        - {compiler: gcc, version: '13', config-flags: '' }
 
     steps:
+
+    - name: Install GCC
+      if: matrix.sys.compiler == 'gcc'
+      uses: egor-tensin/setup-gcc@v1
+      with:
+        version: ${{matrix.sys.version}}
+        platform: x64
+
+    - name: Install LLVM and Clang
+      if: matrix.sys.compiler == 'clang'
+      uses: egor-tensin/setup-clang@v1
+      with:
+        version: ${{matrix.sys.version}}
+        platform: x64
+
+    - name: Install the specified standard library for clang
+      if: matrix.sys.compiler == 'clang'
+      run: sudo apt install ${{matrix.sys.stdlib}}-dev -y
+
+
 
     - name: Checkout code
       uses: actions/checkout@v3
