@@ -14,7 +14,10 @@
 
 #pragma once
 
-#define SPARROW_VERSION_MAJOR 0
-#define SPARROW_VERSION_MINOR 0
-#define SPARROW_VERSION_PATCH 1
+namespace sparrow
+{
+    constexpr int SPARROW_VERSION_MAJOR = 0;
+    constexpr int SPARROW_VERSION_MINOR = 0;
+    constexpr int SPARROW_VERSION_PATCH = 1;
+}
 
