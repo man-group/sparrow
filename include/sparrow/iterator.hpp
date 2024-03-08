@@ -28,7 +28,7 @@ namespace sparrow
         // lvalue, and therefore they do not require to provide operator->.
         // However, because it is such a common operation, and because we
         // don't want to propagate special cases for lvalue / rvalue handling
-        // everywhere in generic code, the iterator_base class provides an 
+        // everywhere in generic code, the iterator_base class provides an
         // implementation of operator->, that returns either the address of
         // an lvalue, or the address of a proxy on an rvalue.
 
@@ -128,7 +128,7 @@ namespace sparrow
             it.advance(n);
         }
 
-#if WIN32
+#if _WIN32 // Workaround for access issue with msvc, when friend is involved
     public:
 #endif
         template <class It>
@@ -143,13 +143,13 @@ namespace sparrow
         {
             return lhs.equal(rhs);
         }
-        
+
         template <class It>
         static bool less_than(const It& lhs, const It& rhs)
         {
             return lhs.less_than(rhs);
         }
-#if WIN32
+#if _WIN32 // Workaround for access issue with msvc, when friend is involved
     private:
 #endif
         template <class Derived, class E, class T, class R, class D>
@@ -188,7 +188,7 @@ namespace sparrow
         using difference_type = Difference;
         using iterator_category = std::forward_iterator_tag;
         using iterator_concept = std::forward_iterator_tag;
-        
+
         reference operator*() const
         {
             return iterator_access::dereference(this->derived());
