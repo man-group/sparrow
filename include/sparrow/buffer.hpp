@@ -26,11 +26,16 @@ namespace sparrow
         struct buffer_data
         {
             using value_type = T;
+            using reference = T&;
+            using const_reference = const T&;
             using pointer = T*;
             using size_type = std::size_t;
             
             bool empty() const noexcept;
             size_type size() const noexcept;
+
+            reference operator[](size_type);
+            const_reference operator[](size_type) const;
 
             template <class U = T>
             U* data() noexcept;
@@ -74,9 +79,11 @@ namespace sparrow
 
         using base_type::empty;
         using base_type::size;
+        using base_type::operator[];
         using base_type::data;
 
         void resize(size_type new_size);
+        void resize(size_type new_size, value_type value);
 
         void swap(buffer&) noexcept;
         bool equal(const buffer& rhs) const;
@@ -109,6 +116,7 @@ namespace sparrow
 
         using base_type::empty;
         using base_type::size;
+        using base_type::operator[];
         using base_type::data;
 
         void swap(buffer_view&) noexcept;
@@ -134,6 +142,18 @@ namespace sparrow
         auto buffer_data<T>::size() const noexcept -> size_type
         {
             return m_size;
+        }
+
+        template <class T>
+        auto buffer_data<T>::operator[](size_type pos) -> reference
+        {
+            return data()[pos];
+        }
+
+        template <class T>
+        auto buffer_data<T>::operator[](size_type pos) const -> const_reference
+        {
+            return data()[pos];
         }
 
         template <class T>
@@ -229,6 +249,14 @@ namespace sparrow
             std::copy(data(), data() + size(), tmp.data());
             swap(tmp);
         }
+    }
+
+    template <class T>
+    void buffer<T>::resize(size_type n, value_type value)
+    {
+        size_type old_size = size();
+        resize(n);
+        std::fill(data() + old_size, data() + n, value);
     }
 
     template <class T>
