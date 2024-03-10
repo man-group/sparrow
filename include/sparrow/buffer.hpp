@@ -67,6 +67,7 @@ namespace sparrow
 
         buffer() = default;
         explicit buffer(size_type size);
+        buffer(size_type size, value_type value);
         buffer(pointer data, size_type size);
         
         ~buffer();
@@ -84,6 +85,7 @@ namespace sparrow
 
         void resize(size_type new_size);
         void resize(size_type new_size, value_type value);
+        void clear();
 
         void swap(buffer&) noexcept;
         bool equal(const buffer& rhs) const;
@@ -195,6 +197,13 @@ namespace sparrow
     }
 
     template <class T>
+    buffer<T>::buffer(size_type size, value_type value)
+        : base_type{allocate(size), size}
+    {
+        std::fill(data(), data() + size, value);
+    }
+    
+    template <class T>
     buffer<T>::buffer(pointer data, size_type size)
         : base_type{data, size}
     {
@@ -246,7 +255,8 @@ namespace sparrow
         if (n != size())
         {
             buffer<T> tmp(n);
-            std::copy(data(), data() + size(), tmp.data());
+            size_type copy_size = std::min(size(), n);
+            std::copy(data(), data() + copy_size, tmp.data());
             swap(tmp);
         }
     }
@@ -256,7 +266,16 @@ namespace sparrow
     {
         size_type old_size = size();
         resize(n);
-        std::fill(data() + old_size, data() + n, value);
+        if (old_size < n)
+        {
+            std::fill(data() + old_size, data() + n, value);
+        }
+    }
+
+    template <class T>
+    void buffer<T>::clear()
+    {
+        resize(size_type(0));
     }
 
     template <class T>
