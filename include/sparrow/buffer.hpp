@@ -25,7 +25,7 @@ namespace sparrow
 {
     namespace impl
     {
-        // Should probably move to a MP util file
+        // TODO: Should probably move to a MP util file
         template <class T, bool is_const>
         struct constify
             : std::conditional<is_const, const T, T>
@@ -56,7 +56,7 @@ namespace sparrow
         >;
         using pointer = typename base_type::pointer;
 
-        explicit buffer_iterator(pointer p = nullptr);
+        explicit buffer_iterator(pointer p);
 
     private:
 
@@ -180,6 +180,7 @@ namespace sparrow
 
         buffer() = default;
         explicit buffer(size_type size);
+        buffer(size_type size, value_type);
         buffer(pointer data, size_type size);
         
         ~buffer();
@@ -464,6 +465,13 @@ namespace sparrow
     }
 
     template <class T>
+    buffer<T>::buffer(size_type size, value_type value)
+        : base_type{allocate(size), size}
+    {
+        std::fill_n(base_type::data(), size, value);
+    }
+
+    template <class T>
     buffer<T>::buffer(pointer data, size_type size)
         : base_type{data, size}
     {
@@ -527,7 +535,7 @@ namespace sparrow
         resize(n);
         if (old_size < n)
         {
-            std::fill(base_type::data() + old_size, base_type::data() + n, value);
+            std::fill_n(base_type::data() + old_size, n, value);
         }
     }
 

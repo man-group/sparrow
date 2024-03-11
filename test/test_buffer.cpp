@@ -60,6 +60,15 @@ namespace sparrow
             CHECK_EQ(b2.data(), mem);
             CHECK_EQ(b2.size(), expected_size);
             CHECK_EQ(b2.data()[2], uint8_t(2));
+
+            const uint8_t expected_value = 3;
+            buffer_test_type b3(expected_size, expected_value);
+            CHECK_NE(b3.data(), nullptr);
+            CHECK_EQ(b3.size(), expected_size);
+            for (std::size_t i = 0; i < expected_size; ++i)
+            {
+                CHECK_EQ(b3[i], expected_value);
+            }
         }
 
         TEST_CASE("copy semantic")
