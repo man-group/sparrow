@@ -16,6 +16,8 @@
 
 namespace sparrow
 {
+    // TODO: does not support all types specified by the Arrow specification
+    // yet
     enum class data_type
     {
         NA = 0,
