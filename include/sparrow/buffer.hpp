@@ -19,8 +19,63 @@
 #include <concepts>
 #include <cstdint>
 
+#include "sparrow/iterator.hpp"
+
 namespace sparrow
 {
+    namespace impl
+    {
+        // Should probably move to a MP util file
+        template <class T, bool is_const>
+        struct constify
+            : std::conditional<is_const, const T, T>
+        {
+        };
+
+        template <class T, bool is_const>
+        using constify_t = typename constify<T, is_const>::type;
+    }
+
+    template <class T, bool is_const>
+    class buffer_iterator
+        : public iterator_base
+          <
+              buffer_iterator<T, is_const>,
+              impl::constify_t<T, is_const>,
+              std::contiguous_iterator_tag
+          >
+    {
+    public:
+
+        using self_type = buffer_iterator<T, is_const>;
+        using base_type = iterator_base
+        <
+            self_type,
+            impl::constify_t<T, is_const>,
+            std::contiguous_iterator_tag
+        >;
+        using pointer = typename base_type::pointer;
+
+        explicit buffer_iterator(pointer p = nullptr);
+
+    private:
+
+        using reference = typename base_type::reference;
+        using difference_type = typename base_type::difference_type;
+
+        reference dereference() const;
+        void increment();
+        void decrement();
+        void advance(difference_type n);
+        difference_type distance_to(const self_type& rhs) const;
+        bool equal(const self_type& rhs) const;
+        bool less_than(const self_type& rhs) const;
+
+        pointer m_pointer;
+
+        friend class iterator_access;
+    };
+
     /**
      * @class buffer_base
      * @brief Base class for buffer and buffer_view
@@ -44,6 +99,11 @@ namespace sparrow
         using size_type = std::size_t;
         using difference_type = std::ptrdiff_t;
 
+        using iterator = buffer_iterator<T, false>;
+        using const_iterator = buffer_iterator<T, true>;
+        using reverse_iterator = std::reverse_iterator<iterator>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
         bool empty() const noexcept;
         size_type size() const noexcept;
 
@@ -61,6 +121,22 @@ namespace sparrow
 
         template <class U = T>
         const U* data() const noexcept;
+
+        iterator begin();
+        iterator end();
+
+        const_iterator begin() const;
+        const_iterator end() const;
+        const_iterator cbegin() const;
+        const_iterator cend() const;
+
+        reverse_iterator rbegin();
+        reverse_iterator rend();
+
+        const_reverse_iterator rbegin() const;
+        const_reverse_iterator rend() const;
+        const_reverse_iterator crbegin() const;
+        const_reverse_iterator crend() const;
 
         void swap(buffer_base& rhs) noexcept;
         bool equal(const buffer_base& rhs) const;
@@ -148,6 +224,58 @@ namespace sparrow
         buffer_view& operator=(buffer_view&&) = default;
     };
 
+    /**********************************
+     * buffer_iterator implementation *
+     **********************************/
+
+    template <class T, bool is_const>
+    buffer_iterator<T, is_const>::buffer_iterator(pointer p)
+        : m_pointer(p)
+    {
+    }
+
+    template <class T, bool is_const>
+    auto buffer_iterator<T, is_const>::dereference() const -> reference
+    {
+        return *m_pointer;
+    }
+
+    template <class T, bool is_const>
+    void buffer_iterator<T, is_const>::increment()
+    {
+        ++m_pointer;
+    }
+
+    template <class T, bool is_const>
+    void buffer_iterator<T, is_const>::decrement()
+    {
+        --m_pointer;
+    }
+
+    template <class T, bool is_const>
+    void buffer_iterator<T, is_const>::advance(difference_type n)
+    {
+        m_pointer += n;
+    }
+
+    template <class T, bool is_const>
+    auto buffer_iterator<T, is_const>::distance_to(const self_type& rhs) const -> difference_type
+    {
+        return rhs.m_pointer - m_pointer;
+    }
+
+    template <class T, bool is_const>
+    bool buffer_iterator<T, is_const>::equal(const self_type& rhs) const
+    {
+        return m_pointer == rhs.m_pointer;
+    }
+
+    template <class T, bool is_const>
+    bool buffer_iterator<T, is_const>::less_than(const self_type& rhs) const
+    {
+        return m_pointer < rhs.m_pointer;
+    }
+
     /******************************
      * buffer_base implementation *
      ******************************/
@@ -232,6 +360,78 @@ namespace sparrow
     const U* buffer_base<T>::data() const noexcept
     {
         return reinterpret_cast<const U*>(p_data);
+    }
+
+    template <class T>
+    auto buffer_base<T>::begin() -> iterator
+    {
+        return iterator(p_data);
+    }
+
+    template <class T>
+    auto buffer_base<T>::end() -> iterator
+    {
+        return iterator(p_data + m_size);
+    }
+
+    template <class T>
+    auto buffer_base<T>::begin() const -> const_iterator
+    {
+        return cbegin();
+    }
+
+    template <class T>
+    auto buffer_base<T>::end() const -> const_iterator
+    {
+        return cend();
+    }
+
+    template <class T>
+    auto buffer_base<T>::cbegin() const -> const_iterator
+    {
+        return const_iterator(p_data);
+    }
+
+    template <class T>
+    auto buffer_base<T>::cend() const -> const_iterator
+    {
+        return const_iterator(p_data + m_size);
+    }
+
+    template <class T>
+    auto buffer_base<T>::rbegin() -> reverse_iterator
+    {
+        return reverse_iterator(end());
+    }
+
+    template <class T>
+    auto buffer_base<T>::rend() -> reverse_iterator
+    {
+        return reverse_iterator(begin());
+    }
+
+    template <class T>
+    auto buffer_base<T>::rbegin() const -> const_reverse_iterator
+    {
+        return crbegin();
+    }
+
+    template <class T>
+    auto buffer_base<T>::rend() const -> const_reverse_iterator
+    {
+        return crend();
+    }
+
+    template <class T>
+    auto buffer_base<T>::crbegin() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cend());
+    }
+
+    template <class T>
+    auto buffer_base<T>::crend() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cbegin());
     }
 
     template <class T>
