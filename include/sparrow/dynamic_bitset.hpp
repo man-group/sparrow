@@ -148,10 +148,11 @@ namespace sparrow
     void dynamic_bitset_base<B>::set(size_type pos, value_type value)
     {
         block_type& block = m_buffer.data()[block_index(pos)];
+        bool old_value = block & bit_mask(pos);
         if (value)
         {
             block |= bit_mask(pos);
-            if (m_null_count)
+            if (m_null_count && !old_value)
             {
                 --m_null_count;
             }
@@ -159,7 +160,10 @@ namespace sparrow
         else
         {
             block &= ~bit_mask(pos);
-            ++m_null_count;
+            if (old_value)
+            {
+                ++m_null_count;
+            }
         }
     }
 

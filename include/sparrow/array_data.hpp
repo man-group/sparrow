@@ -18,47 +18,23 @@
 #include <vector>
 
 #include "sparrow/buffer.hpp"
+#include "sparrow/dynamic_bitset.hpp"
 #include "sparrow/data_type.hpp"
 
 namespace sparrow
 {
-    class bitset_view
-    {
-    public:
-
-        using block_type = std::uint8_t;
-        using value_type = bool;
-        using size_type = std::size_t;
-        using storage_type = buffer<block_type>;
-
-        explicit bitset_view(storage_type& bitmap);
-
-        size_type size() const;
-
-        bool test(size_type pos) const;
-        void set(size_type pos, value_type value);
-
-    private:
-
-        size_type block_index(size_type pos) const noexcept;
-        size_type bit_index(size_type pos) const noexcept;
-        block_type bit_mask(size_type pos) const noexcept;
-
-        storage_type* p_bitmap;
-
-        static constexpr std::size_t s_bits_per_block = sizeof(block_type) * CHAR_BIT;
-    };
-
     struct array_data
     {
         data_descriptor type;
         std::int64_t length = 0;
-        std::int64_t null_count = 0;
         std::int64_t offset = 0;
-        std::vector<buffer<std::uint8_t>> buffers;
+        using block_type = std::uint8_t;
+        using bitmap_type = dynamic_bitset<block_type>; 
+        // bitmap buffer and null_count
+        bitmap_type bitmap;
+        // Other buffers
+        std::vector<buffer<block_type>> buffers;
         std::vector<array_data> child_data;
-
-        bitset_view bitmap();
     };
 
     struct null_type
@@ -112,62 +88,6 @@ namespace sparrow
         size_type m_index;
         array_data* p_array_data;
     };
-
-    /******************************
-     * bitset_view implementation *
-     ******************************/
-
-    inline bitset_view::bitset_view(buffer<block_type>& bitmap)
-        : p_bitmap(&bitmap)
-    {
-    }
-
-    inline auto bitset_view::size() const -> size_type 
-    {
-        return p_bitmap->size() * s_bits_per_block;
-    }
-
-    inline bool bitset_view::test(size_type pos) const
-    {
-        return p_bitmap->data()[block_index(pos)] & bit_mask(pos);
-    }
-    
-    inline void bitset_view::set(size_type pos, value_type value)
-    {
-        block_type& block = p_bitmap->data()[block_index(pos)];
-        if (value)
-        {
-            block |= bit_mask(pos);
-        }
-        else
-        {
-            block &= ~bit_mask(pos);
-        }
-    }
-
-    inline auto bitset_view::block_index(size_type pos) const noexcept -> size_type
-    {
-        return pos / s_bits_per_block;
-    }
-
-    inline auto bitset_view::bit_index(size_type pos) const noexcept -> size_type
-    {
-        return pos % s_bits_per_block;
-    }
-
-    inline auto bitset_view::bit_mask(size_type pos) const noexcept -> block_type 
-    {
-        return block_type(1) << bit_index(pos);
-    }
-
-    /*****************************
-     * array_data implementation *
-     *****************************/
-
-    bitset_view array_data::bitmap()
-    {
-        return bitset_view(buffers[0]);
-    }
 
     /**********************************
      * reference_proxy implementation *
@@ -252,28 +172,16 @@ namespace sparrow
     template <class T>
     void reference_proxy<T>::update_value(value_type value)
     {
-        auto view = p_array_data->bitmap();
-        bool has_val = (p_array_data->null_count == 0u) || view.test(m_index);
-        if (!has_val)
-        {
-            // TODO: handle empty bitmap
-            view.set(m_index, true);
-            --(p_array_data->null_count);
-        }
+        auto& bitmap = p_array_data->bitmap;
+        bitmap.set(m_index, true);
         *p_ref = value;
     }
 
     template <class T>
     void reference_proxy<T>::update_value(null_type)
     {
-        auto view = p_array_data->bitmap();
-        bool has_val = (p_array_data->null_count == 0u) || view.test(m_index);
-        if (has_val)
-        {
-            // TODO: handle empty bitmap
-            view.set(m_index, false);
-            ++(p_array_data->null_count);
-        }
+        auto& bitmap = p_array_data->bitmap;
+        bitmap.set(m_index, false);
     }
 }
 

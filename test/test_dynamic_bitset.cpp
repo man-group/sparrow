@@ -153,6 +153,14 @@ namespace sparrow
             bm.set(24, 0);
             CHECK_EQ(bm.data()[3], 6);
             CHECK_EQ(bm.null_count(), m_null_count);
+
+            bm.set(24, 0);
+            CHECK_EQ(bm.data()[3], 6);
+            CHECK_EQ(bm.null_count(), m_null_count);
+
+            bm.set(2, true);
+            CHECK(bm.test(2));
+            CHECK_EQ(bm.null_count(), m_null_count);
         }
 
         TEST_CASE_FIXTURE(bitmap_fixture, "resize")
