@@ -297,7 +297,7 @@ namespace sparrow
         }
 
         m_size = n;
-        m_null_count == m_size - count_non_null();
+        m_null_count = m_size - count_non_null();
         zero_unused_bits();
     }
 
