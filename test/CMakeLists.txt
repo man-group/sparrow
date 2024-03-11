@@ -38,6 +38,7 @@ set(SPARROW_TESTS
     main.cpp
     test_array_data.cpp
     test_buffer.cpp
+    test_dynamic_bitset.cpp
     test_iterator.cpp
 )
 set(test_target "test_sparrow_lib")

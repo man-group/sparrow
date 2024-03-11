@@ -37,6 +37,12 @@ namespace sparrow
             reference operator[](size_type);
             const_reference operator[](size_type) const;
 
+            reference front();
+            const_reference front() const;
+
+            reference back();
+            const_reference back() const;
+
             template <class U = T>
             U* data() noexcept;
 
@@ -81,6 +87,8 @@ namespace sparrow
         using base_type::empty;
         using base_type::size;
         using base_type::operator[];
+        using base_type::front;
+        using base_type::back;
         using base_type::data;
 
         void resize(size_type new_size);
@@ -119,6 +127,8 @@ namespace sparrow
         using base_type::empty;
         using base_type::size;
         using base_type::operator[];
+        using base_type::front;
+        using base_type::back;
         using base_type::data;
 
         void swap(buffer_view&) noexcept;
@@ -158,6 +168,30 @@ namespace sparrow
             return data()[pos];
         }
 
+        template <class T>
+        auto buffer_data<T>::front() -> reference
+        {
+            return data()[0];
+        }
+
+        template <class T>
+        auto buffer_data<T>::front() const -> const_reference
+        {
+            return data()[0];
+        }
+
+        template <class T>
+        auto buffer_data<T>::back() -> reference
+        {
+            return data()[m_size - 1];
+        }
+
+        template <class T>
+        auto buffer_data<T>::back() const -> const_reference
+        {
+            return data()[m_size - 1];
+        }
+        
         template <class T>
         template <class U>
         U* buffer_data<T>::data() noexcept
@@ -217,7 +251,7 @@ namespace sparrow
         
     template <class T>
     buffer<T>::buffer(const buffer<T>& rhs)
-        : base_type{allocate(rhs.m_size), rhs.size()}
+        : base_type{allocate(rhs.size()), rhs.size()}
     {
         std::copy(rhs.data(), rhs.data() + rhs.size(), data());
     }
