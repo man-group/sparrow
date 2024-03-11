@@ -156,6 +156,23 @@ namespace sparrow
             b.resize(size2);
             CHECK_EQ(b.size(), size2);
             CHECK_EQ(b.data()[2], 2);
+
+            b.resize(size1);
+            CHECK_EQ(b.size(), size1);
+            CHECK_EQ(b.data()[2], 2);
+
+            const std::size_t size3 = 6u;
+            b.resize(size3);
+            CHECK_EQ(b.size(), size3);
+            CHECK_EQ(b.data()[2], 2);
+        }
+
+        TEST_CASE("clear")
+        {
+            const std::size_t size1 = 4u;
+            buffer_test_type b(make_test_buffer(size1), size1); 
+            b.clear();
+            CHECK_EQ(b.size(), 0u);
         }
     }
 

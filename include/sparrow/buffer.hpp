@@ -15,47 +15,89 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <concepts>
 #include <cstdint>
 
 namespace sparrow
 {
-    namespace impl
+    /**
+     * @class buffer_base
+     * @brief Base class for buffer and buffer_view
+     *
+     * This class implements the common API for buffer and buffer_view.
+     * The only difference between these two inheriting classes is
+     * that buffer owns its memory while buffer_view only references it.
+     *
+     **/
+    template <class T>
+    class buffer_base
     {
-        template <class T>
-        struct buffer_data
-        {
-            using value_type = T;
-            using pointer = T*;
-            using size_type = std::size_t;
+    public:
+
+        using self_type = buffer_base<T>;
+        using value_type = T;
+        using reference = T&;
+        using const_reference = const T&;
+        using pointer = T*;
+        using const_pointer = const T*;
+        using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
+
+        bool empty() const noexcept;
+        size_type size() const noexcept;
+
+        reference operator[](size_type);
+        const_reference operator[](size_type) const;
+
+        reference front();
+        const_reference front() const;
+
+        reference back();
+        const_reference back() const;
             
-            bool empty() const noexcept;
-            size_type size() const noexcept;
+        template <class U = T>
+        U* data() noexcept;
 
-            template <class U = T>
-            U* data() noexcept;
+        template <class U = T>
+        const U* data() const noexcept;
 
-            template <class U = T>
-            const U* data() const noexcept;
+        void swap(buffer_base& rhs) noexcept;
+        bool equal(const buffer_base& rhs) const;
+    
+    protected:
 
-            void swap(buffer_data& rhs) noexcept;
-            bool equal(const buffer_data& rhs) const;
+        buffer_base() = default;
+        buffer_base(pointer p, size_type n);
+        ~buffer_base() = default;
 
-            pointer p_data = nullptr;
-            size_type m_size = 0;
-        };
-    }
+        buffer_base(const self_type&) = default;
+        self_type& operator=(const self_type&) = default;
 
+        buffer_base(self_type&&) = default;
+        self_type& operator=(self_type&&) = default;
+
+        void reset(pointer p, size_type n);
+
+    private:
+
+        pointer p_data = nullptr;
+        size_type m_size = 0u;
+    };
+
+    template <class T>
+    bool operator==(const buffer_base<T>& lhs, const buffer_base<T>& rhs);
+    
     /**
      * @class buffer
      * @brief Object that owns a piece of contiguous memory
      */
     template <class T>
-    class buffer : private impl::buffer_data<T>
+    class buffer : public buffer_base<T>
     {
     public:
 
-        using base_type = impl::buffer_data<T>;
+        using base_type = buffer_base<T>;
         using value_type = typename base_type::value_type;
         using pointer = typename base_type::pointer;
         using size_type = typename base_type::size_type;
@@ -72,14 +114,9 @@ namespace sparrow
         buffer(buffer&&);
         buffer& operator=(buffer&&);
 
-        using base_type::empty;
-        using base_type::size;
-        using base_type::data;
-
         void resize(size_type new_size);
-
-        void swap(buffer&) noexcept;
-        bool equal(const buffer& rhs) const;
+        void resize(size_type new_size, value_type value);
+        void clear();
 
     private:
 
@@ -87,81 +124,133 @@ namespace sparrow
         void deallocate(pointer mem) const;
     };
 
-    template <class T>
-    bool operator==(const buffer<T>& lhs, const buffer<T>& rhs);
-
     /*
      * @class buffer_view
      * @brief Object that references but does not own a piece of contiguous memory
      */
     template <class T>
-    class buffer_view : private impl::buffer_data<T>
+    class buffer_view : public buffer_base<T>
     {
     public:
 
-        using base_type = impl::buffer_data<T>;
-        using value_type = typename base_type::value_type;
+        using base_type = buffer_base<T>;
         using pointer = typename base_type::pointer;
         using size_type = typename base_type::size_type;
 
         explicit buffer_view(buffer<T>& buffer);
         buffer_view(pointer data, size_type size);
+        ~buffer_view() = default;
 
-        using base_type::empty;
-        using base_type::size;
-        using base_type::data;
+        buffer_view(const buffer_view&) = default;
+        buffer_view& operator=(const buffer_view&) = default;
 
-        void swap(buffer_view&) noexcept;
-        bool equal(const buffer_view& rhs) const;
+        buffer_view(buffer_view&&) = default;
+        buffer_view& operator=(buffer_view&&) = default;
     };
 
-    template <class T>
-    bool operator==(const buffer_view<T>& lhs, const buffer_view<T>& rhs);
-
     /******************************
-     * buffer_data implementation *
+     * buffer_base implementation *
      ******************************/
 
-    namespace impl
+    template <class T>
+    buffer_base<T>::buffer_base(pointer p, size_type n)
+        : p_data(p)
+        , m_size(n)
     {
-        template <class T>
-        bool buffer_data<T>::empty() const noexcept
-        {
-            return size() == size_type(0);
-        }
+    }
 
-        template <class T>
-        auto buffer_data<T>::size() const noexcept -> size_type
-        {
-            return m_size;
-        }
+    template <class T>
+    void buffer_base<T>::reset(pointer p, size_type n)
+    {
+        p_data = p;
+        m_size = n;
+    }
 
-        template <class T>
-        template <class U>
-        U* buffer_data<T>::data() noexcept
-        {
-            return reinterpret_cast<U*>(p_data);
-        }
+    template <class T>
+    bool buffer_base<T>::empty() const noexcept
+    {
+        return size() == size_type(0);
+    }
 
-        template <class T>
-        template <class U>
-        const U* buffer_data<T>::data() const noexcept
-        {
-            return reinterpret_cast<const U*>(p_data);
-        }
+    template <class T>
+    auto buffer_base<T>::size() const noexcept -> size_type
+    {
+        return m_size;
+    }
 
-        template <class T>
-        void buffer_data<T>::swap(buffer_data<T>& rhs) noexcept
-        {
-            std::swap(p_data, rhs.p_data);
-            std::swap(m_size, rhs.m_size);
-        }
+    template <class T>
+    auto buffer_base<T>::operator[](size_type pos) -> reference
+    {
+        assert(pos < size());
+        return data()[pos];
+    }
 
-        template <class T>
-        bool buffer_data<T>::equal(const buffer_data<T>& rhs) const
-        {
-            return m_size == rhs.m_size && std::equal(p_data, p_data + m_size, rhs.p_data);
-        }
+    template <class T>
+    auto buffer_base<T>::operator[](size_type pos) const -> const_reference
+    {
+        assert(pos < size());
+        return data()[pos];
+    }
+
+    template <class T>
+    auto buffer_base<T>::front() -> reference
+    {
+        assert(!empty());
+        return data()[0];
+    }
+
+    template <class T>
+    auto buffer_base<T>::front() const -> const_reference
+    {
+        assert(!empty());
+        return data()[0];
+    }
+
+    template <class T>
+    auto buffer_base<T>::back() -> reference
+    {
+        assert(!empty());
+        return data()[m_size - 1];
+    }
+
+    template <class T>
+    auto buffer_base<T>::back() const -> const_reference
+    {
+        assert(!empty());
+        return data()[m_size - 1];
+    }
+
+    template <class T>
+    template <class U>
+    U* buffer_base<T>::data() noexcept
+    {
+        return reinterpret_cast<U*>(p_data);
+    }
+
+    template <class T>
+    template <class U>
+    const U* buffer_base<T>::data() const noexcept
+    {
+        return reinterpret_cast<const U*>(p_data);
+    }
+
+    template <class T>
+    void buffer_base<T>::swap(buffer_base<T>& rhs) noexcept
+    {
+        std::swap(p_data, rhs.p_data);
+        std::swap(m_size, rhs.m_size);
+    }
+
+    template <class T>
+    bool buffer_base<T>::equal(const buffer_base<T>& rhs) const
+    {
+        return m_size == rhs.m_size && std::equal(p_data, p_data + m_size, rhs.p_data);
+    }
+
+    template <class T>
+    bool operator==(const buffer_base<T>& lhs, const buffer_base<T>& rhs)
+    {
+        return lhs.equal(rhs);
     }
 
     /*************************
@@ -183,14 +272,14 @@ namespace sparrow
     template <class T>
     buffer<T>::~buffer()
     {
-        deallocate(this->p_data);
+        deallocate(base_type::data());
     }
         
     template <class T>
     buffer<T>::buffer(const buffer<T>& rhs)
-        : base_type{allocate(rhs.m_size), rhs.size()}
+        : base_type{allocate(rhs.size()), rhs.size()}
     {
-        std::copy(rhs.data(), rhs.data() + rhs.size(), data());
+        std::copy(rhs.data(), rhs.data() + rhs.size(), base_type::data());
     }
 
     template <class T>
@@ -199,7 +288,7 @@ namespace sparrow
         if (this != &rhs)
         {
             buffer<T> tmp(rhs);
-            swap(tmp);
+            base_type::swap(tmp);
         }
         return *this;
     }
@@ -208,14 +297,13 @@ namespace sparrow
     buffer<T>::buffer(buffer&& rhs)
         : base_type{rhs.data(), rhs.size()}
     {
-        rhs.p_data = nullptr;
-        rhs.m_size = 0u;
+        rhs.reset(nullptr, 0u);
     }
 
     template <class T>
     buffer<T>& buffer<T>::operator=(buffer<T>&& rhs)
     {
-        swap(rhs);
+        base_type::swap(rhs);
         return *this;
     }
 
@@ -223,26 +311,32 @@ namespace sparrow
     void buffer<T>::resize(size_type n)
     {
         // TODO: add capacity, resize if growing only and define a shrink_to_fit method
-        if (n != size())
+        if (n != base_type::size())
         {
             buffer<T> tmp(n);
-            std::copy(data(), data() + size(), tmp.data());
-            swap(tmp);
+            const size_type copy_size = std::min(base_type::size(), n);
+            std::copy(base_type::data(), base_type::data() + copy_size, tmp.data());
+            base_type::swap(tmp);
         }
     }
 
     template <class T>
-    void buffer<T>::swap(buffer<T>& rhs) noexcept
+    void buffer<T>::resize(size_type n, value_type value)
     {
-        base_type::swap(rhs);
+        const size_type old_size = base_type::size();
+        resize(n);
+        if (old_size < n)
+        {
+            std::fill(base_type::data() + old_size, base_type::data() + n, value);
+        }
     }
 
     template <class T>
-    bool buffer<T>::equal(const buffer<T>& rhs) const
+    void buffer<T>::clear()
     {
-        return base_type::equal(rhs);
+        resize(size_type(0));
     }
-
+    
     template <class T>
     auto buffer<T>::allocate(size_type size) const -> pointer
     {
@@ -253,12 +347,6 @@ namespace sparrow
     void buffer<T>::deallocate(pointer mem) const
     {
         delete[] mem;
-    }
-
-    template <class T>
-    bool operator==(const buffer<T>& lhs, const buffer<T>& rhs)
-    {
-        return lhs.equal(rhs);
     }
 
     /******************************
@@ -275,24 +363,6 @@ namespace sparrow
     buffer_view<T>::buffer_view(pointer data, size_type size)
         : base_type{data, size}
     {
-    }
-
-    template <class T>
-    void buffer_view<T>::swap(buffer_view& rhs) noexcept
-    {
-        base_type::swap(rhs);
-    }
-
-    template <class T>
-    bool buffer_view<T>::equal(const buffer_view& rhs) const
-    {
-        return base_type::equal(rhs);
-    }
-
-    template <class T>
-    bool operator==(const buffer_view<T>& lhs, const buffer_view<T>& rhs)
-    {
-        return lhs.equal(rhs);
     }
 }
 
