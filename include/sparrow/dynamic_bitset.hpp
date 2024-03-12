@@ -153,7 +153,7 @@ namespace sparrow
      **************************************/
 
     template <class B>
-    auto dynamic_bitset_base<B>::size() const noexcept -> size_type 
+    auto dynamic_bitset_base<B>::size() const noexcept -> size_type
     {
         return m_size;
     }
@@ -170,7 +170,7 @@ namespace sparrow
         assert(pos < size());
         return !m_null_count || m_buffer.data()[block_index(pos)] & bit_mask(pos);
     }
-    
+
     template <class B>
     void dynamic_bitset_base<B>::set(size_type pos, value_type value)
     {
@@ -251,6 +251,9 @@ namespace sparrow
     template <class B>
     auto dynamic_bitset_base<B>::count_non_null() const noexcept -> size_type
     {
+        if (m_buffer.empty())
+            return 0u;
+
         // Number of bits set to 1 in i for i from 0 to 255.
         // This can be seen as a mapping "uint8_t -> number of non null bits"
         static constexpr unsigned char table[] =
@@ -266,7 +269,7 @@ namespace sparrow
         };
         // This methods sums up the number of non null bits per block of 8 bits.
         size_type res = 0;
-        const unsigned char* p = reinterpret_cast<const unsigned char*>(&m_buffer[0]);
+        const unsigned char* p = reinterpret_cast<const unsigned char*>(m_buffer.data());
         const size_type length = m_buffer.size() * sizeof(block_type);
         for (size_type i = 0; i < length; ++i, ++p)
         {
@@ -288,7 +291,7 @@ namespace sparrow
     }
 
     template <class B>
-    auto dynamic_bitset_base<B>::bit_mask(size_type pos) const noexcept -> block_type 
+    auto dynamic_bitset_base<B>::bit_mask(size_type pos) const noexcept -> block_type
     {
         return block_type(1) << bit_index(pos);
     }
