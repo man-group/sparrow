@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "sparrow/buffer.hpp"
 #include "sparrow/data_type.hpp"
 #include "sparrow/dynamic_bitset.hpp"
