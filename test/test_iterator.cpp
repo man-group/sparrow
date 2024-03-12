@@ -32,7 +32,7 @@ namespace sparrow
             : m_pointer(p)
         {
         }
-        
+
     private:
 
         using self_type = test_iterator;
@@ -84,7 +84,7 @@ namespace sparrow
     {
         buffer<int> make_test_buffer()
         {
-            constexpr std::size_t size = 8u;
+            constexpr std::size_t size = 16u;
             buffer<int> res(size);
             std::iota(res.data(), res.data() + size, 0);
             return res;
@@ -174,7 +174,7 @@ namespace sparrow
             CHECK_EQ(*iter, buff.data()[0]);
             ++iter;
             CHECK_EQ(*iter, buff.data()[1]);
-            
+
             auto iter2 = iter++;
             CHECK_EQ(*iter2, buff.data()[1]);
             CHECK_EQ(*iter, buff.data()[2]);
@@ -216,13 +216,13 @@ namespace sparrow
             CHECK_EQ(*iter2, buff.data()[6]);
             auto iter4 = 2 + iter2;
             CHECK_EQ(*iter4, buff.data()[8]);
-            
+
             iter2 -= 2;
             CHECK_EQ(*iter2, buff.data()[4]);
             auto iter3 = iter2 - 3;
             CHECK_EQ(*iter2, buff.data()[4]);
             CHECK_EQ(*iter3, buff.data()[1]);
-            
+
             auto diff = iter2 - iter3;
             CHECK_EQ(diff, 3);
 
