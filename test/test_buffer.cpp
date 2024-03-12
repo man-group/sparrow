@@ -60,6 +60,15 @@ namespace sparrow
             CHECK_EQ(b2.data(), mem);
             CHECK_EQ(b2.size(), expected_size);
             CHECK_EQ(b2.data()[2], uint8_t(2));
+
+            const uint8_t expected_value = 3;
+            buffer_test_type b3(expected_size, expected_value);
+            CHECK_NE(b3.data(), nullptr);
+            CHECK_EQ(b3.size(), expected_size);
+            for (std::size_t i = 0; i < expected_size; ++i)
+            {
+                CHECK_EQ(b3[i], expected_value);
+            }
         }
 
         TEST_CASE("copy semantic")
@@ -103,6 +112,38 @@ namespace sparrow
            const std::size_t size = 4u;
            buffer_test_type b2(make_test_buffer(size), size);
            CHECK(!b2.empty());
+        }
+
+        TEST_CASE("operator[]")
+        {
+            const std::size_t size = 4u;
+            buffer_test_type b1(make_test_buffer(size), size);
+            const buffer_test_type b2(b1);
+            for(std::size_t i = 0; i < size; ++i)
+            {
+                CHECK_EQ(b1[i], i);
+                CHECK_EQ(b2[i], i);
+            }
+        }
+
+        TEST_CASE("front")
+        {
+            const std::size_t size = 4u;
+            const std::uint8_t expected_value = 3u;
+            buffer_test_type b1(make_test_buffer(size, expected_value), size);
+            const buffer_test_type b2(b1);
+            CHECK_EQ(b1.front(), expected_value);
+            CHECK_EQ(b2.front(), expected_value);
+        }
+
+        TEST_CASE("back")
+        {
+            const std::size_t size = 4u;
+            const std::uint8_t expected_value = 6u;
+            buffer_test_type b1(make_test_buffer(size, expected_value), size);
+            const buffer_test_type b2(b1);
+            CHECK_EQ(b1.back(), expected_value + 3u);
+            CHECK_EQ(b2.back(), expected_value + 3u);
         }
 
         TEST_CASE("data")
@@ -156,6 +197,53 @@ namespace sparrow
             b.resize(size2);
             CHECK_EQ(b.size(), size2);
             CHECK_EQ(b.data()[2], 2);
+
+            b.resize(size1);
+            CHECK_EQ(b.size(), size1);
+            CHECK_EQ(b.data()[2], 2);
+
+            const std::size_t size3 = 6u;
+            b.resize(size3);
+            CHECK_EQ(b.size(), size3);
+            CHECK_EQ(b.data()[2], 2);
+        }
+
+        TEST_CASE("clear")
+        {
+            const std::size_t size1 = 4u;
+            buffer_test_type b(make_test_buffer(size1), size1); 
+            b.clear();
+            CHECK_EQ(b.size(), 0u);
+        }
+
+        TEST_CASE("iterator")
+        {
+            const std::size_t size = 8u;
+            buffer_test_type b(make_test_buffer(size), size);
+            auto iter = b.begin();
+            auto citer = b.cbegin();
+            for (std::size_t i = 0; i < b.size(); ++i)
+            {
+                CHECK_EQ(*iter++, b[i]);
+                CHECK_EQ(*citer++, b[i]);
+            }
+            CHECK_EQ(iter, b.end());
+            CHECK_EQ(citer, b.cend());
+        }
+
+        TEST_CASE("reverse_iterator")
+        {
+            const std::size_t size = 8u;
+            buffer_test_type b(make_test_buffer(size), size);
+            auto iter = b.rbegin();
+            auto citer = b.crbegin();
+            for (std::size_t i = b.size(); i != 0u; --i)
+            {
+                CHECK_EQ(*iter++, b[i-1]);
+                CHECK_EQ(*citer++, b[i-1]);
+            }
+            CHECK_EQ(iter, b.rend());
+            CHECK_EQ(citer, b.crend());
         }
     }
 
