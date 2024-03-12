@@ -51,6 +51,8 @@ OPTION(BUILD_TESTS "sparrow test suite" OFF)
 
 set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/dynamic_bitset.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow_version.hpp
 )
 

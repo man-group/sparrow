@@ -535,7 +535,7 @@ namespace sparrow
         resize(n);
         if (old_size < n)
         {
-            std::fill_n(base_type::data() + old_size, n, value);
+            std::fill(base_type::data() + old_size, base_type::data() + n, value);
         }
     }
 
