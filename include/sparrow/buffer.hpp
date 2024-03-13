@@ -44,6 +44,9 @@ namespace sparrow
         >;
         using pointer = typename base_type::pointer;
 
+        // Required so that std::ranges::end(b) is
+        // valid when b is a buffer or buffer_view
+        buffer_iterator() = default;
         explicit buffer_iterator(pointer p);
 
     private:
@@ -59,7 +62,7 @@ namespace sparrow
         bool equal(const self_type& rhs) const;
         bool less_than(const self_type& rhs) const;
 
-        pointer m_pointer;
+        pointer m_pointer = nullptr;
 
         friend class iterator_access;
     };

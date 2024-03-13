@@ -16,11 +16,16 @@
 
 #include <cassert>
 #include <climits>
+#include <concepts>
+#include <ranges>
 
 #include "sparrow/buffer.hpp"
 
 namespace sparrow
 {
+    template <class T>
+    concept random_access_range = std::ranges::random_access_range<T>;
+
     /**
      * @class dynamic_bitset_base
      *
@@ -32,7 +37,7 @@ namespace sparrow
      *
      * @tparam B the underlying storage
      */
-    template <class B>
+    template <random_access_range B>
     class dynamic_bitset_base
     {
     public:
@@ -94,7 +99,7 @@ namespace sparrow
      *
      * @tparam T the integer type used to store the bits.
      */
-    template <class T>
+    template <std::integral T>
     class dynamic_bitset : public dynamic_bitset_base<buffer<T>>
     {
     public:
@@ -128,7 +133,7 @@ namespace sparrow
      *
      * @tparam T the integer type used to store the bits.
      */
-    template <class T>
+    template <std::integral T>
     class dynamic_bitset_view : public dynamic_bitset_base<buffer_view<T>>
     {
     public:
@@ -153,26 +158,26 @@ namespace sparrow
      * dynamic_bitset_base implementation *
      **************************************/
 
-    template <class B>
+    template <random_access_range B>
     auto dynamic_bitset_base<B>::size() const noexcept -> size_type
     {
         return m_size;
     }
 
-    template <class B>
+    template <random_access_range B>
     auto dynamic_bitset_base<B>::null_count() const noexcept -> size_type
     {
         return m_null_count;
     }
 
-    template <class B>
+    template <random_access_range B>
     bool dynamic_bitset_base<B>::test(size_type pos) const
     {
         assert(pos < size());
         return !m_null_count || m_buffer.data()[block_index(pos)] & bit_mask(pos);
     }
 
-    template <class B>
+    template <random_access_range B>
     void dynamic_bitset_base<B>::set(size_type pos, value_type value)
     {
         assert(pos < size());
@@ -196,25 +201,25 @@ namespace sparrow
         }
     }
 
-    template <class B>
+    template <random_access_range B>
     auto dynamic_bitset_base<B>::data() noexcept -> block_type*
     {
         return m_buffer.data();
     }
 
-    template <class B>
+    template <random_access_range B>
     auto dynamic_bitset_base<B>::data() const noexcept -> const block_type*
     {
         return m_buffer.data();
     }
 
-    template <class B>
+    template <random_access_range B>
     auto dynamic_bitset_base<B>::block_count() const noexcept -> size_type
     {
         return m_buffer.size();
     }
 
-    template <class B>
+    template <random_access_range B>
     void dynamic_bitset_base<B>::swap(self_type& rhs) noexcept
     {
         using std::swap;
@@ -223,7 +228,7 @@ namespace sparrow
         swap(m_null_count, rhs.m_null_count);
     }
 
-    template <class B>
+    template <random_access_range B>
     dynamic_bitset_base<B>::dynamic_bitset_base(storage_type&& buf, size_type size)
         : m_buffer(std::move(buf))
         , m_size(size)
@@ -232,7 +237,7 @@ namespace sparrow
         zero_unused_bits();
     }
 
-    template <class B>
+    template <random_access_range B>
     dynamic_bitset_base<B>::dynamic_bitset_base(storage_type&& buf, size_type size, size_type null_count)
         : m_buffer(std::move(buf))
         , m_size(size)
@@ -242,14 +247,14 @@ namespace sparrow
         assert(m_null_count == m_size - count_non_null());
     }
 
-    template <class B>
+    template <random_access_range B>
     auto dynamic_bitset_base<B>::compute_block_count(size_type bits_count) const noexcept -> size_type
     {
         return bits_count / s_bits_per_block
             + static_cast<size_type>(bits_count % s_bits_per_block != 0);
     }
 
-    template <class B>
+    template <random_access_range B>
     auto dynamic_bitset_base<B>::count_non_null() const noexcept -> size_type
     {
         if (m_buffer.empty())
@@ -279,31 +284,31 @@ namespace sparrow
         return res;
     }
 
-    template <class B>
+    template <random_access_range B>
     auto dynamic_bitset_base<B>::block_index(size_type pos) const noexcept -> size_type
     {
         return pos / s_bits_per_block;
     }
 
-    template <class B>
+    template <random_access_range B>
     auto dynamic_bitset_base<B>::bit_index(size_type pos) const noexcept -> size_type
     {
         return pos % s_bits_per_block;
     }
 
-    template <class B>
+    template <random_access_range B>
     auto dynamic_bitset_base<B>::bit_mask(size_type pos) const noexcept -> block_type
     {
         return block_type(1) << bit_index(pos);
     }
 
-    template <class B>
+    template <random_access_range B>
     auto dynamic_bitset_base<B>::count_extra_bits() const noexcept -> size_type
     {
         return bit_index(size());
     }
 
-    template <class B>
+    template <random_access_range B>
     void dynamic_bitset_base<B>::zero_unused_bits()
     {
         const size_type extra_bits = count_extra_bits();
@@ -313,7 +318,7 @@ namespace sparrow
         }
     }
 
-    template <class B>
+    template <random_access_range B>
     void dynamic_bitset_base<B>::resize(size_type n, value_type b)
     {
         const size_type old_block_count = m_buffer.size();
@@ -343,19 +348,19 @@ namespace sparrow
      * dynamic_bitset implementation *
      *********************************/
 
-    template <class T>
+    template <std::integral T>
     dynamic_bitset<T>::dynamic_bitset()
         : base_type(storage_type(), 0u)
     {
     }
 
-    template <class T>
+    template <std::integral T>
     dynamic_bitset<T>::dynamic_bitset(size_type n)
         : dynamic_bitset(n, false)
     {
     }
 
-    template <class T>
+    template <std::integral T>
     dynamic_bitset<T>::dynamic_bitset(size_type n, value_type value)
         : base_type(
             storage_type(this->compute_block_count(n), value ? ~block_type(0) : 0),
@@ -364,13 +369,13 @@ namespace sparrow
     {
     }
 
-    template <class T>
+    template <std::integral T>
     dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n)
         : base_type(storage_type(p, this->compute_block_count(n)), n)
     {
     }
 
-    template <class T>
+    template <std::integral T>
     dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type null_count)
         : base_type(storage_type(p, this->compute_block_count(n)), n, null_count)
     {
