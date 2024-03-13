@@ -29,7 +29,7 @@ namespace sparrow
         : public iterator_base
           <
               buffer_iterator<T, is_const>,
-              impl::constify_t<T, is_const>,
+              mpl::constify_t<T, is_const>,
               std::contiguous_iterator_tag
           >
     {
@@ -39,7 +39,7 @@ namespace sparrow
         using base_type = iterator_base
         <
             self_type,
-            impl::constify_t<T, is_const>,
+            mpl::constify_t<T, is_const>,
             std::contiguous_iterator_tag
         >;
         using pointer = typename base_type::pointer;

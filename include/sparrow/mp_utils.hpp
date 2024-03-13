@@ -18,7 +18,7 @@
 
 namespace sparrow
 {
-    namespace impl
+    namespace mpl
     {
         template <class T, bool is_const>
         struct constify
