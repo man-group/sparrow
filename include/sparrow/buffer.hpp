@@ -19,29 +19,17 @@
 #include <concepts>
 #include <cstdint>
 
+#include "sparrow/mp_utils.hpp"
 #include "sparrow/iterator.hpp"
 
 namespace sparrow
 {
-    namespace impl
-    {
-        // TODO: Should probably move to a MP util file
-        template <class T, bool is_const>
-        struct constify
-            : std::conditional<is_const, const T, T>
-        {
-        };
-
-        template <class T, bool is_const>
-        using constify_t = typename constify<T, is_const>::type;
-    }
-
     template <class T, bool is_const>
     class buffer_iterator
         : public iterator_base
           <
               buffer_iterator<T, is_const>,
-              impl::constify_t<T, is_const>,
+              mpl::constify_t<T, is_const>,
               std::contiguous_iterator_tag
           >
     {
@@ -51,7 +39,7 @@ namespace sparrow
         using base_type = iterator_base
         <
             self_type,
-            impl::constify_t<T, is_const>,
+            mpl::constify_t<T, is_const>,
             std::contiguous_iterator_tag
         >;
         using pointer = typename base_type::pointer;
@@ -115,7 +103,7 @@ namespace sparrow
 
         reference back();
         const_reference back() const;
-            
+
         template <class U = T>
         U* data() noexcept;
 
@@ -140,7 +128,7 @@ namespace sparrow
 
         void swap(buffer_base& rhs) noexcept;
         bool equal(const buffer_base& rhs) const;
-    
+
     protected:
 
         buffer_base() = default;
@@ -163,7 +151,7 @@ namespace sparrow
 
     template <class T>
     bool operator==(const buffer_base<T>& lhs, const buffer_base<T>& rhs);
-    
+
     /**
      * @class buffer
      * @brief Object that owns a piece of contiguous memory
@@ -182,9 +170,9 @@ namespace sparrow
         explicit buffer(size_type size);
         buffer(size_type size, value_type);
         buffer(pointer data, size_type size);
-        
+
         ~buffer();
-        
+
         buffer(const buffer&);
         buffer& operator=(const buffer&);
 
@@ -476,13 +464,13 @@ namespace sparrow
         : base_type{data, size}
     {
     }
-        
+
     template <class T>
     buffer<T>::~buffer()
     {
         deallocate(base_type::data());
     }
-        
+
     template <class T>
     buffer<T>::buffer(const buffer<T>& rhs)
         : base_type{allocate(rhs.size()), rhs.size()}
@@ -544,7 +532,7 @@ namespace sparrow
     {
         resize(size_type(0));
     }
-    
+
     template <class T>
     auto buffer<T>::allocate(size_type size) const -> pointer
     {
