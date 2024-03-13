@@ -56,7 +56,8 @@ namespace sparrow
         >;
         using pointer = typename base_type::pointer;
 
-        // Required to be used seen as a range iterator
+        // Required so that std::ranges::end(b) is
+        // valid when b is a buffer or buffer_view
         buffer_iterator() = default;
         explicit buffer_iterator(pointer p);
 
