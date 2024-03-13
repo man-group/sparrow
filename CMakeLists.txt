@@ -20,7 +20,7 @@ cmake_minimum_required(VERSION 3.28)
 # This will affects all following targets being defined.
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-project(sparrow CXX)
+project(sparrow VERSION 0.0.2 LANGUAGES CXX)
 
 set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
