@@ -21,7 +21,7 @@
 namespace sparrow
 {
     // TODO: Test all the other base types once #15 is addressed.
-    static_assert(std::ranges::range<primitive_layout<uint8_t>>);
+    static_assert(std::ranges::contiguous_range<primitive_layout<uint8_t>>);
     static_assert(std::contiguous_iterator<primitive_layout_iterator<uint8_t, true>>);
     static_assert(std::contiguous_iterator<primitive_layout_iterator<uint8_t, false>>);
 
@@ -48,7 +48,7 @@ namespace sparrow
 
     }
 
-    TEST_SUITE("layout")
+    TEST_SUITE("primitive_layout")
     {
         TEST_CASE("constructors")
         {
@@ -57,7 +57,7 @@ namespace sparrow
             REQUIRE(lt.size() == ad.length);
         }
 
-        TEST_CASE("layout_iterator")
+        TEST_CASE("iterator_ordering")
         {
             layout_test_type lt(make_test_array_data());
             layout_test_type::iterator it = lt.begin();
@@ -66,7 +66,7 @@ namespace sparrow
             REQUIRE(cit < lt.cend());
         }
 
-        TEST_CASE("iterator")
+        TEST_CASE("iterator_equality")
         {
             layout_test_type lt(make_test_array_data());
             auto iter = lt.begin();

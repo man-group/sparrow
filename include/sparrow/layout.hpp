@@ -25,9 +25,9 @@
 namespace sparrow
 {
     /**
-     * An iterator for primitive_layout.
+     * An iterator for `primitive_layout` operating on contiguous data only.
      *
-     * @tparam T The type of the elements in the layout.
+     * @tparam T The type of the elements in the layout's data buffer.
      * @tparam is_const A boolean indicating whether the iterator is const.
      *
      * @note This class is not thread-safe, exception-safe, copyable, movable, equality comparable.
@@ -52,8 +52,6 @@ namespace sparrow
         >;
         using pointer = typename base_type::pointer;
 
-        // Required so that std::ranges::end(p) is
-        // valid when p is a primitive_layout.
         primitive_layout_iterator() = default;
         explicit primitive_layout_iterator(pointer p);
 
@@ -72,7 +70,6 @@ namespace sparrow
         bool equal(const self_type& rhs) const;
         bool less_than(const self_type& rhs) const;
 
-        // We only use the first buffer and the bitmap.
         pointer m_pointer = nullptr;
 
         friend class iterator_access;
@@ -85,7 +82,8 @@ namespace sparrow
      * It iterates over the first buffer in the array_data, and uses the bitmap to skip over null.
      * The bitmap is assumed to be present in the array_data.
      *
-     * @tparam T The type of the elements in the layout.
+     * @tparam T The type of the elements in the layout's data buffer.
+     *           A primitive type or a fixed size type.
      *
      * @note This class is not thread-safe, exception-safe, copyable, movable, equality comparable.
      */
@@ -220,13 +218,13 @@ namespace sparrow
     template <class T>
     auto primitive_layout<T>::begin() -> iterator
     {
-        return iterator(data());
+        return iterator{data()};
     }
 
     template <class T>
     auto primitive_layout<T>::end() -> iterator
     {
-        return iterator(data()) + self_type::size();
+        return iterator{data() + self_type::size()};
     }
 
     template <class T>
@@ -244,13 +242,13 @@ namespace sparrow
     template <class T>
     auto primitive_layout<T>::cbegin() const -> const_iterator
     {
-        return const_iterator(data());
+        return const_iterator{data()};
     }
 
     template <class T>
     auto primitive_layout<T>::cend() const -> const_iterator
     {
-        return const_iterator(data()) + self_type::size();
+        return const_iterator{data() + self_type::size()};
     }
 
     template <class T>
