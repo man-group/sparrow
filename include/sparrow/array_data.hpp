@@ -52,7 +52,7 @@ namespace sparrow
 
     /**
      * Reference type used in layout classes.
-     * This classes provides a similar behavior
+     * This class provides a similar behavior
      * as std::optional, but as reference on data
      * in an array_data.
      */
