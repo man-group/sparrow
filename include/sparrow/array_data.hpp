@@ -88,7 +88,7 @@ namespace sparrow
         self_type& operator=(U&& value);
 
         void swap(self_type& rhs);
-
+        
     private:
 
         void reset();
@@ -181,7 +181,7 @@ namespace sparrow
 
     template <class L>
     template <std::convertible_to<typename L::inner_value_type> U>
-    auto reference_proxy<L>::operator=(const std::optional<U>& rhs) -> self_type&
+    auto reference_proxy<L>::operator=(const std::optional<U>& rhs) -> self_type& 
     {
         update(rhs);
         return *this;
@@ -189,7 +189,7 @@ namespace sparrow
 
     template <class L>
     template <std::convertible_to<typename L::inner_value_type> U>
-    auto reference_proxy<L>::operator=(std::optional<U>&& rhs) -> self_type&
+    auto reference_proxy<L>::operator=(std::optional<U>&& rhs) -> self_type& 
     {
         update(std::move(rhs));
         return *this;
