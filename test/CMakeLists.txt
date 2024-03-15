@@ -36,6 +36,7 @@ endif()
 
 set(SPARROW_TESTS
     main.cpp
+    test_array_data.cpp
     test_buffer.cpp
     test_dynamic_bitset.cpp
     test_iterator.cpp
