@@ -256,12 +256,14 @@ namespace sparrow
     template <class T>
     auto primitive_layout<T>::data() -> pointer
     {
+        assert(m_data.buffers.size() > 0);
         return m_data.buffers[0].data();
     }
 
     template <class T>
     auto primitive_layout<T>::data() const -> const_pointer
     {
+        assert(m_data.buffers.size() > 0);
         return m_data.buffers[0].data();
     }
 
