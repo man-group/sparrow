@@ -24,6 +24,14 @@
 
 namespace sparrow
 {
+    /**
+     * An iterator for primitive_layout.
+     *
+     * @tparam T The type of the elements in the layout.
+     * @tparam is_const A boolean indicating whether the iterator is const.
+     *
+     * @note This class is not thread-safe, exception-safe, copyable, movable, equality comparable.
+     */
     template <class T, bool is_const>
     class primitive_layout_iterator
         : public iterator_base
@@ -66,11 +74,21 @@ namespace sparrow
 
         // We only use the first buffer and the bitmap.
         pointer m_pointer = nullptr;
-        size_type m_index = 0;
 
         friend class iterator_access;
     };
 
+    /**
+     * A contiguous layout for primitive types.
+     *
+     * This class provides a contiguous layout for primitive types, such as `uint8_t`, `int32_t`, etc.
+     * It iterates over the first buffer in the array_data, and uses the bitmap to skip over null.
+     * The bitmap is assumed to be present in the array_data.
+     *
+     * @tparam T The type of the elements in the layout.
+     *
+     * @note This class is not thread-safe, exception-safe, copyable, movable, equality comparable.
+     */
     template <class T>
     class primitive_layout
     {
@@ -118,38 +136,38 @@ namespace sparrow
 
     template <class T, bool is_const>
     primitive_layout_iterator<T, is_const>::primitive_layout_iterator(pointer pointer)
-        : m_pointer(pointer), m_index(0)
+        : m_pointer(pointer)
     {
     }
 
     template <class T, bool is_const>
     auto primitive_layout_iterator<T, is_const>::dereference() const -> reference
     {
-        return m_pointer[m_index];
+        return *m_pointer;
     }
 
     template <class T, bool is_const>
     void primitive_layout_iterator<T, is_const>::increment()
     {
-        ++m_index;
+        ++m_pointer;
     }
 
     template <class T, bool is_const>
     void primitive_layout_iterator<T, is_const>::decrement()
     {
-        --m_index;
+        --m_pointer;
     }
 
     template <class T, bool is_const>
     void primitive_layout_iterator<T, is_const>::advance(difference_type n)
     {
-        m_index += n;
+        m_pointer += n;
     }
 
     template <class T, bool is_const>
     auto primitive_layout_iterator<T, is_const>::distance_to(const self_type& rhs) const -> difference_type
     {
-        return rhs.m_index - m_index;
+        return rhs.m_pointer - m_pointer;
     }
 
     template <class T, bool is_const>
@@ -172,15 +190,16 @@ namespace sparrow
     primitive_layout<T>::primitive_layout(array_data ad)
         : m_data(ad)
     {
-        if (m_data.buffers.size() == 0)
-        {
-            throw std::runtime_error("No buffers are present in array_data");
-        }
+        // We only require the presence of the bitmap and the first buffer.
+        assert(m_data.buffers.size() > 0);
+        assert(m_data.length == m_data.buffers[0].size());
+        assert(m_data.length == m_data.bitmap.size());
     }
 
     template <class T>
     auto primitive_layout<T>::size() const -> size_type
     {
+        assert(m_data.buffers.size() > 0);
         return m_data.buffers[0].size();
     }
 

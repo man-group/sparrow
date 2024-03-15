@@ -20,6 +20,7 @@
 
 namespace sparrow
 {
+    // TODO: Test all the other base types once #15 is addressed.
     static_assert(std::ranges::range<primitive_layout<uint8_t>>);
 
     using layout_test_type = primitive_layout<uint8_t>;
