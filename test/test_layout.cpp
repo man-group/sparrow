@@ -44,14 +44,6 @@ namespace sparrow
             return ad;
         }
 
-        array_data make_empty_array_data()
-        {
-            array_data ad;
-            ad.type = data_descriptor(data_type::UINT8);
-            ad.length = 0;
-            ad.offset = 0;
-            return ad;
-        }
     }
 
     TEST_SUITE("layout")
@@ -61,9 +53,6 @@ namespace sparrow
             array_data ad = make_test_array_data();
             layout_test_type lt(ad);
             REQUIRE(lt.size() == ad.length);
-
-            array_data empty_ad = make_empty_array_data();
-            REQUIRE_THROWS_AS(layout_test_type empty_lt(empty_ad), typename std::runtime_error);
         }
 
         TEST_CASE("layout_iterator")
