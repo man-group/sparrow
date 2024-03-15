@@ -78,13 +78,13 @@ namespace sparrow
         self_type& operator=(self_type&& rhs);
         self_type& operator=(std::nullopt_t);
 
-        template <std::convertible_to<value_type> U>
+        template <std::convertible_to<typename L::inner_value_type> U>
         self_type& operator=(const std::optional<U>& rhs);
 
-        template <std::convertible_to<value_type> U>
+        template <std::convertible_to<typename L::inner_value_type> U>
         self_type& operator=(std::optional<U>&& rhs);
 
-        template <std::convertible_to<value_type> U>
+        template <std::convertible_to<typename L::inner_value_type> U>
         self_type& operator=(U&& value);
 
         void reset();
