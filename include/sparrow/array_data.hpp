@@ -51,22 +51,109 @@ namespace sparrow
     };
 
     /**
-     * Reference type used in layout classes.
-     * This class provides a similar behavior
-     * as std::optional, but as reference on data
-     * in an array_data.
+     * CRTP base class for reference types used in
+     * layout classes. The reference proxy classes
+     * inheriting from this class provide a similar
+     * behavior as std::optional, but as reference on
+     * data in an array_data.
+     */
+    template <class D>
+    class reference_proxy_base
+    {
+    public:
+
+        using self_type = reference_proxy_base<D>;
+        using derived_type = D;
+
+        derived_type& derived_cast();
+        const derived_type& derived_cast() const;
+
+    protected:
+
+        reference_proxy_base() = default;
+        ~reference_proxy_base() = default;
+
+        reference_proxy_base(const reference_proxy_base&) = default;
+        reference_proxy_base& operator=(const reference_proxy_base&) = default;
+
+        reference_proxy_base(reference_proxy_base&&) = default;
+        reference_proxy_base& operator=(reference_proxy_base&&) = default;
+    };
+
+    template <class T>
+    concept ref_proxy = std::derived_from<T, reference_proxy_base<T>>;
+
+    template <class T>
+    concept not_ref_proxy = (!ref_proxy<T>);
+
+    template <class D1, class D2>
+    bool operator==(const reference_proxy_base<D1>& lhs, const reference_proxy_base<D2>& rhs);
+
+    template <class D, not_ref_proxy T>
+    bool operator==(const reference_proxy_base<D>& lhs, const T& rhs);
+
+    template <class D>
+    bool operator==(const reference_proxy_base<D>& lhs, std::nullopt_t);
+
+    template <class D1, class D2>
+    std::strong_ordering operator<=>(const reference_proxy_base<D1>& lhs, const reference_proxy_base<D2>& rhs);
+
+    template <class D, not_ref_proxy T>
+    std::strong_ordering operator<=>(const reference_proxy_base<D>& lhs, const T& rhs);
+
+    template <class D>
+    std::strong_ordering operator<=>(const reference_proxy_base<D>& lhs, std::nullopt_t);
+
+    /**
+     * Default const reference proxy class
      */
     template <class L>
-    class reference_proxy
+    class const_reference_proxy : public reference_proxy_base<const_reference_proxy<L>>
+    {
+    public:
+
+        using self_type = const_reference_proxy<L>;
+        using base_type = reference_proxy_base<self_type>;
+        using layout_type = L;
+        using value_type = typename L::inner_value_type;
+        using size_type = typename L::size_type;
+
+        const_reference_proxy(const layout_type& l, size_type index);
+        ~const_reference_proxy() = default;
+
+        const_reference_proxy(const self_type&) = default;
+        const_reference_proxy(self_type&&) = default;
+
+        bool has_value() const;
+        explicit operator bool() const;
+
+        const value_type& value() const;
+
+    private:
+
+        const layout_type* p_layout;
+        size_type m_index;
+    };
+
+    /**
+     * Default reference proxy class.
+     */
+    template <class L>
+    class reference_proxy : public reference_proxy_base<reference_proxy<L>>
     {
     public:
 
         using self_type = reference_proxy<L>;
+        using base_type = reference_proxy_base<self_type>;
         using layout_type = L;
         using value_type = typename L::inner_value_type;
         using size_type = typename L::size_type;
 
         reference_proxy(layout_type& l, size_type index);
+        ~reference_proxy() = default;
+
+        reference_proxy(const self_type&) = default;
+        reference_proxy(self_type&&) = default;
 
         bool has_value() const;
         explicit operator bool() const;
@@ -106,20 +193,92 @@ namespace sparrow
     template <class L>
     void swap(reference_proxy<L>& lhs, reference_proxy<L>& rhs);
 
-    template <class L1, class L2>
-    bool operator==(const reference_proxy<L1>& lhs, const reference_proxy<L2>& rhs);
+    /***************************************
+     * reference_proxy_base implementation *
+     ***************************************/
 
-    template <class L, class T>
-    bool operator==(const reference_proxy<L>& lhs, const T& rhs);
+    template <class D>
+    auto reference_proxy_base<D>::derived_cast() -> derived_type&
+    {
+        return *static_cast<derived_type*>(this);
+    }
+
+    template <class D>
+    auto reference_proxy_base<D>::derived_cast() const -> const derived_type&
+    {
+        return *static_cast<const derived_type*>(this);
+    }
+
+    template <class D1, class D2>
+    bool operator==(const reference_proxy_base<D1>& lhs, const reference_proxy_base<D2>& rhs)
+    {
+        const D1& dlhs = lhs.derived_cast();
+        const D2& drhs = rhs.derived_cast();
+        return (dlhs && drhs && (dlhs.value() == drhs.value())) || (!dlhs && !drhs);
+
+    }
+
+    template <class D, not_ref_proxy T>
+    bool operator==(const reference_proxy_base<D>& lhs, const T& rhs)
+    {
+        return lhs.derived_cast() && (lhs.derived_cast().value() == rhs);
+    }
+
+    template <class D>
+    bool operator==(const reference_proxy_base<D>& lhs, std::nullopt_t)
+    {
+        return !lhs.derived_cast();
+    }
+
+    template <class D1, class D2>
+    std::strong_ordering operator<=>(const reference_proxy_base<D1>& lhs, const reference_proxy_base<D2>& rhs)
+    {
+        const D1& dlhs = lhs.derived_cast();
+        const D2& drhs = rhs.derived_cast();
+        return (dlhs && drhs) ? (dlhs.value() <=> drhs.value()) : (dlhs.has_value() <=> drhs.has_value());
+    }
+
+    template <class D, not_ref_proxy T>
+    std::strong_ordering operator<=>(const reference_proxy_base<D>& lhs, const T& rhs)
+    {
+        return lhs.derived_cast() ? (lhs.derived_cast().value() <=> rhs) : std::strong_ordering::less;
+    }
+
+    template <class D>
+    std::strong_ordering operator<=>(const reference_proxy_base<D>& lhs, std::nullopt_t)
+    {
+        return lhs.derived_cast().has_value() <=> false;
+    }
+
+    /****************************************
+     * const_reference_proxy implementation *
+     ****************************************/
 
     template <class L>
-    bool operator==(const reference_proxy<L>& lhs, std::nullopt_t);
+    const_reference_proxy<L>::const_reference_proxy(const layout_type& l, size_type index)
+        : p_layout(&l)
+        , m_index(index)
+    {
+    }
 
-    template <class L1, class L2>
-    std::strong_ordering operator<=>(const reference_proxy<L1>& lhs, const reference_proxy<L2>& rhs);
+    template <class L>
+    bool const_reference_proxy<L>::has_value() const
+    {
+        return p_layout->has_value(m_index);
+    }
 
-    template <class L, class T>
-    std::strong_ordering operator<=>(const reference_proxy<L>& lhs, const T& rhs);
+    template <class L>
+    const_reference_proxy<L>::operator bool() const
+    {
+        return has_value();
+    }
+
+    template <class L>
+    auto const_reference_proxy<L>::value() const -> const value_type&
+    {
+        assert(has_value());
+        return p_layout->value(m_index);
+    }
 
     /**********************************
      * reference_proxy implementation *
@@ -260,42 +419,5 @@ namespace sparrow
     void swap(reference_proxy<L>& lhs, reference_proxy<L>& rhs)
     {
         lhs.swap(rhs);
-    }
-
-    template <class L1, class L2>
-    bool operator==(const reference_proxy<L1>& lhs, const reference_proxy<L2>& rhs)
-    {
-        return (lhs && rhs && (lhs.value() == rhs.value())) || (!lhs && !rhs);
-
-    }
-
-    template <class L, class T>
-    bool operator==(const reference_proxy<L>& lhs, const T& rhs)
-    {
-        return lhs && (lhs.value() == rhs);
-    }
-
-    template <class L>
-    bool operator==(const reference_proxy<L>& lhs, std::nullopt_t)
-    {
-        return !lhs;
-    }
-
-    template <class L>
-    std::strong_ordering operator<=>(const reference_proxy<L>& lhs, const reference_proxy<L>& rhs)
-    {
-        return (lhs && rhs) ? (lhs.value() <=> rhs.value()) : (lhs.has_value() <=> rhs.has_value());
-    }
-
-    template <class L, class T>
-    std::strong_ordering operator<=>(const reference_proxy<L>& lhs, const T& rhs)
-    {
-        return lhs ? (lhs.value() <=> rhs) : std::strong_ordering::less;
-    }
-
-    template <class L>
-    std::strong_ordering operator<=>(const reference_proxy<L>& lhs, std::nullopt_t)
-    {
-        return lhs.has_value() <=> false;
     }
 }
