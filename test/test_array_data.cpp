@@ -27,7 +27,7 @@ namespace sparrow
         using inner_value_type = value_type::value_type;
         using reference = reference_proxy<mock_layout>;
         using size_type = std::size_t;
-        using storage_type = std::vector<std::optional<int>>;
+        using storage_type = std::vector<value_type>;
 
         mock_layout() = default;
         mock_layout(std::initializer_list<value_type> l)
@@ -52,12 +52,12 @@ namespace sparrow
             return m_storage[index].has_value();
         }
 
-        typename value_type::value_type& value(size_type index)
+        inner_value_type& value(size_type index)
         {
             return m_storage[index].value();
         }
 
-        const value_type::value_type& value(size_type index) const
+        const inner_value_type& value(size_type index) const
         {
             return m_storage[index].value();
         }
@@ -151,13 +151,6 @@ namespace sparrow
             CHECK_EQ(stored_value(0), expected_value3);
         }
 
-        TEST_CASE_FIXTURE(ref_proxy_fixture, "reset")
-        {
-            auto ref0 = m_layout[0];
-            ref0.reset();
-            CHECK(!ref0.has_value());
-        };
-
         TEST_CASE_FIXTURE(ref_proxy_fixture, "swap")
         {
             int expected_value0 = stored_value(0);
@@ -168,6 +161,13 @@ namespace sparrow
             auto ref3 = m_layout[3];
 
             ref0.swap(ref2);
+            CHECK(!ref0);
+            CHECK(ref2);
+            CHECK_EQ(ref2.value(), expected_value0);
+
+            swap(ref2, ref3);
+            CHECK_EQ(ref2.value(), expected_value3);
+            CHECK_EQ(ref3.value(), expected_value0);
         }
 
         TEST_CASE_FIXTURE(ref_proxy_fixture, "comparison")

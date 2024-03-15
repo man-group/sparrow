@@ -53,8 +53,8 @@ namespace sparrow
     /**
      * Reference type used in layout classes.
      * This classes provides a similar behavior
-     * as std::optional, but on references in
-     * an array_data.
+     * as std::optional, but as reference on data
+     * in an array_data.
      */
     template <class L>
     class reference_proxy
@@ -87,10 +87,11 @@ namespace sparrow
         template <std::convertible_to<typename L::inner_value_type> U>
         self_type& operator=(U&& value);
 
-        void reset();
         void swap(self_type& rhs);
         
     private:
+
+        void reset();
 
         template <class U>
         void update(U&& u);
