@@ -22,6 +22,8 @@ namespace sparrow
 {
     // TODO: Test all the other base types once #15 is addressed.
     static_assert(std::ranges::range<primitive_layout<uint8_t>>);
+    static_assert(std::contiguous_iterator<primitive_layout_iterator<uint8_t, true>>);
+    static_assert(std::contiguous_iterator<primitive_layout_iterator<uint8_t, false>>);
 
     using layout_test_type = primitive_layout<uint8_t>;
 
