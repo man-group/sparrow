@@ -211,8 +211,8 @@ namespace sparrow
     template <class L>
     void reference_proxy<L>::swap(self_type& rhs)
     {
-        bool this_has_value = has_value();
-        bool rhs_has_value = rhs.has_value();
+        const bool this_has_value = has_value();
+        const bool rhs_has_value = rhs.has_value();
         using std::swap;
         if (this_has_value)
         {
