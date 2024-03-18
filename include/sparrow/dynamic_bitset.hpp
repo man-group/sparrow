@@ -244,7 +244,7 @@ namespace sparrow
     <
         bitset_iterator<B, is_const>,
         mpl::constify_t<typename B::value_type, is_const>,
-        std::contiguous_iterator_tag,
+        std::random_access_iterator_tag,
         std::conditional_t<is_const, bool, bitset_reference<B>>
     >
     {

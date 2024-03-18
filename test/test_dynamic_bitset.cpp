@@ -179,6 +179,10 @@ namespace sparrow
 
         TEST_CASE_FIXTURE(bitmap_fixture, "iterator")
         {
+            // Does not work because the reference is not bool&
+            //static_assert(std::random_access_iterator<typename bitmap::iterator>);
+            static_assert(std::random_access_iterator<typename bitmap::const_iterator>);
+
             bitmap b(p_buffer, m_size);
             auto iter = b.begin();
             auto citer = b.cbegin();
