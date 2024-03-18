@@ -13,7 +13,7 @@ defaults:
 jobs:
   build:
     runs-on: macos-${{ matrix.os }}
-    name: macos-${{ matrix.os }}-${{ matrix.config.name }}
+    name: ${{ matrix.os }}-${{ matrix.config.name }}
     strategy:
       fail-fast: false
       matrix:
@@ -41,12 +41,12 @@ jobs:
 
     - name: Install
       working-directory: build
-      run: cmake --install .
+      run: cmake --install . --config ${{matrix.config.name}}
 
     - name: Build
       working-directory: build
-      run: cmake --build . --target test_sparrow_lib --parallel 8
+      run: cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib --parallel 8
 
     - name: Run tests
       working-directory: build
-      run: ./test/test_sparrow_lib
+      run: ctest -C ${{matrix.config.name}} --output-on-failure

@@ -70,6 +70,7 @@ set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(sparrow INTERFACE cxx_std_20)
 
 if (BUILD_TESTS)
+    enable_testing()
     add_subdirectory(test)
 endif ()
 
