@@ -190,7 +190,7 @@ namespace sparrow
                 auto ref1 = m_layout[1];
                 auto ref2 = m_layout[2];
 
-                CHECK(bool(ref0 != ref1));
+                CHECK(ref0 != ref1);
                 CHECK(ref0 != stored_value(1));
                 CHECK(stored_value(0) != ref1);
                 ref0 = ref1;
@@ -207,7 +207,7 @@ namespace sparrow
                 auto ref2 = m_layout[2];
                 auto ref3 = m_layout[3];
 
-                CHECK(bool(ref2 < ref0));
+                CHECK(ref2 < ref0);
                 CHECK(ref2 <= ref0);
                 CHECK(ref3 > ref2);
                 CHECK(ref3 >= ref2);
@@ -233,7 +233,6 @@ namespace sparrow
     {
         TEST_CASE_FIXTURE(ref_proxy_fixture, "has_value")
         {
-            const 
             auto ref0 = layout()[0];
             CHECK(ref0.has_value());
             CHECK(ref0);
