@@ -13,13 +13,13 @@ defaults:
 jobs:
   build:
     runs-on: ${{ matrix.runs-on }}
-    name: ${{ matrix.sys.compiler }}-${{ matrix.sys.config.name }}
+    name: ${{ matrix.sys.compiler }}-${{ matrix.config.name }}
     strategy:
       fail-fast: false
       matrix:
         runs-on: [windows-latest]
         sys:
-        - {compiler: default}
+        - {compiler: msvc}
         - {compiler: clang}
         config:
         - { name: Debug }
@@ -27,9 +27,9 @@ jobs:
 
     steps:
 
-    - name: Setup MSVC
-      if: matrix.sys.compiler == 'default'
-      uses: ilammy/msvc-dev-cmd@v1
+    # - name: Setup MSVC
+    #   if: matrix.sys.compiler == 'msvc'
+    #   uses: ilammy/msvc-dev-cmd@v1
 
     - name: Setup clang
       if: matrix.sys.compiler == 'clang'
