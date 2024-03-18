@@ -73,8 +73,8 @@ namespace sparrow
             auto citer = lt.cbegin();
             for (std::size_t i = 0; i < lt.size(); ++i)
             {
-                CHECK_EQ(*iter++, lt.element(i));
-                CHECK_EQ(*citer++, lt.element(i));
+                CHECK_EQ(*iter++, lt.value(i));
+                CHECK_EQ(*citer++, lt.value(i));
             }
             CHECK_EQ(iter, lt.end());
             CHECK_EQ(citer, lt.cend());

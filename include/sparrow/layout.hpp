@@ -94,11 +94,14 @@ namespace sparrow
     public:
 
         using self_type = primitive_layout<T>;
-        using value_type = T;
-        using reference = T&;
-        using const_reference = const T&;
-        using pointer = T*;
-        using const_pointer = const T*;
+        using inner_value_type = T;
+        using value_type = std::optional<inner_value_type>;
+        using inner_reference = inner_value_type&;
+        using inner_const_reference = const inner_reference;
+        using reference = reference_proxy<self_type>;
+        using const_reference = const_reference_proxy<self_type>;
+        using pointer = inner_value_type*;
+        using const_pointer = const inner_value_type*;
         using size_type = std::size_t;
         using difference_type = std::ptrdiff_t;
 
@@ -108,8 +111,10 @@ namespace sparrow
         using const_iterator = primitive_layout_iterator<T, true>;
 
         size_type size() const;
-        reference element(size_type i);
-        const_reference element(size_type i) const;
+        inner_reference value(size_type i);
+        inner_const_reference value(size_type i) const;
+
+        bool has_value(size_type i) const;
 
         iterator begin();
         iterator end();
@@ -203,17 +208,24 @@ namespace sparrow
     }
 
     template <class T>
-    auto primitive_layout<T>::element(size_type i) -> reference
+    auto primitive_layout<T>::value(size_type i) -> inner_reference
     {
         assert(i < size());
         return i[data()];
     }
 
     template <class T>
-    auto primitive_layout<T>::element(size_type i) const -> const_reference
+    auto primitive_layout<T>::value(size_type i) const -> inner_const_reference
     {
         assert(i < size());
         return i[data()];
+    }
+
+    template <class T>
+    auto primitive_layout<T>::has_value(size_type i) const -> bool
+    {
+        assert(i < size());
+        return m_data.bitmap.test(i);
     }
 
     template <class T>
