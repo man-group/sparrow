@@ -19,17 +19,23 @@ jobs:
       matrix:
         runs-on: [windows-latest]
         sys:
+        - {compiler: default}
         - {compiler: msvc}
         - {compiler: clang}
         config:
         - { name: Debug }
         - { name: Release }
+        build-system:
+        - "Visual Studio 17 2022"
+        - "Ninja"
 
     steps:
 
-    # - name: Setup MSVC
-    #   if: matrix.sys.compiler == 'msvc'
-    #   uses: ilammy/msvc-dev-cmd@v1
+    - name: Setup MSVC
+      if: matrix.sys.compiler == 'msvc' && matrix.build-system != 'Visual Studio 17 2022'
+      run: |
+        echo "CC=cl" >> $GITHUB_ENV
+        echo "CXX=cl" >> $GITHUB_ENV
 
     - name: Setup clang
       if: matrix.sys.compiler == 'clang'
