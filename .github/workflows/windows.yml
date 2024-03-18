@@ -67,4 +67,4 @@ jobs:
 
     - name: Run tests
       working-directory: build
-      run: ctest
+      run: ctest -C ${{matrix.config.name}}
