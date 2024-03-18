@@ -26,6 +26,7 @@ namespace sparrow
         using value_type = std::optional<int>;
         using inner_value_type = value_type::value_type;
         using reference = reference_proxy<mock_layout>;
+        using const_reference = const_reference_proxy<mock_layout>;
         using size_type = std::size_t;
         using storage_type = std::vector<value_type>;
 
@@ -38,6 +39,11 @@ namespace sparrow
         reference operator[](size_type pos)
         {
             return reference(*this, pos);
+        }
+
+        const_reference operator[](size_type pos) const
+        {
+            return const_reference(*this, pos);
         }
 
         const storage_type& storage() const
@@ -74,6 +80,7 @@ namespace sparrow
 
         storage_type m_storage;
         friend class reference_proxy<mock_layout>;
+        friend class const_reference_proxy<mock_layout>;
     };
 
     struct ref_proxy_fixture
@@ -91,6 +98,11 @@ namespace sparrow
         int stored_value(mock_layout::size_type index) const
         {
             return m_layout.storage()[index].value();
+        }
+
+        const mock_layout& layout() const
+        {
+            return m_layout;
         }
 
         mock_layout m_layout;
@@ -215,7 +227,27 @@ namespace sparrow
                 CHECK(ref3 >= ref0.value());
             }
         }
+    }
 
+    TEST_SUITE("const_reference_proxy")
+    {
+        TEST_CASE_FIXTURE(ref_proxy_fixture, "has_value")
+        {
+            auto ref0 = layout()[0];
+            CHECK(ref0.has_value());
+            CHECK(ref0);
+
+            auto ref2 = layout()[2];
+            CHECK(!ref2.has_value());
+            CHECK(!ref2);
+        }
+
+        TEST_CASE_FIXTURE(ref_proxy_fixture, "value")
+        {
+            auto ref0 = layout()[0];
+            CHECK_EQ(ref0.value(), stored_value(0));
+            static_assert(std::same_as<decltype(ref0.value()), const int&>);
+        }
     }
 }
 
