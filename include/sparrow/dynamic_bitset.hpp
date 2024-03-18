@@ -179,7 +179,7 @@ namespace sparrow
     };
 
     /**
-     *@class bitset_reference
+     * @class bitset_reference
      *
      * Reference proxy used by the bitset_iterator class
      * to make it possible to assign a bit of a bitset as a regular reference.
