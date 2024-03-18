@@ -253,6 +253,12 @@ namespace sparrow
 
             CHECK_EQ(*iter, *iter);
             CHECK_NE(*iter, *++b.begin());
+
+            CHECK_EQ(*iter, true);
+            CHECK_EQ(true, *iter);
+
+            CHECK_NE(*iter, false);
+            CHECK_NE(false, *iter);
         }
     }
 }

@@ -229,6 +229,9 @@ namespace sparrow
     template <class B1, class B2>
     bool operator==(const bitset_reference<B1>& lhs, const bitset_reference<B2>& rhs);
 
+    template <class B>
+    bool operator==(const bitset_reference<B>& lhs, bool rhs);
+
     /**
      * @class bitset_iterator
      *
@@ -666,6 +669,12 @@ namespace sparrow
     bool operator==(const bitset_reference<B1>& lhs, const bitset_reference<B2>& rhs)
     {
         return bool(lhs) == bool(rhs);
+    }
+
+    template <class B>
+    bool operator==(const bitset_reference<B>& lhs, bool rhs)
+    {
+        return bool(lhs) == rhs;
     }
 
     /**********************************
