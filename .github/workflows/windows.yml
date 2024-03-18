@@ -33,9 +33,7 @@ jobs:
 
     - name: Setup MSVC
       if: matrix.sys.compiler == 'msvc' && matrix.build-system != 'Visual Studio 17 2022'
-      run: |
-        echo "CC=cl" >> $GITHUB_ENV
-        echo "CXX=cl" >> $GITHUB_ENV
+      uses: ilammy/msvc-dev-cmd@v1
 
     - name: Setup clang
       if: matrix.sys.compiler == 'clang'
