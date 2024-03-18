@@ -14,11 +14,10 @@
 
 cmake_minimum_required(VERSION 3.8)
 
+enable_testing()
 
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     project(sparrow-test CXX)
-
-    enable_testing()
 
     find_package(sparrowREQUIRED CONFIG)
     set(SPARROW_INCLUDE_DIR ${sparrow_INCLUDE_DIRS})
@@ -34,7 +33,7 @@ else()
     message(STATUS "Tests build type is ${CMAKE_BUILD_TYPE}")
 endif()
 
-set(SPARROW_TESTS
+set(SPARROW_TESTS_SOURCES
     main.cpp
     test_array_data.cpp
     test_buffer.cpp
@@ -43,8 +42,9 @@ set(SPARROW_TESTS
     test_layout.cpp
 )
 set(test_target "test_sparrow_lib")
-add_executable(${test_target} ${SPARROW_TESTS})
+add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
 target_link_libraries(${test_target} PRIVATE sparrow doctest::doctest)
+add_test(NAME ${test_target} COMMAND ${test_target})
 
 # We do not use non-standard C++
 set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)

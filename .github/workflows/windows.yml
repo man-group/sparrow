@@ -67,4 +67,4 @@ jobs:
 
     - name: Run tests
       working-directory: build
-      run: ./test/test_sparrow_lib.exe
+      run: ctest
