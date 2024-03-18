@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <concepts>
 #include <cstdint>
+#include <cassert>
 
 #include "sparrow/array_data.hpp"
 #include "sparrow/iterator.hpp"
@@ -204,14 +205,14 @@ namespace sparrow
     template <class T>
     auto primitive_layout<T>::element(size_type i) -> reference
     {
-        assert(pos < size());
+        assert(i < size());
         return i[data()];
     }
 
     template <class T>
     auto primitive_layout<T>::element(size_type i) const -> const_reference
     {
-        assert(pos < size());
+        assert(i < size());
         return i[data()];
     }
 
