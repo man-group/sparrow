@@ -13,12 +13,15 @@ defaults:
 jobs:
   build:
     runs-on: macos-${{ matrix.os }}
-    name: macos-${{ matrix.os }}
+    name: macos-${{ matrix.os }}-${{ matrix.config.name }}
     strategy:
       fail-fast: false
       matrix:
         os:
         - 13
+        config:
+        - { name: Debug }
+        - { name: Release }
 
     steps:
 
@@ -34,7 +37,7 @@ jobs:
         cache-downloads: true
 
     - name: Configure using CMake
-      run: cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
+      run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
 
     - name: Install
       working-directory: build
