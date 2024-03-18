@@ -246,6 +246,9 @@ namespace sparrow
             ++iter;
             *iter ^= true;
             CHECK_EQ(b.null_count(), m_null_count - 2);
+
+            CHECK_EQ(*iter, *iter);
+            CHECK_NE(*iter, *++b.begin());
         }
     }
 }

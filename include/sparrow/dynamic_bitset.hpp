@@ -180,6 +180,11 @@ namespace sparrow
 
     /**
      *@class bitset_reference
+     *
+     * Reference proxy used by the bitset_iterator class
+     * to make it possible to assign a bit of a bitset as a regular reference.
+     *
+     * @tparam B the dynamic_bitset containing the bit this class refers to.
      */
     template <class B>
     class bitset_reference
@@ -221,8 +226,18 @@ namespace sparrow
         friend class bitset_iterator<B, false>;
     };
 
+    template <class B1, class B2>
+    bool operator==(const bitset_reference<B1>& lhs, const bitset_reference<B2>& rhs);
+
     /**
      * @class bitset_iterator
+     *
+     * Iterator used to iterate over the bits of a dynamic
+     * bitset as if they were addressable values.
+     *
+     * @tparam B the dynamic bitset this iterator operates on
+     * @tparam is_const a boolean indicating whether this is
+     * a const iterator.
      */
     template <class B, bool is_const>
     class bitset_iterator : public iterator_base
@@ -268,6 +283,8 @@ namespace sparrow
 
         bitset_type* p_bitset = nullptr;
         block_type* p_block = nullptr;
+        // m_index is block-local index.
+        // Invariant: m_index < bitset_type::s_bits_per_block
         size_type m_index;
 
         friend class iterator_access;
@@ -645,6 +662,12 @@ namespace sparrow
         m_bitset.update_null_count(old_value, m_block & m_mask);
     }
 
+    template <class B1, class B2>
+    bool operator==(const bitset_reference<B1>& lhs, const bitset_reference<B2>& rhs)
+    {
+        return bool(lhs) == bool(rhs);
+    }
+
     /**********************************
      * bitset_iterator implementation *
      **********************************/
@@ -655,6 +678,7 @@ namespace sparrow
         , p_block(block)
         , m_index(index)
     {
+        assert(m_index < bitset_type::s_bits_per_block);
     }
     
     template <class B, bool is_const>
@@ -680,6 +704,7 @@ namespace sparrow
             ++p_block;
             m_index = 0u;
         }
+        assert(m_index < bitset_type::s_bits_per_block);
     }
 
     template <class B, bool is_const>
@@ -695,6 +720,7 @@ namespace sparrow
         {
             --m_index;
         }
+        assert(m_index < bitset_type::s_bits_per_block);
     }
 
     template <class B, bool is_const>
@@ -740,6 +766,7 @@ namespace sparrow
                 }
             }
         }
+        assert(m_index < bitset_type::s_bits_per_block);
     }
 
     template <class B, bool is_const>
