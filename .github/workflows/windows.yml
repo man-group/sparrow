@@ -13,7 +13,7 @@ defaults:
 jobs:
   build:
     runs-on: ${{ matrix.runs-on }}
-    name: ${{ matrix.sys.compiler }}-${{ matrix.config.name }}
+    name: ${{ matrix.sys.compiler }}-${{ matrix.build-system }}-${{ matrix.config.name }}
     strategy:
       fail-fast: false
       matrix:
