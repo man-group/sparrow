@@ -114,6 +114,9 @@ namespace sparrow
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
 
+        reference operator[](size_type i);
+        const_reference operator[](size_type i) const;
+
         bool has_value(size_type i) const;
 
         iterator begin();
@@ -211,14 +214,28 @@ namespace sparrow
     auto primitive_layout<T>::value(size_type i) -> inner_reference
     {
         assert(i < size());
-        return i[data()];
+        return data()[i];
     }
 
     template <class T>
     auto primitive_layout<T>::value(size_type i) const -> inner_const_reference
     {
         assert(i < size());
-        return i[data()];
+        return data()[i];
+    }
+
+    template <class T>
+    auto primitive_layout<T>::operator[](size_type i) -> reference
+    {
+        assert(i < size());
+        return reference(*this, i);
+    }
+
+    template <class T>
+    auto primitive_layout<T>::operator[](size_type i) const -> const_reference
+    {
+        assert(i < size());
+        return const_reference(*this, i);
     }
 
     template <class T>
