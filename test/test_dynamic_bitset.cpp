@@ -176,6 +176,90 @@ namespace sparrow
             CHECK_EQ(b.size(), 29);
             CHECK_EQ(b.null_count(), m_null_count);
         }
+
+        TEST_CASE_FIXTURE(bitmap_fixture, "iterator")
+        {
+            // Does not work because the reference is not bool&
+            //static_assert(std::random_access_iterator<typename bitmap::iterator>);
+            static_assert(std::random_access_iterator<typename bitmap::const_iterator>);
+
+            bitmap b(p_buffer, m_size);
+            auto iter = b.begin();
+            auto citer = b.cbegin();
+
+            ++iter;
+            ++citer;
+            CHECK(*iter);
+            CHECK(*citer);
+
+            iter += 14;
+            citer += 14;
+
+            CHECK(!*iter);
+            CHECK(!*citer);
+
+            auto diff = iter - b.begin();
+            auto cdiff = citer - b.cbegin();
+
+            CHECK_EQ(diff, 15);
+            CHECK_EQ(cdiff, 15);
+
+            iter -= 12;
+            citer -= 12;
+            diff = iter - b.begin();
+            cdiff = citer - b.cbegin();
+            CHECK_EQ(diff, 3);
+            CHECK_EQ(cdiff, 3);
+
+            iter += 3;
+            citer += 3;
+            diff = iter - b.begin();
+            cdiff = citer - b.cbegin();
+            CHECK_EQ(diff, 6);
+            CHECK_EQ(cdiff, 6);
+
+            iter -= 4;
+            citer -= 4;
+            diff = iter - b.begin();
+            cdiff = citer - b.cbegin();
+            CHECK_EQ(diff, 2);
+            CHECK_EQ(cdiff, 2);
+
+            auto iter_end = b.begin() + b.size();
+            auto citer_end = b.cbegin() + b.size();
+            CHECK_EQ(iter_end, b.end());
+            CHECK_EQ(citer_end, b.cend());
+        };
+
+        TEST_CASE_FIXTURE(bitmap_fixture, "bitset_reference")
+        {
+            //as a reminder: p_buffer[0] = 38; // 00100110
+            bitmap b(p_buffer, m_size);
+            auto iter = b.begin();
+            *iter = true;
+            CHECK_EQ(b.null_count(), m_null_count - 1);
+
+            ++iter;
+            *iter &= false;
+            CHECK_EQ(b.null_count(), m_null_count);
+
+            iter += 2;
+            *iter |= true;
+            CHECK_EQ(b.null_count(), m_null_count - 1);
+
+            ++iter;
+            *iter ^= true;
+            CHECK_EQ(b.null_count(), m_null_count - 2);
+
+            CHECK_EQ(*iter, *iter);
+            CHECK_NE(*iter, *++b.begin());
+
+            CHECK_EQ(*iter, true);
+            CHECK_EQ(true, *iter);
+
+            CHECK_NE(*iter, false);
+            CHECK_NE(false, *iter);
+        }
     }
 }
 
