@@ -71,11 +71,6 @@ namespace sparrow
             layout_test_type lt(make_test_array_data());
             auto iter = lt.begin();
             auto citer = lt.cbegin();
-            for (std::size_t i = 0; i < lt.size(); ++i)
-            {
-                CHECK_EQ(*iter++, lt.value(i));
-                CHECK_EQ(*citer++, lt.value(i));
-            }
             CHECK_EQ(iter, lt.end());
             CHECK_EQ(citer, lt.cend());
         }

@@ -111,13 +111,9 @@ namespace sparrow
         using const_iterator = primitive_layout_iterator<T, true>;
 
         size_type size() const;
-        inner_reference value(size_type i);
-        inner_const_reference value(size_type i) const;
 
         reference operator[](size_type i);
         const_reference operator[](size_type i) const;
-
-        bool has_value(size_type i) const;
 
         iterator begin();
         iterator end();
@@ -135,6 +131,9 @@ namespace sparrow
         pointer data();
         const_pointer data() const;
 
+        bool has_value(size_type i) const;
+        inner_reference value(size_type i);
+        inner_const_reference value(size_type i) const;
     };
 
     /********************************************
