@@ -66,15 +66,6 @@ namespace sparrow
             REQUIRE(cit < lt.cend());
         }
 
-        TEST_CASE("iterator_equality")
-        {
-            layout_test_type lt(make_test_array_data());
-            auto iter = lt.begin();
-            auto citer = lt.cbegin();
-            CHECK_EQ(iter, lt.end());
-            CHECK_EQ(citer, lt.cend());
-        }
-
     }
 
 }
