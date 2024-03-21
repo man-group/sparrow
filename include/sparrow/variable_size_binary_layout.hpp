@@ -96,7 +96,7 @@ namespace sparrow
     };
 
     /*
-     * @class variabe_size_binary_layout
+     * @class variable_size_binary_layout
      *
      * @brief Layout for arrays containing values consisting of a variable number of bytes.
      *
