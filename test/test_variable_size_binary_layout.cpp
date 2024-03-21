@@ -66,21 +66,19 @@ namespace sparrow
 
         std::int64_t* offset()
         {
+            assert(!m_data.buffers.empty());
             return m_data.buffers[0].data<std::int64_t>();
         }
+
+        static_assert(std::same_as<layout_type::inner_value_type, std::string>);
+        static_assert(std::same_as<layout_type::inner_const_reference, std::string_view>);
+        using const_value_iterator = layout_type::const_value_iterator;
+        static_assert(std::same_as<const_value_iterator::value_type, std::string>);
+        static_assert(std::same_as<const_value_iterator::reference, std::string_view>);
     };
 
     TEST_SUITE("variable_size_binary_layout")
     {
-        TEST_CASE_FIXTURE(vs_binary_fixture, "types")
-        {
-            static_assert(std::same_as<layout_type::inner_value_type, std::string>);
-            static_assert(std::same_as<layout_type::inner_const_reference, std::string_view>);
-            using const_value_iterator = layout_type::const_value_iterator;
-            static_assert(std::same_as<const_value_iterator::value_type, std::string>);
-            static_assert(std::same_as<const_value_iterator::reference, std::string_view>);
-        }
-
         TEST_CASE_FIXTURE(vs_binary_fixture, "size")
         {
             layout_type l(m_data);

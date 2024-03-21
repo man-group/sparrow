@@ -101,13 +101,14 @@ namespace sparrow
      * @brief Layout for arrays containing values consisting of a variable number of bytes.
      *
      * This layout is used to retrieve data in an array of values of a variable number of bytes
-     * (typically string objects). Values are stored contiguously in a data buffer, a single
-     * value is retrieved via an additional offset buffer, where each element is the beginning
-     * of the corresponinding value in the data buffer.
+     * (typically string objects). Values are stored contiguously in a data buffer (for instance
+     * a buffer of char if values are strings), a single value is retrieved via an additional
+     * offset buffer, where each element is the beginning of the corresponding value in the data
+     * buffer.
      *
      * Example:
      *
-     * Let's consider the array ['please', 'allow', 'me', 'to', 'introduce', 'myself'].
+     * Let's consider the array of string ['please', 'allow', 'me', 'to', 'introduce', 'myself'].
      * The internal buffers will be:
      * - offset: [0, 6, 11, 13, 15, 24, 30]
      * - data: ['p','l','e','a','s','e','a','l','l','o','w','m','e','t','o','i','n','t','r','o','d','u','c','e','m','y','s','e','l','f']
@@ -234,7 +235,7 @@ namespace sparrow
         : m_data(std::move(data))
     {
         assert(m_data.buffers.size() == 2u);
-        //TODO: templatize back and front in buffer
+        //TODO: templatize back and front in buffer and uncomment the following line
         //assert(m_data.buffers[0].size() == 0u || m_data.buffers[0].back() == m_data.buffers[1].size());
     }
 
@@ -289,18 +290,21 @@ namespace sparrow
     template <class T, class R, class CR, class OT>
     auto variable_size_binary_layout<T, R, CR, OT>::offset(size_type i) const -> const_offset_iterator
     {
+        assert(!m_data.buffers.empty());
         return m_data.buffers[0].template data<OT>() + m_data.offset + i;
     }
 
     template <class T, class R, class CR, class OT>
     auto variable_size_binary_layout<T, R, CR, OT>::offset_end() const -> const_offset_iterator
     {
+        assert(!m_data.buffers.empty());
         return m_data.buffers[0].template data<OT>() + m_data.length;
     }
 
     template <class T, class R, class CR, class OT>
     auto variable_size_binary_layout<T, R, CR, OT>::data(size_type i) const -> const_data_iterator
     {
+        assert(!m_data.buffers.empty());
         return m_data.buffers[1].template data<data_type>() + i;
     }
 }
