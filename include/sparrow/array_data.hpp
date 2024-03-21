@@ -383,7 +383,6 @@ namespace sparrow
             if (rhs_has_value)
             {
                 swap(m_val_ref, rhs.m_val_ref);
-                //swap(p_layout->value(m_index), rhs.p_layout->value(rhs.m_index));
             }
             else
             {
@@ -419,7 +418,6 @@ namespace sparrow
     {
         m_bit_ref = true;
         m_val_ref = std::forward<U>(u);
-        //p_layout->update(m_index, std::forward<U>(u));
     }
 
     template <class L>

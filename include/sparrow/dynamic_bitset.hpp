@@ -317,6 +317,7 @@ namespace sparrow
     template <random_access_range B>
     auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
     {
+        assert(pos < size());
         return reference(*this, m_buffer.data()[block_index(pos)], bit_mask(pos));
     }
 
