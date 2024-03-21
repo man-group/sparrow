@@ -21,11 +21,11 @@
 namespace sparrow
 {
     // TODO: Test all the other base types once #15 is addressed.
-    static_assert(std::ranges::contiguous_range<primitive_layout<uint8_t>>);
-    static_assert(std::contiguous_iterator<primitive_layout_iterator<uint8_t, true>>);
-    static_assert(std::contiguous_iterator<primitive_layout_iterator<uint8_t, false>>);
+    // static_assert(std::ranges::contiguous_range<fixed_size_layout<uint8_t>>);
+    // static_assert(std::contiguous_iterator<fixed_size_layout_iterator<uint8_t, true>>);
+    // static_assert(std::contiguous_iterator<fixed_size_layout_iterator<uint8_t, false>>);
 
-    using layout_test_type = primitive_layout<uint8_t>;
+    using layout_test_type = fixed_size_layout<uint8_t>;
 
     namespace
     {
@@ -48,7 +48,7 @@ namespace sparrow
 
     }
 
-    TEST_SUITE("primitive_layout")
+    TEST_SUITE("fixed_size_layout")
     {
         TEST_CASE("constructors")
         {
@@ -56,31 +56,8 @@ namespace sparrow
             layout_test_type lt(ad);
             REQUIRE(lt.size() == ad.length);
         }
-
-        TEST_CASE("iterator_ordering")
-        {
-            layout_test_type lt(make_test_array_data());
-            layout_test_type::iterator it = lt.begin();
-            layout_test_type::const_iterator cit = lt.cbegin();
-            REQUIRE(it < lt.end());
-            REQUIRE(cit < lt.cend());
-        }
-
-        TEST_CASE("iterator_equality")
-        {
-            layout_test_type lt(make_test_array_data());
-            auto iter = lt.begin();
-            auto citer = lt.cbegin();
-            for (std::size_t i = 0; i < lt.size(); ++i)
-            {
-                auto val = lt[i].value();
-                CHECK_EQ(*iter++, val);
-                CHECK_EQ(*citer++, val);
-            }
-            CHECK_EQ(iter, lt.end());
-            CHECK_EQ(citer, lt.cend());
-        }
-
     }
+
+    // TODO: Test the iterators once they are implemented.
 
 }

@@ -110,6 +110,10 @@ namespace sparrow
         using bitmap_iterator = array_data::bitmap_type::iterator;
         using value_iterator = fixed_size_layout_value_iterator<T, false>;
 
+        using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
+        using const_value_range = std::ranges::subrange<const_value_iterator>;
+
+        // TODO: implement with `begin` and `end` once the iterator is available.
         // using iterator = reference_proxy<self_type>::iterator;
         // using const_iterator = const_reference_proxy<self_type>::iterator;
 
@@ -119,6 +123,20 @@ namespace sparrow
 
         reference operator[](size_type i);
         const_reference operator[](size_type i) const;
+
+        const_bitmap_range bitmap() const;
+        const_value_range values() const;
+
+    private:
+        // We only use the first buffer and the bitmap.
+        array_data m_data;
+
+        pointer data();
+        const_pointer data() const;
+
+        bool has_value(size_type i) const;
+        inner_reference value(size_type i);
+        inner_const_reference value(size_type i) const;
 
         value_iterator value_begin();
         value_iterator value_end();
@@ -132,24 +150,13 @@ namespace sparrow
         const_bitmap_iterator bitmap_cbegin() const;
         const_bitmap_iterator bitmap_cend() const;
 
-    private:
-        // We only use the first buffer and the bitmap.
-        array_data m_data;
-
-        pointer data();
-        const_pointer data() const;
-
-        bool has_value(size_type i) const;
-        inner_reference value(size_type i);
-        inner_const_reference value(size_type i) const;
-
         friend class reference_proxy<fixed_size_layout>;
         friend class const_reference_proxy<fixed_size_layout>;
     };
 
-    /****************************************************
+    /***************************************************
      * fixed_size_layout_value_iterator implementation *
-     ***************************************************/
+     **************************************************/
 
     template <class T, bool is_const>
     fixed_size_layout_value_iterator<T, is_const>::fixed_size_layout_value_iterator(pointer pointer)
@@ -199,9 +206,9 @@ namespace sparrow
         return distance_to(rhs) > 0;
     }
 
-    /***********************************
+    /************************************
      * fixed_size_layout implementation *
-     * ********************************/
+     * *********************************/
 
     template <class T>
     fixed_size_layout<T>::fixed_size_layout(array_data ad)
@@ -246,6 +253,18 @@ namespace sparrow
     {
         assert(i < size());
         return const_reference(*this, i);
+    }
+
+    template <class T>
+    auto fixed_size_layout<T>::bitmap() const -> const_bitmap_range
+    {
+        return std::ranges::subrange(bitmap_cbegin(), bitmap_cend());
+    }
+
+    template <class T>
+    auto fixed_size_layout<T>::values() const -> const_value_range
+    {
+        return std::ranges::subrange(value_cbegin(), value_cend());
     }
 
     template <class T>
