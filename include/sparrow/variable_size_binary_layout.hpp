@@ -19,29 +19,110 @@
 
 namespace sparrow
 {
-    template <class T, class CR>
+    namespace impl
+    {
+        template <class C, bool is_const>
+        struct get_inner_reference
+            : std::conditional<
+                is_const,
+                typename C::inner_const_reference,
+                typename C::inner_reference
+              >
+        {
+        };
+
+        template <class C, bool is_const>
+        using get_inner_reference_t = typename get_inner_reference<C, is_const>::type;
+    }
+
+    template <class L, bool is_const>
+    class vs_binary_value_iterator : public iterator_base
+    <
+        vs_binary_value_iterator<L, is_const>,
+        mpl::constify_t<typename L::inner_value_type, is_const>,
+        std::contiguous_iterator_tag,
+        impl::get_inner_reference_t<L, is_const>
+    >
+    {
+    public:
+
+        using self_type = vs_binary_value_iterator<L, is_const>;
+        using base_type = iterator_base
+        <
+            self_type,
+            mpl::constify_t<typename L::inner_value_type, is_const>,
+            std::contiguous_iterator_tag,
+            impl::get_inner_reference_t<L, is_const>
+        >;
+        using reference = typename base_type::reference;
+        using difference_type = typename base_type::difference_type;
+        
+        using offset_iterator = std::conditional_t<
+            is_const, typename L::const_offset_iterator, typename L::offset_iterator
+        >;
+        using data_iterator = std::conditional_t<
+            is_const, typename L::const_data_iterator, typename L::data_iterator
+        >;
+
+        vs_binary_value_iterator() noexcept = default;
+        vs_binary_value_iterator(
+            offset_iterator offset_it,
+            data_iterator data_begin
+        );
+
+    private:
+
+        reference dereference() const;
+        void increment();
+        void decrement();
+        void advance(difference_type n);
+        difference_type distance_to(const self_type& rhs) const;
+        bool equal(const self_type& rhs) const;
+        bool less_than(const self_type& rhs) const;
+
+        offset_iterator m_offset_it;
+        const data_iterator m_data_begin;
+
+        friend class iterator_access;
+    };
+
+    template <class T, class R, class CR, class OT = std::int64_t>
     class variable_size_binary_layout
     {
     public:
 
-        using self_type = variable_size_binary_layout<T, CR>;
+        using self_type = variable_size_binary_layout<T, R, CR, OT>;
         using inner_value_type = T;
+        using inner_reference = R;
         using inner_const_reference = CR;
         using value_type = std::optional<inner_value_type>;
         using const_reference = const_reference_proxy<self_type>;
         using size_type = std::size_t;
+
+        using const_value_iterator = vs_binary_value_iterator<self_type, true>;
 
         explicit variable_size_binary_layout(array_data data);
 
         size_type size() const;
         const_reference operator[](size_type i) const;
 
+        const_value_iterator value_cbegin() const;
+        const_value_iterator value_cend() const;
+
     private:
 
-        using sequence_value_type = typename T::value_type;
+        using data_type = typename T::value_type;
+        using offset_iterator = OT*;
+        using const_offset_iterator = const OT*;
+        using data_iterator = data_type*;
+        using const_data_iterator = const data_type*;
 
         bool has_value(size_type i) const;
         inner_const_reference value(size_type i) const;
+
+        const_offset_iterator offset(size_type i) const;
+        const_offset_iterator offset_end() const;
+        const_data_iterator data(size_type i) const;
 
         // We use the bitmap and the first two buffers
         // The first buffer contains the offsets of
@@ -49,45 +130,128 @@ namespace sparrow
         array_data m_data;
 
         friend class const_reference_proxy<self_type>;
+        friend class vs_binary_value_iterator<self_type, true>;
     };
+
+    /*******************************************
+     * vs_binary_value_iterator implementation *
+     *******************************************/
+
+    template <class L, bool is_const>
+    vs_binary_value_iterator<L, is_const>::vs_binary_value_iterator(
+        offset_iterator offset_it,
+        data_iterator data_begin
+    )
+        : m_offset_it(offset_it)
+        , m_data_begin(data_begin)
+    {
+    }
+
+    template <class L, bool is_const>
+    auto vs_binary_value_iterator<L, is_const>::dereference() const -> reference
+    {
+        return reference(m_data_begin + *m_offset_it, m_data_begin + *(m_offset_it + 1));
+    }
+
+    template <class L, bool is_const>
+    void vs_binary_value_iterator<L, is_const>::increment()
+    {
+        ++m_offset_it;
+    }
+
+    template <class L, bool is_const>
+    void vs_binary_value_iterator<L, is_const>::decrement()
+    {
+        --m_offset_it;
+    }
+
+    template <class L, bool is_const>
+    void vs_binary_value_iterator<L, is_const>::advance(difference_type n)
+    {
+        m_offset_it += n;
+    }
+
+    template <class L, bool is_const>
+    auto vs_binary_value_iterator<L, is_const>::distance_to(const self_type& rhs) const -> difference_type
+    {
+        return rhs.m_offset_it - m_offset_it;
+    }
+
+    template <class L, bool is_const>
+    bool vs_binary_value_iterator<L, is_const>::equal(const self_type& rhs) const
+    {
+        return m_offset_it == rhs.m_offset_it;
+    }
+
+    template <class L, bool is_const>
+    bool vs_binary_value_iterator<L, is_const>::less_than(const self_type& rhs) const
+    {
+        return m_offset_it < rhs.m_offset_it;
+    }
 
     /**********************************************
      * variable_size_binary_layout implementation *
      **********************************************/
 
-    template <class T, class CR>
-    variable_size_binary_layout<T, CR>::variable_size_binary_layout(array_data data)
+    template <class T, class R, class CR, class OT>
+    variable_size_binary_layout<T, R, CR, OT>::variable_size_binary_layout(array_data data)
         : m_data(std::move(data))
     {
         assert(m_data.buffers.size() == 2u);
     }
 
-    template <class T, class CR>
-    auto variable_size_binary_layout<T, CR>::size() const -> size_type
+    template <class T, class R, class CR, class OT>
+    auto variable_size_binary_layout<T, R, CR, OT>::size() const -> size_type
     {
         return static_cast<size_type>(m_data.length - m_data.offset);
     }
 
-    template <class T, class CR>
-    auto variable_size_binary_layout<T, CR>::operator[](size_type i) const -> const_reference
+    template <class T, class R, class CR, class OT>
+    auto variable_size_binary_layout<T, R, CR, OT>::operator[](size_type i) const -> const_reference
     {
         return const_reference(*this, i);
     }
 
-    template <class T, class CR>
-    auto variable_size_binary_layout<T, CR>::has_value(size_type i) const -> bool
+    template <class T, class R, class CR, class OT>
+    auto variable_size_binary_layout<T, R, CR, OT>::value_cbegin() const -> const_value_iterator
+    {
+        return const_value_iterator(offset(0u), data(0u));
+    }
+
+    template <class T, class R, class CR, class OT>
+    auto variable_size_binary_layout<T, R, CR, OT>::value_cend() const -> const_value_iterator
+    {
+        return const_value_iterator(offset_end(), data(0u));
+    }
+    
+    template <class T, class R, class CR, class OT>
+    auto variable_size_binary_layout<T, R, CR, OT>::has_value(size_type i) const -> bool
     {
         return m_data.bitmap.test(i + m_data.offset);
     }
 
-    template <class T, class CR>
-    auto variable_size_binary_layout<T, CR>::value(size_type i) const -> inner_const_reference
+    template <class T, class R, class CR, class OT>
+    auto variable_size_binary_layout<T, R, CR, OT>::value(size_type i) const -> inner_const_reference
     {
-        const auto& offsets = m_data.buffers[0];
-        size_type first_index = offsets[m_data.offset + i];
-        size_type last_index = offsets[m_data.offset + i + 1];
-        const auto* seq = m_data.buffers[1].data<sequence_value_type>();
-        return CR(seq + first_index, seq + last_index);
+        return inner_const_reference(data(*offset(i)), data(*offset(i+1)));
+    }
+
+    template <class T, class R, class CR, class OT>
+    auto variable_size_binary_layout<T, R, CR, OT>::offset(size_type i) const -> const_offset_iterator
+    {
+        return m_data.buffers[0].data<OT>() + m_data.offset + i;
+    }
+
+    template <class T, class R, class CR, class OT>
+    auto variable_size_binary_layout<T, R, CR, OT>::offset_end() const -> const_offset_iterator
+    {
+        return m_data.buffers[0].data<OT>() + m_data.length;
+    }
+
+    template <class T, class R, class CR, class OT>
+    auto variable_size_binary_layout<T, R, CR, OT>::data(size_type i) const -> const_data_iterator
+    {
+        return m_data.buffers[1].data<data_type>() + i;
     }
 }
 

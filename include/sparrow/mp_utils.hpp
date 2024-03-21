@@ -28,5 +28,6 @@ namespace sparrow
 
         template <class T, bool is_const>
         using constify_t = typename constify<T, is_const>::type;
+
     }
 }

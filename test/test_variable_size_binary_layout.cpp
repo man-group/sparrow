@@ -29,15 +29,15 @@ namespace sparrow
         vs_binary_fixture()
         {
             m_data.buffers.resize(2);
-            m_data.buffers[0].resize(nb_words + 1);
+            m_data.buffers[0].resize(sizeof(std::int64_t) * (nb_words + 1));
             m_data.buffers[1].resize(std::accumulate(
                 words, words + nb_words, 0u, [](std::size_t res, const auto& s) { return res + s.size(); }
             ));
-            m_data.buffers[0][0] = 0u;
+            m_data.buffers[0].data<std::int64_t>()[0] = 0u;
             auto iter = m_data.buffers[1].begin();
             for (size_t i = 0; i < nb_words; ++i)
             {
-                m_data.buffers[0][i+1] = m_data.buffers[0][i] + words[i].size();
+                offset()[i+1] = offset()[i] + words[i].size();
                 std::copy(words[i].cbegin(), words[i].cend(), iter);
                 iter += words[i].size();
             }
@@ -56,11 +56,26 @@ namespace sparrow
         };
 
         array_data m_data;
-        using layout_type = variable_size_binary_layout<std::string, std::string_view>;
+        using layout_type = variable_size_binary_layout<std::string, std::string_view, std::string_view>;
+    
+    private:
+
+        std::int64_t* offset()
+        {
+            return m_data.buffers[0].data<std::int64_t>();
+        }
     };
 
     TEST_SUITE("variable_size_binary_layout")
     {
+        TEST_CASE_FIXTURE(vs_binary_fixture, "types")
+        {
+            static_assert(std::same_as<layout_type::inner_const_reference, std::string_view>);
+            using const_value_iterator = layout_type::const_value_iterator;
+            static_assert(std::same_as<const_value_iterator::value_type, std::string>);
+            static_assert(std::same_as<const_value_iterator::reference, std::string_view>);
+        }
+
         TEST_CASE_FIXTURE(vs_binary_fixture, "size")
         {
             layout_type l(m_data);
@@ -74,10 +89,28 @@ namespace sparrow
             auto cref1 = l[1];
             auto cref2 = l[2];
 
-            std::cout << cref0.value() << std::endl;
             CHECK_EQ(cref0.value(), words[1]);
             CHECK_EQ(cref1.value(), words[2]);
             CHECK_EQ(cref2.value(), words[3]);
+        }
+
+        TEST_CASE_FIXTURE(vs_binary_fixture, "const_value_iterator")
+        {
+            layout_type l(m_data);
+            auto cref0 = l[0];
+            auto cref1 = l[1];
+            auto cref2 = l[2];
+
+            auto iter = l.value_cbegin();
+            CHECK_EQ(*iter, cref0.value());
+            ++iter;
+            CHECK_EQ(*iter, cref1.value());
+            --iter;
+            CHECK_EQ(*iter, cref0.value());
+            iter += 2;
+            CHECK_EQ(*iter, cref2.value());
+            ++iter;
+            CHECK_EQ(iter, l.value_cend());
         }
     }
 }
