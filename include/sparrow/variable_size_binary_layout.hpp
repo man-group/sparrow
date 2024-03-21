@@ -289,19 +289,19 @@ namespace sparrow
     template <class T, class R, class CR, class OT>
     auto variable_size_binary_layout<T, R, CR, OT>::offset(size_type i) const -> const_offset_iterator
     {
-        return m_data.buffers[0].data<OT>() + m_data.offset + i;
+        return m_data.buffers[0].template data<OT>() + m_data.offset + i;
     }
 
     template <class T, class R, class CR, class OT>
     auto variable_size_binary_layout<T, R, CR, OT>::offset_end() const -> const_offset_iterator
     {
-        return m_data.buffers[0].data<OT>() + m_data.length;
+        return m_data.buffers[0].template data<OT>() + m_data.length;
     }
 
     template <class T, class R, class CR, class OT>
     auto variable_size_binary_layout<T, R, CR, OT>::data(size_type i) const -> const_data_iterator
     {
-        return m_data.buffers[1].data<data_type>() + i;
+        return m_data.buffers[1].template data<data_type>() + i;
     }
 }
 
