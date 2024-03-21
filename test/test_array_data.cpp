@@ -25,62 +25,60 @@ namespace sparrow
 
         using value_type = std::optional<int>;
         using inner_value_type = value_type::value_type;
+        using inner_reference = int&;
+        using inner_const_reference = const int&;
+        using bitmap_type = array_data::bitmap_type;
+        using bitmap_reference = typename bitmap_type::reference;
+        using bitmap_const_reference = typename bitmap_type::const_reference;
         using reference = reference_proxy<mock_layout>;
         using const_reference = const_reference_proxy<mock_layout>;
         using size_type = std::size_t;
-        using storage_type = std::vector<value_type>;
 
         mock_layout() = default;
         mock_layout(std::initializer_list<value_type> l)
-            : m_storage(l)
+            : m_bitmap(l.size())
+            , m_data(l.size())
         {
+            auto bit_iter = m_bitmap.begin();
+            auto value_iter = m_data.begin();
+            for (const auto& v: l)
+            {
+                *bit_iter++ = v.has_value();
+                if (v.has_value())
+                {
+                    *value_iter++ = v.value();
+                }
+                else
+                {
+                    ++value_iter;
+                }
+            }
         }
 
         reference operator[](size_type pos)
         {
-            return reference(*this, pos);
+            return reference(m_data[pos], m_bitmap[pos]);
         }
 
         const_reference operator[](size_type pos) const
         {
-            return const_reference(*this, pos);
+            return const_reference(m_data[pos], m_bitmap[pos]);
         }
 
-        const storage_type& storage() const
+        bool has_value(size_type pos) const
         {
-            return m_storage;
+            return m_bitmap[pos];
+        }
+
+        inner_const_reference value(size_type pos) const
+        {
+            return m_data[pos];
         }
 
     private:
 
-        bool has_value(size_type index) const
-        {
-            return m_storage[index].has_value();
-        }
-
-        inner_value_type& value(size_type index)
-        {
-            return m_storage[index].value();
-        }
-
-        const inner_value_type& value(size_type index) const
-        {
-            return m_storage[index].value();
-        }
-
-        void reset(size_type index)
-        {
-            m_storage[index] = std::nullopt;
-        }
-
-        void update(size_type index, int v)
-        {
-            m_storage[index] = v;
-        }
-
-        storage_type m_storage;
-        friend class reference_proxy<mock_layout>;
-        friend class const_reference_proxy<mock_layout>;
+        bitmap_type m_bitmap;
+        std::vector<int> m_data;
     };
 
     struct ref_proxy_fixture
@@ -93,11 +91,6 @@ namespace sparrow
                 std::nullopt,
                 std::make_optional(7)
             };
-        }
-
-        int stored_value(mock_layout::size_type index) const
-        {
-            return m_layout.storage()[index].value();
         }
 
         const mock_layout& layout() const
@@ -124,11 +117,11 @@ namespace sparrow
         TEST_CASE_FIXTURE(ref_proxy_fixture, "value")
         {
             auto ref0 = m_layout[0];
-            CHECK_EQ(ref0.value(), stored_value(0));
+            CHECK_EQ(ref0.value(), m_layout.value(0));
             static_assert(std::same_as<decltype(ref0.value()), int&>);
 
             const auto cref0 = m_layout[0];
-            CHECK_EQ(cref0.value(), stored_value(0));
+            CHECK_EQ(cref0.value(), m_layout.value(0));
             static_assert(std::same_as<decltype(cref0.value()), const int&>);
         }
 
@@ -137,36 +130,36 @@ namespace sparrow
             int expected_value0 = 4;
             auto ref0 = m_layout[0];
             ref0 = expected_value0;
-            CHECK_EQ(stored_value(0), expected_value0);
+            CHECK_EQ(m_layout.value(0), expected_value0);
 
             ref0 = std::nullopt;
             CHECK(!ref0.has_value());
 
             ref0 = expected_value0;
-            CHECK_EQ(stored_value(0), expected_value0);
+            CHECK_EQ(m_layout.value(0), expected_value0);
 
             int expected_value2 = 3;
             auto ref2 = m_layout[2];
             ref2 = std::make_optional(expected_value2);
-            CHECK_EQ(stored_value(2), expected_value2);
+            CHECK_EQ(m_layout.value(2), expected_value2);
 
             ref0 = ref2;
-            CHECK_EQ(stored_value(0), expected_value2);
+            CHECK_EQ(m_layout.value(0), expected_value2);
 
             int expected_value3 = 8;
             std::optional<int> opt(expected_value3);
             auto ref3 = m_layout[3];
             ref3 = opt;
-            CHECK_EQ(stored_value(3), expected_value3);
+            CHECK_EQ(m_layout.value(3), expected_value3);
 
             ref0 = std::move(ref3);
-            CHECK_EQ(stored_value(0), expected_value3);
+            CHECK_EQ(m_layout.value(0), expected_value3);
         }
 
         TEST_CASE_FIXTURE(ref_proxy_fixture, "swap")
         {
-            int expected_value0 = stored_value(0);
-            int expected_value3 = stored_value(3);
+            int expected_value0 = m_layout.value(0);
+            int expected_value3 = m_layout.value(3);
 
             auto ref0 = m_layout[0];
             auto ref2 = m_layout[2];
@@ -191,12 +184,12 @@ namespace sparrow
                 auto ref2 = m_layout[2];
 
                 CHECK(ref0 != ref1);
-                CHECK(ref0 != stored_value(1));
-                CHECK(stored_value(0) != ref1);
+                CHECK(ref0 != m_layout.value(1));
+                CHECK(m_layout.value(0) != ref1);
                 ref0 = ref1;
                 CHECK(ref0 == ref1);
-                CHECK(ref0 == stored_value(1));
-                CHECK(stored_value(0) == ref1);
+                CHECK(ref0 == m_layout.value(1));
+                CHECK(m_layout.value(0) == ref1);
 
                 CHECK(ref0 != ref2);
             }
@@ -245,7 +238,7 @@ namespace sparrow
         TEST_CASE_FIXTURE(ref_proxy_fixture, "value")
         {
             auto ref0 = layout()[0];
-            CHECK_EQ(ref0.value(), stored_value(0));
+            CHECK_EQ(ref0.value(), m_layout.value(0));
             static_assert(std::same_as<decltype(ref0.value()), const int&>);
         }
     }

@@ -65,6 +65,9 @@ namespace sparrow
         bool test(size_type pos) const;
         void set(size_type pos, value_type value);
 
+        reference operator[](size_type i);
+        const_reference operator[](size_type i) const;
+
         block_type* data() noexcept;
         const block_type* data() const noexcept;
         size_type block_count() const noexcept;
@@ -224,6 +227,8 @@ namespace sparrow
         block_type m_mask;
 
         friend class bitset_iterator<B, false>;
+        template <random_access_range RAR>
+        friend class dynamic_bitset_base;
     };
 
     template <class B1, class B2>
@@ -307,6 +312,19 @@ namespace sparrow
     auto dynamic_bitset_base<B>::null_count() const noexcept -> size_type
     {
         return m_null_count;
+    }
+
+    template <random_access_range B>
+    auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
+    {
+        return reference(*this, m_buffer.data()[block_index(pos)], bit_mask(pos));
+    }
+
+    template <random_access_range B>
+    bool dynamic_bitset_base<B>::operator[](size_type pos) const
+    {
+        assert(pos < size());
+        return !m_null_count || m_buffer.data()[block_index(pos)] & bit_mask(pos);
     }
 
     template <random_access_range B>

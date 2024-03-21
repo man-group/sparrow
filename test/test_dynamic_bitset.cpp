@@ -154,11 +154,41 @@ namespace sparrow
             CHECK_EQ(bm.data()[3], 6);
             CHECK_EQ(bm.null_count(), m_null_count);
 
+            // Ensures that setting false again does not alter the null count
             bm.set(24, 0);
             CHECK_EQ(bm.data()[3], 6);
             CHECK_EQ(bm.null_count(), m_null_count);
 
             bm.set(2, true);
+            CHECK(bm.test(2));
+            CHECK_EQ(bm.null_count(), m_null_count);
+        }
+
+        TEST_CASE_FIXTURE(bitmap_fixture, "operator[]")
+        {
+            bitmap bm(p_buffer, m_size);
+            const bitmap& cbm = bm;
+            bool b1 = cbm[2];
+            CHECK(b1);
+            bool b2 = cbm[3];
+            CHECK(!b2);
+            bool b3 = cbm[24];
+            CHECK(b3);
+
+            bm.set(3, true);
+            CHECK_EQ(bm.data()[0], 46);
+            CHECK_EQ(bm.null_count(), m_null_count - 1);
+
+            bm[24] = false;
+            CHECK_EQ(cbm.data()[3], 6);
+            CHECK_EQ(cbm.null_count(), m_null_count);
+
+            // Ensures that setting false again does not alter the null count
+            bm[24] = false;
+            CHECK_EQ(bm.data()[3], 6);
+            CHECK_EQ(bm.null_count(), m_null_count);
+
+            bm[2] = true;
             CHECK(bm.test(2));
             CHECK_EQ(bm.null_count(), m_null_count);
         }
