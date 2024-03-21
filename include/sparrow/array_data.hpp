@@ -116,9 +116,11 @@ namespace sparrow
         using base_type = reference_proxy_base<self_type>;
         using layout_type = L;
         using value_type = typename L::inner_value_type;
+        using reference = typename L::inner_const_reference;
+        using bitmap_reference = typename L::bitmap_const_reference;
         using size_type = typename L::size_type;
 
-        const_reference_proxy(const layout_type& l, size_type index);
+        const_reference_proxy(reference val_ref, bitmap_reference bit_ref);
         ~const_reference_proxy() = default;
 
         const_reference_proxy(const self_type&) = default;
@@ -131,8 +133,8 @@ namespace sparrow
 
     private:
 
-        const layout_type* p_layout;
-        size_type m_index;
+        reference m_val_ref;
+        bitmap_reference m_bit_ref;
     };
 
     /**
@@ -147,9 +149,11 @@ namespace sparrow
         using base_type = reference_proxy_base<self_type>;
         using layout_type = L;
         using value_type = typename L::inner_value_type;
+        using reference = typename L::inner_reference;
+        using bitmap_reference = typename L::bitmap_reference;
         using size_type = typename L::size_type;
 
-        reference_proxy(layout_type& l, size_type index);
+        reference_proxy(reference val_ref, bitmap_reference bit_ref);
         ~reference_proxy() = default;
 
         reference_proxy(const self_type&) = default;
@@ -186,8 +190,8 @@ namespace sparrow
         template <class U>
         void update_value(U&& u);
 
-        layout_type* p_layout;
-        size_type m_index;
+        reference m_val_ref;
+        bitmap_reference m_bit_ref;
     };
 
     template <class L>
@@ -255,16 +259,16 @@ namespace sparrow
      ****************************************/
 
     template <class L>
-    const_reference_proxy<L>::const_reference_proxy(const layout_type& l, size_type index)
-        : p_layout(&l)
-        , m_index(index)
+    const_reference_proxy<L>::const_reference_proxy(reference val_ref, bitmap_reference bit_ref)
+        : m_val_ref(val_ref)
+        , m_bit_ref(bit_ref)
     {
     }
 
     template <class L>
     bool const_reference_proxy<L>::has_value() const
     {
-        return p_layout->has_value(m_index);
+        return m_bit_ref;
     }
 
     template <class L>
@@ -277,7 +281,7 @@ namespace sparrow
     auto const_reference_proxy<L>::value() const -> const value_type&
     {
         assert(has_value());
-        return p_layout->value(m_index);
+        return m_val_ref;
     }
 
     /**********************************
@@ -285,16 +289,16 @@ namespace sparrow
      **********************************/
 
     template <class L>
-    reference_proxy<L>::reference_proxy(layout_type& l, size_type index)
-        : p_layout(&l)
-        , m_index(index)
+    reference_proxy<L>::reference_proxy(reference val_ref, bitmap_reference bit_ref)
+        : m_val_ref(val_ref)
+        , m_bit_ref(bit_ref)
     {
     }
 
     template <class L>
     bool reference_proxy<L>::has_value() const
     {
-        return p_layout->has_value(m_index);
+        return bool(m_bit_ref);
     }
 
     template <class L>
@@ -307,14 +311,14 @@ namespace sparrow
     auto reference_proxy<L>::value() -> value_type&
     {
         assert(has_value());
-        return p_layout->value(m_index);
+        return m_val_ref;
     }
 
     template <class L>
     auto reference_proxy<L>::value() const -> const value_type&
     {
         assert(has_value());
-        return p_layout->value(m_index);
+        return m_val_ref;
     }
 
     template <class L>
@@ -365,7 +369,7 @@ namespace sparrow
     template <class L>
     void reference_proxy<L>::reset()
     {
-        p_layout->reset(m_index);
+        m_bit_ref = false;
     }
 
     template <class L>
@@ -378,7 +382,7 @@ namespace sparrow
         {
             if (rhs_has_value)
             {
-                swap(p_layout->value(m_index), rhs.p_layout->value(rhs.m_index));
+                swap(m_val_ref, rhs.m_val_ref);
             }
             else
             {
@@ -412,7 +416,8 @@ namespace sparrow
     template <class U>
     void reference_proxy<L>::update_value(U&& u)
     {
-        p_layout->update(m_index, std::forward<U>(u));
+        m_bit_ref = true;
+        m_val_ref = std::forward<U>(u);
     }
 
     template <class L>
