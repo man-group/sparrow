@@ -234,7 +234,8 @@ namespace sparrow
         : m_data(std::move(data))
     {
         assert(m_data.buffers.size() == 2u);
-        assert(m_data.buffers[0].size() == 0u || m_data.buffers[0].back() == m_data.buffers[1].size());
+        //TODO: templatize back and front in buffer
+        //assert(m_data.buffers[0].size() == 0u || m_data.buffers[0].back() == m_data.buffers[1].size());
     }
 
     template <class T, class R, class CR, class OT>

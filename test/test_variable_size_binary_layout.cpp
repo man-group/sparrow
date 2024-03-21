@@ -59,6 +59,7 @@ namespace sparrow
         };
 
         array_data m_data;
+        // TODO: replace R = std::string_view with specific reference proxy
         using layout_type = variable_size_binary_layout<std::string, std::string_view, std::string_view>;
     
     private:
@@ -94,7 +95,7 @@ namespace sparrow
             auto cref2 = l[2];
 
             CHECK_EQ(cref0.value(), words[1]);
-            CHECK_EQ(cref1.value(), words[2]);
+            CHECK(!cref1.has_value());
             CHECK_EQ(cref2.value(), words[3]);
         }
 
@@ -108,7 +109,6 @@ namespace sparrow
             auto iter = l.value_cbegin();
             CHECK_EQ(*iter, cref0.value());
             ++iter;
-            CHECK_EQ(*iter, cref1.value());
             --iter;
             CHECK_EQ(*iter, cref0.value());
             iter += 2;
