@@ -28,6 +28,7 @@ namespace sparrow
     {
         vs_binary_fixture()
         {
+            m_data.bitmap.resize(nb_words);
             m_data.buffers.resize(2);
             m_data.buffers[0].resize(sizeof(std::int64_t) * (nb_words + 1));
             m_data.buffers[1].resize(std::accumulate(
@@ -40,8 +41,10 @@ namespace sparrow
                 offset()[i+1] = offset()[i] + words[i].size();
                 std::copy(words[i].cbegin(), words[i].cend(), iter);
                 iter += words[i].size();
+                m_data.bitmap.set(i, true);
             }
 
+            m_data.bitmap.set(2, false);
             m_data.length = 4;
             m_data.offset = 1;
         }
@@ -70,6 +73,7 @@ namespace sparrow
     {
         TEST_CASE_FIXTURE(vs_binary_fixture, "types")
         {
+            static_assert(std::same_as<layout_type::inner_value_type, std::string>);
             static_assert(std::same_as<layout_type::inner_const_reference, std::string_view>);
             using const_value_iterator = layout_type::const_value_iterator;
             static_assert(std::same_as<const_value_iterator::value_type, std::string>);
@@ -111,6 +115,17 @@ namespace sparrow
             CHECK_EQ(*iter, cref2.value());
             ++iter;
             CHECK_EQ(iter, l.value_cend());
+        }
+
+        TEST_CASE_FIXTURE(vs_binary_fixture, "const_bitmap_iterator")
+        {
+            layout_type l(m_data);
+            auto iter = l.bitmap_cbegin();
+            CHECK(*iter);
+            ++iter;
+            CHECK(!*iter);
+            iter += 2;
+            CHECK_EQ(iter, l.bitmap_cend());
         }
     }
 }
