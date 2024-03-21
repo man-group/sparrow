@@ -124,8 +124,6 @@ namespace sparrow
         const_iterator cbegin() const;
         const_iterator cend() const ;
 
-        friend class reference_proxy<primitive_layout>;
-        friend class const_reference_proxy<primitive_layout>;
     private:
         // We only use the first buffer and the bitmap.
         array_data m_data;
@@ -136,6 +134,9 @@ namespace sparrow
         bool has_value(size_type i) const;
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
+
+        friend class reference_proxy<primitive_layout>;
+        friend class const_reference_proxy<primitive_layout>;
     };
 
     /********************************************
