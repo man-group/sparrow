@@ -50,7 +50,7 @@ namespace sparrow
         }
 
         static constexpr size_t nb_words = 4u;
-        static constexpr std::string words[nb_words] = 
+        static constexpr std::string_view words[nb_words] = 
         {
             "you",
             "are",
