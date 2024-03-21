@@ -131,6 +131,8 @@ namespace sparrow
         using inner_value_type = T;
         using inner_reference = R;
         using inner_const_reference = CR;
+        using bitmap_type = array_data::bitmap_type;
+        using bitmap_const_reference = typename bitmap_type::const_reference;
         using value_type = std::optional<inner_value_type>;
         using const_reference = const_reference_proxy<self_type>;
         using size_type = std::size_t;
@@ -248,7 +250,7 @@ namespace sparrow
     template <class T, class R, class CR, class OT>
     auto variable_size_binary_layout<T, R, CR, OT>::operator[](size_type i) const -> const_reference
     {
-        return const_reference(*this, i);
+        return const_reference(value(i), has_value(i));
     }
     
     template <class T, class R, class CR, class OT>
