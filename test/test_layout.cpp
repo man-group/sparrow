@@ -16,7 +16,7 @@
 
 #include "doctest/doctest.h"
 
-#include "sparrow/layout.hpp"
+#include "sparrow/fixed_size_layout.hpp"
 
 namespace sparrow
 {

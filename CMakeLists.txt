@@ -52,6 +52,7 @@ OPTION(BUILD_TESTS "sparrow test suite" OFF)
 set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/array_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/fixed_size_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/data_type.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/dynamic_bitset.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/iterator.hpp
