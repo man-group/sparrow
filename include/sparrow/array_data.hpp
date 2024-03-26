@@ -117,10 +117,10 @@ namespace sparrow
         using layout_type = L;
         using value_type = typename L::inner_value_type;
         using const_reference = typename L::inner_const_reference;
-        using bitmap_reference = typename L::bitmap_const_reference;
+        using bitmap_const_reference = typename L::bitmap_const_reference;
         using size_type = typename L::size_type;
 
-        const_reference_proxy(const_reference val_ref, bitmap_reference bit_ref);
+        const_reference_proxy(const_reference val_ref, bitmap_const_reference bit_ref);
         ~const_reference_proxy() = default;
 
         const_reference_proxy(const self_type&) = default;
@@ -134,7 +134,7 @@ namespace sparrow
     private:
 
         const_reference m_val_ref;
-        bitmap_reference m_bit_ref;
+        bitmap_const_reference m_bit_ref;
     };
 
     /**
@@ -259,7 +259,7 @@ namespace sparrow
      ****************************************/
 
     template <class L>
-    const_reference_proxy<L>::const_reference_proxy(const_reference val_ref, bitmap_reference bit_ref)
+    const_reference_proxy<L>::const_reference_proxy(const_reference val_ref, bitmap_const_reference bit_ref)
         : m_val_ref(val_ref)
         , m_bit_ref(bit_ref)
     {
