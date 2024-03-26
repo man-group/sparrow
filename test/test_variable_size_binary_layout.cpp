@@ -104,7 +104,8 @@ namespace sparrow
             auto cref1 = l[1];
             auto cref2 = l[2];
 
-            auto iter = l.value_cbegin();
+            auto vrange = l.values();
+            auto iter = vrange.begin();
             CHECK_EQ(*iter, cref0.value());
             ++iter;
             --iter;
@@ -112,18 +113,19 @@ namespace sparrow
             iter += 2;
             CHECK_EQ(*iter, cref2.value());
             ++iter;
-            CHECK_EQ(iter, l.value_cend());
+            CHECK_EQ(iter, vrange.end());
         }
 
         TEST_CASE_FIXTURE(vs_binary_fixture, "const_bitmap_iterator")
         {
             layout_type l(m_data);
-            auto iter = l.bitmap_cbegin();
+            auto brange = l.bitmap();
+            auto iter = brange.begin();
             CHECK(*iter);
             ++iter;
             CHECK(!*iter);
             iter += 2;
-            CHECK_EQ(iter, l.bitmap_cend());
+            CHECK_EQ(iter, brange.end());
         }
     }
 }
