@@ -117,7 +117,7 @@ namespace sparrow
      * - offset: [0, 6, 11, 13, 15, 24, 30]
      * - data: ['p','l','e','a','s','e','a','l','l','o','w','m','e','t','o','i','n','t','r','o','d','u','c','e','m','y','s','e','l','f']
      * 
-     * @tparam T the type of the data stored in the data buffer, not its byt representation.
+     * @tparam T the type of the data stored in the data buffer, not its byte representation.
      * @tparam R the reference type to the data. This type is different from the reference type of the layout,
      * which behaves like std::optional<R>.
      * @tparam CR the const reference type to the data. This type is different from the const reference of the layout,
@@ -257,12 +257,14 @@ namespace sparrow
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::size() const -> size_type
     {
+        assert(m_data.offset <= m_data.lenght);
         return static_cast<size_type>(m_data.length - m_data.offset);
     }
 
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::operator[](size_type i) const -> const_reference
     {
+        assert(i < size());
         return const_reference(value(i), has_value(i));
     }
     
