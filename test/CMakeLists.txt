@@ -40,6 +40,7 @@ set(SPARROW_TESTS_SOURCES
     test_dynamic_bitset.cpp
     test_iterator.cpp
     test_layout.cpp
+    test_variable_size_binary_layout.cpp
 )
 set(test_target "test_sparrow_lib")
 add_executable(${test_target} ${SPARROW_TESTS_SOURCES})

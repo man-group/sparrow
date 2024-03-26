@@ -57,6 +57,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/mp_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow_version.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_layout.hpp
 )
 
 add_library(sparrow INTERFACE)

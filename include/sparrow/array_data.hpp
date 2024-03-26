@@ -116,11 +116,11 @@ namespace sparrow
         using base_type = reference_proxy_base<self_type>;
         using layout_type = L;
         using value_type = typename L::inner_value_type;
-        using reference = typename L::inner_const_reference;
-        using bitmap_reference = typename L::bitmap_const_reference;
+        using const_reference = typename L::inner_const_reference;
+        using bitmap_const_reference = typename L::bitmap_const_reference;
         using size_type = typename L::size_type;
 
-        const_reference_proxy(reference val_ref, bitmap_reference bit_ref);
+        const_reference_proxy(const_reference val_ref, bitmap_const_reference bit_ref);
         ~const_reference_proxy() = default;
 
         const_reference_proxy(const self_type&) = default;
@@ -129,12 +129,12 @@ namespace sparrow
         bool has_value() const;
         explicit operator bool() const;
 
-        const value_type& value() const;
+        const_reference value() const;
 
     private:
 
-        reference m_val_ref;
-        bitmap_reference m_bit_ref;
+        const_reference m_val_ref;
+        bitmap_const_reference m_bit_ref;
     };
 
     /**
@@ -259,7 +259,7 @@ namespace sparrow
      ****************************************/
 
     template <class L>
-    const_reference_proxy<L>::const_reference_proxy(reference val_ref, bitmap_reference bit_ref)
+    const_reference_proxy<L>::const_reference_proxy(const_reference val_ref, bitmap_const_reference bit_ref)
         : m_val_ref(val_ref)
         , m_bit_ref(bit_ref)
     {
@@ -278,7 +278,7 @@ namespace sparrow
     }
 
     template <class L>
-    auto const_reference_proxy<L>::value() const -> const value_type&
+    auto const_reference_proxy<L>::value() const -> const_reference
     {
         assert(has_value());
         return m_val_ref;
