@@ -257,7 +257,7 @@ namespace sparrow
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::size() const -> size_type
     {
-        assert(m_data.offset <= m_data.lenght);
+        assert(m_data.offset <= m_data.length);
         return static_cast<size_type>(m_data.length - m_data.offset);
     }
 
