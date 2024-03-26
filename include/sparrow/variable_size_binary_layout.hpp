@@ -156,8 +156,12 @@ namespace sparrow
 
         // TODO: required by layout_iterator, replace them with the right types
         // when assignment for data in a variable size bienary layout is implemented
+        // and implement non const overloads of `values` and `bitmap`
         using value_iterator = const_value_iterator;
         using bitmap_iterator = const_bitmap_iterator;
+        // TODO: uncomment the following line and implement the non const overloads
+        // of `begin` and `end`
+        // using iterator = layout_iterator<self_type, false>;
 
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
         using const_value_range = std::ranges::subrange<const_value_iterator>;

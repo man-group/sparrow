@@ -199,6 +199,9 @@ namespace sparrow
 
     /*
      * Layout iterator class
+     *
+     * Relies on a layout's couple of value iterator and bitmap iterator to
+     * return reference proxies when it is dereferenced.
      */
     template <class L, bool is_const>
     class layout_iterator : public iterator_base
