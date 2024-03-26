@@ -117,7 +117,7 @@ namespace sparrow
      * - offset: [0, 6, 11, 13, 15, 24, 30]
      * - data: ['p','l','e','a','s','e','a','l','l','o','w','m','e','t','o','i','n','t','r','o','d','u','c','e','m','y','s','e','l','f']
      * 
-     * @tparam T the type of the data
+     * @tparam T the type of the data stored in the data buffer, not its byt representation.
      * @tparam R the reference type to the data. This type is different from the reference type of the layout,
      * which behaves like std::optional<R>.
      * @tparam CR the const reference type to the data. This type is different from the const reference of the layout,
