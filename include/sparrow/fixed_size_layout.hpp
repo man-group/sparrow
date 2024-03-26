@@ -32,7 +32,7 @@ namespace sparrow
      * @tparam T The type of the elements in the layout's data buffer.
      * @tparam is_const A boolean indicating whether the iterator is const.
      *
-     * @note This class is not thread-safe, exception-safe, copyable, movable, equality comparable.
+     * @note This class is copyable and movable.
      */
     template <class T, bool is_const>
     class fixed_size_layout_value_iterator
@@ -66,7 +66,7 @@ namespace sparrow
         void increment();
         void decrement();
         void advance(difference_type n);
-        difference_type distance_to(const self_type& rhs) const;
+        difference_type distance_to(const self_type& hs) const;
         bool equal(const self_type& rhs) const;
         bool less_than(const self_type& rhs) const;
 
@@ -94,9 +94,12 @@ namespace sparrow
 
         using self_type = fixed_size_layout<T>;
         using inner_value_type = T;
-        using value_type = std::optional<inner_value_type>;
         using inner_reference = inner_value_type&;
         using inner_const_reference = const inner_reference;
+        using bitmap_type = array_data::bitmap_type;
+        using bitmap_reference = typename bitmap_type::reference;
+        using bitmap_const_reference = typename bitmap_type::const_reference;
+        using value_type = std::optional<inner_value_type>;
         using reference = reference_proxy<self_type>;
         using const_reference = const_reference_proxy<self_type>;
         using pointer = inner_value_type*;
@@ -113,6 +116,9 @@ namespace sparrow
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
         using const_value_range = std::ranges::subrange<const_value_iterator>;
 
+        using bitmap_range = std::ranges::subrange<bitmap_iterator>;
+        using value_range = std::ranges::subrange<value_iterator>;
+
         // TODO: implement with `begin` and `end` once the iterator is available.
         // using iterator = reference_proxy<self_type>::iterator;
         // using const_iterator = const_reference_proxy<self_type>::iterator;
@@ -124,6 +130,9 @@ namespace sparrow
         reference operator[](size_type i);
         const_reference operator[](size_type i) const;
 
+        bitmap_range bitmap();
+        value_range values();
+
         const_bitmap_range bitmap() const;
         const_value_range values() const;
 
@@ -134,7 +143,8 @@ namespace sparrow
         pointer data();
         const_pointer data() const;
 
-        bool has_value(size_type i) const;
+        bitmap_reference has_value(size_type i);
+        bitmap_const_reference has_value(size_type i) const;
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
 
@@ -197,22 +207,22 @@ namespace sparrow
     template <class T, bool is_const>
     bool fixed_size_layout_value_iterator<T, is_const>::equal(const self_type& rhs) const
     {
-        return distance_to(rhs) == 0;
+        return rhs.m_pointer == m_pointer;
     }
 
     template <class T, bool is_const>
     bool fixed_size_layout_value_iterator<T, is_const>::less_than(const self_type& rhs) const
     {
-        return distance_to(rhs) > 0;
+        return m_pointer < rhs.m_pointer;
     }
 
     /************************************
      * fixed_size_layout implementation *
-     * *********************************/
+     ***********************************/
 
     template <class T>
     fixed_size_layout<T>::fixed_size_layout(array_data ad)
-        : m_data(ad)
+        : m_data(std::move(ad))
     {
         // We only require the presence of the bitmap and the first buffer.
         assert(m_data.buffers.size() > 0);
@@ -245,14 +255,26 @@ namespace sparrow
     auto fixed_size_layout<T>::operator[](size_type i) -> reference
     {
         assert(i < size());
-        return reference(*this, i);
+        return reference(value(i), has_value(i));
     }
 
     template <class T>
     auto fixed_size_layout<T>::operator[](size_type i) const -> const_reference
     {
         assert(i < size());
-        return const_reference(*this, i);
+        return const_reference(value(i), has_value(i));
+    }
+
+    template <class T>
+    auto fixed_size_layout<T>::bitmap() -> bitmap_range
+    {
+        return std::ranges::subrange(bitmap_begin(), bitmap_end());
+    }
+
+    template <class T>
+    auto fixed_size_layout<T>::values() -> value_range
+    {
+        return std::ranges::subrange(value_begin(), value_end());
     }
 
     template <class T>
@@ -268,10 +290,17 @@ namespace sparrow
     }
 
     template <class T>
-    auto fixed_size_layout<T>::has_value(size_type i) const -> bool
+    auto fixed_size_layout<T>::has_value(size_type i) -> bitmap_reference
     {
         assert(i < size());
-        return m_data.bitmap.test(i);
+        return m_data.bitmap[i];
+    }
+
+    template <class T>
+    auto fixed_size_layout<T>::has_value(size_type i) const -> bitmap_const_reference
+    {
+        assert(i < size());
+        return m_data.bitmap[i];
     }
 
     template <class T>
@@ -283,7 +312,7 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::value_end() -> value_iterator
     {
-        return value_iterator{data() + self_type::size()};
+        return value_iterator{data() + size()};
     }
 
     template <class T>
@@ -295,7 +324,7 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::value_cend() const -> const_value_iterator
     {
-        return const_value_iterator{data() + self_type::size()};
+        return const_value_iterator{data() + size()};
     }
 
     template <class T>
@@ -307,7 +336,7 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::bitmap_end() -> bitmap_iterator
     {
-        return m_data.bitmap.begin() + self_type::size();
+        return m_data.bitmap.begin() + size();
     }
 
     template <class T>
@@ -319,7 +348,7 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::bitmap_cend() const -> const_bitmap_iterator
     {
-        return m_data.bitmap.cbegin() + self_type::size();
+        return m_data.bitmap.cbegin() + size();
     }
 
     template <class T>

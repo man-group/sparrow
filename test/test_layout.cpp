@@ -35,7 +35,7 @@ namespace sparrow
             array_data ad;
 
             ad.type = data_descriptor(data_type::UINT8);
-            ad.bitmap = dynamic_bitset<uint8_t>(n);
+            ad.bitmap = dynamic_bitset<uint8_t>(n, true);
             buffer<uint8_t> b(n);
             std::iota(b.begin(), b.end(), 0);
 
@@ -55,9 +55,39 @@ namespace sparrow
             array_data ad = make_test_array_data();
             layout_test_type lt(ad);
             REQUIRE(lt.size() == ad.length);
+
+            for (std::size_t i = 0; i < lt.size(); ++i)
+            {
+                CHECK_EQ(lt[i].value(), ad.buffers[0][i]);
+            }
         }
+
+        TEST_CASE("value_iterator_ordering")
+        {
+            layout_test_type lt(make_test_array_data());
+            auto lt_values = lt.values();
+            layout_test_type::value_iterator iter = lt_values.begin();
+            // TODO: Allow coercion of iterator to const_iterator.
+            // layout_test_type::const_value_iterator citer = lt_values.begin();
+            REQUIRE(iter < lt_values.end());
+            // REQUIRE(citer < lt_values.end());
+        }
+
+        TEST_CASE("value_iterator_equality")
+        {
+            layout_test_type lt(make_test_array_data());
+            auto lt_values = lt.values();
+            layout_test_type::value_iterator iter = lt_values.begin();
+            // TODO: Allow coercion of iterator to const_iterator.
+            // layout_test_type::const_value_iterator citer = lt_values.begin();
+            for (std::size_t i = 0; i < lt.size(); ++i)
+            {
+                CHECK_EQ(*iter++, lt[i]);
+                // CHECK_EQ(*citer++, lt[i]);
+            }
+            CHECK_EQ(iter, lt_values.end());
+            // CHECK_EQ(citer, lt_values.end());
+        }
+
     }
-
-    // TODO: Test the iterators once they are implemented.
-
 }

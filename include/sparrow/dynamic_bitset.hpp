@@ -62,7 +62,7 @@ namespace sparrow
         size_type size() const noexcept;
         size_type null_count() const noexcept;
 
-        bool test(size_type pos) const;
+        const_reference test(size_type pos) const;
         void set(size_type pos, value_type value);
 
         reference operator[](size_type i);
@@ -221,7 +221,7 @@ namespace sparrow
         void assign(bool) noexcept;
         void set() noexcept;
         void reset() noexcept;
-        
+
         bitset_type& m_bitset;
         block_type& m_block;
         block_type m_mask;
@@ -274,7 +274,7 @@ namespace sparrow
             mpl::constify_t<typename B::value_type, is_const>,
             std::contiguous_iterator_tag,
             std::conditional_t<is_const, bool, bitset_reference<B>>
-        >;        
+        >;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
 
@@ -297,7 +297,7 @@ namespace sparrow
 
         friend class iterator_access;
     };
-        
+
     /**************************************
      * dynamic_bitset_base implementation *
      **************************************/
@@ -631,7 +631,7 @@ namespace sparrow
         }
         return *this;
     }
-    
+
     template <class B>
     auto bitset_reference<B>::operator|=(bool rhs) noexcept -> self_type&
     {
@@ -641,7 +641,7 @@ namespace sparrow
         }
         return *this;
     }
-    
+
     template <class B>
     auto bitset_reference<B>::operator^=(bool rhs) noexcept -> self_type&
     {
@@ -708,7 +708,7 @@ namespace sparrow
     {
         assert(m_index < bitset_type::s_bits_per_block);
     }
-    
+
     template <class B, bool is_const>
     auto bitset_iterator<B, is_const>::dereference() const -> reference
     {
