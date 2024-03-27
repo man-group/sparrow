@@ -32,7 +32,6 @@ namespace sparrow
      * @tparam T The type of the elements in the layout's data buffer.
      * @tparam is_const A boolean indicating whether the iterator is const.
      *
-     * @note This class is copyable and movable.
      */
     template <class T, bool is_const>
     class fixed_size_layout_value_iterator
@@ -85,7 +84,6 @@ namespace sparrow
      * @tparam T The type of the elements in the layout's data buffer.
      *           A fixed size type, such as a primitive type.
      *
-     * @note This class is not thread-safe, exception-safe, copyable, movable, equality comparable.
      */
     template <class T>
     class fixed_size_layout
@@ -137,7 +135,6 @@ namespace sparrow
         const_value_range values() const;
 
     private:
-        // We only use the first buffer and the bitmap.
         array_data m_data;
 
         pointer data();
