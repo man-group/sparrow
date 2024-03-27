@@ -62,7 +62,7 @@ namespace sparrow
         size_type size() const noexcept;
         size_type null_count() const noexcept;
 
-        const_reference test(size_type pos) const;
+        bool test(size_type pos) const;
         void set(size_type pos, value_type value);
 
         reference operator[](size_type i);
