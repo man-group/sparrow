@@ -12,7 +12,7 @@ defaults:
     shell: bash -e -l {0}
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     name: ${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.sys.stdlib }}-${{ matrix.config.name }}
     strategy:
       fail-fast: false
@@ -29,7 +29,6 @@ jobs:
         - { name: Release }
 
     steps:
-
 
     - name: Install GCC
       if: matrix.sys.compiler == 'gcc'
@@ -48,7 +47,6 @@ jobs:
     - name: Install the specified standard library for clang
       if: matrix.sys.compiler == 'clang'
       run: sudo apt install ${{matrix.sys.stdlib}}-dev -y
-
 
     - name: Checkout code
       uses: actions/checkout@v3
