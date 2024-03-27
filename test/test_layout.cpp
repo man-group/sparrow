@@ -25,7 +25,8 @@ namespace sparrow
     // static_assert(std::contiguous_iterator<fixed_size_layout_iterator<uint8_t, true>>);
     // static_assert(std::contiguous_iterator<fixed_size_layout_iterator<uint8_t, false>>);
 
-    using layout_test_type = fixed_size_layout<uint8_t>;
+    using data_type_t = int32_t;
+    using layout_test_type = fixed_size_layout<data_type_t>;
 
     namespace
     {
@@ -33,15 +34,14 @@ namespace sparrow
         {
             size_t n = 10;
             array_data ad;
-
-            ad.type = data_descriptor(data_type::UINT8);
+            ad.type = data_descriptor(data_type::INT32);
             ad.bitmap = dynamic_bitset<uint8_t>(n, true);
-            buffer<uint8_t> b(n);
-            std::iota(b.begin(), b.end(), 0);
-
+            size_t buffer_size = (n * sizeof(data_type_t)) / sizeof(uint8_t);
+            buffer<uint8_t> b(buffer_size);
+            std::iota(b.data<int32_t>(), b.data<int32_t>() + n, -8);
             ad.buffers.push_back(b);
             ad.length = n;
-            ad.offset = 0;
+            ad.offset = 1;
             ad.child_data.push_back(array_data());
             return ad;
         }
@@ -54,11 +54,12 @@ namespace sparrow
         {
             array_data ad = make_test_array_data();
             layout_test_type lt(ad);
-            REQUIRE(lt.size() == ad.length);
+            CHECK_EQ(lt.size(), ad.length - ad.offset);
 
+            auto buffer_data = ad.buffers[0].data<data_type_t>();
             for (std::size_t i = 0; i < lt.size(); ++i)
             {
-                CHECK_EQ(lt[i].value(), ad.buffers[0][i]);
+                CHECK_EQ(lt[i].value(), buffer_data[i + ad.offset]);
             }
         }
 
@@ -90,4 +91,5 @@ namespace sparrow
         }
 
     }
+
 }
