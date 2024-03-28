@@ -208,7 +208,7 @@ namespace sparrow
     <
         layout_iterator<L, is_const>,
         mpl::constify_t<typename L::value_type, is_const>,
-        std::contiguous_iterator_tag,
+        typename L::iterator_tag,
         std::conditional_t<is_const, const_reference_proxy<L>, reference_proxy<L>>
     >
     {
@@ -219,7 +219,7 @@ namespace sparrow
         <
             self_type,
             mpl::constify_t<typename L::value_type, is_const>,
-            std::contiguous_iterator_tag,
+            typename L::iterator_tag,
             std::conditional_t<is_const, const_reference_proxy<L>, reference_proxy<L>>
         >;
         using reference = typename base_type::reference;
