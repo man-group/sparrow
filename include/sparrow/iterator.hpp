@@ -401,4 +401,88 @@ namespace sparrow
         : public iterator_root_base<Derived, Element, IteratorConcept, Reference, Difference>
     {
     };
+
+    /*
+     * @class pointer_iterator
+     * @brief iterator adaptor for pointers
+     *
+     * pointer_iterator gives an iterator API to a pointer.
+     * @tparam T the pointer to adapt
+     */
+    template <class T>
+    class pointer_iterator;
+
+    template <class T>
+    class pointer_iterator<T*> 
+        : public iterator_base<pointer_iterator<T*>, T, std::contiguous_iterator_tag>
+    {
+    public:
+        
+        using self_type = pointer_iterator<T*>;
+        using base_type = iterator_base<self_type, T, std::contiguous_iterator_tag>;
+        using pointer = typename base_type::pointer;
+        
+        pointer_iterator() = default;
+        explicit pointer_iterator(pointer p)
+            : p_iter(p)
+        {
+        }
+
+        template <class Iter>
+        requires std::same_as<Iter, std::remove_const_t<T>>
+        pointer_iterator(const Iter& iter)
+            : p_iter(iter.base())
+        {
+        }
+
+        const pointer& base() const
+        {
+            return p_iter;
+        }
+
+    private:
+
+        using reference = typename base_type::reference;
+        using difference_type = typename base_type::difference_type;
+
+        reference dereference() const
+        {
+            return *p_iter;
+        }
+
+        void increment()
+        {
+            ++p_iter;
+        }
+
+        void decrement()
+        {
+            --p_iter;
+        }
+
+        void advance(difference_type n)
+        {
+            p_iter += n;
+        }
+
+        difference_type distance_to(const self_type& rhs) const
+        {
+            return rhs.p_iter - p_iter;
+        }
+
+        bool equal(const self_type& rhs) const
+        {
+            return p_iter == rhs.p_iter;
+        }
+
+        bool less_than(const self_type& rhs) const
+        {
+            return p_iter < rhs.p_iter;
+        }
+        
+        pointer p_iter = nullptr;
+
+        friend class iterator_access;
+    };
+
 }
