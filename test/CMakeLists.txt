@@ -35,6 +35,7 @@ endif()
 
 set(SPARROW_TESTS_SOURCES
     main.cpp
+    test_allocator.cpp
     test_array_data.cpp
     test_buffer.cpp
     test_dynamic_bitset.cpp
