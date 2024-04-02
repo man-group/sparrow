@@ -24,49 +24,6 @@
 
 namespace sparrow
 {
-    template <class T, bool is_const>
-    class buffer_iterator
-        : public iterator_base
-          <
-              buffer_iterator<T, is_const>,
-              mpl::constify_t<T, is_const>,
-              std::contiguous_iterator_tag
-          >
-    {
-    public:
-
-        using self_type = buffer_iterator<T, is_const>;
-        using base_type = iterator_base
-        <
-            self_type,
-            mpl::constify_t<T, is_const>,
-            std::contiguous_iterator_tag
-        >;
-        using pointer = typename base_type::pointer;
-
-        // Required so that std::ranges::end(b) is
-        // valid when b is a buffer or buffer_view
-        buffer_iterator() = default;
-        explicit buffer_iterator(pointer p);
-
-    private:
-
-        using reference = typename base_type::reference;
-        using difference_type = typename base_type::difference_type;
-
-        reference dereference() const;
-        void increment();
-        void decrement();
-        void advance(difference_type n);
-        difference_type distance_to(const self_type& rhs) const;
-        bool equal(const self_type& rhs) const;
-        bool less_than(const self_type& rhs) const;
-
-        pointer m_pointer = nullptr;
-
-        friend class iterator_access;
-    };
-
     /**
      * @class buffer_base
      * @brief Base class for buffer and buffer_view
@@ -90,8 +47,8 @@ namespace sparrow
         using size_type = std::size_t;
         using difference_type = std::ptrdiff_t;
 
-        using iterator = buffer_iterator<T, false>;
-        using const_iterator = buffer_iterator<T, true>;
+        using iterator = pointer_iterator<pointer>;
+        using const_iterator = pointer_iterator<const_pointer>;
         using reverse_iterator = std::reverse_iterator<iterator>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -215,58 +172,6 @@ namespace sparrow
         buffer_view(buffer_view&&) = default;
         buffer_view& operator=(buffer_view&&) = default;
     };
-
-    /**********************************
-     * buffer_iterator implementation *
-     **********************************/
-
-    template <class T, bool is_const>
-    buffer_iterator<T, is_const>::buffer_iterator(pointer p)
-        : m_pointer(p)
-    {
-    }
-
-    template <class T, bool is_const>
-    auto buffer_iterator<T, is_const>::dereference() const -> reference
-    {
-        return *m_pointer;
-    }
-
-    template <class T, bool is_const>
-    void buffer_iterator<T, is_const>::increment()
-    {
-        ++m_pointer;
-    }
-
-    template <class T, bool is_const>
-    void buffer_iterator<T, is_const>::decrement()
-    {
-        --m_pointer;
-    }
-
-    template <class T, bool is_const>
-    void buffer_iterator<T, is_const>::advance(difference_type n)
-    {
-        m_pointer += n;
-    }
-
-    template <class T, bool is_const>
-    auto buffer_iterator<T, is_const>::distance_to(const self_type& rhs) const -> difference_type
-    {
-        return rhs.m_pointer - m_pointer;
-    }
-
-    template <class T, bool is_const>
-    bool buffer_iterator<T, is_const>::equal(const self_type& rhs) const
-    {
-        return m_pointer == rhs.m_pointer;
-    }
-
-    template <class T, bool is_const>
-    bool buffer_iterator<T, is_const>::less_than(const self_type& rhs) const
-    {
-        return m_pointer < rhs.m_pointer;
-    }
 
     /******************************
      * buffer_base implementation *

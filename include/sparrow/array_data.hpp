@@ -179,7 +179,7 @@ namespace sparrow
         self_type& operator=(U&& value);
 
         void swap(self_type& rhs);
-        
+
     private:
 
         void reset();
@@ -208,7 +208,7 @@ namespace sparrow
     <
         layout_iterator<L, is_const>,
         mpl::constify_t<typename L::value_type, is_const>,
-        std::contiguous_iterator_tag,
+        typename L::iterator_tag,
         std::conditional_t<is_const, const_reference_proxy<L>, reference_proxy<L>>
     >
     {
@@ -219,7 +219,7 @@ namespace sparrow
         <
             self_type,
             mpl::constify_t<typename L::value_type, is_const>,
-            std::contiguous_iterator_tag,
+            typename L::iterator_tag,
             std::conditional_t<is_const, const_reference_proxy<L>, reference_proxy<L>>
         >;
         using reference = typename base_type::reference;
@@ -399,7 +399,7 @@ namespace sparrow
 
     template <class L>
     template <std::convertible_to<typename L::inner_value_type> U>
-    auto reference_proxy<L>::operator=(const std::optional<U>& rhs) -> self_type& 
+    auto reference_proxy<L>::operator=(const std::optional<U>& rhs) -> self_type&
     {
         update(rhs);
         return *this;
@@ -407,7 +407,7 @@ namespace sparrow
 
     template <class L>
     template <std::convertible_to<typename L::inner_value_type> U>
-    auto reference_proxy<L>::operator=(std::optional<U>&& rhs) -> self_type& 
+    auto reference_proxy<L>::operator=(std::optional<U>&& rhs) -> self_type&
     {
         update(std::move(rhs));
         return *this;

@@ -138,6 +138,7 @@ namespace sparrow
         using value_type = std::optional<inner_value_type>;
         using const_reference = const_reference_proxy<self_type>;
         using size_type = std::size_t;
+        using iterator_tag = std::contiguous_iterator_tag;
 
         /**
          * These types have to be public to be accessible when
