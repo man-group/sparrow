@@ -56,6 +56,59 @@ namespace sparrow::mpl
     template <class T, bool is_const>
     using constify_t = typename constify<T, is_const>::type;
 
+
+
+
+    template< class P >
+    concept ct_type_predicate = requires
+    {
+        { P::value } -> std::same_as<bool>;
+    };
+
+    template< class P, class T >
+    concept callable_type_predicate = std::semiregular<P>
+        and (
+                requires(P predicate)
+                {
+                    { predicate(typelist<T>{}) } -> std::same_as<bool>;
+                }
+            or
+                requires(P predicate)
+                {
+                    { predicate(std::type_identity_t<T>{}) } -> std::same_as<bool>;
+                }
+            )
+        ;
+
+    template< class P, class T >
+    concept type_predicate = ct_type_predicate<P> or callable_type_predicate<P, T>;
+
+
+    template<class T, template<class> class P>
+        requires ct_type_predicate<P<T>>
+    consteval
+    bool evaluate(P<T>)
+    {
+        return P<T>::value;
+    }
+
+    template<class T, callable_type_predicate<T> P>
+    consteval
+    bool evaluate(P predicate)
+    {
+        if constexpr (requires (P p){ { p(typelist<T>{}) } -> std::same_as<bool>; })
+        {
+            return predicate(typelist<T>{});
+        }
+        else
+        {
+            return predicate(std::type_identity_t<T>{});
+        }
+    }
+
+
+
+
     /// Checks that at least one type in the provided list of is making the provide predicate return `true`.
     /// @returns 'true' if for at least one type T in the type list L,, `Predicate{}(typelist<T>) == true`.
     ///          `false` otherwise or if the list is empty.
@@ -64,7 +117,7 @@ namespace sparrow::mpl
     consteval
     bool any_of(L<T...> list, Predicate predicate)
     {
-        return (predicate(typelist<T>{}) || ... || false);
+        return (evaluate<T>(predicate) || ... || false);
     }
 
     /// Checks that every type in the provided list of is making the provide predicate return `true`.
@@ -75,7 +128,7 @@ namespace sparrow::mpl
     consteval
         bool all_of(L<T...> list, Predicate predicate)
     {
-        return (predicate(typelist<T>{}) && ... && true);
+        return (evaluate<T>(predicate) && ... && true);
     }
 
     /// Compile-time type predicate: `true` if the evaluated type is the same as `T`.
@@ -126,7 +179,7 @@ namespace sparrow::mpl
             }
         };
 
-        (check(predicate(typelist<T>{})) || ...);
+        (check(evaluate<T>(predicate)) || ...);
 
         return idx;
     }
