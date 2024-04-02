@@ -30,9 +30,8 @@ namespace sparrow
 
     namespace
     {
-        array_data make_test_array_data()
+        array_data make_test_array_data(size_t n = 10, size_t offset = 0)
         {
-            size_t n = 10;
             array_data ad;
             ad.type = data_descriptor(data_type::INT32);
             ad.bitmap = dynamic_bitset<uint8_t>(n, true);
@@ -41,7 +40,7 @@ namespace sparrow
             std::iota(b.data<int32_t>(), b.data<int32_t>() + n, -8);
             ad.buffers.push_back(b);
             ad.length = n;
-            ad.offset = 1;
+            ad.offset = offset;
             ad.child_data.push_back(array_data());
             return ad;
         }
@@ -52,7 +51,7 @@ namespace sparrow
     {
         TEST_CASE("constructors")
         {
-            array_data ad = make_test_array_data();
+            array_data ad = make_test_array_data(10, 1);
             layout_test_type lt(ad);
             CHECK_EQ(lt.size(), ad.length - ad.offset);
 
@@ -65,18 +64,18 @@ namespace sparrow
 
         TEST_CASE("value_iterator_ordering")
         {
-            layout_test_type lt(make_test_array_data());
+            layout_test_type lt(make_test_array_data(10, 1));
             auto lt_values = lt.values();
             layout_test_type::value_iterator iter = lt_values.begin();
             // TODO: Allow coercion of iterator to const_iterator.
             // layout_test_type::const_value_iterator citer = lt_values.begin();
-            REQUIRE(iter < lt_values.end());
-            // REQUIRE(citer < lt_values.end());
+            CHECK(iter < lt_values.end());
+            // CHECK(citer < lt_values.end());
         }
 
         TEST_CASE("value_iterator_equality")
         {
-            layout_test_type lt(make_test_array_data());
+            layout_test_type lt(make_test_array_data(10, 1));
             auto lt_values = lt.values();
             layout_test_type::value_iterator iter = lt_values.begin();
             // TODO: Allow coercion of iterator to const_iterator.
@@ -88,6 +87,27 @@ namespace sparrow
             }
             CHECK_EQ(iter, lt_values.end());
             // CHECK_EQ(citer, lt_values.end());
+        }
+
+        TEST_CASE("iterator")
+        {
+            layout_test_type lt(make_test_array_data(10, 1));
+            auto it = lt.begin();
+            auto end = lt.end();
+
+            for (std::size_t i = 0; i != lt.size(); ++it, ++i)
+            {
+                CHECK_EQ(*it, std::make_optional(lt[i].value()));
+                CHECK(it->has_value());
+            }
+
+            CHECK_EQ(it, end);
+
+            for (auto v: lt)
+                CHECK(v.has_value());
+
+            layout_test_type lt_empty(make_test_array_data(0, 0));
+            CHECK_EQ(lt_empty.begin(), lt_empty.end());
         }
 
     }
