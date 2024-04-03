@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <memory>
 #include <memory_resource>
+#include <typeindex>
 #include <type_traits>
 #include <variant>
 
@@ -114,9 +115,9 @@ namespace sparrow
 
             bool equal(const interface& rhs) const override
             {
-                if (auto* p = dynamic_cast<const impl<A>*>(&rhs))
+                if (std::type_index(typeid(*this)) == std::type_index(typeid(rhs)))
                 {
-                    return p->m_alloc == m_alloc;
+                    return m_alloc == static_cast<const impl<A>*>(&rhs)->m_alloc;
                 }
                 return false;
             }
