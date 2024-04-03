@@ -40,20 +40,19 @@ namespace sparrow
             { alloc.deallocate(p, n) } -> std::same_as<void>;
         };
 
+    template <class A, class T>
+    concept can_any_allocator_sbo = allocator<A> &&
+        (std::same_as<A, std::allocator<T>> || std::same_as<A, std::pmr::polymorphic_allocator<T>>);
+
     /*
      * Type erasure class for allocators. This allows to use any kind of allocator
      * (standard, polymorphic) without having to expose it as a template parameter.
      *
      * @tparam T value_type of the allocator
-     * @tparam DA default allocator, instantiated when calling the default constructor
      */
-    template <class T, class DA = std::allocator<T>>
+    template <class T>
     class any_allocator
     {
-        template <class A>
-        static constexpr bool is_value_stored = 
-            std::is_same_v<A, std::allocator<T>> || std::is_same_v<A, std::pmr::polymorphic_allocator<T>>;
-
     public:
 
         using value_type = T;
@@ -137,7 +136,7 @@ namespace sparrow
         }
 
         template <class A>
-        requires is_value_stored<A>
+        requires can_any_allocator_sbo<A, T>
         A&& make_storage(A&& alloc) const
         {
             return std::forward<A>(alloc);
@@ -148,7 +147,7 @@ namespace sparrow
             return std::visit([](auto&& arg) -> storage_type
             {
                 using A = std::decay_t<decltype(arg)>;
-                if constexpr (is_value_stored<A>)
+                if constexpr (can_any_allocator_sbo<A, T>)
                     return { A(arg) };
                 else
                     return { arg->clone() };
@@ -162,63 +161,63 @@ namespace sparrow
      * any_allocator implementation *
      ********************************/
 
-    template <class T, class DA>
-    any_allocator<T, DA>::any_allocator()
-        : m_storage(make_storage(DA()))
+    template <class T>
+    any_allocator<T>::any_allocator()
+        : m_storage(make_storage(std::allocator<T>()))
     {
     }
 
-    template <class T, class DA>
-    any_allocator<T, DA>::any_allocator(const any_allocator& rhs)
+    template <class T>
+    any_allocator<T>::any_allocator(const any_allocator& rhs)
         : m_storage(copy_storage(rhs.m_storage))
     {
     }
 
-    template <class T, class DA>
-    [[nodiscard]] T* any_allocator<T, DA>::allocate(std::size_t n)
+    template <class T>
+    [[nodiscard]] T* any_allocator<T>::allocate(std::size_t n)
     {
         return std::visit([n](auto&& arg)
         {
             using A = std::decay_t<decltype(arg)>;
-            if constexpr (is_value_stored<A>)
+            if constexpr (can_any_allocator_sbo<A, T>)
                 return arg.allocate(n);
             else
                 return arg->allocate(n);
         }, m_storage);
     }
 
-    template <class T, class DA>
-    void any_allocator<T, DA>::deallocate(T* p, std::size_t n)
+    template <class T>
+    void any_allocator<T>::deallocate(T* p, std::size_t n)
     {
         return std::visit([p, n](auto&& arg)
         {
             using A = std::decay_t<decltype(arg)>;
-            if constexpr (is_value_stored<A>)
+            if constexpr (can_any_allocator_sbo<A, T>)
                 arg.deallocate(p, n);
             else
                 arg->deallocate(p, n);
         }, m_storage);
     }
 
-    template <class T, class DA>
-    any_allocator<T, DA> any_allocator<T, DA>::select_on_container_copy_construction() const
+    template <class T>
+    any_allocator<T> any_allocator<T>::select_on_container_copy_construction() const
     {
         return any_allocator(*this);
     }
 
-    template <class T, class DA>
-    bool any_allocator<T, DA>::equal(const any_allocator& rhs) const
+    template <class T>
+    bool any_allocator<T>::equal(const any_allocator& rhs) const
     {
         // YOLO!!
         return std::visit([&rhs](auto&& arg)
         {
             using A = std::decay_t<decltype(arg)>;
-            if constexpr (is_value_stored<A>)
+            if constexpr (can_any_allocator_sbo<A, T>)
             {
                 return std::visit([&arg](auto&& arg2)
                 {
                     using A2 = std::decay_t<decltype(arg2)>;
-                    if constexpr (is_value_stored<A2> && std::same_as<A, A2>)
+                    if constexpr (can_any_allocator_sbo<A2, T> && std::same_as<A, A2>)
                         return arg == arg2;
                     else
                         return false;
@@ -229,7 +228,7 @@ namespace sparrow
                 return std::visit([&arg](auto&& arg2)
                 {
                     using A2 = std::decay_t<decltype(arg2)>;
-                    if constexpr (is_value_stored<A2>)
+                    if constexpr (can_any_allocator_sbo<A2, T>)
                         return false;
                     else
                         return arg->equal(*arg2);
@@ -239,8 +238,8 @@ namespace sparrow
         }, m_storage);
     }
 
-    template <class T, class DA>
-    bool operator==(const any_allocator<T, DA>& lhs, const any_allocator<T, DA>& rhs)
+    template <class T>
+    bool operator==(const any_allocator<T>& lhs, const any_allocator<T>& rhs)
     {
         return lhs.equal(rhs);
     }
