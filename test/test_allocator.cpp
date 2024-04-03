@@ -36,7 +36,7 @@ TEST_SUITE("any_allocator")
             }
         }
 
-        SUBCASE("copy semantic")
+        SUBCASE("copy constructor")
         {
             using value_type = typename A::value_type;
 
@@ -45,12 +45,11 @@ TEST_SUITE("any_allocator")
             sparrow::any_allocator<value_type> b(a);
             CHECK(a == b);
 
-            sparrow::any_allocator<value_type> c(alloc);
-            b = c;
-            CHECK(b == c);
+            auto d = b.select_on_container_copy_construction();
+            CHECK(d == b);
         }
 
-        SUBCASE("move semantic")
+        SUBCASE("move constructor")
         {
             using value_type = typename A::value_type;
 
@@ -58,10 +57,6 @@ TEST_SUITE("any_allocator")
             sparrow::any_allocator<value_type> a(alloc);
             sparrow::any_allocator<value_type> aref(a);
             sparrow::any_allocator<value_type> b(std::move(a));
-            CHECK_EQ(b, aref);
-
-            sparrow::any_allocator<value_type> c(aref);
-            b = std::move(c);
             CHECK_EQ(b, aref);
         }
     }

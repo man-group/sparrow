@@ -16,7 +16,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <memory_resource>
 #include <type_traits>
+#include <variant>
 
 namespace sparrow
 {
@@ -39,7 +41,7 @@ namespace sparrow
 
     /*
      * Type erasure class for allocators. This allows to use any kind of allocator
-     * (standard, polymorphic) whithout having to expose it as a template parameter.
+     * (standard, polymorphic) without having to expose it as a template parameter.
      *
      * @tparam T value_type of the allocator
      * @tparam DA default allocator, instantiated when calling the default constructor
@@ -47,50 +49,96 @@ namespace sparrow
     template <class T, class DA = std::allocator<T>>
     class any_allocator
     {
+        template <class A>
+        static constexpr bool is_value_stored = 
+            std::is_same_v<A, std::allocator<T>> || std::is_same_v<A, std::pmr::polymorphic_allocator<T>>;
+
     public:
 
         using value_type = T;
 
         any_allocator()
-            : p_allocator(std::make_unique<impl<DA>>(DA()))
+            : m_storage(make_storage(DA()))
         {
         }
 
         any_allocator(const any_allocator& rhs)
-            : p_allocator(rhs.p_allocator->clone())
+            : m_storage(copy_storage(rhs.m_storage))
         {
-        }
-
-        any_allocator& operator=(const any_allocator& rhs)
-        {
-            p_allocator = rhs.p_allocator->clone();
-            return *this;
         }
 
         any_allocator(any_allocator&&) = default;
-        any_allocator& operator=(any_allocator&&) = default;
+
+        any_allocator& operator=(const any_allocator& rhs) = delete;
+        any_allocator& operator=(any_allocator&& rhs) = delete;
 
         template <class A>
         any_allocator(A&& alloc)
         requires (not std::same_as<std::remove_cvref_t<A>, any_allocator>
                 and sparrow::allocator<A>)
-            : p_allocator(std::make_unique<impl<std::decay_t<A>>>(std::forward<A>(alloc)))
+            : m_storage(make_storage(std::forward<A>(alloc)))
         {
         }
 
         [[nodiscard]] T* allocate(std::size_t n)
         {
-            return p_allocator->allocate(n);
+            return std::visit([n](auto&& arg)
+            {
+                using A = std::decay_t<decltype(arg)>;
+                if constexpr (is_value_stored<A>)
+                    return arg.allocate(n);
+                else
+                    return arg->allocate(n);
+            }, m_storage);
         }
 
         void deallocate(T* p, std::size_t n)
         {
-            p_allocator->deallocate(p, n);
+            return std::visit([p, n](auto&& arg)
+            {
+                using A = std::decay_t<decltype(arg)>;
+                if constexpr (is_value_stored<A>)
+                    arg.deallocate(p, n);
+                else
+                    arg->deallocate(p, n);
+            }, m_storage);
+        }
+
+        any_allocator select_on_container_copy_construction() const
+        {
+            return any_allocator(*this);
         }
 
         bool equal(const any_allocator& rhs) const
         {
-            return p_allocator->equal(*rhs.p_allocator);
+            // YOLO!!
+            return std::visit([&rhs](auto&& arg)
+            {
+                using A = std::decay_t<decltype(arg)>;
+                if constexpr (is_value_stored<A>)
+                {
+                    return std::visit([&arg](auto&& arg2)
+                    {
+                        using A2 = std::decay_t<decltype(arg2)>;
+                        if constexpr (is_value_stored<A2> && std::same_as<A, A2>)
+                            return arg == arg2;
+                        else
+                            return false;
+                    }, rhs.m_storage);
+                }
+                else
+                {
+                    return std::visit([&arg](auto&& arg2)
+                    {
+                        using A2 = std::decay_t<decltype(arg2)>;
+                        if constexpr (is_value_stored<A2>)
+                            return false;
+                        else
+                            return arg->equal(*arg2);
+                    }, rhs.m_storage);
+                }
+
+            }, m_storage);
         }
 
     private:
@@ -136,7 +184,39 @@ namespace sparrow
             }
         };
 
-        std::unique_ptr<interface> p_allocator;
+        using storage_type = std::variant
+        <
+            std::allocator<T>,
+            std::pmr::polymorphic_allocator<T>,
+            std::unique_ptr<interface>
+        >;
+
+        template <class A>
+        std::unique_ptr<interface> make_storage(A&& alloc) const
+        {
+            return std::make_unique<impl<std::decay_t<A>>>(std::forward<A>(alloc));
+        }
+
+        template <class A>
+        requires is_value_stored<A>
+        A&& make_storage(A&& alloc) const
+        {
+            return std::forward<A>(alloc);
+        }
+
+        storage_type copy_storage(const storage_type& rhs) const
+        {
+            return std::visit([](auto&& arg) -> storage_type
+            {
+                using A = std::decay_t<decltype(arg)>;
+                if constexpr (is_value_stored<A>)
+                    return { A(arg) };
+                else
+                    return { arg->clone() };
+            }, rhs);
+        }
+
+        storage_type m_storage;
     };
 
     template <class T, class DA>
