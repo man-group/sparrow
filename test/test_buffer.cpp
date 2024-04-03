@@ -15,6 +15,7 @@
 #include <numeric>
 
 #include "sparrow/buffer.hpp"
+#include "sparrow/buffer_view.hpp"
 
 #include "doctest/doctest.h"
 
