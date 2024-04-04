@@ -15,30 +15,13 @@
 #pragma once
 
 #include <ranges>
+
+#include "sparrow/mp_utils.hpp"
 #include "sparrow/array_data.hpp"
 #include "sparrow/iterator.hpp"
 
 namespace sparrow
 {
-    namespace impl
-    {
-        template <class C, bool is_const>
-        struct get_inner_reference
-            : std::conditional<
-                is_const,
-                typename C::inner_const_reference,
-                typename C::inner_reference
-              >
-        {
-        };
-
-        template <class C, bool is_const>
-        using get_inner_reference_t = typename get_inner_reference<C, is_const>::type;
-    }
-
-    template <class T>
-    concept layout_offset = std::same_as<T, std::int32_t> || std::same_as<T, std::int64_t>;
-
     /**
      * @class vs_binary_value_iterator
      *
