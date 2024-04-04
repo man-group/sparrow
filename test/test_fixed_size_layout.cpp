@@ -82,6 +82,55 @@ namespace sparrow
             CHECK_EQ(citer, lt_values.end());
         }
 
+        TEST_CASE("const_value_iterator_ordering")
+        {
+            layout_test_type lt(make_test_array_data(10, 1));
+            auto lt_values = lt.values();
+            layout_test_type::const_value_iterator citer = lt_values.begin();
+            CHECK(citer < lt_values.end());
+        }
+
+        TEST_CASE("const_value_iterator_equality")
+        {
+            layout_test_type lt(make_test_array_data(10, 1));
+            auto lt_values = lt.values();
+            for (std::size_t i = 0; i < lt.size(); ++i)
+            {
+                lt[i] = i;
+            }
+
+            layout_test_type::const_value_iterator citer = lt_values.begin();
+            for (std::size_t i = 0; i < lt.size(); ++i, ++citer)
+            {
+                CHECK_EQ(*citer, i);
+            }
+        }
+
+        TEST_CASE("const_bitmap_iterator_ordering")
+        {
+            layout_test_type lt(make_test_array_data(10, 1));
+            auto lt_bitmap = lt.bitmap();
+            layout_test_type::const_bitmap_iterator citer = lt_bitmap.begin();
+            CHECK(citer < lt_bitmap.end());
+        }
+
+        TEST_CASE("const_bitmap_iterator_equality")
+        {
+            layout_test_type lt(make_test_array_data(10, 1));
+            auto lt_bitmap = lt.bitmap();
+            for (std::size_t i = 0; i < lt.size(); ++i)
+            {
+                if (i % 2 != 0)
+                    lt[i] = std::nullopt;
+            }
+
+            layout_test_type::const_bitmap_iterator citer = lt_bitmap.begin();
+            for (std::size_t i = 0; i < lt.size(); ++i, ++citer)
+            {
+                CHECK_EQ(*citer, i % 2 == 0);
+            }
+        }
+
         TEST_CASE("iterator")
         {
             layout_test_type lt(make_test_array_data(10, 1));
