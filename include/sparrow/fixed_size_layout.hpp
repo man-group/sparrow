@@ -67,9 +67,6 @@ namespace sparrow
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
         using const_value_range = std::ranges::subrange<const_value_iterator>;
 
-        using bitmap_range = std::ranges::subrange<bitmap_iterator>;
-        using value_range = std::ranges::subrange<value_iterator>;
-
         using iterator = layout_iterator<self_type, false>;
         using const_iterator = layout_iterator<self_type, true>;
 
@@ -85,9 +82,6 @@ namespace sparrow
 
         const_iterator cbegin() const;
         const_iterator cend() const;
-
-        bitmap_range bitmap();
-        value_range values();
 
         const_bitmap_range bitmap() const;
         const_value_range values() const;
@@ -189,18 +183,6 @@ namespace sparrow
     auto fixed_size_layout<T>::cend() const -> const_iterator
     {
         return const_iterator(value_cend(), bitmap_cend());
-    }
-
-    template <class T>
-    auto fixed_size_layout<T>::bitmap() -> bitmap_range
-    {
-        return std::ranges::subrange(bitmap_begin(), bitmap_end());
-    }
-
-    template <class T>
-    auto fixed_size_layout<T>::values() -> value_range
-    {
-        return std::ranges::subrange(value_begin(), value_end());
     }
 
     template <class T>

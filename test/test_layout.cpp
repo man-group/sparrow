@@ -66,27 +66,20 @@ namespace sparrow
         {
             layout_test_type lt(make_test_array_data(10, 1));
             auto lt_values = lt.values();
-            layout_test_type::value_iterator iter = lt_values.begin();
-            // TODO: Allow coercion of iterator to const_iterator.
-            // layout_test_type::const_value_iterator citer = lt_values.begin();
-            CHECK(iter < lt_values.end());
-            // CHECK(citer < lt_values.end());
+            layout_test_type::const_value_iterator citer = lt_values.begin();
+            CHECK(citer < lt_values.end());
         }
 
         TEST_CASE("value_iterator_equality")
         {
             layout_test_type lt(make_test_array_data(10, 1));
             auto lt_values = lt.values();
-            layout_test_type::value_iterator iter = lt_values.begin();
-            // TODO: Allow coercion of iterator to const_iterator.
-            // layout_test_type::const_value_iterator citer = lt_values.begin();
+            layout_test_type::const_value_iterator citer = lt_values.begin();
             for (std::size_t i = 0; i < lt.size(); ++i)
             {
-                CHECK_EQ(*iter++, lt[i]);
-                // CHECK_EQ(*citer++, lt[i]);
+                CHECK_EQ(*citer++, lt[i]);
             }
-            CHECK_EQ(iter, lt_values.end());
-            // CHECK_EQ(citer, lt_values.end());
+            CHECK_EQ(citer, lt_values.end());
         }
 
         TEST_CASE("iterator")
