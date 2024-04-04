@@ -16,13 +16,13 @@
 
 #include <cassert>
 #include <compare>
-#include <concepts>
 #include <optional>
 #include <vector>
 
 #include "sparrow/buffer.hpp"
 #include "sparrow/data_type.hpp"
 #include "sparrow/dynamic_bitset.hpp"
+#include "sparrow/memory.hpp"
 
 namespace sparrow
 {
@@ -48,7 +48,7 @@ namespace sparrow
         // Other buffers
         std::vector<buffer_type> buffers;
         std::vector<array_data> child_data;
-        std::shared_ptr<array_data> dictionary;
+        sparrow::value_ptr<array_data> dictionary;
     };
 
     /**

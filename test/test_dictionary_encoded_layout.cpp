@@ -43,7 +43,7 @@ namespace sparrow
             m_data.buffers.push_back(b);
             m_data.length = element_count;
             auto dictionary = make_dictionary();
-            m_data.dictionary = std::make_shared<array_data>(std::move(dictionary));
+            m_data.dictionary = sparrow::value_ptr<array_data>(std::move(dictionary));
         }
 
         static array_data make_dictionary()
