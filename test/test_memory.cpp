@@ -20,8 +20,8 @@ TEST_SUITE("value_ptr")
 
     TEST_CASE("copy constructor")
     {
-        value_ptr vp1(42);
-        value_ptr vp2(vp1);
+        const value_ptr vp1(42);
+        const value_ptr vp2(vp1);
         REQUIRE(vp1);
         REQUIRE(vp2);
         CHECK(*vp1 == 42);
@@ -30,8 +30,8 @@ TEST_SUITE("value_ptr")
 
     TEST_CASE("copy")
     {
-        value_ptr vp1(42);
-        value_ptr vp2 = vp1;
+        const value_ptr vp1(42);
+        const value_ptr vp2 = vp1;
         REQUIRE(vp1);
         REQUIRE(vp2);
         CHECK(*vp1 == 42);
@@ -41,7 +41,7 @@ TEST_SUITE("value_ptr")
     TEST_CASE("move constructor")
     {
         value_ptr vp1(42);
-        value_ptr vp2(std::move(vp1));
+        const value_ptr vp2(std::move(vp1));
         CHECK(!vp1);
         REQUIRE(vp2);
         CHECK(*vp2 == 42);
@@ -79,6 +79,7 @@ TEST_SUITE("value_ptr")
         value_ptr vp(std::vector<int>{42});
         CHECK(vp.operator->() == &*vp);
         CHECK(vp->size() == 1);
+        CHECK(vp->at(0) == 42);
     }
 
     TEST_CASE("operator bool")

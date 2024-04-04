@@ -1,4 +1,4 @@
-#include <stdexcept>
+#include <cassert>
 #include <memory>
 
 namespace sparrow {
@@ -11,56 +11,44 @@ public:
     explicit value_ptr(T value)
         : value_(std::make_unique<T>(std::move(value))) {}
 
+    explicit value_ptr(T* value) 
+        : value_(value != nullptr ? std::make_unique<T>(*value) : std::unique_ptr<T>()) {}
+
     value_ptr(const value_ptr& other)
         : value_(other.value_ ? std::make_unique<T>(*other.value_) : std::unique_ptr<T>()){}
 
-    value_ptr(value_ptr&& other) noexcept
-        : value_(std::move(other.value_)) {
-        other.reset();
-    }
+    value_ptr(value_ptr&& other) noexcept = default;
+
+    ~value_ptr() = default;
 
     value_ptr& operator=(const value_ptr& other) {
         if (other.has_value()) {
-            value_ = std::make_unique<T>(*other.value_);
+            *value_ = *other.value_;
         }else {
             value_.reset();
         }
         return *this;
     }
 
-    value_ptr& operator=(value_ptr&& other) noexcept {
-        if (this != &other) {
-            value_ = std::move(other.value_);
-            other.reset();
-        }
-        return *this;
-    }
+    value_ptr& operator=(value_ptr&& other) noexcept = default;
 
     T& operator*() {
-        if (!value_) {
-            throw std::runtime_error("No value stored in value_ptr");
-        }
+        assert(value_);
         return *value_;
     }
 
     const T& operator*() const {
-        if (!value_) {
-            throw std::runtime_error("No value stored in value_ptr");
-        }
+        assert(value_);
         return *value_;
     }
 
     T* operator->() {
-        if (!value_) {
-            throw std::runtime_error("No value stored in value_ptr");
-        }
+        assert(value_);
         return &*value_;
     }
 
     const T* operator->() const {
-        if (!value_) {
-            throw std::runtime_error("No value stored in value_ptr");
-        }
+        assert(value_);
         return &*value_;
     }
 

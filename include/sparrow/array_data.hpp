@@ -48,7 +48,7 @@ namespace sparrow
         // Other buffers
         std::vector<buffer_type> buffers;
         std::vector<array_data> child_data;
-        sparrow::value_ptr<array_data> dictionary;
+        value_ptr<array_data> dictionary;
     };
 
     /**
