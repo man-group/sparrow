@@ -51,7 +51,11 @@ else()
     get_clang_tidy_version(${CLANG_TIDY})
     message(STATUS "✅clang-tidy found at ${CLANG_TIDY} | version: ${CLANG_TIDY_MAJOR_VERSION}.${CLANG_TIDY_MINOR_VERSION}.${CLANG_TIDY_PATCH_VERSION}")
 
-
+    if(ACTIVATE_LINTER_DURING_COMPILATION)
+        set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY})
+    else()
+        set(CMAKE_CXX_CLANG_TIDY "")
+    endif()
 
     find_package (Python COMPONENTS Interpreter)
     if(Python_Interpreter_FOUND)
@@ -85,8 +89,6 @@ else()
         file(GLOB_RECURSE FILES_TO_ANALYZE ${CMAKE_SOURCE_DIR}/${PATTERN})
         list(APPEND ALL_FILES_TO_ANALYZE ${FILES_TO_ANALYZE})
     endforeach()
-
-  
 
     add_custom_target(
         clang-tidy

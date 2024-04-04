@@ -42,3 +42,4 @@ jobs:
         style: 'file'  # Use .clang-format config file
         tidy-checks: '' # Use .clang-tidy config file
         step-summary: true
+        ignore: 'build'
