@@ -43,3 +43,4 @@ jobs:
         tidy-checks: '' # Use .clang-tidy config file
         step-summary: true
         ignore: 'build'
+        extra-args: '-std=c++20'
