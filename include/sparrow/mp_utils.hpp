@@ -56,31 +56,45 @@ namespace sparrow::mpl
     template <class T, bool is_const>
     using constify_t = typename constify<T, is_const>::type;
 
+    //////////////////////////////////////////////////
+    //// Type-predicates /////////////////////////////
 
+    /// Matches template types which can be used as type-wrappers for evaluation in type-predicates.
+    template< template< class > class W, class T >
+    concept type_wrapper = std::same_as<W<T>, typelist<T>>
+                        or std::same_as<W<T>, std::type_identity_t<T>>
+                        ;
 
-    /// Matches types that can be evaluated at compile-time
+    /// Matches template types that can be evaluated at compile-time similarly to `std::true/false_type`
+    /// This makes possible to use predicates provided by the standard.
     template< template<class> class P, class T >
     concept ct_type_predicate = requires
     {
-        { P<T>::value } -> std::same_as<bool>;
+        { P<T>::value } -> std::convertible_to<bool>;
     };
 
+    /// Matches types which instance can be called with an object representing a type to evaluate it.
+    /// The object passed to calling the predicate instance is either a typelist with one element or
+    /// `std::type_identity_t<T>`. Basically a value wrapper for representing a type.
+    /// This is useful to detect type predicates which allow being called like normal functions.
     template< class P, class T >
     concept callable_type_predicate = std::semiregular<P>
         and (
                 requires(P predicate)
                 {
-                    { predicate(typelist<T>{}) } -> std::same_as<bool>;
+                    { predicate(typelist<T>{}) } -> std::convertible_to<bool>;
                 }
             or
                 requires(P predicate)
                 {
-                    { predicate(std::type_identity_t<T>{}) } -> std::same_as<bool>;
+                    { predicate(std::type_identity_t<T>{}) } -> std::convertible_to<bool>;
                 }
             )
         ;
 
 
+
+    /// Evaluates the provided compile-time template class predicate P given a type T, if P is of a similar shape to `std::true/false_type`.
     template<class T, template<class> class P>
         requires ct_type_predicate<P,T>
     consteval
@@ -89,6 +103,7 @@ namespace sparrow::mpl
         return P<T>::value;
     }
 
+    /// Evaluates the provided compile-time template class predicate P given a type T, if P's instance is callable given a value type wrapper of T.
     template<class T, callable_type_predicate<T> P>
     consteval
     bool evaluate(P predicate)
@@ -103,18 +118,69 @@ namespace sparrow::mpl
         }
     }
 
+    namespace predicate
+    {
+
+        /// Compile-time type predicate: `true` if the evaluated type is the same as `T`.
+        /// Example:
+        ///     static constexpr auto some_types = typelist<int, float>{}
+        ///     static constexpr auto same_as_int = same_as<int>{};
+        ///     static_assert( any_of(some_types, same_as_int) == true);
+        ///     static_assert( all_of(some_types, same_as_int) == false);
+        template<class T>
+        struct same_as
+        {
+            template<class X>
+            consteval
+            bool operator()(mpl::typelist<X> list) const
+            {
+                return std::same_as< mpl::typelist<T>, decltype(list) >;
+            }
+
+        };
+    }
+
+    template< template<class> class P >
+    struct ct_type_predicate_to_callable
+    {
+        template<template<class> class W, class T>
+            requires ct_type_predicate<P, T> and type_wrapper<W,T>
+        consteval bool operator()(W<T>)
+        {
+            return P<T>::value;
+        }
+    };
 
 
+    template< template<class> class P >
+    consteval
+    auto as_predicate()
+    {
+        return ct_type_predicate_to_callable<P>{};
+    };
+
+
+
+    //////////////////////////////////////////////////
+    //// Algorithms //////////////////////////////////
 
     /// Checks that at least one type in the provided list of is making the provide predicate return `true`.
     /// @returns 'true' if for at least one type T in the type list L,, `Predicate{}(typelist<T>) == true`.
     ///          `false` otherwise or if the list is empty.
-    template< template<class...> class L, class Predicate, class... T>
+    template< class Predicate, template<class...> class L, class... T>
         requires any_typelist<L<T...>>
     consteval
-    bool any_of(L<T...> list, Predicate predicate)
+    bool any_of(L<T...> list, Predicate predicate = {})
     {
         return (evaluate<T>(predicate) || ... || false);
+    }
+
+    template< template<class> class Predicate, template<class...> class L, class... T>
+        requires any_typelist<L<T...>>
+    consteval
+    bool any_of(L<T...> list)
+    {
+        return any_of(list, as_predicate<Predicate>());
     }
 
     /// Checks that every type in the provided list of is making the provide predicate return `true`.
@@ -123,36 +189,18 @@ namespace sparrow::mpl
     template< template<class...> class L, class Predicate, class... T>
         requires any_typelist<L<T...>>
     consteval
-        bool all_of(L<T...> list, Predicate predicate)
+    bool all_of(L<T...> list, Predicate predicate)
     {
         return (evaluate<T>(predicate) && ... && true);
     }
 
-    /// Compile-time type predicate: `true` if the evaluated type is the same as `T`.
-    /// Example:
-    ///     static constexpr auto some_types = typelist<int, float>{}
-    ///     static constexpr auto same_as_int = same_as<int>{};
-    ///     static_assert( any_of(some_types, same_as_int) == true);
-    ///     static_assert( all_of(some_types, same_as_int) == false);
-    ///
-    // TODO: elaborate documentation?
-    template<class T>
-    struct same_as
-    {
-        consteval
-        bool operator()(mpl::any_typelist auto list) const
-        {
-            return std::same_as< mpl::typelist<T>, decltype(list) >;
-        }
-
-    };
 
     /// @returns `true` if the provided type list contains `V`
     template< class V, any_typelist L>
     consteval
     bool contains(L list)
     {
-        return any_of(list, same_as<V>{});
+        return any_of(list, predicate::same_as<V>{});
     }
 
 
@@ -187,7 +235,7 @@ namespace sparrow::mpl
     consteval
     std::size_t find(L list)
     {
-        return find_if(list, same_as<TypeToFind>{});
+        return find_if(list, predicate::same_as<TypeToFind>{});
     }
 
 

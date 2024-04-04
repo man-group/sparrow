@@ -106,5 +106,24 @@ namespace sparrow
 
     };
 
+    namespace predicate
+    {
+
+        struct {
+            template<class T>
+            consteval bool operator()(mpl::typelist<T>)
+            {
+                return sparrow::is_arrow_base_type<T>;
+            }
+        } constexpr is_arrow_base_type;
+
+        struct {
+            template<class T>
+            consteval bool operator()(mpl::typelist<T>)
+            {
+                return sparrow::is_arrow_traits< arrow_traits<T> >;
+            }
+        } constexpr has_arrow_traits;
+    }
 
 }

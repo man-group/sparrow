@@ -23,25 +23,6 @@ static_assert( sparrow::any_arrow_type< MyDataType > );
 // Base arrow types representations support tests and concept checking.
 namespace sparrow
 {
-    struct {
-        template<class T>
-        consteval bool operator()(mpl::typelist<T>)
-        {
-            return is_arrow_base_type<T>;
-        }
-    } constexpr predicate_is_arrow_base_type;
-
-
-    static_assert(mpl::all_of(all_base_types_t{}, predicate_is_arrow_base_type));
-
-    struct {
-        template<class T>
-        consteval bool operator()(mpl::typelist<T>)
-        {
-            return is_arrow_traits< sparrow::arrow_traits<T> >;
-        }
-    } constexpr predicate_has_arrow_traits;
-
-    static_assert(mpl::all_of(all_base_types_t{}, predicate_has_arrow_traits));
-
+    static_assert(mpl::all_of(all_base_types_t{}, predicate::is_arrow_base_type));
+    static_assert(mpl::all_of(all_base_types_t{}, predicate::has_arrow_traits));
 }
