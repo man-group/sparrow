@@ -18,9 +18,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install Ninja
-      run: sudo apt install ninja-build -y
-
     - name: Set conda environment
       uses: mamba-org/setup-micromamba@main
       with:
