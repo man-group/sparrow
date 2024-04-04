@@ -58,11 +58,11 @@ namespace sparrow::mpl
 
 
 
-
-    template< class P >
+    /// Matches types that can be evaluated at compile-time
+    template< template<class> class P, class T >
     concept ct_type_predicate = requires
     {
-        { P::value } -> std::same_as<bool>;
+        { P<T>::value } -> std::same_as<bool>;
     };
 
     template< class P, class T >
@@ -80,12 +80,9 @@ namespace sparrow::mpl
             )
         ;
 
-    template< class P, class T >
-    concept type_predicate = ct_type_predicate<P> or callable_type_predicate<P, T>;
-
 
     template<class T, template<class> class P>
-        requires ct_type_predicate<P<T>>
+        requires ct_type_predicate<P,T>
     consteval
     bool evaluate(P<T>)
     {
