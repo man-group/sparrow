@@ -50,6 +50,7 @@ OPTION(ACTIVATE_LINTER "Create targets to run clang-format" OFF)
 
 if(ACTIVATE_LINTER)
     include(cmake/clang-format.cmake)
+    include(cmake/clang-tidy.cmake)
 endif()
 
 # Dependencies

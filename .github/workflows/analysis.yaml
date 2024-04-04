@@ -1,6 +1,7 @@
-name: cpp-linter
+name: cpp-linter-analysis
 
 on: [push, pull_request]
+
 defaults:
   run:
     shell: bash -e -l {0}
@@ -39,5 +40,5 @@ jobs:
         # lines-changed-only: true
         database: 'build'
         style: 'file'  # Use .clang-format config file
-        tidy-checks: '-*' # disable clang-tidy checks.
+        tidy-checks: '' # Use .clang-tidy config file
         step-summary: true
