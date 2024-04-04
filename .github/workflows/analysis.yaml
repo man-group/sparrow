@@ -37,7 +37,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         version: 18
-        # lines-changed-only: true
+        files-changed-only: false
         database: 'build'
         style: 'file'  # Use .clang-format config file
         tidy-checks: '' # Use .clang-tidy config file
