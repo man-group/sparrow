@@ -40,6 +40,11 @@ namespace sparrow
             { alloc.deallocate(p, n) } -> std::same_as<void>;
         };
 
+    /*
+     * When the allocator A with value_type T satisfies this concept, any_allocator
+     * can store it as a value in a small buffer instead of having to type-erased it
+     * (Small Buffer Optimization).
+     */
     template <class A, class T>
     concept can_any_allocator_sbo = allocator<A> &&
         (std::same_as<A, std::allocator<T>> || std::same_as<A, std::pmr::polymorphic_allocator<T>>);
@@ -116,7 +121,7 @@ namespace sparrow
             {
                 if (std::type_index(typeid(*this)) == std::type_index(typeid(rhs)))
                 {
-                    return m_alloc == static_cast<const impl<A>*>(&rhs)->m_alloc;
+                    return m_alloc == static_cast<const impl<A>*>(std::addressof(rhs))->m_alloc;
                 }
                 return false;
             }
