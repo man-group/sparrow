@@ -1,3 +1,11 @@
+if(NOT CMAKE_GENERATOR MATCHES "Ninja|Unix Makefiles")
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+else()
+    message(WARNING "🚧 Compile command can't be used because the CMAKE_GENERATOR is ${CMAKE_GENERATOR}.
+You have to use Ninja or Unix Makefiles.
+Without compile command, clang-tidy will not work.")
+endif()
+
 set(CLANG-TIDY_MINIMUM_MAJOR_VERSION 18)
 
 function(get_clang_tidy_version clang_tidy_path)
