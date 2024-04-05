@@ -248,7 +248,7 @@ namespace sparrow
         TEST_CASE("make_pointer_iterator")
         {
             std::array<int, 3> a = { 2, 4, 6 };
-            auto iter = make_pointer_iterator(a.begin());
+            auto iter = make_pointer_iterator(&a[0]);
             CHECK_EQ(*iter, a[0]);
             ++iter;
             CHECK_EQ(*iter, a[1]);
