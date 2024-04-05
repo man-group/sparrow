@@ -3,7 +3,9 @@
 // PLEASE UPDATE THIS COMMENT IF YOU REPLACE THIS
 // SEE README.md for rational
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// Modification from the original:
+// - Added of the <=> operator
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef FLOAT16_T_HPP_INCLUDED_OSDIJSALKJS8OU4LKJAFSOIUASFD98U3LJKASFOIJFFDDDDDF
 #define FLOAT16_T_HPP_INCLUDED_OSDIJSALKJS8OU4LKJAFSOIUASFD98U3LJKASFOIJFFDDDDDF
 //
@@ -11,6 +13,7 @@
 // https://github.com/acgessler/half_float
 // https://github.com/x448/float16
 //
+#include <compare>
 #include <cstdint>
 #include <limits>
 #include <iostream>
@@ -784,6 +787,15 @@ namespace numeric
     constexpr inline bool operator != ( float16_t lhs, float16_t rhs ) noexcept
     {
         return !( lhs == rhs );
+    }
+
+    // Added by Alexis Placet from Quantstack
+    constexpr std::partial_ordering operator <=> ( float16_t lhs, float16_t rhs ) noexcept
+    {
+        if ( lhs < rhs ) return std::partial_ordering::less;
+        if ( lhs > rhs ) return std::partial_ordering::greater;
+        if ( lhs == rhs ) return std::partial_ordering::equivalent;
+        return std::partial_ordering::unordered;
     }
 
     template<typename CharT, class Traits>
