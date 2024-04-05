@@ -3,6 +3,13 @@
 
 namespace sparrow {
 
+/**
+ * @brief A value_ptr is a smart pointer that behaves like a value.
+ * It manages the lifetime of an object of type T.
+ * When copied, it copies the managed object.
+ * 
+ * @tparam T The type of the object managed by the `value_ptr`.
+ */
 template <class T>
 class value_ptr {
 public:

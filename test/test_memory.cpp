@@ -77,7 +77,7 @@ TEST_SUITE("value_ptr")
     TEST_CASE("operator->")
     {
         value_ptr vp(std::vector<int>{42});
-        CHECK(vp.operator->() == &*vp);
+        CHECK(vp.operator->() == std::addressof(*vp));
         CHECK(vp->size() == 1);
         CHECK(vp->at(0) == 42);
     }
