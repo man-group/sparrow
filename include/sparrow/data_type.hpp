@@ -49,6 +49,7 @@ namespace sparrow
     static_assert(std::is_floating_point_v<float16_t>);
     static_assert(std::is_floating_point_v<float32_t>);
     static_assert(std::is_floating_point_v<float64_t>);
+    static_assert(CHAR_BIT == 8);
 
 
     /// Runtime identifier of arrow data types, usually associated with raw bytes with the associated value.

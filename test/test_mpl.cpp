@@ -45,6 +45,11 @@ namespace sparrow
     static_assert(mpl::all_of<std::is_integral>(test_list{}));
     static_assert(not mpl::all_of<std::is_floating_point>(test_list{}));
 
+    static constexpr auto some_types = mpl::typelist<int, float>{};
+    static constexpr auto same_as_int = mpl::predicate::same_as<int>{};
+    static_assert( mpl::any_of(some_types, same_as_int) == true);
+    static_assert(mpl::all_of(some_types, same_as_int) == false);
+
 
     static_assert(mpl::find_if(test_list{}, mpl::predicate::same_as<int>{}) == 0);
     static_assert(mpl::find_if(test_list{}, mpl::predicate::same_as<char>{}) == 1);
