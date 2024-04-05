@@ -21,7 +21,7 @@ namespace sparrow {
 
 /**
  * @brief A value_ptr is a smart pointer that behaves like a value.
- * It manages the lifetime of an object of type T.
+ * It manages the lifetime of an object of type T which is not stored in the `value_ptr` but a pointer, similar to `unique_ptr`.
  * When copied, it copies the managed object.
  * 
  * @tparam T The type of the object managed by the `value_ptr`.
@@ -46,7 +46,12 @@ public:
 
     value_ptr& operator=(const value_ptr& other) {
         if (other.has_value()) {
-            *value_ = *other.value_;
+            if(value_) {
+                *value_ = *other.value_;
+            }
+            else {
+                value_ = std::make_unique<T>(*other.value_);
+            }
         }else {
             value_.reset();
         }
