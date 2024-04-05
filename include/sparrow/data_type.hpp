@@ -177,9 +177,6 @@ namespace sparrow
         return arrow_type_id<T>();
     }
 
-    // TODO:
-    // template< data_type id >
-    // using default_type = mpl::at_t< mpl::find_if(all_base_types_t{}, mpl::same_as{})>;
 
     /// Binary layout type to use by default for the given C++ representation T of an arrow value.
     template< has_arrow_type_traits T >
