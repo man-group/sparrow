@@ -406,7 +406,7 @@ namespace sparrow
      * @class iterator_adaptor
      * @brief generic iterator adaptor
      *
-     * This class forward the calls to its "base" iterator, i.e.
+     * This class forwards the calls to its "base" iterator, i.e.
      * the iterator it adapts. Iterator adaptor classes should
      * inherit from this class and redefine the private methods
      * they need only.
@@ -495,7 +495,7 @@ namespace sparrow
     class pointer_iterator;
 
     template <class T>
-    class pointer_iterator<T*> 
+    class pointer_iterator<T*>
         : public iterator_adaptor<pointer_iterator<T*>, T*, T, std::contiguous_iterator_tag>
     {
     public:
@@ -505,16 +505,22 @@ namespace sparrow
         using iterator_type = typename base_type::iterator_type;
         
         pointer_iterator() = default;
-        explicit pointer_iterator(const iterator_type& p)
+        explicit pointer_iterator(iterator_type p)
             : base_type(p)
         {
         }
 
-        template <class Iter>
-        requires std::same_as<Iter, std::remove_const_t<T>>
-        pointer_iterator(const Iter& iter)
-            : base_type(iter.base())
+        template <class U>
+        requires std::convertible_to<U*, iterator_type>
+        explicit pointer_iterator(U* u)
+            : base_type(iterator_type(u))
         {
         }
     };
+
+    template <class T>
+    pointer_iterator<T*> make_pointer_iterator(T* t)
+    {
+        return pointer_iterator<T*>(t);
+    }
 }
