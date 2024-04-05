@@ -25,7 +25,7 @@ namespace sparrow::mpl
 
     /// @returns The count of types contained in a given `typelist`.
     template< class... T >
-    constexpr std::size_t size(typelist<T...>) { return sizeof...(T); }
+    constexpr std::size_t size(typelist<T...> = {}) { return sizeof...(T); }
 
     template< class L, template<class...> class U >
     struct is_type_instance_of : std::false_type {};
@@ -151,7 +151,7 @@ namespace sparrow::mpl
         }
     };
 
-
+    /// @returns A callable type-predicate object which will return `P<T>::value` when called with `T` in a type-wrapper.
     template< template<class> class P >
     consteval
     auto as_predicate()
@@ -175,8 +175,11 @@ namespace sparrow::mpl
         return (evaluate<T>(predicate) || ... || false);
     }
 
+    /// Checks that at least one type in the provided list of is making the provide predicate return `true`.
+    /// @returns 'true' if for at least one type T in the type list L, `Predicate<T>::value == true`.
+    ///          `false` otherwise or if the list is empty.
     template< template<class> class Predicate, template<class...> class L, class... T>
-        requires any_typelist<L<T...>>
+        requires any_typelist<L<T...>> and (ct_type_predicate<Predicate, T> && ...)
     consteval
     bool any_of(L<T...> list)
     {
@@ -186,12 +189,23 @@ namespace sparrow::mpl
     /// Checks that every type in the provided list of is making the provide predicate return `true`.
     /// @returns `true` if for every type T in the type list L, `Predicate{}(typelist<T>) == true`
     ///          or if the list is empty; `false` otherwise.
-    template< template<class...> class L, class Predicate, class... T>
+    template< class Predicate, template<class...> class L, class... T>
         requires any_typelist<L<T...>>
     consteval
     bool all_of(L<T...> list, Predicate predicate)
     {
         return (evaluate<T>(predicate) && ... && true);
+    }
+
+    /// Checks that every type in the provided list of is making the provide predicate return `true`.
+    /// @returns `true` if for every type T in the type list L, `Predicate<T>::value == true`
+    ///          or if the list is empty; `false` otherwise.
+    template< template<class> class Predicate, template<class...> class L, class... T>
+        requires any_typelist<L<T...>> and (ct_type_predicate<Predicate, T> && ...)
+    consteval
+        bool all_of(L<T...> list)
+    {
+        return all_of(list, as_predicate<Predicate>());
     }
 
 
@@ -206,7 +220,7 @@ namespace sparrow::mpl
 
     /// @returns The index position in the first type in the provided type list `L` that matches the provided predicate,
     ///          or the size of the list if the matching type was not found.
-    template< template<class...> class L, class Predicate, class... T>
+    template< class Predicate, template<class...> class L, class... T>
         requires any_typelist<L<T...>>
     consteval
     std::size_t find_if(L<T...> list, Predicate predicate)
@@ -228,6 +242,18 @@ namespace sparrow::mpl
 
         return idx;
     }
+
+
+    /// @returns The index position in the first type in the provided type list `L` that matches the provided predicate,
+    ///          or the size of the list if the matching type was not found.
+    template< template<class> class Predicate, template<class...> class L, class... T>
+        requires any_typelist<L<T...>> and (ct_type_predicate<Predicate, T> && ...)
+    consteval
+        std::size_t find_if(L<T...> list)
+    {
+        return find_if(list, as_predicate<Predicate>());
+    }
+
 
     /// @returns The index position in the type `TypeToFind` in the provided type list `L`,
     ///          or the size of the list if the matching type was not found.
