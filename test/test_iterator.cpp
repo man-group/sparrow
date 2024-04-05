@@ -262,7 +262,7 @@ namespace sparrow
             using iterator = pointer_iterator<int*>;
             using const_iterator = pointer_iterator<const int*>;
 
-            const_iterator iter{a.begin()};
+            const_iterator iter{&(a[0])};
             CHECK_EQ(*iter, a[0]);
         }
     }
