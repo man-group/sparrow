@@ -1,4 +1,3 @@
-#include "doctest/doctest.h"
 
 #include <sparrow/data_traits.hpp>
 
