@@ -46,13 +46,14 @@ namespace sparrow::mpl
     template< typename TList >
     concept any_typelist = is_type_instance_of_v<TList, typelist>;
 
-    // TODO: document this!
     template <class T, bool is_const>
     struct constify
         : std::conditional<is_const, const T, T>
     {
     };
 
+    // `constify_t` is required since `std::add_const_t<T&>`
+    // is not `const T&` but `T&`.
     template <class T, bool is_const>
     using constify_t = typename constify<T, is_const>::type;
 
