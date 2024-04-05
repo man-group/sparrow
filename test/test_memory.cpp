@@ -28,7 +28,7 @@ TEST_SUITE("value_ptr")
 
         value_ptr vp1(42);
         REQUIRE(vp1);
-        CHECK(*vp1 == 42);
+        CHECK_EQ(*vp1, 42);
     }
 
     TEST_CASE("copy constructor")
@@ -37,8 +37,8 @@ TEST_SUITE("value_ptr")
         const value_ptr vp2(vp1);
         REQUIRE(vp1);
         REQUIRE(vp2);
-        CHECK(*vp1 == 42);
-        CHECK(*vp2 == 42);
+        CHECK_EQ(*vp1, 42);
+        CHECK_EQ(*vp2, 42);
     }
 
     TEST_CASE("copy constructor with nullptr")
@@ -56,8 +56,8 @@ TEST_SUITE("value_ptr")
         vp1 = vp2;
         REQUIRE(vp1);
         REQUIRE(vp2);
-        CHECK(*vp1 == 42);
-        CHECK(*vp2 == 42);
+        CHECK_EQ(*vp1, 42);
+        CHECK_EQ(*vp2, 42);
 
         value_ptr<int> vp3;
         value_ptr<int> vp4;
@@ -72,8 +72,8 @@ TEST_SUITE("value_ptr")
         const value_ptr vp2 = vp1;
         REQUIRE(vp1);
         REQUIRE(vp2);
-        CHECK(*vp1 == 42);
-        CHECK(*vp2 == 42);
+        CHECK_EQ(*vp1, 42);
+        CHECK_EQ(*vp2, 42);
     }
 
     TEST_CASE("move constructor")
@@ -82,7 +82,7 @@ TEST_SUITE("value_ptr")
         const value_ptr vp2(std::move(vp1));
         CHECK(!vp1);
         REQUIRE(vp2);
-        CHECK(*vp2 == 42);
+        CHECK_EQ(*vp2, 42);
     }
 
     TEST_CASE("move assignment")
@@ -92,7 +92,7 @@ TEST_SUITE("value_ptr")
         vp2 = std::move(vp1);
         CHECK(!vp1);
         REQUIRE(vp2);
-        CHECK(*vp2 == 42);
+        CHECK_EQ(*vp2, 42);
 
         value_ptr<int> vp3;
         {
@@ -100,24 +100,24 @@ TEST_SUITE("value_ptr")
             vp3 = std::move(vp4);
         }
         REQUIRE(vp3);
-        CHECK(*vp3 == 43);
+        CHECK_EQ(*vp3, 43);
     }
 
     TEST_CASE("operator*")
     {
         value_ptr vp(42);
-        CHECK(*vp == 42);
+        CHECK_EQ(*vp, 42);
 
         *vp = 43;
-        CHECK(*vp == 43);
+        CHECK_EQ(*vp, 43);
     }
 
     TEST_CASE("operator->")
     {
         value_ptr vp(std::vector<int>{42});
-        CHECK(vp.operator->() == std::addressof(*vp));
-        CHECK(vp->size() == 1);
-        CHECK(vp->at(0) == 42);
+        CHECK_EQ(vp.operator->(), std::addressof(*vp));
+        CHECK_EQ(vp->size(), 1);
+        CHECK_EQ(vp->at(0), 42);
     }
 
     TEST_CASE("operator bool")
