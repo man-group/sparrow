@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "doctest/doctest.h"
-
 #include <algorithm>
+#include <array>
 #include <cstdint>
+#include <iostream>  // For doctest
 #include <numeric>
 #include <string_view>
-#include <array>
-#include <iostream> // For doctest
 
-#include "sparrow/variable_size_binary_layout.hpp"
 #include "sparrow/dictionary_encoded_layout.hpp"
+#include "sparrow/variable_size_binary_layout.hpp"
+
+#include "doctest/doctest.h"
 
 using data_type_t = uint8_t;
 constexpr size_t element_count = 10;
-static const std::array<data_type_t, element_count> indexes {1, 0,3, 0, 1, 2, 3, 2, 4, 2};
+static const std::array<data_type_t, element_count> indexes{1, 0, 3, 0, 1, 2, 3, 2, 4, 2};
 
 namespace sparrow
 {
@@ -39,7 +39,7 @@ namespace sparrow
             m_data.bitmap.set(9, false);
             constexpr size_t buffer_size = (element_count * sizeof(data_type_t)) / sizeof(uint8_t);
             buffer<uint8_t> b(buffer_size);
-            std::ranges::copy(indexes,b.data<data_type_t>());
+            std::ranges::copy(indexes, b.data<data_type_t>());
             m_data.buffers.push_back(b);
             m_data.length = element_count;
             auto dictionary = make_dictionary();
@@ -53,15 +53,24 @@ namespace sparrow
             dictionary.buffers.resize(2);
             dictionary.buffers[0].resize(sizeof(std::int64_t) * (words.size() + 1));
             dictionary.buffers[1].resize(std::accumulate(
-                words.cbegin(), words.cend(), size_t(0), [](std::size_t res, const auto& s) { return res + s.size(); }
+                words.cbegin(),
+                words.cend(),
+                size_t(0),
+                [](std::size_t res, const auto& s)
+                {
+                    return res + s.size();
+                }
             ));
             dictionary.buffers[0].data<std::int64_t>()[0] = 0u;
             auto iter = dictionary.buffers[1].begin();
-            const auto offset = [&dictionary](){ return dictionary.buffers[0].data<std::int64_t>(); };
+            const auto offset = [&dictionary]()
+            {
+                return dictionary.buffers[0].data<std::int64_t>();
+            };
 
             for (size_t i = 0; i < words.size(); ++i)
             {
-                offset()[i+1] = offset()[i] + words[i].size();
+                offset()[i + 1] = offset()[i] + words[i].size();
                 std::ranges::copy(words[i], iter);
                 iter += words[i].size();
                 dictionary.bitmap.set(i, true);
@@ -73,14 +82,7 @@ namespace sparrow
             return dictionary;
         }
 
-        static constexpr std::array<std::string_view, 5> words = 
-        {
-            "you",
-            "are",
-            "not",
-            "prepared",
-            "null"
-        };
+        static constexpr std::array<std::string_view, 5> words = {"you", "are", "not", "prepared", "null"};
 
         array_data m_data;
         using sub_layout_type = variable_size_binary_layout<std::string, std::string_view, std::string_view>;
@@ -89,7 +91,6 @@ namespace sparrow
 
     TEST_SUITE("dictionary_encoded_layout")
     {
-
         TEST_CASE_FIXTURE(dictionary_encoded_fixture, "constructors")
         {
             CHECK(m_data.buffers.size() == 1);

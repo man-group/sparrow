@@ -14,9 +14,9 @@
 #include <iostream>
 #include <numeric>
 
-#include "doctest/doctest.h"
-
 #include "sparrow/fixed_size_layout.hpp"
+
+#include "doctest/doctest.h"
 
 namespace sparrow
 {
@@ -127,7 +127,9 @@ namespace sparrow
             for (std::size_t i = 0; i < lt.size(); ++i)
             {
                 if (i % 2 != 0)
+                {
                     lt[i] = std::nullopt;
+                }
             }
 
             layout_test_type::const_bitmap_iterator citer = lt_bitmap.begin();
@@ -152,14 +154,15 @@ namespace sparrow
 
             CHECK_EQ(it, end);
 
-            for (auto v: lt)
+            for (auto v : lt)
+            {
                 CHECK(v.has_value());
+            }
 
             array_data ad_empty = make_test_array_data(0, 0);
             layout_test_type lt_empty(ad_empty);
             CHECK_EQ(lt_empty.begin(), lt_empty.end());
         }
-
     }
 
 }

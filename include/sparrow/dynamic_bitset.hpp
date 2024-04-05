@@ -221,7 +221,7 @@ namespace sparrow
         void assign(bool) noexcept;
         void set() noexcept;
         void reset() noexcept;
-        
+
         bitset_type& m_bitset;
         block_type& m_block;
         block_type m_mask;
@@ -248,24 +248,20 @@ namespace sparrow
      * a const iterator.
      */
     template <class B, bool is_const>
-    class bitset_iterator : public iterator_base
-    <
-        bitset_iterator<B, is_const>,
-        mpl::constify_t<typename B::value_type, is_const>,
-        std::random_access_iterator_tag,
-        std::conditional_t<is_const, bool, bitset_reference<B>>
-    >
+    class bitset_iterator : public iterator_base<
+                                bitset_iterator<B, is_const>,
+                                mpl::constify_t<typename B::value_type, is_const>,
+                                std::random_access_iterator_tag,
+                                std::conditional_t<is_const, bool, bitset_reference<B>>>
     {
     public:
-        
+
         using self_type = bitset_iterator<B, is_const>;
-        using base_type = iterator_base
-        <
+        using base_type = iterator_base<
             self_type,
             mpl::constify_t<typename B::value_type, is_const>,
             std::contiguous_iterator_tag,
-            std::conditional_t<is_const, bool, bitset_reference<B>>
-        >;        
+            std::conditional_t<is_const, bool, bitset_reference<B>>>;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
 
@@ -297,7 +293,7 @@ namespace sparrow
 
         friend class iterator_access;
     };
-        
+
     /**************************************
      * dynamic_bitset_base implementation *
      **************************************/
@@ -439,8 +435,7 @@ namespace sparrow
     template <random_access_range B>
     auto dynamic_bitset_base<B>::compute_block_count(size_type bits_count) const noexcept -> size_type
     {
-        return bits_count / s_bits_per_block
-            + static_cast<size_type>(bits_count % s_bits_per_block != 0);
+        return bits_count / s_bits_per_block + static_cast<size_type>(bits_count % s_bits_per_block != 0);
     }
 
     template <random_access_range B>
@@ -465,12 +460,13 @@ namespace sparrow
     auto dynamic_bitset_base<B>::count_non_null() const noexcept -> size_type
     {
         if (m_buffer.empty())
+        {
             return 0u;
+        }
 
         // Number of bits set to 1 in i for i from 0 to 255.
         // This can be seen as a mapping "uint8_t -> number of non null bits"
-        static constexpr unsigned char table[] =
-        {
+        static constexpr unsigned char table[] = {
             0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
             1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
             1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
@@ -490,8 +486,6 @@ namespace sparrow
         }
         return res;
     }
-
-
 
     template <random_access_range B>
     auto dynamic_bitset_base<B>::count_extra_bits() const noexcept -> size_type
@@ -516,7 +510,7 @@ namespace sparrow
         {
             --m_null_count;
         }
-        else if(!new_value && old_value)
+        else if (!new_value && old_value)
         {
             ++m_null_count;
         }
@@ -566,10 +560,7 @@ namespace sparrow
 
     template <std::integral T>
     dynamic_bitset<T>::dynamic_bitset(size_type n, value_type value)
-        : base_type(
-            storage_type(this->compute_block_count(n), value ? ~block_type(0) : 0),
-            n,
-            value ? 0u : n)
+        : base_type(storage_type(this->compute_block_count(n), value ? ~block_type(0) : 0), n, value ? 0u : n)
     {
     }
 
@@ -631,7 +622,7 @@ namespace sparrow
         }
         return *this;
     }
-    
+
     template <class B>
     auto bitset_reference<B>::operator|=(bool rhs) noexcept -> self_type&
     {
@@ -641,7 +632,7 @@ namespace sparrow
         }
         return *this;
     }
-    
+
     template <class B>
     auto bitset_reference<B>::operator^=(bool rhs) noexcept -> self_type&
     {
@@ -708,7 +699,7 @@ namespace sparrow
     {
         assert(m_index < bitset_type::s_bits_per_block);
     }
-    
+
     template <class B, bool is_const>
     auto bitset_iterator<B, is_const>::dereference() const -> reference
     {
@@ -763,7 +754,7 @@ namespace sparrow
             else
             {
                 size_type to_next_block = bitset_type::s_bits_per_block - m_index;
-                n -=  to_next_block;
+                n -= to_next_block;
                 size_type block_n = n / bitset_type::s_bits_per_block;
                 p_block += block_n + 1;
                 n -= block_n * bitset_type::s_bits_per_block;

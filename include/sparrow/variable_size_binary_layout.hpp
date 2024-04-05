@@ -17,9 +17,9 @@
 #include <functional>
 #include <ranges>
 
-#include "sparrow/mp_utils.hpp"
 #include "sparrow/array_data.hpp"
 #include "sparrow/iterator.hpp"
+#include "sparrow/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -33,39 +33,28 @@ namespace sparrow
      * @tparam is_const a boolean flag specifying whether this iterator is const.
      */
     template <class L, bool is_const>
-    class vs_binary_value_iterator : public iterator_base
-    <
-        vs_binary_value_iterator<L, is_const>,
-        mpl::constify_t<typename L::inner_value_type, is_const>,
-        std::contiguous_iterator_tag,
-        impl::get_inner_reference_t<L, is_const>
-    >
+    class vs_binary_value_iterator : public iterator_base<
+                                         vs_binary_value_iterator<L, is_const>,
+                                         mpl::constify_t<typename L::inner_value_type, is_const>,
+                                         std::contiguous_iterator_tag,
+                                         impl::get_inner_reference_t<L, is_const>>
     {
     public:
 
         using self_type = vs_binary_value_iterator<L, is_const>;
-        using base_type = iterator_base
-        <
+        using base_type = iterator_base<
             self_type,
             mpl::constify_t<typename L::inner_value_type, is_const>,
             std::contiguous_iterator_tag,
-            impl::get_inner_reference_t<L, is_const>
-        >;
+            impl::get_inner_reference_t<L, is_const>>;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
 
-        using offset_iterator = std::conditional_t<
-            is_const, typename L::const_offset_iterator, typename L::offset_iterator
-        >;
-        using data_iterator = std::conditional_t<
-            is_const, typename L::const_data_iterator, typename L::data_iterator
-        >;
+        using offset_iterator = std::conditional_t<is_const, typename L::const_offset_iterator, typename L::offset_iterator>;
+        using data_iterator = std::conditional_t<is_const, typename L::const_data_iterator, typename L::data_iterator>;
 
         vs_binary_value_iterator() noexcept = default;
-        vs_binary_value_iterator(
-            offset_iterator offset_it,
-            data_iterator data_begin
-        );
+        vs_binary_value_iterator(offset_iterator offset_it, data_iterator data_begin);
 
     private:
 
@@ -99,13 +88,14 @@ namespace sparrow
      * Let's consider the array of string ['please', 'allow', 'me', 'to', 'introduce', 'myself'].
      * The internal buffers will be:
      * - offset: [0, 6, 11, 13, 15, 24, 30]
-     * - data: ['p','l','e','a','s','e','a','l','l','o','w','m','e','t','o','i','n','t','r','o','d','u','c','e','m','y','s','e','l','f']
+     * - data:
+     * ['p','l','e','a','s','e','a','l','l','o','w','m','e','t','o','i','n','t','r','o','d','u','c','e','m','y','s','e','l','f']
      *
      * @tparam T the type of the data stored in the data buffer, not its byte representation.
      * @tparam R the reference type to the data. This type is different from the reference type of the layout,
      * which behaves like std::optional<R>.
-     * @tparam CR the const reference type to the data. This type is different from the const reference of the layout,
-     * which behaves like std::optional<CR>.
+     * @tparam CR the const reference type to the data. This type is different from the const reference of the
+     * layout, which behaves like std::optional<CR>.
      * @tparam OT type of the offset values. Must be std::int64_t or std::int32_t.
      */
     template <class T, class R, class CR, layout_offset OT = std::int64_t>
@@ -147,7 +137,7 @@ namespace sparrow
         // TODO: uncomment the following line and implement the non const overloads
         // of `begin` and `end`
         // using iterator = layout_iterator<self_type, false>;
-        
+
         using const_value_range = std::ranges::subrange<const_value_iterator>;
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
@@ -157,7 +147,7 @@ namespace sparrow
         self_type& operator=(const self_type&) = delete;
         variable_size_binary_layout(self_type&&) = delete;
         self_type& operator=(self_type&&) = delete;
-        
+
         size_type size() const;
         const_reference operator[](size_type i) const;
 
@@ -196,10 +186,7 @@ namespace sparrow
      *******************************************/
 
     template <class L, bool is_const>
-    vs_binary_value_iterator<L, is_const>::vs_binary_value_iterator(
-        offset_iterator offset_it,
-        data_iterator data_begin
-    )
+    vs_binary_value_iterator<L, is_const>::vs_binary_value_iterator(offset_iterator offset_it, data_iterator data_begin)
         : m_offset_it(offset_it)
         , m_data_begin(data_begin)
     {
@@ -256,8 +243,9 @@ namespace sparrow
         : m_data(data)
     {
         assert(data_ref().buffers.size() == 2u);
-        //TODO: templatize back and front in buffer and uncomment the following line
-        //assert(data_ref().buffers[0].size() == 0u || data_ref().buffers[0].back() == data_ref().buffers[1].size());
+        // TODO: templatize back and front in buffer and uncomment the following line
+        // assert(data_ref().buffers[0].size() == 0u || data_ref().buffers[0].back() ==
+        // data_ref().buffers[1].size());
     }
 
     template <class T, class R, class CR, layout_offset OT>
@@ -331,7 +319,7 @@ namespace sparrow
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::value(size_type i) const -> inner_const_reference
     {
-        return inner_const_reference(data(*offset(i)), data(*offset(i+1)));
+        return inner_const_reference(data(*offset(i)), data(*offset(i + 1)));
     }
 
     template <class T, class R, class CR, layout_offset OT>
@@ -367,4 +355,3 @@ namespace sparrow
         return m_data.get();
     }
 }
-

@@ -90,14 +90,7 @@ namespace sparrow
     // output_iterator_tag and input_iterator_tag are not supported.
     // This allows a lot of simplifications regarding the definitions of
     // postfix increment operators and related methods.
-    template
-    <
-        class Derived,
-        class IteratorConcept,
-        class Element,
-        class Reference,
-        class Difference
-    >
+    template <class Derived, class IteratorConcept, class Element, class Reference, class Difference>
     class iterator_root_base;
 
     // Utility class for accessing private methods
@@ -128,12 +121,13 @@ namespace sparrow
             it.advance(n);
         }
 
-#if _WIN32 // Workaround for access issue with msvc, when friend is involved
+#if _WIN32  // Workaround for access issue with msvc, when friend is involved
+
     public:
+
 #endif
         template <class It>
-        static typename It::difference_type
-        distance_to(const It& lhs, const It& rhs)
+        static typename It::difference_type distance_to(const It& lhs, const It& rhs)
         {
             return lhs.distance_to(rhs);
         }
@@ -149,8 +143,10 @@ namespace sparrow
         {
             return lhs.less_than(rhs);
         }
-#if _WIN32 // Workaround for access issue with msvc, when friend is involved
+#if _WIN32  // Workaround for access issue with msvc, when friend is involved
+
     private:
+
 #endif
         template <class Derived, class E, class T, class R, class D>
         friend class iterator_root_base;
@@ -166,13 +162,7 @@ namespace sparrow
     };
 
     // Specialization of iterator_root_base for forward iterator.
-    template
-    <
-        class Derived,
-        class Element,
-        class Reference,
-        class Difference
-    >
+    template <class Derived, class Element, class Reference, class Difference>
     class iterator_root_base<Derived, Element, std::forward_iterator_tag, Reference, Difference>
     {
     private:
@@ -231,13 +221,7 @@ namespace sparrow
     };
 
     // Specialization of iterator_root_base for bidirectional iterator.
-    template
-    <
-        class Derived,
-        class Element,
-        class Reference,
-        class Difference
-    >
+    template <class Derived, class Element, class Reference, class Difference>
     class iterator_root_base<Derived, Element, std::bidirectional_iterator_tag, Reference, Difference>
         : public iterator_root_base<Derived, Element, std::forward_iterator_tag, Reference, Difference>
     {
@@ -263,13 +247,7 @@ namespace sparrow
     };
 
     // Specialization of iterator_root_base for random access iterator.
-    template
-    <
-        class Derived,
-        class Element,
-        class Reference,
-        class Difference
-    >
+    template <class Derived, class Element, class Reference, class Difference>
     class iterator_root_base<Derived, Element, std::random_access_iterator_tag, Reference, Difference>
         : public iterator_root_base<Derived, Element, std::bidirectional_iterator_tag, Reference, Difference>
     {
@@ -324,20 +302,23 @@ namespace sparrow
 
         friend inline std::strong_ordering operator<=>(const derived_type& lhs, const derived_type& rhs)
         {
-            if (iterator_access::less_than(lhs, rhs)) { return std::strong_ordering::less; }
-            else if (iterator_access::equal(lhs, rhs)) { return std::strong_ordering::equal; }
-            else { return std::strong_ordering::greater; }
+            if (iterator_access::less_than(lhs, rhs))
+            {
+                return std::strong_ordering::less;
+            }
+            else if (iterator_access::equal(lhs, rhs))
+            {
+                return std::strong_ordering::equal;
+            }
+            else
+            {
+                return std::strong_ordering::greater;
+            }
         }
     };
 
     // Specialization of iterator_root_base for contiguous iterator.
-    template
-    <
-        class Derived,
-        class Element,
-        class Reference,
-        class Difference
-    >
+    template <class Derived, class Element, class Reference, class Difference>
     class iterator_root_base<Derived, Element, std::contiguous_iterator_tag, Reference, Difference>
         : public iterator_root_base<Derived, Element, std::random_access_iterator_tag, Reference, Difference>
     {
@@ -350,7 +331,6 @@ namespace sparrow
 #endif
         using iterator_concept = std::contiguous_iterator_tag;
     };
-
 
     /*
      * @class iterator_base
@@ -389,16 +369,8 @@ namespace sparrow
      * (except for contiguous_iterator, where it is `random_access_iterator_tag`). This can be overloaded
      * in the inheriting iterator class.
      */
-    template
-    <
-        class Derived,
-        class Element,
-        class IteratorConcept,
-        class Reference = Element&,
-        class Difference = std::ptrdiff_t
-    >
-    class iterator_base
-        : public iterator_root_base<Derived, Element, IteratorConcept, Reference, Difference>
+    template <class Derived, class Element, class IteratorConcept, class Reference = Element&, class Difference = std::ptrdiff_t>
+    class iterator_base : public iterator_root_base<Derived, Element, IteratorConcept, Reference, Difference>
     {
     };
 
@@ -411,17 +383,14 @@ namespace sparrow
      * inherit from this class and redefine the private methods
      * they need only.
      */
-    template
-    <
+    template <
         class Derived,
         class Iter,
         class Element,
         class IteratorConcept = typename std::iterator_traits<Iter>::iterator_category,
         class Reference = std::iter_reference_t<Iter>,
-        class Difference = std::iter_difference_t<Iter>
-    >
-    class iterator_adaptor
-        : public iterator_base<Derived, Element, IteratorConcept, Reference, Difference>
+        class Difference = std::iter_difference_t<Iter>>
+    class iterator_adaptor : public iterator_base<Derived, Element, IteratorConcept, Reference, Difference>
     {
     public:
 
@@ -432,6 +401,7 @@ namespace sparrow
         using iterator_type = Iter;
 
         iterator_adaptor() = default;
+
         explicit iterator_adaptor(const iterator_type& iter)
             : p_iter(iter)
         {
@@ -478,7 +448,7 @@ namespace sparrow
         {
             return p_iter < rhs.p_iter;
         }
-        
+
         iterator_type p_iter = {};
 
         friend class iterator_access;
@@ -499,19 +469,20 @@ namespace sparrow
         : public iterator_adaptor<pointer_iterator<T*>, T*, T, std::contiguous_iterator_tag>
     {
     public:
-        
+
         using self_type = pointer_iterator<T*>;
         using base_type = iterator_adaptor<self_type, T*, T, std::contiguous_iterator_tag>;
         using iterator_type = typename base_type::iterator_type;
-        
+
         pointer_iterator() = default;
+
         explicit pointer_iterator(iterator_type p)
             : base_type(p)
         {
         }
 
         template <class U>
-        requires std::convertible_to<U*, iterator_type>
+            requires std::convertible_to<U*, iterator_type>
         explicit pointer_iterator(U* u)
             : base_type(iterator_type(u))
         {

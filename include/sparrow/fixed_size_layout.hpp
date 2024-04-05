@@ -15,14 +15,14 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <concepts>
 #include <cstdint>
-#include <cassert>
 
 #include "sparrow/array_data.hpp"
-#include "sparrow/iterator.hpp"
 #include "sparrow/buffer.hpp"
 #include "sparrow/dynamic_bitset.hpp"
+#include "sparrow/iterator.hpp"
 
 namespace sparrow
 {
@@ -71,7 +71,7 @@ namespace sparrow
         using const_iterator = layout_iterator<self_type, true>;
 
         explicit fixed_size_layout(array_data& data);
-        
+
         fixed_size_layout(const self_type&) = delete;
         self_type& operator=(const self_type&) = delete;
         fixed_size_layout(self_type&&) = delete;
@@ -117,7 +117,7 @@ namespace sparrow
         const array_data& data_ref() const;
 
         std::reference_wrapper<array_data> m_data;
-        
+
         friend class reference_proxy<fixed_size_layout>;
         friend class const_reference_proxy<fixed_size_layout>;
     };
@@ -294,6 +294,4 @@ namespace sparrow
         return m_data.get();
     }
 
-} // namespace sparrow
-
-
+}  // namespace sparrow

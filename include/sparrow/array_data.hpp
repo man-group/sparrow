@@ -180,7 +180,7 @@ namespace sparrow
         self_type& operator=(U&& value);
 
         void swap(self_type& rhs);
-        
+
     private:
 
         void reset();
@@ -205,34 +205,26 @@ namespace sparrow
      * return reference proxies when it is dereferenced.
      */
     template <class L, bool is_const>
-    class layout_iterator : public iterator_base
-    <
-        layout_iterator<L, is_const>,
-        mpl::constify_t<typename L::value_type, is_const>,
-        typename L::iterator_tag,
-        std::conditional_t<is_const, const_reference_proxy<L>, reference_proxy<L>>
-    >
+    class layout_iterator : public iterator_base<
+                                layout_iterator<L, is_const>,
+                                mpl::constify_t<typename L::value_type, is_const>,
+                                typename L::iterator_tag,
+                                std::conditional_t<is_const, const_reference_proxy<L>, reference_proxy<L>>>
     {
     public:
 
         using self_type = layout_iterator<L, is_const>;
-        using base_type = iterator_base
-        <
+        using base_type = iterator_base<
             self_type,
             mpl::constify_t<typename L::value_type, is_const>,
             typename L::iterator_tag,
-            std::conditional_t<is_const, const_reference_proxy<L>, reference_proxy<L>>
-        >;
+            std::conditional_t<is_const, const_reference_proxy<L>, reference_proxy<L>>>;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
 
-        using value_iterator = std::conditional_t<
-            is_const, typename L::const_value_iterator, typename L::value_iterator
-        >;
+        using value_iterator = std::conditional_t<is_const, typename L::const_value_iterator, typename L::value_iterator>;
 
-        using bitmap_iterator = std::conditional_t<
-            is_const, typename L::const_bitmap_iterator, typename L::bitmap_iterator
-        >;
+        using bitmap_iterator = std::conditional_t<is_const, typename L::const_bitmap_iterator, typename L::bitmap_iterator>;
 
         layout_iterator() noexcept = default;
         layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter);
@@ -275,7 +267,6 @@ namespace sparrow
         const D1& dlhs = lhs.derived_cast();
         const D2& drhs = rhs.derived_cast();
         return (dlhs && drhs && (dlhs.value() == drhs.value())) || (!dlhs && !drhs);
-
     }
 
     template <class D, not_ref_proxy T>
@@ -400,7 +391,7 @@ namespace sparrow
 
     template <class L>
     template <std::convertible_to<typename L::inner_value_type> U>
-    auto reference_proxy<L>::operator=(const std::optional<U>& rhs) -> self_type& 
+    auto reference_proxy<L>::operator=(const std::optional<U>& rhs) -> self_type&
     {
         update(rhs);
         return *this;
@@ -408,7 +399,7 @@ namespace sparrow
 
     template <class L>
     template <std::convertible_to<typename L::inner_value_type> U>
-    auto reference_proxy<L>::operator=(std::optional<U>&& rhs) -> self_type& 
+    auto reference_proxy<L>::operator=(std::optional<U>&& rhs) -> self_type&
     {
         update(std::move(rhs));
         return *this;
@@ -487,10 +478,7 @@ namespace sparrow
      **********************************/
 
     template <class L, bool is_const>
-    layout_iterator<L, is_const>::layout_iterator(
-        value_iterator value_iter,
-        bitmap_iterator bitmap_iter
-    )
+    layout_iterator<L, is_const>::layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter)
         : m_value_iter(value_iter)
         , m_bitmap_iter(bitmap_iter)
     {
@@ -541,4 +529,3 @@ namespace sparrow
         return m_value_iter < rhs.m_value_iter && m_bitmap_iter < rhs.m_bitmap_iter;
     }
 }
-

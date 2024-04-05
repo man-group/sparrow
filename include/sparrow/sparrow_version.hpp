@@ -20,4 +20,3 @@ namespace sparrow
     constexpr int SPARROW_VERSION_MINOR = 0;
     constexpr int SPARROW_VERSION_PATCH = 1;
 }
-
