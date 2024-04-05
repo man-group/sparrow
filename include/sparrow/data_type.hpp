@@ -109,7 +109,7 @@ namespace sparrow
     /// Provides compile-time information about Arrow data types.
     /// Custom types can be made compatible by implementing this traits type.
     ///
-    /// The follwing information must be provided if the type is an arrow type:
+    /// The following information must be provided if the type is an arrow type:
     /// - type_id : the runtime identifier value for that type, see `data_type`
     /// - value_type : the value representation type to use in C++ (usually T)
     /// - default_layout: the layout to use for that type FIXME: be more precise than that
@@ -118,7 +118,7 @@ namespace sparrow
     /// @tparam Type for C++ value-representation that this type describes the traits of.
     ///
     /// @note: See ./arrow_traits.hpp for implementations for default base types.
-/// /// @see `is_arrow_traits`, `has_arrow_type_traits`
+    /// @see `is_arrow_traits`, `has_arrow_type_traits`
     template<class T>
     struct arrow_traits;
 

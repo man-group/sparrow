@@ -35,7 +35,7 @@ namespace sparrow::mpl
     struct is_type_instance_of< L<T...>, U > : std::true_type {};
 
     /// `true` if `T` is a concrete type template instanciation of `U` which is a type template.
-    /// Example: is_type_instant_of_v< std::vector<int>, std::vector > == true
+    /// Example: is_type_instance_of_v< std::vector<int>, std::vector > == true
     template< class T, template< class... > class U >
     constexpr bool is_type_instance_of_v = is_type_instance_of<T, U>::value;
 
@@ -73,7 +73,7 @@ namespace sparrow::mpl
         { P<T>::value } -> std::convertible_to<bool>;
     };
 
-    /// Matches types which instance can be called with an object representing a type to evaluate it.
+    /// Matches types whose instance can be called with an object representing a type to evaluate it.
     /// The object passed to calling the predicate instance is either a typelist with one element or
     /// `std::type_identity_t<T>`. Basically a value wrapper for representing a type.
     /// This is useful to detect type predicates which allow being called like normal functions.
