@@ -403,47 +403,46 @@ namespace sparrow
     };
 
     /*
-     * @class pointer_iterator
-     * @brief iterator adaptor for pointers
+     * @class iterator_adaptor
+     * @brief generic iterator adaptor
      *
-     * pointer_iterator gives an iterator API to a pointer.
-     * @tparam T the pointer to adapt
+     * This class forwards the calls to its "base" iterator, i.e.
+     * the iterator it adapts. Iterator adaptor classes should
+     * inherit from this class and redefine the private methods
+     * they need only.
      */
-    template <class T>
-    class pointer_iterator;
-
-    template <class T>
-    class pointer_iterator<T*> 
-        : public iterator_base<pointer_iterator<T*>, T, std::contiguous_iterator_tag>
+    template
+    <
+        class Derived,
+        class Iter,
+        class Element,
+        class IteratorConcept = typename std::iterator_traits<Iter>::iterator_category,
+        class Reference = std::iter_reference_t<Iter>,
+        class Difference = std::iter_difference_t<Iter>
+    >
+    class iterator_adaptor
+        : public iterator_base<Derived, Element, IteratorConcept, Reference, Difference>
     {
     public:
-        
-        using self_type = pointer_iterator<T*>;
-        using base_type = iterator_base<self_type, T, std::contiguous_iterator_tag>;
-        using pointer = typename base_type::pointer;
-        
-        pointer_iterator() = default;
-        explicit pointer_iterator(pointer p)
-            : p_iter(p)
+
+        using base_type = iterator_base<Derived, Element, IteratorConcept, Reference, Difference>;
+        using self_type = iterator_adaptor<Derived, Iter, Element, IteratorConcept, Reference, Difference>;
+        using reference = typename base_type::reference;
+        using difference_type = typename base_type::difference_type;
+        using iterator_type = Iter;
+
+        iterator_adaptor() = default;
+        explicit iterator_adaptor(const iterator_type& iter)
+            : p_iter(iter)
         {
         }
 
-        template <class Iter>
-        requires std::same_as<Iter, std::remove_const_t<T>>
-        pointer_iterator(const Iter& iter)
-            : p_iter(iter.base())
-        {
-        }
-
-        const pointer& base() const
+        const iterator_type& base() const
         {
             return p_iter;
         }
 
     private:
-
-        using reference = typename base_type::reference;
-        using difference_type = typename base_type::difference_type;
 
         reference dereference() const
         {
@@ -480,9 +479,48 @@ namespace sparrow
             return p_iter < rhs.p_iter;
         }
         
-        pointer p_iter = nullptr;
+        iterator_type p_iter = {};
 
         friend class iterator_access;
     };
 
+    /*
+     * @class pointer_iterator
+     * @brief iterator adaptor for pointers
+     *
+     * pointer_iterator gives an iterator API to a pointer.
+     * @tparam T the pointer to adapt
+     */
+    template <class T>
+    class pointer_iterator;
+
+    template <class T>
+    class pointer_iterator<T*>
+        : public iterator_adaptor<pointer_iterator<T*>, T*, T, std::contiguous_iterator_tag>
+    {
+    public:
+        
+        using self_type = pointer_iterator<T*>;
+        using base_type = iterator_adaptor<self_type, T*, T, std::contiguous_iterator_tag>;
+        using iterator_type = typename base_type::iterator_type;
+        
+        pointer_iterator() = default;
+        explicit pointer_iterator(iterator_type p)
+            : base_type(p)
+        {
+        }
+
+        template <class U>
+        requires std::convertible_to<U*, iterator_type>
+        explicit pointer_iterator(U* u)
+            : base_type(iterator_type(u))
+        {
+        }
+    };
+
+    template <class T>
+    pointer_iterator<T*> make_pointer_iterator(T* t)
+    {
+        return pointer_iterator<T*>(t);
+    }
 }
