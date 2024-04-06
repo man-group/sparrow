@@ -147,16 +147,28 @@ namespace sparrow
             return std::forward<A>(alloc);
         }
 
+        template <class... Ts>
+        struct overloaded : Ts... { using Ts::operator()...; };
+
         storage_type copy_storage(const storage_type& rhs) const
         {
-            return std::visit([](auto&& arg) -> storage_type
+            return std::visit(overloaded {
+                [](const auto& arg) -> storage_type { return { std::decay_t<decltype(arg)>(arg) }; },
+                [](const std::unique_ptr<interface>& arg) -> storage_type { return { arg->clone() }; }
+            }, rhs);
+        }
+
+        template <class F>
+        decltype(auto) visit_storage(F&& f)
+        {
+            return std::visit([&f](auto&& arg)
             {
                 using A = std::decay_t<decltype(arg)>;
                 if constexpr (can_any_allocator_sbo<A, T>)
-                    return { A(arg) };
+                    return f(arg);
                 else
-                    return { arg->clone() };
-            }, rhs);
+                    return f(*arg);
+            }, m_storage);
         }
 
         storage_type m_storage;
@@ -181,27 +193,13 @@ namespace sparrow
     template <class T>
     [[nodiscard]] T* any_allocator<T>::allocate(std::size_t n)
     {
-        return std::visit([n](auto&& arg)
-        {
-            using A = std::decay_t<decltype(arg)>;
-            if constexpr (can_any_allocator_sbo<A, T>)
-                return arg.allocate(n);
-            else
-                return arg->allocate(n);
-        }, m_storage);
+        return visit_storage([n](auto& allocator) { return allocator.allocate(n); });
     }
 
     template <class T>
     void any_allocator<T>::deallocate(T* p, std::size_t n)
     {
-        return std::visit([p, n](auto&& arg)
-        {
-            using A = std::decay_t<decltype(arg)>;
-            if constexpr (can_any_allocator_sbo<A, T>)
-                arg.deallocate(p, n);
-            else
-                arg->deallocate(p, n);
-        }, m_storage);
+        return visit_storage([n, p](auto& allocator) { return allocator.deallocate(p, n); });
     }
 
     template <class T>
