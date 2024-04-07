@@ -61,7 +61,7 @@ namespace sparrow::mpl
     //// Type-predicates /////////////////////////////
 
     /// Matches template types which can be used as type-wrappers for evaluation in type-predicates.
-    template< template< class > class W, class T >
+    template< template< class... > class W, class T >
     concept type_wrapper = std::same_as<W<T>, typelist<T>>
                         or std::same_as<W<T>, std::type_identity_t<T>>
                         ;
@@ -79,14 +79,14 @@ namespace sparrow::mpl
     /// `std::type_identity_t<T>`. Basically a value wrapper for representing a type.
     /// This is useful to detect type predicates which allow being called like normal functions.
     template< class P, class T >
-    concept callable_type_predicate = std::semiregular<P>
+    concept callable_type_predicate = std::semiregular<std::decay_t<P>>
         and (
-                requires(P predicate)
+                requires(std::decay_t<P> predicate)
                 {
                     { predicate(typelist<T>{}) } -> std::convertible_to<bool>;
                 }
             or
-                requires(P predicate)
+                requires(std::decay_t<P> predicate)
                 {
                     { predicate(std::type_identity_t<T>{}) } -> std::convertible_to<bool>;
                 }
@@ -109,7 +109,7 @@ namespace sparrow::mpl
     consteval
     bool evaluate(P predicate)
     {
-        if constexpr (requires (P p){ { p(typelist<T>{}) } -> std::same_as<bool>; })
+        if constexpr (requires (std::decay_t<P> p){ { p(typelist<T>{}) } -> std::same_as<bool>; })
         {
             return predicate(typelist<T>{});
         }
@@ -131,11 +131,11 @@ namespace sparrow::mpl
         template<class T>
         struct same_as
         {
-            template<class X>
-            consteval
-            bool operator()(mpl::typelist<X> list) const
+            template<template<class...> class W, class X>
+                requires type_wrapper<W, X>
+            consteval bool operator()(W<X>) const
             {
-                return std::same_as< mpl::typelist<T>, decltype(list) >;
+                return std::same_as< T, X >;
             }
 
         };
@@ -144,9 +144,9 @@ namespace sparrow::mpl
     template< template<class> class P >
     struct ct_type_predicate_to_callable
     {
-        template<template<class> class W, class T>
+        template<template<class...> class W, class T>
             requires ct_type_predicate<P, T> and type_wrapper<W,T>
-        consteval bool operator()(W<T>)
+        consteval bool operator()(W<T>) const
         {
             return P<T>::value;
         }
@@ -169,7 +169,7 @@ namespace sparrow::mpl
     /// @returns 'true' if for at least one type T in the type list L,, `Predicate{}(typelist<T>) == true`.
     ///          `false` otherwise or if the list is empty.
     template< class Predicate, template<class...> class L, class... T>
-        requires any_typelist<L<T...>>
+        requires any_typelist<L<T...>> and (callable_type_predicate<Predicate, T> && ...)
     consteval
     bool any_of(L<T...> list, Predicate predicate = {})
     {
@@ -191,7 +191,7 @@ namespace sparrow::mpl
     /// @returns `true` if for every type T in the type list L, `Predicate{}(typelist<T>) == true`
     ///          or if the list is empty; `false` otherwise.
     template< class Predicate, template<class...> class L, class... T>
-        requires any_typelist<L<T...>>
+        requires any_typelist<L<T...>> and (callable_type_predicate<Predicate, T> && ...)
     consteval
     bool all_of(L<T...> list, Predicate predicate)
     {
@@ -222,7 +222,7 @@ namespace sparrow::mpl
     /// @returns The index position in the first type in the provided type list `L` that matches the provided predicate,
     ///          or the size of the list if the matching type was not found.
     template< class Predicate, template<class...> class L, class... T>
-        requires any_typelist<L<T...>>
+        requires any_typelist<L<T...>> and (callable_type_predicate<Predicate, T> && ...)
     consteval
     std::size_t find_if(L<T...> list, Predicate predicate)
     {
