@@ -119,7 +119,7 @@ namespace sparrow
     /// - default_layout: the layout to use for that type FIXME: be more precise than that
     /// - MORE TO COME SOON, SEE TODOs BELOW
     ///
-    /// @tparam Type for C++ value-representation that this type describes the traits of.
+    /// @tparam T Type for C++ value-representation that this type describes the traits of.
     ///
     /// @note: See ./arrow_traits.hpp for implementations for default base types.
     /// @see `is_arrow_traits`, `has_arrow_type_traits`
