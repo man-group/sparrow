@@ -25,6 +25,7 @@ namespace sparrow {
  * When copied, it copies the managed object.
  * 
  * @tparam T The type of the object managed by the `value_ptr`.
+ * @todo Make it constexpr.
  */
 template <class T>
 class value_ptr {
