@@ -145,8 +145,12 @@ namespace sparrow
         using const_value_iterator = dictionary_value_iterator<indexes_layout, sub_layout, true>;
         using const_value_range = std::ranges::subrange<const_value_iterator, const_value_iterator>;
 
-        explicit dictionary_encoded_layout(array_data&& data);
-        explicit dictionary_encoded_layout(const array_data& data); // TODO: To remove when #51 will be merged
+        explicit dictionary_encoded_layout(array_data& data);
+
+        dictionary_encoded_layout(const dictionary_encoded_layout&) = delete;
+        dictionary_encoded_layout& operator=(const dictionary_encoded_layout&) = delete;
+        dictionary_encoded_layout(dictionary_encoded_layout&&) = delete;
+        dictionary_encoded_layout& operator=(dictionary_encoded_layout&&) = delete;
         
         size_type size() const;
         const_reference operator[](size_type i) const;
@@ -242,19 +246,11 @@ namespace sparrow
      **********************************************/
 
     template <std::integral T, class SL, layout_offset OT>
-    dictionary_encoded_layout<T, SL, OT>::dictionary_encoded_layout(const array_data& data)
+    dictionary_encoded_layout<T, SL, OT>::dictionary_encoded_layout(array_data& data)
     {
         assert(data.dictionary);
         m_sub_layout = std::make_unique<SL>(*data.dictionary);
         m_indexes_layout = std::make_unique<indexes_layout>(data);
-    }
-
-    template <std::integral T, class SL, layout_offset OT>
-    dictionary_encoded_layout<T, SL, OT>::dictionary_encoded_layout(array_data&& data)
-    {
-        assert(data.dictionary);
-        m_sub_layout = std::make_unique<SL>(std::move(*data.dictionary));
-        m_indexes_layout = std::make_unique<indexes_layout>(std::move(data));
     }
 
     template <std::integral T, class SL, layout_offset OT>
