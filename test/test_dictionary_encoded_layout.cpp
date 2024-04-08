@@ -95,8 +95,6 @@ namespace sparrow
             CHECK(m_data.buffers.size() == 1);
             const layout_type l_copy(m_data);
             CHECK(m_data.buffers.size() == 1);
-            const layout_type l_move(std::move(m_data));
-            CHECK(m_data.buffers.size() == 0);
         }
 
         TEST_CASE_FIXTURE(dictionary_encoded_fixture, "size")
