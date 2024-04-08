@@ -19,15 +19,33 @@
 namespace sparrow
 {
 
+/////////////////////////////////////////////////////////////////////////////
+// Type predicates
+
+
+    static_assert(mpl::type_wrapper<std::type_identity_t, int>);
+    static_assert(mpl::type_wrapper<mpl::typelist, int>);
+
+    static_assert(mpl::ct_type_predicate<std::is_integral, float>);
+    static_assert(mpl::callable_type_predicate< mpl::predicate::same_as<int>, float >);
+
+    static constexpr mpl::ct_type_predicate_to_callable<std::is_integral> object_tpredicate;
+    static_assert(object_tpredicate(mpl::typelist<int>{}));
+
+
+    static_assert(mpl::callable_type_predicate< mpl::ct_type_predicate_to_callable<std::is_integral>, int >);
+    static constexpr auto is_integral = mpl::as_predicate<std::is_integral>();
+    static_assert(mpl::callable_type_predicate<decltype(is_integral), int>);
+
+
     static constexpr auto some_types = mpl::typelist<int, float>{};
     static constexpr auto same_as_int = mpl::predicate::same_as<int>{};
     static_assert(same_as_int(mpl::typelist<int>{}));
     static_assert( mpl::any_of(some_types, same_as_int) == true);
     static_assert(mpl::all_of(some_types, same_as_int) == false);
 
-
-    static_assert(mpl::ct_type_predicate<std::is_integral, float>);
-    static_assert(mpl::callable_type_predicate< mpl::predicate::same_as<int>, float >);
+//////////////////////////////////////////////////////////////////////////////
+// Type-list
 
     using test_list = mpl::typelist< int, char >;
     struct not_a_list { };
@@ -35,16 +53,10 @@ namespace sparrow
     static_assert(not mpl::any_typelist<not_a_list>);
     static_assert(mpl::size(test_list{}) == 2);
 
-    static_assert(mpl::type_wrapper<std::type_identity_t, int>);
-    static_assert(mpl::type_wrapper<mpl::typelist, int>);
+//////////////////////////////////////////////////////////////////////////////
+// Algorithm
 
-    static constexpr mpl::ct_type_predicate_to_callable<std::is_integral> wtf;
-    static_assert(wtf(mpl::typelist<int>{}));
-
-    static_assert(mpl::callable_type_predicate< mpl::ct_type_predicate_to_callable<std::is_integral>, int >);
-    static constexpr auto is_integral = mpl::as_predicate<std::is_integral>();
-    static_assert(mpl::callable_type_predicate<decltype(is_integral), int>);
-
+    // any_of
     static_assert(mpl::any_of(test_list{}, mpl::predicate::same_as<int>{}));
     static_assert(mpl::any_of(test_list{}, mpl::predicate::same_as<char>{}));
     static_assert(not mpl::any_of(test_list{}, mpl::predicate::same_as<float>{}));
@@ -53,6 +65,7 @@ namespace sparrow
     static_assert(mpl::any_of<std::is_integral>(test_list{}));
     static_assert(not mpl::any_of<std::is_floating_point>(test_list{}));
 
+    // all_of
     static_assert(mpl::all_of(mpl::typelist<int, int, int, int, int>{}, mpl::predicate::same_as<int>{}));
     static_assert(not mpl::all_of(mpl::typelist<float, int, float, int, float>{}, mpl::predicate::same_as<float>{}));
     static_assert(mpl::all_of(mpl::typelist<>{}, mpl::predicate::same_as<int>{}));
@@ -60,6 +73,7 @@ namespace sparrow
     static_assert(mpl::all_of<std::is_integral>(test_list{}));
     static_assert(not mpl::all_of<std::is_floating_point>(test_list{}));
 
+    // find_if
     static_assert(mpl::find_if(test_list{}, mpl::predicate::same_as<int>{}) == 0);
     static_assert(mpl::find_if(test_list{}, mpl::predicate::same_as<char>{}) == 1);
     static_assert(mpl::find_if(test_list{}, mpl::predicate::same_as<float>{}) == size(test_list{}));
@@ -69,12 +83,13 @@ namespace sparrow
     static_assert(mpl::find_if<std::is_floating_point>(test_list{}) == size(test_list{}));
     static_assert(mpl::find_if(test_list{}, mpl::as_predicate<std::is_floating_point>()) == size(test_list{}));
 
+    // find
     static_assert(mpl::find<int>(test_list{}) == 0);
     static_assert(mpl::find<char>(test_list{}) == 1);
     static_assert(mpl::find<float>(test_list{}) == size(test_list{}));
     static_assert(mpl::find<std::vector<int>>(test_list{}) == size(test_list{}));
 
-
+    // contains
     static_assert(mpl::contains<int>(test_list{}));
     static_assert(mpl::contains<char>(test_list{}));
     static_assert(not mpl::contains<float>(test_list{}));
