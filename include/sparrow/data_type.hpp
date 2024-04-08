@@ -52,6 +52,8 @@ namespace sparrow
     static_assert(std::is_floating_point_v<float64_t>);
     static_assert(CHAR_BIT == 8);
 
+    using byte_t = std::byte; // For now we will use this to represent raw data TODO: evaluate later if it's the right choice, switch to char if not
+
 
     /// Runtime identifier of arrow data types, usually associated with raw bytes with the associated value.
     // TODO: does not support all types specified by the Arrow specification
@@ -97,7 +99,7 @@ namespace sparrow
     ,   float32_t
     ,   float64_t
     ,   std::string
-    //,   std::vector<std::byte> // REVIEW should this be uint8_t? char? buffer<unit8_t>?
+    ,   std::vector<byte_t>
     // TODO: add missing fundamental types here
     >;
 

@@ -118,6 +118,16 @@ namespace sparrow
 
     };
 
+
+    template<>
+    struct arrow_traits<std::vector<byte_t>>
+    {
+        static constexpr data_type type_id = data_type::STRING;
+        using value_type = std::vector<byte_t>;
+        using default_layout = variable_size_binary_layout<value_type, std::span<byte_t>, std::span<byte_t>>; // FIXME: this is incorrect, change when we have the right types
+
+    };
+
     namespace predicate
     {
 
