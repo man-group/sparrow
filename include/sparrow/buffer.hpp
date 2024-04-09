@@ -19,8 +19,8 @@
 #include <concepts>
 #include <cstdint>
 
-#include "sparrow/mp_utils.hpp"
 #include "sparrow/iterator.hpp"
+#include "sparrow/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -469,4 +469,3 @@ namespace sparrow
     {
     }
 }
-

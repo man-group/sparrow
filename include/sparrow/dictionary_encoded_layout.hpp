@@ -15,10 +15,9 @@
 #pragma once
 
 #include "sparrow/array_data.hpp"
-#include "sparrow/iterator.hpp"
 #include "sparrow/fixed_size_layout.hpp"
-#include "sparrow/mp_utils.hpp"
 #include "sparrow/iterator.hpp"
+#include "sparrow/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -41,18 +40,14 @@ namespace sparrow
     public:
 
         using self_type = dictionary_value_iterator<IL, SL, is_const>;
-        using base_type = iterator_base<
-            self_type,
-            typename SL::value_type,
-            std::random_access_iterator_tag,
-            typename SL::const_reference>;
+        using base_type = iterator_base<self_type, typename SL::value_type, std::random_access_iterator_tag, typename SL::const_reference>;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
 
         using index_iterator = std::conditional_t<is_const, typename IL::const_value_iterator, typename IL::value_iterator>;
         using sub_layout = mpl::constify_t<SL, is_const>;
         using sub_layout_reference = sub_layout&;
-        
+
         // `dictionary_value_iterator` needs to be default constructible
         // to satisfy `dictionary_encoded_layout::const_value_range`'s
         // constraints.
@@ -60,6 +55,7 @@ namespace sparrow
         dictionary_value_iterator(index_iterator index_it, sub_layout_reference sub_layout_reference);
 
     private:
+
         reference dereference() const;
         void increment();
         void decrement();
@@ -105,6 +101,7 @@ namespace sparrow
     class dictionary_encoded_layout
     {
     public:
+
         using self_type = dictionary_encoded_layout<IT, SL, OT>;
         using index_type = IT;
         using inner_value_type = SL::inner_value_type;
@@ -151,7 +148,7 @@ namespace sparrow
         dictionary_encoded_layout& operator=(const dictionary_encoded_layout&) = delete;
         dictionary_encoded_layout(dictionary_encoded_layout&&) = delete;
         dictionary_encoded_layout& operator=(dictionary_encoded_layout&&) = delete;
-        
+
         size_type size() const;
         const_reference operator[](size_type i) const;
 
@@ -162,6 +159,7 @@ namespace sparrow
         const_value_range values() const;
 
     private:
+
         const indexes_layout& get_const_indexes_layout() const;
 
         const_value_iterator value_cbegin() const;
@@ -176,7 +174,8 @@ namespace sparrow
         std::unique_ptr<indexes_layout> m_indexes_layout;
         std::unique_ptr<sub_layout> m_sub_layout;
 
-        static const const_reference& dummy_const_reference(){
+        static const const_reference& dummy_const_reference()
+        {
             static const typename sub_layout::inner_value_type dummy_inner_value;
             static const typename sub_layout::bitmap_type dummy_bitmap(1, false);
             static const const_reference instance(dummy_inner_value, dummy_bitmap[0]);
@@ -192,7 +191,10 @@ namespace sparrow
      *******************************************/
 
     template <class L, class SL, bool is_const>
-    dictionary_value_iterator<L, SL, is_const>::dictionary_value_iterator(index_iterator index_it, sub_layout_reference sub_layout_reference)
+    dictionary_value_iterator<L, SL, is_const>::dictionary_value_iterator(
+        index_iterator index_it,
+        sub_layout_reference sub_layout_reference
+    )
         : m_index_it(index_it)
         , m_sub_layout_reference(sub_layout_reference)
     {
@@ -264,10 +266,12 @@ namespace sparrow
     {
         assert(i < size());
         const auto index = (*m_indexes_layout)[i];
-        if (index.has_value()) {
+        if (index.has_value())
+        {
             return (*m_sub_layout)[index.value()];
         }
-        else {
+        else
+        {
             return dummy_const_reference();
         }
     }
@@ -279,7 +283,8 @@ namespace sparrow
     }
 
     template <std::integral T, class SL, layout_offset OT>
-    const typename dictionary_encoded_layout<T, SL, OT>::indexes_layout& dictionary_encoded_layout<T, SL, OT>::get_const_indexes_layout() const
+    const typename dictionary_encoded_layout<T, SL, OT>::indexes_layout&
+    dictionary_encoded_layout<T, SL, OT>::get_const_indexes_layout() const
     {
         return *const_cast<const indexes_layout*>(m_indexes_layout.get());
     }

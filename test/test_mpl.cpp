@@ -12,28 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <sparrow/mp_utils.hpp>
-
 #include <vector>
+
+#include <sparrow/mp_utils.hpp>
 
 namespace sparrow
 {
 
-/////////////////////////////////////////////////////////////////////////////
-// Type predicates
+    /////////////////////////////////////////////////////////////////////////////
+    // Type predicates
 
 
     static_assert(mpl::type_wrapper<std::type_identity_t, int>);
     static_assert(mpl::type_wrapper<mpl::typelist, int>);
 
     static_assert(mpl::ct_type_predicate<std::is_integral, float>);
-    static_assert(mpl::callable_type_predicate< mpl::predicate::same_as<int>, float >);
+    static_assert(mpl::callable_type_predicate<mpl::predicate::same_as<int>, float>);
 
     static constexpr mpl::ct_type_predicate_to_callable<std::is_integral> object_tpredicate;
     static_assert(object_tpredicate(mpl::typelist<int>{}));
 
 
-    static_assert(mpl::callable_type_predicate< mpl::ct_type_predicate_to_callable<std::is_integral>, int >);
+    static_assert(mpl::callable_type_predicate<mpl::ct_type_predicate_to_callable<std::is_integral>, int>);
     static constexpr auto is_integral = mpl::as_predicate<std::is_integral>();
     static_assert(mpl::callable_type_predicate<decltype(is_integral), int>);
 
@@ -41,20 +41,24 @@ namespace sparrow
     static constexpr auto some_types = mpl::typelist<int, float>{};
     static constexpr auto same_as_int = mpl::predicate::same_as<int>{};
     static_assert(same_as_int(mpl::typelist<int>{}));
-    static_assert( mpl::any_of(some_types, same_as_int) == true);
+    static_assert(mpl::any_of(some_types, same_as_int) == true);
     static_assert(mpl::all_of(some_types, same_as_int) == false);
 
-//////////////////////////////////////////////////////////////////////////////
-// Type-list
+    //////////////////////////////////////////////////////////////////////////////
+    // Type-list
 
-    using test_list = mpl::typelist< int, char >;
-    struct not_a_list { };
+    using test_list = mpl::typelist<int, char>;
+
+    struct not_a_list
+    {
+    };
+
     static_assert(mpl::any_typelist<test_list>);
     static_assert(not mpl::any_typelist<not_a_list>);
     static_assert(mpl::size(test_list{}) == 2);
 
-//////////////////////////////////////////////////////////////////////////////
-// Algorithm
+    //////////////////////////////////////////////////////////////////////////////
+    // Algorithm
 
     // any_of
     static_assert(mpl::any_of(test_list{}, mpl::predicate::same_as<int>{}));
@@ -67,7 +71,9 @@ namespace sparrow
 
     // all_of
     static_assert(mpl::all_of(mpl::typelist<int, int, int, int, int>{}, mpl::predicate::same_as<int>{}));
-    static_assert(not mpl::all_of(mpl::typelist<float, int, float, int, float>{}, mpl::predicate::same_as<float>{}));
+    static_assert(
+        not mpl::all_of(mpl::typelist<float, int, float, int, float>{}, mpl::predicate::same_as<float>{})
+    );
     static_assert(mpl::all_of(mpl::typelist<>{}, mpl::predicate::same_as<int>{}));
     static_assert(mpl::all_of(test_list{}, mpl::as_predicate<std::is_integral>()));
     static_assert(mpl::all_of<std::is_integral>(test_list{}));
@@ -94,8 +100,6 @@ namespace sparrow
     static_assert(mpl::contains<char>(test_list{}));
     static_assert(not mpl::contains<float>(test_list{}));
     static_assert(not mpl::contains<double>(test_list{}));
-
-
 
 
 }

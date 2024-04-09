@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "doctest/doctest.h"
-
 #include <array>
 #include <cstddef>
 #include <numeric>
@@ -21,11 +19,12 @@
 #include "sparrow/buffer.hpp"
 #include "sparrow/iterator.hpp"
 
+#include "doctest/doctest.h"
+
 namespace sparrow
 {
 
-    class test_iterator:
-        public iterator_base<test_iterator, int, std::contiguous_iterator_tag>
+    class test_iterator : public iterator_base<test_iterator, int, std::contiguous_iterator_tag>
     {
     public:
 
@@ -247,7 +246,7 @@ namespace sparrow
     {
         TEST_CASE("make_pointer_iterator")
         {
-            std::array<int, 3> a = { 2, 4, 6 };
+            std::array<int, 3> a = {2, 4, 6};
             auto iter = make_pointer_iterator(&a[0]);
             CHECK_EQ(*iter, a[0]);
             ++iter;
@@ -258,7 +257,7 @@ namespace sparrow
 
         TEST_CASE("const conversion")
         {
-            std::array<int, 3> a = { 2, 4, 6 };
+            std::array<int, 3> a = {2, 4, 6};
             using iterator = pointer_iterator<int*>;
             using const_iterator = pointer_iterator<const int*>;
 

@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "doctest/doctest.h"
-
 #include <initializer_list>
+
 #include "sparrow/array_data.hpp"
+
+#include "doctest/doctest.h"
 
 namespace sparrow
 {
@@ -35,13 +36,14 @@ namespace sparrow
         using size_type = std::size_t;
 
         mock_layout() = default;
+
         mock_layout(std::initializer_list<value_type> l)
             : m_bitmap(l.size())
             , m_data(l.size())
         {
             auto bit_iter = m_bitmap.begin();
             auto value_iter = m_data.begin();
-            for (const auto& v: l)
+            for (const auto& v : l)
             {
                 *bit_iter++ = v.has_value();
                 if (v.has_value())
@@ -91,12 +93,7 @@ namespace sparrow
     {
         ref_proxy_fixture()
         {
-            m_layout = {
-                std::make_optional(2),
-                std::make_optional(5),
-                std::nullopt,
-                std::make_optional(7)
-            };
+            m_layout = {std::make_optional(2), std::make_optional(5), std::nullopt, std::make_optional(7)};
         }
 
         const mock_layout& layout() const
@@ -249,4 +246,3 @@ namespace sparrow
         }
     }
 }
-

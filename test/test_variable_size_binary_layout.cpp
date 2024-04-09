@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "doctest/doctest.h"
-
+#include <iostream>
 #include <numeric>
 #include <string_view>
 
 #include "sparrow/array_data.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
 
-#include <iostream>
+#include "doctest/doctest.h"
 
 namespace sparrow
 {
@@ -32,13 +31,19 @@ namespace sparrow
             m_data.buffers.resize(2);
             m_data.buffers[0].resize(sizeof(std::int64_t) * (nb_words + 1));
             m_data.buffers[1].resize(std::accumulate(
-                words, words + nb_words, 0u, [](std::size_t res, const auto& s) { return res + s.size(); }
+                words,
+                words + nb_words,
+                0u,
+                [](std::size_t res, const auto& s)
+                {
+                    return res + s.size();
+                }
             ));
             m_data.buffers[0].data<std::int64_t>()[0] = 0u;
             auto iter = m_data.buffers[1].begin();
             for (size_t i = 0; i < nb_words; ++i)
             {
-                offset()[i+1] = offset()[i] + words[i].size();
+                offset()[i + 1] = offset()[i] + words[i].size();
                 std::copy(words[i].cbegin(), words[i].cend(), iter);
                 iter += words[i].size();
                 m_data.bitmap.set(i, true);
@@ -50,18 +55,12 @@ namespace sparrow
         }
 
         static constexpr size_t nb_words = 4u;
-        static constexpr std::string_view words[nb_words] = 
-        {
-            "you",
-            "are",
-            "not",
-            "prepared"
-        };
+        static constexpr std::string_view words[nb_words] = {"you", "are", "not", "prepared"};
 
         array_data m_data;
         // TODO: replace R = std::string_view with specific reference proxy
         using layout_type = variable_size_binary_layout<std::string, std::string_view, std::string_view>;
-    
+
     private:
 
         std::int64_t* offset()

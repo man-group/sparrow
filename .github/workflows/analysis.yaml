@@ -1,0 +1,43 @@
+name: cpp-linter
+
+on: [push, pull_request]
+defaults:
+  run:
+    shell: bash -e -l {0}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+        
+    steps:
+    - name: Install LLVM and Clang
+      uses: egor-tensin/setup-clang@v1
+      with:
+        version: 18
+        platform: x64
+    
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set conda environment
+      uses: mamba-org/setup-micromamba@main
+      with:
+        environment-name: myenv
+        environment-file: environment-dev.yml
+        init-shell: bash
+        cache-downloads: true
+
+    - name: Configure using CMake
+      run: cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
+
+    - name: Run C++ analysis
+      uses: cpp-linter/cpp-linter-action@v2
+      id: linter
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        version: 18
+        # lines-changed-only: true
+        database: 'build'
+        style: 'file'  # Use .clang-format config file
+        tidy-checks: '-*' # disable clang-tidy checks.
+        step-summary: true

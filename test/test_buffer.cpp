@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "doctest/doctest.h"
-
 #include <numeric>
 
 #include "sparrow/buffer.hpp"
+
+#include "doctest/doctest.h"
 
 namespace sparrow
 {
@@ -106,12 +106,12 @@ namespace sparrow
 
         TEST_CASE("empty")
         {
-           buffer_test_type b1;
-           CHECK(b1.empty());
+            buffer_test_type b1;
+            CHECK(b1.empty());
 
-           const std::size_t size = 4u;
-           buffer_test_type b2(make_test_buffer(size), size);
-           CHECK(!b2.empty());
+            const std::size_t size = 4u;
+            buffer_test_type b2(make_test_buffer(size), size);
+            CHECK(!b2.empty());
         }
 
         TEST_CASE("operator[]")
@@ -119,7 +119,7 @@ namespace sparrow
             const std::size_t size = 4u;
             buffer_test_type b1(make_test_buffer(size), size);
             const buffer_test_type b2(b1);
-            for(std::size_t i = 0; i < size; ++i)
+            for (std::size_t i = 0; i < size; ++i)
             {
                 CHECK_EQ(b1[i], i);
                 CHECK_EQ(b2[i], i);
@@ -150,7 +150,7 @@ namespace sparrow
         {
             const std::size_t size = 4u;
             buffer_test_type b1(make_test_buffer(size), size);
-            
+
             const uint8_t expected_value = 101;
             const std::size_t idx = 3u;
             b1.data()[idx] = expected_value;
@@ -193,7 +193,7 @@ namespace sparrow
         {
             const std::size_t size1 = 4u;
             const std::size_t size2 = 8u;
-            buffer_test_type b(make_test_buffer(size1), size1); 
+            buffer_test_type b(make_test_buffer(size1), size1);
             b.resize(size2);
             CHECK_EQ(b.size(), size2);
             CHECK_EQ(b.data()[2], 2);
@@ -211,7 +211,7 @@ namespace sparrow
         TEST_CASE("clear")
         {
             const std::size_t size1 = 4u;
-            buffer_test_type b(make_test_buffer(size1), size1); 
+            buffer_test_type b(make_test_buffer(size1), size1);
             b.clear();
             CHECK_EQ(b.size(), 0u);
         }
@@ -239,8 +239,8 @@ namespace sparrow
             auto citer = b.crbegin();
             for (std::size_t i = b.size(); i != 0u; --i)
             {
-                CHECK_EQ(*iter++, b[i-1]);
-                CHECK_EQ(*citer++, b[i-1]);
+                CHECK_EQ(*iter++, b[i - 1]);
+                CHECK_EQ(*citer++, b[i - 1]);
             }
             CHECK_EQ(iter, b.rend());
             CHECK_EQ(citer, b.crend());
@@ -256,9 +256,8 @@ namespace sparrow
                 uint8_t* mem = make_test_buffer(size);
                 [[maybe_unused]] view_test_type v(mem, size);
             }
-            
+
             {
-                
                 const std::size_t size = 8u;
                 buffer_test_type b(make_test_buffer(size), size);
                 [[maybe_unused]] view_test_type v(b);

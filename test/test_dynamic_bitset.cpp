@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "doctest/doctest.h"
-
 #include <cstdint>
 #include <iostream>
 
 #include "sparrow/dynamic_bitset.hpp"
+
+#include "doctest/doctest.h"
 
 namespace sparrow
 {
@@ -26,11 +26,11 @@ namespace sparrow
         bitmap_fixture()
         {
             p_buffer = new std::uint8_t[m_block_count];
-            p_buffer[0] = 38; // 00100110
-            p_buffer[1] = 85; // 01010101
-            p_buffer[2] = 53; // 00110101
-            p_buffer[3] = 7;  // 00000111
-            m_null_count = 15; // Last 3 bits of buffer[3] are unused
+            p_buffer[0] = 38;   // 00100110
+            p_buffer[1] = 85;   // 01010101
+            p_buffer[2] = 53;   // 00110101
+            p_buffer[3] = 7;    // 00000111
+            m_null_count = 15;  // Last 3 bits of buffer[3] are unused
         }
 
         std::uint8_t* p_buffer;
@@ -38,7 +38,7 @@ namespace sparrow
         std::size_t m_size = 29;
         std::size_t m_null_count;
     };
-    
+
     TEST_SUITE("dynamic_bitset")
     {
         using bitmap = dynamic_bitset<std::uint8_t>;
@@ -73,7 +73,7 @@ namespace sparrow
         {
             bitmap b(p_buffer, m_size);
             CHECK_EQ(b.data(), p_buffer);
-            
+
             const bitmap& b2 = b;
             CHECK_EQ(b2.data(), p_buffer);
         }
@@ -96,9 +96,9 @@ namespace sparrow
             buf[0] = 37;
             buf[1] = 2;
             bitmap b3(buf, expected_block_count * 8);
-            
+
             b2 = b3;
-            CHECK_EQ(b2.size() , b3.size());
+            CHECK_EQ(b2.size(), b3.size());
             CHECK_EQ(b2.null_count(), b3.null_count());
             CHECK_NE(b2.data(), b3.data());
             for (size_t i = 0; i < expected_block_count; ++i)
@@ -210,7 +210,7 @@ namespace sparrow
         TEST_CASE_FIXTURE(bitmap_fixture, "iterator")
         {
             // Does not work because the reference is not bool&
-            //static_assert(std::random_access_iterator<typename bitmap::iterator>);
+            // static_assert(std::random_access_iterator<typename bitmap::iterator>);
             static_assert(std::random_access_iterator<typename bitmap::const_iterator>);
 
             bitmap b(p_buffer, m_size);
@@ -263,7 +263,7 @@ namespace sparrow
 
         TEST_CASE_FIXTURE(bitmap_fixture, "bitset_reference")
         {
-            //as a reminder: p_buffer[0] = 38; // 00100110
+            // as a reminder: p_buffer[0] = 38; // 00100110
             bitmap b(p_buffer, m_size);
             auto iter = b.begin();
             *iter = true;
@@ -292,4 +292,3 @@ namespace sparrow
         }
     }
 }
-
