@@ -53,7 +53,7 @@ namespace sparrow
         >;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
-        
+
         using offset_iterator = std::conditional_t<
             is_const, typename L::const_offset_iterator, typename L::offset_iterator
         >;
@@ -100,7 +100,7 @@ namespace sparrow
      * The internal buffers will be:
      * - offset: [0, 6, 11, 13, 15, 24, 30]
      * - data: ['p','l','e','a','s','e','a','l','l','o','w','m','e','t','o','i','n','t','r','o','d','u','c','e','m','y','s','e','l','f']
-     * 
+     *
      * @tparam T the type of the data stored in the data buffer, not its byte representation.
      * @tparam R the reference type to the data. This type is different from the reference type of the layout,
      * which behaves like std::optional<R>.
@@ -134,7 +134,7 @@ namespace sparrow
         using const_offset_iterator = const OT*;
         using data_iterator = data_type*;
         using const_data_iterator = const data_type*;
-        
+
         using const_value_iterator = vs_binary_value_iterator<self_type, true>;
         using const_bitmap_iterator = array_data::bitmap_type::const_iterator;
         using const_iterator = layout_iterator<self_type, true>;
@@ -273,7 +273,7 @@ namespace sparrow
         assert(i < size());
         return const_reference(value(i), has_value(i));
     }
-    
+
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::cbegin() const -> const_iterator
     {
@@ -285,7 +285,7 @@ namespace sparrow
     {
         return const_iterator(value_cend(), bitmap_cend());
     }
-    
+
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::bitmap() const -> const_bitmap_range
     {
