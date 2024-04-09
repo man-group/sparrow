@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <vector>
+
 #include "sparrow/memory.hpp"
 
 #include "doctest/doctest.h"
-#include <vector>
 
 using namespace sparrow;
 
