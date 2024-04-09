@@ -13,6 +13,20 @@
 // limitations under the License.
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <string>
+
+#include <sparrow/sparrow_version.hpp>
+
 #include "doctest/doctest.h"
 
-#include <format>
+TEST_CASE("version is readable")
+{
+    // TODO: once available on OSX, use `<format>` facility instead.
+    // We only try to make sure the version valeus are printable, whatever their type.
+    // AKA this is not written to be fancy but to force conversion to string.
+    using namespace sparrow;
+    [[maybe_unused]] const std::string printable_version = std::string("sparrow version : ")
+                                                           + std::to_string(SPARROW_VERSION_MAJOR) + "."
+                                                           + std::to_string(SPARROW_VERSION_MINOR) + "."
+                                                           + std::to_string(SPARROW_VERSION_PATCH);
+}

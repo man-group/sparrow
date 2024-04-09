@@ -33,6 +33,13 @@
 
 # Ignore build directory
 /build/
+/build-*/
 
 # Ignore VSCODE specific options (unless we want to provide shortcuts to build and run, then delete these)
 /.vscode/
+
+# CTest directory
+/Testing/
+
+# Clangd cache
+.cache

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.27)
 
 # This is better specified per target, but cmake keeps ignoring these language version
 # specification when building this project by itself, in particular the gnu extensions,
@@ -28,9 +28,9 @@ set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # ===========
 
 file(STRINGS "${SPARROW_INCLUDE_DIR}/sparrow/sparrow_version.hpp" sparrow_version_defines
-     REGEX "#define SPARROW_VERSION_(MAJOR|MINOR|PATCH)")
+     REGEX "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH)")
 foreach(ver ${sparrow_version_defines})
-    if(ver MATCHES "#define SPARROW_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
+    if(ver MATCHES "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
         set(SPARROW_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
     endif()
 endforeach()
@@ -43,6 +43,15 @@ message(STATUS "Building sparrow v${${PROJECT_NAME}_VERSION}")
 
 OPTION(BUILD_TESTS "sparrow test suite" OFF)
 
+# Linter options
+# =============
+
+OPTION(ACTIVATE_LINTER "Create targets to run clang-format" OFF)
+
+if(ACTIVATE_LINTER)
+    include(cmake/clang-format.cmake)
+endif()
+
 # Dependencies
 # ============
 
@@ -50,8 +59,20 @@ OPTION(BUILD_TESTS "sparrow test suite" OFF)
 # =====
 
 set(SPARROW_HEADERS
+    ${SPARROW_INCLUDE_DIR}/sparrow/allocator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/data_type.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/data_traits.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/dynamic_bitset.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/fixed_size_layout.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/iterator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/memory.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/mp_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow_version.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_layout.hpp
+
+    ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
 )
 
 add_library(sparrow INTERFACE)
@@ -65,6 +86,7 @@ set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(sparrow INTERFACE cxx_std_20)
 
 if (BUILD_TESTS)
+    enable_testing()
     add_subdirectory(test)
 endif ()
 

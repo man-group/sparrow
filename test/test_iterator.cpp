@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "doctest/doctest.h"
-
+#include <array>
 #include <cstddef>
 #include <numeric>
 
 #include "sparrow/buffer.hpp"
 #include "sparrow/iterator.hpp"
 
+#include "doctest/doctest.h"
+
 namespace sparrow
 {
 
-    class test_iterator:
-        public iterator_base<test_iterator, int, std::contiguous_iterator_tag>
+    class test_iterator : public iterator_base<test_iterator, int, std::contiguous_iterator_tag>
     {
     public:
 
@@ -32,7 +32,7 @@ namespace sparrow
             : m_pointer(p)
         {
         }
-        
+
     private:
 
         using self_type = test_iterator;
@@ -84,7 +84,7 @@ namespace sparrow
     {
         buffer<int> make_test_buffer()
         {
-            constexpr std::size_t size = 8u;
+            constexpr std::size_t size = 16u;
             buffer<int> res(size);
             std::iota(res.data(), res.data() + size, 0);
             return res;
@@ -174,7 +174,7 @@ namespace sparrow
             CHECK_EQ(*iter, buff.data()[0]);
             ++iter;
             CHECK_EQ(*iter, buff.data()[1]);
-            
+
             auto iter2 = iter++;
             CHECK_EQ(*iter2, buff.data()[1]);
             CHECK_EQ(*iter, buff.data()[2]);
@@ -216,13 +216,13 @@ namespace sparrow
             CHECK_EQ(*iter2, buff.data()[6]);
             auto iter4 = 2 + iter2;
             CHECK_EQ(*iter4, buff.data()[8]);
-            
+
             iter2 -= 2;
             CHECK_EQ(*iter2, buff.data()[4]);
             auto iter3 = iter2 - 3;
             CHECK_EQ(*iter2, buff.data()[4]);
             CHECK_EQ(*iter3, buff.data()[1]);
-            
+
             auto diff = iter2 - iter3;
             CHECK_EQ(diff, 3);
 
@@ -239,6 +239,30 @@ namespace sparrow
         {
             constexpr bool valid = std::contiguous_iterator<test_iterator>;
             CHECK(valid);
+        }
+    }
+
+    TEST_SUITE("pointer_iterator")
+    {
+        TEST_CASE("make_pointer_iterator")
+        {
+            std::array<int, 3> a = {2, 4, 6};
+            auto iter = make_pointer_iterator(&a[0]);
+            CHECK_EQ(*iter, a[0]);
+            ++iter;
+            CHECK_EQ(*iter, a[1]);
+            ++iter;
+            CHECK_EQ(*iter, a[2]);
+        }
+
+        TEST_CASE("const conversion")
+        {
+            std::array<int, 3> a = {2, 4, 6};
+            using iterator = pointer_iterator<int*>;
+            using const_iterator = pointer_iterator<const int*>;
+
+            const_iterator iter{&(a[0])};
+            CHECK_EQ(*iter, a[0]);
         }
     }
 }

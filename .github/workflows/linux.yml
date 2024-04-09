@@ -12,8 +12,8 @@ defaults:
     shell: bash -e -l {0}
 jobs:
   build:
-    runs-on: ubuntu-20.04
-    name: ${{ matrix.sys.compiler }} ${{ matrix.sys.version }} ${{ matrix.sys.stdlib }}
+    runs-on: ubuntu-22.04
+    name: ${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.sys.stdlib }}-${{ matrix.config.name }}
     strategy:
       fail-fast: false
       matrix:
@@ -24,8 +24,11 @@ jobs:
         # - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17' }
         - {compiler: gcc, version: '13', config-flags: '' }
 
-    steps:
+        config:
+        - { name: Debug }
+        - { name: Release }
 
+    steps:
 
     - name: Install GCC
       if: matrix.sys.compiler == 'gcc'
@@ -45,7 +48,6 @@ jobs:
       if: matrix.sys.compiler == 'clang'
       run: sudo apt install ${{matrix.sys.stdlib}}-dev -y
 
-
     - name: Checkout code
       uses: actions/checkout@v3
 
@@ -58,16 +60,16 @@ jobs:
         cache-downloads: true
 
     - name: Configure using CMake
-      run: cmake -G Ninja -Bbuild ${{matrix.sys.config-flags}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
+      run: cmake -G Ninja -Bbuild ${{matrix.sys.config-flags}} -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
 
     - name: Install
       working-directory: build
-      run: cmake --install .
+      run: cmake --install . --config ${{matrix.config.name}}
 
     - name: Build
       working-directory: build
-      run: cmake --build . --target test_sparrow_lib --parallel 8
+      run: cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib --parallel 8
 
     - name: Run tests
       working-directory: build
-      run: ./test/test_sparrow_lib
+      run: ctest -C ${{matrix.config.name}} --output-on-failure
