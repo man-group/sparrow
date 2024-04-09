@@ -43,6 +43,7 @@ set(SPARROW_TESTS_SOURCES
     test_dictionary_encoded_layout.cpp
     test_mpl.cpp
     test_traits.cpp
+    test_memory.cpp
 )
 set(test_target "test_sparrow_lib")
 add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
