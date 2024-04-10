@@ -128,7 +128,10 @@ namespace sparrow
 
         template <class A>
         requires (not std::same_as<A, buffer<T>> and allocator<A>)
-        constexpr explicit buffer(const A& a);
+        constexpr explicit buffer(const A& a) 
+            : base_type(a)
+        {
+        }
 
         template <allocator A = allocator_type>
         explicit buffer(size_type n, const A& a = A());
@@ -373,14 +376,6 @@ namespace sparrow
     /*************************
      * buffer implementation *
      *************************/
-
-    template <class T>
-    template <class A>
-    requires (not std::same_as<A, buffer<T>> and allocator<A>)
-    constexpr buffer<T>::buffer(const A& a)
-        : base_type(a)
-    {
-    }
 
     template <class T>
     template <allocator A>
