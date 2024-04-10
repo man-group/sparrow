@@ -70,6 +70,20 @@ namespace sparrow
             {
                 CHECK_EQ(b3[i], expected_value);
             }
+
+            buffer_test_type b4 = { 1u, 3u, 5u };
+            CHECK_EQ(b4.size(), 3u);
+            CHECK_EQ(b4[0], 1u);
+            CHECK_EQ(b4[1], 3u);
+            CHECK_EQ(b4[2], 5u);
+
+            std::vector<buffer_test_type::value_type> exp = { 2u, 4u, 6u };
+            buffer_test_type b5(exp.cbegin(), exp.cend());
+            CHECK_EQ(b5.size(), exp.size());
+            for (size_t i = 0; i < 3u; ++i)
+            {
+                CHECK_EQ(b5[i], exp[i]);
+            }
         }
 
         TEST_CASE("copy semantic")
@@ -105,15 +119,7 @@ namespace sparrow
             CHECK_EQ(b4, control);
         }
 
-        TEST_CASE("empty")
-        {
-            buffer_test_type b1;
-            CHECK(b1.empty());
-
-            const std::size_t size = 4u;
-            buffer_test_type b2(make_test_buffer(size), size);
-            CHECK(!b2.empty());
-        }
+        // Element access
 
         TEST_CASE("operator[]")
         {
@@ -162,60 +168,7 @@ namespace sparrow
             CHECK_EQ(b3.data()[idx], expected_value);
         }
 
-        TEST_CASE("equality comparison")
-        {
-            const std::size_t size = 4u;
-            buffer_test_type b1(make_test_buffer(size), size);
-            buffer_test_type b2(make_test_buffer(size), size);
-            CHECK(b1 == b2);
-
-            const std::size_t size2 = 8u;
-            buffer_test_type b3(make_test_buffer(size2), size2);
-            CHECK(b1 != b3);
-        }
-
-        TEST_CASE("swap")
-        {
-            const std::size_t size1 = 4u;
-            const std::size_t size2 = 8u;
-
-            buffer_test_type b1(make_test_buffer(size1), size1);
-            buffer_test_type b2(make_test_buffer(size2), size2);
-            auto* data1 = b1.data();
-            auto* data2 = b2.data();
-            b1.swap(b2);
-            CHECK_EQ(b1.size(), size2);
-            CHECK_EQ(b1.data(), data2);
-            CHECK_EQ(b2.size(), size1);
-            CHECK_EQ(b2.data(), data1);
-        }
-
-        TEST_CASE("resize")
-        {
-            const std::size_t size1 = 4u;
-            const std::size_t size2 = 8u;
-            buffer_test_type b(make_test_buffer(size1), size1);
-            b.resize(size2);
-            CHECK_EQ(b.size(), size2);
-            CHECK_EQ(b.data()[2], 2);
-
-            b.resize(size1);
-            CHECK_EQ(b.size(), size1);
-            CHECK_EQ(b.data()[2], 2);
-
-            const std::size_t size3 = 6u;
-            b.resize(size3);
-            CHECK_EQ(b.size(), size3);
-            CHECK_EQ(b.data()[2], 2);
-        }
-
-        TEST_CASE("clear")
-        {
-            const std::size_t size1 = 4u;
-            buffer_test_type b(make_test_buffer(size1), size1);
-            b.clear();
-            CHECK_EQ(b.size(), 0u);
-        }
+        // Iterators
 
         TEST_CASE("iterator")
         {
@@ -245,6 +198,118 @@ namespace sparrow
             }
             CHECK_EQ(iter, b.rend());
             CHECK_EQ(citer, b.crend());
+        }
+
+        // capacity
+
+        TEST_CASE("empty")
+        {
+            buffer_test_type b1;
+            CHECK(b1.empty());
+
+            const std::size_t size = 4u;
+            buffer_test_type b2(make_test_buffer(size), size);
+            CHECK(!b2.empty());
+        }
+
+        TEST_CASE("capacity")
+        {
+            const std::size_t size = 4u;
+            buffer_test_type b(make_test_buffer(size), size);
+            CHECK_EQ(b.capacity(), size);
+        }
+
+        TEST_CASE("size")
+        {
+            const std::size_t size = 4u;
+            buffer_test_type b(make_test_buffer(size), size);
+            CHECK_EQ(b.size(), size);
+        }
+
+        // modifiers
+
+        TEST_CASE("clear")
+        {
+            const std::size_t size1 = 4u;
+            buffer_test_type b(make_test_buffer(size1), size1);
+            b.clear();
+            CHECK_EQ(b.size(), 0u);
+        }
+
+        TEST_CASE("reserve")
+        {
+            const std::size_t size1 = 4u;
+            buffer_test_type b1(make_test_buffer(size1), size1);
+            buffer_test_type b2(b1);
+            const std::size_t new_cap = 8u;
+            b1.reserve(new_cap);
+            CHECK_EQ(b1.capacity(), new_cap);
+            for (std::size_t i = 0; i < size1; ++i)
+            {
+                CHECK_EQ(b1.data()[i], b2.data()[i]);
+            }
+
+        }
+
+        TEST_CASE("resize")
+        {
+            const std::size_t size1 = 4u;
+            const std::size_t size2 = 8u;
+            buffer_test_type b(make_test_buffer(size1), size1);
+            b.resize(size2);
+            CHECK_EQ(b.size(), size2);
+            CHECK_EQ(b.data()[2], 2);
+
+            b.resize(size1);
+            CHECK_EQ(b.size(), size1);
+            CHECK_EQ(b.data()[2], 2);
+
+            const std::size_t size3 = 6u;
+            const buffer_test_type::value_type v = 7u;
+            b.resize(size3, v);
+            CHECK_EQ(b.size(), size3);
+            CHECK_EQ(b.data()[2], 2);
+            CHECK_EQ(b.data()[4], v);
+            CHECK_EQ(b.data()[5], v);
+        }
+
+        TEST_CASE("shrink_to_fit")
+        {
+            const std::size_t size1 = 4u;
+            buffer_test_type b1(make_test_buffer(size1), size1);
+            const std::size_t new_cap = 8u;
+            b1.reserve(new_cap);
+            CHECK_EQ(b1.capacity(), new_cap);
+            b1.shrink_to_fit();
+            CHECK_EQ(b1.capacity(), size1);
+        }
+
+        TEST_CASE("swap")
+        {
+            const std::size_t size1 = 4u;
+            const std::size_t size2 = 8u;
+
+            buffer_test_type b1(make_test_buffer(size1), size1);
+            buffer_test_type b2(make_test_buffer(size2), size2);
+            auto* data1 = b1.data();
+            auto* data2 = b2.data();
+            b1.swap(b2);
+            CHECK_EQ(b1.size(), size2);
+            CHECK_EQ(b1.data(), data2);
+            CHECK_EQ(b2.size(), size1);
+            CHECK_EQ(b2.data(), data1);
+        }
+
+        TEST_CASE("equality comparison")
+        {
+            const std::size_t size = 4u;
+            buffer_test_type b1(make_test_buffer(size), size);
+            buffer_test_type b2(make_test_buffer(size), size);
+            CHECK(b1 == b2);
+
+            const std::size_t size2 = 8u;
+            buffer_test_type b3(make_test_buffer(size2), size2);
+            CHECK(b1 != b3);
         }
     }
 
