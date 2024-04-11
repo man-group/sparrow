@@ -232,6 +232,18 @@ namespace sparrow
         
         constexpr void erase_at_end(pointer p);
 
+        template <class It>
+        constexpr pointer
+        allocate_and_copy(size_type n, It first, It last);
+
+        // The following methods are static because:
+        // - they accept an allocator argument, and do not depend on
+        //   the state of buffer
+        // - taking an allocator argument instead of relying on get_allocator
+        //   will make it easier to support allocators that propagate
+        //   on copy / move, as these methods will be called with allocators
+        //   from different instances of buffers.
+
         static constexpr size_type
         check_init_length(size_type n, const allocator_type& a);
 
@@ -247,10 +259,6 @@ namespace sparrow
         template <class It>
         static constexpr pointer
         copy_initialize(It first, It last, pointer begin, allocator_type& a);
-
-        template <class It>
-        constexpr pointer
-        allocate_and_copy(size_type n, It first, It last);
 
         static constexpr void
         destroy(pointer first, pointer last, allocator_type& a);
@@ -794,6 +802,23 @@ namespace sparrow
     }
 
     template <class T>
+    template <class It>
+    constexpr auto buffer<T>::allocate_and_copy(size_type n, It first, It last) -> pointer
+    {
+        pointer p = this->allocate(n);
+        try
+        {
+            copy_initialize(first, last, p, get_allocator());
+        }
+        catch(...)
+        {
+            this->deallocate(p, n);
+            throw;
+        }
+        return p;
+    }
+
+    template <class T>
     constexpr auto buffer<T>::check_init_length(size_type n, const allocator_type& a) -> size_type
     {
         if (n > max_size_impl(a))
@@ -843,23 +868,6 @@ namespace sparrow
             alloc_traits::construct(a, current, *first);
         }
         return current;
-    }
-
-    template <class T>
-    template <class It>
-    constexpr auto buffer<T>::allocate_and_copy(size_type n, It first, It last) -> pointer
-    {
-        pointer p = this->allocate(n);
-        try
-        {
-            copy_initialize(first, last, p, get_allocator());
-        }
-        catch(...)
-        {
-            this->deallocate(p, n);
-            throw;
-        }
-        return p;
     }
 
     template <class T>
