@@ -25,16 +25,6 @@ jobs:
 
     steps:
 
-    - name: Set up LLVM 16
-      uses: actions/setup-llvm@v2
-      run: |
-        echo "CC=clang" >> $GITHUB_ENV
-        echo "CXX=clang++" >> $GITHUB_ENV
-      with:
-        # The version of LLVM we use is the one present on conda-forge.
-        # See: https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/main/recipe/conda_build_config.yaml#L32
-        llvm-version: 16
-
     - name: Checkout code
       uses: actions/checkout@v3
 
