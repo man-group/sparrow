@@ -39,6 +39,7 @@ set(SPARROW_TESTS_SOURCES
     test_array_data_creation.cpp
     test_array_data.cpp
     test_buffer.cpp
+    test_c_data_interface.cpp
     test_dictionary_encoded_layout.cpp
     test_dynamic_bitset.cpp
     test_fixed_size_layout.cpp

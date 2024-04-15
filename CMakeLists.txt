@@ -76,6 +76,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow_version.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/typed_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_layout.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
 
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
 )
