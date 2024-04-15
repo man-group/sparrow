@@ -248,7 +248,6 @@ namespace sparrow
             {
                 CHECK_EQ(b1.data()[i], b2.data()[i]);
             }
-
         }
 
         TEST_CASE("resize")

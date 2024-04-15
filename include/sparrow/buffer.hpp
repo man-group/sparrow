@@ -95,10 +95,10 @@ namespace sparrow
      * @class buffer
      * @brief Object that owns a piece of contiguous memory
      *
-     * This class provides an API similat to std::vector, with
+     * This class provides an API similar to std::vector, with
      * two main differences:
-     * - it is not templated by the allocator type, but type-erases
-     *   it instead.
+     * - it is not templated by the allocator type, but makes use of
+     *   any_allocator which type-erases it.
      * - it can acquire ownership of an already allocated raw buffer.
      */
     template <class T>
@@ -134,19 +134,19 @@ namespace sparrow
         }
 
         template <allocator A = allocator_type>
-        explicit buffer(size_type n, const A& a = A());
+        constexpr explicit buffer(size_type n, const A& a = A());
 
         template <allocator A = allocator_type>
-        buffer(size_type n, const value_type& v, const A& a = A());
+        constexpr buffer(size_type n, const value_type& v, const A& a = A());
 
         template <allocator A = allocator_type>
-        buffer(pointer p, size_type n, const A& a = A());
+        constexpr buffer(pointer p, size_type n, const A& a = A());
 
         template <allocator A = allocator_type>
-        buffer(std::initializer_list<value_type> init, const A& a = A());
+        constexpr buffer(std::initializer_list<value_type> init, const A& a = A());
 
         template <class It, allocator A = allocator_type>
-        buffer(It first, It last, const A& a = A());
+        constexpr buffer(It first, It last, const A& a = A());
 
         ~buffer();
 
@@ -267,7 +267,6 @@ namespace sparrow
     template <class T>
     constexpr bool operator==(const buffer<T>& lhs, const buffer<T>& rhs) noexcept;
 
-
     /******************************
      * buffer_base implementation *
      ******************************/
@@ -376,6 +375,7 @@ namespace sparrow
     template <class T>
     constexpr void buffer_base<T>::assign_storage(pointer p, size_type n, size_type cap)
     {
+        assert(n <= cap);
         m_data.p_begin = p;
         m_data.p_end = p + n;
         m_data.p_storage_end = p + cap;
@@ -387,7 +387,7 @@ namespace sparrow
 
     template <class T>
     template <allocator A>
-    buffer<T>::buffer(size_type n, const A& a)
+    constexpr buffer<T>::buffer(size_type n, const A& a)
         : base_type(check_init_length(n, a), a)
     {
         get_data().p_end = default_initialize(get_data().p_begin, n, get_allocator());
@@ -395,7 +395,7 @@ namespace sparrow
 
     template <class T>
     template <allocator A>
-    buffer<T>::buffer(size_type n, const value_type& v, const A& a)
+    constexpr buffer<T>::buffer(size_type n, const value_type& v, const A& a)
         : base_type(check_init_length(n, a), a)
     {
         get_data().p_end = fill_initialize(get_data().p_begin, n, v, get_allocator());
@@ -403,14 +403,14 @@ namespace sparrow
 
     template <class T>
     template <allocator A>
-    buffer<T>::buffer(pointer p, size_type n, const A& a)
+    constexpr buffer<T>::buffer(pointer p, size_type n, const A& a)
         : base_type(p, check_init_length(n, a), a)
     {
     }
 
     template <class T>
     template <allocator A>
-    buffer<T>::buffer(std::initializer_list<value_type> init, const A& a)
+    constexpr buffer<T>::buffer(std::initializer_list<value_type> init, const A& a)
         : base_type(check_init_length(init.size(), a), a)
     {
         get_data().p_end = copy_initialize
@@ -424,7 +424,7 @@ namespace sparrow
 
     template <class T>
     template <class It, allocator A>
-    buffer<T>::buffer(It first, It last, const A& a)
+    constexpr buffer<T>::buffer(It first, It last, const A& a)
         : base_type(check_init_length(std::distance(first, last), a), a)
     {
         get_data().p_end = copy_initialize
@@ -460,7 +460,7 @@ namespace sparrow
     buffer<T>::buffer(const buffer& rhs, const A& a)
         : base_type(rhs.size(), a)
     {
-        get_data().m_end = copy_initialize
+        get_data().p_end = copy_initialize
         (
             rhs.begin(),
             rhs.end(),
@@ -497,7 +497,7 @@ namespace sparrow
     {
         if (std::addressof(rhs) != this)
         {
-            // We assume that any_allocator nevers propagates on assign
+            // We assume that any_allocator never propagates on assign
             assign_range_impl(
                 rhs.get_data().p_begin,
                 rhs.get_data().p_end,
