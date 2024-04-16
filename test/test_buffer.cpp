@@ -206,6 +206,40 @@ namespace sparrow
             CHECK_EQ(citer, b.crend());
         }
 
+        TEST_CASE("iterator_consistency")
+        {
+            const std::size_t size = 8u;
+            buffer_test_type b(make_test_buffer(size), size);
+
+            {
+                auto iter = --b.end();
+                auto riter = b.rbegin();
+                auto citer = --b.cend();
+                auto criter = b.crbegin();
+
+                while (iter != b.begin())
+                {
+                    CHECK_EQ(*iter, *riter);
+                    CHECK_EQ(*citer, *criter);
+                    --iter, --citer, ++riter, ++criter;
+                }
+            }
+
+            {
+                auto iter = b.begin();
+                auto riter = --b.rend();
+                auto citer = b.cbegin();
+                auto criter = --b.crend();
+
+                while (iter != b.end())
+                {
+                    CHECK_EQ(*iter, *riter);
+                    CHECK_EQ(*citer, *criter);
+                    ++iter, ++citer, --riter, --criter;
+                }
+            }
+        }
+
         // capacity
 
         TEST_CASE("empty")
