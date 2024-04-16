@@ -63,7 +63,7 @@ namespace sparrow
         constexpr buffer_base(const A& a) noexcept;
 
         template <allocator A = allocator_type>
-        buffer_base(size_type n, const A& a = A());
+        constexpr buffer_base(size_type n, const A& a = A());
 
         template <allocator A = allocator_type>
         constexpr buffer_base(pointer p, size_type n, const A& a = A());
@@ -80,9 +80,9 @@ namespace sparrow
         constexpr buffer_data& get_data() noexcept;
         constexpr const buffer_data& get_data() const noexcept;
 
-        pointer allocate(size_type n);
-        void deallocate(pointer p, size_type n);
-        void create_storage(size_type n);
+        constexpr pointer allocate(size_type n);
+        constexpr void deallocate(pointer p, size_type n);
+        constexpr void create_storage(size_type n);
         constexpr void assign_storage(pointer p, size_type n, size_type cap);
 
     private:
@@ -300,7 +300,7 @@ namespace sparrow
     
     template <class T>
     template <allocator A>
-    buffer_base<T>::buffer_base(size_type n, const A& a)
+    constexpr buffer_base<T>::buffer_base(size_type n, const A& a)
         : m_alloc(a)
     {
         create_storage(n);
@@ -353,19 +353,19 @@ namespace sparrow
     }
 
     template <class T>
-    auto buffer_base<T>::allocate(size_type n) -> pointer
+    constexpr auto buffer_base<T>::allocate(size_type n) -> pointer
     {
         return alloc_traits::allocate(m_alloc, n);
     }
 
     template <class T>
-    void buffer_base<T>::deallocate(pointer p, size_type n)
+    constexpr void buffer_base<T>::deallocate(pointer p, size_type n)
     {
         alloc_traits::deallocate(m_alloc, p, n);
     }
 
     template <class T>
-    void buffer_base<T>::create_storage(size_type n)
+    constexpr void buffer_base<T>::create_storage(size_type n)
     {
         m_data.p_begin = allocate(n);
         m_data.p_end = m_data.p_begin + n;

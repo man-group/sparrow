@@ -20,7 +20,7 @@ namespace sparrow
 {
     /*
      * @class buffer_view
-     * @brief Object that references but does not own a piece of contiguous memory
+     * @brief Non-owning view of a contiguous sequence of objects of type T.
      */
     template <class T>
     class buffer_view
@@ -43,6 +43,11 @@ namespace sparrow
 
         explicit buffer_view(buffer<T>& buffer);
         buffer_view(pointer p, size_type n);
+        // TODO: To be complete we also need a subrange(...) function
+        // and a constructor that takes a pair of iterators (they should
+        // be template parameters constrained by concept, not buffer_view::iterator).
+        // These are often used with view types (see std::span, which also provides
+        // first and last subview functions).
 
         bool empty() const noexcept;
         size_type size() const noexcept;
@@ -79,7 +84,6 @@ namespace sparrow
         const_reverse_iterator crend() const;
 
         void swap(buffer_view& rhs) noexcept;
-        bool equal(const buffer_view& rhs) const;
 
     private:
 
@@ -256,15 +260,9 @@ namespace sparrow
     }
 
     template <class T>
-    bool buffer_view<T>::equal(const buffer_view<T>& rhs) const
-    {
-        return m_size == rhs.m_size && std::equal(p_data, p_data + m_size, rhs.p_data);
-    }
-
-    template <class T>
     bool operator==(const buffer_view<T>& lhs, const buffer_view<T>& rhs)
     {
-        return lhs.equal(rhs);
+        return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
     }
 }
 

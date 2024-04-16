@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <iterator>
 #include <numeric>
+#include <ranges>
 
 #include "sparrow/buffer.hpp"
 #include "sparrow/buffer_view.hpp"
@@ -169,6 +171,10 @@ namespace sparrow
         }
 
         // Iterators
+
+        static_assert(std::ranges::contiguous_range<buffer_test_type>);
+        static_assert(std::contiguous_iterator<buffer_test_type::iterator>);
+        static_assert(std::contiguous_iterator<buffer_test_type::const_iterator>);
 
         TEST_CASE("iterator")
         {
