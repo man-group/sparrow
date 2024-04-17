@@ -212,14 +212,14 @@ namespace sparrow
         constexpr size_type capacity() const noexcept;
         constexpr size_type size() const noexcept;
         constexpr size_type max_size() const noexcept;
+        constexpr void reserve(size_type new_cap);
+        constexpr void shrink_to_fit();
 
         // Modifiers
 
         constexpr void clear();
-        constexpr void reserve(size_type new_cap);
         constexpr void resize(size_type new_size);
         constexpr void resize(size_type new_size, const value_type& value);
-        constexpr void shrink_to_fit();
         constexpr void swap(buffer& rhs);
 
     private:
@@ -647,12 +647,6 @@ namespace sparrow
     }
 
     template <class T>
-    constexpr void buffer<T>::clear()
-    {
-        erase_at_end(get_data().p_begin);
-    }
-
-    template <class T>
     constexpr void buffer<T>::reserve(size_type new_cap)
     {
         if (new_cap > max_size())
@@ -671,6 +665,21 @@ namespace sparrow
             this->deallocate(get_data().p_begin, get_data().p_storage_end - get_data().p_begin);
             this->assign_storage(tmp, old_size, new_cap);
         }
+    }
+
+    template <class T>
+    constexpr void buffer<T>::shrink_to_fit()
+    {
+        if (capacity() != size())
+        {
+            buffer(std::make_move_iterator(begin()), std::make_move_iterator(end()), get_allocator()).swap(*this);
+        }
+    }
+
+    template <class T>
+    constexpr void buffer<T>::clear()
+    {
+        erase_at_end(get_data().p_begin);
     }
 
     template <class T>
@@ -695,15 +704,6 @@ namespace sparrow
                 get_data().p_end = fill_initialize(get_data().p_end, nb_init, value, get_allocator());
             }
         );
-    }
-
-    template <class T>
-    constexpr void buffer<T>::shrink_to_fit()
-    {
-        if (capacity() != size())
-        {
-            buffer(std::make_move_iterator(begin()), std::make_move_iterator(end()), get_allocator()).swap(*this);
-        }
     }
 
     template <class T>
