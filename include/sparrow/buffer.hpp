@@ -58,7 +58,7 @@ namespace sparrow
         };
 
         buffer_base() = default;
-        
+
         template <allocator A>
         constexpr buffer_base(const A& a) noexcept;
 
@@ -71,7 +71,7 @@ namespace sparrow
         ~buffer_base();
 
         buffer_base(buffer_base&&) = default;
-        
+
         template <allocator A>
         constexpr buffer_base(buffer_base&& rhs, const A& a);
 
@@ -86,7 +86,7 @@ namespace sparrow
         constexpr void assign_storage(pointer p, size_type n, size_type cap);
 
     private:
-    
+
         allocator_type m_alloc;
         buffer_data m_data;
     };
@@ -107,8 +107,11 @@ namespace sparrow
         using base_type = buffer_base<T>;
         using alloc_traits = typename base_type::alloc_traits;
 
-        static_assert(std::same_as<std::remove_cvref_t<T>, T>, 
-                "buffer must have a non-const, non-volatile, non-reference value_type");
+        static_assert(
+            std::same_as<std::remove_cvref_t<T>, T>,
+            "buffer must have a non-const, non-volatile, non-reference value_type"
+        );
+
     public:
 
         using allocator_type = typename base_type::allocator_type;
@@ -127,8 +130,8 @@ namespace sparrow
         buffer() = default;
 
         template <class A>
-        requires (not std::same_as<A, buffer<T>> and allocator<A>)
-        constexpr explicit buffer(const A& a) 
+            requires(not std::same_as<A, buffer<T>> and allocator<A>)
+        constexpr explicit buffer(const A& a)
             : base_type(a)
         {
         }
@@ -211,7 +214,7 @@ namespace sparrow
         constexpr size_type max_size() const noexcept;
 
         // Modifiers
-        
+
         constexpr void clear();
         constexpr void reserve(size_type new_cap);
         constexpr void resize(size_type new_size);
@@ -221,20 +224,19 @@ namespace sparrow
 
     private:
 
-        using base_type::get_data;
         using base_type::get_allocator;
+        using base_type::get_data;
 
         template <class F>
         constexpr void resize_impl(size_type new_size, F&& initializer);
 
         template <class It>
         constexpr void assign_range_impl(It first, It last, std::forward_iterator_tag);
-        
+
         constexpr void erase_at_end(pointer p);
 
         template <class It>
-        constexpr pointer
-        allocate_and_copy(size_type n, It first, It last);
+        constexpr pointer allocate_and_copy(size_type n, It first, It last);
 
         // The following methods are static because:
         // - they accept an allocator argument, and do not depend on
@@ -244,24 +246,19 @@ namespace sparrow
         //   on copy / move, as these methods will be called with allocators
         //   from different instances of buffers.
 
-        static constexpr size_type
-        check_init_length(size_type n, const allocator_type& a);
+        static constexpr size_type check_init_length(size_type n, const allocator_type& a);
 
-        static constexpr size_type
-        max_size_impl(const allocator_type& a) noexcept;
+        static constexpr size_type max_size_impl(const allocator_type& a) noexcept;
 
-        static constexpr pointer
-        default_initialize(pointer begin, size_type n, allocator_type& a);
+        static constexpr pointer default_initialize(pointer begin, size_type n, allocator_type& a);
 
         static constexpr pointer
         fill_initialize(pointer begin, size_type n, const value_type& v, allocator_type& a);
 
         template <class It>
-        static constexpr pointer
-        copy_initialize(It first, It last, pointer begin, allocator_type& a);
+        static constexpr pointer copy_initialize(It first, It last, pointer begin, allocator_type& a);
 
-        static constexpr void
-        destroy(pointer first, pointer last, allocator_type& a);
+        static constexpr void destroy(pointer first, pointer last, allocator_type& a);
     };
 
     template <class T>
@@ -297,7 +294,7 @@ namespace sparrow
         : m_alloc(a)
     {
     }
-    
+
     template <class T>
     template <allocator A>
     constexpr buffer_base<T>::buffer_base(size_type n, const A& a)
@@ -335,7 +332,7 @@ namespace sparrow
     }
 
     template <class T>
-    constexpr auto buffer_base<T>::get_allocator() const noexcept -> const allocator_type& 
+    constexpr auto buffer_base<T>::get_allocator() const noexcept -> const allocator_type&
     {
         return m_alloc;
     }
@@ -413,13 +410,7 @@ namespace sparrow
     constexpr buffer<T>::buffer(std::initializer_list<value_type> init, const A& a)
         : base_type(check_init_length(init.size(), a), a)
     {
-        get_data().p_end = copy_initialize
-        (
-            init.begin(),
-            init.end(),
-            get_data().p_begin,
-            get_allocator()
-        );
+        get_data().p_end = copy_initialize(init.begin(), init.end(), get_data().p_begin, get_allocator());
     }
 
     template <class T>
@@ -427,13 +418,7 @@ namespace sparrow
     constexpr buffer<T>::buffer(It first, It last, const A& a)
         : base_type(check_init_length(std::distance(first, last), a), a)
     {
-        get_data().p_end = copy_initialize
-        (
-            first,
-            last,
-            get_data().p_begin,
-            get_allocator()
-        );
+        get_data().p_end = copy_initialize(first, last, get_data().p_begin, get_allocator());
     }
 
     template <class T>
@@ -446,13 +431,7 @@ namespace sparrow
     buffer<T>::buffer(const buffer& rhs)
         : base_type(rhs.size(), rhs.get_allocator())
     {
-        get_data().p_end = copy_initialize
-        (
-            rhs.begin(),
-            rhs.end(),
-            get_data().p_begin,
-            get_allocator()
-        );
+        get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
     }
 
     template <class T>
@@ -460,13 +439,7 @@ namespace sparrow
     buffer<T>::buffer(const buffer& rhs, const A& a)
         : base_type(rhs.size(), a)
     {
-        get_data().p_end = copy_initialize
-        (
-            rhs.begin(),
-            rhs.end(),
-            get_data().p_begin,
-            get_allocator()
-        );
+        get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
     }
 
     template <class T>
@@ -481,13 +454,7 @@ namespace sparrow
         else if (!rhs.empty())
         {
             this->create_storage(rhs.size());
-            get_data().p_end = copy_initialize
-            (
-                rhs.begin(),
-                rhs.end(),
-                get_data().p_begin,
-                get_allocator()
-            );
+            get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
             rhs.clear();
         }
     }
@@ -498,11 +465,7 @@ namespace sparrow
         if (std::addressof(rhs) != this)
         {
             // We assume that any_allocator never propagates on assign
-            assign_range_impl(
-                rhs.get_data().p_begin,
-                rhs.get_data().p_end,
-                std::random_access_iterator_tag()
-            );
+            assign_range_impl(rhs.get_data().p_begin, rhs.get_data().p_end, std::random_access_iterator_tag());
         }
         return *this;
     }
@@ -628,7 +591,7 @@ namespace sparrow
     {
         return reverse_iterator(end());
     }
-    
+
     template <class T>
     constexpr auto buffer<T>::rend() noexcept -> reverse_iterator
     {
@@ -640,7 +603,7 @@ namespace sparrow
     {
         return crbegin();
     }
-    
+
     template <class T>
     constexpr auto buffer<T>::rend() const noexcept -> const_reverse_iterator
     {
@@ -664,7 +627,7 @@ namespace sparrow
     {
         return get_data().p_begin == get_data().p_end;
     }
-    
+
     template <class T>
     constexpr auto buffer<T>::capacity() const noexcept -> size_type
     {
@@ -682,7 +645,7 @@ namespace sparrow
     {
         return max_size_impl(get_allocator());
     }
-    
+
     template <class T>
     constexpr void buffer<T>::clear()
     {
@@ -705,27 +668,33 @@ namespace sparrow
                 std::make_move_iterator(get_data().p_end)
             );
             destroy(get_data().p_begin, get_data().p_end, get_allocator());
-            this->deallocate(get_data().p_begin, get_data().p_storage_end - get_data().p_begin); 
+            this->deallocate(get_data().p_begin, get_data().p_storage_end - get_data().p_begin);
             this->assign_storage(tmp, old_size, new_cap);
         }
     }
-    
+
     template <class T>
     constexpr void buffer<T>::resize(size_type new_size)
     {
-        resize_impl(new_size, [this](size_type nb_init)
-        {
-            get_data().p_end = default_initialize(get_data().p_end, nb_init, get_allocator());
-        });
+        resize_impl(
+            new_size,
+            [this](size_type nb_init)
+            {
+                get_data().p_end = default_initialize(get_data().p_end, nb_init, get_allocator());
+            }
+        );
     }
-    
+
     template <class T>
     constexpr void buffer<T>::resize(size_type new_size, const value_type& value)
     {
-        resize_impl(new_size, [this, &value](size_type nb_init)
-        {
-            get_data().p_end = fill_initialize(get_data().p_end, nb_init, value, get_allocator());
-        });
+        resize_impl(
+            new_size,
+            [this, &value](size_type nb_init)
+            {
+                get_data().p_end = fill_initialize(get_data().p_end, nb_init, value, get_allocator());
+            }
+        );
     }
 
     template <class T>
@@ -736,7 +705,7 @@ namespace sparrow
             buffer(std::make_move_iterator(begin()), std::make_move_iterator(end()), get_allocator()).swap(*this);
         }
     }
-    
+
     template <class T>
     constexpr void buffer<T>::swap(buffer& rhs)
     {
@@ -765,7 +734,7 @@ namespace sparrow
             erase_at_end(get_data().p_begin + new_size);
         }
     }
-    
+
     template <class T>
     template <class It>
     constexpr void buffer<T>::assign_range_impl(It first, It last, std::forward_iterator_tag)
@@ -810,7 +779,7 @@ namespace sparrow
         {
             copy_initialize(first, last, p, get_allocator());
         }
-        catch(...)
+        catch (...)
         {
             this->deallocate(p, n);
             throw;
@@ -835,7 +804,7 @@ namespace sparrow
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
         return (std::min)(diff_max, alloc_max);
     }
-    
+
     template <class T>
     constexpr auto buffer<T>::default_initialize(pointer begin, size_type n, allocator_type& a) -> pointer
     {
@@ -848,7 +817,8 @@ namespace sparrow
     }
 
     template <class T>
-    constexpr auto buffer<T>::fill_initialize(pointer begin, size_type n, const value_type& v, allocator_type& a) -> pointer
+    constexpr auto
+    buffer<T>::fill_initialize(pointer begin, size_type n, const value_type& v, allocator_type& a) -> pointer
     {
         pointer current = begin;
         for (; n > 0; --n, ++current)

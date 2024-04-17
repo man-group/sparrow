@@ -265,4 +265,3 @@ namespace sparrow
         return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
     }
 }
-

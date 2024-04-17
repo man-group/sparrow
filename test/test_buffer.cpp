@@ -73,13 +73,13 @@ namespace sparrow
                 CHECK_EQ(b3[i], expected_value);
             }
 
-            buffer_test_type b4 = { 1u, 3u, 5u };
+            buffer_test_type b4 = {1u, 3u, 5u};
             CHECK_EQ(b4.size(), 3u);
             CHECK_EQ(b4[0], 1u);
             CHECK_EQ(b4[1], 3u);
             CHECK_EQ(b4[2], 5u);
 
-            std::vector<buffer_test_type::value_type> exp = { 2u, 4u, 6u };
+            std::vector<buffer_test_type::value_type> exp = {2u, 4u, 6u};
             buffer_test_type b5(exp.cbegin(), exp.cend());
             CHECK_EQ(b5.size(), exp.size());
             for (size_t i = 0; i < 3u; ++i)
