@@ -14,8 +14,9 @@
 
 #pragma once
 
-#include <cassert>
 #include <memory>
+
+#include "sparrow/contracts.hpp"
 
 namespace sparrow
 {
@@ -78,25 +79,25 @@ namespace sparrow
 
         T& operator*()
         {
-            assert(value_);
+            SPARROW_ASSERT_TRUE(value_);
             return *value_;
         }
 
         const T& operator*() const
         {
-            assert(value_);
+            SPARROW_ASSERT_TRUE(value_);
             return *value_;
         }
 
         T* operator->()
         {
-            assert(value_);
+            SPARROW_ASSERT_TRUE(value_);
             return &*value_;
         }
 
         const T* operator->() const
         {
-            assert(value_);
+            SPARROW_ASSERT_TRUE(value_);
             return &*value_;
         }
 

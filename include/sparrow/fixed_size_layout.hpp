@@ -15,10 +15,10 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <concepts>
 #include <cstdint>
 
+#include "sparrow/contracts.hpp"
 #include "sparrow/array_data.hpp"
 #include "sparrow/buffer.hpp"
 #include "sparrow/dynamic_bitset.hpp"
@@ -131,42 +131,42 @@ namespace sparrow
         : m_data(data)
     {
         // We only require the presence of the bitmap and the first buffer.
-        assert(data_ref().buffers.size() > 0);
-        assert(data_ref().length == data_ref().bitmap.size());
+        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
+        SPARROW_ASSERT_TRUE(data_ref().length == data_ref().bitmap.size());
     }
 
     template <class T>
     auto fixed_size_layout<T>::size() const -> size_type
     {
-        assert(data_ref().offset <= data_ref().length);
+        SPARROW_ASSERT_TRUE(data_ref().offset <= data_ref().length);
         return static_cast<size_type>(data_ref().length - data_ref().offset);
     }
 
     template <class T>
     auto fixed_size_layout<T>::value(size_type i) -> inner_reference
     {
-        assert(i < size());
+        SPARROW_ASSERT_TRUE(i < size());
         return data()[i + data_ref().offset];
     }
 
     template <class T>
     auto fixed_size_layout<T>::value(size_type i) const -> inner_const_reference
     {
-        assert(i < size());
+        SPARROW_ASSERT_TRUE(i < size());
         return data()[i + data_ref().offset];
     }
 
     template <class T>
     auto fixed_size_layout<T>::operator[](size_type i) -> reference
     {
-        assert(i < size());
+        SPARROW_ASSERT_TRUE(i < size());
         return reference(value(i), has_value(i));
     }
 
     template <class T>
     auto fixed_size_layout<T>::operator[](size_type i) const -> const_reference
     {
-        assert(i < size());
+        SPARROW_ASSERT_TRUE(i < size());
         return const_reference(value(i), has_value(i));
     }
 
@@ -209,14 +209,14 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::has_value(size_type i) -> bitmap_reference
     {
-        assert(i < size());
+        SPARROW_ASSERT_TRUE(i < size());
         return data_ref().bitmap[i + data_ref().offset];
     }
 
     template <class T>
     auto fixed_size_layout<T>::has_value(size_type i) const -> bitmap_const_reference
     {
-        assert(i < size());
+        SPARROW_ASSERT_TRUE(i < size());
         return data_ref().bitmap[i + data_ref().offset];
     }
 
@@ -271,14 +271,14 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::data() -> pointer
     {
-        assert(data_ref().buffers.size() > 0);
+        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
         return data_ref().buffers[0].template data<inner_value_type>();
     }
 
     template <class T>
     auto fixed_size_layout<T>::data() const -> const_pointer
     {
-        assert(data_ref().buffers.size() > 0);
+        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
         return data_ref().buffers[0].template data<inner_value_type>();
     }
 

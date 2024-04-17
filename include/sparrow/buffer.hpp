@@ -15,10 +15,10 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <concepts>
 #include <cstdint>
 
+#include "sparrow/contracts.hpp"
 #include "sparrow/iterator.hpp"
 #include "sparrow/mp_utils.hpp"
 
@@ -206,42 +206,42 @@ namespace sparrow
     template <class T>
     auto buffer_base<T>::operator[](size_type pos) -> reference
     {
-        assert(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size());
         return data()[pos];
     }
 
     template <class T>
     auto buffer_base<T>::operator[](size_type pos) const -> const_reference
     {
-        assert(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size());
         return data()[pos];
     }
 
     template <class T>
     auto buffer_base<T>::front() -> reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_TRUE(!empty());
         return data()[0];
     }
 
     template <class T>
     auto buffer_base<T>::front() const -> const_reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_TRUE(!empty());
         return data()[0];
     }
 
     template <class T>
     auto buffer_base<T>::back() -> reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_TRUE(!empty());
         return data()[m_size - 1];
     }
 
     template <class T>
     auto buffer_base<T>::back() const -> const_reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_TRUE(!empty());
         return data()[m_size - 1];
     }
 

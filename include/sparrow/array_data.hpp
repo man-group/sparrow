@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include <cassert>
 #include <compare>
 #include <optional>
 #include <vector>
 
+#include "sparrow/contracts.hpp"
 #include "sparrow/buffer.hpp"
 #include "sparrow/data_type.hpp"
 #include "sparrow/dynamic_bitset.hpp"
@@ -327,7 +327,7 @@ namespace sparrow
     template <class L>
     auto const_reference_proxy<L>::value() const -> const_reference
     {
-        assert(has_value());
+        SPARROW_ASSERT_TRUE(has_value());
         return m_val_ref;
     }
 
@@ -357,14 +357,14 @@ namespace sparrow
     template <class L>
     auto reference_proxy<L>::value() -> value_type&
     {
-        assert(has_value());
+        SPARROW_ASSERT_TRUE(has_value());
         return m_val_ref;
     }
 
     template <class L>
     auto reference_proxy<L>::value() const -> const value_type&
     {
-        assert(has_value());
+        SPARROW_ASSERT_TRUE(has_value());
         return m_val_ref;
     }
 

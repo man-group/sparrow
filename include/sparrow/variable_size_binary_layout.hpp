@@ -17,6 +17,7 @@
 #include <functional>
 #include <ranges>
 
+#include "sparrow/contracts.hpp"
 #include "sparrow/array_data.hpp"
 #include "sparrow/iterator.hpp"
 #include "sparrow/mp_utils.hpp"
@@ -242,23 +243,23 @@ namespace sparrow
     variable_size_binary_layout<T, R, CR, OT>::variable_size_binary_layout(array_data& data)
         : m_data(data)
     {
-        assert(data_ref().buffers.size() == 2u);
+        SPARROW_ASSERT_TRUE(data_ref().buffers.size() == 2u);
         // TODO: templatize back and front in buffer and uncomment the following line
-        // assert(data_ref().buffers[0].size() == 0u || data_ref().buffers[0].back() ==
+        // SPARROW_ASSERT_TRUE(data_ref().buffers[0].size() == 0u || data_ref().buffers[0].back() ==
         // data_ref().buffers[1].size());
     }
 
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::size() const -> size_type
     {
-        assert(data_ref().offset <= data_ref().length);
+        SPARROW_ASSERT_TRUE(data_ref().offset <= data_ref().length);
         return static_cast<size_type>(data_ref().length - data_ref().offset);
     }
 
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::operator[](size_type i) const -> const_reference
     {
-        assert(i < size());
+        SPARROW_ASSERT_TRUE(i < size());
         return const_reference(value(i), has_value(i));
     }
 
@@ -325,21 +326,21 @@ namespace sparrow
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::offset(size_type i) const -> const_offset_iterator
     {
-        assert(!data_ref().buffers.empty());
+        SPARROW_ASSERT_TRUE(!data_ref().buffers.empty());
         return data_ref().buffers[0].template data<OT>() + data_ref().offset + i;
     }
 
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::offset_end() const -> const_offset_iterator
     {
-        assert(!data_ref().buffers.empty());
+        SPARROW_ASSERT_TRUE(!data_ref().buffers.empty());
         return data_ref().buffers[0].template data<OT>() + data_ref().length;
     }
 
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::data(size_type i) const -> const_data_iterator
     {
-        assert(!data_ref().buffers.empty());
+        SPARROW_ASSERT_TRUE(!data_ref().buffers.empty());
         return data_ref().buffers[1].template data<data_type>() + i;
     }
 

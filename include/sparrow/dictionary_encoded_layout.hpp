@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "sparrow/contracts.hpp"
 #include "sparrow/array_data.hpp"
 #include "sparrow/fixed_size_layout.hpp"
 #include "sparrow/iterator.hpp"
@@ -203,7 +204,7 @@ namespace sparrow
     template <class IL, class SL, bool is_const>
     auto dictionary_value_iterator<IL, SL, is_const>::dereference() const -> reference
     {
-        assert(m_sub_layout_reference.has_value());
+        SPARROW_ASSERT_TRUE(m_sub_layout_reference.has_value());
         return (*m_sub_layout_reference).get()[*m_index_it];
     }
 
@@ -250,7 +251,7 @@ namespace sparrow
     template <std::integral T, class SL, layout_offset OT>
     dictionary_encoded_layout<T, SL, OT>::dictionary_encoded_layout(array_data& data)
     {
-        assert(data.dictionary);
+        SPARROW_ASSERT_TRUE(data.dictionary);
         m_sub_layout = std::make_unique<SL>(*data.dictionary);
         m_indexes_layout = std::make_unique<indexes_layout>(data);
     }
@@ -264,7 +265,7 @@ namespace sparrow
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::operator[](size_type i) const -> const_reference
     {
-        assert(i < size());
+        SPARROW_ASSERT_TRUE(i < size());
         const auto index = (*m_indexes_layout)[i];
         if (index.has_value())
         {
