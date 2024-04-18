@@ -29,8 +29,7 @@ namespace sparrow
 {
 
     /**
-     * @class buffer_base
-     * @brief base class for buffer
+     * Base class for buffer.
      *
      * This class provides memory management for the buffer class.
      * The constructor and destructor perform allocation and deallocation
@@ -92,8 +91,7 @@ namespace sparrow
     };
 
     /**
-     * @class buffer
-     * @brief Object that owns a piece of contiguous memory
+     * Object that owns a piece of contiguous memory.
      *
      * This class provides an API similar to std::vector, with
      * two main differences:

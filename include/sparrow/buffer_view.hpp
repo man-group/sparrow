@@ -19,8 +19,11 @@
 namespace sparrow
 {
     /*
-     * @class buffer_view
-     * @brief Non-owning view of a contiguous sequence of objects of type T.
+     * Non-owning view of a contiguous sequence of objects of type T.
+     *
+     * Although this class looks very similar to std::span, it provides
+     * methods that are missing in C++20 std::span (like cbegin / cend),
+     * and additional std::vector-like APIs. 
      */
     template <class T>
     class buffer_view
