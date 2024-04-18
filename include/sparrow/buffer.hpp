@@ -220,28 +220,28 @@ namespace sparrow
     template <class T>
     auto buffer_base<T>::front() -> reference
     {
-        SPARROW_ASSERT_TRUE(!empty());
+        SPARROW_ASSERT_FALSE(empty());
         return data()[0];
     }
 
     template <class T>
     auto buffer_base<T>::front() const -> const_reference
     {
-        SPARROW_ASSERT_TRUE(!empty());
+        SPARROW_ASSERT_FALSE(empty());
         return data()[0];
     }
 
     template <class T>
     auto buffer_base<T>::back() -> reference
     {
-        SPARROW_ASSERT_TRUE(!empty());
+        SPARROW_ASSERT_FALSE(empty());
         return data()[m_size - 1];
     }
 
     template <class T>
     auto buffer_base<T>::back() const -> const_reference
     {
-        SPARROW_ASSERT_TRUE(!empty());
+        SPARROW_ASSERT_FALSE(empty());
         return data()[m_size - 1];
     }
 

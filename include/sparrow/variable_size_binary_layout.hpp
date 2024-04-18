@@ -326,21 +326,21 @@ namespace sparrow
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::offset(size_type i) const -> const_offset_iterator
     {
-        SPARROW_ASSERT_TRUE(!data_ref().buffers.empty());
+        SPARROW_ASSERT_FALSE(data_ref().buffers.empty());
         return data_ref().buffers[0].template data<OT>() + data_ref().offset + i;
     }
 
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::offset_end() const -> const_offset_iterator
     {
-        SPARROW_ASSERT_TRUE(!data_ref().buffers.empty());
+        SPARROW_ASSERT_FALSE(data_ref().buffers.empty());
         return data_ref().buffers[0].template data<OT>() + data_ref().length;
     }
 
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::data(size_type i) const -> const_data_iterator
     {
-        SPARROW_ASSERT_TRUE(!data_ref().buffers.empty());
+        SPARROW_ASSERT_FALSE(data_ref().buffers.empty());
         return data_ref().buffers[1].template data<data_type>() + i;
     }
 
