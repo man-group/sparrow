@@ -20,6 +20,7 @@
 #include <ranges>
 
 #include "sparrow/buffer.hpp"
+#include "sparrow/buffer_view.hpp"
 #include "sparrow/mp_utils.hpp"
 
 namespace sparrow
