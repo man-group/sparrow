@@ -21,19 +21,18 @@
 
 namespace sparrow::test
 {
-    /**
-     * Creates an array_data object for testing purposes.
-     *
-     * The bitmap is initialized with all bits set to true, except for the indices specified in the
-     * false_bitmap vector. The buffer is filled with values from 0 to n-1, where n is the size of the array.
-     *
-     * @tparam T The type of the elements in the array.
-     * @param n The size of the array.
-     * @param offset The offset of the array.
-     * @param false_bitmap A vector containing indices to set as false in the bitmap.
-     * @return The created array_data object.
-     * @throws std::invalid_argument If an index in false_bitmap is out of range.
-     */
+    
+    // Creates an array_data object for testing purposes.
+    // 
+    // The bitmap is initialized with all bits set to true, except for the indices specified in the
+    // false_bitmap vector. The buffer is filled with values from 0 to n-1, where n is the size of the array.
+    // 
+    // tparam T The type of the elements in the array.
+    // param n The size of the array.
+    // param offset The offset of the array.
+    // param false_bitmap A vector containing indices to set as false in the bitmap.
+    // return The created array_data object.
+    // throws std::invalid_argument If an index in false_bitmap is out of range.
     template <typename T>
     sparrow::array_data
     make_test_array_data(size_t n = 10, size_t offset = 0, const std::vector<size_t>& false_bitmap = {})
@@ -62,15 +61,13 @@ namespace sparrow::test
         return ad;
     }
 
-    /**
-     * Creates an array_data object for testing with std::string elements.
-     *
-     * @param n The number of elements in the array.
-     * @param offset The offset value for the array_data object.
-     * @param false_bitmap A vector of indices to set as false in the bitmap.
-     * @return The created array_data object.
-     * @throws std::invalid_argument if any index in false_bitmap is out of range.
-     */
+    // Creates an array_data object for testing with std::string elements.
+    //
+    // param n The number of elements in the array.
+    // param offset The offset value for the array_data object.
+    // param false_bitmap A vector of indices to set as false in the bitmap.
+    // return The created array_data object.
+    // throws std::invalid_argument if any index in false_bitmap is out of range.
     template <>
     inline sparrow::array_data
     make_test_array_data<std::string>(size_t n, size_t offset, const std::vector<size_t>& false_bitmap)
