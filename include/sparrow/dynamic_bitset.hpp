@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include <cassert>
 #include <climits>
 #include <concepts>
 #include <ranges>
 
+#include "sparrow/contracts.hpp"
 #include "sparrow/buffer.hpp"
 #include "sparrow/buffer_view.hpp"
 #include "sparrow/mp_utils.hpp"
@@ -314,28 +314,28 @@ namespace sparrow
     template <random_access_range B>
     auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
     {
-        assert(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size());
         return reference(*this, m_buffer.data()[block_index(pos)], bit_mask(pos));
     }
 
     template <random_access_range B>
     bool dynamic_bitset_base<B>::operator[](size_type pos) const
     {
-        assert(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size());
         return !m_null_count || m_buffer.data()[block_index(pos)] & bit_mask(pos);
     }
 
     template <random_access_range B>
     bool dynamic_bitset_base<B>::test(size_type pos) const
     {
-        assert(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size());
         return !m_null_count || m_buffer.data()[block_index(pos)] & bit_mask(pos);
     }
 
     template <random_access_range B>
     void dynamic_bitset_base<B>::set(size_type pos, value_type value)
     {
-        assert(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size());
         block_type& block = m_buffer.data()[block_index(pos)];
         const bool old_value = block & bit_mask(pos);
         if (value)
@@ -430,7 +430,7 @@ namespace sparrow
         , m_null_count(null_count)
     {
         zero_unused_bits();
-        assert(m_null_count == m_size - count_non_null());
+        SPARROW_ASSERT_TRUE(m_null_count == m_size - count_non_null());
     }
 
     template <random_access_range B>
@@ -698,7 +698,7 @@ namespace sparrow
         , p_block(block)
         , m_index(index)
     {
-        assert(m_index < bitset_type::s_bits_per_block);
+        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
     }
 
     template <class B, bool is_const>
@@ -724,7 +724,7 @@ namespace sparrow
             ++p_block;
             m_index = 0u;
         }
-        assert(m_index < bitset_type::s_bits_per_block);
+        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
     }
 
     template <class B, bool is_const>
@@ -740,7 +740,7 @@ namespace sparrow
         {
             --m_index;
         }
-        assert(m_index < bitset_type::s_bits_per_block);
+        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
     }
 
     template <class B, bool is_const>
@@ -786,7 +786,7 @@ namespace sparrow
                 }
             }
         }
-        assert(m_index < bitset_type::s_bits_per_block);
+        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
     }
 
     template <class B, bool is_const>

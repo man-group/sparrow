@@ -16,6 +16,7 @@
 #include <numeric>
 #include <string_view>
 
+#include "sparrow/contracts.hpp"
 #include "sparrow/array_data.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
 
@@ -65,7 +66,7 @@ namespace sparrow
 
         std::int64_t* offset()
         {
-            assert(!m_data.buffers.empty());
+            SPARROW_ASSERT_FALSE(m_data.buffers.empty());
             return m_data.buffers[0].data<std::int64_t>();
         }
 

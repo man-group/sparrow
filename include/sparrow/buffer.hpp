@@ -15,12 +15,12 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <concepts>
 #include <cstdint>
 #include <iterator>
 #include <stdexcept>
 
+#include "sparrow/contracts.hpp"
 #include "sparrow/allocator.hpp"
 #include "sparrow/iterator.hpp"
 #include "sparrow/mp_utils.hpp"
@@ -370,7 +370,7 @@ namespace sparrow
     template <class T>
     constexpr void buffer_base<T>::assign_storage(pointer p, size_type n, size_type cap)
     {
-        assert(n <= cap);
+        SPARROW_ASSERT_TRUE(n <= cap);
         m_data.p_begin = p;
         m_data.p_end = p + n;
         m_data.p_storage_end = p + cap;
@@ -501,36 +501,42 @@ namespace sparrow
     template <class T>
     constexpr auto buffer<T>::operator[](size_type i) -> reference
     {
+        SPARROW_ASSERT_TRUE(i < size());
         return get_data().p_begin[i];
     }
 
     template <class T>
     constexpr auto buffer<T>::operator[](size_type i) const -> const_reference
     {
+        SPARROW_ASSERT_TRUE(i < size());
         return get_data().p_begin[i];
     }
 
     template <class T>
     constexpr auto buffer<T>::front() -> reference
     {
+        SPARROW_ASSERT_FALSE(empty());
         return *(get_data().p_begin);
     }
 
     template <class T>
     constexpr auto buffer<T>::front() const -> const_reference
     {
+        SPARROW_ASSERT_FALSE(empty());
         return *(get_data().p_begin);
     }
 
     template <class T>
     constexpr auto buffer<T>::back() -> reference
     {
+        SPARROW_ASSERT_FALSE(empty());
         return *(get_data().p_end - 1);
     }
 
     template <class T>
     constexpr auto buffer<T>::back() const -> const_reference
     {
+        SPARROW_ASSERT_FALSE(empty());
         return *(get_data().p_end - 1);
     }
 
