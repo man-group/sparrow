@@ -34,7 +34,7 @@ namespace sparrow
             m_data.buffers[1].resize(std::accumulate(
                 words,
                 words + nb_words,
-                0u,
+                size_t(0),
                 [](std::size_t res, const auto& s)
                 {
                     return res + s.size();

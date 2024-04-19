@@ -97,10 +97,10 @@ namespace sparrow
     bool operator==(const reference_proxy_base<D>& lhs, std::nullopt_t);
 
     template <class D1, class D2>
-    std::strong_ordering operator<=>(const reference_proxy_base<D1>& lhs, const reference_proxy_base<D2>& rhs);
+    auto operator<=>(const reference_proxy_base<D1>& lhs, const reference_proxy_base<D2>& rhs);
 
     template <class D, not_ref_proxy T>
-    std::strong_ordering operator<=>(const reference_proxy_base<D>& lhs, const T& rhs);
+    std::partial_ordering operator<=>(const reference_proxy_base<D>& lhs, const T& rhs);
 
     template <class D>
     std::strong_ordering operator<=>(const reference_proxy_base<D>& lhs, std::nullopt_t);
@@ -282,17 +282,27 @@ namespace sparrow
     }
 
     template <class D1, class D2>
-    std::strong_ordering operator<=>(const reference_proxy_base<D1>& lhs, const reference_proxy_base<D2>& rhs)
+    auto operator<=>(const reference_proxy_base<D1>& lhs, const reference_proxy_base<D2>& rhs)
     {
         const D1& dlhs = lhs.derived_cast();
         const D2& drhs = rhs.derived_cast();
-        return (dlhs && drhs) ? (dlhs.value() <=> drhs.value()) : (dlhs.has_value() <=> drhs.has_value());
+
+        using TOrdering = decltype(dlhs.value() <=> drhs.value());
+        if (dlhs && drhs)
+        {
+            return dlhs.value() <=> drhs.value();
+        }
+        return TOrdering(dlhs.has_value() <=> drhs.has_value());
     }
 
     template <class D, not_ref_proxy T>
-    std::strong_ordering operator<=>(const reference_proxy_base<D>& lhs, const T& rhs)
+    std::partial_ordering operator<=>(const reference_proxy_base<D>& lhs, const T& rhs)
     {
-        return lhs.derived_cast() ? (lhs.derived_cast().value() <=> rhs) : std::strong_ordering::less;
+        if (lhs.derived_cast())
+        {
+            return lhs.derived_cast().value() <=> rhs;
+        }
+        return std::partial_ordering::less;
     }
 
     template <class D>

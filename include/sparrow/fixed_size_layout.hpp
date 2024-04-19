@@ -45,7 +45,7 @@ namespace sparrow
         using self_type = fixed_size_layout<T>;
         using inner_value_type = T;
         using inner_reference = inner_value_type&;
-        using inner_const_reference = const inner_reference;
+        using inner_const_reference = const inner_value_type&;
         using bitmap_type = array_data::bitmap_type;
         using bitmap_reference = typename bitmap_type::reference;
         using bitmap_const_reference = typename bitmap_type::const_reference;

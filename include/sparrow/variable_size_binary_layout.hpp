@@ -111,6 +111,7 @@ namespace sparrow
         using bitmap_type = array_data::bitmap_type;
         using bitmap_const_reference = typename bitmap_type::const_reference;
         using value_type = std::optional<inner_value_type>;
+        using reference = const_reference_proxy<self_type>;
         using const_reference = const_reference_proxy<self_type>;
         using size_type = std::size_t;
         using iterator_tag = std::contiguous_iterator_tag;
@@ -128,6 +129,7 @@ namespace sparrow
 
         using const_value_iterator = vs_binary_value_iterator<self_type, true>;
         using const_bitmap_iterator = array_data::bitmap_type::const_iterator;
+        using iterator = layout_iterator<self_type, false>;
         using const_iterator = layout_iterator<self_type, true>;
         //
         // TODO: required by layout_iterator, replace them with the right types
