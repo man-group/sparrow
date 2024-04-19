@@ -19,13 +19,9 @@
 
 #include "sparrow/algorithm.hpp"
 #include "sparrow/array_data.hpp"
+#include "sparrow/contracts.hpp"
 #include "sparrow/data_traits.hpp"
 #include "sparrow/data_type.hpp"
-
-#if !defined(COMPILING_WITH_APPLE_CLANG)
-#include <format>
-#endif
-
 namespace sparrow
 {
     template <class T, class L>
@@ -232,7 +228,7 @@ namespace sparrow
         requires is_arrow_base_type<T>
     auto typed_array<T, L>::operator[](size_type i) -> reference
     {
-        assert(i < size());
+        SPARROW_ASSERT_TRUE(i < size());
         return m_layout[i];
     }
 
@@ -240,7 +236,7 @@ namespace sparrow
         requires is_arrow_base_type<T>
     auto typed_array<T, L>::operator[](size_type i) const -> const_reference
     {
-        assert(i < size());
+        SPARROW_ASSERT_TRUE(i < size());
         return m_layout[i];
     }
 
@@ -248,7 +244,7 @@ namespace sparrow
         requires is_arrow_base_type<T>
     auto typed_array<T, L>::front() -> reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_FALSE(empty());
         return m_layout[0];
     }
 
@@ -256,7 +252,7 @@ namespace sparrow
         requires is_arrow_base_type<T>
     auto typed_array<T, L>::front() const -> const_reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_FALSE(empty());
         return m_layout[0];
     }
 
@@ -264,7 +260,7 @@ namespace sparrow
         requires is_arrow_base_type<T>
     auto typed_array<T, L>::back() -> reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_FALSE(empty());
         return m_layout[size() - 1];
     }
 
@@ -272,7 +268,7 @@ namespace sparrow
         requires is_arrow_base_type<T>
     auto typed_array<T, L>::back() const -> const_reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_FALSE(empty());
         return m_layout[size() - 1];
     }
 

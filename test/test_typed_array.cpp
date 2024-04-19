@@ -150,7 +150,7 @@ TEST_SUITE("typed_array")
             const typed_array<T> ta{array_data};
 
             auto iter = ta.cbegin();
-            assert(std::is_const_v<typename std::remove_reference_t<decltype(iter->value())>>);
+            CHECK(std::is_const_v<typename std::remove_reference_t<decltype(iter->value())>>);
             auto iter_bis = ta.begin();
             CHECK(std::is_const_v<typename std::remove_reference_t<decltype(iter_bis->value())>>);
             CHECK_EQ(iter, iter_bis);
