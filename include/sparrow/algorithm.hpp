@@ -21,7 +21,7 @@
 
 namespace sparrow
 {
-#if COMPILING_WITH_APPLE_CLANG
+#if COMPILING_WITH_APPLE_CLANG || USING_LIBCPP_PRE_17
 
     template <typename T>
     concept OrdCategory = std::same_as<T, std::strong_ordering> || std::same_as<T, std::weak_ordering>
@@ -71,7 +71,7 @@ namespace sparrow
     constexpr auto lexicographical_compare_three_way(const R1& range1, const R2& range2, Cmp comp)
         -> decltype(comp(*range1.cbegin(), *range2.cbegin()))
     {
-#if COMPILING_WITH_APPLE_CLANG
+#if COMPILING_WITH_APPLE_CLANG || USING_LIBCPP_PRE_17
         return lexicographical_compare_three_way_non_std(range1, range2, comp);
 #else
         return std::lexicographical_compare_three_way(
@@ -84,7 +84,7 @@ namespace sparrow
 #endif
     }
 
-#if COMPILING_WITH_APPLE_CLANG
+#if COMPILING_WITH_APPLE_CLANG || USING_LIBCPP_PRE_17
     struct compare_three_way
     {
         template <class T, class U>
@@ -109,7 +109,7 @@ namespace sparrow
         return lexicographical_compare_three_way<R1, R2>(
             r1,
             r2,
-#if COMPILING_WITH_APPLE_CLANG
+#if COMPILING_WITH_APPLE_CLANG || USING_LIBCPP_PRE_17
             compare_three_way {}
 #else
             std::compare_three_way{}
