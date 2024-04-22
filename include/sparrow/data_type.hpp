@@ -14,6 +14,15 @@
 
 #pragma once
 
+#if __cpp_lib_chrono <= 201907L
+    // P0355R7 (Extending chrono to Calendars and Time Zones) has not been entirely implemented in libc++ yet.
+    // See: https://libcxx.llvm.org/Status/Cxx20.html#note-p0355
+    // For now, we use HowardHinnant/date as a replacement if we are compiling with libc++.
+    // TODO: remove this once libc++ has full support for P0355R7.
+#   include <chrono>
+#else
+#   include <date/tz.h>
+#endif
 #include <climits>
 #include <cstdint>
 #include <optional>
@@ -43,6 +52,12 @@ namespace sparrow
     using float16_t = std::float16_t;
     using float32_t = std::float32_t;
     using float64_t = std::float64_t;
+#endif
+
+#if __cpp_lib_chrono <= 201907L
+    using timestamp = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
+#else
+    using timestamp = date::zoned_time<std::chrono::nanoseconds>;
 #endif
 
     // We need to be sure the current target platform is setup to support correctly these types.
@@ -82,14 +97,15 @@ namespace sparrow
         BINARY,
         // Fixed-size binary. Each value occupies the same number of bytes
         FIXED_SIZE_BINARY,
+        // Number of nanoseconds since the UNIX epoch with an optional timezone.
+        // See: https://arrow.apache.org/docs/python/timestamps.html#timestamps
+        TIMESTAMP,
     };
 
     /// C++ types value representation types matching Arrow types.
     // NOTE: this needs to be in sync-order with `data_type`
     using all_base_types_t = mpl::typelist<
-        std::nullopt_t  // REVIEW: not sure about if we need to have this one? for representing NA? is this
-                        // the right type?
-        ,
+        std::nullopt_t,
         bool,
         std::uint8_t,
         std::int8_t,
@@ -103,7 +119,8 @@ namespace sparrow
         float32_t,
         float64_t,
         std::string,
-        std::vector<byte_t>
+        std::vector<byte_t>,
+        sparrow::timestamp
         // TODO: add missing fundamental types here
         >;
 

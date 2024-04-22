@@ -5,5 +5,7 @@ dependencies:
   # Build
   - cmake
   - ninja
+  # Alternative of `std::chrono` introduced in C++20.
+  - howardhinnant_date
   # Tests
   - doctest

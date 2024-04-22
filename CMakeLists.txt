@@ -43,6 +43,22 @@ message(STATUS "Building sparrow v${${PROJECT_NAME}_VERSION}")
 
 OPTION(BUILD_TESTS "sparrow test suite" OFF)
 
+include(CheckCXXSymbolExists)
+
+if(cxx_std_20 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+  set(header version)
+else()
+  set(header ciso646)
+endif()
+
+check_cxx_symbol_exists(_LIBCPP_VERSION ${header} LIBCPP)
+if(LIBCPP)
+  message(STATUS "Using libc++")
+  # Allow the use of not visible yet availabile features, such
+  # as some formatter for new types.
+  add_compile_definitions(_LIBCPP_DISABLE_AVAILABILITY)
+endif()
+
 # Linter options
 # =============
 
@@ -55,6 +71,16 @@ endif()
 # Dependencies
 # ============
 
+set(SPARROW_INTERFACE_DEPENDENCIES "" CACHE STRING "List of dependencies to be linked to the sparrow target")
+
+# libc++ does not provide all the elements of the C++20 standard library,
+# so we need to use `HowardHinnant/date`.
+# See: https://libcxx.llvm.org/Status/Cxx20.html#note-p0355
+if (LIBCPP)
+    find_package(date CONFIG REQUIRED)
+    list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date)
+endif()
+
 # Build
 # =====
 
@@ -65,7 +91,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer_view.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config.hpp
-	${SPARROW_INCLUDE_DIR}/sparrow/contracts.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/contracts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/data_traits.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/data_type.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/dynamic_bitset.hpp
@@ -85,6 +111,8 @@ add_library(sparrow INTERFACE)
 target_include_directories(sparrow INTERFACE
     $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>)
+
+target_link_libraries(sparrow INTERFACE ${SPARROW_INTERFACE_DEPENDENCIES})
 
 # We do not use non-standard C++
 set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)

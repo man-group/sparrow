@@ -125,6 +125,12 @@ namespace sparrow
         using default_layout = variable_size_binary_layout<value_type, std::span<byte_t>, const std::span<byte_t>>;  // FIXME: this is incorrect, change when we have the right types
     };
 
+    template <>
+    struct arrow_traits<timestamp> : common_native_types_traits<timestamp>
+    {
+        static constexpr data_type type_id = data_type::TIMESTAMP;
+    };
+
     namespace predicate
     {
 
