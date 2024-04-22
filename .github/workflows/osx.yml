@@ -28,6 +28,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Add specification clang++ in the conda environment specification
+      run: |
+        echo "  - clangxx==17.0.6" >> environment-dev.yml
+
     - name: Set conda environment
       uses: mamba-org/setup-micromamba@main
       with:
@@ -35,6 +39,11 @@ jobs:
         environment-file: environment-dev.yml
         init-shell: bash
         cache-downloads: true
+
+    - name: Set environment variable to use clang++
+      run: |
+        echo "CXX=$CONDA_PREFIX/bin/clang++" >> $GITHUB_ENV
+        echo "CMAKE_CXX_COMPILER=$CONDA_PREFIX/bin/clang++" >> $GITHUB_ENV
 
     - name: Configure using CMake
       run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
