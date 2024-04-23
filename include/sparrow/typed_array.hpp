@@ -359,7 +359,8 @@ namespace sparrow
         requires is_arrow_base_type<T>
     bool operator==(const typed_array<T, L>& ta1, const typed_array<T, L>& ta2)
     {
-        return std::equal(ta1.cbegin(), ta1.cend(), ta2.cbegin(), ta2.cend());
+        using typed_array_const_iter = typename typed_array<T, L>::const_iterator;
+        return std::equal<typed_array_const_iter, typed_array_const_iter>(ta1.cbegin(), ta1.cend(), ta2.cbegin(), ta2.cend());
     }
 
 }  // namespace sparrow
