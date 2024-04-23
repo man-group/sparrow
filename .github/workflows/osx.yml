@@ -53,13 +53,6 @@ jobs:
     - name: Use Apple Clang (i.e. clang++ from Xcode)
       if: matrix.compiler == 'apple-clang'
       run: |
-        # List all the Xcode installations
-        # For a complete overview of all available pieces of software, see:
-        # https://github.com/actions/runner-images/blob/macos-14-arm64/20240402.2/images/macos/macos-14-Readme.md
-        # https://github.com/actions/runner-images/blob/macos-14-arm64/20240402.2/images/macos/macos-14-arm64-Readme.md
-        sudo ls -1 /Applications | grep "Xcode"
-        # Select Xcode 15.3
-        sudo xcode-select -s /Applications/Xcode_15.3.app/Contents/Developer
         echo "CXX=/usr/bin/clang++" >> $GITHUB_ENV
         echo "CMAKE_CXX_COMPILER=/usr/bin/clang++" >> $GITHUB_ENV
 
