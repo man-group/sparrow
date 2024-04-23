@@ -13,7 +13,7 @@ defaults:
 jobs:
   build:
     runs-on: macos-${{ matrix.os }}
-    name: ${{ matrix.os }}-${{ matrix.config.name }}
+    name: ${{ matrix.os }}-${{ matrix.config.name }}-${{ matrix.compiler }}
     strategy:
       fail-fast: false
       matrix:
