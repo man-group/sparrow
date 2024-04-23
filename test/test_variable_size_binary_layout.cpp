@@ -16,6 +16,7 @@
 #include <numeric>
 #include <string_view>
 
+#include "sparrow/contracts.hpp"
 #include "sparrow/array_data.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
 
@@ -33,7 +34,7 @@ namespace sparrow
             m_data.buffers[1].resize(std::accumulate(
                 words,
                 words + nb_words,
-                0u,
+                size_t(0),
                 [](std::size_t res, const auto& s)
                 {
                     return res + s.size();
@@ -65,7 +66,7 @@ namespace sparrow
 
         std::int64_t* offset()
         {
-            assert(!m_data.buffers.empty());
+            SPARROW_ASSERT_FALSE(m_data.buffers.empty());
             return m_data.buffers[0].data<std::int64_t>();
         }
 

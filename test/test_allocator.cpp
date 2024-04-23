@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "doctest/doctest.h"
-
 #include <memory>
 #include <memory_resource>
 #include <numeric>
 #include <vector>
 
 #include "sparrow/allocator.hpp"
+
+#include "doctest/doctest.h"
 
 TEST_SUITE("any_allocator")
 {
@@ -81,11 +81,13 @@ TEST_SUITE("any_allocator")
 #if __APPLE__
     // /usr/lib/libc++.1.dylib is missing the symbol __ZNSt3__13pmr20get_default_resourceEv, leading
     // to an exception at runtime.
-    TEST_CASE_TEMPLATE_INVOKE(value_semantic_id, std::allocator<int>/*, std::pmr::polymorphic_allocator<int>*/);
-    TEST_CASE_TEMPLATE_INVOKE(allocate_id, std::allocator<int>/*, std::pmr::polymorphic_allocator<int>*/);
+    TEST_CASE_TEMPLATE_INVOKE(
+        value_semantic_id,
+        std::allocator<int> /*, std::pmr::polymorphic_allocator<int>*/
+    );
+    TEST_CASE_TEMPLATE_INVOKE(allocate_id, std::allocator<int> /*, std::pmr::polymorphic_allocator<int>*/);
 #else
     TEST_CASE_TEMPLATE_INVOKE(value_semantic_id, std::allocator<int>, std::pmr::polymorphic_allocator<int>);
     TEST_CASE_TEMPLATE_INVOKE(allocate_id, std::allocator<int>, std::pmr::polymorphic_allocator<int>);
 #endif
 }
-

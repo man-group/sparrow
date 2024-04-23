@@ -34,17 +34,20 @@ endif()
 
 set(SPARROW_TESTS_SOURCES
     main.cpp
+    test_algorithm.cpp
     test_allocator.cpp
+    test_array_data_creation.cpp
     test_array_data.cpp
     test_buffer.cpp
-    test_dynamic_bitset.cpp
-    test_iterator.cpp
-    test_fixed_size_layout.cpp
-    test_variable_size_binary_layout.cpp
     test_dictionary_encoded_layout.cpp
+    test_dynamic_bitset.cpp
+    test_fixed_size_layout.cpp
+    test_iterator.cpp
+    test_memory.cpp
     test_mpl.cpp
     test_traits.cpp
-    test_memory.cpp
+    test_typed_array.cpp
+    test_variable_size_binary_layout.cpp
 )
 set(test_target "test_sparrow_lib")
 add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
