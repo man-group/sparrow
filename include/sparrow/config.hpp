@@ -20,6 +20,12 @@
 #define COMPILING_WITH_APPLE_CLANG 0
 #endif
 
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 170000
+#define USING_LIBCPP_PRE_17 1
+#else
+#define USING_LIBCPP_PRE_17 0
+#endif
+
 consteval bool is_apple_compiler()
 {
     return static_cast<bool>(COMPILING_WITH_APPLE_CLANG);
