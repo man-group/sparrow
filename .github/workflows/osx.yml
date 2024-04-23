@@ -22,13 +22,17 @@ jobs:
         config:
         - { name: Debug }
         - { name: Release }
+        compiler:
+        - clang
+        - apple-clang
 
     steps:
 
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Add specification clang++ in the conda environment specification
+    - name: Add specification of clang++ in the conda environment specification
+      if: matrix.compiler == 'clang'
       run: |
         echo "  - clangxx==17.0.6" >> environment-dev.yml
 
@@ -40,10 +44,17 @@ jobs:
         init-shell: bash
         cache-downloads: true
 
-    - name: Set environment variable to use clang++
+    - name: Use clang++ from conda-forge
+      if: matrix.compiler == 'clang'
       run: |
         echo "CXX=$CONDA_PREFIX/bin/clang++" >> $GITHUB_ENV
         echo "CMAKE_CXX_COMPILER=$CONDA_PREFIX/bin/clang++" >> $GITHUB_ENV
+
+    - name: Use Apple Clang (i.e. clang++ from Xcode)
+      if: matrix.compiler == 'apple-clang'
+      run: |
+        echo "CXX=/usr/bin/clang++" >> $GITHUB_ENV
+        echo "CMAKE_CXX_COMPILER=/usr/bin/clang++" >> $GITHUB_ENV
 
     - name: Configure using CMake
       run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
