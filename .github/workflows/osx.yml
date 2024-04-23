@@ -19,6 +19,7 @@ jobs:
       matrix:
         os:
         - 13
+        - 14
         config:
         - { name: Debug }
         - { name: Release }
