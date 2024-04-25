@@ -121,7 +121,8 @@ namespace sparrow
             it.advance(n);
         }
 
-#if _WIN32  // Workaround for access issue with msvc, when friend is involved
+// On MSVC and GCC < 13, those methods need to be public to be accessible by friend functions.
+#if _WIN32 || __GNUC__ < 13
 
     public:
 
@@ -143,11 +144,14 @@ namespace sparrow
         {
             return lhs.less_than(rhs);
         }
-#if _WIN32  // Workaround for access issue with msvc, when friend is involved
+
+// On MSVC and GCC < 13, those methods need to be public to be accessible by friend functions.
+#if _WIN32 || __GNUC__ < 13
 
     private:
 
 #endif
+
         template <class Derived, class E, class T, class R, class D>
         friend class iterator_root_base;
 
