@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <version>
 #include <chrono>
 
 #if __cpp_lib_chrono > 201907L
