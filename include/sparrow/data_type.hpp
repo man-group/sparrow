@@ -14,13 +14,13 @@
 
 #pragma once
 
-#if __cpp_lib_chrono <= 201907L
+#include <chrono>
+
+#if __cpp_lib_chrono > 201907L
     // P0355R7 (Extending chrono to Calendars and Time Zones) has not been entirely implemented in libc++ yet.
     // See: https://libcxx.llvm.org/Status/Cxx20.html#note-p0355
     // For now, we use HowardHinnant/date as a replacement if we are compiling with libc++.
     // TODO: remove this once libc++ has full support for P0355R7.
-#   include <chrono>
-#else
 #   include <date/tz.h>
 #endif
 #include <climits>
@@ -57,7 +57,7 @@ namespace sparrow
 #if __cpp_lib_chrono <= 201907L
     using timestamp = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
 #else
-    using timestamp = date::zoned_time<std::chrono::nanoseconds>;
+    using timestamp = date::zoned_time<std::chrono::system_clock, std::chrono::nanoseconds>;
 #endif
 
     // We need to be sure the current target platform is setup to support correctly these types.
