@@ -37,6 +37,14 @@ jobs:
       run: |
         echo "  - clangxx==17.0.6" >> environment-dev.yml
 
+    - name: Add `howardhinnant_date` in the conda environment specification
+      run: |
+        # P0355R7 (Extending chrono to Calendars and Time Zones) has not been entirely implemented in libc++ yet.
+        # See: https://libcxx.llvm.org/Status/Cxx20.html#note-p0355
+        # For now, we use HowardHinnant/date as a replacement if we are compiling with libc++.
+        # TODO: remove this once libc++ has full support for P0355R7.
+        echo "  - howardhinnant_date" >> environment-dev.yml
+
     - name: Set conda environment
       uses: mamba-org/setup-micromamba@main
       with:
