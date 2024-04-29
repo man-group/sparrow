@@ -327,7 +327,7 @@ namespace sparrow
      * @tparam T The type of the buffers of the ArrowArray.
      * @tparam Allocator The allocator for the buffers of the ArrowArray.
      * @param length The logical length of the array (i.e. its number of items).
-     * @param null_count The number of null items in the array. MAY be -1 if not yet computed.
+     * @param null_count The number of null items in the array. May be -1 if not yet computed.
      * @param offset The logical offset inside the array (i.e. the number of items from the physical start of
      * the buffers). Must be 0 or positive.
      * @param n_buffers  The number of physical buffers backing this array. The number of buffers is a
