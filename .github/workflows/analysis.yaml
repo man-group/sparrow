@@ -28,7 +28,7 @@ jobs:
         cache-downloads: true
 
     - name: Configure using CMake
-      run: cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DACTIVATE_LINTER=ON
+      run: cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
     - name: Run C++ analysis
       uses: cpp-linter/cpp-linter-action@v2
