@@ -1,4 +1,5 @@
-if(NOT CMAKE_GENERATOR MATCHES "Ninja|Unix Makefiles")
+if(CMAKE_GENERATOR MATCHES "Ninja|Unix Makefiles")
+    message(STATUS "🔧 Compile command will be used to enable clang-tidy")
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 else()
     message(WARNING "🚧 Compile command can't be used because the CMAKE_GENERATOR is ${CMAKE_GENERATOR}.
@@ -57,7 +58,7 @@ if(NOT CLANG_TIDY)
     print_clang_tidy_install_instructions()
 else()
     get_clang_tidy_version(${CLANG_TIDY})
-    message(STATUS "✅clang-tidy found at ${CLANG_TIDY} | version: ${CLANG_TIDY_MAJOR_VERSION}.${CLANG_TIDY_MINOR_VERSION}.${CLANG_TIDY_PATCH_VERSION}")
+    message(STATUS "✅ clang-tidy found at ${CLANG_TIDY} | version: ${CLANG_TIDY_MAJOR_VERSION}.${CLANG_TIDY_MINOR_VERSION}.${CLANG_TIDY_PATCH_VERSION}")
 
     if(ACTIVATE_LINTER_DURING_COMPILATION)
         set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY})
