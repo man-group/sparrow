@@ -36,7 +36,14 @@ TEST_SUITE("C Data Interface")
             auto dictionary = std::make_unique<ArrowArray>();
             const auto dictionary_ptr = dictionary.get();
 
-            const auto array = sparrow::make_array_constructor<int, std::allocator>(1, 0, 0, 1, children, std::move(dictionary));
+            const auto array = sparrow::make_array_constructor<int, std::allocator>(
+                1,
+                0,
+                0,
+                1,
+                children,
+                std::move(dictionary)
+            );
             CHECK_EQ(array->length, 1);
             CHECK_EQ(array->null_count, 0);
             CHECK_EQ(array->offset, 0);
@@ -51,13 +58,68 @@ TEST_SUITE("C Data Interface")
             CHECK_NE(array->private_data, nullptr);
         }
 
+        SUBCASE("make_array_constructor no children and dictionary")
+        {
+            std::vector<std::unique_ptr<ArrowArray>> children;
+            const auto array = sparrow::make_array_constructor<int, std::allocator>(
+                1,
+                0,
+                0,
+                1,
+                children,
+                std::move(std::unique_ptr<ArrowArray>())
+            );
+            CHECK_EQ(array->length, 1);
+            CHECK_EQ(array->null_count, 0);
+            CHECK_EQ(array->offset, 0);
+            CHECK_EQ(array->n_buffers, 1);
+            CHECK_EQ(array->n_children, 0);
+            CHECK_NE(array->buffers, nullptr);
+            CHECK_EQ(array->children, nullptr);
+            CHECK_EQ(array->dictionary, nullptr);
+            CHECK_EQ(array->release, sparrow::delete_array<int, std::allocator>);
+            CHECK_NE(array->private_data, nullptr);
+        }
+
         SUBCASE("ArrowArray release")
         {
             std::vector<std::unique_ptr<ArrowArray>> children;
             children.emplace_back(new ArrowArray);
             children.emplace_back(new ArrowArray);
             auto dictionary = std::make_unique<ArrowArray>();
-            auto array = sparrow::make_array_constructor<int, std::allocator>(1, 0, 0, 1, children, std::move(dictionary));
+            auto array = sparrow::make_array_constructor<int, std::allocator>(
+                1,
+                0,
+                0,
+                1,
+                children,
+                std::move(dictionary)
+            );
+
+            array->release(array.get());
+
+            CHECK_EQ(array->length, 0);
+            CHECK_EQ(array->null_count, 0);
+            CHECK_EQ(array->offset, 0);
+            CHECK_EQ(array->n_buffers, 0);
+            CHECK_EQ(array->n_children, 0);
+            CHECK_EQ(array->buffers, nullptr);
+            CHECK_EQ(array->children, nullptr);
+            CHECK_EQ(array->release, nullptr);
+            CHECK_EQ(array->private_data, nullptr);
+        }
+
+        SUBCASE("ArrowArray release no children and dictionary")
+        {
+            std::vector<std::unique_ptr<ArrowArray>> children;
+            auto array = sparrow::make_array_constructor<int, std::allocator>(
+                1,
+                0,
+                0,
+                1,
+                children,
+                std::move(std::unique_ptr<ArrowArray>())
+            );
 
             array->release(array.get());
 
@@ -72,6 +134,7 @@ TEST_SUITE("C Data Interface")
             CHECK_EQ(array->private_data, nullptr);
         }
     }
+
 
     TEST_CASE("ArrowSchema")
     {
@@ -101,15 +164,45 @@ TEST_SUITE("C Data Interface")
             );
 
             const auto schema_format = std::string_view(schema->format);
-            bool lol = (schema_format == format);
-            // CHECK_EQ(std::string_view(schema->name), name);
-            // CHECK_EQ(std::string_view(schema->metadata), metadata);
+            const bool format_eq = schema_format == format;
+            CHECK(format_eq);
+            const auto schema_name = std::string_view(schema->name);
+            const bool name_eq = schema_name == name;
+            CHECK(name_eq);
+            const auto schema_metadata = std::string_view(schema->metadata);
+            const bool metadata_eq = schema_metadata == metadata;
+            CHECK(metadata_eq);
             CHECK_EQ(schema->flags, 1);
             CHECK_EQ(schema->n_children, 2);
             REQUIRE_NE(schema->children, nullptr);
             CHECK_EQ(schema->children[0], children_1_ptr);
             CHECK_EQ(schema->children[1], children_2_ptr);
             CHECK_EQ(schema->dictionary, dictionary_ptr);
+            CHECK_EQ(schema->release, sparrow::delete_schema<std::allocator>);
+            CHECK_NE(schema->private_data, nullptr);
+        }
+
+        SUBCASE("make_schema_constructor no children, no dictionary, no name and metadata")
+        {
+            std::vector<std::unique_ptr<ArrowSchema>> children;
+            const auto schema = sparrow::make_arrow_schema<std::allocator>(
+                "format",
+                std::string_view(),
+                std::string_view(),
+                sparrow::ArrowFlag::DICTIONARY_ORDERED,
+                children,
+                std::move(std::unique_ptr<ArrowSchema>())
+            );
+
+            const auto schema_format = std::string_view(schema->format);
+            const bool format_eq = schema_format == "format";
+            CHECK(format_eq);
+            CHECK_EQ(schema->name, nullptr);
+            CHECK_EQ(schema->metadata, nullptr);
+            CHECK_EQ(schema->flags, 1);
+            CHECK_EQ(schema->n_children, 0);
+            CHECK_EQ(schema->children, nullptr);
+            CHECK_EQ(schema->dictionary, nullptr);
             CHECK_EQ(schema->release, sparrow::delete_schema<std::allocator>);
             CHECK_NE(schema->private_data, nullptr);
         }
@@ -128,6 +221,29 @@ TEST_SUITE("C Data Interface")
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
                 children,
                 std::move(dictionary)
+            );
+
+            schema->release(schema.get());
+
+            CHECK_EQ(schema->format, nullptr);
+            CHECK_EQ(schema->name, nullptr);
+            CHECK_EQ(schema->metadata, nullptr);
+            CHECK_EQ(schema->children, nullptr);
+            CHECK_EQ(schema->dictionary, nullptr);
+            CHECK_EQ(schema->release, nullptr);
+            CHECK_EQ(schema->private_data, nullptr);
+        }
+
+        SUBCASE("ArrowSchema release no children, no dictionary, no name and metadata")
+        {
+            std::vector<std::unique_ptr<ArrowSchema>> children;
+            auto schema = sparrow::make_arrow_schema<std::allocator>(
+                "format",
+                std::string_view(),
+                std::string_view(),
+                sparrow::ArrowFlag::DICTIONARY_ORDERED,
+                children,
+                std::move(std::unique_ptr<ArrowSchema>())
             );
 
             schema->release(schema.get());

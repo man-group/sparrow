@@ -280,7 +280,13 @@ namespace sparrow
     )
     {
         SPARROW_ASSERT_FALSE(format.empty())
-        SPARROW_ASSERT_TRUE(std::ranges::none_of(children, [](const auto& child) { return child == nullptr; }))
+        SPARROW_ASSERT_TRUE(std::ranges::none_of(
+            children,
+            [](const auto& child)
+            {
+                return child == nullptr;
+            }
+        ))
 
         auto schema = std::make_unique<ArrowSchema>();
         schema->private_data = new ArrowSchemaPrivateData<Allocator>;
@@ -310,10 +316,13 @@ namespace sparrow
 
         schema->flags = flags.has_value() ? static_cast<int64_t>(flags.value()) : 0;
         schema->n_children = children.size();
-        schema->children = new ArrowSchema*[schema->n_children];
-        for (int64_t i = 0; i < schema->n_children; ++i)
+        if (schema->n_children > 0)
         {
-            schema->children[i] = children[i].release();
+            schema->children = new ArrowSchema*[schema->n_children];
+            for (int64_t i = 0; i < schema->n_children; ++i)
+            {
+                schema->children[i] = children[i].release();
+            }
         }
         schema->dictionary = dictionary.release();
         return schema;
@@ -356,7 +365,13 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(null_count >= -1)
         SPARROW_ASSERT_TRUE(offset >= 0)
         SPARROW_ASSERT_TRUE(n_buffers >= 0)
-        SPARROW_ASSERT_TRUE(std::ranges::none_of(children, [](const auto& child) { return child == nullptr; }))
+        SPARROW_ASSERT_TRUE(std::ranges::none_of(
+            children,
+            [](const auto& child)
+            {
+                return child == nullptr;
+            }
+        ))
 
         auto array = std::make_unique<ArrowArray>();
         array->private_data = new ArrowArrayPrivateData<T, Allocator>;
@@ -373,10 +388,13 @@ namespace sparrow
                                     ->buffer_allocator.allocate(buffers_size);
         }
         array->n_children = children.size();
-        array->children = new ArrowArray*[array->n_children];
-        for (int64_t i = 0; i < array->n_children; ++i)
+        if (array->n_children > 0)
         {
-            array->children[i] = children[i].release();
+            array->children = new ArrowArray*[array->n_children];
+            for (int64_t i = 0; i < array->n_children; ++i)
+            {
+                array->children[i] = children[i].release();
+            }
         }
         array->dictionary = dictionary.release();
         return array;
