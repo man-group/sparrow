@@ -26,9 +26,11 @@ namespace sparrow
     using buffer_test_type = buffer<uint8_t>;
     using view_test_type = buffer_view<uint8_t>;
 
+    using non_trivial_buffer_test_type = buffer<std::string>;
+
     namespace
     {
-        uint8_t* make_test_buffer(std::size_t size, uint8_t start_value = 0)
+        auto make_test_buffer(std::size_t size, uint8_t start_value = 0) -> uint8_t*
         {
             uint8_t* res = new uint8_t[size];
             std::iota(res, res + size, start_value);
@@ -349,6 +351,156 @@ namespace sparrow
             const std::size_t size2 = 8u;
             buffer_test_type b3(make_test_buffer(size2), size2);
             CHECK(b1 != b3);
+        }
+
+        TEST_CASE("emplace")
+        {
+            constexpr std::size_t size = 4u;
+            buffer_test_type b(make_test_buffer(size), size);
+
+            constexpr uint8_t expected_value = 101;
+            b.emplace(b.cbegin(), expected_value);
+            REQUIRE_EQ(b.size(), size + 1);
+            CHECK_EQ(b[0], expected_value);
+            CHECK_EQ(b[1], 0);
+            CHECK_EQ(b[2], 1);
+            CHECK_EQ(b[3], 2);
+            CHECK_EQ(b[4], 3);
+        }
+
+        TEST_CASE("insert")
+        {
+            SUBCASE("Inserts value before pos")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                constexpr uint8_t expected_value = 101;
+                b.insert(b.cbegin(), expected_value);
+                REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[0], expected_value);
+                CHECK_EQ(b[1], 0);
+                CHECK_EQ(b[2], 1);
+                CHECK_EQ(b[3], 2);
+                CHECK_EQ(b[4], 3);
+
+                // non_trivial_buffer_test_type b2(make_non_trivial_test_buffer(size), size);
+
+                // std::string expected_value2 = "102";
+                // b2.insert(b2.cbegin(), std::move(expected_value2));
+                // REQUIRE_EQ(b2.size(), size + 1);
+                // CHECK_EQ(b2.data()[0], "102");
+                // CHECK_EQ(b2.data()[1], "0");
+                // CHECK_EQ(b2.data()[2], "1");
+                // CHECK_EQ(b2.data()[3], "2");
+                // CHECK_EQ(b2.data()[4], "3");
+            }
+
+            SUBCASE("Inserts count copies of the value before pos.")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                constexpr uint8_t expected_value = 101;
+                constexpr std::size_t count = 3u;
+                constexpr std::size_t expected_new_size = size + count;
+                b.insert(b.cbegin(), count, expected_value);
+                const std::size_t new_size = b.size();
+                REQUIRE_EQ(new_size, expected_new_size);
+                CHECK_EQ(b[0], expected_value);
+                CHECK_EQ(b[1], expected_value);
+                CHECK_EQ(b[2], expected_value);
+                CHECK_EQ(b[3], 0);
+                CHECK_EQ(b[4], 1);
+                CHECK_EQ(b[5], 2);
+                CHECK_EQ(b[6], 3);
+            }
+
+            SUBCASE("Inserts elements from range [first, last) before pos")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                const std::vector<uint8_t> values = {101, 102, 103};
+                const std::size_t expected_new_size = size + values.size();
+                b.insert(b.cbegin(), values.cbegin(), values.cend());
+                const std::size_t new_size = b.size();
+                REQUIRE_EQ(new_size, expected_new_size);
+                CHECK_EQ(b[0], 101);
+                CHECK_EQ(b[1], 102);
+                CHECK_EQ(b[2], 103);
+                CHECK_EQ(b[3], 0);
+                CHECK_EQ(b[4], 1);
+                CHECK_EQ(b[5], 2);
+                CHECK_EQ(b[6], 3);
+            }
+
+            SUBCASE("Inserts elements from initializer list before pos")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                b.insert(b.cbegin(), {101, 102, 103});
+                REQUIRE_EQ(b.size(), size + 3);
+                CHECK_EQ(b[0], 101);
+                CHECK_EQ(b[1], 102);
+                CHECK_EQ(b[2], 103);
+                CHECK_EQ(b[3], 0);
+                CHECK_EQ(b[4], 1);
+                CHECK_EQ(b[5], 2);
+                CHECK_EQ(b[6], 3);
+            }
+        }
+
+        TEST_CASE("erase")
+        {
+            SUBCASE("Removes the element at pos")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                b.erase(b.cbegin());
+                REQUIRE_EQ(b.size(), size - 1);
+                CHECK_EQ(b[0], 1);
+                CHECK_EQ(b[1], 2);
+                CHECK_EQ(b[2], 3);
+            }
+
+            SUBCASE("Removes the elements in the range [first, last)")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                b.erase(b.cbegin(), b.cbegin() + 2);
+                REQUIRE_EQ(b.size(), size - 2);
+                CHECK_EQ(b[0], 2);
+                CHECK_EQ(b[1], 3);
+            }
+        }
+
+        TEST_CASE("push_back")
+        {
+            SUBCASE("The new element is initialized as a copy of value")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                constexpr uint8_t expected_value = 101;
+                b.push_back(expected_value);
+                REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[size], expected_value);
+            }
+
+            SUBCASE("Value is moved into the new element.")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                uint8_t expected_value = 101;
+                b.push_back(std::move(expected_value));
+                REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[size], 101);
+            }
         }
     }
 
