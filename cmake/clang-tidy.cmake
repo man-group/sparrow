@@ -61,8 +61,10 @@ else()
     message(STATUS "✅ clang-tidy found at ${CLANG_TIDY} | version: ${CLANG_TIDY_MAJOR_VERSION}.${CLANG_TIDY_MINOR_VERSION}.${CLANG_TIDY_PATCH_VERSION}")
 
     if(ACTIVATE_LINTER_DURING_COMPILATION)
+        message(STATUS "🔧 clang-tidy will be activated during compilation")
         set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY})
     else()
+        message(STATUS "🔧 clang-tidy will not be activated during compilation")
         set(CMAKE_CXX_CLANG_TIDY "")
     endif()
 
