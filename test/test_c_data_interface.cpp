@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cstring>
 #include <memory>
-#include <memory_resource>
 #include <string_view>
 
 #include "sparrow/c_interface.hpp"
@@ -41,7 +39,7 @@ TEST_SUITE("C Data Interface")
                 0,
                 0,
                 1,
-                children,
+                std::move(children),
                 std::move(dictionary)
             );
             CHECK_EQ(array->length, 1);
@@ -66,8 +64,8 @@ TEST_SUITE("C Data Interface")
                 0,
                 0,
                 1,
-                children,
-                std::move(std::unique_ptr<ArrowArray>())
+                std::move(children),
+                std::unique_ptr<ArrowArray>()
             );
             CHECK_EQ(array->length, 1);
             CHECK_EQ(array->null_count, 0);
@@ -92,7 +90,7 @@ TEST_SUITE("C Data Interface")
                 0,
                 0,
                 1,
-                children,
+                std::move(children),
                 std::move(dictionary)
             );
 
@@ -117,8 +115,8 @@ TEST_SUITE("C Data Interface")
                 0,
                 0,
                 1,
-                children,
-                std::move(std::unique_ptr<ArrowArray>())
+                std::move(children),
+                std::unique_ptr<ArrowArray>()
             );
 
             array->release(array.get());
@@ -159,7 +157,7 @@ TEST_SUITE("C Data Interface")
                 name,
                 metadata,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                children,
+                std::move(children),
                 std::move(dictionary)
             );
 
@@ -190,8 +188,8 @@ TEST_SUITE("C Data Interface")
                 std::string_view(),
                 std::string_view(),
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                children,
-                std::move(std::unique_ptr<ArrowSchema>())
+                std::move(children),
+                std::unique_ptr<ArrowSchema>()
             );
 
             const auto schema_format = std::string_view(schema->format);
@@ -219,7 +217,7 @@ TEST_SUITE("C Data Interface")
                 "name",
                 "metadata",
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                children,
+                std::move(children),
                 std::move(dictionary)
             );
 
@@ -242,8 +240,8 @@ TEST_SUITE("C Data Interface")
                 std::string_view(),
                 std::string_view(),
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                children,
-                std::move(std::unique_ptr<ArrowSchema>())
+                std::move(children),
+                std::unique_ptr<ArrowSchema>()
             );
 
             schema->release(schema.get());

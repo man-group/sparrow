@@ -17,10 +17,13 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
+#include <iterator>
 #include <optional>
+#include <utility>
 
 #include "sparrow/allocator.hpp"
 #include "sparrow/contracts.hpp"
+
 
 extern "C"
 {
@@ -63,24 +66,72 @@ extern "C"
 
 namespace sparrow
 {
+    template <class T>
+    std::vector<T*> to_raw_ptr_vec(const std::vector<std::unique_ptr<T>>& vec)
+    {
+        std::vector<T*> raw_ptr_vec;
+        std::ranges::transform(
+            vec,
+            std::back_inserter(raw_ptr_vec),
+            [](const auto& child)
+            {
+                return child.get();
+            }
+        );
+        return raw_ptr_vec;
+    }
+
+    template <class T>
+    std::vector<T*> to_raw_ptr_vec(std::vector<std::vector<T>>& vectors)
+    {
+        std::vector<T*> raw_ptr_vec;
+        std::ranges::transform(
+            vectors,
+            std::back_inserter(raw_ptr_vec),
+            [](std::vector<T>& vector) -> T*
+            {
+                return vector.data();
+            }
+        );
+        return raw_ptr_vec;
+    }
+
     /**
      * Holds the allocator for the buffers of an ArrowArray.
      *
      * @tparam BufferType The type of the buffers.
      * @tparam Allocator An allocator for BufferType.
      */
-    template <class BufferType, template <typename> class Allocator>
+    template <class BufferType, template <typename> class Allocator = std::allocator>
         requires sparrow::allocator<Allocator<BufferType>>
     struct ArrowArrayPrivateData
     {
-        ArrowArrayPrivateData() = default;
-
-        explicit ArrowArrayPrivateData(const Allocator<BufferType>& allocator)
-            : buffer_allocator(allocator)
+        explicit ArrowArrayPrivateData(
+            std::vector<std::unique_ptr<ArrowArray>> children,
+            std::unique_ptr<ArrowArray> dictionary,
+            size_t n_buffers,
+            size_t buffer_length
+        )
+            : buffers_(n_buffers, std::vector<BufferType, Allocator<BufferType>>(buffer_length))
+            , buffers_raw_ptr_vec_(to_raw_ptr_vec(buffers_))
+            , children_(std::move(children))
+            , children_raw_ptr_vec_(to_raw_ptr_vec(children_))
+            , dictionary_(std::move(dictionary))
         {
         }
 
-        any_allocator<BufferType> buffer_allocator = Allocator<BufferType>();
+        using BufferAllocator = Allocator<BufferType>;
+        using BuffersAllocator = Allocator<std::vector<BufferType, BufferAllocator>>;
+
+        any_allocator<BufferType> buffer_allocator_ = BufferAllocator();
+
+        std::vector<std::vector<BufferType, Allocator<BufferType>>> buffers_;
+        std::vector<BufferType*> buffers_raw_ptr_vec_;
+
+        std::vector<std::unique_ptr<ArrowArray>> children_;
+        std::vector<ArrowArray*> children_raw_ptr_vec_;
+
+        std::unique_ptr<ArrowArray> dictionary_;
     };
 
     /**
@@ -88,81 +139,65 @@ namespace sparrow
      *
      * @tparam Allocator An allocator for char.
      */
-    template <template <typename> class Allocator>
+    template <template <typename> class Allocator = std::allocator>
         requires sparrow::allocator<Allocator<char>>
     struct ArrowSchemaPrivateData
     {
-        ArrowSchemaPrivateData() = default;
+        using string_type = std::basic_string<char, std::char_traits<char>, Allocator<char>>;
 
-        explicit ArrowSchemaPrivateData(const Allocator<char>& allocator)
-            : string_allocator(allocator)
+        ArrowSchemaPrivateData() = delete;
+
+        explicit ArrowSchemaPrivateData(
+            std::string_view format_view,
+            std::string_view name_view,
+            std::string_view metadata_view,
+            std::vector<std::unique_ptr<ArrowSchema>> children,
+            std::unique_ptr<ArrowSchema> dictionary
+        )
+            : format_(format_view)
+            , name_(name_view)
+            , metadata_(metadata_view)
+            , children_(std::move(children))
+            , dictionary_(std::move(dictionary))
+            , children_raw_ptr_vec_(to_raw_ptr_vec(children_))
         {
         }
 
-        any_allocator<char> string_allocator = Allocator<char>();
-        size_t name_size = 0;
-        size_t format_size = 0;
-        size_t metadata_size = 0;
+        ~ArrowSchemaPrivateData()
+        {
+            for (const auto& child : children_)
+            {
+                SPARROW_ASSERT_TRUE(child->release == nullptr)
+                if (child->release != nullptr)
+                {
+                    child->release(child.get());
+                }
+            }
+
+            if (dictionary_ != nullptr)
+            {
+                SPARROW_ASSERT_TRUE(dictionary_->release == nullptr)
+                if (dictionary_->release != nullptr)
+                {
+                    dictionary_->release(dictionary_.get());
+                }
+            }
+        }
+
+        any_allocator<char> string_allocator_ = Allocator<char>();
+
+        string_type format_;
+        string_type name_;
+        string_type metadata_;
+
+        std::vector<std::unique_ptr<ArrowSchema>> children_;
+        std::vector<ArrowSchema*> children_raw_ptr_vec_;
+
+        std::unique_ptr<ArrowSchema> dictionary_;
     };
 
     template <typename T>
     concept any_arrow_array = std::is_same_v<T, ArrowArray> || std::is_same_v<T, ArrowSchema>;
-
-    /**
-     * Releases the children and dictionary of an ArrowArray or ArrowSchema.
-     *
-     * @tparam T The type of the object.
-     * @param obj The object to release the children and dictionary of.
-     */
-    template <any_arrow_array T>
-    void release_children(T& obj)
-    {
-        for (int64_t i = 0; i < obj.n_children; ++i)
-        {
-            SPARROW_ASSERT_TRUE(obj.children != nullptr)
-            T* child = obj.children[i];
-            if (child->release != nullptr)
-            {
-                child->release(child);
-                SPARROW_ASSERT_TRUE(child->release == nullptr)
-            }
-            delete child;
-        }
-        delete[] obj.children;
-        obj.children = nullptr;
-        obj.n_children = 0;
-    }
-
-    /**
-     * Releases the dictionary of an ArrowArray or ArrowSchema.
-     *
-     * @tparam T The type of the object.
-     * @param obj The object to release the dictionary of.
-     */
-    template <any_arrow_array T>
-    void release_dictionary(T& obj)
-    {
-        if (obj.dictionary != nullptr && obj.dictionary->release != nullptr)
-        {
-            obj.dictionary->release(obj.dictionary);
-            SPARROW_ASSERT_TRUE(obj.dictionary->release == nullptr)
-        }
-        delete obj.dictionary;
-        obj.dictionary = nullptr;
-    }
-
-    /**
-     * Releases the children and dictionary of an ArrowArray or ArrowSchema.
-     *
-     * @tparam T The type of the object.
-     * @param obj The object to release the children and dictionary of.
-     */
-    template <any_arrow_array T>
-    void common_deleter(T& obj)
-    {
-        release_children(obj);
-        release_dictionary(obj);
-    }
 
     /**
      * Deletes an ArrowArray.
@@ -179,23 +214,15 @@ namespace sparrow
         SPARROW_ASSERT_FALSE(array == nullptr)
         SPARROW_ASSERT_FALSE(array->release == nullptr)
 
-        common_deleter(*array);
-
         const auto private_data = static_cast<ArrowArrayPrivateData<T, Allocator>*>(array->private_data);
-        const size_t buffers_size = array->length * sizeof(T);
-        for (int64_t i = 0; i < array->n_buffers; ++i)
-        {
-            auto buffer = const_cast<void*>(array->buffers[i]);
-            private_data->buffer_allocator.deallocate(static_cast<T*>(buffer), buffers_size);
-            buffer = nullptr;
-        }
-        delete array->buffers;
         array->buffers = nullptr;
         array->n_buffers = 0;
-
         array->length = 0;
         array->null_count = 0;
         array->offset = 0;
+        array->n_children = 0;
+        array->children = nullptr;
+        array->dictionary = nullptr;
 
         delete private_data;
         array->private_data = nullptr;
@@ -216,25 +243,15 @@ namespace sparrow
         SPARROW_ASSERT_FALSE(schema == nullptr)
         SPARROW_ASSERT_FALSE(schema->release == nullptr)
 
-        common_deleter(*schema);
-
-        const auto private_data = static_cast<ArrowSchemaPrivateData<Allocator>*>(schema->private_data);
-        auto& string_allocator = private_data->string_allocator;
-        const auto dealocate_string = [&string_allocator](const char*& str, size_t& size)
-        {
-            string_allocator.deallocate(const_cast<char*>(str), size * sizeof(char));
-            str = nullptr;
-            size = 0;
-        };
-
-        dealocate_string(schema->format, private_data->format_size);
-        dealocate_string(schema->name, private_data->name_size);
-        dealocate_string(schema->metadata, private_data->metadata_size);
-
-        delete private_data;
-        schema->n_children = 0;
         schema->flags = 0;
+        schema->n_children = 0;
+        schema->children = nullptr;
+        schema->dictionary = nullptr;
+        schema->name = nullptr;
+        schema->format = nullptr;
+        schema->metadata = nullptr;
 
+        delete schema->private_data;
         schema->private_data = nullptr;
         schema->release = nullptr;
     }
@@ -275,8 +292,8 @@ namespace sparrow
         std::string_view name,
         std::string_view metadata,
         std::optional<ArrowFlag> flags,
-        std::vector<std::unique_ptr<ArrowSchema>>& children,
-        std::unique_ptr<ArrowSchema> dictionary
+        std::vector<std::unique_ptr<ArrowSchema>>&& children,
+        std::unique_ptr<ArrowSchema>&& dictionary
     )
     {
         SPARROW_ASSERT_FALSE(format.empty())
@@ -289,42 +306,30 @@ namespace sparrow
         ))
 
         auto schema = std::make_unique<ArrowSchema>();
-        schema->private_data = new ArrowSchemaPrivateData<Allocator>;
-        schema->release = delete_schema<Allocator>;
+        schema->flags = flags.has_value() ? static_cast<int64_t>(flags.value()) : 0;
+
+        schema->private_data = new ArrowSchemaPrivateData<Allocator>(
+            format,
+            name,
+            metadata,
+            std::move(children),
+            std::move(dictionary)
+        );
 
         auto private_data = static_cast<ArrowSchemaPrivateData<Allocator>*>(schema->private_data);
-
-        const auto build_string = [&private_data](size_t& size, std::string_view str)
+        schema->format = private_data->format_.data();
+        if (!private_data->name_.empty())
         {
-            size = str.size() + 1;
-            char* dest = private_data->string_allocator.allocate(size);
-            std::uninitialized_copy(str.cbegin(), str.cend(), dest);
-            dest[str.size()] = '\0';
-            return dest;
-        };
-
-        schema->format = build_string(private_data->format_size, format);
-
-        if (!name.empty())
-        {
-            schema->name = build_string(private_data->name_size, name);
+            schema->name = private_data->name_.data();
         }
-        if (!metadata.empty())
+        if (!private_data->metadata_.empty())
         {
-            schema->metadata = build_string(private_data->metadata_size, metadata);
+            schema->metadata = private_data->metadata_.data();
         }
-
-        schema->flags = flags.has_value() ? static_cast<int64_t>(flags.value()) : 0;
-        schema->n_children = children.size();
-        if (schema->n_children > 0)
-        {
-            schema->children = new ArrowSchema*[schema->n_children];
-            for (int64_t i = 0; i < schema->n_children; ++i)
-            {
-                schema->children[i] = children[i].release();
-            }
-        }
-        schema->dictionary = dictionary.release();
+        schema->n_children = private_data->children_raw_ptr_vec_.size();
+        schema->children = private_data->children_raw_ptr_vec_.data();
+        schema->dictionary = private_data->dictionary_.get();
+        schema->release = delete_schema<Allocator>;
         return schema;
     };
 
@@ -357,7 +362,7 @@ namespace sparrow
         int64_t null_count,
         int64_t offset,
         int64_t n_buffers,
-        std::vector<std::unique_ptr<ArrowArray>>& children,
+        std::vector<std::unique_ptr<ArrowArray>>&& children,
         std::unique_ptr<ArrowArray> dictionary
     )
     {
@@ -374,29 +379,25 @@ namespace sparrow
         ))
 
         auto array = std::make_unique<ArrowArray>();
-        array->private_data = new ArrowArrayPrivateData<T, Allocator>;
-        array->release = delete_array<T, Allocator>;
+        array->private_data = new ArrowArrayPrivateData<T, Allocator>(
+            std::move(children),
+            std::move(dictionary),
+            n_buffers,
+            length
+        );
+        auto private_data = static_cast<ArrowArrayPrivateData<T, Allocator>*>(array->private_data);
+
         array->length = length;
         array->null_count = null_count;
         array->offset = offset;
         array->n_buffers = n_buffers;
-        const size_t buffers_size = length * sizeof(T);
-        array->buffers = new const void*[n_buffers];
-        for (int64_t i = 0; i < n_buffers; ++i)
-        {
-            array->buffers[i] = static_cast<ArrowArrayPrivateData<T, Allocator>*>(array->private_data)
-                                    ->buffer_allocator.allocate(buffers_size);
-        }
-        array->n_children = children.size();
-        if (array->n_children > 0)
-        {
-            array->children = new ArrowArray*[array->n_children];
-            for (int64_t i = 0; i < array->n_children; ++i)
-            {
-                array->children[i] = children[i].release();
-            }
-        }
-        array->dictionary = dictionary.release();
+        T** buffer_data = private_data->buffers_raw_ptr_vec_.data();
+        const T** const_buffer_ptr = const_cast<const int**>(buffer_data);
+        array->buffers = reinterpret_cast<const void**>(const_buffer_ptr);
+        array->n_children = private_data->children_raw_ptr_vec_.size();
+        array->children = private_data->children_raw_ptr_vec_.data();
+        array->dictionary = private_data->dictionary_.get();
+        array->release = delete_array<T, Allocator>;
         return array;
     }
 
