@@ -18,7 +18,9 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iterator>
+#include <memory>
 #include <optional>
+#include <span>
 #include <utility>
 
 #include "sparrow/allocator.hpp"
@@ -97,7 +99,10 @@ namespace sparrow
     }
 
     /**
-     * Holds the allocator for the buffers of an ArrowArray.
+     * Struct representing private data for ArrowArray.
+     *
+     * This struct holds the private data for ArrowArray, including buffers, children, and dictionary.
+     * It is used in the Sparrow library.
      *
      * @tparam BufferType The type of the buffers.
      * @tparam Allocator An allocator for BufferType.
@@ -135,7 +140,10 @@ namespace sparrow
     };
 
     /**
-     * Holds the allocator for the strings of an ArrowSchema.
+     * Struct representing private data for ArrowSchema.
+     *
+     * This struct holds the private data for ArrowArray, including format, name and metadata strings,
+     * children, and dictionary. It is used in the Sparrow library.
      *
      * @tparam Allocator An allocator for char.
      */
@@ -144,19 +152,23 @@ namespace sparrow
     struct ArrowSchemaPrivateData
     {
         using string_type = std::basic_string<char, std::char_traits<char>, Allocator<char>>;
+        using vector_string_type = std::vector<char, Allocator<char>>;
 
         ArrowSchemaPrivateData() = delete;
 
         explicit ArrowSchemaPrivateData(
             std::string_view format_view,
             std::string_view name_view,
-            std::string_view metadata_view,
+            const std::optional<std::span<char>>& metadata,
             std::vector<std::unique_ptr<ArrowSchema>> children,
             std::unique_ptr<ArrowSchema> dictionary
         )
             : format_(format_view)
             , name_(name_view)
-            , metadata_(metadata_view)
+            , metadata_(
+                  metadata.has_value() ? vector_string_type(metadata->begin(), metadata->end())
+                                       : vector_string_type()
+              )
             , children_(std::move(children))
             , dictionary_(std::move(dictionary))
             , children_raw_ptr_vec_(to_raw_ptr_vec(children_))
@@ -188,7 +200,7 @@ namespace sparrow
 
         string_type format_;
         string_type name_;
-        string_type metadata_;
+        std::optional<vector_string_type> metadata_;
 
         std::vector<std::unique_ptr<ArrowSchema>> children_;
         std::vector<ArrowSchema*> children_raw_ptr_vec_;
@@ -212,9 +224,8 @@ namespace sparrow
     void delete_array(ArrowArray* array)
     {
         SPARROW_ASSERT_FALSE(array == nullptr)
-        SPARROW_ASSERT_FALSE(array->release == nullptr)
+        SPARROW_ASSERT_TRUE(array->release == std::addressof(delete_array<T, Allocator>))
 
-        const auto private_data = static_cast<ArrowArrayPrivateData<T, Allocator>*>(array->private_data);
         array->buffers = nullptr;
         array->n_buffers = 0;
         array->length = 0;
@@ -223,7 +234,7 @@ namespace sparrow
         array->n_children = 0;
         array->children = nullptr;
         array->dictionary = nullptr;
-
+        const auto private_data = static_cast<ArrowArrayPrivateData<T, Allocator>*>(array->private_data);
         delete private_data;
         array->private_data = nullptr;
         array->release = nullptr;
@@ -241,7 +252,7 @@ namespace sparrow
     void delete_schema(ArrowSchema* schema)
     {
         SPARROW_ASSERT_FALSE(schema == nullptr)
-        SPARROW_ASSERT_FALSE(schema->release == nullptr)
+        SPARROW_ASSERT_TRUE(schema->release == std::addressof(delete_schema<Allocator>))
 
         schema->flags = 0;
         schema->n_children = 0;
@@ -250,8 +261,9 @@ namespace sparrow
         schema->name = nullptr;
         schema->format = nullptr;
         schema->metadata = nullptr;
-
-        delete schema->private_data;
+        
+        const auto private_data = static_cast<ArrowSchemaPrivateData<Allocator>*>(schema->private_data);
+        delete private_data;
         schema->private_data = nullptr;
         schema->release = nullptr;
     }
@@ -263,6 +275,18 @@ namespace sparrow
         NULLABLE = 2,        // For dictionary-encoded types, whether the ordering of dictionary indices is
                              // semantically meaningful.
         MAP_KEYS_SORTED = 4  // For map types, whether the keys within each map value are sorted.
+    };
+
+    struct ArrowSchemaCustomDeleter
+    {
+        void operator()(ArrowSchema* schema) const
+        {
+            if (schema->release != nullptr)
+            {
+                schema->release(schema);
+            }
+            delete schema;
+        }
     };
 
     /**
@@ -278,19 +302,17 @@ namespace sparrow
      *                 is nested, child types are not encoded here but in the ArrowSchema.children structures.
      * @param flags A bitfield of flags enriching the type description. Its value is computed by OR’ing
      *              together the flag values.
-     * @param n_children The number of children this type has.
-     * @param children A C array of pointers to each child type of this type. There must be
-     *                 ArrowSchema.n_children pointers. May be nullptr only if ArrowSchema.n_children is 0.
+     * @param children Vector of unique pointer of ArrowSchema. Children must not be null.
      * @param dictionary Optional. A pointer to the type of dictionary values. Must be present if the
      *                   ArrowSchema represents a dictionary-encoded type. Must be nullptr otherwise.
      * @return The created ArrowSchema.
      */
     template <template <typename> class Allocator>
         requires sparrow::allocator<Allocator<char>>
-    std::unique_ptr<ArrowSchema> make_arrow_schema(
+    std::unique_ptr<ArrowSchema, ArrowSchemaCustomDeleter> make_arrow_schema(
         std::string_view format,
         std::string_view name,
-        std::string_view metadata,
+        std::optional<std::span<char>> metadata,
         std::optional<ArrowFlag> flags,
         std::vector<std::unique_ptr<ArrowSchema>>&& children,
         std::unique_ptr<ArrowSchema>&& dictionary
@@ -305,7 +327,7 @@ namespace sparrow
             }
         ))
 
-        auto schema = std::make_unique<ArrowSchema>();
+        std::unique_ptr<ArrowSchema, ArrowSchemaCustomDeleter> schema(new ArrowSchema());
         schema->flags = flags.has_value() ? static_cast<int64_t>(flags.value()) : 0;
 
         schema->private_data = new ArrowSchemaPrivateData<Allocator>(
@@ -316,21 +338,33 @@ namespace sparrow
             std::move(dictionary)
         );
 
-        auto private_data = static_cast<ArrowSchemaPrivateData<Allocator>*>(schema->private_data);
+        const auto private_data = static_cast<ArrowSchemaPrivateData<Allocator>*>(schema->private_data);
         schema->format = private_data->format_.data();
         if (!private_data->name_.empty())
         {
             schema->name = private_data->name_.data();
         }
-        if (!private_data->metadata_.empty())
+        if (private_data->metadata_.has_value() && !(*(private_data->metadata_)).empty())
         {
-            schema->metadata = private_data->metadata_.data();
+            schema->metadata = (*private_data->metadata_).data();
         }
         schema->n_children = private_data->children_raw_ptr_vec_.size();
         schema->children = private_data->children_raw_ptr_vec_.data();
         schema->dictionary = private_data->dictionary_.get();
         schema->release = delete_schema<Allocator>;
         return schema;
+    };
+
+    struct ArrowArrayCustomDeleter
+    {
+        void operator()(ArrowArray* array) const
+        {
+            if (array->release != nullptr)
+            {
+                array->release(array);
+            }
+            delete array;
+        }
     };
 
     /**
@@ -347,17 +381,14 @@ namespace sparrow
      *                  function of the data type, as described in the Columnar format specification, except
      *                  for the the binary or utf-8 view type, which has one additional buffer compared to the
      *                  Columnar format specification (see Binary view arrays). Must be 0 or positive.
-     * @param n_children The number of children this array has. The number of children is a function of the
-     *                   data type, as described in the Columnar format specification. Must be 0 or positive.
-     * @param children Optional. A C array of pointers to each child array of this array. There must be
-     *                 n_children pointers. May be nullptr only if n_children is 0.
+     * @param children Vector of child arrays. Children must not be null.
      * @param dictionary A pointer to the underlying array of dictionary values. Must be present if the
      *                   ArrowArray represents a dictionary-encoded array. Must be null otherwise.
      * @return The created ArrowArray.
      */
     template <class T, template <typename> class Allocator>
         requires sparrow::allocator<Allocator<T>>
-    std::unique_ptr<ArrowArray> make_array_constructor(
+    std::unique_ptr<ArrowArray, ArrowArrayCustomDeleter> make_array_constructor(
         int64_t length,
         int64_t null_count,
         int64_t offset,
@@ -378,19 +409,21 @@ namespace sparrow
             }
         ))
 
-        auto array = std::make_unique<ArrowArray>();
+        std::unique_ptr<ArrowArray, ArrowArrayCustomDeleter> array(new ArrowArray());
+
         array->private_data = new ArrowArrayPrivateData<T, Allocator>(
             std::move(children),
             std::move(dictionary),
             n_buffers,
             length
         );
-        auto private_data = static_cast<ArrowArrayPrivateData<T, Allocator>*>(array->private_data);
-
+        
         array->length = length;
         array->null_count = null_count;
         array->offset = offset;
         array->n_buffers = n_buffers;
+
+        const auto private_data = static_cast<ArrowArrayPrivateData<T, Allocator>*>(array->private_data);
         T** buffer_data = private_data->buffers_raw_ptr_vec_.data();
         const T** const_buffer_ptr = const_cast<const int**>(buffer_data);
         array->buffers = reinterpret_cast<const void**>(const_buffer_ptr);
