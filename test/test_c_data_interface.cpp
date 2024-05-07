@@ -15,6 +15,7 @@
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <array>
 
 #include "sparrow/c_interface.hpp"
 
@@ -35,11 +36,12 @@ TEST_SUITE("C Data Interface")
             auto dictionary = std::make_unique<ArrowArray>();
             const auto dictionary_ptr = dictionary.get();
 
-            const auto array = sparrow::make_array_constructor<int, std::allocator>(
+            std::vector<size_t> buffers_sizes = {1};
+            const auto array = sparrow::make_arrow_array<int, std::allocator>(
                 1,
                 0,
                 0,
-                1,
+                buffers_sizes,
                 std::move(children),
                 std::move(dictionary)
             );
@@ -60,11 +62,11 @@ TEST_SUITE("C Data Interface")
         SUBCASE("make_array_constructor no children and dictionary")
         {
             std::vector<std::unique_ptr<ArrowArray>> children;
-            const auto array = sparrow::make_array_constructor<int, std::allocator>(
+            const auto array = sparrow::make_arrow_array<int, std::allocator>(
                 1,
                 0,
                 0,
-                1,
+                std::array<size_t, 1>{1},
                 std::move(children),
                 std::unique_ptr<ArrowArray>()
             );
@@ -86,11 +88,11 @@ TEST_SUITE("C Data Interface")
             children.emplace_back(new ArrowArray);
             children.emplace_back(new ArrowArray);
             auto dictionary = std::make_unique<ArrowArray>();
-            auto array = sparrow::make_array_constructor<int, std::allocator>(
+            auto array = sparrow::make_arrow_array<int, std::allocator>(
                 1,
                 0,
                 0,
-                1,
+                std::array<size_t, 1>{1},
                 std::move(children),
                 std::move(dictionary)
             );
@@ -111,11 +113,11 @@ TEST_SUITE("C Data Interface")
         SUBCASE("ArrowArray release no children and dictionary")
         {
             std::vector<std::unique_ptr<ArrowArray>> children;
-            auto array = sparrow::make_array_constructor<int, std::allocator>(
+            auto array = sparrow::make_arrow_array<int, std::allocator>(
                 1,
                 0,
                 0,
-                1,
+                std::array<size_t, 1>{1},
                 std::move(children),
                 std::unique_ptr<ArrowArray>()
             );
