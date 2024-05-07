@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <memory>
+#include <optional>
 #include <string_view>
 
 #include "sparrow/c_interface.hpp"
@@ -150,8 +151,7 @@ TEST_SUITE("C Data Interface")
 
             constexpr std::string_view format = "format";
             constexpr std::string_view name = "name";
-            constexpr std::string_view metadata = "metadata";
-
+            std::vector<char> metadata = {'\0', '\0', '\0', '\0'};
             const auto schema = sparrow::make_arrow_schema<std::allocator>(
                 format,
                 name,
@@ -167,9 +167,10 @@ TEST_SUITE("C Data Interface")
             const auto schema_name = std::string_view(schema->name);
             const bool name_eq = schema_name == name;
             CHECK(name_eq);
-            const auto schema_metadata = std::string_view(schema->metadata);
-            const bool metadata_eq = schema_metadata == metadata;
-            CHECK(metadata_eq);
+            CHECK_EQ(schema->metadata[0], metadata[0]);
+            CHECK_EQ(schema->metadata[1], metadata[1]);
+            CHECK_EQ(schema->metadata[2], metadata[2]);
+            CHECK_EQ(schema->metadata[3], metadata[3]);
             CHECK_EQ(schema->flags, 1);
             CHECK_EQ(schema->n_children, 2);
             REQUIRE_NE(schema->children, nullptr);
@@ -186,7 +187,7 @@ TEST_SUITE("C Data Interface")
             const auto schema = sparrow::make_arrow_schema<std::allocator>(
                 "format",
                 std::string_view(),
-                std::string_view(),
+                std::nullopt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
                 std::move(children),
                 std::unique_ptr<ArrowSchema>()
@@ -212,10 +213,12 @@ TEST_SUITE("C Data Interface")
             children.emplace_back(new ArrowSchema);
             auto dictionary = std::make_unique<ArrowSchema>();
 
+            std::vector<char> metadata = {'\0', '\0', '\0', '\0'};
+
             auto schema = sparrow::make_arrow_schema<std::allocator>(
                 "format",
                 "name",
-                "metadata",
+                metadata,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
                 std::move(children),
                 std::move(dictionary)
@@ -238,7 +241,7 @@ TEST_SUITE("C Data Interface")
             auto schema = sparrow::make_arrow_schema<std::allocator>(
                 "format",
                 std::string_view(),
-                std::string_view(),
+                std::nullopt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
                 std::move(children),
                 std::unique_ptr<ArrowSchema>()
