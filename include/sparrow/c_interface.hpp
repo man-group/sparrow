@@ -16,14 +16,15 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <cstdlib>
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <utility>
 
 #include "sparrow/allocator.hpp"
+#include "sparrow/buffer.hpp"
 #include "sparrow/contracts.hpp"
 
 
@@ -68,10 +69,11 @@ extern "C"
 
 namespace sparrow
 {
-    template <class T>
-    std::vector<T*> to_raw_ptr_vec(const std::vector<std::unique_ptr<T>>& vec)
+    template <template <typename> class Allocator = std::allocator, class T>
+    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(const std::vector<std::unique_ptr<T>>& vec)
     {
-        std::vector<T*> raw_ptr_vec;
+        std::vector<T*, Allocator<T*>> raw_ptr_vec;
+        raw_ptr_vec.reserve(vec.size());
         std::ranges::transform(
             vec,
             std::back_inserter(raw_ptr_vec),
@@ -83,19 +85,33 @@ namespace sparrow
         return raw_ptr_vec;
     }
 
-    template <class T>
-    std::vector<T*> to_raw_ptr_vec(std::vector<std::vector<T>>& vectors)
+    template <template <typename> class Allocator = std::allocator, class T>
+    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(std::vector<buffer<T>>& vectors)
     {
-        std::vector<T*> raw_ptr_vec;
+        std::vector<T*, Allocator<T*>> raw_ptr_vec;
+        raw_ptr_vec.reserve(vectors.size());
         std::ranges::transform(
             vectors,
             std::back_inserter(raw_ptr_vec),
-            [](std::vector<T>& vector) -> T*
+            [](buffer<T>& vector) -> T*
             {
                 return vector.data();
             }
         );
         return raw_ptr_vec;
+    }
+
+    template <class BufferType, std::ranges::input_range R, template <typename> class Allocator = std::allocator>
+        requires std::is_integral_v<std::ranges::range_value_t<R>> && sparrow::allocator<Allocator<buffer<BufferType>>>
+    std::vector<buffer<BufferType>, Allocator<buffer<BufferType>>>
+    create_buffers(const R& buffer_sizes, const Allocator<BufferType>& buffer_allocator, const Allocator<buffer<BufferType>>& buffers_allocator_)
+    {
+        std::vector<buffer<BufferType>, Allocator<buffer<BufferType>>> buffers(buffers_allocator_);
+        for (const auto buffer_size : buffer_sizes)
+        {
+            buffers.emplace_back(buffer_size, buffer_allocator);
+        }
+        return buffers;
     }
 
     /**
@@ -109,28 +125,30 @@ namespace sparrow
      */
     template <class BufferType, template <typename> class Allocator = std::allocator>
         requires sparrow::allocator<Allocator<BufferType>>
-    struct ArrowArrayPrivateData
+    struct arrow_array_private_data
     {
-        explicit ArrowArrayPrivateData(
+        template <std::ranges::input_range V>
+            requires std::is_integral_v<std::ranges::range_value_t<V>>
+        explicit arrow_array_private_data(
             std::vector<std::unique_ptr<ArrowArray>> children,
             std::unique_ptr<ArrowArray> dictionary,
-            size_t n_buffers,
-            size_t buffer_length
+            const V& buffer_sizes
         )
-            : buffers_(n_buffers, std::vector<BufferType, Allocator<BufferType>>(buffer_length))
-            , buffers_raw_ptr_vec_(to_raw_ptr_vec(buffers_))
+            : buffers_(create_buffers<BufferType>(buffer_sizes, buffer_allocator_, buffers_allocator_), buffers_allocator_)
+            , buffers_raw_ptr_vec_(to_raw_ptr_vec<Allocator>(buffers_))
             , children_(std::move(children))
-            , children_raw_ptr_vec_(to_raw_ptr_vec(children_))
+            , children_raw_ptr_vec_(to_raw_ptr_vec<Allocator>(children_))
             , dictionary_(std::move(dictionary))
         {
         }
 
-        using BufferAllocator = Allocator<BufferType>;
-        using BuffersAllocator = Allocator<std::vector<BufferType, BufferAllocator>>;
+        using buffer_allocator = Allocator<BufferType>;
+        using buffers_allocator = Allocator<buffer<BufferType>>;
 
-        any_allocator<BufferType> buffer_allocator_ = BufferAllocator();
+        buffer_allocator buffer_allocator_ = buffer_allocator();
+        buffers_allocator buffers_allocator_ = buffers_allocator();
 
-        std::vector<std::vector<BufferType, Allocator<BufferType>>> buffers_;
+        std::vector<buffer<BufferType>, buffers_allocator> buffers_;
         std::vector<BufferType*> buffers_raw_ptr_vec_;
 
         std::vector<std::unique_ptr<ArrowArray>> children_;
@@ -149,14 +167,14 @@ namespace sparrow
      */
     template <template <typename> class Allocator = std::allocator>
         requires sparrow::allocator<Allocator<char>>
-    struct ArrowSchemaPrivateData
+    struct arrow_schema_private_data
     {
         using string_type = std::basic_string<char, std::char_traits<char>, Allocator<char>>;
         using vector_string_type = std::vector<char, Allocator<char>>;
 
-        ArrowSchemaPrivateData() = delete;
+        arrow_schema_private_data() = delete;
 
-        explicit ArrowSchemaPrivateData(
+        explicit arrow_schema_private_data(
             std::string_view format_view,
             std::string_view name_view,
             const std::optional<std::span<char>>& metadata,
@@ -175,7 +193,7 @@ namespace sparrow
         {
         }
 
-        ~ArrowSchemaPrivateData()
+        ~arrow_schema_private_data()
         {
             for (const auto& child : children_)
             {
@@ -234,7 +252,7 @@ namespace sparrow
         array->n_children = 0;
         array->children = nullptr;
         array->dictionary = nullptr;
-        const auto private_data = static_cast<ArrowArrayPrivateData<T, Allocator>*>(array->private_data);
+        const auto private_data = static_cast<arrow_array_private_data<T, Allocator>*>(array->private_data);
         delete private_data;
         array->private_data = nullptr;
         array->release = nullptr;
@@ -261,8 +279,8 @@ namespace sparrow
         schema->name = nullptr;
         schema->format = nullptr;
         schema->metadata = nullptr;
-        
-        const auto private_data = static_cast<ArrowSchemaPrivateData<Allocator>*>(schema->private_data);
+
+        const auto private_data = static_cast<arrow_schema_private_data<Allocator>*>(schema->private_data);
         delete private_data;
         schema->private_data = nullptr;
         schema->release = nullptr;
@@ -270,14 +288,14 @@ namespace sparrow
 
     enum class ArrowFlag : int64_t
     {
-        DICTIONARY_ORDERED = 1,  // Whether this field is semantically nullable (regardless of whether it
+        DICTIONARY_ORDERED = 1,  // For dictionary-encoded types, whether the ordering of dictionary indices
+                                 // is semantically meaningful.
+        NULLABLE = 2,            // Whether this field is semantically nullable (regardless of whether it
                                  // actually has null values).
-        NULLABLE = 2,        // For dictionary-encoded types, whether the ordering of dictionary indices is
-                             // semantically meaningful.
-        MAP_KEYS_SORTED = 4  // For map types, whether the keys within each map value are sorted.
+        MAP_KEYS_SORTED = 4      // For map types, whether the keys within each map value are sorted.
     };
 
-    struct ArrowSchemaCustomDeleter
+    struct arrow_schema_custom_deleter
     {
         void operator()(ArrowSchema* schema) const
         {
@@ -309,7 +327,7 @@ namespace sparrow
      */
     template <template <typename> class Allocator>
         requires sparrow::allocator<Allocator<char>>
-    std::unique_ptr<ArrowSchema, ArrowSchemaCustomDeleter> make_arrow_schema(
+    std::unique_ptr<ArrowSchema, arrow_schema_custom_deleter> make_arrow_schema(
         std::string_view format,
         std::string_view name,
         std::optional<std::span<char>> metadata,
@@ -327,10 +345,10 @@ namespace sparrow
             }
         ))
 
-        std::unique_ptr<ArrowSchema, ArrowSchemaCustomDeleter> schema(new ArrowSchema());
+        std::unique_ptr<ArrowSchema, arrow_schema_custom_deleter> schema(new ArrowSchema());
         schema->flags = flags.has_value() ? static_cast<int64_t>(flags.value()) : 0;
 
-        schema->private_data = new ArrowSchemaPrivateData<Allocator>(
+        schema->private_data = new arrow_schema_private_data<Allocator>(
             format,
             name,
             metadata,
@@ -338,7 +356,7 @@ namespace sparrow
             std::move(dictionary)
         );
 
-        const auto private_data = static_cast<ArrowSchemaPrivateData<Allocator>*>(schema->private_data);
+        const auto private_data = static_cast<arrow_schema_private_data<Allocator>*>(schema->private_data);
         schema->format = private_data->format_.data();
         if (!private_data->name_.empty())
         {
@@ -386,13 +404,13 @@ namespace sparrow
      *                   ArrowArray represents a dictionary-encoded array. Must be null otherwise.
      * @return The created ArrowArray.
      */
-    template <class T, template <typename> class Allocator>
-        requires sparrow::allocator<Allocator<T>>
-    std::unique_ptr<ArrowArray, ArrowArrayCustomDeleter> make_array_constructor(
+    template <class T, template <typename> class Allocator, std::ranges::input_range R>
+        requires sparrow::allocator<Allocator<T>> && std::is_integral_v<std::ranges::range_value_t<R>>
+    std::unique_ptr<ArrowArray, ArrowArrayCustomDeleter> make_arrow_array(
         int64_t length,
         int64_t null_count,
         int64_t offset,
-        int64_t n_buffers,
+        const R& buffer_sizes,
         std::vector<std::unique_ptr<ArrowArray>>&& children,
         std::unique_ptr<ArrowArray> dictionary
     )
@@ -400,7 +418,6 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(length >= 0)
         SPARROW_ASSERT_TRUE(null_count >= -1)
         SPARROW_ASSERT_TRUE(offset >= 0)
-        SPARROW_ASSERT_TRUE(n_buffers >= 0)
         SPARROW_ASSERT_TRUE(std::ranges::none_of(
             children,
             [](const auto& child)
@@ -411,19 +428,18 @@ namespace sparrow
 
         std::unique_ptr<ArrowArray, ArrowArrayCustomDeleter> array(new ArrowArray());
 
-        array->private_data = new ArrowArrayPrivateData<T, Allocator>(
+        array->private_data = new arrow_array_private_data<T, Allocator>(
             std::move(children),
             std::move(dictionary),
-            n_buffers,
-            length
+            buffer_sizes
         );
-        
+
         array->length = length;
         array->null_count = null_count;
         array->offset = offset;
-        array->n_buffers = n_buffers;
+        array->n_buffers = buffer_sizes.size();
 
-        const auto private_data = static_cast<ArrowArrayPrivateData<T, Allocator>*>(array->private_data);
+        const auto private_data = static_cast<arrow_array_private_data<T, Allocator>*>(array->private_data);
         T** buffer_data = private_data->buffers_raw_ptr_vec_.data();
         const T** const_buffer_ptr = const_cast<const int**>(buffer_data);
         array->buffers = reinterpret_cast<const void**>(const_buffer_ptr);
