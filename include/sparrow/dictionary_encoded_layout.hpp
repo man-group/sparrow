@@ -194,10 +194,10 @@ namespace sparrow
     template <class L, class SL, bool is_const>
     dictionary_value_iterator<L, SL, is_const>::dictionary_value_iterator(
         index_iterator index_it,
-        sub_layout_reference sub_layout_reference
+        sub_layout_reference sub_layout_ref
     )
         : m_index_it(index_it)
-        , m_sub_layout_reference(sub_layout_reference)
+        , m_sub_layout_reference(sub_layout_ref)
     {
     }
 

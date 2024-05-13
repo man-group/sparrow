@@ -17,10 +17,11 @@
 #include <climits>
 #include <concepts>
 #include <ranges>
+#include <utility>
 
-#include "sparrow/contracts.hpp"
 #include "sparrow/buffer.hpp"
 #include "sparrow/buffer_view.hpp"
+#include "sparrow/contracts.hpp"
 #include "sparrow/mp_utils.hpp"
 
 namespace sparrow
@@ -314,28 +315,28 @@ namespace sparrow
     template <random_access_range B>
     auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
     {
-        SPARROW_ASSERT_TRUE(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size())
         return reference(*this, m_buffer.data()[block_index(pos)], bit_mask(pos));
     }
 
     template <random_access_range B>
     bool dynamic_bitset_base<B>::operator[](size_type pos) const
     {
-        SPARROW_ASSERT_TRUE(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size())
         return !m_null_count || m_buffer.data()[block_index(pos)] & bit_mask(pos);
     }
 
     template <random_access_range B>
     bool dynamic_bitset_base<B>::test(size_type pos) const
     {
-        SPARROW_ASSERT_TRUE(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size())
         return !m_null_count || m_buffer.data()[block_index(pos)] & bit_mask(pos);
     }
 
     template <random_access_range B>
     void dynamic_bitset_base<B>::set(size_type pos, value_type value)
     {
-        SPARROW_ASSERT_TRUE(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size())
         block_type& block = m_buffer.data()[block_index(pos)];
         const bool old_value = block & bit_mask(pos);
         if (value)
@@ -344,7 +345,15 @@ namespace sparrow
         }
         else
         {
+            #if defined(__GNUC__)
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wconversion"
+            #endif
             block &= ~bit_mask(pos);
+            #if defined(__GNUC__)
+            #pragma GCC diagnostic pop
+            #endif
+            
         }
         update_null_count(old_value, value);
     }
@@ -430,7 +439,7 @@ namespace sparrow
         , m_null_count(null_count)
     {
         zero_unused_bits();
-        SPARROW_ASSERT_TRUE(m_null_count == m_size - count_non_null());
+        SPARROW_ASSERT_TRUE(m_null_count == m_size - count_non_null())
     }
 
     template <random_access_range B>
@@ -454,7 +463,8 @@ namespace sparrow
     template <random_access_range B>
     auto dynamic_bitset_base<B>::bit_mask(size_type pos) noexcept -> block_type
     {
-        return block_type(1) << bit_index(pos);
+        const size_type bit = bit_index(pos);
+        return static_cast<block_type>(block_type(1) << bit);
     }
 
     template <random_access_range B>
@@ -500,7 +510,14 @@ namespace sparrow
         const size_type extra_bits = count_extra_bits();
         if (extra_bits != 0)
         {
+            #if defined(__GNUC__)
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wconversion"
+            #endif
             m_buffer.back() &= ~(~block_type(0) << extra_bits);
+            #if defined(__GNUC__)
+            #pragma GCC diagnostic pop
+            #endif
         }
     }
 
@@ -522,7 +539,7 @@ namespace sparrow
     {
         const size_type old_block_count = m_buffer.size();
         const size_type new_block_count = compute_block_count(n);
-        const block_type value = b ? ~block_type(0) : block_type(0);
+        const block_type value = b ? block_type(~block_type(0)) : block_type(0);
 
         if (new_block_count != old_block_count)
         {
@@ -561,7 +578,11 @@ namespace sparrow
 
     template <std::integral T>
     dynamic_bitset<T>::dynamic_bitset(size_type n, value_type value)
-        : base_type(storage_type(this->compute_block_count(n), value ? ~block_type(0) : 0), n, value ? 0u : n)
+        : base_type(
+              storage_type(this->compute_block_count(n), value ? block_type(~block_type(0)) : 0),
+              n,
+              value ? 0u : n
+          )
     {
     }
 
@@ -698,7 +719,7 @@ namespace sparrow
         , p_block(block)
         , m_index(index)
     {
-        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
+        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block)
     }
 
     template <class B, bool is_const>
@@ -724,7 +745,7 @@ namespace sparrow
             ++p_block;
             m_index = 0u;
         }
-        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
+        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block)
     }
 
     template <class B, bool is_const>
@@ -740,7 +761,7 @@ namespace sparrow
         {
             --m_index;
         }
-        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
+        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block)
     }
 
     template <class B, bool is_const>
@@ -748,30 +769,30 @@ namespace sparrow
     {
         if (n >= 0)
         {
-            if (m_index + n < bitset_type::s_bits_per_block)
+            if (std::cmp_less(n, bitset_type::s_bits_per_block - m_index))
             {
-                m_index += n;
+                m_index += static_cast<size_type>(n);
             }
             else
             {
-                size_type to_next_block = bitset_type::s_bits_per_block - m_index;
-                n -= to_next_block;
-                size_type block_n = n / bitset_type::s_bits_per_block;
+                const size_type to_next_block = bitset_type::s_bits_per_block - m_index;
+                n -= static_cast<difference_type>(to_next_block);
+                const size_type block_n = static_cast<size_type>(n) / bitset_type::s_bits_per_block;
                 p_block += block_n + 1;
-                n -= block_n * bitset_type::s_bits_per_block;
-                m_index = n;
+                n -= static_cast<difference_type>(block_n * bitset_type::s_bits_per_block);
+                m_index = static_cast<size_type>(n);
             }
         }
         else
         {
-            difference_type mn = -n;
+            size_type mn = static_cast<size_type>(-n);
             if (m_index >= mn)
             {
                 m_index -= mn;
             }
             else
             {
-                size_type block_n = mn / bitset_type::s_bits_per_block;
+                const size_type block_n = mn / bitset_type::s_bits_per_block;
                 p_block -= block_n;
                 mn -= block_n * bitset_type::s_bits_per_block;
                 if (m_index >= mn)
@@ -786,7 +807,7 @@ namespace sparrow
                 }
             }
         }
-        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
+        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block)
     }
 
     template <class B, bool is_const>
@@ -794,12 +815,12 @@ namespace sparrow
     {
         if (p_block == rhs.p_block)
         {
-            return rhs.m_index - m_index;
+            return static_cast<difference_type>(rhs.m_index - m_index);
         }
         else
         {
-            auto dist1 = distance_to_begin();
-            auto dist2 = rhs.distance_to_begin();
+            const auto dist1 = distance_to_begin();
+            const auto dist2 = rhs.distance_to_begin();
             return dist2 - dist1;
         }
     }
@@ -825,6 +846,9 @@ namespace sparrow
     template <class B, bool is_const>
     auto bitset_iterator<B, is_const>::distance_to_begin() const -> difference_type
     {
-        return bitset_type::s_bits_per_block * (p_block - p_bitset->begin().p_block) + m_index;
+        const difference_type distance = p_block - p_bitset->begin().p_block;
+        SPARROW_ASSERT_TRUE(distance >= 0)
+        return static_cast<difference_type>(bitset_type::s_bits_per_block) * distance
+               + static_cast<difference_type>(m_index);
     }
 }
