@@ -25,7 +25,24 @@
 // TODO: use exclusively `std::float16_t etc. once we switch to c++23, see
 // https://en.cppreference.com/w/cpp/types/floating-point
 #if __cplusplus <= 202002L
+#if defined(__GNUC__)
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
+#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#elif defined(__clang__)
+#pragma clang diagnostic push 
+#pragma clang diagnostic ignored "-Weverything"
+#endif
 #include "details/3rdparty/float16_t.hpp"
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 #else
 #include <stdfloat>
 #endif

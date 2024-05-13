@@ -312,7 +312,7 @@ namespace sparrow
     template <class T>
     buffer_base<T>::~buffer_base()
     {
-        deallocate(m_data.p_begin, (m_data.p_storage_end - m_data.p_begin));
+        deallocate(m_data.p_begin, static_cast<size_type>(m_data.p_storage_end - m_data.p_begin));
     }
 
     template <class T>
@@ -370,7 +370,7 @@ namespace sparrow
     template <class T>
     constexpr void buffer_base<T>::assign_storage(pointer p, size_type n, size_type cap)
     {
-        SPARROW_ASSERT_TRUE(n <= cap);
+        SPARROW_ASSERT_TRUE(n <= cap)
         m_data.p_begin = p;
         m_data.p_end = p + n;
         m_data.p_storage_end = p + cap;
@@ -414,7 +414,7 @@ namespace sparrow
     template <class T>
     template <class It, allocator A>
     constexpr buffer<T>::buffer(It first, It last, const A& a)
-        : base_type(check_init_length(std::distance(first, last), a), a)
+        : base_type(check_init_length(static_cast<size_type>(std::distance(first, last)), a), a)
     {
         get_data().p_end = copy_initialize(first, last, get_data().p_begin, get_allocator());
     }
@@ -666,7 +666,7 @@ namespace sparrow
                 std::make_move_iterator(get_data().p_end)
             );
             destroy(get_data().p_begin, get_data().p_end, get_allocator());
-            this->deallocate(get_data().p_begin, get_data().p_storage_end - get_data().p_begin);
+            this->deallocate(get_data().p_begin, static_cast<size_type>(get_data().p_storage_end - get_data().p_begin));
             this->assign_storage(tmp, old_size, new_cap);
         }
     }
@@ -744,7 +744,7 @@ namespace sparrow
     constexpr void buffer<T>::assign_range_impl(It first, It last, std::forward_iterator_tag)
     {
         const size_type sz = size();
-        const size_type len = std::distance(first, last);
+        const size_type len = static_cast<size_type>(std::distance(first, last));
         if (len > capacity())
         {
             check_init_length(len, get_allocator());

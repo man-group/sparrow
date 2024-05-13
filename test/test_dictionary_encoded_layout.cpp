@@ -70,9 +70,9 @@ namespace sparrow
 
             for (size_t i = 0; i < words.size(); ++i)
             {
-                offset()[i + 1] = offset()[i] + words[i].size();
+                offset()[i + 1] = offset()[i] + static_cast<std::int64_t>(words[i].size());
                 std::ranges::copy(words[i], iter);
-                iter += words[i].size();
+                iter += static_cast<array_data::buffer_type::difference_type>(words[i].size());
                 dictionary.bitmap.set(i, true);
             }
             dictionary.bitmap.set(4, false);

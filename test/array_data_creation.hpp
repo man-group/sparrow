@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <numeric>
 
 #include "sparrow/array_data.hpp"
@@ -55,8 +56,8 @@ namespace sparrow::test
             b.data<T>()[i] = static_cast<T>(i);
         }
         ad.buffers.push_back(b);
-        ad.length = n;
-        ad.offset = offset;
+        ad.length = static_cast<std::int64_t>(n);
+        ad.offset = static_cast<std::int64_t>(offset);
         ad.child_data.emplace_back();
         return ad;
     }
@@ -98,9 +99,9 @@ namespace sparrow::test
         };
         for (size_t i = 0; i < words.size(); ++i)
         {
-            offset_func()[i + 1] = offset_func()[i] + words[i].size();
+            offset_func()[i + 1] = offset_func()[i] + static_cast<sparrow::array_data::buffer_type::difference_type>(words[i].size());
             std::ranges::copy(words[i], iter);
-            iter += words[i].size();
+            iter += static_cast<sparrow::array_data::buffer_type::difference_type>(words[i].size());
             ad.bitmap.set(i, true);
         }
 
@@ -113,8 +114,8 @@ namespace sparrow::test
             ad.bitmap.set(i, false);
         }
 
-        ad.length = n;
-        ad.offset = offset;
+        ad.length = static_cast<int64_t>(n);
+        ad.offset = static_cast<int64_t>(offset);
         return ad;
     }
 }

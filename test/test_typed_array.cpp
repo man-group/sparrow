@@ -180,8 +180,9 @@ TEST_SUITE("typed_array")
             const typed_array<T> ta{array_data};
             const auto bitmap = ta.bitmap();
             REQUIRE_EQ(bitmap.size(), n - offset);
-            for (size_t i = 0; i < bitmap.size() - 1; ++i)
+            for (int32_t i = 0; i < static_cast<int32_t>(bitmap.size()) -1; ++i)
             {
+                
                 CHECK(bitmap[i]);
             }
             CHECK_FALSE(bitmap[8]);
@@ -193,7 +194,7 @@ TEST_SUITE("typed_array")
             const typed_array<T> ta{array_data};
             const auto values = ta.values();
             CHECK_EQ(values.size(), n - offset);
-            for (size_t i = 0; i < values.size(); ++i)
+            for (int32_t i = 0; i < static_cast<int32_t>(values.size()); ++i)
             {
                 CHECK_EQ(values[i], to_value_type<T>(i + 1));
             }

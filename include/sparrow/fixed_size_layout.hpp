@@ -17,6 +17,8 @@
 #include <algorithm>
 #include <concepts>
 #include <cstdint>
+#include <limits>
+#include <utility>
 
 #include "sparrow/contracts.hpp"
 #include "sparrow/array_data.hpp"
@@ -132,7 +134,7 @@ namespace sparrow
     {
         // We only require the presence of the bitmap and the first buffer.
         SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
-        SPARROW_ASSERT_TRUE(data_ref().length == data_ref().bitmap.size());
+        SPARROW_ASSERT_TRUE(static_cast<size_type>(data_ref().length) == data_ref().bitmap.size());
     }
 
     template <class T>
@@ -146,14 +148,14 @@ namespace sparrow
     auto fixed_size_layout<T>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + data_ref().offset];
+        return data()[i + static_cast<size_type>(data_ref().offset)];
     }
 
     template <class T>
     auto fixed_size_layout<T>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + data_ref().offset];
+        return data()[i + static_cast<size_type>(data_ref().offset)];
     }
 
     template <class T>
@@ -210,14 +212,14 @@ namespace sparrow
     auto fixed_size_layout<T>::has_value(size_type i) -> bitmap_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data_ref().bitmap[i + data_ref().offset];
+        return data_ref().bitmap[i + static_cast<size_type>(data_ref().offset)];
     }
 
     template <class T>
     auto fixed_size_layout<T>::has_value(size_type i) const -> bitmap_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data_ref().bitmap[i + data_ref().offset];
+        return data_ref().bitmap[i + static_cast<size_type>(data_ref().offset)];
     }
 
     template <class T>
@@ -229,7 +231,9 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::value_end() -> value_iterator
     {
-        return value_begin() + size();
+        value_iterator it = value_begin();
+        std::advance(it,size());
+        return it;
     }
 
     template <class T>
@@ -241,7 +245,8 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::value_cend() const -> const_value_iterator
     {
-        return value_cbegin() + size();
+        SPARROW_ASSERT_TRUE(std::cmp_less(size(), std::numeric_limits<difference_type>::max()))
+        return value_cbegin() + static_cast<difference_type>(size());
     }
 
     template <class T>
@@ -253,7 +258,9 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::bitmap_end() -> bitmap_iterator
     {
-        return bitmap_begin() + size();
+        bitmap_iterator it = bitmap_begin();
+        std::advance(it,size());
+        return it;
     }
 
     template <class T>
@@ -265,7 +272,9 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::bitmap_cend() const -> const_bitmap_iterator
     {
-        return bitmap_cbegin() + size();
+        const_bitmap_iterator it = bitmap_cbegin();
+        std::advance(it,size());
+        return it;
     }
 
     template <class T>

@@ -62,22 +62,44 @@
 # endif
 #endif
 
+#if defined(__GNUC__)
+#define SPARROW_CONTRACTS_IGNORE_WARNINGS \
+    _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Wall\"")
+    _Pragma("GCC diagnostic ignored \"-Wformat-security\"")
+#define SPARROW_CONTRACTS_RESTORE_WARNINGS \
+    _Pragma("GCC diagnostic pop")
+#elif defined(__clang__)
+#define SPARROW_CONTRACTS_IGNORE_WARNINGS \
+    _Pragma("clang diagnostic push") \
+    _Pragma("clang diagnostic ignored \"-Weverything\"")
+#define SPARROW_CONTRACTS_RESTORE_WARNINGS \
+    _Pragma("clang diagnostic pop")
+#else
+#define SPARROW_CONTRACTS_IGNORE_WARNINGS
+#define SPARROW_CONTRACTS_RESTORE_WARNINGS
+#endif
+
 #ifndef SPARROW_CONTRACTS_LOG_FAILURE
 # if defined(SPARROW_CONTRACTS_USE_STD_PRINT) && SPARROW_CONTRACTS_USE_STD_PRINT == 1
 #   include <print>
 #   include <cstdio>
 #   define SPARROW_CONTRACTS_LOG_FAILURE( expr__, message__ ) \
-      ::std::print(stderr, "Assertion Failed ({}:{}): {} - ({} is wrong)\n", __FILE__, __LINE__, message__, #expr__ )
+      ::std::print(stderr, "Assertion Failed ({}:{}): {} - ({} is wrong)\n", __FILE__, __LINE__, message__, #expr__ );
 # elif defined(SPARROW_CONTRACTS_USE_STD_FORMAT) && SPARROW_CONTRACTS_USE_STD_FORMAT == 1
 #   include <format>
 #   include <cstdio>
 #   define SPARROW_CONTRACTS_LOG_FAILURE( expr__, message__ ) \
-      ::fprintf(stderr, ::std::format("Assertion Failed ({}:{}): {} - ({} is wrong)\n", __FILE__, __LINE__, message__, #expr__ ).c_str())
+      do { \
+            SPARROW_CONTRACTS_IGNORE_WARNINGS; \
+            ::fprintf(stderr, ::std::format("Assertion Failed ({}:{}): {} - ({} is wrong)\n", __FILE__, __LINE__, message__, #expr__ ).c_str()); \
+            SPARROW_CONTRACTS_RESTORE_WARNINGS; \
+      } while (0);
 # else
 #   include <cstdlib>
 #   include <cstdio>
 #   define SPARROW_CONTRACTS_LOG_FAILURE( expr__, message__ ) \
-      ::fprintf(stderr, "Assertion Failed (%s:%i): %s - (%s is wrong)\n", __FILE__, __LINE__, message__, #expr__ )
+      ::fprintf(stderr, "Assertion Failed (%s:%i): %s - (%s is wrong)\n", __FILE__, __LINE__, message__, #expr__ );
 # endif
 #endif
 

@@ -18,11 +18,12 @@
 #include <optional>
 #include <vector>
 
-#include "sparrow/contracts.hpp"
 #include "sparrow/buffer.hpp"
+#include "sparrow/contracts.hpp"
 #include "sparrow/data_type.hpp"
 #include "sparrow/dynamic_bitset.hpp"
 #include "sparrow/memory.hpp"
+
 
 namespace sparrow
 {
@@ -367,14 +368,14 @@ namespace sparrow
     template <class L>
     auto reference_proxy<L>::value() -> value_type&
     {
-        SPARROW_ASSERT_TRUE(has_value());
+        SPARROW_ASSERT_TRUE(has_value())
         return m_val_ref;
     }
 
     template <class L>
     auto reference_proxy<L>::value() const -> const value_type&
     {
-        SPARROW_ASSERT_TRUE(has_value());
+        SPARROW_ASSERT_TRUE(has_value())
         return m_val_ref;
     }
 
