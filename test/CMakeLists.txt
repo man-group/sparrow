@@ -57,3 +57,6 @@ add_test(NAME ${test_target} COMMAND ${test_target})
 # We do not use non-standard C++
 set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(${test_target} PRIVATE cxx_std_20)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(${test_target} PRIVATE -ftemplate-backtrace-limit=0)
+endif()
