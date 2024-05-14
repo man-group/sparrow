@@ -228,7 +228,7 @@ namespace sparrow
         requires is_arrow_base_type<T>
     auto typed_array<T, L>::operator[](size_type i) -> reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return m_layout[i];
     }
 
@@ -236,7 +236,7 @@ namespace sparrow
         requires is_arrow_base_type<T>
     auto typed_array<T, L>::operator[](size_type i) const -> const_reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return m_layout[i];
     }
 

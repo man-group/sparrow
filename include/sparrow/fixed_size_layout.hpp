@@ -20,11 +20,12 @@
 #include <limits>
 #include <utility>
 
-#include "sparrow/contracts.hpp"
 #include "sparrow/array_data.hpp"
 #include "sparrow/buffer.hpp"
+#include "sparrow/contracts.hpp"
 #include "sparrow/dynamic_bitset.hpp"
 #include "sparrow/iterator.hpp"
+
 
 namespace sparrow
 {
@@ -133,42 +134,42 @@ namespace sparrow
         : m_data(data)
     {
         // We only require the presence of the bitmap and the first buffer.
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
-        SPARROW_ASSERT_TRUE(static_cast<size_type>(data_ref().length) == data_ref().bitmap.size());
+        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0)
+        SPARROW_ASSERT_TRUE(static_cast<size_type>(data_ref().length) == data_ref().bitmap.size())
     }
 
     template <class T>
     auto fixed_size_layout<T>::size() const -> size_type
     {
-        SPARROW_ASSERT_TRUE(data_ref().offset <= data_ref().length);
+        SPARROW_ASSERT_TRUE(data_ref().offset <= data_ref().length)
         return static_cast<size_type>(data_ref().length - data_ref().offset);
     }
 
     template <class T>
     auto fixed_size_layout<T>::value(size_type i) -> inner_reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return data()[i + static_cast<size_type>(data_ref().offset)];
     }
 
     template <class T>
     auto fixed_size_layout<T>::value(size_type i) const -> inner_const_reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return data()[i + static_cast<size_type>(data_ref().offset)];
     }
 
     template <class T>
     auto fixed_size_layout<T>::operator[](size_type i) -> reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return reference(value(i), has_value(i));
     }
 
     template <class T>
     auto fixed_size_layout<T>::operator[](size_type i) const -> const_reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return const_reference(value(i), has_value(i));
     }
 
@@ -211,14 +212,14 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::has_value(size_type i) -> bitmap_reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return data_ref().bitmap[i + static_cast<size_type>(data_ref().offset)];
     }
 
     template <class T>
     auto fixed_size_layout<T>::has_value(size_type i) const -> bitmap_const_reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return data_ref().bitmap[i + static_cast<size_type>(data_ref().offset)];
     }
 
@@ -232,7 +233,7 @@ namespace sparrow
     auto fixed_size_layout<T>::value_end() -> value_iterator
     {
         value_iterator it = value_begin();
-        std::advance(it,size());
+        std::advance(it, size());
         return it;
     }
 
@@ -245,8 +246,9 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::value_cend() const -> const_value_iterator
     {
-        SPARROW_ASSERT_TRUE(std::cmp_less(size(), std::numeric_limits<difference_type>::max()))
-        return value_cbegin() + static_cast<difference_type>(size());
+        auto it = value_cbegin();
+        std::advance(it, size());
+        return it;
     }
 
     template <class T>
@@ -259,7 +261,7 @@ namespace sparrow
     auto fixed_size_layout<T>::bitmap_end() -> bitmap_iterator
     {
         bitmap_iterator it = bitmap_begin();
-        std::advance(it,size());
+        std::advance(it, size());
         return it;
     }
 
@@ -273,21 +275,21 @@ namespace sparrow
     auto fixed_size_layout<T>::bitmap_cend() const -> const_bitmap_iterator
     {
         const_bitmap_iterator it = bitmap_cbegin();
-        std::advance(it,size());
+        std::advance(it, size());
         return it;
     }
 
     template <class T>
     auto fixed_size_layout<T>::data() -> pointer
     {
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
+        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0)
         return data_ref().buffers[0].template data<inner_value_type>();
     }
 
     template <class T>
     auto fixed_size_layout<T>::data() const -> const_pointer
     {
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
+        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0)
         return data_ref().buffers[0].template data<inner_value_type>();
     }
 

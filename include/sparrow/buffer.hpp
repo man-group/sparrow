@@ -501,42 +501,42 @@ namespace sparrow
     template <class T>
     constexpr auto buffer<T>::operator[](size_type i) -> reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return get_data().p_begin[i];
     }
 
     template <class T>
     constexpr auto buffer<T>::operator[](size_type i) const -> const_reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return get_data().p_begin[i];
     }
 
     template <class T>
     constexpr auto buffer<T>::front() -> reference
     {
-        SPARROW_ASSERT_FALSE(empty());
+        SPARROW_ASSERT_FALSE(empty())
         return *(get_data().p_begin);
     }
 
     template <class T>
     constexpr auto buffer<T>::front() const -> const_reference
     {
-        SPARROW_ASSERT_FALSE(empty());
+        SPARROW_ASSERT_FALSE(empty())
         return *(get_data().p_begin);
     }
 
     template <class T>
     constexpr auto buffer<T>::back() -> reference
     {
-        SPARROW_ASSERT_FALSE(empty());
+        SPARROW_ASSERT_FALSE(empty())
         return *(get_data().p_end - 1);
     }
 
     template <class T>
     constexpr auto buffer<T>::back() const -> const_reference
     {
-        SPARROW_ASSERT_FALSE(empty());
+        SPARROW_ASSERT_FALSE(empty())
         return *(get_data().p_end - 1);
     }
 

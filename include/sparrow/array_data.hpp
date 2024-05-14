@@ -338,7 +338,7 @@ namespace sparrow
     template <class L>
     auto const_reference_proxy<L>::value() const -> const_reference
     {
-        SPARROW_ASSERT_TRUE(has_value());
+        SPARROW_ASSERT_TRUE(has_value())
         return m_val_ref;
     }
 

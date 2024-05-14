@@ -15,6 +15,7 @@
 #pragma once
 
 #include "sparrow/buffer.hpp"
+#include "sparrow/contracts.hpp"
 
 namespace sparrow
 {
@@ -130,42 +131,42 @@ namespace sparrow
     template <class T>
     auto buffer_view<T>::operator[](size_type pos) -> reference
     {
-        assert(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size())
         return data()[pos];
     }
 
     template <class T>
     auto buffer_view<T>::operator[](size_type pos) const -> const_reference
     {
-        assert(pos < size());
+        SPARROW_ASSERT_TRUE(pos < size())
         return data()[pos];
     }
 
     template <class T>
     auto buffer_view<T>::front() -> reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_TRUE(!empty())
         return data()[0];
     }
 
     template <class T>
     auto buffer_view<T>::front() const -> const_reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_TRUE(!empty())
         return data()[0];
     }
 
     template <class T>
     auto buffer_view<T>::back() -> reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_TRUE(!empty())
         return data()[m_size - 1];
     }
 
     template <class T>
     auto buffer_view<T>::back() const -> const_reference
     {
-        assert(!empty());
+        SPARROW_ASSERT_TRUE(!empty())
         return data()[m_size - 1];
     }
 
