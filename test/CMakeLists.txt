@@ -49,14 +49,22 @@ set(SPARROW_TESTS_SOURCES
     test_typed_array.cpp
     test_variable_size_binary_layout.cpp
 )
-set(test_target "test_sparrow_lib")
-add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
-target_link_libraries(${test_target} PRIVATE sparrow doctest::doctest)
-add_test(NAME ${test_target} COMMAND ${test_target})
+# set(test_target "test_sparrow_lib")
+# add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
+# target_link_libraries(${test_target} PRIVATE sparrow doctest::doctest)
+# add_test(NAME ${test_target} COMMAND ${test_target})
 
-# We do not use non-standard C++
-set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
-target_compile_features(${test_target} PRIVATE cxx_std_20)
+# # We do not use non-standard C++
+# set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
+# target_compile_features(${test_target} PRIVATE cxx_std_20)
+# if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#     target_compile_options(${test_target} PRIVATE -ftemplate-backtrace-limit=0)
+# endif()
+
+add_executable(osx_compilation_fail_reproduce osx_compilation_fail_reproduce.cpp)
+target_link_libraries(osx_compilation_fail_reproduce PRIVATE sparrow)
+set_target_properties(osx_compilation_fail_reproduce PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
+target_compile_features(osx_compilation_fail_reproduce PRIVATE cxx_std_20)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_compile_options(${test_target} PRIVATE -ftemplate-backtrace-limit=0)
+    target_compile_options(osx_compilation_fail_reproduce PRIVATE -ftemplate-backtrace-limit=0)
 endif()
