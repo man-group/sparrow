@@ -73,13 +73,8 @@ endif()
 
 set(SPARROW_INTERFACE_DEPENDENCIES "" CACHE STRING "List of dependencies to be linked to the sparrow target")
 
-# libc++ does not provide all the elements of the C++20 standard library,
-# so we need to use `HowardHinnant/date`.
-# See: https://libcxx.llvm.org/Status/Cxx20.html#note-p0355
-if (LIBCPP)
-    find_package(date CONFIG REQUIRED)
-    list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date)
-endif()
+find_package(date CONFIG REQUIRED)
+list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date)
 
 # Build
 # =====

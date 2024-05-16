@@ -17,13 +17,12 @@
 #include <version>
 #include <chrono>
 
-#if __cpp_lib_chrono > 201907L
-    // P0355R7 (Extending chrono to Calendars and Time Zones) has not been entirely implemented in libc++ yet.
-    // See: https://libcxx.llvm.org/Status/Cxx20.html#note-p0355
-    // For now, we use HowardHinnant/date as a replacement if we are compiling with libc++.
-    // TODO: remove this once libc++ has full support for P0355R7.
-#   include <date/tz.h>
-#endif
+// P0355R7 (Extending chrono to Calendars and Time Zones) has not been entirely implemented in libc++ yet.
+// See: https://libcxx.llvm.org/Status/Cxx20.html#note-p0355
+// For now, we use HowardHinnant/date as a replacement if we are compiling with libc++.
+// TODO: remove this once libc++ has full support for P0355R7.
+#include <date/tz.h>
+
 #include <climits>
 #include <cstdint>
 #include <optional>
@@ -55,11 +54,12 @@ namespace sparrow
     using float64_t = std::float64_t;
 #endif
 
-#if __cpp_lib_chrono <= 201907L
-    using timestamp = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
-#else
-    using timestamp = date::zoned_time<std::chrono::system_clock, std::chrono::nanoseconds>;
-#endif
+    // P0355R7 (Extending chrono to Calendars and Time Zones) has not been entirely implemented in libc++ yet.
+    // See: https://libcxx.llvm.org/Status/Cxx20.html#note-p0355
+    // For now, we use HowardHinnant/date as a replacement if we are compiling with libc++.
+    // TODO: use the following once libc++ has full support for P0355R7.
+    // using timestamp = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
+    using timestamp = date::zoned_time<std::chrono::nanoseconds>;
 
     // We need to be sure the current target platform is setup to support correctly these types.
     static_assert(sizeof(float16_t) == 2);
