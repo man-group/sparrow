@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <memory>
 
 #include "sparrow/contracts.hpp"
@@ -34,7 +35,9 @@ namespace sparrow
     {
     public:
 
-        value_ptr() = default;
+        constexpr value_ptr() noexcept = default;
+
+        constexpr value_ptr(std::nullptr_t) noexcept {}
 
         explicit value_ptr(T value)
             : value_(std::make_unique<T>(std::move(value)))
@@ -76,6 +79,11 @@ namespace sparrow
         }
 
         value_ptr& operator=(value_ptr&& other) noexcept = default;
+
+        value_ptr& operator=(std::nullptr_t) noexcept {
+            reset();
+            return *this;
+        }
 
         T& operator*()
         {

@@ -117,6 +117,7 @@ namespace sparrow
                         // the right type?
         ,
         bool,
+        char,
         std::uint8_t,
         std::int8_t,
         std::uint16_t,
@@ -129,6 +130,7 @@ namespace sparrow
         float32_t,
         float64_t,
         std::string,
+        std::string_view,
         std::vector<byte_t>
         // TODO: add missing fundamental types here
         >;

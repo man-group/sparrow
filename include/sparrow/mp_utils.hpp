@@ -258,5 +258,12 @@ namespace sparrow::mpl
         return find_if(list, predicate::same_as<TypeToFind>{});
     }
 
+    template <template <typename...> class, typename>
+    inline constexpr bool is_instantiation_of_v = false;
+    template <template <typename...> class C, typename... T>
+    inline constexpr bool is_instantiation_of_v<C, C<T...>> = true;
+    /// @returns `true` if `T` is an instantiation of `C`.
+    template <template <typename...> class C, typename... T>
+    concept InstantiationOf = is_instantiation_of_v<C, T...>;
 
 }

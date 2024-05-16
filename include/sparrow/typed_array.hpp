@@ -16,12 +16,18 @@
 
 #include <algorithm>
 #include <compare>
+#include <cstddef>
+#include <cstdint>
+#include <numeric>
+#include <unordered_set>
 
 #include "sparrow/algorithm.hpp"
 #include "sparrow/array_data.hpp"
+#include "sparrow/array_data_factory.hpp"
 #include "sparrow/contracts.hpp"
 #include "sparrow/data_traits.hpp"
 #include "sparrow/data_type.hpp"
+#include "sparrow/dynamic_bitset.hpp"
 
 namespace sparrow
 {
@@ -62,6 +68,8 @@ namespace sparrow
         using size_type = typename layout_type::size_type;
         using const_bitmap_range = typename layout_type::const_bitmap_range;
         using const_value_range = typename layout_type::const_value_range;
+
+        typed_array();
 
         explicit typed_array(array_data data);
 
@@ -186,7 +194,31 @@ namespace sparrow
         layout_type m_layout;
     };
 
+    template <typename T, std::size_t N>
+struct template_param_at;
+
+template <template <typename...> class L, typename A, typename... Bs, std::size_t N>
+struct template_param_at<L<A, Bs...>, N> {
+    using type = typename template_param_at<L<Bs...>, N - 1>::type;
+};
+
+template <template <typename...> class L, typename A, typename... Bs>
+struct template_param_at<L<A, Bs...>, 0> {
+    using type = A;
+};
+
+template <class L, std::size_t N>
+using template_param_at_t = typename template_param_at<L, N>::type;
+
     // Constructors
+    template <class T, class L>
+        requires is_arrow_base_type<T>
+    typed_array<T, L>::typed_array()
+        : m_data(default_array_data_factory<L>())
+        , m_layout(m_data)
+    {
+    }
+
     template <class T, class L>
         requires is_arrow_base_type<T>
     typed_array<T, L>::typed_array(array_data data)
@@ -231,7 +263,7 @@ namespace sparrow
         requires is_arrow_base_type<T>
     auto typed_array<T, L>::operator[](size_type i) -> reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return m_layout[i];
     }
 
@@ -239,7 +271,7 @@ namespace sparrow
         requires is_arrow_base_type<T>
     auto typed_array<T, L>::operator[](size_type i) const -> const_reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < size())
         return m_layout[i];
     }
 

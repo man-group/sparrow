@@ -56,6 +56,12 @@ namespace sparrow
     };
 
     template <>
+    struct arrow_traits<char> : common_native_types_traits<char>
+    {
+        static constexpr data_type type_id = data_type::INT8;
+    };
+
+    template <>
     struct arrow_traits<std::uint16_t> : common_native_types_traits<std::uint16_t>
     {
         static constexpr data_type type_id = data_type::UINT16;
@@ -114,6 +120,14 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::STRING;
         using value_type = std::string;
+        using default_layout = variable_size_binary_layout<value_type, std::string_view, const std::string_view>;  // FIXME: this is incorrect, change when we have the right types
+    };
+
+    template <>
+    struct arrow_traits<std::string_view>
+    {
+        static constexpr data_type type_id = data_type::STRING;
+        using value_type = std::string_view;
         using default_layout = variable_size_binary_layout<value_type, std::string_view, const std::string_view>;  // FIXME: this is incorrect, change when we have the right types
     };
 

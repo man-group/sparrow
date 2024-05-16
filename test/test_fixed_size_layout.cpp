@@ -14,6 +14,7 @@
 #include <iostream>
 #include <numeric>
 
+#include "sparrow/array_data_factory.hpp"
 #include "sparrow/fixed_size_layout.hpp"
 
 #include "doctest/doctest.h"
@@ -30,19 +31,12 @@ namespace sparrow
 
     namespace
     {
-        array_data make_test_array_data(size_t n = 10, size_t offset = 0)
+        array_data make_test_array_data(size_t n = 10, std::int64_t offset = 0)
         {
-            array_data ad;
-            ad.type = data_descriptor(data_type::INT32);
-            ad.bitmap = dynamic_bitset<uint8_t>(n, true);
-            size_t buffer_size = (n * sizeof(data_type_t)) / sizeof(uint8_t);
-            buffer<uint8_t> b(buffer_size);
-            std::iota(b.data<int32_t>(), b.data<int32_t>() + n, -8);
-            ad.buffers.push_back(b);
-            ad.length = static_cast<std::int64_t>(n);
-            ad.offset = static_cast<std::int64_t>(offset);
-            ad.child_data.push_back(array_data());
-            return ad;
+            std::vector<data_type_t> v(n);
+            std::iota(v.begin(), v.end(), -8);
+            array_data::bitmap_type bitmap(n, true);
+            return default_array_data_factory<layout_test_type>(v, bitmap, offset);
         }
 
     }

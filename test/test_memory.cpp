@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstddef>
 #include <vector>
 
 #include "sparrow/memory.hpp"
@@ -65,6 +66,9 @@ TEST_SUITE("value_ptr")
         vp3 = vp4;
         CHECK(!vp3);
         CHECK(!vp4);
+
+        vp3 = nullptr;
+        CHECK(!vp3);
     }
 
     TEST_CASE("copy")

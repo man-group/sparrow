@@ -139,18 +139,18 @@ namespace sparrow
         using value_type = typename base_type::value_type;
         using size_type = typename base_type::size_type;
 
-        dynamic_bitset();
-        explicit dynamic_bitset(size_type n);
-        dynamic_bitset(size_type n, value_type v);
-        dynamic_bitset(block_type* p, size_type n);
-        dynamic_bitset(block_type* p, size_type n, size_type null_count);
+        constexpr dynamic_bitset();
+        constexpr explicit dynamic_bitset(size_type n);
+        constexpr dynamic_bitset(size_type n, value_type v);
+        constexpr dynamic_bitset(block_type* p, size_type n);
+        constexpr dynamic_bitset(block_type* p, size_type n, size_type null_count);
 
-        ~dynamic_bitset() = default;
-        dynamic_bitset(const dynamic_bitset&) = default;
-        dynamic_bitset(dynamic_bitset&&) = default;
+        constexpr ~dynamic_bitset() = default;
+        constexpr dynamic_bitset(const dynamic_bitset&) = default;
+        constexpr dynamic_bitset(dynamic_bitset&&) = default;
 
-        dynamic_bitset& operator=(const dynamic_bitset&) = default;
-        dynamic_bitset& operator=(dynamic_bitset&&) = default;
+        constexpr dynamic_bitset& operator=(const dynamic_bitset&) = default;
+        constexpr dynamic_bitset& operator=(dynamic_bitset&&) = default;
 
         using base_type::resize;
     };
@@ -550,19 +550,19 @@ namespace sparrow
      *********************************/
 
     template <std::integral T>
-    dynamic_bitset<T>::dynamic_bitset()
+    constexpr dynamic_bitset<T>::dynamic_bitset()
         : base_type(storage_type(), 0u)
     {
     }
 
     template <std::integral T>
-    dynamic_bitset<T>::dynamic_bitset(size_type n)
+    constexpr dynamic_bitset<T>::dynamic_bitset(size_type n)
         : dynamic_bitset(n, false)
     {
     }
 
     template <std::integral T>
-    dynamic_bitset<T>::dynamic_bitset(size_type n, value_type value)
+    constexpr dynamic_bitset<T>::dynamic_bitset(size_type n, value_type value)
         : base_type(
               storage_type(this->compute_block_count(n), value ? block_type(~block_type(0)) : block_type(0)),
               n,
@@ -572,13 +572,13 @@ namespace sparrow
     }
 
     template <std::integral T>
-    dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n)
+    constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n)
         : base_type(storage_type(p, this->compute_block_count(n)), n)
     {
     }
 
     template <std::integral T>
-    dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type null_count)
+    constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type null_count)
         : base_type(storage_type(p, this->compute_block_count(n)), n, null_count)
     {
     }

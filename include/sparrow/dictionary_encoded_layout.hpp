@@ -133,7 +133,7 @@ namespace sparrow
         using const_data_iterator = const data_type*;
 
         // TODO: implement the iterator once #35 is merged
-        // using iterator = layout_iterator<self_type, false>;
+        using iterator = layout_iterator<self_type, false>;
         using const_iterator = layout_iterator<self_type, true>;
 
         using bitmap_iterator = indexes_layout::bitmap_iterator;

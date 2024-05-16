@@ -37,6 +37,7 @@ set(SPARROW_TESTS_SOURCES
     test_algorithm.cpp
     test_allocator.cpp
     test_array_data_creation.cpp
+    test_array_data_factory.cpp
     test_array_data.cpp
     test_buffer.cpp
     test_dictionary_encoded_layout.cpp
