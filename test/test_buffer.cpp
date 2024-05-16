@@ -355,22 +355,77 @@ namespace sparrow
 
         TEST_CASE("emplace")
         {
-            constexpr std::size_t size = 4u;
-            buffer_test_type b(make_test_buffer(size), size);
+            SUBCASE("in empty buffer")
+            {
+                buffer_test_type b;
+                constexpr uint8_t expected_value = 101;
+                b.emplace(b.cbegin(), expected_value);
+                REQUIRE_EQ(b.size(), 1);
+                CHECK_EQ(b[0], expected_value);
+            }
 
-            constexpr uint8_t expected_value = 101;
-            b.emplace(b.cbegin(), expected_value);
-            REQUIRE_EQ(b.size(), size + 1);
-            CHECK_EQ(b[0], expected_value);
-            CHECK_EQ(b[1], 0);
-            CHECK_EQ(b[2], 1);
-            CHECK_EQ(b[3], 2);
-            CHECK_EQ(b[4], 3);
+            SUBCASE("at begin")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                constexpr uint8_t expected_value = 101;
+                b.emplace(b.cbegin(), expected_value);
+                REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[0], expected_value);
+                CHECK_EQ(b[1], 0);
+                CHECK_EQ(b[2], 1);
+                CHECK_EQ(b[3], 2);
+                CHECK_EQ(b[4], 3);
+            }
+
+            SUBCASE("in the middle")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                constexpr uint8_t expected_value = 101;
+                b.emplace(b.cbegin() + 2, expected_value);
+                REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], expected_value);
+                CHECK_EQ(b[3], 2);
+                CHECK_EQ(b[4], 3);
+            }
+
+            SUBCASE("at the end")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                constexpr uint8_t expected_value = 101;
+                b.emplace(b.cend(), expected_value);
+                REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], 2);
+                CHECK_EQ(b[3], 3);
+                CHECK_EQ(b[4], expected_value);
+            }
+           
         }
 
         TEST_CASE("insert")
         {
-            SUBCASE("Inserts value before pos")
+            SUBCASE("in empty buffer")
+            {
+                buffer_test_type b;
+                constexpr uint8_t expected_value = 101;
+                b.insert(b.cbegin(), expected_value);
+                REQUIRE_EQ(b.size(), 1);
+                CHECK_EQ(b[0], expected_value);
+                CHECK_EQ(b.back(), expected_value);
+                CHECK_EQ(b.cend()[-1], expected_value);
+                CHECK_EQ(b.crbegin()[0], expected_value);
+            }
+
+            SUBCASE("value at the beginning of the buffer")
             {
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
@@ -396,7 +451,37 @@ namespace sparrow
                 // CHECK_EQ(b2.data()[4], "3");
             }
 
-            SUBCASE("Inserts count copies of the value before pos.")
+            SUBCASE("value in the middle of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                constexpr uint8_t expected_value = 101;
+                b.insert(b.cbegin() + 2, expected_value);
+                REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], expected_value);
+                CHECK_EQ(b[3], 2);
+                CHECK_EQ(b[4], 3);
+            }
+
+            SUBCASE("value at the end of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                constexpr uint8_t expected_value = 101;
+                b.insert(b.cend(), expected_value);
+                REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], 2);
+                CHECK_EQ(b[3], 3);
+                CHECK_EQ(b[4], expected_value);
+            }
+
+            SUBCASE("count copies at the beginning")
             {
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
@@ -416,7 +501,47 @@ namespace sparrow
                 CHECK_EQ(b[6], 3);
             }
 
-            SUBCASE("Inserts elements from range [first, last) before pos")
+            SUBCASE("count copies in the middle")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                constexpr uint8_t expected_value = 101;
+                constexpr std::size_t count = 3u;
+                constexpr std::size_t expected_new_size = size + count;
+                b.insert(b.cbegin() + 2, count, expected_value);
+                const std::size_t new_size = b.size();
+                REQUIRE_EQ(new_size, expected_new_size);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], expected_value);
+                CHECK_EQ(b[3], expected_value);
+                CHECK_EQ(b[4], expected_value);
+                CHECK_EQ(b[5], 2);
+                CHECK_EQ(b[6], 3);
+            }
+
+            SUBCASE("count copies at the end")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                constexpr uint8_t expected_value = 101;
+                constexpr std::size_t count = 3u;
+                constexpr std::size_t expected_new_size = size + count;
+                b.insert(b.cend(), count, expected_value);
+                const std::size_t new_size = b.size();
+                REQUIRE_EQ(new_size, expected_new_size);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], 2);
+                CHECK_EQ(b[3], 3);
+                CHECK_EQ(b[4], expected_value);
+                CHECK_EQ(b[5], expected_value);
+                CHECK_EQ(b[6], expected_value);
+            }
+
+            SUBCASE("elements from range [first, last) at the beginning of the buffer")
             {
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
@@ -434,8 +559,46 @@ namespace sparrow
                 CHECK_EQ(b[5], 2);
                 CHECK_EQ(b[6], 3);
             }
+           
+            SUBCASE("elements from range [first, last) in the middle of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
 
-            SUBCASE("Inserts elements from initializer list before pos")
+                const std::vector<uint8_t> values = {101, 102, 103};
+                const std::size_t expected_new_size = size + values.size();
+                b.insert(b.cbegin() + 2, values.cbegin(), values.cend());
+                const std::size_t new_size = b.size();
+                REQUIRE_EQ(new_size, expected_new_size);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], 101);
+                CHECK_EQ(b[3], 102);
+                CHECK_EQ(b[4], 103);
+                CHECK_EQ(b[5], 2);
+                CHECK_EQ(b[6], 3);
+            }
+
+            SUBCASE("elements from range [first, last) at the end of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                const std::vector<uint8_t> values = {101, 102, 103};
+                const std::size_t expected_new_size = size + values.size();
+                b.insert(b.cend(), values.cbegin(), values.cend());
+                const std::size_t new_size = b.size();
+                REQUIRE_EQ(new_size, expected_new_size);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], 2);
+                CHECK_EQ(b[3], 3);
+                CHECK_EQ(b[4], 101);
+                CHECK_EQ(b[5], 102);
+                CHECK_EQ(b[6], 103);
+            }
+
+            SUBCASE("elements from initializer list at the beginning o the buffer")
             {
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
@@ -450,11 +613,43 @@ namespace sparrow
                 CHECK_EQ(b[5], 2);
                 CHECK_EQ(b[6], 3);
             }
+
+            SUBCASE("elements from initializer list in the middle of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                b.insert(b.cbegin() + 2, {101, 102, 103});
+                REQUIRE_EQ(b.size(), size + 3);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], 101);
+                CHECK_EQ(b[3], 102);
+                CHECK_EQ(b[4], 103);
+                CHECK_EQ(b[5], 2);
+                CHECK_EQ(b[6], 3);
+            }
+
+            SUBCASE("elements from initializer list at the end of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                b.insert(b.cend(), {101, 102, 103});
+                REQUIRE_EQ(b.size(), size + 3);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], 2);
+                CHECK_EQ(b[3], 3);
+                CHECK_EQ(b[4], 101);
+                CHECK_EQ(b[5], 102);
+                CHECK_EQ(b[6], 103);
+            }
         }
 
         TEST_CASE("erase")
         {
-            SUBCASE("Removes the element at pos")
+            SUBCASE("the element at the beginning of the buffer")
             {
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
@@ -466,7 +661,31 @@ namespace sparrow
                 CHECK_EQ(b[2], 3);
             }
 
-            SUBCASE("Removes the elements in the range [first, last)")
+            SUBCASE("the element in the middle of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                b.erase(b.cbegin() + 2);
+                REQUIRE_EQ(b.size(), size - 1);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], 3);
+            }
+
+            SUBCASE("the element at the end of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                b.erase(b.cend() - 1);
+                REQUIRE_EQ(b.size(), size - 1);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], 2);
+            }
+
+            SUBCASE("the elements in the range [first, last) at the beginning of the buffer")
             {
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
@@ -475,6 +694,28 @@ namespace sparrow
                 REQUIRE_EQ(b.size(), size - 2);
                 CHECK_EQ(b[0], 2);
                 CHECK_EQ(b[1], 3);
+            }
+
+            SUBCASE("the elements in the range [first, last) in the middle of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                b.erase(b.cbegin() + 1, b.cbegin() + 3);
+                REQUIRE_EQ(b.size(), size - 2);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 3);
+            }
+
+            SUBCASE("the elements in the range [first, last) at the end of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+
+                b.erase(b.cend() - 2, b.cend());
+                REQUIRE_EQ(b.size(), size - 2);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
             }
         }
 
@@ -489,6 +730,9 @@ namespace sparrow
                 b.push_back(expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
                 CHECK_EQ(b[size], expected_value);
+                CHECK_EQ(b.back(), expected_value);
+                CHECK_EQ(b.cend()[-1], expected_value);
+                CHECK_EQ(b.crbegin()[0], expected_value);
             }
 
             SUBCASE("Value is moved into the new element.")
@@ -499,7 +743,10 @@ namespace sparrow
                 uint8_t expected_value = 101;
                 b.push_back(std::move(expected_value));
                 REQUIRE_EQ(b.size(), size + 1);
-                CHECK_EQ(b[size], 101);
+                CHECK_EQ(b[size], expected_value);
+                CHECK_EQ(b.back(), expected_value);
+                CHECK_EQ(b.cend()[-1], expected_value);
+                CHECK_EQ(b.crbegin()[0], expected_value);
             }
         }
     }
