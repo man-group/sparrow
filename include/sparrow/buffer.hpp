@@ -15,8 +15,11 @@
 #pragma once
 
 #include <algorithm>
+#include <concepts>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
+#include <type_traits>
 
 #include "sparrow/allocator.hpp"
 #include "sparrow/contracts.hpp"
@@ -730,35 +733,54 @@ namespace sparrow
         {
             const size_type sz = size();
             const size_type off = ptr - get_data().p_begin;
-            reserve( sz + count);
-            
+            reserve(sz + count);
+
             auto& data = get_data();
             const auto new_ptr = data.p_begin + off;
             std::move_backward(new_ptr, data.p_end, data.p_end + count);
             std::fill_n(new_ptr, count, value);
             data.p_end += count;
         }
-        auto it = begin();
-        std::advance(it, __offset);
-        return it;
+        return std::next(begin(), __offset);
     }
+
+    template <typename T>
+    struct is_move_iterator : std::false_type
+    {
+    };
+
+    template <typename Iterator>
+    struct is_move_iterator<std::move_iterator<Iterator>> : std::true_type
+    {
+    };
+
+    template <typename T>
+    constexpr bool is_move_iterator_v = is_move_iterator<T>::value;
 
     template <class T>
     template <class InputIt>
     constexpr auto buffer<T>::insert(const_iterator pos, InputIt first, InputIt last) -> iterator
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos)
-        SPARROW_ASSERT_TRUE(pos <= cend())
-        const size_type num_elements = std::distance(first, last);
+        SPARROW_ASSERT_TRUE(cbegin() <= pos && pos <= cend())
+        const size_type num_elements = last - first;
         const size_type new_size = size() + num_elements;
         const size_type offset = pos - cbegin();
-        reserve(new_size);
+        const size_type old_size = size();
+        resize(new_size);
         auto& data = get_data();
         const pointer p = data.p_begin + offset;
-        std::move_backward(p, data.p_end, data.p_end + num_elements);
-        std::copy(first, last, p);
-        data.p_end += num_elements;
-        return iterator(p);
+        const iterator p_it = iterator(p);
+        const iterator end_it = std::next(begin(), old_size);
+        std::move_backward(p_it, end_it, end());
+        if constexpr (is_move_iterator_v<InputIt>)
+        {
+            std::uninitialized_move(first, last, p_it);
+        }
+        else
+        {
+            std::uninitialized_copy(first, last, p_it);
+        }
+        return p_it;
     }
 
     template <class T>

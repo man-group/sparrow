@@ -23,18 +23,33 @@
 
 namespace sparrow
 {
-    using buffer_test_type = buffer<uint8_t>;
-    using view_test_type = buffer_view<uint8_t>;
+    using buffer_test_type = buffer<int32_t>;
+    using view_test_type = buffer_view<int32_t>;
 
     using non_trivial_buffer_test_type = buffer<std::string>;
 
     namespace
     {
-        auto make_test_buffer(std::size_t size, uint8_t start_value = 0) -> uint8_t*
+        auto make_test_buffer(std::size_t size, int32_t start_value = 0) -> int32_t*
         {
-            uint8_t* res = new uint8_t[size];
+            int32_t* res = new int32_t[size];
             std::iota(res, res + size, start_value);
             return res;
+        }
+
+        auto make_test_buffer_non_trivial(std::size_t size) -> std::string*
+        {
+            std::vector<std::string> vec(size);
+            vec.insert(vec.begin(), vec.end(), vec.end());
+            for (std::size_t i = 0; i < size; ++i)
+            {
+                vec[i] = std::to_string(i);
+            }
+
+            buffer<std::string>::allocator_type alloc;
+            std::string* raw_buf = alloc.allocate(size);
+            std::uninitialized_copy(vec.cbegin(), vec.cend(), raw_buf);
+            return raw_buf;
         }
     }
 
@@ -60,7 +75,7 @@ namespace sparrow
             CHECK_NE(b1.data(), nullptr);
             CHECK_EQ(b1.size(), expected_size);
 
-            uint8_t* mem = make_test_buffer(expected_size);
+            int32_t* mem = make_test_buffer(expected_size);
             buffer_test_type b2(mem, expected_size);
             CHECK_EQ(b2.data(), mem);
             CHECK_EQ(b2.size(), expected_size);
@@ -408,7 +423,6 @@ namespace sparrow
                 CHECK_EQ(b[3], 3);
                 CHECK_EQ(b[4], expected_value);
             }
-           
         }
 
         TEST_CASE("insert")
@@ -429,7 +443,6 @@ namespace sparrow
             {
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
-
                 constexpr uint8_t expected_value = 101;
                 b.insert(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
@@ -438,24 +451,26 @@ namespace sparrow
                 CHECK_EQ(b[2], 1);
                 CHECK_EQ(b[3], 2);
                 CHECK_EQ(b[4], 3);
+            }
 
-                // non_trivial_buffer_test_type b2(make_non_trivial_test_buffer(size), size);
-
-                // std::string expected_value2 = "102";
-                // b2.insert(b2.cbegin(), std::move(expected_value2));
-                // REQUIRE_EQ(b2.size(), size + 1);
-                // CHECK_EQ(b2.data()[0], "102");
-                // CHECK_EQ(b2.data()[1], "0");
-                // CHECK_EQ(b2.data()[2], "1");
-                // CHECK_EQ(b2.data()[3], "2");
-                // CHECK_EQ(b2.data()[4], "3");
+            SUBCASE("move value at the beginning of the buffer")
+            {
+                CHECK(true);
+                constexpr std::size_t size = 4u;
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                const std::string expected_value = "9999";
+                std::string movable_expected_value = expected_value;
+                b.insert(b.cbegin(), std::move(movable_expected_value));
+                REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[0], expected_value);
+                CHECK_EQ(b.front(), expected_value);
+                CHECK_EQ(*b.cbegin(), expected_value);
             }
 
             SUBCASE("value in the middle of the buffer")
             {
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
-
                 constexpr uint8_t expected_value = 101;
                 b.insert(b.cbegin() + 2, expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
@@ -464,6 +479,22 @@ namespace sparrow
                 CHECK_EQ(b[2], expected_value);
                 CHECK_EQ(b[3], 2);
                 CHECK_EQ(b[4], 3);
+            }
+
+            SUBCASE("move value in the middle of the buffer")
+            {
+                // CHECK(true);
+                constexpr std::size_t size = 4u;
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                const std::string expected_value = "9999";
+                std::string movable_expected_value = expected_value;
+                b.insert(b.cbegin() + 2, std::move(movable_expected_value));
+                REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[0], "0");
+                CHECK_EQ(b[1], "1");
+                CHECK_EQ(b[2], expected_value);
+                CHECK_EQ(b[3], "2");
+                CHECK_EQ(b[4], "3");
             }
 
             SUBCASE("value at the end of the buffer")
@@ -478,6 +509,21 @@ namespace sparrow
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], 2);
                 CHECK_EQ(b[3], 3);
+                CHECK_EQ(b[4], expected_value);
+            }
+
+            SUBCASE("move value at the end of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                const std::string expected_value = "9999";
+                std::string movable_expected_value = expected_value;
+                b.insert(b.cend(), std::move(movable_expected_value));
+                REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[0], "0");
+                CHECK_EQ(b[1], "1");
+                CHECK_EQ(b[2], "2");
+                CHECK_EQ(b[3], "3");
                 CHECK_EQ(b[4], expected_value);
             }
 
@@ -559,7 +605,28 @@ namespace sparrow
                 CHECK_EQ(b[5], 2);
                 CHECK_EQ(b[6], 3);
             }
-           
+
+            SUBCASE("move elements from range [first, last) at the beginning of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                std::vector<std::string> values = {"101", "102", "103"};
+                const std::size_t expected_new_size = size + values.size();
+                b.insert(
+                    b.cbegin(),
+                    std::make_move_iterator(values.begin()),
+                    std::make_move_iterator(values.end())
+                );
+                REQUIRE_EQ(b.size(), expected_new_size);
+                CHECK_EQ(b[0], "101");
+                CHECK_EQ(b[1], "102");
+                CHECK_EQ(b[2], "103");
+                CHECK_EQ(b[3], "0");
+                CHECK_EQ(b[4], "1");
+                CHECK_EQ(b[5], "2");
+                CHECK_EQ(b[6], "3");
+            }
+
             SUBCASE("elements from range [first, last) in the middle of the buffer")
             {
                 constexpr std::size_t size = 4u;
@@ -579,6 +646,24 @@ namespace sparrow
                 CHECK_EQ(b[6], 3);
             }
 
+            SUBCASE("move elements from range [first, last) in the middle of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+
+                std::vector<std::string> values = {"101", "102", "103"};
+                const std::size_t expected_new_size = size + values.size();
+                b.insert(b.cbegin() + 2, std::make_move_iterator(values.begin()), std::make_move_iterator(values.end()));
+                REQUIRE_EQ(b.size(), expected_new_size);
+                CHECK_EQ(b[0], "0");
+                CHECK_EQ(b[1], "1");
+                CHECK_EQ(b[2], "101");
+                CHECK_EQ(b[3], "102");
+                CHECK_EQ(b[4], "103");
+                CHECK_EQ(b[5], "2");
+                CHECK_EQ(b[6], "3");
+            }
+
             SUBCASE("elements from range [first, last) at the end of the buffer")
             {
                 constexpr std::size_t size = 4u;
@@ -596,6 +681,24 @@ namespace sparrow
                 CHECK_EQ(b[4], 101);
                 CHECK_EQ(b[5], 102);
                 CHECK_EQ(b[6], 103);
+            }
+
+            SUBCASE("move elements from range [first, last) at the end of the buffer")
+            {
+                constexpr std::size_t size = 4u;
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+
+                std::vector<std::string> values = {"101", "102", "103"};
+                const std::size_t expected_new_size = size + values.size();
+                b.insert(b.cend(), std::make_move_iterator(values.begin()), std::make_move_iterator(values.end()));
+                REQUIRE_EQ(b.size(), expected_new_size);
+                CHECK_EQ(b[0], "0");
+                CHECK_EQ(b[1], "1");
+                CHECK_EQ(b[2], "2");
+                CHECK_EQ(b[3], "3");
+                CHECK_EQ(b[4], "101");
+                CHECK_EQ(b[5], "102");
+                CHECK_EQ(b[6], "103");
             }
 
             SUBCASE("elements from initializer list at the beginning o the buffer")
@@ -729,6 +832,10 @@ namespace sparrow
                 constexpr uint8_t expected_value = 101;
                 b.push_back(expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[0], 0);
+                CHECK_EQ(b[1], 1);
+                CHECK_EQ(b[2], 2);
+                CHECK_EQ(b[3], 3);
                 CHECK_EQ(b[size], expected_value);
                 CHECK_EQ(b.back(), expected_value);
                 CHECK_EQ(b.cend()[-1], expected_value);
@@ -738,11 +845,15 @@ namespace sparrow
             SUBCASE("Value is moved into the new element.")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
-
-                uint8_t expected_value = 101;
-                b.push_back(std::move(expected_value));
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                const std::string expected_value = "9999";
+                std::string movable_expected_value = expected_value;
+                b.push_back(std::move(movable_expected_value));
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b[0], "0");
+                CHECK_EQ(b[1], "1");
+                CHECK_EQ(b[2], "2");
+                CHECK_EQ(b[3], "3");
                 CHECK_EQ(b[size], expected_value);
                 CHECK_EQ(b.back(), expected_value);
                 CHECK_EQ(b.cend()[-1], expected_value);
@@ -757,7 +868,7 @@ namespace sparrow
         {
             {
                 const std::size_t size = 8u;
-                uint8_t* mem = make_test_buffer(size);
+                int32_t* mem = make_test_buffer(size);
                 [[maybe_unused]] view_test_type v(mem, size);
             }
 
@@ -769,7 +880,7 @@ namespace sparrow
 
             {
                 const std::size_t size = 8u;
-                uint8_t* mem = make_test_buffer(size);
+                int32_t* mem = make_test_buffer(size);
                 view_test_type v(mem, size);
 
                 CHECK_EQ(v.data(), mem);
