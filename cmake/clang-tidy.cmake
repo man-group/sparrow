@@ -4,7 +4,9 @@ if(CMAKE_GENERATOR MATCHES "Ninja|Unix Makefiles")
 else()
     message(WARNING "🚧 CMAKE_EXPORT_COMPILE_COMMANDS can't be used because the CMAKE_GENERATOR is ${CMAKE_GENERATOR}.
 You have to use Ninja or Unix Makefiles.
-Without CMAKE_EXPORT_COMPILE_COMMANDS, clang-tidy will not work.")
+Without CMAKE_EXPORT_COMPILE_COMMANDS, clang-tidy will not work.
+CMAKE_EXPORT_COMPILE_COMMANDS is used to generate a JSON file that contains all the compiler commands used to build the project.
+This file is used by clang-tidy to know how to compile the project.")
 endif()
 
 set(CLANG-TIDY_MINIMUM_MAJOR_VERSION 18)
