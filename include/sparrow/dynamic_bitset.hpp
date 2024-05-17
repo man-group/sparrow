@@ -578,7 +578,7 @@ namespace sparrow
     template <std::integral T>
     dynamic_bitset<T>::dynamic_bitset(size_type n, value_type value)
         : base_type(
-              storage_type(this->compute_block_count(n), value ? block_type(~block_type(0)) : 0),
+              storage_type(this->compute_block_count(n), value ? block_type(~block_type(0)) : block_type(0)),
               n,
               value ? 0u : n
           )
