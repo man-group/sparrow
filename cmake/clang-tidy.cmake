@@ -58,7 +58,7 @@ if(NOT CLANG_TIDY)
     print_clang_tidy_install_instructions()
 else()
     get_clang_tidy_version(${CLANG_TIDY})
-    message(STATUS "✅ clang-tidy found at ${CLANG_TIDY} | version: ${CLANG_TIDY_MAJOR_VERSION}.${CLANG_TIDY_MINOR_VERSION}.${CLANG_TIDY_PATCH_VERSION}")
+    message(STATUS "✅ clang-tidy (version: ${CLANG_TIDY_MAJOR_VERSION}.${CLANG_TIDY_MINOR_VERSION}.${CLANG_TIDY_PATCH_VERSION}) found at ${CLANG_TIDY}")
 
     if(ACTIVATE_LINTER_DURING_COMPILATION)
         message(STATUS "🔧 clang-tidy will be activated during compilation")
