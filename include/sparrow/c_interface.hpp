@@ -102,9 +102,13 @@ namespace sparrow
     }
 
     template <class BufferType, std::ranges::input_range R, template <typename> class Allocator = std::allocator>
-        requires std::is_integral_v<std::ranges::range_value_t<R>> && sparrow::allocator<Allocator<buffer<BufferType>>>
-    std::vector<buffer<BufferType>, Allocator<buffer<BufferType>>>
-    create_buffers(const R& buffer_sizes, const Allocator<BufferType>& buffer_allocator, const Allocator<buffer<BufferType>>& buffers_allocator_)
+        requires std::is_integral_v<std::ranges::range_value_t<R>>
+                 && sparrow::allocator<Allocator<buffer<BufferType>>>
+    std::vector<buffer<BufferType>, Allocator<buffer<BufferType>>> create_buffers(
+        const R& buffer_sizes,
+        const Allocator<BufferType>& buffer_allocator,
+        const Allocator<buffer<BufferType>>& buffers_allocator_
+    )
     {
         std::vector<buffer<BufferType>, Allocator<buffer<BufferType>>> buffers(buffers_allocator_);
         for (const auto buffer_size : buffer_sizes)
@@ -134,7 +138,10 @@ namespace sparrow
             std::unique_ptr<ArrowArray> dictionary,
             const V& buffer_sizes
         )
-            : buffers_(create_buffers<BufferType>(buffer_sizes, buffer_allocator_, buffers_allocator_), buffers_allocator_)
+            : buffers_(
+                  create_buffers<BufferType>(buffer_sizes, buffer_allocator_, buffers_allocator_),
+                  buffers_allocator_
+              )
             , buffers_raw_ptr_vec_(to_raw_ptr_vec<Allocator>(buffers_))
             , children_(std::move(children))
             , children_raw_ptr_vec_(to_raw_ptr_vec<Allocator>(children_))
@@ -321,7 +328,8 @@ namespace sparrow
      * @param name An optional (nullptr), null-terminated, UTF8-encoded string of the field or array name.
      *             This is mainly used to reconstruct child fields of nested types.
      * @param metadata An optional (nullptr), binary string describing the type’s metadata. If the data type
-     *                 is nested, child types are not encoded here but in the ArrowSchema.children structures.
+     *                 is nested, the metadata for child types are not encoded here but in the
+     * ArrowSchema.children structures.
      * @param flags A bitfield of flags enriching the type description. Its value is computed by OR’ing
      *              together the flag values.
      * @param children Vector of unique pointer of ArrowSchema. Children must not be null.
