@@ -26,7 +26,6 @@
 #include "sparrow/dynamic_bitset.hpp"
 #include "sparrow/iterator.hpp"
 
-
 namespace sparrow
 {
     /**

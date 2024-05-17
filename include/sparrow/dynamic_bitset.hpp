@@ -345,15 +345,14 @@ namespace sparrow
         }
         else
         {
-            #if defined(__GNUC__)
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wconversion"
-            #endif
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
             block &= ~bit_mask(pos);
-            #if defined(__GNUC__)
-            #pragma GCC diagnostic pop
-            #endif
-            
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
         }
         update_null_count(old_value, value);
     }
@@ -510,14 +509,14 @@ namespace sparrow
         const size_type extra_bits = count_extra_bits();
         if (extra_bits != 0)
         {
-            #if defined(__GNUC__)
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wconversion"
-            #endif
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
             m_buffer.back() &= ~(~block_type(0) << extra_bits);
-            #if defined(__GNUC__)
-            #pragma GCC diagnostic pop
-            #endif
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
         }
     }
 

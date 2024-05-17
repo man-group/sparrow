@@ -248,7 +248,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(data_ref().buffers.size() == 2u)
         // TODO: templatize back and front in buffer and uncomment the following line
         // SPARROW_ASSERT_TRUE(data_ref().buffers[0].size() == 0u || data_ref().buffers[0].back() ==
-        // data_ref().buffers[1].size())
+        // data_ref().buffers[1].size());
     }
 
     template <class T, class R, class CR, layout_offset OT>

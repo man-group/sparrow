@@ -14,11 +14,12 @@
 
 #pragma once
 
-#include "sparrow/contracts.hpp"
 #include "sparrow/array_data.hpp"
+#include "sparrow/contracts.hpp"
 #include "sparrow/fixed_size_layout.hpp"
 #include "sparrow/iterator.hpp"
 #include "sparrow/mp_utils.hpp"
+
 
 namespace sparrow
 {
