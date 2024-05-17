@@ -279,9 +279,7 @@ namespace sparrow
     void delete_schema(ArrowSchema* schema)
     {
         SPARROW_ASSERT_FALSE(schema == nullptr)
-        // #if !(defined(__clang__) && __clang_major__ < 15)
-        // SPARROW_ASSERT_TRUE(schema->release == std::addressof(delete_schema<Allocator>))
-        // #endif
+        SPARROW_ASSERT_TRUE(schema->release == std::addressof(delete_schema<Allocator>))
 
         schema->flags = 0;
         schema->n_children = 0;
