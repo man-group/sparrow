@@ -20,10 +20,11 @@
 #include <iterator>
 #include <stdexcept>
 
-#include "sparrow/contracts.hpp"
 #include "sparrow/allocator.hpp"
+#include "sparrow/contracts.hpp"
 #include "sparrow/iterator.hpp"
 #include "sparrow/mp_utils.hpp"
+
 
 namespace sparrow
 {
@@ -666,7 +667,10 @@ namespace sparrow
                 std::make_move_iterator(get_data().p_end)
             );
             destroy(get_data().p_begin, get_data().p_end, get_allocator());
-            this->deallocate(get_data().p_begin, static_cast<size_type>(get_data().p_storage_end - get_data().p_begin));
+            this->deallocate(
+                get_data().p_begin,
+                static_cast<size_type>(get_data().p_storage_end - get_data().p_begin)
+            );
             this->assign_storage(tmp, old_size, new_cap);
         }
     }
