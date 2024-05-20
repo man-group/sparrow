@@ -34,7 +34,7 @@ endif()
 
 set(SPARROW_TESTS_SOURCES
     main.cpp
-    array_data_creation.hpp
+    array_data_creation.cpp
     test_algorithm.cpp
     test_allocator.cpp
     test_array_data_creation.cpp
