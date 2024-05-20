@@ -48,6 +48,7 @@ set(SPARROW_TESTS_SOURCES
     test_mpl.cpp
     test_traits.cpp
     test_typed_array.cpp
+    test_typed_array_timestamp.cpp
     test_variable_size_binary_layout.cpp
 )
 set(test_target "test_sparrow_lib")
