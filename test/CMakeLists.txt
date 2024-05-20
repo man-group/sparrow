@@ -55,68 +55,43 @@ target_link_libraries(${test_target} PRIVATE sparrow doctest::doctest)
 add_test(NAME ${test_target} COMMAND ${test_target})
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options(${test_target} 
-        PRIVATE
-            /permissive-
-            /W4
-            /w14640
-            /external:anglebrackets
-            /external:W0)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(${test_target}
-        PRIVATE 
-            -Wall
-            -Wextra
-            -pedantic
-            -Werror
-            -Wno-unused-parameter
-            -Wno-unused-variable
-            -Wno-unused-function
-            -Wshadow
-            -Wnon-virtual-dtor
-            -Wold-style-cast
-            -Wcast-align
-            -Wunused
-            -Woverloaded-virtual
-            -Wpedantic
-            -Wconversion
-            -Wsign-conversion
-            -Wmisleading-indentation
-            -Wduplicated-cond
-            -Wduplicated-branches
-            -Wlogical-op
-            -Wnull-dereference
-            -Wuseless-cast
-            -Wdouble-promotion
-            -Wformat=2 
-            -Wimplicit-fallthrough
-            )
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(${test_target}
-        PRIVATE 
-            -Wall
-            -Wextra
-            -pedantic
-            -Werror
-            -Wno-unused-parameter
-            -Wno-unused-variable
-            -Wno-unused-function
-            -Wshadow
-            -Wnon-virtual-dtor
-            -Wold-style-cast
-            -Wcast-align
-            -Wunused
-            -Woverloaded-virtual
-            -Wpedantic
-            -Wconversion
-            -Wsign-conversion
-            -Wmisleading-indentation
-            -Wnull-dereference
-            -Wdouble-promotion
-            -Wformat=2
-            -Wimplicit-fallthrough
-            )
+    set(compiles_options
+        /permissive-
+        /W4 
+        /w14640
+        /external:anglebrackets
+        /external:W0)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(compiles_options
+        -pedantic
+        -Wall
+        -Wcast-align
+        -Wconversion
+        -Wdouble-promotion
+        -Werror
+        -Wextra
+        -Wformat=2 
+        -Wimplicit-fallthrough
+        -Wmisleading-indentation
+        -Wno-unused-function
+        -Wno-unused-parameter
+        -Wno-unused-variable
+        -Wnon-virtual-dtor
+        -Wnull-dereference
+        -Wold-style-cast
+        -Woverloaded-virtual
+        -Wpedantic
+        -Wshadow
+        -Wsign-conversion
+        -Wunused
+        $<$<CXX_COMPILER_ID:GNU>:-Wduplicated-branches>
+        $<$<CXX_COMPILER_ID:GNU>:-Wduplicated-cond>
+        $<$<CXX_COMPILER_ID:GNU>:-Wlogical-op>
+        $<$<CXX_COMPILER_ID:GNU>:-Wuseless-cast>)
 endif()
+
+target_compile_options(${test_target} PRIVATE ${compiles_options})
+
 # We do not use non-standard C++
 set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(${test_target} PRIVATE cxx_std_20)
