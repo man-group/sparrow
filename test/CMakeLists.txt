@@ -84,6 +84,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /wd4514 # deactivate warning: 'function' : unreferenced inline function has been removed
         /wd4625 # deactivate warning: 'derived class' : copy constructor was implicitly defined as deleted because a base class copy constructor is inaccessible or deleted
         /wd4626 # deactivate warning: 'derived class' : assignment operator was implicitly defined as deleted because a base class assignment operator is inaccessible or deleted
+        /wd4710 # deactivate warning: 'function' : function not inlined
+        /wd4711 # deactivate warning: function 'function' selected for inline expansion
         /wd4820 # deactivate warning: 'bytes' bytes padding added after construct 'member_name'
         /wd5026 # deactivate warning: 'type': move constructor was implicitly defined as deleted
         /wd5027 # deactivate warning: 'type': move assignment operator was implicitly defined as deleted
