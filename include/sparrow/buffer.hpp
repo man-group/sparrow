@@ -808,7 +808,7 @@ namespace sparrow
     template <class T>
     constexpr auto buffer<T>::max_size_impl(const allocator_type& a) noexcept -> size_type
     {
-        const size_type diff_max = std::numeric_limits<difference_type>::max();
+        const size_type diff_max = static_cast<size_type>(std::numeric_limits<difference_type>::max());
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
         return (std::min)(diff_max, alloc_max);
     }

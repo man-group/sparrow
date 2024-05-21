@@ -77,12 +77,12 @@ namespace sparrow
             }
             dictionary.bitmap.set(4, false);
 
-            dictionary.length = words.size();
+            dictionary.length = static_cast<int64_t>(words.size());
             dictionary.offset = 0;
             return dictionary;
         }
 
-        static constexpr std::array<std::string_view, 5> words = {"you", "are", "not", "prepared", "null"};
+        static constexpr std::array<std::string_view, 5> words{{"you", "are", "not", "prepared", "null"}};
 
         array_data m_data;
         using sub_layout_type = variable_size_binary_layout<std::string, std::string_view, std::string_view>;

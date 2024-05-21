@@ -345,14 +345,7 @@ namespace sparrow
         }
         else
         {
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-            block &= ~bit_mask(pos);
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+            block &= block_type(~bit_mask(pos));
         }
         update_null_count(old_value, value);
     }
@@ -509,14 +502,7 @@ namespace sparrow
         const size_type extra_bits = count_extra_bits();
         if (extra_bits != 0)
         {
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-            m_buffer.back() &= ~(~block_type(0) << extra_bits);
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+            m_buffer.back() &= block_type(~(~block_type(0) << extra_bits));
         }
     }
 
@@ -839,7 +825,7 @@ namespace sparrow
     template <class B, bool is_const>
     bool bitset_iterator<B, is_const>::is_first_bit_of_block(size_type index) const
     {
-        return m_index % bitset_type::s_bits_per_block == 0;
+        return index % bitset_type::s_bits_per_block == 0;
     }
 
     template <class B, bool is_const>
