@@ -797,12 +797,8 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= cend())
-        const size_type sz = size();
         const size_type off = pos - cbegin();
-        if (sz <= capacity())
-        {
-            reserve(sz + 1);
-        }
+        reserve(size() + 1);
         pointer p = get_data().p_begin + off;
         if (p != get_data().p_end)
         {
