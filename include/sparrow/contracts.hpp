@@ -66,23 +66,23 @@
 
 #if defined(__GNUC__)
 #    define SPARROW_CONTRACTS_IGNORE_WARNINGS \
-       _Pragma("GCC diagnostic push") \
-       _Pragma("GCC diagnostic ignored \"-Wall\"") \
-       _Pragma("GCC diagnostic ignored \"-Wformat-security\"")
+      _Pragma("GCC diagnostic push") \
+      _Pragma("GCC diagnostic ignored \"-Wall\"") \
+      _Pragma("GCC diagnostic ignored \"-Wformat-security\"")
 #    define SPARROW_CONTRACTS_RESTORE_WARNINGS \
-       _Pragma("GCC diagnostic pop")
+      _Pragma("GCC diagnostic pop")
 #elif defined(__clang__)
 #    define SPARROW_CONTRACTS_IGNORE_WARNINGS \
-        _Pragma("clang diagnostic push") \
-       _Pragma("clang diagnostic ignored \"-Weverything\"")
+      _Pragma("clang diagnostic push") \
+      _Pragma("clang diagnostic ignored \"-Weverything\"")
 #    define SPARROW_CONTRACTS_RESTORE_WARNINGS \
-#        _Pragma("clang diagnostic pop")
+      _Pragma("clang diagnostic pop")
 #elif defined(_MSC_VER)
 #    define SPARROW_CONTRACTS_IGNORE_WARNINGS \
-       _Pragma("warning(push)") \
-          _Pragma("warning(disable : 4774)")
+      _Pragma("warning(push)") \
+      _Pragma("warning(disable : 4774)") // 'var' has different type in 'file1' and 'file2': 'type1' and 'type2'
 #    define SPARROW_CONTRACTS_RESTORE_WARNINGS \
-     _Pragma("warning(pop)")
+      _Pragma("warning(pop)")
 #else
 #    define SPARROW_CONTRACTS_IGNORE_WARNINGS
 #    define SPARROW_CONTRACTS_RESTORE_WARNINGS
