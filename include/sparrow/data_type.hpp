@@ -80,27 +80,27 @@ namespace sparrow
     enum class data_type
     {
         NA = 0,
-        BOOL,
-        UINT8,
-        INT8,
-        UINT16,
-        INT16,
-        UINT32,
-        INT32,
-        UINT64,
-        INT64,
-        HALF_FLOAT,
-        FLOAT,
-        DOUBLE,
+        BOOL = 1,
+        UINT8 = 2,
+        INT8 = 3,
+        UINT16 = 4,
+        INT16 = 5,
+        UINT32 = 6,
+        INT32 = 7,
+        UINT64 = 8,
+        INT64 = 9,
+        HALF_FLOAT = 10,
+        FLOAT = 11,
+        DOUBLE = 12,
         // UTF8 variable-length string
-        STRING,
+        STRING = 13,
         // Variable-length bytes (no guarantee of UTF8-ness)
-        BINARY,
+        BINARY = 14,
         // Fixed-size binary. Each value occupies the same number of bytes
-        FIXED_SIZE_BINARY,
+        FIXED_SIZE_BINARY = 15,
         // Number of nanoseconds since the UNIX epoch with an optional timezone.
         // See: https://arrow.apache.org/docs/python/timestamps.html#timestamps
-        TIMESTAMP,
+        TIMESTAMP = 18,
     };
 
     /// C++ types value representation types matching Arrow types.
