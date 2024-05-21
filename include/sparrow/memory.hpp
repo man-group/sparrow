@@ -79,25 +79,25 @@ namespace sparrow
 
         T& operator*()
         {
-            SPARROW_ASSERT_TRUE(value_)
+            SPARROW_ASSERT_TRUE(value_);
             return *value_;
         }
 
         const T& operator*() const
         {
-            SPARROW_ASSERT_TRUE(value_)
+            SPARROW_ASSERT_TRUE(value_);
             return *value_;
         }
 
         T* operator->()
         {
-            SPARROW_ASSERT_TRUE(value_)
+            SPARROW_ASSERT_TRUE(value_);
             return &*value_;
         }
 
         const T* operator->() const
         {
-            SPARROW_ASSERT_TRUE(value_)
+            SPARROW_ASSERT_TRUE(value_);
             return &*value_;
         }
 
