@@ -79,9 +79,9 @@ namespace sparrow
             buffer_test_type b2(mem, expected_size);
             CHECK_EQ(b2.data(), mem);
             CHECK_EQ(b2.size(), expected_size);
-            CHECK_EQ(b2.data()[2], uint8_t(2));
+            CHECK_EQ(b2.data()[2], 2);
 
-            const uint8_t expected_value = 3;
+            const int32_t expected_value = 3;
             buffer_test_type b3(expected_size, expected_value);
             CHECK_NE(b3.data(), nullptr);
             CHECK_EQ(b3.size(), expected_size);
@@ -155,7 +155,7 @@ namespace sparrow
         TEST_CASE("front")
         {
             const std::size_t size = 4u;
-            const std::uint8_t expected_value = 3u;
+            const std::int32_t expected_value = 3u;
             buffer_test_type b1(make_test_buffer(size, expected_value), size);
             const buffer_test_type b2(b1);
             CHECK_EQ(b1.front(), expected_value);
@@ -165,7 +165,7 @@ namespace sparrow
         TEST_CASE("back")
         {
             const std::size_t size = 4u;
-            const std::uint8_t expected_value = 6u;
+            const std::int32_t expected_value = 6u;
             buffer_test_type b1(make_test_buffer(size, expected_value), size);
             const buffer_test_type b2(b1);
             CHECK_EQ(b1.back(), expected_value + 3u);
@@ -177,7 +177,7 @@ namespace sparrow
             const std::size_t size = 4u;
             buffer_test_type b1(make_test_buffer(size), size);
 
-            const uint8_t expected_value = 101;
+            const int32_t expected_value = 101;
             const std::size_t idx = 3u;
             b1.data()[idx] = expected_value;
             buffer_test_type b2(b1);
@@ -373,7 +373,7 @@ namespace sparrow
             SUBCASE("in empty buffer")
             {
                 buffer_test_type b;
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 b.emplace(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), 1);
                 CHECK_EQ(b[0], expected_value);
@@ -384,7 +384,7 @@ namespace sparrow
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
 
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 b.emplace(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
                 CHECK_EQ(b[0], expected_value);
@@ -399,7 +399,7 @@ namespace sparrow
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
 
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 b.emplace(b.cbegin() + 2, expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
                 CHECK_EQ(b[0], 0);
@@ -414,7 +414,7 @@ namespace sparrow
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
 
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 b.emplace(b.cend(), expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
                 CHECK_EQ(b[0], 0);
@@ -430,7 +430,7 @@ namespace sparrow
             SUBCASE("in empty buffer")
             {
                 buffer_test_type b;
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 b.insert(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), 1);
                 CHECK_EQ(b[0], expected_value);
@@ -443,7 +443,7 @@ namespace sparrow
             {
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 b.insert(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
                 CHECK_EQ(b[0], expected_value);
@@ -471,7 +471,7 @@ namespace sparrow
             {
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 b.insert(b.cbegin() + 2, expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
                 CHECK_EQ(b[0], 0);
@@ -502,7 +502,7 @@ namespace sparrow
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
 
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 b.insert(b.cend(), expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
                 CHECK_EQ(b[0], 0);
@@ -532,7 +532,7 @@ namespace sparrow
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
 
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 constexpr std::size_t count = 3u;
                 constexpr std::size_t expected_new_size = size + count;
                 b.insert(b.cbegin(), count, expected_value);
@@ -552,7 +552,7 @@ namespace sparrow
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
 
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 constexpr std::size_t count = 3u;
                 constexpr std::size_t expected_new_size = size + count;
                 b.insert(b.cbegin() + 2, count, expected_value);
@@ -572,7 +572,7 @@ namespace sparrow
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
 
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 constexpr std::size_t count = 3u;
                 constexpr std::size_t expected_new_size = size + count;
                 b.insert(b.cend(), count, expected_value);
@@ -592,7 +592,7 @@ namespace sparrow
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
 
-                const std::vector<uint8_t> values = {101, 102, 103};
+                const std::vector<int32_t> values = {101, 102, 103};
                 const std::size_t expected_new_size = size + values.size();
                 b.insert(b.cbegin(), values.cbegin(), values.cend());
                 const std::size_t new_size = b.size();
@@ -632,7 +632,7 @@ namespace sparrow
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
 
-                const std::vector<uint8_t> values = {101, 102, 103};
+                const std::vector<int32_t> values = {101, 102, 103};
                 const std::size_t expected_new_size = size + values.size();
                 b.insert(b.cbegin() + 2, values.cbegin(), values.cend());
                 const std::size_t new_size = b.size();
@@ -669,7 +669,7 @@ namespace sparrow
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
 
-                const std::vector<uint8_t> values = {101, 102, 103};
+                const std::vector<int32_t> values = {101, 102, 103};
                 const std::size_t expected_new_size = size + values.size();
                 b.insert(b.cend(), values.cbegin(), values.cend());
                 const std::size_t new_size = b.size();
@@ -829,7 +829,7 @@ namespace sparrow
                 constexpr std::size_t size = 4u;
                 buffer_test_type b(make_test_buffer(size), size);
 
-                constexpr uint8_t expected_value = 101;
+                constexpr int32_t expected_value = 101;
                 b.push_back(expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
                 CHECK_EQ(b[0], 0);
@@ -885,7 +885,7 @@ namespace sparrow
 
                 CHECK_EQ(v.data(), mem);
                 CHECK_EQ(v.size(), size);
-                CHECK_EQ(v.data()[2], uint8_t(2));
+                CHECK_EQ(v.data()[2], 2);
             }
 
             {
@@ -895,7 +895,7 @@ namespace sparrow
 
                 CHECK_EQ(v.data(), b.data());
                 CHECK_EQ(v.size(), b.size());
-                CHECK_EQ(v.data()[2], uint8_t(2));
+                CHECK_EQ(v.data()[2], 2);
             }
         }
 
@@ -947,7 +947,7 @@ namespace sparrow
             buffer_test_type b(make_test_buffer(size), size);
             view_test_type v1(b);
 
-            const uint8_t expected_value = 101;
+            const int32_t expected_value = 101;
             const std::size_t idx = 3u;
             b.data()[idx] = expected_value;
             CHECK_EQ(v1.data()[idx], expected_value);
