@@ -13,13 +13,12 @@
 // limitations under the License.
 
 // NOTE: This is based upon v0.3.0 of NoContracts library
-// https://github.com/Klaim/nocontracts/tree/0ffc183f7527213e3f0a57b8dae9befa7c0ca02c Modifications: renamed
-// macros
+// https://github.com/Klaim/nocontracts/tree/0ffc183f7527213e3f0a57b8dae9befa7c0ca02c
+// Modifications: renamed macros
 
 #pragma once
 #include <csignal>
 #include <cstdio>
-
 
 
 ///////////////////////////////////////////////////////////////////
@@ -65,24 +64,30 @@
 #endif
 
 #if defined(__GNUC__)
-#    define SPARROW_CONTRACTS_IGNORE_WARNINGS \
+#    define SPARROW_CONTRACTS_IGNORE_WARNINGS // clang-format off
       _Pragma("GCC diagnostic push") \
       _Pragma("GCC diagnostic ignored \"-Wall\"") \
       _Pragma("GCC diagnostic ignored \"-Wformat-security\"")
-#    define SPARROW_CONTRACTS_RESTORE_WARNINGS \
+// clang-format on
+#    define SPARROW_CONTRACTS_RESTORE_WARNINGS // clang-format off
       _Pragma("GCC diagnostic pop")
+// clang-format on
 #elif defined(__clang__)
-#    define SPARROW_CONTRACTS_IGNORE_WARNINGS \
+#    define SPARROW_CONTRACTS_IGNORE_WARNINGS  // clang-format off
       _Pragma("clang diagnostic push") \
       _Pragma("clang diagnostic ignored \"-Weverything\"")
-#    define SPARROW_CONTRACTS_RESTORE_WARNINGS \
+// clang-format on
+#    define SPARROW_CONTRACTS_RESTORE_WARNINGS // clang-format off
       _Pragma("clang diagnostic pop")
+// clang-format on
 #elif defined(_MSC_VER)
-#    define SPARROW_CONTRACTS_IGNORE_WARNINGS \
+#    define SPARROW_CONTRACTS_IGNORE_WARNINGS  // clang-format off
       _Pragma("warning(push)") \
       _Pragma("warning(disable : 4774)") // 'var' has different type in 'file1' and 'file2': 'type1' and 'type2'
-#    define SPARROW_CONTRACTS_RESTORE_WARNINGS \
+// clang-format on
+#    define SPARROW_CONTRACTS_RESTORE_WARNINGS // clang-format off
       _Pragma("warning(pop)")
+// clang-format on
 #else
 #    define SPARROW_CONTRACTS_IGNORE_WARNINGS
 #    define SPARROW_CONTRACTS_RESTORE_WARNINGS
@@ -93,49 +98,29 @@
 #        include <cstdio>
 #        include <print>
 
-#        define SPARROW_CONTRACTS_LOG_FAILURE(expr__, message__)  \
-            ::std::print(                                         \
-                stderr,                                           \
-                "Assertion Failed ({}:{}): {} - ({} is wrong)\n", \
-                __FILE__,                                         \
-                __LINE__,                                         \
-                message__,                                        \
-                #expr__                                           \
-            )
+#        define SPARROW_CONTRACTS_LOG_FAILURE(expr__, message__) // clang-format off
+            ::std::print(stderr, "Assertion Failed ({}:{}): {} - ({} is wrong)\n", __FILE__, __LINE__, message__, #expr__);
+// clang-format on
 #    elif defined(SPARROW_CONTRACTS_USE_STD_FORMAT) && SPARROW_CONTRACTS_USE_STD_FORMAT == 1
 #        include <cstdio>
 #        include <format>
-
+// clang-format off
 #        define SPARROW_CONTRACTS_LOG_FAILURE(expr__, message__)          \
             do                                                            \
             {                                                             \
                 SPARROW_CONTRACTS_IGNORE_WARNINGS;                        \
-                ::fprintf(                                                \
-                    stderr,                                               \
-                    ::std::format(                                        \
-                        "Assertion Failed ({}:{}): {} - ({} is wrong)\n", \
-                        __FILE__,                                         \
-                        __LINE__,                                         \
-                        message__,                                        \
-                        #expr__                                           \
-                    )                                                     \
-                        .c_str()                                          \
-                );                                                        \
+                ::fprintf(stderr, ::std::format("Assertion Failed ({}:{}): {} - ({} is wrong)\n", __FILE__, __LINE__, message__, #expr__).c_str()); \                                                       \
                 SPARROW_CONTRACTS_RESTORE_WARNINGS;                       \
             } while (0);
+// clang-format on
 #    else
 #        include <cstdio>
 #        include <cstdlib>
-
+#        include <format>
+// clang-format off
 #        define SPARROW_CONTRACTS_LOG_FAILURE(expr__, message__)  \
-            ::fprintf(                                            \
-                stderr,                                           \
-                "Assertion Failed (%s:%i): %s - (%s is wrong)\n", \
-                __FILE__,                                         \
-                __LINE__,                                         \
-                message__,                                        \
-                #expr__                                           \
-            );
+            ::fprintf(stderr, "Assertion Failed (%s:%i): %s - (%s is wrong)\n", __FILE__, __LINE__, message__, #expr__);
+// clang-format on
 #    endif
 #endif
 
