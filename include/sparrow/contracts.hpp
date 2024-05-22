@@ -111,7 +111,6 @@
 #    else
 #        include <cstdio>
 #        include <cstdlib>
-#        include <format>
 // clang-format off
 #        define SPARROW_CONTRACTS_LOG_FAILURE(expr__, message__)  \
             ::fprintf(stderr, "Assertion Failed (%s:%i): %s - (%s is wrong)\n", __FILE__, __LINE__, message__, #expr__);
