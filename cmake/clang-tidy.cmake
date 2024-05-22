@@ -85,7 +85,6 @@ else()
 
     set(CLANG_TIDY_COMMON_ARGUMENTS
         $<$<NOT:$<BOOL:CLANG_TIDY_PYTHON_SCRIPT>>:->-use-color
-        $<$<NOT:$<BOOL:CLANG_TIDY_PYTHON_SCRIPT>>:->-config-file=${CMAKE_SOURCE_DIR}/.clang-tidy
         -p ${CMAKE_BINARY_DIR})
 
     set(
