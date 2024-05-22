@@ -1,6 +1,7 @@
-name: cpp-linter
+name: cpp-linter-analysis
 
 on: [push, pull_request]
+
 defaults:
   run:
     shell: bash -e -l {0}
@@ -27,7 +28,7 @@ jobs:
         cache-downloads: true
 
     - name: Configure using CMake
-      run: cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
+      run: cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
     - name: Run C++ analysis
       uses: cpp-linter/cpp-linter-action@v2
@@ -36,8 +37,10 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         version: 18
-        # lines-changed-only: true
+        files-changed-only: false
         database: 'build'
         style: 'file'  # Use .clang-format config file
-        tidy-checks: '-*' # disable clang-tidy checks.
+        tidy-checks: '' # Use .clang-tidy config file
         step-summary: true
+        ignore: 'build'
+        extra-args: '-std=c++20'

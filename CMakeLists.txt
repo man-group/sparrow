@@ -22,6 +22,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(sparrow CXX)
 
+include(CMakeDependentOption)
+
 set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Versionning
@@ -47,9 +49,11 @@ OPTION(BUILD_TESTS "sparrow test suite" OFF)
 # =============
 
 OPTION(ACTIVATE_LINTER "Create targets to run clang-format" OFF)
+cmake_dependent_option(ACTIVATE_LINTER_DURING_COMPILATION "Run linter during the compilation" ON "ACTIVATE_LINTER" OFF)
 
 if(ACTIVATE_LINTER)
     include(cmake/clang-format.cmake)
+    include(cmake/clang-tidy.cmake)
 endif()
 
 # Dependencies
