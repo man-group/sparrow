@@ -74,7 +74,7 @@ endif()
 set(SPARROW_INTERFACE_DEPENDENCIES "" CACHE STRING "List of dependencies to be linked to the sparrow target")
 
 find_package(date CONFIG REQUIRED)
-list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date)
+list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
 
 # Build
 # =====
