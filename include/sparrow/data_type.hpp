@@ -25,6 +25,7 @@
 // TODO: use exclusively `std::float16_t etc. once we switch to c++23, see
 // https://en.cppreference.com/w/cpp/types/floating-point
 #if __cplusplus <= 202002L
+     // We disable some warnings for the 3rd party float16_t library
 #    if defined(__clang__)
 #        pragma clang diagnostic push
 #        pragma clang diagnostic ignored "-Wconversion"
