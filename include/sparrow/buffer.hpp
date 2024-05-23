@@ -732,11 +732,11 @@ namespace sparrow
         if (count != 0)
         {
             const size_type sz = size();
-            const size_type off = ptr - get_data().p_begin;
+            const size_type offset = std::distance(get_data().p_begin, ptr);
             reserve(sz + count);
 
             auto& data = get_data();
-            const auto new_ptr = data.p_begin + off;
+            const auto new_ptr = data.p_begin + offset;
             std::move_backward(new_ptr, data.p_end, data.p_end + count);
             std::fill_n(new_ptr, count, value);
             data.p_end += count;
@@ -797,9 +797,9 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
-        const size_type off = pos - cbegin();
+        const size_type offset = std::distance(cbegin(), pos);
         reserve(size() + 1);
-        pointer p = get_data().p_begin + off;
+        pointer p = get_data().p_begin + offset;
         if (p != get_data().p_end)
         {
             alloc_traits::construct(get_allocator(), get_data().p_end, std::move(*(get_data().p_end - 1)));
