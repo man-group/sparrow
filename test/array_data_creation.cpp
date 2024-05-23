@@ -1,8 +1,13 @@
 #include "array_data_creation.hpp"
 
+#include <date/date.h>
+#include <date/tz.h>
+
 namespace sparrow::test
 {
     using sys_time = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
+
+    using namespace date::literals;
 
     template <>
     sparrow::array_data
@@ -22,7 +27,7 @@ namespace sparrow::test
 
         for (uint8_t i = 0; i < n; ++i)
         {
-            b.data<sparrow::timestamp>()[i] = sparrow::timestamp(sys_time(std::chrono::system_clock::now()));
+            b.data<sparrow::timestamp>()[i] = sparrow::timestamp(date::sys_days(1970_y/date::January/1_d) + date::days(i));
         }
 
         ad.buffers.push_back(b);
