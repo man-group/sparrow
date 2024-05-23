@@ -70,7 +70,7 @@ namespace sparrow
             CHECK_EQ(b0.data(), nullptr);
             CHECK_EQ(b0.size(), 0u);
 
-            const std::size_t expected_size = 4u;
+            const std::size_t expected_size = 4;
             buffer_test_type b1(expected_size);
             CHECK_NE(b1.data(), nullptr);
             CHECK_EQ(b1.size(), expected_size);
@@ -155,7 +155,7 @@ namespace sparrow
         TEST_CASE("front")
         {
             const std::size_t size = 4u;
-            const std::int32_t expected_value = 3u;
+            const std::int32_t expected_value = 3;
             buffer_test_type b1(make_test_buffer(size, expected_value), size);
             const buffer_test_type b2(b1);
             CHECK_EQ(b1.front(), expected_value);
@@ -165,7 +165,7 @@ namespace sparrow
         TEST_CASE("back")
         {
             const std::size_t size = 4u;
-            const std::int32_t expected_value = 6u;
+            const std::int32_t expected_value = 6;
             buffer_test_type b1(make_test_buffer(size, expected_value), size);
             const buffer_test_type b2(b1);
             CHECK_EQ(b1.back(), expected_value + 3u);

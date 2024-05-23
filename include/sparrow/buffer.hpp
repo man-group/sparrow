@@ -727,8 +727,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
 
-        const difference_type __offset = std::distance(cbegin(), pos);
-        pointer ptr = get_data().p_begin + __offset;
+        const difference_type offset = std::distance(cbegin(), pos);
+        pointer ptr = get_data().p_begin + offset;
         if (count != 0)
         {
             const size_type sz = size();
@@ -741,7 +741,7 @@ namespace sparrow
             std::fill_n(new_ptr, count, value);
             data.p_end += count;
         }
-        return std::next(begin(), __offset);
+        return std::next(begin(), offset);
     }
 
     template <typename T>
