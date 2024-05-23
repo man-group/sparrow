@@ -520,42 +520,42 @@ namespace sparrow
     template <class T>
     constexpr auto buffer<T>::operator[](size_type i) -> reference
     {
-        SPARROW_ASSERT_TRUE(i < size())
+        SPARROW_ASSERT_TRUE(i < size());
         return get_data().p_begin[i];
     }
 
     template <class T>
     constexpr auto buffer<T>::operator[](size_type i) const -> const_reference
     {
-        SPARROW_ASSERT_TRUE(i < size())
+        SPARROW_ASSERT_TRUE(i < size());
         return get_data().p_begin[i];
     }
 
     template <class T>
     constexpr auto buffer<T>::front() -> reference
     {
-        SPARROW_ASSERT_FALSE(empty())
+        SPARROW_ASSERT_FALSE(empty());
         return *(get_data().p_begin);
     }
 
     template <class T>
     constexpr auto buffer<T>::front() const -> const_reference
     {
-        SPARROW_ASSERT_FALSE(empty())
+        SPARROW_ASSERT_FALSE(empty());
         return *(get_data().p_begin);
     }
 
     template <class T>
     constexpr auto buffer<T>::back() -> reference
     {
-        SPARROW_ASSERT_FALSE(empty())
+        SPARROW_ASSERT_FALSE(empty());
         return *(get_data().p_end - 1);
     }
 
     template <class T>
     constexpr auto buffer<T>::back() const -> const_reference
     {
-        SPARROW_ASSERT_FALSE(empty())
+        SPARROW_ASSERT_FALSE(empty());
         return *(get_data().p_end - 1);
     }
 
@@ -708,24 +708,24 @@ namespace sparrow
     template <class T>
     constexpr auto buffer<T>::insert(const_iterator pos, const T& value) -> iterator
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos)
-        SPARROW_ASSERT_TRUE(pos <= cend())
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
         return emplace(pos, value);
     }
 
     template <class T>
     constexpr auto buffer<T>::insert(const_iterator pos, T&& value) -> iterator
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos)
-        SPARROW_ASSERT_TRUE(pos <= cend())
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
         return emplace(pos, std::move(value));
     }
 
     template <class T>
     constexpr auto buffer<T>::insert(const_iterator pos, size_type count, const T& value) -> iterator
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos)
-        SPARROW_ASSERT_TRUE(pos <= cend())
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
 
         const difference_type __offset = pos - cbegin();
         pointer ptr = get_data().p_begin + __offset;
@@ -761,8 +761,8 @@ namespace sparrow
     template <class InputIt>
     constexpr auto buffer<T>::insert(const_iterator pos, InputIt first, InputIt last) -> iterator
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos && pos <= cend())
-        const size_type num_elements = last - first;
+        SPARROW_ASSERT_TRUE(cbegin() <= pos && pos <= cend());
+        const size_type num_elements = std::distance(first, last);
         const size_type new_size = size() + num_elements;
         const size_type offset = pos - cbegin();
         const size_type old_size = size();
@@ -786,8 +786,8 @@ namespace sparrow
     template <class T>
     constexpr auto buffer<T>::insert(const_iterator pos, std::initializer_list<T> ilist) -> iterator
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos)
-        SPARROW_ASSERT_TRUE(pos <= cend())
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
         return insert(pos, ilist.begin(), ilist.end());
     }
 
@@ -795,8 +795,8 @@ namespace sparrow
     template <class... Args>
     constexpr buffer<T>::iterator buffer<T>::emplace(const_iterator pos, Args&&... args)
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos)
-        SPARROW_ASSERT_TRUE(pos <= cend())
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
         const size_type off = pos - cbegin();
         reserve(size() + 1);
         pointer p = get_data().p_begin + off;
@@ -817,19 +817,19 @@ namespace sparrow
     template <class T>
     constexpr auto buffer<T>::erase(const_iterator pos) -> iterator
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos)
-        SPARROW_ASSERT_TRUE(pos < cend())
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos < cend());
         return erase(pos, pos + 1);
     }
 
     template <class T>
     constexpr auto buffer<T>::erase(const_iterator first, const_iterator last) -> iterator
     {
-        SPARROW_ASSERT_TRUE(first < last)
-        SPARROW_ASSERT_TRUE(cbegin() <= first)
-        SPARROW_ASSERT_TRUE(last <= cend())
+        SPARROW_ASSERT_TRUE(first < last);
+        SPARROW_ASSERT_TRUE(cbegin() <= first);
+        SPARROW_ASSERT_TRUE(last <= cend());
         const size_type offset = first - cbegin();
-        const size_type len = last - first;
+        const size_type len = std::distance(first, last);
         pointer p = get_data().p_begin + offset;
         erase_at_end(std::move(p + len, get_data().p_end, p));
         return iterator(p);
@@ -850,7 +850,7 @@ namespace sparrow
     template <class T>
     constexpr void buffer<T>::pop_back()
     {
-        SPARROW_ASSERT_FALSE(empty())
+        SPARROW_ASSERT_FALSE(empty());
         destroy(get_allocator(), get_data().p_end - 1);
         --get_data().p_end;
     }
