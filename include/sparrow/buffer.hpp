@@ -727,7 +727,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
 
-        const difference_type __offset = pos - cbegin();
+        const difference_type __offset = std::distance(cbegin(), pos);
         pointer ptr = get_data().p_begin + __offset;
         if (count != 0)
         {
@@ -764,7 +764,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(cbegin() <= pos && pos <= cend());
         const size_type num_elements = std::distance(first, last);
         const size_type new_size = size() + num_elements;
-        const size_type offset = pos - cbegin();
+        const size_type offset = std::distance(cbegin(), pos);
         const size_type old_size = size();
         resize(new_size);
         auto& data = get_data();
@@ -828,7 +828,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(first < last);
         SPARROW_ASSERT_TRUE(cbegin() <= first);
         SPARROW_ASSERT_TRUE(last <= cend());
-        const size_type offset = first - cbegin();
+        const size_type offset = std::distance(cbegin(), first);
         const size_type len = std::distance(first, last);
         pointer p = get_data().p_begin + offset;
         erase_at_end(std::move(p + len, get_data().p_end, p));
