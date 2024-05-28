@@ -25,7 +25,6 @@
 #include "sparrow/contracts.hpp"
 #include "sparrow/iterator.hpp"
 
-
 namespace sparrow
 {
 
@@ -732,18 +731,13 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(pos <= cend());
 
         const difference_type offset = std::distance(cbegin(), pos);
-        pointer ptr = get_data().p_begin + offset;
         if (count != 0)
         {
-            const size_type sz = size();
-            const size_type offset = std::distance(get_data().p_begin, ptr);
-            reserve(sz + count);
-
-            auto& data = get_data();
-            const auto new_ptr = data.p_begin + offset;
-            std::move_backward(new_ptr, data.p_end, data.p_end + count);
-            std::fill_n(new_ptr, count, value);
-            data.p_end += count;
+            reserve(size() + count);
+            const iterator it = std::next(begin(), offset);
+            std::move_backward(it, end(), std::next(end(), static_cast<difference_type>(count)));
+            std::fill_n(it, count, value);
+            get_data().p_end += count;
         }
         return std::next(begin(), offset);
     }
@@ -766,25 +760,23 @@ namespace sparrow
     constexpr auto buffer<T>::insert(const_iterator pos, InputIt first, InputIt last) -> iterator
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos && pos <= cend());
-        const size_type num_elements = std::distance(first, last);
-        const size_type new_size = size() + num_elements;
-        const size_type offset = std::distance(cbegin(), pos);
+        const difference_type num_elements = std::distance(first, last);
+        const size_type new_size = size() + static_cast<size_type>(num_elements);
+        const difference_type offset = std::distance(cbegin(), pos);
         const size_type old_size = size();
         resize(new_size);
-        auto& data = get_data();
-        const pointer p = data.p_begin + offset;
-        const iterator p_it = iterator(p);
-        const iterator end_it = std::next(begin(), old_size);
-        std::move_backward(p_it, end_it, end());
+        const iterator new_pos = std::next(begin(), offset);
+        const iterator end_it = std::next(begin(), static_cast<difference_type>(old_size));
+        std::move_backward(new_pos, end_it, end());
         if constexpr (is_move_iterator_v<InputIt>)
         {
-            std::uninitialized_move(first, last, p_it);
+            std::uninitialized_move(first, last, new_pos);
         }
         else
         {
-            std::uninitialized_copy(first, last, p_it);
+            std::uninitialized_copy(first, last, new_pos);
         }
-        return p_it;
+        return new_pos;
     }
 
     template <class T>
@@ -801,7 +793,7 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
-        const size_type offset = std::distance(cbegin(), pos);
+        const difference_type offset = std::distance(cbegin(), pos);
         reserve(size() + 1);
         pointer p = get_data().p_begin + offset;
         if (p != get_data().p_end)
@@ -832,8 +824,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(first < last);
         SPARROW_ASSERT_TRUE(cbegin() <= first);
         SPARROW_ASSERT_TRUE(last <= cend());
-        const size_type offset = std::distance(cbegin(), first);
-        const size_type len = std::distance(first, last);
+        const difference_type offset = std::distance(cbegin(), first);
+        const difference_type len = std::distance(first, last);
         pointer p = get_data().p_begin + offset;
         erase_at_end(std::move(p + len, get_data().p_end, p));
         return iterator(p);

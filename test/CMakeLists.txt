@@ -59,39 +59,27 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /permissive-
         /WX # treat warnings as errors 
         /W4 # Baseline reasonable warnings
-        # /w14242 # 'identifier': conversion from 'type1' to 'type1', possible loss of data
-        # /w14254 # 'operator': conversion from 'type1:field_bits' to 'type2:field_bits', possible loss of data
-        # /w14263 # 'function': member function does not override any base class virtual member function
-        # /w14265 # 'classname': class has virtual functions, but destructor is not virtual instances of this class may not be destructed correctly
-        # /w14287 # 'operator': unsigned/negative constant mismatch
-        # /w14296 # 'operator': expression is always 'boolean_value'
-        # /w14311 # 'variable': pointer truncation from 'type1' to 'type2'
-        # /w14545 # expression before comma evaluates to a function which is missing an argument list
-        # /w14546 # function call before comma missing argument list
-        # /w14547 # 'operator': operator before comma has no effect; expected operator with side-effect
-        # /w14549 # 'operator': operator before comma has no effect; did you intend 'operator'?
-        # /w14555 # expression has no effect; expected expression with side- effect
-        # /w14619 # pragma warning: there is no warning number 'number'
-        # /w14640 # Enable warning on thread un-safe static member initialization
-        # /w14826 # Conversion from 'type1' to 'type_2' is sign-extended. This may cause unexpected runtime behavior.
-        # /w14905 # wide string literal cast to 'LPSTR'
-        # /w14906 # string literal cast to 'LPWSTR'
-        # /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
-        # /we4289 # nonstandard extension used: 'variable': loop control variable declared in the for-loop is used outside the for-loop scope
-        # /we4244 # conversion from 'type1' to 'type_2', possible loss of data
-        /Wall # all warnings
-        /wd4355 # deactivate warning: 'this': used in base member initializer list
-        /wd4514 # deactivate warning: 'function' : unreferenced inline function has been removed
-        /wd4625 # deactivate warning: 'derived class' : copy constructor was implicitly defined as deleted because a base class copy constructor is inaccessible or deleted
-        /wd4626 # deactivate warning: 'derived class' : assignment operator was implicitly defined as deleted because a base class assignment operator is inaccessible or deleted
-        /wd4710 # deactivate warning: 'function' : function not inlined
-        /wd4711 # deactivate warning: function 'function' selected for inline expansion
-        /wd4820 # deactivate warning: 'bytes' bytes padding added after construct 'member_name'
-        /wd5026 # deactivate warning: 'type': move constructor was implicitly defined as deleted
-        /wd5027 # deactivate warning: 'type': move assignment operator was implicitly defined as deleted
-        /wd5045 # deactivate warning: Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
-        /external:anglebrackets
-        /external:W0
+        /we4242 # 'identifier': conversion from 'type1' to 'type1', possible loss of data
+        /we4244 # conversion from 'type1' to 'type_2', possible loss of data
+        /we4254 # 'operator': conversion from 'type1:field_bits' to 'type2:field_bits', possible loss of data
+        /we4263 # 'function': member function does not override any base class virtual member function
+        /we4265 # 'classname': class has virtual functions, but destructor is not virtual instances of this class may not be destructed correctly
+        /we4287 # 'operator': unsigned/negative constant mismatch
+        /we4289 # nonstandard extension used: 'variable': loop control variable declared in the for-loop is used outside the for-loop scope
+        /we4296 # 'operator': expression is always 'boolean_value'
+        /we4311 # 'variable': pointer truncation from 'type1' to 'type2'
+        /we4545 # expression before comma evaluates to a function which is missing an argument list
+        /we4546 # function call before comma missing argument list
+        /we4547 # 'operator': operator before comma has no effect; expected operator with side-effect
+        /we4549 # 'operator': operator before comma has no effect; did you intend 'operator'?
+        /we4555 # expression has no effect; expected expression with side- effect
+        /we4619 # pragma warning: there is no warning number 'number'
+        /we4640 # Enable warning on thread un-safe static member initialization
+        /we4826 # Conversion from 'type1' to 'type_2' is sign-extended. This may cause unexpected runtime behavior.
+        /we4905 # wide string literal cast to 'LPSTR'
+        /we4906 # string literal cast to 'LPWSTR'
+        /we4928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
+        /we5038 # data member 'member1' will be initialized after data member 'member2'
         /Zc:__cplusplus)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(compiles_options
