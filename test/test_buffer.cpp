@@ -15,6 +15,7 @@
 #include <iterator>
 #include <numeric>
 #include <ranges>
+#include <string>
 
 #include "sparrow/buffer.hpp"
 #include "sparrow/buffer_view.hpp"
@@ -653,7 +654,11 @@ namespace sparrow
 
                 std::vector<std::string> values = {"101", "102", "103"};
                 const std::size_t expected_new_size = size + values.size();
-                b.insert(b.cbegin() + 2, std::make_move_iterator(values.begin()), std::make_move_iterator(values.end()));
+                b.insert(
+                    b.cbegin() + 2,
+                    std::make_move_iterator(values.begin()),
+                    std::make_move_iterator(values.end())
+                );
                 REQUIRE_EQ(b.size(), expected_new_size);
                 CHECK_EQ(b[0], "0");
                 CHECK_EQ(b[1], "1");
