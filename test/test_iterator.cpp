@@ -263,6 +263,11 @@ namespace sparrow
 
             const_iterator iter{&(a[0])};
             CHECK_EQ(*iter, a[0]);
+
+            iterator iter2{&(a[0])};
+            CHECK_EQ(*iter2, a[0]);
+            *iter2 = 3;
+            CHECK_EQ(a[0], 3);
         }
     }
 }

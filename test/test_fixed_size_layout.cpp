@@ -39,8 +39,8 @@ namespace sparrow
             buffer<uint8_t> b(buffer_size);
             std::iota(b.data<int32_t>(), b.data<int32_t>() + n, -8);
             ad.buffers.push_back(b);
-            ad.length = n;
-            ad.offset = offset;
+            ad.length = static_cast<std::int64_t>(n);
+            ad.offset = static_cast<std::int64_t>(offset);
             ad.child_data.push_back(array_data());
             return ad;
         }
@@ -58,7 +58,7 @@ namespace sparrow
             auto buffer_data = ad.buffers[0].data<data_type_t>();
             for (std::size_t i = 0; i < lt.size(); ++i)
             {
-                CHECK_EQ(lt[i].value(), buffer_data[i + ad.offset]);
+                CHECK_EQ(lt[i].value(), buffer_data[i + static_cast<size_t>(ad.offset)]);
             }
         }
 
@@ -100,7 +100,7 @@ namespace sparrow
             auto lt_values = lt.values();
             for (std::size_t i = 0; i < lt.size(); ++i)
             {
-                lt[i] = i;
+                lt[i] = static_cast<int>(i);
             }
 
             layout_test_type::const_value_iterator citer = lt_values.begin();

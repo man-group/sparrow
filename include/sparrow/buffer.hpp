@@ -25,6 +25,7 @@
 #include "sparrow/contracts.hpp"
 #include "sparrow/iterator.hpp"
 
+
 namespace sparrow
 {
 
@@ -331,7 +332,7 @@ namespace sparrow
     template <class T>
     buffer_base<T>::~buffer_base()
     {
-        deallocate(m_data.p_begin, (m_data.p_storage_end - m_data.p_begin));
+        deallocate(m_data.p_begin, static_cast<size_type>(m_data.p_storage_end - m_data.p_begin));
     }
 
     template <class T>
@@ -433,7 +434,7 @@ namespace sparrow
     template <class T>
     template <class It, allocator A>
     constexpr buffer<T>::buffer(It first, It last, const A& a)
-        : base_type(check_init_length(std::distance(first, last), a), a)
+        : base_type(check_init_length(static_cast<size_type>(std::distance(first, last)), a), a)
     {
         get_data().p_end = copy_initialize(first, last, get_data().p_begin, get_allocator());
     }
@@ -685,7 +686,10 @@ namespace sparrow
                 std::make_move_iterator(get_data().p_end)
             );
             destroy(get_data().p_begin, get_data().p_end, get_allocator());
-            this->deallocate(get_data().p_begin, get_data().p_storage_end - get_data().p_begin);
+            this->deallocate(
+                get_data().p_begin,
+                static_cast<size_type>(get_data().p_storage_end - get_data().p_begin)
+            );
             this->assign_storage(tmp, old_size, new_cap);
         }
     }
@@ -913,7 +917,7 @@ namespace sparrow
     constexpr void buffer<T>::assign_range_impl(It first, It last, std::forward_iterator_tag)
     {
         const size_type sz = size();
-        const size_type len = std::distance(first, last);
+        const size_type len = static_cast<size_type>(std::distance(first, last));
         if (len > capacity())
         {
             check_init_length(len, get_allocator());
@@ -973,7 +977,7 @@ namespace sparrow
     template <class T>
     constexpr auto buffer<T>::max_size_impl(const allocator_type& a) noexcept -> size_type
     {
-        const size_type diff_max = std::numeric_limits<difference_type>::max();
+        const size_type diff_max = static_cast<size_type>(std::numeric_limits<difference_type>::max());
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
         return (std::min)(diff_max, alloc_max);
     }

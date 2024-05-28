@@ -172,7 +172,7 @@ namespace sparrow::mpl
     ///          `false` otherwise or if the list is empty.
     template <class Predicate, template <class...> class L, class... T>
         requires any_typelist<L<T...>> and (callable_type_predicate<Predicate, T> && ...)
-    consteval bool any_of(L<T...> list, Predicate predicate = {})
+    consteval bool any_of(L<T...> , Predicate predicate = {})
     {
         return (evaluate<T>(predicate) || ... || false);
     }
@@ -192,7 +192,7 @@ namespace sparrow::mpl
     ///          or if the list is empty; `false` otherwise.
     template <class Predicate, template <class...> class L, class... T>
         requires any_typelist<L<T...>> and (callable_type_predicate<Predicate, T> && ...)
-    consteval bool all_of(L<T...> list, Predicate predicate)
+    consteval bool all_of(L<T...>, [[maybe_unused]] Predicate predicate) // predicate is used but GCC does not see it, that's why we use [[maybe_unused]]
     {
         return (evaluate<T>(predicate) && ... && true);
     }
@@ -219,7 +219,7 @@ namespace sparrow::mpl
     ///          or the size of the list if the matching type was not found.
     template <class Predicate, template <class...> class L, class... T>
         requires any_typelist<L<T...>> and (callable_type_predicate<Predicate, T> && ...)
-    consteval std::size_t find_if(L<T...> list, Predicate predicate)
+    consteval std::size_t find_if(L<T...>, Predicate predicate)
     {
         std::size_t idx = 0;
         auto check = [&](bool match_success)

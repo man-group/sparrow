@@ -316,13 +316,21 @@ namespace sparrow
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::has_value(size_type i) const -> bool
     {
-        return data_ref().bitmap.test(i + data_ref().offset);
+        SPARROW_ASSERT_TRUE(data_ref().offset >= 0);
+        const size_type pos = i + static_cast<size_type>(data_ref().offset);
+        return data_ref().bitmap.test(pos);
     }
 
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::value(size_type i) const -> inner_const_reference
     {
-        return inner_const_reference(data(*offset(i)), data(*offset(i + 1)));
+        const long long offset_i = *offset(i);
+        SPARROW_ASSERT_TRUE(offset_i >= 0);
+        const long long offset_next = *offset(i + 1);
+        SPARROW_ASSERT_TRUE(offset_next >= 0);
+        const const_data_iterator pointer1 = data(static_cast<size_type>(offset_i));
+        const const_data_iterator pointer2 = data(static_cast<size_type>(offset_next));
+        return inner_const_reference(pointer1, pointer2);
     }
 
     template <class T, class R, class CR, layout_offset OT>

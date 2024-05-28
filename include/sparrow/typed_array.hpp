@@ -22,10 +22,11 @@
 #include "sparrow/contracts.hpp"
 #include "sparrow/data_traits.hpp"
 #include "sparrow/data_type.hpp"
+
 namespace sparrow
 {
     template <class T, class L>
-    requires is_arrow_base_type<T>
+        requires is_arrow_base_type<T>
     class typed_array;
 
     template <class U, class M>
@@ -37,11 +38,12 @@ namespace sparrow
     /**
      * A class template representing a typed array.
      *
-     * The `typed_array` class template provides an container interface over `array_data` for elements of a specific type `T`.
-     * The access to the elements are executed according to the layout `L` of the array.
+     * The `typed_array` class template provides an container interface over `array_data` for elements of a
+     * specific type `T`. The access to the elements are executed according to the layout `L` of the array.
      *
      * @tparam T The type of elements stored in the array.
-     * @tparam L The layout type of the array. Defaults to the default layout defined by the `arrow_traits` of `T`.
+     * @tparam L The layout type of the array. Defaults to the default layout defined by the `arrow_traits` of
+     * `T`.
      */
     template <class T, class L = typename arrow_traits<T>::default_layout>
         requires is_arrow_base_type<T>
@@ -146,7 +148,8 @@ namespace sparrow
         ///@}
 
         /*
-         * @return A range of the bitmap. For each index position in this range, if `true` then there is a value at the same index position in the `values()` range, `false` means the value there is null.
+         * @return A range of the bitmap. For each index position in this range, if `true` then there is a
+         * value at the same index position in the `values()` range, `false` means the value there is null.
          */
         const_bitmap_range bitmap() const;
 
@@ -173,9 +176,9 @@ namespace sparrow
 
         // TODO: Implement insert, erase, push_back, pop_back, clear, resize, swap
 
-        friend std::partial_ordering operator<=><T, L>(const typed_array& ta1, const typed_array& ta2);
+        friend std::partial_ordering operator<=> <T, L>(const typed_array& ta1, const typed_array& ta2);
 
-        friend bool operator==<T, L>(const typed_array& ta1, const typed_array& ta2);
+        friend bool operator== <T, L>(const typed_array& ta1, const typed_array& ta2);
 
     private:
 

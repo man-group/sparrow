@@ -78,7 +78,7 @@ TEST_SUITE("any_allocator")
         a.deallocate(buf, n);
     }
 
-#if __APPLE__
+#if defined(__APPLE__)
     // /usr/lib/libc++.1.dylib is missing the symbol __ZNSt3__13pmr20get_default_resourceEv, leading
     // to an exception at runtime.
     TEST_CASE_TEMPLATE_INVOKE(

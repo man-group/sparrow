@@ -25,9 +25,35 @@
 // TODO: use exclusively `std::float16_t etc. once we switch to c++23, see
 // https://en.cppreference.com/w/cpp/types/floating-point
 #if __cplusplus <= 202002L
-#include "details/3rdparty/float16_t.hpp"
+     // We disable some warnings for the 3rd party float16_t library
+#    if defined(__clang__)
+#        pragma clang diagnostic push
+#        pragma clang diagnostic ignored "-Wconversion"
+#        pragma clang diagnostic ignored "-Wsign-conversion"
+#        pragma clang diagnostic ignored "-Wold-style-cast"
+#    elif defined(__GNUC__)
+#        pragma GCC diagnostic push
+#        pragma GCC diagnostic ignored "-Wconversion"
+#        pragma GCC diagnostic ignored "-Wsign-conversion"
+#        pragma GCC diagnostic ignored "-Wold-style-cast"
+#    elif defined(_MSC_VER)
+#        pragma warning(push)
+#        pragma warning(disable : 4365)  // 'action' : conversion from 'type_1' to 'type_2', signed/unsigned
+                                         // mismatch
+#        pragma warning(disable : 4514)  // 'function' : unreferenced inline function has been removed
+#        pragma warning(disable : 4668)  // 'symbol' is not defined as a preprocessor macro, replacing with
+                                         // '0' for 'directives'
+#    endif
+#    include "details/3rdparty/float16_t.hpp"
+#    if defined(__GNUC__)
+#        pragma GCC diagnostic pop
+#    elif defined(__clang__)
+#        pragma clang diagnostic pop
+#    elif defined(_MSC_VER)
+#        pragma warning(pop)
+#    endif
 #else
-#include <stdfloat>
+#    include <stdfloat>
 #endif
 
 

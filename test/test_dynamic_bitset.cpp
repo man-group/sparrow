@@ -255,8 +255,8 @@ namespace sparrow
             CHECK_EQ(diff, 2);
             CHECK_EQ(cdiff, 2);
 
-            auto iter_end = b.begin() + b.size();
-            auto citer_end = b.cbegin() + b.size();
+            auto iter_end = std::next(b.begin(), static_cast<bitmap::iterator::difference_type>(b.size()));
+            auto citer_end = std::next(b.cbegin(), static_cast<bitmap::iterator::difference_type>(b.size()));
             CHECK_EQ(iter_end, b.end());
             CHECK_EQ(citer_end, b.cend());
         };

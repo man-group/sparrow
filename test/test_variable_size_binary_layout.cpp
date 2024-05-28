@@ -44,9 +44,9 @@ namespace sparrow
             auto iter = m_data.buffers[1].begin();
             for (size_t i = 0; i < nb_words; ++i)
             {
-                offset()[i + 1] = offset()[i] + words[i].size();
-                std::copy(words[i].cbegin(), words[i].cend(), iter);
-                iter += words[i].size();
+                offset()[i + 1] = static_cast<std::int64_t>(static_cast<size_t>(offset()[i]) + words[i].size());
+                std::ranges::copy(words[i], iter);
+                iter += static_cast<sparrow::array_data::buffer_type::difference_type>(words[i].size());
                 m_data.bitmap.set(i, true);
             }
 
@@ -101,7 +101,6 @@ namespace sparrow
         {
             layout_type l(m_data);
             auto cref0 = l[0];
-            auto cref1 = l[1];
             auto cref2 = l[2];
 
             auto vrange = l.values();
@@ -132,7 +131,6 @@ namespace sparrow
         {
             layout_type l(m_data);
             auto cref0 = l[0];
-            auto cref1 = l[1];
             auto cref2 = l[2];
 
             auto iter = l.cbegin();
