@@ -25,7 +25,6 @@
 #include "sparrow/contracts.hpp"
 #include "sparrow/iterator.hpp"
 
-
 namespace sparrow
 {
 
