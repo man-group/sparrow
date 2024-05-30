@@ -266,4 +266,15 @@ namespace sparrow::mpl
     template <template <typename...> class C, typename... T>
     concept InstantiationOf = is_instantiation_of_v<C, T...>;
 
+    template <typename T>
+    constexpr bool is_reference_wrapper_v = false;
+
+    template <typename U>
+    constexpr bool is_reference_wrapper_v<std::reference_wrapper<U>> = true;
+
+    template <typename T>
+    constexpr bool is_reference_wrapper(const T&)
+    {
+        return is_reference_wrapper_v<std::remove_cvref_t<T>>;
+    }
 }

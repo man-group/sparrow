@@ -117,18 +117,6 @@ namespace sparrow
         };
     }
 
-    template <typename T>
-    constexpr bool is_reference_wrapper_v = false;
-
-    template <typename U>
-    constexpr bool is_reference_wrapper_v<std::reference_wrapper<U>> = true;
-
-    template <typename T>
-    constexpr bool is_reference_wrapper(const T&)
-    {
-        return is_reference_wrapper_v<std::remove_cvref_t<T>>;
-    }
-
     template <std::ranges::range ValueRange>
         requires std::ranges::range<std::unwrap_ref_decay_t<std::ranges::range_value_t<ValueRange>>>
     array_data
@@ -151,7 +139,7 @@ namespace sparrow
             using T = std::ranges::range_value_t<ValueRange>;
             const auto& unwrap_value = [](const T& value)
             {
-                if constexpr (is_reference_wrapper_v<T>)
+                if constexpr (mpl::is_reference_wrapper_v<T>)
                 {
                     return value.get();
                 }

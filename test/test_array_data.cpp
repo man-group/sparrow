@@ -60,27 +60,27 @@ namespace sparrow
 
         reference operator[](size_type pos)
         {
-            SPARROW_ASSERT_TRUE(pos < m_bitmap.size())
-            SPARROW_ASSERT_TRUE(pos < m_data.size())
+            SPARROW_ASSERT_TRUE(pos < m_bitmap.size());
+            SPARROW_ASSERT_TRUE(pos < m_data.size());
             return reference(m_data[pos], m_bitmap[pos]);
         }
 
         const_reference operator[](size_type pos) const
         {
-            SPARROW_ASSERT_TRUE(pos < m_bitmap.size())
-            SPARROW_ASSERT_TRUE(pos < m_data.size())
+            SPARROW_ASSERT_TRUE(pos < m_bitmap.size());
+            SPARROW_ASSERT_TRUE(pos < m_data.size());
             return const_reference(m_data[pos], m_bitmap[pos]);
         }
 
         bool has_value(size_type pos) const
         {
-            SPARROW_ASSERT_TRUE(pos < m_bitmap.size())
+            SPARROW_ASSERT_TRUE(pos < m_bitmap.size());
             return m_bitmap[pos];
         }
 
         inner_const_reference value(size_type pos) const
         {
-            SPARROW_ASSERT_TRUE(pos < m_data.size())
+            SPARROW_ASSERT_TRUE(pos < m_data.size());
             return m_data[pos];
         }
 
