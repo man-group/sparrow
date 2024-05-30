@@ -24,7 +24,6 @@
 #include "sparrow/dynamic_bitset.hpp"
 #include "sparrow/memory.hpp"
 
-
 namespace sparrow
 {
     /**

@@ -167,7 +167,9 @@ namespace sparrow
             for (const auto& value : values)
             {
                 const auto& unwraped_value = unwrap_value(value);
-                SPARROW_ASSERT_TRUE(std::cmp_less(unwraped_value.size(), std::numeric_limits<std::int64_t>::max()));
+                SPARROW_ASSERT_TRUE(
+                    std::cmp_less(unwraped_value.size(), std::numeric_limits<std::int64_t>::max())
+                );
                 offsets[i + 1] = offsets[i] + static_cast<std::int64_t>(unwraped_value.size());
                 std::ranges::copy(unwraped_value, iter);
                 std::advance(iter, unwraped_value.size());

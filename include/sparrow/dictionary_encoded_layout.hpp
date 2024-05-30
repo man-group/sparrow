@@ -20,7 +20,6 @@
 #include "sparrow/iterator.hpp"
 #include "sparrow/mp_utils.hpp"
 
-
 namespace sparrow
 {
     /**
