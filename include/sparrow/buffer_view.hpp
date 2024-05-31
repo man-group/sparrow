@@ -127,8 +127,9 @@ namespace sparrow
                      && std::same_as<std::remove_const_t<std::iter_value_t<It>>, std::remove_const_t<T>>
     buffer_view<T>::buffer_view(It first, It last)
         : p_data(&*first)
-        , m_size(std::distance(first, last))
+        , m_size(static_cast<size_type>(std::distance(first, last)))
     {
+        SPARROW_ASSERT_TRUE(first <= last);
     }
 
     template <class T>
