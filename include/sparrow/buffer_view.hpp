@@ -17,7 +17,6 @@
 #include "sparrow/buffer.hpp"
 #include "sparrow/contracts.hpp"
 
-
 namespace sparrow
 {
     /*
