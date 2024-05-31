@@ -26,6 +26,7 @@ namespace sparrow
 {
     using buffer_test_type = buffer<int32_t>;
     using view_test_type = buffer_view<int32_t>;
+    using const_view_test_type = buffer_view<const int32_t>;
 
     using non_trivial_buffer_test_type = buffer<std::string>;
 
@@ -871,36 +872,37 @@ namespace sparrow
     {
         TEST_CASE("constructors")
         {
+            SUBCASE("with ptr and size")
             {
-                const std::size_t size = 8u;
+                constexpr std::size_t size = 8u;
                 int32_t* mem = make_test_buffer(size);
-                [[maybe_unused]] view_test_type v(mem, size);
-            }
-
-            {
-                const std::size_t size = 8u;
-                buffer_test_type b(make_test_buffer(size), size);
-                [[maybe_unused]] view_test_type v(b);
-            }
-
-            {
-                const std::size_t size = 8u;
-                int32_t* mem = make_test_buffer(size);
-                view_test_type v(mem, size);
+                const view_test_type v(mem, size);
 
                 CHECK_EQ(v.data(), mem);
                 CHECK_EQ(v.size(), size);
                 CHECK_EQ(v.data()[2], 2);
             }
 
+            SUBCASE("with buffer")
             {
-                const std::size_t size = 8u;
+                constexpr std::size_t size = 8u;
                 buffer_test_type b(make_test_buffer(size), size);
-                view_test_type v(b);
+                const view_test_type v(b);
 
                 CHECK_EQ(v.data(), b.data());
                 CHECK_EQ(v.size(), b.size());
                 CHECK_EQ(v.data()[2], 2);
+            }
+
+            SUBCASE("with iterators")
+            {
+                const std::vector<int32_t> values{0, 1, 2, 3, 4, 5, 6, 7};
+                const const_view_test_type v(values.cbegin(), values.cend());
+                CHECK_EQ(v.size(), values.size());
+                for (std::size_t i = 0; i < values.size(); ++i)
+                {
+                    CHECK_EQ(v[i], values[i]);
+                }
             }
         }
 
@@ -946,6 +948,50 @@ namespace sparrow
             CHECK(!v2.empty());
         }
 
+        TEST_CASE("size")
+        {
+            constexpr std::size_t size = 4u;
+            buffer_test_type b(make_test_buffer(size), size);
+            view_test_type v(b);
+            CHECK_EQ(v.size(), size);
+        }
+
+        TEST_CASE("front")
+        {
+            const std::size_t size = 4u;
+            const int32_t expected_value = 3;
+            buffer_test_type b(make_test_buffer(size, expected_value), size);
+            view_test_type v(b);
+            CHECK_EQ(v.front(), expected_value);
+        }
+
+        TEST_CASE("front const")
+        {
+            const std::size_t size = 4u;
+            const int32_t expected_value = 3;
+            buffer_test_type b(make_test_buffer(size, expected_value), size);
+            const view_test_type v(b);
+            CHECK_EQ(v.front(), expected_value);
+        }
+
+        TEST_CASE("back")
+        {
+            const std::size_t size = 4u;
+            const int32_t expected_value = 6;
+            buffer_test_type b(make_test_buffer(size, expected_value), size);
+            view_test_type v(b);
+            CHECK_EQ(v.back(), expected_value + 3u);
+        }
+
+        TEST_CASE("back const")
+        {
+            const std::size_t size = 4u;
+            const int32_t expected_value = 6;
+            buffer_test_type b(make_test_buffer(size, expected_value), size);
+            const view_test_type v(b);
+            CHECK_EQ(v.back(), expected_value + 3u);
+        }
+
         TEST_CASE("data")
         {
             const std::size_t size = 4u;
@@ -962,6 +1008,124 @@ namespace sparrow
 
             view_test_type v3(std::move(v1));
             CHECK_EQ(v3.data()[idx], expected_value);
+        }
+
+        TEST_CASE("operator[]")
+        {
+            const std::size_t size = 4u;
+            buffer_test_type b(make_test_buffer(size), size);
+            view_test_type v(b);
+            for (std::size_t i = 0; i < size; ++i)
+            {
+                CHECK_EQ(v[i], i);
+            }
+        }
+
+        TEST_CASE("operator[] const")
+        {
+            const std::size_t size = 4u;
+            buffer_test_type b(make_test_buffer(size), size);
+            const view_test_type v(b);
+            for (std::size_t i = 0; i < size; ++i)
+            {
+                CHECK_EQ(v[i], i);
+            }
+        }
+
+        TEST_CASE("begin")
+        {
+            const std::size_t size = 8u;
+            buffer_test_type b(make_test_buffer(size), size);
+            view_test_type v(b);
+            auto iter = v.begin();
+            for (std::size_t i = 0; i < v.size(); ++i)
+            {
+                CHECK_EQ(*iter++, i);
+            }
+        }
+
+        TEST_CASE("begin const")
+        {
+            const std::size_t size = 8u;
+            buffer_test_type b(make_test_buffer(size), size);
+            const view_test_type v(b);
+            auto iter = v.begin();
+            for (std::size_t i = 0; i < v.size(); ++i)
+            {
+                CHECK_EQ(*iter++, i);
+            }
+        }
+
+        TEST_CASE("end")
+        {
+            const std::size_t size = 8u;
+            buffer_test_type b(make_test_buffer(size), size);
+            view_test_type v(b);
+            auto iter = v.end();
+            for (std::size_t i = 0; i < v.size(); ++i)
+            {
+                CHECK_EQ(*--iter, size - i - 1);
+            }
+        }
+
+        TEST_CASE("end const")
+        {
+            const std::size_t size = 8u;
+            buffer_test_type b(make_test_buffer(size), size);
+            const view_test_type v(b);
+            auto iter = v.end();
+            for (std::size_t i = 0; i < v.size(); ++i)
+            {
+                CHECK_EQ(*--iter, size - i - 1);
+            }
+        }
+
+        TEST_CASE("rbegin")
+        {
+            const std::size_t size = 8u;
+            buffer_test_type b(make_test_buffer(size), size);
+            view_test_type v(b);
+            auto iter = v.rbegin();
+            for (std::size_t i = 0; i < v.size(); ++i)
+            {
+                CHECK_EQ(*iter++, size - i - 1);
+            }
+        }
+
+        TEST_CASE("rbegin const")
+        {
+            const std::size_t size = 8u;
+            buffer_test_type b(make_test_buffer(size), size);
+            const view_test_type v(b);
+            auto iter = v.rbegin();
+            for (std::size_t i = 0; i < v.size(); ++i)
+            {
+                CHECK_EQ(*iter++, size - i - 1);
+            }
+        }
+
+        TEST_CASE("rend")
+        {
+            const std::size_t size = 8u;
+            buffer_test_type b(make_test_buffer(size), size);
+            view_test_type v(b);
+            auto iter = v.rend();
+            for (std::size_t i = 0; i < v.size(); ++i)
+            {
+                CHECK_EQ(*--iter, i);
+            }
+        }
+
+        TEST_CASE("rend const")
+        {
+            const std::size_t size = 8u;
+            buffer_test_type b(make_test_buffer(size), size);
+            const view_test_type v(b);
+            auto iter = v.rend();
+            for (std::size_t i = 0; i < v.size(); ++i)
+            {
+                CHECK_EQ(*--iter, i);
+            }
         }
 
         TEST_CASE("equality comparison")
@@ -993,6 +1157,68 @@ namespace sparrow
             CHECK_EQ(v1.data(), data2);
             CHECK_EQ(v2.size(), size1);
             CHECK_EQ(v2.data(), data1);
+        }
+
+        TEST_CASE("subrange")
+        {
+            SUBCASE("pos and count")
+            {
+                const std::size_t size = 8u;
+                buffer_test_type b(make_test_buffer(size), size);
+                view_test_type v(b);
+                const std::size_t pos = 2u;
+                const std::size_t count = 3u;
+                const view_test_type sv = v.subrange(pos, count);
+                CHECK_EQ(sv.size(), count);
+                for (std::size_t i = 0; i < count; ++i)
+                {
+                    CHECK_EQ(sv[i], i + pos);
+                }
+            }
+
+            SUBCASE("pos")
+            {
+                const std::size_t size = 8u;
+                buffer_test_type b(make_test_buffer(size), size);
+                view_test_type v(b);
+                const std::size_t pos = 2u;
+                const view_test_type sv = v.subrange(pos);
+                CHECK_EQ(sv.size(), size - pos);
+                for (std::size_t i = 0; i < size - pos; ++i)
+                {
+                    CHECK_EQ(sv[i], i + pos);
+                }
+            }
+
+            SUBCASE("iterators")
+            {
+                const std::size_t size = 8u;
+                buffer_test_type b(make_test_buffer(size), size);
+                view_test_type v(b);
+                const std::size_t pos = 2u;
+                const std::size_t count = 3u;
+                const view_test_type sv(std::next(v.begin(), pos), std::next(v.begin(), pos + count));
+                CHECK_EQ(sv.size(), count);
+                for (std::size_t i = 0; i < count; ++i)
+                {
+                    CHECK_EQ(sv[i], i + pos);
+                }
+            }
+
+            SUBCASE("const iterators")
+            {
+                const std::size_t size = 8u;
+                buffer_test_type b(make_test_buffer(size), size);
+                const view_test_type v(b);
+                const std::size_t pos = 2u;
+                const std::size_t count = 3u;
+                const const_view_test_type sv(std::next(v.cbegin(), pos), std::next(v.cbegin(), pos + count));
+                CHECK_EQ(sv.size(), count);
+                for (std::size_t i = 0; i < count; ++i)
+                {
+                    CHECK_EQ(sv[i], i + pos);
+                }
+            }
         }
     }
 }

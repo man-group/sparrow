@@ -17,6 +17,7 @@
 #include "sparrow/buffer.hpp"
 #include "sparrow/contracts.hpp"
 
+
 namespace sparrow
 {
     /*
@@ -47,14 +48,14 @@ namespace sparrow
 
         explicit buffer_view(buffer<T>& buffer);
         buffer_view(pointer p, size_type n);
-        // TODO: To be complete we also need a subrange(...) function
-        // and a constructor that takes a pair of iterators (they should
-        // be template parameters constrained by concept, not buffer_view::iterator).
-        // These are often used with view types (see std::span, which also provides
-        // first and last subview functions).
 
-        bool empty() const noexcept;
-        size_type size() const noexcept;
+        template <class It>
+            requires std::input_iterator<It>
+                     && std::same_as<std::remove_const_t<std::iter_value_t<It>>, std::remove_const_t<T>>
+        buffer_view(It first, It last);
+
+        [[nodiscard]] bool empty() const noexcept;
+        [[nodiscard]] size_type size() const noexcept;
 
         reference operator[](size_type);
         const_reference operator[](size_type) const;
@@ -89,6 +90,10 @@ namespace sparrow
 
         void swap(buffer_view& rhs) noexcept;
 
+        buffer_view subrange(size_type pos, size_type count) const;
+        buffer_view subrange(size_type pos) const;
+        buffer_view subrange(const_iterator first, const_iterator last) const;
+
     private:
 
         pointer p_data = nullptr;
@@ -113,6 +118,16 @@ namespace sparrow
     buffer_view<T>::buffer_view(pointer p, size_type n)
         : p_data(p)
         , m_size(n)
+    {
+    }
+
+    template <class T>
+    template <class It>
+        requires std::input_iterator<It>
+                     && std::same_as<std::remove_const_t<std::iter_value_t<It>>, std::remove_const_t<T>>
+    buffer_view<T>::buffer_view(It first, It last)
+        : p_data(&*first)
+        , m_size(std::distance(first, last))
     {
     }
 
@@ -261,6 +276,28 @@ namespace sparrow
     {
         std::swap(p_data, rhs.p_data);
         std::swap(m_size, rhs.m_size);
+    }
+
+    template <class T>
+    buffer_view<T> buffer_view<T>::subrange(size_type pos, size_type count) const
+    {
+        SPARROW_ASSERT_TRUE(pos <= size());
+        SPARROW_ASSERT_TRUE(count <= size() - pos);
+        return buffer_view<T>(p_data + pos, count);
+    }
+
+    template <class T>
+    buffer_view<T> buffer_view<T>::subrange(size_type pos) const
+    {
+        SPARROW_ASSERT_TRUE(pos <= size());
+        return buffer_view<T>(p_data + pos, size() - pos);
+    }
+
+    template <class T>
+    buffer_view<T> buffer_view<T>::subrange(const_iterator first, const_iterator last) const
+    {
+        SPARROW_ASSERT_TRUE(first >= begin() && last <= end());
+        return buffer_view<T>(first, last);
     }
 
     template <class T>
