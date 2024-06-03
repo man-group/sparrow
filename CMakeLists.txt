@@ -41,7 +41,8 @@ message(STATUS "Building sparrow v${${PROJECT_NAME}_VERSION}")
 # Build options
 # =============
 
-OPTION(BUILD_TESTS "sparrow test suite" OFF)
+OPTION(BUILD_TESTS "Build sparrow test suite" OFF)
+OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
 
 include(CheckCXXSymbolExists)
 
@@ -73,8 +74,11 @@ endif()
 
 set(SPARROW_INTERFACE_DEPENDENCIES "" CACHE STRING "List of dependencies to be linked to the sparrow target")
 
-find_package(date CONFIG REQUIRED)
-list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
+if (USE_DATE_POLYFILL)
+    find_package(date CONFIG REQUIRED)
+    list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
+    add_compile_definitions(SPARROW_USE_DATE_POLYFILL)
+endif()
 
 # Build
 # =====

@@ -722,7 +722,7 @@ namespace sparrow
     {
         if (new_size > size())
         {
-            const size_t nb_init = new_size - size();
+            const std::size_t nb_init = new_size - size();
             if (new_size <= capacity())
             {
                 initializer(nb_init);

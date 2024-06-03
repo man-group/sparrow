@@ -13,15 +13,16 @@ defaults:
 jobs:
   build:
     runs-on: ${{ matrix.runs-on }}
-    name: ${{ matrix.sys.compiler }}-${{ matrix.build-system }}-${{ matrix.config.name }}
+    name: ${{ matrix.sys.compiler }} / ${{ matrix.build-system }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}}
     strategy:
       fail-fast: false
       matrix:
         runs-on: [windows-latest]
         sys:
-        - {compiler: default}
-        - {compiler: msvc}
-        - {compiler: clang}
+        - {compiler: msvc, date-polyfill: 'ON' }
+        - {compiler: msvc, date-polyfill: 'OFF' }
+        - {compiler: clang, date-polyfill: 'ON' }
+        - {compiler: clang, date-polyfill: 'OFF' }
         config:
         - { name: Debug }
         - { name: Release }
@@ -55,7 +56,7 @@ jobs:
           ninja
 
     - name: Configure using CMake
-      run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -G "${{matrix.build-system}}"
+      run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} -G "${{matrix.build-system}}"
 
     - name: Install
       working-directory: build

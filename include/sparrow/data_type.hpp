@@ -17,11 +17,11 @@
 #include <version>
 #include <chrono>
 
-// P0355R7 (Extending chrono to Calendars and Time Zones) has not been entirely implemented in libc++ yet.
-// See: https://libcxx.llvm.org/Status/Cxx20.html#note-p0355
-// For now, we use HowardHinnant/date as a replacement if we are compiling with libc++.
-// TODO: remove this once libc++ has full support for P0355R7.
+#if defined(SPARROW_USE_DATE_POLYFILL)
 #include <date/tz.h>
+#else
+namespace date = std::chrono; 
+#endif
 
 #include <climits>
 #include <cstdint>

@@ -13,17 +13,19 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    name: ${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.sys.stdlib }}-${{ matrix.config.name }}
+    name: ${{ matrix.sys.compiler }} / ${{ matrix.sys.version }} / ${{ matrix.sys.stdlib }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}}
     strategy:
       fail-fast: false
       matrix:
         sys:
-        - {compiler: clang, version: '16', config-flags: '', stdlib: 'libstdc++-12' }
-        # - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17' }
-        - {compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12' }
-        # - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17' }
-        - {compiler: gcc, version: '12', config-flags: '' }
-        - {compiler: gcc, version: '13', config-flags: '' }
+        - {compiler: clang, version: '16', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON' }
+        # - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
+        - {compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON' }
+        # - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
+
+        - {compiler: gcc, version: '12', config-flags: '', date-polyfill: 'ON' }
+        - {compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON' }
+        - {compiler: gcc, version: '13', config-flags: '', date-polyfill: 'OFF' }
 
         config:
         - { name: Debug }
@@ -61,7 +63,7 @@ jobs:
         cache-downloads: true
 
     - name: Configure using CMake
-      run: cmake -G Ninja -Bbuild ${{matrix.sys.config-flags}} -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
+      run: cmake -G Ninja -Bbuild ${{matrix.sys.config-flags}} -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} -DBUILD_TESTS=ON
 
     - name: Install
       working-directory: build
