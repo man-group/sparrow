@@ -48,10 +48,10 @@ namespace sparrow
         explicit buffer_view(buffer<T>& buffer);
         buffer_view(pointer p, size_type n);
 
-        template <class It>
-            requires std::input_iterator<It>
+        template <class It, class End>
+            requires std::contiguous_iterator<It> && std::sentinel_for<End, It>
                      && std::same_as<std::remove_const_t<std::iter_value_t<It>>, std::remove_const_t<T>>
-        buffer_view(It first, It last);
+        buffer_view(It first, End last);
 
         [[nodiscard]] bool empty() const noexcept;
         [[nodiscard]] size_type size() const noexcept;
@@ -121,11 +121,11 @@ namespace sparrow
     }
 
     template <class T>
-    template <class It>
-        requires std::input_iterator<It>
+    template <class It, class End>
+        requires std::contiguous_iterator<It> && std::sentinel_for<End, It>
                      && std::same_as<std::remove_const_t<std::iter_value_t<It>>, std::remove_const_t<T>>
-    buffer_view<T>::buffer_view(It first, It last)
-        : p_data(&*first)
+    buffer_view<T>::buffer_view(It first, End last)
+        : p_data(std::to_address(first))
         , m_size(static_cast<size_type>(std::distance(first, last)))
     {
         SPARROW_ASSERT_TRUE(first <= last);
