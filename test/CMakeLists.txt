@@ -41,6 +41,7 @@ set(SPARROW_TESTS_SOURCES
     test_array_data_creation.cpp
     test_array_data_factory.cpp
     test_array_data.cpp
+    test_buffer_adaptor.cpp
     test_buffer.cpp
     test_c_data_interface.cpp
     test_dictionary_encoded_layout.cpp
