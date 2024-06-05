@@ -21,12 +21,6 @@
 #include <string>
 #include <type_traits>
 
-#if defined(SPARROW_USE_DATE_POLYFILL)
-#include <date/tz.h>
-#else
-namespace date = std::chrono; 
-#endif
-
 #include "sparrow/typed_array.hpp"
 #include "sparrow/data_type.hpp"
 
