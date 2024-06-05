@@ -62,6 +62,10 @@ namespace sparrow::test
         return ad;
     }
 
+    template <>
+    sparrow::array_data
+    make_test_array_data<sparrow::timestamp>(size_t n, size_t offset, const std::vector<size_t>& false_bitmap);
+
     // Creates an array_data object for testing with std::string elements.
     //
     // param n The number of elements in the array.

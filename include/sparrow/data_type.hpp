@@ -14,6 +14,15 @@
 
 #pragma once
 
+#include <version>
+#include <chrono>
+
+#if defined(SPARROW_USE_DATE_POLYFILL)
+#include <date/tz.h>
+#else
+namespace date = std::chrono; 
+#endif
+
 #include <climits>
 #include <cstdint>
 #include <optional>
@@ -71,6 +80,13 @@ namespace sparrow
     using float64_t = std::float64_t;
 #endif
 
+    // P0355R7 (Extending chrono to Calendars and Time Zones) has not been entirely implemented in libc++ yet.
+    // See: https://libcxx.llvm.org/Status/Cxx20.html#note-p0355
+    // For now, we use HowardHinnant/date as a replacement if we are compiling with libc++.
+    // TODO: use the following once libc++ has full support for P0355R7.
+    // using timestamp = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
+    using timestamp = date::zoned_time<std::chrono::nanoseconds>;
+
     // We need to be sure the current target platform is setup to support correctly these types.
     static_assert(sizeof(float16_t) == 2);
     static_assert(sizeof(float32_t) == 4);
@@ -90,32 +106,33 @@ namespace sparrow
     enum class data_type
     {
         NA = 0,
-        BOOL,
-        UINT8,
-        INT8,
-        UINT16,
-        INT16,
-        UINT32,
-        INT32,
-        UINT64,
-        INT64,
-        HALF_FLOAT,
-        FLOAT,
-        DOUBLE,
+        BOOL = 1,
+        UINT8 = 2,
+        INT8 = 3,
+        UINT16 = 4,
+        INT16 = 5,
+        UINT32 = 6,
+        INT32 = 7,
+        UINT64 = 8,
+        INT64 = 9,
+        HALF_FLOAT = 10,
+        FLOAT = 11,
+        DOUBLE = 12,
         // UTF8 variable-length string
-        STRING,
+        STRING = 13,
         // Variable-length bytes (no guarantee of UTF8-ness)
-        BINARY,
+        BINARY = 14,
         // Fixed-size binary. Each value occupies the same number of bytes
-        FIXED_SIZE_BINARY,
+        FIXED_SIZE_BINARY = 15,
+        // Number of nanoseconds since the UNIX epoch with an optional timezone.
+        // See: https://arrow.apache.org/docs/python/timestamps.html#timestamps
+        TIMESTAMP = 18,
     };
 
     /// C++ types value representation types matching Arrow types.
     // NOTE: this needs to be in sync-order with `data_type`
     using all_base_types_t = mpl::typelist<
-        std::nullopt_t  // REVIEW: not sure about if we need to have this one? for representing NA? is this
-                        // the right type?
-        ,
+        std::nullopt_t,
         bool,
         std::uint8_t,
         std::int8_t,
@@ -129,7 +146,8 @@ namespace sparrow
         float32_t,
         float64_t,
         std::string,
-        std::vector<byte_t>
+        std::vector<byte_t>,
+        sparrow::timestamp
         // TODO: add missing fundamental types here
         >;
 

@@ -34,6 +34,7 @@ endif()
 
 set(SPARROW_TESTS_SOURCES
     main.cpp
+    array_data_creation.cpp
     test_algorithm.cpp
     test_allocator.cpp
     test_array_data_creation.cpp
@@ -47,6 +48,7 @@ set(SPARROW_TESTS_SOURCES
     test_mpl.cpp
     test_traits.cpp
     test_typed_array.cpp
+    test_typed_array_timestamp.cpp
     test_variable_size_binary_layout.cpp
 )
 set(test_target "test_sparrow_lib")
