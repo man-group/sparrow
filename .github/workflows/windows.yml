@@ -19,10 +19,10 @@ jobs:
       matrix:
         runs-on: [windows-latest]
         sys:
-        - {compiler: msvc, date-polyfill: 'ON' }
-        - {compiler: msvc, date-polyfill: 'OFF' }
-        - {compiler: clang, date-polyfill: 'ON' }
-        - {compiler: clang, date-polyfill: 'OFF' }
+        - { compiler: msvc, date-polyfill: 'ON' }
+        - { compiler: msvc, date-polyfill: 'OFF' }
+        - { compiler: clang, date-polyfill: 'ON', version: 17 }
+        - { compiler: clang, date-polyfill: 'OFF', version: 17 }
         config:
         - { name: Debug }
         - { name: Release }
@@ -35,6 +35,13 @@ jobs:
     - name: Setup MSVC
       if: matrix.sys.compiler == 'msvc' && matrix.build-system != 'Visual Studio 17 2022'
       uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Install LLVM and Clang
+      if: matrix.sys.compiler == 'clang'
+      uses: egor-tensin/setup-clang@v1
+      with:
+        version: ${{matrix.sys.version}}
+        platform: x64
 
     - name: Setup clang
       if: matrix.sys.compiler == 'clang'
