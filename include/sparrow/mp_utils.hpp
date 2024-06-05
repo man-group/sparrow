@@ -259,4 +259,16 @@ namespace sparrow::mpl
     {
         return find_if(list, predicate::same_as<TypeToFind>{});
     }
+
+    template <std::indirectly_readable T>
+    using iter_const_reference_t = std::common_reference_t<const std::iter_value_t<T>&&, std::iter_reference_t<T>>;
+
+    template <class T>
+    concept constant_iterator = std::input_iterator<T>
+                                && std::same_as<iter_const_reference_t<T>, std::iter_reference_t<T>>;
+
+    template <class T>
+    concept constant_range = std::ranges::input_range<T> && constant_iterator<std::ranges::iterator_t<T>>;
+
+
 }

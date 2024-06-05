@@ -52,9 +52,9 @@ namespace sparrow
         };
     }
 
-    template <std::ranges::input_range ValueRange>
+    template <mpl::constant_range ValueRange>
     array_data make_array_data_for_fixed_size_layout(
-        const ValueRange& values,
+        ValueRange&& values,
         const array_data::bitmap_type& bitmap,
         std::int64_t offset
     )
@@ -63,9 +63,9 @@ namespace sparrow
         if constexpr (std::ranges::range<T>)
         {
             using U = std::ranges::range_value_t<T>;
-            if constexpr (!is_arrow_base_type<U>)
+            if constexpr (!is_arrow_base_type_extended<U>)
             {
-                static_assert(std::is_same_v<U, U>, "Unsupported range value type");
+                static_assert(false, "The elements the input range are ranges but haven't arrow base type");
             }
             if (!values.empty())
             {
@@ -120,10 +120,10 @@ namespace sparrow
         };
     }
 
-    template <std::ranges::input_range ValueRange>
+    template <mpl::constant_range ValueRange>
         requires std::ranges::range<std::unwrap_ref_decay_t<std::ranges::range_value_t<ValueRange>>>
     array_data make_array_data_for_variable_size_binary_layout(
-        const ValueRange& values,
+        ValueRange&& values,
         const array_data::bitmap_type& bitmap,
         std::int64_t offset
     )
@@ -132,9 +132,9 @@ namespace sparrow
         if constexpr (std::ranges::range<U>)
         {
             using V = std::ranges::range_value_t<U>;
-            if constexpr (!is_arrow_base_type<V>)
+            if constexpr (!is_arrow_base_type_extended<V>)
             {
-                static_assert(!std::is_same_v<V, V>, "Unsupported range value type");
+                static_assert(false, "Unsupported range value type");
             }
         }
         SPARROW_ASSERT_TRUE(values.size() == bitmap.size());
@@ -200,9 +200,9 @@ namespace sparrow
     template <typename V>
     struct ValuesAndIndexes
     {
-        template <std::ranges::input_range R>
+        template <mpl::constant_range R>
             requires std::same_as<std::ranges::range_value_t<R>, std::remove_const_t<V>>
-        explicit ValuesAndIndexes(const R& range)
+        explicit ValuesAndIndexes(R&& range)
         {
             ranges_to_vec_and_indexes<R>(range, *this);
         }
@@ -211,9 +211,9 @@ namespace sparrow
         std::vector<size_t> indexes;
     };
 
-    template <std::ranges::input_range R>
+    template <mpl::constant_range R>
     void
-    ranges_to_vec_and_indexes(const R& range, ValuesAndIndexes<const std::ranges::range_value_t<R>>& values_and_indexes)
+    ranges_to_vec_and_indexes(R&& range, ValuesAndIndexes<const std::ranges::range_value_t<R>>& values_and_indexes)
     {
         using T = const std::ranges::range_value_t<R>;
         std::unordered_map<std::reference_wrapper<T>, size_t, reference_wrapper_hasher, reference_wrapper_equal>
@@ -223,8 +223,8 @@ namespace sparrow
         {
             set_index.emplace(std::cref(value), 0);
         }
-        size_t i = 0;
-        for (auto& [_, value] : set_index)
+
+        for (size_t i = 0; auto& [_, value] : set_index)
         {
             value = i;
             ++i;
@@ -241,9 +241,10 @@ namespace sparrow
             }
         );
 
-        std::transform(
-            set_index.begin(),
-            set_index.end(),
+        values_and_indexes.values.reserve(set_index.size());
+
+        std::ranges::transform(
+            set_index,
             std::back_inserter(values_and_indexes.values),
             [](const auto& pair)
             {
@@ -266,9 +267,9 @@ namespace sparrow
         };
     }
 
-    template <std::ranges::input_range ValueRange>
+    template <mpl::constant_range ValueRange>
     array_data make_array_data_for_dictionary_encoded_layout(
-        const ValueRange& values,
+        ValueRange&& values,
         const array_data::bitmap_type& bitmap,
         std::int64_t offset
     )
@@ -300,9 +301,13 @@ namespace sparrow
         };
     }
 
-
+    template <class Layout>
+    concept is_a_supported_layout = mpl::is_type_instance_of_v<Layout, fixed_size_layout>
+                                    || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
+                                    || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>;
 
     template <class Layout>
+        requires is_a_supported_layout<Layout>
     array_data make_default_array_data_factory()
     {
         if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
@@ -319,13 +324,17 @@ namespace sparrow
         }
         else
         {
-            static_assert(!std::is_same_v<Layout, Layout>, "Unsupported layout type");
+            static_assert(
+                false,
+                "Unsupported layout type. Please check the is_a_supported_layout concept and create a function make_array_data_for_... for the new layout type."
+            );
         }
     }
 
-    template <class Layout, std::ranges::input_range ValueRange>
+    template <class Layout, mpl::constant_range ValueRange>
+        requires is_a_supported_layout<Layout>
     array_data
-    make_default_array_data_factory(const ValueRange& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
+    make_default_array_data_factory(ValueRange&& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
     {
         if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
         {
@@ -341,7 +350,10 @@ namespace sparrow
         }
         else
         {
-            static_assert(!std::is_same_v<Layout, Layout>, "Unsupported layout type");
+            static_assert(
+                false,
+                "Unsupported layout type. Please check the is_a_supported_layout concept and create a function make_array_data_for_... for the new layout type."
+            );
         }
     }
 }  // namespace sparrow

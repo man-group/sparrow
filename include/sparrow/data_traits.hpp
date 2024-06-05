@@ -58,7 +58,7 @@ namespace sparrow
     template <>
     struct arrow_traits<char> : common_native_types_traits<char>
     {
-        static constexpr data_type type_id = data_type::INT8;
+        static constexpr data_type type_id = data_type::UINT8;
     };
 
     template <>

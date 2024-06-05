@@ -117,7 +117,6 @@ namespace sparrow
                         // the right type?
         ,
         bool,
-        char,
         std::uint8_t,
         std::int8_t,
         std::uint16_t,
@@ -130,7 +129,6 @@ namespace sparrow
         float32_t,
         float64_t,
         std::string,
-        std::string_view,
         std::vector<byte_t>
         // TODO: add missing fundamental types here
         >;
@@ -142,6 +140,10 @@ namespace sparrow
     /// Matches C++ representation types which are supported by default.
     template <class T>
     concept is_arrow_base_type = mpl::contains<T>(all_base_types);
+
+    template <class T>
+    concept is_arrow_base_type_extended = is_arrow_base_type<T> or std::same_as<T, std::string_view>
+                                          or std::same_as<T, char>;
 
     /// Provides compile-time information about Arrow data types.
     /// Custom types can be made compatible by implementing this traits type.
@@ -251,6 +253,4 @@ namespace sparrow
 
     template <class T>
     concept layout_offset = std::same_as<T, std::int32_t> || std::same_as<T, std::int64_t>;
-
-
 }
