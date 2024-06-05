@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <iterator>
 #include <limits>
 #include <numeric>
@@ -34,12 +33,13 @@
 #include "sparrow/fixed_size_layout.hpp"
 #include "sparrow/memory.hpp"
 #include "sparrow/mp_utils.hpp"
+#include "sparrow/reference_wrapper_utils.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
 
 namespace sparrow
 {
     template <typename T>
-    array_data for_fixed_size_layout()
+    array_data make_array_data_for_fixed_size_layout()
     {
         return {
             .type = data_descriptor(arrow_type_id<T>()),
@@ -52,9 +52,12 @@ namespace sparrow
         };
     }
 
-    template <std::ranges::range ValueRange>
-    array_data
-    for_fixed_size_layout(const ValueRange& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
+    template <std::ranges::input_range ValueRange>
+    array_data make_array_data_for_fixed_size_layout(
+        const ValueRange& values,
+        const array_data::bitmap_type& bitmap,
+        std::int64_t offset
+    )
     {
         using T = std::ranges::range_value_t<ValueRange>;
         if constexpr (std::ranges::range<T>)
@@ -104,7 +107,7 @@ namespace sparrow
     }
 
     template <typename T>
-    array_data for_variable_size_binary_layout()
+    array_data make_array_data_for_variable_size_binary_layout()
     {
         return {
             .type = data_descriptor(arrow_type_id<T>()),
@@ -117,10 +120,13 @@ namespace sparrow
         };
     }
 
-    template <std::ranges::range ValueRange>
+    template <std::ranges::input_range ValueRange>
         requires std::ranges::range<std::unwrap_ref_decay_t<std::ranges::range_value_t<ValueRange>>>
-    array_data
-    for_variable_size_binary_layout(const ValueRange& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
+    array_data make_array_data_for_variable_size_binary_layout(
+        const ValueRange& values,
+        const array_data::bitmap_type& bitmap,
+        std::int64_t offset
+    )
     {
         using U = std::unwrap_ref_decay_t<std::ranges::range_value_t<ValueRange>>;
         if constexpr (std::ranges::range<U>)
@@ -191,36 +197,28 @@ namespace sparrow
         };
     }
 
-    struct ReferenceWrapperHasher
-    {
-        template <typename T>
-        std::size_t operator()(const std::reference_wrapper<T>& ref) const
-        {
-            return std::hash<std::remove_cvref_t<T>>{}(ref.get());
-        }
-    };
-
-    struct ReferenceWrapperEqual
-    {
-        template <typename T>
-        bool operator()(const std::reference_wrapper<T>& lhs, const std::reference_wrapper<T>& rhs) const
-        {
-            return lhs.get() == rhs.get();
-        }
-    };
-
     template <typename V>
     struct ValuesAndIndexes
     {
+        template <std::ranges::input_range R>
+            requires std::same_as<std::ranges::range_value_t<R>, std::remove_const_t<V>>
+        explicit ValuesAndIndexes(const R& range)
+        {
+            ranges_to_vec_and_indexes<R>(range, *this);
+        }
+
         std::vector<std::reference_wrapper<V>> values;
         std::vector<size_t> indexes;
     };
 
-    template <std::ranges::range R>
-    ValuesAndIndexes<const std::ranges::range_value_t<R>> ranges_to_vec_and_indexes(const R& range)
+    template <std::ranges::input_range R>
+    void
+    ranges_to_vec_and_indexes(const R& range, ValuesAndIndexes<const std::ranges::range_value_t<R>>& values_and_indexes)
     {
         using T = const std::ranges::range_value_t<R>;
-        std::unordered_map<std::reference_wrapper<T>, size_t, ReferenceWrapperHasher, ReferenceWrapperEqual> set_index;
+        std::unordered_map<std::reference_wrapper<T>, size_t, reference_wrapper_hasher, reference_wrapper_equal>
+            set_index;  // TODO: To replace with a flat_map/another implementation when available, for
+                        // performance reasons
         for (const auto& value : range)
         {
             set_index.emplace(std::cref(value), 0);
@@ -232,12 +230,11 @@ namespace sparrow
             ++i;
         }
 
-        ValuesAndIndexes<T> result;
+        values_and_indexes.indexes.reserve(std::ranges::size(range));
 
-        std::transform(
-            range.begin(),
-            range.end(),
-            std::back_inserter(result.indexes),
+        std::ranges::transform(
+            range,
+            std::back_inserter(values_and_indexes.indexes),
             [&set_index](const T& value)
             {
                 return set_index[std::cref(value)];
@@ -247,18 +244,16 @@ namespace sparrow
         std::transform(
             set_index.begin(),
             set_index.end(),
-            std::back_inserter(result.values),
+            std::back_inserter(values_and_indexes.values),
             [](const auto& pair)
             {
                 return pair.first;
             }
         );
-
-        return result;
     }
 
     template <typename T>
-    array_data for_dictionary_encoded_layout()
+    array_data make_array_data_for_dictionary_encoded_layout()
     {
         return {
             .type = data_descriptor(arrow_type_id<std::uint64_t>()),
@@ -267,18 +262,21 @@ namespace sparrow
             .bitmap = {},
             .buffers = {array_data::buffer_type(sizeof(std::int64_t), 0)},
             .child_data = {},
-            .dictionary = value_ptr<array_data>(for_variable_size_binary_layout<T>())
+            .dictionary = value_ptr<array_data>(make_array_data_for_variable_size_binary_layout<T>())
         };
     }
 
-    template <std::ranges::range ValueRange>
-    array_data
-    for_dictionary_encoded_layout(const ValueRange& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
+    template <std::ranges::input_range ValueRange>
+    array_data make_array_data_for_dictionary_encoded_layout(
+        const ValueRange& values,
+        const array_data::bitmap_type& bitmap,
+        std::int64_t offset
+    )
     {
         SPARROW_ASSERT_TRUE(values.size() == bitmap.size());
         SPARROW_ASSERT_TRUE(std::cmp_greater_equal(values.size(), offset));
 
-        const auto vec_and_indexes = ranges_to_vec_and_indexes(values);
+        const ValuesAndIndexes<const std::ranges::range_value_t<ValueRange>> vec_and_indexes{values};
         const auto& indexes = vec_and_indexes.indexes;
         static const auto create_buffer = [&indexes]()
         {
@@ -294,7 +292,7 @@ namespace sparrow
             .bitmap = bitmap,
             .buffers = {create_buffer()},
             .child_data = {},
-            .dictionary = value_ptr<array_data>(for_variable_size_binary_layout(
+            .dictionary = value_ptr<array_data>(make_array_data_for_variable_size_binary_layout(
                 vec_and_indexes.values,
                 array_data::bitmap_type(vec_and_indexes.values.size(), true),
                 0
@@ -302,20 +300,22 @@ namespace sparrow
         };
     }
 
+
+
     template <class Layout>
-    array_data default_array_data_factory()
+    array_data make_default_array_data_factory()
     {
-        if constexpr (mpl::InstantiationOf<fixed_size_layout, Layout>)
+        if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
         {
-            return for_fixed_size_layout<typename Layout::inner_value_type>();
+            return make_array_data_for_fixed_size_layout<typename Layout::inner_value_type>();
         }
-        else if constexpr (mpl::InstantiationOf<variable_size_binary_layout, Layout>)
+        else if constexpr (mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>)
         {
-            return for_variable_size_binary_layout<typename Layout::inner_value_type>();
+            return make_array_data_for_variable_size_binary_layout<typename Layout::inner_value_type>();
         }
-        else if constexpr (mpl::InstantiationOf<dictionary_encoded_layout, Layout>)
+        else if constexpr (mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>)
         {
-            return for_dictionary_encoded_layout<typename Layout::inner_value_type>();
+            return make_array_data_for_dictionary_encoded_layout<typename Layout::inner_value_type>();
         }
         else
         {
@@ -323,21 +323,21 @@ namespace sparrow
         }
     }
 
-    template <class Layout, std::ranges::range ValueRange>
+    template <class Layout, std::ranges::input_range ValueRange>
     array_data
-    default_array_data_factory(const ValueRange& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
+    make_default_array_data_factory(const ValueRange& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
     {
-        if constexpr (mpl::InstantiationOf<fixed_size_layout, Layout>)
+        if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
         {
-            return for_fixed_size_layout(values, bitmap, offset);
+            return make_array_data_for_fixed_size_layout(values, bitmap, offset);
         }
-        else if constexpr (mpl::InstantiationOf<variable_size_binary_layout, Layout>)
+        else if constexpr (mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>)
         {
-            return for_variable_size_binary_layout(values, bitmap, offset);
+            return make_array_data_for_variable_size_binary_layout(values, bitmap, offset);
         }
-        else if constexpr (mpl::InstantiationOf<dictionary_encoded_layout, Layout>)
+        else if constexpr (mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>)
         {
-            return for_dictionary_encoded_layout(values, bitmap, offset);
+            return make_array_data_for_dictionary_encoded_layout(values, bitmap, offset);
         }
         else
         {

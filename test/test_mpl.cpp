@@ -101,8 +101,4 @@ namespace sparrow
     static_assert(mpl::contains<char>(test_list{}));
     static_assert(not mpl::contains<float>(test_list{}));
     static_assert(not mpl::contains<double>(test_list{}));
-
-    // is_instance_of
-    static_assert(mpl::is_instantiation_of_v<std::vector, std::vector<int>>);
-    static_assert(not mpl::is_instantiation_of_v<std::vector, std::list<int>>);
 }

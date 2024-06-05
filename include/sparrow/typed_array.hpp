@@ -51,13 +51,13 @@ namespace sparrow
      * @tparam L The layout type of the array. Defaults to the default layout defined by the `arrow_traits` of
      * `T`.
      */
-    template <class T, class L = typename arrow_traits<T>::default_layout>
+    template <class T, class Layout = typename arrow_traits<T>::default_layout>
         requires is_arrow_base_type<T>
     class typed_array
     {
     public:
 
-        using layout_type = L;
+        using layout_type = Layout;
 
         using reference = typename layout_type::reference;
         using const_reference = typename layout_type::const_reference;
@@ -184,9 +184,9 @@ namespace sparrow
 
         // TODO: Implement insert, erase, push_back, pop_back, clear, resize, swap
 
-        friend std::partial_ordering operator<=> <T, L>(const typed_array& ta1, const typed_array& ta2);
+        friend std::partial_ordering operator<=> <T, Layout>(const typed_array& ta1, const typed_array& ta2);
 
-        friend bool operator== <T, L>(const typed_array& ta1, const typed_array& ta2);
+        friend bool operator== <T, Layout>(const typed_array& ta1, const typed_array& ta2);
 
     private:
 
@@ -194,34 +194,18 @@ namespace sparrow
         layout_type m_layout;
     };
 
-    template <typename T, std::size_t N>
-struct template_param_at;
-
-template <template <typename...> class L, typename A, typename... Bs, std::size_t N>
-struct template_param_at<L<A, Bs...>, N> {
-    using type = typename template_param_at<L<Bs...>, N - 1>::type;
-};
-
-template <template <typename...> class L, typename A, typename... Bs>
-struct template_param_at<L<A, Bs...>, 0> {
-    using type = A;
-};
-
-template <class L, std::size_t N>
-using template_param_at_t = typename template_param_at<L, N>::type;
-
     // Constructors
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    typed_array<T, L>::typed_array()
-        : m_data(default_array_data_factory<L>())
+    typed_array<T, Layout>::typed_array()
+        : m_data(make_default_array_data_factory<Layout>())
         , m_layout(m_data)
     {
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    typed_array<T, L>::typed_array(array_data data)
+    typed_array<T, Layout>::typed_array(array_data data)
         : m_data(std::move(data))
         , m_layout(m_data)
     {
@@ -229,9 +213,9 @@ using template_param_at_t = typename template_param_at<L, N>::type;
 
     // Element access
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::at(size_type i) -> reference
+    auto typed_array<T, Layout>::at(size_type i) -> reference
     {
         if (i >= size())
         {
@@ -244,9 +228,9 @@ using template_param_at_t = typename template_param_at<L, N>::type;
         return m_layout[i];
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::at(size_type i) const -> const_reference
+    auto typed_array<T, Layout>::at(size_type i) const -> const_reference
     {
         if (i >= size())
         {
@@ -259,49 +243,49 @@ using template_param_at_t = typename template_param_at<L, N>::type;
         return m_layout[i];
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::operator[](size_type i) -> reference
+    auto typed_array<T, Layout>::operator[](size_type i) -> reference
     {
         SPARROW_ASSERT_TRUE(i < size())
         return m_layout[i];
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::operator[](size_type i) const -> const_reference
+    auto typed_array<T, Layout>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size())
         return m_layout[i];
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::front() -> reference
+    auto typed_array<T, Layout>::front() -> reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return m_layout[0];
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::front() const -> const_reference
+    auto typed_array<T, Layout>::front() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return m_layout[0];
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::back() -> reference
+    auto typed_array<T, Layout>::back() -> reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return m_layout[size() - 1];
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::back() const -> const_reference
+    auto typed_array<T, Layout>::back() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return m_layout[size() - 1];
@@ -309,90 +293,90 @@ using template_param_at_t = typename template_param_at<L, N>::type;
 
     // Iterators
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::begin() -> iterator
+    auto typed_array<T, Layout>::begin() -> iterator
     {
         return m_layout.begin();
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::begin() const -> const_iterator
+    auto typed_array<T, Layout>::begin() const -> const_iterator
     {
         return m_layout.cbegin();
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::end() -> iterator
+    auto typed_array<T, Layout>::end() -> iterator
     {
         return m_layout.end();
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::end() const -> const_iterator
+    auto typed_array<T, Layout>::end() const -> const_iterator
     {
         return m_layout.cend();
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::cbegin() const -> const_iterator
+    auto typed_array<T, Layout>::cbegin() const -> const_iterator
     {
         return begin();
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::cend() const -> const_iterator
+    auto typed_array<T, Layout>::cend() const -> const_iterator
     {
         return end();
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::bitmap() const -> const_bitmap_range
+    auto typed_array<T, Layout>::bitmap() const -> const_bitmap_range
     {
         return m_layout.bitmap();
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::values() const -> const_value_range
+    auto typed_array<T, Layout>::values() const -> const_value_range
     {
         return m_layout.values();
     }
 
     // Capacity
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    bool typed_array<T, L>::empty() const
+    bool typed_array<T, Layout>::empty() const
     {
         return m_layout.size() == 0;
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto typed_array<T, L>::size() const -> size_type
+    auto typed_array<T, Layout>::size() const -> size_type
     {
         return m_layout.size();
     }
 
     // Comparators
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto operator<=>(const typed_array<T, L>& ta1, const typed_array<T, L>& ta2) -> std::partial_ordering
+    auto operator<=>(const typed_array<T, Layout>& ta1, const typed_array<T, Layout>& ta2) -> std::partial_ordering
     {
         return lexicographical_compare_three_way(ta1, ta2);
     }
 
-    template <class T, class L>
+    template <class T, class Layout>
         requires is_arrow_base_type<T>
-    bool operator==(const typed_array<T, L>& ta1, const typed_array<T, L>& ta2)
+    bool operator==(const typed_array<T, Layout>& ta1, const typed_array<T, Layout>& ta2)
     {
         return std::equal(ta1.cbegin(), ta1.cend(), ta2.cbegin(), ta2.cend());
     }

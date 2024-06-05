@@ -34,7 +34,7 @@ namespace sparrow
         {
             array_data::bitmap_type bitmap{words.size(), true};
             bitmap.set(2, false);
-            m_data = default_array_data_factory<layout_type>(words, bitmap, 1);
+            m_data = make_default_array_data_factory<layout_type>(words, bitmap, 1);
         }
 
         static constexpr std::array<std::string_view, 4> words = {"you", "are", "not", "prepared"};
