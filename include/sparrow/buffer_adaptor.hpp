@@ -124,14 +124,12 @@ namespace sparrow
 
     private:
 
-        static constexpr double _buffervalue_type_by_value_type_ratio = static_cast<double>(
-                                                                            sizeof(buffer_reference_value_type)
-                                                                        )
-                                                                        / static_cast<double>(sizeof(value_type)
-                                                                        );
+        static constexpr double sizeof_ratio = static_cast<double>(sizeof(buffer_reference_value_type))
+                                               / static_cast<double>(sizeof(value_type));
 
         static constexpr size_type _extra_buffervalue_type_size = sizeof(buffer_reference_value_type)
                                                                   % sizeof(value_type);
+
         [[nodiscard]] constexpr buffer_reference::size_type index_for_buffer(size_type idx) const noexcept;
 
         buffer_reference& _buffer;
@@ -142,9 +140,7 @@ namespace sparrow
     constexpr typename buffer_adaptor<T, U>::buffer_reference::size_type
     buffer_adaptor<T, U>::index_for_buffer(size_type idx) const noexcept
     {
-        auto idx_for_T = static_cast<buffer_reference::size_type>(
-            static_cast<double>(idx) / _buffervalue_type_by_value_type_ratio
-        );
+        auto idx_for_T = static_cast<buffer_reference::size_type>(static_cast<double>(idx) / sizeof_ratio);
         return idx_for_T;
     }
 
@@ -298,7 +294,7 @@ namespace sparrow
         requires(sizeof(U) < sizeof(T))
     constexpr buffer_adaptor<T, U>::size_type buffer_adaptor<T, U>::size() const noexcept
     {
-        const double new_size = static_cast<double>(_buffer.size()) * _buffervalue_type_by_value_type_ratio;
+        const double new_size = static_cast<double>(_buffer.size()) * sizeof_ratio;
         SPARROW_ASSERT(
             std::trunc(new_size) == new_size,
             "The size of the buffer is not a multiple of the size of the new type"
@@ -310,18 +306,14 @@ namespace sparrow
         requires(sizeof(U) < sizeof(T))
     constexpr typename buffer_adaptor<T, U>::size_type buffer_adaptor<T, U>::max_size() const noexcept
     {
-        return static_cast<size_type>(
-            static_cast<double>(_buffer.max_size()) * _buffervalue_type_by_value_type_ratio
-        );
+        return static_cast<size_type>(static_cast<double>(_buffer.max_size()) * sizeof_ratio);
     }
 
     template <typename T, typename U>
         requires(sizeof(U) < sizeof(T))
     constexpr typename buffer_adaptor<T, U>::size_type buffer_adaptor<T, U>::capacity() const noexcept
     {
-        return static_cast<size_type>(
-            static_cast<double>(_buffer.capacity()) * _buffervalue_type_by_value_type_ratio
-        );
+        return static_cast<size_type>(static_cast<double>(_buffer.capacity()) * sizeof_ratio);
     }
 
     template <typename T, typename U>
@@ -335,9 +327,7 @@ namespace sparrow
         requires(sizeof(U) < sizeof(T))
     constexpr void buffer_adaptor<T, U>::reserve(size_type new_cap)
     {
-        _buffer.reserve(
-            static_cast<size_type>(static_cast<double>(new_cap) / _buffervalue_type_by_value_type_ratio)
-        );
+        _buffer.reserve(static_cast<size_type>(static_cast<double>(new_cap) / sizeof_ratio));
     }
 
     template <typename T, typename U>
@@ -361,13 +351,13 @@ namespace sparrow
     constexpr typename buffer_adaptor<T, U>::iterator
     buffer_adaptor<T, U>::insert(const_iterator pos, const value_type& value)
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos && pos <= cend());
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
-        const typename buffer_reference::size_type idx_for_buffer = index_for_buffer(static_cast<size_type>(index
-        ));
-        const auto type_size = static_cast<difference_type>(1. / _buffervalue_type_by_value_type_ratio);
+        const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
+        const auto type_size = static_cast<difference_type>(1. / sizeof_ratio);
         _buffer.insert(std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer)), type_size, 0);
-        operator [](static_cast<size_type>(index)) = value;
+        operator[](static_cast<size_type>(index)) = value;
         return std::next(begin(), index);
     }
 
@@ -376,11 +366,11 @@ namespace sparrow
     constexpr typename buffer_adaptor<T, U>::iterator
     buffer_adaptor<T, U>::insert(const_iterator pos, size_type count, const value_type& value)
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos && pos <= cend());
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
-        const typename buffer_reference::size_type idx_for_buffer = index_for_buffer(static_cast<size_type>(index
-        ));
-        constexpr auto type_size = static_cast<size_type>(1. / _buffervalue_type_by_value_type_ratio);
+        const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
+        constexpr auto type_size = static_cast<size_type>(1. / sizeof_ratio);
         const auto buffer_pos = std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
         _buffer.insert(buffer_pos, count * type_size, 0);
         for (size_type i = 0; i < count; ++i)
@@ -397,10 +387,11 @@ namespace sparrow
     constexpr typename buffer_adaptor<T, U>::iterator
     buffer_adaptor<T, U>::insert(const_iterator pos, InputIt first, InputIt last)
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos && pos <= cend());
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
-        const typename buffer_reference::size_type idx_for_buffer = index_for_buffer(static_cast<size_t>(index));
-        constexpr auto type_size = static_cast<size_type>(1. / _buffervalue_type_by_value_type_ratio);
+        const auto idx_for_buffer = index_for_buffer(static_cast<size_t>(index));
+        constexpr auto type_size = static_cast<size_type>(1. / sizeof_ratio);
         const difference_type count = std::distance(first, last);
         const auto buffer_pos = std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
         _buffer.insert(buffer_pos, static_cast<size_type>(count) * type_size, 0);
@@ -422,11 +413,11 @@ namespace sparrow
     constexpr typename buffer_adaptor<T, U>::iterator
     buffer_adaptor<T, U>::emplace(const_iterator pos, Args&&... args)
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos && pos <= cend());
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
-        const typename buffer_reference::size_type idx_for_buffer = index_for_buffer(static_cast<size_type>(index
-        ));
-        constexpr auto type_size = static_cast<size_type>(1. / _buffervalue_type_by_value_type_ratio);
+        const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
+        constexpr auto type_size = static_cast<size_type>(1. / sizeof_ratio);
         const auto buffer_pos = std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
         _buffer.insert(buffer_pos, type_size, 0);
         data()[index] = value_type(std::forward<Args>(args)...);
@@ -437,13 +428,11 @@ namespace sparrow
         requires(sizeof(U) < sizeof(T))
     constexpr typename buffer_adaptor<T, U>::iterator buffer_adaptor<T, U>::erase(const_iterator pos)
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= pos && pos < cend());
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
-        const typename buffer_reference::size_type idx_for_buffer = index_for_buffer(static_cast<size_type>(index
-        ));
-        constexpr auto type_size = static_cast<buffer_reference::difference_type>(
-            1. / _buffervalue_type_by_value_type_ratio
-        );
+        const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
+        constexpr auto type_size = static_cast<buffer_reference::difference_type>(1. / sizeof_ratio);
         _buffer.erase(
             std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer)),
             std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer) + type_size)
@@ -456,15 +445,12 @@ namespace sparrow
     constexpr typename buffer_adaptor<T, U>::iterator
     buffer_adaptor<T, U>::erase(const_iterator first, const_iterator last)
     {
-        SPARROW_ASSERT_TRUE(cbegin() <= first && first < last && last <= cend());
+        SPARROW_ASSERT_TRUE(cbegin() <= first);
+        SPARROW_ASSERT_TRUE(last <= cend());
         const difference_type index_first = std::distance(cbegin(), first);
         const difference_type index_last = std::distance(cbegin(), last);
-        const typename buffer_reference::size_type idx_for_buffer_first = index_for_buffer(
-            static_cast<size_type>(index_first)
-        );
-        const typename buffer_reference::size_type idx_for_buffer_last = index_for_buffer(
-            static_cast<size_type>(index_last)
-        );
+        const auto idx_for_buffer_first = index_for_buffer(static_cast<size_type>(index_first));
+        const auto idx_for_buffer_last = index_for_buffer(static_cast<size_type>(index_last));
         _buffer.erase(
             std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_first)),
             std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_last))
@@ -490,9 +476,7 @@ namespace sparrow
         requires(sizeof(U) < sizeof(T))
     constexpr void buffer_adaptor<T, U>::resize(size_type new_size)
     {
-        const auto new_size_for_buffer = static_cast<size_type>(
-            static_cast<double>(new_size) / _buffervalue_type_by_value_type_ratio
-        );
+        const auto new_size_for_buffer = static_cast<size_type>(static_cast<double>(new_size) / sizeof_ratio);
         _buffer.resize(new_size_for_buffer);
     }
 
@@ -501,9 +485,7 @@ namespace sparrow
     constexpr void buffer_adaptor<T, U>::resize(size_type new_size, const value_type& value)
     {
         const size_type current_size = size();
-        const auto new_size_for_buffer = static_cast<size_type>(
-            static_cast<double>(new_size) / _buffervalue_type_by_value_type_ratio
-        );
+        const auto new_size_for_buffer = static_cast<size_type>(static_cast<double>(new_size) / sizeof_ratio);
         _buffer.resize(new_size_for_buffer, 0);
 
         for (size_type i = current_size; i < new_size; ++i)
@@ -511,6 +493,4 @@ namespace sparrow
             operator[](i) = value;
         }
     }
-
-
 }

@@ -25,7 +25,7 @@ namespace sparrow
     TEST_SUITE("buffer_adaptor")
     {
         const std::array<uint8_t, 8> input{1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u};
-        const std::array<uint8_t, 12> long_input{1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u, 11u, 12u};       
+        const std::array<uint8_t, 12> long_input{1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u, 11u, 12u};
 
         TEST_CASE("constructor")
         {
@@ -227,7 +227,7 @@ namespace sparrow
             buffer<uint8_t> empty_buf;
             const buffer_adaptor<uint32_t, uint8_t> buffer_adapt(empty_buf);
             CHECK(buffer_adapt.empty());
-            
+
             buffer<uint8_t> buf2(input);
             const buffer_adaptor<uint32_t, uint8_t> buffer_adapt2(buf2);
             CHECK(!buffer_adapt2.empty());
@@ -252,6 +252,9 @@ namespace sparrow
         {
             buffer<uint8_t> buf(input);
             buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
+            CHECK_EQ(buffer_adapt.capacity(), 2);
+            buffer_adapt.reserve(50);
+            CHECK_EQ(buffer_adapt.capacity(), 50);
             buffer_adapt.shrink_to_fit();
             CHECK_EQ(buffer_adapt.capacity(), 2);
         }
@@ -291,7 +294,7 @@ namespace sparrow
                     buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
                     const auto it = std::next(buffer_adapt.cbegin());
                     constexpr uint32_t to_insert = 0x09999999;
-                    const buffer_adaptor<uint32_t, uint8_t>::iterator result =buffer_adapt.insert(it, to_insert);
+                    const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.insert(it, to_insert);
                     CHECK_EQ(*result, to_insert);
                     CHECK_EQ(result, std::next(buffer_adapt.begin()));
                     REQUIRE_EQ(buffer_adapt.size(), 3);
@@ -375,7 +378,11 @@ namespace sparrow
                     buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
                     auto it = buffer_adapt.cbegin();
                     std::vector<uint32_t> to_insert = {0x09999999, 0x08888888};
-                    const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.insert(it, to_insert.cbegin(), to_insert.cend());
+                    const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.insert(
+                        it,
+                        to_insert.cbegin(),
+                        to_insert.cend()
+                    );
                     CHECK_EQ(*result, to_insert[0]);
                     CHECK_EQ(result, buffer_adapt.begin());
                     REQUIRE_EQ(buffer_adapt.size(), 4);
@@ -391,7 +398,11 @@ namespace sparrow
                     buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
                     auto it = std::next(buffer_adapt.cbegin());
                     const std::vector<uint32_t> to_insert = {0x09999999, 0x08888888};
-                    const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.insert(it, to_insert.cbegin(), to_insert.cend());
+                    const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.insert(
+                        it,
+                        to_insert.cbegin(),
+                        to_insert.cend()
+                    );
                     CHECK_EQ(*result, to_insert[0]);
                     CHECK_EQ(result, std::next(buffer_adapt.begin()));
                     REQUIRE_EQ(buffer_adapt.size(), 4);
@@ -407,7 +418,11 @@ namespace sparrow
                     buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
                     auto it = buffer_adapt.cend();
                     std::vector<uint32_t> to_insert = {0x09999999, 0x08888888};
-                    const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.insert(it, to_insert.cbegin(), to_insert.cend());
+                    const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.insert(
+                        it,
+                        to_insert.cbegin(),
+                        to_insert.cend()
+                    );
                     CHECK_EQ(*result, to_insert[0]);
                     CHECK_EQ(result, std::prev(buffer_adapt.end(), 2));
                     REQUIRE_EQ(buffer_adapt.size(), 4);
