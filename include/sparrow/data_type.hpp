@@ -141,9 +141,16 @@ namespace sparrow
     template <class T>
     concept is_arrow_base_type = mpl::contains<T>(all_base_types);
 
+     using all_base_types_extended_t = mpl::typelist<
+        char,
+        std::string_view>;
+
+        /// Type list of every C++ representation types supported by default, in order matching `data_type`
+    /// related values.
+    static constexpr all_base_types_extended_t all_base_types_extended;
+
     template <class T>
-    concept is_arrow_base_type_extended = is_arrow_base_type<T> or std::same_as<T, std::string_view>
-                                          or std::same_as<T, char>;
+    concept is_arrow_base_type_extended = is_arrow_base_type<T> or mpl::contains<T>(all_base_types_extended);;
 
     /// Provides compile-time information about Arrow data types.
     /// Custom types can be made compatible by implementing this traits type.

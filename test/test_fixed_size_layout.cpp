@@ -36,9 +36,8 @@ namespace sparrow
             std::vector<data_type_t> v(n);
             std::iota(v.begin(), v.end(), -8);
             array_data::bitmap_type bitmap(n, true);
-            return make_default_array_data_factory<layout_test_type>(std::ranges::subrange<std::vector<data_type_t>::const_iterator>(v), bitmap, offset);
+            return make_default_array_data_factory<layout_test_type>(v, bitmap, offset);
         }
-
     }
 
     TEST_SUITE("fixed_size_layout")

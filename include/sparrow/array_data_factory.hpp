@@ -31,10 +31,12 @@
 #include "sparrow/data_type.hpp"
 #include "sparrow/dictionary_encoded_layout.hpp"
 #include "sparrow/fixed_size_layout.hpp"
+#include "sparrow/array_data_concepts.hpp"
 #include "sparrow/memory.hpp"
 #include "sparrow/mp_utils.hpp"
 #include "sparrow/reference_wrapper_utils.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
+
 
 namespace sparrow
 {
@@ -52,7 +54,7 @@ namespace sparrow
         };
     }
 
-    template <mpl::constant_range ValueRange>
+    template <constant_range_for_array_data ValueRange>
     array_data make_array_data_for_fixed_size_layout(
         ValueRange&& values,
         const array_data::bitmap_type& bitmap,
@@ -60,13 +62,9 @@ namespace sparrow
     )
     {
         using T = std::ranges::range_value_t<ValueRange>;
+        // Check that the range is a range of ranges
         if constexpr (std::ranges::range<T>)
         {
-            using U = std::ranges::range_value_t<T>;
-            if constexpr (!is_arrow_base_type_extended<U>)
-            {
-                static_assert(false, "The elements the input range are ranges but haven't arrow base type");
-            }
             if (!values.empty())
             {
                 const size_t expected_size = values.front().size();
@@ -120,23 +118,13 @@ namespace sparrow
         };
     }
 
-    template <mpl::constant_range ValueRange>
-        requires std::ranges::range<std::unwrap_ref_decay_t<std::ranges::range_value_t<ValueRange>>>
+    template <constant_range_for_array_data ValueRange>
     array_data make_array_data_for_variable_size_binary_layout(
         ValueRange&& values,
         const array_data::bitmap_type& bitmap,
         std::int64_t offset
     )
     {
-        using U = std::unwrap_ref_decay_t<std::ranges::range_value_t<ValueRange>>;
-        if constexpr (std::ranges::range<U>)
-        {
-            using V = std::ranges::range_value_t<U>;
-            if constexpr (!is_arrow_base_type_extended<V>)
-            {
-                static_assert(false, "Unsupported range value type");
-            }
-        }
         SPARROW_ASSERT_TRUE(values.size() == bitmap.size());
         SPARROW_ASSERT_TRUE(std::cmp_greater_equal(values.size(), offset));
 
@@ -166,9 +154,9 @@ namespace sparrow
                     return res + unwrap_value(s).size();
                 }
             ));
+
             auto iter = buffers[1].begin();
             const auto offsets = buffers[0].data<std::int64_t>();
-
             size_t i = 0;
             for (const auto& value : values)
             {
@@ -267,7 +255,7 @@ namespace sparrow
         };
     }
 
-    template <mpl::constant_range ValueRange>
+    template <constant_range_for_array_data ValueRange>
     array_data make_array_data_for_dictionary_encoded_layout(
         ValueRange&& values,
         const array_data::bitmap_type& bitmap,
@@ -301,13 +289,7 @@ namespace sparrow
         };
     }
 
-    template <class Layout>
-    concept is_a_supported_layout = mpl::is_type_instance_of_v<Layout, fixed_size_layout>
-                                    || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
-                                    || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>;
-
-    template <class Layout>
-        requires is_a_supported_layout<Layout>
+    template <is_a_supported_layout Layout>
     array_data make_default_array_data_factory()
     {
         if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
@@ -331,8 +313,7 @@ namespace sparrow
         }
     }
 
-    template <class Layout, mpl::constant_range ValueRange>
-        requires is_a_supported_layout<Layout>
+    template <is_a_supported_layout Layout, constant_range_for_array_data ValueRange>
     array_data
     make_default_array_data_factory(ValueRange&& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
     {
@@ -355,5 +336,13 @@ namespace sparrow
                 "Unsupported layout type. Please check the is_a_supported_layout concept and create a function make_array_data_for_... for the new layout type."
             );
         }
+    }
+
+    template <is_a_supported_layout Layout, std::ranges::input_range ValueRange>
+        requires(!mpl::constant_range<ValueRange>)
+    array_data
+    make_default_array_data_factory(ValueRange&& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
+    {
+        return make_default_array_data_factory<Layout>(std::as_const(values), bitmap, offset);
     }
 }  // namespace sparrow

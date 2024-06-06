@@ -269,6 +269,4 @@ namespace sparrow::mpl
 
     template <class T>
     concept constant_range = std::ranges::input_range<T> && constant_iterator<std::ranges::iterator_t<T>>;
-
-
 }
