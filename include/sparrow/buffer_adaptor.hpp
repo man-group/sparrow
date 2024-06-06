@@ -142,7 +142,6 @@ namespace sparrow
     constexpr typename buffer_adaptor<T, U>::buffer_reference::size_type
     buffer_adaptor<T, U>::index_for_buffer(size_type idx) const noexcept
     {
-        SPARROW_ASSERT_TRUE(std::cmp_less_equal(idx, static_cast<size_t>(std::numeric_limits<double>::max())));
         auto idx_for_T = static_cast<buffer_reference::size_type>(
             static_cast<double>(idx) / _buffervalue_type_by_value_type_ratio
         );
