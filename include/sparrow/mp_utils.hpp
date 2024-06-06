@@ -269,4 +269,14 @@ namespace sparrow::mpl
 
     template <class T>
     concept constant_range = std::ranges::input_range<T> && constant_iterator<std::ranges::iterator_t<T>>;
+
+    /*
+     * Workaround to replace static_assert(false) in template code.
+     * https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
+     */
+    template <class T>
+    struct dependent_false : std::false_type
+    {
+    };
+
 }
