@@ -307,7 +307,7 @@ namespace sparrow
         else
         {
             static_assert(
-                !std::is_same_v<Layout, Layout>,
+                !std::is_same_v<bool, bool>,
                 "Unsupported layout type. Please check the is_a_supported_layout concept and create a function make_array_data_for_... for the new layout type."
             );
         }
@@ -332,7 +332,7 @@ namespace sparrow
         else
         {
             static_assert(
-                !std::is_same_v<Layout, Layout>,
+                !std::is_same_v<bool, bool>,
                 "Unsupported layout type. Please check the is_a_supported_layout concept and create a function make_array_data_for_... for the new layout type."
             );
         }
