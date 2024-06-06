@@ -26,17 +26,16 @@
 #include <utility>
 
 #include "sparrow/array_data.hpp"
+#include "sparrow/array_data_concepts.hpp"
 #include "sparrow/contracts.hpp"
 #include "sparrow/data_traits.hpp"
 #include "sparrow/data_type.hpp"
 #include "sparrow/dictionary_encoded_layout.hpp"
 #include "sparrow/fixed_size_layout.hpp"
-#include "sparrow/array_data_concepts.hpp"
 #include "sparrow/memory.hpp"
 #include "sparrow/mp_utils.hpp"
 #include "sparrow/reference_wrapper_utils.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
-
 
 namespace sparrow
 {
@@ -186,13 +185,13 @@ namespace sparrow
     }
 
     template <typename V>
-    struct ValuesAndIndexes
+    struct values_and_indexes
     {
         template <mpl::constant_range R>
             requires std::same_as<std::ranges::range_value_t<R>, std::remove_const_t<V>>
-        explicit ValuesAndIndexes(R&& range)
+        explicit values_and_indexes(R&& range)
         {
-            ranges_to_vec_and_indexes<R>(range, *this);
+            ranges_to_vec_and_indexes<R>(std::forward<R>(range), *this);
         }
 
         std::vector<std::reference_wrapper<V>> values;
@@ -201,7 +200,7 @@ namespace sparrow
 
     template <mpl::constant_range R>
     void
-    ranges_to_vec_and_indexes(R&& range, ValuesAndIndexes<const std::ranges::range_value_t<R>>& values_and_indexes)
+    ranges_to_vec_and_indexes(R&& range, values_and_indexes<const std::ranges::range_value_t<R>>& values_and_indexes)
     {
         using T = const std::ranges::range_value_t<R>;
         std::unordered_map<std::reference_wrapper<T>, size_t, reference_wrapper_hasher, reference_wrapper_equal>
@@ -265,9 +264,9 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(values.size() == bitmap.size());
         SPARROW_ASSERT_TRUE(std::cmp_greater_equal(values.size(), offset));
 
-        const ValuesAndIndexes<const std::ranges::range_value_t<ValueRange>> vec_and_indexes{values};
+        const values_and_indexes<const std::ranges::range_value_t<ValueRange>> vec_and_indexes{values};
         const auto& indexes = vec_and_indexes.indexes;
-        static const auto create_buffer = [&indexes]()
+        const auto create_buffer = [&indexes]()
         {
             const size_t buffer_size = indexes.size() * sizeof(size_t) / sizeof(uint8_t);
             array_data::buffer_type b(buffer_size);
@@ -319,15 +318,15 @@ namespace sparrow
     {
         if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
         {
-            return make_array_data_for_fixed_size_layout(values, bitmap, offset);
+            return make_array_data_for_fixed_size_layout(std::forward<ValueRange>(values), bitmap, offset);
         }
         else if constexpr (mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>)
         {
-            return make_array_data_for_variable_size_binary_layout(values, bitmap, offset);
+            return make_array_data_for_variable_size_binary_layout(std::forward<ValueRange>(values), bitmap, offset);
         }
         else if constexpr (mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>)
         {
-            return make_array_data_for_dictionary_encoded_layout(values, bitmap, offset);
+            return make_array_data_for_dictionary_encoded_layout(std::forward<ValueRange>(values), bitmap, offset);
         }
         else
         {
