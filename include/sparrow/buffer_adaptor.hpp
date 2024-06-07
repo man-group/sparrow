@@ -120,7 +120,6 @@ namespace sparrow
 
         constexpr void resize(size_type new_size);
         constexpr void resize(size_type new_size, const value_type& value);
-        // constexpr void swap(buffer& rhs) noexcept;
 
     private:
 
@@ -140,8 +139,7 @@ namespace sparrow
     constexpr typename buffer_adaptor<T, U>::buffer_reference::size_type
     buffer_adaptor<T, U>::index_for_buffer(size_type idx) const noexcept
     {
-        auto idx_for_T = static_cast<buffer_reference::size_type>(static_cast<double>(idx) / sizeof_ratio);
-        return idx_for_T;
+        return static_cast<buffer_reference::size_type>(static_cast<double>(idx) / sizeof_ratio);
     }
 
     template <typename T, typename U>
