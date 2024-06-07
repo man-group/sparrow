@@ -63,6 +63,28 @@ namespace sparrow
     }
 
     /**
+     * Checks if all elements in the input range have the same size.
+     *
+     * @param values The input range of elements to check.
+     * @return `true` if all elements have the same size or if the input range is empty, `false` otherwise.
+     */
+    bool check_all_elements_have_same_size(const std::ranges::input_range auto& values)
+    {
+        if (!values.empty())
+        {
+            const size_t expected_size = values.front().size();
+            return std::ranges::all_of(
+                values,
+                [expected_size](const auto& value)
+                {
+                    return value.size() == expected_size;
+                }
+            );
+        }
+        return true;
+    }
+
+    /**
      * Creates an array_data object for a fixed-size layout.
      *
      * The values are copied to the buffer of the array_data object.
@@ -84,18 +106,7 @@ namespace sparrow
         // Check that the range is a range of ranges
         if constexpr (std::ranges::range<T>)
         {
-            if (!values.empty())
-            {
-                const size_t expected_size = values.front().size();
-                const bool all_same_size = std::ranges::all_of(
-                    values,
-                    [expected_size](const auto& value)
-                    {
-                        return value.size() == expected_size;
-                    }
-                );
-                SPARROW_ASSERT_TRUE(all_same_size);
-            }
+            SPARROW_ASSERT_TRUE(check_all_elements_have_same_size(values));
         }
         SPARROW_ASSERT_TRUE(values.size() == bitmap.size());
         SPARROW_ASSERT_TRUE(std::cmp_greater_equal(values.size(), offset));
