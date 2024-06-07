@@ -41,7 +41,7 @@ namespace sparrow::mpl
     {
     };
 
-    /// Function to append a type to a typelist.
+    /// Appends types to a type list.
     template <class TypeList, class... Us>
         requires mpl::is_type_instance_of_v<TypeList, typelist>
     struct typelist_append;
