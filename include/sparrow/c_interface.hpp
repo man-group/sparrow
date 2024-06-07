@@ -383,7 +383,7 @@ namespace sparrow
         return schema;
     };
 
-    struct ArrowArrayCustomDeleter
+    struct arrow_array_custom_deleter
     {
         void operator()(ArrowArray* array) const
         {
@@ -416,7 +416,7 @@ namespace sparrow
      */
     template <class T, template <typename> class Allocator, std::ranges::input_range R>
         requires sparrow::allocator<Allocator<T>> && std::is_integral_v<std::ranges::range_value_t<R>>
-    std::unique_ptr<ArrowArray, ArrowArrayCustomDeleter> make_arrow_array(
+    std::unique_ptr<ArrowArray, arrow_array_custom_deleter> make_arrow_array(
         int64_t length,
         int64_t null_count,
         int64_t offset,
@@ -436,7 +436,7 @@ namespace sparrow
             }
         ))
 
-        std::unique_ptr<ArrowArray, ArrowArrayCustomDeleter> array(new ArrowArray());
+        std::unique_ptr<ArrowArray, arrow_array_custom_deleter> array(new ArrowArray());
 
         array->private_data = new arrow_array_private_data<T, Allocator>(
             std::move(children),

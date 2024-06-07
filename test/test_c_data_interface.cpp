@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <array>
 #include <memory>
 #include <optional>
 #include <string_view>
-#include <array>
 
 #include "sparrow/c_interface.hpp"
 
 #include "doctest/doctest.h"
+
 
 TEST_SUITE("C Data Interface")
 {
