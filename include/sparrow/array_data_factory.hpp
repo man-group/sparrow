@@ -50,8 +50,9 @@ namespace sparrow
     template <typename T>
     array_data make_array_data_for_fixed_size_layout()
     {
+        using U = get_corresponding_arrow_type_t<T>;
         return {
-            .type = data_descriptor(arrow_type_id<T>()),
+            .type = data_descriptor(arrow_type_id<U>()),
             .length = 0,
             .offset = 0,
             .bitmap = {},
@@ -111,8 +112,9 @@ namespace sparrow
             }
             return buffer;
         };
+        using U = std::conditional_t<std::same_as<T, std::string_view>, std::string, T>;
         return {
-            .type = data_descriptor(arrow_type_id<T>()),
+            .type = data_descriptor(arrow_type_id<U>()),
             .length = static_cast<int64_t>(values.size()),
             .offset = offset,
             .bitmap = bitmap,
@@ -131,8 +133,9 @@ namespace sparrow
     template <typename T>
     array_data make_array_data_for_variable_size_binary_layout()
     {
+        using U = get_corresponding_arrow_type_t<T>;
         return {
-            .type = data_descriptor(arrow_type_id<T>()),
+            .type = data_descriptor(arrow_type_id<U>()),
             .length = 0,
             .offset = 0,
             .bitmap = {},
@@ -208,9 +211,10 @@ namespace sparrow
         };
 
         using T = std::unwrap_ref_decay_t<std::unwrap_ref_decay_t<std::ranges::range_value_t<ValueRange>>>;
+        using U = get_corresponding_arrow_type_t<T>;
 
         return {
-            .type = data_descriptor(arrow_type_id<T>()),
+            .type = data_descriptor(arrow_type_id<U>()),
             .length = static_cast<array_data::length_type>(values.size()),
             .offset = offset,
             .bitmap = bitmap,

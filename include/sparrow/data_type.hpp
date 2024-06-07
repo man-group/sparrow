@@ -141,14 +141,32 @@ namespace sparrow
     template <class T>
     concept is_arrow_base_type = mpl::contains<T>(all_base_types);
 
-    using all_base_types_extended_t = mpl::typelist<char, std::string_view>;
+    using all_base_types_extended_t = mpl::typelist_append_t<all_base_types_t, char, std::string_view>;
 
     /// Type list of every C++ representation types supported by default, in order matching `data_type`
     /// related values.
     static constexpr all_base_types_extended_t all_base_types_extended;
 
+    /// @brief Checks if a type is an extended base type for Arrow.
+    /// 
+    /// This concept checks if a given type `T` is an extended base type for Arrow.
+    /// It uses the `mpl::contains` function to check if `T` is present in the `all_base_types_extended` list.
+    /// 
+    /// @tparam T The type to check.
+    /// @return `true` if `T` is an extended base type for Arrow, `false` otherwise.
     template <class T>
-    concept is_arrow_base_type_extended = is_arrow_base_type<T> or mpl::contains<T>(all_base_types_extended);
+    concept is_arrow_base_type_extended = mpl::contains<T>(all_base_types_extended);
+
+    /// @brief Template alias to get the corresponding Arrow type for a given type.
+    /// 
+    /// This template alias is used to determine the corresponding Arrow type for a given type.
+    /// For example, the given type is std::string_view, the corresponding Arrow type is std::string.
+    /// Otherwise, the corresponding Arrow type is the same as the given type.
+    /// 
+    /// @tparam T The type for which to determine the corresponding Arrow type.
+    /// @return The corresponding Arrow type for the given type.
+    template<class T>
+    using get_corresponding_arrow_type_t = std::conditional_t<std::same_as<T, std::string_view>, std::string, T>;
 
     /// Provides compile-time information about Arrow data types.
     /// Custom types can be made compatible by implementing this traits type.

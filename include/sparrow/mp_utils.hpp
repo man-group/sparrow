@@ -19,19 +19,6 @@
 
 namespace sparrow::mpl
 {
-    /// A sequence of types, used for meta-programming operations.
-    template <class... T>
-    struct typelist
-    {
-    };
-
-    /// @returns The count of types contained in a given `typelist`.
-    template <class... T>
-    constexpr std::size_t size(typelist<T...> = {})
-    {
-        return sizeof...(T);
-    }
-
     template <class L, template <class...> class U>
     struct is_type_instance_of : std::false_type
     {
@@ -47,6 +34,34 @@ namespace sparrow::mpl
     /// Example: is_type_instance_of_v< std::vector<int>, std::vector > == true
     template <class T, template <class...> class U>
     constexpr bool is_type_instance_of_v = is_type_instance_of<T, U>::value;
+
+    /// A sequence of types, used for meta-programming operations.
+    template <class... T>
+    struct typelist
+    {
+    };
+
+    /// Function to append a type to a typelist.
+    template <class TypeList, class... Us>
+        requires mpl::is_type_instance_of_v<TypeList, typelist>
+    struct typelist_append;
+
+    template <class... Ts, class... Us>
+    struct typelist_append<typelist<Ts...>, Us...>
+    {
+        using type = typelist<Ts..., Us...>;
+    };
+
+    template <class TypeList, class... Us>
+    requires mpl::is_type_instance_of_v<TypeList, typelist>
+    using typelist_append_t = typename typelist_append<TypeList, Us...>::type;
+
+    /// @returns The count of types contained in a given `typelist`.
+    template <class... T>
+    constexpr std::size_t size(typelist<T...> = {})
+    {
+        return sizeof...(T);
+    }
 
     /// Matches any type which is an instance of `typelist`.
     /// Examples:

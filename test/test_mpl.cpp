@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <concepts>
 #include <list>
 #include <vector>
 
@@ -57,6 +58,10 @@ namespace sparrow
     static_assert(mpl::any_typelist<test_list>);
     static_assert(not mpl::any_typelist<not_a_list>);
     static_assert(mpl::size(test_list{}) == 2);
+
+    using test_list_extended = mpl::typelist_append_t<test_list, float, double>;
+    static_assert(mpl::size(test_list_extended{}) == 4);
+    static_assert(std::same_as<test_list_extended, mpl::typelist<int, char, float, double>>);
 
     //////////////////////////////////////////////////////////////////////////////
     // Algorithm
