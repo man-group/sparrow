@@ -18,6 +18,15 @@
 
 namespace sparrow
 {
+    /**
+     * @brief Hash function object for std::reference_wrapper.
+     *
+     * This function object provides a hash function for std::reference_wrapper.
+     * It computes the hash value of the referenced object using std::hash,
+     * and returns the result.
+     *
+     * @tparam T The type of the referenced object.
+     */
     struct reference_wrapper_hasher
     {
         template <typename T>
@@ -27,6 +36,14 @@ namespace sparrow
         }
     };
 
+    /**
+     * @brief Functor for comparing two reference wrappers.
+     *
+     * This functor is used to compare two reference wrappers for equality.
+     * It compares the underlying referenced objects using the `==` operator.
+     *
+     * @tparam T The type of the referenced object.
+     */
     struct reference_wrapper_equal
     {
         template <typename T>
@@ -44,6 +61,13 @@ namespace sparrow
         template <typename U>
         constexpr bool is_reference_wrapper_v<std::reference_wrapper<U>> = true;
 
+        /**
+         * Checks if the given type is a reference wrapper.
+         *
+         * @tparam T The type to check.
+         * @param  The instance of the type to check.
+         * @return `true` if the type is a reference wrapper, `false` otherwise.
+         */
         template <typename T>
         constexpr bool is_reference_wrapper(const T&)
         {

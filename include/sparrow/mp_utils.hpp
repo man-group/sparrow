@@ -260,17 +260,41 @@ namespace sparrow::mpl
         return find_if(list, predicate::same_as<TypeToFind>{});
     }
 
-    template <std::indirectly_readable T>
+    /**
+     * @brief Computes the const reference type of T.
+     *
+     * @tparam T The const reference type of T.
+     */
+    template <class T>
     using iter_const_reference_t = std::common_reference_t<const std::iter_value_t<T>&&, std::iter_reference_t<T>>;
 
+    /**
+     * @brief Represents a constant iterator.
+     *
+     * A constant iterator is an iterator that satisfies the following requirements:
+     * - It is an input iterator.
+     * - The reference type of the iterator is the same as the const reference type of the iterator.
+     *
+     * @tparam T The type of the iterator.
+     */
     template <class T>
     concept constant_iterator = std::input_iterator<T>
                                 && std::same_as<iter_const_reference_t<T>, std::iter_reference_t<T>>;
 
+    /**
+     * @brief The constant_range concept is a refinement of range for which ranges::begin returns a constant
+     * iterator.
+     *
+     * A constant range is a range that satisfies the following conditions:
+     * - It is an input range.
+     * - Its iterator type is a constant iterator.
+     *
+     * @tparam T The type to be checked for constant range concept.
+     */
     template <class T>
     concept constant_range = std::ranges::input_range<T> && constant_iterator<std::ranges::iterator_t<T>>;
 
-    /*
+    /**
      * Workaround to replace static_assert(false) in template code.
      * https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
      */
@@ -278,5 +302,24 @@ namespace sparrow::mpl
     struct dependent_false : std::false_type
     {
     };
+
+    /**
+     * @brief Invokes undefined behavior. An implementation may use this to optimize impossible code branches
+     * away (typically, in optimized builds) or to trap them to prevent further execution (typically, in debug
+     * builds).
+     *
+     * @note Documentation and implementation come from https://en.cppreference.com/w/cpp/utility/unreachable
+     */
+    [[noreturn]] inline void unreachable()
+    {
+        // Uses compiler specific extensions if possible.
+        // Even if no extension is used, undefined behavior is still raised by
+        // an empty function body and the noreturn attribute.
+#if defined(_MSC_VER) && !defined(__clang__)  // MSVC
+        __assume(false);
+#else  // GCC, Clang
+        __builtin_unreachable();
+#endif
+    }
 
 }

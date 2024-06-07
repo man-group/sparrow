@@ -29,7 +29,7 @@ namespace sparrow
         {
             const std::vector<int32_t> v = {1, 2, 3, 4, 5};
             const dynamic_bitset<std::uint8_t> bitmap(v.size(), true);
-            array_data ar = make_default_array_data_factory<fixed_size_layout<int32_t>>(v, bitmap, 1);
+            array_data ar = make_default_array_data<fixed_size_layout<int32_t>>(v, bitmap, 1);
             CHECK_EQ(ar.type.id(), data_descriptor(arrow_type_id<int32_t>()).id());
             CHECK_EQ(ar.length, 5);
             CHECK_EQ(ar.offset, 1);
@@ -54,7 +54,7 @@ namespace sparrow
             using Layout = variable_size_binary_layout<std::string, std::string_view, const std::string_view>;
             const std::vector<std::string> v = {"a", "bb", "ccc", "dddd", "eeeee"};
             const dynamic_bitset<std::uint8_t> bitmap(v.size(), true);
-            array_data ar = make_default_array_data_factory<Layout>(v, bitmap, offset);
+            array_data ar = make_default_array_data<Layout>(v, bitmap, offset);
             CHECK_EQ(ar.type.id(), data_descriptor(arrow_type_id<std::string>()).id());
             CHECK_EQ(ar.length, v.size());
             CHECK_EQ(ar.offset, offset);
@@ -79,7 +79,7 @@ namespace sparrow
             using Layout = dictionary_encoded_layout<size_t, SubLayout>;
             const std::vector<std::string> v = {"a", "bb", "ccc", "bb", "a"};
             const dynamic_bitset<std::uint8_t> bitmap(v.size(), true);
-            array_data ar = make_default_array_data_factory<Layout>(v, bitmap, offset);
+            array_data ar = make_default_array_data<Layout>(v, bitmap, offset);
             CHECK_EQ(ar.type.id(), data_descriptor(arrow_type_id<std::uint64_t>()).id());
             CHECK_EQ(ar.length, 5);
             CHECK_EQ(ar.offset, offset);

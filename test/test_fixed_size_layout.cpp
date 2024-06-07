@@ -36,7 +36,7 @@ namespace sparrow
             std::vector<data_type_t> v(n);
             std::iota(v.begin(), v.end(), -8);
             array_data::bitmap_type bitmap(n, true);
-            return make_default_array_data_factory<layout_test_type>(v, bitmap, offset);
+            return make_default_array_data<layout_test_type>(v, bitmap, offset);
         }
     }
 

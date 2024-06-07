@@ -69,7 +69,7 @@ namespace sparrow
         using const_bitmap_range = typename layout_type::const_bitmap_range;
         using const_value_range = typename layout_type::const_value_range;
 
-        typed_array();
+        typed_array() = default;
 
         explicit typed_array(array_data data);
 
@@ -190,19 +190,11 @@ namespace sparrow
 
     private:
 
-        array_data m_data;
-        layout_type m_layout;
+        array_data m_data = make_default_array_data<Layout>();
+        layout_type m_layout{m_data};
     };
 
     // Constructors
-    template <class T, class Layout>
-        requires is_arrow_base_type<T>
-    typed_array<T, Layout>::typed_array()
-        : m_data(make_default_array_data_factory<Layout>())
-        , m_layout(m_data)
-    {
-    }
-
     template <class T, class Layout>
         requires is_arrow_base_type<T>
     typed_array<T, Layout>::typed_array(array_data data)

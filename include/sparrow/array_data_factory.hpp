@@ -39,6 +39,14 @@
 
 namespace sparrow
 {
+    /**
+     * \brief Creates an array_data object for a fixed-size layout.
+     *
+     * This function creates an array_data object without any input data.
+     *
+     * @tparam T The type of the array_data object.
+     * @return The created array_data object.
+     */
     template <typename T>
     array_data make_array_data_for_fixed_size_layout()
     {
@@ -53,6 +61,17 @@ namespace sparrow
         };
     }
 
+    /**
+     * Creates an array_data object for a fixed-size layout.
+     *
+     * The values are copied to the buffer of the array_data object.
+     *
+     * @tparam ValueRange The type of the range of values.
+     * @param values The range of values.
+     * @param bitmap The bitmap indicating null values.
+     * @param offset The offset of the array data.
+     * @return The created array_data object.
+     */
     template <constant_range_for_array_data ValueRange>
     array_data make_array_data_for_fixed_size_layout(
         ValueRange&& values,
@@ -103,6 +122,12 @@ namespace sparrow
         };
     }
 
+    /**
+     * @brief Creates an empty array_data object for a variable-sized binary layout.
+     *
+     * @tparam T The data type of the array.
+     * @return The created array_data object.
+     */
     template <typename T>
     array_data make_array_data_for_variable_size_binary_layout()
     {
@@ -117,6 +142,17 @@ namespace sparrow
         };
     }
 
+    /**
+     * Creates an array_data object to use with a variable-size binary layout.
+     *
+     * The values are copied to the buffer of the array_data object.
+     *
+     * @tparam ValueRange The type of the range of values.
+     * @param values The range of values.
+     * @param bitmap The bitmap indicating the presence of each value.
+     * @param offset The offset of the array_data object.
+     * @return The created array_data object.
+     */
     template <constant_range_for_array_data ValueRange>
     array_data make_array_data_for_variable_size_binary_layout(
         ValueRange&& values,
@@ -184,6 +220,11 @@ namespace sparrow
         };
     }
 
+    /**
+     * @brief Helper struct to store values and their indexes for a dictionary-encoded layout.
+     *
+     * @tparam V The type of the values.
+     */
     template <typename V>
     struct values_and_indexes
     {
@@ -198,10 +239,20 @@ namespace sparrow
         std::vector<size_t> indexes;
     };
 
+    /**
+     * Converts a range of values to a vector of unique values and their corresponding indexes.
+     *
+     * @tparam R The type of the range.
+     * @param range The input range of values.
+     * @param values_and_indexes The output container for the unique values and their indexes. The values and
+     * indexes must be empty.
+     */
     template <mpl::constant_range R>
     void
     ranges_to_vec_and_indexes(R&& range, values_and_indexes<const std::ranges::range_value_t<R>>& values_and_indexes)
     {
+        SPARROW_ASSERT_TRUE(values_and_indexes.values.empty());
+        SPARROW_ASSERT_TRUE(values_and_indexes.indexes.empty());
         using T = const std::ranges::range_value_t<R>;
         std::unordered_map<std::reference_wrapper<T>, size_t, reference_wrapper_hasher, reference_wrapper_equal>
             set_index;  // TODO: To replace with a flat_map/another implementation when available, for
@@ -240,6 +291,12 @@ namespace sparrow
         );
     }
 
+    /**
+     * Creates an empty array_data object for dictionary encoded layout.
+     *
+     * @tparam T The type of the array data.
+     * @return The created array_data object.
+     */
     template <typename T>
     array_data make_array_data_for_dictionary_encoded_layout()
     {
@@ -254,6 +311,17 @@ namespace sparrow
         };
     }
 
+    /**
+     * Creates an array_data object for dictionary encoded layout.
+     *
+     * The values are copied to the array_data object.
+     *
+     * @tparam ValueRange The type of the range for the values.
+     * @param values The range of values.
+     * @param bitmap The bitmap indicating the presence of values.
+     * @param offset The offset for the array data.
+     * @return The created array_data object.
+     */
     template <constant_range_for_array_data ValueRange>
     array_data make_array_data_for_dictionary_encoded_layout(
         ValueRange&& values,
@@ -288,8 +356,18 @@ namespace sparrow
         };
     }
 
+    /**
+     * @brief Creates a default array data object based on the specified layout.
+     *
+     * This function creates a default array data object based on the specified layout and value range.
+     * It uses the layout type to determine the appropriate function to call for creating the array data.
+     * If the layout type is not supported, a static assertion is triggered.
+     *
+     * @tparam Layout The layout type for the array data.
+     * @return The created array data object.
+     */
     template <is_a_supported_layout Layout>
-    array_data make_default_array_data_factory()
+    array_data make_default_array_data()
     {
         if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
         {
@@ -309,12 +387,27 @@ namespace sparrow
                 mpl::dependent_false<Layout>::value,
                 "Unsupported layout type. Please check the is_a_supported_layout concept and create a function make_array_data_for_... for the new layout type."
             );
+            mpl::unreachable();
         }
     }
 
+    /**
+     * \brief Creates a default array data object based on the specified layout and value range.
+     *
+     * This function creates a default array data object based on the specified layout and value range.
+     * It uses the layout type to determine the appropriate function to call for creating the array data.
+     * If the layout type is not supported, a static assertion is triggered.
+     *
+     * @tparam Layout The layout type for the array data.
+     * @tparam ValueRange The type of the value range for the array data.
+     * @param values The value range for the array data.
+     * @param bitmap The bitmap type for the array data.
+     * @param offset The offset for the array data.
+     * @return The created array data object.
+     */
     template <is_a_supported_layout Layout, constant_range_for_array_data ValueRange>
     array_data
-    make_default_array_data_factory(ValueRange&& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
+    make_default_array_data(ValueRange&& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
     {
         if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
         {
@@ -334,14 +427,25 @@ namespace sparrow
                 mpl::dependent_false<Layout>::value,
                 "Unsupported layout type. Please check the is_a_supported_layout concept and create a function make_array_data_for_... for the new layout type."
             );
+            mpl::unreachable();
         }
     }
 
+    /**
+     * \brief Creates a default array_data object with the specified layout and values.
+     *
+     * @tparam Layout The layout of the array_data object.
+     * @tparam ValueRange The type of the input range for the values.
+     * @param values The input range of values for the array_data object.
+     * @param bitmap The bitmap type for the array_data object.
+     * @param offset The offset for the array_data object.
+     * @return A new array_data object with the specified layout, values, bitmap, and offset.
+     */
     template <is_a_supported_layout Layout, std::ranges::input_range ValueRange>
         requires(!mpl::constant_range<ValueRange>)
     array_data
-    make_default_array_data_factory(ValueRange&& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
+    make_default_array_data(ValueRange&& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
     {
-        return make_default_array_data_factory<Layout>(std::as_const(values), bitmap, offset);
+        return make_default_array_data<Layout>(std::as_const(values), bitmap, offset);
     }
 }  // namespace sparrow
