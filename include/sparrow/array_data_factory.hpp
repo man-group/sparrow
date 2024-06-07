@@ -250,6 +250,12 @@ namespace sparrow
             ranges_to_vec_and_indexes<R>(std::forward<R>(range), *this);
         }
 
+        void clear()
+        {
+            values.clear();
+            indexes.clear();
+        }
+
         std::vector<std::reference_wrapper<V>> values;
         std::vector<size_t> indexes;
     };
