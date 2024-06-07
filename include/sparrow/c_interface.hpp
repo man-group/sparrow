@@ -195,8 +195,8 @@ namespace sparrow
                                        : vector_string_type()
               )
             , children_(std::move(children))
-            , dictionary_(std::move(dictionary))
             , children_raw_ptr_vec_(to_raw_ptr_vec(children_))
+            , dictionary_(std::move(dictionary))
         {
         }
 
@@ -376,7 +376,7 @@ namespace sparrow
         {
             schema->metadata = (*private_data->metadata_).data();
         }
-        schema->n_children = private_data->children_raw_ptr_vec_.size();
+        schema->n_children = static_cast<int64_t>(private_data->children_raw_ptr_vec_.size());
         schema->children = private_data->children_raw_ptr_vec_.data();
         schema->dictionary = private_data->dictionary_.get();
         schema->release = delete_schema<Allocator>;
@@ -447,13 +447,13 @@ namespace sparrow
         array->length = length;
         array->null_count = null_count;
         array->offset = offset;
-        array->n_buffers = buffer_sizes.size();
+        array->n_buffers = static_cast<int64_t>(buffer_sizes.size());
 
         const auto private_data = static_cast<arrow_array_private_data<T, Allocator>*>(array->private_data);
         T** buffer_data = private_data->buffers_raw_ptr_vec_.data();
         const T** const_buffer_ptr = const_cast<const int**>(buffer_data);
         array->buffers = reinterpret_cast<const void**>(const_buffer_ptr);
-        array->n_children = private_data->children_raw_ptr_vec_.size();
+        array->n_children = static_cast<int64_t>(private_data->children_raw_ptr_vec_.size());
         array->children = private_data->children_raw_ptr_vec_.data();
         array->dictionary = private_data->dictionary_.get();
         array->release = delete_array<T, Allocator>;
