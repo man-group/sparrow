@@ -136,7 +136,7 @@ namespace sparrow
     }
 
     /**
-     * @brief Creates an empty array_data object for a variable-sized binary layout.
+     * Creates an empty array_data object for a variable-sized binary layout.
      *
      * @tparam T The data type of the array.
      * @return The created array_data object.
@@ -236,7 +236,7 @@ namespace sparrow
     }
 
     /**
-     * @brief Helper struct to store values and their indexes for a dictionary-encoded layout.
+     * Helper struct to store values and their indexes for a dictionary-encoded layout.
      *
      * @tparam V The type of the values.
      */
@@ -372,7 +372,7 @@ namespace sparrow
     }
 
     /**
-     * @brief Creates a default array data object based on the specified layout.
+     * Creates a default array data object based on the specified layout.
      *
      * This function creates a default array data object based on the specified layout and value range.
      * It uses the layout type to determine the appropriate function to call for creating the array data.

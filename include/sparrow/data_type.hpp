@@ -147,7 +147,7 @@ namespace sparrow
     /// related values.
     static constexpr all_base_types_extended_t all_base_types_extended;
 
-    /// @brief Checks if a type is an extended base type for Arrow.
+    /// Checks if a type is an extended base type for Arrow.
     /// 
     /// This concept checks if a given type `T` is an extended base type for Arrow.
     /// It uses the `mpl::contains` function to check if `T` is present in the `all_base_types_extended` list.
@@ -157,7 +157,7 @@ namespace sparrow
     template <class T>
     concept is_arrow_base_type_extended = mpl::contains<T>(all_base_types_extended);
 
-    /// @brief Template alias to get the corresponding Arrow type for a given type.
+    /// Template alias to get the corresponding Arrow type for a given type.
     /// 
     /// This template alias is used to determine the corresponding Arrow type for a given type.
     /// For example, the given type is std::string_view, the corresponding Arrow type is std::string.
