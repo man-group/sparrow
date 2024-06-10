@@ -41,20 +41,22 @@ namespace sparrow::mpl
     {
     };
 
-    /// Appends types to a type list.
-    template <class TypeList, class... Us>
-        requires mpl::is_type_instance_of_v<TypeList, typelist>
-    struct typelist_append;
+    template <class... Ts, class... Us>
+        requires(!is_type_instance_of_v<Us, typelist> && ...)
+    consteval auto append(typelist<Ts...>, Us...)
+    {
+        return typelist<Ts..., Us...>{};
+    }
 
     template <class... Ts, class... Us>
-    struct typelist_append<typelist<Ts...>, Us...>
+    consteval auto append(typelist<Ts...>, typelist<Us...>)
     {
-        using type = typelist<Ts..., Us...>;
-    };
+        return typelist<Ts..., Us...>{};
+    }
 
     template <class TypeList, class... Us>
-    requires mpl::is_type_instance_of_v<TypeList, typelist>
-    using typelist_append_t = typename typelist_append<TypeList, Us...>::type;
+        requires mpl::is_type_instance_of_v<TypeList, typelist>
+    using append_t = decltype(append(TypeList{}, Us{}...));
 
     /// @returns The count of types contained in a given `typelist`.
     template <class... T>
@@ -282,11 +284,11 @@ namespace sparrow::mpl
     using iter_const_reference_t = std::common_reference_t<const std::iter_value_t<T>&&, std::iter_reference_t<T>>;
 
     /// Represents a constant iterator.
-    /// 
+    ///
     /// A constant iterator is an iterator that satisfies the following requirements:
     /// - It is an input iterator.
     /// - The reference type of the iterator is the same as the const reference type of the iterator.
-    /// 
+    ///
     /// @tparam T The type of the iterator.
     template <class T>
     concept constant_iterator = std::input_iterator<T>
@@ -294,11 +296,11 @@ namespace sparrow::mpl
 
     /// The constant_range concept is a refinement of range for which ranges::begin returns a constant
     /// iterator.
-    /// 
+    ///
     /// A constant range is a range that satisfies the following conditions:
     /// - It is an input range.
     /// - Its iterator type is a constant iterator.
-    /// 
+    ///
     /// @tparam T The type to be checked for constant range concept.
     template <class T>
     concept constant_range = std::ranges::input_range<T> && constant_iterator<std::ranges::iterator_t<T>>;
@@ -311,9 +313,9 @@ namespace sparrow::mpl
     };
 
     /// Invokes undefined behavior. An implementation may use this to optimize impossible code branches
-    /// away (typically, in optimized builds) or to trap them to prevent further execution (typically, in debug
-    /// builds).
-    /// 
+    /// away (typically, in optimized builds) or to trap them to prevent further execution (typically, in
+    /// debug builds).
+    ///
     /// @note Documentation and implementation come from https://en.cppreference.com/w/cpp/utility/unreachable
     [[noreturn]] inline void unreachable()
     {

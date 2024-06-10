@@ -59,9 +59,14 @@ namespace sparrow
     static_assert(not mpl::any_typelist<not_a_list>);
     static_assert(mpl::size(test_list{}) == 2);
 
-    using test_list_extended = mpl::typelist_append_t<test_list, float, double>;
+    using test_list_extended = mpl::append_t<test_list, float, double>;
     static_assert(mpl::size(test_list_extended{}) == 4);
     static_assert(std::same_as<test_list_extended, mpl::typelist<int, char, float, double>>);
+
+    using test_list_2 = mpl::typelist<float, double>;
+    using test_list_extended_2 = mpl::append_t<test_list, test_list_2>;
+    static_assert(mpl::size(test_list_extended_2{}) == 4);
+    static_assert(std::same_as<test_list_extended_2, mpl::typelist<int, char, float, double>>);
 
     //////////////////////////////////////////////////////////////////////////////
     // Algorithm
