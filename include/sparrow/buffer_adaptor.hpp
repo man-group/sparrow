@@ -123,13 +123,17 @@ namespace sparrow
 
     private:
 
-        static constexpr double sizeof_ratio = static_cast<double>(sizeof(buffer_reference_value_type))
-                                               / static_cast<double>(sizeof(value_type));
+        static constexpr double _sizeof_ratio = static_cast<double>(sizeof(buffer_reference_value_type))
+                                                / static_cast<double>(sizeof(value_type));
+
+        static constexpr auto _type_size = static_cast<size_type>(1. / _sizeof_ratio);
 
         static constexpr size_type _extra_buffervalue_type_size = sizeof(buffer_reference_value_type)
                                                                   % sizeof(value_type);
 
         [[nodiscard]] constexpr buffer_reference::size_type index_for_buffer(size_type idx) const noexcept;
+
+        [[nodiscard]] buffer_reference::const_iterator get_buffer_reference_iterator(const_iterator pos);
 
         buffer_reference& _buffer;
     };
@@ -139,7 +143,7 @@ namespace sparrow
     constexpr typename buffer_adaptor<T, U>::buffer_reference::size_type
     buffer_adaptor<T, U>::index_for_buffer(size_type idx) const noexcept
     {
-        return static_cast<buffer_reference::size_type>(static_cast<double>(idx) / sizeof_ratio);
+        return static_cast<buffer_reference::size_type>(static_cast<double>(idx) / _sizeof_ratio);
     }
 
     template <typename T, typename U>
@@ -292,7 +296,7 @@ namespace sparrow
         requires(sizeof(U) < sizeof(T))
     constexpr buffer_adaptor<T, U>::size_type buffer_adaptor<T, U>::size() const noexcept
     {
-        const double new_size = static_cast<double>(_buffer.size()) * sizeof_ratio;
+        const double new_size = static_cast<double>(_buffer.size()) * _sizeof_ratio;
         SPARROW_ASSERT(
             std::trunc(new_size) == new_size,
             "The size of the buffer is not a multiple of the size of the new type"
@@ -304,14 +308,14 @@ namespace sparrow
         requires(sizeof(U) < sizeof(T))
     constexpr typename buffer_adaptor<T, U>::size_type buffer_adaptor<T, U>::max_size() const noexcept
     {
-        return static_cast<size_type>(static_cast<double>(_buffer.max_size()) * sizeof_ratio);
+        return static_cast<size_type>(static_cast<double>(_buffer.max_size()) * _sizeof_ratio);
     }
 
     template <typename T, typename U>
         requires(sizeof(U) < sizeof(T))
     constexpr typename buffer_adaptor<T, U>::size_type buffer_adaptor<T, U>::capacity() const noexcept
     {
-        return static_cast<size_type>(static_cast<double>(_buffer.capacity()) * sizeof_ratio);
+        return static_cast<size_type>(static_cast<double>(_buffer.capacity()) * _sizeof_ratio);
     }
 
     template <typename T, typename U>
@@ -325,7 +329,7 @@ namespace sparrow
         requires(sizeof(U) < sizeof(T))
     constexpr void buffer_adaptor<T, U>::reserve(size_type new_cap)
     {
-        _buffer.reserve(static_cast<size_type>(static_cast<double>(new_cap) / sizeof_ratio));
+        _buffer.reserve(static_cast<size_type>(static_cast<double>(new_cap) / _sizeof_ratio));
     }
 
     template <typename T, typename U>
@@ -352,9 +356,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
-        const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
-        const auto type_size = static_cast<difference_type>(1. / sizeof_ratio);
-        _buffer.insert(std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer)), type_size, 0);
+        const auto buffer_pos = get_buffer_reference_iterator(pos);
+        _buffer.insert(buffer_pos, _type_size, 0);
         operator[](static_cast<size_type>(index)) = value;
         return std::next(begin(), index);
     }
@@ -367,10 +370,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
-        const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
-        constexpr auto type_size = static_cast<size_type>(1. / sizeof_ratio);
-        const auto buffer_pos = std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
-        _buffer.insert(buffer_pos, count * type_size, 0);
+        const auto buffer_pos = get_buffer_reference_iterator(pos);
+        _buffer.insert(buffer_pos, count * _type_size, 0);
         for (size_type i = 0; i < count; ++i)
         {
             data()[static_cast<size_t>(index) + i] = value;
@@ -388,11 +389,9 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
-        const auto idx_for_buffer = index_for_buffer(static_cast<size_t>(index));
-        constexpr auto type_size = static_cast<size_type>(1. / sizeof_ratio);
         const difference_type count = std::distance(first, last);
-        const auto buffer_pos = std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
-        _buffer.insert(buffer_pos, static_cast<size_type>(count) * type_size, 0);
+        const auto buffer_pos = get_buffer_reference_iterator(pos);
+        _buffer.insert(buffer_pos, static_cast<size_type>(count) * _type_size, 0);
         std::copy(first, last, data() + index);
         return std::next(begin(), index);
     }
@@ -414,10 +413,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
-        const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
-        constexpr auto type_size = static_cast<size_type>(1. / sizeof_ratio);
-        const auto buffer_pos = std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
-        _buffer.insert(buffer_pos, type_size, 0);
+        const auto buffer_pos = get_buffer_reference_iterator(pos);
+        _buffer.insert(buffer_pos, _type_size, 0);
         data()[index] = value_type(std::forward<Args>(args)...);
         return std::next(begin(), index);
     }
@@ -430,10 +427,9 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
         const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
-        constexpr auto type_size = static_cast<buffer_reference::difference_type>(1. / sizeof_ratio);
         _buffer.erase(
             std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer)),
-            std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer) + type_size)
+            std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer + _type_size))
         );
         return std::next(begin(), index);
     }
@@ -474,7 +470,7 @@ namespace sparrow
         requires(sizeof(U) < sizeof(T))
     constexpr void buffer_adaptor<T, U>::resize(size_type new_size)
     {
-        const auto new_size_for_buffer = static_cast<size_type>(static_cast<double>(new_size) / sizeof_ratio);
+        const auto new_size_for_buffer = static_cast<size_type>(static_cast<double>(new_size) / _sizeof_ratio);
         _buffer.resize(new_size_for_buffer);
     }
 
@@ -482,13 +478,22 @@ namespace sparrow
         requires(sizeof(U) < sizeof(T))
     constexpr void buffer_adaptor<T, U>::resize(size_type new_size, const value_type& value)
     {
-        const size_type current_size = size();
-        const auto new_size_for_buffer = static_cast<size_type>(static_cast<double>(new_size) / sizeof_ratio);
+        const size_type original_size = size();
+        const auto new_size_for_buffer = static_cast<size_type>(static_cast<double>(new_size) / _sizeof_ratio);
         _buffer.resize(new_size_for_buffer, 0);
-
-        for (size_type i = current_size; i < new_size; ++i)
+        for (size_type i = original_size; i < new_size; ++i)
         {
             operator[](i) = value;
         }
+    }
+
+    template <typename T, typename U>
+        requires(sizeof(U) < sizeof(T))
+    buffer_adaptor<T, U>::buffer_reference::const_iterator
+    buffer_adaptor<T, U>::get_buffer_reference_iterator(const_iterator pos)
+    {
+        const difference_type index = std::distance(cbegin(), pos);
+        const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
+        return std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
     }
 }
