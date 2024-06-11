@@ -148,7 +148,11 @@ target_link_options(${test_target}
     PRIVATE
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
 # We do not use non-standard C++
-set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
+set_target_properties(${test_target} 
+    PROPERTIES
+        CMAKE_CXX_EXTENSIONS OFF
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        # ENVIRONMENT "ASAN_OPTIONS=log_path=${CMAKE_SOURCE_DIR}/log_file.txt")
 target_compile_features(${test_target} PRIVATE cxx_std_20)
 
 add_custom_target(run_tests
