@@ -1,5 +1,4 @@
-
-name: Linux
+name: Sanitizers
 on:
   workflow_dispatch:
   pull_request:
@@ -14,38 +13,22 @@ defaults:
 jobs:
   build:
     runs-on: ${{ matrix.sys.image }}
-    name: ${{ matrix.sys.compiler }} / ${{ matrix.sys.version }} / ${{ matrix.sys.stdlib }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}} / shared ${{ matrix.sys.shared }}
+    name: sanitizer / ${{ matrix.sys.compiler }} / ${{ matrix.sys.version }} / ${{ matrix.sys.stdlib }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}} / shared ${{ matrix.sys.shared }}
     env:
       SCCACHE_GHA_ENABLED: "true"
     strategy:
       fail-fast: false
       matrix:
         sys:
-        - {image: ubuntu-24.04, compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON', shared : 'ON'}
-        # - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
         - {image: ubuntu-24.04, compiler: clang, version: '18', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON', shared : 'ON'}
-        # - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
-
-        - {image: ubuntu-24.04, compiler: gcc, version: '12', config-flags: '', date-polyfill: 'ON', shared : 'ON'}
-        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON', shared : 'ON'}
-        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON', shared : 'OFF'}
-        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'OFF', shared : 'ON'}
 
         config:
         - {name: Debug}
-        - {name: Release}
 
     steps:
 
     - name: Run sccache-cache
       uses: mozilla-actions/sccache-action@v0.0.6
-
-    - name: Install GCC
-      if: matrix.sys.compiler == 'gcc'
-      uses: egor-tensin/setup-gcc@v1
-      with:
-        version: ${{matrix.sys.version}}
-        platform: x64
 
     - name: Install LLVM and Clang
       if: matrix.sys.compiler == 'clang'
@@ -85,7 +68,8 @@ jobs:
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
-          -DSPARROW_BUILD_SHARED=${{matrix.sys.shared}}
+          -DSPARROW_BUILD_SHARED=${{matrix.sys.shared}} \
+          -DUSE_SANITIZER=address
 
     - name: Build library
       working-directory: build
@@ -105,18 +89,31 @@ jobs:
 
     - name: Run tests
       working-directory: build
-      run: |
-        cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
-
-    - name: Upload test results
+      run: | 
+        export ASAN_OPTIONS=log_path=asan_log_:alloc_dealloc_mismatch=0:halt_on_error=0:handle_abort=0
+        cmake --build . --config ${{matrix.config.name}} --target run_tests
+      # env:
+      #   # log_path is set to the path where ASAN will write the error report (seems ineffective)
+      #   # alloc_dealloc_mismatch is set to 0 to deactivate unwanted ASAN warnings.
+      #   # halt_on_error is set to 0 to avoid crashing the program after printing the first error report.
+      #   # handle_abort is set to 0 to deactivate calls are handled as crashes by ASAN.
+      #   # exitcode is set to 0 to avoid reporting the build as failed if ASAN detects an error.
+      
+    - name: Upload ASAN log
+      if: always()
       uses: actions/upload-artifact@v4
-      if: success() || failure()
       with:
-        name: test_sparrow_lib_report_Linux_${{ matrix.sys.compiler }}_${{ matrix.sys.version }}_${{ matrix.sys.stdlib }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.sys.date-polyfill}}_shared_${{ matrix.sys.shared }}
-        path: ./**/test*.xml
-        if-no-files-found: error
+        name: asan-log-${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.config.name }}-${{ matrix.sys.date-polyfill }}
+        path: '**/asan_log_*'
+        
 
-    - name: Run all examples
-      working-directory: build
-      run: cmake --build . --config ${{matrix.config.name}} --target run_examples
+    - name: Return errors if ASAN log content is not empty
+      if: always()
+      run: |
+        if [ -s build/test/asan_log_* ]; then
+          echo "ASAN detected errors. See the log for details."
+          exit 1
+        fi
+
+
 

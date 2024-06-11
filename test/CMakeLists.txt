@@ -285,7 +285,9 @@ if(ENABLE_COVERAGE)
 endif()
 
 # We do not use non-standard C++
-set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
+set_target_properties(${test_target} 
+    PROPERTIES
+        CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(${test_target} PRIVATE cxx_std_20)
 
 # target_compile_options(${test_target_catch2}
