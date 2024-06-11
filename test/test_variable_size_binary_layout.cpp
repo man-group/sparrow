@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <array>
 #include <iostream>
 #include <numeric>
 #include <string_view>
 
-#include "sparrow/contracts.hpp"
 #include "sparrow/array_data.hpp"
+#include "sparrow/array_data_factory.hpp"
+#include "sparrow/contracts.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
 
 #include "doctest/doctest.h"
@@ -26,41 +28,18 @@ namespace sparrow
 {
     struct vs_binary_fixture
     {
+        using layout_type = variable_size_binary_layout<std::string, std::string_view, std::string_view>;
+
         vs_binary_fixture()
         {
-            m_data.bitmap.resize(nb_words);
-            m_data.buffers.resize(2);
-            m_data.buffers[0].resize(sizeof(std::int64_t) * (nb_words + 1));
-            m_data.buffers[1].resize(std::accumulate(
-                words,
-                words + nb_words,
-                size_t(0),
-                [](std::size_t res, const auto& s)
-                {
-                    return res + s.size();
-                }
-            ));
-            m_data.buffers[0].data<std::int64_t>()[0] = 0u;
-            auto iter = m_data.buffers[1].begin();
-            for (size_t i = 0; i < nb_words; ++i)
-            {
-                offset()[i + 1] = static_cast<std::int64_t>(static_cast<size_t>(offset()[i]) + words[i].size());
-                std::ranges::copy(words[i], iter);
-                iter += static_cast<sparrow::array_data::buffer_type::difference_type>(words[i].size());
-                m_data.bitmap.set(i, true);
-            }
-
-            m_data.bitmap.set(2, false);
-            m_data.length = 4;
-            m_data.offset = 1;
+            array_data::bitmap_type bitmap{words.size(), true};
+            bitmap.set(2, false);
+            m_data = make_default_array_data<layout_type>(words, bitmap, 1);
         }
 
-        static constexpr size_t nb_words = 4u;
-        static constexpr std::string_view words[nb_words] = {"you", "are", "not", "prepared"};
-
+        static constexpr std::array<std::string_view, 4> words = {"you", "are", "not", "prepared"};
         array_data m_data;
         // TODO: replace R = std::string_view with specific reference proxy
-        using layout_type = variable_size_binary_layout<std::string, std::string_view, std::string_view>;
 
     private:
 

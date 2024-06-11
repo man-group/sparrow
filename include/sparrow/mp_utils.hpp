@@ -19,19 +19,6 @@
 
 namespace sparrow::mpl
 {
-    /// A sequence of types, used for meta-programming operations.
-    template <class... T>
-    struct typelist
-    {
-    };
-
-    /// @returns The count of types contained in a given `typelist`.
-    template <class... T>
-    constexpr std::size_t size(typelist<T...> = {})
-    {
-        return sizeof...(T);
-    }
-
     template <class L, template <class...> class U>
     struct is_type_instance_of : std::false_type
     {
@@ -47,6 +34,64 @@ namespace sparrow::mpl
     /// Example: is_type_instance_of_v< std::vector<int>, std::vector > == true
     template <class T, template <class...> class U>
     constexpr bool is_type_instance_of_v = is_type_instance_of<T, U>::value;
+
+    /// A sequence of types, used for meta-programming operations.
+    template <class... T>
+    struct typelist
+    {
+    };
+
+    /// Appends the given types to a typelist.
+    /// 
+    /// This function takes a typelist and additional types as arguments, and returns a new typelist
+    /// that contains all the types from the original typelist followed by the additional types.
+    /// 
+    /// @tparam Ts... The types in the original typelist.
+    /// @tparam Us... The additional types to be appended.
+    /// @param typelist<Ts...> The original typelist.
+    /// @param Us... The additional types.
+    /// @return A new typelist containing all the types from the original typelist followed by the additional types.
+    template <class... Ts, class... Us>
+        requires(!is_type_instance_of_v<Us, typelist> && ...)
+    consteval auto append(typelist<Ts...>, Us...)
+    {
+        return typelist<Ts..., Us...>{};
+    }
+
+    /// Appends two typelists together.
+    /// 
+    /// This function takes two typelists as input and returns a new typelist that contains all the types from both input typelists.
+    /// 
+    /// @tparam Ts... The types in the first typelist.
+    /// @tparam Us... The types in the second typelist.
+    /// @param list1 The first typelist.
+    /// @param list2 The second typelist.
+    /// @return A new typelist that contains all the types from both input typelists.
+    template <class... Ts, class... Us>
+    consteval auto append(typelist<Ts...>, typelist<Us...>) // TODO: Handle several typelists
+    {
+        return typelist<Ts..., Us...>{};
+    }
+
+
+    /// Appends one or more types or typelist to a given TypeList.
+    /// 
+    /// This template alias takes a TypeList and one or more types or typelist as template arguments.
+    /// It appends the types to the given TypeList and returns the resulting TypeList.
+    /// 
+    /// @tparam TypeList The TypeList to which the types will be appended.
+    /// @tparam Us The types or typelists to be appended to the TypeList.
+    /// @return The resulting TypeList after appending the types.
+    template <class TypeList, class... Us>
+        requires mpl::is_type_instance_of_v<TypeList, typelist>
+    using append_t = decltype(append(TypeList{}, Us{}...));
+
+    /// @returns The count of types contained in a given `typelist`.
+    template <class... T>
+    constexpr std::size_t size(typelist<T...> = {})
+    {
+        return sizeof...(T);
+    }
 
     /// Matches any type which is an instance of `typelist`.
     /// Examples:
@@ -172,7 +217,7 @@ namespace sparrow::mpl
     ///          `false` otherwise or if the list is empty.
     template <class Predicate, template <class...> class L, class... T>
         requires any_typelist<L<T...>> and (callable_type_predicate<Predicate, T> && ...)
-    consteval bool any_of(L<T...> , Predicate predicate = {})
+    consteval bool any_of(L<T...>, Predicate predicate = {})
     {
         return (evaluate<T>(predicate) || ... || false);
     }
@@ -192,7 +237,9 @@ namespace sparrow::mpl
     ///          or if the list is empty; `false` otherwise.
     template <class Predicate, template <class...> class L, class... T>
         requires any_typelist<L<T...>> and (callable_type_predicate<Predicate, T> && ...)
-    consteval bool all_of(L<T...>, [[maybe_unused]] Predicate predicate) // predicate is used but GCC does not see it, that's why we use [[maybe_unused]]
+    consteval bool all_of(L<T...>, [[maybe_unused]] Predicate predicate)  // predicate is used but GCC does
+                                                                          // not see it, that's why we use
+                                                                          // [[maybe_unused]]
     {
         return (evaluate<T>(predicate) && ... && true);
     }
@@ -258,5 +305,56 @@ namespace sparrow::mpl
         return find_if(list, predicate::same_as<TypeToFind>{});
     }
 
+    /// Computes the const reference type of T.
+    ///
+    /// @tparam T The const reference type of T.
+    template <class T>
+    using iter_const_reference_t = std::common_reference_t<const std::iter_value_t<T>&&, std::iter_reference_t<T>>;
+
+    /// Represents a constant iterator.
+    ///
+    /// A constant iterator is an iterator that satisfies the following requirements:
+    /// - It is an input iterator.
+    /// - The reference type of the iterator is the same as the const reference type of the iterator.
+    ///
+    /// @tparam T The type of the iterator.
+    template <class T>
+    concept constant_iterator = std::input_iterator<T>
+                                && std::same_as<iter_const_reference_t<T>, std::iter_reference_t<T>>;
+
+    /// The constant_range concept is a refinement of range for which ranges::begin returns a constant
+    /// iterator.
+    ///
+    /// A constant range is a range that satisfies the following conditions:
+    /// - It is an input range.
+    /// - Its iterator type is a constant iterator.
+    ///
+    /// @tparam T The type to be checked for constant range concept.
+    template <class T>
+    concept constant_range = std::ranges::input_range<T> && constant_iterator<std::ranges::iterator_t<T>>;
+
+    /// Workaround to replace static_assert(false) in template code.
+    /// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
+    template <class T>
+    struct dependent_false : std::false_type
+    {
+    };
+
+    /// Invokes undefined behavior. An implementation may use this to optimize impossible code branches
+    /// away (typically, in optimized builds) or to trap them to prevent further execution (typically, in
+    /// debug builds).
+    ///
+    /// @note Documentation and implementation come from https://en.cppreference.com/w/cpp/utility/unreachable
+    [[noreturn]] inline void unreachable()
+    {
+        // Uses compiler specific extensions if possible.
+        // Even if no extension is used, undefined behavior is still raised by
+        // an empty function body and the noreturn attribute.
+#if defined(_MSC_VER) && !defined(__clang__)  // MSVC
+        __assume(false);
+#else  // GCC, Clang
+        __builtin_unreachable();
+#endif
+    }
 
 }

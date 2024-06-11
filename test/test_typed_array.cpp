@@ -53,8 +53,30 @@ namespace
 
 TEST_SUITE("typed_array")
 {
+    TEST_CASE("default constructor for variable_size_binary_layout")
+    {
+        using Layout = variable_size_binary_layout<std::string, std::string_view, const std::string_view>;
+        const typed_array<std::string, Layout> ta_for_vsbl;
+        CHECK_EQ(ta_for_vsbl.size(), 0);
+    }
+
+    TEST_CASE("default constructor for dictionary_encoded_layout")
+    {
+        using SubLayout = variable_size_binary_layout<std::string, std::string_view, const std::string_view>;
+        using Layout = dictionary_encoded_layout<std::uint32_t, SubLayout>;
+        typed_array<uint32_t, Layout> ta_for_dels;
+        CHECK_EQ(ta_for_dels.size(), 0);
+    }
+
     TEST_CASE_TEMPLATE_DEFINE("all", T, all)
     {
+        SUBCASE("default constructor for fixed_size_layout")
+        {
+            using Layout = fixed_size_layout<int32_t>;
+            const typed_array<int32_t, Layout> ta_for_fsl;
+            CHECK_EQ(ta_for_fsl.size(), 0);
+        }
+
         SUBCASE("constructor with parameter")
         {
             const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset);
@@ -178,9 +200,8 @@ TEST_SUITE("typed_array")
             const typed_array<T> ta{array_data};
             const auto bitmap = ta.bitmap();
             REQUIRE_EQ(bitmap.size(), array_size - offset);
-            for (int32_t i = 0; i < static_cast<int32_t>(bitmap.size()) -1; ++i)
+            for (int32_t i = 0; i < static_cast<int32_t>(bitmap.size()) - 1; ++i)
             {
-                
                 CHECK(bitmap[i]);
             }
             CHECK_FALSE(bitmap[8]);

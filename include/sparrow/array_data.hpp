@@ -24,7 +24,6 @@
 #include "sparrow/dynamic_bitset.hpp"
 #include "sparrow/memory.hpp"
 
-
 namespace sparrow
 {
     /**
@@ -40,9 +39,10 @@ namespace sparrow
         using block_type = std::uint8_t;
         using bitmap_type = dynamic_bitset<block_type>;
         using buffer_type = buffer<block_type>;
+        using length_type = std::int64_t;
 
         data_descriptor type;
-        std::int64_t length = 0;
+        length_type length = 0;
         std::int64_t offset = 0;
         // bitmap buffer and null_count
         bitmap_type bitmap;

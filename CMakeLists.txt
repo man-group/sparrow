@@ -90,9 +90,10 @@ endif()
 set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/algorithm.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/allocator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array_data_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array_data.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer_view.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/contracts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/data_traits.hpp
