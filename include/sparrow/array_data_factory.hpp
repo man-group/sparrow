@@ -387,7 +387,7 @@ namespace sparrow
      * @tparam Layout The layout type for the array data.
      * @return The created array data object.
      */
-    template <is_a_supported_layout Layout>
+    template <arrow_layout Layout>
     array_data make_default_array_data()
     {
         if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
@@ -426,7 +426,7 @@ namespace sparrow
      * @param offset The offset for the array data.
      * @return The created array data object.
      */
-    template <is_a_supported_layout Layout, constant_range_for_array_data ValueRange>
+    template <arrow_layout Layout, constant_range_for_array_data ValueRange>
     array_data
     make_default_array_data(ValueRange&& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
     {
@@ -462,7 +462,7 @@ namespace sparrow
      * @param offset The offset for the array_data object.
      * @return A new array_data object with the specified layout, values, bitmap, and offset.
      */
-    template <is_a_supported_layout Layout, std::ranges::input_range ValueRange>
+    template <arrow_layout Layout, std::ranges::input_range ValueRange>
         requires(!mpl::constant_range<ValueRange>)
     array_data
     make_default_array_data(ValueRange&& values, const array_data::bitmap_type& bitmap, std::int64_t offset)

@@ -30,7 +30,7 @@ namespace sparrow
      * @tparam Layout The layout type to check.
      */
     template <class Layout>
-    concept is_a_supported_layout = mpl::is_type_instance_of_v<Layout, fixed_size_layout>
+    concept arrow_layout = mpl::is_type_instance_of_v<Layout, fixed_size_layout>
                                     || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
                                     || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>;
 
