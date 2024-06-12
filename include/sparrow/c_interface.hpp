@@ -138,30 +138,30 @@ namespace sparrow
             std::unique_ptr<ArrowArray> dictionary,
             const V& buffer_sizes
         )
-            : buffers_(
-                  create_buffers<BufferType>(buffer_sizes, buffer_allocator_, buffers_allocator_),
-                  buffers_allocator_
+            : m_buffers(
+                  create_buffers<BufferType>(buffer_sizes, m_buffer_allocator, m_buffers_allocator),
+                  m_buffers_allocator
               )
-            , buffers_raw_ptr_vec_(to_raw_ptr_vec<Allocator>(buffers_))
-            , children_(std::move(children))
-            , children_raw_ptr_vec_(to_raw_ptr_vec<Allocator>(children_))
-            , dictionary_(std::move(dictionary))
+            , m_buffers_raw_ptr_vec(to_raw_ptr_vec<Allocator>(m_buffers))
+            , m_children(std::move(children))
+            , m_children_raw_ptr_vec(to_raw_ptr_vec<Allocator>(m_children))
+            , m_dictionary(std::move(dictionary))
         {
         }
 
         using buffer_allocator = Allocator<BufferType>;
         using buffers_allocator = Allocator<buffer<BufferType>>;
 
-        buffer_allocator buffer_allocator_ = buffer_allocator();
-        buffers_allocator buffers_allocator_ = buffers_allocator();
+        buffer_allocator m_buffer_allocator = buffer_allocator();
+        buffers_allocator m_buffers_allocator = buffers_allocator();
 
-        std::vector<buffer<BufferType>, buffers_allocator> buffers_;
-        std::vector<BufferType*> buffers_raw_ptr_vec_;
+        std::vector<buffer<BufferType>, buffers_allocator> m_buffers;
+        std::vector<BufferType*> m_buffers_raw_ptr_vec;
 
-        std::vector<std::unique_ptr<ArrowArray>> children_;
-        std::vector<ArrowArray*> children_raw_ptr_vec_;
+        std::vector<std::unique_ptr<ArrowArray>> m_children;
+        std::vector<ArrowArray*> m_children_raw_ptr_vec;
 
-        std::unique_ptr<ArrowArray> dictionary_;
+        std::unique_ptr<ArrowArray> m_dictionary;
     };
 
     /**
@@ -187,51 +187,62 @@ namespace sparrow
             const std::optional<std::span<char>>& metadata,
             std::vector<std::unique_ptr<ArrowSchema>> children,
             std::unique_ptr<ArrowSchema> dictionary
-        )
-            : format_(format_view)
-            , name_(name_view)
-            , metadata_(
-                  metadata.has_value() ? vector_string_type(metadata->begin(), metadata->end())
-                                       : vector_string_type()
-              )
-            , children_(std::move(children))
-            , children_raw_ptr_vec_(to_raw_ptr_vec(children_))
-            , dictionary_(std::move(dictionary))
-        {
-        }
+        );
 
-        ~arrow_schema_private_data()
-        {
-            for (const auto& child : children_)
-            {
-                SPARROW_ASSERT_TRUE(child->release == nullptr)
-                if (child->release != nullptr)
-                {
-                    child->release(child.get());
-                }
-            }
-
-            if (dictionary_ != nullptr)
-            {
-                SPARROW_ASSERT_TRUE(dictionary_->release == nullptr)
-                if (dictionary_->release != nullptr)
-                {
-                    dictionary_->release(dictionary_.get());
-                }
-            }
-        }
+        ~arrow_schema_private_data();
 
         any_allocator<char> string_allocator_ = Allocator<char>();
-
-        string_type format_;
-        string_type name_;
-        std::optional<vector_string_type> metadata_;
-
-        std::vector<std::unique_ptr<ArrowSchema>> children_;
-        std::vector<ArrowSchema*> children_raw_ptr_vec_;
-
-        std::unique_ptr<ArrowSchema> dictionary_;
+        string_type m_format;
+        string_type m_name;
+        std::optional<vector_string_type> m_metadata;
+        std::vector<std::unique_ptr<ArrowSchema>> m_children;
+        std::vector<ArrowSchema*> m_children_raw_ptr_vec;
+        std::unique_ptr<ArrowSchema> m_dictionary;
     };
+
+    template <template <typename> class Allocator>
+        requires sparrow::allocator<Allocator<char>>
+    arrow_schema_private_data<Allocator>::arrow_schema_private_data(
+        std::string_view format_view,
+        std::string_view name_view,
+        const std::optional<std::span<char>>& metadata,
+        std::vector<std::unique_ptr<ArrowSchema>> children,
+        std::unique_ptr<ArrowSchema> dictionary
+    )
+        : m_format(format_view)
+        , m_name(name_view)
+        , m_metadata(
+              metadata.has_value() ? vector_string_type(metadata->begin(), metadata->end())
+                                   : vector_string_type()
+          )
+        , m_children(std::move(children))
+        , m_children_raw_ptr_vec(to_raw_ptr_vec(m_children))
+        , m_dictionary(std::move(dictionary))
+    {
+    }
+
+    template <template <typename> class Allocator>
+        requires sparrow::allocator<Allocator<char>>
+    arrow_schema_private_data<Allocator>::~arrow_schema_private_data()
+    {
+        for (const auto& child : m_children)
+        {
+            SPARROW_ASSERT_TRUE(child->release == nullptr)
+            if (child->release != nullptr)
+            {
+                child->release(child.get());
+            }
+        }
+
+        if (m_dictionary != nullptr)
+        {
+            SPARROW_ASSERT_TRUE(m_dictionary->release == nullptr)
+            if (m_dictionary->release != nullptr)
+            {
+                m_dictionary->release(m_dictionary.get());
+            }
+        }
+    }
 
     template <typename T>
     concept any_arrow_array = std::is_same_v<T, ArrowArray> || std::is_same_v<T, ArrowSchema>;
@@ -367,18 +378,18 @@ namespace sparrow
         );
 
         const auto private_data = static_cast<arrow_schema_private_data<Allocator>*>(schema->private_data);
-        schema->format = private_data->format_.data();
-        if (!private_data->name_.empty())
+        schema->format = private_data->m_format.data();
+        if (!private_data->m_name.empty())
         {
-            schema->name = private_data->name_.data();
+            schema->name = private_data->m_name.data();
         }
-        if (private_data->metadata_.has_value() && !(*(private_data->metadata_)).empty())
+        if (private_data->m_metadata.has_value() && !(*(private_data->m_metadata)).empty())
         {
-            schema->metadata = (*private_data->metadata_).data();
+            schema->metadata = (*private_data->m_metadata).data();
         }
-        schema->n_children = static_cast<int64_t>(private_data->children_raw_ptr_vec_.size());
-        schema->children = private_data->children_raw_ptr_vec_.data();
-        schema->dictionary = private_data->dictionary_.get();
+        schema->n_children = static_cast<int64_t>(private_data->m_children_raw_ptr_vec.size());
+        schema->children = private_data->m_children_raw_ptr_vec.data();
+        schema->dictionary = private_data->m_dictionary.get();
         schema->release = delete_schema<Allocator>;
         return schema;
     };
@@ -450,12 +461,12 @@ namespace sparrow
         array->n_buffers = static_cast<int64_t>(buffer_sizes.size());
 
         const auto private_data = static_cast<arrow_array_private_data<T, Allocator>*>(array->private_data);
-        T** buffer_data = private_data->buffers_raw_ptr_vec_.data();
+        T** buffer_data = private_data->m_buffers_raw_ptr_vec.data();
         const T** const_buffer_ptr = const_cast<const int**>(buffer_data);
         array->buffers = reinterpret_cast<const void**>(const_buffer_ptr);
-        array->n_children = static_cast<int64_t>(private_data->children_raw_ptr_vec_.size());
-        array->children = private_data->children_raw_ptr_vec_.data();
-        array->dictionary = private_data->dictionary_.get();
+        array->n_children = static_cast<int64_t>(private_data->m_children_raw_ptr_vec.size());
+        array->children = private_data->m_children_raw_ptr_vec.data();
+        array->dictionary = private_data->m_dictionary.get();
         array->release = delete_array<T, Allocator>;
         return array;
     }
