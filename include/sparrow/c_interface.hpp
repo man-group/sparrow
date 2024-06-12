@@ -27,6 +27,8 @@
 #include "sparrow/buffer.hpp"
 #include "sparrow/contracts.hpp"
 
+#ifndef ARROW_C_DATA_INTERFACE
+#define ARROW_C_DATA_INTERFACE
 
 extern "C"
 {
@@ -66,6 +68,8 @@ extern "C"
     };
 
 }  // extern "C"
+
+#endif // ARROW_C_DATA_INTERFACE
 
 namespace sparrow
 {
