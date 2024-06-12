@@ -137,17 +137,7 @@ namespace sparrow
             std::vector<std::unique_ptr<ArrowArray>> children,
             std::unique_ptr<ArrowArray> dictionary,
             const V& buffer_sizes
-        )
-            : m_buffers(
-                  create_buffers<BufferType>(buffer_sizes, m_buffer_allocator, m_buffers_allocator),
-                  m_buffers_allocator
-              )
-            , m_buffers_raw_ptr_vec(to_raw_ptr_vec<Allocator>(m_buffers))
-            , m_children(std::move(children))
-            , m_children_raw_ptr_vec(to_raw_ptr_vec<Allocator>(m_children))
-            , m_dictionary(std::move(dictionary))
-        {
-        }
+        );
 
         using buffer_allocator = Allocator<BufferType>;
         using buffers_allocator = Allocator<buffer<BufferType>>;
@@ -163,6 +153,26 @@ namespace sparrow
 
         std::unique_ptr<ArrowArray> m_dictionary;
     };
+
+    template <class BufferType, template <typename> class Allocator>
+        requires sparrow::allocator<Allocator<BufferType>>
+    template <std::ranges::input_range V>
+        requires std::is_integral_v<std::ranges::range_value_t<V>>
+    arrow_array_private_data<BufferType, Allocator>::arrow_array_private_data(
+        std::vector<std::unique_ptr<ArrowArray>> children,
+        std::unique_ptr<ArrowArray> dictionary,
+        const V& buffer_sizes
+    )
+        : m_buffers(
+              create_buffers<BufferType>(buffer_sizes, m_buffer_allocator, m_buffers_allocator),
+              m_buffers_allocator
+          )
+        , m_buffers_raw_ptr_vec(to_raw_ptr_vec<Allocator>(m_buffers))
+        , m_children(std::move(children))
+        , m_children_raw_ptr_vec(to_raw_ptr_vec<Allocator>(m_children))
+        , m_dictionary(std::move(dictionary))
+    {
+    }
 
     /**
      * Struct representing private data for ArrowSchema.
