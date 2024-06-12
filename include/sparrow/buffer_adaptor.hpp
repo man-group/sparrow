@@ -24,21 +24,21 @@
 namespace sparrow
 {
     /**
-     * @brief Class which have internally a reference to a buffer<T> and provides the API of a buffer<U>
+     * @brief Class which have internally a reference to a buffer<From> and provides the API of a buffer<To>
      */
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
     class buffer_adaptor
     {
     public:
 
-        using value_type = T;
+        using value_type = To;
         using reference = value_type&;
         using const_reference = const value_type&;
         using pointer = value_type*;
         using const_pointer = const value_type*;
 
-        using buffer_reference_value_type = U;
+        using buffer_reference_value_type = From;
         using buffer_reference = buffer<buffer_reference_value_type>;
 
         using size_type = buffer_reference::size_type;
@@ -49,7 +49,7 @@ namespace sparrow
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
         buffer_adaptor(buffer_reference& buf)
-            : _buffer(buf)
+            : m_buffer(buf)
         {
         }
 
@@ -123,180 +123,180 @@ namespace sparrow
 
     private:
 
-        static constexpr double _sizeof_ratio = static_cast<double>(sizeof(buffer_reference_value_type))
-                                                / static_cast<double>(sizeof(value_type));
+        static constexpr double m_from_to_size_ratio = static_cast<double>(sizeof(buffer_reference_value_type))
+                                                       / static_cast<double>(sizeof(value_type));
 
-        static constexpr auto _type_size = static_cast<size_type>(1. / _sizeof_ratio);
-
-        static constexpr size_type _extra_buffervalue_type_size = sizeof(buffer_reference_value_type)
-                                                                  % sizeof(value_type);
+        static constexpr size_type m_to_from_size_ratio = static_cast<size_type>(1. / m_from_to_size_ratio);
 
         [[nodiscard]] constexpr buffer_reference::size_type index_for_buffer(size_type idx) const noexcept;
 
         [[nodiscard]] buffer_reference::const_iterator get_buffer_reference_iterator(const_iterator pos);
 
-        buffer_reference& _buffer;
+        buffer_reference& m_buffer;
     };
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::buffer_reference::size_type
-    buffer_adaptor<T, U>::index_for_buffer(size_type idx) const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::buffer_reference::size_type
+    buffer_adaptor<To, From>::index_for_buffer(size_type idx) const noexcept
     {
-        return static_cast<buffer_reference::size_type>(static_cast<double>(idx) / _sizeof_ratio);
+        return idx * m_to_from_size_ratio;
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::pointer buffer_adaptor<T, U>::data() noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::pointer buffer_adaptor<To, From>::data() noexcept
     {
-        return _buffer.template data<value_type>();
+        return m_buffer.template data<value_type>();
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_pointer buffer_adaptor<T, U>::data() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_pointer buffer_adaptor<To, From>::data() const noexcept
     {
-        return _buffer.template data<value_type>();
+        return m_buffer.template data<value_type>();
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::reference buffer_adaptor<T, U>::operator[](size_type idx)
-    {
-        SPARROW_ASSERT_TRUE(idx < size());
-        return data()[idx];
-    }
-
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_reference
-    buffer_adaptor<T, U>::operator[](size_type idx) const
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::reference buffer_adaptor<To, From>::operator[](size_type idx)
     {
         SPARROW_ASSERT_TRUE(idx < size());
         return data()[idx];
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::reference buffer_adaptor<T, U>::front()
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_reference
+    buffer_adaptor<To, From>::operator[](size_type idx) const
+    {
+        SPARROW_ASSERT_TRUE(idx < size());
+        return data()[idx];
+    }
+
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::reference buffer_adaptor<To, From>::front()
     {
         return operator[](0);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_reference buffer_adaptor<T, U>::front() const
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_reference buffer_adaptor<To, From>::front() const
     {
         return operator[](0);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::reference buffer_adaptor<T, U>::back()
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::reference buffer_adaptor<To, From>::back()
     {
         return operator[](size() - 1);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_reference buffer_adaptor<T, U>::back() const
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_reference buffer_adaptor<To, From>::back() const
     {
         return operator[](size() - 1);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::iterator buffer_adaptor<T, U>::begin() noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::iterator buffer_adaptor<To, From>::begin() noexcept
     {
         return iterator(data());
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::iterator buffer_adaptor<T, U>::end() noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::iterator buffer_adaptor<To, From>::end() noexcept
     {
         return iterator(data() + size());
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_iterator buffer_adaptor<T, U>::begin() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_iterator buffer_adaptor<To, From>::begin() const noexcept
     {
         return const_iterator(data());
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_iterator buffer_adaptor<T, U>::end() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_iterator buffer_adaptor<To, From>::end() const noexcept
     {
         return const_iterator(data() + size());
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_iterator buffer_adaptor<T, U>::cbegin() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_iterator buffer_adaptor<To, From>::cbegin() const noexcept
     {
         return begin();
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_iterator buffer_adaptor<T, U>::cend() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_iterator buffer_adaptor<To, From>::cend() const noexcept
     {
         return end();
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::reverse_iterator buffer_adaptor<T, U>::rbegin() noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::reverse_iterator buffer_adaptor<To, From>::rbegin() noexcept
     {
         return reverse_iterator(end());
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::reverse_iterator buffer_adaptor<T, U>::rend() noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::reverse_iterator buffer_adaptor<To, From>::rend() noexcept
     {
         return reverse_iterator(begin());
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_reverse_iterator buffer_adaptor<T, U>::rbegin() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_reverse_iterator
+    buffer_adaptor<To, From>::rbegin() const noexcept
     {
         return const_reverse_iterator(end());
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_reverse_iterator buffer_adaptor<T, U>::rend() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_reverse_iterator
+    buffer_adaptor<To, From>::rend() const noexcept
     {
         return const_reverse_iterator(begin());
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_reverse_iterator
-    buffer_adaptor<T, U>::crbegin() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_reverse_iterator
+    buffer_adaptor<To, From>::crbegin() const noexcept
     {
         return rbegin();
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::const_reverse_iterator buffer_adaptor<T, U>::crend() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::const_reverse_iterator
+    buffer_adaptor<To, From>::crend() const noexcept
     {
         return rend();
     }
 
     // Capacity
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr buffer_adaptor<T, U>::size_type buffer_adaptor<T, U>::size() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr buffer_adaptor<To, From>::size_type buffer_adaptor<To, From>::size() const noexcept
     {
-        const double new_size = static_cast<double>(_buffer.size()) * _sizeof_ratio;
+        const double new_size = static_cast<double>(m_buffer.size()) * m_from_to_size_ratio;
         SPARROW_ASSERT(
             std::trunc(new_size) == new_size,
             "The size of the buffer is not a multiple of the size of the new type"
@@ -304,74 +304,74 @@ namespace sparrow
         return static_cast<size_type>(new_size);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::size_type buffer_adaptor<T, U>::max_size() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::size_type buffer_adaptor<To, From>::max_size() const noexcept
     {
-        return static_cast<size_type>(static_cast<double>(_buffer.max_size()) * _sizeof_ratio);
+        return static_cast<size_type>(static_cast<double>(m_buffer.max_size()) * m_from_to_size_ratio);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::size_type buffer_adaptor<T, U>::capacity() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::size_type buffer_adaptor<To, From>::capacity() const noexcept
     {
-        return static_cast<size_type>(static_cast<double>(_buffer.capacity()) * _sizeof_ratio);
+        return static_cast<size_type>(static_cast<double>(m_buffer.capacity()) * m_from_to_size_ratio);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr bool buffer_adaptor<T, U>::empty() const noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr bool buffer_adaptor<To, From>::empty() const noexcept
     {
-        return _buffer.empty();
+        return m_buffer.empty();
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr void buffer_adaptor<T, U>::reserve(size_type new_cap)
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr void buffer_adaptor<To, From>::reserve(size_type new_cap)
     {
-        _buffer.reserve(static_cast<size_type>(static_cast<double>(new_cap) / _sizeof_ratio));
+        m_buffer.reserve(new_cap * m_to_from_size_ratio);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr void buffer_adaptor<T, U>::shrink_to_fit()
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr void buffer_adaptor<To, From>::shrink_to_fit()
     {
-        _buffer.shrink_to_fit();
+        m_buffer.shrink_to_fit();
     }
 
     // Modifiers
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr void buffer_adaptor<T, U>::clear() noexcept
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr void buffer_adaptor<To, From>::clear() noexcept
     {
-        _buffer.clear();
+        m_buffer.clear();
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::iterator
-    buffer_adaptor<T, U>::insert(const_iterator pos, const value_type& value)
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::iterator
+    buffer_adaptor<To, From>::insert(const_iterator pos, const value_type& value)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
         const auto buffer_pos = get_buffer_reference_iterator(pos);
-        _buffer.insert(buffer_pos, _type_size, 0);
+        m_buffer.insert(buffer_pos, m_to_from_size_ratio, 0);
         operator[](static_cast<size_type>(index)) = value;
         return std::next(begin(), index);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::iterator
-    buffer_adaptor<T, U>::insert(const_iterator pos, size_type count, const value_type& value)
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::iterator
+    buffer_adaptor<To, From>::insert(const_iterator pos, size_type count, const value_type& value)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
         const auto buffer_pos = get_buffer_reference_iterator(pos);
-        _buffer.insert(buffer_pos, count * _type_size, 0);
+        m_buffer.insert(buffer_pos, count * m_to_from_size_ratio, 0);
         for (size_type i = 0; i < count; ++i)
         {
             data()[static_cast<size_t>(index) + i] = value;
@@ -379,65 +379,65 @@ namespace sparrow
         return std::next(begin(), index);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
     template <class InputIt>
         requires std::input_iterator<InputIt>
-    constexpr typename buffer_adaptor<T, U>::iterator
-    buffer_adaptor<T, U>::insert(const_iterator pos, InputIt first, InputIt last)
+    constexpr typename buffer_adaptor<To, From>::iterator
+    buffer_adaptor<To, From>::insert(const_iterator pos, InputIt first, InputIt last)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
         const difference_type count = std::distance(first, last);
         const auto buffer_pos = get_buffer_reference_iterator(pos);
-        _buffer.insert(buffer_pos, static_cast<size_type>(count) * _type_size, 0);
+        m_buffer.insert(buffer_pos, static_cast<size_type>(count) * m_to_from_size_ratio, 0);
         std::copy(first, last, data() + index);
         return std::next(begin(), index);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::iterator
-    buffer_adaptor<T, U>::insert(const_iterator pos, std::initializer_list<value_type> ilist)
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::iterator
+    buffer_adaptor<To, From>::insert(const_iterator pos, std::initializer_list<value_type> ilist)
     {
         return insert(pos, ilist.begin(), ilist.end());
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
     template <class... Args>
-    constexpr typename buffer_adaptor<T, U>::iterator
-    buffer_adaptor<T, U>::emplace(const_iterator pos, Args&&... args)
+    constexpr typename buffer_adaptor<To, From>::iterator
+    buffer_adaptor<To, From>::emplace(const_iterator pos, Args&&... args)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
         const auto buffer_pos = get_buffer_reference_iterator(pos);
-        _buffer.insert(buffer_pos, _type_size, 0);
+        m_buffer.insert(buffer_pos, m_to_from_size_ratio, 0);
         data()[index] = value_type(std::forward<Args>(args)...);
         return std::next(begin(), index);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::iterator buffer_adaptor<T, U>::erase(const_iterator pos)
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::iterator buffer_adaptor<To, From>::erase(const_iterator pos)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
         const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
-        _buffer.erase(
-            std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer)),
-            std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer + _type_size))
+        m_buffer.erase(
+            std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer)),
+            std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer + m_to_from_size_ratio))
         );
         return std::next(begin(), index);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr typename buffer_adaptor<T, U>::iterator
-    buffer_adaptor<T, U>::erase(const_iterator first, const_iterator last)
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr typename buffer_adaptor<To, From>::iterator
+    buffer_adaptor<To, From>::erase(const_iterator first, const_iterator last)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= first);
         SPARROW_ASSERT_TRUE(last <= cend());
@@ -445,55 +445,59 @@ namespace sparrow
         const difference_type index_last = std::distance(cbegin(), last);
         const auto idx_for_buffer_first = index_for_buffer(static_cast<size_type>(index_first));
         const auto idx_for_buffer_last = index_for_buffer(static_cast<size_type>(index_last));
-        _buffer.erase(
-            std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_first)),
-            std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_last))
+        m_buffer.erase(
+            std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_first)),
+            std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_last))
         );
         return std::next(begin(), index_first);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr void buffer_adaptor<T, U>::push_back(const value_type& value)
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr void buffer_adaptor<To, From>::push_back(const value_type& value)
     {
         insert(cend(), value);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr void buffer_adaptor<T, U>::pop_back()
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr void buffer_adaptor<To, From>::pop_back()
     {
         erase(std::prev(cend()));
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr void buffer_adaptor<T, U>::resize(size_type new_size)
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr void buffer_adaptor<To, From>::resize(size_type new_size)
     {
-        const auto new_size_for_buffer = static_cast<size_type>(static_cast<double>(new_size) / _sizeof_ratio);
-        _buffer.resize(new_size_for_buffer);
+        const auto new_size_for_buffer = static_cast<size_type>(
+            static_cast<double>(new_size) / m_from_to_size_ratio
+        );
+        m_buffer.resize(new_size_for_buffer);
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    constexpr void buffer_adaptor<T, U>::resize(size_type new_size, const value_type& value)
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    constexpr void buffer_adaptor<To, From>::resize(size_type new_size, const value_type& value)
     {
         const size_type original_size = size();
-        const auto new_size_for_buffer = static_cast<size_type>(static_cast<double>(new_size) / _sizeof_ratio);
-        _buffer.resize(new_size_for_buffer, 0);
+        const auto new_size_for_buffer = static_cast<size_type>(
+            static_cast<double>(new_size) / m_from_to_size_ratio
+        );
+        m_buffer.resize(new_size_for_buffer, 0);
         for (size_type i = original_size; i < new_size; ++i)
         {
             operator[](i) = value;
         }
     }
 
-    template <typename T, typename U>
-        requires(sizeof(U) < sizeof(T))
-    buffer_adaptor<T, U>::buffer_reference::const_iterator
-    buffer_adaptor<T, U>::get_buffer_reference_iterator(const_iterator pos)
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    buffer_adaptor<To, From>::buffer_reference::const_iterator
+    buffer_adaptor<To, From>::get_buffer_reference_iterator(const_iterator pos)
     {
         const difference_type index = std::distance(cbegin(), pos);
         const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
-        return std::next(_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
+        return std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
     }
 }
