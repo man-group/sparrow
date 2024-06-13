@@ -19,6 +19,7 @@
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <numeric>
 
 #include "sparrow/typed_array.hpp"
 
