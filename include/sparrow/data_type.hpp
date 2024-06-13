@@ -20,7 +20,7 @@
 #if defined(SPARROW_USE_DATE_POLYFILL)
 #include <date/tz.h>
 #else
-namespace date = std::chrono; 
+namespace date = std::chrono;
 #endif
 
 #include <climits>
@@ -31,15 +31,22 @@ namespace date = std::chrono;
 
 #include "sparrow/mp_utils.hpp"
 
+#if __cplusplus > 202002L and defined(__STDCPP_FLOAT16_T__) and defined(__STDCPP_FLOAT32_T__) and defined(__STDCPP_FLOAT64_T__)
+#    define SPARROW_STD_FIXED_FLOAT_SUPPORT
+#endif
+
 // TODO: use exclusively `std::float16_t etc. once we switch to c++23, see
 // https://en.cppreference.com/w/cpp/types/floating-point
-#if __cplusplus <= 202002L
+#if defined(SPARROW_STD_FIXED_FLOAT_SUPPORT)
+#   include <stdfloat>
+#else
 // We disable some warnings for the 3rd party float16_t library
 #    if defined(__clang__)
 #        pragma clang diagnostic push
 #        pragma clang diagnostic ignored "-Wconversion"
 #        pragma clang diagnostic ignored "-Wsign-conversion"
 #        pragma clang diagnostic ignored "-Wold-style-cast"
+#        pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #    elif defined(__GNUC__)
 #        pragma GCC diagnostic push
 #        pragma GCC diagnostic ignored "-Wconversion"
@@ -61,23 +68,22 @@ namespace date = std::chrono;
 #    elif defined(_MSC_VER)
 #        pragma warning(pop)
 #    endif
-#else
-#    include <stdfloat>
 #endif
 
 
 namespace sparrow
 {
+
 // TODO: use exclusively `std::float16_t etc. once we switch to c++23, see
 // https://en.cppreference.com/w/cpp/types/floating-point
-#if __cplusplus <= 202002L
-    using float16_t = numeric::float16_t;
-    using float32_t = float;
-    using float64_t = double;
-#else
+#if defined(SPARROW_STD_FIXED_FLOAT_SUPPORT)
     using float16_t = std::float16_t;
     using float32_t = std::float32_t;
     using float64_t = std::float64_t;
+#else
+    using float16_t = numeric::float16_t;
+    using float32_t = float;
+    using float64_t = double;
 #endif
 
     // P0355R7 (Extending chrono to Calendars and Time Zones) has not been entirely implemented in libc++ yet.
