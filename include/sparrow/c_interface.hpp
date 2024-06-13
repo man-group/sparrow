@@ -28,7 +28,7 @@
 #include "sparrow/contracts.hpp"
 
 #ifndef ARROW_C_DATA_INTERFACE
-#define ARROW_C_DATA_INTERFACE
+#    define ARROW_C_DATA_INTERFACE
 
 extern "C"
 {
@@ -69,12 +69,12 @@ extern "C"
 
 }  // extern "C"
 
-#endif // ARROW_C_DATA_INTERFACE
+#endif  // ARROW_C_DATA_INTERFACE
 
 namespace sparrow
 {
-    template <template <typename> class Allocator = std::allocator, class T>
-    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(const std::vector<std::unique_ptr<T>>& vec)
+    template <template <typename> class Allocator = std::allocator, class T, class U>
+    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(const std::vector<std::unique_ptr<T, U>>& vec)
     {
         std::vector<T*, Allocator<T*>> raw_ptr_vec;
         raw_ptr_vec.reserve(vec.size());
@@ -122,6 +122,20 @@ namespace sparrow
         return buffers;
     }
 
+    struct arrow_array_custom_deleter
+    {
+        void operator()(ArrowArray* array) const
+        {
+            if (array->release != nullptr)
+            {
+                array->release(array);
+            }
+            delete array;
+        }
+    };
+
+    using arrow_array_unique_ptr = std::unique_ptr<ArrowArray, arrow_array_custom_deleter>;
+
     /**
      * Struct representing private data for ArrowArray.
      *
@@ -138,8 +152,8 @@ namespace sparrow
         template <std::ranges::input_range V>
             requires std::is_integral_v<std::ranges::range_value_t<V>>
         explicit arrow_array_private_data(
-            std::vector<std::unique_ptr<ArrowArray>> children,
-            std::unique_ptr<ArrowArray> dictionary,
+            std::vector<arrow_array_unique_ptr> children,
+            arrow_array_unique_ptr dictionary,
             const V& buffer_sizes
         );
 
@@ -152,10 +166,10 @@ namespace sparrow
         std::vector<buffer<BufferType>, buffers_allocator> m_buffers;
         std::vector<BufferType*> m_buffers_raw_ptr_vec;
 
-        std::vector<std::unique_ptr<ArrowArray>> m_children;
+        std::vector<arrow_array_unique_ptr> m_children;
         std::vector<ArrowArray*> m_children_raw_ptr_vec;
 
-        std::unique_ptr<ArrowArray> m_dictionary;
+        arrow_array_unique_ptr m_dictionary;
     };
 
     template <class BufferType, template <typename> class Allocator>
@@ -163,8 +177,8 @@ namespace sparrow
     template <std::ranges::input_range V>
         requires std::is_integral_v<std::ranges::range_value_t<V>>
     arrow_array_private_data<BufferType, Allocator>::arrow_array_private_data(
-        std::vector<std::unique_ptr<ArrowArray>> children,
-        std::unique_ptr<ArrowArray> dictionary,
+        std::vector<arrow_array_unique_ptr> children,
+        arrow_array_unique_ptr dictionary,
         const V& buffer_sizes
     )
         : m_buffers(
@@ -177,6 +191,20 @@ namespace sparrow
         , m_dictionary(std::move(dictionary))
     {
     }
+
+    struct arrow_schema_custom_deleter
+    {
+        void operator()(ArrowSchema* schema) const
+        {
+            if (schema->release != nullptr)
+            {
+                schema->release(schema);
+            }
+            delete schema;
+        }
+    };
+
+    using arrow_schema_unique_ptr = std::unique_ptr<ArrowSchema, arrow_schema_custom_deleter>;
 
     /**
      * Struct representing private data for ArrowSchema.
@@ -199,8 +227,8 @@ namespace sparrow
             std::string_view format_view,
             std::string_view name_view,
             const std::optional<std::span<char>>& metadata,
-            std::vector<std::unique_ptr<ArrowSchema>> children,
-            std::unique_ptr<ArrowSchema> dictionary
+            std::vector<arrow_schema_unique_ptr> children,
+            arrow_schema_unique_ptr dictionary
         );
 
         ~arrow_schema_private_data();
@@ -209,9 +237,9 @@ namespace sparrow
         string_type m_format;
         string_type m_name;
         std::optional<vector_string_type> m_metadata;
-        std::vector<std::unique_ptr<ArrowSchema>> m_children;
+        std::vector<arrow_schema_unique_ptr> m_children;
         std::vector<ArrowSchema*> m_children_raw_ptr_vec;
-        std::unique_ptr<ArrowSchema> m_dictionary;
+        arrow_schema_unique_ptr m_dictionary;
     };
 
     template <template <typename> class Allocator>
@@ -220,8 +248,8 @@ namespace sparrow
         std::string_view format_view,
         std::string_view name_view,
         const std::optional<std::span<char>>& metadata,
-        std::vector<std::unique_ptr<ArrowSchema>> children,
-        std::unique_ptr<ArrowSchema> dictionary
+        std::vector<arrow_schema_unique_ptr> children,
+        arrow_schema_unique_ptr dictionary
     )
         : m_format(format_view)
         , m_name(name_view)
@@ -329,18 +357,6 @@ namespace sparrow
         MAP_KEYS_SORTED = 4      // For map types, whether the keys within each map value are sorted.
     };
 
-    struct arrow_schema_custom_deleter
-    {
-        void operator()(ArrowSchema* schema) const
-        {
-            if (schema->release != nullptr)
-            {
-                schema->release(schema);
-            }
-            delete schema;
-        }
-    };
-
     /**
      * Creates an ArrowSchema.
      *
@@ -362,13 +378,13 @@ namespace sparrow
      */
     template <template <typename> class Allocator>
         requires sparrow::allocator<Allocator<char>>
-    std::unique_ptr<ArrowSchema, arrow_schema_custom_deleter> make_arrow_schema(
+    arrow_schema_unique_ptr make_arrow_schema(
         std::string_view format,
         std::string_view name,
         std::optional<std::span<char>> metadata,
         std::optional<ArrowFlag> flags,
-        std::vector<std::unique_ptr<ArrowSchema>>&& children,
-        std::unique_ptr<ArrowSchema>&& dictionary
+        std::vector<arrow_schema_unique_ptr>&& children,
+        arrow_schema_unique_ptr&& dictionary
     )
     {
         SPARROW_ASSERT_FALSE(format.empty())
@@ -380,7 +396,7 @@ namespace sparrow
             }
         ))
 
-        std::unique_ptr<ArrowSchema, arrow_schema_custom_deleter> schema(new ArrowSchema());
+        arrow_schema_unique_ptr schema(new ArrowSchema());
         schema->flags = flags.has_value() ? static_cast<int64_t>(flags.value()) : 0;
 
         schema->private_data = new arrow_schema_private_data<Allocator>(
@@ -408,18 +424,6 @@ namespace sparrow
         return schema;
     };
 
-    struct arrow_array_custom_deleter
-    {
-        void operator()(ArrowArray* array) const
-        {
-            if (array->release != nullptr)
-            {
-                array->release(array);
-            }
-            delete array;
-        }
-    };
-
     /**
      * Creates an ArrowArray.
      *
@@ -441,13 +445,13 @@ namespace sparrow
      */
     template <class T, template <typename> class Allocator, std::ranges::input_range R>
         requires sparrow::allocator<Allocator<T>> && std::is_integral_v<std::ranges::range_value_t<R>>
-    std::unique_ptr<ArrowArray, arrow_array_custom_deleter> make_arrow_array(
+    arrow_array_unique_ptr make_arrow_array(
         int64_t length,
         int64_t null_count,
         int64_t offset,
         const R& buffer_sizes,
-        std::vector<std::unique_ptr<ArrowArray>>&& children,
-        std::unique_ptr<ArrowArray> dictionary
+        std::vector<arrow_array_unique_ptr>&& children,
+        arrow_array_unique_ptr dictionary
     )
     {
         SPARROW_ASSERT_TRUE(length >= 0)
@@ -461,7 +465,7 @@ namespace sparrow
             }
         ))
 
-        std::unique_ptr<ArrowArray, arrow_array_custom_deleter> array(new ArrowArray());
+        arrow_array_unique_ptr array(new ArrowArray());
 
         array->private_data = new arrow_array_private_data<T, Allocator>(
             std::move(children),
