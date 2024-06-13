@@ -19,7 +19,6 @@
 #include <sstream>
 #include <string>
 #include <type_traits>
-#include <numeric>
 
 #include "sparrow/typed_array.hpp"
 
@@ -33,7 +32,7 @@ namespace
     template <typename O, std::integral I>
     constexpr O to_value_type(I i)
     {
-        if constexpr (std::is_same_v<O, numeric::float16_t>)
+        if constexpr (std::is_same_v<O, sparrow::float16_t>)
         {
             return static_cast<float>(i);
         }
