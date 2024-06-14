@@ -223,7 +223,6 @@ namespace sparrow
             }
         }
 
-
         // Capacity
 
         TEST_CASE("size")

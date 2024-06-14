@@ -435,7 +435,7 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
-        if(empty())
+        if (empty())
         {
             return begin();
         }
