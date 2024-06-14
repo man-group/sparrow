@@ -35,36 +35,36 @@ extern "C"
     struct ArrowSchema
     {
         // Array type description
-        const char* format = nullptr;
-        const char* name = nullptr;
-        const char* metadata = nullptr;
-        int64_t flags = 0;
-        int64_t n_children = 0;
-        struct ArrowSchema** children = nullptr;
-        struct ArrowSchema* dictionary = nullptr;
+        const char* format;
+        const char* name;
+        const char* metadata;
+        int64_t flags;
+        int64_t n_children;
+        struct ArrowSchema** children;
+        struct ArrowSchema* dictionary;
 
         // Release callback
-        void (*release)(struct ArrowSchema*) = nullptr;
+        void (*release)(struct ArrowSchema*);
         // Opaque producer-specific data
-        void* private_data = nullptr;
+        void* private_data;
     };
 
     struct ArrowArray
     {
         // Array data description
-        int64_t length = 0;
-        int64_t null_count = 0;
-        int64_t offset = 0;
-        int64_t n_buffers = 0;
-        int64_t n_children = 0;
-        const void** buffers = nullptr;
-        struct ArrowArray** children = nullptr;
-        struct ArrowArray* dictionary = nullptr;
+        int64_t length;
+        int64_t null_count;
+        int64_t offset;
+        int64_t n_buffers;
+        int64_t n_children;
+        const void** buffers;
+        struct ArrowArray** children;
+        struct ArrowArray* dictionary;
 
         // Release callback
-        void (*release)(struct ArrowArray*) = nullptr;
+        void (*release)(struct ArrowArray*);
         // Opaque producer-specific data
-        void* private_data = nullptr;
+        void* private_data;
     };
 
 }  // extern "C"
@@ -222,6 +222,10 @@ namespace sparrow
         using vector_string_type = std::vector<char, Allocator<char>>;
 
         arrow_schema_private_data() = delete;
+        arrow_schema_private_data(const arrow_schema_private_data&) = delete;
+        arrow_schema_private_data(arrow_schema_private_data&&) = delete;
+        arrow_schema_private_data& operator=(const arrow_schema_private_data&) = delete;
+        arrow_schema_private_data& operator=(arrow_schema_private_data&&) = delete;
 
         explicit arrow_schema_private_data(
             std::string_view format_view,
@@ -302,9 +306,6 @@ namespace sparrow
     void delete_array(ArrowArray* array)
     {
         SPARROW_ASSERT_FALSE(array == nullptr)
-        // #if !(defined(__clang__) && __clang_major__ < 15)
-        // SPARROW_ASSERT_TRUE(array->release == std::addressof(delete_array<T, Allocator>))
-        // #endif
 
         array->buffers = nullptr;
         array->n_buffers = 0;
@@ -357,6 +358,21 @@ namespace sparrow
         MAP_KEYS_SORTED = 4      // For map types, whether the keys within each map value are sorted.
     };
 
+    arrow_schema_unique_ptr default_arrow_schema()
+    {
+        auto ptr = arrow_schema_unique_ptr(new ArrowSchema());
+        ptr->format = nullptr;
+        ptr->name = nullptr;
+        ptr->metadata = nullptr;
+        ptr->flags = 0;
+        ptr->n_children = 0;
+        ptr->children = nullptr;
+        ptr->dictionary = nullptr;
+        ptr->release = nullptr;
+        ptr->private_data = nullptr;
+        return ptr;
+    }
+
     /**
      * Creates an ArrowSchema.
      *
@@ -396,7 +412,8 @@ namespace sparrow
             }
         ))
 
-        arrow_schema_unique_ptr schema(new ArrowSchema());
+        arrow_schema_unique_ptr schema = default_arrow_schema();
+
         schema->flags = flags.has_value() ? static_cast<int64_t>(flags.value()) : 0;
 
         schema->private_data = new arrow_schema_private_data<Allocator>(
@@ -423,6 +440,22 @@ namespace sparrow
         schema->release = delete_schema<Allocator>;
         return schema;
     };
+
+    arrow_array_unique_ptr default_arrow_array()
+    {
+        auto ptr = arrow_array_unique_ptr(new ArrowArray());
+        ptr->length = 0;
+        ptr->null_count = 0;
+        ptr->offset = 0;
+        ptr->n_buffers = 0;
+        ptr->n_children = 0;
+        ptr->buffers = nullptr;
+        ptr->children = nullptr;
+        ptr->dictionary = nullptr;
+        ptr->release = nullptr;
+        ptr->private_data = nullptr;
+        return ptr;
+    }
 
     /**
      * Creates an ArrowArray.
@@ -465,7 +498,7 @@ namespace sparrow
             }
         ))
 
-        arrow_array_unique_ptr array(new ArrowArray());
+        arrow_array_unique_ptr array = default_arrow_array();
 
         array->private_data = new arrow_array_private_data<T, Allocator>(
             std::move(children),

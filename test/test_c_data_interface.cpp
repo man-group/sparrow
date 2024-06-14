@@ -28,12 +28,12 @@ TEST_SUITE("C Data Interface")
         SUBCASE("make_array_constructor")
         {
             std::vector<sparrow::arrow_array_unique_ptr> children;
-            children.emplace_back(new ArrowArray);
-            children.emplace_back(new ArrowArray);
+            children.emplace_back(sparrow::default_arrow_array());
+            children.emplace_back(sparrow::default_arrow_array());
             const auto children_1_ptr = children[0].get();
             const auto children_2_ptr = children[1].get();
 
-            sparrow::arrow_array_unique_ptr dictionary(new ArrowArray);
+            sparrow::arrow_array_unique_ptr dictionary(sparrow::default_arrow_array());
             const auto dictionary_ptr = dictionary.get();
 
             std::vector<size_t> buffers_sizes = {1};
@@ -85,9 +85,9 @@ TEST_SUITE("C Data Interface")
         SUBCASE("ArrowArray release")
         {
             std::vector<sparrow::arrow_array_unique_ptr> children;
-            children.emplace_back(new ArrowArray);
-            children.emplace_back(new ArrowArray);
-            sparrow::arrow_array_unique_ptr dictionary(new ArrowArray);
+            children.emplace_back(sparrow::default_arrow_array());
+            children.emplace_back(sparrow::default_arrow_array());
+            sparrow::arrow_array_unique_ptr dictionary(sparrow::default_arrow_array());
             auto array = sparrow::make_arrow_array<int, std::allocator>(
                 1,
                 0,
@@ -142,13 +142,13 @@ TEST_SUITE("C Data Interface")
         SUBCASE("make_schema_constructor")
         {
             std::vector<sparrow::arrow_schema_unique_ptr> children;
-            children.emplace_back(new ArrowSchema);
-            children.emplace_back(new ArrowSchema);
+            children.emplace_back(sparrow::default_arrow_schema());
+            children.emplace_back(sparrow::default_arrow_schema());
 
             const auto children_1_ptr = children[0].get();
             const auto children_2_ptr = children[1].get();
 
-            sparrow::arrow_schema_unique_ptr dictionary(new ArrowSchema);
+            sparrow::arrow_schema_unique_ptr dictionary(sparrow::default_arrow_schema());
             const auto dictionary_ptr = dictionary.get();
 
             constexpr std::string_view format = "format";
@@ -211,9 +211,9 @@ TEST_SUITE("C Data Interface")
         SUBCASE("ArrowSchema release")
         {
             std::vector<sparrow::arrow_schema_unique_ptr> children;
-            children.emplace_back(new ArrowSchema);
-            children.emplace_back(new ArrowSchema);
-            sparrow::arrow_schema_unique_ptr dictionary(new ArrowSchema);
+            children.emplace_back(sparrow::default_arrow_schema());
+            children.emplace_back(sparrow::default_arrow_schema());
+            sparrow::arrow_schema_unique_ptr dictionary(sparrow::default_arrow_schema());
 
             std::vector<char> metadata = {'\0', '\0', '\0', '\0'};
 
