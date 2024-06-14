@@ -24,13 +24,24 @@ namespace sparrow
 
     TEST_SUITE("buffer_adaptor")
     {
+        const std::array<uint8_t, 0> input_empty{};
+
         const std::array<uint8_t, 8> input{1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u};
         const std::array<uint8_t, 12> long_input{1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u, 11u, 12u};
 
         TEST_CASE("constructor")
         {
-            buffer<uint8_t> buf(input);
-            buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
+            SUBCASE("from non empty buffer")
+            {
+                buffer<uint8_t> buf(input);
+                buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
+            }
+
+            SUBCASE("from empty buffer")
+            {
+                buffer<uint8_t> buf_empty(input);
+                buffer_adaptor<uint32_t, uint8_t> buffer_adapt_empty(buf_empty);
+            }
         }
 
         // Element access
@@ -486,77 +497,104 @@ namespace sparrow
         {
             SUBCASE("pos")
             {
-                SUBCASE("at the beginning")
+                SUBCASE("with filled buffer")
                 {
-                    buffer<uint8_t> buf(input);
+                    SUBCASE("at the beginning")
+                    {
+                        buffer<uint8_t> buf(input);
+                        buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
+                        const auto it = buffer_adapt.cbegin();
+                        const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(it);
+                        CHECK_EQ(result, buffer_adapt.begin());
+                        REQUIRE_EQ(buffer_adapt.size(), 1);
+                        CHECK_EQ(buffer_adapt[0], 0x08070605);
+                    }
+
+                    SUBCASE("in the middle")
+                    {
+                        buffer<uint8_t> buf(input);
+                        buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
+                        const auto it = std::next(buffer_adapt.cbegin());
+                        const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(it);
+                        CHECK_EQ(result, std::next(buffer_adapt.begin()));
+                        REQUIRE_EQ(buffer_adapt.size(), 1);
+                        CHECK_EQ(buffer_adapt[0], 0x04030201);
+                    }
+
+                    SUBCASE("at the end")
+                    {
+                        buffer<uint8_t> buf(input);
+                        buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
+                        const auto it = std::prev(buffer_adapt.cend());
+                        const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(it);
+                        CHECK_EQ(result, buffer_adapt.end());
+                        REQUIRE_EQ(buffer_adapt.size(), 1);
+                        CHECK_EQ(buffer_adapt[0], 0x04030201);
+                    }
+                }
+
+                SUBCASE("with empty buffer")
+                {
+                    buffer<uint8_t> buf(input_empty);
                     buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
                     const auto it = buffer_adapt.cbegin();
                     const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(it);
-                    CHECK_EQ(result, buffer_adapt.begin());
-                    REQUIRE_EQ(buffer_adapt.size(), 1);
-                    CHECK_EQ(buffer_adapt[0], 0x08070605);
-                }
-
-                SUBCASE("in the middle")
-                {
-                    buffer<uint8_t> buf(input);
-                    buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
-                    const auto it = std::next(buffer_adapt.cbegin());
-                    const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(it);
-                    CHECK_EQ(result, std::next(buffer_adapt.begin()));
-                    REQUIRE_EQ(buffer_adapt.size(), 1);
-                    CHECK_EQ(buffer_adapt[0], 0x04030201);
-                }
-
-                SUBCASE("at the end")
-                {
-                    buffer<uint8_t> buf(input);
-                    buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
-                    const auto it = std::prev(buffer_adapt.cend());
-                    const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(it);
                     CHECK_EQ(result, buffer_adapt.end());
-                    REQUIRE_EQ(buffer_adapt.size(), 1);
-                    CHECK_EQ(buffer_adapt[0], 0x04030201);
+                    CHECK(buffer_adapt.empty());
                 }
             }
 
             SUBCASE("first and last")
             {
-                SUBCASE("at the beginning")
+                SUBCASE("with filled buffer")
                 {
-                    buffer<uint8_t> buf(long_input);
+                    SUBCASE("at the beginning")
+                    {
+                        buffer<uint8_t> buf(long_input);
+                        buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
+                        const auto first = buffer_adapt.cbegin();
+                        const auto last = buffer_adapt.cend();
+                        const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(first, last);
+                        CHECK_EQ(result, buffer_adapt.end());
+                        CHECK(buffer_adapt.empty());
+                    }
+
+                    SUBCASE("in the middle")
+                    {
+                        buffer<uint8_t> buf(long_input);
+                        buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
+                        const auto first = std::next(buffer_adapt.cbegin());
+                        const auto last = std::next(buffer_adapt.cend(), -1);
+                        const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(first, last);
+                        CHECK_EQ(result, std::prev(buffer_adapt.end()));
+                        REQUIRE_EQ(buffer_adapt.size(), 2);
+                        CHECK_EQ(buffer_adapt[0], 0x04030201);
+                        CHECK_EQ(buffer_adapt[1], 0x0C0B0A09);
+                    }
+
+                    SUBCASE("at the end")
+                    {
+                        buffer<uint8_t> buf(long_input);
+                        buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
+                        const auto first = std::prev(buffer_adapt.cend());
+                        const auto last = buffer_adapt.cend();
+                        const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(first, last);
+                        CHECK_EQ(result, buffer_adapt.end());
+                        REQUIRE_EQ(buffer_adapt.size(), 2);
+                        CHECK_EQ(buffer_adapt[0], 0x04030201);
+                        CHECK_EQ(buffer_adapt[1], 0x08070605);
+                    }
+                }
+
+                SUBCASE("with empty buffer")
+                {
+                    buffer<uint8_t> buf(input_empty);
                     buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
                     const auto first = buffer_adapt.cbegin();
                     const auto last = buffer_adapt.cend();
                     const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(first, last);
                     CHECK_EQ(result, buffer_adapt.end());
                     CHECK(buffer_adapt.empty());
-                }
-
-                SUBCASE("in the middle")
-                {
-                    buffer<uint8_t> buf(long_input);
-                    buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
-                    const auto first = std::next(buffer_adapt.cbegin());
-                    const auto last = std::next(buffer_adapt.cend(), -1);
-                    const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(first, last);
-                    CHECK_EQ(result, std::prev(buffer_adapt.end()));
-                    REQUIRE_EQ(buffer_adapt.size(), 2);
-                    CHECK_EQ(buffer_adapt[0], 0x04030201);
-                    CHECK_EQ(buffer_adapt[1], 0x0C0B0A09);
-                }
-
-                SUBCASE("at the end")
-                {
-                    buffer<uint8_t> buf(long_input);
-                    buffer_adaptor<uint32_t, uint8_t> buffer_adapt(buf);
-                    const auto first = std::prev(buffer_adapt.cend());
-                    const auto last = buffer_adapt.cend();
-                    const buffer_adaptor<uint32_t, uint8_t>::iterator result = buffer_adapt.erase(first, last);
-                    CHECK_EQ(result, buffer_adapt.end());
-                    REQUIRE_EQ(buffer_adapt.size(), 2);
-                    CHECK_EQ(buffer_adapt[0], 0x04030201);
-                    CHECK_EQ(buffer_adapt[1], 0x08070605);
                 }
             }
         }

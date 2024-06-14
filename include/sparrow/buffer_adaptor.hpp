@@ -24,7 +24,7 @@
 namespace sparrow
 {
     /**
-     * @brief Class which have internally a reference to a buffer<From> and provides the API of a buffer<To>
+     * Class which have internally a reference to a buffer<From> and provides the API of a buffer<To>
      */
     template <typename To, typename From>
         requires(sizeof(From) < sizeof(To))
@@ -48,10 +48,7 @@ namespace sparrow
         using reverse_iterator = std::reverse_iterator<iterator>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-        buffer_adaptor(buffer_reference& buf)
-            : m_buffer(buf)
-        {
-        }
+        buffer_adaptor(buffer_reference& buf);
 
         constexpr pointer data() noexcept;
         constexpr const_pointer data() const noexcept;
@@ -133,7 +130,16 @@ namespace sparrow
         [[nodiscard]] buffer_reference::const_iterator get_buffer_reference_iterator(const_iterator pos);
 
         buffer_reference& m_buffer;
+        const size_type m_max_size;
     };
+
+    template <typename To, typename From>
+        requires(sizeof(From) < sizeof(To))
+    buffer_adaptor<To, From>::buffer_adaptor(buffer_adaptor<To, From>::buffer_reference& buf)
+        : m_buffer(buf)
+        , m_max_size(m_buffer.max_size() / m_to_from_size_ratio)
+    {
+    }
 
     template <typename To, typename From>
         requires(sizeof(From) < sizeof(To))
@@ -178,6 +184,7 @@ namespace sparrow
         requires(sizeof(From) < sizeof(To))
     constexpr typename buffer_adaptor<To, From>::reference buffer_adaptor<To, From>::front()
     {
+        SPARROW_ASSERT_TRUE(!empty());
         return operator[](0);
     }
 
@@ -185,6 +192,7 @@ namespace sparrow
         requires(sizeof(From) < sizeof(To))
     constexpr typename buffer_adaptor<To, From>::const_reference buffer_adaptor<To, From>::front() const
     {
+        SPARROW_ASSERT_TRUE(!empty());
         return operator[](0);
     }
 
@@ -192,6 +200,7 @@ namespace sparrow
         requires(sizeof(From) < sizeof(To))
     constexpr typename buffer_adaptor<To, From>::reference buffer_adaptor<To, From>::back()
     {
+        SPARROW_ASSERT_TRUE(!empty());
         return operator[](size() - 1);
     }
 
@@ -199,6 +208,7 @@ namespace sparrow
         requires(sizeof(From) < sizeof(To))
     constexpr typename buffer_adaptor<To, From>::const_reference buffer_adaptor<To, From>::back() const
     {
+        SPARROW_ASSERT_TRUE(!empty());
         return operator[](size() - 1);
     }
 
@@ -308,14 +318,14 @@ namespace sparrow
         requires(sizeof(From) < sizeof(To))
     constexpr typename buffer_adaptor<To, From>::size_type buffer_adaptor<To, From>::max_size() const noexcept
     {
-        return static_cast<size_type>(static_cast<double>(m_buffer.max_size()) * m_from_to_size_ratio);
+        return m_max_size;
     }
 
     template <typename To, typename From>
         requires(sizeof(From) < sizeof(To))
     constexpr typename buffer_adaptor<To, From>::size_type buffer_adaptor<To, From>::capacity() const noexcept
     {
-        return static_cast<size_type>(static_cast<double>(m_buffer.capacity()) * m_from_to_size_ratio);
+        return m_buffer.capacity() / m_to_from_size_ratio;
     }
 
     template <typename To, typename From>
@@ -427,6 +437,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
         const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
+        SPARROW_ASSERT_TRUE(idx_for_buffer < m_buffer.size());
+
         m_buffer.erase(
             std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer)),
             std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer + m_to_from_size_ratio))
@@ -444,7 +456,9 @@ namespace sparrow
         const difference_type index_first = std::distance(cbegin(), first);
         const difference_type index_last = std::distance(cbegin(), last);
         const auto idx_for_buffer_first = index_for_buffer(static_cast<size_type>(index_first));
+        SPARROW_ASSERT_TRUE(idx_for_buffer_first < m_buffer.size());
         const auto idx_for_buffer_last = index_for_buffer(static_cast<size_type>(index_last));
+        SPARROW_ASSERT_TRUE(idx_for_buffer_last < m_buffer.size());
         m_buffer.erase(
             std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_first)),
             std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_last))
@@ -498,6 +512,7 @@ namespace sparrow
     {
         const difference_type index = std::distance(cbegin(), pos);
         const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
+        SPARROW_ASSERT_TRUE(idx_for_buffer < m_buffer.size());
         return std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
     }
 }

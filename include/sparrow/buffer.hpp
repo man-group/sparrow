@@ -150,8 +150,7 @@ namespace sparrow
         template <class It, allocator A = allocator_type>
         constexpr buffer(It first, It last, const A& a = A());
 
-        template <class Range, allocator A = allocator_type>
-        requires std::ranges::input_range<Range>
+        template <std::ranges::input_range Range, allocator A = allocator_type>
         constexpr buffer(const Range& range, const A& a = A());
 
         ~buffer();
@@ -444,8 +443,7 @@ namespace sparrow
     }
 
     template <class T>
-    template <class Range, allocator A>
-    requires std::ranges::input_range<Range>
+    template <std::ranges::input_range Range, allocator A>
     constexpr buffer<T>::buffer(const Range& range, const A& a)
         : base_type(check_init_length(static_cast<size_type>(std::ranges::size(range)), a), a)
     {
