@@ -435,6 +435,10 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
+        if(empty())
+        {
+            return begin();
+        }
         const difference_type index = std::distance(cbegin(), pos);
         const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
         SPARROW_ASSERT_TRUE(idx_for_buffer < m_buffer.size());
@@ -453,12 +457,16 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(cbegin() <= first);
         SPARROW_ASSERT_TRUE(last <= cend());
+        if (empty())
+        {
+            return begin();
+        }
         const difference_type index_first = std::distance(cbegin(), first);
         const difference_type index_last = std::distance(cbegin(), last);
         const auto idx_for_buffer_first = index_for_buffer(static_cast<size_type>(index_first));
         SPARROW_ASSERT_TRUE(idx_for_buffer_first < m_buffer.size());
         const auto idx_for_buffer_last = index_for_buffer(static_cast<size_type>(index_last));
-        SPARROW_ASSERT_TRUE(idx_for_buffer_last < m_buffer.size());
+        SPARROW_ASSERT_TRUE(idx_for_buffer_last <= m_buffer.size());
         m_buffer.erase(
             std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_first)),
             std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_last))
@@ -512,7 +520,7 @@ namespace sparrow
     {
         const difference_type index = std::distance(cbegin(), pos);
         const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
-        SPARROW_ASSERT_TRUE(idx_for_buffer < m_buffer.size());
+        SPARROW_ASSERT_TRUE(idx_for_buffer <= m_buffer.size());
         return std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
     }
 }
