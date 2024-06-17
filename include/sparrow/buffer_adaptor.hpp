@@ -130,7 +130,7 @@ namespace sparrow
         [[nodiscard]] buffer_reference::const_iterator get_buffer_reference_iterator(const_iterator pos);
 
         buffer_reference& m_buffer;
-        const size_type m_max_size;
+        size_type m_max_size;
     };
 
     template <typename To, typename From>
