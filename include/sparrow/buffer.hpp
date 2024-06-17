@@ -18,12 +18,14 @@
 #include <concepts>
 #include <iterator>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 #include <type_traits>
 
 #include "sparrow/allocator.hpp"
 #include "sparrow/contracts.hpp"
 #include "sparrow/iterator.hpp"
+
 
 namespace sparrow
 {
@@ -148,6 +150,9 @@ namespace sparrow
 
         template <class It, allocator A = allocator_type>
         constexpr buffer(It first, It last, const A& a = A());
+
+        template <std::ranges::input_range Range, allocator A = allocator_type>
+        constexpr buffer(const Range& range, const A& a = A());
 
         ~buffer();
 
@@ -436,6 +441,19 @@ namespace sparrow
         : base_type(check_init_length(static_cast<size_type>(std::distance(first, last)), a), a)
     {
         get_data().p_end = copy_initialize(first, last, get_data().p_begin, get_allocator());
+    }
+
+    template <class T>
+    template <std::ranges::input_range Range, allocator A>
+    constexpr buffer<T>::buffer(const Range& range, const A& a)
+        : base_type(check_init_length(static_cast<size_type>(std::ranges::size(range)), a), a)
+    {
+        get_data().p_end = copy_initialize(
+            std::ranges::begin(range),
+            std::ranges::end(range),
+            get_data().p_begin,
+            get_allocator()
+        );
     }
 
     template <class T>
