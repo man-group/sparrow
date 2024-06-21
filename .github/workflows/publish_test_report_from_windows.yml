@@ -1,7 +1,7 @@
 name: 'Test Report'
 on:
   workflow_run:
-    workflows: []
+    workflows: [Windows]
     types:
       - completed
 permissions:
@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: dorny/test-reporter@v1
       with:
-        artifact: test_sparrow_lib_report_(.*)
+        artifact: test_sparrow_lib_report_Windows_(.*)
         name: Process test report
         path: '**/*.xml'
         reporter: java-junit
