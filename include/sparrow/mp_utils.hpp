@@ -19,6 +19,13 @@
 
 namespace sparrow::mpl
 {
+    /// Workaround to replace static_assert(false) in template code.
+    /// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
+    template <class... T>
+    struct dependent_false : std::false_type
+    {
+    };
+
     template <class L, template <class...> class U>
     struct is_type_instance_of : std::false_type
     {
@@ -100,15 +107,25 @@ namespace sparrow::mpl
     template <typename TList>
     concept any_typelist = is_type_instance_of_v<TList, typelist>;
 
-    template <class T, bool is_const>
-    struct constify : std::conditional<is_const, const T, T>
-    {
-    };
 
-    // `constify_t` is required since `std::add_const_t<T&>`
-    // is not `const T&` but `T&`.
-    template <class T, bool is_const>
-    using constify_t = typename constify<T, is_const>::type;
+
+    namespace impl
+    {
+        template <class From, template <class...> class To>
+        struct rename_impl;
+
+        template <template <class...> class From, template <class...> class To, class... T>
+        struct rename_impl<From<T...>, To>
+        {
+            using type = To<T...>;
+        };
+    }
+
+    /// Changes the type of the list to the given type/
+    /// Example:
+    ///     static_assert(std::same_as<rename<typelist<int, float>, std::variant>, std::variant<int, float>>)
+    template <class From, template <class... >class To>
+    using rename = typename impl::rename_impl<From, To>::type;
 
     //////////////////////////////////////////////////
     //// Type-predicates /////////////////////////////
@@ -209,6 +226,7 @@ namespace sparrow::mpl
         return ct_type_predicate_to_callable<P>{};
     };
 
+
     //////////////////////////////////////////////////
     //// Algorithms //////////////////////////////////
 
@@ -305,6 +323,57 @@ namespace sparrow::mpl
         return find_if(list, predicate::same_as<TypeToFind>{});
     }
 
+    namespace impl
+    {
+        template <template <class...> class F, class... L>
+        struct transform_impl
+        {
+            static_assert(dependent_false<L...>::value, "transform can apply to typelist-like types only");
+        };
+
+        template <template <class...> class F, template <class...> class L, class... T>
+        struct transform_impl<F, L<T...>>
+        {
+            using type = L<F<T>...>;
+        };
+
+        template
+        <
+            template <class...> class F,
+            template <class...> class L1,
+            class... T1,
+            template <class...> class L2,
+            class... T2
+        >
+        struct transform_impl<F, L1<T1...>, L2<T2...>>
+        {
+            using type = L1<F<T1, T2>...>;
+        };
+    }
+
+    /// Applies the metafunction F to each tuple of elements in the typelists and returns the
+    /// corresponding list
+    /// Example:
+    ///     transform<std::add_pointer_t, typelist<int, float> gives typelist<int*, float*>
+    ///     transform<std::is_same, typelist<int, float>, typelist<int, int>> gives
+    ///         typelist<std::is_same<int, int>, std::is_same<float, int>>
+    template <template <class> class F, class... L>
+    using transform = typename impl::transform_impl<F, L...>::type;
+
+    //////////////////////////////////////////////////
+    //// Miscellaneous ///////////////////////////////
+
+    template <class T, bool is_const>
+    struct constify : std::conditional<is_const, const T, T>
+    {
+    };
+
+    // `constify_t` is required since `std::add_const_t<T&>`
+    // is not `const T&` but `T&`.
+    template <class T, bool is_const>
+    using constify_t = typename constify<T, is_const>::type;
+
+
     /// Computes the const reference type of T.
     ///
     /// @tparam T The const reference type of T.
@@ -333,12 +402,6 @@ namespace sparrow::mpl
     template <class T>
     concept constant_range = std::ranges::input_range<T> && constant_iterator<std::ranges::iterator_t<T>>;
 
-    /// Workaround to replace static_assert(false) in template code.
-    /// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
-    template <class T>
-    struct dependent_false : std::false_type
-    {
-    };
 
     /// Invokes undefined behavior. An implementation may use this to optimize impossible code branches
     /// away (typically, in optimized builds) or to trap them to prevent further execution (typically, in
