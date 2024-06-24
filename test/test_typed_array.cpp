@@ -51,6 +51,22 @@ namespace
     const std::vector<size_t> false_bitmap = {9};
 }
 
+namespace
+{
+    // typed_array traits
+
+    using testing_array = typed_array<double>;
+
+    static_assert(std::is_same_v<testing_array::value_type, array_value_type_t<testing_array>>);
+    static_assert(std::is_same_v<testing_array::reference, array_reference_t<testing_array>>);
+    static_assert(std::is_same_v<testing_array::const_reference, array_const_reference_t<testing_array>>);
+    static_assert(std::is_same_v<testing_array::size_type, array_size_type_t<testing_array>>);
+    static_assert(std::is_same_v<testing_array::iterator, array_iterator_t<testing_array>>);
+    static_assert(std::is_same_v<testing_array::const_iterator, array_const_iterator_t<testing_array>>);
+    static_assert(std::is_same_v<testing_array::const_bitmap_range, array_const_bitmap_range_t<testing_array>>);
+    static_assert(std::is_same_v<testing_array::const_value_range, array_const_value_range_t<testing_array>>);
+}
+
 TEST_SUITE("typed_array")
 {
     TEST_CASE("default constructor for variable_size_binary_layout")

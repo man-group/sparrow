@@ -21,8 +21,8 @@
 #include <string>
 #include <type_traits>
 
-#include "sparrow/typed_array.hpp"
 #include "sparrow/data_type.hpp"
+#include "sparrow/typed_array.hpp"
 
 #include "array_data_creation.hpp"
 #include "doctest/doctest.h"
@@ -31,7 +31,7 @@ namespace
 {
     constexpr std::size_t test_n = 10;
     constexpr std::size_t test_offset = 1;
-    constexpr date::sys_days unix_time = date::sys_days(date::year(1970)/date::January/date::day(1));
+    constexpr date::sys_days unix_time = date::sys_days(date::year(1970) / date::January / date::day(1));
     const std::vector<size_t> false_bitmap = {9};
     using sys_time = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
 }
@@ -49,7 +49,11 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("at")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         sparrow::typed_array<sparrow::timestamp> ta{array_data};
         for (typename sparrow::typed_array<sparrow::timestamp>::size_type i = 0; i < ta.size() - 1; ++i)
         {
@@ -62,7 +66,11 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("const at")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         const sparrow::typed_array<sparrow::timestamp> ta{array_data};
         for (typename sparrow::typed_array<sparrow::timestamp>::size_type i = 0; i < ta.size() - 1; ++i)
         {
@@ -75,7 +83,11 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("operator[]")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         sparrow::typed_array<sparrow::timestamp> ta{array_data};
         for (typename sparrow::typed_array<sparrow::timestamp>::size_type i = 0; i < ta.size() - 1; ++i)
         {
@@ -86,7 +98,11 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("const operator[]")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         const sparrow::typed_array<sparrow::timestamp> ta{array_data};
         for (typename sparrow::typed_array<sparrow::timestamp>::size_type i = 0; i < ta.size() - 1; ++i)
         {
@@ -97,28 +113,44 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("front")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         sparrow::typed_array<sparrow::timestamp> ta{array_data};
         CHECK_EQ(ta.front().value(), sparrow::timestamp(unix_time + date::days(1)));
     }
 
     TEST_CASE("const front")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         const sparrow::typed_array<sparrow::timestamp> ta{array_data};
         CHECK_EQ(ta.front().value(), sparrow::timestamp(unix_time + date::days(1)));
     }
 
     TEST_CASE("back")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         sparrow::typed_array<sparrow::timestamp> ta{array_data};
         CHECK_FALSE(ta.back().has_value());
     }
 
     TEST_CASE("const back")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         const sparrow::typed_array<sparrow::timestamp> ta{array_data};
         CHECK_FALSE(ta.back().has_value());
     }
@@ -127,7 +159,11 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("const iterators")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         const sparrow::typed_array<sparrow::timestamp> ta{array_data};
 
         auto iter = ta.cbegin();
@@ -157,7 +193,11 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("bitmap")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         const sparrow::typed_array<sparrow::timestamp> ta{array_data};
         const auto bitmap = ta.bitmap();
         REQUIRE_EQ(bitmap.size(), test_n - test_offset);
@@ -170,7 +210,11 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("values")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         const sparrow::typed_array<sparrow::timestamp> ta{array_data};
         const auto values = ta.values();
         CHECK_EQ(values.size(), test_n - test_offset);
@@ -184,7 +228,11 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("empty")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         const sparrow::typed_array<sparrow::timestamp> ta{array_data};
         CHECK_FALSE(ta.empty());
 
@@ -195,7 +243,11 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("size")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         const sparrow::typed_array<sparrow::timestamp> ta{array_data};
         CHECK_EQ(ta.size(), test_n - test_offset);
     }
@@ -204,13 +256,21 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("==")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         const sparrow::typed_array<sparrow::timestamp> ta{array_data};
         const sparrow::typed_array<sparrow::timestamp> ta_same{array_data};
         CHECK(ta == ta);
         CHECK(ta == ta_same);
 
-        const auto array_data_less = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n - 1, test_offset - 1, {8});
+        const auto array_data_less = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n - 1,
+            test_offset - 1,
+            {8}
+        );
         const sparrow::typed_array<sparrow::timestamp> ta_less{array_data_less};
         CHECK_FALSE(ta == ta_less);
         CHECK_FALSE(ta_less == ta);
@@ -218,13 +278,21 @@ TEST_SUITE("typed_array_timestamp")
 
     TEST_CASE("!=")
     {
-        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n, test_offset, false_bitmap);
+        const auto array_data = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n,
+            test_offset,
+            false_bitmap
+        );
         const sparrow::typed_array<sparrow::timestamp> ta{array_data};
         const sparrow::typed_array<sparrow::timestamp> ta_same{array_data};
         CHECK_FALSE(ta != ta);
         CHECK_FALSE(ta != ta_same);
 
-        const auto array_data_less = sparrow::test::make_test_array_data<sparrow::timestamp>(test_n - 1, test_offset - 1, {8});
+        const auto array_data_less = sparrow::test::make_test_array_data<sparrow::timestamp>(
+            test_n - 1,
+            test_offset - 1,
+            {8}
+        );
         const sparrow::typed_array<sparrow::timestamp> ta_less{array_data_less};
         CHECK(ta != ta_less);
         CHECK(ta_less != ta);

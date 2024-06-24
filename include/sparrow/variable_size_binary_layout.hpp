@@ -17,8 +17,8 @@
 #include <functional>
 #include <ranges>
 
-#include "sparrow/contracts.hpp"
 #include "sparrow/array_data.hpp"
+#include "sparrow/contracts.hpp"
 #include "sparrow/iterator.hpp"
 #include "sparrow/mp_utils.hpp"
 

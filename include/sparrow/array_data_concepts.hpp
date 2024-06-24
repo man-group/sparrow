@@ -31,8 +31,8 @@ namespace sparrow
      */
     template <class Layout>
     concept arrow_layout = mpl::is_type_instance_of_v<Layout, fixed_size_layout>
-                                    || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
-                                    || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>;
+                           || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
+                           || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>;
 
     /**
      * Concept to check if a type is a range of arrow base type extended.

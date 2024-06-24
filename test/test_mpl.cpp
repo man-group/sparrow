@@ -14,6 +14,7 @@
 
 #include <concepts>
 #include <list>
+#include <variant>
 #include <vector>
 
 #include <sparrow/mp_utils.hpp>
@@ -68,6 +69,8 @@ namespace sparrow
     static_assert(mpl::size(test_list_extended_2{}) == 4);
     static_assert(std::same_as<test_list_extended_2, mpl::typelist<int, char, float, double>>);
 
+    static_assert(std::same_as<mpl::rename<test_list, std::variant>, std::variant<int, char>>);
+
     //////////////////////////////////////////////////////////////////////////////
     // Algorithm
 
@@ -111,4 +114,7 @@ namespace sparrow
     static_assert(mpl::contains<char>(test_list{}));
     static_assert(not mpl::contains<float>(test_list{}));
     static_assert(not mpl::contains<double>(test_list{}));
+
+    // transfrom
+    static_assert(std::same_as<mpl::typelist<int*, char*>, mpl::transform<std::add_pointer_t, test_list>>);
 }

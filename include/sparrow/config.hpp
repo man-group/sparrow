@@ -15,15 +15,15 @@
 #pragma once
 
 #if defined(__apple_build_version__)
-#define COMPILING_WITH_APPLE_CLANG 1
+#    define COMPILING_WITH_APPLE_CLANG 1
 #else
-#define COMPILING_WITH_APPLE_CLANG 0
+#    define COMPILING_WITH_APPLE_CLANG 0
 #endif
 
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 170000
-#define USING_LIBCPP_PRE_17 1
+#    define USING_LIBCPP_PRE_17 1
 #else
-#define USING_LIBCPP_PRE_17 0
+#    define USING_LIBCPP_PRE_17 0
 #endif
 
 consteval bool is_apple_compiler()
