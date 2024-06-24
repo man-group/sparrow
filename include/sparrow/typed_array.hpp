@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <numeric>
+#include <type_traits>
 #include <unordered_set>
 
 #include "sparrow/algorithm.hpp"
@@ -59,6 +60,7 @@ namespace sparrow
 
         using layout_type = Layout;
 
+        using value_type = typename layout_type::value_type;
         using reference = typename layout_type::reference;
         using const_reference = typename layout_type::const_reference;
 
@@ -193,6 +195,57 @@ namespace sparrow
         array_data m_data = make_default_array_data<Layout>();
         layout_type m_layout{m_data};
     };
+
+    /*
+     * is_typed_array traits
+     */
+    template <class A>
+    struct is_typed_array : std::false_type
+    {
+    };
+
+    template <class T, class L>
+    struct is_typed_array<typed_array<T, L>> : std::true_type
+    {
+    };
+
+    template <class A>
+    constexpr bool is_typed_array_v = is_typed_array<A>::value;
+
+    /*
+     * typed_array traits
+     */
+    template <class A>
+    requires is_typed_array_v<A>
+    using array_value_type_t = typename A::value_type;
+
+    template <class A>
+    requires is_typed_array_v<A>
+    using array_reference_t = typename A::reference;
+
+    template <class A>
+    requires is_typed_array_v<A>
+    using array_const_reference_t = typename A::const_reference;
+
+    template <class A>
+    requires is_typed_array_v<A>
+    using array_size_type_t = typename A::size_type;
+
+    template <class A>
+    requires is_typed_array_v<A>
+    using array_iterator_t = typename A::iterator;
+
+    template <class A>
+    requires is_typed_array_v<A>
+    using array_const_iterator_t = typename A::const_iterator;
+
+    template <class A>
+    requires is_typed_array_v<A>
+    using array_const_bitmap_range_t = typename A::const_bitmap_range;
+    
+    template <class A>
+    requires is_typed_array_v<A>
+    using array_const_value_range_t = typename A::const_value_range;
 
     // Constructors
     template <class T, class Layout>
