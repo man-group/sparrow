@@ -22,12 +22,12 @@
 
 namespace sparrow::test
 {
-    
+
     // Creates an array_data object for testing purposes.
-    // 
+    //
     // The bitmap is initialized with all bits set to true, except for the indices specified in the
     // false_bitmap vector. The buffer is filled with values from 0 to n-1, where n is the size of the array.
-    // 
+    //
     // tparam T The type of the elements in the array.
     // param n The size of the array.
     // param offset The offset of the array.
@@ -103,7 +103,9 @@ namespace sparrow::test
         };
         for (size_t i = 0; i < words.size(); ++i)
         {
-            offset_func()[i + 1] = offset_func()[i] + static_cast<sparrow::array_data::buffer_type::difference_type>(words[i].size());
+            offset_func(
+            )[i + 1] = offset_func()[i]
+                       + static_cast<sparrow::array_data::buffer_type::difference_type>(words[i].size());
             std::ranges::copy(words[i], iter);
             iter += static_cast<sparrow::array_data::buffer_type::difference_type>(words[i].size());
             ad.bitmap.set(i, true);

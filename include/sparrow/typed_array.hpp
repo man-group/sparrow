@@ -216,35 +216,35 @@ namespace sparrow
      * typed_array traits
      */
     template <class A>
-    requires is_typed_array_v<A>
+        requires is_typed_array_v<A>
     using array_value_type_t = typename A::value_type;
 
     template <class A>
-    requires is_typed_array_v<A>
+        requires is_typed_array_v<A>
     using array_reference_t = typename A::reference;
 
     template <class A>
-    requires is_typed_array_v<A>
+        requires is_typed_array_v<A>
     using array_const_reference_t = typename A::const_reference;
 
     template <class A>
-    requires is_typed_array_v<A>
+        requires is_typed_array_v<A>
     using array_size_type_t = typename A::size_type;
 
     template <class A>
-    requires is_typed_array_v<A>
+        requires is_typed_array_v<A>
     using array_iterator_t = typename A::iterator;
 
     template <class A>
-    requires is_typed_array_v<A>
+        requires is_typed_array_v<A>
     using array_const_iterator_t = typename A::const_iterator;
 
     template <class A>
-    requires is_typed_array_v<A>
+        requires is_typed_array_v<A>
     using array_const_bitmap_range_t = typename A::const_bitmap_range;
-    
+
     template <class A>
-    requires is_typed_array_v<A>
+        requires is_typed_array_v<A>
     using array_const_value_range_t = typename A::const_value_range;
 
     // Constructors
@@ -414,7 +414,8 @@ namespace sparrow
 
     template <class T, class Layout>
         requires is_arrow_base_type<T>
-    auto operator<=>(const typed_array<T, Layout>& ta1, const typed_array<T, Layout>& ta2) -> std::partial_ordering
+    auto
+    operator<=>(const typed_array<T, Layout>& ta1, const typed_array<T, Layout>& ta2) -> std::partial_ordering
     {
         return lexicographical_compare_three_way(ta1, ta2);
     }

@@ -14,8 +14,8 @@
 
 #include <initializer_list>
 
-#include "sparrow/contracts.hpp"
 #include "sparrow/array_data.hpp"
+#include "sparrow/contracts.hpp"
 
 #include "doctest/doctest.h"
 

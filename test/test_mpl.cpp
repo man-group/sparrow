@@ -116,6 +116,5 @@ namespace sparrow
     static_assert(not mpl::contains<double>(test_list{}));
 
     // transfrom
-    static_assert(std::same_as<mpl::typelist<int*, char*>,
-                               mpl::transform<std::add_pointer_t, test_list>>);
+    static_assert(std::same_as<mpl::typelist<int*, char*>, mpl::transform<std::add_pointer_t, test_list>>);
 }

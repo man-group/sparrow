@@ -49,15 +49,16 @@ namespace sparrow::mpl
     };
 
     /// Appends the given types to a typelist.
-    /// 
+    ///
     /// This function takes a typelist and additional types as arguments, and returns a new typelist
     /// that contains all the types from the original typelist followed by the additional types.
-    /// 
+    ///
     /// @tparam Ts... The types in the original typelist.
     /// @tparam Us... The additional types to be appended.
     /// @param typelist<Ts...> The original typelist.
     /// @param Us... The additional types.
-    /// @return A new typelist containing all the types from the original typelist followed by the additional types.
+    /// @return A new typelist containing all the types from the original typelist followed by the additional
+    /// types.
     template <class... Ts, class... Us>
         requires(!is_type_instance_of_v<Us, typelist> && ...)
     consteval auto append(typelist<Ts...>, Us...)
@@ -66,26 +67,27 @@ namespace sparrow::mpl
     }
 
     /// Appends two typelists together.
-    /// 
-    /// This function takes two typelists as input and returns a new typelist that contains all the types from both input typelists.
-    /// 
+    ///
+    /// This function takes two typelists as input and returns a new typelist that contains all the types from
+    /// both input typelists.
+    ///
     /// @tparam Ts... The types in the first typelist.
     /// @tparam Us... The types in the second typelist.
     /// @param list1 The first typelist.
     /// @param list2 The second typelist.
     /// @return A new typelist that contains all the types from both input typelists.
     template <class... Ts, class... Us>
-    consteval auto append(typelist<Ts...>, typelist<Us...>) // TODO: Handle several typelists
+    consteval auto append(typelist<Ts...>, typelist<Us...>)  // TODO: Handle several typelists
     {
         return typelist<Ts..., Us...>{};
     }
 
 
     /// Appends one or more types or typelist to a given TypeList.
-    /// 
+    ///
     /// This template alias takes a TypeList and one or more types or typelist as template arguments.
     /// It appends the types to the given TypeList and returns the resulting TypeList.
-    /// 
+    ///
     /// @tparam TypeList The TypeList to which the types will be appended.
     /// @tparam Us The types or typelists to be appended to the TypeList.
     /// @return The resulting TypeList after appending the types.
@@ -107,8 +109,6 @@ namespace sparrow::mpl
     template <typename TList>
     concept any_typelist = is_type_instance_of_v<TList, typelist>;
 
-
-
     namespace impl
     {
         template <class From, template <class...> class To>
@@ -124,7 +124,7 @@ namespace sparrow::mpl
     /// Changes the type of the list to the given type/
     /// Example:
     ///     static_assert(std::same_as<rename<typelist<int, float>, std::variant>, std::variant<int, float>>)
-    template <class From, template <class... >class To>
+    template <class From, template <class...> class To>
     using rename = typename impl::rename_impl<From, To>::type;
 
     //////////////////////////////////////////////////
@@ -225,7 +225,6 @@ namespace sparrow::mpl
     {
         return ct_type_predicate_to_callable<P>{};
     };
-
 
     //////////////////////////////////////////////////
     //// Algorithms //////////////////////////////////
@@ -337,14 +336,7 @@ namespace sparrow::mpl
             using type = L<F<T>...>;
         };
 
-        template
-        <
-            template <class...> class F,
-            template <class...> class L1,
-            class... T1,
-            template <class...> class L2,
-            class... T2
-        >
+        template <template <class...> class F, template <class...> class L1, class... T1, template <class...> class L2, class... T2>
         struct transform_impl<F, L1<T1...>, L2<T2...>>
         {
             using type = L1<F<T1, T2>...>;
@@ -401,7 +393,6 @@ namespace sparrow::mpl
     /// @tparam T The type to be checked for constant range concept.
     template <class T>
     concept constant_range = std::ranges::input_range<T> && constant_iterator<std::ranges::iterator_t<T>>;
-
 
     /// Invokes undefined behavior. An implementation may use this to optimize impossible code branches
     /// away (typically, in optimized builds) or to trap them to prevent further execution (typically, in

@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include <version>
 #include <chrono>
+#include <version>
 
 #if defined(SPARROW_USE_DATE_POLYFILL)
-#include <date/tz.h>
+#    include <date/tz.h>
 #else
 namespace date = std::chrono;
 #endif
@@ -31,14 +31,15 @@ namespace date = std::chrono;
 
 #include "sparrow/mp_utils.hpp"
 
-#if __cplusplus > 202002L and defined(__STDCPP_FLOAT16_T__) and defined(__STDCPP_FLOAT32_T__) and defined(__STDCPP_FLOAT64_T__)
+#if __cplusplus > 202002L and defined(__STDCPP_FLOAT16_T__) and defined(__STDCPP_FLOAT32_T__) \
+    and defined(__STDCPP_FLOAT64_T__)
 #    define SPARROW_STD_FIXED_FLOAT_SUPPORT
 #endif
 
 // TODO: use exclusively `std::float16_t etc. once we switch to c++23, see
 // https://en.cppreference.com/w/cpp/types/floating-point
 #if defined(SPARROW_STD_FIXED_FLOAT_SUPPORT)
-#   include <stdfloat>
+#    include <stdfloat>
 #else
 // We disable some warnings for the 3rd party float16_t library
 #    if defined(__clang__)
