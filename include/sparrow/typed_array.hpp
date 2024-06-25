@@ -75,6 +75,12 @@ namespace sparrow
 
         explicit typed_array(array_data data);
 
+        typed_array(const typed_array& rhs);
+        typed_array(typed_array&& rhs);
+
+        typed_array& operator=(const typed_array& rhs);
+        typed_array& operator=(typed_array&& rhs);
+
         // Element access
 
         ///@{
@@ -254,6 +260,42 @@ namespace sparrow
         : m_data(std::move(data))
         , m_layout(m_data)
     {
+    }
+
+    // Value semantics
+
+    template <class T, class Layout>
+        requires is_arrow_base_type<T>
+    typed_array<T, Layout>::typed_array(const typed_array& rhs)
+        : m_data(rhs.m_data)
+        , m_layout(m_data)
+    {
+    }
+
+    template <class T, class Layout>
+        requires is_arrow_base_type<T>
+    typed_array<T, Layout>::typed_array(typed_array&& rhs)
+        : m_data(std::move(rhs.m_data))
+        , m_layout(m_data)
+    {
+    }
+
+    template <class T, class Layout>
+        requires is_arrow_base_type<T>
+    typed_array<T, Layout>& typed_array<T, Layout>::operator=(const typed_array& rhs)
+    {
+        m_data = rhs.m_data;
+        m_layout.rebind_data(m_data);
+        return *this;
+    }
+
+    template <class T, class Layout>
+        requires is_arrow_base_type<T>
+    typed_array<T, Layout>& typed_array<T, Layout>::operator=(typed_array&& rhs)
+    {
+        m_data = std::move(rhs.m_data);
+        m_layout.rebind_data(m_data);
+        return *this;
     }
 
     // Element access
