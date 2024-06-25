@@ -127,7 +127,7 @@ namespace sparrow
         // UTF8 variable-length string
         STRING = 13,
         // Variable-length bytes (no guarantee of UTF8-ness)
-        BINARY = 14,
+        //BINARY = 14,
         // Fixed-size binary. Each value occupies the same number of bytes
         FIXED_SIZE_BINARY = 15,
         // Number of nanoseconds since the UNIX epoch with an optional timezone.
@@ -161,7 +161,7 @@ namespace sparrow
         float32_t,
         float64_t,
         std::string,
-        std::vector<byte_t>,
+        //std::vector<byte_t>,
         sparrow::timestamp
         // TODO: add missing fundamental types here
         >;

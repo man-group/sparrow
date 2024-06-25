@@ -124,4 +124,23 @@ namespace sparrow::test
         ad.offset = static_cast<int64_t>(offset);
         return ad;
     }
+
+    // helper function that converts its parameters to
+    // hte given type.
+    template <typename O, std::integral I>
+    constexpr O to_value_type(I i)
+    {
+        if constexpr (std::is_same_v<O, sparrow::float16_t>)
+        {
+            return static_cast<float>(i);
+        }
+        else if constexpr (std::is_arithmetic_v<O>)
+        {
+            return static_cast<O>(i);
+        }
+        else if constexpr (std::is_same_v<O, std::string>)
+        {
+            return std::to_string(i);
+        }
+    }
 }
