@@ -46,7 +46,7 @@ namespace sparrow
             m_data.dictionary = sparrow::value_ptr<array_data>(std::move(dictionary));
         }
 
-        static array_data make_dictionary(const std::array<std::string_view, 5>& lwords)
+        static array_data make_dictionary(const std::array<std::string_view ,5>& lwords)
         {
             array_data dictionary;
             dictionary.bitmap.resize(lwords.size());
