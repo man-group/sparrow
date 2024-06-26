@@ -47,7 +47,7 @@ TEST_SUITE("const_array_iterator")
 
     TEST_CASE("default constructor")
     {
-        const_iter_type iter;
+        [[maybe_unused]] const_iter_type iter;
     }
 
     TEST_CASE_TEMPLATE_DEFINE("all", T, all)
@@ -55,7 +55,7 @@ TEST_SUITE("const_array_iterator")
         SUBCASE("constructor")
         {
             auto tarray = make_test_typed_array<T>();
-            const_iter_type iter(tarray.cbegin());
+            [[maybe_unused]] const_iter_type iter(tarray.cbegin());
         }
 
         SUBCASE("equality")
@@ -179,7 +179,7 @@ TEST_SUITE("array")
     {
         SUBCASE("constructor")
         {
-            auto ar = make_test_array<T>();
+            [[maybe_unused]] auto ar = make_test_array<T>();
         }
 
         SUBCASE("empty")

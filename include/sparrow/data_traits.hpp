@@ -16,6 +16,7 @@
 
 #include "sparrow/data_type.hpp"
 #include "sparrow/fixed_size_layout.hpp"
+#include "sparrow/null_layout.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
 
 namespace sparrow
@@ -32,9 +33,8 @@ namespace sparrow
     struct arrow_traits<null_type>
     {
         static constexpr data_type type_id = data_type::NA;
-        using value_type = std::nullopt_t;
-        using default_layout = fixed_size_layout<value_type>;  // TODO: replace this by a special layout
-                                                               // that's always empty
+        using value_type = null_type;
+        using default_layout = null_layout;
     };
 
     template <>
