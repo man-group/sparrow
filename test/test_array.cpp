@@ -14,9 +14,8 @@
 
 #include "sparrow/array.hpp"
 
-#include "doctest/doctest.h"
-
 #include "array_data_creation.hpp"
+#include "doctest/doctest.h"
 
 using namespace sparrow;
 using sparrow::test::to_value_type;
@@ -231,11 +230,11 @@ TEST_SUITE("array")
             auto iter_end2 = ar.end();
             CHECK_EQ(iter_end, iter_end2);
 
-            for(std::size_t i = 0; i < ar.size(); ++iter, ++i)
+            for (std::size_t i = 0; i < ar.size(); ++iter, ++i)
             {
-                CHECK_EQ(std::get<const_ref>(*iter), to_value_type<T>(i + offset)); 
+                CHECK_EQ(std::get<const_ref>(*iter), to_value_type<T>(i + offset));
             }
-            
+
             CHECK_EQ(iter, iter_end);
         }
     }
