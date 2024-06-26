@@ -58,6 +58,19 @@ namespace sparrow
 
     TEST_SUITE("variable_size_binary_layout")
     {
+        TEST_CASE_FIXTURE(vs_binary_fixture, "rebind_data")
+        {
+            layout_type l(m_data);
+            static constexpr std::array<std::string_view, 3> new_words = {"tambourines", "and", "elephant"};
+            array_data::bitmap_type new_bitmap{new_words.size(), true};
+            auto data = make_default_array_data<layout_type>(new_words, new_bitmap, 0);
+            l.rebind_data(data);
+            for (std::size_t i = 0; i < new_words.size(); ++i)
+            {
+                CHECK_EQ(l[i].value(), new_words[i]);
+            }
+        }
+
         TEST_CASE_FIXTURE(vs_binary_fixture, "size")
         {
             layout_type l(m_data);

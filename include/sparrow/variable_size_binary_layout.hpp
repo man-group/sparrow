@@ -145,6 +145,7 @@ namespace sparrow
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
         explicit variable_size_binary_layout(array_data& data);
+        void rebind_data(array_data& data);
 
         variable_size_binary_layout(const self_type&) = delete;
         self_type& operator=(const self_type&) = delete;
@@ -249,6 +250,12 @@ namespace sparrow
         // TODO: templatize back and front in buffer and uncomment the following line
         // SPARROW_ASSERT_TRUE(data_ref().buffers[0].size() == 0u || data_ref().buffers[0].back() ==
         // data_ref().buffers[1].size());
+    }
+
+    template <class T, class R, class CR, layout_offset OT>
+    void variable_size_binary_layout<T, R, CR, OT>::rebind_data(array_data& data)
+    {
+        m_data = data;
     }
 
     template <class T, class R, class CR, layout_offset OT>

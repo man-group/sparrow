@@ -42,19 +42,19 @@ namespace sparrow
             std::ranges::copy(indexes, b.data<data_type_t>());
             m_data.buffers.push_back(b);
             m_data.length = element_count;
-            auto dictionary = make_dictionary();
+            auto dictionary = make_dictionary(words);
             m_data.dictionary = sparrow::value_ptr<array_data>(std::move(dictionary));
         }
 
-        static array_data make_dictionary()
+        static array_data make_dictionary(const std::array<std::string_view, 5>& lwords)
         {
             array_data dictionary;
-            dictionary.bitmap.resize(words.size());
+            dictionary.bitmap.resize(lwords.size());
             dictionary.buffers.resize(2);
-            dictionary.buffers[0].resize(sizeof(std::int64_t) * (words.size() + 1));
+            dictionary.buffers[0].resize(sizeof(std::int64_t) * (lwords.size() + 1));
             dictionary.buffers[1].resize(std::accumulate(
-                words.cbegin(),
-                words.cend(),
+                lwords.cbegin(),
+                lwords.cend(),
                 size_t(0),
                 [](std::size_t res, const auto& s)
                 {
@@ -68,16 +68,16 @@ namespace sparrow
                 return dictionary.buffers[0].data<std::int64_t>();
             };
 
-            for (size_t i = 0; i < words.size(); ++i)
+            for (size_t i = 0; i < lwords.size(); ++i)
             {
-                offset()[i + 1] = offset()[i] + static_cast<std::int64_t>(words[i].size());
-                std::ranges::copy(words[i], iter);
-                iter += static_cast<array_data::buffer_type::difference_type>(words[i].size());
+                offset()[i + 1] = offset()[i] + static_cast<std::int64_t>(lwords[i].size());
+                std::ranges::copy(lwords[i], iter);
+                iter += static_cast<array_data::buffer_type::difference_type>(lwords[i].size());
                 dictionary.bitmap.set(i, true);
             }
             dictionary.bitmap.set(4, false);
 
-            dictionary.length = static_cast<int64_t>(words.size());
+            dictionary.length = static_cast<int64_t>(lwords.size());
             dictionary.offset = 0;
             return dictionary;
         }
@@ -96,6 +96,27 @@ namespace sparrow
             CHECK(m_data.buffers.size() == 1);
             const layout_type l_copy(m_data);
             CHECK(m_data.buffers.size() == 1);
+        }
+
+        TEST_CASE_FIXTURE(dictionary_encoded_fixture, "rebind_data")
+        {
+            array_data data2 = m_data;
+            layout_type l(m_data);
+            static constexpr std::array<std::string_view, 5> new_words = {
+                {"Just", "got", "home", "from", "Illinois"}
+            };
+            data2.dictionary = sparrow::value_ptr<array_data>(make_dictionary(new_words));
+            l.rebind_data(data2);
+            CHECK_EQ(l[0].value(), new_words[1]);
+            CHECK_EQ(l[1].value(), new_words[0]);
+            CHECK_EQ(l[2].value(), new_words[3]);
+            CHECK_EQ(l[3].value(), new_words[0]);
+            CHECK_EQ(l[4].value(), new_words[1]);
+            CHECK_EQ(l[5].value(), new_words[2]);
+            CHECK_EQ(l[6].value(), new_words[3]);
+            CHECK_EQ(l[7].value(), new_words[2]);
+            CHECK_FALSE(l[8].has_value());
+            CHECK_FALSE(l[9].has_value());
         }
 
         TEST_CASE_FIXTURE(dictionary_encoded_fixture, "size")

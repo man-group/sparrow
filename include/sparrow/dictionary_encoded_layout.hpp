@@ -143,6 +143,7 @@ namespace sparrow
         using const_value_range = std::ranges::subrange<const_value_iterator, const_value_iterator>;
 
         explicit dictionary_encoded_layout(array_data& data);
+        void rebind_data(array_data& data);
 
         dictionary_encoded_layout(const dictionary_encoded_layout&) = delete;
         dictionary_encoded_layout& operator=(const dictionary_encoded_layout&) = delete;
@@ -253,6 +254,13 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(data.dictionary);
         m_sub_layout = std::make_unique<SL>(*data.dictionary);
         m_indexes_layout = std::make_unique<indexes_layout>(data);
+    }
+
+    template <std::integral T, class SL, layout_offset OT>
+    void dictionary_encoded_layout<T, SL, OT>::rebind_data(array_data& data)
+    {
+        m_sub_layout->rebind_data(*data.dictionary);
+        m_indexes_layout->rebind_data(data);
     }
 
     template <std::integral T, class SL, layout_offset OT>

@@ -73,6 +73,7 @@ namespace sparrow
         using const_iterator = layout_iterator<self_type, true>;
 
         explicit fixed_size_layout(array_data& data);
+        void rebind_data(array_data& data);
 
         fixed_size_layout(const self_type&) = delete;
         self_type& operator=(const self_type&) = delete;
@@ -135,6 +136,12 @@ namespace sparrow
         // We only require the presence of the bitmap and the first buffer.
         SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
         SPARROW_ASSERT_TRUE(static_cast<size_type>(data_ref().length) == data_ref().bitmap.size())
+    }
+
+    template <class T>
+    void fixed_size_layout<T>::rebind_data(array_data& data)
+    {
+        m_data = data;
     }
 
     template <class T>
