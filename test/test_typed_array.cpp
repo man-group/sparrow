@@ -124,7 +124,7 @@ TEST_SUITE("typed_array")
             auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset);
             typed_array<T> ta1{array_data};
 
-            auto array_data2 = sparrow::test::make_test_array_data<T>(array_size+8u, offset);
+            auto array_data2 = sparrow::test::make_test_array_data<T>(array_size + 8u, offset);
             typed_array<T> ta2{array_data2};
 
             CHECK_NE(ta1, ta2);
@@ -139,7 +139,7 @@ TEST_SUITE("typed_array")
             typed_array<T> ta1{array_data};
             typed_array<T> ta3{ta1};
 
-            auto array_data2 = sparrow::test::make_test_array_data<T>(array_size+8u, offset);
+            auto array_data2 = sparrow::test::make_test_array_data<T>(array_size + 8u, offset);
             typed_array<T> ta2{array_data2};
 
             CHECK_NE(ta1, ta2);
