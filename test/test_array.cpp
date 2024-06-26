@@ -53,7 +53,7 @@ TEST_SUITE("const_array_iterator")
 
     TEST_CASE_TEMPLATE_DEFINE("all", T, all)
     {
-        SUBCASE("construcator")
+        SUBCASE("constructor")
         {
             auto tarray = make_test_typed_array<T>();
             const_iter_type iter(tarray.cbegin());

@@ -122,6 +122,9 @@ namespace sparrow
     private:
 
         using array_variant = array_traits::array_variant;
+        array_variant build_array(data_descriptor d, array_data data) const;
+
+        data_descriptor m_data_descriptor;
         array_variant m_array;
     };
 
@@ -208,59 +211,52 @@ namespace sparrow
      * array implementation *
      ************************/
 
-    inline array::array(data_descriptor dd, array_data data)
+    inline auto array::build_array(data_descriptor dd, array_data data) const -> array_variant
     {
         switch(dd.id())
         {
         case data_type::NA:
-            m_array = typed_array<null_type>(std::move(data));
-            break;
+            return typed_array<null_type>(std::move(data));
         case data_type::BOOL:
-            m_array = typed_array<bool>(std::move(data));
-            break;
+            return typed_array<bool>(std::move(data));
         case data_type::UINT8:
-            m_array = typed_array<std::uint8_t>(std::move(data));
-            break;
+            return typed_array<std::uint8_t>(std::move(data));
         case data_type::INT8:
-            m_array = typed_array<std::int8_t>(std::move(data));
-            break;
+            return typed_array<std::int8_t>(std::move(data));
         case data_type::UINT16:
-            m_array = typed_array<std::uint16_t>(std::move(data));
-            break;
+            return typed_array<std::uint16_t>(std::move(data));
         case data_type::INT16:
-            m_array = typed_array<std::int16_t>(std::move(data));
-            break;
+            return typed_array<std::int16_t>(std::move(data));
         case data_type::UINT32:
-            m_array = typed_array<std::uint32_t>(std::move(data));
-            break;
+            return typed_array<std::uint32_t>(std::move(data));
         case data_type::INT32:
-            m_array = typed_array<std::int32_t>(std::move(data));
-            break;
+            return typed_array<std::int32_t>(std::move(data));
         case data_type::UINT64:
-            m_array = typed_array<std::uint64_t>(std::move(data));
-            break;
+            return  typed_array<std::uint64_t>(std::move(data));
         case data_type::INT64:
-            m_array = typed_array<std::int64_t>(std::move(data));
-            break;
+            return typed_array<std::int64_t>(std::move(data));
         case data_type::HALF_FLOAT:
-            m_array = typed_array<float16_t>(std::move(data));
-            break;
+            return typed_array<float16_t>(std::move(data));
         case data_type::FLOAT:
-            m_array = typed_array<float32_t>(std::move(data));
-            break;
+            return typed_array<float32_t>(std::move(data));
         case data_type::DOUBLE:
-            m_array = typed_array<float64_t>(std::move(data));
-            break;
+            return typed_array<float64_t>(std::move(data));
         case data_type::STRING:
         case data_type::FIXED_SIZE_BINARY:
-            m_array = typed_array<std::string>(std::move(data));
-            break;
+            return typed_array<std::string>(std::move(data));
         case data_type::TIMESTAMP:
-            m_array = typed_array<sparrow::timestamp>(std::move(data));
-            break;
+            return typed_array<sparrow::timestamp>(std::move(data));
         default:
+            // TODO: implement other data types, remove the default use case
+            // and throw from outside of the switch
             throw std::invalid_argument("not supported yet");
         }
+    }
+
+    inline array::array(data_descriptor dd, array_data data)
+        : m_data_descriptor(dd)
+        , m_array(build_array(std::move(dd), std::move(data)))
+    {
     }
 
     inline bool array::empty() const
@@ -288,15 +284,18 @@ namespace sparrow
 
     inline auto array::operator[](size_type i) const -> const_reference
     {
+        SPARROW_ASSERT_TRUE(i < size());
         return std::visit([i](auto&& arg) { return const_reference(arg[i]); }, m_array);
     }
     inline auto array::front() const -> const_reference
     {
+        SPARROW_ASSERT_FALSE(empty());
         return (*this)[0];
     }
 
     inline auto array::back() const -> const_reference
     {
+        SPARROW_ASSERT_FALSE(empty());
         return (*this)[size() - 1];
     }
 
