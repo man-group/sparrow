@@ -15,6 +15,7 @@
 #pragma once
 
 #include <concepts>
+#include <sstream>
 #include <variant>
 
 #include "sparrow/data_type.hpp"
@@ -70,6 +71,9 @@ namespace sparrow
 
     private:
 
+        std::string get_type_name() const;
+        std::string build_mismatch_message(std::string_view method, const self_type& rhs) const;
+
         reference dereference() const;
         void increment();
         void decrement();
@@ -119,7 +123,7 @@ namespace sparrow
     private:
 
         using array_variant = array_traits::array_variant;
-        array_variant build_array(const data_descriptor& d, array_data data) const;
+        array_variant build_array(const data_descriptor& d, array_data&& data) const;
 
         data_descriptor m_data_descriptor;
         array_variant m_array;
@@ -128,6 +132,27 @@ namespace sparrow
     /*********************************
      * array_iterator implementation *
      *********************************/
+
+    template <bool IC>
+    std::string array_iterator<IC>::get_type_name() const
+    {
+        return std::visit(
+            [](auto&& arg)
+            {
+                return typeid(std::decay_t<decltype(arg)>).name();
+            },
+            m_iter
+        );
+    }
+
+    template <bool IC>
+    std::string array_iterator<IC>::build_mismatch_message(std::string_view method, const self_type& rhs) const
+    {
+        std::ostringstream oss117;
+        oss117 << method << ": iterators must have the same type, got " << get_type_name() << " and "
+               << rhs.get_type_name();
+        return oss117.str();
+    }
 
     template <bool IC>
     auto array_iterator<IC>::dereference() const -> reference
@@ -182,7 +207,7 @@ namespace sparrow
     {
         if (m_iter.index() != rhs.m_iter.index())
         {
-            throw std::invalid_argument("array_iterator::distance_to: iterators must have the same type");
+            throw std::invalid_argument(build_mismatch_message("array_iterator::distance_to", rhs));
         }
 
         return std::visit(
@@ -216,7 +241,7 @@ namespace sparrow
     {
         if (m_iter.index() != rhs.m_iter.index())
         {
-            throw std::invalid_argument("array_iterator::less_than: iterators must have the same type");
+            throw std::invalid_argument(build_mismatch_message("array_iterator::less_than", rhs));
         }
 
         return std::visit(
@@ -232,7 +257,7 @@ namespace sparrow
      * array implementation *
      ************************/
 
-    inline auto array::build_array(const data_descriptor& dd, array_data data) const -> array_variant
+    inline auto array::build_array(const data_descriptor& dd, array_data&& data) const -> array_variant
     {
         switch (dd.id())
         {
