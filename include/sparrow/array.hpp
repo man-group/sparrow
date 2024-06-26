@@ -119,7 +119,7 @@ namespace sparrow
     private:
 
         using array_variant = array_traits::array_variant;
-        array_variant build_array(data_descriptor d, array_data data) const;
+        array_variant build_array(const data_descriptor& d, array_data data) const;
 
         data_descriptor m_data_descriptor;
         array_variant m_array;
@@ -232,7 +232,7 @@ namespace sparrow
      * array implementation *
      ************************/
 
-    inline auto array::build_array(data_descriptor dd, array_data data) const -> array_variant
+    inline auto array::build_array(const data_descriptor& dd, array_data data) const -> array_variant
     {
         switch (dd.id())
         {
@@ -275,8 +275,8 @@ namespace sparrow
     }
 
     inline array::array(data_descriptor dd, array_data data)
-        : m_data_descriptor(dd)
-        , m_array(build_array(std::move(dd), std::move(data)))
+        : m_data_descriptor(std::move(dd))
+        , m_array(build_array(m_data_descriptor, std::move(data)))
     {
     }
 
