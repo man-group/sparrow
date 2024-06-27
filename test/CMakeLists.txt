@@ -50,6 +50,7 @@ set(SPARROW_TESTS_SOURCES
     test_iterator.cpp
     test_memory.cpp
     test_mpl.cpp
+    test_null_layout.cpp
     test_traits.cpp
     test_typed_array.cpp
     test_typed_array_timestamp.cpp
