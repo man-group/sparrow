@@ -15,6 +15,8 @@
 #pragma once
 
 #include <iterator>
+#include <memory>
+#include <ranges>
 #include <type_traits>
 
 namespace sparrow::mpl
@@ -409,5 +411,74 @@ namespace sparrow::mpl
         __builtin_unreachable();
 #endif
     }
+
+    // Concept to check if a type is a unique_ptr
+    template <typename T>
+    concept unique_ptr = mpl::is_type_instance_of_v<std::remove_reference_t<T>, std::unique_ptr>;
+
+    template <typename T>
+    concept unique_ptr_or_derived = unique_ptr<T>
+                                    || std::derived_from<T, std::unique_ptr<typename T::element_type>>;
+
+    // Concept to check if a type is a shared_ptr or derived
+    template <typename T>
+    concept shared_ptr = mpl::is_type_instance_of_v<std::remove_reference_t<T>, std::shared_ptr>;
+
+    template <typename T>
+    concept shared_ptr_or_derived = shared_ptr<T>
+                                    || std::derived_from<T, std::shared_ptr<typename T::element_type>>;
+
+    // Concept to check if a type is either a unique_ptr or a shared_ptr
+    template <typename T>
+    concept smart_ptr = unique_ptr<T> || shared_ptr<T>;
+
+    // Concept to check if a type is either a unique_ptr or a shared_ptr or derived
+    template <typename T>
+    concept smart_ptr_and_derived = shared_ptr_or_derived<T> || unique_ptr_or_derived<T>;
+
+    // Concept to check if a type has a data() member function that returns a pointer
+    template <typename T, typename U>
+    concept has_data_function = requires(T t) {
+        { t.data() } -> std::same_as<U*>;
+    };
+
+    // Concept to check if a type has a element_type type member
+    template <typename T>
+    concept has_element_type = requires { typename T::element_type; };
+
+    template <typename T>
+    struct get_element_type_helper
+    {
+        using type = void;
+    };
+
+    template <has_element_type T>
+    struct get_element_type_helper<T>
+    {
+        using type = typename T::element_type;
+    };
+
+    // Get the element type of a type. If it does not have an element_type member, return void.
+    template <typename T>
+    using get_element_type_t = typename get_element_type_helper<T>::type;
+
+    template <typename T>
+    concept has_deleter_type = requires { typename T::deleter_type; };
+
+    template <typename T>
+    struct get_deleter_type_helper
+    {
+        using type = void;
+    };
+
+    template <has_deleter_type T>
+    struct get_deleter_type_helper<T>
+    {
+        using type = typename T::deleter_type;
+    };
+
+    // Get the deleter type of a type. If it does not have a deleter_type member, return void.
+    template <typename T>
+    using get_deleter_type_t = typename get_deleter_type_helper<T>::type;
 
 }

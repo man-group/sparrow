@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "sparrow/contracts.hpp"
+#include "sparrow/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -28,12 +29,15 @@ namespace sparrow
      * similar to `unique_ptr`. When copied, it copies the managed object.
      *
      * @tparam T The type of the object managed by the `value_ptr`.
+     * @tparam D The deleter type used by the `unique_ptr` that manages the object.
      * @todo Make it constexpr.
      */
-    template <class T>
+    template <class T, class D = std::default_delete<T>>
     class value_ptr
     {
     public:
+
+        using element_type = T;
 
         constexpr value_ptr() noexcept = default;
 
@@ -42,17 +46,25 @@ namespace sparrow
         }
 
         explicit value_ptr(T value)
-            : value_(std::make_unique<T>(std::move(value)))
+            : m_value(std::unique_ptr<T, D>(new T(std::move(value)), D()))
         {
         }
 
         explicit value_ptr(T* value)
-            : value_(value != nullptr ? std::make_unique<T>(*value) : std::unique_ptr<T>())
+            : m_value(value != nullptr ? std::unique_ptr<T, D>(*value) : std::unique_ptr<T, D>())
+        {
+        }
+
+        explicit value_ptr(std::unique_ptr<T, D> unique_ptr)
+            : m_value(std::move(unique_ptr))
         {
         }
 
         value_ptr(const value_ptr& other)
-            : value_(other.value_ ? std::make_unique<T>(*other.value_) : std::unique_ptr<T>())
+            : m_value(
+                  other.m_value ? std::unique_ptr<T, D>(new T(*other.m_value), other.m_value.get_deleter())
+                                : std::unique_ptr<T, D>()
+              )
         {
         }
 
@@ -64,18 +76,18 @@ namespace sparrow
         {
             if (other.has_value())
             {
-                if (value_)
+                if (m_value)
                 {
-                    *value_ = *other.value_;
+                    *m_value = *other.m_value;
                 }
                 else
                 {
-                    value_ = std::make_unique<T>(*other.value_);
+                    m_value = std::unique_ptr<T, D>(new T(*other.m_value), other.m_value.get_deleter());
                 }
             }
             else
             {
-                value_.reset();
+                m_value.reset();
             }
             return *this;
         }
@@ -90,26 +102,31 @@ namespace sparrow
 
         T& operator*()
         {
-            SPARROW_ASSERT_TRUE(value_);
-            return *value_;
+            SPARROW_ASSERT_TRUE(m_value);
+            return *m_value;
         }
 
         const T& operator*() const
         {
-            SPARROW_ASSERT_TRUE(value_);
-            return *value_;
+            SPARROW_ASSERT_TRUE(m_value);
+            return *m_value;
         }
 
         T* operator->()
         {
-            SPARROW_ASSERT_TRUE(value_);
-            return &*value_;
+            SPARROW_ASSERT_TRUE(m_value);
+            return &*m_value;
+        }
+
+        T* get()
+        {
+            return m_value.get();
         }
 
         const T* operator->() const
         {
-            SPARROW_ASSERT_TRUE(value_);
-            return &*value_;
+            SPARROW_ASSERT_TRUE(m_value);
+            return &*m_value;
         }
 
         explicit operator bool() const noexcept
@@ -117,19 +134,29 @@ namespace sparrow
             return has_value();
         }
 
-        bool has_value() const noexcept
+        [[nodiscard]] bool has_value() const noexcept
         {
-            return bool(value_);
+            return bool(m_value);
         }
 
         void reset() noexcept
         {
-            value_.reset();
+            m_value.reset();
         }
 
     private:
 
-        std::unique_ptr<T> value_;
+        std::unique_ptr<T, D> m_value;
     };
 
+    /// If the type is a unique_ptr, it replaces it with a value_ptr, else it keeps the type.
+    template <class T>
+    using replace_unique_ptr_by_value_ptr = std::conditional_t<
+        mpl::unique_ptr_or_derived<T>,
+        sparrow::value_ptr<mpl::get_element_type_t<T>, mpl::get_deleter_type_t<T>>,
+        T>;
+
+    /// Given a typelist, it replaces all unique_ptrs with value_ptrs.
+    template <class Typelist>
+    using replace_unique_ptrs_by_value_ptrs_t = mpl::transform<replace_unique_ptr_by_value_ptr, Typelist>;
 }
