@@ -365,7 +365,6 @@ namespace sparrow::mpl
     template <class T, bool is_const>
     using constify_t = typename constify<T, is_const>::type;
 
-
     /// Computes the const reference type of T.
     ///
     /// @tparam T The const reference type of T.
