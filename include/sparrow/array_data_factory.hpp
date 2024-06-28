@@ -39,6 +39,24 @@
 
 namespace sparrow
 {
+    /*
+     * \brief Creates an array_data object for a null layout.
+     *
+     * This function creates an array_data object.
+     */
+    inline array_data make_array_data_for_null_layout(std::size_t size = 0u)
+    {
+        return {
+            .type = data_descriptor(arrow_type_id<null_type>()),
+            .length = static_cast<std::int64_t>(size),
+            .offset = 0,
+            .bitmap = {},
+            .buffers = {},
+            .child_data = {},
+            .dictionary = nullptr
+        };
+    }
+
     /**
      * \brief Creates an array_data object for a fixed-size layout.
      *

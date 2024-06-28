@@ -25,7 +25,6 @@ namespace date = std::chrono;
 
 #include <climits>
 #include <cstdint>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -136,10 +135,19 @@ namespace sparrow
         TIMESTAMP = 18,
     };
 
+    struct null_type
+    {
+    };
+
+    inline bool operator==(const null_type&, const null_type&)
+    {
+        return true;
+    }
+
     /// C++ types value representation types matching Arrow types.
     // NOTE: this needs to be in sync-order with `data_type`
     using all_base_types_t = mpl::typelist<
-        std::nullopt_t,
+        null_type,
         bool,
         std::uint8_t,
         std::int8_t,

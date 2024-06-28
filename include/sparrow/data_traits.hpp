@@ -29,10 +29,10 @@ namespace sparrow
     };
 
     template <>
-    struct arrow_traits<std::nullopt_t>
+    struct arrow_traits<null_type>
     {
         static constexpr data_type type_id = data_type::NA;
-        using value_type = std::nullopt_t;
+        using value_type = null_type;
         using default_layout = fixed_size_layout<value_type>;  // TODO: replace this by a special layout
                                                                // that's always empty
     };
