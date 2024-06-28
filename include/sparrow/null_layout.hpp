@@ -19,6 +19,8 @@
 #include <optional>
 #include <ranges>
 
+#include "sparrow/array_data.hpp"
+#include "sparrow/contracts.hpp"
 #include "sparrow/data_type.hpp"
 #include "sparrow/iterator.hpp"
 
@@ -33,20 +35,12 @@ namespace sparrow
      * @tparam T the value_type of the iterator
      */
     template <class T>
-    class empty_iterator : public iterator_base<
-                               empty_iterator<T>,
-                               T,
-                               std::contiguous_iterator_tag,
-                               T>
+    class empty_iterator : public iterator_base<empty_iterator<T>, T, std::contiguous_iterator_tag, T>
     {
     public:
 
         using self_type = empty_iterator<T>;
-        using base_type = iterator_base<
-            self_type,
-            T,
-            std::contiguous_iterator_tag,
-            T>;
+        using base_type = iterator_base<self_type, T, std::contiguous_iterator_tag, T>;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
 
@@ -253,4 +247,3 @@ namespace sparrow
         return m_data.get();
     }
 }
-

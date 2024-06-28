@@ -33,7 +33,7 @@ namespace sparrow
 
         TEST_CASE("rebind_data")
         {
-            constexpr std::size_t size1 = 5u;
+            constexpr std::size_t size1 = 3u;
             constexpr std::size_t size2 = 5u;
             array_data ad1 = make_array_data_for_null_layout(size1);
             array_data ad2 = make_array_data_for_null_layout(size2);
@@ -98,4 +98,3 @@ namespace sparrow
         }
     }
 }
-

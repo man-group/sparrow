@@ -135,8 +135,14 @@ namespace sparrow
         TIMESTAMP = 18,
     };
 
-    struct null_type {};
-    inline bool operator==(const null_type&, const null_type&) { return true; }
+    struct null_type
+    {
+    };
+
+    inline bool operator==(const null_type&, const null_type&)
+    {
+        return true;
+    }
 
     /// C++ types value representation types matching Arrow types.
     // NOTE: this needs to be in sync-order with `data_type`
