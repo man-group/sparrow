@@ -465,8 +465,26 @@ namespace sparrow
     template <class T, class Layout>
         requires is_arrow_base_type<T>
     bool operator==(const typed_array<T, Layout>& ta1, const typed_array<T, Layout>& ta2)
-    {
+    {   
+        // see https://github.com/man-group/sparrow/issues/108
+#if defined(__APPLE__) && defined(__clang__) && defined(_LIBCPP_VERSION) && (__clang_major__ < 18)
+
+        if(ta1.size() != ta2.size())
+        { 
+            return false;
+        }
+        auto first1 = ta1.cbegin();
+        auto last1 = ta1.cend();
+        auto first2 = ta2.cbegin();
+        for(; first1 != last1; ++first1, ++first2){
+            if (!(*first1 == *first2)){
+                return false;
+            }
+        }
+        return true;
+#else
         return std::equal(ta1.cbegin(), ta1.cend(), ta2.cbegin(), ta2.cend());
+#endif
     }
 
 }  // namespace sparrow
