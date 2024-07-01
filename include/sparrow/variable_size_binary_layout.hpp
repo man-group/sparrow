@@ -50,12 +50,11 @@ namespace sparrow
             impl::get_inner_reference_t<L, is_const>>;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
-
-        using offset_iterator = std::conditional_t<is_const, typename L::const_offset_iterator, typename L::offset_iterator>;
-        using data_iterator = std::conditional_t<is_const, typename L::const_data_iterator, typename L::data_iterator>;
+        using size_type = typename L::size_type;
+        using layout_type = mpl::constify_t<L, is_const>;
 
         vs_binary_value_iterator() noexcept = default;
-        vs_binary_value_iterator(offset_iterator offset_it, data_iterator data_begin);
+        vs_binary_value_iterator(layout_type* layout, size_type index);
 
     private:
 
@@ -67,8 +66,8 @@ namespace sparrow
         bool equal(const self_type& rhs) const;
         bool less_than(const self_type& rhs) const;
 
-        offset_iterator m_offset_it;
-        data_iterator m_data_begin;
+        layout_type* p_layout = nullptr;
+        difference_type m_index;
 
         friend class iterator_access;
     };
@@ -188,54 +187,60 @@ namespace sparrow
     /*******************************************
      * vs_binary_value_iterator implementation *
      *******************************************/
-
     template <class L, bool is_const>
-    vs_binary_value_iterator<L, is_const>::vs_binary_value_iterator(offset_iterator offset_it, data_iterator data_begin)
-        : m_offset_it(offset_it)
-        , m_data_begin(data_begin)
+    vs_binary_value_iterator<L, is_const>::vs_binary_value_iterator(layout_type* layout, size_type index)
+        : p_layout(layout)
+        , m_index(static_cast<difference_type>(index))
     {
     }
 
     template <class L, bool is_const>
     auto vs_binary_value_iterator<L, is_const>::dereference() const -> reference
     {
-        return reference(m_data_begin + *m_offset_it, m_data_begin + *(m_offset_it + 1));
+        if constexpr (is_const)
+        {
+            return p_layout->value(static_cast<size_type>(m_index));
+        }
+        else
+        {
+            return reference(p_layout, static_cast<size_type>(m_index));
+        }
     }
 
     template <class L, bool is_const>
     void vs_binary_value_iterator<L, is_const>::increment()
     {
-        ++m_offset_it;
+        ++m_index;
     }
 
     template <class L, bool is_const>
     void vs_binary_value_iterator<L, is_const>::decrement()
     {
-        --m_offset_it;
+        --m_index;
     }
 
     template <class L, bool is_const>
     void vs_binary_value_iterator<L, is_const>::advance(difference_type n)
     {
-        m_offset_it += n;
+        m_index += n;
     }
 
     template <class L, bool is_const>
     auto vs_binary_value_iterator<L, is_const>::distance_to(const self_type& rhs) const -> difference_type
     {
-        return rhs.m_offset_it - m_offset_it;
+        return rhs.m_index - m_index;
     }
 
     template <class L, bool is_const>
     bool vs_binary_value_iterator<L, is_const>::equal(const self_type& rhs) const
     {
-        return m_offset_it == rhs.m_offset_it;
+        return p_layout == rhs.p_layout && m_index == rhs.m_index;
     }
 
     template <class L, bool is_const>
     bool vs_binary_value_iterator<L, is_const>::less_than(const self_type& rhs) const
     {
-        return m_offset_it < rhs.m_offset_it;
+        return p_layout == rhs.m_layout && m_index < rhs.m_index;
     }
 
     /**********************************************
@@ -311,13 +316,13 @@ namespace sparrow
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator(offset(0u), data(0u));
+        return const_value_iterator(this, 0u);
     }
 
     template <class T, class R, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, R, CR, OT>::value_cend() const -> const_value_iterator
     {
-        return const_value_iterator(offset_end(), data(0u));
+        return const_value_iterator(this, size());
     }
 
     template <class T, class R, class CR, layout_offset OT>
