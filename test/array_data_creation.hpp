@@ -83,6 +83,7 @@ namespace sparrow::test
             words.push_back(std::to_string(i));
         }
         sparrow::array_data ad;
+        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<std::string>::type_id);
         ad.bitmap.resize(n);
         ad.buffers.resize(2);
         ad.buffers[0].resize(sizeof(std::int64_t) * (n + 1));
