@@ -17,6 +17,7 @@
 #include "sparrow/dictionary_encoded_layout.hpp"
 #include "sparrow/fixed_size_layout.hpp"
 #include "sparrow/mp_utils.hpp"
+#include "sparrow/null_layout.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
 
 namespace sparrow
@@ -30,7 +31,8 @@ namespace sparrow
      * @tparam Layout The layout type to check.
      */
     template <class Layout>
-    concept arrow_layout = mpl::is_type_instance_of_v<Layout, fixed_size_layout>
+    concept arrow_layout = std::same_as<Layout, null_layout>
+                           || mpl::is_type_instance_of_v<Layout, fixed_size_layout>
                            || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
                            || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>;
 

@@ -92,11 +92,13 @@ endif()
 set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/algorithm.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/allocator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array_data_factory.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array_data.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array_data_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer_adaptor.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer_view.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer_view.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/contracts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/data_traits.hpp
@@ -106,10 +108,10 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/memory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/mp_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/null_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow_version.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/typed_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_layout.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
 
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
 )

@@ -25,7 +25,6 @@ namespace date = std::chrono;
 
 #include <climits>
 #include <cstdint>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -128,7 +127,7 @@ namespace sparrow
         // UTF8 variable-length string
         STRING = 13,
         // Variable-length bytes (no guarantee of UTF8-ness)
-        BINARY = 14,
+        //BINARY = 14,
         // Fixed-size binary. Each value occupies the same number of bytes
         FIXED_SIZE_BINARY = 15,
         // Number of nanoseconds since the UNIX epoch with an optional timezone.
@@ -136,10 +135,19 @@ namespace sparrow
         TIMESTAMP = 18,
     };
 
+    struct null_type
+    {
+    };
+
+    inline bool operator==(const null_type&, const null_type&)
+    {
+        return true;
+    }
+
     /// C++ types value representation types matching Arrow types.
     // NOTE: this needs to be in sync-order with `data_type`
     using all_base_types_t = mpl::typelist<
-        std::nullopt_t,
+        null_type,
         bool,
         std::uint8_t,
         std::int8_t,
@@ -153,7 +161,7 @@ namespace sparrow
         float32_t,
         float64_t,
         std::string,
-        std::vector<byte_t>,
+        //std::vector<byte_t>,
         sparrow::timestamp
         // TODO: add missing fundamental types here
         >;

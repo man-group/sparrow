@@ -39,6 +39,24 @@
 
 namespace sparrow
 {
+    /*
+     * \brief Creates an array_data object for a null layout.
+     *
+     * This function creates an array_data object.
+     */
+    inline array_data make_array_data_for_null_layout(std::size_t size = 0u)
+    {
+        return {
+            .type = data_descriptor(arrow_type_id<null_type>()),
+            .length = static_cast<std::int64_t>(size),
+            .offset = 0,
+            .bitmap = {},
+            .buffers = {},
+            .child_data = {},
+            .dictionary = nullptr
+        };
+    }
+
     /**
      * \brief Creates an array_data object for a fixed-size layout.
      *
@@ -390,7 +408,11 @@ namespace sparrow
     template <arrow_layout Layout>
     array_data make_default_array_data()
     {
-        if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
+        if constexpr (std::same_as<Layout, null_layout>)
+        {
+            return make_array_data_for_null_layout();
+        }
+        else if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
         {
             return make_array_data_for_fixed_size_layout<typename Layout::inner_value_type>();
         }

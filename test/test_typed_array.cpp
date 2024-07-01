@@ -26,26 +26,10 @@
 #include "doctest/doctest.h"
 
 using namespace sparrow;
+using sparrow::test::to_value_type;
 
 namespace
 {
-    template <typename O, std::integral I>
-    constexpr O to_value_type(I i)
-    {
-        if constexpr (std::is_same_v<O, sparrow::float16_t>)
-        {
-            return static_cast<float>(i);
-        }
-        else if constexpr (std::is_arithmetic_v<O>)
-        {
-            return static_cast<O>(i);
-        }
-        else if constexpr (std::is_same_v<O, std::string>)
-        {
-            return std::to_string(i);
-        }
-    }
-
     constexpr size_t array_size = 10;
     constexpr size_t offset = 1;
     const std::vector<size_t> false_bitmap = {9};
