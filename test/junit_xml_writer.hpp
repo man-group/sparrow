@@ -40,6 +40,7 @@ namespace sparrow
     private:
 
         doctest::XmlWriter m_xml_writer;
+        // TODO: check if a copy is acceptable
         const doctest::ContextOptions& m_context_options;
     };
 }
