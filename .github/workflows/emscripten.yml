@@ -65,5 +65,5 @@ jobs:
     
     - name: run tests
       run: |
-        node build/tests/test_sparrow_lib.js
+        node build/test/test_sparrow_lib.js
 
