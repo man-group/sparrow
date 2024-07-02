@@ -36,7 +36,6 @@ jobs:
 
     - name: create wasm prefix
       run: |
-        mkdir wasm_prefix
         $MAMBA_EXE create -p $(pwd)/wasm_prefix \
           --platform=emscripten-wasm32 \
           -c https://repo.mamba.pm/emscripten-forge \
