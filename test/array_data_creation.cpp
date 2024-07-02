@@ -39,6 +39,7 @@ namespace sparrow::test
         for (uint8_t i = 0; i < n; ++i)
         {
             b.data<sparrow::timestamp>()[i] = sparrow::timestamp(
+                date::locate_zone("America/New_York"),
                 date::sys_days(date::year(1970) / date::January / date::day(1)) + date::days(i)
             );
         }
