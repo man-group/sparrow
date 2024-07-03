@@ -167,6 +167,8 @@ namespace sparrow
         value_type& value();
         const value_type& value() const;
 
+        self_type& operator=(const_reference_proxy<L>&& rhs);
+        self_type& operator=(const const_reference_proxy<L>& rhs);
         self_type& operator=(const self_type& rhs);
         self_type& operator=(self_type&& rhs);
         self_type& operator=(std::nullopt_t);
@@ -377,6 +379,20 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(has_value());
         return m_val_ref;
+    }
+
+    template <class L>
+    reference_proxy<L>& reference_proxy<L>::operator=(const const_reference_proxy<L>& rhs)
+    {
+        update(rhs);
+        return *this;
+    }
+
+    template <class L>
+    reference_proxy<L>& reference_proxy<L>::operator=(const_reference_proxy<L>&& rhs)
+    {
+        update(std::move(rhs));
+        return *this;
     }
 
     template <class L>

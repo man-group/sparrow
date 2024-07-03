@@ -94,7 +94,7 @@ namespace sparrow
     {
         ref_proxy_fixture()
         {
-            m_layout = {std::make_optional(2), std::make_optional(5), std::nullopt, std::make_optional(7)};
+            m_layout = {std::make_optional(2), std::make_optional(5), std::nullopt, std::make_optional(7), std::nullopt};
         }
 
         const mock_layout& layout() const
@@ -244,6 +244,80 @@ namespace sparrow
             auto ref0 = layout()[0];
             CHECK_EQ(ref0.value(), m_layout.value(0));
             static_assert(std::same_as<decltype(ref0.value()), const int&>);
+        }
+
+        TEST_CASE_FIXTURE(ref_proxy_fixture, "assign_to_reference")
+        {
+
+            SUBCASE("assign_const_ref_with_value_to_ref_without_value")
+            {
+                // has a value
+                auto const_ref0 = layout()[0];
+                // does not have a value
+                auto ref2 = m_layout[2];
+
+                ref2 = const_ref0;
+
+                CHECK(ref2.has_value());
+                CHECK_EQ(ref2.value(),  2);
+                CHECK(ref2);
+                CHECK_EQ(ref2.value(), m_layout.value(0));
+                CHECK_EQ(m_layout.value(0), m_layout.value(2));
+           
+            }
+            SUBCASE("assign_const_ref_with_value_to_ref_with_value")
+            {
+                // has a value
+                auto const_ref0 = layout()[0];
+                // has a value
+                auto ref1 = m_layout[1];
+
+                ref1 = const_ref0;
+
+                CHECK(ref1.has_value());
+                CHECK_EQ(ref1.value(),  2);
+                CHECK(ref1);
+                CHECK_EQ(ref1.value(), m_layout.value(0));
+                CHECK_EQ(m_layout.value(0), m_layout.value(1));
+            }
+            SUBCASE("assign_const_ref_without_value_to_ref_with_value")
+            {
+                // does not have a value
+                auto const_ref2 = layout()[2];
+
+                // has a value
+                auto ref3 = m_layout[3];
+
+                ref3 = const_ref2;
+
+                CHECK(!ref3.has_value());
+                CHECK(!ref3);
+            }
+            SUBCASE("assign_const_ref_without_value_to_ref_without_value")
+            {
+                // does not have a value
+                auto const_ref2 = layout()[2];
+                // does not have a value
+                auto ref4 = m_layout[4];
+
+                ref4 = const_ref2;
+
+                CHECK(!ref4.has_value());
+                CHECK(!ref4);
+            }
+
+            SUBCASE("self_assign_const_ref_with_value")
+            {
+                // the const reference
+                auto const_ref0 = layout()[0];
+                // a reference to the same value
+                auto ref0 = m_layout[0];
+
+                ref0 = const_ref0;
+
+                CHECK(ref0.has_value());
+                CHECK_EQ(ref0.value(),  2);
+            }
         }
     }
 }
