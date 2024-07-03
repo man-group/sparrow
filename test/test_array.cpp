@@ -36,8 +36,7 @@ namespace
     array make_test_array(std::size_t size = array_size, std::size_t off = offset)
     {
         auto ar_data = sparrow::test::make_test_array_data<T>(size, off);
-        auto data_desc = data_descriptor(arrow_type_id<T>());
-        return array(data_desc, std::move(ar_data));
+        return array(std::move(ar_data));
     }
 }
 

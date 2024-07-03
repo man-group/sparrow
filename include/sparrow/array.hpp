@@ -104,7 +104,7 @@ namespace sparrow
 
         using const_iterator = array_iterator<true>;
 
-        array(data_descriptor dd, array_data data);
+        explicit array(array_data data);
 
         bool empty() const;
         size_type size() const;
@@ -123,9 +123,8 @@ namespace sparrow
     private:
 
         using array_variant = array_traits::array_variant;
-        array_variant build_array(const data_descriptor& d, array_data&& data) const;
+        array_variant build_array(array_data&& data) const;
 
-        data_descriptor m_data_descriptor;
         array_variant m_array;
     };
 
@@ -257,8 +256,9 @@ namespace sparrow
      * array implementation *
      ************************/
 
-    inline auto array::build_array(const data_descriptor& dd, array_data&& data) const -> array_variant
+    inline auto array::build_array(array_data&& data) const -> array_variant
     {
+        data_descriptor dd = data.type;
         switch (dd.id())
         {
             case data_type::NA:
@@ -299,9 +299,8 @@ namespace sparrow
         }
     }
 
-    inline array::array(data_descriptor dd, array_data data)
-        : m_data_descriptor(std::move(dd))
-        , m_array(build_array(m_data_descriptor, std::move(data)))
+    inline array::array(array_data data)
+        : m_array(build_array(std::move(data)))
     {
     }
 
