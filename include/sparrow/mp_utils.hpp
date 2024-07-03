@@ -355,6 +355,15 @@ namespace sparrow::mpl
     //////////////////////////////////////////////////
     //// Miscellaneous ///////////////////////////////
 
+    template <class T>
+    struct add_const_lvalue_reference
+        : std::add_lvalue_reference<std::add_const_t<T>>
+    {
+    };
+
+    template <class T>
+    using add_const_lvalue_reference_t = typename add_const_lvalue_reference<T>::type;
+
     template <class T, bool is_const>
     struct constify : std::conditional<is_const, const T, T>
     {
