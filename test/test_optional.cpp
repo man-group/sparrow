@@ -37,7 +37,7 @@ namespace sparrow
 
             {
                 optional_double d(1.2);
-                CHECK(d.has_value());
+                REQUIRE(d.has_value());
                 CHECK_EQ(d.value(), 1.2);
             }
 
