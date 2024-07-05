@@ -16,7 +16,7 @@
 
 #include <compare>
 #include <concepts>
-#include <nullable>
+#include <optional>
 #include <type_traits>
 
 #include "sparrow/mp_utils.hpp"
@@ -441,7 +441,7 @@ namespace sparrow
     {
         if (!m_flag)
         {
-            throw std::bad_nullable_access{};
+            throw std::bad_optional_access{};
         }
     }
 

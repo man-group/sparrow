@@ -249,7 +249,7 @@ namespace sparrow
             SUBCASE("empty")
             {
                 nullable_double empty = std::nullopt;
-                CHECK_THROWS_AS(empty.value(), std::bad_nullable_access);
+                CHECK_THROWS_AS(empty.value(), std::bad_optional_access);
                 CHECK_NOTHROW(*empty);
             }
         }
@@ -549,7 +549,7 @@ namespace sparrow
             {
                 nullable_proxy empty(initial);
                 empty = std::nullopt;
-                CHECK_THROWS_AS(empty.value(), std::bad_nullable_access);
+                CHECK_THROWS_AS(empty.value(), std::bad_optional_access);
                 CHECK_NOTHROW(*empty);
             }
         }
