@@ -16,7 +16,7 @@
 
 #include <compare>
 #include <concepts>
-#include <optional>
+#include <nullable>
 #include <type_traits>
 
 #include "sparrow/mp_utils.hpp"
@@ -27,10 +27,10 @@ namespace sparrow
     concept boolean_like = std::constructible_from<T, bool> and std::convertible_to<T, bool>;
 
     template <class T, boolean_like B>
-    class optional;
+    class nullable;
 
     template <class T>
-    struct optional_traits
+    struct nullable_traits
     {
         using value_type = std::decay_t<T>;
         using reference = value_type&;
@@ -40,7 +40,7 @@ namespace sparrow
     };
 
     template <class T>
-    struct optional_traits<T&>
+    struct nullable_traits<T&>
     {
         using value_type = std::decay_t<T>;
         using unref_type = T;
@@ -111,34 +111,34 @@ namespace sparrow
             std::assignable_from<std::add_lvalue_reference_t<To2>, conditional_ref_t<To2, From2>>;
 
         template <class T>
-        struct is_optional : std::false_type
+        struct is_nullable : std::false_type
         {
         };
 
         template <class T, boolean_like B>
-        struct is_optional<optional<T, B>> : std::true_type
+        struct is_nullable<nullable<T, B>> : std::true_type
         {
         };
 
         template <class T>
-        static constexpr bool is_optional_v = is_optional<T>::value;
+        static constexpr bool is_nullable_v = is_nullable<T>::value;
     }
 
     /**
-     * The optional class is similar to std::optional, with two major differences:
+     * The nullable class is similar to std::nullable, with two major differences:
      * - it can act as a proxy, meaning its template parameter can be lvalue references
      *   or lvalue const references
-     * - the semantic for empty optional: resetting an non empty optional does not destruct
-     *   the contained value. Allocating an empty optional construct the contained value. This
+     * - the semantic for empty nullable: resetting an non empty nullable does not destruct
+     *   the contained value. Allocating an empty nullable construct the contained value. This
      *   behavior is temporary and will be changed in the near future.
      */
     template <class T, boolean_like B = bool>
-    class optional
+    class nullable
     {
     public:
 
-        using self_type = optional<T, B>;
-        using traits = optional_traits<T>;
+        using self_type = nullable<T, B>;
+        using traits = nullable_traits<T>;
         using value_type = typename traits::value_type;
         using reference = typename traits::reference;
         using const_reference = typename traits::const_reference;
@@ -146,13 +146,13 @@ namespace sparrow
         using const_rvalue_reference = typename traits::const_rvalue_reference;
         using flag_type = std::decay_t<B>;
         
-        constexpr optional() noexcept
+        constexpr nullable() noexcept
             : m_value()
             , m_flag(false)
         {
         }
         
-        constexpr optional(std::nullopt_t) noexcept
+        constexpr nullable(std::nullopt_t) noexcept
             : m_value()
             , m_flag(false)
         {
@@ -164,59 +164,59 @@ namespace sparrow
             std::constructible_from<T, U&&>
         )
         explicit (not std::convertible_to<U&&, T>)
-        constexpr optional(U&& value)
+        constexpr nullable(U&& value)
             : m_value(std::forward<U>(value))
             , m_flag(true)
         {
         }
 
-        constexpr optional(const self_type&) = default;
+        constexpr nullable(const self_type&) = default;
 
         template <class TO, boolean_like BO>
         requires (
             util::both_constructible_from_cref<T, TO, B, BO> and
-            not util::initializable_from_refs<T, optional<TO, BO>>
+            not util::initializable_from_refs<T, nullable<TO, BO>>
         )
         explicit(not util::both_convertible_from_cref<T, TO, B, BO>)
-        constexpr optional(const optional<TO, BO>& rhs)
+        constexpr nullable(const nullable<TO, BO>& rhs)
             : m_value(rhs.m_value)
             , m_flag(rhs.m_flag)
         {
         }
 
-        constexpr optional(self_type&&) noexcept = default;
+        constexpr nullable(self_type&&) noexcept = default;
 
         template <class TO, boolean_like BO>
         requires (
             util::both_constructible_from_cond_ref<T, TO, B, BO> and
-            not util::initializable_from_refs<T, optional<TO, BO>>
+            not util::initializable_from_refs<T, nullable<TO, BO>>
         )
         explicit(not util::both_convertible_from_cond_ref<T, TO, B, BO>)
-        constexpr optional(optional<TO, BO>&& rhs)
+        constexpr nullable(nullable<TO, BO>&& rhs)
             : m_value(std::move(rhs.m_value))
             , m_flag(std::move(rhs.m_flag))
         {
         }
 
-        constexpr optional(value_type&& value, flag_type&& flag)
+        constexpr nullable(value_type&& value, flag_type&& flag)
             : m_value(std::move(value))
             , m_flag(std::move(flag))
         {
         }
 
-        constexpr optional(std::add_lvalue_reference_t<T> value, std::add_lvalue_reference_t<B> flag)
+        constexpr nullable(std::add_lvalue_reference_t<T> value, std::add_lvalue_reference_t<B> flag)
             : m_value(value)
             , m_flag(flag)
         {
         }
 
-        constexpr optional(value_type&& value, std::add_lvalue_reference_t<B> flag)
+        constexpr nullable(value_type&& value, std::add_lvalue_reference_t<B> flag)
             : m_value(std::move(value))
             , m_flag(flag)
         {
         }
 
-        constexpr optional(std::add_lvalue_reference_t<T> value, flag_type&& flag)
+        constexpr nullable(std::add_lvalue_reference_t<T> value, flag_type&& flag)
             : m_value(value)
             , m_flag(std::move(flag))
         {
@@ -250,10 +250,10 @@ namespace sparrow
         template <class TO, boolean_like BO>
         requires(
             util::both_assignable_from_cref<T, TO, B, BO> and
-            not util::initializable_from_refs<T, optional<TO, BO>> and
-            not util::assignable_from_refs<T, optional<TO, BO>>
+            not util::initializable_from_refs<T, nullable<TO, BO>> and
+            not util::assignable_from_refs<T, nullable<TO, BO>>
         )
-        constexpr self_type& operator=(const optional<TO, BO>& rhs)
+        constexpr self_type& operator=(const nullable<TO, BO>& rhs)
         {
             m_value = rhs.m_value;
             m_flag = rhs.m_flag;
@@ -270,10 +270,10 @@ namespace sparrow
         template <class TO, boolean_like BO>
         requires(
             util::both_assignable_from_cond_ref<T, TO, B, BO> and
-            not util::initializable_from_refs<T, optional<TO, BO>> and
-            not util::assignable_from_refs<T, optional<TO, BO>>
+            not util::initializable_from_refs<T, nullable<TO, BO>> and
+            not util::assignable_from_refs<T, nullable<TO, BO>>
         )
-        constexpr self_type& operator=(optional<TO, BO>&& rhs)
+        constexpr self_type& operator=(nullable<TO, BO>&& rhs)
         {
             m_value = std::move(rhs.m_value);
             m_flag = std::move(rhs.m_flag);
@@ -310,99 +310,99 @@ namespace sparrow
         B m_flag;
 
         template <class TO, boolean_like BO>
-        friend class optional;
+        friend class nullable;
     };
 
     template <class T, class B>
-    constexpr void swap(optional<T, B>& lhs, optional<T, B>& rhs) noexcept;
+    constexpr void swap(nullable<T, B>& lhs, nullable<T, B>& rhs) noexcept;
 
     template <class T, class B>
-    constexpr bool operator==(const optional<T, B>& lhs, std::nullopt_t) noexcept;
+    constexpr bool operator==(const nullable<T, B>& lhs, std::nullopt_t) noexcept;
 
     template <class T, boolean_like B>
-    constexpr std::strong_ordering operator<=>(const optional<T, B>& lhs, std::nullopt_t) noexcept;
+    constexpr std::strong_ordering operator<=>(const nullable<T, B>& lhs, std::nullopt_t) noexcept;
     
     template <class T, class B, class U>
-    constexpr bool operator==(const optional<T, B>& lhs, const U& rhs) noexcept;
+    constexpr bool operator==(const nullable<T, B>& lhs, const U& rhs) noexcept;
 
     template <class T, class B, class U>
-    requires (!util::is_optional_v<U> && std::three_way_comparable_with<U, T>)
+    requires (!util::is_nullable_v<U> && std::three_way_comparable_with<U, T>)
     constexpr std::compare_three_way_result_t<T, U>
-    operator<=>(const optional<T, B>& lhs, const U& rhs) noexcept;
+    operator<=>(const nullable<T, B>& lhs, const U& rhs) noexcept;
 
     template <class T, class B, class U, class UB>
-    constexpr bool operator==(const optional<T, B>& lhs, const optional<U, UB>& rhs) noexcept;
+    constexpr bool operator==(const nullable<T, B>& lhs, const nullable<U, UB>& rhs) noexcept;
 
     template <class T, class B, std::three_way_comparable_with<T> U, class UB>
     constexpr std::compare_three_way_result_t<T, U>
-    operator<=>(const optional<T, B>& lhs, const optional<U, UB>& rhs) noexcept;
+    operator<=>(const nullable<T, B>& lhs, const nullable<U, UB>& rhs) noexcept;
 
     template <class T, boolean_like B = bool>
-    constexpr optional<T, B> make_optional(T&& value, B&& flag = true);
+    constexpr nullable<T, B> make_nullable(T&& value, B&& flag = true);
 
     /***************************
-     * optional implementation *
+     * nullable implementation *
      ***************************/
 
     template <class T, boolean_like B>
-    constexpr bool optional<T, B>::has_value() const noexcept
+    constexpr bool nullable<T, B>::has_value() const noexcept
     {
         return m_flag;
     }
 
     template <class T, boolean_like B>
-    constexpr optional<T, B>::operator bool() const noexcept
+    constexpr nullable<T, B>::operator bool() const noexcept
     {
         return m_flag;
     }
 
     template <class T, boolean_like B>
-    constexpr auto optional<T, B>::operator*() & noexcept -> reference
+    constexpr auto nullable<T, B>::operator*() & noexcept -> reference
     {
         return m_value;
     }
 
     template <class T, boolean_like B>
-    constexpr auto optional<T, B>::operator*() const & noexcept -> const_reference
+    constexpr auto nullable<T, B>::operator*() const & noexcept -> const_reference
     {
-        return m_value;
-    }
-    
-    template <class T, boolean_like B>
-    constexpr auto optional<T, B>::operator*() && noexcept -> rvalue_reference
-    {
-        return std::move(m_value);
-    }
-
-    template <class T, boolean_like B>
-    constexpr auto optional<T, B>::operator*() const && noexcept -> const_rvalue_reference
-    {
-        return std::move(m_value);
-    }
-
-    template <class T, boolean_like B>
-    constexpr auto optional<T, B>::value() & -> reference
-    {
-        throw_if_empty();
-        return m_value;
-    }
-
-    template <class T, boolean_like B>
-    constexpr auto optional<T, B>::value() const & -> const_reference
-    {
-        throw_if_empty();
         return m_value;
     }
     
     template <class T, boolean_like B>
-    constexpr auto optional<T, B>::value() && -> rvalue_reference
+    constexpr auto nullable<T, B>::operator*() && noexcept -> rvalue_reference
+    {
+        return std::move(m_value);
+    }
+
+    template <class T, boolean_like B>
+    constexpr auto nullable<T, B>::operator*() const && noexcept -> const_rvalue_reference
+    {
+        return std::move(m_value);
+    }
+
+    template <class T, boolean_like B>
+    constexpr auto nullable<T, B>::value() & -> reference
+    {
+        throw_if_empty();
+        return m_value;
+    }
+
+    template <class T, boolean_like B>
+    constexpr auto nullable<T, B>::value() const & -> const_reference
+    {
+        throw_if_empty();
+        return m_value;
+    }
+    
+    template <class T, boolean_like B>
+    constexpr auto nullable<T, B>::value() && -> rvalue_reference
     {
         throw_if_empty();
         return std::move(m_value);
     }
 
     template <class T, boolean_like B>
-    constexpr auto optional<T, B>::value() const && -> const_rvalue_reference
+    constexpr auto nullable<T, B>::value() const && -> const_rvalue_reference
     {
         throw_if_empty();
         return std::move(m_value);
@@ -410,20 +410,20 @@ namespace sparrow
 
     template <class T, boolean_like B>
     template <class U>
-    constexpr auto optional<T, B>::value_or(U&& default_value) const & -> value_type
+    constexpr auto nullable<T, B>::value_or(U&& default_value) const & -> value_type
     {
         return bool(*this) ? **this : static_cast<value_type>(std::forward<U>(default_value)); 
     }
 
     template <class T, boolean_like B>
     template <class U>
-    constexpr auto optional<T, B>::value_or(U&& default_value) && -> value_type
+    constexpr auto nullable<T, B>::value_or(U&& default_value) && -> value_type
     {
         return bool(*this) ? std::move(**this) : static_cast<value_type>(std::forward<U>(default_value)); 
     }
 
     template <class T, boolean_like B>
-    void optional<T, B>::swap(self_type& other) noexcept
+    void nullable<T, B>::swap(self_type& other) noexcept
     {
         using std::swap;
         swap(m_value, other.m_value);
@@ -431,69 +431,69 @@ namespace sparrow
     }
 
     template <class T, boolean_like B>
-    void optional<T, B>::reset() noexcept
+    void nullable<T, B>::reset() noexcept
     {
         m_flag = false;
     }
     
     template <class T, boolean_like B>
-    void optional<T, B>::throw_if_empty() const
+    void nullable<T, B>::throw_if_empty() const
     {
         if (!m_flag)
         {
-            throw std::bad_optional_access{};
+            throw std::bad_nullable_access{};
         }
     }
 
     template <class T, class B>
-    constexpr void swap(optional<T, B>& lhs, optional<T, B>& rhs) noexcept
+    constexpr void swap(nullable<T, B>& lhs, nullable<T, B>& rhs) noexcept
     {
         lhs.swap(rhs);
     }
 
     template <class T, class B>
-    constexpr bool operator==(const optional<T, B>& lhs, std::nullopt_t) noexcept
+    constexpr bool operator==(const nullable<T, B>& lhs, std::nullopt_t) noexcept
     {
         return !lhs;
     }
 
     template <class T, class B>
-    constexpr std::strong_ordering operator<=>(const optional<T, B>& lhs, std::nullopt_t) noexcept
+    constexpr std::strong_ordering operator<=>(const nullable<T, B>& lhs, std::nullopt_t) noexcept
     {
         return bool(lhs) <=> false;
     }
     
     template <class T, class B, class U>
-    constexpr bool operator==(const optional<T, B>& lhs, const U& rhs) noexcept
+    constexpr bool operator==(const nullable<T, B>& lhs, const U& rhs) noexcept
     {
         return bool(lhs) && *lhs == rhs;
     }
 
     template <class T, class B, class U>
-    requires (!util::is_optional_v<U> && std::three_way_comparable_with<U, T>)
+    requires (!util::is_nullable_v<U> && std::three_way_comparable_with<U, T>)
     constexpr std::compare_three_way_result_t<T, U>
-    operator<=>(const optional<T, B>& lhs, const U& rhs) noexcept
+    operator<=>(const nullable<T, B>& lhs, const U& rhs) noexcept
     {
         return bool(lhs) ? *lhs <=> rhs : std::strong_ordering::less;
     }
 
     template <class T, class B, class U, class UB>
-    constexpr bool operator==(const optional<T, B>& lhs, const optional<U, UB>& rhs) noexcept
+    constexpr bool operator==(const nullable<T, B>& lhs, const nullable<U, UB>& rhs) noexcept
     {
         return bool(rhs) ? lhs == *rhs : !bool(lhs);
     }
 
     template <class T, class B, std::three_way_comparable_with<T> U, class UB>
     constexpr std::compare_three_way_result_t<T, U>
-    operator<=>(const optional<T, B>& lhs, const optional<U, UB>& rhs) noexcept
+    operator<=>(const nullable<T, B>& lhs, const nullable<U, UB>& rhs) noexcept
     {
         return (bool(lhs) && bool(rhs)) ? *lhs <=> *rhs : bool(lhs) <=> bool(rhs);
     }
 
     template <class T, boolean_like B>
-    constexpr optional<T, B> make_optional(T&& value, B&& flag)
+    constexpr nullable<T, B> make_nullable(T&& value, B&& flag)
     {
-        return optional<T, B>(std::forward<T>(value), std::forward<B>(flag));
+        return nullable<T, B>(std::forward<T>(value), std::forward<B>(flag));
     }
 
 }

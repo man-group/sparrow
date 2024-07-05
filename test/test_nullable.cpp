@@ -12,34 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/optional.hpp"
+#include "sparrow/nullable.hpp"
 
 #include "doctest/doctest.h"
 
 namespace sparrow
 {
-    using optional_double = optional<double, bool>;
-    using optional_int = optional<int, bool>;
+    using nullable_double = nullable<double, bool>;
+    using nullable_int = nullable<int, bool>;
 
-    TEST_SUITE("optional value")
+    TEST_SUITE("nullable value")
     {
         TEST_CASE("constructors")
         {
             SUBCASE("default")
             {
-                optional_double d;
+                nullable_double d;
                 CHECK_FALSE(d.has_value());
             }
             
             SUBCASE("from nullopt")
             {
-                optional_double d(std::nullopt);
+                nullable_double d(std::nullopt);
                 CHECK_FALSE(d.has_value());
             }
 
             SUBCASE("from value")
             {
-                optional_double d(1.2);
+                nullable_double d(1.2);
                 REQUIRE(d.has_value());
                 CHECK_EQ(d.value(), 1.2);
             }
@@ -47,7 +47,7 @@ namespace sparrow
             SUBCASE("from value with conversion")
             {
                 int i = 3;
-                optional_double d(i);
+                nullable_double d(i);
                 REQUIRE(d.has_value());
                 CHECK_EQ(d.value(), 3.);
             }
@@ -57,10 +57,10 @@ namespace sparrow
                 double val = 1.2;
                 bool b1 = true;
 
-                optional_double td1(val, b1);
-                optional_double td2(std::move(val), b1);
-                optional_double td3(val, std::move(b1));
-                optional_double td4(std::move(val), std::move(b1));
+                nullable_double td1(val, b1);
+                nullable_double td2(std::move(val), b1);
+                nullable_double td3(val, std::move(b1));
+                nullable_double td4(std::move(val), std::move(b1));
 
                 REQUIRE(td1.has_value());
                 CHECK_EQ(td1.value(), val);
@@ -72,10 +72,10 @@ namespace sparrow
                 CHECK_EQ(td4.value(), val);
 
                 bool b2 = false;
-                optional_double fd1(val, b2);
-                optional_double fd2(std::move(val), b2);
-                optional_double fd3(val, std::move(b2));
-                optional_double fd4(std::move(val), std::move(b2));
+                nullable_double fd1(val, b2);
+                nullable_double fd2(std::move(val), b2);
+                nullable_double fd3(val, std::move(b2));
+                nullable_double fd4(std::move(val), std::move(b2));
 
                 CHECK_FALSE(fd1.has_value());
                 CHECK_FALSE(fd2.has_value());
@@ -88,24 +88,24 @@ namespace sparrow
         {
             SUBCASE("default")
             {
-                optional_double d1(1.2);
-                optional_double d2(d1);
+                nullable_double d1(1.2);
+                nullable_double d2(d1);
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
             }
 
             SUBCASE("with conversion")
             {
-                optional_int i(2);
-                optional_double d(i);
+                nullable_int i(2);
+                nullable_double d(i);
                 REQUIRE(d.has_value());
                 CHECK_EQ(i.value(), d.value());
             }
 
-            SUBCASE("from empty optional")
+            SUBCASE("from empty nullable")
             {
-                optional_double d1(std::nullopt);
-                optional_double d2(d1);
+                nullable_double d1(std::nullopt);
+                nullable_double d2(d1);
                 CHECK_FALSE(d2.has_value());
             }
         }
@@ -114,26 +114,26 @@ namespace sparrow
         {
             SUBCASE("default")
             {
-                optional_double d0(1.2);
-                optional_double d1(d0);
-                optional_double d2(std::move(d0));
+                nullable_double d0(1.2);
+                nullable_double d1(d0);
+                nullable_double d2(std::move(d0));
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
             }
 
             SUBCASE("with conversion")
             {
-                optional_int i(2);
-                optional_int ci(i);
-                optional_double d(std::move(i));
+                nullable_int i(2);
+                nullable_int ci(i);
+                nullable_double d(std::move(i));
                 REQUIRE(d.has_value());
                 CHECK_EQ(ci.value(), d.value());
             }
 
-            SUBCASE("from empty optional")
+            SUBCASE("from empty nullable")
             {
-                optional_double d1(std::nullopt);
-                optional_double d2(std::move(d1));
+                nullable_double d1(std::nullopt);
+                nullable_double d2(std::move(d1));
                 CHECK_FALSE(d2.has_value());
             }
         }
@@ -142,8 +142,8 @@ namespace sparrow
         {
             SUBCASE("default")
             {
-                optional_double d1(1.2);
-                optional_double d2(2.5);
+                nullable_double d1(1.2);
+                nullable_double d2(2.5);
                 d2 = d1;
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
@@ -151,17 +151,17 @@ namespace sparrow
 
             SUBCASE("with conversion")
             {
-                optional_int d1(1);
-                optional_double d2(2.5);
+                nullable_int d1(1);
+                nullable_double d2(2.5);
                 d2 = d1;
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
             }
 
-            SUBCASE("from empty optional")
+            SUBCASE("from empty nullable")
             {
-                optional_double d1(std::nullopt);
-                optional_double d2(2.5);
+                nullable_double d1(std::nullopt);
+                nullable_double d2(2.5);
                 d2 = d1;
                 CHECK_FALSE(d2.has_value());
             }
@@ -171,9 +171,9 @@ namespace sparrow
         {
             SUBCASE("default")
             {
-                optional_double d0(1.2);
-                optional_double d1(d0);
-                optional_double d2(2.5);
+                nullable_double d0(1.2);
+                nullable_double d1(d0);
+                nullable_double d2(2.5);
                 d2 = std::move(d0);
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
@@ -181,18 +181,18 @@ namespace sparrow
 
             SUBCASE("with conversion")
             {
-                optional_int d0(1);
-                optional_int d1(d0);
-                optional_double d2(2.5);
+                nullable_int d0(1);
+                nullable_int d1(d0);
+                nullable_double d2(2.5);
                 d2 = std::move(d0);
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
             }
 
-            SUBCASE("from empty optional")
+            SUBCASE("from empty nullable")
             {
-                optional_double d1(std::nullopt);
-                optional_double d2(2.3);
+                nullable_double d1(std::nullopt);
+                nullable_double d2(2.3);
                 d2 = std::move(d1);
                 CHECK_FALSE(d2.has_value());
             }
@@ -200,10 +200,10 @@ namespace sparrow
 
         TEST_CASE("conversion to bool")
         {
-            optional_double d1(1.2);
+            nullable_double d1(1.2);
             CHECK(d1);
 
-            optional_double d2(std::nullopt);
+            nullable_double d2(std::nullopt);
             CHECK_FALSE(d2);
         }
 
@@ -214,8 +214,8 @@ namespace sparrow
             
             SUBCASE("& overload")
             {
-                optional_double d(initial);
-                optional_double& d1(d);
+                nullable_double d(initial);
+                nullable_double& d1(d);
                 d1.value() = expected;
                 CHECK_EQ(d.value(), expected);
                 CHECK_EQ(*d, expected);
@@ -223,16 +223,16 @@ namespace sparrow
 
             SUBCASE("const & overload")
             {
-                optional_double d(initial);
-                const optional_double& d2(d);
+                nullable_double d(initial);
+                const nullable_double& d2(d);
                 CHECK_EQ(d2.value(), initial);
                 CHECK_EQ(*d2, initial);
             }
 
             SUBCASE("&& overload")
             {
-                optional_double d(initial);
-                optional_double&& d3(std::move(d));
+                nullable_double d(initial);
+                nullable_double&& d3(std::move(d));
                 d3.value() = expected;
                 CHECK_EQ(d.value(), expected);
                 CHECK_EQ(*d, expected);
@@ -240,16 +240,16 @@ namespace sparrow
 
             SUBCASE("const && overload")
             {
-                optional_double d(initial);
-                const optional_double&& d4(std::move(d));
+                nullable_double d(initial);
+                const nullable_double&& d4(std::move(d));
                 CHECK_EQ(d4.value(), initial);
                 CHECK_EQ(*d4, initial);
             }
 
             SUBCASE("empty")
             {
-                optional_double empty = std::nullopt;
-                CHECK_THROWS_AS(empty.value(), std::bad_optional_access);
+                nullable_double empty = std::nullopt;
+                CHECK_THROWS_AS(empty.value(), std::bad_nullable_access);
                 CHECK_NOTHROW(*empty);
             }
         }
@@ -259,13 +259,13 @@ namespace sparrow
             constexpr double initial = 1.2;
             constexpr double expected = 2.5;
 
-            optional_double d(initial);
-            optional_double empty(std::nullopt);
+            nullable_double d(initial);
+            nullable_double empty(std::nullopt);
 
             SUBCASE("const & overload")
             {
-                const optional_double& ref(d);
-                const optional_double& ref_empty(empty);
+                const nullable_double& ref(d);
+                const nullable_double& ref_empty(empty);
 
                 double res = ref.value_or(expected);
                 double res_empty = ref_empty.value_or(expected);
@@ -276,8 +276,8 @@ namespace sparrow
 
             SUBCASE("&& overload")
             {
-                optional_double&& ref(std::move(d));
-                optional_double&& ref_empty(std::move(empty));
+                nullable_double&& ref(std::move(d));
+                nullable_double&& ref_empty(std::move(empty));
 
                 double res = ref.value_or(expected);
                 double res_empty = ref_empty.value_or(expected);
@@ -292,9 +292,9 @@ namespace sparrow
         {
             constexpr double initial = 1.2;
             constexpr double expected = 2.5;
-            optional_double d1(initial);
-            optional_double d2(expected);
-            optional_double empty(std::nullopt);
+            nullable_double d1(initial);
+            nullable_double d2(expected);
+            nullable_double empty(std::nullopt);
 
             swap(d1, d2);
             CHECK_EQ(d1.value(), expected);
@@ -308,7 +308,7 @@ namespace sparrow
         TEST_CASE("reset")
         {
             constexpr double initial = 1.2;
-            optional_double d(initial);
+            nullable_double d(initial);
             d.reset();
             CHECK_FALSE(d.has_value());
         }
@@ -318,9 +318,9 @@ namespace sparrow
             constexpr double initial = 1.2;
             constexpr double other = 2.5;
 
-            optional_double d1(initial);
-            optional_double d2(other);
-            optional_double empty;
+            nullable_double d1(initial);
+            nullable_double d2(other);
+            nullable_double empty;
 
             CHECK(d1 == d1);
             CHECK(d1 == d1.value());
@@ -335,9 +335,9 @@ namespace sparrow
             constexpr double initial = 1.2;
             constexpr double other = 2.5;
 
-            optional_double d1(initial);
-            optional_double d2(other);
-            optional_double empty;
+            nullable_double d1(initial);
+            nullable_double d2(other);
+            nullable_double empty;
 
             // opearator <=
             CHECK(d1 <= d1);
@@ -376,31 +376,31 @@ namespace sparrow
             CHECK_FALSE(empty > d1);
         }
 
-        TEST_CASE("make_optional")
+        TEST_CASE("make_nullable")
         {
             double value = 2.5;
-            auto opt = make_optional(std::move(value), true);
-            static_assert(std::same_as<std::decay_t<decltype(opt)>, optional_double>);
+            auto opt = make_nullable(std::move(value), true);
+            static_assert(std::same_as<std::decay_t<decltype(opt)>, nullable_double>);
             REQUIRE(opt.has_value());
             CHECK_EQ(opt.value(), value);
         }
     }
 
-    using optional_proxy = optional<double&, bool>;
+    using nullable_proxy = nullable<double&, bool>;
 
-    TEST_SUITE("optional proxy")
+    TEST_SUITE("nullable proxy")
     {
         TEST_CASE("constructors")
         {
             double val = 1.2;
             bool b1 = true;
 
-            optional_proxy td(val);
+            nullable_proxy td(val);
             REQUIRE(td.has_value());
             CHECK_EQ(td.value(), val);
 
-            optional_proxy td1(val, b1);
-            optional_proxy td2(val, std::move(b1));
+            nullable_proxy td1(val, b1);
+            nullable_proxy td2(val, std::move(b1));
 
             REQUIRE(td1.has_value());
             CHECK_EQ(td1.value(), val);
@@ -408,8 +408,8 @@ namespace sparrow
             CHECK_EQ(td2.value(), val);
 
             bool b2 = false;
-            optional_proxy fd1(val, b2);
-            optional_proxy fd2(val, std::move(b2));
+            nullable_proxy fd1(val, b2);
+            nullable_proxy fd2(val, std::move(b2));
 
             CHECK_FALSE(fd1.has_value());
             CHECK_FALSE(fd2.has_value());
@@ -418,8 +418,8 @@ namespace sparrow
         TEST_CASE("copy constructors")
         {
             double val = 1.2;
-            optional_proxy d1(val);
-            optional_proxy d2(d1);
+            nullable_proxy d1(val);
+            nullable_proxy d2(d1);
             REQUIRE(d2.has_value());
             CHECK_EQ(d1.value(), d2.value());
         }
@@ -427,8 +427,8 @@ namespace sparrow
         TEST_CASE("move constructor")
         {
             double val = 1.2;
-            optional_proxy d1(val);
-            optional_proxy d2(std::move(d1));
+            nullable_proxy d1(val);
+            nullable_proxy d2(std::move(d1));
             REQUIRE(d2.has_value());
             CHECK_EQ(d2.value(), val);
         }
@@ -439,8 +439,8 @@ namespace sparrow
             {
                 double initial = 1.2;
                 double expected = 2.5;
-                optional_proxy d1(initial);
-                optional_proxy d2(expected);
+                nullable_proxy d1(initial);
+                nullable_proxy d2(expected);
                 d2 = d1;
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
@@ -451,18 +451,18 @@ namespace sparrow
             {
                 double initial = 1.2;
                 double expected = 2.5;
-                optional_double d1(initial);
-                optional_proxy d2(expected);
+                nullable_double d1(initial);
+                nullable_proxy d2(expected);
                 d2 = d1;
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
                 CHECK_EQ(initial, expected);
             }
 
-            SUBCASE("from empty optional")
+            SUBCASE("from empty nullable")
             {
                 double initial = 1.2;
-                optional_proxy d2(initial);
+                nullable_proxy d2(initial);
                 d2 = std::nullopt;
                 CHECK_FALSE(d2.has_value());
             }
@@ -474,8 +474,8 @@ namespace sparrow
             {
                 double initial = 1.2;
                 double expected = 2.5;
-                optional_proxy d1(initial);
-                optional_proxy d2(expected);
+                nullable_proxy d1(initial);
+                nullable_proxy d2(expected);
                 d2 = std::move(d1);
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
@@ -487,8 +487,8 @@ namespace sparrow
             {
                 double initial = 1.2;
                 double expected = 2.5;
-                optional_double d1(initial);
-                optional_proxy d2(expected);
+                nullable_double d1(initial);
+                nullable_proxy d2(expected);
                 d2 = std::move(d1);
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
@@ -499,7 +499,7 @@ namespace sparrow
         TEST_CASE("conversion to bool")
         {
             double val = 1.2;
-            optional_proxy d1(val);
+            nullable_proxy d1(val);
             CHECK(d1);
 
             d1 = std::nullopt;
@@ -513,8 +513,8 @@ namespace sparrow
             
             SUBCASE("& overload")
             {
-                optional_proxy d(initial);
-                optional_proxy& d1(d);
+                nullable_proxy d(initial);
+                nullable_proxy& d1(d);
                 d1.value() = expected;
                 CHECK_EQ(d.value(), expected);
                 CHECK_EQ(*d, expected);
@@ -522,16 +522,16 @@ namespace sparrow
 
             SUBCASE("const & overload")
             {
-                optional_proxy d(initial);
-                const optional_proxy& d2(d);
+                nullable_proxy d(initial);
+                const nullable_proxy& d2(d);
                 CHECK_EQ(d2.value(), initial);
                 CHECK_EQ(*d2, initial);
             }
 
             SUBCASE("&& overload")
             {
-                optional_proxy d(initial);
-                optional_proxy&& d3(std::move(d));
+                nullable_proxy d(initial);
+                nullable_proxy&& d3(std::move(d));
                 d3.value() = expected;
                 CHECK_EQ(d.value(), expected);
                 CHECK_EQ(*d, expected);
@@ -539,17 +539,17 @@ namespace sparrow
 
             SUBCASE("const && overload")
             {
-                optional_proxy d(initial);
-                const optional_proxy&& d4(std::move(d));
+                nullable_proxy d(initial);
+                const nullable_proxy&& d4(std::move(d));
                 CHECK_EQ(d4.value(), initial);
                 CHECK_EQ(*d4, initial);
             }
 
             SUBCASE("empty")
             {
-                optional_proxy empty(initial);
+                nullable_proxy empty(initial);
                 empty = std::nullopt;
-                CHECK_THROWS_AS(empty.value(), std::bad_optional_access);
+                CHECK_THROWS_AS(empty.value(), std::bad_nullable_access);
                 CHECK_NOTHROW(*empty);
             }
         }
@@ -559,14 +559,14 @@ namespace sparrow
             double initial = 1.2;
             double expected = 2.5;
 
-            optional_proxy d(initial);
-            optional_proxy empty(initial);
+            nullable_proxy d(initial);
+            nullable_proxy empty(initial);
             empty = std::nullopt;
 
             SUBCASE("const & overload")
             {
-                const optional_proxy& ref(d);
-                const optional_proxy& ref_empty(empty);
+                const nullable_proxy& ref(d);
+                const nullable_proxy& ref_empty(empty);
 
                 double res = ref.value_or(expected);
                 double res_empty = ref_empty.value_or(expected);
@@ -577,8 +577,8 @@ namespace sparrow
 
             SUBCASE("&& overload")
             {
-                optional_proxy&& ref(std::move(d));
-                optional_proxy&& ref_empty(std::move(empty));
+                nullable_proxy&& ref(std::move(d));
+                nullable_proxy&& ref_empty(std::move(empty));
 
                 double res = ref.value_or(expected);
                 double res_empty = ref_empty.value_or(expected);
@@ -595,9 +595,9 @@ namespace sparrow
             double initial_bu = initial;
             double expected_bu = expected;
             double empty_val = 3.7;
-            optional_proxy d1(initial);
-            optional_proxy d2(expected);
-            optional_proxy empty(empty_val);
+            nullable_proxy d1(initial);
+            nullable_proxy d2(expected);
+            nullable_proxy empty(empty_val);
             empty = std::nullopt;
 
             swap(d1, d2);
@@ -612,7 +612,7 @@ namespace sparrow
         TEST_CASE("reset")
         {
             double initial = 1.2;
-            optional_proxy d(initial);
+            nullable_proxy d(initial);
             d.reset();
             CHECK_FALSE(d.has_value());
         }
@@ -623,9 +623,9 @@ namespace sparrow
             double other = 2.5;
             double empty_val = 3.7;
 
-            optional_proxy d1(initial);
-            optional_proxy d2(other);
-            optional_proxy empty(empty_val);
+            nullable_proxy d1(initial);
+            nullable_proxy d2(other);
+            nullable_proxy empty(empty_val);
             empty = std::nullopt;
 
             CHECK(d1 == d1);
@@ -642,9 +642,9 @@ namespace sparrow
             double other = 2.5;
             double empty_val = 3.7;
 
-            optional_proxy d1(initial);
-            optional_proxy d2(other);
-            optional_proxy empty(empty_val);
+            nullable_proxy d1(initial);
+            nullable_proxy d2(other);
+            nullable_proxy empty(empty_val);
             empty = std::nullopt;
 
             // opearator <=
@@ -684,11 +684,11 @@ namespace sparrow
             CHECK_FALSE(empty > d1);
         }
 
-        TEST_CASE("make_optional")
+        TEST_CASE("make_nullable")
         {
             double value = 2.7;
-            auto opt = make_optional(value, true);
-            static_assert(std::same_as<std::decay_t<decltype(opt)>, optional_proxy>);
+            auto opt = make_nullable(value, true);
+            static_assert(std::same_as<std::decay_t<decltype(opt)>, nullable_proxy>);
             REQUIRE(opt.has_value());
             CHECK_EQ(opt.value(), value);
         }
