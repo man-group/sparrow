@@ -25,6 +25,7 @@
 #include "sparrow/contracts.hpp"
 #include "sparrow/dynamic_bitset.hpp"
 #include "sparrow/iterator.hpp"
+#include "sparrow/nullable.hpp"
 
 namespace sparrow
 {
@@ -51,9 +52,12 @@ namespace sparrow
         using bitmap_type = array_data::bitmap_type;
         using bitmap_reference = typename bitmap_type::reference;
         using bitmap_const_reference = typename bitmap_type::const_reference;
-        using value_type = std::optional<inner_value_type>;
-        using reference = reference_proxy<self_type>;
-        using const_reference = const_reference_proxy<self_type>;
+        //using value_type = optional<inner_value_type>;
+        //using reference = reference_proxy<self_type>;
+        //using const_reference = const_reference_proxy<self_type>;
+        using value_type = nullable<inner_value_type>;
+        using reference = nullable<inner_reference, bitmap_reference>;
+        using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using pointer = inner_value_type*;
         using const_pointer = const inner_value_type*;
         using size_type = std::size_t;

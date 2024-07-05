@@ -205,7 +205,7 @@ namespace sparrow
         self_type& operator=(self_type&&) noexcept;
         self_type& operator=(bool) noexcept;
 
-        explicit operator bool() const noexcept;
+        operator bool() const noexcept;
 
         bool operator~() const noexcept;
 
