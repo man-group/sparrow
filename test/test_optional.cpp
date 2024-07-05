@@ -131,7 +131,7 @@ namespace sparrow
                 optional_double d1(1.2);
                 optional_double d2(2.5);
                 d2 = d1;
-                CHECK(d2.has_value());
+                REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
             }
             {
