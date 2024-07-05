@@ -121,6 +121,14 @@ namespace sparrow
         static constexpr bool is_optional_v = is_optional<T>::value;
     }
 
+    /**
+     * The optional class is similar to std::optional, with two major differences:
+     * - it can act as a proxy, meaning its template parameter can be lvalue references
+     *   or lvalue const references
+     * - the semantic for empty optoinal: resetting an non empty optional does not destruct
+     *   the contained value. Allocating an empty optional construct the contained value. This
+     *   behavior is temporary and will be changed in the near future.
+     */
     template <class T, class B = bool>
     class optional
     {
@@ -329,6 +337,9 @@ namespace sparrow
     constexpr std::compare_three_way_result_t<T, U>
     operator<=>(const optional<T, B>& lhs, const optional<U, UB>& rhs) noexcept;
 
+    template <class T, class B = bool>
+    constexpr optional<T, B> make_optional(T&& value, B&& flag = true);
+
     /***************************
      * optional implementation *
      ***************************/
@@ -472,5 +483,12 @@ namespace sparrow
     {
         return (bool(lhs) && bool(rhs)) ? *lhs <=> *rhs : bool(lhs) <=> bool(rhs);
     }
+
+    template <class T, class B>
+    constexpr optional<T, B> make_optional(T&& value, B&& flag)
+    {
+        return optional<T, B>(std::forward<T>(value), std::forward<B>(flag));
+    }
+
 }
 

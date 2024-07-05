@@ -25,22 +25,26 @@ namespace sparrow
     {
         TEST_CASE("constructors")
         {
+            SUBCASE("default")
             {
                 optional_double d;
                 CHECK_FALSE(d.has_value());
             }
-
+            
+            SUBCASE("from nullopt")
             {
                 optional_double d(std::nullopt);
                 CHECK_FALSE(d.has_value());
             }
 
+            SUBCASE("from value")
             {
                 optional_double d(1.2);
                 REQUIRE(d.has_value());
                 CHECK_EQ(d.value(), 1.2);
             }
 
+            SUBCASE("from value with conversion")
             {
                 int i = 3;
                 optional_double d(i);
@@ -48,6 +52,7 @@ namespace sparrow
                 CHECK_EQ(d.value(), 3.);
             }
 
+            SUBCASE("from value and flag")
             {
                 double val = 1.2;
                 bool b1 = true;
@@ -81,6 +86,7 @@ namespace sparrow
 
         TEST_CASE("copy constructors")
         {
+            SUBCASE("default")
             {
                 optional_double d1(1.2);
                 optional_double d2(d1);
@@ -88,6 +94,7 @@ namespace sparrow
                 CHECK_EQ(d1.value(), d2.value());
             }
 
+            SUBCASE("with conversion")
             {
                 optional_int i(2);
                 optional_double d(i);
@@ -95,6 +102,7 @@ namespace sparrow
                 CHECK_EQ(i.value(), d.value());
             }
 
+            SUBCASE("from empty optional")
             {
                 optional_double d1(std::nullopt);
                 optional_double d2(d1);
@@ -104,6 +112,7 @@ namespace sparrow
 
         TEST_CASE("move constructors")
         {
+            SUBCASE("default")
             {
                 optional_double d0(1.2);
                 optional_double d1(d0);
@@ -111,6 +120,8 @@ namespace sparrow
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
             }
+
+            SUBCASE("with conversion")
             {
                 optional_int i(2);
                 optional_int ci(i);
@@ -118,6 +129,8 @@ namespace sparrow
                 REQUIRE(d.has_value());
                 CHECK_EQ(ci.value(), d.value());
             }
+
+            SUBCASE("from empty optional")
             {
                 optional_double d1(std::nullopt);
                 optional_double d2(std::move(d1));
@@ -127,6 +140,7 @@ namespace sparrow
 
         TEST_CASE("copy assign")
         {
+            SUBCASE("default")
             {
                 optional_double d1(1.2);
                 optional_double d2(2.5);
@@ -134,6 +148,8 @@ namespace sparrow
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
             }
+
+            SUBCASE("with conversion")
             {
                 optional_int d1(1);
                 optional_double d2(2.5);
@@ -141,6 +157,8 @@ namespace sparrow
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
             }
+
+            SUBCASE("from empty optional")
             {
                 optional_double d1(std::nullopt);
                 optional_double d2(2.5);
@@ -151,6 +169,7 @@ namespace sparrow
 
         TEST_CASE("move assign")
         {
+            SUBCASE("default")
             {
                 optional_double d0(1.2);
                 optional_double d1(d0);
@@ -159,6 +178,8 @@ namespace sparrow
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
             }
+
+            SUBCASE("with conversion")
             {
                 optional_int d0(1);
                 optional_int d1(d0);
@@ -167,6 +188,8 @@ namespace sparrow
                 REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
             }
+
+            SUBCASE("from empty optional")
             {
                 optional_double d1(std::nullopt);
                 optional_double d2(2.3);
@@ -189,6 +212,7 @@ namespace sparrow
             constexpr double initial = 1.2;
             constexpr double expected = 2.5;
             
+            SUBCASE("& overload")
             {
                 optional_double d(initial);
                 optional_double& d1(d);
@@ -196,12 +220,16 @@ namespace sparrow
                 CHECK_EQ(d.value(), expected);
                 CHECK_EQ(*d, expected);
             }
+
+            SUBCASE("const & overload")
             {
                 optional_double d(initial);
                 const optional_double& d2(d);
                 CHECK_EQ(d2.value(), initial);
                 CHECK_EQ(*d2, initial);
             }
+
+            SUBCASE("&& overload")
             {
                 optional_double d(initial);
                 optional_double&& d3(std::move(d));
@@ -209,6 +237,8 @@ namespace sparrow
                 CHECK_EQ(d.value(), expected);
                 CHECK_EQ(*d, expected);
             }
+
+            SUBCASE("const && overload")
             {
                 optional_double d(initial);
                 const optional_double&& d4(std::move(d));
@@ -216,9 +246,12 @@ namespace sparrow
                 CHECK_EQ(*d4, initial);
             }
 
-            optional_double empty = std::nullopt;
-            CHECK_THROWS_AS(empty.value(), std::bad_optional_access);
-            CHECK_NOTHROW(*empty);
+            SUBCASE("empty")
+            {
+                optional_double empty = std::nullopt;
+                CHECK_THROWS_AS(empty.value(), std::bad_optional_access);
+                CHECK_NOTHROW(*empty);
+            }
         }
 
         TEST_CASE("value_or")
@@ -229,6 +262,7 @@ namespace sparrow
             optional_double d(initial);
             optional_double empty(std::nullopt);
 
+            SUBCASE("const & overload")
             {
                 const optional_double& ref(d);
                 const optional_double& ref_empty(empty);
@@ -240,6 +274,7 @@ namespace sparrow
                 CHECK_EQ(res_empty, expected);
             }
 
+            SUBCASE("&& overload")
             {
                 optional_double&& ref(std::move(d));
                 optional_double&& ref_empty(std::move(empty));
@@ -340,6 +375,15 @@ namespace sparrow
             CHECK(d1 > empty);
             CHECK_FALSE(empty > d1);
         }
+
+        TEST_CASE("make_optional")
+        {
+            double value = 2.5;
+            auto opt = make_optional(std::move(value), true);
+            static_assert(std::same_as<std::decay_t<decltype(opt)>, optional_double>);
+            REQUIRE(opt.has_value());
+            CHECK_EQ(opt.value(), value);
+        }
     }
 
     using optional_proxy = optional<double&, bool>;
@@ -391,6 +435,7 @@ namespace sparrow
 
         TEST_CASE("copy assign")
         {
+            SUBCASE("default")
             {
                 double initial = 1.2;
                 double expected = 2.5;
@@ -402,6 +447,7 @@ namespace sparrow
                 CHECK_EQ(initial, expected);
             }
 
+            SUBCASE("with conversion")
             {
                 double initial = 1.2;
                 double expected = 2.5;
@@ -413,6 +459,7 @@ namespace sparrow
                 CHECK_EQ(initial, expected);
             }
 
+            SUBCASE("from empty optional")
             {
                 double initial = 1.2;
                 optional_proxy d2(initial);
@@ -423,6 +470,7 @@ namespace sparrow
 
         TEST_CASE("move assign")
         {
+            SUBCASE("default")
             {
                 double initial = 1.2;
                 double expected = 2.5;
@@ -435,6 +483,7 @@ namespace sparrow
 
             }
 
+            SUBCASE("with conversion")
             {
                 double initial = 1.2;
                 double expected = 2.5;
@@ -462,6 +511,7 @@ namespace sparrow
             double initial = 1.2;
             double expected = 2.5;
             
+            SUBCASE("& overload")
             {
                 optional_proxy d(initial);
                 optional_proxy& d1(d);
@@ -469,12 +519,16 @@ namespace sparrow
                 CHECK_EQ(d.value(), expected);
                 CHECK_EQ(*d, expected);
             }
+
+            SUBCASE("const & overload")
             {
                 optional_proxy d(initial);
                 const optional_proxy& d2(d);
                 CHECK_EQ(d2.value(), initial);
                 CHECK_EQ(*d2, initial);
             }
+
+            SUBCASE("&& overload")
             {
                 optional_proxy d(initial);
                 optional_proxy&& d3(std::move(d));
@@ -482,6 +536,8 @@ namespace sparrow
                 CHECK_EQ(d.value(), expected);
                 CHECK_EQ(*d, expected);
             }
+
+            SUBCASE("const && overload")
             {
                 optional_proxy d(initial);
                 const optional_proxy&& d4(std::move(d));
@@ -489,6 +545,7 @@ namespace sparrow
                 CHECK_EQ(*d4, initial);
             }
 
+            SUBCASE("empty")
             {
                 optional_proxy empty(initial);
                 empty = std::nullopt;
@@ -506,6 +563,7 @@ namespace sparrow
             optional_proxy empty(initial);
             empty = std::nullopt;
 
+            SUBCASE("const & overload")
             {
                 const optional_proxy& ref(d);
                 const optional_proxy& ref_empty(empty);
@@ -517,6 +575,7 @@ namespace sparrow
                 CHECK_EQ(res_empty, expected);
             }
 
+            SUBCASE("&& overload")
             {
                 optional_proxy&& ref(std::move(d));
                 optional_proxy&& ref_empty(std::move(empty));
@@ -623,6 +682,15 @@ namespace sparrow
             CHECK(d2 > d1.value());
             CHECK(d1 > empty);
             CHECK_FALSE(empty > d1);
+        }
+
+        TEST_CASE("make_optional")
+        {
+            double value = 2.7;
+            auto opt = make_optional(value, true);
+            static_assert(std::same_as<std::decay_t<decltype(opt)>, optional_proxy>);
+            REQUIRE(opt.has_value());
+            CHECK_EQ(opt.value(), value);
         }
     }
 }
