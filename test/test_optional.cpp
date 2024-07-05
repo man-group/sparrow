@@ -429,7 +429,7 @@ namespace sparrow
                 optional_proxy d1(initial);
                 optional_proxy d2(expected);
                 d2 = std::move(d1);
-                CHECK(d2.has_value());
+                REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
                 CHECK_EQ(initial, expected);
 
