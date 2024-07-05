@@ -57,13 +57,13 @@ namespace sparrow
                 optional_double td3(val, std::move(b1));
                 optional_double td4(std::move(val), std::move(b1));
 
-                CHECK(td1.has_value());
+                REQUIRE(td1.has_value());
                 CHECK_EQ(td1.value(), val);
-                CHECK(td2.has_value());
+                REQUIRE(td2.has_value());
                 CHECK_EQ(td2.value(), val);
-                CHECK(td3.has_value());
+                REQUIRE(td3.has_value());
                 CHECK_EQ(td3.value(), val);
-                CHECK(td4.has_value());
+                REQUIRE(td4.has_value());
                 CHECK_EQ(td4.value(), val);
 
                 bool b2 = false;
