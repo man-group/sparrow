@@ -91,7 +91,7 @@ namespace sparrow
             {
                 optional_int i(2);
                 optional_double d(i);
-                CHECK(d.has_value());
+                REQUIRE(d.has_value());
                 CHECK_EQ(i.value(), d.value());
             }
 
