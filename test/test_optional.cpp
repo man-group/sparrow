@@ -44,7 +44,7 @@ namespace sparrow
             {
                 int i = 3;
                 optional_double d(i);
-                CHECK(d.has_value());
+                REQUIRE(d.has_value());
                 CHECK_EQ(d.value(), 3.);
             }
 
