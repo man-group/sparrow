@@ -108,7 +108,7 @@ namespace sparrow
                 optional_double d0(1.2);
                 optional_double d1(d0);
                 optional_double d2(std::move(d0));
-                CHECK(d2.has_value());
+                REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
             }
             {
