@@ -23,7 +23,10 @@
 
 namespace sparrow
 {
-    template <class T, class B>
+    template <class T>
+    concept boolean_like = std::constructible_from<T, bool> and std::convertible_to<T, bool>;
+
+    template <class T, boolean_like B>
     class optional;
 
     template <class T>
@@ -112,7 +115,7 @@ namespace sparrow
         {
         };
 
-        template <class T, class B>
+        template <class T, boolean_like B>
         struct is_optional<optional<T, B>> : std::true_type
         {
         };
@@ -125,11 +128,11 @@ namespace sparrow
      * The optional class is similar to std::optional, with two major differences:
      * - it can act as a proxy, meaning its template parameter can be lvalue references
      *   or lvalue const references
-     * - the semantic for empty optoinal: resetting an non empty optional does not destruct
+     * - the semantic for empty optional: resetting an non empty optional does not destruct
      *   the contained value. Allocating an empty optional construct the contained value. This
      *   behavior is temporary and will be changed in the near future.
      */
-    template <class T, class B = bool>
+    template <class T, boolean_like B = bool>
     class optional
     {
     public:
@@ -169,7 +172,7 @@ namespace sparrow
 
         constexpr optional(const self_type&) = default;
 
-        template <class TO, class BO>
+        template <class TO, boolean_like BO>
         requires (
             util::both_constructible_from_cref<T, TO, B, BO> and
             not util::initializable_from_refs<T, optional<TO, BO>>
@@ -183,7 +186,7 @@ namespace sparrow
 
         constexpr optional(self_type&&) noexcept = default;
 
-        template <class TO, class BO>
+        template <class TO, boolean_like BO>
         requires (
             util::both_constructible_from_cond_ref<T, TO, B, BO> and
             not util::initializable_from_refs<T, optional<TO, BO>>
@@ -244,7 +247,7 @@ namespace sparrow
             return *this;
         }
 
-        template <class TO, class BO>
+        template <class TO, boolean_like BO>
         requires(
             util::both_assignable_from_cref<T, TO, B, BO> and
             not util::initializable_from_refs<T, optional<TO, BO>> and
@@ -264,7 +267,7 @@ namespace sparrow
             return *this;
         }
 
-        template <class TO, class BO>
+        template <class TO, boolean_like BO>
         requires(
             util::both_assignable_from_cond_ref<T, TO, B, BO> and
             not util::initializable_from_refs<T, optional<TO, BO>> and
@@ -306,20 +309,17 @@ namespace sparrow
         T m_value;
         B m_flag;
 
-        template <class TO, class BO>
+        template <class TO, boolean_like BO>
         friend class optional;
     };
 
     template <class T, class B>
-    constexpr void swap(optional<T, B>& lhs, optional<T, B>& rhs) noexcept
-    {
-        lhs.swap(rhs);
-    }
+    constexpr void swap(optional<T, B>& lhs, optional<T, B>& rhs) noexcept;
 
     template <class T, class B>
     constexpr bool operator==(const optional<T, B>& lhs, std::nullopt_t) noexcept;
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr std::strong_ordering operator<=>(const optional<T, B>& lhs, std::nullopt_t) noexcept;
     
     template <class T, class B, class U>
@@ -337,92 +337,92 @@ namespace sparrow
     constexpr std::compare_three_way_result_t<T, U>
     operator<=>(const optional<T, B>& lhs, const optional<U, UB>& rhs) noexcept;
 
-    template <class T, class B = bool>
+    template <class T, boolean_like B = bool>
     constexpr optional<T, B> make_optional(T&& value, B&& flag = true);
 
     /***************************
      * optional implementation *
      ***************************/
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr bool optional<T, B>::has_value() const noexcept
     {
         return m_flag;
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr optional<T, B>::operator bool() const noexcept
     {
         return m_flag;
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr auto optional<T, B>::operator*() & noexcept -> reference
     {
         return m_value;
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr auto optional<T, B>::operator*() const & noexcept -> const_reference
     {
         return m_value;
     }
     
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr auto optional<T, B>::operator*() && noexcept -> rvalue_reference
     {
         return std::move(m_value);
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr auto optional<T, B>::operator*() const && noexcept -> const_rvalue_reference
     {
         return std::move(m_value);
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr auto optional<T, B>::value() & -> reference
     {
         throw_if_empty();
         return m_value;
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr auto optional<T, B>::value() const & -> const_reference
     {
         throw_if_empty();
         return m_value;
     }
     
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr auto optional<T, B>::value() && -> rvalue_reference
     {
         throw_if_empty();
         return std::move(m_value);
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr auto optional<T, B>::value() const && -> const_rvalue_reference
     {
         throw_if_empty();
         return std::move(m_value);
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     template <class U>
     constexpr auto optional<T, B>::value_or(U&& default_value) const & -> value_type
     {
         return bool(*this) ? **this : static_cast<value_type>(std::forward<U>(default_value)); 
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     template <class U>
     constexpr auto optional<T, B>::value_or(U&& default_value) && -> value_type
     {
         return bool(*this) ? std::move(**this) : static_cast<value_type>(std::forward<U>(default_value)); 
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     void optional<T, B>::swap(self_type& other) noexcept
     {
         using std::swap;
@@ -430,19 +430,25 @@ namespace sparrow
         swap(m_flag, other.m_flag);
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     void optional<T, B>::reset() noexcept
     {
         m_flag = false;
     }
     
-    template <class T, class B>
+    template <class T, boolean_like B>
     void optional<T, B>::throw_if_empty() const
     {
         if (!m_flag)
         {
             throw std::bad_optional_access{};
         }
+    }
+
+    template <class T, class B>
+    constexpr void swap(optional<T, B>& lhs, optional<T, B>& rhs) noexcept
+    {
+        lhs.swap(rhs);
     }
 
     template <class T, class B>
@@ -484,7 +490,7 @@ namespace sparrow
         return (bool(lhs) && bool(rhs)) ? *lhs <=> *rhs : bool(lhs) <=> bool(rhs);
     }
 
-    template <class T, class B>
+    template <class T, boolean_like B>
     constexpr optional<T, B> make_optional(T&& value, B&& flag)
     {
         return optional<T, B>(std::forward<T>(value), std::forward<B>(flag));
