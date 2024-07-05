@@ -352,7 +352,7 @@ namespace sparrow
             bool b1 = true;
 
             optional_proxy td(val);
-            CHECK(td.has_value());
+            REQUIRE(td.has_value());
             CHECK_EQ(td.value(), val);
 
             optional_proxy td1(val, b1);
