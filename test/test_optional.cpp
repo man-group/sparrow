@@ -358,9 +358,9 @@ namespace sparrow
             optional_proxy td1(val, b1);
             optional_proxy td2(val, std::move(b1));
 
-            CHECK(td1.has_value());
+            REQUIRE(td1.has_value());
             CHECK_EQ(td1.value(), val);
-            CHECK(td2.has_value());
+            REQUIRE(td2.has_value());
             CHECK_EQ(td2.value(), val);
 
             bool b2 = false;
