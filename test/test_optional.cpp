@@ -385,7 +385,7 @@ namespace sparrow
             double val = 1.2;
             optional_proxy d1(val);
             optional_proxy d2(std::move(d1));
-            CHECK(d2.has_value());
+            REQUIRE(d2.has_value());
             CHECK_EQ(d2.value(), val);
         }
 
