@@ -408,7 +408,7 @@ namespace sparrow
                 optional_double d1(initial);
                 optional_proxy d2(expected);
                 d2 = d1;
-                CHECK(d2.has_value());
+                REQUIRE(d2.has_value());
                 CHECK_EQ(d1.value(), d2.value());
                 CHECK_EQ(initial, expected);
             }
