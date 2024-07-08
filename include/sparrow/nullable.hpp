@@ -158,17 +158,7 @@ namespace sparrow
             std::assignable_from<std::add_lvalue_reference_t<To2>, conditional_ref_t<To2, From2>>;
 
         template <class T>
-        struct is_nullable : std::false_type
-        {
-        };
-
-        template <class T, boolean_like B>
-        struct is_nullable<nullable<T, B>> : std::true_type
-        {
-        };
-
-        template <class T>
-        static constexpr bool is_nullable_v = is_nullable<T>::value;
+        static constexpr bool is_nullable_v = mpl::is_type_instance_of_v<T, nullable>;
     }
 
     /**
@@ -385,9 +375,6 @@ namespace sparrow
     /**************************************
      * bad_nullable_access implementation *
      **************************************/
-
-    /*bad_nullable_access::bad_nullable_access(const bad_nullable_access&) noexcept;
-    bad_nullable_access& bad_nullable_access::operator=(const bad_nullable_access&) noexcept;*/
 
     const char* bad_nullable_access::what() const noexcept
     {
