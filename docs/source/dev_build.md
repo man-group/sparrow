@@ -1,7 +1,7 @@
 
 
 
-Development builds                             {#dev_build}
+Development build                             {#dev_build}
 ====================
 
 Here we describe how to build the project for development purposes on **Linux** or **macOS**.
