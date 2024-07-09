@@ -109,9 +109,9 @@ namespace sparrow
         using inner_const_reference = CR;
         using bitmap_type = array_data::bitmap_type;
         using bitmap_const_reference = typename bitmap_type::const_reference;
-        using value_type = std::optional<inner_value_type>;
-        using reference = const_reference_proxy<self_type>;
-        using const_reference = const_reference_proxy<self_type>;
+        using value_type = nullable<inner_value_type>;
+        using reference = nullable<inner_const_reference, bitmap_const_reference>;
+        using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using size_type = std::size_t;
         using iterator_tag = std::contiguous_iterator_tag;
 
@@ -180,7 +180,6 @@ namespace sparrow
 
         std::reference_wrapper<array_data> m_data;
 
-        friend class const_reference_proxy<self_type>;
         friend class vs_binary_value_iterator<self_type, true>;
     };
 

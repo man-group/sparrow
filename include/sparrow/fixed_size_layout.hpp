@@ -52,9 +52,6 @@ namespace sparrow
         using bitmap_type = array_data::bitmap_type;
         using bitmap_reference = typename bitmap_type::reference;
         using bitmap_const_reference = typename bitmap_type::const_reference;
-        //using value_type = optional<inner_value_type>;
-        //using reference = reference_proxy<self_type>;
-        //using const_reference = const_reference_proxy<self_type>;
         using value_type = nullable<inner_value_type>;
         using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
@@ -124,9 +121,6 @@ namespace sparrow
         const array_data& data_ref() const;
 
         std::reference_wrapper<array_data> m_data;
-
-        friend class reference_proxy<fixed_size_layout>;
-        friend class const_reference_proxy<fixed_size_layout>;
     };
 
     /************************************
