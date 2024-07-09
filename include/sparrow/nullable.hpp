@@ -61,8 +61,8 @@ namespace sparrow
         using unref_type = T;
         using reference = T&;
         using const_reference = std::add_lvalue_reference_t<std::add_const_t<unref_type>>;
-        using rvalue_reference = T&&;
-        using const_rvalue_reference = std::add_rvalue_reference_t<std::add_const_t<unref_type>>;
+        using rvalue_reference = reference;
+        using const_rvalue_reference = const_reference;
     };
 
     /*
@@ -170,13 +170,18 @@ namespace sparrow
     public:
 
         using self_type = nullable<T, B>;
-        using traits = nullable_traits<T>;
-        using value_type = typename traits::value_type;
-        using reference = typename traits::reference;
-        using const_reference = typename traits::const_reference;
-        using rvalue_reference = typename traits::rvalue_reference;
-        using const_rvalue_reference = typename traits::const_rvalue_reference;
-        using flag_type = std::decay_t<B>;
+        using value_traits = nullable_traits<T>;
+        using value_type = typename value_traits::value_type;
+        using reference = typename value_traits::reference;
+        using const_reference = typename value_traits::const_reference;
+        using rvalue_reference = typename value_traits::rvalue_reference;
+        using const_rvalue_reference = typename value_traits::const_rvalue_reference;
+        using flag_traits = nullable_traits<B>;
+        using flag_type = typename flag_traits::value_type;
+        using flag_reference = typename flag_traits::reference;
+        using flag_const_reference = typename flag_traits::const_reference;
+        using flag_rvalue_reference = typename flag_traits::rvalue_reference;
+        using flag_const_rvalue_reference = typename flag_traits::const_rvalue_reference;
         
         constexpr nullable() noexcept
             : m_value()
@@ -211,8 +216,8 @@ namespace sparrow
         )
         explicit(not impl::both_convertible_from_cref<T, TO, B, BO>)
         constexpr nullable(const nullable<TO, BO>& rhs)
-            : m_value(rhs.m_value)
-            , m_flag(rhs.m_flag)
+            : m_value(rhs.get())
+            , m_flag(rhs.has_value())
         {
         }
 
@@ -225,8 +230,8 @@ namespace sparrow
         )
         explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>)
         constexpr nullable(nullable<TO, BO>&& rhs)
-            : m_value(std::move(rhs.m_value))
-            , m_flag(std::move(rhs.m_flag))
+            : m_value(std::move(rhs).get())
+            , m_flag(std::move(rhs).has_value())
         {
         }
 
@@ -274,8 +279,8 @@ namespace sparrow
 
         constexpr self_type& operator=(const self_type& rhs)
         {
-            m_value = rhs.m_value;
-            m_flag = rhs.m_flag;
+            m_value = rhs.get();
+            m_flag = rhs.has_value();
             return *this;
         }
 
@@ -287,15 +292,15 @@ namespace sparrow
         )
         constexpr self_type& operator=(const nullable<TO, BO>& rhs)
         {
-            m_value = rhs.m_value;
-            m_flag = rhs.m_flag;
+            m_value = rhs.get();
+            m_flag = rhs.has_value();
             return *this;
         }
 
         constexpr self_type& operator=(self_type&& rhs)
         {
-            m_value = std::move(rhs.m_value);
-            m_flag = std::move(rhs.m_flag);
+            m_value = std::move(rhs).get();
+            m_flag = std::move(rhs).has_value();
             return *this;
         }
 
@@ -307,13 +312,17 @@ namespace sparrow
         )
         constexpr self_type& operator=(nullable<TO, BO>&& rhs)
         {
-            m_value = std::move(rhs.m_value);
-            m_flag = std::move(rhs.m_flag);
+            m_value = std::move(rhs).get();
+            m_flag = std::move(rhs).has_value();
             return *this;
         }
 
-        constexpr bool has_value() const noexcept;
         constexpr explicit operator bool() const noexcept;
+
+        constexpr flag_reference has_value() & noexcept;
+        constexpr flag_const_reference has_value() const & noexcept;
+        constexpr flag_rvalue_reference has_value() && noexcept;
+        constexpr flag_const_rvalue_reference has_value() const && noexcept;
 
         constexpr reference get() & noexcept;
         constexpr const_reference get() const & noexcept;
@@ -386,15 +395,47 @@ namespace sparrow
      ***************************/
 
     template <class T, boolean_like B>
-    constexpr bool nullable<T, B>::has_value() const noexcept
+    constexpr nullable<T, B>::operator bool() const noexcept
     {
         return m_flag;
     }
 
     template <class T, boolean_like B>
-    constexpr nullable<T, B>::operator bool() const noexcept
+    constexpr auto nullable<T, B>::has_value() & noexcept -> flag_reference
     {
         return m_flag;
+    }
+    
+    template <class T, boolean_like B>
+    constexpr auto nullable<T, B>::has_value() const & noexcept -> flag_const_reference
+    {
+        return m_flag;
+    }
+    
+    template <class T, boolean_like B>
+    constexpr auto nullable<T, B>::has_value() && noexcept -> flag_rvalue_reference
+    {
+        if constexpr (std::is_reference_v<B>)
+        {
+            return m_flag;
+        }
+        else
+        {
+            return std::move(m_flag);
+        }
+    }
+    
+    template <class T, boolean_like B>
+    constexpr auto nullable<T, B>::has_value() const && noexcept -> flag_const_rvalue_reference
+    {
+        if constexpr (std::is_reference_v<B>)
+        {
+            return m_flag;
+        }
+        else
+        {
+            return std::move(m_flag);
+        }
     }
 
     template <class T, boolean_like B>
@@ -412,15 +453,27 @@ namespace sparrow
     template <class T, boolean_like B>
     constexpr auto nullable<T, B>::get() && noexcept -> rvalue_reference
     {
-        reset();
-        return std::move(m_value);
+        if constexpr (std::is_reference_v<T>)
+        {
+            return m_value;
+        }
+        else
+        {
+            return std::move(m_value);
+        }
     }
 
     template <class T, boolean_like B>
     constexpr auto nullable<T, B>::get() const && noexcept -> const_rvalue_reference
     {
-        reset();
-        return std::move(m_value);
+        if constexpr (std::is_reference_v<T>)
+        {
+            return m_value;
+        }
+        else
+        {
+            return std::move(m_value);
+        }
     }
 
     template <class T, boolean_like B>
@@ -441,14 +494,14 @@ namespace sparrow
     constexpr auto nullable<T, B>::value() && -> rvalue_reference
     {
         throw_if_null();
-        return get();
+        return std::move(*this).get();
     }
 
     template <class T, boolean_like B>
     constexpr auto nullable<T, B>::value() const && -> const_rvalue_reference
     {
         throw_if_null();
-        return get();
+        return std::move(*this).get();
     }
 
     template <class T, boolean_like B>
