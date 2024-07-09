@@ -47,9 +47,9 @@ namespace sparrow
     template <class T>
     struct nullable_traits
     {
-        using value_type = std::decay_t<T>;
-        using reference = value_type&;
-        using const_reference = const value_type&;
+        using value_type = T;
+        using reference = std::add_lvalue_reference_t<value_type>;
+        using const_reference = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
         using rvalue_reference = value_type&&;
         using const_rvalue_reference = const value_type&&;
     };
@@ -57,10 +57,9 @@ namespace sparrow
     template <class T>
     struct nullable_traits<T&>
     {
-        using value_type = std::decay_t<T>;
-        using unref_type = T;
-        using reference = T&;
-        using const_reference = std::add_lvalue_reference_t<std::add_const_t<unref_type>>;
+        using value_type = T;
+        using reference = std::add_lvalue_reference_t<value_type>;
+        using const_reference = std::add_lvalue_reference_t<std::add_const_t<value_type>>;
         using rvalue_reference = reference;
         using const_rvalue_reference = const_reference;
     };
@@ -77,7 +76,10 @@ namespace sparrow
         bad_nullable_access(const bad_nullable_access&) noexcept = default;
         bad_nullable_access& operator=(const bad_nullable_access&) noexcept = default;
 
-        virtual const char* what() const noexcept;
+        virtual const char* what() const noexcept
+        {
+            return message;
+        }
 
     private:
 
@@ -381,15 +383,6 @@ namespace sparrow
     template <class T, boolean_like B = bool>
     constexpr nullable<T, B> make_nullable(T&& value, B&& flag = true);
 
-    /**************************************
-     * bad_nullable_access implementation *
-     **************************************/
-
-    const char* bad_nullable_access::what() const noexcept
-    {
-        return message;
-    }
-
     /***************************
      * nullable implementation *
      ***************************/
@@ -421,7 +414,7 @@ namespace sparrow
         }
         else
         {
-            return std::move(m_flag);
+            return flag_rvalue_reference(m_flag);
         }
     }
     
@@ -434,7 +427,7 @@ namespace sparrow
         }
         else
         {
-            return std::move(m_flag);
+            return flag_const_rvalue_reference(m_flag);
         }
     }
 
@@ -459,7 +452,7 @@ namespace sparrow
         }
         else
         {
-            return std::move(m_value);
+            return rvalue_reference(m_value);
         }
     }
 
@@ -472,7 +465,7 @@ namespace sparrow
         }
         else
         {
-            return std::move(m_value);
+            return const_rvalue_reference(m_value);
         }
     }
 
