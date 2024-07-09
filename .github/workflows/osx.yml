@@ -58,7 +58,7 @@ jobs:
         echo "CMAKE_CXX_COMPILER=/usr/bin/clang++" >> $GITHUB_ENV
 
     - name: Configure using CMake
-      run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON
+      run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
 
     - name: Install
       working-directory: build
@@ -78,4 +78,8 @@ jobs:
       with:
         name: test_sparrow_lib_report_OSX_${{ matrix.os }}_${{ matrix.config.name }}_${{ matrix.compiler }}
         path: '**/test_sparrow_lib_report.xml'
+    
+    - name: Run all examples
+      working-directory: build
+      run: cmake --build . --config ${{matrix.config.name}} --target run_examples
 
