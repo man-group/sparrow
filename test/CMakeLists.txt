@@ -16,15 +16,15 @@ cmake_minimum_required(VERSION 3.8)
 
 enable_testing()
 
-if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     project(sparrow-test CXX)
     find_package(sparrow REQUIRED CONFIG)
     set(SPARROW_INCLUDE_DIR ${sparrow_INCLUDE_DIRS})
-endif ()
+endif()
 
 find_package(doctest REQUIRED)
-#find_package(Threads)
 
+# find_package(Threads)
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting tests build type to Release")
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
@@ -37,24 +37,26 @@ set(SPARROW_TESTS_SOURCES
     array_data_creation.cpp
     test_algorithm.cpp
     test_allocator.cpp
-    test_array.cpp
     test_array_data_concepts.cpp
     test_array_data_creation.cpp
     test_array_data_factory.cpp
+    test_array.cpp
+    test_arrow_array_schema_utils.cpp
+    test_arrow_array.cpp
+    test_arrow_schema.cpp
     test_buffer_adaptor.cpp
+    test_memory.cpp
     test_buffer.cpp
-    test_c_data_interface.cpp
     test_dictionary_encoded_layout.cpp
     test_dynamic_bitset.cpp
     test_fixed_size_layout.cpp
     test_iterator.cpp
-    test_memory.cpp
     test_mpl.cpp
     test_null_layout.cpp
     test_nullable.cpp
     test_traits.cpp
-    test_typed_array.cpp
     test_typed_array_timestamp.cpp
+    test_typed_array.cpp
     test_variable_size_binary_layout.cpp
     better_junit_reporter.hpp
     junit.hpp
@@ -68,10 +70,10 @@ target_link_libraries(${test_target} PRIVATE sparrow doctest::doctest)
 include(doctest)
 doctest_discover_tests(${test_target})
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(compiles_options
         /permissive-
-        /WX # treat warnings as errors 
+        /WX # treat warnings as errors
         /W4 # Baseline reasonable warnings
         /we4242 # 'identifier': conversion from 'type1' to 'type1', possible loss of data
         /we4244 # conversion from 'type1' to 'type_2', possible loss of data
@@ -102,11 +104,11 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         -Wcast-align # warn for potential performance problem casts
         -Wconversion # warn on type conversions that may lose data
         -Wdouble-promotion # warn if float is implicitly promoted to double
-        -Werror # treat warnings as errors 
+        -Werror # treat warnings as errors
         -Wextra
         -Wformat=2 # warn on security issues around functions that format output (i.e., printf)
         -Wimplicit-fallthrough # Warns when case statements fall-through. (Included with -Wextra in GCC, not in clang)
-        -Wmisleading-indentation #  warn if indentation implies blocks where blocks do not exist
+        -Wmisleading-indentation # warn if indentation implies blocks where blocks do not exist
         -Wnon-virtual-dtor # warn the user if a class with virtual functions has a non-virtual destructor. This helps catch hard to track down memory errors
         -Wnull-dereference # warn if a null dereference is detected
         -Wold-style-cast # warn for c-style casts
@@ -120,7 +122,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         $<$<CXX_COMPILER_ID:GNU>:-Wlogical-op> # warn about logical operations being used where bitwise were probably wanted
         $<$<CXX_COMPILER_ID:GNU>:-Wno-subobject-linkage> # suppress warnings about subobject linkage
         $<$<CXX_COMPILER_ID:GNU>:-Wuseless-cast> # warn if you perform a cast to the same type
-    ) 
+    )
 endif()
 
 target_compile_options(${test_target} PRIVATE ${compiles_options})
@@ -148,4 +150,3 @@ add_custom_target(run_tests_with_junit_report
 )
 
 set_target_properties(run_tests_with_junit_report PROPERTIES FOLDER "Tests utilities")
-
