@@ -176,18 +176,18 @@ namespace sparrow
     inline null_layout::null_layout(array_data& data)
         : m_data(data)
     {
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() == 0u);
+        SPARROW_ASSERT_TRUE(data_ref().m_buffers.size() == 0u);
     }
 
     inline void null_layout::rebind_data(array_data& data)
     {
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() == 0u);
+        SPARROW_ASSERT_TRUE(data_ref().m_buffers.size() == 0u);
         m_data = data;
     }
 
     inline auto null_layout::size() const -> size_type
     {
-        return static_cast<size_type>(data_ref().length);
+        return static_cast<size_type>(data_ref().m_length);
     }
 
     inline auto null_layout::operator[](size_type i) -> reference

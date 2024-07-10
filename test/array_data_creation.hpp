@@ -39,15 +39,15 @@ namespace sparrow::test
     make_test_array_data(size_t n = 10, size_t offset = 0, const std::vector<size_t>& false_bitmap = {})
     {
         sparrow::array_data ad;
-        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
-        ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
+        ad.m_type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
+        ad.m_bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
         for (const auto i : false_bitmap)
         {
             if (i >= n)
             {
                 throw std::invalid_argument("Index out of range");
             }
-            ad.bitmap.set(i, false);
+            ad.m_bitmap.set(i, false);
         }
         const size_t buffer_size = (n * sizeof(T)) / sizeof(uint8_t);
         sparrow::buffer<uint8_t> b(buffer_size);
@@ -55,10 +55,10 @@ namespace sparrow::test
         {
             b.data<T>()[i] = static_cast<T>(i);
         }
-        ad.buffers.push_back(b);
-        ad.length = static_cast<std::int64_t>(n);
-        ad.offset = static_cast<std::int64_t>(offset);
-        ad.child_data.emplace_back();
+        ad.m_buffers.push_back(b);
+        ad.m_length = static_cast<std::int64_t>(n);
+        ad.m_offset = static_cast<std::int64_t>(offset);
+        ad.m_child_data.emplace_back();
         return ad;
     }
 
@@ -83,11 +83,11 @@ namespace sparrow::test
             words.push_back(std::to_string(i));
         }
         sparrow::array_data ad;
-        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<std::string>::type_id);
-        ad.bitmap.resize(n);
-        ad.buffers.resize(2);
-        ad.buffers[0].resize(sizeof(std::int64_t) * (n + 1));
-        ad.buffers[1].resize(std::accumulate(
+        ad.m_type = sparrow::data_descriptor(sparrow::arrow_traits<std::string>::type_id);
+        ad.m_bitmap.resize(n);
+        ad.m_buffers.resize(2);
+        ad.m_buffers[0].resize(sizeof(std::int64_t) * (n + 1));
+        ad.m_buffers[1].resize(std::accumulate(
             words.begin(),
             words.end(),
             size_t(0),
@@ -96,11 +96,11 @@ namespace sparrow::test
                 return res + s.size();
             }
         ));
-        ad.buffers[0].data<std::int64_t>()[0] = 0u;
-        auto iter = ad.buffers[1].begin();
+        ad.m_buffers[0].data<std::int64_t>()[0] = 0u;
+        auto iter = ad.m_buffers[1].begin();
         const auto offset_func = [&ad]()
         {
-            return ad.buffers[0].data<std::int64_t>();
+            return ad.m_buffers[0].data<std::int64_t>();
         };
         for (size_t i = 0; i < words.size(); ++i)
         {
@@ -109,7 +109,7 @@ namespace sparrow::test
                        + static_cast<sparrow::array_data::buffer_type::difference_type>(words[i].size());
             std::ranges::copy(words[i], iter);
             iter += static_cast<sparrow::array_data::buffer_type::difference_type>(words[i].size());
-            ad.bitmap.set(i, true);
+            ad.m_bitmap.set(i, true);
         }
 
         for (const auto i : false_bitmap)
@@ -118,11 +118,11 @@ namespace sparrow::test
             {
                 throw std::invalid_argument("Index out of range");
             }
-            ad.bitmap.set(i, false);
+            ad.m_bitmap.set(i, false);
         }
 
-        ad.length = static_cast<int64_t>(n);
-        ad.offset = static_cast<int64_t>(offset);
+        ad.m_length = static_cast<int64_t>(n);
+        ad.m_offset = static_cast<int64_t>(offset);
         return ad;
     }
 

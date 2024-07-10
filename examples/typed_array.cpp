@@ -17,12 +17,12 @@ int main() {
 
     // create the array_data object 
     sparrow::array_data ad;
-    ad.type = sparrow::data_descriptor(sparrow::arrow_traits<value_type>::type_id);
+    ad.m_type = sparrow::data_descriptor(sparrow::arrow_traits<value_type>::type_id);
 
     // create a bitmap with all bits set to true exceot for 
     // the missing value at index 2
-    ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
-    ad.bitmap.set(2, false);
+    ad.m_bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
+    ad.m_bitmap.set(2, false);
 
 
     //  the buffer holding the actual data
@@ -36,17 +36,17 @@ int main() {
     b.data<value_type>()[4] = 5.0;
 
     // add the buffer to the array_data
-    ad.buffers.push_back(b);
-    ad.length = static_cast<std::int64_t>(n);
-    ad.offset = static_cast<std::int64_t>(0);
-    ad.child_data.emplace_back();
+    ad.m_buffers.push_back(b);
+    ad.m_length = static_cast<std::int64_t>(n);
+    ad.m_offset = static_cast<std::int64_t>(0);
+    ad.m_child_data.emplace_back();
     
     // create a typed_array object from the array_data
     auto array = sparrow::typed_array<value_type>(ad);
 
     // access the data
     for (auto i = 0; i < n; ++i) {
-        if (ad.bitmap[i]) {
+        if (ad.m_bitmap[i]) {
             std::cout << b.data<value_type>()[i] << std::endl;
         } else {
             std::cout << "missing value" << std::endl;

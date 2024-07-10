@@ -258,7 +258,7 @@ namespace sparrow
 
     inline auto array::build_array(array_data&& data) const -> array_variant
     {
-        data_descriptor dd = data.type;
+        data_descriptor dd = data.m_type;
         switch (dd.id())
         {
             case data_type::NA:

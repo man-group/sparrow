@@ -34,25 +34,25 @@ namespace sparrow
     {
         dictionary_encoded_fixture()
         {
-            m_data.type = data_descriptor(data_type::UINT8);
-            m_data.bitmap = dynamic_bitset<uint8_t>(element_count, true);
-            m_data.bitmap.set(9, false);
+            m_data.m_type = data_descriptor(data_type::UINT8);
+            m_data.m_bitmap = dynamic_bitset<uint8_t>(element_count, true);
+            m_data.m_bitmap.set(9, false);
             constexpr size_t buffer_size = (element_count * sizeof(data_type_t)) / sizeof(uint8_t);
             buffer<uint8_t> b(buffer_size);
             std::ranges::copy(indexes, b.data<data_type_t>());
-            m_data.buffers.push_back(b);
-            m_data.length = element_count;
+            m_data.m_buffers.push_back(b);
+            m_data.m_length = element_count;
             auto dictionary = make_dictionary(words);
-            m_data.dictionary = sparrow::value_ptr<array_data>(std::move(dictionary));
+            m_data.m_dictionary = value_ptr<array_data>(std::move(dictionary));
         }
 
         static array_data make_dictionary(const std::array<std::string_view, 5>& lwords)
         {
             array_data dictionary;
-            dictionary.bitmap.resize(lwords.size());
-            dictionary.buffers.resize(2);
-            dictionary.buffers[0].resize(sizeof(std::int64_t) * (lwords.size() + 1));
-            dictionary.buffers[1].resize(std::accumulate(
+            dictionary.m_bitmap.resize(lwords.size());
+            dictionary.m_buffers.resize(2);
+            dictionary.m_buffers[0].resize(sizeof(std::int64_t) * (lwords.size() + 1));
+            dictionary.m_buffers[1].resize(std::accumulate(
                 lwords.cbegin(),
                 lwords.cend(),
                 size_t(0),
@@ -61,11 +61,11 @@ namespace sparrow
                     return res + s.size();
                 }
             ));
-            dictionary.buffers[0].data<std::int64_t>()[0] = 0u;
-            auto iter = dictionary.buffers[1].begin();
+            dictionary.m_buffers[0].data<std::int64_t>()[0] = 0u;
+            auto iter = dictionary.m_buffers[1].begin();
             const auto offset = [&dictionary]()
             {
-                return dictionary.buffers[0].data<std::int64_t>();
+                return dictionary.m_buffers[0].data<std::int64_t>();
             };
 
             for (size_t i = 0; i < lwords.size(); ++i)
@@ -73,12 +73,12 @@ namespace sparrow
                 offset()[i + 1] = offset()[i] + static_cast<std::int64_t>(lwords[i].size());
                 std::ranges::copy(lwords[i], iter);
                 iter += static_cast<array_data::buffer_type::difference_type>(lwords[i].size());
-                dictionary.bitmap.set(i, true);
+                dictionary.m_bitmap.set(i, true);
             }
-            dictionary.bitmap.set(4, false);
+            dictionary.m_bitmap.set(4, false);
 
-            dictionary.length = static_cast<int64_t>(lwords.size());
-            dictionary.offset = 0;
+            dictionary.m_length = static_cast<int64_t>(lwords.size());
+            dictionary.m_offset = 0;
             return dictionary;
         }
 
@@ -93,9 +93,9 @@ namespace sparrow
     {
         TEST_CASE_FIXTURE(dictionary_encoded_fixture, "constructors")
         {
-            CHECK(m_data.buffers.size() == 1);
+            CHECK(m_data.m_buffers.size() == 1);
             const layout_type l_copy(m_data);
-            CHECK(m_data.buffers.size() == 1);
+            CHECK(m_data.m_buffers.size() == 1);
         }
 
         TEST_CASE_FIXTURE(dictionary_encoded_fixture, "rebind_data")
@@ -105,7 +105,7 @@ namespace sparrow
             static constexpr std::array<std::string_view, 5> new_words = {
                 {"Just", "got", "home", "from", "Illinois"}
             };
-            data2.dictionary = sparrow::value_ptr<array_data>(make_dictionary(new_words));
+            data2.m_dictionary = value_ptr<array_data>(make_dictionary(new_words));
             l.rebind_data(data2);
             CHECK_EQ(l[0].value(), new_words[1]);
             CHECK_EQ(l[1].value(), new_words[0]);
