@@ -24,38 +24,37 @@
 
 #include "sparrow/any_data_utils.hpp"
 
-
 namespace sparrow
 {
     /// A class that can own or not any object and expose it as a raw pointer.
-    template <typename T>
     class any_data
     {
     public:
 
+        template <class T>
         explicit any_data(T* data);
 
-        template <mpl::unique_ptr_or_derived U>
-            requires std::same_as<typename U::element_type, T>
-        explicit any_data(U&& data);
+        template <mpl::unique_ptr_or_derived T>
+        explicit any_data(T&& data);
 
-        template <mpl::shared_ptr_or_derived U>
-            requires std::same_as<typename U::element_type, T>
-        explicit any_data(U data);
+        template <mpl::shared_ptr_or_derived T>
+        explicit any_data(T data);
 
-
+        template <class T>
         explicit any_data(T data)
             requires(!mpl::smart_ptr_and_derived<T>);
 
+        template <class T>
         T* get();
+        template <class T>
         const T* get() const;
 
         // Performs type-safe access to the contained object.
-        template <class U>
-        U get_data();
+        template <class T>
+        T get_data();
 
-        template <class U>
-        const U get_data() const;
+        template <class T>
+        const T get_data() const;
 
         [[nodiscard]] bool owns_data() const noexcept;
 
@@ -64,15 +63,10 @@ namespace sparrow
     private:
 
         std::any m_owner;
-        T* m_raw_ptr = nullptr;
+        void* m_raw_ptr = nullptr;
     };
 
-    /**
-     * @brief A class that can own or not a container of objects and expose them as raw pointers.
-     *
-     * @tparam T The type of the pointers.
-     */
-    template <typename T>
+    /// A class that can own or not a container of objects and expose them as raw pointers..
     class any_data_container
     {
     public:
@@ -81,15 +75,15 @@ namespace sparrow
             requires mpl::is_type_instance_of_v<Tuple, std::tuple>
         explicit any_data_container(Tuple container);
 
-        explicit any_data_container(T** container);
+        template <class T>
+        explicit any_data_container(T** pointers);
 
-        explicit any_data_container(std::vector<T*> container);
+        template <class T>
+        explicit any_data_container(const std::vector<T*>& container);
 
         // In case where `container` is a range, raw pointers or shared pointers.
         template <std::ranges::input_range C>
-            requires std::is_same_v<std::ranges::range_value_t<C>, T>
-                     || std::is_same_v<std::ranges::range_value_t<C>, T*>
-                     || std::ranges::input_range<std::ranges::range_value_t<C>>
+            requires std::ranges::input_range<std::ranges::range_value_t<C>>
                      || mpl::shared_ptr_or_derived<std::ranges::range_value_t<C>>
         explicit any_data_container(C container);
 
@@ -99,28 +93,38 @@ namespace sparrow
             requires mpl::unique_ptr_or_derived<std::ranges::range_value_t<C>>
         explicit any_data_container(C container);
 
-        any_data_container(const any_data_container<T>&) = delete;
-        any_data_container& operator=(const any_data_container<T>&) = delete;
 
-        any_data_container(any_data_container<T>&& other) noexcept;
+        any_data_container(const any_data_container&) = delete;
+        any_data_container& operator=(const any_data_container&) = delete;
 
-        any_data_container& operator=(any_data_container<T>&& other) noexcept;
+        any_data_container(any_data_container&& other) noexcept;
+
+        any_data_container& operator=(any_data_container&& other) noexcept;
 
         ~any_data_container() = default;
 
-        [[nodiscard]] std::vector<T*>& get_pointers_vec() noexcept;
 
-        [[nodiscard]] std::span<const T* const> get_pointers_vec() const noexcept;
+        [[nodiscard]] std::vector<void*>& get_pointers_vec() noexcept;
 
+        [[nodiscard]] std::span<const void* const> get_pointers_vec() const noexcept;
+
+        template <class T>
+        [[nodiscard]] std::vector<T*> get_pointers_vec() noexcept;
+
+        template <class T>
+        [[nodiscard]] std::vector<const T*> get_pointers_vec() const noexcept;
+
+        template <class T>
         [[nodiscard]] T** get() noexcept;
 
+        template <class T>
         [[nodiscard]] const T** get() const noexcept;
 
-        template <class U>
-        [[nodiscard]] U get_data();
+        template <class T>
+        [[nodiscard]] T get_data();
 
-        template <class U>
-        [[nodiscard]] const U get_data() const;
+        template <class T>
+        [[nodiscard]] const T get_data() const;
 
         [[nodiscard]] bool owns_data() const noexcept;
 
@@ -129,36 +133,32 @@ namespace sparrow
     private:
 
         std::any m_owner;
-        std::vector<T*> m_pointers_vec;
-        T** m_raw_pointers = nullptr;
+        std::vector<void*> m_pointers_vec;
+        void** m_raw_pointers = nullptr;
     };
 
     template <typename T>
-    any_data<T>::any_data(T* data)
+    any_data::any_data(T* data)
         : m_raw_ptr(data)
     {
     }
 
-    template <typename T>
     template <mpl::unique_ptr_or_derived U>
-        requires std::same_as<typename U::element_type, T>
-    any_data<T>::any_data(U&& data)
+    any_data::any_data(U&& data)
         : m_owner(value_ptr<typename U::element_type, typename U::deleter_type>(std::forward<U>(data)))
         , m_raw_ptr(std::any_cast<value_ptr<typename U::element_type, typename U::deleter_type>&>(m_owner).get())
     {
     }
 
-    template <typename T>
     template <mpl::shared_ptr_or_derived U>
-        requires std::same_as<typename U::element_type, T>
-    any_data<T>::any_data(U data)
+    any_data::any_data(U data)
         : m_owner(std::move(data))
         , m_raw_ptr(std::any_cast<U&>(m_owner).get())
     {
     }
 
     template <typename T>
-    any_data<T>::any_data(T data)
+    any_data::any_data(T data)
         requires(!mpl::smart_ptr_and_derived<T>)
         : m_owner(std::move(data))
         , m_raw_ptr(&std::any_cast<T&>(m_owner))
@@ -166,39 +166,35 @@ namespace sparrow
     }
 
     template <typename T>
-    T* any_data<T>::get()
+    T* any_data::get()
     {
-        return m_raw_ptr;
+        return static_cast<T*>(m_raw_ptr);
     }
 
     template <typename T>
-    const T* any_data<T>::get() const
+    const T* any_data::get() const
     {
-        return m_raw_ptr;
+        return static_cast<T*>(m_raw_ptr);
     }
 
-    template <typename T>
     template <class U>
-    U any_data<T>::get_data()
+    U any_data::get_data()
     {
         return std::any_cast<U>(m_owner);
     }
 
-    template <typename T>
     template <class U>
-    const U any_data<T>::get_data() const
+    const U any_data::get_data() const
     {
         return std::any_cast<U>(m_owner);
     }
 
-    template <typename T>
-    bool any_data<T>::owns_data() const noexcept
+    bool any_data::owns_data() const noexcept
     {
         return m_owner.has_value();
     }
 
-    template <typename T>
-    std::type_index any_data<T>::type_id() const noexcept
+    std::type_index any_data::type_id() const noexcept
     {
         return m_owner.type();
     }
@@ -227,56 +223,54 @@ namespace sparrow
         return tuple_without_unique_ptr_instance;
     }
 
-    template <typename T>
     template <typename Tuple>
         requires mpl::is_type_instance_of_v<Tuple, std::tuple>
-    any_data_container<T>::any_data_container(Tuple tuple)
+    any_data_container::any_data_container(Tuple tuple)
         : m_owner(convert_tuple(std::move(tuple)))
-        , m_pointers_vec(to_raw_ptr_vec<T>(std::any_cast<replace_unique_ptrs_by_value_ptrs_t<Tuple>&>(m_owner)))
+        , m_pointers_vec(
+              to_raw_ptr_vec<void>(std::any_cast<replace_unique_ptrs_by_value_ptrs_t<Tuple>&>(m_owner))
+          )
         , m_raw_pointers(m_pointers_vec.data())
     {
     }
 
     template <typename T>
-    any_data_container<T>::any_data_container(T** container)
-        : m_raw_pointers(container)
+    any_data_container::any_data_container(T** pointer)
+        : m_raw_pointers(reinterpret_cast<void**>(pointer))
     {
     }
 
     template <typename T>
-    any_data_container<T>::any_data_container(std::vector<T*> container)
-        : m_pointers_vec(std::move(container))
+    any_data_container::any_data_container(const std::vector<T*>& container)
+        : m_pointers_vec(std::vector<void*>{std::begin(container), std::end(container)})
         , m_raw_pointers(m_pointers_vec.data())
     {
     }
 
-    template <typename T>
     template <std::ranges::input_range C>
-        requires std::is_same_v<std::ranges::range_value_t<C>, T>
-                     || std::is_same_v<std::ranges::range_value_t<C>, T*>
-                     || std::ranges::input_range<std::ranges::range_value_t<C>>
+        requires std::ranges::input_range<std::ranges::range_value_t<C>>
                      || mpl::shared_ptr_or_derived<std::ranges::range_value_t<C>>
-    any_data_container<T>::any_data_container(C container)
+    any_data_container::any_data_container(C container)
         : m_owner(std::move(container))
-        , m_pointers_vec(to_raw_ptr_vec<T>(std::any_cast<C&>(m_owner)))
+        , m_pointers_vec(to_raw_ptr_vec<void>(std::any_cast<C&>(m_owner)))
         , m_raw_pointers(m_pointers_vec.data())
     {
     }
 
-    template <typename T>
     template <std::ranges::input_range C>
         requires mpl::unique_ptr_or_derived<std::ranges::range_value_t<C>>
-    any_data_container<T>::any_data_container(C container)
+    any_data_container::any_data_container(C container)
         : m_owner(range_of_unique_ptr_to_vec_of_value_ptr(container))
-        , m_pointers_vec(to_raw_ptr_vec<T>(std::any_cast<std::vector<sparrow::value_ptr<
-                                               typename std::ranges::range_value_t<C>::element_type,
-                                               typename std::ranges::range_value_t<C>::deleter_type>>&>(m_owner)))
+        , m_pointers_vec(
+              to_raw_ptr_vec<void>(std::any_cast<std::vector<sparrow::value_ptr<
+                                       typename std::ranges::range_value_t<C>::element_type,
+                                       typename std::ranges::range_value_t<C>::deleter_type>>&>(m_owner))
+          )
         , m_raw_pointers(m_pointers_vec.data())
     {
     }
 
-    template <typename T>
-    any_data_container<T>::any_data_container(any_data_container<T>&& other) noexcept
+    any_data_container::any_data_container(any_data_container&& other) noexcept
         : m_owner(std::move(other.m_owner))
         , m_pointers_vec(std::move(other.m_pointers_vec))
         , m_raw_pointers(other.m_raw_pointers)
@@ -284,65 +278,82 @@ namespace sparrow
         other.m_raw_pointers = nullptr;
     }
 
-    template <typename T>
-    any_data_container<T>& any_data_container<T>::operator=(any_data_container<T>&& other) noexcept
+    any_data_container& any_data_container::operator=(any_data_container&& other) noexcept
     {
         if (this != &other)
         {
             m_owner = std::move(other.m_owner);
             m_pointers_vec = std::move(other.m_pointers_vec);
             m_raw_pointers = other.m_raw_pointers;
-            other.raw_pointers = nullptr;
+            other.m_raw_pointers = nullptr;
         }
         return *this;
     }
 
-    template <typename T>
-    std::vector<T*>& any_data_container<T>::get_pointers_vec() noexcept
+    std::vector<void*>& any_data_container::get_pointers_vec() noexcept
     {
         return m_pointers_vec;
     }
 
-    template <typename T>
-    std::span<const T* const> any_data_container<T>::get_pointers_vec() const noexcept
+    std::span<const void* const> any_data_container::get_pointers_vec() const noexcept
     {
         return m_pointers_vec;
     }
 
-    template <typename T>
-    T** any_data_container<T>::get() noexcept
+    template <class T>
+    std::vector<T*> any_data_container::get_pointers_vec() noexcept
     {
-        return m_raw_pointers;
+        std::vector<T*> pointers_vec;
+        pointers_vec.reserve(m_pointers_vec.size());
+        for (auto ptr : m_pointers_vec)
+        {
+            pointers_vec.emplace_back(static_cast<T*>(ptr));
+        }
+        return pointers_vec;
+    }
+
+    template <class T>
+    std::vector<const T*> any_data_container::get_pointers_vec() const noexcept
+    {
+        std::vector<const T*> pointers_vec;
+        pointers_vec.reserve(m_pointers_vec.size());
+        for (auto ptr : m_pointers_vec)
+        {
+            pointers_vec.emplace_back(static_cast<const T*>(ptr));
+        }
+        return pointers_vec;
     }
 
     template <typename T>
-    const T** any_data_container<T>::get() const noexcept
+    T** any_data_container::get() noexcept
     {
-        return m_raw_pointers;
+        return static_cast<T**>(m_raw_pointers);
     }
 
     template <typename T>
-    template <typename U>
-    U any_data_container<T>::get_data()
+    const T** any_data_container::get() const noexcept
     {
-        return std::any_cast<U>(m_owner);
+        return static_cast<T**>(m_raw_pointers);
     }
 
     template <typename T>
-    template <typename U>
-    const U any_data_container<T>::get_data() const
+    T any_data_container::get_data()
     {
-        return std::any_cast<U>(m_owner);
+        return std::any_cast<T>(m_owner);
     }
 
     template <typename T>
-    bool any_data_container<T>::owns_data() const noexcept
+    const T any_data_container::get_data() const
+    {
+        return std::any_cast<T>(m_owner);
+    }
+
+    bool any_data_container::owns_data() const noexcept
     {
         return m_owner.has_value();
     }
 
-    template <typename T>
-    std::type_index any_data_container<T>::type_id() const noexcept
+    std::type_index any_data_container::type_id() const noexcept
     {
         return m_owner.type();
     }

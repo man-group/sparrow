@@ -44,7 +44,7 @@ namespace sparrow
             if constexpr (mpl::smart_ptr<U> || std::derived_from<U, std::shared_ptr<typename U::element_type>>
                           || mpl::is_type_instance_of_v<U, value_ptr>)
             {
-                if constexpr (std::is_same_v<typename U::element_type, T>)
+                if constexpr (std::same_as<typename U::element_type, T> || std::same_as<T, void>)
                 {
                     return reinterpret_cast<T*>(elem.get());
                 }
@@ -62,13 +62,17 @@ namespace sparrow
         {
             return reinterpret_cast<T*>(elem.data());
         }
-        else if constexpr (std::is_same_v<T, U>)
+        else if constexpr (std::same_as<T, U>)
         {
             return reinterpret_cast<T*>(&elem);
         }
+        else if constexpr (std::same_as<T, void>)
+        {
+            return reinterpret_cast<void*>(&elem);
+        }
         else
         {
-            static_assert(mpl::dependent_false<U>::value, "get_raw_ptr: unsupported type.");
+            static_assert(mpl::dependent_false<T, U>::value, "get_raw_ptr: unsupported type.");
             mpl::unreachable();
         }
     }
