@@ -56,6 +56,31 @@ TEST_SUITE("any_data")
         {
             sparrow::any_data<int> any_data(nullptr);
         }
+
+        struct Test
+        {
+            std::shared_ptr<int> m_ptr;
+        };
+
+        SUBCASE("check move do not copy")
+        {
+            Test test{std::make_shared<int>(5)};
+
+            sparrow::any_data<Test> any_data(std::move(test));
+            CHECK_EQ(test.m_ptr.use_count(), 0);
+            CHECK_EQ(*any_data.get_data<Test&>().m_ptr, 5);
+            CHECK_EQ(any_data.get_data<Test&>().m_ptr.use_count(), 1);
+        }
+
+        SUBCASE("check copy")
+        {
+            Test test{std::make_shared<int>(5)};
+
+            sparrow::any_data<Test> any_data(test);
+            CHECK_EQ(test.m_ptr.use_count(), 2);
+            CHECK_EQ(*any_data.get_data<Test&>().m_ptr, 5);
+            CHECK_EQ(any_data.get_data<Test&>().m_ptr.use_count(), 2);
+        }
     }
 
     TEST_CASE("get")
