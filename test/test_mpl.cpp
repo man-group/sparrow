@@ -118,7 +118,7 @@ namespace sparrow
     // transfrom
     static_assert(std::same_as<mpl::typelist<int*, char*>, mpl::transform<std::add_pointer_t, test_list>>);
 
-    //////////////////////////////
+	//////////////////////////////
     // concepts and other stuff
 
     // add_const_lvalue_reference
@@ -137,4 +137,53 @@ namespace sparrow
     };
 
     static_assert(mpl::boolean_like<like_a_bool>);
+
+    // unique_ptr
+    static_assert(mpl::unique_ptr<std::unique_ptr<int>>);
+    static_assert(not mpl::unique_ptr<int>);
+    static_assert(not mpl::unique_ptr<std::shared_ptr<int>>);
+    static_assert(not mpl::unique_ptr<std::weak_ptr<int>>);
+    static_assert(not mpl::unique_ptr<int*>);
+
+    // shared_ptr
+    static_assert(mpl::shared_ptr<std::shared_ptr<int>>);
+    static_assert(not mpl::shared_ptr<int>);
+    static_assert(not mpl::shared_ptr<std::unique_ptr<int>>);
+    static_assert(not mpl::shared_ptr<std::weak_ptr<int>>);
+    static_assert(not mpl::shared_ptr<int*>);
+
+    // smart_ptr
+    static_assert(mpl::smart_ptr<std::unique_ptr<int>>);
+    static_assert(mpl::smart_ptr<std::shared_ptr<int>>);
+    static_assert(not mpl::smart_ptr<int>);
+    static_assert(not mpl::smart_ptr<std::weak_ptr<int>>);
+    static_assert(not mpl::smart_ptr<int*>);
+
+    // has_data_function
+    static_assert(mpl::has_data_function<std::vector<int>, int>);
+    static_assert(not mpl::has_data_function<std::list<int>, int>);
+    static_assert(not mpl::has_data_function<int, int>);
+    static_assert(not mpl::has_data_function<std::vector<int>, float>);
+
+    // has_element_type
+    static_assert(mpl::has_element_type<std::unique_ptr<int>>);
+    static_assert(mpl::has_element_type<std::shared_ptr<int>>);
+    static_assert(not mpl::has_element_type<int>);
+    static_assert(not mpl::has_element_type<int*>);
+
+    // get_element_type_t
+    static_assert(std::same_as<mpl::get_element_type_t<std::unique_ptr<int>>, int>);
+    static_assert(std::same_as<mpl::get_element_type_t<std::shared_ptr<int>>, int>);
+    static_assert(std::same_as<mpl::get_element_type_t<std::vector<int>>, void>);
+
+    // has_deleter_type
+    static_assert(mpl::has_deleter_type<std::unique_ptr<int>>);
+    static_assert(not mpl::has_deleter_type<std::shared_ptr<int>>);
+    static_assert(not mpl::has_deleter_type<int>);
+    static_assert(not mpl::has_deleter_type<int*>);
+
+    // get_deleter_type_t
+    static_assert(std::same_as<mpl::get_deleter_type_t<std::unique_ptr<int>>, std::default_delete<int>>);
+    static_assert(std::same_as<mpl::get_deleter_type_t<std::shared_ptr<int>>, void>);
+    static_assert(std::same_as<mpl::get_deleter_type_t<std::vector<int>>, void>);
 }
