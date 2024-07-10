@@ -19,9 +19,11 @@
 #include <tuple>
 #include <type_traits>
 #include <typeindex>
+#include <utility>
 #include <vector>
 
 #include "sparrow/any_data_utils.hpp"
+
 
 namespace sparrow
 {
@@ -34,11 +36,11 @@ namespace sparrow
         explicit any_data(T* data);
 
         template <mpl::unique_ptr_or_derived U>
-            requires std::is_same_v<typename U::element_type, T>
-        explicit any_data(U data);
+            requires std::same_as<typename U::element_type, T>
+        explicit any_data(U&& data);
 
         template <mpl::shared_ptr_or_derived U>
-            requires std::is_same_v<typename U::element_type, T>
+            requires std::same_as<typename U::element_type, T>
         explicit any_data(U data);
 
 
@@ -48,9 +50,7 @@ namespace sparrow
         T* get();
         const T* get() const;
 
-        // Returns the data as a reference to the type U.
-        // The type U must be the same as the type of the data. Otherwise std::bad_any_cast exception is
-        // thrown.
+        // Performs type-safe access to the contained object.
         template <class U>
         U get_data();
 
@@ -59,12 +59,78 @@ namespace sparrow
 
         [[nodiscard]] bool owns_data() const noexcept;
 
-        std::type_index type_id() const;
+        std::type_index type_id() const noexcept;
 
     private:
 
         std::any m_owner;
         T* m_raw_ptr = nullptr;
+    };
+
+    /**
+     * @brief A class that can own or not a container of objects and expose them as raw pointers.
+     *
+     * @tparam T The type of the pointers.
+     */
+    template <typename T>
+    class any_data_container
+    {
+    public:
+
+        template <typename Tuple>
+            requires mpl::is_type_instance_of_v<Tuple, std::tuple>
+        explicit any_data_container(Tuple container);
+
+        explicit any_data_container(T** container);
+
+        explicit any_data_container(std::vector<T*> container);
+
+        // In case where `container` is a range, raw pointers or shared pointers.
+        template <std::ranges::input_range C>
+            requires std::is_same_v<std::ranges::range_value_t<C>, T>
+                     || std::is_same_v<std::ranges::range_value_t<C>, T*>
+                     || std::ranges::input_range<std::ranges::range_value_t<C>>
+                     || mpl::shared_ptr_or_derived<std::ranges::range_value_t<C>>
+        explicit any_data_container(C container);
+
+        // In the case where `container` is a range of unique pointers, we have to transform them to
+        // value_ptr.
+        template <std::ranges::input_range C>
+            requires mpl::unique_ptr_or_derived<std::ranges::range_value_t<C>>
+        explicit any_data_container(C container);
+
+        any_data_container(const any_data_container<T>&) = delete;
+        any_data_container& operator=(const any_data_container<T>&) = delete;
+
+        any_data_container(any_data_container<T>&& other) noexcept;
+
+        any_data_container& operator=(any_data_container<T>&& other) noexcept;
+
+        ~any_data_container() = default;
+
+        [[nodiscard]] std::vector<T*>& get_pointers_vec() noexcept;
+
+        [[nodiscard]] std::span<const T* const> get_pointers_vec() const noexcept;
+
+        [[nodiscard]] T** get() noexcept;
+
+        [[nodiscard]] const T** get() const noexcept;
+
+        template <class U>
+        [[nodiscard]] U get_data();
+
+        template <class U>
+        [[nodiscard]] const U get_data() const;
+
+        [[nodiscard]] bool owns_data() const noexcept;
+
+        std::type_index type_id() const noexcept;
+
+    private:
+
+        std::any m_owner;
+        std::vector<T*> m_pointers_vec;
+        T** m_raw_pointers = nullptr;
     };
 
     template <typename T>
@@ -75,16 +141,16 @@ namespace sparrow
 
     template <typename T>
     template <mpl::unique_ptr_or_derived U>
-        requires std::is_same_v<typename U::element_type, T>
-    any_data<T>::any_data(U data)
-        : m_owner(std::move(value_ptr<typename U::element_type, typename U::deleter_type>(std::move(data))))
+        requires std::same_as<typename U::element_type, T>
+    any_data<T>::any_data(U&& data)
+        : m_owner(value_ptr<typename U::element_type, typename U::deleter_type>(std::forward<U>(data)))
         , m_raw_ptr(std::any_cast<value_ptr<typename U::element_type, typename U::deleter_type>&>(m_owner).get())
     {
     }
 
     template <typename T>
     template <mpl::shared_ptr_or_derived U>
-        requires std::is_same_v<typename U::element_type, T>
+        requires std::same_as<typename U::element_type, T>
     any_data<T>::any_data(U data)
         : m_owner(std::move(data))
         , m_raw_ptr(std::any_cast<U&>(m_owner).get())
@@ -132,76 +198,10 @@ namespace sparrow
     }
 
     template <typename T>
-    std::type_index any_data<T>::type_id() const
+    std::type_index any_data<T>::type_id() const noexcept
     {
         return m_owner.type();
     }
-
-    /**
-     * @brief A class that can own or not a container of objects and expose them as raw pointers.
-     *
-     * @tparam T The type of the pointers.
-     */
-    template <typename T>
-    class any_data_container
-    {
-    public:
-
-        template <typename Tuple>
-            requires mpl::is_type_instance_of_v<Tuple, std::tuple>
-        explicit any_data_container(Tuple container);
-
-        explicit any_data_container(T** container);
-
-        explicit any_data_container(std::vector<T*> container);
-
-        // In case where `container` is a range, raw pointers or shared pointers.
-        template <std::ranges::input_range C>
-            requires std::is_same_v<std::ranges::range_value_t<C>, T>
-                     || std::is_same_v<std::ranges::range_value_t<C>, T*>
-                     || std::ranges::input_range<std::ranges::range_value_t<C>>
-                     || mpl::shared_ptr_or_derived<std::ranges::range_value_t<C>>
-        explicit any_data_container(C container);
-
-        // In the case where `container` is a range of unique pointers, we have to transform them to
-        // value_ptr.
-        template <std::ranges::input_range C>
-            requires mpl::unique_ptr_or_derived<std::ranges::range_value_t<C>>
-        explicit any_data_container(C container);
-
-        any_data_container(const any_data_container<T>&) = delete;
-        any_data_container& operator=(const any_data_container<T>&) = delete;
-
-        any_data_container(any_data_container<T>&& other) noexcept;
-
-        any_data_container& operator=(any_data_container<T>&& other) noexcept;
-
-        ~any_data_container() = default;
-
-        [[nodiscard]] std::vector<T*>& get_pointers_vec() noexcept;
-
-        [[nodiscard]] const std::vector<T*>& get_pointers_vec() const noexcept;
-
-        [[nodiscard]] T** get() noexcept;
-
-        [[nodiscard]] const T** get() const noexcept;
-
-        template <class U>
-        [[nodiscard]] U get_data();
-
-        template <class U>
-        [[nodiscard]] const U get_data() const;
-
-        [[nodiscard]] bool owns_data() const noexcept;
-
-        std::type_index type_id() const noexcept;
-
-    private:
-
-        std::any m_owner;
-        std::vector<T*> m_pointers_vec;
-        T** m_raw_pointers = nullptr;
-    };
 
     /**
      * Convert a std::tuple to another. They must have the same size and be constructible with the same
@@ -304,7 +304,7 @@ namespace sparrow
     }
 
     template <typename T>
-    const std::vector<T*>& any_data_container<T>::get_pointers_vec() const noexcept
+    std::span<const T* const> any_data_container<T>::get_pointers_vec() const noexcept
     {
         return m_pointers_vec;
     }
