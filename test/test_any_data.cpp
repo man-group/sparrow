@@ -617,4 +617,63 @@ TEST_SUITE("any_data_container")
             CHECK(data.owns_data());
         }
     }
+
+    TEST_CASE("type_id")
+    {
+        SUBCASE("std::vector<std::vector<int>>")
+        {
+            const auto vec = create_vec_of_vec_int();
+            sparrow::any_data_container<int> data(vec);
+            CHECK_EQ(data.type_id(), typeid(std::vector<std::vector<int>>));
+        }
+
+        SUBCASE("std::vector<int*>")
+        {
+            std::vector<int*> vec;
+            for (int i = 0; i < 5; ++i)
+            {
+                vec.push_back(new int(i));
+            }
+            sparrow::any_data_container<int> data(vec.data());
+            CHECK_EQ(data.type_id(), typeid(void));
+        }
+
+        SUBCASE("std::vector<std::unique_ptr<sparrow::buffer<int>>>")
+        {
+            sparrow::any_data_container<int> data(create_vec_of_unique_buffer_int());
+            CHECK_EQ(data.type_id(), typeid(std::vector<sparrow::value_ptr<sparrow::buffer<int>>>));
+        }
+
+        SUBCASE("std::vector<std::shared_ptr<sparrow::buffer<int>>>")
+        {
+            sparrow::any_data_container<int> data(create_vec_of_shared_buffer_int());
+            CHECK_EQ(data.type_id(), typeid(std::vector<std::shared_ptr<sparrow::buffer<int>>>));
+        }
+
+        SUBCASE("std::tuple<std::vector<int32_t>, sparrow::buffer<uint8_t>, int64_t*")
+        {
+            std::vector<int64_t> vec{0, 1, 2, 3, 4};
+
+            std::tuple<std::vector<int32_t>, sparrow::buffer<int64_t>, int64_t*> tuple{
+                std::vector<int32_t>{0, 1, 2, 3, 4},
+                sparrow::buffer<int64_t>(vec),
+                vec.data()
+            };
+
+            sparrow::any_data_container<uint8_t> data(tuple);
+            CHECK_EQ(data.type_id(), typeid(std::tuple<std::vector<int32_t>, sparrow::buffer<int64_t>, int64_t*>));
+        }
+
+        SUBCASE("std:tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>")
+        {
+            sparrow::any_data_container<int> data(create_tuple_of_value_shared_int());
+            CHECK_EQ(data.type_id(), typeid(std::tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>));
+        }
+
+        SUBCASE("std:tuple<sparrow::unique_ptr<int>, std::shared_ptr<int>>")
+        {
+            sparrow::any_data_container<int> data(create_tuple_of_unique_shared_int());
+            CHECK_EQ(data.type_id(), typeid(std::tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>));
+        }
+    }
 }

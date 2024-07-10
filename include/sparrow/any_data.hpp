@@ -194,7 +194,7 @@ namespace sparrow
 
         [[nodiscard]] bool owns_data() const noexcept;
 
-        [[nodiscard]] size_t size() const noexcept;
+        std::type_index type_id() const noexcept;
 
     private:
 
@@ -342,8 +342,8 @@ namespace sparrow
     }
 
     template <typename T>
-    size_t any_data_container<T>::size() const noexcept
+    std::type_index any_data_container<T>::type_id() const noexcept
     {
-        return m_pointers_vec.size();
+        return m_owner.type();
     }
 }
