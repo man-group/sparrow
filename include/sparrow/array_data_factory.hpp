@@ -355,7 +355,7 @@ namespace sparrow
             nonstd::value_ptr<array_data>(make_array_data_for_variable_size_binary_layout<T>())
         };
     }
-#if defined(__GNUC__) 
+#if defined(__GNUC__) && not defined(__clang__)
 #    pragma GCC diagnostic pop
 #endif
 
