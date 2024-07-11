@@ -467,7 +467,7 @@ TEST_SUITE("any_data_container")
 
             sparrow::any_data_container data{tuple};
             auto ptrs = data.get_pointers_vec<int>();
-            const auto vec_ptr = reinterpret_cast<int32_t*>(ptrs.at(0));
+            const auto vec_ptr = ptrs.at(0);
             const auto buffer_ptr = reinterpret_cast<int64_t*>(ptrs.at(1));
             const auto int64_ptr = reinterpret_cast<int64_t*>(ptrs.at(2));
 

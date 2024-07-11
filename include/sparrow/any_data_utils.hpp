@@ -29,7 +29,7 @@ namespace sparrow
      * @tparam T The type of the pointer to obtain.
      * @tparam U The type of the variable.
      * @param var The variable.
-     * @return A raw pointer of to the value.
+     * @return A raw pointer.
      *          If the variable is a smart pointer, the pointer is obtained by calling get().
      *          If the variable is a range, the pointer is obtained by calling data().
      *          If the variable is a pointer, the pointer is returned as is.

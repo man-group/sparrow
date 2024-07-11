@@ -28,7 +28,7 @@
 namespace sparrow
 {
     /// A class that can own or not any object and expose it as a raw pointer.
-    /// If a pointer is passed to the constructor, the class does not own the object.
+    /// If a raw pointer is passed to the constructor, the class does not own the object.
     /// If a rvalue is passed, the class takes the ownership of the object.
     /// In any other case, the class copies the object.
     class any_data
@@ -66,6 +66,7 @@ namespace sparrow
 
         [[nodiscard]] bool owns_data() const noexcept;
 
+        /// Return the type_index of the contained object.
         std::type_index type_id() const noexcept;
 
     private:
