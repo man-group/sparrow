@@ -159,12 +159,6 @@ namespace sparrow
     static_assert(not mpl::smart_ptr<std::weak_ptr<int>>);
     static_assert(not mpl::smart_ptr<int*>);
 
-    // has_data_function
-    static_assert(mpl::has_data_function<std::vector<int>, int>);
-    static_assert(not mpl::has_data_function<std::list<int>, int>);
-    static_assert(not mpl::has_data_function<int, int>);
-    static_assert(not mpl::has_data_function<std::vector<int>, float>);
-
     // has_element_type
     static_assert(mpl::has_element_type<std::unique_ptr<int>>);
     static_assert(mpl::has_element_type<std::shared_ptr<int>>);

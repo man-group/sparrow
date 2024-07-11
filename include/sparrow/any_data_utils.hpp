@@ -21,54 +21,49 @@
 #include "sparrow/memory.hpp"
 #include "sparrow/mp_utils.hpp"
 
-
 namespace sparrow
 {
     /**
      * Get a raw pointer from a smart pointer, a range, an object or a pointer.
      *
-     * @tparam T The type of the pointer.
-     * @tparam U The type of the element.
-     * @param elem The element.
-     * @return A raw pointer.
+     * @tparam T The type of the pointer to obtain.
+     * @tparam U The type of the variable.
+     * @param var The variable.
+     * @return A raw pointer of to the value.
+     *          If the variable is a smart pointer, the pointer is obtained by calling get().
+     *          If the variable is a range, the pointer is obtained by calling data().
+     *          If the variable is a pointer, the pointer is returned as is.
+     *          If the variable is an object, the pointer is returned by calling the address-of operator.
      */
     template <typename T, typename U>
-    T* get_raw_ptr(U& elem)
+    T* get_raw_ptr(U& var)
     {
         if constexpr (std::is_pointer_v<U>)
         {
-            return reinterpret_cast<T*>(elem);
+            return var;
         }
         else if constexpr (mpl::has_element_type<U>)
         {
             if constexpr (mpl::smart_ptr<U> || std::derived_from<U, std::shared_ptr<typename U::element_type>>
                           || mpl::is_type_instance_of_v<U, value_ptr>)
             {
-                if constexpr (std::same_as<typename U::element_type, T> || std::same_as<T, void>)
+                if constexpr (std::ranges::input_range<typename U::element_type>)
                 {
-                    return reinterpret_cast<T*>(elem.get());
+                    return std::ranges::data(*var.get());
                 }
-                else if constexpr (mpl::has_data_function<typename U::element_type, T>)
+                else if constexpr (std::same_as<typename U::element_type, T> || std::same_as<T, void>)
                 {
-                    return reinterpret_cast<T*>(std::ranges::data(*elem.get()));
+                    return var.get();
                 }
             }
         }
         else if constexpr (std::ranges::input_range<U>)
         {
-            return reinterpret_cast<T*>(std::ranges::data(elem));
+            return std::ranges::data(var);
         }
-        else if constexpr (mpl::has_data_function<U, T>)
+        else if constexpr (std::same_as<T, U> || std::same_as<T, void>)
         {
-            return reinterpret_cast<T*>(elem.data());
-        }
-        else if constexpr (std::same_as<T, U>)
-        {
-            return reinterpret_cast<T*>(&elem);
-        }
-        else if constexpr (std::same_as<T, void>)
-        {
-            return reinterpret_cast<void*>(&elem);
+            return &var;
         }
         else
         {
@@ -78,7 +73,7 @@ namespace sparrow
     }
 
     /**
-     * Create a vector of pointers from a range.
+     * Create a vector of pointers to elements from a range.
      *
      * @tparam T The type of the pointers.
      * @tparam Range The range type.
@@ -103,7 +98,10 @@ namespace sparrow
     }
 
     /**
-     * Create a vector of pointers from a tuple.
+     * Create a vector of pointers to elements of a tuple.
+     * Types of the tuple can be sparrow::value_ptr, smart pointers, ranges, objects or pointers.
+     * The type of the elements can be different.
+     * Reinterpret cast is used to convert the pointers to the desired type.
      *
      * @tparam T The type of the pointers.
      * @tparam Tuple The tuple type.

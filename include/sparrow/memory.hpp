@@ -149,7 +149,7 @@ namespace sparrow
         std::unique_ptr<T, D> m_value;
     };
 
-    /// If the type is a unique_ptr, it replaces it with a value_ptr, else it keeps the type.
+    /// This type is `value_ptr` if `T` is a `unique_ptr` instance, `T` otherwise.
     template <class T>
     using replace_unique_ptr_by_value_ptr = std::conditional_t<
         mpl::unique_ptr_or_derived<T>,

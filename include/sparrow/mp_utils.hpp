@@ -451,12 +451,6 @@ namespace sparrow::mpl
     template <typename T>
     concept smart_ptr_and_derived = shared_ptr_or_derived<T> || unique_ptr_or_derived<T>;
 
-    // Concept to check if a type has a data() member function that returns a pointer
-    template <typename T, typename U>
-    concept has_data_function = requires(T t) {
-        { t.data() } -> std::same_as<U*>;
-    };
-
     // Concept to check if a type has a element_type type member
     template <typename T>
     concept has_element_type = requires { typename T::element_type; };

@@ -15,6 +15,7 @@
 #pragma once
 
 #include <any>
+#include <cstddef>
 #include <ranges>
 #include <tuple>
 #include <type_traits>
@@ -27,9 +28,16 @@
 namespace sparrow
 {
     /// A class that can own or not any object and expose it as a raw pointer.
+    /// If a pointer is passed to the constructor, the class does not own the object.
+    /// If a rvalue is passed, the class takes the ownership of the object.
+    /// In any other case, the class copies the object.
     class any_data
     {
     public:
+
+        explicit any_data() noexcept = default;
+
+        explicit any_data(std::nullptr_t) noexcept;
 
         template <class T>
         explicit any_data(T* data);
@@ -51,10 +59,10 @@ namespace sparrow
 
         // Performs type-safe access to the contained object.
         template <class T>
-        T get_data();
+        T value();
 
         template <class T>
-        const T get_data() const;
+        const T value() const;
 
         [[nodiscard]] bool owns_data() const noexcept;
 
@@ -66,7 +74,7 @@ namespace sparrow
         void* m_raw_ptr = nullptr;
     };
 
-    /// A class that can own or not a container of objects and expose them as raw pointers..
+    /// Stores or refers to a container and expose it's elements through raw pointers.
     class any_data_container
     {
     public:
@@ -121,13 +129,14 @@ namespace sparrow
         [[nodiscard]] const T** get() const noexcept;
 
         template <class T>
-        [[nodiscard]] T get_data();
+        [[nodiscard]] T value();
 
         template <class T>
-        [[nodiscard]] const T get_data() const;
+        [[nodiscard]] const T value() const;
 
         [[nodiscard]] bool owns_data() const noexcept;
 
+        /// Return the type_index of the container.
         std::type_index type_id() const noexcept;
 
     private:
@@ -136,6 +145,10 @@ namespace sparrow
         std::vector<void*> m_pointers_vec;
         void** m_raw_pointers = nullptr;
     };
+
+    any_data::any_data(std::nullptr_t) noexcept
+    {
+    }
 
     template <typename T>
     any_data::any_data(T* data)
@@ -178,13 +191,13 @@ namespace sparrow
     }
 
     template <class U>
-    U any_data::get_data()
+    U any_data::value()
     {
         return std::any_cast<U>(m_owner);
     }
 
     template <class U>
-    const U any_data::get_data() const
+    const U any_data::value() const
     {
         return std::any_cast<U>(m_owner);
     }
@@ -327,23 +340,23 @@ namespace sparrow
     template <typename T>
     T** any_data_container::get() noexcept
     {
-        return static_cast<T**>(m_raw_pointers);
+        return reinterpret_cast<T**>(m_raw_pointers);
     }
 
     template <typename T>
     const T** any_data_container::get() const noexcept
     {
-        return static_cast<T**>(m_raw_pointers);
+        return reinterpret_cast<T**>(m_raw_pointers);
     }
 
     template <typename T>
-    T any_data_container::get_data()
+    T any_data_container::value()
     {
         return std::any_cast<T>(m_owner);
     }
 
     template <typename T>
-    const T any_data_container::get_data() const
+    const T any_data_container::value() const
     {
         return std::any_cast<T>(m_owner);
     }
