@@ -22,7 +22,6 @@
 #include "sparrow/contracts.hpp"
 #include "sparrow/data_type.hpp"
 #include "sparrow/dynamic_bitset.hpp"
-// #include "sparrow/memory.hpp"
 #include "sparrow/details/3rdparty/value_ptr_lite.hpp"
 
 namespace sparrow
@@ -71,7 +70,7 @@ namespace sparrow
         array_data(const array_data&) = default;
         array_data(array_data&&) = default;
         array_data& operator=(const array_data&) = default;
-        array_data& operator=(array_data&&) = default;
+        array_data& operator=(array_data&&)  noexcept = default;
 
         data_descriptor m_type;
         length_type m_length = 0;

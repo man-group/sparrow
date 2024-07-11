@@ -37,7 +37,6 @@
 #include "sparrow/reference_wrapper_utils.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
 
-
 namespace sparrow
 {
     /*
@@ -58,6 +57,11 @@ namespace sparrow
         };
     }
 
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
     /**
      * \brief Creates an array_data object for a fixed-size layout.
      *
@@ -72,6 +76,10 @@ namespace sparrow
         using U = get_corresponding_arrow_type_t<T>;
         return {data_descriptor(arrow_type_id<U>()), 0, 0, {}, {{}}, {}, nullptr};
     }
+
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
 
     /**
      * Checks if all elements in the input range have the same size.
@@ -323,6 +331,11 @@ namespace sparrow
         );
     }
 
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
     /**
      * Creates an empty array_data object for dictionary encoded layout.
      *
@@ -332,7 +345,7 @@ namespace sparrow
     template <typename T>
     array_data make_array_data_for_dictionary_encoded_layout()
     {
-        return {
+        return array_data{
             data_descriptor(arrow_type_id<std::uint64_t>()),
             0,
             0,
@@ -342,6 +355,9 @@ namespace sparrow
             nonstd::value_ptr<array_data>(make_array_data_for_variable_size_binary_layout<T>())
         };
     }
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
 
     /**
      * Creates an array_data object for dictionary encoded layout.
