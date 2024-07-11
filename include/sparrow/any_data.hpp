@@ -92,7 +92,7 @@ namespace sparrow
         template <class T>
         explicit any_data_container(const std::vector<T*>& container);
 
-        // In case where `container` is a range, raw pointers or shared pointers.
+        // In case where `container` is a range or range or a range of shared pointers.
         template <std::ranges::input_range C>
             requires std::ranges::input_range<std::ranges::range_value_t<C>>
                      || mpl::shared_ptr_or_derived<std::ranges::range_value_t<C>>
@@ -135,6 +135,7 @@ namespace sparrow
         [[nodiscard]] T value();
 
         template <class T>
+        requires std::is_const_v<T>
         [[nodiscard]] const T value() const;
 
         [[nodiscard]] bool owns_data() const noexcept;
@@ -372,6 +373,7 @@ namespace sparrow
     }
 
     template <typename T>
+    requires std::is_const_v<T>
     const T any_data_container::value() const
     {
         return std::any_cast<T>(m_owner);

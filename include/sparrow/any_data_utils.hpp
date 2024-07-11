@@ -100,8 +100,8 @@ namespace sparrow
     /**
      * Create a vector of pointers to elements of a tuple.
      * Types of the tuple can be nonstd::value_ptr, smart pointers, ranges, objects or pointers.
-     * The type of the elements can be different.
-     * Reinterpret cast is used to convert the pointers to the desired type.
+     * The type of the elements can be different. E.g: std::tuple<nonstd::value_ptr<int>, std::unique_ptr<char>, double>.
+     * Casting is used to convert the pointers to the desired type.
      *
      * @tparam T The type of the pointers.
      * @tparam Tuple The tuple type.
