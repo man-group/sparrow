@@ -57,7 +57,7 @@ namespace sparrow
         };
     }
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && not defined(__clang__)
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
@@ -77,7 +77,7 @@ namespace sparrow
         return {data_descriptor(arrow_type_id<U>()), 0, 0, {}, {{}}, {}, nullptr};
     }
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && not defined(__clang__)
 #    pragma GCC diagnostic pop
 #endif
 
@@ -331,7 +331,7 @@ namespace sparrow
         );
     }
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && not defined(__clang__)
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
@@ -355,7 +355,7 @@ namespace sparrow
             nonstd::value_ptr<array_data>(make_array_data_for_variable_size_binary_layout<T>())
         };
     }
-#if defined(__GNUC__)
+#if defined(__GNUC__) 
 #    pragma GCC diagnostic pop
 #endif
 
