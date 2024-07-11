@@ -22,10 +22,14 @@
 #include "sparrow/contracts.hpp"
 #include "sparrow/data_type.hpp"
 #include "sparrow/dynamic_bitset.hpp"
-#include "sparrow/memory.hpp"
+// #include "sparrow/memory.hpp"
+#include "sparrow/details/3rdparty/value_ptr_lite.hpp"
 
 namespace sparrow
 {
+
+    struct array_data;
+
     /**
      * Structure holding the raw data.
      *
@@ -41,6 +45,34 @@ namespace sparrow
         using buffer_type = buffer<block_type>;
         using length_type = std::int64_t;
 
+        // default constructor
+        array_data() = default;
+
+        // constructor with parameters
+        array_data(
+            data_descriptor type,
+            length_type length,
+            std::int64_t offset,
+            bitmap_type bitmap,
+            std::vector<buffer_type> buffers,
+            std::vector<array_data> child_data,
+            nonstd::value_ptr<array_data> dictionary
+        )
+            : type(type)
+            , length(length)
+            , offset(offset)
+            , bitmap(std::move(bitmap))
+            , buffers(std::move(buffers))
+            , child_data(std::move(child_data))
+            , dictionary(std::move(dictionary))
+        {
+        }
+
+        array_data(const array_data&) = default;
+        array_data(array_data&&) = default;
+        array_data& operator=(const array_data&) = default;
+        array_data& operator=(array_data&&) = default;
+
         data_descriptor type;
         length_type length = 0;
         std::int64_t offset = 0;
@@ -49,7 +81,7 @@ namespace sparrow
         // Other buffers
         std::vector<buffer_type> buffers;
         std::vector<array_data> child_data;
-        value_ptr<array_data> dictionary;
+        nonstd::value_ptr<array_data> dictionary;
     };
 
     /**

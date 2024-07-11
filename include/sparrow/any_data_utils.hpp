@@ -18,7 +18,7 @@
 #include <ranges>
 #include <vector>
 
-#include "sparrow/memory.hpp"
+#include "sparrow/details/3rdparty/value_ptr_lite.hpp"
 #include "sparrow/mp_utils.hpp"
 
 namespace sparrow
@@ -45,7 +45,7 @@ namespace sparrow
         else if constexpr (mpl::has_element_type<U>)
         {
             if constexpr (mpl::smart_ptr<U> || std::derived_from<U, std::shared_ptr<typename U::element_type>>
-                          || mpl::is_type_instance_of_v<U, value_ptr>)
+                          || mpl::is_type_instance_of_v<U, nonstd::value_ptr>)
             {
                 if constexpr (std::ranges::input_range<typename U::element_type>)
                 {
@@ -99,7 +99,7 @@ namespace sparrow
 
     /**
      * Create a vector of pointers to elements of a tuple.
-     * Types of the tuple can be sparrow::value_ptr, smart pointers, ranges, objects or pointers.
+     * Types of the tuple can be nonstd::value_ptr, smart pointers, ranges, objects or pointers.
      * The type of the elements can be different.
      * Reinterpret cast is used to convert the pointers to the desired type.
      *
@@ -125,31 +125,32 @@ namespace sparrow
         return raw_ptr_vec;
     }
 
+    template <class Ptr>
+    using value_ptr_from = nonstd::value_ptr<
+        typename Ptr::element_type,
+        nonstd::detail::default_clone<typename Ptr::element_type>,
+        typename Ptr::deleter_type>;
+
     /**
-     * Transforms a range of unique pointers to a vector of value_ptr.
+     * Transforms a range of unique pointers to a vector of nonstd::value_ptr.
      *
      * @tparam Input A range of unique_ptr.
      * @param input The input range.
-     * @return A vector of value_ptr.
+     * @return A vector of nonstd::value_ptr.
      */
     template <std::ranges::input_range Input>
         requires mpl::unique_ptr<std::ranges::range_value_t<Input>>
-    std::vector<sparrow::value_ptr<
-        typename std::ranges::range_value_t<Input>::element_type,
-        typename std::ranges::range_value_t<Input>::deleter_type>>
+    std::vector<value_ptr_from<std::ranges::range_value_t<Input>>>
     range_of_unique_ptr_to_vec_of_value_ptr(Input& input)
     {
-        using UniquePtr = std::ranges::range_value_t<Input>;
-        using T = UniquePtr::element_type;
-        using D = UniquePtr::deleter_type;
-        std::vector<value_ptr<T, D>> values_ptrs;
+        std::vector<value_ptr_from<std::ranges::range_value_t<Input>>> values_ptrs;
         values_ptrs.reserve(std::ranges::size(input));
         std::ranges::transform(
             input,
             std::back_inserter(values_ptrs),
             [](auto& child)
             {
-                return value_ptr<T, D>(std::move(child));
+                return value_ptr_from<std::ranges::range_value_t<Input>>{child.release()};
             }
         );
         return values_ptrs;

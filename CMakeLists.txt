@@ -108,7 +108,6 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/dynamic_bitset.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/fixed_size_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/iterator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/memory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/mp_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/null_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/nullable.hpp
@@ -117,6 +116,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_layout.hpp
 
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/value_ptr_lite.hpp
 )
 
 add_library(sparrow INTERFACE)

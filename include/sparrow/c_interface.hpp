@@ -126,6 +126,10 @@ namespace sparrow
     {
         void operator()(ArrowArray* array) const
         {
+            if (array == nullptr)
+            {
+                return;
+            }
             if (array->release != nullptr)
             {
                 array->release(array);

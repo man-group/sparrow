@@ -51,7 +51,6 @@ set(SPARROW_TESTS_SOURCES
     test_dynamic_bitset.cpp
     test_fixed_size_layout.cpp
     test_iterator.cpp
-    test_memory.cpp
     test_mpl.cpp
     test_null_layout.cpp
     test_nullable.cpp

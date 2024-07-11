@@ -25,6 +25,8 @@
 
 #include "sparrow/any_data_utils.hpp"
 
+#include "details/3rdparty/value_ptr_lite.hpp"
+
 namespace sparrow
 {
     /// A class that can own or not any object and expose it as a raw pointer.
@@ -159,8 +161,9 @@ namespace sparrow
 
     template <mpl::unique_ptr_or_derived U>
     any_data::any_data(U&& data)
-        : m_owner(value_ptr<typename U::element_type, typename U::deleter_type>(std::forward<U>(data)))
-        , m_raw_ptr(std::any_cast<value_ptr<typename U::element_type, typename U::deleter_type>&>(m_owner).get())
+        : m_owner(value_ptr_from<U>{std::move(data)})
+        , m_raw_ptr(std::any_cast<value_ptr_from<U>&>(m_owner)
+                        .get())
     {
     }
 
@@ -212,6 +215,20 @@ namespace sparrow
     {
         return m_owner.type();
     }
+
+    /// This type is `value_ptr` if `T` is a `unique_ptr` instance, `T` otherwise.
+    template <class T>
+    using replace_unique_ptr_by_value_ptr = std::conditional_t<
+        mpl::unique_ptr_or_derived<T>,
+        nonstd::value_ptr<
+            mpl::get_element_type_t<T>,
+            nonstd::detail::default_clone<mpl::get_element_type_t<T>>,
+            mpl::get_deleter_type_t<T>>,
+        T>;
+
+    /// Given a typelist, it replaces all unique_ptrs with value_ptrs.
+    template <class Typelist>
+    using replace_unique_ptrs_by_value_ptrs_t = mpl::transform<replace_unique_ptr_by_value_ptr, Typelist>;
 
     /**
      * Convert a std::tuple to another. They must have the same size and be constructible with the same
@@ -275,11 +292,9 @@ namespace sparrow
         requires mpl::unique_ptr_or_derived<std::ranges::range_value_t<C>>
     any_data_container::any_data_container(C container)
         : m_owner(range_of_unique_ptr_to_vec_of_value_ptr(container))
-        , m_pointers_vec(
-              to_raw_ptr_vec<void>(std::any_cast<std::vector<sparrow::value_ptr<
-                                       typename std::ranges::range_value_t<C>::element_type,
-                                       typename std::ranges::range_value_t<C>::deleter_type>>&>(m_owner))
-          )
+        , m_pointers_vec(to_raw_ptr_vec<void>(
+              std::any_cast<std::vector<value_ptr_from<std::ranges::range_value_t<C>>>&>(m_owner)
+          ))
         , m_raw_pointers(m_pointers_vec.data())
     {
     }

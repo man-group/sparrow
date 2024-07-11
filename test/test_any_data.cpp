@@ -18,7 +18,7 @@
 #include "sparrow/any_data.hpp"
 #include "sparrow/buffer.hpp"
 #include "sparrow/c_interface.hpp"
-#include "sparrow/memory.hpp"
+#include "sparrow/details/3rdparty/value_ptr_lite.hpp"
 
 #include "doctest/doctest.h"
 
@@ -187,8 +187,8 @@ TEST_SUITE("any_data")
             {
                 auto ptr = std::make_unique<int>(5);
                 sparrow::any_data data{std::move(ptr)};
-                REQUIRE_NOTHROW(data.value<sparrow::value_ptr<int>&>());
-                auto& value = data.value<sparrow::value_ptr<int>&>();
+                REQUIRE_NOTHROW(data.value<nonstd::value_ptr<int>&>());
+                auto& value = data.value<nonstd::value_ptr<int>&>();
                 CHECK_EQ(*value.get(), 5);
             }
 
@@ -231,7 +231,7 @@ TEST_SUITE("any_data")
             auto ptr = std::make_unique<int>(5);
             sparrow::any_data data{std::move(ptr)};
             std::string type_id = data.type_id().name();
-            CHECK_EQ(data.type_id(), typeid(sparrow::value_ptr<int>));
+            CHECK_EQ(data.type_id(), typeid(nonstd::value_ptr<int>));
         }
     }
 
@@ -321,9 +321,9 @@ std::vector<std::shared_ptr<sparrow::buffer<int>>> create_vec_of_shared_buffer_i
     return vec;
 }
 
-std::tuple<sparrow::value_ptr<int>, std::shared_ptr<int>> create_tuple_of_value_shared_int()
+std::tuple<nonstd::value_ptr<int>, std::shared_ptr<int>> create_tuple_of_value_shared_int()
 {
-    auto value_ptr = sparrow::value_ptr<int>{5};
+    auto value_ptr = nonstd::value_ptr<int>{5};
     auto shared_ptr = std::make_shared<int>(6);
     return {std::move(value_ptr), shared_ptr};
 }
@@ -387,7 +387,7 @@ TEST_SUITE("any_data_container")
             sparrow::any_data_container data{tuple};
         }
 
-        SUBCASE("std:tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>")
+        SUBCASE("std:tuple<nonstd::value_ptr<int>, std::shared_ptr<int>>")
         {
             sparrow::any_data_container data{create_tuple_of_value_shared_int()};
         }
@@ -479,7 +479,7 @@ TEST_SUITE("any_data_container")
             }
         }
 
-        SUBCASE("std:tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>")
+        SUBCASE("std:tuple<nonstd::value_ptr<int>, std::shared_ptr<int>>")
         {
             sparrow::any_data_container data{create_tuple_of_value_shared_int()};
             auto ptrs = data.get_pointers_vec<int>();
@@ -528,7 +528,7 @@ TEST_SUITE("any_data_container")
             SUBCASE("std::vector<std::unique_ptr<sparrow::buffer<int>>>")
             {
                 sparrow::any_data_container data{create_vec_of_unique_buffer_int()};
-                auto& data_vec = data.value<std::vector<sparrow::value_ptr<sparrow::buffer<int>>>&>();
+                auto& data_vec = data.value<std::vector<nonstd::value_ptr<sparrow::buffer<int>>>&>();
                 for (size_t i = 0; i < 5; ++i)
                 {
                     for (size_t j = 0; j < 5; ++j)
@@ -576,10 +576,10 @@ TEST_SUITE("any_data_container")
                 }
             }
 
-            SUBCASE("std:tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>")
+            SUBCASE("std:tuple<nonstd::value_ptr<int>, std::shared_ptr<int>>")
             {
                 sparrow::any_data_container data{create_tuple_of_value_shared_int()};
-                auto& data_tuple = data.value<std::tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>&>();
+                auto& data_tuple = data.value<std::tuple<nonstd::value_ptr<int>, std::shared_ptr<int>>&>();
                 CHECK_EQ(*std::get<0>(data_tuple), 5);
                 CHECK_EQ(*std::get<1>(data_tuple), 6);
             }
@@ -587,7 +587,7 @@ TEST_SUITE("any_data_container")
             SUBCASE("std:tuple<sparrow::unique_ptr<int>, std::shared_ptr<int>>")
             {
                 sparrow::any_data_container data{create_tuple_of_unique_shared_int()};
-                auto& data_tuple = data.value<std::tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>&>();
+                auto& data_tuple = data.value<std::tuple<nonstd::value_ptr<int>, std::shared_ptr<int>>&>();
                 CHECK_EQ(*std::get<0>(data_tuple), 5);
                 CHECK_EQ(*std::get<1>(data_tuple), 6);
             }
@@ -692,7 +692,7 @@ TEST_SUITE("any_data_container")
                 }
             }
 
-            SUBCASE("std:tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>")
+            SUBCASE("std:tuple<nonstd::value_ptr<int>, std::shared_ptr<int>>")
             {
                 sparrow::any_data_container data{create_tuple_of_value_shared_int()};
                 auto ptr = data.get<int>();
@@ -756,7 +756,7 @@ TEST_SUITE("any_data_container")
             CHECK(data.owns_data());
         }
 
-        SUBCASE("std:tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>")
+        SUBCASE("std:tuple<nonstd::value_ptr<int>, std::shared_ptr<int>>")
         {
             sparrow::any_data_container data{create_tuple_of_value_shared_int()};
             CHECK(data.owns_data());
@@ -792,7 +792,7 @@ TEST_SUITE("any_data_container")
         SUBCASE("std::vector<std::unique_ptr<sparrow::buffer<int>>>")
         {
             sparrow::any_data_container data{create_vec_of_unique_buffer_int()};
-            CHECK_EQ(data.type_id(), typeid(std::vector<sparrow::value_ptr<sparrow::buffer<int>>>));
+            CHECK_EQ(data.type_id(), typeid(std::vector<nonstd::value_ptr<sparrow::buffer<int>>>));
         }
 
         SUBCASE("std::vector<std::shared_ptr<sparrow::buffer<int>>>")
@@ -815,16 +815,16 @@ TEST_SUITE("any_data_container")
             CHECK_EQ(data.type_id(), typeid(std::tuple<std::vector<int32_t>, sparrow::buffer<int64_t>, int64_t*>));
         }
 
-        SUBCASE("std:tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>")
+        SUBCASE("std:tuple<nonstd::value_ptr<int>, std::shared_ptr<int>>")
         {
             sparrow::any_data_container data{create_tuple_of_value_shared_int()};
-            CHECK_EQ(data.type_id(), typeid(std::tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>));
+            CHECK_EQ(data.type_id(), typeid(std::tuple<nonstd::value_ptr<int>, std::shared_ptr<int>>));
         }
 
         SUBCASE("std:tuple<sparrow::unique_ptr<int>, std::shared_ptr<int>>")
         {
             sparrow::any_data_container data{create_tuple_of_unique_shared_int()};
-            CHECK_EQ(data.type_id(), typeid(std::tuple<sparrow::value_ptr<int>, std::shared_ptr<int>>));
+            CHECK_EQ(data.type_id(), typeid(std::tuple<nonstd::value_ptr<int>, std::shared_ptr<int>>));
         }
     }
 }

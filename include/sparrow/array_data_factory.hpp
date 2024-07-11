@@ -30,12 +30,13 @@
 #include "sparrow/contracts.hpp"
 #include "sparrow/data_traits.hpp"
 #include "sparrow/data_type.hpp"
+#include "sparrow/details/3rdparty/value_ptr_lite.hpp"
 #include "sparrow/dictionary_encoded_layout.hpp"
 #include "sparrow/fixed_size_layout.hpp"
-#include "sparrow/memory.hpp"
 #include "sparrow/mp_utils.hpp"
 #include "sparrow/reference_wrapper_utils.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
+
 
 namespace sparrow
 {
@@ -47,13 +48,13 @@ namespace sparrow
     inline array_data make_array_data_for_null_layout(std::size_t size = 0u)
     {
         return {
-            .type = data_descriptor(arrow_type_id<null_type>()),
-            .length = static_cast<std::int64_t>(size),
-            .offset = 0,
-            .bitmap = {},
-            .buffers = {},
-            .child_data = {},
-            .dictionary = nullptr
+            data_descriptor(arrow_type_id<null_type>()),
+            static_cast<std::int64_t>(size),
+            0,
+            {},
+            {},
+            {},
+            nonstd::value_ptr<array_data>(nullptr)
         };
     }
 
@@ -69,15 +70,7 @@ namespace sparrow
     array_data make_array_data_for_fixed_size_layout()
     {
         using U = get_corresponding_arrow_type_t<T>;
-        return {
-            .type = data_descriptor(arrow_type_id<U>()),
-            .length = 0,
-            .offset = 0,
-            .bitmap = {},
-            .buffers = {{}},
-            .child_data = {},
-            .dictionary = nullptr
-        };
+        return {data_descriptor(arrow_type_id<U>()), 0, 0, {}, {{}}, {}, nullptr};
     }
 
     /**
@@ -143,13 +136,13 @@ namespace sparrow
         };
         using U = std::conditional_t<std::same_as<T, std::string_view>, std::string, T>;
         return {
-            .type = data_descriptor(arrow_type_id<U>()),
-            .length = static_cast<int64_t>(values.size()),
-            .offset = offset,
-            .bitmap = bitmap,
-            .buffers = {create_buffer()},
-            .child_data = {},
-            .dictionary = nullptr
+            data_descriptor(arrow_type_id<U>()),
+            static_cast<int64_t>(values.size()),
+            offset,
+            bitmap,
+            {create_buffer()},
+            {},
+            nullptr
         };
     }
 
@@ -164,13 +157,13 @@ namespace sparrow
     {
         using U = get_corresponding_arrow_type_t<T>;
         return {
-            .type = data_descriptor(arrow_type_id<U>()),
-            .length = 0,
-            .offset = 0,
-            .bitmap = {},
-            .buffers = {{}, array_data::buffer_type(sizeof(std::int64_t), 0)},
-            .child_data = {},
-            .dictionary = nullptr
+            data_descriptor(arrow_type_id<U>()),
+            0,
+            0,
+            {},
+            {{}, array_data::buffer_type(sizeof(std::int64_t), 0)},
+            {},
+            nullptr
         };
     }
 
@@ -243,13 +236,13 @@ namespace sparrow
         using U = get_corresponding_arrow_type_t<T>;
 
         return {
-            .type = data_descriptor(arrow_type_id<U>()),
-            .length = static_cast<array_data::length_type>(values.size()),
-            .offset = offset,
-            .bitmap = bitmap,
-            .buffers = create_buffers(),
-            .child_data = {},
-            .dictionary = nullptr
+            data_descriptor(arrow_type_id<U>()),
+            static_cast<array_data::length_type>(values.size()),
+            offset,
+            bitmap,
+            create_buffers(),
+            {},
+            nullptr
         };
     }
 
@@ -340,13 +333,13 @@ namespace sparrow
     array_data make_array_data_for_dictionary_encoded_layout()
     {
         return {
-            .type = data_descriptor(arrow_type_id<std::uint64_t>()),
-            .length = 0,
-            .offset = 0,
-            .bitmap = {},
-            .buffers = {array_data::buffer_type(sizeof(std::int64_t), 0)},
-            .child_data = {},
-            .dictionary = value_ptr<array_data>(make_array_data_for_variable_size_binary_layout<T>())
+            data_descriptor(arrow_type_id<std::uint64_t>()),
+            0,
+            0,
+            {},
+            {array_data::buffer_type(sizeof(std::int64_t), 0)},
+            {},
+            nonstd::value_ptr<array_data>(make_array_data_for_variable_size_binary_layout<T>())
         };
     }
 
@@ -381,13 +374,13 @@ namespace sparrow
             return b;
         };
         return {
-            .type = data_descriptor(arrow_type_id<std::uint64_t>()),
-            .length = static_cast<array_data::length_type>(indexes.size()),
-            .offset = offset,
-            .bitmap = bitmap,
-            .buffers = {create_buffer()},
-            .child_data = {},
-            .dictionary = value_ptr<array_data>(make_array_data_for_variable_size_binary_layout(
+            data_descriptor(arrow_type_id<std::uint64_t>()),
+            static_cast<array_data::length_type>(indexes.size()),
+            offset,
+            bitmap,
+            {create_buffer()},
+            {},
+            nonstd::value_ptr<array_data>(make_array_data_for_variable_size_binary_layout(
                 vec_and_indexes.values,
                 array_data::bitmap_type(vec_and_indexes.values.size(), true),
                 0
