@@ -30,19 +30,19 @@ namespace sparrow
             const std::vector<int32_t> v = {1, 2, 3, 4, 5};
             const dynamic_bitset<std::uint8_t> bitmap(v.size(), true);
             array_data ar = make_default_array_data<fixed_size_layout<int32_t>>(v, bitmap, 1);
-            CHECK_EQ(ar.type.id(), data_descriptor(arrow_type_id<int32_t>()).id());
-            CHECK_EQ(ar.length, 5);
-            CHECK_EQ(ar.offset, 1);
-            CHECK_EQ(ar.bitmap.size(), 5);
-            CHECK_EQ(ar.buffers.size(), 1);
-            CHECK_EQ(ar.buffers[0].size(), v.size() * sizeof(int32_t) / sizeof(uint8_t));
-            auto data = ar.buffers[0].data<int32_t>();
+            CHECK_EQ(ar.m_type.id(), data_descriptor(arrow_type_id<int32_t>()).id());
+            CHECK_EQ(ar.m_length, 5);
+            CHECK_EQ(ar.m_offset, 1);
+            CHECK_EQ(ar.m_bitmap.size(), 5);
+            CHECK_EQ(ar.m_buffers.size(), 1);
+            CHECK_EQ(ar.m_buffers[0].size(), v.size() * sizeof(int32_t) / sizeof(uint8_t));
+            auto data = ar.m_buffers[0].data<int32_t>();
             for (size_t i = 0; i < v.size(); ++i)
             {
                 CHECK_EQ(data[i], v[i]);
             }
-            CHECK_EQ(ar.child_data.size(), 0);
-            CHECK_FALSE(ar.dictionary.has_value());
+            CHECK_EQ(ar.m_child_data.size(), 0);
+            CHECK_FALSE(ar.m_dictionary.has_value());
 
             fixed_size_layout<int32_t> layout(ar);
             CHECK_EQ(layout.size(), v.size() - 1);
@@ -55,14 +55,14 @@ namespace sparrow
             const std::vector<std::string> v = {"a", "bb", "ccc", "dddd", "eeeee"};
             const dynamic_bitset<std::uint8_t> bitmap(v.size(), true);
             array_data ar = make_default_array_data<Layout>(v, bitmap, offset);
-            CHECK_EQ(ar.type.id(), data_descriptor(arrow_type_id<std::string>()).id());
-            CHECK_EQ(ar.length, v.size());
-            CHECK_EQ(ar.offset, offset);
-            CHECK_EQ(ar.bitmap.size(), 5);
-            CHECK_EQ(ar.buffers.size(), 2);
+            CHECK_EQ(ar.m_type.id(), data_descriptor(arrow_type_id<std::string>()).id());
+            CHECK_EQ(ar.m_length, v.size());
+            CHECK_EQ(ar.m_offset, offset);
+            CHECK_EQ(ar.m_bitmap.size(), 5);
+            CHECK_EQ(ar.m_buffers.size(), 2);
 
-            CHECK_EQ(ar.child_data.size(), 0);
-            CHECK_FALSE(ar.dictionary.has_value());
+            CHECK_EQ(ar.m_child_data.size(), 0);
+            CHECK_FALSE(ar.m_dictionary.has_value());
 
             Layout layout(ar);
             CHECK_EQ(layout.size(), v.size() - offset);
@@ -80,23 +80,23 @@ namespace sparrow
             const std::vector<std::string> v = {"a", "bb", "ccc", "bb", "a"};
             const dynamic_bitset<std::uint8_t> bitmap(v.size(), true);
             array_data ar = make_default_array_data<Layout>(v, bitmap, offset);
-            CHECK_EQ(ar.type.id(), data_descriptor(arrow_type_id<std::uint64_t>()).id());
-            CHECK_EQ(ar.length, 5);
-            CHECK_EQ(ar.offset, offset);
-            CHECK_EQ(ar.bitmap.size(), bitmap.size());
-            CHECK_EQ(ar.buffers.size(), 1);
-            CHECK_EQ(ar.child_data.size(), 0);
-            REQUIRE(ar.dictionary.has_value());
-            CHECK_EQ(ar.dictionary->type.id(), data_descriptor(arrow_type_id<std::string>()).id());
-            CHECK_EQ(ar.dictionary->length, 3);
-            CHECK_EQ(ar.dictionary->offset, 0);
-            CHECK_EQ(ar.dictionary->bitmap.size(), 3);
-            REQUIRE_EQ(ar.dictionary->buffers.size(), 2);
-            CHECK_EQ(ar.buffers[0].size(), v.size() * sizeof(size_t) / sizeof(uint8_t));
-            CHECK(ar.dictionary->child_data.empty());
-            CHECK_FALSE(ar.dictionary->dictionary.has_value());
+            CHECK_EQ(ar.m_type.id(), data_descriptor(arrow_type_id<std::uint64_t>()).id());
+            CHECK_EQ(ar.m_length, 5);
+            CHECK_EQ(ar.m_offset, offset);
+            CHECK_EQ(ar.m_bitmap.size(), bitmap.size());
+            CHECK_EQ(ar.m_buffers.size(), 1);
+            CHECK_EQ(ar.m_child_data.size(), 0);
+            REQUIRE(ar.m_dictionary.has_value());
+            CHECK_EQ(ar.m_dictionary->m_type.id(), data_descriptor(arrow_type_id<std::string>()).id());
+            CHECK_EQ(ar.m_dictionary->m_length, 3);
+            CHECK_EQ(ar.m_dictionary->m_offset, 0);
+            CHECK_EQ(ar.m_dictionary->m_bitmap.size(), 3);
+            REQUIRE_EQ(ar.m_dictionary->m_buffers.size(), 2);
+            CHECK_EQ(ar.m_buffers[0].size(), v.size() * sizeof(size_t) / sizeof(uint8_t));
+            CHECK(ar.m_dictionary->m_child_data.empty());
+            CHECK_FALSE(ar.m_dictionary->m_dictionary.has_value());
 
-            SubLayout sublayout(*ar.dictionary);
+            SubLayout sublayout(*ar.m_dictionary);
             Layout layout(ar);
             CHECK_EQ(layout.size(), v.size() - offset);
             for (size_t i = 0; i < layout.size(); ++i)

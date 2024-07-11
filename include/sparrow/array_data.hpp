@@ -58,13 +58,13 @@ namespace sparrow
             std::vector<array_data> child_data,
             nonstd::value_ptr<array_data> dictionary
         )
-            : type(type)
-            , length(length)
-            , offset(offset)
-            , bitmap(std::move(bitmap))
-            , buffers(std::move(buffers))
-            , child_data(std::move(child_data))
-            , dictionary(std::move(dictionary))
+            : m_type(type)
+            , m_length(length)
+            , m_offset(offset)
+            , m_bitmap(std::move(bitmap))
+            , m_buffers(std::move(buffers))
+            , m_child_data(std::move(child_data))
+            , m_dictionary(std::move(dictionary))
         {
         }
 
@@ -73,15 +73,15 @@ namespace sparrow
         array_data& operator=(const array_data&) = default;
         array_data& operator=(array_data&&) = default;
 
-        data_descriptor type;
-        length_type length = 0;
-        std::int64_t offset = 0;
+        data_descriptor m_type;
+        length_type m_length = 0;
+        std::int64_t m_offset = 0;
         // bitmap buffer and null_count
-        bitmap_type bitmap;
+        bitmap_type m_bitmap;
         // Other buffers
-        std::vector<buffer_type> buffers;
-        std::vector<array_data> child_data;
-        nonstd::value_ptr<array_data> dictionary;
+        std::vector<buffer_type> m_buffers;
+        std::vector<array_data> m_child_data;
+        nonstd::value_ptr<array_data> m_dictionary;
     };
 
     /**

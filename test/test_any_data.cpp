@@ -64,6 +64,12 @@ TEST_SUITE("any_data")
 
         SUBCASE("check move do not copy")
         {
+            int* ptr = new int(5);
+            nonstd::value_ptr value_ptr(ptr);
+            CHECK_EQ(value_ptr.value(), 5);
+            nonstd::value_ptr value_ptr_2(value_ptr);
+            value_ptr.value() = 0;
+            CHECK_EQ(value_ptr_2.value(), 5);
             Test test{std::make_shared<int>(5)};
 
             sparrow::any_data any_data{std::move(test)};
