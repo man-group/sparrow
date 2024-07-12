@@ -23,9 +23,7 @@
 
 namespace sparrow
 {
-    using mpl::boolean_like;
-
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     class nullable;
     /*
      * Default traits for the nullable class. These traits should be specialized
@@ -229,7 +227,7 @@ namespace sparrow
      * @tparam T the type of the value
      * @tparam B the type of the flag. This type must be convertible to and assignable from bool
      */
-    template <class T, boolean_like B = bool>
+    template <class T, mpl::boolean_like B = bool>
     class nullable
     {
     public:
@@ -276,7 +274,7 @@ namespace sparrow
 
         constexpr nullable(const self_type&) = default;
 
-        template <class TO, boolean_like BO>
+        template <class TO, mpl::boolean_like BO>
         requires (
             impl::both_constructible_from_cref<T, TO, B, BO> and
             not impl::initializable_from_refs<T, nullable<TO, BO>>
@@ -290,7 +288,7 @@ namespace sparrow
 
         constexpr nullable(self_type&&) noexcept = default;
 
-        template <class TO, boolean_like BO>
+        template <class TO, mpl::boolean_like BO>
         requires (
             impl::both_constructible_from_cond_ref<T, TO, B, BO> and
             not impl::initializable_from_refs<T, nullable<TO, BO>>
@@ -351,7 +349,7 @@ namespace sparrow
             return *this;
         }
 
-        template <class TO, boolean_like BO>
+        template <class TO, mpl::boolean_like BO>
         requires(
             impl::both_assignable_from_cref<T, TO, B, BO> and
             not impl::initializable_from_refs<T, nullable<TO, BO>> and
@@ -371,7 +369,7 @@ namespace sparrow
             return *this;
         }
 
-        template <class TO, boolean_like BO>
+        template <class TO, mpl::boolean_like BO>
         requires(
             impl::both_assignable_from_cond_ref<T, TO, B, BO> and
             not impl::initializable_from_refs<T, nullable<TO, BO>> and
@@ -418,7 +416,7 @@ namespace sparrow
         T m_value;
         B m_null_flag;
 
-        template <class TO, boolean_like BO>
+        template <class TO, mpl::boolean_like BO>
         friend class nullable;
     };
 
@@ -428,7 +426,7 @@ namespace sparrow
     template <class T, class B>
     constexpr bool operator==(const nullable<T, B>& lhs, nullval_t) noexcept;
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr std::strong_ordering operator<=>(const nullable<T, B>& lhs, nullval_t) noexcept;
     
     template <class T, class B, class U>
@@ -448,38 +446,38 @@ namespace sparrow
 
     // Even if we have CTAD in C++20, some constructors add lvalue reference
     // to their argument, making the deduction impossible.
-    template <class T, boolean_like B = bool>
+    template <class T, mpl::boolean_like B = bool>
     constexpr nullable<T, B> make_nullable(T&& value, B&& flag = true);
     
     /***************************
      * nullable implementation *
      ***************************/
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr nullable<T, B>::operator bool() const noexcept
     {
         return m_null_flag;
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr bool nullable<T, B>::has_value() const noexcept
     {
         return m_null_flag;
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::null_flag() & noexcept -> flag_reference
     {
         return m_null_flag;
     }
     
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::null_flag() const & noexcept -> flag_const_reference
     {
         return m_null_flag;
     }
     
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::null_flag() && noexcept -> flag_rvalue_reference
     {
         if constexpr (std::is_reference_v<B>)
@@ -492,7 +490,7 @@ namespace sparrow
         }
     }
     
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::null_flag() const && noexcept -> flag_const_rvalue_reference
     {
         if constexpr (std::is_reference_v<B>)
@@ -505,19 +503,19 @@ namespace sparrow
         }
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::get() & noexcept -> reference
     {
         return m_value;
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::get() const & noexcept -> const_reference
     {
         return m_value;
     }
     
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::get() && noexcept -> rvalue_reference
     {
         if constexpr (std::is_reference_v<T>)
@@ -530,7 +528,7 @@ namespace sparrow
         }
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::get() const && noexcept -> const_rvalue_reference
     {
         if constexpr (std::is_reference_v<T>)
@@ -543,49 +541,49 @@ namespace sparrow
         }
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::value() & -> reference
     {
         throw_if_null();
         return get();
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::value() const & -> const_reference
     {
         throw_if_null();
         return get();
     }
     
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::value() && -> rvalue_reference
     {
         throw_if_null();
         return std::move(*this).get();
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::value() const && -> const_rvalue_reference
     {
         throw_if_null();
         return std::move(*this).get();
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     template <class U>
     constexpr auto nullable<T, B>::value_or(U&& default_value) const & -> value_type
     {
         return *this ? get() : value_type(std::forward<U>(default_value)); 
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     template <class U>
     constexpr auto nullable<T, B>::value_or(U&& default_value) && -> value_type
     {
         return *this ? get() : value_type(std::forward<U>(default_value)); 
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     void nullable<T, B>::swap(self_type& other) noexcept
     {
         using std::swap;
@@ -593,13 +591,13 @@ namespace sparrow
         swap(m_null_flag, other.m_null_flag);
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     void nullable<T, B>::reset() noexcept
     {
         m_null_flag = false;
     }
     
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     void nullable<T, B>::throw_if_null() const
     {
         if (!m_null_flag)
@@ -653,7 +651,7 @@ namespace sparrow
         return (lhs && rhs) ? lhs.get() <=> rhs.get() : bool(lhs) <=> bool(rhs);
     }
 
-    template <class T, boolean_like B>
+    template <class T, mpl::boolean_like B>
     constexpr nullable<T, B> make_nullable(T&& value, B&& flag)
     {
         return nullable<T, B>(std::forward<T>(value), std::forward<B>(flag));
