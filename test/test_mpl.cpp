@@ -133,7 +133,7 @@ namespace sparrow
     {
     public:
         like_a_bool& operator=(const bool&) { return *this; }
-        operator bool() const { return true; }
+        explicit operator bool() const { return true; }
     };
 
     static_assert(mpl::boolean_like<like_a_bool>);

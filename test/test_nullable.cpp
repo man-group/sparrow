@@ -14,6 +14,7 @@
 
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "sparrow/nullable.hpp"
 
@@ -21,13 +22,19 @@
 
 namespace sparrow
 {
+    // Custom type that increments a counter
+    // when an instane is move constructed or
+    // move assigned (and decrements it upon
+    // deletion). This allows to test that
+    // nullable views do not move their underlying
+    // data upon assignment.
     class Custom
     {
     public:
 
         static int counter;
 
-        explicit Custom(const int& i = 0)
+        explicit Custom(int i = 0)
             : m_value(i)
         {
         }

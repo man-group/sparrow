@@ -82,7 +82,7 @@ namespace sparrow
 
     private:
 
-        static constexpr const char* message = "Invalid access to null value";
+        static constexpr const char* message = "Invalid access to nullable underlying value";
     };
 
     /**
@@ -171,20 +171,23 @@ namespace sparrow
     }
 
     /**
-     * The nullable class models a value or a reference that can be "null", or missing.
+     * The nullable class models a value or a reference that can be "null", or missing,
+     * like values traditionally used in data science libraries.
      * The flag indicating whether the element should be considered missing can be a
      * boolean-like value or reference.
      *
-     * The value is always available, independently from the value of the flag. The flag
-     * only indicates whether the value should be considered for computation.
+     * The value is always valid, independently from the value of the flag. The flag
+     * only indicates whether the value should be considered as specified (flag is true)
+     * or null (flag is false). Assigning nullval to a nullable or setting its flag to
+     * flase does not trigger the destruction of the underlying value.
      *
-     * When it holds a value, the nullable class has a regular value semantics: copying
-     * or moving it will copy or move the underlygin value and flag. When it holds a
-     * reference, the nullable class has a view semantics: copying it or moving it will
-     * copy the underlying value and flag instead of reassigining the references. This
-     * allows to create nullable views over two distinct arrays (one for the values, one
-     * for the flags) used to implement a stl-like contianer of nullable. For instance,
-     * if you have the following class:
+     * When the stored object is not a reference, the nullable class has a regular value
+     * semantics: copying or moving it will copy or move the underlying value and flag.
+     * When the stored object is a reference, the nullable class has a view semantics:
+     * copying it or moving it will copy the underlying value and flag instead of reassigining
+     * the references. This allows to create nullable views over two distinct arrays (one
+     * for the values, one for the flags) used to implement a stl-like contianer of nullable.
+     * For instance, if you have the following class:
      *
      * @code{.cpp}
      * template <class T, class B>
