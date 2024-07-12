@@ -117,4 +117,24 @@ namespace sparrow
 
     // transfrom
     static_assert(std::same_as<mpl::typelist<int*, char*>, mpl::transform<std::add_pointer_t, test_list>>);
+
+    //////////////////////////////
+    // concepts and other stuff
+
+    // add_const_lvalue_reference
+    static_assert(std::same_as<mpl::add_const_lvalue_reference_t<int>, const int&>);
+    static_assert(std::same_as<mpl::add_const_lvalue_reference_t<const int>, const int&>);
+    static_assert(not std::same_as<mpl::add_const_lvalue_reference_t<int&>, const int&>);
+
+    // boolean like
+    static_assert(mpl::boolean_like<bool>);
+
+    class like_a_bool
+    {
+    public:
+        like_a_bool& operator=(const bool&) { return *this; }
+        explicit operator bool() const { return true; }
+    };
+
+    static_assert(mpl::boolean_like<like_a_bool>);
 }

@@ -355,6 +355,15 @@ namespace sparrow::mpl
     //////////////////////////////////////////////////
     //// Miscellaneous ///////////////////////////////
 
+    template <class T>
+    struct add_const_lvalue_reference
+        : std::add_lvalue_reference<std::add_const_t<T>>
+    {
+    };
+
+    template <class T>
+    using add_const_lvalue_reference_t = typename add_const_lvalue_reference<T>::type;
+
     template <class T, bool is_const>
     struct constify : std::conditional<is_const, const T, T>
     {
@@ -410,4 +419,9 @@ namespace sparrow::mpl
 #endif
     }
 
+    /// Matches types that can be convertible to and assignable from bool. We do not use
+    /// `std::convertible_to` because we don't want to impose an implicit conversion.
+    template <class T>
+    concept boolean_like = std::is_assignable_v<std::add_lvalue_reference_t<T>, bool> and 
+                           requires { static_cast<bool>(std::declval<T>()); };
 }
