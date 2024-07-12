@@ -134,8 +134,8 @@ namespace sparrow
         : m_data(data)
     {
         // We only require the presence of the bitmap and the first buffer.
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
-        SPARROW_ASSERT_TRUE(static_cast<size_type>(data_ref().length) == data_ref().bitmap.size())
+        SPARROW_ASSERT_TRUE(data_ref().m_buffers.size() > 0);
+        SPARROW_ASSERT_TRUE(static_cast<size_type>(data_ref().m_length) == data_ref().m_bitmap.size())
     }
 
     template <class T>
@@ -147,22 +147,22 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::size() const -> size_type
     {
-        SPARROW_ASSERT_TRUE(data_ref().offset <= data_ref().length);
-        return static_cast<size_type>(data_ref().length - data_ref().offset);
+        SPARROW_ASSERT_TRUE(data_ref().m_offset <= data_ref().m_length);
+        return static_cast<size_type>(data_ref().m_length - data_ref().m_offset);
     }
 
     template <class T>
     auto fixed_size_layout<T>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + static_cast<size_type>(data_ref().offset)];
+        return data()[i + static_cast<size_type>(data_ref().m_offset)];
     }
 
     template <class T>
     auto fixed_size_layout<T>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + static_cast<size_type>(data_ref().offset)];
+        return data()[i + static_cast<size_type>(data_ref().m_offset)];
     }
 
     template <class T>
@@ -219,20 +219,20 @@ namespace sparrow
     auto fixed_size_layout<T>::has_value(size_type i) -> bitmap_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data_ref().bitmap[i + static_cast<size_type>(data_ref().offset)];
+        return data_ref().m_bitmap[i + static_cast<size_type>(data_ref().m_offset)];
     }
 
     template <class T>
     auto fixed_size_layout<T>::has_value(size_type i) const -> bitmap_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data_ref().bitmap[i + static_cast<size_type>(data_ref().offset)];
+        return data_ref().m_bitmap[i + static_cast<size_type>(data_ref().m_offset)];
     }
 
     template <class T>
     auto fixed_size_layout<T>::value_begin() -> value_iterator
     {
-        return value_iterator{data() + data_ref().offset};
+        return value_iterator{data() + data_ref().m_offset};
     }
 
     template <class T>
@@ -246,7 +246,7 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator{data() + data_ref().offset};
+        return const_value_iterator{data() + data_ref().m_offset};
     }
 
     template <class T>
@@ -260,7 +260,7 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::bitmap_begin() -> bitmap_iterator
     {
-        return data_ref().bitmap.begin() + data_ref().offset;
+        return data_ref().m_bitmap.begin() + data_ref().m_offset;
     }
 
     template <class T>
@@ -274,7 +274,7 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::bitmap_cbegin() const -> const_bitmap_iterator
     {
-        return data_ref().bitmap.cbegin() + data_ref().offset;
+        return data_ref().m_bitmap.cbegin() + data_ref().m_offset;
     }
 
     template <class T>
@@ -288,15 +288,15 @@ namespace sparrow
     template <class T>
     auto fixed_size_layout<T>::data() -> pointer
     {
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
-        return data_ref().buffers[0].template data<inner_value_type>();
+        SPARROW_ASSERT_TRUE(data_ref().m_buffers.size() > 0);
+        return data_ref().m_buffers[0].template data<inner_value_type>();
     }
 
     template <class T>
     auto fixed_size_layout<T>::data() const -> const_pointer
     {
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
-        return data_ref().buffers[0].template data<inner_value_type>();
+        SPARROW_ASSERT_TRUE(data_ref().m_buffers.size() > 0);
+        return data_ref().m_buffers[0].template data<inner_value_type>();
     }
 
     template <class T>

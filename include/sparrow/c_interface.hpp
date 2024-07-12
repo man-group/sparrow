@@ -126,6 +126,10 @@ namespace sparrow
     {
         void operator()(ArrowArray* array) const
         {
+            if (array == nullptr)
+            {
+                return;
+            }
             if (array->release != nullptr)
             {
                 array->release(array);
@@ -358,7 +362,7 @@ namespace sparrow
         MAP_KEYS_SORTED = 4      // For map types, whether the keys within each map value are sorted.
     };
 
-    arrow_schema_unique_ptr default_arrow_schema()
+    inline arrow_schema_unique_ptr default_arrow_schema()
     {
         auto ptr = arrow_schema_unique_ptr(new ArrowSchema());
         ptr->format = nullptr;
@@ -441,7 +445,7 @@ namespace sparrow
         return schema;
     };
 
-    arrow_array_unique_ptr default_arrow_array()
+    inline arrow_array_unique_ptr default_arrow_array()
     {
         auto ptr = arrow_array_unique_ptr(new ArrowArray());
         ptr->length = 0;

@@ -45,8 +45,8 @@ namespace sparrow
 
         std::int64_t* offset()
         {
-            SPARROW_ASSERT_FALSE(m_data.buffers.empty());
-            return m_data.buffers[0].data<std::int64_t>();
+            SPARROW_ASSERT_FALSE(m_data.m_buffers.empty());
+            return m_data.m_buffers[0].data<std::int64_t>();
         }
 
         static_assert(std::same_as<layout_type::inner_value_type, std::string>);
@@ -74,7 +74,7 @@ namespace sparrow
         TEST_CASE_FIXTURE(vs_binary_fixture, "size")
         {
             layout_type l(m_data);
-            CHECK_EQ(l.size(), m_data.length - m_data.offset);
+            CHECK_EQ(l.size(), m_data.m_length - m_data.m_offset);
         }
 
         TEST_CASE_FIXTURE(vs_binary_fixture, "operator[]")

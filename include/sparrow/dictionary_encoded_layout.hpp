@@ -251,15 +251,15 @@ namespace sparrow
     template <std::integral T, class SL, layout_offset OT>
     dictionary_encoded_layout<T, SL, OT>::dictionary_encoded_layout(array_data& data)
     {
-        SPARROW_ASSERT_TRUE(data.dictionary);
-        m_sub_layout = std::make_unique<SL>(*data.dictionary);
+        SPARROW_ASSERT_TRUE(data.m_dictionary);
+        m_sub_layout = std::make_unique<SL>(*data.m_dictionary);
         m_indexes_layout = std::make_unique<indexes_layout>(data);
     }
 
     template <std::integral T, class SL, layout_offset OT>
     void dictionary_encoded_layout<T, SL, OT>::rebind_data(array_data& data)
     {
-        m_sub_layout->rebind_data(*data.dictionary);
+        m_sub_layout->rebind_data(*data.m_dictionary);
         m_indexes_layout->rebind_data(data);
     }
 
