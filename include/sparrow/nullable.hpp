@@ -265,7 +265,7 @@ namespace sparrow
             std::constructible_from<T, U&&>
         )
         explicit (not std::convertible_to<U&&, T>)
-        constexpr nullable(U&& value)
+        constexpr nullable(U&& value) noexcept(noexcept(T(std::declval<U>())))
             : m_value(std::forward<U>(value))
             , m_null_flag(true)
         {
