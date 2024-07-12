@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
 #include <tuple>
 
 #include "sparrow/nullable.hpp"
@@ -559,6 +560,17 @@ namespace sparrow
             CHECK_FALSE(empty > d1);
         }
         TEST_CASE_TEMPLATE_APPLY(inequality_comparison_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("make_nullable", T, make_nullable_id)
+        {
+            T value = fixture<T>::init();
+            T value_copy = value;
+            auto opt = make_nullable(std::move(value), true);
+            static_assert(std::same_as<std::decay_t<decltype(opt)>, nullable<T>>);
+            REQUIRE(opt.has_value());
+            CHECK_EQ(opt.value(), value_copy);
+        }
+        TEST_CASE_TEMPLATE_APPLY(make_nullable_id, testing_types);
     }
 
     TEST_SUITE("nullable proxy")

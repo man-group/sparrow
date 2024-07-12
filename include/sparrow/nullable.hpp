@@ -443,6 +443,11 @@ namespace sparrow
     constexpr std::compare_three_way_result_t<T, U>
     operator<=>(const nullable<T, B>& lhs, const nullable<U, UB>& rhs) noexcept;
 
+    // Even if we have CTAD in C++20, some constructors add lvalue reference
+    // to their argument, making the deduction impossible.
+    template <class T, boolean_like B = bool>
+    constexpr nullable<T, B> make_nullable(T&& value, B&& flag = true);
+    
     /***************************
      * nullable implementation *
      ***************************/
@@ -645,5 +650,10 @@ namespace sparrow
         return (lhs && rhs) ? lhs.get() <=> rhs.get() : bool(lhs) <=> bool(rhs);
     }
 
+    template <class T, boolean_like B>
+    constexpr nullable<T, B> make_nullable(T&& value, B&& flag)
+    {
+        return nullable<T, B>(std::forward<T>(value), std::forward<B>(flag));
+    }
 }
 

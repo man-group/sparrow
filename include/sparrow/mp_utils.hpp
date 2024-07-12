@@ -422,5 +422,5 @@ namespace sparrow::mpl
     /// The boolean_like concept specifies that a type can be convertible to and assignable from
     /// bool.
     template <class T>
-    concept boolean_like = std::constructible_from<T, bool> and std::convertible_to<T, bool>;
+    concept boolean_like = std::is_assignable_v<std::add_lvalue_reference_t<T>, bool> and std::convertible_to<T, bool>;
 }
