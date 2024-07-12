@@ -47,7 +47,7 @@ namespace sparrow
             if constexpr (mpl::smart_ptr<U> || std::derived_from<U, std::shared_ptr<typename U::element_type>>
                           || mpl::is_type_instance_of_v<U, nonstd::value_ptr>)
             {
-                if constexpr (std::ranges::input_range<typename U::element_type>)
+                if constexpr (std::ranges::contiguous_range<typename U::element_type>)
                 {
                     return std::ranges::data(*var.get());
                 }
@@ -57,7 +57,7 @@ namespace sparrow
                 }
             }
         }
-        else if constexpr (std::ranges::input_range<U>)
+        else if constexpr (std::ranges::contiguous_range<U>)
         {
             return std::ranges::data(var);
         }
@@ -74,14 +74,16 @@ namespace sparrow
 
     /**
      * Create a vector of pointers to elements from a range.
+     * The range must be a non-view range.
      *
-     * @tparam T The type of the pointers.
+     * @tparam T The type of the pointers to obtain.
      * @tparam Range The range type.
      * @tparam Allocator The allocator type.
      * @param range The range.
      * @return A vector of pointers.
      */
     template <class T, std::ranges::input_range Range, template <typename> class Allocator = std::allocator>
+        requires(!std::ranges::view<Range>)
     std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Range& range)
     {
         std::vector<T*, Allocator<T*>> raw_ptr_vec;
@@ -100,10 +102,10 @@ namespace sparrow
     /**
      * Create a vector of pointers to elements of a tuple.
      * Types of the tuple can be nonstd::value_ptr, smart pointers, ranges, objects or pointers.
-     * The type of the elements can be different. E.g: std::tuple<nonstd::value_ptr<int>, std::unique_ptr<char>, double>.
-     * Casting is used to convert the pointers to the desired type.
+     * The type of the elements can be different. E.g: std::tuple<nonstd::value_ptr<int>,
+     * std::unique_ptr<char>, double>. Casting is used to convert the pointers to the desired type.
      *
-     * @tparam T The type of the pointers.
+     * @tparam T The type of the pointers to obtain.
      * @tparam Tuple The tuple type.
      * @tparam Allocator The allocator type.
      * @param tuple The tuple.

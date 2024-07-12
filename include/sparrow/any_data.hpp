@@ -99,11 +99,10 @@ namespace sparrow
         explicit any_data_container(C container);
 
         // In the case where `container` is a range of unique pointers, we have to transform them to
-        // value_ptr.
+        // value_ptr. The unique pointers can be nullptr.
         template <std::ranges::input_range C>
             requires mpl::unique_ptr_or_derived<std::ranges::range_value_t<C>>
         explicit any_data_container(C container);
-
 
         any_data_container(const any_data_container&) = delete;
         any_data_container& operator=(const any_data_container&) = delete;

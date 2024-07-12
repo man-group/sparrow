@@ -57,35 +57,47 @@ TEST_SUITE("any_data")
             sparrow::any_data any_data{nullptr};
         }
 
-        struct Test
+        struct CopyOnlyForTest
         {
-            std::shared_ptr<int> m_ptr;
+            CopyOnlyForTest() = default;
+
+            CopyOnlyForTest(const CopyOnlyForTest&)
+                : copied(true)
+            {
+            }
+
+            CopyOnlyForTest(CopyOnlyForTest&&) = delete;
+
+            bool copied = false;
+        };
+
+        struct MoveOnlyForTest
+        {
+            MoveOnlyForTest() = default;
+            MoveOnlyForTest(const MoveOnlyForTest&) = delete;
+
+            MoveOnlyForTest(MoveOnlyForTest&&)
+                : from_move(true)
+            {
+            }
+
+            bool from_move = false;
         };
 
         SUBCASE("check move do not copy")
         {
-            int* ptr = new int(5);
-            nonstd::value_ptr value_ptr(ptr);
-            CHECK_EQ(value_ptr.value(), 5);
-            nonstd::value_ptr value_ptr_2(value_ptr);
-            value_ptr.value() = 0;
-            CHECK_EQ(value_ptr_2.value(), 5);
-            Test test{std::make_shared<int>(5)};
-
-            sparrow::any_data any_data{std::move(test)};
-            CHECK_EQ(test.m_ptr.use_count(), 0);
-            CHECK_EQ(*any_data.value<Test&>().m_ptr, 5);
-            CHECK_EQ(any_data.value<Test&>().m_ptr.use_count(), 1);
+            MoveOnlyForTest move_only;
+            CHECK_FALSE(move_only.from_move);
+            sparrow::any_data any_data{std::move(move_only)};
+            CHECK(move_only.from_move);
         }
 
         SUBCASE("check copy")
         {
-            Test test{std::make_shared<int>(5)};
-
-            sparrow::any_data any_data(test);
-            CHECK_EQ(test.m_ptr.use_count(), 2);
-            CHECK_EQ(*any_data.value<Test&>().m_ptr, 5);
-            CHECK_EQ(any_data.value<Test&>().m_ptr.use_count(), 2);
+            CopyOnlyForTest copy_only;
+            CHECK_FALSE(copy_only.copied);
+            sparrow::any_data any_data{copy_only};
+            CHECK(copy_only.copied);
         }
     }
 
