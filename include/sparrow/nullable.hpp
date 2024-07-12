@@ -23,8 +23,7 @@
 
 namespace sparrow
 {
-    template <class T>
-    concept boolean_like = std::constructible_from<T, bool> and std::convertible_to<T, bool>;
+    using mpl::boolean_like;
 
     template <class T, boolean_like B>
     class nullable;
@@ -178,6 +177,54 @@ namespace sparrow
      *
      * The value is always available, independently from the value of the flag. The flag
      * only indicates whether the value should be considered for computation.
+     *
+     * When it holds a value, the nullable class has a regular value semantics: copying
+     * or moving it will copy or move the underlygin value and flag. When it holds a
+     * reference, the nullable class has a view semantics: copying it or moving it will
+     * copy the underlying value and flag instead of reassigining the references. This
+     * allows to create nullable views over two distinct arrays (one for the values, one
+     * for the flags) used to implement a stl-like contianer of nullable. For instance,
+     * if you have the following class:
+     *
+     * @code{.cpp}
+     * template <class T, class B>
+     * class nullable_array
+     * {
+     * private:
+     *     std::vector<T> m_values;
+     *     std::vector<bool> m_flags;
+     * 
+     * public:
+     *
+     *     using reference = nullable<double&, bool&>;
+     *     using cons_reference = nullable<const double&, const bool&>;
+     *
+     *     reference operator[](size_type i)
+     *     {
+     *         return reference(m_values[i], m_flags[i]);
+     *     }
+     *
+     *     const_reference operator[](size_type i) const
+     *     {
+     *         return const_reference(m_values[i], m_flags[i]);
+     *     }
+     *     // ...
+     * };
+     * @endcode
+     *
+     * Then you want the same semantic for accessing elements of nullable_array
+     * as that of std::vector, meaning that the following:
+     *
+     * @code{.cpp}
+     * nullable_array my_array = { ... };
+     * my_array[1] = my_array[0];
+     * @endcode
+     *
+     * should copy the underlying value and flag of the first element of my_array
+     * to the underlying value and flag of the second element of the array.
+     *
+     * @tparam T the type of the value
+     * @tparam B the type of the flag. This type must be convertible to and assignable from bool
      */
     template <class T, boolean_like B = bool>
     class nullable
