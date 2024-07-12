@@ -51,7 +51,7 @@ namespace sparrow
         explicit any_data(T data);
 
         template <class T>
-        explicit any_data(T data)
+        explicit any_data(T&& data)
             requires(!mpl::smart_ptr_and_derived<T>);
 
         template <class T>
@@ -175,9 +175,9 @@ namespace sparrow
     }
 
     template <typename T>
-    any_data::any_data(T data)
+    any_data::any_data(T&& data)
         requires(!mpl::smart_ptr_and_derived<T>)
-        : m_owner(std::move(data))
+        : m_owner(std::forward<T>(data))
         , m_raw_ptr(&std::any_cast<T&>(m_owner))
     {
     }

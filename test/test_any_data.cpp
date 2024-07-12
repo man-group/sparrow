@@ -71,25 +71,34 @@ TEST_SUITE("any_data")
             bool copied = false;
         };
 
-        struct MoveOnlyForTest
+        struct MoveAndCopyOnlyForTest
         {
-            MoveOnlyForTest() = default;
-            MoveOnlyForTest(const MoveOnlyForTest&) = delete;
+            MoveAndCopyOnlyForTest() = default;
 
-            MoveOnlyForTest(MoveOnlyForTest&&)
-                : from_move(true)
+            MoveAndCopyOnlyForTest(const MoveAndCopyOnlyForTest&) noexcept
+                : copied(true)
             {
             }
 
-            bool from_move = false;
+            MoveAndCopyOnlyForTest(MoveAndCopyOnlyForTest&&) noexcept
+                : moved(true)
+            {
+            }
+
+            bool copied = false;
+            bool moved = false;
         };
 
-        SUBCASE("check move do not copy")
+        SUBCASE("check move")
         {
-            MoveOnlyForTest move_only;
-            CHECK_FALSE(move_only.from_move);
-            sparrow::any_data any_data{std::move(move_only)};
-            CHECK(move_only.from_move);
+            MoveAndCopyOnlyForTest mo;
+            std::any a = std::move(mo);
+            MoveAndCopyOnlyForTest move_and_copy_only;
+            CHECK_FALSE(move_and_copy_only.moved);
+            sparrow::any_data any_data{std::move(move_and_copy_only)};
+            auto& data = any_data.value<MoveAndCopyOnlyForTest&>();
+            CHECK(data.moved);
+            CHECK_FALSE(data.copied);
         }
 
         SUBCASE("check copy")
@@ -97,7 +106,16 @@ TEST_SUITE("any_data")
             CopyOnlyForTest copy_only;
             CHECK_FALSE(copy_only.copied);
             sparrow::any_data any_data{copy_only};
-            CHECK(copy_only.copied);
+            CHECK_FALSE(copy_only.copied);
+            auto& data = any_data.value<CopyOnlyForTest&>();
+            CHECK(data.copied);
+
+            MoveAndCopyOnlyForTest move_and_copy_only;
+            CHECK_FALSE(move_and_copy_only.copied);
+            sparrow::any_data any_data_2{move_and_copy_only};
+            CHECK_FALSE(move_and_copy_only.copied);
+            auto& data_2 = any_data.value<CopyOnlyForTest&>();
+            CHECK(data_2.copied);
         }
     }
 
