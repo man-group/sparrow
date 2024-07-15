@@ -226,6 +226,7 @@ namespace sparrow
     }
 
     template <class T>
+    // This is needed to avoid AddressSanitizer false positives
 #if defined(_MSC_VER) && !defined(__clang__)  // MSVC
     __declspec(no_sanitize_address)
 #else
