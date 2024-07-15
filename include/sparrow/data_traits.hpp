@@ -19,6 +19,8 @@
 #include "sparrow/null_layout.hpp"
 #include "sparrow/variable_size_binary_layout.hpp"
 
+#include <span>
+
 namespace sparrow
 {
 
