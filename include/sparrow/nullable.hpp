@@ -22,10 +22,10 @@
 #include "sparrow/mp_utils.hpp"
 
 // clang workaround: clang instantiates the constructor in SFINAE context,
-// which is incompatible with the implementation of the libdstdc++ (especially
-// the variant).This leads to wrong compilation errors. Making the constructor
+// which is incompatible with the implementation of standard libraries which
+// are not libc++.This leads to wrong compilation errors. Making the constructor
 // not constexpr prevents the compiler from instantiating it.
-#if defined(__clang__) && defined(__GLIBCXX__)
+#if defined(__clang__) && not defined(_LIBCPP_VERSION)
 #   define CONSTEXPR
 #else
 #   define CONSTEXPR constexpr
