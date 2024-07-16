@@ -23,15 +23,15 @@ namespace sparrow::test
     )
     {
         sparrow::array_data ad;
-        ad.m_type = sparrow::data_descriptor(sparrow::arrow_traits<sparrow::timestamp>::type_id);
-        ad.m_bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
+        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<sparrow::timestamp>::type_id);
+        ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
         for (const auto i : false_bitmap)
         {
             if (i >= n)
             {
                 throw std::invalid_argument("Index out of range");
             }
-            ad.m_bitmap.set(i, false);
+            ad.bitmap.set(i, false);
         }
         const std::size_t buffer_size = (n * sizeof(sparrow::timestamp)) / sizeof(uint8_t);
         sparrow::buffer<uint8_t> b(buffer_size);
@@ -43,10 +43,10 @@ namespace sparrow::test
             );
         }
 
-        ad.m_buffers.push_back(b);
-        ad.m_length = static_cast<std::int64_t>(n);
-        ad.m_offset = static_cast<std::int64_t>(offset);
-        ad.m_child_data.emplace_back();
+        ad.buffers.push_back(b);
+        ad.length = static_cast<std::int64_t>(n);
+        ad.offset = static_cast<std::int64_t>(offset);
+        ad.child_data.emplace_back();
         return ad;
     }
 }  // namespace sparrow::test

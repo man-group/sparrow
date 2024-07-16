@@ -44,43 +44,15 @@ namespace sparrow
         using buffer_type = buffer<block_type>;
         using length_type = std::int64_t;
 
-        // default constructor
-        array_data() = default;
-
-        // constructor with parameters
-        array_data(
-            data_descriptor type,
-            length_type length,
-            std::int64_t offset,
-            bitmap_type bitmap,
-            std::vector<buffer_type> buffers,
-            std::vector<array_data> child_data,
-            value_ptr<array_data> dictionary
-        )
-            : m_type(type)
-            , m_length(length)
-            , m_offset(offset)
-            , m_bitmap(std::move(bitmap))
-            , m_buffers(std::move(buffers))
-            , m_child_data(std::move(child_data))
-            , m_dictionary(std::move(dictionary))
-        {
-        }
-
-        array_data(const array_data&) = default;
-        array_data(array_data&&) = default;
-        array_data& operator=(const array_data&) = default;
-        array_data& operator=(array_data&&)  noexcept = default;
-
-        data_descriptor m_type;
-        length_type m_length = 0;
-        std::int64_t m_offset = 0;
+        data_descriptor type;
+        length_type length = 0;
+        std::int64_t offset = 0;
         // bitmap buffer and null_count
-        bitmap_type m_bitmap;
+        bitmap_type bitmap;
         // Other buffers
-        std::vector<buffer_type> m_buffers;
-        std::vector<array_data> m_child_data;
-        value_ptr<array_data> m_dictionary;
+        std::vector<buffer_type> buffers;
+        std::vector<array_data> child_data;
+        value_ptr<array_data> dictionary;
     };
 
     /**

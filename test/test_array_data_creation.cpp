@@ -28,11 +28,11 @@ TEST_SUITE("array_data_creation")
         {
             constexpr size_t n = 10;
             const sparrow::array_data data = sparrow::test::make_test_array_data<int>(n);
-            CHECK_EQ(data.m_length, n);
-            CHECK_EQ(data.m_offset, 0);
+            CHECK_EQ(data.length, n);
+            CHECK_EQ(data.offset, 0);
             for (size_t i = 0; i < n; i++)
             {
-                CHECK(data.m_bitmap[i]);
+                CHECK(data.bitmap[i]);
             }
         }
 
@@ -43,13 +43,13 @@ TEST_SUITE("array_data_creation")
             const std::vector<size_t> false_bitmap = {1, 3};
 
             const sparrow::array_data data = sparrow::test::make_test_array_data<int>(n, offset, false_bitmap);
-            CHECK_EQ(data.m_length, n);
-            CHECK_EQ(data.m_offset, offset);
-            CHECK(data.m_bitmap[0]);
-            CHECK_FALSE(data.m_bitmap[1]);
-            CHECK(data.m_bitmap[2]);
-            CHECK_FALSE(data.m_bitmap[3]);
-            CHECK(data.m_bitmap[4]);
+            CHECK_EQ(data.length, n);
+            CHECK_EQ(data.offset, offset);
+            CHECK(data.bitmap[0]);
+            CHECK_FALSE(data.bitmap[1]);
+            CHECK(data.bitmap[2]);
+            CHECK_FALSE(data.bitmap[3]);
+            CHECK(data.bitmap[4]);
         }
     }
 }

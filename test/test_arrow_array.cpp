@@ -70,9 +70,6 @@ TEST_SUITE("C Data Interface")
         {
             SUBCASE("sparrow::default_arrow_array_unique_ptr")
             {
-                static_assert(std::same_as<
-                              sparrow::mpl::get_deleter_type_t<sparrow::arrow_array_unique_ptr>,
-                              sparrow::arrow_array_custom_deleter_struct>);
                 const sparrow::arrow_array_unique_ptr array = sparrow::default_arrow_array_unique_ptr();
                 CHECK_EQ(array->length, 0);
                 CHECK_EQ(array->null_count, 0);

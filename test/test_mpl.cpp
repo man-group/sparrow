@@ -166,21 +166,5 @@ namespace sparrow
     static_assert(not mpl::has_element_type<int>);
     static_assert(not mpl::has_element_type<int*>);
 
-    // get_element_type_t
-    static_assert(std::same_as<mpl::get_element_type_t<std::unique_ptr<int>>, int>);
-    static_assert(std::same_as<mpl::get_element_type_t<std::shared_ptr<int>>, int>);
-    static_assert(std::same_as<mpl::get_element_type_t<std::vector<int>>, void>);
-
-    // has_deleter_type
-    static_assert(mpl::has_deleter_type<std::unique_ptr<int>>);
-    static_assert(not mpl::has_deleter_type<std::shared_ptr<int>>);
-    static_assert(not mpl::has_deleter_type<int>);
-    static_assert(not mpl::has_deleter_type<int*>);
-
-    // get_deleter_type_t
-    static_assert(std::same_as<mpl::get_deleter_type_t<std::unique_ptr<int>>, std::default_delete<int>>);
-    static_assert(std::same_as<mpl::get_deleter_type_t<std::shared_ptr<int>>, void>);
-    static_assert(std::same_as<mpl::get_deleter_type_t<std::vector<int>>, void>);
-
     static_assert(mpl::is_same_relaxed<std::string, std::string>);
 }

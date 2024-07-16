@@ -464,41 +464,4 @@ namespace sparrow::mpl
     // Matches any type that has an element_type member.
     template <typename T>
     concept has_element_type = requires { typename T::element_type; };
-
-    template <typename T>
-    struct get_element_type_helper
-    {
-        using type = void;
-    };
-
-    template <has_element_type T>
-    struct get_element_type_helper<T>
-    {
-        using type = typename T::element_type;
-    };
-
-    // Get the element type of a type. If it does not have an element_type member, return void.
-    template <typename T>
-    using get_element_type_t = typename get_element_type_helper<T>::type;
-
-    template <typename T>
-    concept has_deleter_type = requires { typename T::deleter_type; };
-
-    template <typename T>
-    struct get_deleter_type_helper
-    {
-        using type = void;
-    };
-
-    template <has_deleter_type T>
-    struct get_deleter_type_helper<T>
-    {
-        using type = typename T::deleter_type;
-    };
-
-    // Get the deleter type of a type. If it does not have a deleter_type member, return void.
-    template <typename T>
-    using get_deleter_type_t = typename get_deleter_type_helper<T>::type;
-
-
 }

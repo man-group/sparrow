@@ -46,12 +46,12 @@ namespace sparrow
         {
             array_data ad = make_test_array_data(10, 1);
             layout_test_type lt(ad);
-            CHECK_EQ(lt.size(), ad.m_length - ad.m_offset);
+            CHECK_EQ(lt.size(), ad.length - ad.offset);
 
-            auto buffer_data = ad.m_buffers[0].data<data_type_t>();
+            auto buffer_data = ad.buffers[0].data<data_type_t>();
             for (std::size_t i = 0; i < lt.size(); ++i)
             {
-                CHECK_EQ(lt[i].value(), buffer_data[i + static_cast<size_t>(ad.m_offset)]);
+                CHECK_EQ(lt[i].value(), buffer_data[i + static_cast<size_t>(ad.offset)]);
             }
         }
 
@@ -62,10 +62,10 @@ namespace sparrow
             array_data ad2 = make_test_array_data(12, 0);
             lt.rebind_data(ad2);
 
-            auto buffer_data = ad2.m_buffers[0].data<data_type_t>();
+            auto buffer_data = ad2.buffers[0].data<data_type_t>();
             for (std::size_t i = 0; i < lt.size(); ++i)
             {
-                CHECK_EQ(lt[i].value(), buffer_data[i + static_cast<size_t>(ad2.m_offset)]);
+                CHECK_EQ(lt[i].value(), buffer_data[i + static_cast<size_t>(ad2.offset)]);
             }
         }
 
