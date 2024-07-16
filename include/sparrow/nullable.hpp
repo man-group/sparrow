@@ -21,14 +21,18 @@
 
 #include "sparrow/mp_utils.hpp"
 
+#if defined(SPARROW_CONSTEXPR)
+#error "SPARROW_CONSTEXPR already defined"
+#endif
+
 // clang workaround: clang instantiates the constructor in SFINAE context,
 // which is incompatible with the implementation of standard libraries which
 // are not libc++.This leads to wrong compilation errors. Making the constructor
 // not constexpr prevents the compiler from instantiating it.
 #if defined(__clang__) && not defined(_LIBCPP_VERSION)
-#   define CONSTEXPR
+#   define SPARROW_CONSTEXPR
 #else
-#   define CONSTEXPR constexpr
+#   define SPARROW_CONSTEXPR constexpr
 #endif
 
 namespace sparrow
@@ -304,7 +308,7 @@ namespace sparrow
             not impl::initializable_from_refs<T, nullable<TO, BO>>
         )
         explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>)
-        CONSTEXPR nullable(nullable<TO, BO>&& rhs)
+        SPARROW_CONSTEXPR nullable(nullable<TO, BO>&& rhs)
             : m_value(std::move(rhs).get())
             , m_null_flag(std::move(rhs).null_flag())
         {
@@ -668,5 +672,5 @@ namespace sparrow
     }
 }
 
-#undef CONSTEXPR
+#undef SPARROW_CONSTEXPR
 

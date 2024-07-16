@@ -21,6 +21,7 @@
 #include "sparrow/contracts.hpp"
 #include "sparrow/iterator.hpp"
 #include "sparrow/mp_utils.hpp"
+#include "sparrow/nullable.hpp"
 
 namespace sparrow
 {

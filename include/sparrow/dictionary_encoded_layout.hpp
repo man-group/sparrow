@@ -22,6 +22,14 @@
 
 namespace sparrow
 {
+    /*
+     * Traits class for the iterator over the data values
+     * of a dictionary encoded layout.
+     *
+     * @tparam L the layout type
+     * @tparam IC a constnat indicating whether the inner types
+     * must be defined for a constant iterator.
+     */
     template <class L, bool IC>
     struct dictionary_value_traits
     {
@@ -33,6 +41,14 @@ namespace sparrow
         static constexpr bool is_const = IC;
     };
 
+    /*
+     * Traits class for the iterator over the bitmap values
+     * of a dictionary encoded layout.
+     *
+     * @tparam L the layout type
+     * @tparam IC a constnat indicating whether the inner types
+     * must be defined for a constant iterator.
+     */
     template <class L, bool IC>
     struct dictionary_bitmap_traits
     {
@@ -44,7 +60,25 @@ namespace sparrow
         static constexpr bool is_const = IC;
     };
 
-    template <class Traits>
+    template <class T>
+    concept dictionary_iterator_traits = requires
+    {
+        typename T::layout_type;
+        typename T::value_type;
+        typename T::tag;
+        typename T::const_reference;
+        { T::is_value } -> std::same_as<const bool&>;
+        { T::is_const } -> std::same_as<const bool&>;
+    };
+
+    /**
+     * @class dictionary_iterator
+     *
+     * @brief Iterator over the values or the bitmap elements of a dictionary layout.
+     *
+     * @tparam Traits the traits defining the inner types of the iterator.
+     */
+    template <dictionary_iterator_traits Traits>
     class dictionary_iterator : public iterator_base<
                                     dictionary_iterator<Traits>,
                                     typename Traits::value_type,
@@ -219,7 +253,7 @@ namespace sparrow
      * vs_binary_value_iterator implementation *
      *******************************************/
 
-    template <class Traits>
+    template <dictionary_iterator_traits Traits>
     dictionary_iterator<Traits>::dictionary_iterator(
         index_iterator index_it,
         sub_layout_reference sub_layout_ref
@@ -229,13 +263,13 @@ namespace sparrow
     {
     }
 
-    template <class Traits>
+    template <dictionary_iterator_traits Traits>
     auto dictionary_iterator<Traits>::get_subreference() const -> sub_reference
     {
         return (*m_sub_layout_reference).get()[m_index_it->value()];
     }
 
-    template <class Traits>
+    template <dictionary_iterator_traits Traits>
     auto dictionary_iterator<Traits>::dereference() const -> reference
     {
         SPARROW_ASSERT_TRUE(m_sub_layout_reference.has_value());
@@ -256,37 +290,37 @@ namespace sparrow
         }
     }
 
-    template <class Traits>
+    template <dictionary_iterator_traits Traits>
     void dictionary_iterator<Traits>::increment()
     {
         ++m_index_it;
     }
 
-    template <class Traits>
+    template <dictionary_iterator_traits Traits>
     void dictionary_iterator<Traits>::decrement()
     {
         --m_index_it;
     }
 
-    template <class Traits>
+    template <dictionary_iterator_traits Traits>
     void dictionary_iterator<Traits>::advance(difference_type n)
     {
         m_index_it += n;
     }
 
-    template <class Traits>
+    template <dictionary_iterator_traits Traits>
     auto dictionary_iterator<Traits>::distance_to(const self_type& rhs) const -> difference_type
     {
         m_index_it.distance_to(rhs.m_index_it);
     }
 
-    template <class Traits>
+    template <dictionary_iterator_traits Traits>
     bool dictionary_iterator<Traits>::equal(const self_type& rhs) const
     {
         return m_index_it == rhs.m_index_it;
     }
 
-    template <class Traits>
+    template <dictionary_iterator_traits Traits>
     bool dictionary_iterator<Traits>::less_than(const self_type& rhs) const
     {
         return m_index_it < rhs.m_index_it;
