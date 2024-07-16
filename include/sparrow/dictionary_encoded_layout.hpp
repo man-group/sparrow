@@ -22,40 +22,99 @@
 
 namespace sparrow
 {
-    /**
-     * @class dictionary_value_iterator
+    /*
+     * Traits class for the iterator over the data values
+     * of a dictionary encoded layout.
      *
-     * @brief Iterator over the data values of a dictionary layout.
-     *
-     * @tparam IL the layout type of the indexes.
-     * @tparam SL the layout type of the dictionary.
-     * @tparam is_const a boolean flag specifying whether this iterator is const.
+     * @tparam L the layout type
+     * @tparam IC a constnat indicating whether the inner types
+     * must be defined for a constant iterator.
      */
-    template <class IL, class SL, bool is_const>
-    class dictionary_value_iterator : public iterator_base<
-                                          dictionary_value_iterator<IL, SL, is_const>,
-                                          typename SL::value_type,
-                                          std::random_access_iterator_tag,
-                                          typename SL::const_reference>
+    template <class L, bool IC>
+    struct dictionary_value_traits
+    {
+        using layout_type = L;
+        using value_type = typename L::inner_value_type;
+        using tag = std::random_access_iterator_tag;
+        using const_reference = typename L::inner_const_reference;
+        static constexpr bool is_value = true;
+        static constexpr bool is_const = IC;
+    };
+
+    /*
+     * Traits class for the iterator over the bitmap values
+     * of a dictionary encoded layout.
+     *
+     * @tparam L the layout type
+     * @tparam IC a constnat indicating whether the inner types
+     * must be defined for a constant iterator.
+     */
+    template <class L, bool IC>
+    struct dictionary_bitmap_traits
+    {
+        using layout_type = L;
+        using value_type = typename L::bitmap_value_type;
+        using tag = std::random_access_iterator_tag;
+        using const_reference = typename L::bitmap_const_reference;
+        static constexpr bool is_value = false;
+        static constexpr bool is_const = IC;
+    };
+
+    template <class T>
+    concept dictionary_iterator_traits = requires
+    {
+        typename T::layout_type;
+        typename T::value_type;
+        typename T::tag;
+        typename T::const_reference;
+        { T::is_value } -> std::same_as<const bool&>;
+        { T::is_const } -> std::same_as<const bool&>;
+    };
+
+    /**
+     * @class dictionary_iterator
+     *
+     * @brief Iterator over the values or the bitmap elements of a dictionary layout.
+     *
+     * @tparam Traits the traits defining the inner types of the iterator.
+     */
+    template <dictionary_iterator_traits Traits>
+    class dictionary_iterator : public iterator_base<
+                                    dictionary_iterator<Traits>,
+                                    typename Traits::value_type,
+                                    typename Traits::tag,
+                                    typename Traits::const_reference>
     {
     public:
 
-        using self_type = dictionary_value_iterator<IL, SL, is_const>;
-        using base_type = iterator_base<self_type, typename SL::value_type, std::random_access_iterator_tag, typename SL::const_reference>;
+        using self_type = dictionary_iterator<Traits>;
+        using base_type = iterator_base<
+            dictionary_iterator<Traits>,
+            typename Traits::value_type,
+            typename Traits::tag,
+            typename Traits::const_reference>;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
 
-        using index_iterator = std::conditional_t<is_const, typename IL::const_value_iterator, typename IL::value_iterator>;
-        using sub_layout = mpl::constify_t<SL, is_const>;
-        using sub_layout_reference = sub_layout&;
+        using layout_type = typename Traits::layout_type;
+        using index_layout = typename layout_type::indexes_layout;
+        using index_iterator = std::conditional_t<Traits::is_const, typename index_layout::const_iterator, typename index_layout::iterator>;
+        using sub_layout = typename layout_type::sub_layout;
+        using sub_layout_storage = mpl::constify_t<sub_layout, Traits::is_const>;
+        using sub_layout_reference = sub_layout_storage&;
 
-        // `dictionary_value_iterator` needs to be default constructible
+        // `dictionary_iterator` needs to be default constructible
         // to satisfy `dictionary_encoded_layout::const_value_range`'s
+        // and `dicitonary_encoded_layout::const_bitmap_range`'s
         // constraints.
-        dictionary_value_iterator() noexcept = default;
-        dictionary_value_iterator(index_iterator index_it, sub_layout_reference sub_layout_reference);
+        dictionary_iterator() noexcept = default;
+        dictionary_iterator(index_iterator index_it, sub_layout_reference sub_layout_reference);
 
     private:
+
+        using sub_reference = std::conditional_t<Traits::is_const, typename sub_layout::const_reference, typename sub_layout::reference>;
+
+        sub_reference get_subreference() const;
 
         reference dereference() const;
         void increment();
@@ -67,7 +126,7 @@ namespace sparrow
 
         index_iterator m_index_it;
         // Use std::optional because of default constructor.
-        std::optional<std::reference_wrapper<sub_layout>> m_sub_layout_reference;
+        std::optional<std::reference_wrapper<sub_layout_storage>> m_sub_layout_reference;
 
         friend class iterator_access;
     };
@@ -105,15 +164,16 @@ namespace sparrow
 
         using self_type = dictionary_encoded_layout<IT, SL, OT>;
         using index_type = IT;
-        using inner_value_type = SL::inner_value_type;
         using sub_layout = SL;
-        using inner_reference = reference_proxy<SL>;
-        using inner_const_reference = const_reference_proxy<SL>;
+        using inner_value_type = SL::inner_value_type;
+        using inner_reference = typename SL::inner_reference;
+        using inner_const_reference = typename SL::inner_const_reference;
         using bitmap_type = array_data::bitmap_type;
+        using bitmap_value_type = bitmap_type::value_type;
         using bitmap_const_reference = bitmap_type::const_reference;
         using value_type = SL::value_type;
-        using reference = reference_proxy<SL>;
-        using const_reference = const_reference_proxy<SL>;
+        using reference = typename SL::reference;
+        using const_reference = typename SL::const_reference;
         using size_type = std::size_t;
         using indexes_layout = fixed_size_layout<IT>;
         using iterator_tag = std::random_access_iterator_tag;
@@ -134,13 +194,13 @@ namespace sparrow
         using iterator = layout_iterator<self_type, false>;
         using const_iterator = layout_iterator<self_type, true>;
 
-        using bitmap_iterator = indexes_layout::bitmap_iterator;
-        using const_bitmap_iterator = indexes_layout::const_bitmap_iterator;
-        using const_bitmap_range = indexes_layout::const_bitmap_range;
+        using bitmap_iterator = dictionary_iterator<dictionary_bitmap_traits<self_type, true>>;
+        using const_bitmap_iterator = dictionary_iterator<dictionary_bitmap_traits<self_type, true>>;
+        using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
-        using value_iterator = dictionary_value_iterator<indexes_layout, sub_layout, false>;
-        using const_value_iterator = dictionary_value_iterator<indexes_layout, sub_layout, true>;
-        using const_value_range = std::ranges::subrange<const_value_iterator, const_value_iterator>;
+        using value_iterator = dictionary_iterator<dictionary_value_traits<self_type, true>>;
+        using const_value_iterator = dictionary_iterator<dictionary_value_traits<self_type, true>>;
+        using const_value_range = std::ranges::subrange<const_value_iterator>;
 
         explicit dictionary_encoded_layout(array_data& data);
         void rebind_data(array_data& data);
@@ -166,6 +226,9 @@ namespace sparrow
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
 
+        const_bitmap_iterator bitmap_cbegin() const;
+        const_bitmap_iterator bitmap_cend() const;
+
         inner_const_reference value(size_type i) const;
 
         const_offset_iterator offset(size_type i) const;
@@ -183,16 +246,15 @@ namespace sparrow
             return instance;
         }
 
-        friend class const_reference_proxy<self_type>;
-        friend class dictionary_value_iterator<indexes_layout, sub_layout, true>;
+        friend class dictionary_iterator<dictionary_value_traits<self_type, true>>;
     };
 
     /*******************************************
      * vs_binary_value_iterator implementation *
      *******************************************/
 
-    template <class L, class SL, bool is_const>
-    dictionary_value_iterator<L, SL, is_const>::dictionary_value_iterator(
+    template <dictionary_iterator_traits Traits>
+    dictionary_iterator<Traits>::dictionary_iterator(
         index_iterator index_it,
         sub_layout_reference sub_layout_ref
     )
@@ -201,45 +263,65 @@ namespace sparrow
     {
     }
 
-    template <class IL, class SL, bool is_const>
-    auto dictionary_value_iterator<IL, SL, is_const>::dereference() const -> reference
+    template <dictionary_iterator_traits Traits>
+    auto dictionary_iterator<Traits>::get_subreference() const -> sub_reference
     {
-        SPARROW_ASSERT_TRUE(m_sub_layout_reference.has_value());
-        return (*m_sub_layout_reference).get()[*m_index_it];
+        return (*m_sub_layout_reference).get()[m_index_it->value()];
     }
 
-    template <class IL, class SL, bool is_const>
-    void dictionary_value_iterator<IL, SL, is_const>::increment()
+    template <dictionary_iterator_traits Traits>
+    auto dictionary_iterator<Traits>::dereference() const -> reference
+    {
+        SPARROW_ASSERT_TRUE(m_sub_layout_reference.has_value());
+        if constexpr (Traits::is_value)
+        {
+            if (m_index_it->has_value())
+            {
+                return get_subreference().get();
+            }
+            else
+            {
+                return layout_type::dummy_const_reference().get();
+            }
+        }
+        else
+        {
+            return m_index_it->has_value() && get_subreference().has_value();
+        }
+    }
+
+    template <dictionary_iterator_traits Traits>
+    void dictionary_iterator<Traits>::increment()
     {
         ++m_index_it;
     }
 
-    template <class IL, class SL, bool is_const>
-    void dictionary_value_iterator<IL, SL, is_const>::decrement()
+    template <dictionary_iterator_traits Traits>
+    void dictionary_iterator<Traits>::decrement()
     {
         --m_index_it;
     }
 
-    template <class IL, class SL, bool is_const>
-    void dictionary_value_iterator<IL, SL, is_const>::advance(difference_type n)
+    template <dictionary_iterator_traits Traits>
+    void dictionary_iterator<Traits>::advance(difference_type n)
     {
         m_index_it += n;
     }
 
-    template <class IL, class SL, bool is_const>
-    auto dictionary_value_iterator<IL, SL, is_const>::distance_to(const self_type& rhs) const -> difference_type
+    template <dictionary_iterator_traits Traits>
+    auto dictionary_iterator<Traits>::distance_to(const self_type& rhs) const -> difference_type
     {
         m_index_it.distance_to(rhs.m_index_it);
     }
 
-    template <class IL, class SL, bool is_const>
-    bool dictionary_value_iterator<IL, SL, is_const>::equal(const self_type& rhs) const
+    template <dictionary_iterator_traits Traits>
+    bool dictionary_iterator<Traits>::equal(const self_type& rhs) const
     {
         return m_index_it == rhs.m_index_it;
     }
 
-    template <class IL, class SL, bool is_const>
-    bool dictionary_value_iterator<IL, SL, is_const>::less_than(const self_type& rhs) const
+    template <dictionary_iterator_traits Traits>
+    bool dictionary_iterator<Traits>::less_than(const self_type& rhs) const
     {
         return m_index_it < rhs.m_index_it;
     }
@@ -285,9 +367,28 @@ namespace sparrow
     }
 
     template <std::integral T, class SL, layout_offset OT>
+    auto dictionary_encoded_layout<T, SL, OT>::cbegin() const -> const_iterator
+    {
+        return const_iterator(value_cbegin(), bitmap_cbegin());
+    }
+
+    template <std::integral T, class SL, layout_offset OT>
+    auto dictionary_encoded_layout<T, SL, OT>::cend() const -> const_iterator
+    {
+        return const_iterator(value_cend(), bitmap_cend());
+    }
+
+
+    template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::bitmap() const -> const_bitmap_range
     {
-        return get_const_indexes_layout().bitmap();
+        return const_bitmap_range(bitmap_cbegin(), bitmap_cend());
+    }
+
+    template <std::integral T, class SL, layout_offset OT>
+    auto dictionary_encoded_layout<T, SL, OT>::values() const -> const_value_range
+    {
+        return const_value_range(value_cbegin(), value_cend());
     }
 
     template <std::integral T, class SL, layout_offset OT>
@@ -298,33 +399,26 @@ namespace sparrow
     }
 
     template <std::integral T, class SL, layout_offset OT>
-    auto dictionary_encoded_layout<T, SL, OT>::cbegin() const -> const_iterator
-    {
-        return const_iterator(value_cbegin(), get_const_indexes_layout().bitmap().begin());
-    }
-
-    template <std::integral T, class SL, layout_offset OT>
-    auto dictionary_encoded_layout<T, SL, OT>::cend() const -> const_iterator
-    {
-        return const_iterator(value_cend(), get_const_indexes_layout().bitmap().end());
-    }
-
-    template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator(get_const_indexes_layout().values().begin(), *m_sub_layout);
+        return const_value_iterator(get_const_indexes_layout().cbegin(), *m_sub_layout);
     }
 
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::value_cend() const -> const_value_iterator
     {
-        return const_value_iterator(get_const_indexes_layout().values().end(), *m_sub_layout);
+        return const_value_iterator(get_const_indexes_layout().cend(), *m_sub_layout);
+    }
+    template <std::integral T, class SL, layout_offset OT>
+    auto dictionary_encoded_layout<T, SL, OT>::bitmap_cbegin() const -> const_bitmap_iterator 
+    {
+        return const_bitmap_iterator(get_const_indexes_layout().cbegin(), *m_sub_layout);
     }
 
     template <std::integral T, class SL, layout_offset OT>
-    auto dictionary_encoded_layout<T, SL, OT>::values() const -> const_value_range
+    auto dictionary_encoded_layout<T, SL, OT>::bitmap_cend() const -> const_bitmap_iterator 
     {
-        return const_value_range(value_cbegin(), value_cend());
+        return const_bitmap_iterator(get_const_indexes_layout().cend(), *m_sub_layout);
     }
 
     template <std::integral T, class SL, layout_offset OT>

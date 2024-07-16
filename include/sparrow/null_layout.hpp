@@ -16,13 +16,13 @@
 
 #include <cstddef>
 #include <functional>
-#include <optional>
 #include <ranges>
 
 #include "sparrow/array_data.hpp"
 #include "sparrow/contracts.hpp"
 #include "sparrow/data_type.hpp"
 #include "sparrow/iterator.hpp"
+#include "sparrow/nullable.hpp"
 
 namespace sparrow
 {
@@ -74,7 +74,7 @@ namespace sparrow
     public:
 
         using inner_value_type = null_type;
-        using value_type = std::optional<inner_value_type>;
+        using value_type = nullable<inner_value_type>;
         using iterator = empty_iterator<value_type>;
         using const_iterator = empty_iterator<value_type>;
         using reference = iterator::reference;

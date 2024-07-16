@@ -422,6 +422,6 @@ namespace sparrow::mpl
     /// Matches types that can be convertible to and assignable from bool. We do not use
     /// `std::convertible_to` because we don't want to impose an implicit conversion.
     template <class T>
-    concept boolean_like = std::is_assignable_v<std::add_lvalue_reference_t<T>, bool> and 
+    concept boolean_like = std::is_assignable_v<std::add_lvalue_reference_t<std::decay_t<T>>, bool> and 
                            requires { static_cast<bool>(std::declval<T>()); };
 }

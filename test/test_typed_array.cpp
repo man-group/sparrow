@@ -232,7 +232,7 @@ TEST_SUITE("typed_array")
             for (typename typed_array<T>::size_type i = 0; i < ta.size() - 1; ++iter, ++i)
             {
                 REQUIRE(iter->has_value());
-                CHECK_EQ(*iter, std::make_optional(ta[i].value()));
+                CHECK_EQ(*iter, make_nullable(ta[i].value()));
             }
 
             CHECK_EQ(++iter, end);

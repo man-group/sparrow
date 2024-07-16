@@ -126,7 +126,7 @@ namespace sparrow
             auto cref2 = l[2];
 
             auto iter = l.cbegin();
-            CHECK_EQ(*iter, std::make_optional(cref0.value()));
+            CHECK_EQ(*iter, make_nullable(cref0.value()));
 
             ++iter;
             CHECK(!iter->has_value());

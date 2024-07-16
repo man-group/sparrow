@@ -135,7 +135,7 @@ namespace sparrow
             {
                 if (i % 2 != 0)
                 {
-                    lt[i] = std::nullopt;
+                    lt[i] = nullval;
                 }
             }
 
@@ -155,7 +155,7 @@ namespace sparrow
 
             for (std::size_t i = 0; i != lt.size(); ++it, ++i)
             {
-                CHECK_EQ(*it, std::make_optional(lt[i].value()));
+                CHECK_EQ(*it, make_nullable(lt[i].value()));
                 CHECK(it->has_value());
             }
 

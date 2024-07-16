@@ -181,7 +181,7 @@ TEST_SUITE("typed_array_timestamp")
         for (typename sparrow::typed_array<sparrow::timestamp>::size_type i = 0; i < ta.size() - 1; ++iter, ++i)
         {
             REQUIRE(iter->has_value());
-            CHECK_EQ(*iter, std::make_optional(ta[i].value()));
+            CHECK_EQ(*iter, sparrow::make_nullable(ta[i].value()));
         }
 
         CHECK_EQ(++iter, end);

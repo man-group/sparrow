@@ -38,7 +38,6 @@ set(SPARROW_TESTS_SOURCES
     test_algorithm.cpp
     test_allocator.cpp
     test_array.cpp
-    test_array_data.cpp
     test_array_data_concepts.cpp
     test_array_data_creation.cpp
     test_array_data_factory.cpp

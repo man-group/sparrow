@@ -48,8 +48,8 @@ namespace sparrow
             null_layout nl(ad);
             const null_layout cnl(ad);
 
-            CHECK_EQ(nl[2], std::nullopt);
-            CHECK_EQ(cnl[2], std::nullopt);
+            CHECK_EQ(nl[2], nullval);
+            CHECK_EQ(cnl[2], nullval);
         }
 
         TEST_CASE("iterator")
@@ -59,13 +59,13 @@ namespace sparrow
 
             auto iter = nl.begin();
             auto citer = nl.cbegin();
-            CHECK_EQ(*iter, std::nullopt);
-            CHECK_EQ(*citer, std::nullopt);
+            CHECK_EQ(*iter, nullval);
+            CHECK_EQ(*citer, nullval);
 
             ++iter;
             ++citer;
-            CHECK_EQ(*iter, std::nullopt);
-            CHECK_EQ(*citer, std::nullopt);
+            CHECK_EQ(*iter, nullval);
+            CHECK_EQ(*citer, nullval);
 
             iter += 2;
             citer += 2;
