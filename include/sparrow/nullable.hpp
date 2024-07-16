@@ -21,6 +21,16 @@
 
 #include "sparrow/mp_utils.hpp"
 
+// clang workaround: clang instantiates the constructor in SFINAE context,
+// which is incompatible with the implementation of the libdstdc++ (especially
+// the variant).This leads to wrong compilation errors. Making the constructor
+// not constexpr prevents the compiler from instantiating it.
+#if defined(__clang__) && defined(__GLIBCXX__)
+#   define CONSTEXPR
+#else
+#   define CONSTEXPR constexpr
+#endif
+
 namespace sparrow
 {
     template <class T, mpl::boolean_like B>
@@ -294,7 +304,7 @@ namespace sparrow
             not impl::initializable_from_refs<T, nullable<TO, BO>>
         )
         explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>)
-        constexpr nullable(nullable<TO, BO>&& rhs)
+        CONSTEXPR nullable(nullable<TO, BO>&& rhs)
             : m_value(std::move(rhs).get())
             , m_null_flag(std::move(rhs).null_flag())
         {
@@ -657,4 +667,6 @@ namespace sparrow
         return nullable<T, B>(std::forward<T>(value), std::forward<B>(flag));
     }
 }
+
+#undef CONSTEXPR
 
