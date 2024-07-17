@@ -28,7 +28,6 @@
 
 #include "mp_utils.hpp"
 
-
 namespace sparrow
 {
     template <class T>

@@ -359,8 +359,7 @@ namespace sparrow::mpl
     //// Miscellaneous ///////////////////////////////
 
     template <class T>
-    struct add_const_lvalue_reference
-        : std::add_lvalue_reference<std::add_const_t<T>>
+    struct add_const_lvalue_reference : std::add_lvalue_reference<std::add_const_t<T>>
     {
     };
 
@@ -453,7 +452,7 @@ namespace sparrow::mpl
     // Matches any `unique_ptr` or `shared_ptr` instance.
     template <typename T>
     concept smart_ptr = unique_ptr<T> || shared_ptr<T>;
-    
+
     // Matches any `unique_ptr` or `shared_ptr` or derived instance.
     template <typename T>
     concept smart_ptr_and_derived = shared_ptr_or_derived<T> || unique_ptr_or_derived<T>;

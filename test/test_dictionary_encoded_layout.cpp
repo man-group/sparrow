@@ -43,7 +43,7 @@ namespace sparrow
             m_data.buffers.push_back(b);
             m_data.length = element_count;
             auto dictionary = make_dictionary(words);
-            m_data.dictionary = value_ptr<array_data>(std::move(dictionary));
+            m_data.dictionary = sparrow::value_ptr<array_data>(std::move(dictionary));
         }
 
         static array_data make_dictionary(const std::array<std::string_view, 5>& lwords)
@@ -105,7 +105,7 @@ namespace sparrow
             static constexpr std::array<std::string_view, 5> new_words = {
                 {"Just", "got", "home", "from", "Illinois"}
             };
-            data2.dictionary = value_ptr<array_data>(make_dictionary(new_words));
+            data2.dictionary = sparrow::value_ptr<array_data>(make_dictionary(new_words));
             l.rebind_data(data2);
             CHECK_EQ(l[0].value(), new_words[1]);
             CHECK_EQ(l[1].value(), new_words[0]);
