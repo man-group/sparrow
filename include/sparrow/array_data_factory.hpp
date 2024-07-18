@@ -339,11 +339,6 @@ namespace sparrow
         );
     }
 
-// #if defined(__GNUC__) && not defined(__clang__)
-// #    pragma GCC diagnostic push
-// #    pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-// #endif
-
     /**
      * Creates an empty array_data object for dictionary encoded layout.
      *
@@ -363,9 +358,6 @@ namespace sparrow
             .dictionary = value_ptr<array_data>(make_array_data_for_variable_size_binary_layout<T>())
         };
     }
-// #if defined(__GNUC__) && not defined(__clang__)
-// #    pragma GCC diagnostic pop
-// #endif
 
     /**
      * Creates an array_data object for dictionary encoded layout.

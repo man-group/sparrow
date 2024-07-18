@@ -16,7 +16,7 @@
 #include <optional>
 #include <string_view>
 
-#include "sparrow/arrow_schema.hpp"
+#include "sparrow/c_interface/arrow_schema.hpp"
 
 #include "doctest/doctest.h"
 
@@ -34,7 +34,7 @@ TEST_SUITE("C Data Interface")
                 {
                     sparrow::arrow_schema_shared_ptr schema;
                     CHECK_EQ(schema.get(), nullptr);
-                    const auto deleter = std::get_deleter<void (*)(ArrowSchema*)>(schema);
+                    const auto deleter = schema.get_deleter();
                     CHECK_EQ(*deleter, &sparrow::arrow_schema_custom_deleter);
                 }
 
@@ -47,7 +47,7 @@ TEST_SUITE("C Data Interface")
                     CHECK_NE(schema_shared.get(), nullptr);
                     CHECK_EQ(schema_shared->n_children, 99);
                     CHECK_EQ(schema_shared->flags, 1);
-                    const auto deleter = std::get_deleter<void (*)(ArrowSchema*)>(schema_shared);
+                    const auto deleter = schema_shared.get_deleter();
                     CHECK_EQ(*deleter, &sparrow::arrow_schema_custom_deleter);
                 }
 
@@ -61,7 +61,7 @@ TEST_SUITE("C Data Interface")
                     CHECK_NE(schema_shared_2.get(), nullptr);
                     CHECK_EQ(schema_shared_2->n_children, 99);
                     CHECK_EQ(schema_shared_2->flags, 1);
-                    const auto deleter = std::get_deleter<void (*)(ArrowSchema*)>(schema_shared);
+                    const auto deleter = schema_shared.get_deleter();
                     CHECK_EQ(*deleter, &sparrow::arrow_schema_custom_deleter);
                 }
             }
@@ -79,7 +79,7 @@ TEST_SUITE("C Data Interface")
                     CHECK_NE(schema_shared_2.get(), nullptr);
                     CHECK_EQ(schema_shared_2->n_children, 99);
                     CHECK_EQ(schema_shared_2->flags, 1);
-                    const auto deleter = std::get_deleter<void (*)(ArrowSchema*)>(schema_shared_2);
+                    const auto deleter = schema_shared_2.get_deleter();
                     CHECK_EQ(*deleter, &sparrow::arrow_schema_custom_deleter);
                 }
 
@@ -94,7 +94,7 @@ TEST_SUITE("C Data Interface")
                     CHECK_NE(schema_shared_2.get(), nullptr);
                     CHECK_EQ(schema_shared_2->n_children, 99);
                     CHECK_EQ(schema_shared_2->flags, 1);
-                    const auto deleter = std::get_deleter<void (*)(ArrowSchema*)>(schema_shared);
+                    const auto deleter = schema_shared.get_deleter();
                     CHECK_EQ(*deleter, &sparrow::arrow_schema_custom_deleter);
                 }
             }

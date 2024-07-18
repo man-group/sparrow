@@ -12,15 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <concepts>
 #include <cstdint>
 #include <memory>
-#include <optional>
 #include <ranges>
 
-#include "sparrow/arrow_array.hpp"
-#include "sparrow/buffer.hpp"
-#include "sparrow/mp_utils.hpp"
+#include "sparrow/c_interface/arrow_array.hpp"
 
 #include "doctest/doctest.h"
 
@@ -113,8 +109,8 @@ TEST_SUITE("C Data Interface")
                 SUBCASE("default")
                 {
                     const sparrow::arrow_array_shared_ptr array;
-                    CHECK_EQ(array, nullptr);
-                    const auto deleter = std::get_deleter<void (*)(ArrowArray*)>(array);
+                    CHECK_FALSE(array);
+                    const auto deleter = array.get_deleter();
                     CHECK_EQ(*deleter, &sparrow::arrow_array_custom_deleter);
                 }
 
@@ -126,7 +122,7 @@ TEST_SUITE("C Data Interface")
                     const sparrow::arrow_array_shared_ptr shared_array(std::move(array));
                     CHECK_EQ(shared_array->length, 99);
                     CHECK_EQ(shared_array->null_count, 42);
-                    const auto del_p = std::get_deleter<void (*)(ArrowArray*)>(shared_array);
+                    const auto del_p = shared_array.get_deleter();
                     CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
                 }
 
@@ -139,7 +135,7 @@ TEST_SUITE("C Data Interface")
                     sparrow::arrow_array_shared_ptr shared_array_2(std::move(shared_array));
                     CHECK_EQ(shared_array_2->length, 99);
                     CHECK_EQ(shared_array_2->null_count, 42);
-                    const auto del_p = std::get_deleter<void (*)(ArrowArray*)>(shared_array_2);
+                    const auto del_p = shared_array_2.get_deleter();
                     CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
                 }
 
@@ -152,15 +148,15 @@ TEST_SUITE("C Data Interface")
                     const sparrow::arrow_array_shared_ptr shared_array_2(shared_array);
                     CHECK_EQ(shared_array_2->length, 99);
                     CHECK_EQ(shared_array_2->null_count, 42);
-                    const auto del_p = std::get_deleter<void (*)(ArrowArray*)>(shared_array_2);
+                    const auto del_p = shared_array_2.get_deleter();
                     CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
                 }
 
                 SUBCASE("nullptr")
                 {
                     const sparrow::arrow_array_shared_ptr shared_array(nullptr);
-                    CHECK_EQ(shared_array, nullptr);
-                    const auto del_p = std::get_deleter<void (*)(ArrowArray*)>(shared_array);
+                    CHECK_FALSE(shared_array);
+                    const auto del_p = shared_array.get_deleter();
                     CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
                 }
             }
@@ -177,7 +173,7 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(shared_array_2->length, 99);
                     CHECK_EQ(shared_array_2->null_count, 42);
                     // obtain pointer to the deleter:
-                    const auto del_p = std::get_deleter<void (*)(ArrowArray*)>(shared_array_2);
+                    const auto del_p = shared_array_2.get_deleter();
                     CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
                 }
 
@@ -191,7 +187,7 @@ TEST_SUITE("C Data Interface")
                     sparrow::arrow_array_shared_ptr shared_array_2 = shared_array;
                     CHECK_EQ(shared_array_2->length, 99);
                     CHECK_EQ(shared_array_2->null_count, 42);
-                    const auto del_p = std::get_deleter<void (*)(ArrowArray*)>(shared_array_2);
+                    const auto del_p = shared_array_2.get_deleter();
                     CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
                 }
             }
@@ -220,7 +216,7 @@ TEST_SUITE("C Data Interface")
                 );
 
                 CHECK(children.empty());
-                CHECK_EQ(dictionary, nullptr);
+                CHECK_FALSE(dictionary);
                 check_common(array, buffers_dummy, {children_1_ptr, children_2_ptr}, dictionary_pointer);
             }
 

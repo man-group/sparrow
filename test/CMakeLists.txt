@@ -45,12 +45,12 @@ set(SPARROW_TESTS_SOURCES
     test_arrow_array.cpp
     test_arrow_schema.cpp
     test_buffer_adaptor.cpp
-    test_memory.cpp
     test_buffer.cpp
     test_dictionary_encoded_layout.cpp
     test_dynamic_bitset.cpp
     test_fixed_size_layout.cpp
     test_iterator.cpp
+    test_memory.cpp
     test_mpl.cpp
     test_null_layout.cpp
     test_nullable.cpp

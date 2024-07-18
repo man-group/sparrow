@@ -15,18 +15,14 @@
 #pragma once
 
 #include <algorithm>
-#include <cstddef>
 #include <optional>
 #include <ranges>
 #include <tuple>
 #include <type_traits>
 #include <vector>
 
-#include "sparrow/c_interface.hpp"
 #include "sparrow/memory.hpp"
 #include "sparrow/mp_utils.hpp"
-
-#include "mp_utils.hpp"
 
 namespace sparrow
 {
@@ -79,7 +75,7 @@ namespace sparrow
         }
         else if constexpr (mpl::has_element_type<U>)
         {
-            if constexpr (mpl::smart_ptr<U> || std::derived_from<U, std::shared_ptr<typename U::element_type>>
+            if constexpr (mpl::smart_ptr<U> || std::is_base_of_v<std::shared_ptr<typename U::element_type>, U>
                           || mpl::is_type_instance_of_v<U, value_ptr>)
             {
                 if constexpr (std::ranges::contiguous_range<typename U::element_type>)
@@ -181,6 +177,38 @@ namespace sparrow
             tuple
         );
         return raw_ptr_vec;
+    }
+
+    template <class C>
+    bool children_are_not_null(const C& children)
+    {
+        if constexpr (!std::same_as<C, std::nullopt_t>)
+        {
+            if constexpr (mpl::is_type_instance_of_v<C, std::optional>)
+            {
+                if (children.has_value())
+                {
+                    SPARROW_ASSERT_TRUE(std::ranges::all_of(
+                        *children,
+                        [](const auto& child)
+                        {
+                            return bool(child);
+                        }
+                    ))
+                }
+            }
+            else
+            {
+                SPARROW_ASSERT_TRUE(std::ranges::all_of(
+                    children,
+                    [](const auto& child)
+                    {
+                        return bool(child);
+                    }
+                ))
+            }
+        }
+        return true;
     }
 
 }
