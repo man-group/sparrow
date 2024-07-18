@@ -140,7 +140,7 @@ namespace sparrow
         buffer_type& get_data_buffer();
 
         L* p_layout = nullptr;
-        size_type m_index;
+        size_type m_index = size_type(0);
     };
 
     /*
@@ -348,13 +348,13 @@ namespace sparrow
         buffer_type& data_buffer = get_data_buffer();
         const auto layout_data_length = p_layout->size();
 
-        auto offset_beg = offset(m_index);
-        auto offset_end = offset(m_index + 1);
-        auto initial_value_length = static_cast<size_type>(offset_end - offset_beg);
-        auto new_value_length = std::ranges::size(rhs);
+        const auto offset_beg = offset(m_index);
+        const auto offset_end = offset(m_index + 1);
+        const auto initial_value_length = static_cast<size_type>(offset_end - offset_beg);
+        const auto new_value_length = std::ranges::size(rhs);
         if (new_value_length > initial_value_length)
         {
-            auto shift_val = new_value_length - initial_value_length;
+            const std::size_t shift_val = new_value_length - initial_value_length;
             // Allocate tmp buffer for data
             buffer_type tmp_data_buf;
             tmp_data_buf.resize(data_buffer.size() + shift_val);
@@ -373,7 +373,7 @@ namespace sparrow
             std::copy(std::ranges::cbegin(rhs), std::ranges::cend(rhs), data_buffer.begin() + offset_beg);
             if (new_value_length < initial_value_length)
             {
-                std::size_t shift_val = initial_value_length - new_value_length;
+                const std::size_t shift_val = initial_value_length - new_value_length;
                 // Shift values
                 std::copy(data_buffer.cbegin() + offset_end, data_buffer.cend(), data_buffer.begin() + offset_beg + static_cast<difference_type>(new_value_length));
                 // Update offsets 
@@ -440,7 +440,6 @@ namespace sparrow
     requires mpl::convertible_ranges<T, typename L::inner_value_type>
     bool vs_binary_reference<L>::operator==(const T& rhs) const
     {
-        std::string_view view(cbegin(), cend());
         return std::equal(cbegin(), cend(), std::cbegin(rhs), std::cend(rhs));
     }
 
@@ -614,7 +613,6 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, CR, OT>::value(size_type i) -> inner_reference
     {
-        //const size_type pos = i + static_cast<size_type>(data_ref().offset);
         return inner_reference(this, i);
     }
 
