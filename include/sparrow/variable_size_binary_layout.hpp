@@ -108,8 +108,8 @@ namespace sparrow
         self_type& operator=(T&& rhs);
 
         // This is to avoid const char* from begin caught by the previous
-        // operator= overload. This would converth the const char* to
-        // const char[N], including the null-terminating char.
+        // operator= overload. It would convert const char* to const char[N],
+        // including the null-terminating char.
         template <class U = typename L::inner_value_type>
         requires std::assignable_from<U&, const char*>
         self_type& operator=(const char* rhs);
@@ -136,8 +136,6 @@ namespace sparrow
 
         offset_type offset(size_type index) const;
         size_type uoffset(size_type index) const;
-
-        buffer_type& get_data_buffer();
 
         L* p_layout = nullptr;
         size_type m_index = size_type(0);
@@ -174,8 +172,8 @@ namespace sparrow
     public:
 
         using self_type = variable_size_binary_layout<T, CR, OT>;
-        using inner_value_type = T;
         using offset_type = OT;
+        using inner_value_type = T;
         using inner_reference = vs_binary_reference<self_type>;
         using inner_const_reference = CR;
         using bitmap_type = array_data::bitmap_type;
@@ -185,6 +183,7 @@ namespace sparrow
         using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
         using iterator_tag = std::contiguous_iterator_tag;
 
         /**
@@ -233,6 +232,10 @@ namespace sparrow
         const_bitmap_range bitmap() const;
 
     private:
+
+        template <std::ranges::sized_range U>
+        requires mpl::convertible_ranges<U, T>
+        void assign(U&& rhs, size_type index);
 
         value_iterator value_begin();
         value_iterator value_end();
@@ -345,42 +348,7 @@ namespace sparrow
     requires mpl::convertible_ranges<T, typename L::inner_value_type>
     auto vs_binary_reference<L>::operator=(T&& rhs) -> self_type&
     {
-        buffer_type& data_buffer = get_data_buffer();
-        const auto layout_data_length = p_layout->size();
-
-        const auto offset_beg = offset(m_index);
-        const auto offset_end = offset(m_index + 1);
-        const auto initial_value_length = static_cast<size_type>(offset_end - offset_beg);
-        const auto new_value_length = std::ranges::size(rhs);
-        if (new_value_length > initial_value_length)
-        {
-            const std::size_t shift_val = new_value_length - initial_value_length;
-            // Allocate tmp buffer for data
-            buffer_type tmp_data_buf;
-            tmp_data_buf.resize(data_buffer.size() + shift_val);
-            // Copy initial elements
-            std::copy(data_buffer.cbegin(), data_buffer.cbegin() + offset_beg, tmp_data_buf.begin());
-            // Copy new_inner_val
-            std::copy(std::ranges::cbegin(rhs), std::ranges::cend(rhs), tmp_data_buf.begin() + offset_beg);
-            // Copy the elements left
-            std::copy(data_buffer.cbegin() + offset_end, data_buffer.cend(), tmp_data_buf.begin() + offset_beg + static_cast<difference_type>(new_value_length));
-            std::swap(data_buffer, tmp_data_buf);
-            // Update offsets
-            std::for_each(p_layout->offset(m_index + 1), p_layout->offset(layout_data_length + 1), [shift_val](auto& offset){ offset += static_cast<offset_type>(shift_val); });
-        }
-        else
-        {
-            std::copy(std::ranges::cbegin(rhs), std::ranges::cend(rhs), data_buffer.begin() + offset_beg);
-            if (new_value_length < initial_value_length)
-            {
-                const std::size_t shift_val = initial_value_length - new_value_length;
-                // Shift values
-                std::copy(data_buffer.cbegin() + offset_end, data_buffer.cend(), data_buffer.begin() + offset_beg + static_cast<difference_type>(new_value_length));
-                // Update offsets 
-
-                std::for_each(p_layout->offset(m_index+1), p_layout->offset(layout_data_length + 1), [shift_val](auto& offset){ offset -= static_cast<offset_type>(shift_val); });
-            }
-        }
+        p_layout->assign(std::forward<T>(rhs), m_index);
         return *this;
     }
     
@@ -463,12 +431,6 @@ namespace sparrow
         return static_cast<size_type>(offset(index));
     }
 
-    template <class L>
-    auto vs_binary_reference<L>::get_data_buffer() -> buffer_type&
-    {
-        return p_layout->data_ref().buffers[1];
-    }
-
     /**********************************************
      * variable_size_binary_layout implementation *
      **********************************************/
@@ -538,6 +500,49 @@ namespace sparrow
     auto variable_size_binary_layout<T, CR, OT>::bitmap() const -> const_bitmap_range
     {
         return std::ranges::subrange(bitmap_cbegin(), bitmap_cend());
+    }
+
+    template <std::ranges::sized_range T, class CR, layout_offset OT>
+    template <std::ranges::sized_range U>
+    requires mpl::convertible_ranges<U, T>
+    void variable_size_binary_layout<T, CR, OT>::assign(U&& rhs, size_type index)
+    {
+        array_data::buffer_type& data_buffer = data_ref().buffers[1];
+        const auto layout_data_length = size();
+
+        const auto offset_beg = *offset(index);
+        const auto offset_end = *offset(index + 1);
+        const auto initial_value_length = static_cast<size_type>(offset_end - offset_beg);
+        const auto new_value_length = std::ranges::size(rhs);
+        if (new_value_length > initial_value_length)
+        {
+            const std::size_t shift_val = new_value_length - initial_value_length;
+            // Allocate tmp buffer for data
+            array_data::buffer_type tmp_data_buf;
+            tmp_data_buf.resize(data_buffer.size() + shift_val);
+            // Copy initial elements
+            std::copy(data_buffer.cbegin(), data_buffer.cbegin() + offset_beg, tmp_data_buf.begin());
+            // Copy new_inner_val
+            std::copy(std::ranges::cbegin(rhs), std::ranges::cend(rhs), tmp_data_buf.begin() + offset_beg);
+            // Copy the elements left
+            std::copy(data_buffer.cbegin() + offset_end, data_buffer.cend(), tmp_data_buf.begin() + offset_beg + static_cast<difference_type>(new_value_length));
+            std::swap(data_buffer, tmp_data_buf);
+            // Update offsets
+            std::for_each(offset(index + 1), offset(layout_data_length + 1), [shift_val](auto& offset){ offset += static_cast<offset_type>(shift_val); });
+        }
+        else
+        {
+            std::copy(std::ranges::cbegin(rhs), std::ranges::cend(rhs), data_buffer.begin() + offset_beg);
+            if (new_value_length < initial_value_length)
+            {
+                const std::size_t shift_val = initial_value_length - new_value_length;
+                // Shift values
+                std::copy(data_buffer.cbegin() + offset_end, data_buffer.cend(), data_buffer.begin() + offset_beg + static_cast<difference_type>(new_value_length));
+                // Update offsets 
+
+                std::for_each(offset(index+1), offset(layout_data_length + 1), [shift_val](auto& offset){ offset -= static_cast<offset_type>(shift_val); });
+            }
+        }
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
