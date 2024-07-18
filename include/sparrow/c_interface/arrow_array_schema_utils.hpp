@@ -64,9 +64,9 @@ namespace sparrow
      * @param range The range.
      * @return A vector of pointers.
      */
-    template <class T, std::ranges::input_range Range, template <typename> class Allocator = std::allocator>
+    template <class T, std::ranges::input_range Range, class Allocator = std::allocator<T*>>
         requires(!std::ranges::view<Range>)
-    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Range& range);
+    std::vector<T*, Allocator> to_raw_ptr_vec(Range& range);
 
     /**
      * Create a vector of pointers to elements from a std::optional<range>.
@@ -78,9 +78,9 @@ namespace sparrow
      * @param optional The optional range.
      * @return A vector of pointers.
      */
-    template <class T, class Optional, template <typename> class Allocator = std::allocator>
+    template <class T, class Optional, class Allocator = std::allocator<T*>>
         requires(mpl::is_type_instance_of_v<Optional, std::optional>)
-    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Optional& optional);
+    std::vector<T*, Allocator> to_raw_ptr_vec(Optional& optional);
 
     /**
      * Create a vector of pointers to elements of a tuple.
@@ -94,9 +94,9 @@ namespace sparrow
      * @param tuple The tuple.
      * @return A vector of pointers.
      */
-    template <class T, class Tuple, template <typename> class Allocator = std::allocator>
+    template <class T, class Tuple, class Allocator = std::allocator<T*>>
         requires mpl::is_type_instance_of_v<Tuple, std::tuple>
-    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Tuple& tuple);
+    std::vector<T*, Allocator> to_raw_ptr_vec(Tuple& tuple);
 
     /**
      * Check if all elements if a range or std::optional<range> are valid by caling their bool operator. If
@@ -174,11 +174,11 @@ namespace sparrow
         }
     }
 
-    template <class T, std::ranges::input_range Range, template <typename> class Allocator>
+    template <class T, std::ranges::input_range Range, class Allocator>
         requires(!std::ranges::view<Range>)
-    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Range& range)
+    std::vector<T*, Allocator> to_raw_ptr_vec(Range& range)
     {
-        std::vector<T*, Allocator<T*>> raw_ptr_vec;
+        std::vector<T*, Allocator> raw_ptr_vec;
         raw_ptr_vec.reserve(range.size());
         std::ranges::transform(
             range,
@@ -191,9 +191,9 @@ namespace sparrow
         return raw_ptr_vec;
     }
 
-    template <class T, class Optional, template <typename> class Allocator>
+    template <class T, class Optional, class Allocator>
         requires(mpl::is_type_instance_of_v<Optional, std::optional>)
-    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Optional& optional)
+    std::vector<T*, Allocator> to_raw_ptr_vec(Optional& optional)
     {
         if (!optional.has_value())
         {
@@ -202,11 +202,11 @@ namespace sparrow
         return to_raw_ptr_vec<T>(*optional);
     }
 
-    template <class T, class Tuple, template <typename> class Allocator>
+    template <class T, class Tuple, class Allocator>
         requires mpl::is_type_instance_of_v<Tuple, std::tuple>
-    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Tuple& tuple)
+    std::vector<T*, Allocator> to_raw_ptr_vec(Tuple& tuple)
     {
-        std::vector<T*, Allocator<T*>> raw_ptr_vec;
+        std::vector<T*, Allocator> raw_ptr_vec;
         raw_ptr_vec.reserve(std::tuple_size_v<Tuple>);
         std::apply(
             [&raw_ptr_vec](auto&&... args)
