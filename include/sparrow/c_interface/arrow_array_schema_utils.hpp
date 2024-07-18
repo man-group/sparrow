@@ -26,33 +26,18 @@
 
 namespace sparrow
 {
+    /**
+     * Get the size of a range, a tuple or an optional.
+     * If the range is a sized range, the size is obtained by calling size().
+     * If the range is a tuple, the size is obtained by calling tuple_size_v.
+     * If the optional has a value, the size is obtained by calling ssize() on the value.
+     *
+     * @tparam T The type of the value.
+     * @param value The value.
+     * @return The size of the value.
+     */
     template <class T>
-    constexpr int64_t get_size(const T& value)
-    {
-        if constexpr (std::ranges::sized_range<T>)
-        {
-            return static_cast<int64_t>(std::ranges::size(value));
-        }
-        else if constexpr (mpl::is_type_instance_of_v<T, std::tuple>)
-        {
-            return std::tuple_size_v<T>;
-        }
-        else if constexpr (mpl::is_type_instance_of_v<T, std::optional>)
-        {
-            if (value.has_value())
-            {
-                return get_size(*value);
-            }
-            else
-            {
-                return 0;
-            }
-        }
-        else
-        {
-            return 0;
-        }
-    }
+    constexpr int64_t ssize(const T& value);
 
     /**
      * Get a raw pointer from a smart pointer, a range, an object or a pointer.
@@ -66,6 +51,86 @@ namespace sparrow
      *          If the variable is a pointer, the pointer is returned as is.
      *          If the variable is an object, the pointer is returned by calling the address-of operator.
      */
+    template <typename T, typename U>
+    T* get_raw_ptr(U& var);
+
+    /**
+     * Create a vector of pointers to elements from a range.
+     * The range must be a non-view range.
+     *
+     * @tparam T The type of the pointers to obtain.
+     * @tparam Range The range type.
+     * @tparam Allocator The allocator type.
+     * @param range The range.
+     * @return A vector of pointers.
+     */
+    template <class T, std::ranges::input_range Range, template <typename> class Allocator = std::allocator>
+        requires(!std::ranges::view<Range>)
+    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Range& range);
+
+    /**
+     * Create a vector of pointers to elements from a std::optional<range>.
+     * The range must be a non-view range.
+     *
+     * @tparam T The type of the pointers to obtain.
+     * @tparam Optional The optional type.
+     * @tparam Allocator The allocator type.
+     * @param optional The optional range.
+     * @return A vector of pointers.
+     */
+    template <class T, class Optional, template <typename> class Allocator = std::allocator>
+        requires(mpl::is_type_instance_of_v<Optional, std::optional>)
+    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Optional& optional);
+
+    /**
+     * Create a vector of pointers to elements of a tuple.
+     * Types of the tuple can be value_ptr, smart pointers, ranges, objects or pointers.
+     * The type of the elements can be different. E.g: std::tuple<value_ptr<int>,
+     * std::unique_ptr<char>, double>. Casting is used to convert the pointers to the desired type.
+     *
+     * @tparam T The type of the pointers to obtain.
+     * @tparam Tuple The tuple type.
+     * @tparam Allocator The allocator type.
+     * @param tuple The tuple.
+     * @return A vector of pointers.
+     */
+    template <class T, class Tuple, template <typename> class Allocator = std::allocator>
+        requires mpl::is_type_instance_of_v<Tuple, std::tuple>
+    std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Tuple& tuple);
+
+    /**
+     * Check if all children are not null. Could be nullopt, std::optional<range<smart> or a range.
+     *
+     * @tparam C The type of the children.
+     * @param children The children.
+     * @return True if all element are not null, false otherwise.
+     *
+     */
+    template <class P>
+    bool all_smart_pointers_are_not_null(const P& children);
+
+    template <class T>
+    constexpr int64_t ssize(const T& value)
+    {
+        if constexpr (std::ranges::sized_range<T>)
+        {
+            return static_cast<int64_t>(std::ranges::size(value));
+        }
+        else if constexpr (mpl::is_type_instance_of_v<T, std::tuple>)
+        {
+            return std::tuple_size_v<T>;
+        }
+        else if constexpr (mpl::is_type_instance_of_v<T, std::optional>)
+        {
+            if (value.has_value())
+            {
+                return ssize(*value);
+            }
+        }
+
+        return 0;
+    }
+
     template <typename T, typename U>
     T* get_raw_ptr(U& var)
     {
@@ -103,17 +168,7 @@ namespace sparrow
         }
     }
 
-    /**
-     * Create a vector of pointers to elements from a range.
-     * The range must be a non-view range.
-     *
-     * @tparam T The type of the pointers to obtain.
-     * @tparam Range The range type.
-     * @tparam Allocator The allocator type.
-     * @param range The range.
-     * @return A vector of pointers.
-     */
-    template <class T, std::ranges::input_range Range, template <typename> class Allocator = std::allocator>
+    template <class T, std::ranges::input_range Range, template <typename> class Allocator>
         requires(!std::ranges::view<Range>)
     std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Range& range)
     {
@@ -130,17 +185,7 @@ namespace sparrow
         return raw_ptr_vec;
     }
 
-    /**
-     * Create a vector of pointers to elements from a std::optional<range>.
-     * The range must be a non-view range.
-     *
-     * @tparam T The type of the pointers to obtain.
-     * @tparam Optional The optional type.
-     * @tparam Allocator The allocator type.
-     * @param optional The optional range.
-     * @return A vector of pointers.
-     */
-    template <class T, class Optional, template <typename> class Allocator = std::allocator>
+    template <class T, class Optional, template <typename> class Allocator>
         requires(mpl::is_type_instance_of_v<Optional, std::optional>)
     std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Optional& optional)
     {
@@ -151,19 +196,7 @@ namespace sparrow
         return to_raw_ptr_vec<T>(*optional);
     }
 
-    /**
-     * Create a vector of pointers to elements of a tuple.
-     * Types of the tuple can be value_ptr, smart pointers, ranges, objects or pointers.
-     * The type of the elements can be different. E.g: std::tuple<value_ptr<int>,
-     * std::unique_ptr<char>, double>. Casting is used to convert the pointers to the desired type.
-     *
-     * @tparam T The type of the pointers to obtain.
-     * @tparam Tuple The tuple type.
-     * @tparam Allocator The allocator type.
-     * @param tuple The tuple.
-     * @return A vector of pointers.
-     */
-    template <class T, class Tuple, template <typename> class Allocator = std::allocator>
+    template <class T, class Tuple, template <typename> class Allocator>
         requires mpl::is_type_instance_of_v<Tuple, std::tuple>
     std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Tuple& tuple)
     {
@@ -179,33 +212,39 @@ namespace sparrow
         return raw_ptr_vec;
     }
 
-    template <class C>
-    bool children_are_not_null(const C& children)
+    // concept checking that a type has bool operator
+    template<class T>
+    concept has_boolean_operator = requires(T t) { bool(t); };
+
+    template <class T>
+        requires std::same_as<T, std::nullopt_t> || mpl::is_type_instance_of_v<T, std::optional>
+                 || (std::ranges::range<T> && has_boolean_operator<std::ranges::range_value_t<T>>)
+    bool all_element_are_true(const T& elements)
     {
-        if constexpr (!std::same_as<C, std::nullopt_t>)
+        if constexpr (!std::same_as<T, std::nullopt_t>)
         {
-            if constexpr (mpl::is_type_instance_of_v<C, std::optional>)
+            if constexpr (mpl::is_type_instance_of_v<T, std::optional>)
             {
-                if (children.has_value())
+                if (elements.has_value())
                 {
-                    SPARROW_ASSERT_TRUE(std::ranges::all_of(
-                        *children,
+                    return std::ranges::all_of(
+                        *elements,
                         [](const auto& child)
                         {
                             return bool(child);
                         }
-                    ))
+                    );
                 }
             }
             else
             {
-                SPARROW_ASSERT_TRUE(std::ranges::all_of(
-                    children,
-                    [](const auto& child)
+                return std::ranges::all_of(
+                    elements,
+                    [](const auto& element)
                     {
-                        return bool(child);
+                        return bool(element);
                     }
-                ))
+                );
             }
         }
         return true;

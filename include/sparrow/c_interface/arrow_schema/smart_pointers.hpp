@@ -19,7 +19,6 @@
 #include "sparrow/c_interface/arrow_schema/deleter.hpp"
 #include "sparrow/c_interface/c_structures.hpp"
 
-
 namespace sparrow
 {
     /**
@@ -35,94 +34,81 @@ namespace sparrow
 
         using element_type = ArrowSchema;
 
-        arrow_schema_shared_ptr()
-            : std::shared_ptr<ArrowSchema>(nullptr, arrow_schema_custom_deleter)
-        {
-        }
+        arrow_schema_shared_ptr() noexcept;
 
-        arrow_schema_shared_ptr(arrow_schema_shared_ptr&& ptr) noexcept
-            : std::shared_ptr<ArrowSchema>(std::move(ptr))
-        {
-        }
+        arrow_schema_shared_ptr(arrow_schema_shared_ptr&& ptr) noexcept;
 
-        explicit arrow_schema_shared_ptr(const arrow_schema_shared_ptr& ptr) noexcept
-            : std::shared_ptr<ArrowSchema>(ptr)
-        {
-        }
+        explicit arrow_schema_shared_ptr(const arrow_schema_shared_ptr& ptr) noexcept;
 
-        explicit arrow_schema_shared_ptr(arrow_schema_unique_ptr&& ptr)
-            : std::shared_ptr<ArrowSchema>(std::move(ptr).release(), arrow_schema_custom_deleter)
-        {
-        }
+        explicit arrow_schema_shared_ptr(arrow_schema_unique_ptr&& ptr) noexcept;
 
-        explicit arrow_schema_shared_ptr(std::nullptr_t) noexcept
-            : std::shared_ptr<ArrowSchema>(nullptr, arrow_schema_custom_deleter)
-        {
-        }
+        explicit arrow_schema_shared_ptr(std::nullptr_t) noexcept;
 
-        arrow_schema_shared_ptr& operator=(arrow_schema_shared_ptr&& ptr) noexcept
-        {
-            std::shared_ptr<ArrowSchema>::operator=(std::move(ptr));
-            return *this;
-        }
+        arrow_schema_shared_ptr& operator=(arrow_schema_shared_ptr&& ptr) noexcept;
 
-        arrow_schema_shared_ptr& operator=(const arrow_schema_shared_ptr& ptr) noexcept
-        {
-            std::shared_ptr<ArrowSchema>::operator=(ptr);
-            return *this;
-        }
+        arrow_schema_shared_ptr& operator=(const arrow_schema_shared_ptr& ptr) noexcept;
 
         ~arrow_schema_shared_ptr() = default;
 
-        inline void reset() noexcept
-        {
-            std::shared_ptr<ArrowSchema>::reset();
-        }
+        using std::shared_ptr<ArrowSchema>::reset;
 
-        inline void reset(ArrowSchema* ptr) noexcept
-        {
-            std::shared_ptr<ArrowSchema>::reset(ptr, arrow_schema_custom_deleter);
-        }
+        using std::shared_ptr<ArrowSchema>::swap;
 
-        inline void swap(arrow_schema_shared_ptr& ptr) noexcept
-        {
-            std::shared_ptr<ArrowSchema>::swap(ptr);
-        }
+        using std::shared_ptr<ArrowSchema>::get;
 
-        [[nodiscard]] inline ArrowSchema* get() const noexcept
-        {
-            return std::shared_ptr<ArrowSchema>::get();
-        }
+        using std::shared_ptr<ArrowSchema>::operator*;
 
-        [[nodiscard]] inline ArrowSchema& operator*() const noexcept
-        {
-            return std::shared_ptr<ArrowSchema>::operator*();
-        }
+        using std::shared_ptr<ArrowSchema>::operator->;
 
-        [[nodiscard]] inline ArrowSchema* operator->() const noexcept
-        {
-            return std::shared_ptr<ArrowSchema>::operator->();
-        }
+        using std::shared_ptr<ArrowSchema>::use_count;
 
-        [[nodiscard]] inline long use_count() const noexcept
-        {
-            return std::shared_ptr<ArrowSchema>::use_count();
-        }
+        using std::shared_ptr<ArrowSchema>::operator bool;
 
-        [[nodiscard]] inline explicit operator bool() const noexcept
-        {
-            return std::shared_ptr<ArrowSchema>::operator bool();
-        }
+        using std::shared_ptr<ArrowSchema>::owner_before;
 
-        [[nodiscard]] inline bool owner_before(const arrow_schema_shared_ptr& ptr) const noexcept
-        {
-            return std::shared_ptr<ArrowSchema>::owner_before(ptr);
-        }
-
-        [[nodiscard]] inline auto& get_deleter() noexcept
-        {
-            return *std::get_deleter<void (*)(ArrowSchema*)>(*this);
-        }
+        [[nodiscard]] inline auto& get_deleter() noexcept;
     };
+
+    arrow_schema_shared_ptr::arrow_schema_shared_ptr() noexcept
+        : std::shared_ptr<ArrowSchema>(nullptr, arrow_schema_custom_deleter)
+    {
+    }
+
+    arrow_schema_shared_ptr::arrow_schema_shared_ptr(arrow_schema_shared_ptr&& ptr) noexcept
+        : std::shared_ptr<ArrowSchema>(std::move(ptr))
+    {
+    }
+
+    arrow_schema_shared_ptr::arrow_schema_shared_ptr(const arrow_schema_shared_ptr& ptr) noexcept
+        : std::shared_ptr<ArrowSchema>(ptr)
+    {
+    }
+
+    arrow_schema_shared_ptr::arrow_schema_shared_ptr(arrow_schema_unique_ptr&& ptr) noexcept
+        : std::shared_ptr<ArrowSchema>(std::move(ptr).release(), arrow_schema_custom_deleter)
+    {
+    }
+
+    arrow_schema_shared_ptr::arrow_schema_shared_ptr(std::nullptr_t) noexcept
+        : std::shared_ptr<ArrowSchema>(nullptr, arrow_schema_custom_deleter)
+    {
+    }
+
+    arrow_schema_shared_ptr& arrow_schema_shared_ptr::operator=(arrow_schema_shared_ptr&& ptr) noexcept
+    {
+        std::shared_ptr<ArrowSchema>::operator=(std::move(ptr));
+        return *this;
+    };
+
+    arrow_schema_shared_ptr& arrow_schema_shared_ptr::operator=(const arrow_schema_shared_ptr& ptr) noexcept
+    {
+        std::shared_ptr<ArrowSchema>::operator=(ptr);
+        return *this;
+    }
+
+    [[nodiscard]] inline auto& arrow_schema_shared_ptr::get_deleter() noexcept
+    {
+        return *std::get_deleter<void (*)(ArrowSchema*)>(*this);
+    }
 
 }

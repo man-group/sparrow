@@ -142,7 +142,7 @@ TEST_SUITE("C Data Interface")
             CHECK_EQ(schema->children[0], children_1_ptr);
             CHECK_EQ(schema->children[1], children_2_ptr);
             CHECK_EQ(schema->dictionary, dictionary_ptr);
-            CHECK_EQ(schema->release, sparrow::delete_schema);
+            CHECK_EQ(schema->release, sparrow::release_arrow_schema);
             CHECK_NE(schema->private_data, nullptr);
         }
 
@@ -167,7 +167,7 @@ TEST_SUITE("C Data Interface")
             CHECK_EQ(schema->n_children, 0);
             CHECK_EQ(schema->children, nullptr);
             CHECK_EQ(schema->dictionary, nullptr);
-            CHECK_EQ(schema->release, sparrow::delete_schema);
+            CHECK_EQ(schema->release, sparrow::release_arrow_schema);
             CHECK_NE(schema->private_data, nullptr);
         }
 

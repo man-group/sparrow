@@ -57,7 +57,7 @@ void check_common(
         CHECK_EQ(array->children[i], children_ptr[i]);
     }
     CHECK_EQ(array->dictionary, dictionary_pointer);
-    CHECK_EQ(array->release, sparrow::delete_array);
+    CHECK_EQ(array->release, sparrow::release_arrow_array);
     CHECK_NE(array->private_data, nullptr);
 }
 

@@ -55,71 +55,24 @@ namespace sparrow
 
         ~arrow_array_shared_ptr() = default;
 
-        void reset() noexcept;
+        using std::shared_ptr<ArrowArray>::reset;
 
-        void reset(ArrowArray* ptr) noexcept;
+        using std::shared_ptr<ArrowArray>::swap;
 
-        void swap(arrow_array_shared_ptr& ptr) noexcept;
+        using std::shared_ptr<ArrowArray>::get;
 
-        [[nodiscard]] ArrowArray* get() const noexcept;
+        using std::shared_ptr<ArrowArray>::operator*;
 
-        [[nodiscard]] ArrowArray& operator*() const noexcept;
+        using std::shared_ptr<ArrowArray>::operator->;
 
-        [[nodiscard]] ArrowArray* operator->() const noexcept;
+        using std::shared_ptr<ArrowArray>::use_count;
 
-        [[nodiscard]] long use_count() const noexcept;
+        using std::shared_ptr<ArrowArray>::operator bool;
 
-        [[nodiscard]] explicit operator bool() const noexcept;
-
-        [[nodiscard]] bool owner_before(const arrow_array_shared_ptr& ptr) const noexcept;
+        using std::shared_ptr<ArrowArray>::owner_before;
 
         [[nodiscard]] auto& get_deleter() const noexcept;
     };
-
-    inline void arrow_array_shared_ptr::reset() noexcept
-    {
-        std::shared_ptr<ArrowArray>::reset();
-    }
-
-    inline void arrow_array_shared_ptr::reset(ArrowArray* ptr) noexcept
-    {
-        std::shared_ptr<ArrowArray>::reset(ptr, arrow_array_custom_deleter);
-    }
-
-    inline void arrow_array_shared_ptr::swap(arrow_array_shared_ptr& ptr) noexcept
-    {
-        std::shared_ptr<ArrowArray>::swap(ptr);
-    }
-
-    [[nodiscard]] inline ArrowArray* arrow_array_shared_ptr::get() const noexcept
-    {
-        return std::shared_ptr<ArrowArray>::get();
-    }
-
-    [[nodiscard]] inline ArrowArray& arrow_array_shared_ptr::operator*() const noexcept
-    {
-        return std::shared_ptr<ArrowArray>::operator*();
-    }
-
-    [[nodiscard]] inline ArrowArray* arrow_array_shared_ptr::operator->() const noexcept
-    {
-        return std::shared_ptr<ArrowArray>::operator->();
-    }
-
-    [[nodiscard]] inline long arrow_array_shared_ptr::use_count() const noexcept
-    {
-        return std::shared_ptr<ArrowArray>::use_count();
-    }
-
-    [[nodiscard]] inline arrow_array_shared_ptr::operator bool() const noexcept
-    {
-        return std::shared_ptr<ArrowArray>::operator bool();
-    }
-
-    [[nodiscard]] inline bool arrow_array_shared_ptr::owner_before(const arrow_array_shared_ptr& ptr) const noexcept
-    {
-        return std::shared_ptr<ArrowArray>::owner_before(ptr);
-    }
 
     [[nodiscard]] inline auto& arrow_array_shared_ptr::get_deleter() const noexcept
     {

@@ -28,21 +28,21 @@ TEST_SUITE("C Data Interface")
             SUBCASE("std::nullptr_t")
             {
                 std::nullptr_t ptr = nullptr;
-                const auto size = sparrow::get_size(ptr);
+                const auto size = sparrow::ssize(ptr);
                 CHECK_EQ(size, 0);
             }
 
             SUBCASE("std::vector")
             {
                 std::vector<int> vec = {0, 1, 2, 3, 4, 5};
-                const auto size = sparrow::get_size(vec);
+                const auto size = sparrow::ssize(vec);
                 CHECK_EQ(size, vec.size());
             }
 
             SUBCASE("std::tuple")
             {
                 std::tuple<int, int, int> tuple{0, 1, 2};
-                constexpr auto size = sparrow::get_size(tuple);
+                constexpr auto size = sparrow::ssize(tuple);
                 CHECK_EQ(size, 3);
             }
         }
