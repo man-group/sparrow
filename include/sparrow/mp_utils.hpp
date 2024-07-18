@@ -462,4 +462,8 @@ namespace sparrow::mpl
     // Matches any type that has an element_type member.
     template <typename T>
     concept has_element_type = requires { typename T::element_type; };
+
+    // Matches any type that has a boolean operator.
+    template <class T>
+    concept has_boolean_operator = requires(T t) { bool(t); };
 }

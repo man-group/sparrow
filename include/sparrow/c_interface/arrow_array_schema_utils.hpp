@@ -99,15 +99,15 @@ namespace sparrow
     std::vector<T*, Allocator<T*>> to_raw_ptr_vec(Tuple& tuple);
 
     /**
-     * Check if all children are not null. Could be nullopt, std::optional<range<smart> or a range.
-     *
-     * @tparam C The type of the children.
-     * @param children The children.
-     * @return True if all element are not null, false otherwise.
-     *
+     * Check if all elements if a range or std::optional<range> are valid by caling their bool operator. If
+     * the type is nullptr, it returns true. If the std::optional does not have a value, it returns true.
      */
-    template <class P>
-    bool all_smart_pointers_are_not_null(const P& children);
+    template <class T>
+        requires std::same_as<T, std::nullopt_t>
+                 || (mpl::is_type_instance_of_v<T, std::optional>
+                     && mpl::has_boolean_operator<std::ranges::range_value_t<typename T::value_type>>)
+                 || (std::ranges::range<T> && mpl::has_boolean_operator<std::ranges::range_value_t<T>>)
+    bool all_element_are_true(const T& elements);
 
     template <class T>
     constexpr int64_t ssize(const T& value)
@@ -126,9 +126,15 @@ namespace sparrow
             {
                 return ssize(*value);
             }
+            else
+            {
+                return 0;
+            }
         }
-
-        return 0;
+        else
+        {
+            return 0;
+        }
     }
 
     template <typename T, typename U>
@@ -212,13 +218,11 @@ namespace sparrow
         return raw_ptr_vec;
     }
 
-    // concept checking that a type has bool operator
-    template<class T>
-    concept has_boolean_operator = requires(T t) { bool(t); };
-
     template <class T>
-        requires std::same_as<T, std::nullopt_t> || mpl::is_type_instance_of_v<T, std::optional>
-                 || (std::ranges::range<T> && has_boolean_operator<std::ranges::range_value_t<T>>)
+        requires std::same_as<T, std::nullopt_t>
+                 || (mpl::is_type_instance_of_v<T, std::optional>
+                     && mpl::has_boolean_operator<std::ranges::range_value_t<typename T::value_type>>)
+                 || (std::ranges::range<T> && mpl::has_boolean_operator<std::ranges::range_value_t<T>>)
     bool all_element_are_true(const T& elements)
     {
         if constexpr (!std::same_as<T, std::nullopt_t>)
@@ -235,6 +239,10 @@ namespace sparrow
                         }
                     );
                 }
+                else
+                {
+                    return true;
+                }
             }
             else
             {
@@ -247,7 +255,10 @@ namespace sparrow
                 );
             }
         }
-        return true;
+        else
+        {
+            return true;
+        }
     }
 
 }
