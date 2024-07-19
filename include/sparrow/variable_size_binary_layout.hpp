@@ -578,7 +578,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     auto variable_size_binary_layout<T, CR, OT>::value_begin() -> value_iterator
     {
-        return value_iterator(this, data(0u));
+        return value_iterator(this, 0u);
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>

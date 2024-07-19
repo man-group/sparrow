@@ -102,6 +102,7 @@ namespace sparrow
         using const_reference = array_traits::const_reference;
         using size_type = std::size_t;
 
+        using iterator = array_iterator<false>;
         using const_iterator = array_iterator<true>;
 
         explicit array(array_data data);
@@ -109,16 +110,38 @@ namespace sparrow
         bool empty() const;
         size_type size() const;
 
+        reference at(size_type i);
         const_reference at(size_type i) const;
+
+        reference operator[](size_type i);
         const_reference operator[](size_type i) const;
+
+        reference front();
         const_reference front() const;
+
+        reference back();
         const_reference back() const;
+
+        iterator begin();
+        iterator end();
 
         const_iterator begin() const;
         const_iterator end() const;
 
         const_iterator cbegin() const;
         const_iterator cend() const;
+
+        template <class T>
+        using as_reference = typed_array<T>::reference;
+
+        template <class T>
+        using as_const_reference = typed_array<T>::const_reference;
+
+        template <class T>
+        as_reference<T> get(size_type i);
+
+        template <class T>
+        as_const_reference<T> get(size_type i) const;
 
     private:
 
@@ -326,6 +349,19 @@ namespace sparrow
         );
     }
 
+    inline auto array::at(size_type i) -> reference
+    {
+        if (i >= size())
+        {
+            // TODO: Use our own format function
+            throw std::out_of_range(
+                "array::at: index out of range for array of size " + std::to_string(size()) + " at index "
+                + std::to_string(i)
+            );
+        }
+        return (*this)[i];
+    }
+    
     inline auto array::at(size_type i) const -> const_reference
     {
         if (i >= size())
@@ -339,6 +375,18 @@ namespace sparrow
         return (*this)[i];
     }
 
+    inline auto array::operator[](size_type i) -> reference
+    {
+        SPARROW_ASSERT_TRUE(i < size());
+        return std::visit(
+            [i](auto&& arg)
+            {
+                return reference(arg[i]);
+            },
+            m_array
+        );
+    }
+    
     inline auto array::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
@@ -351,18 +399,52 @@ namespace sparrow
         );
     }
 
+    inline auto array::front() -> reference
+    {
+        SPARROW_ASSERT_FALSE(empty());
+        return (*this)[0];
+    }
+    
     inline auto array::front() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return (*this)[0];
     }
 
+    inline auto array::back() -> reference
+    {
+        SPARROW_ASSERT_FALSE(empty());
+        return (*this)[size() - 1];
+    }
+    
     inline auto array::back() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return (*this)[size() - 1];
     }
 
+    inline auto array::begin() -> iterator
+    {
+        return std::visit(
+            [](auto&& arg)
+            {
+                return iterator(arg.begin());
+            },
+            m_array
+        );
+    }
+
+    inline auto array::end() -> iterator
+    {
+        return std::visit(
+            [](auto&& arg)
+            {
+                return iterator(arg.end());
+            },
+            m_array
+        );
+    }
+    
     inline auto array::begin() const -> const_iterator
     {
         return cbegin();
@@ -393,5 +475,17 @@ namespace sparrow
             },
             m_array
         );
+    }
+
+    template <class T>
+    inline auto array::get(size_type i) -> as_reference<T> 
+    {
+        return std::get<as_reference<T>>(this->operator[](i));
+    }
+
+    template <class T>
+    inline auto array::get(size_type i) const -> as_const_reference<T>
+    {
+        return std::get<as_const_reference<T>>(this->operator[](i));
     }
 }
