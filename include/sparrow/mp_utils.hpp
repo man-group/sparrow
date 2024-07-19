@@ -457,12 +457,6 @@ namespace sparrow::mpl
     template <typename T>
     concept smart_ptr_and_derived = shared_ptr_or_derived<T> || unique_ptr_or_derived<T>;
 
-    static_assert(std::is_same_v<int, int> == true);
-
-    // Matches any type that has an element_type member.
-    template <typename T>
-    concept has_element_type = requires { typename T::element_type; };
-
     // Matches any type that has a boolean operator.
     template <class T>
     concept has_boolean_operator = requires(T t) { bool(t); };

@@ -25,9 +25,9 @@ namespace sparrow
 {
 
     /**
-     * Struct representing private data for ArrowArray.
+     * Private data for ArrowArray.
      *
-     * This struct holds the private data for ArrowArray, including buffers, children, and dictionary.
+     * Holds and own buffers, children, and dictionary.
      * It is used in the Sparrow library.
      */
 

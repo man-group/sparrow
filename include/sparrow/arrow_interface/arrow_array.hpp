@@ -19,6 +19,8 @@
 namespace sparrow
 {
     /**
+     * Creates an ArrowArray with provided data, with unique ownership.  
+     * 
      * @tparam B Value, reference or rvalue of std::vector<sparrow::buffer<uint8_t>>
      * @tparam C Value, reference or rvalue of std::vector<arrow_array_shared_ptr>
      * @tparam D Value, reference or rvalue of arrow_array_shared_ptr
@@ -52,7 +54,7 @@ namespace sparrow
     );
 
     /**
-     * @brief Creates a unique pointer to an Arrow array.
+     * Creates a unique pointer to an Arrow array.
      *
      * This function creates a unique pointer to an Arrow array with the specified parameters.
      *
@@ -77,9 +79,9 @@ namespace sparrow
     make_arrow_array_unique_ptr(int64_t length, int64_t null_count, int64_t offset, B buffers, C children, D dictionary);
 
     /**
-     * Creates a unique pointer to an Arrow array with default values.
-     *
-     * This function creates a unique pointer to an Arrow array with default values.
+     * Creates a unique pointer to an ArrowArray with default values.
+     * All integers are set to 0 and pointers to nullptr.
+     * The ArrowArray is in an invalid state and should not bu used as is.
      *
      * @return The created ArrowArray.
      */
@@ -155,18 +157,7 @@ namespace sparrow
 
     inline arrow_array_unique_ptr default_arrow_array_unique_ptr()
     {
-        auto ptr = arrow_array_unique_ptr(new ArrowArray());
-        ptr->length = 0;
-        ptr->null_count = 0;
-        ptr->offset = 0;
-        ptr->n_buffers = 0;
-        ptr->n_children = 0;
-        ptr->buffers = nullptr;
-        ptr->children = nullptr;
-        ptr->dictionary = nullptr;
-        ptr->release = nullptr;
-        ptr->private_data = nullptr;
-        return ptr;
+        return arrow_array_unique_ptr(new ArrowArray{});
     }
 
     inline void release_arrow_array(ArrowArray* array)

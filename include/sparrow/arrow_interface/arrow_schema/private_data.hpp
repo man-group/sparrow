@@ -24,7 +24,7 @@
 namespace sparrow
 {
     /**
-     * Struct representing private data for ArrowSchema.
+     * Private data for ArrowSchema.
      *
      * This struct holds the private data for ArrowSchema, including format,
      * name and metadata strings, children, and dictionary. It is used in the

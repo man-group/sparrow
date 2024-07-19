@@ -28,13 +28,13 @@ namespace sparrow
 {
     /**
      * Get the size of a range, a tuple or an optional.
-     * If the range is a sized range, the size is obtained by calling size().
+     * If the range is a sized range, the size is obtained by calling `std::ranges::size()`.
      * If the range is a tuple, the size is obtained by calling tuple_size_v.
      * If the optional has a value, the size is obtained by calling ssize() on the value.
      *
-     * @tparam T The type of the value.
+     * @tparam T The type of the `value`.
      * @param value The value.
-     * @return The size of the value.
+     * @return The number of elements in `value`.
      */
     template <class T>
     constexpr int64_t ssize(const T& value);
@@ -56,7 +56,7 @@ namespace sparrow
 
     /**
      * Create a vector of pointers to elements from a range.
-     * The range must be a non-view range.
+     * Requirement: The provided range must own it's elements.
      *
      * @tparam T The type of the pointers to obtain.
      * @tparam Range The range type.
@@ -70,7 +70,7 @@ namespace sparrow
 
     /**
      * Create a vector of pointers to elements from a std::optional<range>.
-     * The range must be a non-view range.
+     * Requirement: The provided range must own it's elements.
      *
      * @tparam T The type of the pointers to obtain.
      * @tparam Optional The optional type.
@@ -99,7 +99,7 @@ namespace sparrow
     std::vector<T*, Allocator> to_raw_ptr_vec(Tuple& tuple);
 
     /**
-     * Check if all elements if a range or std::optional<range> are valid by caling their bool operator. If
+     * Check if all elements of a range or std::optional<range> are valid by caling their bool operator. If
      * the type is nullptr, it returns true. If the std::optional does not have a value, it returns true.
      */
     template <class T>
@@ -144,7 +144,7 @@ namespace sparrow
         {
             return var;
         }
-        else if constexpr (mpl::has_element_type<U>)
+        else if constexpr (requires { typename U::element_type; })
         {
             if constexpr (mpl::smart_ptr<U> || std::is_base_of_v<std::shared_ptr<typename U::element_type>, U>
                           || mpl::is_type_instance_of_v<U, value_ptr>)

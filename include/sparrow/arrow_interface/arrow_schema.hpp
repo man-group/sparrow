@@ -22,7 +22,7 @@
 namespace sparrow
 {
     /**
-     * Creates an ArrowSchema.
+     * Creates an ArrowSchema owned by a `unique_ptr` and holding the provided data.
      *
      * @tparam C Value, reference or rvalue of std::vector<arrow_schema_shared_ptr>
      * @tparam D Value, reference or rvalue of arrow_schema_shared_ptr
@@ -73,38 +73,26 @@ namespace sparrow
 
     void release_arrow_schema(ArrowSchema* schema)
     {
-        SPARROW_ASSERT_FALSE(schema == nullptr)
-        SPARROW_ASSERT_TRUE(schema->release == std::addressof(release_arrow_schema))
-
-        schema->flags = 0;
-        schema->n_children = 0;
-        schema->children = nullptr;
-        schema->dictionary = nullptr;
-        schema->name = nullptr;
-        schema->format = nullptr;
-        schema->metadata = nullptr;
+        SPARROW_ASSERT_FALSE(schema == nullptr);
+        SPARROW_ASSERT_TRUE(schema->release == std::addressof(release_arrow_schema));
         if (schema->private_data != nullptr)
         {
             const auto private_data = static_cast<arrow_schema_private_data*>(schema->private_data);
             delete private_data;
         }
-        schema->private_data = nullptr;
-        schema->release = nullptr;
+        *schema = {};
     }
 
+/**
+     * Creates a unique pointer to an ArrowSchema with default values.
+     * All integers are set to 0 and pointers to nullptr.
+     * The ArrowSchema is in an invalid state and should not bu used as is.
+     *
+     * @return The created ArrowSchema.
+     */
     inline arrow_schema_unique_ptr default_arrow_schema_unique_ptr()
     {
-        auto ptr = arrow_schema_unique_ptr(new ArrowSchema());
-        ptr->format = nullptr;
-        ptr->name = nullptr;
-        ptr->metadata = nullptr;
-        ptr->flags = 0;
-        ptr->n_children = 0;
-        ptr->children = nullptr;
-        ptr->dictionary = nullptr;
-        ptr->release = nullptr;
-        ptr->private_data = nullptr;
-        return ptr;
+        return arrow_schema_unique_ptr(new ArrowSchema{});
     }
 
     template <class F, class N, class M, class C, class D>
