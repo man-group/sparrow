@@ -25,17 +25,17 @@
 #include <unordered_map>
 #include <utility>
 
-#include "sparrow/array_data.hpp"
-#include "sparrow/array_data_concepts.hpp"
-#include "sparrow/contracts.hpp"
-#include "sparrow/data_traits.hpp"
-#include "sparrow/data_type.hpp"
-#include "sparrow/dictionary_encoded_layout.hpp"
-#include "sparrow/fixed_size_layout.hpp"
-#include "sparrow/memory.hpp"
-#include "sparrow/mp_utils.hpp"
-#include "sparrow/reference_wrapper_utils.hpp"
-#include "sparrow/variable_size_binary_layout.hpp"
+#include "sparrow/array/array_data.hpp"
+#include "sparrow/array/array_data_concepts.hpp"
+#include "sparrow/array/data_traits.hpp"
+#include "sparrow/array/data_type.hpp"
+#include "sparrow/layout/dictionary_encoded_layout.hpp"
+#include "sparrow/layout/fixed_size_layout.hpp"
+#include "sparrow/layout/variable_size_binary_layout.hpp"
+#include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/memory.hpp"
+#include "sparrow/utils/mp_utils.hpp"
+#include "sparrow/utils/reference_wrapper_utils.hpp"
 
 namespace sparrow
 {

@@ -22,9 +22,9 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include "sparrow/allocator.hpp"
-#include "sparrow/contracts.hpp"
-#include "sparrow/iterator.hpp"
+#include "sparrow/buffer/allocator.hpp"
+#include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/iterator.hpp"
 
 namespace sparrow
 {

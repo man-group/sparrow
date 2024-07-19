@@ -17,7 +17,7 @@
 #include <numeric>
 #include <vector>
 
-#include "sparrow/allocator.hpp"
+#include "sparrow/buffer/allocator.hpp"
 
 #include "doctest/doctest.h"
 

@@ -15,7 +15,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <string>
 
-#include <sparrow/sparrow_version.hpp>
+#include <sparrow/config/sparrow_version.hpp>
 
 #include "better_junit_reporter.hpp"
 

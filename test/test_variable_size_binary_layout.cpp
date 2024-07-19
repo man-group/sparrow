@@ -17,10 +17,10 @@
 #include <numeric>
 #include <string_view>
 
-#include "sparrow/array_data.hpp"
-#include "sparrow/array_data_factory.hpp"
-#include "sparrow/contracts.hpp"
-#include "sparrow/variable_size_binary_layout.hpp"
+#include "sparrow/array/array_data.hpp"
+#include "sparrow/array/array_data_factory.hpp"
+#include "sparrow/layout/variable_size_binary_layout.hpp"
+#include "sparrow/utils/contracts.hpp"
 
 #include "doctest/doctest.h"
 

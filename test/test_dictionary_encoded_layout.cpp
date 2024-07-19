@@ -19,8 +19,8 @@
 #include <numeric>
 #include <string_view>
 
-#include "sparrow/dictionary_encoded_layout.hpp"
-#include "sparrow/variable_size_binary_layout.hpp"
+#include "sparrow/layout/dictionary_encoded_layout.hpp"
+#include "sparrow/layout/variable_size_binary_layout.hpp"
 
 #include "doctest/doctest.h"
 

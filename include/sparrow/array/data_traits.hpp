@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include "sparrow/data_type.hpp"
-#include "sparrow/fixed_size_layout.hpp"
-#include "sparrow/null_layout.hpp"
-#include "sparrow/variable_size_binary_layout.hpp"
+#include "sparrow/array/data_type.hpp"
+#include "sparrow/layout/fixed_size_layout.hpp"
+#include "sparrow/layout/null_layout.hpp"
+#include "sparrow/layout/variable_size_binary_layout.hpp"
 
 namespace sparrow
 {

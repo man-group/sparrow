@@ -18,7 +18,7 @@
 #include <compare>
 #include <concepts>
 
-#include "sparrow/config.hpp"
+#include "sparrow/config/config.hpp"
 
 namespace sparrow
 {

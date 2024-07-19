@@ -28,7 +28,7 @@ namespace date = std::chrono;
 #include <string>
 #include <vector>
 
-#include "sparrow/mp_utils.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 #if __cplusplus > 202002L and defined(__STDCPP_FLOAT16_T__) and defined(__STDCPP_FLOAT32_T__) \
     and defined(__STDCPP_FLOAT64_T__)
@@ -60,7 +60,7 @@ namespace date = std::chrono;
 #        pragma warning(disable : 4668)  // 'symbol' is not defined as a preprocessor macro, replacing with
                                          // '0' for 'directives'
 #    endif
-#    include "details/3rdparty/float16_t.hpp"
+#    include "sparrow/details/3rdparty/float16_t.hpp"
 #    if defined(__GNUC__)
 #        pragma GCC diagnostic pop
 #    elif defined(__clang__)

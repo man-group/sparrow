@@ -17,8 +17,8 @@
 #include <cstdint>
 #include <numeric>
 
-#include "sparrow/array_data.hpp"
-#include "sparrow/data_traits.hpp"
+#include "sparrow/array/array_data.hpp"
+#include "sparrow/array/data_traits.hpp"
 
 namespace sparrow::test
 {

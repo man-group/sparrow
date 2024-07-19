@@ -17,8 +17,8 @@
 #include <ranges>
 #include <string>
 
-#include "sparrow/buffer.hpp"
-#include "sparrow/buffer_view.hpp"
+#include "sparrow/buffer/buffer.hpp"
+#include "sparrow/buffer/buffer_view.hpp"
 
 #include "doctest/doctest.h"
 

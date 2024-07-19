@@ -17,7 +17,7 @@
 #include <cstddef>
 #include <memory>
 
-#include "sparrow/contracts.hpp"
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {

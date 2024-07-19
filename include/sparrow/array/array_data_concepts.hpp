@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include "sparrow/dictionary_encoded_layout.hpp"
-#include "sparrow/fixed_size_layout.hpp"
-#include "sparrow/mp_utils.hpp"
-#include "sparrow/null_layout.hpp"
-#include "sparrow/variable_size_binary_layout.hpp"
+#include "sparrow/layout/dictionary_encoded_layout.hpp"
+#include "sparrow/layout/fixed_size_layout.hpp"
+#include "sparrow/layout/null_layout.hpp"
+#include "sparrow/layout/variable_size_binary_layout.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {

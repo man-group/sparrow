@@ -18,8 +18,8 @@
 #include <limits>
 #include <utility>
 
-#include "sparrow/buffer.hpp"
-#include "sparrow/contracts.hpp"
+#include "sparrow/buffer/buffer.hpp"
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {

@@ -16,8 +16,8 @@
 #include <cstddef>
 #include <numeric>
 
-#include "sparrow/buffer.hpp"
-#include "sparrow/iterator.hpp"
+#include "sparrow/buffer/buffer.hpp"
+#include "sparrow/utils/iterator.hpp"
 
 #include "doctest/doctest.h"
 

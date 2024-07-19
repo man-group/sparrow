@@ -14,7 +14,7 @@
 
 #include <list>
 
-#include "sparrow/array_data_concepts.hpp"
+#include "sparrow/array/array_data_concepts.hpp"
 
 namespace sparrow
 {
