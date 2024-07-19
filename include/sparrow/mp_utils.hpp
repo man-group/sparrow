@@ -14,7 +14,10 @@
 
 #pragma once
 
+#include <concepts>
 #include <iterator>
+#include <memory>
+#include <ranges>
 #include <type_traits>
 
 namespace sparrow::mpl
@@ -356,8 +359,7 @@ namespace sparrow::mpl
     //// Miscellaneous ///////////////////////////////
 
     template <class T>
-    struct add_const_lvalue_reference
-        : std::add_lvalue_reference<std::add_const_t<T>>
+    struct add_const_lvalue_reference : std::add_lvalue_reference<std::add_const_t<T>>
     {
     };
 
@@ -424,8 +426,38 @@ namespace sparrow::mpl
     template <class T>
     concept boolean_like = std::is_assignable_v<std::add_lvalue_reference_t<std::decay_t<T>>, bool> and 
                            requires { static_cast<bool>(std::declval<T>()); };
-
+    
     /// Matches range types From whose elements are convertible to elements of range type To.
     template <class From, class To>
     concept convertible_ranges = std::convertible_to<std::ranges::range_value_t<From>, std::ranges::range_value_t<To>>;
+                   
+    // Matches any `unique_ptr` instance.
+    template <typename T>
+    concept unique_ptr = mpl::is_type_instance_of_v<std::remove_reference_t<T>, std::unique_ptr>;
+
+    // Matches any `unique_ptr` or derived instance.
+    template <typename T>
+    concept unique_ptr_or_derived = unique_ptr<T>
+                                    || std::derived_from<T, std::unique_ptr<typename T::element_type>>;
+
+    // Matches any `shared_ptr` instance.
+    template <typename T>
+    concept shared_ptr = mpl::is_type_instance_of_v<std::remove_reference_t<T>, std::shared_ptr>;
+
+    // Matches any `shared_ptr` or derived instance.
+    template <typename T>
+    concept shared_ptr_or_derived = shared_ptr<T>
+                                    || std::derived_from<T, std::shared_ptr<typename T::element_type>>;
+
+    // Matches any `unique_ptr` or `shared_ptr` instance.
+    template <typename T>
+    concept smart_ptr = unique_ptr<T> || shared_ptr<T>;
+
+    // Matches any `unique_ptr` or `shared_ptr` or derived instance.
+    template <typename T>
+    concept smart_ptr_and_derived = shared_ptr_or_derived<T> || unique_ptr_or_derived<T>;
+
+    // Matches any type that is testable
+    template <class T>
+    concept testable = requires(T t) {  t ? true : false; };
 }

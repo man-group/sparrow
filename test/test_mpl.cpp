@@ -14,6 +14,7 @@
 
 #include <concepts>
 #include <list>
+#include <optional>
 #include <variant>
 #include <vector>
 
@@ -132,9 +133,46 @@ namespace sparrow
     class like_a_bool
     {
     public:
-        like_a_bool& operator=(const bool&) { return *this; }
-        explicit operator bool() const { return true; }
+
+        like_a_bool& operator=(const bool&)
+        {
+            return *this;
+        }
+
+        explicit operator bool() const
+        {
+            return true;
+        }
     };
 
     static_assert(mpl::boolean_like<like_a_bool>);
+
+    // unique_ptr
+    static_assert(mpl::unique_ptr<std::unique_ptr<int>>);
+    static_assert(not mpl::unique_ptr<int>);
+    static_assert(not mpl::unique_ptr<std::shared_ptr<int>>);
+    static_assert(not mpl::unique_ptr<std::weak_ptr<int>>);
+    static_assert(not mpl::unique_ptr<int*>);
+
+    // shared_ptr
+    static_assert(mpl::shared_ptr<std::shared_ptr<int>>);
+    static_assert(not mpl::shared_ptr<int>);
+    static_assert(not mpl::shared_ptr<std::unique_ptr<int>>);
+    static_assert(not mpl::shared_ptr<std::weak_ptr<int>>);
+    static_assert(not mpl::shared_ptr<int*>);
+
+    // smart_ptr
+    static_assert(mpl::smart_ptr<std::unique_ptr<int>>);
+    static_assert(mpl::smart_ptr<std::shared_ptr<int>>);
+    static_assert(not mpl::smart_ptr<int>);
+    static_assert(not mpl::smart_ptr<std::weak_ptr<int>>);
+    static_assert(not mpl::smart_ptr<int*>);
+
+    // testable
+    static_assert(mpl::testable<bool>);
+    static_assert(mpl::testable<like_a_bool>);
+    static_assert(mpl::testable<int>);
+    static_assert(mpl::testable<std::optional<int>>);
+    static_assert(mpl::testable<std::shared_ptr<int>>);
+    static_assert(not mpl::testable<std::vector<int>>);
 }
