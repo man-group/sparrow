@@ -424,4 +424,8 @@ namespace sparrow::mpl
     template <class T>
     concept boolean_like = std::is_assignable_v<std::add_lvalue_reference_t<std::decay_t<T>>, bool> and 
                            requires { static_cast<bool>(std::declval<T>()); };
+
+    /// Matches range types From whose elements are convertible to elements of range type To.
+    template <class From, class To>
+    concept convertible_ranges = std::convertible_to<std::ranges::range_value_t<From>, std::ranges::range_value_t<To>>;
 }

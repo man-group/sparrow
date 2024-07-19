@@ -221,7 +221,11 @@ namespace sparrow
 
     private:
 
-        const indexes_layout& get_const_indexes_layout() const;
+        indexes_layout& get_indexes_layout();
+        const indexes_layout& get_indexes_layout() const;
+
+        sub_layout& get_sub_layout();
+        const sub_layout& get_sub_layout() const;
 
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
@@ -355,10 +359,10 @@ namespace sparrow
     auto dictionary_encoded_layout<T, SL, OT>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        const auto index = (*m_indexes_layout)[i];
+        const auto index = get_indexes_layout()[i];
         if (index.has_value())
         {
-            return (*m_sub_layout)[index.value()];
+            return get_sub_layout()[index.value()];
         }
         else
         {
@@ -392,33 +396,54 @@ namespace sparrow
     }
 
     template <std::integral T, class SL, layout_offset OT>
+    typename dictionary_encoded_layout<T, SL, OT>::indexes_layout&
+    dictionary_encoded_layout<T, SL, OT>::get_indexes_layout()
+    {
+        return *(m_indexes_layout.get());
+    }
+
+    template <std::integral T, class SL, layout_offset OT>
     const typename dictionary_encoded_layout<T, SL, OT>::indexes_layout&
-    dictionary_encoded_layout<T, SL, OT>::get_const_indexes_layout() const
+    dictionary_encoded_layout<T, SL, OT>::get_indexes_layout() const
     {
         return *const_cast<const indexes_layout*>(m_indexes_layout.get());
     }
 
     template <std::integral T, class SL, layout_offset OT>
+    typename dictionary_encoded_layout<T, SL, OT>::sub_layout&
+    dictionary_encoded_layout<T, SL, OT>::get_sub_layout()
+    {
+        return *(m_sub_layout.get());
+    }
+
+    template <std::integral T, class SL, layout_offset OT>
+    const typename dictionary_encoded_layout<T, SL, OT>::sub_layout&
+    dictionary_encoded_layout<T, SL, OT>::get_sub_layout() const
+    {
+        return *const_cast<const sub_layout*>(m_sub_layout.get());
+    }
+
+    template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator(get_const_indexes_layout().cbegin(), *m_sub_layout);
+        return const_value_iterator(get_indexes_layout().cbegin(), *m_sub_layout);
     }
 
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::value_cend() const -> const_value_iterator
     {
-        return const_value_iterator(get_const_indexes_layout().cend(), *m_sub_layout);
+        return const_value_iterator(get_indexes_layout().cend(), *m_sub_layout);
     }
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::bitmap_cbegin() const -> const_bitmap_iterator 
     {
-        return const_bitmap_iterator(get_const_indexes_layout().cbegin(), *m_sub_layout);
+        return const_bitmap_iterator(get_indexes_layout().cbegin(), get_sub_layout());
     }
 
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::bitmap_cend() const -> const_bitmap_iterator 
     {
-        return const_bitmap_iterator(get_const_indexes_layout().cend(), *m_sub_layout);
+        return const_bitmap_iterator(get_indexes_layout().cend(), get_sub_layout());
     }
 
     template <std::integral T, class SL, layout_offset OT>
