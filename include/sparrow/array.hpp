@@ -355,7 +355,7 @@ namespace sparrow
         {
             // TODO: Use our own format function
             throw std::out_of_range(
-                "array::at: index out of range for array of size " + std::to_string(size()) + " at index "
+                "sparrow::array::at: index out of range for array of size " + std::to_string(size()) + " at index "
                 + std::to_string(i)
             );
         }
