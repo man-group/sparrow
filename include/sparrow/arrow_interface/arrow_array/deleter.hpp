@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "sparrow/c_interface/c_structures.hpp"
+#include "sparrow/c_interface.hpp"
 
 namespace sparrow
 {

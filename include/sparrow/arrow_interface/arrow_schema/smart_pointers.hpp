@@ -16,8 +16,7 @@
 
 #include <memory>
 
-#include "sparrow/c_interface/arrow_schema/deleter.hpp"
-#include "sparrow/c_interface/c_structures.hpp"
+#include "sparrow/arrow_interface/arrow_schema/deleter.hpp"
 
 namespace sparrow
 {

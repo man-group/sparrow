@@ -98,16 +98,16 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer_adaptor.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer_view.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface/arrow_array_schema_utils.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface/arrow_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface/arrow_array/deleter.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface/arrow_array/private_data.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface/arrow_array/smart_pointers.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface/arrow_schema.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface/arrow_schema/deleter.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface/arrow_schema/private_data.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface/arrow_schema/smart_pointers.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface/c_structures.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/deleter.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/private_data.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/smart_pointers.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/deleter.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/smart_pointers.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/contracts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/data_traits.hpp

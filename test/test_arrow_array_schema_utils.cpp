@@ -14,7 +14,7 @@
 
 #include <cstddef>
 
-#include "sparrow/c_interface/arrow_array_schema_utils.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
 #include "sparrow/buffer.hpp"
 
 #include "doctest/doctest.h"

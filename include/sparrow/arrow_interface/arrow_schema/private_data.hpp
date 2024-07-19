@@ -18,8 +18,8 @@
 #include <string>
 #include <vector>
 
-#include "sparrow/c_interface/arrow_schema/smart_pointers.hpp"
-#include "sparrow/c_interface/arrow_array_schema_utils.hpp"
+#include "sparrow/arrow_interface/arrow_schema/smart_pointers.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
 
 namespace sparrow
 {

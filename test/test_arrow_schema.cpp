@@ -16,7 +16,7 @@
 #include <optional>
 #include <string_view>
 
-#include "sparrow/c_interface/arrow_schema.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 
 #include "doctest/doctest.h"
 

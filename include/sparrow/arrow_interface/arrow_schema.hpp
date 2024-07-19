@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "sparrow/c_interface/arrow_schema/private_data.hpp"
+#include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 
 #include "arrow_array_schema_utils.hpp"
 

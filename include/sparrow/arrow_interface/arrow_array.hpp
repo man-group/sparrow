@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "sparrow/c_interface/arrow_array/private_data.hpp"
+#include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 
 namespace sparrow
 {
