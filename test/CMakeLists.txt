@@ -43,6 +43,7 @@ set(SPARROW_TESTS_SOURCES
     test_array_data_factory.cpp
     test_array.cpp
     test_array_data.cpp
+    test_array_data_to_arrow_array_converters.cpp
     test_arrow_array_schema_utils.cpp
     test_arrow_array.cpp
     test_arrow_schema.cpp
