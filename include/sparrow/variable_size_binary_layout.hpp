@@ -128,9 +128,17 @@ namespace sparrow
         requires mpl::convertible_ranges<T, typename L::inner_value_type>
         bool operator==(const T& rhs) const;
 
+        template <class U = typename L::inner_value_type>
+        requires std::assignable_from<U&, const char*>
+        bool operator==(const char* rhs) const;
+
         template <std::ranges::input_range T>
         requires mpl::convertible_ranges<T, typename L::inner_value_type>
         auto operator<=>(const T& rhs) const;
+
+        template <class U = typename L::inner_value_type>
+        requires std::assignable_from<U&, const char*>
+        auto operator<=>(const char* rhs) const;
 
     private:
 
@@ -412,6 +420,14 @@ namespace sparrow
     }
 
     template <class L>
+    template <class U>
+    requires std::assignable_from<U&, const char*>
+    bool vs_binary_reference<L>::operator==(const char* rhs) const
+    {
+        return operator==(std::string_view(rhs));
+    }
+    
+    template <class L>
     template <std::ranges::input_range T>
     requires mpl::convertible_ranges<T, typename L::inner_value_type>
     auto vs_binary_reference<L>::operator<=>(const T& rhs) const
@@ -419,6 +435,14 @@ namespace sparrow
         return lexicographical_compare_three_way(*this, rhs);
     }
     
+    template <class L>
+    template <class U>
+    requires std::assignable_from<U&, const char*>
+    auto vs_binary_reference<L>::operator<=>(const char* rhs) const
+    {
+        return operator<=>(std::string_view(rhs));
+    }
+
     template <class L>
     auto vs_binary_reference<L>::offset(size_type index) const -> offset_type
     {

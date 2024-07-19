@@ -211,6 +211,8 @@ TEST_SUITE("array")
                 }
                 else if constexpr (std::same_as<T, std::string>)
                 {
+                    std::get<ref>(ar.at(i)).value() = "rod";
+                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), "rod");
                 }
                 else
                 {
@@ -245,6 +247,8 @@ TEST_SUITE("array")
                 }
                 else if constexpr (std::same_as<T, std::string>)
                 {
+                    std::get<ref>(ar[i]).value() = "zombie";
+                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), "zombie");
                 }
                 else
                 {
@@ -279,6 +283,8 @@ TEST_SUITE("array")
                 }
                 else if constexpr (std::same_as<T, std::string>)
                 {
+                    std::get<ref>(*iter).value() = "soad";
+                    CHECK_EQ(std::get<ref>(*iter).value(), "soad");
                 }
                 else
                 {
@@ -324,6 +330,8 @@ TEST_SUITE("array")
                 }
                 else if constexpr (std::same_as<T, std::string>)
                 {
+                    ar.template get<T>(i).value() = "chopsuey";
+                    CHECK_EQ(car.template get<T>(i).value(), "chopsuey");
                 }
                 else
                 {
