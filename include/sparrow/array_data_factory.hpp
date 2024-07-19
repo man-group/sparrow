@@ -57,11 +57,6 @@ namespace sparrow
         };
     }
 
-#if defined(__GNUC__) && not defined(__clang__)
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
-
     /**
      * \brief Creates an array_data object for a fixed-size layout.
      *
@@ -84,10 +79,6 @@ namespace sparrow
             .dictionary = nullptr
         };
     }
-
-#if defined(__GNUC__) && not defined(__clang__)
-#    pragma GCC diagnostic pop
-#endif
 
     /**
      * Checks if all elements in the input range have the same size.
