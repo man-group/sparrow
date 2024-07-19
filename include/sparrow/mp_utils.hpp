@@ -457,7 +457,7 @@ namespace sparrow::mpl
     template <typename T>
     concept smart_ptr_and_derived = shared_ptr_or_derived<T> || unique_ptr_or_derived<T>;
 
-    // Matches any type that has a boolean operator.
+    // Matches any type that is testable
     template <class T>
-    concept has_boolean_operator = requires(T t) { bool(t); };
+    concept testable = requires(T t) {  t ? true : false; };
 }

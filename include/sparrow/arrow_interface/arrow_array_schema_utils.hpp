@@ -105,8 +105,8 @@ namespace sparrow
     template <class T>
         requires std::same_as<T, std::nullopt_t>
                  || (mpl::is_type_instance_of_v<T, std::optional>
-                     && mpl::has_boolean_operator<std::ranges::range_value_t<typename T::value_type>>)
-                 || (std::ranges::range<T> && mpl::has_boolean_operator<std::ranges::range_value_t<T>>)
+                     && mpl::testable<std::ranges::range_value_t<typename T::value_type>>)
+                 || (std::ranges::range<T> && mpl::testable<std::ranges::range_value_t<T>>)
     bool all_element_are_true(const T& elements);
 
     template <class T>
@@ -221,8 +221,8 @@ namespace sparrow
     template <class T>
         requires std::same_as<T, std::nullopt_t>
                  || (mpl::is_type_instance_of_v<T, std::optional>
-                     && mpl::has_boolean_operator<std::ranges::range_value_t<typename T::value_type>>)
-                 || (std::ranges::range<T> && mpl::has_boolean_operator<std::ranges::range_value_t<T>>)
+                     && mpl::testable<std::ranges::range_value_t<typename T::value_type>>)
+                 || (std::ranges::range<T> && mpl::testable<std::ranges::range_value_t<T>>)
     bool all_element_are_true(const T& elements)
     {
         if constexpr (!std::same_as<T, std::nullopt_t>)

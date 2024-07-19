@@ -168,11 +168,11 @@ namespace sparrow
     static_assert(not mpl::smart_ptr<std::weak_ptr<int>>);
     static_assert(not mpl::smart_ptr<int*>);
 
-    // has_boolean_operator
-    static_assert(mpl::has_boolean_operator<bool>);
-    static_assert(mpl::has_boolean_operator<like_a_bool>);
-    static_assert(mpl::has_boolean_operator<int>);
-    static_assert(mpl::has_boolean_operator<std::optional<int>>);
-    static_assert(mpl::has_boolean_operator<std::shared_ptr<int>>);
-    static_assert(not mpl::has_boolean_operator<std::vector<int>>);
+    // testable
+    static_assert(mpl::testable<bool>);
+    static_assert(mpl::testable<like_a_bool>);
+    static_assert(mpl::testable<int>);
+    static_assert(mpl::testable<std::optional<int>>);
+    static_assert(mpl::testable<std::shared_ptr<int>>);
+    static_assert(not mpl::testable<std::vector<int>>);
 }
