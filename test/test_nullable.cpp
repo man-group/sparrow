@@ -16,7 +16,7 @@
 #include <tuple>
 #include <vector>
 
-#include "sparrow/nullable.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 #include "doctest/doctest.h"
 

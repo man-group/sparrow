@@ -15,7 +15,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "sparrow/memory.hpp"
+#include "sparrow/utils/memory.hpp"
 
 #include "doctest/doctest.h"
 

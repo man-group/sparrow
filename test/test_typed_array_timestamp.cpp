@@ -21,8 +21,8 @@
 #include <string>
 #include <type_traits>
 
-#include "sparrow/data_type.hpp"
-#include "sparrow/typed_array.hpp"
+#include "sparrow/array/data_type.hpp"
+#include "sparrow/array/typed_array.hpp"
 
 #include "array_data_creation.hpp"
 #include "doctest/doctest.h"

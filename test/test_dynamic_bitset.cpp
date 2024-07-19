@@ -15,7 +15,7 @@
 #include <cstdint>
 #include <iostream>
 
-#include "sparrow/dynamic_bitset.hpp"
+#include "sparrow/buffer/dynamic_bitset.hpp"
 
 #include "doctest/doctest.h"
 

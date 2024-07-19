@@ -15,7 +15,7 @@
 #include <array>
 #include <cstdint>
 
-#include "sparrow/buffer_adaptor.hpp"
+#include "sparrow/buffer/buffer_adaptor.hpp"
 
 #include "doctest/doctest.h"
 

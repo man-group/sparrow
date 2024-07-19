@@ -20,12 +20,12 @@
 #include <limits>
 #include <utility>
 
-#include "sparrow/array_data.hpp"
-#include "sparrow/buffer.hpp"
-#include "sparrow/contracts.hpp"
-#include "sparrow/dynamic_bitset.hpp"
-#include "sparrow/iterator.hpp"
-#include "sparrow/nullable.hpp"
+#include "sparrow/array/array_data.hpp"
+#include "sparrow/buffer/buffer.hpp"
+#include "sparrow/buffer/dynamic_bitset.hpp"
+#include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
 {

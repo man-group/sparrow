@@ -19,7 +19,7 @@
 #include <exception>
 #include <type_traits>
 
-#include "sparrow/mp_utils.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 #if defined(SPARROW_CONSTEXPR)
 #error "SPARROW_CONSTEXPR already defined"

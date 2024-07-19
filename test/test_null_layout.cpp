@@ -14,8 +14,8 @@
 
 #include <numeric>
 
-#include "sparrow/array_data_factory.hpp"
-#include "sparrow/null_layout.hpp"
+#include "sparrow/array/array_data_factory.hpp"
+#include "sparrow/layout/null_layout.hpp"
 
 #include "doctest/doctest.h"
 

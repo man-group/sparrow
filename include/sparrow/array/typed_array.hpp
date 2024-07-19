@@ -22,13 +22,13 @@
 #include <type_traits>
 #include <unordered_set>
 
-#include "sparrow/algorithm.hpp"
-#include "sparrow/array_data.hpp"
-#include "sparrow/array_data_factory.hpp"
-#include "sparrow/contracts.hpp"
-#include "sparrow/data_traits.hpp"
-#include "sparrow/data_type.hpp"
-#include "sparrow/dynamic_bitset.hpp"
+#include "sparrow/array/array_data.hpp"
+#include "sparrow/array/array_data_factory.hpp"
+#include "sparrow/array/data_traits.hpp"
+#include "sparrow/array/data_type.hpp"
+#include "sparrow/buffer/dynamic_bitset.hpp"
+#include "sparrow/utils/algorithm.hpp"
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {

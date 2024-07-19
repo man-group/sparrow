@@ -19,10 +19,10 @@
 #include <ranges>
 #include <utility>
 
-#include "sparrow/buffer.hpp"
-#include "sparrow/buffer_view.hpp"
-#include "sparrow/contracts.hpp"
-#include "sparrow/mp_utils.hpp"
+#include "sparrow/buffer/buffer.hpp"
+#include "sparrow/buffer/buffer_view.hpp"
+#include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {

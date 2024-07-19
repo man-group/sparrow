@@ -16,8 +16,8 @@
 #include <cstdio>
 #include <vector>
 
-#include "sparrow/array_data_factory.hpp"
-#include "sparrow/variable_size_binary_layout.hpp"
+#include "sparrow/array/array_data_factory.hpp"
+#include "sparrow/layout/variable_size_binary_layout.hpp"
 
 #include "doctest/doctest.h"
 

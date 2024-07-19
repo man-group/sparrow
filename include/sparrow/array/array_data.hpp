@@ -18,11 +18,11 @@
 #include <optional>
 #include <vector>
 
-#include "sparrow/buffer.hpp"
-#include "sparrow/contracts.hpp"
-#include "sparrow/data_type.hpp"
-#include "sparrow/dynamic_bitset.hpp"
-#include "sparrow/memory.hpp"
+#include "sparrow/array/data_type.hpp"
+#include "sparrow/buffer/buffer.hpp"
+#include "sparrow/buffer/dynamic_bitset.hpp"
+#include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/memory.hpp"
 
 namespace sparrow
 {

@@ -21,8 +21,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "sparrow/memory.hpp"
-#include "sparrow/mp_utils.hpp"
+#include "sparrow/utils/memory.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {

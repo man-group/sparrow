@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <sparrow/data_traits.hpp>
+#include <sparrow/array/data_traits.hpp>
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Opt-in support for custom C++ representations of arrow data types.

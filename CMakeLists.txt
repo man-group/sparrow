@@ -29,7 +29,7 @@ set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # Versionning
 # ===========
 
-file(STRINGS "${SPARROW_INCLUDE_DIR}/sparrow/sparrow_version.hpp" sparrow_version_defines
+file(STRINGS "${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp" sparrow_version_defines
      REGEX "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH)")
 foreach(ver ${sparrow_version_defines})
     if(ver MATCHES "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
@@ -90,14 +90,15 @@ endif()
 # =====
 
 set(SPARROW_HEADERS
-    ${SPARROW_INCLUDE_DIR}/sparrow/algorithm.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/allocator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array_data_factory.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer_adaptor.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer_view.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_concepts.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_factory.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array/data_traits.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array/data_type.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array/typed_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/deleter.hpp
@@ -107,21 +108,23 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/deleter.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/smart_pointers.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/config.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/contracts.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/data_traits.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/data_type.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/dynamic_bitset.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/fixed_size_layout.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/iterator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/memory.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/mp_utils.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/null_layout.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/nullable.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/sparrow_version.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/typed_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_layout.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/allocator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_adaptor.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_view.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/config/config.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_layout.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_size_layout.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/null_layout.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/algorithm.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/contracts.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/iterator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/memory.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/mp_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/nullable.hpp
 
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
 )
@@ -169,8 +172,8 @@ install(TARGETS sparrow
 export(EXPORT ${PROJECT_NAME}-targets
        FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
 
-   install(FILES ${SPARROW_HEADERS}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sparrow)
+install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 set(SPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
     STRING "install path for sparrowConfig.cmake")

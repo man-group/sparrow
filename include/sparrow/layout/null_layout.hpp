@@ -18,11 +18,11 @@
 #include <functional>
 #include <ranges>
 
-#include "sparrow/array_data.hpp"
-#include "sparrow/contracts.hpp"
-#include "sparrow/data_type.hpp"
-#include "sparrow/iterator.hpp"
-#include "sparrow/nullable.hpp"
+#include "sparrow/array/array_data.hpp"
+#include "sparrow/array/data_type.hpp"
+#include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
 {

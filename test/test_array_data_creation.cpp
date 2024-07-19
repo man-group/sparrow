@@ -15,7 +15,7 @@
 #include <compare>
 #include <vector>
 
-#include "sparrow/algorithm.hpp"
+#include "sparrow/utils/algorithm.hpp"
 
 #include "array_data_creation.hpp"
 #include "doctest/doctest.h"
