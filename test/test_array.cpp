@@ -196,6 +196,32 @@ TEST_SUITE("array")
             CHECK_EQ(ar.size(), array_size);
         }
 
+        SUBCASE("at")
+        {
+            using ref = typed_array<T>::reference;
+            using const_ref = typed_array<T>::const_reference;
+            auto ar = make_test_array<T>();
+            const auto& car = ar;
+            for (std::size_t i = 0; i < ar.size(); ++i)
+            {
+                if constexpr (std::same_as<T , bool>)
+                {
+                    std::get<ref>(ar.at(i)).value() = false;
+                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), false);
+                }
+                else if constexpr (std::same_as<T, std::string>)
+                {
+                    std::get<ref>(ar.at(i)).value() = "rod";
+                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), "rod");
+                }
+                else
+                {
+                    std::get<ref>(ar.at(i)).value() *= 100;
+                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), to_value_type<T>(100 * (i + offset)));
+                }
+            }
+        }
+        
         SUBCASE("const at")
         {
             using const_ref = typed_array<T>::const_reference;
@@ -203,6 +229,32 @@ TEST_SUITE("array")
             for (std::size_t i = 0; i < ar.size(); ++i)
             {
                 CHECK_EQ(std::get<const_ref>(ar.at(i)).value(), to_value_type<T>(i + offset));
+            }
+        }
+
+        SUBCASE("operator[]")
+        {
+            using ref = typed_array<T>::reference;
+            using const_ref = typed_array<T>::const_reference;
+            auto ar = make_test_array<T>();
+            const auto& car = ar;
+            for (std::size_t i = 0; i < ar.size(); ++i)
+            {
+                if constexpr (std::same_as<T , bool>)
+                {
+                    std::get<ref>(ar[i]).value() = false;
+                    CHECK_EQ(std::get<const_ref>(car[i]).value(), false);
+                }
+                else if constexpr (std::same_as<T, std::string>)
+                {
+                    std::get<ref>(ar[i]).value() = "zombie";
+                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), "zombie");
+                }
+                else
+                {
+                    std::get<ref>(ar[i]).value() *= 100;
+                    CHECK_EQ(std::get<const_ref>(car[i]).value(), to_value_type<T>(100 * (i + offset)));
+                }
             }
         }
 
@@ -214,6 +266,34 @@ TEST_SUITE("array")
             {
                 CHECK_EQ(std::get<const_ref>(ar[i]).value(), to_value_type<T>(i + offset));
             }
+        }
+
+        SUBCASE("iterators")
+        {
+            auto ar = make_test_array<T>();
+            using ref = typed_array<T>::reference;
+
+            auto iter = ar.begin();
+            for (std::size_t i = 0; i < ar.size(); ++iter, ++i)
+            {
+                if constexpr (std::same_as<T, bool>)
+                {
+                    std::get<ref>(*iter).value() = false;
+                    CHECK_EQ(std::get<ref>(*iter).value(), false);
+                }
+                else if constexpr (std::same_as<T, std::string>)
+                {
+                    std::get<ref>(*iter).value() = "soad";
+                    CHECK_EQ(std::get<ref>(*iter).value(), "soad");
+                }
+                else
+                {
+                    std::get<ref>(*iter).value() *= 100;
+                    CHECK_EQ(std::get<ref>(*iter).value(), to_value_type<T>(100 * (i + offset)));
+                }
+            }
+
+            CHECK_EQ(iter, ar.end());
         }
 
         SUBCASE("const iterators")
@@ -235,6 +315,30 @@ TEST_SUITE("array")
             }
 
             CHECK_EQ(iter, iter_end);
+        }
+
+        SUBCASE("get")
+        {
+            auto ar = make_test_array<T>();
+            const auto& car = ar;
+            for (std::size_t i = 0; i < ar.size(); ++i)
+            {
+                if constexpr (std::same_as<T , bool>)
+                {
+                    ar.template get<T>(i).value() = false;
+                    CHECK_EQ(car.template get<T>(i).value(), false);
+                }
+                else if constexpr (std::same_as<T, std::string>)
+                {
+                    ar.template get<T>(i).value() = "chopsuey";
+                    CHECK_EQ(car.template get<T>(i).value(), "chopsuey");
+                }
+                else
+                {
+                    ar.template get<T>(i).value() *= 100;
+                    CHECK_EQ(car.template get<T>(i).value(), to_value_type<T>(100 * (i + offset)));
+                }
+            }
         }
     }
 
