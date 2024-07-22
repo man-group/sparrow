@@ -165,9 +165,9 @@ namespace sparrow
      *
      * Let's consider the array of string ['please', 'allow', 'me', 'to', 'introduce', 'myself'].
      * The internal buffers will be:
-     * - offset (i.e storage().buffers[0]: stored in the index `0` of array_data buffers):
+     * - offset (i.e buffers(storage())[0]: stored in the index `0` of array_data buffers):
      * [0, 6, 11, 13, 15, 24, 30]
-     * - data (i.e storage().buffers[1]: stored in the index `1` of array_data buffers):
+     * - data (i.e buffers(storage())[1]: stored in the index `1` of array_data buffers):
      * ['p','l','e','a','s','e','a','l','l','o','w','m','e','t','o','i','n','t','r','o','d','u','c','e','m','y','s','e','l','f']
      *
      * @tparam T the type of the data stored in the data buffer, not its byte representation.
@@ -176,7 +176,7 @@ namespace sparrow
      * @tparam DS tthe type of the structure holding the data.
      * @tparam OT type of the offset values. Must be std::int64_t or std::int32_t.
      */
-    template <std::ranges::sized_range T, class CR, class DS = array_data, layout_offset OT = std::int64_t>
+    template <std::ranges::sized_range T, class CR, data_storage DS = array_data, layout_offset OT = std::int64_t>
     class variable_size_binary_layout
     {
     public:
@@ -462,79 +462,79 @@ namespace sparrow
      * variable_size_binary_layout implementation *
      **********************************************/
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     variable_size_binary_layout<T, CR, DS, OT>::variable_size_binary_layout(data_storage_type& data)
         : m_data(data)
     {
-        SPARROW_ASSERT_TRUE(storage().buffers.size() == 2u);
+        SPARROW_ASSERT_TRUE(buffers(storage()).size() == 2u);
         // TODO: templatize back and front in buffer and uncomment the following line
-        // SPARROW_ASSERT_TRUE(storage().buffers[0].size() == 0u || storage().buffers[0].back() ==
-        // storage().buffers[1].size());
+        // SPARROW_ASSERT_TRUE(buffers(storage())[0].size() == 0u || buffers(storage())[0].back() ==
+        // buffers(storage())[1].size());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     void variable_size_binary_layout<T, CR, DS, OT>::rebind_data(data_storage_type& data)
     {
         m_data = data;
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::size() const -> size_type
     {
-        SPARROW_ASSERT_TRUE(storage().offset <= storage().length);
-        return static_cast<size_type>(storage().length - storage().offset);
+        SPARROW_ASSERT_TRUE(sparrow::offset(storage()) <= length(storage()));
+        return static_cast<size_type>(length(storage()) - sparrow::offset(storage()));
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::operator[](size_type i) -> reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         return reference(value(i), has_value(i));
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         return const_reference(value(i), has_value(i));
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::begin() -> iterator
     {
         return iterator(value_begin(), bitmap_begin());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::end() -> iterator
     {
         return iterator(value_end(), bitmap_end());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::cbegin() const -> const_iterator
     {
         return const_iterator(value_cbegin(), bitmap_cbegin());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::cend() const -> const_iterator
     {
         return const_iterator(value_cend(), bitmap_cend());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::bitmap() const -> const_bitmap_range
     {
         return std::ranges::subrange(bitmap_cbegin(), bitmap_cend());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     template <std::ranges::sized_range U>
     requires mpl::convertible_ranges<U, T>
     void variable_size_binary_layout<T, CR, DS, OT>::assign(U&& rhs, size_type index)
     {
-        typename data_storage_type::buffer_type& data_buffer = storage().buffers[1];
+        typename data_storage_type::buffer_type& data_buffer = buffers(storage())[1];
         const auto layout_data_length = size();
 
         const auto offset_beg = *offset(index);
@@ -572,83 +572,83 @@ namespace sparrow
         }
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::values() const -> const_value_range
     {
         return std::ranges::subrange(value_cbegin(), value_cend());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::bitmap_begin() -> bitmap_iterator
     {
-        return storage().bitmap.begin() + storage().offset;
+        return sparrow::bitmap(storage()).begin() + sparrow::offset(storage());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::bitmap_end() -> bitmap_iterator
     {
-        return storage().bitmap.end();
+        return sparrow::bitmap(storage()).end();
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::bitmap_cbegin() const -> const_bitmap_iterator
     {
-        return storage().bitmap.cbegin() + storage().offset;
+        return sparrow::bitmap(storage()).cbegin() + sparrow::offset(storage());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::bitmap_cend() const -> const_bitmap_iterator
     {
-        return storage().bitmap.cend();
+        return sparrow::bitmap(storage()).cend();
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::value_begin() -> value_iterator
     {
         return value_iterator(this, 0u);
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::value_end() -> value_iterator
     {
         return value_iterator(this, size());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator(this, 0u);
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(this, size());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::has_value(size_type i) -> bitmap_reference
     {
-        SPARROW_ASSERT_TRUE(storage().offset >= 0);
-        const size_type pos = i + static_cast<size_type>(storage().offset);
-        return storage().bitmap[pos];
+        SPARROW_ASSERT_TRUE(sparrow::offset(storage()) >= 0);
+        const size_type pos = i + static_cast<size_type>(sparrow::offset(storage()));
+        return sparrow::bitmap(storage())[pos];
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::has_value(size_type i) const -> bitmap_const_reference
     {
-        SPARROW_ASSERT_TRUE(storage().offset >= 0);
-        const size_type pos = i + static_cast<size_type>(storage().offset);
-        return storage().bitmap[pos];
+        SPARROW_ASSERT_TRUE(sparrow::offset(storage()) >= 0);
+        const size_type pos = i + static_cast<size_type>(sparrow::offset(storage()));
+        return sparrow::bitmap(storage())[pos];
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::value(size_type i) -> inner_reference
     {
         return inner_reference(this, i);
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::value(size_type i) const -> inner_const_reference
     {
         const long long offset_i = *offset(i);
@@ -660,55 +660,55 @@ namespace sparrow
         return inner_const_reference(pointer1, pointer2);
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::offset(size_type i) -> offset_iterator
     {
-        SPARROW_ASSERT_FALSE(storage().buffers.empty());
-        return storage().buffers[0].template data<OT>() + storage().offset + i;
+        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
+        return buffers(storage())[0].template data<OT>() + sparrow::offset(storage()) + i;
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::offset_end() -> offset_iterator
     {
-        SPARROW_ASSERT_FALSE(storage().buffers.empty());
-        return storage().buffers[0].template data<OT>() + storage().length;
+        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
+        return buffers(storage())[0].template data<OT>() + length(storage());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::data(size_type i) -> data_iterator
     {
-        SPARROW_ASSERT_FALSE(storage().buffers.empty());
-        return storage().buffers[1].template data<data_type>() + i;
+        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
+        return buffers(storage())[1].template data<data_type>() + i;
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::offset(size_type i) const -> const_offset_iterator
     {
-        SPARROW_ASSERT_FALSE(storage().buffers.empty());
-        return storage().buffers[0].template data<OT>() + storage().offset + i;
+        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
+        return buffers(storage())[0].template data<OT>() + sparrow::offset(storage()) + i;
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::offset_end() const -> const_offset_iterator
     {
-        SPARROW_ASSERT_FALSE(storage().buffers.empty());
-        return storage().buffers[0].template data<OT>() + storage().length;
+        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
+        return buffers(storage())[0].template data<OT>() + length(storage());
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::data(size_type i) const -> const_data_iterator
     {
-        SPARROW_ASSERT_FALSE(storage().buffers.empty());
-        return storage().buffers[1].template data<data_type>() + i;
+        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
+        return buffers(storage())[1].template data<data_type>() + i;
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::storage() -> data_storage_type&
     {
         return m_data.get();
     }
 
-    template <std::ranges::sized_range T, class CR, class DS, layout_offset OT>
+    template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::storage() const -> const data_storage_type& 
     {
         return m_data.get();

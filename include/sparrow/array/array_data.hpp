@@ -52,6 +52,38 @@ namespace sparrow
         value_ptr<array_data> dictionary;
     };
 
+    data_descriptor type_descriptor(const array_data& data);
+    array_data::length_type length(const array_data& data);
+    std::int64_t offset(const array_data& data);
+
+    array_data::bitmap_type& bitmap(array_data& data);
+    const array_data::bitmap_type& bitmap(const array_data& data);
+
+    std::vector<array_data::buffer_type>& buffers(array_data& data);
+    const std::vector<array_data::buffer_type>& buffers(const array_data& data);
+
+    std::vector<array_data>& child_data(array_data& data);
+    const std::vector<array_data>& child_data(const array_data& data);
+
+    value_ptr<array_data>& dictionary(array_data& data);
+    const value_ptr<array_data>& dictionary(const array_data& data);
+
+    /**
+     * Concept for a structure that can be used as a data storage in the layout and the
+     * typed_array class.
+     */
+    template <class T>
+    concept data_storage = requires(T t)
+    {
+        type_descriptor(t);
+        length(t);
+        offset(t);
+        bitmap(t);
+        buffers(t);
+        child_data(t);
+        dictionary(t);
+    };
+
     /**
      * Layout iterator class
      *
@@ -99,6 +131,65 @@ namespace sparrow
         friend class iterator_access;
     };
 
+    /***********************************
+     * getter functions for array_data *
+     ***********************************/
+
+    inline data_descriptor type_descriptor(const array_data& data)
+    {
+        return data.type;
+    }
+
+    inline array_data::length_type length(const array_data& data)
+    {
+        return data.length;
+    }
+
+    inline std::int64_t offset(const array_data& data)
+    {
+        return data.offset;
+    }
+
+    inline array_data::bitmap_type& bitmap(array_data& data)
+    {
+        return data.bitmap;
+    }
+
+    inline const array_data::bitmap_type& bitmap(const array_data& data)
+    {
+        return data.bitmap;
+    }
+
+    inline std::vector<array_data::buffer_type>& buffers(array_data& data)
+    {
+        return data.buffers;
+    }
+
+    inline const std::vector<array_data::buffer_type>& buffers(const array_data& data)
+    {
+        return data.buffers;
+    }
+
+    inline std::vector<array_data>& child_data(array_data& data)
+    {
+        return data.child_data;
+    }
+
+    inline const std::vector<array_data>& child_data(const array_data& data)
+    {
+        return data.child_data;
+    }
+
+    inline value_ptr<array_data>& dictionary(array_data& data)
+    {
+        return data.dictionary;
+    }
+
+    inline const value_ptr<array_data>& dictionary(const array_data& data)
+    {
+        return data.dictionary;
+    }
+    
     /**********************************
      * layout_iterator implementation *
      **********************************/

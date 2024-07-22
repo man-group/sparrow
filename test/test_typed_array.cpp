@@ -31,7 +31,7 @@ using sparrow::test::to_value_type;
 namespace
 {
     constexpr size_t array_size = 10;
-    constexpr size_t offset = 1;
+    constexpr size_t array_offset = 1;
     const std::vector<size_t> false_bitmap = {9};
 }
 
@@ -79,14 +79,14 @@ TEST_SUITE("typed_array")
 
         SUBCASE("constructor with parameter")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset);
             const typed_array<T> ta{array_data};
-            CHECK_EQ(ta.size(), array_size - offset);
+            CHECK_EQ(ta.size(), array_size - array_offset);
         }
 
         SUBCASE("copy constructor")
         {
-            auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset);
+            auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset);
             typed_array<T> ta1{array_data};
             typed_array<T> ta2(ta1);
 
@@ -95,7 +95,7 @@ TEST_SUITE("typed_array")
 
         SUBCASE("move constructor")
         {
-            auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset);
+            auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset);
             typed_array<T> ta1{array_data};
             typed_array<T> ta2(ta1);
             typed_array<T> ta3(std::move(ta2));
@@ -105,10 +105,10 @@ TEST_SUITE("typed_array")
 
         SUBCASE("copy assignment")
         {
-            auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset);
+            auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset);
             typed_array<T> ta1{array_data};
 
-            auto array_data2 = sparrow::test::make_test_array_data<T>(array_size + 8u, offset);
+            auto array_data2 = sparrow::test::make_test_array_data<T>(array_size + 8u, array_offset);
             typed_array<T> ta2{array_data2};
 
             CHECK_NE(ta1, ta2);
@@ -119,11 +119,11 @@ TEST_SUITE("typed_array")
 
         SUBCASE("move assignment")
         {
-            auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset);
+            auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset);
             typed_array<T> ta1{array_data};
             typed_array<T> ta3{ta1};
 
-            auto array_data2 = sparrow::test::make_test_array_data<T>(array_size + 8u, offset);
+            auto array_data2 = sparrow::test::make_test_array_data<T>(array_size + 8u, array_offset);
             typed_array<T> ta2{array_data2};
 
             CHECK_NE(ta1, ta2);
@@ -136,33 +136,33 @@ TEST_SUITE("typed_array")
 
         SUBCASE("at")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             typed_array<T> ta{array_data};
             for (typename typed_array<T>::size_type i = 0; i < ta.size() - 1; ++i)
             {
-                CHECK_EQ(ta.at(i).value(), to_value_type<T>(i + offset));
+                CHECK_EQ(ta.at(i).value(), to_value_type<T>(i + array_offset));
             }
-            CHECK_FALSE(ta.at(false_bitmap[0] - offset).has_value());
+            CHECK_FALSE(ta.at(false_bitmap[0] - array_offset).has_value());
 
             CHECK_THROWS_AS(ta.at(ta.size()), std::out_of_range);
         }
 
         SUBCASE("const at")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             for (typename typed_array<T>::size_type i = 0; i < ta.size() - 1; ++i)
             {
-                CHECK_EQ(ta.at(i).value(), to_value_type<T>(i + offset));
+                CHECK_EQ(ta.at(i).value(), to_value_type<T>(i + array_offset));
             }
-            CHECK_FALSE(ta.at(false_bitmap[0] - offset).has_value());
+            CHECK_FALSE(ta.at(false_bitmap[0] - array_offset).has_value());
 
             CHECK_THROWS_AS(ta.at(ta.size()), std::out_of_range);
         }
 
         SUBCASE("operator[]")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             typed_array<T> ta{array_data};
             for (typename typed_array<T>::size_type i = 0; i < ta.size() - 1; ++i)
             {
@@ -173,39 +173,39 @@ TEST_SUITE("typed_array")
 
         SUBCASE("const operator[]")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             for (typename typed_array<T>::size_type i = 0; i < ta.size() - 1; ++i)
             {
-                CHECK_EQ(ta[i].value(), to_value_type<T>(i + offset));
+                CHECK_EQ(ta[i].value(), to_value_type<T>(i + array_offset));
             }
-            CHECK_FALSE(ta[false_bitmap[0] - offset].has_value());
+            CHECK_FALSE(ta[false_bitmap[0] - array_offset].has_value());
         }
 
         SUBCASE("front")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             typed_array<T> ta{array_data};
             CHECK_EQ(ta.front().value(), to_value_type<T>(1));
         }
 
         SUBCASE("const front")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             CHECK_EQ(ta.front().value(), to_value_type<T>(1));
         }
 
         SUBCASE("back")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             typed_array<T> ta{array_data};
             CHECK_FALSE(ta.back().has_value());
         }
 
         SUBCASE("const back")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             CHECK_FALSE(ta.back().has_value());
         }
@@ -214,7 +214,7 @@ TEST_SUITE("typed_array")
 
         SUBCASE("const iterators")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
 
             auto iter = ta.cbegin();
@@ -244,10 +244,10 @@ TEST_SUITE("typed_array")
 
         SUBCASE("bitmap")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             const auto bitmap = ta.bitmap();
-            REQUIRE_EQ(bitmap.size(), array_size - offset);
+            REQUIRE_EQ(bitmap.size(), array_size - array_offset);
             for (int32_t i = 0; i < static_cast<int32_t>(bitmap.size()) - 1; ++i)
             {
                 CHECK(bitmap[i]);
@@ -257,10 +257,10 @@ TEST_SUITE("typed_array")
 
         SUBCASE("values")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             const auto values = ta.values();
-            CHECK_EQ(values.size(), array_size - offset);
+            CHECK_EQ(values.size(), array_size - array_offset);
             for (int32_t i = 0; i < static_cast<int32_t>(values.size()); ++i)
             {
                 CHECK_EQ(values[i], to_value_type<T>(i + 1));
@@ -271,7 +271,7 @@ TEST_SUITE("typed_array")
 
         SUBCASE("empty")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             CHECK_FALSE(ta.empty());
 
@@ -282,20 +282,20 @@ TEST_SUITE("typed_array")
 
         SUBCASE("size")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
-            CHECK_EQ(ta.size(), array_size - offset);
+            CHECK_EQ(ta.size(), array_size - array_offset);
         }
 
         // Operators
 
         SUBCASE("<=>")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             CHECK_EQ(ta <=> ta, std::strong_ordering::equal);
 
-            const auto array_data_less = sparrow::test::make_test_array_data<T>(array_size - 1, offset - 1, {8});
+            const auto array_data_less = sparrow::test::make_test_array_data<T>(array_size - 1, array_offset - 1, {8});
             const typed_array<T> typed_array_less(array_data_less);
             CHECK_EQ(ta <=> typed_array_less, std::strong_ordering::greater);
             CHECK_EQ(typed_array_less <=> ta, std::strong_ordering::less);
@@ -303,13 +303,13 @@ TEST_SUITE("typed_array")
 
         SUBCASE("==")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             const typed_array<T> ta_same{array_data};
             CHECK(ta == ta);
             CHECK(ta == ta_same);
 
-            const auto array_data_less = sparrow::test::make_test_array_data<T>(array_size - 1, offset - 1, {8});
+            const auto array_data_less = sparrow::test::make_test_array_data<T>(array_size - 1, array_offset - 1, {8});
             const ::typed_array<T> ta_less{array_data_less};
             CHECK_FALSE(ta == ta_less);
             CHECK_FALSE(ta_less == ta);
@@ -317,13 +317,13 @@ TEST_SUITE("typed_array")
 
         SUBCASE("!=")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             const typed_array<T> ta_same{array_data};
             CHECK_FALSE(ta != ta);
             CHECK_FALSE(ta != ta_same);
 
-            const auto array_data_less = sparrow::test::make_test_array_data<T>(array_size - 1, offset - 1, {8});
+            const auto array_data_less = sparrow::test::make_test_array_data<T>(array_size - 1, array_offset - 1, {8});
             const typed_array<T> ta_less{array_data_less};
             CHECK(ta != ta_less);
             CHECK(ta_less != ta);
@@ -331,13 +331,13 @@ TEST_SUITE("typed_array")
 
         SUBCASE("<")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             const typed_array<T> ta_same{array_data};
             CHECK_FALSE(ta < ta);
             CHECK_FALSE(ta < ta_same);
 
-            const auto array_data_less = sparrow::test::make_test_array_data<T>(array_size - 1, offset - 1, {8});
+            const auto array_data_less = sparrow::test::make_test_array_data<T>(array_size - 1, array_offset - 1, {8});
             const typed_array<T> ta_less{array_data_less};
             CHECK_FALSE(ta < ta_less);
             CHECK(ta_less < ta);
@@ -345,13 +345,13 @@ TEST_SUITE("typed_array")
 
         SUBCASE(">")
         {
-            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset, false_bitmap);
+            const auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset, false_bitmap);
             const typed_array<T> ta{array_data};
             const typed_array<T> ta_same{array_data};
             CHECK_FALSE(ta > ta);
             CHECK_FALSE(ta > ta_same);
 
-            const auto array_data_less = sparrow::test::make_test_array_data<T>(array_size - 1, offset - 1, {8});
+            const auto array_data_less = sparrow::test::make_test_array_data<T>(array_size - 1, array_offset - 1, {8});
             const ::typed_array<T> ta_less{array_data_less};
             CHECK(ta > ta_less);
             CHECK_FALSE(ta_less > ta);

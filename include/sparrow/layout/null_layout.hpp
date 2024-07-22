@@ -72,7 +72,7 @@ namespace sparrow
      * @tparam DS The type for the structure holding the data. Default to
      *            array_data.
      */
-    template <class DS = array_data>
+    template <data_storage DS = array_data>
     class null_layout
     {
     public:
@@ -178,89 +178,89 @@ namespace sparrow
      * null_layout implementation *
      ******************************/
 
-    template <class DS>
+    template <data_storage DS>
     null_layout<DS>::null_layout(data_storage_type& data)
         : m_data(data)
     {
-        SPARROW_ASSERT_TRUE(storage().buffers.size() == 0u);
+        SPARROW_ASSERT_TRUE(buffers(storage()).size() == 0u);
     }
 
-    template <class DS>
+    template <data_storage DS>
     void null_layout<DS>::rebind_data(data_storage_type& data)
     {
-        SPARROW_ASSERT_TRUE(storage().buffers.size() == 0u);
+        SPARROW_ASSERT_TRUE(buffers(storage()).size() == 0u);
         m_data = data;
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::size() const -> size_type
     {
-        return static_cast<size_type>(storage().length);
+        return static_cast<size_type>(length(storage()));
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::operator[](size_type i) -> reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         return *(begin());
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         return *(cbegin());
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::begin() -> iterator
     {
         return iterator(0);
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::end() -> iterator
     {
         return iterator(ssize());
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::cbegin() const -> const_iterator
     {
         return const_iterator(0);
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::cend() const -> const_iterator
     {
         return const_iterator(ssize());
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::values() const -> const_value_range
     {
         return std::ranges::subrange(const_value_iterator(0), const_value_iterator(ssize()));
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::bitmap() const -> const_bitmap_range
     {
         return std::ranges::subrange(const_bitmap_iterator(0), const_bitmap_iterator(ssize()));
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::ssize() const -> difference_type
     {
         return static_cast<difference_type>(size());
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::storage() -> data_storage_type&
     {
         return m_data.get();
     }
 
-    template <class DS>
+    template <data_storage DS>
     auto null_layout<DS>::storage() const -> const data_storage_type&
     {
         return m_data.get();

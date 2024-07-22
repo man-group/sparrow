@@ -74,4 +74,5 @@ namespace sparrow
      */
     template <class R>
     concept constant_range_for_array_data = mpl::constant_range<R> && range_for_array_data<R>;
+
 }  // namespace sparrow
