@@ -23,6 +23,13 @@
 
 namespace sparrow
 {
+    static_assert(arrow_layout<fixed_size_layout<int>>);
+    static_assert(arrow_layout<variable_size_binary_layout<std::string, const std::string_view>>);
+    static_assert(arrow_layout<dictionary_encoded_layout<
+                      size_t,
+                      variable_size_binary_layout<std::string, const std::string_view>>>);
+    static_assert(!arrow_layout<std::string>);
+
     TEST_SUITE("array_data_factory")
     {
         TEST_CASE("fixed_size_layout")

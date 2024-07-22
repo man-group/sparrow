@@ -217,6 +217,11 @@ namespace sparrow
     template <class T>
     struct arrow_traits;
 
+    namespace detail
+    {
+        template <template <class> class>
+        struct accepts_template {};
+    }
     /// Matches valid and complete `arrow_traits` specializations for type T.
     /// Every type that needs to be compatible with this library's interface must
     /// provide a specialization of `arrow_traits`
@@ -231,7 +236,7 @@ namespace sparrow
         typename T::value_type;
 
         /// The arrow (binary) layout to use by default for representing a set of data for that type.
-        typename T::default_layout;
+        typename detail::accepts_template<T::template default_layout>;
 
         // TODO: add more interface requirements on the traits here
         // TODO: add conversion operations between bytes and the value type

@@ -70,71 +70,6 @@ namespace sparrow
     value_ptr<array_data>& dictionary(array_data& data);
     const value_ptr<array_data>& dictionary(const array_data& data);
 
-    /**
-     * Concept for a structure that can be used as a data storage in the layout and the
-     * typed_array class.
-     */
-    template <class T>
-    concept data_storage = requires(const T t, std::size_t i)
-    {
-        { type_descriptor(t) } -> std::same_as<data_descriptor>;
-        { length(t) } -> std::same_as<std::int64_t>;
-        { offset(t) } -> std::same_as<std::int64_t>;
-        { bitmap(t) } -> std::ranges::random_access_range;
-        { buffers_size(t) } -> std::same_as<std::size_t>;
-        { buffer_at(t, i) } -> std::ranges::random_access_range;
-        { child_data_size(t) } -> std::same_as<std::size_t>;
-        child_data_at(t, i);
-        dictionary(t);
-    };
-
-    /**
-     * Layout iterator class
-     *
-     * Relies on a layout's couple of value iterator and bitmap iterator to
-     * return reference proxies when it is dereferenced.
-     */
-    template <class L, bool is_const>
-    class layout_iterator : public iterator_base<
-                                layout_iterator<L, is_const>,
-                                mpl::constify_t<typename L::value_type, is_const>,
-                                typename L::iterator_tag,
-                                std::conditional_t<is_const, typename L::const_reference, typename L::reference>>
-    {
-    public:
-
-        using self_type = layout_iterator<L, is_const>;
-        using base_type = iterator_base<
-            self_type,
-            mpl::constify_t<typename L::value_type, is_const>,
-            typename L::iterator_tag,
-            std::conditional_t<is_const, typename L::const_reference, typename L::reference>>;
-        using reference = typename base_type::reference;
-        using difference_type = typename base_type::difference_type;
-
-        using value_iterator = std::conditional_t<is_const, typename L::const_value_iterator, typename L::value_iterator>;
-
-        using bitmap_iterator = std::conditional_t<is_const, typename L::const_bitmap_iterator, typename L::bitmap_iterator>;
-
-        layout_iterator() noexcept = default;
-        layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter);
-
-    private:
-
-        reference dereference() const;
-        void increment();
-        void decrement();
-        void advance(difference_type n);
-        difference_type distance_to(const self_type& rhs) const;
-        bool equal(const self_type& rhs) const;
-        bool less_than(const self_type& rhs) const;
-
-        value_iterator m_value_iter;
-        bitmap_iterator m_bitmap_iter;
-
-        friend class iterator_access;
-    };
-
     /***********************************
      * getter functions for array_data *
      ***********************************/
@@ -192,7 +127,7 @@ namespace sparrow
         return data.child_data[i];
     }
 
-    inline const array_data& child_data(const array_data& data, std::size_t i)
+    inline const array_data& child_data_at(const array_data& data, std::size_t i)
     {
         SPARROW_ASSERT_TRUE(i < child_data_size(data));
         return data.child_data[i];
@@ -206,61 +141,5 @@ namespace sparrow
     inline const value_ptr<array_data>& dictionary(const array_data& data)
     {
         return data.dictionary;
-    }
-    
-    /**********************************
-     * layout_iterator implementation *
-     **********************************/
-
-    template <class L, bool is_const>
-    layout_iterator<L, is_const>::layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter)
-        : m_value_iter(value_iter)
-        , m_bitmap_iter(bitmap_iter)
-    {
-    }
-
-    template <class L, bool is_const>
-    auto layout_iterator<L, is_const>::dereference() const -> reference
-    {
-        return reference(*m_value_iter, *m_bitmap_iter);
-    }
-
-    template <class L, bool is_const>
-    void layout_iterator<L, is_const>::increment()
-    {
-        ++m_value_iter;
-        ++m_bitmap_iter;
-    }
-
-    template <class L, bool is_const>
-    void layout_iterator<L, is_const>::decrement()
-    {
-        --m_value_iter;
-        --m_bitmap_iter;
-    }
-
-    template <class L, bool is_const>
-    void layout_iterator<L, is_const>::advance(difference_type n)
-    {
-        m_value_iter += n;
-        m_bitmap_iter += n;
-    }
-
-    template <class L, bool is_const>
-    auto layout_iterator<L, is_const>::distance_to(const self_type& rhs) const -> difference_type
-    {
-        return rhs.m_value_iter - m_value_iter;
-    }
-
-    template <class L, bool is_const>
-    bool layout_iterator<L, is_const>::equal(const self_type& rhs) const
-    {
-        return m_value_iter == rhs.m_value_iter && m_bitmap_iter == rhs.m_bitmap_iter;
-    }
-
-    template <class L, bool is_const>
-    bool layout_iterator<L, is_const>::less_than(const self_type& rhs) const
-    {
-        return m_value_iter < rhs.m_value_iter && m_bitmap_iter < rhs.m_bitmap_iter;
     }
 }
