@@ -23,6 +23,8 @@ namespace sparrow
 {
     struct bitmap_fixture
     {
+        using buffer_type = std::uint8_t*;
+
         bitmap_fixture()
         {
             p_buffer = new std::uint8_t[m_block_count];
@@ -31,9 +33,30 @@ namespace sparrow
             p_buffer[2] = 53;   // 00110101
             p_buffer[3] = 7;    // 00000111
             m_null_count = 15;  // Last 3 bits of buffer[3] are unused
+            p_expected_buffer = p_buffer;
         }
 
-        std::uint8_t* p_buffer;
+        ~bitmap_fixture()
+        {
+            delete[] p_buffer;
+            p_expected_buffer = nullptr;
+        }
+
+        buffer_type release_buffer()
+        {
+            buffer_type res = p_buffer;
+            p_buffer = nullptr;
+            return res;
+        }
+
+        bitmap_fixture(const bitmap_fixture&) = delete;
+        bitmap_fixture(bitmap_fixture&&) = delete;
+
+        bitmap_fixture& operator=(const bitmap_fixture&) = delete;
+        bitmap_fixture& operator=(bitmap_fixture&&) = delete;
+
+        buffer_type p_buffer;
+        buffer_type p_expected_buffer;
         std::size_t m_block_count = 4;
         std::size_t m_size = 29;
         std::size_t m_null_count;
@@ -59,28 +82,28 @@ namespace sparrow
             CHECK_EQ(b3.null_count(), 0u);
 
             bitmap_fixture bf;
-            bitmap b4(bf.p_buffer, bf.m_size);
+            bitmap b4(bf.release_buffer(), bf.m_size);
             CHECK_EQ(b4.size(), bf.m_size);
             CHECK_EQ(b4.null_count(), bf.m_null_count);
 
             bitmap_fixture bf2;
-            bitmap b5(bf2.p_buffer, bf2.m_size, bf2.m_null_count);
+            bitmap b5(bf2.release_buffer(), bf2.m_size, bf2.m_null_count);
             CHECK_EQ(b5.size(), bf.m_size);
             CHECK_EQ(b5.null_count(), bf.m_null_count);
         }
 
         TEST_CASE_FIXTURE(bitmap_fixture, "data")
         {
-            bitmap b(p_buffer, m_size);
-            CHECK_EQ(b.data(), p_buffer);
+            bitmap b(release_buffer(), m_size);
+            CHECK_EQ(b.data(), p_expected_buffer);
 
             const bitmap& b2 = b;
-            CHECK_EQ(b2.data(), p_buffer);
+            CHECK_EQ(b2.data(), p_expected_buffer);
         }
 
         TEST_CASE_FIXTURE(bitmap_fixture, "copy semantic")
         {
-            bitmap b(p_buffer, m_size);
+            bitmap b(release_buffer(), m_size);
             bitmap b2(b);
 
             CHECK_EQ(b.size(), b2.size());
@@ -109,7 +132,7 @@ namespace sparrow
 
         TEST_CASE_FIXTURE(bitmap_fixture, "move semantic")
         {
-            bitmap bref(p_buffer, m_size);
+            bitmap bref(release_buffer(), m_size);
             bitmap b(bref);
 
             bitmap b2(std::move(b));
@@ -138,7 +161,7 @@ namespace sparrow
 
         TEST_CASE_FIXTURE(bitmap_fixture, "test/set")
         {
-            bitmap bm(p_buffer, m_size);
+            bitmap bm(release_buffer(), m_size);
             bool b1 = bm.test(2);
             CHECK(b1);
             bool b2 = bm.test(3);
@@ -166,7 +189,7 @@ namespace sparrow
 
         TEST_CASE_FIXTURE(bitmap_fixture, "operator[]")
         {
-            bitmap bm(p_buffer, m_size);
+            bitmap bm(release_buffer(), m_size);
             const bitmap& cbm = bm;
             bool b1 = cbm[2];
             CHECK(b1);
@@ -195,7 +218,7 @@ namespace sparrow
 
         TEST_CASE_FIXTURE(bitmap_fixture, "resize")
         {
-            bitmap bref(p_buffer, m_size);
+            bitmap bref(release_buffer(), m_size);
             bitmap b(bref);
             b.resize(33);
             CHECK_EQ(b.size(), 33);
@@ -213,7 +236,7 @@ namespace sparrow
             // static_assert(std::random_access_iterator<typename bitmap::iterator>);
             static_assert(std::random_access_iterator<typename bitmap::const_iterator>);
 
-            bitmap b(p_buffer, m_size);
+            bitmap b(release_buffer(), m_size);
             auto iter = b.begin();
             auto citer = b.cbegin();
 
@@ -264,7 +287,7 @@ namespace sparrow
         TEST_CASE_FIXTURE(bitmap_fixture, "bitset_reference")
         {
             // as a reminder: p_buffer[0] = 38; // 00100110
-            bitmap b(p_buffer, m_size);
+            bitmap b(release_buffer(), m_size);
             auto iter = b.begin();
             *iter = true;
             CHECK_EQ(b.null_count(), m_null_count - 1);
@@ -289,6 +312,48 @@ namespace sparrow
 
             CHECK_NE(*iter, false);
             CHECK_NE(false, *iter);
+        }
+    }
+
+    TEST_SUITE("dyamic_bitset_view")
+    {
+        using bitmap_view = dynamic_bitset_view<const std::uint8_t>;
+
+        TEST_CASE_FIXTURE(bitmap_fixture, "constructor")
+        {
+            bitmap_view b(p_buffer, m_size);
+            CHECK_EQ(b.data(), p_buffer);
+
+            const bitmap_view& b2 = b;
+            CHECK_EQ(b2.data(), p_buffer);
+        }
+
+        TEST_CASE_FIXTURE(bitmap_fixture, "copy semantic")
+        {
+            bitmap_view b(p_buffer, m_size);
+            bitmap_view b2(b);
+
+            CHECK_EQ(b.size(), b2.size());
+            CHECK_EQ(b.null_count(), b2.null_count());
+            CHECK_EQ(b.data(), b2.data());
+            for (size_t i = 0; i < m_block_count; ++i)
+            {
+                CHECK_EQ(b.data()[i], b2.data()[i]);
+            }
+        }
+
+        TEST_CASE_FIXTURE(bitmap_fixture, "move semantic")
+        {
+            bitmap_view bref(p_buffer, m_size);
+            bitmap_view b(bref);
+
+            bitmap_view b2(std::move(b));
+            CHECK_EQ(b2.size(), bref.size());
+            CHECK_EQ(b2.null_count(), bref.null_count());
+            for (size_t i = 0; i < m_block_count; ++i)
+            {
+                CHECK_EQ(b2.data()[i], bref.data()[i]);
+            }
         }
     }
 }
