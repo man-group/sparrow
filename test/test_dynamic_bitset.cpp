@@ -291,4 +291,55 @@ namespace sparrow
             CHECK_NE(false, *iter);
         }
     }
+
+    TEST_SUITE("dyamic_bitset_view")
+    {
+        using bitmap = dynamic_bitset_view<const std::uint8_t>;
+
+        TEST_CASE_FIXTURE(bitmap_fixture, "constructor")
+        {
+            {
+                bitmap b(p_buffer, m_size);
+                CHECK_EQ(b.data(), p_buffer);
+
+                const bitmap& b2 = b;
+                CHECK_EQ(b2.data(), p_buffer);
+            }
+            delete p_buffer;
+        }
+
+        TEST_CASE_FIXTURE(bitmap_fixture, "copy semantic")
+        {
+            {
+                bitmap b(p_buffer, m_size);
+                bitmap b2(b);
+
+                CHECK_EQ(b.size(), b2.size());
+                CHECK_EQ(b.null_count(), b2.null_count());
+                CHECK_EQ(b.data(), b2.data());
+                for (size_t i = 0; i < m_block_count; ++i)
+                {
+                    CHECK_EQ(b.data()[i], b2.data()[i]);
+                }
+            }
+            delete p_buffer;
+        }
+
+        TEST_CASE_FIXTURE(bitmap_fixture, "move semantic")
+        {
+            {
+                bitmap bref(p_buffer, m_size);
+                bitmap b(bref);
+
+                bitmap b2(std::move(b));
+                CHECK_EQ(b2.size(), bref.size());
+                CHECK_EQ(b2.null_count(), bref.null_count());
+                for (size_t i = 0; i < m_block_count; ++i)
+                {
+                    CHECK_EQ(b2.data()[i], bref.data()[i]);
+                }
+            }
+            delete p_buffer;
+        }
+    }
 }

@@ -421,7 +421,10 @@ namespace sparrow
         , m_size(size)
         , m_null_count(m_size - count_non_null())
     {
-        zero_unused_bits();
+        if constexpr (!std::is_const_v<block_type>)
+        {
+            zero_unused_bits();
+        }
     }
 
     template <random_access_range B>
@@ -430,8 +433,11 @@ namespace sparrow
         , m_size(size)
         , m_null_count(null_count)
     {
-        zero_unused_bits();
-        SPARROW_ASSERT_TRUE(m_null_count == m_size - count_non_null());
+        if constexpr (!std::is_const_v<block_type>)
+        {
+            zero_unused_bits();
+            SPARROW_ASSERT_TRUE(m_null_count == m_size - count_non_null());
+        }
     }
 
     template <random_access_range B>
@@ -583,6 +589,22 @@ namespace sparrow
     {
     }
 
+    /*************************************
+     * dyamic_bitset_view implementation *
+     *************************************/
+
+    template <std::integral T>
+    dynamic_bitset_view<T>::dynamic_bitset_view(block_type* p, size_type n)
+        : base_type(storage_type(p, this->compute_block_count(n)), n)
+    {
+    }
+
+    template <std::integral T>
+    dynamic_bitset_view<T>::dynamic_bitset_view(block_type* p, size_type n, size_type null_count)
+        : base_type(storage_type(p, this->compute_block_count(n)), n, null_count)
+    {
+    }
+    
     /***********************************
      * bitset_reference implementation *
      ***********************************/
