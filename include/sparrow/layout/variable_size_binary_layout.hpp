@@ -466,10 +466,7 @@ namespace sparrow
     variable_size_binary_layout<T, CR, DS, OT>::variable_size_binary_layout(data_storage_type& data)
         : m_data(data)
     {
-        SPARROW_ASSERT_TRUE(buffers(storage()).size() == 2u);
-        // TODO: templatize back and front in buffer and uncomment the following line
-        // SPARROW_ASSERT_TRUE(buffers(storage())[0].size() == 0u || buffers(storage())[0].back() ==
-        // buffers(storage())[1].size());
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) == 2u);
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
@@ -534,7 +531,7 @@ namespace sparrow
     requires mpl::convertible_ranges<U, T>
     void variable_size_binary_layout<T, CR, DS, OT>::assign(U&& rhs, size_type index)
     {
-        typename data_storage_type::buffer_type& data_buffer = buffers(storage())[1];
+        typename data_storage_type::buffer_type& data_buffer = buffer_at(storage(), 1u);
         const auto layout_data_length = size();
 
         const auto offset_beg = *offset(index);
@@ -663,43 +660,43 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::offset(size_type i) -> offset_iterator
     {
-        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
-        return buffers(storage())[0].template data<OT>() + sparrow::offset(storage()) + i;
+        SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
+        return buffer_at(storage(), 0u).template data<OT>() + sparrow::offset(storage()) + i;
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::offset_end() -> offset_iterator
     {
-        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
-        return buffers(storage())[0].template data<OT>() + length(storage());
+        SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
+        return buffers_at(storage(), 0u).template data<OT>() + length(storage());
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::data(size_type i) -> data_iterator
     {
-        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
-        return buffers(storage())[1].template data<data_type>() + i;
+        SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
+        return buffer_at(storage(), 1u).template data<data_type>() + i;
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::offset(size_type i) const -> const_offset_iterator
     {
-        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
-        return buffers(storage())[0].template data<OT>() + sparrow::offset(storage()) + i;
+        SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
+        return buffer_at(storage(), 0u).template data<OT>() + sparrow::offset(storage()) + i;
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::offset_end() const -> const_offset_iterator
     {
-        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
-        return buffers(storage())[0].template data<OT>() + length(storage());
+        SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
+        return buffer_at(storage(), 0u).template data<OT>() + length(storage());
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::data(size_type i) const -> const_data_iterator
     {
-        SPARROW_ASSERT_FALSE(buffers(storage()).empty());
-        return buffers(storage())[1].template data<data_type>() + i;
+        SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
+        return buffer_at(storage(), 1u).template data<data_type>() + i;
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>

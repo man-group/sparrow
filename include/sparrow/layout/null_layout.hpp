@@ -182,13 +182,13 @@ namespace sparrow
     null_layout<DS>::null_layout(data_storage_type& data)
         : m_data(data)
     {
-        SPARROW_ASSERT_TRUE(buffers(storage()).size() == 0u);
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) == 0u);
     }
 
     template <data_storage DS>
     void null_layout<DS>::rebind_data(data_storage_type& data)
     {
-        SPARROW_ASSERT_TRUE(buffers(storage()).size() == 0u);
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) == 0u);
         m_data = data;
     }
 

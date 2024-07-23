@@ -59,11 +59,13 @@ namespace sparrow
     array_data::bitmap_type& bitmap(array_data& data);
     const array_data::bitmap_type& bitmap(const array_data& data);
 
-    std::vector<array_data::buffer_type>& buffers(array_data& data);
-    const std::vector<array_data::buffer_type>& buffers(const array_data& data);
+    std::size_t buffers_size(const array_data& data);
+    array_data::buffer_type& buffer_at(array_data& data, std::size_t i);
+    const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i);
 
-    std::vector<array_data>& child_data(array_data& data);
-    const std::vector<array_data>& child_data(const array_data& data);
+    std::size_t child_data_size(const array_data& data);
+    array_data& child_data_at(array_data& data, std::size_t i);
+    const array_data& child_data(const array_data& data, std::size_t i);
 
     value_ptr<array_data>& dictionary(array_data& data);
     const value_ptr<array_data>& dictionary(const array_data& data);
@@ -73,14 +75,16 @@ namespace sparrow
      * typed_array class.
      */
     template <class T>
-    concept data_storage = requires(T t)
+    concept data_storage = requires(T t, std::size_t i)
     {
         type_descriptor(t);
         length(t);
         offset(t);
         bitmap(t);
-        buffers(t);
-        child_data(t);
+        buffers_size(t);
+        buffer_at(t, i);
+        child_data_size(t);
+        child_data_at(t, i);
         dictionary(t);
     };
 
@@ -160,24 +164,34 @@ namespace sparrow
         return data.bitmap;
     }
 
-    inline std::vector<array_data::buffer_type>& buffers(array_data& data)
+    inline std::size_t buffers_size(const array_data& data)
     {
-        return data.buffers;
+        return data.buffers.size();
     }
 
-    inline const std::vector<array_data::buffer_type>& buffers(const array_data& data)
+    inline array_data::buffer_type& buffer_at(array_data& data, std::size_t i)
     {
-        return data.buffers;
+        return data.buffers[i];
     }
 
-    inline std::vector<array_data>& child_data(array_data& data)
+    inline const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i)
     {
-        return data.child_data;
+        return data.buffers[i];
     }
 
-    inline const std::vector<array_data>& child_data(const array_data& data)
+    inline std::size_t child_data_size(const array_data& data)
     {
-        return data.child_data;
+        return data.child_data.size();
+    }
+
+    inline array_data& child_data_at(array_data& data, std::size_t i)
+    {
+        return data.child_data[i];
+    }
+
+    inline const array_data& child_data(const array_data& data, std::size_t i)
+    {
+        return data.child_data[i];
     }
 
     inline value_ptr<array_data>& dictionary(array_data& data)

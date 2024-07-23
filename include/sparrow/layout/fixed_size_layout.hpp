@@ -133,7 +133,7 @@ namespace sparrow
         : m_data(data)
     {
         // We only require the presence of the bitmap and the first buffer.
-        SPARROW_ASSERT_TRUE(buffers(storage()).size() > 0);
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
         SPARROW_ASSERT_TRUE(static_cast<size_type>(length(storage())) == sparrow::bitmap(storage()).size())
     }
 
@@ -287,15 +287,15 @@ namespace sparrow
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::data() -> pointer
     {
-        SPARROW_ASSERT_TRUE(buffers(storage()).size() > 0);
-        return buffers(storage())[0].template data<inner_value_type>();
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
+        return buffer_at(storage(), 0u).template data<inner_value_type>();
     }
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::data() const -> const_pointer
     {
-        SPARROW_ASSERT_TRUE(buffers(storage()).size() > 0);
-        return buffers(storage())[0].template data<inner_value_type>();
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
+        return buffer_at(storage(), 0u).template data<inner_value_type>();
     }
 
     template <class T, data_storage DS>
