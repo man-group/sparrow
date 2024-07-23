@@ -49,6 +49,12 @@ namespace sparrow
             return res;
         }
 
+        bitmap_fixture(const bitmap_fixture&) = delete;
+        bitmap_fixture(bitmap_fixture&&) = delete;
+
+        bitmap_fixture& operator=(const bitmap_fixture&) = delete;
+        bitmap_fixture& operator=(bitmap_fixture&&) = delete;
+
         buffer_type p_buffer;
         buffer_type p_expected_buffer;
         std::size_t m_block_count = 4;
