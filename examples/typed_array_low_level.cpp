@@ -46,8 +46,8 @@ int main() {
 
     // access the data
     for (auto i = 0; i < n; ++i) {
-        if (ad.bitmap[i]) {
-            std::cout << b.data<value_type>()[i] << std::endl;
+        if (array.bitmap()[i]) {
+            std::cout << array[i].value() << std::endl;
         } else {
             std::cout << "missing value" << std::endl;
         }

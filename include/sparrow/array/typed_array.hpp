@@ -29,6 +29,7 @@
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/utils/algorithm.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -77,6 +78,17 @@ namespace sparrow
 
         typed_array(const typed_array& rhs);
         typed_array(typed_array&& rhs);
+
+        // from std::range of values convertible to T
+        template <class R>
+        requires std::ranges::range<R> && std::convertible_to<std::ranges::range_value_t<R>, T> && mpl::is_type_instance_of_v<Layout, fixed_size_layout>
+        typed_array(R&& range);
+
+        template <class R>
+        requires std::ranges::range<R> && std::convertible_to<std::ranges::range_value_t<R>, T> && mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
+        typed_array(R&& range);
+
+
 
         typed_array& operator=(const typed_array& rhs);
         typed_array& operator=(typed_array&& rhs);
@@ -261,6 +273,106 @@ namespace sparrow
         , m_layout(m_data)
     {
     }
+
+    // this is only for a fixed layout
+    template <class T, class Layout>
+        requires is_arrow_base_type<T> 
+    template <class R>
+        requires std::ranges::range<R> 
+            && std::convertible_to<std::ranges::range_value_t<R>, T> 
+            && mpl::is_type_instance_of_v<Layout, fixed_size_layout>
+    typed_array<T, Layout>::typed_array(R&& range)
+    {
+        // num elements
+        auto n = std::ranges::distance(range);
+
+        // create the array_data object holding the data
+        sparrow::array_data ad;
+        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
+        ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
+
+        //  the buffer holding the actual data
+        const size_t buffer_size = (n * sizeof(T)) / sizeof(uint8_t);
+        sparrow::buffer<uint8_t> b(buffer_size);
+
+        // copy the range to the buffer
+        std::ranges::copy(range, b.data<T>());
+
+        // add the buffer to the array_data
+        ad.buffers.push_back(b);
+
+        // bookkeeping
+        ad.length = static_cast<std::int64_t>(range.size());
+        ad.offset = static_cast<std::int64_t>(0);
+        ad.child_data.emplace_back();
+
+        // pass the data to the member variables
+        m_data = std::move(ad);
+        m_layout.rebind_data(m_data);
+    }
+
+
+     template <class T, class Layout>
+        requires is_arrow_base_type<T> 
+    template <class R>
+        requires std::ranges::range<R> 
+            && std::convertible_to<std::ranges::range_value_t<R>, T> 
+            && mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
+    typed_array<T, Layout>::typed_array(R&& words_range)
+    {
+        // num elements
+        auto n = std::ranges::distance(words_range);
+
+        std::cout<<"num elements: "<<n<<std::endl;
+
+        // create the array_data object holding the data
+        sparrow::array_data ad;
+        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
+        ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
+        ad.buffers.resize(2);
+
+        // offsets
+        ad.buffers[0].resize(sizeof(std::int64_t) * (n + 1));
+
+        // total size of the buffer holding the elements
+        ad.buffers[1].resize(std::accumulate(
+            words_range.begin(), words_range.end(), 
+            size_t(0),
+            [](std::size_t res, const auto& s)
+            {
+                return res + s.size();
+            }
+        ));
+
+        auto offset_ptr = ad.buffers[0].data<std::int64_t>();
+
+        //iterate over the words and copy them to the buffer
+        auto iter = ad.buffers[1].begin();
+
+        // offset at 0 is 0
+        offset_ptr[0] = 0u;
+
+        auto word_index = 0;
+        for(auto word : words_range)
+        {
+            const auto word_size = static_cast<sparrow::array_data::buffer_type::difference_type>(word.size());
+            offset_ptr[word_index + 1] = offset_ptr[word_index] + word_size;
+            std::ranges::copy(word, iter);
+            iter += word_size;
+            ++word_index;
+        }
+        
+
+        // bookkeeping
+        ad.length = static_cast<std::int64_t>(n);
+        ad.offset = static_cast<std::int64_t>(0);
+    
+        // pass the data to the member variables
+        m_data = std::move(ad);
+        m_layout.rebind_data(m_data);
+
+    }
+
 
     // Value semantics
 
