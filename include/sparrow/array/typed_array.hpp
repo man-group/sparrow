@@ -276,9 +276,9 @@ namespace sparrow
 
     // this is only for a fixed layout
     template <class T, class Layout>
-        requires is_arrow_base_type<T> 
+        requires is_arrow_base_type<T>
     template <class R>
-        requires std::ranges::range<R> 
+        requires std::ranges::range<R>
             && std::convertible_to<std::ranges::range_value_t<R>, T> 
             && mpl::is_type_instance_of_v<Layout, fixed_size_layout>
     typed_array<T, Layout>::typed_array(R&& range)
@@ -312,11 +312,11 @@ namespace sparrow
     }
 
 
-     template <class T, class Layout>
-        requires is_arrow_base_type<T> 
+    template <class T, class Layout>
+        requires is_arrow_base_type<T>
     template <class R>
-        requires std::ranges::range<R> 
-            && std::convertible_to<std::ranges::range_value_t<R>, T> 
+        requires std::ranges::range<R>
+            && std::convertible_to<std::ranges::range_value_t<R>, T>
             && mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
     typed_array<T, Layout>::typed_array(R&& words_range)
     {
@@ -360,7 +360,6 @@ namespace sparrow
             ++word_index;
         }
         
-
         // bookkeeping
         ad.length = static_cast<std::int64_t>(n);
         ad.offset = static_cast<std::int64_t>(0);
@@ -368,7 +367,6 @@ namespace sparrow
         // pass the data to the member variables
         m_data = std::move(ad);
         m_layout.rebind_data(m_data);
-
     }
 
 
