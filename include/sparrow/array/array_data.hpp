@@ -65,7 +65,7 @@ namespace sparrow
 
     std::size_t child_data_size(const array_data& data);
     array_data& child_data_at(array_data& data, std::size_t i);
-    const array_data& child_data(const array_data& data, std::size_t i);
+    const array_data& child_data_at(const array_data& data, std::size_t i);
 
     value_ptr<array_data>& dictionary(array_data& data);
     const value_ptr<array_data>& dictionary(const array_data& data);
@@ -75,15 +75,15 @@ namespace sparrow
      * typed_array class.
      */
     template <class T>
-    concept data_storage = requires(T t, std::size_t i)
+    concept data_storage = requires(const T t, std::size_t i)
     {
-        type_descriptor(t);
-        length(t);
-        offset(t);
+        { type_descriptor(t) } -> std::same_as<data_descriptor>;
+        { length(t) } -> std::same_as<std::int64_t>;
+        { offset(t) } -> std::same_as<std::int64_t>;
         bitmap(t);
-        buffers_size(t);
+        { buffers_size(t) } -> std::same_as<std::size_t>;
         buffer_at(t, i);
-        child_data_size(t);
+        { child_data_size(t) } -> std::same_as<std::size_t>;
         child_data_at(t, i);
         dictionary(t);
     };
@@ -171,11 +171,13 @@ namespace sparrow
 
     inline array_data::buffer_type& buffer_at(array_data& data, std::size_t i)
     {
+        SPARROW_ASSERT_TRUE(i < buffers_size(data));
         return data.buffers[i];
     }
 
     inline const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i)
     {
+        SPARROW_ASSERT_TRUE(i < buffers_size(data));
         return data.buffers[i];
     }
 
@@ -186,11 +188,13 @@ namespace sparrow
 
     inline array_data& child_data_at(array_data& data, std::size_t i)
     {
+        SPARROW_ASSERT_TRUE(i < child_data_size(data));
         return data.child_data[i];
     }
 
     inline const array_data& child_data(const array_data& data, std::size_t i)
     {
+        SPARROW_ASSERT_TRUE(i < child_data_size(data));
         return data.child_data[i];
     }
 
