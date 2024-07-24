@@ -284,7 +284,7 @@ namespace sparrow
     typed_array<T, Layout>::typed_array(R&& range)
     {
         // num elements
-        auto n = std::ranges::distance(range);
+        auto n = static_cast<size_t>(std::ranges::distance(range));
 
         // create the array_data object holding the data
         sparrow::array_data ad;
@@ -321,9 +321,7 @@ namespace sparrow
     typed_array<T, Layout>::typed_array(R&& words_range)
     {
         // num elements
-        auto n = std::ranges::distance(words_range);
-
-        std::cout<<"num elements: "<<n<<std::endl;
+        auto n = static_cast<size_t>(std::ranges::distance(words_range));
 
         // create the array_data object holding the data
         sparrow::array_data ad;

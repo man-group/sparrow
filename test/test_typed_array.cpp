@@ -102,7 +102,16 @@ TEST_SUITE("typed_array")
 
             CHECK_EQ(ta1, ta3);
         }
+        SUBCASE("construct from range")
+        {
+            auto data = test::iota_vector<T>(10);
+            typed_array<T> ta{data};
 
+            for (size_t i = 0; i < ta.size(); ++i)
+            {
+                CHECK_EQ(ta[i].value(), data[i]);
+            }
+        }
         SUBCASE("copy assignment")
         {
             auto array_data = sparrow::test::make_test_array_data<T>(array_size, offset);
