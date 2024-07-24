@@ -39,6 +39,20 @@
 
 namespace sparrow
 {
+    /**
+     * Concept to check if a layout is a supported layout.
+     *
+     * A layout is considered supported if it is an instance of `fixed_size_layout`,
+     * `variable_size_binary_layout`, or `dictionary_encoded_layout`.
+     *
+     * @tparam Layout The layout type to check.
+     */
+    template <class Layout>
+    concept arrow_layout = mpl::is_type_instance_of_v<Layout, null_layout>
+                           || mpl::is_type_instance_of_v<Layout, fixed_size_layout>
+                           || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
+                           || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>;
+    
     /*
      * \brief Creates an array_data object for a null layout.
      *

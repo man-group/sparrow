@@ -19,6 +19,8 @@
 #include <string_view>
 
 #include "sparrow/array/array_data.hpp"
+#include "sparrow/array/array_data_concepts.hpp"
+#include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/algorithm.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"

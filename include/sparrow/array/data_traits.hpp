@@ -26,7 +26,8 @@ namespace sparrow
     struct common_native_types_traits
     {
         using value_type = T;
-        using default_layout = fixed_size_layout<T>;
+        template <class DS>
+        using default_layout = fixed_size_layout<T, DS>;
     };
 
     template <>
@@ -34,7 +35,8 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::NA;
         using value_type = null_type;
-        using default_layout = null_layout<>;
+        template <class DS>
+        using default_layout = null_layout<DS>;
     };
 
     template <>
@@ -120,7 +122,8 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::STRING;
         using value_type = std::string;
-        using default_layout = variable_size_binary_layout<value_type, const std::string_view>;
+        template <class DS>
+        using default_layout = variable_size_binary_layout<value_type, const std::string_view, DS>;
     };
 
     template <>
@@ -128,7 +131,8 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::STRING;
         using value_type = std::vector<byte_t>;
-        using default_layout = variable_size_binary_layout<value_type, const std::span<byte_t>>;
+        template <class DS>
+        using default_layout = variable_size_binary_layout<value_type, const std::span<byte_t>, DS>;
     };
 
     template <>

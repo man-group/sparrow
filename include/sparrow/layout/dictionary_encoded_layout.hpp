@@ -16,6 +16,7 @@
 
 #include "sparrow/array/array_data.hpp"
 #include "sparrow/layout/fixed_size_layout.hpp"
+#include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"

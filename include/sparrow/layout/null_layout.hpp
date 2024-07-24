@@ -19,6 +19,7 @@
 #include <ranges>
 
 #include "sparrow/array/array_data.hpp"
+#include "sparrow/array/array_data_concepts.hpp"
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"

@@ -122,6 +122,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_size_layout.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/null_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/algorithm.hpp
