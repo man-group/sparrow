@@ -25,27 +25,27 @@ namespace sparrow
      * Relies on a layout's couple of value iterator and bitmap iterator to
      * return reference proxies when it is dereferenced.
      */
-    template <class L, bool is_const>
+    template <class Layout, bool is_const>
     class layout_iterator : public iterator_base<
-                                layout_iterator<L, is_const>,
-                                mpl::constify_t<typename L::value_type, is_const>,
-                                typename L::iterator_tag,
-                                std::conditional_t<is_const, typename L::const_reference, typename L::reference>>
+                                layout_iterator<Layout, is_const>,
+                                mpl::constify_t<typename Layout::value_type, is_const>,
+                                typename Layout::iterator_tag,
+                                std::conditional_t<is_const, typename Layout::const_reference, typename Layout::reference>>
     {
     public:
 
-        using self_type = layout_iterator<L, is_const>;
+        using self_type = layout_iterator<Layout, is_const>;
         using base_type = iterator_base<
             self_type,
-            mpl::constify_t<typename L::value_type, is_const>,
-            typename L::iterator_tag,
-            std::conditional_t<is_const, typename L::const_reference, typename L::reference>>;
+            mpl::constify_t<typename Layout::value_type, is_const>,
+            typename Layout::iterator_tag,
+            std::conditional_t<is_const, typename Layout::const_reference, typename Layout::reference>>;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
 
-        using value_iterator = std::conditional_t<is_const, typename L::const_value_iterator, typename L::value_iterator>;
+        using value_iterator = std::conditional_t<is_const, typename Layout::const_value_iterator, typename Layout::value_iterator>;
 
-        using bitmap_iterator = std::conditional_t<is_const, typename L::const_bitmap_iterator, typename L::bitmap_iterator>;
+        using bitmap_iterator = std::conditional_t<is_const, typename Layout::const_bitmap_iterator, typename Layout::bitmap_iterator>;
 
         layout_iterator() noexcept = default;
         layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter);
@@ -70,54 +70,54 @@ namespace sparrow
      * layout_iterator implementation *
      **********************************/
 
-    template <class L, bool is_const>
-    layout_iterator<L, is_const>::layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter)
+    template <class Layout, bool is_const>
+    layout_iterator<Layout, is_const>::layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter)
         : m_value_iter(value_iter)
         , m_bitmap_iter(bitmap_iter)
     {
     }
 
-    template <class L, bool is_const>
-    auto layout_iterator<L, is_const>::dereference() const -> reference
+    template <class Layout, bool is_const>
+    auto layout_iterator<Layout, is_const>::dereference() const -> reference
     {
         return reference(*m_value_iter, *m_bitmap_iter);
     }
 
-    template <class L, bool is_const>
-    void layout_iterator<L, is_const>::increment()
+    template <class Layout, bool is_const>
+    void layout_iterator<Layout, is_const>::increment()
     {
         ++m_value_iter;
         ++m_bitmap_iter;
     }
 
-    template <class L, bool is_const>
-    void layout_iterator<L, is_const>::decrement()
+    template <class Layout, bool is_const>
+    void layout_iterator<Layout, is_const>::decrement()
     {
         --m_value_iter;
         --m_bitmap_iter;
     }
 
-    template <class L, bool is_const>
-    void layout_iterator<L, is_const>::advance(difference_type n)
+    template <class Layout, bool is_const>
+    void layout_iterator<Layout, is_const>::advance(difference_type n)
     {
         m_value_iter += n;
         m_bitmap_iter += n;
     }
 
-    template <class L, bool is_const>
-    auto layout_iterator<L, is_const>::distance_to(const self_type& rhs) const -> difference_type
+    template <class Layout, bool is_const>
+    auto layout_iterator<Layout, is_const>::distance_to(const self_type& rhs) const -> difference_type
     {
         return rhs.m_value_iter - m_value_iter;
     }
 
-    template <class L, bool is_const>
-    bool layout_iterator<L, is_const>::equal(const self_type& rhs) const
+    template <class Layout, bool is_const>
+    bool layout_iterator<Layout, is_const>::equal(const self_type& rhs) const
     {
         return m_value_iter == rhs.m_value_iter && m_bitmap_iter == rhs.m_bitmap_iter;
     }
 
-    template <class L, bool is_const>
-    bool layout_iterator<L, is_const>::less_than(const self_type& rhs) const
+    template <class Layout, bool is_const>
+    bool layout_iterator<Layout, is_const>::less_than(const self_type& rhs) const
     {
         return m_value_iter < rhs.m_value_iter && m_bitmap_iter < rhs.m_bitmap_iter;
     }

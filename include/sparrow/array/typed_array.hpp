@@ -181,24 +181,20 @@ namespace sparrow
 
         // TODO: Implement insert, erase, push_back, pop_back, clear, resize, swap
 
-        //friend std::partial_ordering operator<=> <T, L>(const typed_array_impl& ta1, const typed_array_impl& ta2);
-
-        //friend bool operator== <T, L>(const typed_array_impl& ta1, const typed_array_impl& ta2);
-
     private:
 
         array_data m_data = make_default_array_data<L>();
         layout_type m_layout{m_data};
     };
 
-    template <class T, class L>
-    std::partial_ordering operator<=>(const typed_array_impl<T, L>& ta1, const typed_array_impl<T, L>& ta2);
+    template <class T, class Layout>
+    std::partial_ordering operator<=>(const typed_array_impl<T, Layout>& ta1, const typed_array_impl<T, Layout>& ta2);
 
-    template <class T, class L>
-    bool operator==(const typed_array_impl<T, L>& ta1, const typed_array_impl<T, L>& ta2);
+    template <class T, class Layout>
+    bool operator==(const typed_array_impl<T, Layout>& ta1, const typed_array_impl<T, Layout>& ta2);
     
-    template <class T, class L = typename arrow_traits<T>::template default_layout<array_data>>
-    using typed_array = typed_array_impl<T, L>;
+    template <class T, class Layout = typename arrow_traits<T>::template default_layout<array_data>>
+    using typed_array = typed_array_impl<T, Layout>;
     
     /*
      * is_typed_array_impl traits
@@ -429,15 +425,15 @@ namespace sparrow
 
     // Comparators
 
-    template <class T, class L>
+    template <class T, class Layout>
     std::partial_ordering
-    operator<=>(const typed_array_impl<T, L>& ta1, const typed_array_impl<T, L>& ta2)
+    operator<=>(const typed_array_impl<T, Layout>& ta1, const typed_array_impl<T, Layout>& ta2)
     {
         return lexicographical_compare_three_way(ta1, ta2);
     }
 
-    template <class T, class L>
-    bool operator==(const typed_array_impl<T, L>& ta1, const typed_array_impl<T, L>& ta2)
+    template <class T, class Layout>
+    bool operator==(const typed_array_impl<T, Layout>& ta1, const typed_array_impl<T, Layout>& ta2)
     {   
         // see https://github.com/man-group/sparrow/issues/108
 #if defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION < 190000)
