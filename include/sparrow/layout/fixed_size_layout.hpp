@@ -33,23 +33,24 @@ namespace sparrow
      * A contiguous layout for fixed size types.
      *
      * This class provides a contiguous layout for fixed size types, such as `uint8_t`, `int32_t`, etc.
-     * It iterates over the first buffer in the array_data, and uses the bitmap to skip over null.
-     * The bitmap is assumed to be present in the array_data.
+     * It iterates over the first buffer in the data storage, and uses the bitmap to skip over null.
+     * The bitmap is assumed to be present in the data storage.
      *
      * @tparam T The type of the elements in the layout's data buffer.
      *           A fixed size type, such as a primitive type.
-     *
+     * @tparam DS The type for the structure holding the data. Default to array_data.
      */
-    template <class T>
+    template <class T, data_storage DS = array_data>
     class fixed_size_layout
     {
     public:
 
-        using self_type = fixed_size_layout<T>;
+        using self_type = fixed_size_layout<T, DS>;
+        using data_storage_type = DS;
         using inner_value_type = T;
         using inner_reference = inner_value_type&;
         using inner_const_reference = const inner_value_type&;
-        using bitmap_type = array_data::bitmap_type;
+        using bitmap_type = typename data_storage_type::bitmap_type;
         using bitmap_reference = typename bitmap_type::reference;
         using bitmap_const_reference = typename bitmap_type::const_reference;
         using value_type = nullable<inner_value_type>;
@@ -61,10 +62,10 @@ namespace sparrow
         using difference_type = std::ptrdiff_t;
         using iterator_tag = std::contiguous_iterator_tag;
 
-        using const_bitmap_iterator = array_data::bitmap_type::const_iterator;
+        using const_bitmap_iterator = bitmap_type::const_iterator;
         using const_value_iterator = pointer_iterator<const_pointer>;
 
-        using bitmap_iterator = array_data::bitmap_type::iterator;
+        using bitmap_iterator = bitmap_type::iterator;
         using value_iterator = pointer_iterator<pointer>;
 
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
@@ -73,8 +74,8 @@ namespace sparrow
         using iterator = layout_iterator<self_type, false>;
         using const_iterator = layout_iterator<self_type, true>;
 
-        explicit fixed_size_layout(array_data& data);
-        void rebind_data(array_data& data);
+        explicit fixed_size_layout(data_storage_type& data);
+        void rebind_data(data_storage_type& data);
 
         fixed_size_layout(const self_type&) = delete;
         self_type& operator=(const self_type&) = delete;
@@ -117,194 +118,194 @@ namespace sparrow
         const_bitmap_iterator bitmap_cbegin() const;
         const_bitmap_iterator bitmap_cend() const;
 
-        array_data& data_ref();
-        const array_data& data_ref() const;
+        data_storage_type& storage();
+        const data_storage_type& storage() const;
 
-        std::reference_wrapper<array_data> m_data;
+        std::reference_wrapper<data_storage_type> m_data;
     };
 
     /************************************
      * fixed_size_layout implementation *
      ***********************************/
 
-    template <class T>
-    fixed_size_layout<T>::fixed_size_layout(array_data& data)
+    template <class T, data_storage DS>
+    fixed_size_layout<T, DS>::fixed_size_layout(data_storage_type& data)
         : m_data(data)
     {
         // We only require the presence of the bitmap and the first buffer.
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
-        SPARROW_ASSERT_TRUE(static_cast<size_type>(data_ref().length) == data_ref().bitmap.size())
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
+        SPARROW_ASSERT_TRUE(static_cast<size_type>(length(storage())) == sparrow::bitmap(storage()).size())
     }
 
-    template <class T>
-    void fixed_size_layout<T>::rebind_data(array_data& data)
+    template <class T, data_storage DS>
+    void fixed_size_layout<T, DS>::rebind_data(data_storage_type& data)
     {
         m_data = data;
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::size() const -> size_type
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::size() const -> size_type
     {
-        SPARROW_ASSERT_TRUE(data_ref().offset <= data_ref().length);
-        return static_cast<size_type>(data_ref().length - data_ref().offset);
+        SPARROW_ASSERT_TRUE(offset(storage()) <= length(storage()));
+        return static_cast<size_type>(length(storage()) - offset(storage()));
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::value(size_type i) -> inner_reference
-    {
-        SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + static_cast<size_type>(data_ref().offset)];
-    }
-
-    template <class T>
-    auto fixed_size_layout<T>::value(size_type i) const -> inner_const_reference
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + static_cast<size_type>(data_ref().offset)];
+        return data()[i + static_cast<size_type>(offset(storage()))];
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::operator[](size_type i) -> reference
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::value(size_type i) const -> inner_const_reference
+    {
+        SPARROW_ASSERT_TRUE(i < size());
+        return data()[i + static_cast<size_type>(offset(storage()))];
+    }
+
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::operator[](size_type i) -> reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         return reference(value(i), has_value(i));
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::operator[](size_type i) const -> const_reference
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         return const_reference(value(i), has_value(i));
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::begin() -> iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::begin() -> iterator
     {
         return iterator(value_begin(), bitmap_begin());
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::end() -> iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::end() -> iterator
     {
         return iterator(value_end(), bitmap_end());
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::cbegin() const -> const_iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::cbegin() const -> const_iterator
     {
         return const_iterator(value_cbegin(), bitmap_cbegin());
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::cend() const -> const_iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::cend() const -> const_iterator
     {
         return const_iterator(value_cend(), bitmap_cend());
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::bitmap() const -> const_bitmap_range
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::bitmap() const -> const_bitmap_range
     {
         return std::ranges::subrange(bitmap_cbegin(), bitmap_cend());
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::values() const -> const_value_range
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::values() const -> const_value_range
     {
         return std::ranges::subrange(value_cbegin(), value_cend());
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::has_value(size_type i) -> bitmap_reference
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::has_value(size_type i) -> bitmap_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data_ref().bitmap[i + static_cast<size_type>(data_ref().offset)];
+        return sparrow::bitmap(storage())[i + static_cast<size_type>(offset(storage()))];
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::has_value(size_type i) const -> bitmap_const_reference
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::has_value(size_type i) const -> bitmap_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data_ref().bitmap[i + static_cast<size_type>(data_ref().offset)];
+        return sparrow::bitmap(storage())[i + static_cast<size_type>(offset(storage()))];
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::value_begin() -> value_iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::value_begin() -> value_iterator
     {
-        return value_iterator{data() + data_ref().offset};
+        return value_iterator{data() + offset(storage())};
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::value_end() -> value_iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::value_end() -> value_iterator
     {
         value_iterator it = value_begin();
         std::advance(it, size());
         return it;
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::value_cbegin() const -> const_value_iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator{data() + data_ref().offset};
+        return const_value_iterator{data() + offset(storage())};
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::value_cend() const -> const_value_iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::value_cend() const -> const_value_iterator
     {
         auto it = value_cbegin();
         std::advance(it, size());
         return it;
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::bitmap_begin() -> bitmap_iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::bitmap_begin() -> bitmap_iterator
     {
-        return data_ref().bitmap.begin() + data_ref().offset;
+        return sparrow::bitmap(storage()).begin() + offset(storage());
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::bitmap_end() -> bitmap_iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::bitmap_end() -> bitmap_iterator
     {
         bitmap_iterator it = bitmap_begin();
         std::advance(it, size());
         return it;
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::bitmap_cbegin() const -> const_bitmap_iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::bitmap_cbegin() const -> const_bitmap_iterator
     {
-        return data_ref().bitmap.cbegin() + data_ref().offset;
+        return sparrow::bitmap(storage()).cbegin() + offset(storage());
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::bitmap_cend() const -> const_bitmap_iterator
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::bitmap_cend() const -> const_bitmap_iterator
     {
         const_bitmap_iterator it = bitmap_cbegin();
         std::advance(it, size());
         return it;
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::data() -> pointer
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::data() -> pointer
     {
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
-        return data_ref().buffers[0].template data<inner_value_type>();
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
+        return buffer_at(storage(), 0u).template data<inner_value_type>();
     }
 
-    template <class T>
-    auto fixed_size_layout<T>::data() const -> const_pointer
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::data() const -> const_pointer
     {
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() > 0);
-        return data_ref().buffers[0].template data<inner_value_type>();
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
+        return buffer_at(storage(), 0u).template data<inner_value_type>();
     }
 
-    template <class T>
-    array_data& fixed_size_layout<T>::data_ref()
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::storage() -> data_storage_type&
     {
         return m_data.get();
     }
 
-    template <class T>
-    const array_data& fixed_size_layout<T>::data_ref() const
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::storage() const -> const data_storage_type&
     {
         return m_data.get();
     }

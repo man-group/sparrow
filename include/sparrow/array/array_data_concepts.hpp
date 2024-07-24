@@ -31,7 +31,7 @@ namespace sparrow
      * @tparam Layout The layout type to check.
      */
     template <class Layout>
-    concept arrow_layout = std::same_as<Layout, null_layout>
+    concept arrow_layout = mpl::is_type_instance_of_v<Layout, null_layout>
                            || mpl::is_type_instance_of_v<Layout, fixed_size_layout>
                            || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
                            || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>;
@@ -74,4 +74,5 @@ namespace sparrow
      */
     template <class R>
     concept constant_range_for_array_data = mpl::constant_range<R> && range_for_array_data<R>;
+
 }  // namespace sparrow

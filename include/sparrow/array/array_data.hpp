@@ -52,6 +52,42 @@ namespace sparrow
         value_ptr<array_data> dictionary;
     };
 
+    data_descriptor type_descriptor(const array_data& data);
+    array_data::length_type length(const array_data& data);
+    std::int64_t offset(const array_data& data);
+
+    array_data::bitmap_type& bitmap(array_data& data);
+    const array_data::bitmap_type& bitmap(const array_data& data);
+
+    std::size_t buffers_size(const array_data& data);
+    array_data::buffer_type& buffer_at(array_data& data, std::size_t i);
+    const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i);
+
+    std::size_t child_data_size(const array_data& data);
+    array_data& child_data_at(array_data& data, std::size_t i);
+    const array_data& child_data_at(const array_data& data, std::size_t i);
+
+    value_ptr<array_data>& dictionary(array_data& data);
+    const value_ptr<array_data>& dictionary(const array_data& data);
+
+    /**
+     * Concept for a structure that can be used as a data storage in the layout and the
+     * typed_array class.
+     */
+    template <class T>
+    concept data_storage = requires(const T t, std::size_t i)
+    {
+        { type_descriptor(t) } -> std::same_as<data_descriptor>;
+        { length(t) } -> std::same_as<std::int64_t>;
+        { offset(t) } -> std::same_as<std::int64_t>;
+        { bitmap(t) } -> std::ranges::random_access_range;
+        { buffers_size(t) } -> std::same_as<std::size_t>;
+        { buffer_at(t, i) } -> std::ranges::random_access_range;
+        { child_data_size(t) } -> std::same_as<std::size_t>;
+        child_data_at(t, i);
+        dictionary(t);
+    };
+
     /**
      * Layout iterator class
      *
@@ -99,6 +135,79 @@ namespace sparrow
         friend class iterator_access;
     };
 
+    /***********************************
+     * getter functions for array_data *
+     ***********************************/
+
+    inline data_descriptor type_descriptor(const array_data& data)
+    {
+        return data.type;
+    }
+
+    inline array_data::length_type length(const array_data& data)
+    {
+        return data.length;
+    }
+
+    inline std::int64_t offset(const array_data& data)
+    {
+        return data.offset;
+    }
+
+    inline array_data::bitmap_type& bitmap(array_data& data)
+    {
+        return data.bitmap;
+    }
+
+    inline const array_data::bitmap_type& bitmap(const array_data& data)
+    {
+        return data.bitmap;
+    }
+
+    inline std::size_t buffers_size(const array_data& data)
+    {
+        return data.buffers.size();
+    }
+
+    inline array_data::buffer_type& buffer_at(array_data& data, std::size_t i)
+    {
+        SPARROW_ASSERT_TRUE(i < buffers_size(data));
+        return data.buffers[i];
+    }
+
+    inline const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i)
+    {
+        SPARROW_ASSERT_TRUE(i < buffers_size(data));
+        return data.buffers[i];
+    }
+
+    inline std::size_t child_data_size(const array_data& data)
+    {
+        return data.child_data.size();
+    }
+
+    inline array_data& child_data_at(array_data& data, std::size_t i)
+    {
+        SPARROW_ASSERT_TRUE(i < child_data_size(data));
+        return data.child_data[i];
+    }
+
+    inline const array_data& child_data(const array_data& data, std::size_t i)
+    {
+        SPARROW_ASSERT_TRUE(i < child_data_size(data));
+        return data.child_data[i];
+    }
+
+    inline value_ptr<array_data>& dictionary(array_data& data)
+    {
+        return data.dictionary;
+    }
+
+    inline const value_ptr<array_data>& dictionary(const array_data& data)
+    {
+        return data.dictionary;
+    }
+    
     /**********************************
      * layout_iterator implementation *
      **********************************/

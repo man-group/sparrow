@@ -34,7 +34,7 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::NA;
         using value_type = null_type;
-        using default_layout = null_layout;
+        using default_layout = null_layout<>;
     };
 
     template <>

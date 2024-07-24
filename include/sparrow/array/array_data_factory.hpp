@@ -408,7 +408,7 @@ namespace sparrow
     template <arrow_layout Layout>
     array_data make_default_array_data()
     {
-        if constexpr (std::same_as<Layout, null_layout>)
+        if constexpr (mpl::is_type_instance_of_v<Layout, null_layout>)
         {
             return make_array_data_for_null_layout();
         }
