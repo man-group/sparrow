@@ -226,6 +226,16 @@ namespace sparrow
     }
 
     template <class T>
+    // This is needed to avoid AddressSanitizer false positives
+#if defined(_MSC_VER) && !defined(__clang__)  // MSVC
+    __declspec(no_sanitize_address)
+#else
+#    if defined(__has_feature)
+#        if __has_feature(address_sanitizer)
+    __attribute__((no_sanitize("address")))
+#        endif
+#    endif
+#endif
     void any_allocator<T>::deallocate(T* p, std::size_t n)
     {
         return visit_storage(

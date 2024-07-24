@@ -177,7 +177,7 @@ namespace half
         const std::uint32_t f_m_rounded = ( f_m + f_m_round_offset );
         const std::uint32_t f_m_denorm_sa = ( one - f_e_half_bias );
         const std::uint32_t f_m_with_hidden = ( f_m_rounded | f_m_hidden_bit );
-        const std::uint32_t f_m_denorm = ( f_m_with_hidden >> f_m_denorm_sa );
+        const std::uint32_t f_m_denorm = f_m_denorm_sa < 32 ? ( f_m_with_hidden >> f_m_denorm_sa ) : 0;
         const std::uint32_t h_m_denorm = ( f_m_denorm >> f_h_m_pos_offset );
         const std::uint32_t f_m_rounded_overflow = ( f_m_rounded & f_m_hidden_bit );
         const std::uint32_t m_nan = ( f_m >> f_h_m_pos_offset );
@@ -405,14 +405,14 @@ namespace half
         const std::uint32_t c_m_denorm_round_amount = ( c_m_denorm_biased & h_m_mask );
         const std::uint32_t c_m_denorm_rounded = ( c_m_denorm_biased + c_m_denorm_round_amount );
         const std::uint32_t c_m_denorm_inplace = ( c_m_denorm_rounded >> h_m_bit_count );
-        const std::uint32_t c_m_denorm_unbiased = ( c_m_denorm_inplace >> c_e_denorm_unbias_e );
+        const std::uint32_t c_m_denorm_unbiased = c_e_denorm_unbias_e < 32 ? ( c_m_denorm_inplace >> c_e_denorm_unbias_e ) : 0;
         const std::uint32_t c_m_denorm = ( c_m_denorm_unbiased & h_m_mask );
         const std::uint32_t c_e_amount_biased = ( a_e_amount + b_e_amount );
         const std::uint32_t c_e_amount_unbiased = ( c_e_amount_biased - h_e_bias );
         const std::uint32_t is_c_e_unbiased_underflow = ( ( ( std::int32_t )c_e_amount_unbiased ) >> 31 );
         const std::uint32_t c_e_underflow_half_sa = ( -c_e_amount_unbiased );
         const std::uint32_t c_e_underflow_sa = ( c_e_underflow_half_sa << one );
-        const std::uint32_t c_m_underflow = ( c_m_normal >> c_e_underflow_sa );
+        const std::uint32_t c_m_underflow = c_e_underflow_sa < 32 ? ( c_m_normal >> c_e_underflow_sa ) : 0;
         const std::uint32_t c_e_underflow_added = ( c_e_amount_unbiased & ~is_c_e_unbiased_underflow );
         const std::uint32_t c_m_underflow_added = half_private::_uint32_selb( is_c_e_unbiased_underflow, c_m_underflow, c_m_normal );
         const std::uint32_t is_mul_overflow_test = ( c_e_underflow_added & m_round_overflow_bit );
