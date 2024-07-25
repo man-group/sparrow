@@ -153,7 +153,7 @@ namespace sparrow::test
     std::vector<T> iota_vector(size_t n)
     {
         std::vector<T> v(n);
-        std::iota(v.begin(), v.end(), 0);
+        std::iota(v.begin(), v.end(), static_cast<T>(0));
         return v;
     }
 
