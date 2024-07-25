@@ -26,7 +26,8 @@ struct sparrow::arrow_traits<MyDataType>
 {
     static constexpr data_type type_id = sparrow::data_type::INT32;
     using value_type = MyDataType;
-    using default_layout = sparrow::fixed_size_layout<MyDataType>;
+    template <sparrow::data_storage DS>
+    using default_layout = sparrow::fixed_size_layout<MyDataType, DS>;
 };
 
 static_assert(sparrow::is_arrow_traits<sparrow::arrow_traits<MyDataType>>);

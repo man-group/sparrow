@@ -23,17 +23,17 @@ using sparrow::test::to_value_type;
 namespace
 {
     constexpr size_t array_size = 10;
-    constexpr size_t offset = 0;
+    constexpr size_t array_offset = 0;
 
     template <class T>
-    typed_array<T> make_test_typed_array(std::size_t size = array_size, std::size_t off = offset)
+    typed_array<T> make_test_typed_array(std::size_t size = array_size, std::size_t off = array_offset)
     {
         auto ar_data = sparrow::test::make_test_array_data<T>(size, off);
         return typed_array<T>(ar_data);
     }
 
     template <class T>
-    array make_test_array(std::size_t size = array_size, std::size_t off = offset)
+    array make_test_array(std::size_t size = array_size, std::size_t off = array_offset)
     {
         auto ar_data = sparrow::test::make_test_array_data<T>(size, off);
         return array(std::move(ar_data));
@@ -217,7 +217,7 @@ TEST_SUITE("array")
                 else
                 {
                     std::get<ref>(ar.at(i)).value() *= 100;
-                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), to_value_type<T>(100 * (i + offset)));
+                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), to_value_type<T>(100 * (i + array_offset)));
                 }
             }
         }
@@ -228,7 +228,7 @@ TEST_SUITE("array")
             const auto ar = make_test_array<T>();
             for (std::size_t i = 0; i < ar.size(); ++i)
             {
-                CHECK_EQ(std::get<const_ref>(ar.at(i)).value(), to_value_type<T>(i + offset));
+                CHECK_EQ(std::get<const_ref>(ar.at(i)).value(), to_value_type<T>(i + array_offset));
             }
         }
 
@@ -253,7 +253,7 @@ TEST_SUITE("array")
                 else
                 {
                     std::get<ref>(ar[i]).value() *= 100;
-                    CHECK_EQ(std::get<const_ref>(car[i]).value(), to_value_type<T>(100 * (i + offset)));
+                    CHECK_EQ(std::get<const_ref>(car[i]).value(), to_value_type<T>(100 * (i + array_offset)));
                 }
             }
         }
@@ -264,7 +264,7 @@ TEST_SUITE("array")
             const auto ar = make_test_array<T>();
             for (std::size_t i = 0; i < ar.size(); ++i)
             {
-                CHECK_EQ(std::get<const_ref>(ar[i]).value(), to_value_type<T>(i + offset));
+                CHECK_EQ(std::get<const_ref>(ar[i]).value(), to_value_type<T>(i + array_offset));
             }
         }
 
@@ -289,7 +289,7 @@ TEST_SUITE("array")
                 else
                 {
                     std::get<ref>(*iter).value() *= 100;
-                    CHECK_EQ(std::get<ref>(*iter).value(), to_value_type<T>(100 * (i + offset)));
+                    CHECK_EQ(std::get<ref>(*iter).value(), to_value_type<T>(100 * (i + array_offset)));
                 }
             }
 
@@ -311,7 +311,7 @@ TEST_SUITE("array")
 
             for (std::size_t i = 0; i < ar.size(); ++iter, ++i)
             {
-                CHECK_EQ(std::get<const_ref>(*iter), to_value_type<T>(i + offset));
+                CHECK_EQ(std::get<const_ref>(*iter), to_value_type<T>(i + array_offset));
             }
 
             CHECK_EQ(iter, iter_end);
@@ -336,7 +336,7 @@ TEST_SUITE("array")
                 else
                 {
                     ar.template get<T>(i).value() *= 100;
-                    CHECK_EQ(car.template get<T>(i).value(), to_value_type<T>(100 * (i + offset)));
+                    CHECK_EQ(car.template get<T>(i).value(), to_value_type<T>(100 * (i + array_offset)));
                 }
             }
         }

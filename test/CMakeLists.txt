@@ -41,6 +41,7 @@ set(SPARROW_TESTS_SOURCES
     test_array_data_creation.cpp
     test_array_data_factory.cpp
     test_array.cpp
+    test_array_data.cpp
     test_arrow_array_schema_utils.cpp
     test_arrow_array.cpp
     test_arrow_schema.cpp
@@ -65,7 +66,9 @@ set(SPARROW_TESTS_SOURCES
 )
 set(test_target "test_sparrow_lib")
 add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
-target_link_libraries(${test_target} PRIVATE sparrow doctest::doctest)
+target_link_libraries(${test_target}
+    PRIVATE 
+        sparrow doctest::doctest $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
 include(doctest)
 doctest_discover_tests(${test_target})
@@ -117,6 +120,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         -Wshadow # warn the user if a variable declaration shadows one from a parent context
         -Wsign-conversion # warn on sign conversions
         -Wunused # warn on anything being unused
+        $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>
+        $<$<CXX_COMPILER_ID:GNU>:-Wno-array-bounds>
+        $<$<CXX_COMPILER_ID:GNU>:-Wno-stringop-overread>
         $<$<CXX_COMPILER_ID:GNU>:-Wduplicated-branches> # warn if if / else branches have duplicated code
         $<$<CXX_COMPILER_ID:GNU>:-Wduplicated-cond> # warn if if / else chain has duplicated conditions
         $<$<CXX_COMPILER_ID:GNU>:-Wlogical-op> # warn about logical operations being used where bitwise were probably wanted
@@ -125,8 +131,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
     )
 endif()
 
-target_compile_options(${test_target} PRIVATE ${compiles_options})
-
+target_compile_options(${test_target} PRIVATE ${compiles_options} $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>)
+target_link_options(${test_target}
+    PRIVATE
+        $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
 # We do not use non-standard C++
 set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(${test_target} PRIVATE cxx_std_20)

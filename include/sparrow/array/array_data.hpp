@@ -52,106 +52,94 @@ namespace sparrow
         value_ptr<array_data> dictionary;
     };
 
-    /**
-     * Layout iterator class
-     *
-     * Relies on a layout's couple of value iterator and bitmap iterator to
-     * return reference proxies when it is dereferenced.
-     */
-    template <class L, bool is_const>
-    class layout_iterator : public iterator_base<
-                                layout_iterator<L, is_const>,
-                                mpl::constify_t<typename L::value_type, is_const>,
-                                typename L::iterator_tag,
-                                std::conditional_t<is_const, typename L::const_reference, typename L::reference>>
+    data_descriptor type_descriptor(const array_data& data);
+    array_data::length_type length(const array_data& data);
+    std::int64_t offset(const array_data& data);
+
+    array_data::bitmap_type& bitmap(array_data& data);
+    const array_data::bitmap_type& bitmap(const array_data& data);
+
+    std::size_t buffers_size(const array_data& data);
+    array_data::buffer_type& buffer_at(array_data& data, std::size_t i);
+    const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i);
+
+    std::size_t child_data_size(const array_data& data);
+    array_data& child_data_at(array_data& data, std::size_t i);
+    const array_data& child_data_at(const array_data& data, std::size_t i);
+
+    value_ptr<array_data>& dictionary(array_data& data);
+    const value_ptr<array_data>& dictionary(const array_data& data);
+
+    /***********************************
+     * getter functions for array_data *
+     ***********************************/
+
+    inline data_descriptor type_descriptor(const array_data& data)
     {
-    public:
-
-        using self_type = layout_iterator<L, is_const>;
-        using base_type = iterator_base<
-            self_type,
-            mpl::constify_t<typename L::value_type, is_const>,
-            typename L::iterator_tag,
-            std::conditional_t<is_const, typename L::const_reference, typename L::reference>>;
-        using reference = typename base_type::reference;
-        using difference_type = typename base_type::difference_type;
-
-        using value_iterator = std::conditional_t<is_const, typename L::const_value_iterator, typename L::value_iterator>;
-
-        using bitmap_iterator = std::conditional_t<is_const, typename L::const_bitmap_iterator, typename L::bitmap_iterator>;
-
-        layout_iterator() noexcept = default;
-        layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter);
-
-    private:
-
-        reference dereference() const;
-        void increment();
-        void decrement();
-        void advance(difference_type n);
-        difference_type distance_to(const self_type& rhs) const;
-        bool equal(const self_type& rhs) const;
-        bool less_than(const self_type& rhs) const;
-
-        value_iterator m_value_iter;
-        bitmap_iterator m_bitmap_iter;
-
-        friend class iterator_access;
-    };
-
-    /**********************************
-     * layout_iterator implementation *
-     **********************************/
-
-    template <class L, bool is_const>
-    layout_iterator<L, is_const>::layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter)
-        : m_value_iter(value_iter)
-        , m_bitmap_iter(bitmap_iter)
-    {
+        return data.type;
     }
 
-    template <class L, bool is_const>
-    auto layout_iterator<L, is_const>::dereference() const -> reference
+    inline array_data::length_type length(const array_data& data)
     {
-        return reference(*m_value_iter, *m_bitmap_iter);
+        return data.length;
     }
 
-    template <class L, bool is_const>
-    void layout_iterator<L, is_const>::increment()
+    inline std::int64_t offset(const array_data& data)
     {
-        ++m_value_iter;
-        ++m_bitmap_iter;
+        return data.offset;
     }
 
-    template <class L, bool is_const>
-    void layout_iterator<L, is_const>::decrement()
+    inline array_data::bitmap_type& bitmap(array_data& data)
     {
-        --m_value_iter;
-        --m_bitmap_iter;
+        return data.bitmap;
     }
 
-    template <class L, bool is_const>
-    void layout_iterator<L, is_const>::advance(difference_type n)
+    inline const array_data::bitmap_type& bitmap(const array_data& data)
     {
-        m_value_iter += n;
-        m_bitmap_iter += n;
+        return data.bitmap;
     }
 
-    template <class L, bool is_const>
-    auto layout_iterator<L, is_const>::distance_to(const self_type& rhs) const -> difference_type
+    inline std::size_t buffers_size(const array_data& data)
     {
-        return rhs.m_value_iter - m_value_iter;
+        return data.buffers.size();
     }
 
-    template <class L, bool is_const>
-    bool layout_iterator<L, is_const>::equal(const self_type& rhs) const
+    inline array_data::buffer_type& buffer_at(array_data& data, std::size_t i)
     {
-        return m_value_iter == rhs.m_value_iter && m_bitmap_iter == rhs.m_bitmap_iter;
+        SPARROW_ASSERT_TRUE(i < buffers_size(data));
+        return data.buffers[i];
     }
 
-    template <class L, bool is_const>
-    bool layout_iterator<L, is_const>::less_than(const self_type& rhs) const
+    inline const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i)
     {
-        return m_value_iter < rhs.m_value_iter && m_bitmap_iter < rhs.m_bitmap_iter;
+        SPARROW_ASSERT_TRUE(i < buffers_size(data));
+        return data.buffers[i];
+    }
+
+    inline std::size_t child_data_size(const array_data& data)
+    {
+        return data.child_data.size();
+    }
+
+    inline array_data& child_data_at(array_data& data, std::size_t i)
+    {
+        SPARROW_ASSERT_TRUE(i < child_data_size(data));
+        return data.child_data[i];
+    }
+
+    inline const array_data& child_data_at(const array_data& data, std::size_t i)
+    {
+        SPARROW_ASSERT_TRUE(i < child_data_size(data));
+        return data.child_data[i];
+    }
+
+    inline value_ptr<array_data>& dictionary(array_data& data)
+    {
+        return data.dictionary;
+    }
+
+    inline const value_ptr<array_data>& dictionary(const array_data& data)
+    {
+        return data.dictionary;
     }
 }

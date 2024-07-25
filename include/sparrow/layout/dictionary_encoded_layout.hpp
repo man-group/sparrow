@@ -16,6 +16,7 @@
 
 #include "sparrow/array/array_data.hpp"
 #include "sparrow/layout/fixed_size_layout.hpp"
+#include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
@@ -165,17 +166,18 @@ namespace sparrow
         using self_type = dictionary_encoded_layout<IT, SL, OT>;
         using index_type = IT;
         using sub_layout = SL;
+        using data_storage_type = typename sub_layout::data_storage_type;
         using inner_value_type = SL::inner_value_type;
         using inner_reference = typename SL::inner_reference;
         using inner_const_reference = typename SL::inner_const_reference;
-        using bitmap_type = array_data::bitmap_type;
-        using bitmap_value_type = bitmap_type::value_type;
-        using bitmap_const_reference = bitmap_type::const_reference;
-        using value_type = SL::value_type;
+        using bitmap_type = typename data_storage_type::bitmap_type;
+        using bitmap_value_type = typename bitmap_type::value_type;
+        using bitmap_const_reference = typename bitmap_type::const_reference;
+        using value_type = typename SL::value_type;
         using reference = typename SL::reference;
         using const_reference = typename SL::const_reference;
         using size_type = std::size_t;
-        using indexes_layout = fixed_size_layout<IT>;
+        using indexes_layout = fixed_size_layout<IT, data_storage_type>;
         using iterator_tag = std::random_access_iterator_tag;
 
         /**
@@ -202,8 +204,8 @@ namespace sparrow
         using const_value_iterator = dictionary_iterator<dictionary_value_traits<self_type, true>>;
         using const_value_range = std::ranges::subrange<const_value_iterator>;
 
-        explicit dictionary_encoded_layout(array_data& data);
-        void rebind_data(array_data& data);
+        explicit dictionary_encoded_layout(data_storage_type& data);
+        void rebind_data(data_storage_type& data);
 
         dictionary_encoded_layout(const dictionary_encoded_layout&) = delete;
         dictionary_encoded_layout& operator=(const dictionary_encoded_layout&) = delete;
@@ -335,7 +337,7 @@ namespace sparrow
      **********************************************/
 
     template <std::integral T, class SL, layout_offset OT>
-    dictionary_encoded_layout<T, SL, OT>::dictionary_encoded_layout(array_data& data)
+    dictionary_encoded_layout<T, SL, OT>::dictionary_encoded_layout(data_storage_type& data)
     {
         SPARROW_ASSERT_TRUE(data.dictionary);
         m_sub_layout = std::make_unique<SL>(*data.dictionary);
@@ -343,7 +345,7 @@ namespace sparrow
     }
 
     template <std::integral T, class SL, layout_offset OT>
-    void dictionary_encoded_layout<T, SL, OT>::rebind_data(array_data& data)
+    void dictionary_encoded_layout<T, SL, OT>::rebind_data(data_storage_type& data)
     {
         m_sub_layout->rebind_data(*data.dictionary);
         m_indexes_layout->rebind_data(data);

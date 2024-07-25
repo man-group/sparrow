@@ -14,28 +14,13 @@
 
 #pragma once
 
-#include "sparrow/layout/dictionary_encoded_layout.hpp"
-#include "sparrow/layout/fixed_size_layout.hpp"
-#include "sparrow/layout/null_layout.hpp"
-#include "sparrow/layout/variable_size_binary_layout.hpp"
+#include <ranges>
+
+#include "sparrow/array/data_type.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
-    /**
-     * Concept to check if a layout is a supported layout.
-     *
-     * A layout is considered supported if it is an instance of `fixed_size_layout`,
-     * `variable_size_binary_layout`, or `dictionary_encoded_layout`.
-     *
-     * @tparam Layout The layout type to check.
-     */
-    template <class Layout>
-    concept arrow_layout = std::same_as<Layout, null_layout>
-                           || mpl::is_type_instance_of_v<Layout, fixed_size_layout>
-                           || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
-                           || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>;
-
     /**
      * Concept to check if a type is a range of arrow base type extended.
      *
@@ -74,4 +59,22 @@ namespace sparrow
      */
     template <class R>
     concept constant_range_for_array_data = mpl::constant_range<R> && range_for_array_data<R>;
+
+    /**
+     * Concept for a structure that can be used as a data storage in the layout and the
+     * typed_array class.
+     */
+    template <class T>
+    concept data_storage = requires(T t, std::size_t i)
+    {
+        { type_descriptor(t) } -> std::same_as<data_descriptor>;
+        { length(t) } -> std::same_as<std::int64_t>;
+        { offset(t) } -> std::same_as<std::int64_t>;
+        { bitmap(t) } -> std::ranges::random_access_range;
+        { buffers_size(t) } -> std::same_as<std::size_t>;
+        { buffer_at(t, i) } -> std::ranges::random_access_range;
+        { child_data_size(t) } -> std::same_as<std::size_t>;
+        child_data_at(t, i);
+        dictionary(t);
+    };
 }  // namespace sparrow

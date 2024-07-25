@@ -19,6 +19,7 @@
 #include <ranges>
 
 #include "sparrow/array/array_data.hpp"
+#include "sparrow/array/array_data_concepts.hpp"
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
@@ -68,11 +69,16 @@ namespace sparrow
      *
      * This layout is a memory-efficient layout for the Null data type where
      * all values are null. In this case, no memory buffers are allocated.
+     *
+     * @tparam DS The type for the structure holding the data. Default to
+     *            array_data.
      */
+    template <data_storage DS = array_data>
     class null_layout
     {
     public:
 
+        using data_storage_type = DS;
         using inner_value_type = null_type;
         using value_type = nullable<inner_value_type>;
         using iterator = empty_iterator<value_type>;
@@ -90,8 +96,8 @@ namespace sparrow
         using const_value_range = std::ranges::subrange<const_value_iterator>;
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
-        explicit null_layout(array_data& data);
-        void rebind_data(array_data& data);
+        explicit null_layout(data_storage_type& data);
+        void rebind_data(data_storage_type& data);
 
         size_type size() const;
 
@@ -111,10 +117,10 @@ namespace sparrow
 
         difference_type ssize() const;
 
-        array_data& data_ref();
-        const array_data& data_ref() const;
+        data_storage_type& storage();
+        const data_storage_type& storage() const;
 
-        std::reference_wrapper<array_data> m_data;
+        std::reference_wrapper<data_storage_type> m_data;
     };
 
     /*********************************
@@ -173,76 +179,90 @@ namespace sparrow
      * null_layout implementation *
      ******************************/
 
-    inline null_layout::null_layout(array_data& data)
+    template <data_storage DS>
+    null_layout<DS>::null_layout(data_storage_type& data)
         : m_data(data)
     {
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() == 0u);
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) == 0u);
     }
 
-    inline void null_layout::rebind_data(array_data& data)
+    template <data_storage DS>
+    void null_layout<DS>::rebind_data(data_storage_type& data)
     {
-        SPARROW_ASSERT_TRUE(data_ref().buffers.size() == 0u);
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) == 0u);
         m_data = data;
     }
 
-    inline auto null_layout::size() const -> size_type
+    template <data_storage DS>
+    auto null_layout<DS>::size() const -> size_type
     {
-        return static_cast<size_type>(data_ref().length);
+        return static_cast<size_type>(length(storage()));
     }
 
-    inline auto null_layout::operator[](size_type i) -> reference
+    template <data_storage DS>
+    auto null_layout<DS>::operator[](size_type i) -> reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         return *(begin());
     }
 
-    inline auto null_layout::operator[](size_type i) const -> const_reference
+    template <data_storage DS>
+    auto null_layout<DS>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         return *(cbegin());
     }
 
-    inline auto null_layout::begin() -> iterator
+    template <data_storage DS>
+    auto null_layout<DS>::begin() -> iterator
     {
         return iterator(0);
     }
 
-    inline auto null_layout::end() -> iterator
+    template <data_storage DS>
+    auto null_layout<DS>::end() -> iterator
     {
         return iterator(ssize());
     }
 
-    inline auto null_layout::cbegin() const -> const_iterator
+    template <data_storage DS>
+    auto null_layout<DS>::cbegin() const -> const_iterator
     {
         return const_iterator(0);
     }
 
-    inline auto null_layout::cend() const -> const_iterator
+    template <data_storage DS>
+    auto null_layout<DS>::cend() const -> const_iterator
     {
         return const_iterator(ssize());
     }
 
-    inline auto null_layout::values() const -> const_value_range
+    template <data_storage DS>
+    auto null_layout<DS>::values() const -> const_value_range
     {
         return std::ranges::subrange(const_value_iterator(0), const_value_iterator(ssize()));
     }
 
-    inline auto null_layout::bitmap() const -> const_bitmap_range
+    template <data_storage DS>
+    auto null_layout<DS>::bitmap() const -> const_bitmap_range
     {
         return std::ranges::subrange(const_bitmap_iterator(0), const_bitmap_iterator(ssize()));
     }
 
-    inline auto null_layout::ssize() const -> difference_type
+    template <data_storage DS>
+    auto null_layout<DS>::ssize() const -> difference_type
     {
         return static_cast<difference_type>(size());
     }
 
-    inline array_data& null_layout::data_ref()
+    template <data_storage DS>
+    auto null_layout<DS>::storage() -> data_storage_type&
     {
         return m_data.get();
     }
 
-    inline const array_data& null_layout::data_ref() const
+    template <data_storage DS>
+    auto null_layout<DS>::storage() const -> const data_storage_type&
     {
         return m_data.get();
     }
