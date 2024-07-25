@@ -70,12 +70,12 @@ namespace sparrow
 
 
         template <class R>
-        requires std::ranges::range<R> && std::convertible_to<std::ranges::range_value_t<R>, T> && mpl::is_type_instance_of_v<Layout, fixed_size_layout>
-        typed_array(R&& range);
+        requires std::ranges::range<R> && std::convertible_to<std::ranges::range_value_t<R>, T> && mpl::is_type_instance_of_v<L, fixed_size_layout>
+        typed_array_impl(R&& range);
 
         template <class R>
-        requires std::ranges::range<R> && std::convertible_to<std::ranges::range_value_t<R>, T> && mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
-        typed_array(R&& range);
+        requires std::ranges::range<R> && std::convertible_to<std::ranges::range_value_t<R>, T> && mpl::is_type_instance_of_v<L, variable_size_binary_layout>
+        typed_array_impl(R&& range);
 
 
 
@@ -268,13 +268,12 @@ namespace sparrow
     }
 
     // this is only for a fixed layout
-    template <class T, class Layout>
-        requires is_arrow_base_type<T>
+    template <is_arrow_base_type T, arrow_layout L>
     template <class R>
         requires std::ranges::range<R>
             && std::convertible_to<std::ranges::range_value_t<R>, T> 
-            && mpl::is_type_instance_of_v<Layout, fixed_size_layout>
-    typed_array<T, Layout>::typed_array(R&& range)
+            && mpl::is_type_instance_of_v<L, fixed_size_layout>
+    typed_array_impl<T, L>::typed_array_impl(R&& range)
     {
         // num elements
         auto n = static_cast<size_t>(std::ranges::distance(range));
@@ -305,13 +304,12 @@ namespace sparrow
     }
 
 
-    template <class T, class Layout>
-        requires is_arrow_base_type<T>
+    template <is_arrow_base_type T, arrow_layout L>
     template <class R>
         requires std::ranges::range<R>
             && std::convertible_to<std::ranges::range_value_t<R>, T>
-            && mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
-    typed_array<T, Layout>::typed_array(R&& words_range)
+            && mpl::is_type_instance_of_v<L, variable_size_binary_layout>
+    typed_array_impl<T, L>::typed_array_impl(R&& words_range)
     {
         // num elements
         auto n = static_cast<size_t>(std::ranges::distance(words_range));
