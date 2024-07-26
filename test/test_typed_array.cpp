@@ -484,9 +484,12 @@ TEST_SUITE("typed_array")
 
     TEST_CASE_TEMPLATE_DEFINE("all_except_string",  T, all_except_string)
     {
+        // this constructor is not available for string on purpose
+        // because std::string is auto mapped to a variable_size_binary_layout 
+        // which defeats the purpose of this constructor
         SUBCASE("constructor_with_n_inital_value")
         {   
-            // get a "one" in a generic way with iota_vector of length 2 at index 1
+            // get a "one" in a generic way with iota_vector of length 2 at index 1 =)
             const auto data = test::iota_vector<T>(2);
             const auto one = data[1];
 
