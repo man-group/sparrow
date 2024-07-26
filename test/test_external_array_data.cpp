@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/array/external_array_data.hpp"
+#include "sparrow/array/array_data.hpp"
 #include "sparrow/layout/fixed_size_layout.hpp"
 #include "sparrow/layout/null_layout.hpp"
 #include "sparrow/layout/variable_size_binary_layout.hpp"

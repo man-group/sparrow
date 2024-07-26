@@ -17,47 +17,14 @@
 #include <numeric>
 
 #include "sparrow/c_interface.hpp"
+#include "sparrow/array/array_data.hpp"
 #include "sparrow/array/data_traits.hpp"
 
 namespace sparrow::test
 {
-    namespace detail
-    {
-        template <class T>
-        void release_common_arrow(T* t)
-        {
-            if (t->dictionary)
-            {
-                delete t->dictionary;
-                t->dictionary = nullptr;
-            }
-
-            for (std::int64_t i = 0; i < t->n_children; ++i)
-            {
-                t->children[i]->release(t->children[i]);
-            }
-            delete[] t->children;
-            t->children = nullptr;
-
-            t->release = nullptr;
-        }
-    }
-    void release_arrow_schema(ArrowSchema* schema)
-    {
-        detail::release_common_arrow(schema);
-    }
-
-    void release_arrow_array(ArrowArray* arr)
-    {
-        for (std::int64_t i = 0; i < arr->n_buffers; ++i)
-        {
-            delete[] reinterpret_cast<const std::uint8_t*>(arr->buffers[i]);
-        }
-        delete[] reinterpret_cast<const std::uint8_t**>(arr->buffers);
-        arr->buffers = nullptr;
-        detail::release_common_arrow(arr);
-    }
-
+    void release_arrow_schema(ArrowSchema* schema);
+    void release_arrow_array(ArrowArray* arr);
+    
     inline std::uint8_t* make_bitmap_buffer(size_t n, const std::vector<size_t>& false_bitmap)
     {
         auto tmp_bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
@@ -96,7 +63,17 @@ namespace sparrow::test
         buf[0] = make_bitmap_buffer(n, false_bitmap);
 
         T* data_buf = new T[n];
-        std::iota(data_buf, data_buf + n, T(0));
+        if constexpr (std::same_as<T, bool>)
+        {
+            for (std::size_t i = 0; i < n; ++i)
+            {
+                data_buf[i] = (i%2 == 0);
+            }
+        }
+        else
+        {
+            std::iota(data_buf, data_buf + n, T(0));
+        }
         buf[1] = reinterpret_cast<std::uint8_t*>(data_buf);
 
         arr.children = nullptr;
@@ -124,7 +101,7 @@ namespace sparrow::test
     }
 
     template <>
-    void fill_schema_and_array<std::string>(
+    inline void fill_schema_and_array<std::string>(
         ArrowSchema& schema,
         ArrowArray& arr,
         size_t n,
@@ -171,7 +148,7 @@ namespace sparrow::test
     }
 
     template <>
-    void fill_schema_and_array<sparrow::null_type>(
+    inline void fill_schema_and_array<sparrow::null_type>(
         ArrowSchema& schema,
         ArrowArray& arr,
         size_t n,

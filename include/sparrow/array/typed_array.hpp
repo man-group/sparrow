@@ -26,7 +26,6 @@
 #include "sparrow/array/array_data_factory.hpp"
 #include "sparrow/array/data_traits.hpp"
 #include "sparrow/array/data_type.hpp"
-#include "sparrow/array/external_array_data.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/utils/algorithm.hpp"
 #include "sparrow/utils/contracts.hpp"
@@ -82,6 +81,13 @@ namespace sparrow
          && mpl::is_type_instance_of_v<L, fixed_size_layout>
         typed_array_impl(size_type n, const U& value);
 
+        // TODO: the commented constructors lead to compilation error when the
+        // data_storage_type is external_array_data, probably because of a missing
+        // constraint (notice there were added BEFORE the external_array development).
+        // However, this doe snot seem trivial to fix (adding a constraint on an
+        // additional template parameter that default to data_storage_type is not enough).
+        // Maybe a split of this class is required, with a base class capturing the
+        // implementation, and inheriting class providing the constructors.
         ///@{
         /**
          * Constructs a typed array with a fixed-size layout from a range of values.
@@ -91,12 +97,12 @@ namespace sparrow
          * @tparam R The type of the range.
          * @param range The range of values to construct the array from.
          */
-        template <class R>
+        /*template <class R, class D = typename L::data_storage_type>
         requires std::ranges::range<R> 
             && std::convertible_to<std::ranges::range_value_t<R>, T> 
             && (!is_nullable_v<std::ranges::range_value_t<R>>)
             && mpl::is_type_instance_of_v<L, fixed_size_layout>
-        typed_array_impl(R&& range);
+        typed_array_impl(R&& range, D = {});*/
         ///@}
 
         ///@{
@@ -108,11 +114,11 @@ namespace sparrow
          * @tparam R The type of the range.
          * @param range The range of values to construct the array from.
          */
-        template <class R>
+        /*template <class R>
         requires std::ranges::range<R> 
             && is_nullable_of_convertible_to<std::ranges::range_value_t<R>, T>
             && mpl::is_type_instance_of_v<L, fixed_size_layout>
-        typed_array_impl(R&& range);
+        typed_array_impl(R&& range);*/
         ///@}
 
         ///@{
@@ -124,12 +130,12 @@ namespace sparrow
          * @tparam R The type of the range.
          * @param range The range of values to construct the array from.
          */
-        template <class R>
+        /*template <class R>
         requires std::ranges::range<R> 
             && std::convertible_to<std::ranges::range_value_t<R>, T> 
             && (!is_nullable_v<std::ranges::range_value_t<R>>)
             && mpl::is_type_instance_of_v<L, variable_size_binary_layout>
-        typed_array_impl(R&& range);
+        typed_array_impl(R&& range);*/
         ///@}
 
         ///@{
@@ -141,11 +147,11 @@ namespace sparrow
          * @tparam R The type of the range.
          * @param range The range of values to construct the array from.
          */
-        template <class R>
+        /*template <class R>
         requires std::ranges::range<R> 
             && is_nullable_of_convertible_to<std::ranges::range_value_t<R>, T>
             && mpl::is_type_instance_of_v<L, variable_size_binary_layout>
-        typed_array_impl(R&& range);
+        typed_array_impl(R&& range);*/
         ///@}
 
         typed_array_impl& operator=(const typed_array_impl& rhs);
@@ -367,14 +373,15 @@ namespace sparrow
         m_layout.rebind_data(m_data);
     }
 
+    // TODO: see comment above declaration of these constructors.
     // fixed-layout non-nullable
-    template <is_arrow_base_type T, arrow_layout L>
+    /*template <is_arrow_base_type T, arrow_layout L>
     template <class R>
         requires std::ranges::range<R>
             && std::convertible_to<std::ranges::range_value_t<R>, T> 
             && (!is_nullable_v<std::ranges::range_value_t<R>>)
             && mpl::is_type_instance_of_v<L, fixed_size_layout>
-    typed_array_impl<T, L>::typed_array_impl(R&& range)
+    typed_array_impl<T, L>::typed_array_impl(R&& range, D)
     {
         // num elements
         auto n = static_cast<size_t>(std::ranges::distance(range));
@@ -503,7 +510,6 @@ namespace sparrow
         m_layout.rebind_data(m_data);
     }
 
-
     // variable-sized-layout nullable
     template <is_arrow_base_type T, arrow_layout L>
     template <class R>
@@ -569,8 +575,7 @@ namespace sparrow
         // pass the data to the member variables
         m_data = std::move(ad);
         m_layout.rebind_data(m_data);
-    }
-
+    }*/
 
     // Value semantics
 

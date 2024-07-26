@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/array.hpp"
+#include "sparrow/external_array.hpp"
 
-#include "array_data_creation.hpp"
+#include "external_array_data_creation.hpp"
 #include "doctest/doctest.h"
 
 using namespace sparrow;
-using sparrow::test::to_value_type;
+//using sparrow::test::to_value_type;
 
 namespace
 {
@@ -26,23 +26,32 @@ namespace
     constexpr size_t array_offset = 0;
 
     template <class T>
-    typed_array<T> make_test_typed_array(std::size_t size = array_size, std::size_t off = array_offset)
+    external_typed_array<T> make_test_external_typed_array(std::size_t size = array_size, std::size_t off = array_offset)
     {
-        auto ar_data = sparrow::test::make_test_array_data<T>(size, off);
-        return typed_array<T>(std::move(ar_data));
+        auto ar_data = sparrow::test::make_test_external_array_data<T>(size, off);
+        return external_typed_array<T>(std::move(ar_data));
     }
 
     template <class T>
-    array make_test_array(std::size_t size = array_size, std::size_t off = array_offset)
+    external_array make_test_external_array(std::size_t size = array_size, std::size_t off = array_offset)
     {
-        auto ar_data = sparrow::test::make_test_array_data<T>(size, off);
-        return array(std::move(ar_data));
+        ArrowSchema schema;
+        ArrowArray arr;
+        sparrow::test::fill_schema_and_array<T>(schema, arr, size, off, {});
+        return external_array(std::move(schema), std::move(arr));
     }
+
+    /*template <class T>
+    array make_test_external_array(std::size_t size = array_size, std::size_t off = array_offset)
+    {
+        auto ar_data = sparrow::test::make_test_external_array_data<T>(size, off);
+        return array(std::move(ar_data));
+    }*/
 }
 
-TEST_SUITE("const_array_iterator")
+TEST_SUITE("const_external_array_iterator")
 {
-    using const_iter_type = array_iterator<true>;
+    using const_iter_type = external_array_iterator<true>;
 
     TEST_CASE("default constructor")
     {
@@ -53,13 +62,13 @@ TEST_SUITE("const_array_iterator")
     {
         SUBCASE("constructor")
         {
-            auto tarray = make_test_typed_array<T>();
+            auto tarray = make_test_external_typed_array<T>();
             [[maybe_unused]] const_iter_type iter(tarray.cbegin());
         }
 
         SUBCASE("equality")
         {
-            auto tarray = make_test_typed_array<T>();
+            auto tarray = make_test_external_typed_array<T>();
             const_iter_type iter(tarray.cbegin());
             const_iter_type iter2(tarray.cbegin());
             CHECK_EQ(iter, iter2);
@@ -67,12 +76,12 @@ TEST_SUITE("const_array_iterator")
             const_iter_type iter3;
             if constexpr (std::same_as<T, double>)
             {
-                auto tarray2 = make_test_typed_array<int>();
+                auto tarray2 = make_test_external_typed_array<int>();
                 iter3 = tarray2.cbegin();
             }
             else
             {
-                auto tarray2 = make_test_typed_array<double>();
+                auto tarray2 = make_test_external_typed_array<double>();
                 iter3 = tarray2.cbegin();
             }
             CHECK_NE(iter2, iter3);
@@ -80,7 +89,7 @@ TEST_SUITE("const_array_iterator")
 
         SUBCASE("copy semantic")
         {
-            auto tarray = make_test_typed_array<T>();
+            auto tarray = make_test_external_typed_array<T>();
             const_iter_type iter(tarray.cbegin());
             const_iter_type iter2(iter);
             CHECK_EQ(iter, iter2);
@@ -88,12 +97,12 @@ TEST_SUITE("const_array_iterator")
             const_iter_type iter3;
             if constexpr (std::same_as<T, double>)
             {
-                auto tarray2 = make_test_typed_array<int>();
+                auto tarray2 = make_test_external_typed_array<int>();
                 iter3 = tarray2.cbegin();
             }
             else
             {
-                auto tarray2 = make_test_typed_array<double>();
+                auto tarray2 = make_test_external_typed_array<double>();
                 iter3 = tarray2.cbegin();
             }
             iter3 = iter;
@@ -102,7 +111,7 @@ TEST_SUITE("const_array_iterator")
 
         SUBCASE("increment")
         {
-            auto tarray = make_test_typed_array<T>();
+            auto tarray = make_test_external_typed_array<T>();
             const_iter_type iter(tarray.cbegin());
             const_iter_type iter2(tarray.cbegin());
             ++iter;
@@ -116,7 +125,7 @@ TEST_SUITE("const_array_iterator")
 
         SUBCASE("decrement")
         {
-            auto tarray = make_test_typed_array<T>();
+            auto tarray = make_test_external_typed_array<T>();
             const_iter_type iter(tarray.cbegin() + 3);
             const_iter_type iter2(tarray.cbegin() + 3);
 
@@ -131,7 +140,7 @@ TEST_SUITE("const_array_iterator")
 
         SUBCASE("distance")
         {
-            auto tarray = make_test_typed_array<T>();
+            auto tarray = make_test_external_typed_array<T>();
             const_iter_type iter(tarray.cbegin());
             const_iter_type iter2(tarray.cbegin() + 3);
 
@@ -141,8 +150,8 @@ TEST_SUITE("const_array_iterator")
 
         SUBCASE("dereference")
         {
-            using cref_t = typed_array<T>::const_reference;
-            auto tarray = make_test_typed_array<T>();
+            using cref_t = external_typed_array<T>::const_reference;
+            const auto tarray = make_test_external_typed_array<T>();
             const_iter_type iter = tarray.cbegin();
 
             auto val = std::get<cref_t>(*iter);
@@ -172,133 +181,53 @@ TEST_SUITE("const_array_iterator")
     );
 }
 
-TEST_SUITE("array")
+TEST_SUITE("external_array")
 {
     TEST_CASE_TEMPLATE_DEFINE("all", T, all)
     {
         SUBCASE("constructor")
         {
-            [[maybe_unused]] auto ar = make_test_array<T>();
+            [[maybe_unused]] auto ar = make_test_external_array<T>();
         }
 
-        SUBCASE("empty")
+        /*SUBCASE("empty")
         {
-            auto ar = make_test_array<T>();
+            auto ar = make_test_external_array<T>();
             CHECK_FALSE(ar.empty());
 
-            auto ar2 = make_test_array<T>(0, 0);
+            auto ar2 = make_test_external_array<T>(0, 0);
             CHECK(ar2.empty());
         }
 
         SUBCASE("size")
         {
-            auto ar = make_test_array<T>();
+            auto ar = make_test_external_array<T>();
             CHECK_EQ(ar.size(), array_size);
         }
 
-        SUBCASE("at")
-        {
-            using ref = typed_array<T>::reference;
-            using const_ref = typed_array<T>::const_reference;
-            auto ar = make_test_array<T>();
-            const auto& car = ar;
-            for (std::size_t i = 0; i < ar.size(); ++i)
-            {
-                if constexpr (std::same_as<T , bool>)
-                {
-                    std::get<ref>(ar.at(i)).value() = false;
-                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), false);
-                }
-                else if constexpr (std::same_as<T, std::string>)
-                {
-                    std::get<ref>(ar.at(i)).value() = "rod";
-                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), "rod");
-                }
-                else
-                {
-                    std::get<ref>(ar.at(i)).value() *= 100;
-                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), to_value_type<T>(100 * (i + array_offset)));
-                }
-            }
-        }
-        
         SUBCASE("const at")
         {
             using const_ref = typed_array<T>::const_reference;
-            const auto ar = make_test_array<T>();
+            const auto ar = make_test_external_array<T>();
             for (std::size_t i = 0; i < ar.size(); ++i)
             {
                 CHECK_EQ(std::get<const_ref>(ar.at(i)).value(), to_value_type<T>(i + array_offset));
             }
         }
 
-        SUBCASE("operator[]")
-        {
-            using ref = typed_array<T>::reference;
-            using const_ref = typed_array<T>::const_reference;
-            auto ar = make_test_array<T>();
-            const auto& car = ar;
-            for (std::size_t i = 0; i < ar.size(); ++i)
-            {
-                if constexpr (std::same_as<T , bool>)
-                {
-                    std::get<ref>(ar[i]).value() = false;
-                    CHECK_EQ(std::get<const_ref>(car[i]).value(), false);
-                }
-                else if constexpr (std::same_as<T, std::string>)
-                {
-                    std::get<ref>(ar[i]).value() = "zombie";
-                    CHECK_EQ(std::get<const_ref>(car.at(i)).value(), "zombie");
-                }
-                else
-                {
-                    std::get<ref>(ar[i]).value() *= 100;
-                    CHECK_EQ(std::get<const_ref>(car[i]).value(), to_value_type<T>(100 * (i + array_offset)));
-                }
-            }
-        }
-
         SUBCASE("const operator[]")
         {
             using const_ref = typed_array<T>::const_reference;
-            const auto ar = make_test_array<T>();
+            const auto ar = make_test_external_array<T>();
             for (std::size_t i = 0; i < ar.size(); ++i)
             {
                 CHECK_EQ(std::get<const_ref>(ar[i]).value(), to_value_type<T>(i + array_offset));
             }
         }
 
-        SUBCASE("iterators")
-        {
-            auto ar = make_test_array<T>();
-            using ref = typed_array<T>::reference;
-
-            auto iter = ar.begin();
-            for (std::size_t i = 0; i < ar.size(); ++iter, ++i)
-            {
-                if constexpr (std::same_as<T, bool>)
-                {
-                    std::get<ref>(*iter).value() = false;
-                    CHECK_EQ(std::get<ref>(*iter).value(), false);
-                }
-                else if constexpr (std::same_as<T, std::string>)
-                {
-                    std::get<ref>(*iter).value() = "soad";
-                    CHECK_EQ(std::get<ref>(*iter).value(), "soad");
-                }
-                else
-                {
-                    std::get<ref>(*iter).value() *= 100;
-                    CHECK_EQ(std::get<ref>(*iter).value(), to_value_type<T>(100 * (i + array_offset)));
-                }
-            }
-
-            CHECK_EQ(iter, ar.end());
-        }
-
         SUBCASE("const iterators")
         {
-            const auto ar = make_test_array<T>();
+            const auto ar = make_test_external_array<T>();
             using const_ref = typed_array<T>::const_reference;
 
             auto iter = ar.cbegin();
@@ -319,7 +248,7 @@ TEST_SUITE("array")
 
         SUBCASE("get")
         {
-            auto ar = make_test_array<T>();
+            auto ar = make_test_external_array<T>();
             const auto& car = ar;
             for (std::size_t i = 0; i < ar.size(); ++i)
             {
@@ -339,7 +268,7 @@ TEST_SUITE("array")
                     CHECK_EQ(car.template get<T>(i).value(), to_value_type<T>(100 * (i + array_offset)));
                 }
             }
-        }
+        }*/
     }
 
     TEST_CASE_TEMPLATE_INVOKE(

@@ -14,6 +14,10 @@
 
 #pragma once
 
+#include <concepts>
+#include <sstream>
+#include <variant>
+
 #include "sparrow/array/typed_array.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -31,7 +35,7 @@ namespace sparrow
     using all_external_array_types_t = mpl::transform<make_external_typed_array_t, all_base_types_t>;
 
     /*
-     * Selection of typed_array types according to the DataStorage
+     * Selection of list of typed_array types according to the DataStorage
      */
     template <class DataStorage>
     struct select_all_array_types;
@@ -141,6 +145,15 @@ namespace sparrow
     template <bool is_const>
     using external_array_iterator = array_iterator_impl<external_array_data, is_const>;
 
+    /**
+     * common function for building internal storage
+     * of array and external_array
+     */
+
+    template <class DataStorage>
+    typename array_traits<DataStorage>::array_variant
+    build_array_variant(DataStorage&& data);
+    
     /*********************************
      * array_iterator implementation *
      *********************************/
@@ -263,5 +276,76 @@ namespace sparrow
             },
             m_iter
         );
+    }
+
+    /**************************************
+     * build_array_variant implementation *
+     **************************************/
+
+    namespace impl
+    {
+        template <class DataStorage>
+        struct select_typed_array;
+
+        template <>
+        struct select_typed_array<array_data>
+        {
+            template <class T>
+            using type = typed_array<T>;
+        };
+
+        template <>
+        struct select_typed_array<external_array_data>
+        {
+            template <class T>
+            using type = external_typed_array<T>;
+        };
+
+        template <class T, class DataStorage>
+        using select_typed_array_t = typename select_typed_array<DataStorage>::template type<T>;
+    }
+    template <class DataStorage>
+    inline typename array_traits<DataStorage>::array_variant
+    build_array_variant(DataStorage&& data)
+    {
+        data_descriptor dd = type_descriptor(data);
+        switch (dd.id())
+        {
+            case data_type::NA:
+                return impl::select_typed_array_t<null_type, DataStorage>(std::move(data));
+            case data_type::BOOL:
+                return impl::select_typed_array_t<bool, DataStorage>(std::move(data));
+            case data_type::UINT8:
+                return impl::select_typed_array_t<std::uint8_t, DataStorage>(std::move(data));
+            case data_type::INT8:
+                return impl::select_typed_array_t<std::int8_t, DataStorage>(std::move(data));
+            case data_type::UINT16:
+                return impl::select_typed_array_t<std::uint16_t, DataStorage>(std::move(data));
+            case data_type::INT16:
+                return impl::select_typed_array_t<std::int16_t, DataStorage>(std::move(data));
+            case data_type::UINT32:
+                return impl::select_typed_array_t<std::uint32_t, DataStorage>(std::move(data));
+            case data_type::INT32:
+                return impl::select_typed_array_t<std::int32_t, DataStorage>(std::move(data));
+            case data_type::UINT64:
+                return impl::select_typed_array_t<std::uint64_t, DataStorage>(std::move(data));
+            case data_type::INT64:
+                return impl::select_typed_array_t<std::int64_t, DataStorage>(std::move(data));
+            case data_type::HALF_FLOAT:
+                return impl::select_typed_array_t<float16_t, DataStorage>(std::move(data));
+            case data_type::FLOAT:
+                return impl::select_typed_array_t<float32_t, DataStorage>(std::move(data));
+            case data_type::DOUBLE:
+                return impl::select_typed_array_t<float64_t, DataStorage>(std::move(data));
+            case data_type::STRING:
+            case data_type::FIXED_SIZE_BINARY:
+                return impl::select_typed_array_t<std::string, DataStorage>(std::move(data));
+            case data_type::TIMESTAMP:
+                return impl::select_typed_array_t<sparrow::timestamp, DataStorage>(std::move(data));
+            default:
+                // TODO: implement other data types, remove the default use case
+                // and throw from outside of the switch
+                throw std::invalid_argument("not supported yet");
+        }
     }
 }

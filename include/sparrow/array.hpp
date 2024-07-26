@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <concepts>
-#include <sstream>
 #include <variant>
 
 #include "sparrow/array/data_type.hpp"
@@ -77,8 +75,6 @@ namespace sparrow
     private:
 
         using array_variant = traits_type::array_variant;
-        array_variant build_array(array_data&& data) const;
-
         array_variant m_array;
     };
 
@@ -86,51 +82,8 @@ namespace sparrow
      * array implementation *
      ************************/
 
-    inline auto array::build_array(array_data&& data) const -> array_variant
-    {
-        data_descriptor dd = data.type;
-        switch (dd.id())
-        {
-            case data_type::NA:
-                return typed_array<null_type>(std::move(data));
-            case data_type::BOOL:
-                return typed_array<bool>(std::move(data));
-            case data_type::UINT8:
-                return typed_array<std::uint8_t>(std::move(data));
-            case data_type::INT8:
-                return typed_array<std::int8_t>(std::move(data));
-            case data_type::UINT16:
-                return typed_array<std::uint16_t>(std::move(data));
-            case data_type::INT16:
-                return typed_array<std::int16_t>(std::move(data));
-            case data_type::UINT32:
-                return typed_array<std::uint32_t>(std::move(data));
-            case data_type::INT32:
-                return typed_array<std::int32_t>(std::move(data));
-            case data_type::UINT64:
-                return typed_array<std::uint64_t>(std::move(data));
-            case data_type::INT64:
-                return typed_array<std::int64_t>(std::move(data));
-            case data_type::HALF_FLOAT:
-                return typed_array<float16_t>(std::move(data));
-            case data_type::FLOAT:
-                return typed_array<float32_t>(std::move(data));
-            case data_type::DOUBLE:
-                return typed_array<float64_t>(std::move(data));
-            case data_type::STRING:
-            case data_type::FIXED_SIZE_BINARY:
-                return typed_array<std::string>(std::move(data));
-            case data_type::TIMESTAMP:
-                return typed_array<sparrow::timestamp>(std::move(data));
-            default:
-                // TODO: implement other data types, remove the default use case
-                // and throw from outside of the switch
-                throw std::invalid_argument("not supported yet");
-        }
-    }
-
     inline array::array(array_data data)
-        : m_array(build_array(std::move(data)))
+        : m_array(build_array_variant(std::move(data)))
     {
     }
 

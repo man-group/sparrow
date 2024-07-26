@@ -35,6 +35,7 @@ endif()
 set(SPARROW_TESTS_SOURCES
     main.cpp
     array_data_creation.cpp
+    external_array_data_creation.cpp
     test_algorithm.cpp
     test_allocator.cpp
     test_array_data_concepts.cpp
@@ -49,6 +50,7 @@ set(SPARROW_TESTS_SOURCES
     test_buffer.cpp
     test_dictionary_encoded_layout.cpp
     test_dynamic_bitset.cpp
+    test_external_array.cpp
     test_external_array_data.cpp
     test_fixed_size_layout.cpp
     test_iterator.cpp
@@ -132,6 +134,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
     )
 endif()
 
+target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
 target_compile_options(${test_target} PRIVATE ${compiles_options} $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>)
 target_link_options(${test_target}
     PRIVATE
