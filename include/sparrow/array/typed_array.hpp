@@ -68,7 +68,17 @@ namespace sparrow
         typed_array_impl(const typed_array_impl& rhs);
         typed_array_impl(typed_array_impl&& rhs);
 
-        // fixed-layout non-nullable
+        ///@{
+        /** Construct a typed array with a fixed layout with the same value repeated `n` times.
+         * 
+         * @param n The number of elements in the array.
+         * @param value The value to repeat.
+         */
+        ///@}
+        template<class U>
+        requires std::convertible_to<U, T>
+         && mpl::is_type_instance_of_v<L, fixed_size_layout>
+        typed_array_impl(size_type n, const U& value);
 
         ///@{
         /**
@@ -324,6 +334,27 @@ namespace sparrow
     {
     }
 
+    template <is_arrow_base_type T, arrow_layout L>
+    template<class U>
+    requires std::convertible_to<U, T>
+        && mpl::is_type_instance_of_v<L, fixed_size_layout>
+    typed_array_impl<T, L>::typed_array_impl(size_type n, const U& value)
+    {
+        sparrow::array_data ad;
+        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
+        ad.length = static_cast<typename array_data::length_type>(n);
+        ad.offset = static_cast<std::int64_t>(0);
+        ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
+        
+        const size_t buffer_size = (n * sizeof(T)) / sizeof(uint8_t);
+        sparrow::buffer<uint8_t> b(buffer_size);
+        std::fill_n(b.data<T>(), n, value);
+        ad.buffers.push_back(b);
+        
+        m_data = std::move(ad);
+        m_layout.rebind_data(m_data);
+    }
+
     // fixed-layout non-nullable
     template <is_arrow_base_type T, arrow_layout L>
     template <class R>
@@ -339,6 +370,8 @@ namespace sparrow
         // create the array_data object holding the data
         sparrow::array_data ad;
         ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
+        ad.length = static_cast<typename array_data::length_type>(n);
+        ad.offset = static_cast<std::int64_t>(0);
         ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
 
         //  the buffer holding the actual data
@@ -350,11 +383,6 @@ namespace sparrow
 
         // add the buffer to the array_data
         ad.buffers.push_back(b);
-
-        // bookkeeping
-        ad.length = static_cast<std::int64_t>(range.size());
-        ad.offset = static_cast<std::int64_t>(0);
-        ad.child_data.emplace_back();
 
         // pass the data to the member variables
         m_data = std::move(ad);
@@ -375,7 +403,10 @@ namespace sparrow
         // create the array_data object holding the data
         sparrow::array_data ad;
         ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
+        ad.length = static_cast<typename array_data::length_type>(n);
+        ad.offset = static_cast<std::int64_t>(0);
         ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
+        ad.child_data.emplace_back();
 
         const size_t buffer_size = (n * sizeof(T)) / sizeof(uint8_t);
         sparrow::buffer<uint8_t> b(buffer_size);
@@ -400,11 +431,6 @@ namespace sparrow
         // add the buffer to the array_data
         ad.buffers.push_back(b);
 
-        // bookkeeping
-        ad.length = static_cast<std::int64_t>(range.size());
-        ad.offset = static_cast<std::int64_t>(0);
-        ad.child_data.emplace_back();
-
         // pass the data to the member variables
         m_data = std::move(ad);
         m_layout.rebind_data(m_data);
@@ -425,6 +451,8 @@ namespace sparrow
         // create the array_data object holding the data
         sparrow::array_data ad;
         ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
+        ad.length = static_cast<typename array_data::length_type>(n);
+        ad.offset = static_cast<std::int64_t>(0);
         ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
         ad.buffers.resize(2);
 
@@ -458,10 +486,6 @@ namespace sparrow
             iter += word_size;
             ++word_index;
         }
-        
-        // bookkeeping
-        ad.length = static_cast<std::int64_t>(n);
-        ad.offset = static_cast<std::int64_t>(0);
     
         // pass the data to the member variables
         m_data = std::move(ad);
@@ -483,6 +507,8 @@ namespace sparrow
         // create the array_data object holding the data
         sparrow::array_data ad;
         ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
+        ad.length = static_cast<typename array_data::length_type>(n);
+        ad.offset = static_cast<std::int64_t>(0);
         ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
         ad.buffers.resize(2);
 
@@ -528,10 +554,6 @@ namespace sparrow
             }
             ++word_index;
         }
-        
-        // bookkeeping
-        ad.length = static_cast<std::int64_t>(n);
-        ad.offset = static_cast<std::int64_t>(0);
     
         // pass the data to the member variables
         m_data = std::move(ad);
