@@ -396,7 +396,6 @@ namespace sparrow
             ++iter;
             ++index;
         }
-        
 
         // add the buffer to the array_data
         ad.buffers.push_back(b);
