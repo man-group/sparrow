@@ -139,7 +139,7 @@ namespace sparrow
     {
     };
 
-    inline bool operator==(const null_type&, const null_type&)
+    constexpr bool operator==(const null_type&, const null_type&)
     {
         return true;
     }
@@ -214,7 +214,7 @@ namespace sparrow
     ///
     /// @note: See ./arrow_traits.hpp for implementations for default base types.
     /// @see `is_arrow_traits`, `has_arrow_type_traits`
-    template <class T>
+    template < class T >
     struct arrow_traits;
 
     namespace detail

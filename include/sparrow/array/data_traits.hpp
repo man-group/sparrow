@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <concepts>
+
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/layout/fixed_size_layout.hpp"
 #include "sparrow/layout/null_layout.hpp"
@@ -99,23 +101,25 @@ namespace sparrow
         static constexpr data_type type_id = data_type::INT64;
     };
 
-    template <>
-    struct arrow_traits<float16_t> : common_native_types_traits<float16_t>
+    template< std::floating_point T >
+    constexpr
+    data_type expected_float_type(T = {})
     {
-        static constexpr data_type type_id = data_type::HALF_FLOAT;
+        switch(sizeof(T))
+        {
+            case 2: return data_type::HALF_FLOAT;
+            case 4: return data_type::FLOAT;
+            case 8: return data_type::DOUBLE;
+            default: return data_type::NA;
+        }
+    }
+
+    template < std::floating_point T >
+    struct arrow_traits<T> : common_native_types_traits<T>
+    {
+        static constexpr data_type type_id = expected_float_type<T>();
     };
 
-    template <>
-    struct arrow_traits<float32_t> : common_native_types_traits<float32_t>
-    {
-        static constexpr data_type type_id = data_type::FLOAT;
-    };
-
-    template <>
-    struct arrow_traits<float64_t> : common_native_types_traits<float64_t>
-    {
-        static constexpr data_type type_id = data_type::DOUBLE;
-    };
 
     template <>
     struct arrow_traits<std::string>
