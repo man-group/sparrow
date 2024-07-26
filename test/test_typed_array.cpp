@@ -68,6 +68,121 @@ TEST_SUITE("typed_array")
         CHECK_EQ(ta_for_dels.size(), 0);
     }
 
+    TEST_CASE("constructor from range of nullable fixed_size_layout"){
+        using nt = nullable<int32_t>;
+        SUBCASE("some missing")
+        {
+            std::vector<nt> data = { nt{0}, nullval, nt{2}, nullval};
+            typed_array<int32_t> ta{data};
+
+            CHECK_EQ(ta.size(), 4);
+
+            // 0
+            CHECK(ta[0].has_value());
+            CHECK_EQ(ta[0].value(), 0);
+
+            // 1
+            CHECK_FALSE(ta[1].has_value());
+            // 2
+            CHECK(ta[2].has_value());
+            CHECK_EQ(ta[2].value(), 2);
+            // 3
+            CHECK_FALSE(ta[3].has_value());
+        }
+        SUBCASE("all missing")
+        {
+            std::vector<nt> data = { nullval, nullval, nullval, nullval};
+            typed_array<int32_t> ta{data};
+
+            CHECK_EQ(ta.size(), 4);
+
+            // 0
+            CHECK_FALSE(ta[0].has_value());
+            // 1
+            CHECK_FALSE(ta[1].has_value());
+            // 2
+            CHECK_FALSE(ta[2].has_value());
+            // 3
+            CHECK_FALSE(ta[3].has_value());
+        }
+        SUBCASE("non missing")
+        {
+            std::vector<nt> data = { nt{0}, nt{1}, nt{2}, nt{3}};
+            typed_array<int32_t> ta{data};
+
+            CHECK_EQ(ta.size(), 4);
+
+            // 0
+            CHECK(ta[0].has_value());
+            CHECK_EQ(ta[0].value(), 0);
+
+            // 1
+            CHECK(ta[1].has_value());
+            CHECK_EQ(ta[1].value(), 1);
+
+            // 2
+            CHECK(ta[2].has_value());
+            CHECK_EQ(ta[2].value(), 2);
+
+            // 3
+            CHECK(ta[3].has_value());
+            CHECK_EQ(ta[3].value(), 3);
+        }
+    }
+    TEST_CASE("constructor from range of nullable variable_size_binary_layout"){
+        using nt = nullable<std::string>;
+        SUBCASE("some missing")
+        {
+            std::vector<nt> data = { nt{"aa"}, nullval, nt{"bbb"}, nullval};
+            typed_array<std::string> ta{data};
+
+            CHECK_EQ(ta.size(), 4);
+            // 0
+            CHECK(ta[0].has_value());
+            CHECK_EQ(ta[0].value(), "aa");
+            // 1
+            CHECK_FALSE(ta[1].has_value());
+            // 2
+            CHECK(ta[2].has_value());
+            CHECK_EQ(ta[2].value(), "bbb");
+            // 3
+            CHECK_FALSE(ta[3].has_value());
+        }
+        SUBCASE("all missing")
+        {
+            std::vector<nt> data = { nullval, nullval, nullval, nullval};
+            typed_array<std::string> ta{data};
+
+            CHECK_EQ(ta.size(), 4);
+            // 0
+            CHECK_FALSE(ta[0].has_value());
+            // 1
+            CHECK_FALSE(ta[1].has_value());
+            // 2
+            CHECK_FALSE(ta[2].has_value());
+            // 3
+            CHECK_FALSE(ta[3].has_value());
+        }
+        SUBCASE("non missing"){
+            std::vector<nt> data = { nt{"aa"}, nt{"bbb"}, nt{"c"}, nt{"dddd"}};
+            typed_array<std::string> ta{data};
+
+            CHECK_EQ(ta.size(), 4);
+            // 0
+            CHECK(ta[0].has_value());
+            CHECK_EQ(ta[0].value(), "aa");
+            // 1
+            CHECK(ta[1].has_value());
+            CHECK_EQ(ta[1].value(), "bbb");
+            // 2
+            CHECK(ta[2].has_value());
+            CHECK_EQ(ta[2].value(), "c");
+            // 3
+            CHECK(ta[3].has_value());
+            CHECK_EQ(ta[3].value(), "dddd");
+        }
+    }
+
     TEST_CASE_TEMPLATE_DEFINE("all", T, all)
     {
         SUBCASE("default constructor for fixed_size_layout")

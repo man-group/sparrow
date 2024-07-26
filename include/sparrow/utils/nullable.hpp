@@ -39,6 +39,22 @@ namespace sparrow
 {
     template <class T, mpl::boolean_like B>
     class nullable;
+
+    template <class T>
+    struct is_nullable : std::false_type {};
+
+    template <class T, mpl::boolean_like B>
+    struct is_nullable<nullable<T, B>> : std::true_type {};
+
+    template <class T>
+    inline constexpr bool is_nullable_v = is_nullable<T>::value;
+
+    template<class N, class T>
+    concept is_nullable_of = is_nullable_v<N> && std::same_as<typename N::value_type, T>;
+
+    template<class N, class T>
+    concept is_nullable_of_convertible_to = is_nullable_v<N> &&  std::convertible_to<typename N::value_type, T>;
+
     /*
      * Default traits for the nullable class. These traits should be specialized
      * for proxy classes whose reference and const_reference types are not
