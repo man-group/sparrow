@@ -1,5 +1,8 @@
 # build all examples
-SET(EXAMPLES typed_array.cpp)
+SET(EXAMPLES 
+    typed_array_low_level.cpp
+    typed_array_high_level.cpp
+)
 
 # iterate over all examples
 foreach(EXAMPLE ${EXAMPLES})

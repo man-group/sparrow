@@ -144,4 +144,73 @@ namespace sparrow::test
             return std::to_string(i);
         }
     }
+
+
+
+
+    template <typename T>
+    requires std::integral<T> && (!std::same_as<T, bool>)
+    std::vector<T> iota_vector(size_t n)
+    {
+        std::vector<T> v(n);
+        std::iota(v.begin(), v.end(), static_cast<T>(0));
+        return v;
+    }
+
+    template <typename T>
+    // floating point
+    requires std::floating_point<T> && (!std::same_as<T, sparrow::float16_t>)
+    std::vector<T> iota_vector(size_t n)
+    {
+        std::vector<T> v(n);
+        for (size_t i = 0; i < n; ++i)
+        {
+            v[i] = static_cast<T>(i);
+        }
+        return v;
+    }
+
+    // floating point float_16
+    template<class T>
+    requires std::is_same_v<T, sparrow::float16_t>
+    std::vector<T> iota_vector(size_t n)
+    {
+        std::vector<T> v(n);
+        for (size_t i = 0; i < n; ++i)
+        {
+            v[i] = static_cast<float>(i);
+        }
+        return v;
+    }
+
+
+
+
+    // iota-vector (for strings we use the index as as string as value)
+    template <class T>
+    requires std::is_same_v<T, std::string>
+    inline std::vector<T> iota_vector(size_t n)
+    {
+        std::vector<std::string> v(n);
+        for(size_t i = 0; i < n; ++i)
+        {
+            v[i] = std::to_string(i);
+        }
+        return v;
+    }
+
+    // for bool we alternate
+    template <class T>
+    requires std::is_same_v<T, bool>
+    inline std::vector<T> iota_vector(size_t n)
+    {
+        std::vector<bool> v(n);
+        for (size_t i = 0; i < n; ++i)
+        {
+            v[i] = i % 2 == 0;
+        }
+        return v;
+    }   
+
+
 }
