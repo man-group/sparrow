@@ -291,7 +291,7 @@ namespace sparrow
                            static_cast<std::size_t>(length(data)));
     }
 
-    std::size_t buffers_size(const external_array_data& data)
+    inline std::size_t buffers_size(const external_array_data& data)
     {
         // Special case: the null_layout does not allocate any buffer
         if (data.array().n_buffers == 0)

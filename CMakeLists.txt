@@ -98,6 +98,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_common.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_concepts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_factory.hpp

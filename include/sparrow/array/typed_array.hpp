@@ -26,6 +26,7 @@
 #include "sparrow/array/array_data_factory.hpp"
 #include "sparrow/array/data_traits.hpp"
 #include "sparrow/array/data_type.hpp"
+#include "sparrow/array/external_array_data.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/utils/algorithm.hpp"
 #include "sparrow/utils/contracts.hpp"
@@ -49,6 +50,7 @@ namespace sparrow
     public:
 
         using layout_type = L;
+        using data_storage_type = typename layout_type::data_storage_type;
 
         using value_type = typename layout_type::value_type;
         using reference = typename layout_type::reference;
@@ -63,7 +65,7 @@ namespace sparrow
 
         typed_array_impl() = default;
 
-        explicit typed_array_impl(array_data data);
+        explicit typed_array_impl(data_storage_type data);
 
         typed_array_impl(const typed_array_impl& rhs);
         typed_array_impl(typed_array_impl&& rhs);
@@ -262,7 +264,7 @@ namespace sparrow
 
     private:
 
-        array_data m_data = make_default_array_data<L>();
+        data_storage_type m_data = make_default_array_data<L>();
         layout_type m_layout{m_data};
     };
 
@@ -272,9 +274,19 @@ namespace sparrow
     template <class T, class Layout>
     bool operator==(const typed_array_impl<T, Layout>& ta1, const typed_array_impl<T, Layout>& ta2);
     
-    template <class T, class Layout = typename arrow_traits<T>::template default_layout<array_data>>
+    namespace impl
+    {
+        template <class T, class DataStorage>
+        using default_layout = typename arrow_traits<T>::template default_layout<DataStorage>;
+    }
+
+    template <class T, class Layout = impl::default_layout<T, array_data>>
     using typed_array = typed_array_impl<T, Layout>;
     
+    template <class T, class Layout = impl::default_layout<T, external_array_data>>
+    using external_typed_array = typed_array_impl<T, Layout>;
+
+
     /*
      * is_typed_array_impl traits
      */
@@ -328,7 +340,7 @@ namespace sparrow
 
     // Constructors
     template <is_arrow_base_type T, arrow_layout L>
-    typed_array_impl<T, L>::typed_array_impl(array_data data)
+    typed_array_impl<T, L>::typed_array_impl(data_storage_type data)
         : m_data(std::move(data))
         , m_layout(m_data)
     {
