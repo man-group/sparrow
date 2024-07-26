@@ -69,35 +69,72 @@ namespace sparrow
         typed_array_impl(typed_array_impl&& rhs);
 
         // fixed-layout non-nullable
+
+        ///@{
+        /**
+         * Constructs a typed array with a fixed-size layout from a range of values.
+         *
+         * The range must be a range of values convertible to `T` and the elements must not be nullable.
+         *
+         * @tparam R The type of the range.
+         * @param range The range of values to construct the array from.
+         */
         template <class R>
         requires std::ranges::range<R> 
             && std::convertible_to<std::ranges::range_value_t<R>, T> 
             && (!is_nullable_v<std::ranges::range_value_t<R>>)
             && mpl::is_type_instance_of_v<L, fixed_size_layout>
         typed_array_impl(R&& range);
+        ///@}
 
-        // fixed-layout nullable
+        ///@{
+        /**
+         * Constructs a typed array with a fixed-size layout from a range of nullable values.
+         *
+         * The range must be a range of values convertible to `T` and the elements must be nullable.
+         *
+         * @tparam R The type of the range.
+         * @param range The range of values to construct the array from.
+         */
         template <class R>
         requires std::ranges::range<R> 
             && is_nullable_of_convertible_to<std::ranges::range_value_t<R>, T>
             && mpl::is_type_instance_of_v<L, fixed_size_layout>
         typed_array_impl(R&& range);
+        ///@}
 
-        // variable-layout non-nullable
+        ///@{
+        /**
+         * Constructs a typed array with a variable-size layout from a range of values.
+         * 
+         * The range must be a range of values convertible to `T` and the elements must not be nullable.
+         * 
+         * @tparam R The type of the range.
+         * @param range The range of values to construct the array from.
+         */
         template <class R>
         requires std::ranges::range<R> 
             && std::convertible_to<std::ranges::range_value_t<R>, T> 
             && (!is_nullable_v<std::ranges::range_value_t<R>>)
             && mpl::is_type_instance_of_v<L, variable_size_binary_layout>
         typed_array_impl(R&& range);
+        ///@}
 
-        // variable-layout nullable
+        ///@{
+        /**
+         * Constructs a typed array with a variable-size layout from a range of nullable values.
+         * 
+         * The range must be a range of values convertible to `T` and the elements must be nullable.
+         * 
+         * @tparam R The type of the range.
+         * @param range The range of values to construct the array from.
+         */
         template <class R>
         requires std::ranges::range<R> 
             && is_nullable_of_convertible_to<std::ranges::range_value_t<R>, T>
             && mpl::is_type_instance_of_v<L, variable_size_binary_layout>
         typed_array_impl(R&& range);
-
+        ///@}
 
         typed_array_impl& operator=(const typed_array_impl& rhs);
         typed_array_impl& operator=(typed_array_impl&& rhs);
