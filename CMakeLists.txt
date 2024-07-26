@@ -103,6 +103,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/data_traits.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/data_type.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array/external_array_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/typed_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
@@ -152,15 +153,16 @@ if (BUILD_TESTS)
     add_subdirectory(test)
 endif ()
 
-
 # Docs
 # ====
+
 if(BUILD_DOCS)
     add_subdirectory(docs)
 endif()
 
-# Exacmples
-# ====
+# Examples
+# ========
+
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()

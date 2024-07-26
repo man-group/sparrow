@@ -684,21 +684,21 @@ namespace sparrow
     auto variable_size_binary_layout<T, CR, DS, OT>::offset(size_type i) const -> const_offset_iterator
     {
         SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
-        return buffer_at(storage(), 0u).template data<OT>() + sparrow::offset(storage()) + i;
+        return buffer_at(storage(), 0u).template data<const OT>() + sparrow::offset(storage()) + i;
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::offset_end() const -> const_offset_iterator
     {
         SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
-        return buffer_at(storage(), 0u).template data<OT>() + length(storage());
+        return buffer_at(storage(), 0u).template data<const OT>() + length(storage());
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::data(size_type i) const -> const_data_iterator
     {
         SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
-        return buffer_at(storage(), 1u).template data<data_type>() + i;
+        return buffer_at(storage(), 1u).template data<const data_type>() + i;
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>

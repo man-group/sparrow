@@ -25,6 +25,7 @@ namespace date = std::chrono;
 
 #include <climits>
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -285,6 +286,11 @@ namespace sparrow
         {
         }
 
+        data_descriptor(const char* format)
+            : data_descriptor(id_from_format(format))
+        {
+        }
+
         constexpr explicit data_descriptor(data_type id)
             : m_id(id)
         {
@@ -296,6 +302,8 @@ namespace sparrow
         }
 
     private:
+
+        static data_type id_from_format(const char* format);
 
         data_type m_id;
     };
@@ -314,4 +322,54 @@ namespace sparrow
 
     template <class T>
     concept layout_offset = std::same_as<T, std::int32_t> || std::same_as<T, std::int64_t>;
+
+    inline data_type data_descriptor::id_from_format(const char* format)
+    {
+        // TODO: add missing conversions from 
+        // https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
+        if (std::strlen(format) == 1u)
+        {
+            switch(format[0])
+            {
+            case 'n':
+                return data_type::NA;
+            case 'b':
+                return data_type::BOOL;
+            case 'c':
+                return data_type::INT8;
+            case 'C':
+                return data_type::UINT8;
+            case 's':
+                return data_type::INT16;
+            case 'S':
+                return data_type::UINT16;
+            case 'i':
+                return data_type::INT32;
+            case 'I':
+                return data_type::UINT32;
+            case 'l':
+                return data_type::INT64;
+            case 'L':
+                return data_type::UINT64;
+            case 'e':
+                return data_type::HALF_FLOAT;
+            case 'f':
+                return data_type::FLOAT;
+            case 'g':
+                return data_type::DOUBLE;
+            case 'u':
+                return data_type::STRING;
+            default:
+                return data_type::NA;
+            }
+        }
+        else if (std::strcmp(format, "tDm") == 0)
+        {
+            return data_type::TIMESTAMP;
+        }
+        else
+        {
+            return data_type::NA;
+        }
+    }
 }

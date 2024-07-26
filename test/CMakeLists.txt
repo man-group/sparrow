@@ -49,6 +49,7 @@ set(SPARROW_TESTS_SOURCES
     test_buffer.cpp
     test_dictionary_encoded_layout.cpp
     test_dynamic_bitset.cpp
+    test_external_array_data.cpp
     test_fixed_size_layout.cpp
     test_iterator.cpp
     test_memory.cpp
