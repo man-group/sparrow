@@ -1,7 +1,6 @@
 /** @example typed_array.cpp
- * Create a typed_array object from an array_data object.
- * The array_data object is created with 5 float32 elements where the value at index 2 is missing.
- * The typed_array is created from the array_data and the data is accessed.
+ * Create a typed_array object from a range.
+ * The range can be a range of values or a range of nullable values.
  */
 
 #include <sparrow/array/array_data.hpp>
@@ -10,15 +9,12 @@
 
 
 
-/////////////////////////////////////////////////
-// create array_data with 5 float32 elements
-/////////////////////////////////////////////////
-void example_float_typed_array(){
+
+void example_typed_array_of_floats(){
     using value_type = float;
     std::vector<value_type> data = {1.0, 2.0, 3.0, 4.0, 5.0};
     
-    // create a typed_array object from the array_data
-
+    // construct the array
     auto array = sparrow::typed_array<value_type>(data);
 
     // access the data
@@ -33,8 +29,7 @@ void example_float_typed_array(){
 }
 
 
-
-void example_string_typed_array(){
+void example_typed_array_of_strings(){
     using value_type = std::string;
     std::vector<std::string> data = {
         "one",
@@ -44,29 +39,50 @@ void example_string_typed_array(){
         "five"
     };
     
-    // create a typed_array object from the array_data
-
+    // construct the array
     auto array = sparrow::typed_array<value_type>(data);
-    const auto size = array.size();
+
     // access the data
-    for (auto i = 0; i <size; ++i) {
+    for (auto i = 0; i <array.size(); ++i) {
         if (array.bitmap()[i]) {
             auto  value = array[i].value();
             std::cout << std::string(value.begin(), value.end()) << std::endl;
         } else {
+            std::cout << "missing value" << std::endl;
         }
     }
 }
 
+void example_typed_array_of_strings_from_nullables(){
 
+    using value_type = std::string;
+    using nullable_type = sparrow::nullable<value_type>;
 
+    std::vector<nullable_type> data = {
+        nullable_type("one"),
+        nullable_type("two"),
+        nullable_type(),
+        nullable_type("four"),
+        nullable_type("five")
+    };
+    
+    // construct the array
+    auto array = sparrow::typed_array<value_type>(data);
 
-
-
+    // access the data
+    for (auto i = 0; i <array.size(); ++i) {
+        if (array.bitmap()[i]) {
+            auto  value = array[i].value();
+            std::cout << std::string(value.begin(), value.end()) << std::endl;
+        } else {
+            std::cout << "missing value" << std::endl;
+        }
+    }
+}
 
 int main() {
-    example_float_typed_array();
-    example_string_typed_array();
-
+    example_typed_array_of_floats();
+    example_typed_array_of_strings();
+    example_typed_array_of_strings_from_nullables();
     return 0;
 }
