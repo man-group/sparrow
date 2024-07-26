@@ -406,7 +406,6 @@ namespace sparrow
         ad.length = static_cast<typename array_data::length_type>(n);
         ad.offset = static_cast<std::int64_t>(0);
         ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
-        ad.child_data.emplace_back();
 
         const size_t buffer_size = (n * sizeof(T)) / sizeof(uint8_t);
         sparrow::buffer<uint8_t> b(buffer_size);
