@@ -62,7 +62,9 @@ namespace sparrow
         using const_bitmap_range = typename layout_type::const_bitmap_range;
         using const_value_range = typename layout_type::const_value_range;
 
-        typed_array_impl() = default;
+        template <class D = typename L::data_storage_type>
+        requires (not std::same_as<D, external_array_data>)
+        typed_array_impl();
 
         explicit typed_array_impl(data_storage_type data);
 
@@ -345,6 +347,16 @@ namespace sparrow
     using array_const_value_range_t = typename A::const_value_range;
 
     // Constructors
+
+    template <is_arrow_base_type T, arrow_layout L>
+    template <class D>
+    requires (not std::same_as<D, external_array_data>)
+    typed_array_impl<T, L>::typed_array_impl()
+        : m_data(make_default_array_data<L>())
+        ,m_layout{m_data}
+    {
+    }
+    
     template <is_arrow_base_type T, arrow_layout L>
     typed_array_impl<T, L>::typed_array_impl(data_storage_type data)
         : m_data(std::move(data))

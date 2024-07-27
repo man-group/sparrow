@@ -271,7 +271,8 @@ namespace sparrow
         }
         else
         {
-            static_assert(false, "format not supported for given type");
+            static_assert(mpl::dependent_false<T>::value, "format not supported for given type");
+            mpl::unreachable();
         }
     }
 
