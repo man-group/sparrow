@@ -356,9 +356,7 @@ namespace sparrow
         m_children.reserve(size);
         for (std::size_t i = 0; i < size; ++i)
         {
-            external_array_data tmp(schema().children[i], false, array().children[i], false);
-            m_children.push_back(std::move(tmp));
-            //m_children.emplace_back(schema().children[i], false, array().children[i], false);
+            m_children.emplace_back(schema().children[i], false, array().children[i], false);
         }
     }
 

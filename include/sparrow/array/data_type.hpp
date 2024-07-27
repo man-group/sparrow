@@ -106,6 +106,14 @@ namespace sparrow
     using byte_t = std::byte;  // For now we will use this to represent raw data TODO: evaluate later if it's
                                // the right choice, switch to char if not
 
+    struct null_type
+    {
+    };
+
+    inline bool operator==(const null_type&, const null_type&)
+    {
+        return true;
+    }
 
     /// Runtime identifier of arrow data types, usually associated with raw bytes with the associated value.
     // TODO: does not support all types specified by the Arrow specification
@@ -136,13 +144,135 @@ namespace sparrow
         TIMESTAMP = 18,
     };
 
-    struct null_type
+    inline data_type data_type_from_format(const char* format)
     {
-    };
+        // TODO: add missing conversions from 
+        // https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
+        if (std::strlen(format) == 1u)
+        {
+            switch(format[0])
+            {
+            case 'n':
+                return data_type::NA;
+            case 'b':
+                return data_type::BOOL;
+            case 'c':
+                return data_type::INT8;
+            case 'C':
+                return data_type::UINT8;
+            case 's':
+                return data_type::INT16;
+            case 'S':
+                return data_type::UINT16;
+            case 'i':
+                return data_type::INT32;
+            case 'I':
+                return data_type::UINT32;
+            case 'l':
+                return data_type::INT64;
+            case 'L':
+                return data_type::UINT64;
+            case 'e':
+                return data_type::HALF_FLOAT;
+            case 'f':
+                return data_type::FLOAT;
+            case 'g':
+                return data_type::DOUBLE;
+            case 'u':
+                return data_type::STRING;
+            default:
+                return data_type::NA;
+            }
+        }
+        else if (std::strcmp(format, "tDm") == 0)
+        {
+            return data_type::TIMESTAMP;
+        }
+        else
+        {
+            return data_type::NA;
+        }
+    }
 
-    inline bool operator==(const null_type&, const null_type&)
+    template <class T>
+    inline const char* type_to_format()
     {
-        return true;
+        if constexpr (std::same_as<T, null_type>)
+        {
+            return "n";
+        }
+        else if constexpr (std::same_as<T, bool>)
+        {
+            return "b";
+        }
+        else if constexpr (std::same_as<T, bool>)
+        {
+            return "b";
+        }
+        else if constexpr (std::same_as<T, uint8_t>)
+        {
+            return "c";
+        }
+        else if constexpr (std::same_as<T, int8_t>)
+        {
+            return "C";
+        }
+        else if constexpr (std::same_as<T, char>)
+        {
+            return "C";
+        }
+        else if constexpr (std::same_as<T, uint16_t>)
+        {
+            return "S";
+        }
+        else if constexpr (std::same_as<T, int16_t>)
+        {
+            return "s";
+        }
+        else if constexpr (std::same_as<T, uint32_t>)
+        {
+            return "I";
+        }
+        else if constexpr (std::same_as<T, int32_t>)
+        {
+            return "i";
+        }
+        else if constexpr (std::same_as<T, uint64_t>)
+        {
+            return "L";
+        }
+        else if constexpr (std::same_as<T, int64_t>)
+        {
+            return "l";
+        }
+        else if constexpr (std::same_as<T, float16_t>)
+        {
+            return "e";
+        }
+        else if constexpr (std::same_as<T, float32_t>)
+        {
+            return "f";
+        }
+        else if constexpr (std::same_as<T, float64_t>)
+        {
+            return "g";
+        }
+        else if constexpr (std::same_as<T, std::string>)
+        {
+            return "u";
+        }
+        else if constexpr (std::same_as<T, std::vector<byte_t>>)
+        {
+            return "z";
+        }
+        else if constexpr (std::same_as<T, timestamp>)
+        {
+            return "tDm";
+        }
+        else
+        {
+            static_assert(false, "format not supported for given type");
+        }
     }
 
     /// C++ types value representation types matching Arrow types.
@@ -287,7 +417,7 @@ namespace sparrow
         }
 
         data_descriptor(const char* format)
-            : data_descriptor(id_from_format(format))
+            : data_descriptor(data_type_from_format(format))
         {
         }
 
@@ -322,54 +452,4 @@ namespace sparrow
 
     template <class T>
     concept layout_offset = std::same_as<T, std::int32_t> || std::same_as<T, std::int64_t>;
-
-    inline data_type data_descriptor::id_from_format(const char* format)
-    {
-        // TODO: add missing conversions from 
-        // https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
-        if (std::strlen(format) == 1u)
-        {
-            switch(format[0])
-            {
-            case 'n':
-                return data_type::NA;
-            case 'b':
-                return data_type::BOOL;
-            case 'c':
-                return data_type::INT8;
-            case 'C':
-                return data_type::UINT8;
-            case 's':
-                return data_type::INT16;
-            case 'S':
-                return data_type::UINT16;
-            case 'i':
-                return data_type::INT32;
-            case 'I':
-                return data_type::UINT32;
-            case 'l':
-                return data_type::INT64;
-            case 'L':
-                return data_type::UINT64;
-            case 'e':
-                return data_type::HALF_FLOAT;
-            case 'f':
-                return data_type::FLOAT;
-            case 'g':
-                return data_type::DOUBLE;
-            case 'u':
-                return data_type::STRING;
-            default:
-                return data_type::NA;
-            }
-        }
-        else if (std::strcmp(format, "tDm") == 0)
-        {
-            return data_type::TIMESTAMP;
-        }
-        else
-        {
-            return data_type::NA;
-        }
-    }
 }

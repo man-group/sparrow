@@ -45,7 +45,7 @@ namespace sparrow::test
     template <class T>
     void fill_schema_and_array(ArrowSchema& schema, ArrowArray& arr, size_t n, size_t offset, const std::vector<size_t>& false_bitmap)
     {
-        schema.format = sparrow::arrow_traits<T>::format;
+        schema.format = sparrow::type_to_format<T>();
         schema.name = "test";
         schema.n_children = 0;
         schema.children = nullptr;
@@ -84,7 +84,7 @@ namespace sparrow::test
 
     inline std::vector<std::string> make_testing_words(std::size_t n)
     {
-        static std::vector<std::string> words =
+        static const std::vector<std::string> words =
             {"once", "upon", "a", "time", "I", "was", "writing", "clean",
              "code", "now", "I'm", "only", "drawing", "flowcharts", "Bonnie", "Compyler" };
         std::vector<std::string> res(n);
@@ -108,7 +108,7 @@ namespace sparrow::test
         size_t offset,
         const std::vector<size_t>& false_bitmap)
     {
-        schema.format = sparrow::arrow_traits<std::string>::format;
+        schema.format = sparrow::type_to_format<std::string>();
         schema.name = "test";
         schema.n_children = 0;
         schema.children = nullptr;
@@ -155,7 +155,7 @@ namespace sparrow::test
         size_t offset,
         const std::vector<size_t>&)
     {
-        schema.format = sparrow::arrow_traits<sparrow::null_type>::format;
+        schema.format = sparrow::type_to_format<sparrow::null_type>();
         schema.name = "test";
         schema.n_children = 0;
         schema.children = nullptr;
