@@ -12,7 +12,7 @@ int main() {
     // create array_data with 5 float32 elements
     // where the value at index 2 is missing
     /////////////////////////////////////////////////
-    using value_type = float;
+    /*using value_type = float;
     auto n = 5;
 
     // create the array_data object 
@@ -51,7 +51,7 @@ int main() {
         } else {
             std::cout << "missing value" << std::endl;
         }
-    }
+    }*/
 
     return 0;
 }
