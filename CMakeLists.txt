@@ -135,7 +135,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
 )
 
-add_library(sparrow INTERFACE)
+add_library(sparrow INTERFACE ${SPARROW_HEADERS})
 
 target_include_directories(sparrow INTERFACE
     $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
@@ -153,13 +153,13 @@ if (BUILD_TESTS)
 endif ()
 
 
-# Docs 
+# Docs
 # ====
 if(BUILD_DOCS)
     add_subdirectory(docs)
 endif()
 
-# Exacmples 
+# Exacmples
 # ====
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
