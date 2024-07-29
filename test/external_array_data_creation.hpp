@@ -24,7 +24,7 @@ namespace sparrow::test
 {
     void release_arrow_schema(ArrowSchema* schema);
     void release_arrow_array(ArrowArray* arr);
-    
+
     inline std::uint8_t* make_bitmap_buffer(size_t n, const std::vector<size_t>& false_bitmap)
     {
         auto tmp_bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
@@ -45,7 +45,7 @@ namespace sparrow::test
     template <class T>
     void fill_schema_and_array(ArrowSchema& schema, ArrowArray& arr, size_t n, size_t offset, const std::vector<size_t>& false_bitmap)
     {
-        schema.format = sparrow::type_to_format<T>();
+        schema.format = sparrow::data_type_format_of<T>().data();
         schema.name = "test";
         schema.n_children = 0;
         schema.children = nullptr;
@@ -108,7 +108,7 @@ namespace sparrow::test
         size_t offset,
         const std::vector<size_t>& false_bitmap)
     {
-        schema.format = sparrow::type_to_format<std::string>();
+        schema.format = sparrow::data_type_format_of<std::string>().data();
         schema.name = "test";
         schema.n_children = 0;
         schema.children = nullptr;
@@ -155,7 +155,7 @@ namespace sparrow::test
         size_t offset,
         const std::vector<size_t>&)
     {
-        schema.format = sparrow::type_to_format<sparrow::null_type>();
+        schema.format = sparrow::data_type_format_of<sparrow::null_type>().data();
         schema.name = "test";
         schema.n_children = 0;
         schema.children = nullptr;

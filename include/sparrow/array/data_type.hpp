@@ -144,11 +144,14 @@ namespace sparrow
         TIMESTAMP = 18,
     };
 
-    inline data_type data_type_from_format(const char* format)
+    /// @returns The data_type value matchning the provided format string or `data_type::NA`
+    ///          if we couldnt find a amtching data_type.
+    // TODO: consider returning an optional instead
+    inline data_type format_to_data_type(std::string_view format)
     {
-        // TODO: add missing conversions from 
+        // TODO: add missing conversions from
         // https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
-        if (std::strlen(format) == 1u)
+        if (format.size() == 1)
         {
             switch(format[0])
             {
@@ -156,22 +159,22 @@ namespace sparrow
                 return data_type::NA;
             case 'b':
                 return data_type::BOOL;
-            case 'c':
-                return data_type::INT8;
             case 'C':
                 return data_type::UINT8;
-            case 's':
-                return data_type::INT16;
+            case 'c':
+                return data_type::INT8;
             case 'S':
                 return data_type::UINT16;
-            case 'i':
-                return data_type::INT32;
+            case 's':
+                return data_type::INT16;
             case 'I':
                 return data_type::UINT32;
-            case 'l':
-                return data_type::INT64;
+            case 'i':
+                return data_type::INT32;
             case 'L':
                 return data_type::UINT64;
+            case 'l':
+                return data_type::INT64;
             case 'e':
                 return data_type::HALF_FLOAT;
             case 'f':
@@ -179,102 +182,60 @@ namespace sparrow
             case 'g':
                 return data_type::DOUBLE;
             case 'u':
+            case 'U': // large string
                 return data_type::STRING;
+            case 'z': // binary
+            case 'Z': // large binary
+                return data_type::FIXED_SIZE_BINARY;
             default:
                 return data_type::NA;
             }
         }
-        else if (std::strcmp(format, "tDm") == 0)
+        else if (format == "vu") // string view
+        {
+            return data_type::STRING;
+        }
+        else if (format == "vu") // binary view
+        {
+            return data_type::FIXED_SIZE_BINARY;
+        }
+        // TODO: add propper timetstamp support below
+        else if (format.starts_with("t"))
         {
             return data_type::TIMESTAMP;
         }
-        else
-        {
-            return data_type::NA;
-        }
+
+        return data_type::NA;
     }
 
-    template <class T>
-    inline const char* type_to_format()
+    /// @returns Format string matching the provided data_type.
+    ///          The returned string is guaranteed to be null-terminated and to have static storage lifetime.
+    ///          (this means you can do data_type_to_format(mytype).data() to get a C pointer.
+    inline std::string_view data_type_to_format(data_type type)
     {
-        if constexpr (std::same_as<T, null_type>)
+        switch(type)
         {
-            return "n";
+            case data_type::NA : return "n";
+            case data_type::BOOL : return "b";
+            case data_type::UINT8 : return "C";
+            case data_type::INT8 : return "c";
+            case data_type::UINT16 : return "S";
+            case data_type::INT16 : return "s";
+            case data_type::UINT32 : return "I";
+            case data_type::INT32 : return "i";
+            case data_type::UINT64 : return "L";
+            case data_type::INT64 : return "l";
+            case data_type::HALF_FLOAT : return "e";
+            case data_type::FLOAT : return "f";
+            case data_type::DOUBLE : return "g";
+            case data_type::STRING : return "u";
+            case data_type::FIXED_SIZE_BINARY : return "z";
+            case data_type::TIMESTAMP : return "tDm";
         }
-        else if constexpr (std::same_as<T, bool>)
-        {
-            return "b";
-        }
-        else if constexpr (std::same_as<T, bool>)
-        {
-            return "b";
-        }
-        else if constexpr (std::same_as<T, uint8_t>)
-        {
-            return "c";
-        }
-        else if constexpr (std::same_as<T, int8_t>)
-        {
-            return "C";
-        }
-        else if constexpr (std::same_as<T, char>)
-        {
-            return "C";
-        }
-        else if constexpr (std::same_as<T, uint16_t>)
-        {
-            return "S";
-        }
-        else if constexpr (std::same_as<T, int16_t>)
-        {
-            return "s";
-        }
-        else if constexpr (std::same_as<T, uint32_t>)
-        {
-            return "I";
-        }
-        else if constexpr (std::same_as<T, int32_t>)
-        {
-            return "i";
-        }
-        else if constexpr (std::same_as<T, uint64_t>)
-        {
-            return "L";
-        }
-        else if constexpr (std::same_as<T, int64_t>)
-        {
-            return "l";
-        }
-        else if constexpr (std::same_as<T, float16_t>)
-        {
-            return "e";
-        }
-        else if constexpr (std::same_as<T, float32_t>)
-        {
-            return "f";
-        }
-        else if constexpr (std::same_as<T, float64_t>)
-        {
-            return "g";
-        }
-        else if constexpr (std::same_as<T, std::string>)
-        {
-            return "u";
-        }
-        else if constexpr (std::same_as<T, std::vector<byte_t>>)
-        {
-            return "z";
-        }
-        else if constexpr (std::same_as<T, timestamp>)
-        {
-            return "tDm";
-        }
-        else
-        {
-            static_assert(mpl::dependent_false<T>::value, "format not supported for given type");
-            mpl::unreachable();
-        }
+
+        mpl::unreachable();
     }
+
 
     /// C++ types value representation types matching Arrow types.
     // NOTE: this needs to be in sync-order with `data_type`
@@ -387,7 +348,7 @@ namespace sparrow
     concept any_arrow_type = is_arrow_base_type<T> or has_arrow_type_traits<T>;
 
     /// @returns Arrow type id to use for a given C++ representation of that type.
-    /// @see `arrow_traits`
+    ///          @see `arrow_traits`
     template <has_arrow_type_traits T>
     constexpr auto arrow_type_id() -> data_type
     {
@@ -395,12 +356,22 @@ namespace sparrow
     }
 
     /// @returns Arrow type id to use for the type of a given object.
-    /// @see `arrow_traits`
+    ///          @see `arrow_traits`
     template <has_arrow_type_traits T>
     constexpr auto arrow_type_id(const T&) -> data_type
     {
         return arrow_type_id<T>();
     }
+
+    /// @returns Format string matching the arrow data-type mathcing the provided
+    ///          arrow type.
+    template <has_arrow_type_traits T>
+    std::string_view data_type_format_of()
+    {
+        return data_type_to_format(arrow_type_id<T>());
+    }
+
+
 
     /// Binary layout type to use by default for the given C++ representation T of an arrow value.
     template <has_arrow_type_traits T>
@@ -418,7 +389,7 @@ namespace sparrow
         }
 
         data_descriptor(const char* format)
-            : data_descriptor(data_type_from_format(format))
+            : data_descriptor(format_to_data_type(format))
         {
         }
 
