@@ -147,7 +147,7 @@ namespace sparrow
     /// @returns The data_type value matchning the provided format string or `data_type::NA`
     ///          if we couldnt find a amtching data_type.
     // TODO: consider returning an optional instead
-    inline data_type format_to_data_type(std::string_view format)
+    constexpr data_type format_to_data_type(std::string_view format)
     {
         // TODO: add missing conversions from
         // https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
@@ -211,7 +211,7 @@ namespace sparrow
     /// @returns Format string matching the provided data_type.
     ///          The returned string is guaranteed to be null-terminated and to have static storage lifetime.
     ///          (this means you can do data_type_to_format(mytype).data() to get a C pointer.
-    inline std::string_view data_type_to_format(data_type type)
+    constexpr std::string_view data_type_to_format(data_type type)
     {
         switch(type)
         {
@@ -366,6 +366,7 @@ namespace sparrow
     /// @returns Format string matching the arrow data-type mathcing the provided
     ///          arrow type.
     template <has_arrow_type_traits T>
+    constexpr
     std::string_view data_type_format_of()
     {
         return data_type_to_format(arrow_type_id<T>());
