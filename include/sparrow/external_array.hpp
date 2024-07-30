@@ -19,6 +19,7 @@
 #include <variant>
 
 #include "sparrow/array/data_type.hpp"
+#include "sparrow/array/external_array_data.hpp"
 #include "sparrow/array/array_common.hpp"
 
 namespace sparrow
@@ -35,7 +36,7 @@ namespace sparrow
         using const_iterator = external_array_iterator<true>;
 
         template <class S, class A>
-        requires impl::is_arrow_schema_v<S> and impl::is_arrow_array_v<A>
+            requires impl::is_arrow_schema_v<S> and impl::is_arrow_array_v<A>
         external_array(S&& schema, A&& ar, bool own_schema = true, bool own_array = true);
 
         bool empty() const;
@@ -79,7 +80,7 @@ namespace sparrow
           )
     {
     }
-    
+
     inline bool external_array::empty() const
     {
         return std::visit(

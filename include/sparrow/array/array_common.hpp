@@ -153,7 +153,7 @@ namespace sparrow
     template <class DataStorage>
     typename array_traits<DataStorage>::array_variant
     build_array_variant(DataStorage&& data);
-    
+
     /*********************************
      * array_iterator implementation *
      *********************************/

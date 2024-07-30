@@ -121,7 +121,7 @@ namespace sparrow
         }
         return (*this)[i];
     }
-    
+
     inline auto array::at(size_type i) const -> const_reference
     {
         if (i >= size())
@@ -146,7 +146,7 @@ namespace sparrow
             m_array
         );
     }
-    
+
     inline auto array::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
@@ -164,7 +164,7 @@ namespace sparrow
         SPARROW_ASSERT_FALSE(empty());
         return (*this)[0];
     }
-    
+
     inline auto array::front() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
@@ -176,7 +176,7 @@ namespace sparrow
         SPARROW_ASSERT_FALSE(empty());
         return (*this)[size() - 1];
     }
-    
+
     inline auto array::back() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
@@ -204,7 +204,7 @@ namespace sparrow
             m_array
         );
     }
-    
+
     inline auto array::begin() const -> const_iterator
     {
         return cbegin();
@@ -238,7 +238,7 @@ namespace sparrow
     }
 
     template <class T>
-    inline auto array::get(size_type i) -> as_reference<T> 
+    inline auto array::get(size_type i) -> as_reference<T>
     {
         return std::get<as_reference<T>>(this->operator[](i));
     }

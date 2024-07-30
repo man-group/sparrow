@@ -16,8 +16,7 @@
 
 #include <numeric>
 
-#include "sparrow/c_interface.hpp"
-#include "sparrow/array/array_data.hpp"
+#include "sparrow/array/external_array_data.hpp"
 #include "sparrow/array/data_traits.hpp"
 
 namespace sparrow::test

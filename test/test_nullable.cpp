@@ -178,7 +178,7 @@ namespace sparrow
                 nullable<T> d;
                 CHECK_FALSE(d.has_value());
             }
-            
+
             SUBCASE("from nullval")
             {
                 nullable<T> d{nullval};
@@ -398,7 +398,7 @@ namespace sparrow
         {
             const T initial = fixture<T>::init();
             const T expected = fixture<T>::other();
-            
+
             SUBCASE("& overload")
             {
                 nullable<T> d{initial};
@@ -714,7 +714,7 @@ namespace sparrow
         {
             T initial = fixture<T>::init();
             T expected = fixture<T>::other();
-            
+
             SUBCASE("& overload")
             {
                 nullable<T&> d{initial};
