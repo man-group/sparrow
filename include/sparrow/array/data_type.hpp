@@ -379,7 +379,7 @@ namespace sparrow
     using default_layout_t = typename arrow_traits<T>::default_layout;
 
     // For now, a tiny wrapper around data_type
-    // More data and functions to come
+    // TODO: More data and functions to come
     class data_descriptor
     {
     public:
@@ -389,7 +389,7 @@ namespace sparrow
         {
         }
 
-        data_descriptor(const char* format)
+        data_descriptor(std::string_view format)
             : data_descriptor(format_to_data_type(format))
         {
         }
@@ -405,8 +405,6 @@ namespace sparrow
         }
 
     private:
-
-        static data_type id_from_format(const char* format);
 
         data_type m_id;
     };
