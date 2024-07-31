@@ -237,7 +237,7 @@ namespace sparrow
 
     inline void external_array_data::build_children()
     {
-        auto size = static_cast<std::size_t>(array().n_children);
+        const auto size = static_cast<std::size_t>(array().n_children);
         m_children.reserve(size);
         for (std::size_t i = 0; i < size; ++i)
         {
