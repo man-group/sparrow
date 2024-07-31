@@ -195,7 +195,7 @@ namespace sparrow
         {
             return data_type::STRING;
         }
-        else if (format == "vu") // binary view
+        else if (format == "vz") // binary view
         {
             return data_type::FIXED_SIZE_BINARY;
         }
