@@ -144,8 +144,8 @@ namespace sparrow
         TIMESTAMP = 18,
     };
 
-    /// @returns The data_type value matchning the provided format string or `data_type::NA`
-    ///          if we couldnt find a amtching data_type.
+    /// @returns The data_type value matching the provided format string or `data_type::NA`
+    ///          if we couldnt find a matching data_type.
     // TODO: consider returning an optional instead
     constexpr data_type format_to_data_type(std::string_view format)
     {
