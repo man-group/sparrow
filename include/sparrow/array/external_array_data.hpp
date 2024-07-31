@@ -29,7 +29,8 @@ namespace sparrow
      */
     namespace impl
     {
-        template <class T>
+
+        template <any_arrow_c_interface T>
         class external_wrapper
         {
         public:
@@ -37,24 +38,37 @@ namespace sparrow
             using self_type = external_wrapper<T>;
 
             template <class U>
-            requires std::is_rvalue_reference_v<U&&>
-            external_wrapper(U&&, bool own);
+                requires std::convertible_to<U, T>
+            external_wrapper(U&&, ownership ownership_model);
 
             template <class U>
-            requires std::is_pointer_v<U>
-            external_wrapper(U, bool own);
+                requires std::is_pointer_v<std::remove_reference_t<U>> and std::convertible_to<U, T*>
+            external_wrapper(U, ownership ownership_model);
 
             T& data();
             const T& data() const;
 
         private:
 
-            struct no_releaser
+            // `shared_ptr` deleter that does nothing,
+            // doesnt even delete the pointed structure.
+            struct dont_release_anything
             {
                 void operator()(T*) const {}
             };
 
-            struct releaser
+            // `shared_ptr` deleter that only release
+            // the Arrow data handled, not the pointed structure
+            // that owns it.
+            struct only_release_arrow_data
+            {
+                void operator()(T* t) const;
+            };
+
+            // `shared_ptr` deleter that releases both the
+            // Arrow data handled and the pointed structure
+            // that owns it.
+            struct full_ownership_deleter
             {
                 void operator()(T* t) const;
             };
@@ -62,17 +76,21 @@ namespace sparrow
             std::shared_ptr<T> p_data = nullptr;
         };
 
-        template <class T>
-        constexpr bool is_arrow_schema_v = std::same_as<T, ArrowSchema>
-                                        or std::same_as<std::remove_reference_t<T>, ArrowSchema*>;
 
-        template <class T>
-        constexpr bool is_arrow_array_v = std::same_as<T, ArrowArray>
-                                       or std::same_as<std::remove_reference_t<T>, ArrowArray*>;
     }
 
+
     /**
-     * Structure holding raw data allocated outside of sparrow
+     * Holds raw Arrow data allocated outside of this library.
+     * Usually constructed using `ArrayArray` and `ArrowSchema` C structures
+     * (see `arrow_interface/c_interface.hpp` for details).
+     *
+     * Data held by this type will not be modifiable but ownership will
+     * be preserved according to the requested behavior specified at construction.
+     *
+     * This type is specifically designed to work as a `data_storage` usable
+     * by layouts implementations. @see `data_storage` concept for details.
+     *
      */
     class external_array_data
     {
@@ -83,9 +101,22 @@ namespace sparrow
         using buffer_type = buffer_view<const block_type>;
         using length_type = std::int64_t;
 
-        template <class S, class A>
-        requires impl::is_arrow_schema_v<S> and impl::is_arrow_array_v<A>
-        external_array_data(S&& os, bool own_schema, A&& oa, bool own_array);
+
+        /**
+         * Constructor acquiring data from `ArrowArray` and `ArrowSchema` C structures.
+         * Ownership for either is specified through parameter `ownership`.
+         * As per Arrow's format specification, if the data is own, the provided release functions
+         * which are part of the provided structures will be used and must exist in that case.
+         *
+         * @param aschema `ArrowSchema` object passed by reference, value or pointer, that
+         *                this object will handle.
+         * @param aarray `ArrowArray` object passed by reference, value or pointer, that
+         *                this object will handle.
+         * @param ownership Specifies ownership of the data provided through the
+                            `ArrowSchema` and `ArrowArray`.
+         */
+        template <arrow_schema_or_ptr S, arrow_array_or_ptr A>
+        external_array_data(S&& aschema, A&& aarray, arrow_data_ownership ownership);
 
         const ArrowSchema& schema() const;
         const ArrowArray& array() const;
@@ -133,55 +164,50 @@ namespace sparrow
 
     namespace impl
     {
-        template <class T>
+        template <any_arrow_c_interface T>
         template <class U>
-        requires std::is_rvalue_reference_v<U&&>
-        external_wrapper<T>::external_wrapper(U&& u, bool own)
+            requires std::convertible_to<U, T>
+        external_wrapper<T>::external_wrapper(U&& u, ownership ownership_model)
         {
-            if (own)
+            if (ownership_model == ownership::owning)
             {
-                auto l = [r = releaser()](T* t)
-                {
-                    r(t);
-                    delete t;
-                };
-                p_data = std::shared_ptr<T>(new T(std::move(u)), std::move(l));
+                p_data = std::shared_ptr<T>(new T(std::forward<U>(u)), full_ownership_deleter{});
             }
             else
             {
-                p_data = std::shared_ptr<T>(new T(std::move(u)));
+                p_data = std::shared_ptr<T>(new T(std::forward<U>(u))); // default shared_ptr deleter
             }
         }
 
-        template <class T>
+        template <any_arrow_c_interface T>
         template <class U>
-        requires std::is_pointer_v<U>
-        external_wrapper<T>::external_wrapper(U u, bool own)
+            requires std::is_pointer_v<std::remove_reference_t<U>> and std::convertible_to<U, T*>
+        external_wrapper<T>::external_wrapper(U ptr, ownership ownership_model)
         {
-            if (own)
+            if (ownership_model == ownership::owning)
             {
-                p_data = std::shared_ptr<T>(u, releaser());
+                p_data = std::shared_ptr<T>(ptr, only_release_arrow_data{});
             }
             else
             {
-                p_data = std::shared_ptr<T>(u, no_releaser());
+                p_data = std::shared_ptr<T>(ptr, dont_release_anything{});
             }
         }
 
-        template <class T>
+        template <any_arrow_c_interface T>
         T& external_wrapper<T>::data()
         {
             return *p_data;
         }
 
-        template <class T>
+        template <any_arrow_c_interface T>
         const T& external_wrapper<T>::data() const
         {
             return *p_data;
         }
 
-        template <class T>
-        void external_wrapper<T>::releaser::operator()(T* t) const
+        template <any_arrow_c_interface T>
+        void external_wrapper<T>::only_release_arrow_data::operator()(T* t) const
         {
             if (t->release)
             {
@@ -189,17 +215,26 @@ namespace sparrow
                 t->release = nullptr;
             }
         }
+
+        template <any_arrow_c_interface T>
+        void external_wrapper<T>::full_ownership_deleter::operator()(T* t) const
+        {
+            if (t->release)
+            {
+                t->release(t);
+            }
+            delete t;
+        }
     }
 
     /**************************************
      * external_array_data implementation *
      **************************************/
 
-    template <class S, class A>
-    requires impl::is_arrow_schema_v<S> and impl::is_arrow_array_v<A>
-    external_array_data::external_array_data(S&& os, bool own_schema, A&& oa, bool own_array)
-        : m_schema(std::forward<S>(os), own_schema)
-        , m_array(std::forward<A>(oa), own_array)
+    template <arrow_schema_or_ptr S, arrow_array_or_ptr A>
+    external_array_data::external_array_data(S&& aschema, A&& aarray, arrow_data_ownership ownership)
+        : m_schema(std::forward<S>(aschema), ownership.schema)
+        , m_array(std::forward<A>(aarray), ownership.array)
     {
         build_children();
         build_dictionary();
@@ -241,7 +276,7 @@ namespace sparrow
         m_children.reserve(size);
         for (std::size_t i = 0; i < size; ++i)
         {
-            m_children.emplace_back(schema().children[i], false, array().children[i], false);
+            m_children.emplace_back(schema().children[i], array().children[i], doesnt_own_arrow_data);
         }
     }
 
@@ -249,7 +284,7 @@ namespace sparrow
     {
         if (schema().dictionary && array().dictionary)
         {
-            m_dictionary = value_ptr(external_array_data(schema().dictionary, false, array().dictionary, false));
+            m_dictionary = value_ptr(external_array_data(schema().dictionary, array().dictionary, doesnt_own_arrow_data));
         }
         else
         {
@@ -310,7 +345,7 @@ namespace sparrow
     buffer_at(const external_array_data& data, std::size_t i)
     {
         using return_type = external_array_data::buffer_type;
-        // The first buffer in exyternal data is used for the bitmap
+        // The first buffer in external data is used for the bitmap
         return return_type(impl::buffer_at(data, i + 1u),
                            static_cast<std::size_t>(length(data)));
     }

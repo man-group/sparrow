@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <concepts>
 #include <cstdint>
 
 #ifndef ARROW_C_DATA_INTERFACE
@@ -70,4 +71,56 @@ namespace sparrow
                                  // actually has null values).
         MAP_KEYS_SORTED = 4      // For map types, whether the keys within each map value are sorted.
     };
+
+    /// Specifies the ownership model when passing Arrow data to another system.
+    enum class ownership : bool
+    {
+        not_owning,  ///< The system handling the related Arrow data do not own that data,
+                     ///< that system must not and will not release it.
+
+        owning,  ///< The system handling the related Arrow data owns that data
+                 ///< and is responsible for releasing it through the release
+                 ///< function associated to the Arrow data.
+    };
+
+    /// Specifies the ownership model when passing Arrow data to another system
+    /// through `ArrowArray` and `ArrowSchema`
+    struct arrow_data_ownership
+    {
+        ///< Specifies if the ownership of the schema data
+        ownership schema = ownership::not_owning;
+
+        ///< Specifies if the ownership of the array data
+        ownership array = ownership::not_owning;
+    };
+
+    /// Useful shortcut value to specify non-owning handled Arrow data.
+    inline constexpr auto doesnt_own_arrow_data = arrow_data_ownership{
+        .schema = ownership::not_owning,
+        .array = ownership::not_owning,
+    };
+
+    /// Useful shortcut value to specify full owning of handled Arrow data.
+    inline constexpr auto owns_arrow_data = arrow_data_ownership{
+        .schema = ownership::owning,
+        .array = ownership::owning,
+    };
+
+    /// Matches only the C interface structs for Arrow.
+    template<class T>
+    concept any_arrow_c_interface = std::same_as<std::remove_cvref_t<T>, ArrowArray>
+                                    or std::same_as<std::remove_cvref_t<T>, ArrowSchema>;
+
+
+    /// Matches `ArrowSchema` or  a non-const pointer to an `ArrowSchema`.
+    template <class T>
+    concept arrow_schema_or_ptr = std::same_as<T, ArrowSchema>
+                                  or std::same_as<std::remove_reference_t<T>, ArrowSchema*>;
+
+    /// Matches `ArrowArray` or  a non-const pointer to an `ArrowArray`.
+    template <class T>
+    concept arrow_array_or_ptr = std::same_as<T, ArrowArray>
+                                 or std::same_as<std::remove_reference_t<T>, ArrowArray*>;
+
+
 }  // namespace sparrow

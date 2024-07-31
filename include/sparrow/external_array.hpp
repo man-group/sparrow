@@ -18,12 +18,21 @@
 #include <sstream>
 #include <variant>
 
+#include "sparrow/array/array_common.hpp"
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/array/external_array_data.hpp"
-#include "sparrow/array/array_common.hpp"
 
 namespace sparrow
 {
+    /**
+     * Holds and provide a c++ interface for raw Arrow data allocated outside of this library.
+     * Usually constructed using `ArrayArray` and `ArrowSchema` C structures
+     * (see `arrow_interface/c_interface.hpp` for details).
+     *
+     * Data held by this type will not be modifiable but ownership will
+     * be preserved according to the requested behavior specified at construction.
+     *
+     */
     class external_array
     {
     public:
@@ -35,9 +44,22 @@ namespace sparrow
 
         using const_iterator = external_array_iterator<true>;
 
-        template <class S, class A>
-            requires impl::is_arrow_schema_v<S> and impl::is_arrow_array_v<A>
-        external_array(S&& schema, A&& ar, bool own_schema = true, bool own_array = true);
+        /**
+         * Constructor acquiring data from `ArrowArray` and `ArrowSchema` C structures.
+         * Ownership for either is specified through parameter `ownership`.
+         * As per Arrow's format specification, if the data is own, the provided release functions
+         * which are part of the provided structures will be used and must exist in that case.
+         *
+         * @param aschema `ArrowSchema` object passed by reference, value or pointer, that
+         *                this object will handle.
+         * @param aarray `ArrowArray` object passed by reference, value or pointer, that
+         *                this object will handle.
+         * @param ownership Specifies ownership of the data provided through the
+                            `ArrowSchema` and `ArrowArray`. By default, if not specified,
+                            we assume that the ownership of these data is transfered to this object.
+         */
+        template <arrow_schema_or_ptr S, arrow_array_or_ptr A>
+        external_array(S&& aschema, A&& aarray, arrow_data_ownership ownership = owns_arrow_data);
 
         bool empty() const;
         size_type size() const;
@@ -70,14 +92,12 @@ namespace sparrow
      * external_array implementation *
      *********************************/
 
-    template <class S, class A>
-    requires impl::is_arrow_schema_v<S> and impl::is_arrow_array_v<A>
-    external_array::external_array(S&& schema, A&& ar, bool own_schema, bool own_array)
-        : m_array(
-            build_array_variant(
-                external_array_data(std::forward<S>(schema), own_schema, std::forward<A>(ar), own_array)
-            )
-          )
+    template <arrow_schema_or_ptr S, arrow_array_or_ptr A>
+    external_array::external_array(S&& aschema, A&& aarray, arrow_data_ownership ownership)
+        : m_array(build_array_variant(
+            external_array_data(std::forward<S>(aschema), std::forward<A>(aarray), ownership)
+        )
+        )
     {
     }
 
@@ -109,8 +129,8 @@ namespace sparrow
         {
             // TODO: Use our own format function
             throw std::out_of_range(
-                "sparrow::array::at: index out of range for array of size " + std::to_string(size()) + " at index "
-                + std::to_string(i)
+                "sparrow::array::at: index out of range for array of size " + std::to_string(size())
+                + " at index " + std::to_string(i)
             );
         }
         return (*this)[i];

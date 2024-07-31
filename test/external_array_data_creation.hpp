@@ -181,14 +181,14 @@ namespace sparrow::test
             ArrowSchema* schema = new ArrowSchema;
             ArrowArray* arr = new ArrowArray;
             fill_schema_and_array<T>(*schema, *arr, n, offset, false_bitmap);
-            return sparrow::external_array_data(schema, true, arr, true);
+            return sparrow::external_array_data(schema, arr, owns_arrow_data);
         }
         else
         {
             ArrowSchema schema;
             ArrowArray arr;
             fill_schema_and_array<T>(schema, arr, n, offset, false_bitmap);
-            return sparrow::external_array_data(std::move(schema), true, std::move(arr), true);
+            return sparrow::external_array_data(std::move(schema), std::move(arr), owns_arrow_data);
         }
     }
 }
