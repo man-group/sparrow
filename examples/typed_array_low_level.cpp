@@ -13,7 +13,7 @@ int main() {
     // where the value at index 2 is missing
     /////////////////////////////////////////////////
     using value_type = float;
-    static constexpr float no_value = NAN;
+    static const float no_value = NAN;
     auto n = 5;
 
     // create the array_data object
