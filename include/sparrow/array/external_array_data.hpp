@@ -211,8 +211,7 @@ namespace sparrow
         {
             if (t->release)
             {
-                t->release(t);
-                t->release = nullptr;
+                t->release(t); // implies `t->release = nullptr;`
             }
         }
 
@@ -221,7 +220,7 @@ namespace sparrow
         {
             if (t->release)
             {
-                t->release(t);
+                t->release(t); // implies `t->release = nullptr;`
             }
             delete t;
         }
