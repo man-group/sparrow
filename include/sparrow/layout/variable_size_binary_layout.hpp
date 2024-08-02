@@ -18,8 +18,8 @@
 #include <ranges>
 #include <string_view>
 
-#include "sparrow/array/array_data.hpp"
 #include "sparrow/array/array_data_concepts.hpp"
+#include "sparrow/array/array_data.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/algorithm.hpp"
 #include "sparrow/utils/contracts.hpp"
@@ -217,7 +217,7 @@ namespace sparrow
         using bitmap_iterator = data_storage_type::bitmap_type::iterator;
 
         using iterator = layout_iterator<self_type, false>;
-        using const_iterator = layout_iterator<self_type, true>;       
+        using const_iterator = layout_iterator<self_type, true>;
 
         using const_value_range = std::ranges::subrange<const_value_iterator>;
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
@@ -364,7 +364,7 @@ namespace sparrow
         p_layout->assign(std::forward<T>(rhs), m_index);
         return *this;
     }
-    
+
     template <class L>
     template <class U>
     requires std::assignable_from<U&, const char*>
@@ -431,7 +431,7 @@ namespace sparrow
     {
         return operator==(std::string_view(rhs));
     }
-    
+
     template <class L>
     template <std::ranges::input_range T>
     requires mpl::convertible_ranges<T, typename L::inner_value_type>
@@ -439,7 +439,7 @@ namespace sparrow
     {
         return lexicographical_compare_three_way(*this, rhs);
     }
-    
+
     template <class L>
     template <class U>
     requires std::assignable_from<U&, const char*>
@@ -564,7 +564,7 @@ namespace sparrow
                 const std::size_t shift_val = initial_value_length - new_value_length;
                 // Shift values
                 std::copy(data_buffer.cbegin() + offset_end, data_buffer.cend(), data_buffer.begin() + offset_beg + static_cast<difference_type>(new_value_length));
-                // Update offsets 
+                // Update offsets
 
                 std::for_each(offset(index+1), offset(layout_data_length + 1), [shift_val](auto& offset){ offset -= static_cast<offset_type>(shift_val); });
             }
@@ -684,21 +684,21 @@ namespace sparrow
     auto variable_size_binary_layout<T, CR, DS, OT>::offset(size_type i) const -> const_offset_iterator
     {
         SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
-        return buffer_at(storage(), 0u).template data<OT>() + sparrow::offset(storage()) + i;
+        return buffer_at(storage(), 0u).template data<const OT>() + sparrow::offset(storage()) + i;
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::offset_end() const -> const_offset_iterator
     {
         SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
-        return buffer_at(storage(), 0u).template data<OT>() + length(storage());
+        return buffer_at(storage(), 0u).template data<const OT>() + length(storage());
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::data(size_type i) const -> const_data_iterator
     {
         SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
-        return buffer_at(storage(), 1u).template data<data_type>() + i;
+        return buffer_at(storage(), 1u).template data<const data_type>() + i;
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
@@ -708,7 +708,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
-    auto variable_size_binary_layout<T, CR, DS, OT>::storage() const -> const data_storage_type& 
+    auto variable_size_binary_layout<T, CR, DS, OT>::storage() const -> const data_storage_type&
     {
         return m_data.get();
     }

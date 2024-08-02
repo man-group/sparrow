@@ -297,7 +297,7 @@ namespace sparrow
     auto fixed_size_layout<T, DS>::data() const -> const_pointer
     {
         SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
-        return buffer_at(storage(), 0u).template data<inner_value_type>();
+        return buffer_at(storage(), 0u).template data<const inner_value_type>();
     }
 
     template <class T, data_storage DS>

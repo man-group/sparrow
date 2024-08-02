@@ -14,10 +14,9 @@
 
 #pragma once
 
-#include <compare>
-#include <optional>
 #include <vector>
 
+#include "sparrow/array/array_data_concepts.hpp"
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
@@ -69,6 +68,11 @@ namespace sparrow
 
     value_ptr<array_data>& dictionary(array_data& data);
     const value_ptr<array_data>& dictionary(const array_data& data);
+
+
+    // `array_data` must always be usable as a data-storage that layout implementations can use.
+    static_assert(data_storage<array_data>);
+
 
     /***********************************
      * getter functions for array_data *
@@ -142,4 +146,7 @@ namespace sparrow
     {
         return data.dictionary;
     }
+
+
+
 }

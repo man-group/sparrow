@@ -22,7 +22,7 @@
 namespace sparrow
 {
     /**
-     * Concept to check if a type is a range of arrow base type extended.
+     * Matches types that are range of arrow base type extended.
      *
      * This concept checks if a type is a range and if its value type satisfies the
      * `is_arrow_base_type_extended` concept.
@@ -34,9 +34,8 @@ namespace sparrow
                                                 && is_arrow_base_type_extended<std::ranges::range_value_t<R>>;
 
     /**
-     * Concept to check if a type is a range for array data.
+     * Matches types that are range for array data.
      *
-     * This concept checks if a type `R` satisfies the requirements of being a range for array data.
      * A type `R` is considered a range for array data if it satisfies either of the following conditions:
      * - It satisfies the `range_of_arrow_base_type_extended` concept.
      * - The unwrapped and decayed `range_value_t` of `R` satisfies the `range_of_arrow_base_type_extended`
@@ -50,10 +49,7 @@ namespace sparrow
                                        std::unwrap_ref_decay_t<std::ranges::range_value_t<R>>>;
 
     /**
-     * Concept for a constant range that can be used with array data.
-     *
-     * This concept requires that the range is both a constant range and a range that can be used with array
-     * data.
+     * Matches a constant range that can be used with array data.
      *
      * @tparam R The type of the range.
      */
@@ -61,8 +57,8 @@ namespace sparrow
     concept constant_range_for_array_data = mpl::constant_range<R> && range_for_array_data<R>;
 
     /**
-     * Concept for a structure that can be used as a data storage in the layout and the
-     * typed_array class.
+     * Matches types that are valid data storage usable by layouts and the
+     * `typed_array` type.
      */
     template <class T>
     concept data_storage = requires(T t, std::size_t i)
@@ -77,4 +73,5 @@ namespace sparrow
         child_data_at(t, i);
         dictionary(t);
     };
+
 }  // namespace sparrow

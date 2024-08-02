@@ -22,10 +22,8 @@
 #include <type_traits>
 #include <unordered_set>
 
-#include "sparrow/array/array_data.hpp"
-#include "sparrow/array/array_data_factory.hpp"
+#include "sparrow/array/data_storages.hpp"
 #include "sparrow/array/data_traits.hpp"
-#include "sparrow/array/data_type.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/utils/algorithm.hpp"
 #include "sparrow/utils/contracts.hpp"
@@ -49,6 +47,7 @@ namespace sparrow
     public:
 
         using layout_type = L;
+        using data_storage_type = typename layout_type::data_storage_type;
 
         using value_type = typename layout_type::value_type;
         using reference = typename layout_type::reference;
@@ -61,93 +60,32 @@ namespace sparrow
         using const_bitmap_range = typename layout_type::const_bitmap_range;
         using const_value_range = typename layout_type::const_value_range;
 
-        typed_array_impl() = default;
+        template <class D = typename L::data_storage_type>
+        requires (not std::same_as<D, external_array_data>)
+        typed_array_impl();
 
-        explicit typed_array_impl(array_data data);
+        explicit typed_array_impl(data_storage_type data);
 
-        typed_array_impl(const typed_array_impl& rhs);
-        typed_array_impl(typed_array_impl&& rhs);
 
         ///@{
+        /// This type is moveable and copyable.
+        typed_array_impl(const typed_array_impl& rhs);
+        typed_array_impl(typed_array_impl&& rhs);
+        typed_array_impl& operator=(const typed_array_impl& rhs);
+        typed_array_impl& operator=(typed_array_impl&& rhs);
+        ///@}
+
         /** Construct a typed array with a fixed layout with the same value repeated `n` times.
-         * 
+         *
          * @param n The number of elements in the array.
          * @param value The value to repeat.
          */
-        ///@}
         template<class U>
         requires std::convertible_to<U, T>
          && mpl::is_type_instance_of_v<L, fixed_size_layout>
         typed_array_impl(size_type n, const U& value);
 
-        ///@{
-        /**
-         * Constructs a typed array with a fixed-size layout from a range of values.
-         *
-         * The range must be a range of values convertible to `T` and the elements must not be nullable.
-         *
-         * @tparam R The type of the range.
-         * @param range The range of values to construct the array from.
-         */
-        template <class R>
-        requires std::ranges::range<R> 
-            && std::convertible_to<std::ranges::range_value_t<R>, T> 
-            && (!is_nullable_v<std::ranges::range_value_t<R>>)
-            && mpl::is_type_instance_of_v<L, fixed_size_layout>
-        typed_array_impl(R&& range);
-        ///@}
 
-        ///@{
-        /**
-         * Constructs a typed array with a fixed-size layout from a range of nullable values.
-         *
-         * The range must be a range of values convertible to `T` and the elements must be nullable.
-         *
-         * @tparam R The type of the range.
-         * @param range The range of values to construct the array from.
-         */
-        template <class R>
-        requires std::ranges::range<R> 
-            && is_nullable_of_convertible_to<std::ranges::range_value_t<R>, T>
-            && mpl::is_type_instance_of_v<L, fixed_size_layout>
-        typed_array_impl(R&& range);
-        ///@}
-
-        ///@{
-        /**
-         * Constructs a typed array with a variable-size layout from a range of values.
-         * 
-         * The range must be a range of values convertible to `T` and the elements must not be nullable.
-         * 
-         * @tparam R The type of the range.
-         * @param range The range of values to construct the array from.
-         */
-        template <class R>
-        requires std::ranges::range<R> 
-            && std::convertible_to<std::ranges::range_value_t<R>, T> 
-            && (!is_nullable_v<std::ranges::range_value_t<R>>)
-            && mpl::is_type_instance_of_v<L, variable_size_binary_layout>
-        typed_array_impl(R&& range);
-        ///@}
-
-        ///@{
-        /**
-         * Constructs a typed array with a variable-size layout from a range of nullable values.
-         * 
-         * The range must be a range of values convertible to `T` and the elements must be nullable.
-         * 
-         * @tparam R The type of the range.
-         * @param range The range of values to construct the array from.
-         */
-        template <class R>
-        requires std::ranges::range<R> 
-            && is_nullable_of_convertible_to<std::ranges::range_value_t<R>, T>
-            && mpl::is_type_instance_of_v<L, variable_size_binary_layout>
-        typed_array_impl(R&& range);
-        ///@}
-
-        typed_array_impl& operator=(const typed_array_impl& rhs);
-        typed_array_impl& operator=(typed_array_impl&& rhs);
 
         // Element access
 
@@ -262,7 +200,7 @@ namespace sparrow
 
     private:
 
-        array_data m_data = make_default_array_data<L>();
+        data_storage_type m_data = make_default_array_data<L>();
         layout_type m_layout{m_data};
     };
 
@@ -271,10 +209,20 @@ namespace sparrow
 
     template <class T, class Layout>
     bool operator==(const typed_array_impl<T, Layout>& ta1, const typed_array_impl<T, Layout>& ta2);
-    
-    template <class T, class Layout = typename arrow_traits<T>::template default_layout<array_data>>
+
+    namespace impl
+    {
+        template <class T, class DataStorage>
+        using default_layout = typename arrow_traits<T>::template default_layout<DataStorage>;
+    }
+
+    template <class T, class Layout = impl::default_layout<T, array_data>>
     using typed_array = typed_array_impl<T, Layout>;
-    
+
+    template <class T, class Layout = impl::default_layout<T, external_array_data>>
+    using external_typed_array = typed_array_impl<T, Layout>;
+
+
     /*
      * is_typed_array_impl traits
      */
@@ -327,8 +275,18 @@ namespace sparrow
     using array_const_value_range_t = typename A::const_value_range;
 
     // Constructors
+
     template <is_arrow_base_type T, arrow_layout L>
-    typed_array_impl<T, L>::typed_array_impl(array_data data)
+    template <class D>
+    requires (not std::same_as<D, external_array_data>)
+    typed_array_impl<T, L>::typed_array_impl()
+        : m_data(make_default_array_data<L>())
+        ,m_layout{m_data}
+    {
+    }
+
+    template <is_arrow_base_type T, arrow_layout L>
+    typed_array_impl<T, L>::typed_array_impl(data_storage_type data)
         : m_data(std::move(data))
         , m_layout(m_data)
     {
@@ -345,220 +303,15 @@ namespace sparrow
         ad.length = static_cast<typename array_data::length_type>(n);
         ad.offset = static_cast<std::int64_t>(0);
         ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
-        
+
         const size_t buffer_size = (n * sizeof(T)) / sizeof(uint8_t);
         sparrow::buffer<uint8_t> b(buffer_size);
         std::fill_n(b.data<T>(), n, value);
         ad.buffers.push_back(b);
-        
+
         m_data = std::move(ad);
         m_layout.rebind_data(m_data);
     }
-
-    // fixed-layout non-nullable
-    template <is_arrow_base_type T, arrow_layout L>
-    template <class R>
-        requires std::ranges::range<R>
-            && std::convertible_to<std::ranges::range_value_t<R>, T> 
-            && (!is_nullable_v<std::ranges::range_value_t<R>>)
-            && mpl::is_type_instance_of_v<L, fixed_size_layout>
-    typed_array_impl<T, L>::typed_array_impl(R&& range)
-    {
-        // num elements
-        auto n = static_cast<size_t>(std::ranges::distance(range));
-
-        // create the array_data object holding the data
-        sparrow::array_data ad;
-        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
-        ad.length = static_cast<typename array_data::length_type>(n);
-        ad.offset = static_cast<std::int64_t>(0);
-        ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
-
-        //  the buffer holding the actual data
-        const size_t buffer_size = (n * sizeof(T)) / sizeof(uint8_t);
-        sparrow::buffer<uint8_t> b(buffer_size);
-
-        // copy the range to the buffer
-        std::ranges::copy(range, b.data<T>());
-
-        // add the buffer to the array_data
-        ad.buffers.push_back(b);
-
-        // pass the data to the member variables
-        m_data = std::move(ad);
-        m_layout.rebind_data(m_data);
-    }
-
-    // fixed-layout nullable
-    template <is_arrow_base_type T, arrow_layout L>
-    template <class R>
-        requires std::ranges::range<R>
-            && is_nullable_of_convertible_to<std::ranges::range_value_t<R>, T>
-            && mpl::is_type_instance_of_v<L, fixed_size_layout>
-    typed_array_impl<T, L>::typed_array_impl(R&& range)
-    {
-        // num elements
-        auto n = static_cast<size_t>(std::ranges::distance(range));
-
-        // create the array_data object holding the data
-        sparrow::array_data ad;
-        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
-        ad.length = static_cast<typename array_data::length_type>(n);
-        ad.offset = static_cast<std::int64_t>(0);
-        ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
-
-        const size_t buffer_size = (n * sizeof(T)) / sizeof(uint8_t);
-        sparrow::buffer<uint8_t> b(buffer_size);
-
-        // iterate over the range
-        auto iter = b.data<T>();
-        size_t index = 0;
-        for (const auto& value : range)
-        {
-            if (value.has_value())
-            {
-                *iter = value.value();
-            }
-            else
-            {
-                ad.bitmap.set(index, false);
-            }
-            ++iter;
-            ++index;
-        }
-
-        // add the buffer to the array_data
-        ad.buffers.push_back(b);
-
-        // pass the data to the member variables
-        m_data = std::move(ad);
-        m_layout.rebind_data(m_data);
-    }
-
-    // variable-sized-layout non-nullable
-    template <is_arrow_base_type T, arrow_layout L>
-    template <class R>
-        requires std::ranges::range<R>
-            && std::convertible_to<std::ranges::range_value_t<R>, T>
-            && (!is_nullable_v<std::ranges::range_value_t<R>>)
-            && mpl::is_type_instance_of_v<L, variable_size_binary_layout>
-    typed_array_impl<T, L>::typed_array_impl(R&& words_range)
-    {
-        // num elements
-        auto n = static_cast<size_t>(std::ranges::distance(words_range));
-
-        // create the array_data object holding the data
-        sparrow::array_data ad;
-        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
-        ad.length = static_cast<typename array_data::length_type>(n);
-        ad.offset = static_cast<std::int64_t>(0);
-        ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
-        ad.buffers.resize(2);
-
-        // offsets
-        ad.buffers[0].resize(sizeof(std::int64_t) * (n + 1));
-
-        // total size of the buffer holding the elements
-        ad.buffers[1].resize(std::accumulate(
-            words_range.begin(), words_range.end(), 
-            size_t(0),
-            [](std::size_t res, const auto& s)
-            {
-                return res + s.size();
-            }
-        ));
-
-        auto offset_ptr = ad.buffers[0].data<std::int64_t>();
-
-        //iterate over the words and copy them to the buffer
-        auto iter = ad.buffers[1].begin();
-
-        // offset at 0 is 0
-        offset_ptr[0] = 0u;
-
-        auto word_index = 0;
-        for(auto word : words_range)
-        {
-            const auto word_size = static_cast<sparrow::array_data::buffer_type::difference_type>(word.size());
-            offset_ptr[word_index + 1] = offset_ptr[word_index] + word_size;
-            std::ranges::copy(word, iter);
-            iter += word_size;
-            ++word_index;
-        }
-    
-        // pass the data to the member variables
-        m_data = std::move(ad);
-        m_layout.rebind_data(m_data);
-    }
-
-
-    // variable-sized-layout nullable
-    template <is_arrow_base_type T, arrow_layout L>
-    template <class R>
-    requires std::ranges::range<R>
-        && is_nullable_of_convertible_to<std::ranges::range_value_t<R>, T>
-        && mpl::is_type_instance_of_v<L, variable_size_binary_layout>
-    typed_array_impl<T, L>::typed_array_impl(R&& words_range)
-    {
-        // num elements
-        auto n = static_cast<size_t>(std::ranges::distance(words_range));
-
-        // create the array_data object holding the data
-        sparrow::array_data ad;
-        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
-        ad.length = static_cast<typename array_data::length_type>(n);
-        ad.offset = static_cast<std::int64_t>(0);
-        ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
-        ad.buffers.resize(2);
-
-        // offsets
-        ad.buffers[0].resize(sizeof(std::int64_t) * (n + 1));
-
-        // total size of the buffer holding the elements
-        ad.buffers[1].resize(std::accumulate(
-            words_range.begin(), words_range.end(), 
-            size_t(0),
-            [](std::size_t res, const auto& s)
-            {
-                if(s.has_value())
-                {
-                    return res + s.value().size();
-                }
-                return res;
-            }
-        ));
-
-        auto offset_ptr = ad.buffers[0].data<std::int64_t>();
-
-        //iterate over the words and copy them to the buffer
-        auto iter = ad.buffers[1].begin();
-
-        // offset at 0 is 0
-        offset_ptr[0] = 0u;
-
-        size_t word_index = 0;
-        for(auto maybe_word : words_range)
-        {
-            if(maybe_word.has_value())
-            {
-                const auto & word = maybe_word.value();
-                const auto word_size = static_cast<sparrow::array_data::buffer_type::difference_type>(word.size());
-                offset_ptr[word_index + 1] = offset_ptr[word_index] + word_size;
-                std::ranges::copy(word, iter);
-                iter += word_size;
-            }
-            else{
-                offset_ptr[word_index + 1] = offset_ptr[word_index];
-                ad.bitmap.set(word_index, false);
-            }
-            ++word_index;
-        }
-    
-        // pass the data to the member variables
-        m_data = std::move(ad);
-        m_layout.rebind_data(m_data);
-    }
-
 
     // Value semantics
 
@@ -739,11 +492,11 @@ namespace sparrow
 
     template <class T, class Layout>
     bool operator==(const typed_array_impl<T, Layout>& ta1, const typed_array_impl<T, Layout>& ta2)
-    {   
+    {
         // see https://github.com/man-group/sparrow/issues/108
 #if defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION < 190000)
         if(ta1.size() != ta2.size())
-        { 
+        {
             return false;
         }
         auto first1 = ta1.cbegin();

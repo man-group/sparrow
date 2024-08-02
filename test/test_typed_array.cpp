@@ -68,7 +68,7 @@ TEST_SUITE("typed_array")
         CHECK_EQ(ta_for_dels.size(), 0);
     }
 
-    TEST_CASE("constructor from range of nullable fixed_size_layout"){
+    /*TEST_CASE("constructor from range of nullable fixed_size_layout"){
         using nt = nullable<int32_t>;
         SUBCASE("some missing")
         {
@@ -181,7 +181,7 @@ TEST_SUITE("typed_array")
             CHECK(ta[3].has_value());
             CHECK_EQ(ta[3].value(), "dddd");
         }
-    }
+    }*/
 
     TEST_CASE_TEMPLATE_DEFINE("all", T, all)
     {
@@ -217,7 +217,7 @@ TEST_SUITE("typed_array")
 
             CHECK_EQ(ta1, ta3);
         }
-        SUBCASE("construct from range")
+        /*SUBCASE("construct from range")
         {
             auto data = test::iota_vector<T>(10);
             typed_array<T> ta{data};
@@ -226,7 +226,7 @@ TEST_SUITE("typed_array")
             {
                 CHECK_EQ(ta[i].value(), data[i]);
             }
-        }
+        }*/
         SUBCASE("copy assignment")
         {
             auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset);

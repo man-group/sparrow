@@ -139,6 +139,9 @@ namespace sparrow
     struct arrow_traits<timestamp> : common_native_types_traits<timestamp>
     {
         static constexpr data_type type_id = data_type::TIMESTAMP;
+        // By default duration in milliseconds, but see
+        // https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
+        // for other possibilities
     };
 
     namespace predicate

@@ -26,7 +26,6 @@
 #include <utility>
 
 #include "sparrow/array/array_data.hpp"
-#include "sparrow/array/array_data_concepts.hpp"
 #include "sparrow/array/data_traits.hpp"
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/layout/dictionary_encoded_layout.hpp"
@@ -52,7 +51,7 @@ namespace sparrow
                            || mpl::is_type_instance_of_v<Layout, fixed_size_layout>
                            || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
                            || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>;
-    
+
     /*
      * \brief Creates an array_data object for a null layout.
      *
