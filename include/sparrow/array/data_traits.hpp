@@ -47,59 +47,14 @@ namespace sparrow
         static constexpr data_type type_id = data_type::BOOL;
     };
 
-    template <>
-    struct arrow_traits<std::uint8_t> : common_native_types_traits<std::uint8_t>
+    // Define automatically all standard integral types support (including `bool`).
+    template <class T>
+        requires std::integral<T>
+    struct arrow_traits<T> : common_native_types_traits<T>
     {
-        static constexpr data_type type_id = data_type::UINT8;
+        static constexpr data_type type_id = data_type_from_size<T>();
     };
 
-    template <>
-    struct arrow_traits<std::int8_t> : common_native_types_traits<std::int8_t>
-    {
-        static constexpr data_type type_id = data_type::INT8;
-    };
-
-    template <>
-    struct arrow_traits<char> : common_native_types_traits<char>
-    {
-        static constexpr data_type type_id = data_type::UINT8;
-    };
-
-    template <>
-    struct arrow_traits<std::uint16_t> : common_native_types_traits<std::uint16_t>
-    {
-        static constexpr data_type type_id = data_type::UINT16;
-    };
-
-    template <>
-    struct arrow_traits<std::int16_t> : common_native_types_traits<std::int16_t>
-    {
-        static constexpr data_type type_id = data_type::INT16;
-    };
-
-    template <>
-    struct arrow_traits<std::uint32_t> : common_native_types_traits<std::uint32_t>
-    {
-        static constexpr data_type type_id = data_type::UINT32;
-    };
-
-    template <>
-    struct arrow_traits<std::int32_t> : common_native_types_traits<std::int32_t>
-    {
-        static constexpr data_type type_id = data_type::INT32;
-    };
-
-    template <>
-    struct arrow_traits<std::uint64_t> : common_native_types_traits<std::uint64_t>
-    {
-        static constexpr data_type type_id = data_type::UINT64;
-    };
-
-    template <>
-    struct arrow_traits<std::int64_t> : common_native_types_traits<std::int64_t>
-    {
-        static constexpr data_type type_id = data_type::INT64;
-    };
 
     // Define automatically all standard floating-point types support.
     template<class T>
@@ -108,6 +63,7 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type_from_size<T>();
     };
+
 
     template <>
     struct arrow_traits<std::string>
