@@ -26,6 +26,7 @@ namespace date = std::chrono;
 #include <climits>
 #include <cstdint>
 #include <cstring>
+#include <concepts>
 #include <string>
 #include <vector>
 
@@ -231,6 +232,23 @@ namespace sparrow
             case data_type::STRING : return "u";
             case data_type::FIXED_SIZE_BINARY : return "z";
             case data_type::TIMESTAMP : return "tDm";
+        }
+
+        mpl::unreachable();
+    }
+
+    /// @returns The default floating-point `data_type`  that should be associated with the provided type.
+    ///          The deduction will be based on the size of the type. Calling this function with unsupported sizes
+    ///          will not compile.
+    template<std::floating_point T>
+        requires (sizeof(T) >= 16 && sizeof(T) <= 64)
+    constexpr data_type data_type_from_size(T = {})
+    {
+        switch(sizeof(T))
+        {
+            case 16: return data_type::HALF_FLOAT;
+            case 32: return data_type::FLOAT;
+            case 64: return data_type::DOUBLE;
         }
 
         mpl::unreachable();
