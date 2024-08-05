@@ -41,12 +41,6 @@ namespace sparrow
         using default_layout = null_layout<DS>;
     };
 
-    template <>
-    struct arrow_traits<bool> : common_native_types_traits<bool>
-    {
-        static constexpr data_type type_id = data_type::BOOL;
-    };
-
     // Define automatically all standard integral types support (including `bool`).
     template <class T>
         requires std::integral<T>
