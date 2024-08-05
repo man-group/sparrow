@@ -96,6 +96,10 @@ namespace sparrow
     {
     public:
 
+        // is the data in buffers allowed to be modified?
+        static constexpr bool is_mutable = false;
+
+
         using block_type = std::uint8_t;
         using bitmap_type = dynamic_bitset_view<const block_type>;
         using buffer_type = buffer_view<const block_type>;

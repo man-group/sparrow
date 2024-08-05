@@ -504,4 +504,32 @@ namespace sparrow
     {
         return make_default_array_data<Layout>(std::as_const(values), bitmap, offset);
     }
+
+
+
+
+    /**
+     * \brief Creates a default array_data object with the specified layout and values.
+     *
+     * @tparam Layout The layout of the array_data object.
+     * @tparam ValueRange The type of the input range for the values.
+     * @param values The input range of values for the array_data object.
+     * @return A new array_data object with the specified layout, values, bitmap, and offset.
+     */
+    template <arrow_layout Layout, std::ranges::input_range ValueRange>
+        requires(!mpl::constant_range<ValueRange>)
+    array_data
+    make_default_array_data(ValueRange&& values)
+    {
+        // size of the range
+        const std::size_t size = std::ranges::size(values);
+
+        // create a bitmap with all values set to true
+        array_data::bitmap_type bitmap(size, true);
+
+        // zero offset
+        const std::int64_t offset = 0;
+
+        return make_default_array_data<Layout>(std::as_const(values), bitmap, offset);
+    }
 }  // namespace sparrow

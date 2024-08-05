@@ -54,6 +54,7 @@ namespace sparrow
 
     struct test_array_data
     {
+        constexpr static bool is_mutable = true;
         using block_type = std::uint8_t;
         using bitmap_type = dynamic_bitset_view<const block_type>;
         using buffer_type = test::cast_vector<block_type>;

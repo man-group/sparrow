@@ -60,12 +60,12 @@ namespace sparrow
         using const_bitmap_range = typename layout_type::const_bitmap_range;
         using const_value_range = typename layout_type::const_value_range;
 
-        template <class D = typename L::data_storage_type>
-        requires (not std::same_as<D, external_array_data>)
-        typed_array_impl();
+        typed_array_impl() requires  std::same_as<array_data, typename L::data_storage_type>;
 
         explicit typed_array_impl(data_storage_type data);
 
+
+        
 
         ///@{
         /// This type is moveable and copyable.
@@ -74,6 +74,18 @@ namespace sparrow
         typed_array_impl& operator=(const typed_array_impl& rhs);
         typed_array_impl& operator=(typed_array_impl&& rhs);
         ///@}
+
+        // /** Construct a typed array from a range of values.
+        //  * 
+        //  * @param values The range of values to construct the array from.
+        //  */
+        template <std::ranges::input_range ValueRange>
+        requires  range_for_array_data<ValueRange> && std::same_as<array_data, typename L::data_storage_type>
+        typed_array_impl(ValueRange&& values)   
+            : m_data(make_default_array_data<L>(std::move(values)))
+            , m_layout(m_data) 
+        {
+        }
 
         /** Construct a typed array with a fixed layout with the same value repeated `n` times.
          *
@@ -84,6 +96,9 @@ namespace sparrow
         requires std::convertible_to<U, T>
          && mpl::is_type_instance_of_v<L, fixed_size_layout>
         typed_array_impl(size_type n, const U& value);
+
+
+        
 
 
 
@@ -200,8 +215,8 @@ namespace sparrow
 
     private:
 
-        data_storage_type m_data = make_default_array_data<L>();
-        layout_type m_layout{m_data};
+        data_storage_type m_data;// = make_default_array_data<L>();
+        layout_type m_layout;//{m_data};
     };
 
     template <class T, class Layout>
@@ -276,12 +291,11 @@ namespace sparrow
 
     // Constructors
 
+    // empty constructor
     template <is_arrow_base_type T, arrow_layout L>
-    template <class D>
-    requires (not std::same_as<D, external_array_data>)
-    typed_array_impl<T, L>::typed_array_impl()
+    typed_array_impl<T, L>::typed_array_impl()  requires  std::same_as<array_data, typename L::data_storage_type>
         : m_data(make_default_array_data<L>())
-        ,m_layout{m_data}
+        , m_layout{m_data}
     {
     }
 
@@ -297,6 +311,8 @@ namespace sparrow
     requires std::convertible_to<U, T>
         && mpl::is_type_instance_of_v<L, fixed_size_layout>
     typed_array_impl<T, L>::typed_array_impl(size_type n, const U& value)
+        : m_data(make_default_array_data<L>())
+        , m_layout{m_data}
     {
         sparrow::array_data ad;
         ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
@@ -313,8 +329,16 @@ namespace sparrow
         m_layout.rebind_data(m_data);
     }
 
-    // Value semantics
 
+    // template <is_arrow_base_type T, arrow_layout L>
+    // template <std::ranges::input_range ValueRange>
+    // typed_array_impl<T, L>::typed_array_impl(ValueRange&& )
+    //     // : m_data(make_default_array_data<L>(std::move(values)))
+    //     // , m_layout(m_data)
+    // {
+    // }
+
+    // Value semantics
     template <is_arrow_base_type T, arrow_layout L>
     typed_array_impl<T, L>::typed_array_impl(const typed_array_impl& rhs)
         : m_data(rhs.m_data)

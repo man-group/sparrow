@@ -35,6 +35,8 @@ namespace sparrow
      */
     struct array_data
     {
+        // is the data in buffers allowed to be modified?
+        static constexpr bool is_mutable = true;
         using block_type = std::uint8_t;
         using bitmap_type = dynamic_bitset<block_type>;
         using buffer_type = buffer<block_type>;
