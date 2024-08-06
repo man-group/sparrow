@@ -47,7 +47,6 @@ namespace sparrow
     {
     public:
 
-
         using self_type = fixed_size_layout<T, DS>;
         using data_storage_type = DS;
         constexpr static bool is_mutable = data_storage_type::is_mutable;

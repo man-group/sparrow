@@ -328,7 +328,7 @@ namespace sparrow
     template<class U>
     requires is_arrow_base_type_extended<std::decay_t<U>>
     typed_array_impl<T, L>::typed_array_impl(size_type n,  U&& value)
-        : m_data(make_default_array_data<L>(n, value))
+        : m_data(make_default_array_data<L>(n, std::forward<U>(value)))
         , m_layout{m_data}
     {
     }

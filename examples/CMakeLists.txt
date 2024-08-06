@@ -2,7 +2,6 @@
 SET(EXAMPLES 
     typed_array_low_level.cpp
     typed_array_high_level.cpp
-    sandbox.cpp
 )
 
 # iterate over all examples
