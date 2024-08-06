@@ -217,7 +217,7 @@ TEST_SUITE("typed_array")
 
             CHECK_EQ(ta1, ta3);
         }
-        /*SUBCASE("construct from range")
+        SUBCASE("construct from range")
         {
             auto data = test::iota_vector<T>(10);
             typed_array<T> ta{data};
@@ -226,7 +226,21 @@ TEST_SUITE("typed_array")
             {
                 CHECK_EQ(ta[i].value(), data[i]);
             }
-        }*/
+        }
+        SUBCASE("constructor_with_n_inital_value")
+        {   
+            // get a "one" in a generic way with iota_vector of length 2 at index 1 =)
+            const auto data = test::iota_vector<T>(2);
+            T one = data[1];
+
+            const typed_array<T> ta{std::size_t(10), one};
+            CHECK_EQ(ta.size(), 10);
+
+            for (size_t i = 0; i < ta.size(); ++i)
+            {
+                CHECK_EQ(ta[i].value(), one);
+            }
+        }
         SUBCASE("copy assignment")
         {
             auto array_data = sparrow::test::make_test_array_data<T>(array_size, array_offset);
@@ -482,27 +496,6 @@ TEST_SUITE("typed_array")
         }
     }
 
-    TEST_CASE_TEMPLATE_DEFINE("all_except_string",  T, all_except_string)
-    {
-        // this constructor is not available for string on purpose
-        // because std::string is auto mapped to a variable_size_binary_layout 
-        // which defeats the purpose of this constructor
-        SUBCASE("constructor_with_n_inital_value")
-        {   
-            // get a "one" in a generic way with iota_vector of length 2 at index 1 =)
-            const auto data = test::iota_vector<T>(2);
-            const auto one = data[1];
-
-            const typed_array<T> ta{10, one};
-            CHECK_EQ(ta.size(), 10);
-
-            for (size_t i = 0; i < ta.size(); ++i)
-            {
-                CHECK_EQ(ta[i].value(), one);
-            }
-        }
-    }
-
     TEST_CASE_TEMPLATE_INVOKE(
         all,
         bool,
@@ -515,22 +508,6 @@ TEST_SUITE("typed_array")
         std::uint64_t,
         std::int64_t,
         std::string,
-        float16_t,
-        float32_t,
-        float64_t
-    );
-
-    TEST_CASE_TEMPLATE_INVOKE(
-        all_except_string,
-        bool,
-        std::uint8_t,
-        std::int8_t,
-        std::uint16_t,
-        std::int16_t,
-        std::uint32_t,
-        std::int32_t,
-        std::uint64_t,
-        std::int64_t,
         float16_t,
         float32_t,
         float64_t

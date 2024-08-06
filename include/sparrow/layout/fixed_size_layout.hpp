@@ -49,7 +49,8 @@ namespace sparrow
 
         using self_type = fixed_size_layout<T, DS>;
         using data_storage_type = DS;
-        using inner_value_type = T;
+        constexpr static bool is_mutable = data_storage_type::is_mutable;
+        using inner_value_type = std::conditional_t<is_mutable, T, const T>;
         using inner_reference = inner_value_type&;
         using inner_const_reference = const inner_value_type&;
         using bitmap_type = typename data_storage_type::bitmap_type;
