@@ -14,27 +14,29 @@
 
 #pragma once
 
-#include <cmath>
-#include <functional>
 #include <ranges>
 #include <type_traits>
-#include <utility>
 
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
     template <typename FromBufferRef, typename T>
-    concept BufferReference = std::is_reference_v<FromBufferRef>
-                              && (sizeof(typename std::remove_cvref_t<FromBufferRef>::value_type) <= sizeof(T))
-                              && std::ranges::contiguous_range<FromBufferRef>;
+    concept BufferReference = std::ranges::contiguous_range<FromBufferRef> && std::is_reference_v<FromBufferRef>
+                              && (sizeof(std::ranges::range_value_t<FromBufferRef>) <= sizeof(T));
 
     template <typename FromBufferRef, typename T>
-    concept T_is_const_if_FromBufferRef_is_const = std::is_const_v<T> || !std::is_const_v<std::remove_reference_t<FromBufferRef>>;
+    concept T_is_const_if_FromBufferRef_is_const = mpl::T_matches_qualifier_if_Y_is<T, FromBufferRef, std::is_const>;
 
     /**
-     * Class which have internally a reference to a buffer<From> and provides the API of a buffer<To>
+     * Class which have internally a reference to a contiguous container of a certain type and provides an API
+     * to access it as if it was a buffer<T>.
+     * @tparam To The type to which the buffer will be adapted. The size of the type To must be equal of
+     * bigger than the element type of the container.
+     * @tparam FromBufferRef The type of the container to adapt. If it's a const reference, all non-const
+     * methods are disabled.
      */
     template <typename To, BufferReference<To> FromBufferRef>
         requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
@@ -63,29 +65,28 @@ namespace sparrow
             requires(not is_const);
         explicit buffer_adaptor(const FromBufferRef buf);
 
-        constexpr pointer data() noexcept;
+        constexpr pointer data() noexcept
+            requires(not is_const);
         constexpr const_pointer data() const noexcept;
 
-        // Element access()
+        // Element access
+
         constexpr reference operator[](size_type idx)
             requires(not is_const);
         constexpr const_reference operator[](size_type idx) const;
 
         constexpr reference front()
             requires(not is_const);
-
         constexpr const_reference front() const;
 
         constexpr reference back()
             requires(not is_const);
-
         constexpr const_reference back() const;
 
         // Iterators
 
         constexpr iterator begin() noexcept
             requires(not is_const);
-
         constexpr iterator end() noexcept
             requires(not is_const);
 
@@ -97,7 +98,6 @@ namespace sparrow
 
         constexpr reverse_iterator rbegin() noexcept
             requires(not is_const);
-
         constexpr reverse_iterator rend() noexcept
             requires(not is_const);
 
@@ -113,8 +113,10 @@ namespace sparrow
         [[nodiscard]] constexpr size_type max_size() const noexcept;
         [[nodiscard]] constexpr size_type capacity() const noexcept;
         [[nodiscard]] constexpr bool empty() const noexcept;
-        constexpr void reserve(size_type new_cap);
-        constexpr void shrink_to_fit();
+        constexpr void reserve(size_type new_cap)
+            requires(not is_const);
+        constexpr void shrink_to_fit()
+            requires(not is_const);
 
         // Modifiers
 
@@ -201,6 +203,7 @@ namespace sparrow
         requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
     constexpr typename buffer_adaptor<To, FromBufferRef>::pointer
     buffer_adaptor<To, FromBufferRef>::data() noexcept
+        requires(not is_const)
     {
         return m_buffer.get().template data<value_type>();
     }
@@ -409,6 +412,7 @@ namespace sparrow
     template <typename To, BufferReference<To> FromBufferRef>
         requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
     constexpr void buffer_adaptor<To, FromBufferRef>::reserve(size_type new_cap)
+        requires(not is_const)
     {
         m_buffer.get().reserve(new_cap * m_to_from_size_ratio);
     }
@@ -416,7 +420,7 @@ namespace sparrow
     template <typename To, BufferReference<To> FromBufferRef>
         requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
     constexpr void buffer_adaptor<To, FromBufferRef>::shrink_to_fit()
-    // requires m_buffer to have a shrink_to_fit method
+        requires(not is_const)
     {
         m_buffer.get().shrink_to_fit();
     }
@@ -598,7 +602,7 @@ namespace sparrow
         }
     }
 
-    template<typename To, class FromBufferRef>
+    template <typename To, class FromBufferRef>
     auto make_buffer_adaptor(FromBufferRef& buf)
     {
         constexpr bool is_const = std::is_const_v<FromBufferRef>;

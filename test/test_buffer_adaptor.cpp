@@ -14,6 +14,7 @@
 
 #include <array>
 #include <cstdint>
+#include <list>
 
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
