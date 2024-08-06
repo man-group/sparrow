@@ -94,6 +94,8 @@ namespace sparrow
                     return sizeof(T) <= 4;
                 case data_type::INT64:
                     return sizeof(T) <= 8;
+                default:
+                    return false;
             }
         }
         else
@@ -110,6 +112,8 @@ namespace sparrow
                     return sizeof(T) <= 4;
                 case data_type::UINT64:
                     return sizeof(T) <= 8;
+                default:
+                    return false;
             }
         }
 
@@ -128,9 +132,9 @@ namespace sparrow
                 return sizeof(T) <= 4;
             case data_type::DOUBLE:
                 return sizeof(T) <= 8;
+            default:
+                return false;
         }
-
-        return false;
     }
 
     // Tests `data_type_from_size` and it's usage in `arrow_traits<T>::type_id`
