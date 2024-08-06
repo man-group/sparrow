@@ -97,9 +97,8 @@ namespace sparrow
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
         explicit null_layout(data_storage_type& data);
-        void rebind_data(data_storage_type& data);
 
-        size_type size() const;
+        [[nodiscard]] size_type size() const;
 
         reference operator[](size_type i);
         const_reference operator[](size_type i) const;
@@ -184,13 +183,6 @@ namespace sparrow
         : m_data(data)
     {
         SPARROW_ASSERT_TRUE(buffers_size(storage()) == 0u);
-    }
-
-    template <data_storage DS>
-    void null_layout<DS>::rebind_data(data_storage_type& data)
-    {
-        SPARROW_ASSERT_TRUE(buffers_size(storage()) == 0u);
-        m_data = data;
     }
 
     template <data_storage DS>

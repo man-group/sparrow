@@ -13,14 +13,11 @@
 // limitations under the License.
 
 #include <array>
-#include <iostream>
-#include <numeric>
 #include <string_view>
 
 #include "sparrow/array/array_data.hpp"
 #include "sparrow/array/array_data_factory.hpp"
 #include "sparrow/layout/variable_size_binary_layout.hpp"
-#include "sparrow/utils/contracts.hpp"
 
 #include "doctest/doctest.h"
 
@@ -52,16 +49,43 @@ namespace sparrow
 
     TEST_SUITE("variable_size_binary_layout")
     {
-        TEST_CASE_FIXTURE(vs_binary_fixture, "rebind_data")
+        TEST_CASE_FIXTURE(vs_binary_fixture, "constructors")
         {
-            layout_type l(m_data);
-            static constexpr std::array<std::string_view, 3> new_words = {"tambourines", "and", "elephant"};
-            array_data::bitmap_type new_bitmap{new_words.size(), true};
-            auto data = make_default_array_data<layout_type>(new_words, new_bitmap, 0);
-            l.rebind_data(data);
-            for (std::size_t i = 0; i < new_words.size(); ++i)
+            SUBCASE("from_array_data")
             {
-                CHECK_EQ(l[i].value(), new_words[i]);
+                layout_type l(m_data);
+                CHECK_EQ(l.size(), m_data.length - m_data.offset);
+            }
+
+            SUBCASE("copy")
+            {
+                layout_type l(m_data);
+                const layout_type l_copy(l);
+                CHECK_EQ(l_copy.size(), l.size());
+            }
+
+            SUBCASE("move")
+            {
+                layout_type l(m_data);
+                const layout_type l_move(std::move(l));
+                CHECK_EQ(l_move.size(), m_data.length - m_data.offset);
+            }
+        }
+
+        TEST_CASE_FIXTURE(vs_binary_fixture, "operator=")
+        {
+            SUBCASE("copy")
+            {
+                layout_type l(m_data);
+                const layout_type l_copy = l;
+                CHECK_EQ(l_copy.size(), l.size());
+            }
+
+            SUBCASE("move")
+            {
+                layout_type l(m_data);
+                const layout_type l_move = std::move(l);
+                CHECK_EQ(l_move.size(), m_data.length - m_data.offset);
             }
         }
 
@@ -159,7 +183,6 @@ namespace sparrow
 
             SUBCASE("size")
             {
-                
                 auto ref0 = l[0].value();
                 CHECK_EQ(ref0.size(), 3);
             }

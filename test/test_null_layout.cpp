@@ -23,23 +23,54 @@ namespace sparrow
 {
     TEST_SUITE("null layout")
     {
-        TEST_CASE("constructor")
+        TEST_CASE("constructors")
         {
-            constexpr std::size_t size = 5u;
-            array_data ad = make_array_data_for_null_layout(size);
-            null_layout nl(ad);
-            CHECK_EQ(nl.size(), size);
+            SUBCASE("with array data")
+            {
+                constexpr std::size_t size = 5u;
+                array_data ad = make_array_data_for_null_layout(size);
+                const null_layout nl(ad);
+                CHECK_EQ(nl.size(), size);
+            }
+
+            SUBCASE("copy")
+            {
+                constexpr std::size_t size = 5u;
+                array_data ad = make_array_data_for_null_layout(size);
+                null_layout nl(ad);
+                const null_layout nl_copy(nl);
+                CHECK_EQ(nl_copy.size(), size);
+            }
+
+            SUBCASE("move")
+            {
+                constexpr std::size_t size = 5u;
+                array_data ad = make_array_data_for_null_layout(size);
+                null_layout nl(ad);
+                const null_layout nl_move(std::move(nl));
+                CHECK_EQ(nl_move.size(), size);
+            }
         }
 
-        TEST_CASE("rebind_data")
+        TEST_CASE("operator=")
         {
-            constexpr std::size_t size1 = 3u;
-            constexpr std::size_t size2 = 5u;
-            array_data ad1 = make_array_data_for_null_layout(size1);
-            array_data ad2 = make_array_data_for_null_layout(size2);
-            null_layout nl(ad1);
-            nl.rebind_data(ad2);
-            CHECK_EQ(nl.size(), size2);
+            SUBCASE("copy")
+            {
+                constexpr std::size_t size = 5u;
+                array_data ad = make_array_data_for_null_layout(size);
+                null_layout nl(ad);
+                const null_layout nl_copy = nl;
+                CHECK_EQ(nl_copy.size(), size);
+            }
+
+            SUBCASE("move")
+            {
+                constexpr std::size_t size = 5u;
+                array_data ad = make_array_data_for_null_layout(size);
+                null_layout nl(ad);
+                const null_layout nl_move = std::move(nl);
+                CHECK_EQ(nl_move.size(), size);
+            }
         }
 
         TEST_CASE("operator[]")

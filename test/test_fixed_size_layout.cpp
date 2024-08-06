@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include <iostream>
 #include <numeric>
 
 #include "sparrow/array/array_data_factory.hpp"
@@ -55,94 +54,89 @@ namespace sparrow
             }
         }
 
-        TEST_CASE("rebind_data")
+        TEST_CASE("value_iterator")
         {
-            array_data ad = make_test_array_data(10, 1);
-            layout_test_type lt(ad);
-            array_data ad2 = make_test_array_data(12, 0);
-            lt.rebind_data(ad2);
-
-            auto buffer_data = ad2.buffers[0].data<data_type_t>();
-            for (std::size_t i = 0; i < lt.size(); ++i)
+            SUBCASE("ordering")
             {
-                CHECK_EQ(lt[i].value(), buffer_data[i + static_cast<size_t>(ad2.offset)]);
-            }
-        }
-
-        TEST_CASE("value_iterator_ordering")
-        {
-            array_data ad = make_test_array_data(10, 1);
-            layout_test_type lt(ad);
-            auto lt_values = lt.values();
-            layout_test_type::const_value_iterator citer = lt_values.begin();
-            CHECK(citer < lt_values.end());
-        }
-
-        TEST_CASE("value_iterator_equality")
-        {
-            array_data ad = make_test_array_data(10, 1);
-            layout_test_type lt(ad);
-            auto lt_values = lt.values();
-            layout_test_type::const_value_iterator citer = lt_values.begin();
-            for (std::size_t i = 0; i < lt.size(); ++i)
-            {
-                CHECK_EQ(*citer++, lt[i]);
-            }
-            CHECK_EQ(citer, lt_values.end());
-        }
-
-        TEST_CASE("const_value_iterator_ordering")
-        {
-            array_data ad = make_test_array_data(10, 1);
-            layout_test_type lt(ad);
-            auto lt_values = lt.values();
-            layout_test_type::const_value_iterator citer = lt_values.begin();
-            CHECK(citer < lt_values.end());
-        }
-
-        TEST_CASE("const_value_iterator_equality")
-        {
-            array_data ad = make_test_array_data(10, 1);
-            layout_test_type lt(ad);
-            auto lt_values = lt.values();
-            for (std::size_t i = 0; i < lt.size(); ++i)
-            {
-                lt[i] = static_cast<int>(i);
+                array_data ad = make_test_array_data(10, 1);
+                layout_test_type lt(ad);
+                auto lt_values = lt.values();
+                layout_test_type::const_value_iterator citer = lt_values.begin();
+                CHECK(citer < lt_values.end());
             }
 
-            layout_test_type::const_value_iterator citer = lt_values.begin();
-            for (std::size_t i = 0; i < lt.size(); ++i, ++citer)
+            SUBCASE("equality")
             {
-                CHECK_EQ(*citer, i);
-            }
-        }
-
-        TEST_CASE("const_bitmap_iterator_ordering")
-        {
-            array_data ad = make_test_array_data(10, 1);
-            layout_test_type lt(ad);
-            auto lt_bitmap = lt.bitmap();
-            layout_test_type::const_bitmap_iterator citer = lt_bitmap.begin();
-            CHECK(citer < lt_bitmap.end());
-        }
-
-        TEST_CASE("const_bitmap_iterator_equality")
-        {
-            array_data ad = make_test_array_data(10, 1);
-            layout_test_type lt(ad);
-            auto lt_bitmap = lt.bitmap();
-            for (std::size_t i = 0; i < lt.size(); ++i)
-            {
-                if (i % 2 != 0)
+                array_data ad = make_test_array_data(10, 1);
+                layout_test_type lt(ad);
+                auto lt_values = lt.values();
+                layout_test_type::const_value_iterator citer = lt_values.begin();
+                for (std::size_t i = 0; i < lt.size(); ++i)
                 {
-                    lt[i] = nullval;
+                    CHECK_EQ(*citer++, lt[i]);
+                }
+                CHECK_EQ(citer, lt_values.end());
+            }
+        }
+
+        TEST_CASE("const_value_iterator")
+        {
+            SUBCASE("ordering")
+            {
+                array_data ad = make_test_array_data(10, 1);
+                layout_test_type lt(ad);
+                auto lt_values = lt.values();
+                layout_test_type::const_value_iterator citer = lt_values.begin();
+                CHECK(citer < lt_values.end());
+            }
+
+            SUBCASE("equality")
+            {
+                array_data ad = make_test_array_data(10, 1);
+                layout_test_type lt(ad);
+                auto lt_values = lt.values();
+                for (std::size_t i = 0; i < lt.size(); ++i)
+                {
+                    lt[i] = static_cast<int>(i);
+                }
+
+                layout_test_type::const_value_iterator citer = lt_values.begin();
+                for (std::size_t i = 0; i < lt.size(); ++i, ++citer)
+                {
+                    CHECK_EQ(*citer, i);
                 }
             }
+        }
 
-            layout_test_type::const_bitmap_iterator citer = lt_bitmap.begin();
-            for (std::size_t i = 0; i < lt.size(); ++i, ++citer)
+        TEST_CASE("bitmap_iterator")
+        {
+            SUBCASE("ordering")
             {
-                CHECK_EQ(*citer, i % 2 == 0);
+                array_data ad = make_test_array_data(10, 1);
+                layout_test_type lt(ad);
+                auto lt_bitmap = lt.bitmap();
+                layout_test_type::const_bitmap_iterator citer = lt_bitmap.begin();
+                CHECK(citer < lt_bitmap.end());
+            }
+
+            SUBCASE("equality")
+            {
+                array_data ad = make_test_array_data(10, 1);
+                layout_test_type lt(ad);
+                auto lt_bitmap = lt.bitmap();
+                for (std::size_t i = 0; i < lt.size(); ++i)
+                {
+                    if (i % 2 != 0)
+                    {
+                        lt[i] = nullval;
+                    }
+                }
+
+                layout_test_type::const_bitmap_iterator citer = lt_bitmap.begin();
+                for (std::size_t i = 0; i < lt.size(); ++i, ++citer)
+                {
+                    CHECK_EQ(*citer, i % 2 == 0);
+                }
             }
         }
 
@@ -170,6 +164,47 @@ namespace sparrow
             layout_test_type lt_empty(ad_empty);
             CHECK_EQ(lt_empty.begin(), lt_empty.end());
         }
-    }
 
+        TEST_CASE("size")
+        {
+            array_data ad = make_test_array_data(10, 1);
+            layout_test_type lt(ad);
+            CHECK_EQ(lt.size(), ad.length - ad.offset);
+        }
+
+        TEST_CASE("empty")
+        {
+            array_data ad = make_test_array_data(10, 1);
+            layout_test_type lt(ad);
+            CHECK_FALSE(lt.empty());
+
+            array_data ad_empty = make_test_array_data(0, 0);
+            layout_test_type lt_empty(ad_empty);
+            CHECK(lt_empty.empty());
+        }
+
+        TEST_CASE("clear")
+        {
+            array_data ad = make_test_array_data(10, 1);
+            layout_test_type lt(ad);
+            lt.clear();
+            CHECK(lt.empty());
+        }
+
+        TEST_CASE("insert")
+        {
+            SUBCASE("iterator and const ref value")
+            {
+                array_data ad = make_test_array_data(10, 1);
+                layout_test_type lt(ad);
+                auto it = lt.cbegin();
+                lt.insert(it, 42);
+                CHECK_EQ(lt.size(), 11u);
+                CHECK_EQ(lt[0], 42);
+                CHECK_EQ(lt[1], 0);
+                CHECK_EQ(lt[10], 9);
+            }
+        }
+
+    }
 }

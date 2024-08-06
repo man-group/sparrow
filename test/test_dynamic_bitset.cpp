@@ -57,8 +57,8 @@ namespace sparrow
 
         buffer_type p_buffer;
         buffer_type p_expected_buffer;
-        std::size_t m_block_count = 4;
-        std::size_t m_size = 29;
+        static constexpr std::size_t m_block_count = 4;
+        static constexpr std::size_t m_size = 29;
         std::size_t m_null_count;
     };
 
@@ -283,6 +283,234 @@ namespace sparrow
             CHECK_EQ(iter_end, b.end());
             CHECK_EQ(citer_end, b.cend());
         };
+
+        TEST_CASE_FIXTURE(bitmap_fixture, "insert")
+        {
+            SUBCASE("const_iterator and value_type")
+            {
+                SUBCASE("begin")
+                {
+                    bitmap b(release_buffer(), m_size);
+                    const auto pos = b.cbegin();
+                    auto iter = b.insert(pos, false);
+                    CHECK_EQ(b.size(), m_size + 1);
+                    CHECK_EQ(b.null_count(), m_null_count + 1);
+                    CHECK_EQ(*iter, false);
+
+                    iter = b.insert(pos, true);
+                    CHECK_EQ(b.size(), m_size + 2);
+                    CHECK_EQ(b.null_count(), m_null_count + 1);
+                    CHECK_EQ(*iter, true);
+                }
+
+                SUBCASE("middle")
+                {
+                    bitmap b(release_buffer(), m_size);
+                    const auto pos = std::next(b.cbegin(), 14);
+                    auto iter = b.insert(pos, false);
+                    CHECK_EQ(b.size(), m_size + 1);
+                    CHECK_EQ(b.null_count(), m_null_count + 1);
+                    CHECK_EQ(*iter, false);
+
+                    iter = b.insert(pos, true);
+                    CHECK_EQ(b.size(), m_size + 2);
+                    CHECK_EQ(b.null_count(), m_null_count + 1);
+                    CHECK_EQ(*iter, true);
+                }
+
+                SUBCASE("end")
+                {
+                    bitmap b(release_buffer(), m_size);
+                    const auto pos = b.cend();
+                    auto iter = b.insert(pos, false);
+                    CHECK_EQ(b.size(), m_size + 1);
+                    CHECK_EQ(b.null_count(), m_null_count + 1);
+                    CHECK_EQ(*iter, false);
+
+                    iter = b.insert(pos, true);
+                    CHECK_EQ(b.size(), m_size + 2);
+                    CHECK_EQ(b.null_count(), m_null_count + 1);
+                    CHECK_EQ(*iter, true);
+                }
+            }
+
+            SUBCASE("const_iterator and count/value_type")
+            {
+                SUBCASE("begin")
+                {
+                    bitmap b(release_buffer(), m_size);
+                    const auto pos = b.cbegin();
+                    auto iter = b.insert(pos, 3, false);
+                    CHECK_EQ(b.size(), m_size + 3);
+                    CHECK_EQ(b.null_count(), m_null_count + 3);
+                    CHECK_EQ(*iter, false);
+                    CHECK_EQ(*(++iter), false);
+                    CHECK_EQ(*(++iter), false);
+
+                    iter = b.insert(pos, 3, true);
+                    CHECK_EQ(b.size(), m_size + 6);
+                    CHECK_EQ(b.null_count(), m_null_count + 3);
+                    CHECK_EQ(*iter, true);
+                    CHECK_EQ(*(++iter), true);
+                    CHECK_EQ(*(++iter), true);
+                }
+
+                SUBCASE("middle")
+                {
+                    bitmap b(release_buffer(), m_size);
+                    const auto pos = std::next(b.cbegin(), 14);
+                    auto iter = b.insert(pos, 3, false);
+                    CHECK_EQ(b.size(), m_size + 3);
+                    CHECK_EQ(b.null_count(), m_null_count + 3);
+                    CHECK_EQ(*iter, false);
+                    CHECK_EQ(*(++iter), false);
+                    CHECK_EQ(*(++iter), false);
+
+                    iter = b.insert(pos, 3, true);
+                    CHECK_EQ(b.size(), m_size + 6);
+                    CHECK_EQ(b.null_count(), m_null_count + 3);
+                    CHECK_EQ(*iter, true);
+                    CHECK_EQ(*(++iter), true);
+                    CHECK_EQ(*(++iter), true);
+                }
+
+                SUBCASE("end")
+                {
+                    bitmap b(release_buffer(), m_size);
+                    ;
+                    auto iter = b.insert(b.cend(), 3, false);
+                    CHECK_EQ(b.size(), m_size + 3);
+                    CHECK_EQ(b.null_count(), m_null_count + 3);
+                    CHECK_EQ(*iter, false);
+                    CHECK_EQ(*(++iter), false);
+                    CHECK_EQ(*(++iter), false);
+
+                    iter = b.insert(b.cend(), 3, true);
+                    CHECK_EQ(b.size(), m_size + 6);
+                    CHECK_EQ(b.null_count(), m_null_count + 3);
+                    CHECK_EQ(*iter, true);
+                    CHECK_EQ(*(++iter), true);
+                    CHECK_EQ(*(++iter), true);
+                }
+            }
+        }
+
+        TEST_CASE("emplace")
+        {
+            SUBCASE("begin")
+            {
+                bitmap b(3, false);
+                auto iter = b.emplace(b.cbegin(), true);
+                CHECK_EQ(b.size(), 4);
+                CHECK_EQ(b.null_count(), 3);
+                CHECK_EQ(*iter, true);
+            }
+
+            SUBCASE("middle")
+            {
+                bitmap b(3, false);
+                auto iter = b.emplace(std::next(b.cbegin()), true);
+                CHECK_EQ(b.size(), 4);
+                CHECK_EQ(b.null_count(), 3);
+                CHECK_EQ(*iter, true);
+            }
+
+            SUBCASE("end")
+            {
+                bitmap b(3, false);
+                auto iter = b.emplace(b.cend(), true);
+                CHECK_EQ(b.size(), 4);
+                CHECK_EQ(b.null_count(), 3);
+                CHECK_EQ(*iter, true);
+            }
+        }
+
+        TEST_CASE("erase")
+        {
+            SUBCASE("const_iterator")
+            {
+                SUBCASE("begin")
+                {
+                    bitmap b(5, false);
+                    auto iter = b.erase(b.cbegin());
+                    CHECK_EQ(b.size(), 4);
+                    CHECK_EQ(b.null_count(), 4);
+                    CHECK_EQ(iter, b.begin());
+                    CHECK_EQ(*iter, false);
+                }
+
+                SUBCASE("middle")
+                {
+                    bitmap b(5, false);
+                    const auto pos = std::next(b.cbegin(), 2);
+                    auto iter = b.erase(pos);
+                    CHECK_EQ(b.size(), 4);
+                    CHECK_EQ(b.null_count(), 4);
+                    CHECK_EQ(iter, std::next(b.begin(), 2));
+                    CHECK_EQ(*iter, false);
+                }
+            }
+
+            SUBCASE("const_iterator range")
+            {
+                SUBCASE("begin")
+                {
+                    bitmap b(3, false);
+                    auto iter = b.erase(b.cbegin(), std::next(b.cbegin()));
+                    CHECK_EQ(b.size(), 2);
+                    CHECK_EQ(b.null_count(), 2);
+                    CHECK_EQ(*iter, false);
+                }
+
+                SUBCASE("middle")
+                {
+                    bitmap b(3, false);
+                    const auto pos = std::next(b.cbegin());
+                    auto iter = b.erase(pos, std::next(pos, 1));
+                    CHECK_EQ(b.size(), 2);
+                    CHECK_EQ(b.null_count(), 2);
+                    CHECK_EQ(*iter, false);
+                }
+            }
+        }
+
+        TEST_CASE("at")
+        {
+            bitmap b(3, true);
+            CHECK_EQ(b.at(0), true);
+            CHECK_EQ(b.at(1), true);
+            CHECK_EQ(b.at(2), true);
+            CHECK_THROWS_AS(b.at(3), std::out_of_range);
+        }
+
+        TEST_CASE("front")
+        {
+            bitmap b(3, true);
+            CHECK_EQ(b.front(), true);
+        }
+
+        TEST_CASE("back")
+        {
+            bitmap b(3, true);
+            CHECK_EQ(b.back(), true);
+        }
+
+        TEST_CASE("push_back")
+        {
+            bitmap b(3, true);
+            b.push_back(false);
+            CHECK_EQ(b.size(), 4);
+            CHECK_EQ(b.null_count(), 1);
+            CHECK_EQ(b.back(), false);
+        }
+
+        TEST_CASE("pop_back")
+        {
+            bitmap b(3, false);
+            b.pop_back();
+            CHECK_EQ(b.size(), 2);
+            CHECK_EQ(b.null_count(), 2);
+        }
 
         TEST_CASE_FIXTURE(bitmap_fixture, "bitset_reference")
         {

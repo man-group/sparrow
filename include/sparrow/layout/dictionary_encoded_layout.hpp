@@ -62,8 +62,7 @@ namespace sparrow
     };
 
     template <class T>
-    concept dictionary_iterator_traits = requires
-    {
+    concept dictionary_iterator_traits = requires {
         typename T::layout_type;
         typename T::value_type;
         typename T::tag;
@@ -80,11 +79,8 @@ namespace sparrow
      * @tparam Traits the traits defining the inner types of the iterator.
      */
     template <dictionary_iterator_traits Traits>
-    class dictionary_iterator : public iterator_base<
-                                    dictionary_iterator<Traits>,
-                                    typename Traits::value_type,
-                                    typename Traits::tag,
-                                    typename Traits::const_reference>
+    class dictionary_iterator
+        : public iterator_base<dictionary_iterator<Traits>, typename Traits::value_type, typename Traits::tag, typename Traits::const_reference>
     {
     public:
 
@@ -99,7 +95,8 @@ namespace sparrow
 
         using layout_type = typename Traits::layout_type;
         using index_layout = typename layout_type::indexes_layout;
-        using index_iterator = std::conditional_t<Traits::is_const, typename index_layout::const_iterator, typename index_layout::iterator>;
+        using index_iterator = std::
+            conditional_t<Traits::is_const, typename index_layout::const_iterator, typename index_layout::iterator>;
         using sub_layout = typename layout_type::sub_layout;
         using sub_layout_storage = mpl::constify_t<sub_layout, Traits::is_const>;
         using sub_layout_reference = sub_layout_storage&;
@@ -113,7 +110,8 @@ namespace sparrow
 
     private:
 
-        using sub_reference = std::conditional_t<Traits::is_const, typename sub_layout::const_reference, typename sub_layout::reference>;
+        using sub_reference = std::
+            conditional_t<Traits::is_const, typename sub_layout::const_reference, typename sub_layout::reference>;
 
         sub_reference get_subreference() const;
 
@@ -205,12 +203,6 @@ namespace sparrow
         using const_value_range = std::ranges::subrange<const_value_iterator>;
 
         explicit dictionary_encoded_layout(data_storage_type& data);
-        void rebind_data(data_storage_type& data);
-
-        dictionary_encoded_layout(const dictionary_encoded_layout&) = delete;
-        dictionary_encoded_layout& operator=(const dictionary_encoded_layout&) = delete;
-        dictionary_encoded_layout(dictionary_encoded_layout&&) = delete;
-        dictionary_encoded_layout& operator=(dictionary_encoded_layout&&) = delete;
 
         size_type size() const;
         const_reference operator[](size_type i) const;
@@ -241,8 +233,8 @@ namespace sparrow
         const_offset_iterator offset_end() const;
         const_data_iterator data(size_type i) const;
 
-        std::unique_ptr<indexes_layout> m_indexes_layout;
-        std::unique_ptr<sub_layout> m_sub_layout;
+        indexes_layout m_indexes_layout;
+        sub_layout m_sub_layout;
 
         static const const_reference& dummy_const_reference()
         {
@@ -260,10 +252,7 @@ namespace sparrow
      *******************************************/
 
     template <dictionary_iterator_traits Traits>
-    dictionary_iterator<Traits>::dictionary_iterator(
-        index_iterator index_it,
-        sub_layout_reference sub_layout_ref
-    )
+    dictionary_iterator<Traits>::dictionary_iterator(index_iterator index_it, sub_layout_reference sub_layout_ref)
         : m_index_it(index_it)
         , m_sub_layout_reference(sub_layout_ref)
     {
@@ -333,28 +322,26 @@ namespace sparrow
     }
 
     /**********************************************
-     * dictionary_encoded_layout implementation *
+     * dictionary_encoded_layout implementation   *
      **********************************************/
-
-    template <std::integral T, class SL, layout_offset OT>
-    dictionary_encoded_layout<T, SL, OT>::dictionary_encoded_layout(data_storage_type& data)
+    template <typename DS>
+    DS& get_dictionary_safely(DS& data)
     {
         SPARROW_ASSERT_TRUE(data.dictionary);
-        m_sub_layout = std::make_unique<SL>(*data.dictionary);
-        m_indexes_layout = std::make_unique<indexes_layout>(data);
+        return *data.dictionary;
     }
 
     template <std::integral T, class SL, layout_offset OT>
-    void dictionary_encoded_layout<T, SL, OT>::rebind_data(data_storage_type& data)
+    dictionary_encoded_layout<T, SL, OT>::dictionary_encoded_layout(data_storage_type& data)
+        : m_indexes_layout(data)
+        , m_sub_layout(get_dictionary_safely(data))
     {
-        m_sub_layout->rebind_data(*data.dictionary);
-        m_indexes_layout->rebind_data(data);
     }
 
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::size() const -> size_type
     {
-        return m_indexes_layout->size();
+        return m_indexes_layout.size();
     }
 
     template <std::integral T, class SL, layout_offset OT>
@@ -384,7 +371,6 @@ namespace sparrow
         return const_iterator(value_cend(), bitmap_cend());
     }
 
-
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::bitmap() const -> const_bitmap_range
     {
@@ -401,49 +387,50 @@ namespace sparrow
     typename dictionary_encoded_layout<T, SL, OT>::indexes_layout&
     dictionary_encoded_layout<T, SL, OT>::get_indexes_layout()
     {
-        return *(m_indexes_layout.get());
+        return m_indexes_layout;
     }
 
     template <std::integral T, class SL, layout_offset OT>
     const typename dictionary_encoded_layout<T, SL, OT>::indexes_layout&
     dictionary_encoded_layout<T, SL, OT>::get_indexes_layout() const
     {
-        return *const_cast<const indexes_layout*>(m_indexes_layout.get());
+        return m_indexes_layout;
     }
 
     template <std::integral T, class SL, layout_offset OT>
     typename dictionary_encoded_layout<T, SL, OT>::sub_layout&
     dictionary_encoded_layout<T, SL, OT>::get_sub_layout()
     {
-        return *(m_sub_layout.get());
+        return m_sub_layout;
     }
 
     template <std::integral T, class SL, layout_offset OT>
     const typename dictionary_encoded_layout<T, SL, OT>::sub_layout&
     dictionary_encoded_layout<T, SL, OT>::get_sub_layout() const
     {
-        return *const_cast<const sub_layout*>(m_sub_layout.get());
+        return m_sub_layout;
     }
 
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator(get_indexes_layout().cbegin(), *m_sub_layout);
+        return const_value_iterator(get_indexes_layout().cbegin(), m_sub_layout);
     }
 
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::value_cend() const -> const_value_iterator
     {
-        return const_value_iterator(get_indexes_layout().cend(), *m_sub_layout);
+        return const_value_iterator(get_indexes_layout().cend(), m_sub_layout);
     }
+
     template <std::integral T, class SL, layout_offset OT>
-    auto dictionary_encoded_layout<T, SL, OT>::bitmap_cbegin() const -> const_bitmap_iterator 
+    auto dictionary_encoded_layout<T, SL, OT>::bitmap_cbegin() const -> const_bitmap_iterator
     {
         return const_bitmap_iterator(get_indexes_layout().cbegin(), get_sub_layout());
     }
 
     template <std::integral T, class SL, layout_offset OT>
-    auto dictionary_encoded_layout<T, SL, OT>::bitmap_cend() const -> const_bitmap_iterator 
+    auto dictionary_encoded_layout<T, SL, OT>::bitmap_cend() const -> const_bitmap_iterator
     {
         return const_bitmap_iterator(get_indexes_layout().cend(), get_sub_layout());
     }
@@ -457,18 +444,18 @@ namespace sparrow
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::offset(size_type i) const -> const_offset_iterator
     {
-        return m_indexes_layout->offset(i);
+        return m_indexes_layout.offset(i);
     }
 
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::offset_end() const -> const_offset_iterator
     {
-        return m_indexes_layout->offset_end();
+        return m_indexes_layout.offset_end();
     }
 
     template <std::integral T, class SL, layout_offset OT>
     auto dictionary_encoded_layout<T, SL, OT>::data(size_type i) const -> const_data_iterator
     {
-        return m_sub_layout->data(i);
+        return m_sub_layout.data(i);
     }
 }  // namespace sparrow

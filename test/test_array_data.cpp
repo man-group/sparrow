@@ -13,9 +13,12 @@
 // limitations under the License.
 
 #include <numeric>
+
 #include "sparrow/array/array_data.hpp"
+#include "sparrow/array/array_data_concepts.hpp"
 
 #include "doctest/doctest.h"
+
 
 namespace sparrow
 {
@@ -28,15 +31,29 @@ namespace sparrow
 
             using base_type = std::vector<T>;
             using difference_type = base_type::difference_type;
+            using value_type = base_type::value_type;
+            using size_type = base_type::size_type;
+            using const_iterator = base_type::const_iterator;
 
             using base_type::base_type;
             using base_type::resize;
             using base_type::size;
             using base_type::operator[];
+            using base_type::back;
             using base_type::begin;
-            using base_type::end;
+            using base_type::capacity;
             using base_type::cbegin;
             using base_type::cend;
+            using base_type::clear;
+            using base_type::emplace;
+            using base_type::empty;
+            using base_type::end;
+            using base_type::front;
+            using base_type::insert;
+            using base_type::max_size;
+            using base_type::pop_back;
+            using base_type::push_back;
+            using base_type::reserve;
 
             template <class U>
             U* data()
@@ -55,7 +72,7 @@ namespace sparrow
     struct test_array_data
     {
         using block_type = std::uint8_t;
-        using bitmap_type = dynamic_bitset_view<const block_type>;
+        using bitmap_type = dynamic_bitset<block_type>;
         using buffer_type = test::cast_vector<block_type>;
         using length_type = std::int64_t;
 
@@ -63,61 +80,89 @@ namespace sparrow
         length_type length = 0;
         std::int64_t offset = 0;
         // bitmap buffer and null_count
-        std::vector<block_type> bitmap;
+        bitmap_type bitmap;
         // Other buffers
         std::vector<buffer_type> buffers;
         std::vector<test_array_data> child_data;
         value_ptr<test_array_data> dictionary;
     };
 
-    data_descriptor type_descriptor(const test_array_data& data)
+    constexpr data_descriptor type_descriptor(const test_array_data& data)
     {
         return data.type;
     }
 
-    test_array_data::length_type length(const test_array_data& data)
+    constexpr test_array_data::length_type length(const test_array_data& data)
     {
         return data.length;
     }
 
-    std::int64_t offset(const test_array_data& data)
+    constexpr std::int64_t offset(const test_array_data& data)
     {
         return data.offset;
     }
 
-    const test_array_data::bitmap_type bitmap(const test_array_data& data)
+    constexpr test_array_data::bitmap_type& bitmap(test_array_data& data)
     {
-        using return_type = const test_array_data::bitmap_type;
-        return return_type(data.bitmap.data(), std::size_t(data.length));
+        return data.bitmap;
     }
 
-    std::size_t buffers_size(const test_array_data& data)
+    constexpr const test_array_data::bitmap_type& bitmap(const test_array_data& data)
+    {
+        return data.bitmap;
+    }
+
+    constexpr std::size_t buffers_size(const test_array_data& data)
     {
         return data.buffers.size();
     }
 
-    const test_array_data::buffer_type& buffer_at(const test_array_data& data, std::size_t i)
+    constexpr test_array_data::buffer_type& buffer_at(test_array_data& data, std::size_t i)
     {
         SPARROW_ASSERT_TRUE(i < buffers_size(data));
         return data.buffers[i];
     }
 
-    std::size_t child_data_size(const test_array_data& data)
+    constexpr const test_array_data::buffer_type& buffer_at(const test_array_data& data, std::size_t i)
+    {
+        SPARROW_ASSERT_TRUE(i < buffers_size(data));
+        return data.buffers[i];
+    }
+
+    constexpr std::size_t child_data_size(const test_array_data& data)
     {
         return data.child_data.size();
     }
 
-    const test_array_data& child_data_at(const test_array_data& data, std::size_t i)
+    constexpr test_array_data& child_data_at(test_array_data& data, std::size_t i)
     {
         SPARROW_ASSERT_TRUE(i < child_data_size(data));
         return data.child_data[i];
     }
 
-    const value_ptr<test_array_data>& dictionary(const test_array_data& data)
+    constexpr value_ptr<test_array_data>& dictionary(test_array_data& data)
     {
         return data.dictionary;
     }
+
+    void buffers_clear(test_array_data& data)
+    {
+        for (auto& buffer : data.buffers)
+        {
+            buffer.clear();
+        }
+    }
+
+    void child_data_clear(test_array_data& data)
+    {
+        for (auto& child : data.child_data)
+        {
+            child_data_clear(child);
+        }
+    }
 }
+
+static_assert(sparrow::mutable_data_storage<sparrow::test_array_data>);
 
 // test_array_data free functions must be defined before including the layout
 // headers, otherwise they are not found.
@@ -138,7 +183,7 @@ namespace sparrow
                 td.type = data_descriptor(data_type::INT32);
                 td.length = 16;
                 td.offset = 0;
-                td.bitmap = {std::uint8_t(255), std::uint8_t(255)};
+                td.bitmap = {16, true};
                 td.buffers = std::vector<buffer_type>(1u, buffer_type(64u));
                 for (std::int32_t i = 0; i < 16; ++i)
                 {
@@ -163,15 +208,30 @@ namespace sparrow
 
         TEST_CASE("variable_size_binary_layout")
         {
-            std::vector<std::string> words =
-                {"once", "upon", "a", "time", "I", "was", "writing", "clean",
-                 "code", "now", "I'm", "only", "drawing", "flowcharts", "Bonnie", "Compyler" };
+            std::vector<std::string> words = {
+                "once",
+                "upon",
+                "a",
+                "time",
+                "I",
+                "was",
+                "writing",
+                "clean",
+                "code",
+                "now",
+                "I'm",
+                "only",
+                "drawing",
+                "flowcharts",
+                "Bonnie",
+                "Compyler"
+            };
             test_array_data td;
             {
                 td.type = data_descriptor(data_type::STRING);
                 td.length = 16;
                 td.offset = 0;
-                td.bitmap = {std::uint8_t(255), std::uint8_t(255)};
+                td.bitmap = {16, true};
                 td.buffers.resize(2);
                 // Chars buffer
                 td.buffers[0].resize(sizeof(std::int64_t) * (16 + 1));
@@ -194,9 +254,10 @@ namespace sparrow
                 };
                 for (size_t i = 0; i < words.size(); ++i)
                 {
-                    offset_func(
-                    )[i + 1] = offset_func()[i]
-                               + static_cast<sparrow::test_array_data::buffer_type::difference_type>(words[i].size());
+                    offset_func()[i + 1] = offset_func()[i]
+                                           + static_cast<sparrow::test_array_data::buffer_type::difference_type>(
+                                               words[i].size()
+                                           );
                     std::ranges::copy(words[i], iter);
                     iter += static_cast<sparrow::test_array_data::buffer_type::difference_type>(words[i].size());
                 }
@@ -211,11 +272,11 @@ namespace sparrow
             {
                 CHECK_EQ(layout[i], words[i]);
             }
-            
+
             auto iter = layout.cbegin();
             auto words_iter = words.cbegin();
             auto words_end = words.cend();
-            while(words_iter != words_end)
+            while (words_iter != words_end)
             {
                 CHECK_EQ(*words_iter++, *iter++);
             }

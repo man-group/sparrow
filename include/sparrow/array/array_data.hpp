@@ -16,7 +16,6 @@
 
 #include <vector>
 
-#include "sparrow/array/array_data_concepts.hpp"
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
@@ -51,78 +50,85 @@ namespace sparrow
         value_ptr<array_data> dictionary;
     };
 
-    data_descriptor type_descriptor(const array_data& data);
-    array_data::length_type length(const array_data& data);
-    std::int64_t offset(const array_data& data);
+    constexpr data_descriptor type_descriptor(const array_data& data) noexcept;
+    constexpr array_data::length_type length(const array_data& data) noexcept;
+    constexpr std::int64_t offset(const array_data& data) noexcept;
 
-    array_data::bitmap_type& bitmap(array_data& data);
-    const array_data::bitmap_type& bitmap(const array_data& data);
+    constexpr array_data::bitmap_type& bitmap(array_data& data) noexcept;
+    constexpr const array_data::bitmap_type& bitmap(const array_data& data) noexcept;
 
-    std::size_t buffers_size(const array_data& data);
-    array_data::buffer_type& buffer_at(array_data& data, std::size_t i);
-    const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i);
+    constexpr std::size_t buffers_size(const array_data& data) noexcept;
+    constexpr void buffers_clear() noexcept;
+    constexpr array_data::buffer_type& buffer_at(array_data& data, std::size_t i);
+    constexpr const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i);
 
-    std::size_t child_data_size(const array_data& data);
+    constexpr std::size_t child_data_size(const array_data& data) noexcept;
+    constexpr void child_data_clear() noexcept;
     array_data& child_data_at(array_data& data, std::size_t i);
     const array_data& child_data_at(const array_data& data, std::size_t i);
 
     value_ptr<array_data>& dictionary(array_data& data);
     const value_ptr<array_data>& dictionary(const array_data& data);
 
-
-    // `array_data` must always be usable as a data-storage that layout implementations can use.
-    static_assert(data_storage<array_data>);
-
-
     /***********************************
      * getter functions for array_data *
      ***********************************/
 
-    inline data_descriptor type_descriptor(const array_data& data)
+    constexpr data_descriptor type_descriptor(const array_data& data) noexcept
     {
         return data.type;
     }
 
-    inline array_data::length_type length(const array_data& data)
+    constexpr array_data::length_type length(const array_data& data) noexcept
     {
         return data.length;
     }
 
-    inline std::int64_t offset(const array_data& data)
+    constexpr std::int64_t offset(const array_data& data) noexcept
     {
         return data.offset;
     }
 
-    inline array_data::bitmap_type& bitmap(array_data& data)
+    constexpr array_data::bitmap_type& bitmap(array_data& data) noexcept
     {
         return data.bitmap;
     }
 
-    inline const array_data::bitmap_type& bitmap(const array_data& data)
+    constexpr const array_data::bitmap_type& bitmap(const array_data& data) noexcept
     {
         return data.bitmap;
     }
 
-    inline std::size_t buffers_size(const array_data& data)
+    constexpr std::size_t buffers_size(const array_data& data) noexcept
     {
         return data.buffers.size();
     }
 
-    inline array_data::buffer_type& buffer_at(array_data& data, std::size_t i)
+    constexpr void buffers_clear(array_data& data) noexcept
+    {
+        data.buffers.clear();
+    }
+
+    constexpr array_data::buffer_type& buffer_at(array_data& data, std::size_t i)
     {
         SPARROW_ASSERT_TRUE(i < buffers_size(data));
         return data.buffers[i];
     }
 
-    inline const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i)
+    constexpr const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i)
     {
         SPARROW_ASSERT_TRUE(i < buffers_size(data));
         return data.buffers[i];
     }
 
-    inline std::size_t child_data_size(const array_data& data)
+    constexpr std::size_t child_data_size(const array_data& data) noexcept
     {
         return data.child_data.size();
+    }
+
+    constexpr void child_data_clear(array_data& data) noexcept
+    {
+        data.child_data.clear();
     }
 
     inline array_data& child_data_at(array_data& data, std::size_t i)
@@ -146,7 +152,4 @@ namespace sparrow
     {
         return data.dictionary;
     }
-
-
-
 }

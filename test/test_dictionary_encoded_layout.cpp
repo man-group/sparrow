@@ -93,30 +93,45 @@ namespace sparrow
     {
         TEST_CASE_FIXTURE(dictionary_encoded_fixture, "constructors")
         {
-            CHECK(m_data.buffers.size() == 1);
-            const layout_type l_copy(m_data);
-            CHECK(m_data.buffers.size() == 1);
+            SUBCASE("with array data")
+            {
+                CHECK(m_data.buffers.size() == 1);
+                const layout_type layout(m_data);
+                CHECK(m_data.buffers.size() == 1);
+            }
+
+            SUBCASE("copy")
+            {
+                CHECK(m_data.buffers.size() == 1);
+                const layout_type layout(m_data);
+                const layout_type layout_copy(layout);
+                CHECK_EQ(layout_copy.size(), element_count);
+            }
+
+            SUBCASE("move")
+            {
+                CHECK(m_data.buffers.size() == 1);
+                layout_type layout(m_data);
+                const layout_type layout_copy(std::move(layout));
+                CHECK_EQ(layout_copy.size(), element_count);
+            }
         }
 
-        TEST_CASE_FIXTURE(dictionary_encoded_fixture, "rebind_data")
+        TEST_CASE_FIXTURE(dictionary_encoded_fixture, "operator=")
         {
-            array_data data2 = m_data;
-            layout_type l(m_data);
-            static constexpr std::array<std::string_view, 5> new_words = {
-                {"Just", "got", "home", "from", "Illinois"}
-            };
-            data2.dictionary = sparrow::value_ptr<array_data>(make_dictionary(new_words));
-            l.rebind_data(data2);
-            CHECK_EQ(l[0].value(), new_words[1]);
-            CHECK_EQ(l[1].value(), new_words[0]);
-            CHECK_EQ(l[2].value(), new_words[3]);
-            CHECK_EQ(l[3].value(), new_words[0]);
-            CHECK_EQ(l[4].value(), new_words[1]);
-            CHECK_EQ(l[5].value(), new_words[2]);
-            CHECK_EQ(l[6].value(), new_words[3]);
-            CHECK_EQ(l[7].value(), new_words[2]);
-            CHECK_FALSE(l[8].has_value());
-            CHECK_FALSE(l[9].has_value());
+            SUBCASE("move")
+            {
+                layout_type layout(m_data);
+                const layout_type layout_copy = std::move(layout);
+                CHECK_EQ(layout_copy.size(), element_count);
+            }
+
+            SUBCASE("copy")
+            {
+                const layout_type layout(m_data);
+                const layout_type layout_copy = layout;
+                CHECK_EQ(layout_copy.size(), element_count);
+            }
         }
 
         TEST_CASE_FIXTURE(dictionary_encoded_fixture, "size")

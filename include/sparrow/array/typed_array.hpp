@@ -292,11 +292,9 @@ namespace sparrow
     {
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
-    template<class U>
+    template<class U, class T, class S>
     requires std::convertible_to<U, T>
-        && mpl::is_type_instance_of_v<L, fixed_size_layout>
-    typed_array_impl<T, L>::typed_array_impl(size_type n, const U& value)
+    sparrow::array_data from_n_value(S n, const U& value)
     {
         sparrow::array_data ad;
         ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
@@ -308,9 +306,17 @@ namespace sparrow
         sparrow::buffer<uint8_t> b(buffer_size);
         std::fill_n(b.data<T>(), n, value);
         ad.buffers.push_back(b);
+        return ad;
+    }
 
-        m_data = std::move(ad);
-        m_layout.rebind_data(m_data);
+    template <is_arrow_base_type T, arrow_layout L>
+    template<class U>
+    requires std::convertible_to<U, T>
+        && mpl::is_type_instance_of_v<L, fixed_size_layout>
+    typed_array_impl<T, L>::typed_array_impl(size_type n, const U& value)
+    : m_data(from_n_value<U, T>(n, value))
+    , m_layout(m_data)
+    {
     }
 
     // Value semantics
@@ -333,7 +339,7 @@ namespace sparrow
     typed_array_impl<T, L>& typed_array_impl<T, L>::operator=(const typed_array_impl& rhs)
     {
         m_data = rhs.m_data;
-        m_layout.rebind_data(m_data);
+        m_layout = layout_type{m_data};
         return *this;
     }
 
@@ -341,7 +347,7 @@ namespace sparrow
     typed_array_impl<T, L>& typed_array_impl<T, L>::operator=(typed_array_impl&& rhs)
     {
         m_data = std::move(rhs.m_data);
-        m_layout.rebind_data(m_data);
+        m_layout = layout_type{m_data};
         return *this;
     }
 
