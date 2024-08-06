@@ -14,20 +14,16 @@
 
 #pragma once
 
-#include <algorithm>
-#include <concepts>
-#include <cstdint>
-#include <limits>
-#include <utility>
+#include <type_traits>
 
 #include "sparrow/array/array_data.hpp"
 #include "sparrow/array/array_data_concepts.hpp"
-#include "sparrow/buffer/buffer.hpp"
-#include "sparrow/buffer/dynamic_bitset.hpp"
+#include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
+
 
 namespace sparrow
 {
@@ -48,7 +44,8 @@ namespace sparrow
     public:
 
         using self_type = fixed_size_layout<T, DS>;
-        using data_storage_type = DS;
+        using data_storage_type = std::remove_reference_t<DS>;
+        using buffer_type = DS::buffer_type;
         using inner_value_type = T;
         using inner_reference = inner_value_type&;
         using inner_const_reference = const inner_value_type&;
@@ -76,7 +73,9 @@ namespace sparrow
         using iterator = layout_iterator<self_type, false>;
         using const_iterator = layout_iterator<self_type, true>;
 
+        explicit fixed_size_layout(const data_storage_type& data);
         explicit fixed_size_layout(data_storage_type& data);
+
         void rebind_data(data_storage_type& data);
 
         fixed_size_layout(const self_type&) = delete;
@@ -97,6 +96,113 @@ namespace sparrow
 
         const_bitmap_range bitmap() const;
         const_value_range values() const;
+
+        // Modifiers
+        void clear()
+        {
+            sparrow::buffers_clear(storage());
+            sparrow::bitmap(storage()).clear();
+        }
+
+        constexpr iterator insert(const_iterator pos, const value_type& value)
+        {
+            SPARROW_ASSERT_TRUE(cbegin() <= pos);
+            SPARROW_ASSERT_TRUE(pos <= cend());
+            return emplace(pos, value);
+        }
+
+        constexpr iterator insert(const_iterator pos, value_type&& value)
+        {
+            SPARROW_ASSERT_TRUE(cbegin() <= pos);
+            SPARROW_ASSERT_TRUE(pos <= cend());
+            return emplace(pos, std::move(value));
+        }
+
+        constexpr iterator insert(const_iterator pos, size_type count, const value_type& value)
+        {
+            SPARROW_ASSERT_TRUE(cbegin() <= pos);
+            SPARROW_ASSERT_TRUE(pos <= cend());
+
+            const difference_type offset = std::distance(cbegin(), pos);
+            if (count != 0)
+            {
+                m_buffer_adaptor.insert(
+                    std::next(m_buffer_adaptor.begin(), offset),
+                    count,
+                    value.value_or(inner_value_type{})
+                );
+                sparrow::bitmap(storage())
+                    .insert(sparrow::bitmap(storage()).begin() + offset, count, value.has_value());
+            }
+            return std::next(begin(), offset);
+        }
+
+        constexpr iterator emplace(const_iterator pos, const value_type& value)
+        {
+            SPARROW_ASSERT_TRUE(pos >= cbegin());
+            SPARROW_ASSERT_TRUE(pos <= cend());
+            const difference_type offset = std::distance(cbegin(), pos);
+            const auto it = m_buffer_adaptor.begin() + offset;
+            sparrow::bitmap(storage()).insert(sparrow::bitmap(storage()).begin() + offset, value.has_value());
+            m_buffer_adaptor.emplace(it, value.value_or(inner_value_type{}));
+            return iterator(value_end(), bitmap_end());
+        }
+
+        constexpr iterator erase(const_iterator first, const_iterator last)
+        {
+            SPARROW_ASSERT_TRUE(first < last);
+            SPARROW_ASSERT_TRUE(cbegin() <= first);
+            SPARROW_ASSERT_TRUE(last <= cend());
+            const difference_type offset = std::distance(cbegin(), first);
+            const difference_type len = std::distance(first, last);
+            auto& bitmap = sparrow::bitmap(storage());
+            bitmap.erase(bitmap.begin() + offset, bitmap.begin() + offset + len);
+            m_buffer_adaptor.erase(m_buffer_adaptor.begin() + offset, m_buffer_adaptor.begin() + offset + len);
+            return iterator(begin() + offset);
+        }
+
+        constexpr iterator erase(const_iterator pos)
+        {
+            SPARROW_ASSERT_TRUE(cbegin() <= pos);
+            SPARROW_ASSERT_TRUE(pos < cend());
+            return erase(pos, pos + 1);
+        }
+
+        constexpr void push_back(const value_type& value)
+        {
+            m_buffer_adaptor.push_back(value.value_or(inner_value_type{}));
+            sparrow::bitmap(storage()).push_back(value.has_value());
+        }
+
+        constexpr void push_back(value_type&& value)
+        {
+            m_buffer_adaptor.push_back(std::move(value.value_or(inner_value_type{})));
+            sparrow::bitmap(storage()).push_back(value.has_value());
+        }
+
+        constexpr void pop_back()
+        {
+            m_buffer_adaptor.pop_back();
+            sparrow::bitmap(storage()).pop_back();
+        }
+
+        constexpr void resize(size_type count, const value_type& value)
+        {
+            const size_type current_size = size();
+            if (count < current_size)
+            {
+                erase(begin() + count, end());
+            }
+            else if (count > current_size)
+            {
+                insert(end(), count - current_size, value);
+            }
+        }
+
+        constexpr void resize(size_type count)
+        {
+            resize(count, value_type{});
+        }
 
     private:
 
@@ -124,6 +230,8 @@ namespace sparrow
         const data_storage_type& storage() const;
 
         std::reference_wrapper<data_storage_type> m_data;
+        using buffer_adaptor_type = buffer_adaptor<inner_value_type, buffer_type&>;
+        buffer_adaptor_type m_buffer_adaptor;
     };
 
     /************************************
@@ -131,8 +239,19 @@ namespace sparrow
      ***********************************/
 
     template <class T, data_storage DS>
+    fixed_size_layout<T, DS>::fixed_size_layout(const data_storage_type& data)
+        : m_data(data)
+        , m_buffer_adaptor(buffer_at(storage(), 0u))
+    {
+        // We only require the presence of the bitmap and the first buffer.
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
+        SPARROW_ASSERT_TRUE(static_cast<size_type>(length(storage())) == sparrow::bitmap(storage()).size())
+    }
+
+    template <class T, data_storage DS>
     fixed_size_layout<T, DS>::fixed_size_layout(data_storage_type& data)
         : m_data(data)
+        , m_buffer_adaptor(buffer_adaptor_type{buffer_at(m_data.get(), 0u)})
     {
         // We only require the presence of the bitmap and the first buffer.
         SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
@@ -142,7 +261,10 @@ namespace sparrow
     template <class T, data_storage DS>
     void fixed_size_layout<T, DS>::rebind_data(data_storage_type& data)
     {
+        SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
+        SPARROW_ASSERT_TRUE(static_cast<size_type>(length(storage())) == sparrow::bitmap(storage()).size())
         m_data = data;
+        m_buffer_adaptor = buffer_adaptor_type(buffer_at(storage(), 0u));
     }
 
     template <class T, data_storage DS>
