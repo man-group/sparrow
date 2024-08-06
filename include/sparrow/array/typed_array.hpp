@@ -233,8 +233,8 @@ namespace sparrow
 
     private:
 
-        data_storage_type m_data;// = make_default_array_data<L>();
-        layout_type m_layout;//{m_data};
+        data_storage_type m_data;
+        layout_type m_layout;
     };
 
     template <class T, class Layout>
