@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <iostream> // REMOVE ME
-
 #include <ranges>
 #include <algorithm>
 #include <cstddef>
@@ -140,18 +138,14 @@ namespace sparrow
         // Check that the range is a range of ranges
         if constexpr (std::ranges::range<T>)
         {
-            std::cout<<"is range"<<std::endl;
             SPARROW_ASSERT_TRUE(check_all_elements_have_same_size(values));
         }
 
-        std::cout<<"values.size(): "<<values.size()<<std::endl;
-        std::cout<<"bitmap.size(): "<<bitmap.size()<<std::endl;
         SPARROW_ASSERT_TRUE(values.size() == bitmap.size());
         SPARROW_ASSERT_TRUE(std::cmp_greater_equal(values.size(), offset));
 
         const auto create_buffer = [&values]()
         {
-            std::cout<<"create_buffer"<<std::endl;
             const size_t buffer_size = (values.size() * sizeof(T)) / sizeof(uint8_t);
             array_data::buffer_type buffer(buffer_size);
             auto data = buffer.data<T>();
@@ -160,7 +154,6 @@ namespace sparrow
                 *data = value;
                 ++data;
             }
-            std::cout<<"buffer_size: "<<buffer_size<<std::endl;
             return buffer;
         };
         using U = std::conditional_t<std::same_as<T, std::string_view>, std::string, T>;
@@ -211,7 +204,7 @@ namespace sparrow
     template <range_for_array_data ValueRange>
     array_data make_array_data_for_variable_size_binary_layout(
         ValueRange&& values,
-        const array_data::bitmap_type& bitmap,
+        array_data::bitmap_type bitmap,
         std::int64_t offset
     )
     {
@@ -264,12 +257,11 @@ namespace sparrow
 
         using T = std::unwrap_ref_decay_t<std::unwrap_ref_decay_t<std::ranges::range_value_t<ValueRange>>>;
         using U = get_corresponding_arrow_type_t<T>;
-        std::cout<<"return..."<<std::endl;
         return {
             .type = data_descriptor(arrow_type_id<U>()),
             .length = static_cast<array_data::length_type>(values.size()),
             .offset = offset,
-            .bitmap = bitmap,
+            .bitmap = std::move(bitmap),
             .buffers = create_buffers(),
             .child_data = {},
             .dictionary = nullptr
@@ -387,7 +379,7 @@ namespace sparrow
     template <range_for_array_data ValueRange>
     array_data make_array_data_for_dictionary_encoded_layout(
         ValueRange&& values,
-        const array_data::bitmap_type& bitmap,
+        array_data::bitmap_type bitmap,
         std::int64_t offset
     )
     {
@@ -407,7 +399,7 @@ namespace sparrow
             .type = data_descriptor(arrow_type_id<std::uint64_t>()),
             .length = static_cast<array_data::length_type>(indexes.size()),
             .offset = offset,
-            .bitmap = bitmap,
+            .bitmap = std::move(bitmap),
             .buffers = {create_buffer()},
             .child_data = {},
             .dictionary = value_ptr<array_data>(make_array_data_for_variable_size_binary_layout(
@@ -473,20 +465,19 @@ namespace sparrow
      */
     template <arrow_layout Layout, range_for_array_data ValueRange>
     array_data
-    make_default_array_data(ValueRange&& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
+    make_default_array_data(ValueRange&& values, array_data::bitmap_type bitmap, std::int64_t offset)
     {
-        std::cout<<"make_default_array_data for const range"<<std::endl;
         if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
         {
-            return make_array_data_for_fixed_size_layout(std::forward<ValueRange>(values), bitmap, offset);
+            return make_array_data_for_fixed_size_layout(std::forward<ValueRange>(values), std::move(bitmap), offset);
         }
         else if constexpr (mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>)
         {
-            return make_array_data_for_variable_size_binary_layout(std::forward<ValueRange>(values), bitmap, offset);
+            return make_array_data_for_variable_size_binary_layout(std::forward<ValueRange>(values), std::move(bitmap), offset);
         }
         else if constexpr (mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>)
         {
-            return make_array_data_for_dictionary_encoded_layout(std::forward<ValueRange>(values), bitmap, offset);
+            return make_array_data_for_dictionary_encoded_layout(std::forward<ValueRange>(values), std::move(bitmap), offset);
         }
         else
         {
@@ -497,27 +488,6 @@ namespace sparrow
             mpl::unreachable();
         }
     }
-
-    // /**
-    //  * \brief Creates a default array_data object with the specified layout and values.
-    //  *
-    //  * @tparam Layout The layout of the array_data object.
-    //  * @tparam ValueRange The type of the input range for the values.
-    //  * @param values The input range of values for the array_data object.
-    //  * @param bitmap The bitmap type for the array_data object.
-    //  * @param offset The offset for the array_data object.
-    //  * @return A new array_data object with the specified layout, values, bitmap, and offset.
-    //  */
-    // template <arrow_layout Layout, std::ranges::input_range ValueRange>
-    //     requires(!mpl::constant_range<ValueRange>)
-    // array_data
-    // make_default_array_data_nc(ValueRange&& values, const array_data::bitmap_type& bitmap, std::int64_t offset)
-    // {
-    //     std::cout<<"make_default_array_data for NON-const range"<<std::endl;
-    //     return make_default_array_data_c<Layout>(std::as_const(values), bitmap, offset);
-    // }
-
-
 
 
     /**
@@ -532,19 +502,9 @@ namespace sparrow
     array_data
     make_default_array_data(ValueRange&& values)
     {
-        std::cout<<"make_default_array_data"<<std::endl;
-        // size of the range
         const std::size_t size = std::ranges::size(values);
-
-        std::cout<<"    size: "<<size<<std::endl;
-
-        // create a bitmap with all values set to true
         array_data::bitmap_type bitmap(size, true);
-
-        // zero offset
         const std::int64_t offset = 0;
-
-        std::cout<<"    call make_default_array_data(values, bitmap, offset)"<<std::endl;
-        return make_default_array_data<Layout>(std::as_const(values), bitmap, offset);
+        return make_default_array_data<Layout>(std::forward<ValueRange>(values), std::move(bitmap), offset);
     }
 }  // namespace sparrow

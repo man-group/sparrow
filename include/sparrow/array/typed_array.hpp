@@ -106,11 +106,8 @@ namespace sparrow
             range_for_array_data<ValueRange> && 
             std::same_as<array_data, typename L::data_storage_type> &&
             (!is_typed_array_impl_v<ValueRange>)
-        typed_array_impl(ValueRange&& values)   
-            : m_data(make_default_array_data<L>(std::forward<ValueRange>(values)))
-            , m_layout(m_data) 
-        {
-        }
+        typed_array_impl(ValueRange&& values);
+
 
         /** Construct a typed array with a fixed layout with the same value repeated `n` times.
          *
@@ -305,7 +302,6 @@ namespace sparrow
         : m_data(make_default_array_data<L>())
         , m_layout{m_data}
     {
-        std::cout<<"typed_array_impl<T, L>::typed_array_impl()"<<std::endl;
     }
 
     template <is_arrow_base_type T, arrow_layout L>
@@ -315,17 +311,17 @@ namespace sparrow
     {
     }
 
-    // template <is_arrow_base_type T, arrow_layout L>
-    // template <std::ranges::input_range ValueRange>
-    // requires  
-    //     range_for_array_data<ValueRange> && 
-    //     std::same_as<array_data, typename L::data_storage_type> &&
-    //     (!is_typed_array_impl_v<ValueRange>)
-    // typed_array_impl<T, L>::typed_array_impl(ValueRange&& values)   
-    //     : m_data(make_default_array_data<L>(std::forward<ValueRange>(values)))
-    //     , m_layout(m_data) 
-    // {
-    // }
+    template <is_arrow_base_type T, arrow_layout L>
+    template <std::ranges::input_range ValueRange>
+    requires  
+        range_for_array_data<ValueRange> && 
+        std::same_as<array_data, typename L::data_storage_type> &&
+        (!is_typed_array_impl_v<ValueRange>)
+    typed_array_impl<T, L>::typed_array_impl(ValueRange&& values)   
+        : m_data(make_default_array_data<L>(std::forward<ValueRange>(values)))
+        , m_layout(m_data) 
+    {
+    }
 
 
 
