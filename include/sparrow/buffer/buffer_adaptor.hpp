@@ -14,12 +14,14 @@
 
 #pragma once
 
+#include <cmath>
 #include <ranges>
 #include <type_traits>
 
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
+
 
 namespace sparrow
 {
