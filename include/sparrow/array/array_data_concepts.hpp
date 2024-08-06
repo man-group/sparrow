@@ -63,6 +63,7 @@ namespace sparrow
     template <class T>
     concept data_storage = requires(T t, std::size_t i)
     {
+        { T::is_mutable } -> std::convertible_to<bool>;
         { type_descriptor(t) } -> std::same_as<data_descriptor>;
         { length(t) } -> std::same_as<std::int64_t>;
         { offset(t) } -> std::same_as<std::int64_t>;
@@ -72,6 +73,7 @@ namespace sparrow
         { child_data_size(t) } -> std::same_as<std::size_t>;
         child_data_at(t, i);
         dictionary(t);
+
     };
 
 }  // namespace sparrow

@@ -97,10 +97,10 @@ namespace sparrow
         typed_array_impl& operator=(typed_array_impl&& rhs);
         ///@}
 
-        // /** Construct a typed array from a range of values.
-        //  * 
-        //  * @param values The range of values to construct the array from.
-        //  */
+        /** Construct a typed array from a range of values.
+         * 
+         * @param values The range of values to construct the array from.
+         */
         template <std::ranges::input_range ValueRange>
         requires  
             range_for_array_data<ValueRange> && 
