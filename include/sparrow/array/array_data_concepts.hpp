@@ -73,7 +73,6 @@ namespace sparrow
         { child_data_size(t) } -> std::same_as<std::size_t>;
         child_data_at(t, i);
         dictionary(t);
-
     };
 
 }  // namespace sparrow
