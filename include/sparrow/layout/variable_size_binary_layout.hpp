@@ -185,8 +185,9 @@ namespace sparrow
 
         using self_type = variable_size_binary_layout<T, CR, DS, OT>;
         using data_storage_type = DS;
+        constexpr static bool is_mutable = data_storage_type::is_mutable;
         using offset_type = OT;
-        using inner_value_type = T;
+        using inner_value_type = std::conditional_t<is_mutable, T, const T>; 
         using inner_reference = vs_binary_reference<self_type>;
         using inner_const_reference = CR;
         using bitmap_type = typename data_storage_type::bitmap_type;
