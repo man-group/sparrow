@@ -120,6 +120,9 @@ namespace sparrow
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 CHECK_EQ(buffer_adapt[0], 0x04030201);
                 CHECK_EQ(buffer_adapt[1], 0x08070605);
+
+                buffer_adapt[0] = 0x11111111;
+                CHECK_EQ(buf[0], 0x11);
             }
 
             SUBCASE("from const data")
@@ -339,6 +342,7 @@ namespace sparrow
             buffer<uint8_t> buf(input);
             const buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             CHECK_EQ(buffer_adapt.size(), 2);
+            CHECK_EQ(buf.size(), 8);
         }
 
         TEST_CASE("empty")
@@ -346,10 +350,12 @@ namespace sparrow
             buffer<uint8_t> empty_buf;
             const buffer_adaptor<uint32_t, decltype(empty_buf)&> buffer_adapt(empty_buf);
             CHECK(buffer_adapt.empty());
+            CHECK(empty_buf.empty());
 
             buffer<uint8_t> buf2(input);
             const buffer_adaptor<uint32_t, decltype(buf2)&> buffer_adapt2(buf2);
-            CHECK(!buffer_adapt2.empty());
+            CHECK_FALSE(buffer_adapt2.empty());
+            CHECK_FALSE(buf2.empty());
         }
 
         TEST_CASE("capacity")
@@ -357,6 +363,7 @@ namespace sparrow
             buffer<uint8_t> buf(input);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             CHECK_EQ(buffer_adapt.capacity(), 2);
+            CHECK_EQ(buf.capacity(), 8);
         }
 
         TEST_CASE("reserve")
@@ -365,6 +372,7 @@ namespace sparrow
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             buffer_adapt.reserve(10);
             CHECK_EQ(buffer_adapt.capacity(), 10);
+            CHECK_EQ(buf.capacity(), 40);
         }
 
         TEST_CASE("shrink_to_fit")
@@ -372,10 +380,13 @@ namespace sparrow
             buffer<uint8_t> buf(input);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             CHECK_EQ(buffer_adapt.capacity(), 2);
+            CHECK_EQ(buf.capacity(), 8);
             buffer_adapt.reserve(50);
             CHECK_EQ(buffer_adapt.capacity(), 50);
+            CHECK_EQ(buf.capacity(), 200);
             buffer_adapt.shrink_to_fit();
             CHECK_EQ(buffer_adapt.capacity(), 2);
+            CHECK_EQ(buf.capacity(), 8);
         }
 
         // Modifiers
@@ -385,7 +396,8 @@ namespace sparrow
             buffer<uint8_t> buf(input);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             buffer_adapt.clear();
-            CHECK_EQ(buffer_adapt.size(), 0);
+            CHECK(buffer_adapt.empty());
+            CHECK(buf.empty());
         }
 
         TEST_CASE("insert")
@@ -408,6 +420,7 @@ namespace sparrow
                     CHECK_EQ(buffer_adapt[0], to_insert);
                     CHECK_EQ(buffer_adapt[1], 0x04030201);
                     CHECK_EQ(buffer_adapt[2], 0x08070605);
+                    CHECK_EQ(buf.size(), 12);
                 }
 
                 SUBCASE("in the middle")
@@ -426,6 +439,7 @@ namespace sparrow
                     CHECK_EQ(buffer_adapt[0], 0x04030201);
                     CHECK_EQ(buffer_adapt[1], to_insert);
                     CHECK_EQ(buffer_adapt[2], 0x08070605);
+                    CHECK_EQ(buf.size(), 12);
                 }
 
                 SUBCASE("at the end")
@@ -444,6 +458,7 @@ namespace sparrow
                     CHECK_EQ(buffer_adapt[0], 0x04030201);
                     CHECK_EQ(buffer_adapt[1], 0x08070605);
                     CHECK_EQ(buffer_adapt[2], to_insert);
+                    CHECK_EQ(buf.size(), 12);
                 }
             }
 
@@ -467,6 +482,7 @@ namespace sparrow
                     CHECK_EQ(buffer_adapt[1], to_insert);
                     CHECK_EQ(buffer_adapt[2], 0x04030201);
                     CHECK_EQ(buffer_adapt[3], 0x08070605);
+                    CHECK_EQ(buf.size(), 16);
                 }
 
                 SUBCASE("in the middle")
@@ -487,6 +503,7 @@ namespace sparrow
                     CHECK_EQ(buffer_adapt[1], to_insert);
                     CHECK_EQ(buffer_adapt[2], to_insert);
                     CHECK_EQ(buffer_adapt[3], 0x08070605);
+                    CHECK_EQ(buf.size(), 16);
                 }
 
                 SUBCASE("at the end")
@@ -507,6 +524,7 @@ namespace sparrow
                     CHECK_EQ(buffer_adapt[1], 0x08070605);
                     CHECK_EQ(buffer_adapt[2], to_insert);
                     CHECK_EQ(buffer_adapt[3], to_insert);
+                    CHECK_EQ(buf.size(), 16);
                 }
             }
 
@@ -530,6 +548,7 @@ namespace sparrow
                     CHECK_EQ(buffer_adapt[1], to_insert[1]);
                     CHECK_EQ(buffer_adapt[2], 0x04030201);
                     CHECK_EQ(buffer_adapt[3], 0x08070605);
+                    CHECK_EQ(buf.size(), 16);
                 }
 
                 SUBCASE("in the middle")
@@ -550,6 +569,7 @@ namespace sparrow
                     CHECK_EQ(buffer_adapt[1], to_insert[0]);
                     CHECK_EQ(buffer_adapt[2], to_insert[1]);
                     CHECK_EQ(buffer_adapt[3], 0x08070605);
+                    CHECK_EQ(buf.size(), 16);
                 }
 
                 SUBCASE("at the end")
@@ -570,6 +590,7 @@ namespace sparrow
                     CHECK_EQ(buffer_adapt[1], 0x08070605);
                     CHECK_EQ(buffer_adapt[2], to_insert[0]);
                     CHECK_EQ(buffer_adapt[3], to_insert[1]);
+                    CHECK_EQ(buf.size(), 16);
                 }
             }
         }
@@ -592,6 +613,7 @@ namespace sparrow
                 CHECK_EQ(buffer_adapt[0], to_insert);
                 CHECK_EQ(buffer_adapt[1], 0x04030201);
                 CHECK_EQ(buffer_adapt[2], 0x08070605);
+                CHECK_EQ(buf.size(), 12);
             }
 
             SUBCASE("in the middle")
@@ -610,6 +632,7 @@ namespace sparrow
                 CHECK_EQ(buffer_adapt[0], 0x04030201);
                 CHECK_EQ(buffer_adapt[1], to_insert);
                 CHECK_EQ(buffer_adapt[2], 0x08070605);
+                CHECK_EQ(buf.size(), 12);
             }
 
             SUBCASE("at the end")
@@ -628,6 +651,7 @@ namespace sparrow
                 CHECK_EQ(buffer_adapt[0], 0x04030201);
                 CHECK_EQ(buffer_adapt[1], 0x08070605);
                 CHECK_EQ(buffer_adapt[2], to_insert);
+                CHECK_EQ(buf.size(), 12);
             }
         }
 
@@ -646,6 +670,11 @@ namespace sparrow
                         CHECK_EQ(result, buffer_adapt.begin());
                         REQUIRE_EQ(buffer_adapt.size(), 1);
                         CHECK_EQ(buffer_adapt[0], 0x08070605);
+                        CHECK_EQ(buf.size(), 4);
+                        CHECK_EQ(buf[0], 0x05);
+                        CHECK_EQ(buf[1], 0x06);
+                        CHECK_EQ(buf[2], 0x07);
+                        CHECK_EQ(buf[3], 0x08);
                     }
 
                     SUBCASE("in the middle")
@@ -657,6 +686,11 @@ namespace sparrow
                         CHECK_EQ(result, std::next(buffer_adapt.begin()));
                         REQUIRE_EQ(buffer_adapt.size(), 1);
                         CHECK_EQ(buffer_adapt[0], 0x04030201);
+                        REQUIRE_EQ(buf.size(), 4);
+                        CHECK_EQ(buf[0], 0x01);
+                        CHECK_EQ(buf[1], 0x02);
+                        CHECK_EQ(buf[2], 0x03);
+                        CHECK_EQ(buf[3], 0x04);
                     }
 
                     SUBCASE("at the end")
@@ -668,6 +702,11 @@ namespace sparrow
                         CHECK_EQ(result, buffer_adapt.end());
                         REQUIRE_EQ(buffer_adapt.size(), 1);
                         CHECK_EQ(buffer_adapt[0], 0x04030201);
+                        REQUIRE_EQ(buf.size(), 4);
+                        CHECK_EQ(buf[0], 0x01);
+                        CHECK_EQ(buf[1], 0x02);
+                        CHECK_EQ(buf[2], 0x03);
+                        CHECK_EQ(buf[3], 0x04);
                     }
                 }
 
@@ -679,6 +718,7 @@ namespace sparrow
                     const buffer_adaptor<uint32_t, decltype(buf)&>::iterator result = buffer_adapt.erase(it);
                     CHECK_EQ(result, buffer_adapt.end());
                     CHECK(buffer_adapt.empty());
+                    CHECK(buf.empty());
                 }
             }
 
@@ -698,6 +738,7 @@ namespace sparrow
                         );
                         CHECK_EQ(result, buffer_adapt.end());
                         CHECK(buffer_adapt.empty());
+                        CHECK_EQ(buf.size(), 0);
                     }
 
                     SUBCASE("in the middle")
@@ -714,6 +755,7 @@ namespace sparrow
                         REQUIRE_EQ(buffer_adapt.size(), 2);
                         CHECK_EQ(buffer_adapt[0], 0x04030201);
                         CHECK_EQ(buffer_adapt[1], 0x0C0B0A09);
+                        CHECK_EQ(buf.size(), 8);
                     }
 
                     SUBCASE("at the end")
@@ -730,6 +772,7 @@ namespace sparrow
                         REQUIRE_EQ(buffer_adapt.size(), 2);
                         CHECK_EQ(buffer_adapt[0], 0x04030201);
                         CHECK_EQ(buffer_adapt[1], 0x08070605);
+                        CHECK_EQ(buf.size(), 8);
                     }
                 }
 
@@ -758,6 +801,11 @@ namespace sparrow
             CHECK_EQ(buffer_adapt[0], 0x04030201);
             CHECK_EQ(buffer_adapt[1], 0x08070605);
             CHECK_EQ(buffer_adapt[2], 0x05040302);
+
+            CHECK_EQ(buf[8], 0x02);
+            CHECK_EQ(buf[9], 0x03);
+            CHECK_EQ(buf[10], 0x04);
+            CHECK_EQ(buf[11], 0x05);
         }
 
         TEST_CASE("pop_back")
@@ -767,6 +815,7 @@ namespace sparrow
             buffer_adapt.pop_back();
             REQUIRE_EQ(buffer_adapt.size(), 1);
             CHECK_EQ(buffer_adapt[0], 0x04030201);
+            CHECK_EQ(buf.size(), 4);
         }
 
         TEST_CASE("resize")
@@ -781,6 +830,7 @@ namespace sparrow
                 CHECK_EQ(buffer_adapt[1], 0x08070605);
                 CHECK_EQ(buffer_adapt[2], 0x00000000);
                 CHECK_EQ(buffer_adapt[3], 0x00000000);
+                CHECK_EQ(buf.size(), 16);
             }
 
             SUBCASE("new_size and value")
@@ -792,6 +842,7 @@ namespace sparrow
                 CHECK_EQ(buffer_adapt[1], 0x08070605);
                 CHECK_EQ(buffer_adapt[2], value);
                 CHECK_EQ(buffer_adapt[3], value);
+                CHECK_EQ(buf.size(), 16);
             }
         }
 
