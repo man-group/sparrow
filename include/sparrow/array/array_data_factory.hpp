@@ -507,4 +507,27 @@ namespace sparrow
         const std::int64_t offset = 0;
         return make_default_array_data<Layout>(std::forward<ValueRange>(values), std::move(bitmap), offset);
     }
+
+
+    /**
+     * \brief Creates a default array_data object with the specified layout and values.
+     * 
+     * @tparam Layout The layout of the array_data object.
+     * @tparam T The type of the value to be repeated.
+     * 
+     * @param n The number of times the value should be repeated.
+     * @param value The value to be repeated.
+     */
+    template <arrow_layout Layout, class T>
+    requires is_arrow_base_type_extended<std::decay_t<T>>
+    array_data make_default_array_data( 
+        typename Layout::size_type n
+        ,  T && value)
+    {
+        auto repeated_range = std::ranges::iota_view{size_t(0),size_t(n)} | std::views::transform([&](auto) { return value; });
+
+        return make_default_array_data<Layout>(repeated_range);
+    }
+
+
 }  // namespace sparrow

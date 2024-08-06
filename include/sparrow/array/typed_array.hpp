@@ -115,9 +115,8 @@ namespace sparrow
          * @param value The value to repeat.
          */
         template<class U>
-        requires std::convertible_to<U, T>
-         && mpl::is_type_instance_of_v<L, fixed_size_layout>
-        typed_array_impl(size_type n, const U& value);
+        requires is_arrow_base_type_extended<std::decay_t<U>>
+        typed_array_impl(size_type n,  U && value);
 
 
 
@@ -327,25 +326,11 @@ namespace sparrow
 
     template <is_arrow_base_type T, arrow_layout L>
     template<class U>
-    requires std::convertible_to<U, T>
-        && mpl::is_type_instance_of_v<L, fixed_size_layout>
-    typed_array_impl<T, L>::typed_array_impl(size_type n, const U& value)
-        : m_data(make_default_array_data<L>())
+    requires is_arrow_base_type_extended<std::decay_t<U>>
+    typed_array_impl<T, L>::typed_array_impl(size_type n,  U&& value)
+        : m_data(make_default_array_data<L>(n, value))
         , m_layout{m_data}
     {
-        sparrow::array_data ad;
-        ad.type = sparrow::data_descriptor(sparrow::arrow_traits<T>::type_id);
-        ad.length = static_cast<typename array_data::length_type>(n);
-        ad.offset = static_cast<std::int64_t>(0);
-        ad.bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
-
-        const size_t buffer_size = (n * sizeof(T)) / sizeof(uint8_t);
-        sparrow::buffer<uint8_t> b(buffer_size);
-        std::fill_n(b.data<T>(), n, value);
-        ad.buffers.push_back(b);
-
-        m_data = std::move(ad);
-        m_layout.rebind_data(m_data);
     }
 
 
