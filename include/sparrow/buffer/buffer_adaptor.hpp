@@ -15,19 +15,29 @@
 #pragma once
 
 #include <cmath>
-#include <limits>
+#include <functional>
+#include <ranges>
+#include <type_traits>
 #include <utility>
 
-#include "sparrow/buffer/buffer.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/iterator.hpp"
 
 namespace sparrow
 {
+    template <typename FromBufferRef, typename T>
+    concept BufferReference = std::is_reference_v<FromBufferRef>
+                              && (sizeof(typename std::remove_cvref_t<FromBufferRef>::value_type) <= sizeof(T))
+                              && std::ranges::contiguous_range<FromBufferRef>;
+
+    template <typename FromBufferRef, typename T>
+    concept T_is_const_if_FromBufferRef_is_const = std::is_const_v<T> || !std::is_const_v<std::remove_reference_t<FromBufferRef>>;
+
     /**
      * Class which have internally a reference to a buffer<From> and provides the API of a buffer<To>
      */
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
     class buffer_adaptor
     {
     public:
@@ -37,38 +47,47 @@ namespace sparrow
         using const_reference = const value_type&;
         using pointer = value_type*;
         using const_pointer = const value_type*;
+        static constexpr bool is_const = std::is_const_v<To>;
 
-        using buffer_reference_value_type = From;
-        using buffer_reference = buffer<buffer_reference_value_type>;
+        using buffer_reference_value_type = std::remove_cvref_t<FromBufferRef>::value_type;
+        using buffer_reference = std::conditional_t<is_const, const FromBufferRef, FromBufferRef>;
 
-        using size_type = buffer_reference::size_type;
-        using difference_type = buffer_reference::difference_type;
+        using size_type = std::remove_cvref_t<buffer_reference>::size_type;
+        using difference_type = std::remove_cvref_t<buffer_reference>::difference_type;
         using iterator = pointer_iterator<pointer>;
         using const_iterator = pointer_iterator<const_pointer>;
         using reverse_iterator = std::reverse_iterator<iterator>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-        buffer_adaptor(buffer_reference& buf);
+        explicit buffer_adaptor(FromBufferRef buf)
+            requires(not is_const);
+        explicit buffer_adaptor(const FromBufferRef buf);
 
         constexpr pointer data() noexcept;
         constexpr const_pointer data() const noexcept;
 
-
         // Element access()
-
-        constexpr reference operator[](size_type idx);
+        constexpr reference operator[](size_type idx)
+            requires(not is_const);
         constexpr const_reference operator[](size_type idx) const;
 
-        constexpr reference front();
+        constexpr reference front()
+            requires(not is_const);
+
         constexpr const_reference front() const;
 
-        constexpr reference back();
+        constexpr reference back()
+            requires(not is_const);
+
         constexpr const_reference back() const;
 
         // Iterators
 
-        constexpr iterator begin() noexcept;
-        constexpr iterator end() noexcept;
+        constexpr iterator begin() noexcept
+            requires(not is_const);
+
+        constexpr iterator end() noexcept
+            requires(not is_const);
 
         constexpr const_iterator begin() const noexcept;
         constexpr const_iterator end() const noexcept;
@@ -76,8 +95,11 @@ namespace sparrow
         constexpr const_iterator cbegin() const noexcept;
         constexpr const_iterator cend() const noexcept;
 
-        constexpr reverse_iterator rbegin() noexcept;
-        constexpr reverse_iterator rend() noexcept;
+        constexpr reverse_iterator rbegin() noexcept
+            requires(not is_const);
+
+        constexpr reverse_iterator rend() noexcept
+            requires(not is_const);
 
         constexpr const_reverse_iterator rbegin() const noexcept;
         constexpr const_reverse_iterator rend() const noexcept;
@@ -96,27 +118,41 @@ namespace sparrow
 
         // Modifiers
 
-        constexpr void clear() noexcept;
+        constexpr void clear() noexcept
+            requires(not is_const);
 
-        constexpr iterator insert(const_iterator pos, const value_type& value);
-        constexpr iterator insert(const_iterator pos, size_type count, const value_type& value);
+        constexpr iterator insert(const_iterator pos, const value_type& value)
+            requires(not is_const);
+        constexpr iterator insert(const_iterator pos, size_type count, const value_type& value)
+            requires(not is_const);
+
         template <class InputIt>
             requires std::input_iterator<InputIt>
-        constexpr iterator insert(const_iterator pos, InputIt first, InputIt last);
-        constexpr iterator insert(const_iterator pos, std::initializer_list<value_type> ilist);
+        constexpr iterator insert(const_iterator pos, InputIt first, InputIt last)
+            requires(not is_const);
+        constexpr iterator insert(const_iterator pos, std::initializer_list<value_type> ilist)
+            requires(not is_const);
 
         template <class... Args>
-        constexpr iterator emplace(const_iterator pos, Args&&... args);
+        constexpr iterator emplace(const_iterator pos, Args&&... args)
+            requires(not is_const);
 
-        constexpr iterator erase(const_iterator pos);
-        constexpr iterator erase(const_iterator first, const_iterator last);
+        constexpr iterator erase(const_iterator pos)
+            requires(not is_const);
+        constexpr iterator erase(const_iterator first, const_iterator last)
+            requires(not is_const);
 
-        constexpr void push_back(const value_type& value);
+        constexpr void push_back(const value_type& value)
+            requires(not is_const);
 
-        constexpr void pop_back();
+        constexpr void pop_back()
+            requires(not is_const);
 
-        constexpr void resize(size_type new_size);
-        constexpr void resize(size_type new_size, const value_type& value);
+        constexpr void resize(size_type new_size)
+            requires(not is_const);
+
+        constexpr void resize(size_type new_size, const value_type& value)
+            requires(not is_const);
 
     private:
 
@@ -125,188 +161,221 @@ namespace sparrow
 
         static constexpr size_type m_to_from_size_ratio = static_cast<size_type>(1. / m_from_to_size_ratio);
 
-        [[nodiscard]] constexpr buffer_reference::size_type index_for_buffer(size_type idx) const noexcept;
+        [[nodiscard]] constexpr std::remove_cvref_t<buffer_reference>::size_type
+        index_for_buffer(size_type idx) const noexcept
+        {
+            return idx * m_to_from_size_ratio;
+        }
 
-        [[nodiscard]] buffer_reference::const_iterator get_buffer_reference_iterator(const_iterator pos);
+        [[nodiscard]] std::remove_cvref_t<buffer_reference>::const_iterator
+        get_buffer_reference_iterator(const_iterator pos)
+        {
+            const difference_type index = std::distance(cbegin(), pos);
+            const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
+            SPARROW_ASSERT_TRUE(idx_for_buffer <= m_buffer.get().size());
+            return std::next(m_buffer.get().cbegin(), static_cast<difference_type>(idx_for_buffer));
+        }
 
-        buffer_reference& m_buffer;
+        std::reference_wrapper<std::remove_reference_t<buffer_reference>> m_buffer;
         size_type m_max_size;
     };
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    buffer_adaptor<To, From>::buffer_adaptor(buffer_adaptor<To, From>::buffer_reference& buf)
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    buffer_adaptor<To, FromBufferRef>::buffer_adaptor(FromBufferRef buf)
+        requires(not is_const)
         : m_buffer(buf)
-        , m_max_size(m_buffer.max_size() / m_to_from_size_ratio)
+        , m_max_size(m_buffer.get().max_size() / m_to_from_size_ratio)
     {
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::buffer_reference::size_type
-    buffer_adaptor<To, From>::index_for_buffer(size_type idx) const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    buffer_adaptor<To, FromBufferRef>::buffer_adaptor(const FromBufferRef buf)
+        : m_buffer(buf)
+        , m_max_size(m_buffer.get().max_size() / m_to_from_size_ratio)
     {
-        return idx * m_to_from_size_ratio;
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::pointer buffer_adaptor<To, From>::data() noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::pointer
+    buffer_adaptor<To, FromBufferRef>::data() noexcept
     {
-        return m_buffer.template data<value_type>();
+        return m_buffer.get().template data<value_type>();
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_pointer buffer_adaptor<To, From>::data() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_pointer
+    buffer_adaptor<To, FromBufferRef>::data() const noexcept
     {
-        return m_buffer.template data<value_type>();
+        return m_buffer.get().template data<value_type>();
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::reference buffer_adaptor<To, From>::operator[](size_type idx)
-    {
-        SPARROW_ASSERT_TRUE(idx < size());
-        return data()[idx];
-    }
-
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_reference
-    buffer_adaptor<To, From>::operator[](size_type idx) const
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::reference
+    buffer_adaptor<To, FromBufferRef>::operator[](size_type idx)
+        requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(idx < size());
         return data()[idx];
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::reference buffer_adaptor<To, From>::front()
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_reference
+    buffer_adaptor<To, FromBufferRef>::operator[](size_type idx) const
+    {
+        SPARROW_ASSERT_TRUE(idx < size());
+        return data()[idx];
+    }
+
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::reference buffer_adaptor<To, FromBufferRef>::front()
+        requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(!empty());
         return operator[](0);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_reference buffer_adaptor<To, From>::front() const
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_reference
+    buffer_adaptor<To, FromBufferRef>::front() const
     {
         SPARROW_ASSERT_TRUE(!empty());
         return operator[](0);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::reference buffer_adaptor<To, From>::back()
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::reference buffer_adaptor<To, FromBufferRef>::back()
+        requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(!empty());
         return operator[](size() - 1);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_reference buffer_adaptor<To, From>::back() const
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_reference
+    buffer_adaptor<To, FromBufferRef>::back() const
     {
         SPARROW_ASSERT_TRUE(!empty());
         return operator[](size() - 1);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::iterator buffer_adaptor<To, From>::begin() noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::iterator
+    buffer_adaptor<To, FromBufferRef>::begin() noexcept
+        requires(not is_const)
     {
         return iterator(data());
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::iterator buffer_adaptor<To, From>::end() noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::iterator
+    buffer_adaptor<To, FromBufferRef>::end() noexcept
+        requires(not is_const)
     {
         return iterator(data() + size());
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_iterator buffer_adaptor<To, From>::begin() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_iterator
+    buffer_adaptor<To, FromBufferRef>::begin() const noexcept
     {
         return const_iterator(data());
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_iterator buffer_adaptor<To, From>::end() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_iterator
+    buffer_adaptor<To, FromBufferRef>::end() const noexcept
     {
         return const_iterator(data() + size());
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_iterator buffer_adaptor<To, From>::cbegin() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_iterator
+    buffer_adaptor<To, FromBufferRef>::cbegin() const noexcept
     {
         return begin();
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_iterator buffer_adaptor<To, From>::cend() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_iterator
+    buffer_adaptor<To, FromBufferRef>::cend() const noexcept
     {
         return end();
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::reverse_iterator buffer_adaptor<To, From>::rbegin() noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::reverse_iterator
+    buffer_adaptor<To, FromBufferRef>::rbegin() noexcept
+        requires(not is_const)
     {
         return reverse_iterator(end());
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::reverse_iterator buffer_adaptor<To, From>::rend() noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::reverse_iterator
+    buffer_adaptor<To, FromBufferRef>::rend() noexcept
+        requires(not is_const)
     {
         return reverse_iterator(begin());
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_reverse_iterator
-    buffer_adaptor<To, From>::rbegin() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_reverse_iterator
+    buffer_adaptor<To, FromBufferRef>::rbegin() const noexcept
     {
         return const_reverse_iterator(end());
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_reverse_iterator
-    buffer_adaptor<To, From>::rend() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_reverse_iterator
+    buffer_adaptor<To, FromBufferRef>::rend() const noexcept
     {
         return const_reverse_iterator(begin());
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_reverse_iterator
-    buffer_adaptor<To, From>::crbegin() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_reverse_iterator
+    buffer_adaptor<To, FromBufferRef>::crbegin() const noexcept
     {
         return rbegin();
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::const_reverse_iterator
-    buffer_adaptor<To, From>::crend() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::const_reverse_iterator
+    buffer_adaptor<To, FromBufferRef>::crend() const noexcept
     {
         return rend();
     }
 
     // Capacity
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr buffer_adaptor<To, From>::size_type buffer_adaptor<To, From>::size() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr buffer_adaptor<To, FromBufferRef>::size_type
+    buffer_adaptor<To, FromBufferRef>::size() const noexcept
     {
-        const double new_size = static_cast<double>(m_buffer.size()) * m_from_to_size_ratio;
+        const double new_size = static_cast<double>(m_buffer.get().size()) * m_from_to_size_ratio;
         SPARROW_ASSERT(
             std::trunc(new_size) == new_size,
             "The size of the buffer is not a multiple of the size of the new type"
@@ -314,74 +383,80 @@ namespace sparrow
         return static_cast<size_type>(new_size);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::size_type buffer_adaptor<To, From>::max_size() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::size_type
+    buffer_adaptor<To, FromBufferRef>::max_size() const noexcept
     {
         return m_max_size;
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::size_type buffer_adaptor<To, From>::capacity() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::size_type
+    buffer_adaptor<To, FromBufferRef>::capacity() const noexcept
     {
-        return m_buffer.capacity() / m_to_from_size_ratio;
+        return m_buffer.get().capacity() / m_to_from_size_ratio;
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr bool buffer_adaptor<To, From>::empty() const noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr bool buffer_adaptor<To, FromBufferRef>::empty() const noexcept
     {
-        return m_buffer.empty();
+        return m_buffer.get().empty();
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr void buffer_adaptor<To, From>::reserve(size_type new_cap)
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr void buffer_adaptor<To, FromBufferRef>::reserve(size_type new_cap)
     {
-        m_buffer.reserve(new_cap * m_to_from_size_ratio);
+        m_buffer.get().reserve(new_cap * m_to_from_size_ratio);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr void buffer_adaptor<To, From>::shrink_to_fit()
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr void buffer_adaptor<To, FromBufferRef>::shrink_to_fit()
+    // requires m_buffer to have a shrink_to_fit method
     {
-        m_buffer.shrink_to_fit();
+        m_buffer.get().shrink_to_fit();
     }
 
     // Modifiers
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr void buffer_adaptor<To, From>::clear() noexcept
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr void buffer_adaptor<To, FromBufferRef>::clear() noexcept
+        requires(not is_const)
     {
-        m_buffer.clear();
+        m_buffer.get().clear();
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::iterator
-    buffer_adaptor<To, From>::insert(const_iterator pos, const value_type& value)
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::iterator
+    buffer_adaptor<To, FromBufferRef>::insert(const_iterator pos, const value_type& value)
+        requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
         const auto buffer_pos = get_buffer_reference_iterator(pos);
-        m_buffer.insert(buffer_pos, m_to_from_size_ratio, 0);
+        m_buffer.get().insert(buffer_pos, m_to_from_size_ratio, 0);
         operator[](static_cast<size_type>(index)) = value;
         return std::next(begin(), index);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::iterator
-    buffer_adaptor<To, From>::insert(const_iterator pos, size_type count, const value_type& value)
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::iterator
+    buffer_adaptor<To, FromBufferRef>::insert(const_iterator pos, size_type count, const value_type& value)
+        requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
         const auto buffer_pos = get_buffer_reference_iterator(pos);
-        m_buffer.insert(buffer_pos, count * m_to_from_size_ratio, 0);
+        m_buffer.get().insert(buffer_pos, count * m_to_from_size_ratio, 0);
         for (size_type i = 0; i < count; ++i)
         {
             data()[static_cast<size_t>(index) + i] = value;
@@ -389,49 +464,54 @@ namespace sparrow
         return std::next(begin(), index);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
     template <class InputIt>
         requires std::input_iterator<InputIt>
-    constexpr typename buffer_adaptor<To, From>::iterator
-    buffer_adaptor<To, From>::insert(const_iterator pos, InputIt first, InputIt last)
+    constexpr typename buffer_adaptor<To, FromBufferRef>::iterator
+    buffer_adaptor<To, FromBufferRef>::insert(const_iterator pos, InputIt first, InputIt last)
+        requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
         const difference_type count = std::distance(first, last);
         const auto buffer_pos = get_buffer_reference_iterator(pos);
-        m_buffer.insert(buffer_pos, static_cast<size_type>(count) * m_to_from_size_ratio, 0);
+        m_buffer.get().insert(buffer_pos, static_cast<size_type>(count) * m_to_from_size_ratio, 0);
         std::copy(first, last, data() + index);
         return std::next(begin(), index);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::iterator
-    buffer_adaptor<To, From>::insert(const_iterator pos, std::initializer_list<value_type> ilist)
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::iterator
+    buffer_adaptor<To, FromBufferRef>::insert(const_iterator pos, std::initializer_list<value_type> ilist)
+        requires(not is_const)
     {
         return insert(pos, ilist.begin(), ilist.end());
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
     template <class... Args>
-    constexpr typename buffer_adaptor<To, From>::iterator
-    buffer_adaptor<To, From>::emplace(const_iterator pos, Args&&... args)
+    constexpr typename buffer_adaptor<To, FromBufferRef>::iterator
+    buffer_adaptor<To, FromBufferRef>::emplace(const_iterator pos, Args&&... args)
+        requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type index = std::distance(cbegin(), pos);
         const auto buffer_pos = get_buffer_reference_iterator(pos);
-        m_buffer.insert(buffer_pos, m_to_from_size_ratio, 0);
+        m_buffer.get().insert(buffer_pos, m_to_from_size_ratio, 0);
         data()[index] = value_type(std::forward<Args>(args)...);
         return std::next(begin(), index);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::iterator buffer_adaptor<To, From>::erase(const_iterator pos)
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::iterator
+    buffer_adaptor<To, FromBufferRef>::erase(const_iterator pos)
+        requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
@@ -441,19 +521,20 @@ namespace sparrow
         }
         const difference_type index = std::distance(cbegin(), pos);
         const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
-        SPARROW_ASSERT_TRUE(idx_for_buffer < m_buffer.size());
+        SPARROW_ASSERT_TRUE(idx_for_buffer < m_buffer.get().size());
 
-        m_buffer.erase(
-            std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer)),
-            std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer + m_to_from_size_ratio))
+        m_buffer.get().erase(
+            std::next(m_buffer.get().cbegin(), static_cast<difference_type>(idx_for_buffer)),
+            std::next(m_buffer.get().cbegin(), static_cast<difference_type>(idx_for_buffer + m_to_from_size_ratio))
         );
         return std::next(begin(), index);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr typename buffer_adaptor<To, From>::iterator
-    buffer_adaptor<To, From>::erase(const_iterator first, const_iterator last)
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr typename buffer_adaptor<To, FromBufferRef>::iterator
+    buffer_adaptor<To, FromBufferRef>::erase(const_iterator first, const_iterator last)
+        requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= first);
         SPARROW_ASSERT_TRUE(last <= cend());
@@ -464,63 +545,64 @@ namespace sparrow
         const difference_type index_first = std::distance(cbegin(), first);
         const difference_type index_last = std::distance(cbegin(), last);
         const auto idx_for_buffer_first = index_for_buffer(static_cast<size_type>(index_first));
-        SPARROW_ASSERT_TRUE(idx_for_buffer_first < m_buffer.size());
+        SPARROW_ASSERT_TRUE(idx_for_buffer_first < m_buffer.get().size());
         const auto idx_for_buffer_last = index_for_buffer(static_cast<size_type>(index_last));
-        SPARROW_ASSERT_TRUE(idx_for_buffer_last <= m_buffer.size());
-        m_buffer.erase(
-            std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_first)),
-            std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer_last))
+        SPARROW_ASSERT_TRUE(idx_for_buffer_last <= m_buffer.get().size());
+        m_buffer.get().erase(
+            std::next(m_buffer.get().cbegin(), static_cast<difference_type>(idx_for_buffer_first)),
+            std::next(m_buffer.get().cbegin(), static_cast<difference_type>(idx_for_buffer_last))
         );
         return std::next(begin(), index_first);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr void buffer_adaptor<To, From>::push_back(const value_type& value)
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr void buffer_adaptor<To, FromBufferRef>::push_back(const value_type& value)
+        requires(not is_const)
     {
         insert(cend(), value);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr void buffer_adaptor<To, From>::pop_back()
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr void buffer_adaptor<To, FromBufferRef>::pop_back()
+        requires(not is_const)
     {
         erase(std::prev(cend()));
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr void buffer_adaptor<To, From>::resize(size_type new_size)
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr void buffer_adaptor<To, FromBufferRef>::resize(size_type new_size)
+        requires(not is_const)
     {
         const auto new_size_for_buffer = static_cast<size_type>(
             static_cast<double>(new_size) / m_from_to_size_ratio
         );
-        m_buffer.resize(new_size_for_buffer);
+        m_buffer.get().resize(new_size_for_buffer);
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    constexpr void buffer_adaptor<To, From>::resize(size_type new_size, const value_type& value)
+    template <typename To, BufferReference<To> FromBufferRef>
+        requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
+    constexpr void buffer_adaptor<To, FromBufferRef>::resize(size_type new_size, const value_type& value)
+        requires(not is_const)
     {
         const size_type original_size = size();
         const auto new_size_for_buffer = static_cast<size_type>(
             static_cast<double>(new_size) / m_from_to_size_ratio
         );
-        m_buffer.resize(new_size_for_buffer, 0);
+        m_buffer.get().resize(new_size_for_buffer, 0);
         for (size_type i = original_size; i < new_size; ++i)
         {
             operator[](i) = value;
         }
     }
 
-    template <typename To, typename From>
-        requires(sizeof(From) < sizeof(To))
-    buffer_adaptor<To, From>::buffer_reference::const_iterator
-    buffer_adaptor<To, From>::get_buffer_reference_iterator(const_iterator pos)
+    template<typename To, class FromBufferRef>
+    auto make_buffer_adaptor(FromBufferRef& buf)
     {
-        const difference_type index = std::distance(cbegin(), pos);
-        const auto idx_for_buffer = index_for_buffer(static_cast<size_type>(index));
-        SPARROW_ASSERT_TRUE(idx_for_buffer <= m_buffer.size());
-        return std::next(m_buffer.cbegin(), static_cast<difference_type>(idx_for_buffer));
+        constexpr bool is_const = std::is_const_v<FromBufferRef>;
+        using RealToType = std::conditional_t<is_const, const To, To>;
+        return buffer_adaptor<RealToType, decltype(buf)&>(buf);
     }
 }
