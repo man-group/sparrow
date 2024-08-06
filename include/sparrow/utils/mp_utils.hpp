@@ -473,7 +473,7 @@ namespace sparrow::mpl
     template <class T>
     concept testable = requires(T t) {  t ? true : false; };
 
-    // Failes if the Qualifier is true for Y but not for T.
+    // Fails if the Qualifier is true for Y but not for T.
     template <typename T, typename Y, template <typename> typename Qualifier>
     concept T_matches_qualifier_if_Y_is = Qualifier<T>::value || !Qualifier<Y>::value;
 }
