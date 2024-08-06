@@ -33,7 +33,7 @@ namespace sparrow
 {
 
     // forward declaration
-     template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type T, arrow_layout L>
     class typed_array_impl;
 
     /*
