@@ -31,6 +31,28 @@
 
 namespace sparrow
 {
+
+    // forward declaration
+     template <is_arrow_base_type T, arrow_layout L>
+    class typed_array_impl;
+
+    /*
+     * is_typed_array_impl traits
+     */
+    template <class A>
+    struct is_typed_array_impl : std::false_type
+    {
+    };
+
+    template <class T, class L>
+    struct is_typed_array_impl<typed_array_impl<T, L>> : std::true_type
+    {
+    };
+
+    template <class A>
+    constexpr bool is_typed_array_impl_v = is_typed_array_impl<A>::value;
+
+
     /**
      * A class template representing a typed array.
      *
@@ -80,9 +102,12 @@ namespace sparrow
         //  * @param values The range of values to construct the array from.
         //  */
         template <std::ranges::input_range ValueRange>
-        requires  range_for_array_data<ValueRange> && std::same_as<array_data, typename L::data_storage_type>
+        requires  
+            range_for_array_data<ValueRange> && 
+            std::same_as<array_data, typename L::data_storage_type> &&
+            (!is_typed_array_impl_v<ValueRange>)
         typed_array_impl(ValueRange&& values)   
-            : m_data(make_default_array_data<L>(std::move(values)))
+            : m_data(make_default_array_data<L>(std::forward<ValueRange>(values)))
             , m_layout(m_data) 
         {
         }
@@ -96,9 +121,6 @@ namespace sparrow
         requires std::convertible_to<U, T>
          && mpl::is_type_instance_of_v<L, fixed_size_layout>
         typed_array_impl(size_type n, const U& value);
-
-
-        
 
 
 
@@ -238,21 +260,7 @@ namespace sparrow
     using external_typed_array = typed_array_impl<T, Layout>;
 
 
-    /*
-     * is_typed_array_impl traits
-     */
-    template <class A>
-    struct is_typed_array_impl : std::false_type
-    {
-    };
 
-    template <class T, class L>
-    struct is_typed_array_impl<typed_array_impl<T, L>> : std::true_type
-    {
-    };
-
-    template <class A>
-    constexpr bool is_typed_array_impl_v = is_typed_array_impl<A>::value;
 
     /*
      * typed_array_impl traits
@@ -297,6 +305,7 @@ namespace sparrow
         : m_data(make_default_array_data<L>())
         , m_layout{m_data}
     {
+        std::cout<<"typed_array_impl<T, L>::typed_array_impl()"<<std::endl;
     }
 
     template <is_arrow_base_type T, arrow_layout L>
@@ -305,6 +314,20 @@ namespace sparrow
         , m_layout(m_data)
     {
     }
+
+    // template <is_arrow_base_type T, arrow_layout L>
+    // template <std::ranges::input_range ValueRange>
+    // requires  
+    //     range_for_array_data<ValueRange> && 
+    //     std::same_as<array_data, typename L::data_storage_type> &&
+    //     (!is_typed_array_impl_v<ValueRange>)
+    // typed_array_impl<T, L>::typed_array_impl(ValueRange&& values)   
+    //     : m_data(make_default_array_data<L>(std::forward<ValueRange>(values)))
+    //     , m_layout(m_data) 
+    // {
+    // }
+
+
 
     template <is_arrow_base_type T, arrow_layout L>
     template<class U>
@@ -329,14 +352,6 @@ namespace sparrow
         m_layout.rebind_data(m_data);
     }
 
-
-    // template <is_arrow_base_type T, arrow_layout L>
-    // template <std::ranges::input_range ValueRange>
-    // typed_array_impl<T, L>::typed_array_impl(ValueRange&& )
-    //     // : m_data(make_default_array_data<L>(std::move(values)))
-    //     // , m_layout(m_data)
-    // {
-    // }
 
     // Value semantics
     template <is_arrow_base_type T, arrow_layout L>

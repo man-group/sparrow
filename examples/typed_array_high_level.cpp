@@ -7,9 +7,9 @@
 #include <sparrow/array.hpp>
 
 
-/*void example_typed_array_of_floats(){
-    using value_type = float;
-    std::vector<value_type> data = {1.0, 2.0, 3.0, 4.0, 5.0};
+void example_typed_array_of_floats(){
+    using value_type = bool;
+    std::vector<value_type> data = {true, false, true, false, true};
     
     // construct the array
     auto array = sparrow::typed_array<value_type>(data);
@@ -25,6 +25,7 @@
     }
 }
 
+/*
 void example_typed_array_of_strings(){
     using value_type = std::string;
     std::vector<std::string> data = {
@@ -76,7 +77,7 @@ void example_typed_array_of_strings_from_nullables(){
     }
 }*/
 int main() {
-    //example_typed_array_of_floats();
+    example_typed_array_of_floats();
     //example_typed_array_of_strings();
     //example_typed_array_of_strings_from_nullables();
     return 0;
