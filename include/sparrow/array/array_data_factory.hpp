@@ -45,13 +45,10 @@ namespace sparrow
     concept bool_convertible_range = std::ranges::range<BoolRange> &&
         std::convertible_to<std::ranges::range_value_t<BoolRange>, bool>;
 
-    
     // a range of nullable values / nullable<T>
     template<class RangeOfNullables>
     concept range_of_nullables = std::ranges::range<RangeOfNullables> && is_nullable<std::ranges::range_value_t<RangeOfNullables>>::value;
         
-        
-
     namespace detail
     {
 
