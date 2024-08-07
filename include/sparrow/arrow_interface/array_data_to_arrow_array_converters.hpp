@@ -42,7 +42,7 @@ namespace sparrow
      */
     template <class T>
         requires std::same_as<std::remove_cvref_t<T>, array_data>
-    std::vector<sparrow::buffer<uint8_t>> arrow_array_buffer_from_array_data(T&& ad);
+    std::vector<sparrow::buffer<uint8_t>> to_vector_of_buffer(T&& ad);
 
     /**
      * Convert an array_data to an ArrowArray.
@@ -57,7 +57,7 @@ namespace sparrow
 
     template <class T>
         requires std::same_as<std::remove_cvref_t<T>, array_data>
-    std::vector<sparrow::buffer<uint8_t>> arrow_array_buffer_from_array_data(T&& ad)
+    std::vector<sparrow::buffer<uint8_t>> to_vector_of_buffer(T&& ad)
     {
         std::vector<sparrow::buffer<uint8_t>> buffers;
         buffers.reserve(ad.buffers.size() + 1);
@@ -85,7 +85,7 @@ namespace sparrow
             ad.length,
             static_cast<int64_t>(ad.bitmap.null_count()),
             ad.offset,
-            arrow_array_buffer_from_array_data(std::move(ad)),
+            to_vector_of_buffer(std::move(ad)),
             std::move(children),
             std::move(dictionary)
         );

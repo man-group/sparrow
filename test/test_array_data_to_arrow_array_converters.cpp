@@ -81,12 +81,12 @@ TEST_SUITE("ArrowArray array_data converters")
         }
     }
 
-    TEST_CASE("arrow_array_buffer_from_array_data")
+    TEST_CASE("to_vector_of_buffer")
     {
         SUBCASE("move")
         {
             auto array_data = sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9});
-            const auto buffers = sparrow::arrow_array_buffer_from_array_data(std::move(array_data));
+            const auto buffers = sparrow::to_vector_of_buffer(std::move(array_data));
             CHECK(array_data.buffers[0].empty());
             REQUIRE_EQ(buffers.size(), 2);
             REQUIRE_EQ(buffers[0].size(), 2);
@@ -103,7 +103,7 @@ TEST_SUITE("ArrowArray array_data converters")
         SUBCASE("copy")
         {
             const auto array_data = sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9});
-            const auto buffers = sparrow::arrow_array_buffer_from_array_data(array_data);
+            const auto buffers = sparrow::to_vector_of_buffer(array_data);
             CHECK_EQ(array_data.buffers[0].size(), 10);
             REQUIRE_EQ(buffers.size(), 2);
             REQUIRE_EQ(buffers[0].size(), 2);
