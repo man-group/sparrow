@@ -49,7 +49,7 @@ void example_typed_array_of_strings(){
         }
     }
 }
-/*
+
 void example_typed_array_of_strings_from_nullables(){
 
     using value_type = std::string;
@@ -75,10 +75,10 @@ void example_typed_array_of_strings_from_nullables(){
             std::cout << "missing value" << std::endl;
         }
     }
-}*/
+}
 int main() {
     example_typed_array_of_floats();
     example_typed_array_of_strings();
-    //example_typed_array_of_strings_from_nullables();
+    example_typed_array_of_strings_from_nullables();
     return 0;
 }
