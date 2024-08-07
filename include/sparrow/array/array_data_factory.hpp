@@ -40,15 +40,28 @@
 namespace sparrow
 {
 
-    // a range where the value type is convertible to bool
+    /*
+    * \brief Concept to check if a range is convertible to a range of booleans.
+    *
+    * A range is considered convertible to a range of booleans if it is a range and its value type is convertible to a boolean.
+    *
+    * @tparam BoolRange The range to check.
+    */
     template<class BoolRange>
     concept bool_convertible_range = std::ranges::range<BoolRange> &&
         std::convertible_to<std::ranges::range_value_t<BoolRange>, bool>;
 
-    // a range of nullable values / nullable<T>
+    /*
+    * \brief Concept to check if a range is a range of nullables.
+    *
+    * A range is considered a range of nullables if it is a range and its value type is a nullable.
+    *
+    * @tparam RangeOfNullables The range to check.
+    */
     template<class RangeOfNullables>
     concept range_of_nullables = std::ranges::range<RangeOfNullables> && is_nullable<std::ranges::range_value_t<RangeOfNullables>>::value;
-        
+
+    /// \cond
     namespace detail
     {
 
@@ -78,8 +91,8 @@ namespace sparrow
         {
             return std::forward<Bitmap>(bitmap);
         }
-
     }
+    /// \endcond
 
     /**
      * Concept to check if a layout is a supported layout.
@@ -551,13 +564,13 @@ namespace sparrow
 
 
     /**
-     * \brief Creates a default array_data object with the specified layout and values and indicate which values are null.
+     * \brief Creates a default array_data object with the specified layout and values and indicate which values are missing.
      *
      * @tparam Layout The layout of the array_data object.
      * @tparam ValueRange The type of the input range for the values.
      * @tparam BitmapRange The type of the input range for the bitmap.
      * @param values The input range of values for the array_data object.
-     * @param bitmap The input range of values for the bitmap.
+     * @param bitmap The input range of values for the bitmap to indicate missing values.
      * @return A new array_data object with the specified layout, values, bitmap, and offset.
      */
     template <arrow_layout Layout, std::ranges::input_range ValueRange, bool_convertible_range BitmapRange>
@@ -569,16 +582,16 @@ namespace sparrow
     }
 
     /*
-    * \brief Creates a default array_data object with the specified layout and values.
+    * \brief Creates a default array_data object with the specified layout and values and indicate which values are missing.
     *
     * @tparam Layout The layout of the array_data object.
-    * @tparam ValueRange The type of the input range for the values.
+    * @tparam RangeOfNullables The type of the input range for the values.
     * @param values The input range of values for the array_data object.
     * @return A new array_data object with the specified layout, values, bitmap, and offset.
     */
-    template<arrow_layout Layout, range_of_nullables ValueRange>
-    requires std::convertible_to<typename std::ranges::range_value_t<ValueRange>::value_type, typename Layout::inner_value_type>
-    array_data make_default_array_data(ValueRange&& values)
+    template<arrow_layout Layout, range_of_nullables RangeOfNullables>
+    requires std::convertible_to<typename std::ranges::range_value_t<RangeOfNullables>::value_type, typename Layout::inner_value_type>
+    array_data make_default_array_data(RangeOfNullables&& values)
     {
         // transform range of nullable to range of values
         auto values_range = values | std::views::transform([](auto&& nullable) { return nullable.value(); });
