@@ -253,7 +253,7 @@ namespace sparrow
     template <range_for_array_data ValueRange, bool_convertible_range BitmapRange>
     array_data make_array_data_for_variable_size_binary_layout(
         ValueRange&& values,
-        BitmapRange && bitmap,        
+        BitmapRange && bitmap,
         std::int64_t offset
     )
     {
@@ -273,9 +273,6 @@ namespace sparrow
                 return value;
             }
         };
-
-
-        
 
         std::vector<array_data::buffer_type> buffers(2);
         buffers[0].resize(sizeof(std::int64_t) * (values_size + 1), 0);
