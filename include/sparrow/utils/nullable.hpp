@@ -56,6 +56,17 @@ namespace sparrow
     concept is_nullable_of_convertible_to = is_nullable_v<N> &&  std::convertible_to<typename N::value_type, T>;
 
     /*
+    * Matches a range of nullables objects.
+    *
+    * A range is considered a range of nullables if it is a range and its value type is a nullable.
+    *
+    * @tparam RangeOfNullables The range to check.
+    */
+    template<class RangeOfNullables>
+    concept range_of_nullables = std::ranges::range<RangeOfNullables> && is_nullable<std::ranges::range_value_t<RangeOfNullables>>::value;
+
+
+    /*
      * Default traits for the nullable class. These traits should be specialized
      * for proxy classes whose reference and const_reference types are not
      * defined as usual. For instance:
