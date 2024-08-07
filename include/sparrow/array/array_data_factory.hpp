@@ -54,6 +54,7 @@ namespace sparrow
 
         // a helper function to make the bitmap from a range
         template<bool_convertible_range BoolRange>
+        requires (!std::is_same_v<std::decay_t<BoolRange>, array_data::bitmap_type>)
         array_data::bitmap_type make_array_data_bitmap(BoolRange&& range)
         {
             array_data::bitmap_type bitmap(std::ranges::size(range), true);
@@ -68,15 +69,17 @@ namespace sparrow
             return bitmap;
         }
 
-        // specization if the range is already a bitmap
-        inline array_data::bitmap_type make_array_data_bitmap(array_data::bitmap_type&& bitmap)
+        // specialisation for when the input range is already a bitmap.
+        // in case of an rvalue reference, this will be a move operation
+        // and therefore zero cost.
+        template<class Bitmap>
+        requires std::same_as<std::decay_t<Bitmap>, array_data::bitmap_type>
+        inline array_data::bitmap_type make_array_data_bitmap(Bitmap && bitmap)
         {
-            return std::move(bitmap);
+            return std::forward<Bitmap>(bitmap);
         }
+
     }
-
-    
-
 
     /**
      * Concept to check if a layout is a supported layout.
@@ -277,14 +280,12 @@ namespace sparrow
         size_t acc_size = 0; 
         auto bitmap_iter = bitmap.begin();
         auto value_iter = values.begin();
-        for(std::size_t i = 0; i < values_size; ++i)
+        for(std::size_t i = 0;i < values_size; ++i, ++bitmap_iter, ++value_iter)
         {
             if(*bitmap_iter)
             {
                 acc_size += unwrap_value(*value_iter).size();
             }
-            ++bitmap_iter;
-            ++value_iter;
         }
         buffers[1].resize(acc_size);
 
@@ -292,11 +293,10 @@ namespace sparrow
         const auto offsets = buffers[0].data<std::int64_t>();
         offsets[0] = 0;
         
-
-        // resert the iterators
+ 
         value_iter = values.begin();
         bitmap_iter = bitmap.begin();
-        for(std::size_t i = 0; i < values_size; ++i)
+        for(std::size_t i = 0; i < values_size; ++i, ++bitmap_iter, ++value_iter)
         {
             if(*bitmap_iter)
             {
@@ -312,8 +312,6 @@ namespace sparrow
             {
                 offsets[i + 1] = offsets[i];
             }
-            ++bitmap_iter;
-            ++value_iter;
         }        
 
         using T = std::unwrap_ref_decay_t<std::unwrap_ref_decay_t<std::ranges::range_value_t<ValueRange>>>;
