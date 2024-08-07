@@ -421,12 +421,10 @@ namespace sparrow::mpl
 #endif
     }
 
-
     /// Matches range types whose elements are convertible to bool.
     template<class BoolRange>
     concept bool_convertible_range = std::ranges::range<BoolRange> &&
         std::convertible_to<std::ranges::range_value_t<BoolRange>, bool>;
-
 
     /// Matches types that can be convertible to and assignable from bool. We do not use
     /// `std::convertible_to` because we don't want to impose an implicit conversion.
