@@ -29,9 +29,9 @@ namespace sparrow
      * @param ads The array_data vector to convert.
      * @return The converted array_data elements
      */
-    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(const std::vector<array_data>& ads);
-    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(std::vector<array_data>&& ads);
-
+    template <typename R>
+        requires std::ranges::input_range<R> && std::same_as<std::ranges::range_value_t<R>, array_data>
+    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(R ads);
 
     /**
      * Convert array_data buffers to ArrowArray buffers.
@@ -90,37 +90,35 @@ namespace sparrow
         );
     }
 
-    inline std::vector<arrow_array_shared_ptr>
-    to_vector_of_arrow_array_shared_ptr(std::vector<array_data>&& ads)
+    template <typename R>
+        requires std::ranges::input_range<R> && std::same_as<std::ranges::range_value_t<R>, array_data>
+    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(R ads)
     {
         std::vector<arrow_array_shared_ptr> result;
         result.reserve(ads.size());
-        std::transform(
-            std::make_move_iterator(ads.begin()),
-            std::make_move_iterator(ads.end()),
-            std::back_inserter(result),
-            [](array_data&& ad)
-            {
-                return to_arrow_array_unique_ptr(std::forward<array_data>(ad));
-            }
-        );
-        return result;
-    }
-
-    inline std::vector<arrow_array_shared_ptr>
-    to_vector_of_arrow_array_shared_ptr(const std::vector<array_data>& ads)
-    {
-        std::vector<arrow_array_shared_ptr> result;
-        result.reserve(ads.size());
-        std::transform(
-            ads.begin(),
-            ads.end(),
-            std::back_inserter(result),
-            [](const array_data& ad)
-            {
-                return to_arrow_array_unique_ptr(ad);
-            }
-        );
+        if constexpr (std::is_rvalue_reference_v<R>)
+        {
+            std::transform(
+                std::make_move_iterator(ads.begin()),
+                std::make_move_iterator(ads.end()),
+                std::back_inserter(result),
+                [](array_data&& ad)
+                {
+                    return to_arrow_array_unique_ptr(std::forward<array_data>(ad));
+                }
+            );
+        }
+        else
+        {
+            std::ranges::transform(
+                ads,
+                std::back_inserter(result),
+                [](const array_data& ad)
+                {
+                    return to_arrow_array_unique_ptr(ad);
+                }
+            );
+        }
         return result;
     }
 }
