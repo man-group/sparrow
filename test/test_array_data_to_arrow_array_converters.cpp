@@ -58,7 +58,7 @@ TEST_SUITE("ArrowArray array_data converters")
                 sparrow::test::make_test_array_data<uint8_t>(5, 0, {1}),
             };
             CHECK_EQ(array_data_vec[0].buffers[0].size(), 10);
-            CHECK_EQ(array_data_vec[0].buffers[1].size(), 5);
+            CHECK_EQ(array_data_vec[1].buffers[0].size(), 5);
 
             const auto arrow_array_vec = sparrow::to_vector_of_arrow_array_shared_ptr(array_data_vec);
             CHECK_EQ(arrow_array_vec.size(), 2);
