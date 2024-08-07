@@ -32,6 +32,7 @@
 #include "sparrow/layout/dictionary_encoded_layout.hpp"
 #include "sparrow/layout/fixed_size_layout.hpp"
 #include "sparrow/layout/variable_size_binary_layout.hpp"
+#include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/mp_utils.hpp"
@@ -39,34 +40,12 @@
 
 namespace sparrow
 {
-
-    /*
-    * \brief Concept to check if a range is convertible to a range of booleans.
-    *
-    * A range is considered convertible to a range of booleans if it is a range and its value type is convertible to a boolean.
-    *
-    * @tparam BoolRange The range to check.
-    */
-    template<class BoolRange>
-    concept bool_convertible_range = std::ranges::range<BoolRange> &&
-        std::convertible_to<std::ranges::range_value_t<BoolRange>, bool>;
-
-    /*
-    * \brief Concept to check if a range is a range of nullables.
-    *
-    * A range is considered a range of nullables if it is a range and its value type is a nullable.
-    *
-    * @tparam RangeOfNullables The range to check.
-    */
-    template<class RangeOfNullables>
-    concept range_of_nullables = std::ranges::range<RangeOfNullables> && is_nullable<std::ranges::range_value_t<RangeOfNullables>>::value;
-
     /// \cond
     namespace detail
     {
 
         // a helper function to make the bitmap from a range
-        template<bool_convertible_range BoolRange>
+        template<mpl::bool_convertible_range BoolRange>
         requires (!std::is_same_v<std::decay_t<BoolRange>, array_data::bitmap_type>)
         array_data::bitmap_type make_array_data_bitmap(BoolRange&& range)
         {
@@ -182,7 +161,7 @@ namespace sparrow
      * @param offset The offset of the array data.
      * @return The created array_data object.
      */
-    template <range_for_array_data ValueRange, bool_convertible_range BitmapRange>
+    template <range_for_array_data ValueRange, mpl::bool_convertible_range BitmapRange>
     array_data make_array_data_for_fixed_size_layout(
         ValueRange&& values,
         BitmapRange && bitmap,
@@ -260,7 +239,7 @@ namespace sparrow
      * @param offset The offset of the array_data object.
      * @return The created array_data object.
      */
-    template <range_for_array_data ValueRange, bool_convertible_range BitmapRange>
+    template <range_for_array_data ValueRange, mpl::bool_convertible_range BitmapRange>
     array_data make_array_data_for_variable_size_binary_layout(
         ValueRange&& values,
         BitmapRange && bitmap,
@@ -445,7 +424,7 @@ namespace sparrow
      * @param offset The offset for the array data.
      * @return The created array_data object.
      */
-    template <range_for_array_data ValueRange, bool_convertible_range BitmapRange>
+    template <range_for_array_data ValueRange, mpl::bool_convertible_range BitmapRange>
     array_data make_array_data_for_dictionary_encoded_layout(
         ValueRange&& values,
         BitmapRange && bitmap,
@@ -532,7 +511,7 @@ namespace sparrow
      * @param offset The offset for the array data.
      * @return The created array data object.
      */
-    template <arrow_layout Layout, range_for_array_data ValueRange, bool_convertible_range BitmapRange>
+    template <arrow_layout Layout, range_for_array_data ValueRange, mpl::bool_convertible_range BitmapRange>
     array_data
     make_default_array_data(ValueRange&& values, BitmapRange && bitmap, std::int64_t offset)
     {
@@ -570,7 +549,7 @@ namespace sparrow
      * @param bitmap The input range of values for the bitmap to indicate missing values.
      * @return A new array_data object with the specified layout, values, bitmap, and offset.
      */
-    template <arrow_layout Layout, std::ranges::input_range ValueRange, bool_convertible_range BitmapRange>
+    template <arrow_layout Layout, std::ranges::input_range ValueRange, mpl::bool_convertible_range BitmapRange>
     array_data
     make_default_array_data(ValueRange&& values, BitmapRange && bitmap)
     {
