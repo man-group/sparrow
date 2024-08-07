@@ -56,7 +56,7 @@ namespace sparrow
     concept is_nullable_of_convertible_to = is_nullable_v<N> &&  std::convertible_to<typename N::value_type, T>;
 
     /*
-    * \brief Concept to check if a range is a range of nullables.
+    * Matches a range of nullables objects.
     *
     * A range is considered a range of nullables if it is a range and its value type is a nullable.
     *
