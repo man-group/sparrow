@@ -30,7 +30,7 @@ namespace sparrow
 
     template <typename FromBufferRef, typename T>
     concept T_is_const_if_FromBufferRef_is_const = mpl::T_matches_qualifier_if_Y_is<T, FromBufferRef, std::is_const>
-                                                   || mpl::T_matches_qualifier_if_Y_is<
+                                                   && mpl::T_matches_qualifier_if_Y_is<
                                                        T,
                                                        std::ranges::range_value_t<FromBufferRef>,
                                                        std::is_const>;

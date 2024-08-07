@@ -28,6 +28,9 @@ namespace sparrow
 
             using base_type = std::vector<T>;
             using difference_type = base_type::difference_type;
+            using value_type = base_type::value_type;
+            using size_type = base_type::size_type;
+            using const_iterator = base_type::const_iterator;
 
             using base_type::base_type;
             using base_type::resize;
@@ -37,6 +40,17 @@ namespace sparrow
             using base_type::end;
             using base_type::cbegin;
             using base_type::cend;
+            using base_type::front;
+            using base_type::back;
+            using base_type::max_size;
+            using base_type::empty;
+            using base_type::capacity;
+            using base_type::reserve;
+            using base_type::clear;
+            using base_type::insert;
+            using base_type::emplace;
+            using base_type::push_back;
+            using base_type::pop_back;
 
             template <class U>
             U* data()
@@ -146,7 +160,7 @@ namespace sparrow
                 }
             }
 
-            const fixed_size_layout<std::int32_t, test_array_data> layout(td);
+            fixed_size_layout<std::int32_t, test_array_data> layout(td);
             CHECK_EQ(layout.size(), std::size_t(td.length));
             for (std::size_t i = 0; i < 16u; ++i)
             {

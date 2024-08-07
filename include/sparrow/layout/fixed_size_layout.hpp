@@ -24,7 +24,6 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 
-
 namespace sparrow
 {
     /**
@@ -73,10 +72,13 @@ namespace sparrow
         using iterator = layout_iterator<self_type, false>;
         using const_iterator = layout_iterator<self_type, true>;
 
-        explicit fixed_size_layout(const data_storage_type& data);
+        static constexpr bool is_const = std::is_const_v<T>;
+
+        explicit fixed_size_layout(const data_storage_type& data)
+            requires is_const;
         explicit fixed_size_layout(data_storage_type& data);
 
-        void rebind_data(data_storage_type& data);
+        void rebind_data(data_storage_type& data) requires(not is_const);
 
         fixed_size_layout(const self_type&) = delete;
         self_type& operator=(const self_type&) = delete;
@@ -85,11 +87,14 @@ namespace sparrow
 
         size_type size() const;
 
-        reference operator[](size_type i);
+        reference operator[](size_type i)
+            requires(not is_const);
         const_reference operator[](size_type i) const;
 
-        iterator begin();
-        iterator end();
+        iterator begin()
+            requires(not is_const);
+        iterator end()
+            requires(not is_const);
 
         const_iterator cbegin() const;
         const_iterator cend() const;
@@ -98,27 +103,27 @@ namespace sparrow
         const_value_range values() const;
 
         // Modifiers
-        void clear()
+        void clear() requires(not is_const)
         {
             sparrow::buffers_clear(storage());
             sparrow::bitmap(storage()).clear();
         }
 
-        constexpr iterator insert(const_iterator pos, const value_type& value)
+        constexpr iterator insert(const_iterator pos, const value_type& value) requires(not is_const)
         {
             SPARROW_ASSERT_TRUE(cbegin() <= pos);
             SPARROW_ASSERT_TRUE(pos <= cend());
             return emplace(pos, value);
         }
 
-        constexpr iterator insert(const_iterator pos, value_type&& value)
+        constexpr iterator insert(const_iterator pos, value_type&& value) requires(not is_const)
         {
             SPARROW_ASSERT_TRUE(cbegin() <= pos);
             SPARROW_ASSERT_TRUE(pos <= cend());
             return emplace(pos, std::move(value));
         }
 
-        constexpr iterator insert(const_iterator pos, size_type count, const value_type& value)
+        constexpr iterator insert(const_iterator pos, size_type count, const value_type& value) requires(not is_const)
         {
             SPARROW_ASSERT_TRUE(cbegin() <= pos);
             SPARROW_ASSERT_TRUE(pos <= cend());
@@ -137,7 +142,7 @@ namespace sparrow
             return std::next(begin(), offset);
         }
 
-        constexpr iterator emplace(const_iterator pos, const value_type& value)
+        constexpr iterator emplace(const_iterator pos, const value_type& value) requires(not is_const)
         {
             SPARROW_ASSERT_TRUE(pos >= cbegin());
             SPARROW_ASSERT_TRUE(pos <= cend());
@@ -148,7 +153,7 @@ namespace sparrow
             return iterator(value_end(), bitmap_end());
         }
 
-        constexpr iterator erase(const_iterator first, const_iterator last)
+        constexpr iterator erase(const_iterator first, const_iterator last) requires(not is_const)
         {
             SPARROW_ASSERT_TRUE(first < last);
             SPARROW_ASSERT_TRUE(cbegin() <= first);
@@ -161,32 +166,32 @@ namespace sparrow
             return iterator(begin() + offset);
         }
 
-        constexpr iterator erase(const_iterator pos)
+        constexpr iterator erase(const_iterator pos) requires(not is_const)
         {
             SPARROW_ASSERT_TRUE(cbegin() <= pos);
             SPARROW_ASSERT_TRUE(pos < cend());
             return erase(pos, pos + 1);
         }
 
-        constexpr void push_back(const value_type& value)
+        constexpr void push_back(const value_type& value) requires(not is_const)
         {
             m_buffer_adaptor.push_back(value.value_or(inner_value_type{}));
             sparrow::bitmap(storage()).push_back(value.has_value());
         }
 
-        constexpr void push_back(value_type&& value)
+        constexpr void push_back(value_type&& value) requires(not is_const)
         {
             m_buffer_adaptor.push_back(std::move(value.value_or(inner_value_type{})));
             sparrow::bitmap(storage()).push_back(value.has_value());
         }
 
-        constexpr void pop_back()
+        constexpr void pop_back() requires(not is_const)
         {
             m_buffer_adaptor.pop_back();
             sparrow::bitmap(storage()).pop_back();
         }
 
-        constexpr void resize(size_type count, const value_type& value)
+        constexpr void resize(size_type count, const value_type& value) requires(not is_const)
         {
             const size_type current_size = size();
             if (count < current_size)
@@ -199,34 +204,34 @@ namespace sparrow
             }
         }
 
-        constexpr void resize(size_type count)
+        constexpr void resize(size_type count) requires(not is_const)
         {
             resize(count, value_type{});
         }
 
     private:
 
-        pointer data();
+        pointer data() requires(not is_const);
         const_pointer data() const;
 
-        bitmap_reference has_value(size_type i);
+        bitmap_reference has_value(size_type i) requires(not is_const);
         bitmap_const_reference has_value(size_type i) const;
-        inner_reference value(size_type i);
+        inner_reference value(size_type i) requires(not is_const);
         inner_const_reference value(size_type i) const;
 
-        value_iterator value_begin();
-        value_iterator value_end();
+        value_iterator value_begin() requires(not is_const);
+        value_iterator value_end() requires(not is_const);
 
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
 
-        bitmap_iterator bitmap_begin();
-        bitmap_iterator bitmap_end();
+        bitmap_iterator bitmap_begin() requires(not is_const);
+        bitmap_iterator bitmap_end() requires(not is_const);
 
         const_bitmap_iterator bitmap_cbegin() const;
         const_bitmap_iterator bitmap_cend() const;
 
-        data_storage_type& storage();
+        data_storage_type& storage() requires(not is_const);
         const data_storage_type& storage() const;
 
         std::reference_wrapper<data_storage_type> m_data;
@@ -239,7 +244,7 @@ namespace sparrow
      ***********************************/
 
     template <class T, data_storage DS>
-    fixed_size_layout<T, DS>::fixed_size_layout(const data_storage_type& data)
+    fixed_size_layout<T, DS>::fixed_size_layout(const data_storage_type& data) requires is_const
         : m_data(data)
         , m_buffer_adaptor(buffer_at(storage(), 0u))
     {
@@ -251,7 +256,7 @@ namespace sparrow
     template <class T, data_storage DS>
     fixed_size_layout<T, DS>::fixed_size_layout(data_storage_type& data)
         : m_data(data)
-        , m_buffer_adaptor(buffer_adaptor_type{buffer_at(m_data.get(), 0u)})
+        , m_buffer_adaptor(buffer_at(storage(), 0u))
     {
         // We only require the presence of the bitmap and the first buffer.
         SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
@@ -259,7 +264,7 @@ namespace sparrow
     }
 
     template <class T, data_storage DS>
-    void fixed_size_layout<T, DS>::rebind_data(data_storage_type& data)
+    void fixed_size_layout<T, DS>::rebind_data(data_storage_type& data) requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
         SPARROW_ASSERT_TRUE(static_cast<size_type>(length(storage())) == sparrow::bitmap(storage()).size())
@@ -275,7 +280,7 @@ namespace sparrow
     }
 
     template <class T, data_storage DS>
-    auto fixed_size_layout<T, DS>::value(size_type i) -> inner_reference
+    auto fixed_size_layout<T, DS>::value(size_type i) -> inner_reference requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(i < size());
         return data()[i + static_cast<size_type>(offset(storage()))];
@@ -289,7 +294,7 @@ namespace sparrow
     }
 
     template <class T, data_storage DS>
-    auto fixed_size_layout<T, DS>::operator[](size_type i) -> reference
+    auto fixed_size_layout<T, DS>::operator[](size_type i) -> reference requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(i < size());
         return reference(value(i), has_value(i));
@@ -303,13 +308,13 @@ namespace sparrow
     }
 
     template <class T, data_storage DS>
-    auto fixed_size_layout<T, DS>::begin() -> iterator
+    auto fixed_size_layout<T, DS>::begin() -> iterator requires(not is_const)
     {
         return iterator(value_begin(), bitmap_begin());
     }
 
     template <class T, data_storage DS>
-    auto fixed_size_layout<T, DS>::end() -> iterator
+    auto fixed_size_layout<T, DS>::end() -> iterator requires(not is_const)
     {
         return iterator(value_end(), bitmap_end());
     }
@@ -339,7 +344,7 @@ namespace sparrow
     }
 
     template <class T, data_storage DS>
-    auto fixed_size_layout<T, DS>::has_value(size_type i) -> bitmap_reference
+    auto fixed_size_layout<T, DS>::has_value(size_type i) -> bitmap_reference requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(i < size());
         return sparrow::bitmap(storage())[i + static_cast<size_type>(offset(storage()))];
@@ -353,13 +358,13 @@ namespace sparrow
     }
 
     template <class T, data_storage DS>
-    auto fixed_size_layout<T, DS>::value_begin() -> value_iterator
+    auto fixed_size_layout<T, DS>::value_begin() -> value_iterator requires(not is_const)
     {
         return value_iterator{data() + offset(storage())};
     }
 
     template <class T, data_storage DS>
-    auto fixed_size_layout<T, DS>::value_end() -> value_iterator
+    auto fixed_size_layout<T, DS>::value_end() -> value_iterator requires(not is_const)
     {
         value_iterator it = value_begin();
         std::advance(it, size());
@@ -381,13 +386,13 @@ namespace sparrow
     }
 
     template <class T, data_storage DS>
-    auto fixed_size_layout<T, DS>::bitmap_begin() -> bitmap_iterator
+    auto fixed_size_layout<T, DS>::bitmap_begin() -> bitmap_iterator requires(not is_const)
     {
         return sparrow::bitmap(storage()).begin() + offset(storage());
     }
 
     template <class T, data_storage DS>
-    auto fixed_size_layout<T, DS>::bitmap_end() -> bitmap_iterator
+    auto fixed_size_layout<T, DS>::bitmap_end() -> bitmap_iterator requires(not is_const)
     {
         bitmap_iterator it = bitmap_begin();
         std::advance(it, size());
@@ -409,7 +414,7 @@ namespace sparrow
     }
 
     template <class T, data_storage DS>
-    auto fixed_size_layout<T, DS>::data() -> pointer
+    auto fixed_size_layout<T, DS>::data() -> pointer requires(not is_const)
     {
         SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
         return buffer_at(storage(), 0u).template data<inner_value_type>();
@@ -423,7 +428,7 @@ namespace sparrow
     }
 
     template <class T, data_storage DS>
-    auto fixed_size_layout<T, DS>::storage() -> data_storage_type&
+    auto fixed_size_layout<T, DS>::storage() -> data_storage_type& requires(not is_const)
     {
         return m_data.get();
     }
