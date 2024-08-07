@@ -206,15 +206,12 @@ namespace sparrow
         auto data = buffer.data<T>();
         auto value_iter = values.begin();
         auto bitmap_iter = bitmap.begin();
-        for (std::size_t i = 0; i < size; ++i)
+        for (std::size_t i = 0; i < size; ++i, ++bitmap_iter, ++value_iter, ++data)
         {
             if (*bitmap_iter)
             {
                 *data = *value_iter;
             }
-            ++bitmap_iter;
-            ++data;
-            ++value_iter;
         }
         buffers[0] = std::move(buffer);
 
