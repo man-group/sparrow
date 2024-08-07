@@ -67,8 +67,8 @@ TEST_SUITE("typed_array")
         typed_array<uint32_t, Layout> ta_for_dels;
         CHECK_EQ(ta_for_dels.size(), 0);
     }
-
-    /*TEST_CASE("constructor from range of nullable fixed_size_layout"){
+    
+    TEST_CASE("constructor from range of nullable fixed_size_layout"){
         using nt = nullable<int32_t>;
         SUBCASE("some missing")
         {
@@ -129,6 +129,7 @@ TEST_SUITE("typed_array")
             CHECK_EQ(ta[3].value(), 3);
         }
     }
+    
     TEST_CASE("constructor from range of nullable variable_size_binary_layout"){
         using nt = nullable<std::string>;
         SUBCASE("some missing")
@@ -181,8 +182,8 @@ TEST_SUITE("typed_array")
             CHECK(ta[3].has_value());
             CHECK_EQ(ta[3].value(), "dddd");
         }
-    }*/
-
+    }
+    
     TEST_CASE_TEMPLATE_DEFINE("all", T, all)
     {
         SUBCASE("default constructor for fixed_size_layout")

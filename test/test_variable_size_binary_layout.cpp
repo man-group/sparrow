@@ -157,6 +157,13 @@ namespace sparrow
             layout_type l(m_data);
             const layout_type& cl = l;
 
+            SUBCASE("sanity")
+            {
+                CHECK_EQ(cl[0].value(), words[1]);
+                CHECK_EQ(cl[1].has_value(), true);
+                CHECK_EQ(cl[1].value().size(), 0);
+            }
+
             SUBCASE("size")
             {
                 
@@ -166,6 +173,7 @@ namespace sparrow
 
             SUBCASE("iterator")
             {
+                
                 auto ref0 = l[0].value();
                 auto cref0 = cl[0].value();
                 auto cref1 = cl[1].value();
@@ -173,7 +181,7 @@ namespace sparrow
                 auto it_end = ref0.end();
                 std::fill(it, it_end, 'a');
                 CHECK_EQ(cref0, "aaa");
-                CHECK_EQ(cref1, words[2]);
+                CHECK_EQ(cref1, "");
             }
 
             SUBCASE("const_iterator")
@@ -200,7 +208,7 @@ namespace sparrow
                 auto ref0 = l[0].value();
                 ref0 = "coi";
                 CHECK_EQ(cl[0].value(), "coi");
-                CHECK_EQ(cl[1].value(), words[2]);
+                CHECK_EQ(cl[1].value(), "");
                 CHECK_EQ(cl[2].value(), words[3]);
             }
 
@@ -209,7 +217,7 @@ namespace sparrow
                 auto ref0 = l[0].value();
                 ref0 = "coin";
                 CHECK_EQ(cl[0].value(), "coin");
-                CHECK_EQ(cl[1].value(), words[2]);
+                CHECK_EQ(cl[1].value(), "");
                 CHECK_EQ(cl[2].value(), words[3]);
             }
 
@@ -218,7 +226,7 @@ namespace sparrow
                 auto ref0 = l[0].value();
                 ref0 = "am";
                 CHECK_EQ(cl[0].value(), "am");
-                CHECK_EQ(cl[1].value(), words[2]);
+                CHECK_EQ(cl[1].value(),"");
                 CHECK_EQ(cl[2].value(), words[3]);
             }
 
@@ -235,7 +243,7 @@ namespace sparrow
 
                 CHECK_EQ(ref0.value(), words[0]);
                 CHECK_EQ(ref1.value(), words[1]);
-                CHECK_EQ(ref2.value(), words[2]);
+                CHECK_EQ(ref2.value(), "");
                 CHECK_EQ(ref3.value(), std::string("unpreparedandmore"));
 
                 ref0.value() = std::string("he");

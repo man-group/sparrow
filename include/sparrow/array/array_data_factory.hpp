@@ -44,6 +44,12 @@ namespace sparrow
     template<class BoolRange>
     concept bool_convertible_range = std::ranges::range<BoolRange> &&
         std::convertible_to<std::ranges::range_value_t<BoolRange>, bool>;
+
+    
+    // a range of nullable values / nullable<T>
+    template<class RangeOfNullables>
+    concept range_of_nullables = std::ranges::range<RangeOfNullables> && is_nullable<std::ranges::range_value_t<RangeOfNullables>>::value;
+        
         
 
     namespace detail
@@ -176,30 +182,37 @@ namespace sparrow
         {
             SPARROW_ASSERT_TRUE(check_all_elements_have_same_size(values));
         }
+        const auto size = std::ranges::size(values);
+        SPARROW_ASSERT_TRUE(size == std::ranges::size(bitmap));
+        SPARROW_ASSERT_TRUE(std::cmp_greater_equal(size, offset));
 
-        SPARROW_ASSERT_TRUE(std::ranges::size(values) == std::ranges::size(bitmap));
-        SPARROW_ASSERT_TRUE(std::cmp_greater_equal(values.size(), offset));
 
-        const auto create_buffer = [&values]()
+        std::vector<array_data::buffer_type> buffers(1);
+        const size_t buffer_size = (size * sizeof(T)) / sizeof(uint8_t);
+        array_data::buffer_type buffer(buffer_size);
+        auto data = buffer.data<T>();
+        auto value_iter = values.begin();
+        auto bitmap_iter = bitmap.begin();
+        for (size_t i = 0; i < size; ++i)
         {
-            const size_t buffer_size = (values.size() * sizeof(T)) / sizeof(uint8_t);
-            array_data::buffer_type buffer(buffer_size);
-            auto data = buffer.data<T>();
-            for (const auto& value : values)
+            if (*bitmap_iter)
             {
-                *data = value;
-                ++data;
+                *data = *value_iter;
             }
-            return buffer;
-        };
+            ++bitmap_iter;
+            ++data;
+            ++value_iter;
+        }
+        buffers[0] = std::move(buffer);
+
         using U = std::conditional_t<std::same_as<T, std::string_view>, std::string, T>;
 
         return {
             .type = data_descriptor(arrow_type_id<U>()),
-            .length = static_cast<int64_t>(values.size()),
+            .length = static_cast<int64_t>(size),
             .offset = offset,
             .bitmap = detail::make_array_data_bitmap(std::forward<BitmapRange>(bitmap)),
-            .buffers = {create_buffer()},
+            .buffers = std::move(buffers),
             .child_data = {},
             .dictionary = nullptr
         };
@@ -248,49 +261,66 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(values_size == std::ranges::size(bitmap));
         SPARROW_ASSERT_TRUE(std::cmp_greater_equal(values_size, offset));
 
-        const auto create_buffers = [&values, values_size]()
+        using range_value_type = std::ranges::range_value_t<ValueRange>;
+        const auto& unwrap_value = [](const range_value_type & value)
         {
-            using T = std::ranges::range_value_t<ValueRange>;
-            const auto& unwrap_value = [](const T& value)
+            if constexpr (mpl::is_reference_wrapper_v<range_value_type>)
             {
-                if constexpr (mpl::is_reference_wrapper_v<T>)
-                {
-                    return value.get();
-                }
-                else
-                {
-                    return value;
-                }
-            };
-
-            std::vector<array_data::buffer_type> buffers(2);
-            buffers[0].resize(sizeof(std::int64_t) * (values_size + 1), 0);
-            buffers[1].resize(std::accumulate(
-                values.begin(),
-                values.end(),
-                size_t(0),
-                [&unwrap_value](std::size_t res, const auto& s)
-                {
-                    return res + unwrap_value(s).size();
-                }
-            ));
-
-            auto iter = buffers[1].begin();
-            const auto offsets = buffers[0].data<std::int64_t>();
-            size_t i = 0;
-            for (const auto& value : values)
+                return value.get();
+            }
+            else
             {
-                const auto& unwraped_value = unwrap_value(value);
+                return value;
+            }
+        };
+
+
+        
+
+        std::vector<array_data::buffer_type> buffers(2);
+        buffers[0].resize(sizeof(std::int64_t) * (values_size + 1), 0);
+        // we accumulate by hand otherwise we might access a missing value
+        size_t acc_size = 0; 
+        auto bitmap_iter = bitmap.begin();
+        auto value_iter = values.begin();
+        for(size_t i = 0; i < values_size; ++i)
+        {
+            if(*bitmap_iter)
+            {
+                acc_size += unwrap_value(*value_iter).size();
+            }
+            ++bitmap_iter;
+            ++value_iter;
+        }
+        buffers[1].resize(acc_size);
+
+        auto iter = buffers[1].begin();
+        const auto offsets = buffers[0].data<std::int64_t>();
+        offsets[0] = 0;
+        
+
+        // resert the iterators
+        value_iter = values.begin();
+        bitmap_iter = bitmap.begin();
+        for(std::size_t i = 0; i < values_size; ++i)
+        {
+            if(*bitmap_iter)
+            {
+                const auto& unwraped_value = unwrap_value(*value_iter);
                 SPARROW_ASSERT_TRUE(
                     std::cmp_less(unwraped_value.size(), std::numeric_limits<std::int64_t>::max())
                 );
                 offsets[i + 1] = offsets[i] + static_cast<std::int64_t>(unwraped_value.size());
                 std::ranges::copy(unwraped_value, iter);
                 std::advance(iter, unwraped_value.size());
-                ++i;
             }
-            return buffers;
-        };
+            else
+            {
+                offsets[i + 1] = offsets[i];
+            }
+            ++bitmap_iter;
+            ++value_iter;
+        }        
 
         using T = std::unwrap_ref_decay_t<std::unwrap_ref_decay_t<std::ranges::range_value_t<ValueRange>>>;
         using U = get_corresponding_arrow_type_t<T>;
@@ -299,7 +329,7 @@ namespace sparrow
             .length = static_cast<array_data::length_type>(values.size()),
             .offset = offset,
             .bitmap = detail::make_array_data_bitmap(std::forward<BitmapRange>(bitmap)),
-            .buffers = create_buffers(),
+            .buffers = std::move(buffers),
             .child_data = {},
             .dictionary = nullptr
         };
@@ -527,6 +557,46 @@ namespace sparrow
     }
 
 
+
+    /**
+     * \brief Creates a default array_data object with the specified layout and values and indicate which values are null.
+     *
+     * @tparam Layout The layout of the array_data object.
+     * @tparam ValueRange The type of the input range for the values.
+     * @tparam BitmapRange The type of the input range for the bitmap.
+     * @param values The input range of values for the array_data object.
+     * @param bitmap The input range of values for the bitmap.
+     * @return A new array_data object with the specified layout, values, bitmap, and offset.
+     */
+    template <arrow_layout Layout, std::ranges::input_range ValueRange, bool_convertible_range BitmapRange>
+    array_data
+    make_default_array_data(ValueRange&& values, BitmapRange && bitmap)
+    {
+        const std::int64_t offset = 0;
+        return make_default_array_data<Layout>(std::forward<ValueRange>(values), std::forward<BitmapRange>(bitmap), offset);
+    }
+
+    /*
+    * \brief Creates a default array_data object with the specified layout and values.
+    *
+    * @tparam Layout The layout of the array_data object.
+    * @tparam ValueRange The type of the input range for the values.
+    * @param values The input range of values for the array_data object.
+    * @return A new array_data object with the specified layout, values, bitmap, and offset.
+    */
+    template<arrow_layout Layout, range_of_nullables ValueRange>
+    requires std::convertible_to<typename std::ranges::range_value_t<ValueRange>::value_type, typename Layout::inner_value_type>
+    array_data make_default_array_data(ValueRange&& values)
+    {
+        // transform range of nullable to range of values
+        auto values_range = values | std::views::transform([](auto&& nullable) { return nullable.value(); });
+
+        // transform range of nullable to range of bool
+        auto bitmap_range = values | std::views::transform([](auto&& nullable) { return nullable.has_value(); });
+
+        return make_default_array_data<Layout>(std::move(values_range), std::move(bitmap_range));
+    }
+
     /**
      * \brief Creates a default array_data object with the specified layout and values.
      *
@@ -536,6 +606,7 @@ namespace sparrow
      * @return A new array_data object with the specified layout, values, bitmap, and offset.
      */
     template <arrow_layout Layout, std::ranges::input_range ValueRange>
+    requires (!range_of_nullables<ValueRange>)
     array_data
     make_default_array_data(ValueRange&& values)
     {
@@ -568,3 +639,4 @@ namespace sparrow
 
 
 }  // namespace sparrow
+
