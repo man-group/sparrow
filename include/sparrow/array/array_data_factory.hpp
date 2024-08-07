@@ -60,7 +60,7 @@ namespace sparrow
         array_data::bitmap_type make_array_data_bitmap(BoolRange&& range)
         {
             array_data::bitmap_type bitmap(std::ranges::size(range), true);
-            for(size_t i = 0; auto value : range)
+            for(std::size_t i = 0; auto value : range)
             {
                 if(!value)
                 {
@@ -283,7 +283,7 @@ namespace sparrow
         size_t acc_size = 0; 
         auto bitmap_iter = bitmap.begin();
         auto value_iter = values.begin();
-        for(size_t i = 0; i < values_size; ++i)
+        for(std::size_t i = 0; i < values_size; ++i)
         {
             if(*bitmap_iter)
             {
