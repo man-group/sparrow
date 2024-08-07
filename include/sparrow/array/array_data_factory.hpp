@@ -39,6 +39,42 @@
 
 namespace sparrow
 {
+
+    // a range where the value type is convertible to bool
+    template<class BoolRange>
+    concept bool_convertible_range = std::ranges::range<BoolRange> &&
+        std::convertible_to<std::ranges::range_value_t<BoolRange>, bool>;
+        
+
+    namespace detail
+    {
+
+        // a helper function to make the bitmap from a range
+        template<bool_convertible_range BoolRange>
+        array_data::bitmap_type make_array_data_bitmap(BoolRange&& range)
+        {
+            array_data::bitmap_type bitmap(std::ranges::size(range), true);
+            for(size_t i = 0; auto value : range)
+            {
+                if(!value)
+                {
+                    bitmap[i] = false;
+                }
+                ++i;
+            }
+            return bitmap;
+        }
+
+        // specization if the range is already a bitmap
+        inline array_data::bitmap_type make_array_data_bitmap(array_data::bitmap_type&& bitmap)
+        {
+            return std::move(bitmap);
+        }
+    }
+
+    
+
+
     /**
      * Concept to check if a layout is a supported layout.
      *
@@ -127,10 +163,10 @@ namespace sparrow
      * @param offset The offset of the array data.
      * @return The created array_data object.
      */
-    template <range_for_array_data ValueRange>
+    template <range_for_array_data ValueRange, bool_convertible_range BitmapRange>
     array_data make_array_data_for_fixed_size_layout(
         ValueRange&& values,
-        const array_data::bitmap_type& bitmap,
+        BitmapRange && bitmap,
         std::int64_t offset
     )
     {
@@ -141,7 +177,7 @@ namespace sparrow
             SPARROW_ASSERT_TRUE(check_all_elements_have_same_size(values));
         }
 
-        SPARROW_ASSERT_TRUE(values.size() == bitmap.size());
+        SPARROW_ASSERT_TRUE(std::ranges::size(values) == std::ranges::size(bitmap));
         SPARROW_ASSERT_TRUE(std::cmp_greater_equal(values.size(), offset));
 
         const auto create_buffer = [&values]()
@@ -162,7 +198,7 @@ namespace sparrow
             .type = data_descriptor(arrow_type_id<U>()),
             .length = static_cast<int64_t>(values.size()),
             .offset = offset,
-            .bitmap = bitmap,
+            .bitmap = detail::make_array_data_bitmap(std::forward<BitmapRange>(bitmap)),
             .buffers = {create_buffer()},
             .child_data = {},
             .dictionary = nullptr
@@ -201,17 +237,18 @@ namespace sparrow
      * @param offset The offset of the array_data object.
      * @return The created array_data object.
      */
-    template <range_for_array_data ValueRange>
+    template <range_for_array_data ValueRange, bool_convertible_range BitmapRange>
     array_data make_array_data_for_variable_size_binary_layout(
         ValueRange&& values,
-        array_data::bitmap_type bitmap,
+        BitmapRange && bitmap,        
         std::int64_t offset
     )
     {
-        SPARROW_ASSERT_TRUE(values.size() == bitmap.size());
-        SPARROW_ASSERT_TRUE(std::cmp_greater_equal(values.size(), offset));
+        const auto values_size = std::ranges::size(values);
+        SPARROW_ASSERT_TRUE(values_size == std::ranges::size(bitmap));
+        SPARROW_ASSERT_TRUE(std::cmp_greater_equal(values_size, offset));
 
-        const auto create_buffers = [&values]()
+        const auto create_buffers = [&values, values_size]()
         {
             using T = std::ranges::range_value_t<ValueRange>;
             const auto& unwrap_value = [](const T& value)
@@ -227,7 +264,7 @@ namespace sparrow
             };
 
             std::vector<array_data::buffer_type> buffers(2);
-            buffers[0].resize(sizeof(std::int64_t) * (values.size() + 1), 0);
+            buffers[0].resize(sizeof(std::int64_t) * (values_size + 1), 0);
             buffers[1].resize(std::accumulate(
                 values.begin(),
                 values.end(),
@@ -261,7 +298,7 @@ namespace sparrow
             .type = data_descriptor(arrow_type_id<U>()),
             .length = static_cast<array_data::length_type>(values.size()),
             .offset = offset,
-            .bitmap = std::move(bitmap),
+            .bitmap = detail::make_array_data_bitmap(std::forward<BitmapRange>(bitmap)),
             .buffers = create_buffers(),
             .child_data = {},
             .dictionary = nullptr
@@ -376,15 +413,15 @@ namespace sparrow
      * @param offset The offset for the array data.
      * @return The created array_data object.
      */
-    template <range_for_array_data ValueRange>
+    template <range_for_array_data ValueRange, bool_convertible_range BitmapRange>
     array_data make_array_data_for_dictionary_encoded_layout(
         ValueRange&& values,
-        array_data::bitmap_type bitmap,
+        BitmapRange && bitmap,
         std::int64_t offset
     )
     {
-        SPARROW_ASSERT_TRUE(values.size() == bitmap.size());
-        SPARROW_ASSERT_TRUE(std::cmp_greater_equal(values.size(), offset));
+        SPARROW_ASSERT_TRUE(std::ranges::size(values) == std::ranges::size(bitmap));
+        SPARROW_ASSERT_TRUE(std::cmp_greater_equal(std::ranges::size(values), offset));
 
         const values_and_indexes<const std::ranges::range_value_t<ValueRange>> vec_and_indexes{values};
         const auto& indexes = vec_and_indexes.indexes;
@@ -399,7 +436,7 @@ namespace sparrow
             .type = data_descriptor(arrow_type_id<std::uint64_t>()),
             .length = static_cast<array_data::length_type>(indexes.size()),
             .offset = offset,
-            .bitmap = std::move(bitmap),
+            .bitmap = detail::make_array_data_bitmap(std::forward<BitmapRange>(bitmap)),
             .buffers = {create_buffer()},
             .child_data = {},
             .dictionary = value_ptr<array_data>(make_array_data_for_variable_size_binary_layout(
@@ -463,21 +500,21 @@ namespace sparrow
      * @param offset The offset for the array data.
      * @return The created array data object.
      */
-    template <arrow_layout Layout, range_for_array_data ValueRange>
+    template <arrow_layout Layout, range_for_array_data ValueRange, bool_convertible_range BitmapRange>
     array_data
-    make_default_array_data(ValueRange&& values, array_data::bitmap_type bitmap, std::int64_t offset)
+    make_default_array_data(ValueRange&& values, BitmapRange && bitmap, std::int64_t offset)
     {
         if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
         {
-            return make_array_data_for_fixed_size_layout(std::forward<ValueRange>(values), std::move(bitmap), offset);
+            return make_array_data_for_fixed_size_layout(std::forward<ValueRange>(values), std::forward<BitmapRange>(bitmap), offset);
         }
         else if constexpr (mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>)
         {
-            return make_array_data_for_variable_size_binary_layout(std::forward<ValueRange>(values), std::move(bitmap), offset);
+            return make_array_data_for_variable_size_binary_layout(std::forward<ValueRange>(values), std::forward<BitmapRange>(bitmap), offset);
         }
         else if constexpr (mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>)
         {
-            return make_array_data_for_dictionary_encoded_layout(std::forward<ValueRange>(values), std::move(bitmap), offset);
+            return make_array_data_for_dictionary_encoded_layout(std::forward<ValueRange>(values), std::forward<BitmapRange>(bitmap), offset);
         }
         else
         {
