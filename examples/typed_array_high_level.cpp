@@ -17,7 +17,7 @@ void example_typed_array_of_floats(){
     // access the data
     for (auto i = 0; i < array.size(); ++i) {
 
-        if (array.bitmap()[i]) {
+        if (array[i].has_value()) {
             std::cout << array[i].value() << std::endl;
         } else {
            std::cout << "missing value" << std::endl;
@@ -41,7 +41,7 @@ void example_typed_array_of_strings(){
 
     // access the data
     for (auto i = 0; i <array.size(); ++i) {
-        if (array.bitmap()[i]) {
+        if (array[i].has_value()) {
             auto  value = array[i].value();
             std::cout << std::string(value.begin(), value.end()) << std::endl;
         } else {
@@ -68,7 +68,7 @@ void example_typed_array_of_strings_from_nullables(){
 
     // access the data
     for (auto i = 0; i <array.size(); ++i) {
-        if (array.bitmap()[i]) {
+        if (array[i].has_value()) {
             auto  value = array[i].value();
             std::cout << std::string(value.begin(), value.end()) << std::endl;
         } else {
