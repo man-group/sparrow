@@ -146,7 +146,7 @@ namespace sparrow
     {
         if (!values.empty())
         {
-            const size_t expected_size = values.front().size();
+            const std::size_t expected_size = values.front().size();
             return std::ranges::all_of(
                 values,
                 [expected_size](const auto& value)
@@ -188,12 +188,12 @@ namespace sparrow
 
 
         std::vector<array_data::buffer_type> buffers(1);
-        const size_t buffer_size = (size * sizeof(T)) / sizeof(uint8_t);
+        const std::size_t buffer_size = (size * sizeof(T)) / sizeof(uint8_t);
         array_data::buffer_type buffer(buffer_size);
         auto data = buffer.data<T>();
         auto value_iter = values.begin();
         auto bitmap_iter = bitmap.begin();
-        for (size_t i = 0; i < size; ++i)
+        for (std::size_t i = 0; i < size; ++i)
         {
             if (*bitmap_iter)
             {
@@ -357,7 +357,7 @@ namespace sparrow
         }
 
         std::vector<std::reference_wrapper<V>> values;
-        std::vector<size_t> indexes;
+        std::vector<std::size_t> indexes;
     };
 
     /**
@@ -383,7 +383,7 @@ namespace sparrow
             set_index.emplace(std::cref(value), 0);
         }
 
-        for (size_t i = 0; auto& [_, value] : set_index)
+        for (std::size_t i = 0; auto& [_, value] : set_index)
         {
             value = i;
             ++i;
@@ -457,9 +457,9 @@ namespace sparrow
         const auto& indexes = vec_and_indexes.indexes;
         const auto create_buffer = [&indexes]()
         {
-            const size_t buffer_size = indexes.size() * sizeof(size_t) / sizeof(uint8_t);
+            const std::size_t buffer_size = indexes.size() * sizeof(std::size_t) / sizeof(uint8_t);
             array_data::buffer_type b(buffer_size);
-            std::ranges::copy(indexes, b.data<size_t>());
+            std::ranges::copy(indexes, b.data<std::size_t>());
             return b;
         };
         return {
@@ -632,7 +632,7 @@ namespace sparrow
         typename Layout::size_type n
         ,  T && value)
     {
-        auto repeated_range = std::ranges::iota_view{size_t(0),size_t(n)} | std::views::transform([&](auto) { return value; });
+        auto repeated_range = std::ranges::iota_view{std::size_t(0),std::size_t(n)} | std::views::transform([&](auto) { return value; });
 
         return make_default_array_data<Layout>(repeated_range);
     }
