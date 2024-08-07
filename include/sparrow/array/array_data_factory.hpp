@@ -265,7 +265,6 @@ namespace sparrow
 
         std::vector<array_data::buffer_type> buffers(2);
         buffers[0].resize(sizeof(std::int64_t) * (values_size + 1), 0);
-        // we accumulate by hand otherwise we might access a missing value
         size_t acc_size = 0; 
         auto bitmap_iter = bitmap.begin();
         auto value_iter = values.begin();
