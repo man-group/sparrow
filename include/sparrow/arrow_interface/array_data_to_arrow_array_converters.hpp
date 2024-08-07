@@ -29,8 +29,9 @@ namespace sparrow
      * @param ads The array_data vector to convert.
      * @return The converted children.
      */
-    std::vector<arrow_array_shared_ptr> children_from_array_data_vec(std::vector<array_data>&& ads);
-    std::vector<arrow_array_shared_ptr> children_from_array_data_vec(const std::vector<array_data>& ads);
+    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(const std::vector<array_data>& ads);
+    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(std::vector<array_data>&& ads);
+
 
     /**
      * Convert array_data buffers to ArrowArray buffers.
@@ -45,14 +46,14 @@ namespace sparrow
 
     /**
      * Convert an array_data to an ArrowArray.
-     * 
+     *
      * @tparam T A const reference or rvalue reference to an array_data.
      * @param ad The array_data to convert.
-     * @return The converted ArrowArray. 
+     * @return The converted ArrowArray.
      */
     template <class T>
         requires std::same_as<std::remove_cvref_t<T>, array_data>
-    arrow_array_unique_ptr from_array_data(T&& ad);
+    arrow_array_unique_ptr to_arrow_array_unique_ptr(T&& ad);
 
     template <class T>
         requires std::same_as<std::remove_cvref_t<T>, array_data>
@@ -74,22 +75,23 @@ namespace sparrow
 
     template <class T>
         requires std::same_as<std::remove_cvref_t<T>, array_data>
-    inline arrow_array_unique_ptr from_array_data(T&& ad)
+    arrow_array_unique_ptr to_arrow_array_unique_ptr(T&& ad)
     {
         arrow_array_shared_ptr dictionary = ad.dictionary.has_value()
-                                                ? from_array_data(std::move(*ad.dictionary))
+                                                ? to_arrow_array_unique_ptr(std::move(*ad.dictionary))
                                                 : nullptr;
         return make_arrow_array_unique_ptr(
             ad.length,
             static_cast<int64_t>(ad.bitmap.null_count()),
             ad.offset,
             arrow_array_buffer_from_array_data(ad),
-            children_from_array_data_vec(std::move(ad.child_data)),
+            to_vector_of_arrow_array_shared_ptr(std::move(ad.child_data)),
             std::move(dictionary)
         );
     }
 
-    inline std::vector<arrow_array_shared_ptr> children_from_array_data_vec(std::vector<array_data>&& ads)
+    inline std::vector<arrow_array_shared_ptr>
+    to_vector_of_arrow_array_shared_ptr(std::vector<array_data>&& ads)
     {
         std::vector<arrow_array_shared_ptr> result;
         result.reserve(ads.size());
@@ -99,13 +101,14 @@ namespace sparrow
             std::back_inserter(result),
             [](array_data&& ad)
             {
-                return from_array_data(std::forward<array_data>(ad));
+                return to_arrow_array_unique_ptr(std::forward<array_data>(ad));
             }
         );
         return result;
     }
 
-    inline std::vector<arrow_array_shared_ptr> children_from_array_data_vec(const std::vector<array_data>& ads)
+    inline std::vector<arrow_array_shared_ptr>
+    to_vector_of_arrow_array_shared_ptr(const std::vector<array_data>& ads)
     {
         std::vector<arrow_array_shared_ptr> result;
         result.reserve(ads.size());
@@ -115,7 +118,7 @@ namespace sparrow
             std::back_inserter(result),
             [](const array_data& ad)
             {
-                return from_array_data(ad);
+                return to_arrow_array_unique_ptr(ad);
             }
         );
         return result;

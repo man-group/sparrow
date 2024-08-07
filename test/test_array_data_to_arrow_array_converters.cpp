@@ -21,7 +21,7 @@
 
 TEST_SUITE("ArrowArray array_data converters")
 {
-    TEST_CASE("children_from_array_data_vec")
+    TEST_CASE("to_vector_of_arrow_array_shared_ptr")
     {
         SUBCASE("move")
         {
@@ -29,7 +29,7 @@ TEST_SUITE("ArrowArray array_data converters")
                 sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9}),
                 sparrow::test::make_test_array_data<uint8_t>(5, 0, {1}),
             };
-            const auto arrow_array_vec = sparrow::children_from_array_data_vec(std::move(array_data_vec));
+            const auto arrow_array_vec = sparrow::to_vector_of_arrow_array_shared_ptr(std::move(array_data_vec));
             CHECK_EQ(arrow_array_vec.size(), 2);
 
             CHECK_EQ(arrow_array_vec[0]->length, 10);
@@ -56,7 +56,7 @@ TEST_SUITE("ArrowArray array_data converters")
                 sparrow::test::make_test_array_data<uint8_t>(5, 0, {1}),
             };
 
-            const auto arrow_array_vec = sparrow::children_from_array_data_vec(array_data_vec);
+            const auto arrow_array_vec = sparrow::to_vector_of_arrow_array_shared_ptr(array_data_vec);
             CHECK_EQ(arrow_array_vec.size(), 2);
 
             CHECK_EQ(arrow_array_vec[0]->length, 10);
@@ -113,12 +113,12 @@ TEST_SUITE("ArrowArray array_data converters")
         }
     }
 
-    TEST_CASE("from_array_data")
+    TEST_CASE("to_arrow_array_unique_ptr")
     {
         SUBCASE("move")
         {
             auto array_data = sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9});
-            const auto arrow_array = sparrow::from_array_data(std::move(array_data));
+            const auto arrow_array = sparrow::to_arrow_array_unique_ptr(std::move(array_data));
             CHECK_EQ(arrow_array->length, 10);
             CHECK_EQ(arrow_array->null_count, 5);
             CHECK_EQ(arrow_array->offset, 1);
@@ -131,7 +131,7 @@ TEST_SUITE("ArrowArray array_data converters")
         SUBCASE("copy")
         {
             const auto array_data = sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9});
-            const auto arrow_array = sparrow::from_array_data(array_data);
+            const auto arrow_array = sparrow::to_arrow_array_unique_ptr(array_data);
             CHECK_EQ(arrow_array->length, 10);
             CHECK_EQ(arrow_array->null_count, 5);
             CHECK_EQ(arrow_array->offset, 1);
