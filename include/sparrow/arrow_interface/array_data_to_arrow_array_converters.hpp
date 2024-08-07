@@ -27,7 +27,7 @@ namespace sparrow
      * Convert an array_data vector to an ArrowArray vector.
      *
      * @param ads The array_data vector to convert.
-     * @return The converted children.
+     * @return The converted array_data elements
      */
     std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(const std::vector<array_data>& ads);
     std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(std::vector<array_data>&& ads);
