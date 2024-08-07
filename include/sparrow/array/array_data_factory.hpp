@@ -539,7 +539,7 @@ namespace sparrow
 
 
     /**
-     * \brief Creates a default array_data object with the specified layout and values and indicate which values are missing.
+     * Creates a default array_data object with the specified layout and values and indicate which values are missing.
      *
      * @tparam Layout The layout of the array_data object.
      * @tparam ValueRange The type of the input range for the values.
