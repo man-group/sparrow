@@ -135,8 +135,12 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
     )
 endif()
 
-target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
-target_compile_options(${test_target} PRIVATE ${compiles_options} $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>)
+target_compile_options(${test_target}
+    PRIVATE
+        ${compiles_options}
+        $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>
+        $<$<NOT:$<C_COMPILER_ID:MSVC>>:-ftemplate-backtrace-limit=0>
+        )
 target_link_options(${test_target}
     PRIVATE
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)

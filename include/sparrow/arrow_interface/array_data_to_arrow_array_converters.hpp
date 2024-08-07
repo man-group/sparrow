@@ -31,7 +31,7 @@ namespace sparrow
      */
     template <typename R>
         requires std::ranges::input_range<R> && std::same_as<std::ranges::range_value_t<R>, array_data>
-    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(R ads);
+    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(R&& ads);
 
     /**
      * Convert array_data buffers to ArrowArray buffers.
@@ -62,7 +62,7 @@ namespace sparrow
         std::vector<sparrow::buffer<uint8_t>> buffers;
         buffers.reserve(ad.buffers.size() + 1);
         buffers.emplace_back(std::move(ad.bitmap.buffer()));
-        if constexpr (std::is_rvalue_reference_v<T&&>)
+        if constexpr (std::is_rvalue_reference_v<decltype(ad)>)
         {
             std::ranges::move(ad.buffers, std::back_inserter(buffers));
         }
@@ -80,45 +80,32 @@ namespace sparrow
         arrow_array_shared_ptr dictionary = ad.dictionary.has_value()
                                                 ? to_arrow_array_unique_ptr(std::move(*ad.dictionary))
                                                 : nullptr;
+        auto children = to_vector_of_arrow_array_shared_ptr(std::move(ad.child_data));
         return make_arrow_array_unique_ptr(
             ad.length,
             static_cast<int64_t>(ad.bitmap.null_count()),
             ad.offset,
-            arrow_array_buffer_from_array_data(ad),
-            to_vector_of_arrow_array_shared_ptr(std::move(ad.child_data)),
+            arrow_array_buffer_from_array_data(std::move(ad)),
+            std::move(children),
             std::move(dictionary)
         );
     }
 
     template <typename R>
         requires std::ranges::input_range<R> && std::same_as<std::ranges::range_value_t<R>, array_data>
-    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(R ads)
+    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(R&& ads)
     {
         std::vector<arrow_array_shared_ptr> result;
         result.reserve(ads.size());
-        if constexpr (std::is_rvalue_reference_v<R>)
-        {
-            std::transform(
-                std::make_move_iterator(ads.begin()),
-                std::make_move_iterator(ads.end()),
-                std::back_inserter(result),
-                [](array_data&& ad)
-                {
-                    return to_arrow_array_unique_ptr(std::forward<array_data>(ad));
-                }
-            );
-        }
-        else
-        {
-            std::ranges::transform(
-                ads,
-                std::back_inserter(result),
-                [](const array_data& ad)
-                {
-                    return to_arrow_array_unique_ptr(ad);
-                }
-            );
-        }
+        std::transform(
+            std::make_move_iterator(ads.begin()),
+            std::make_move_iterator(ads.end()),
+            std::back_inserter(result),
+            []<typename AD>(AD&& ad)
+            {
+                return to_arrow_array_unique_ptr(std::forward<AD>(ad));
+            }
+        );
         return result;
     }
 }

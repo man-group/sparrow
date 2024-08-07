@@ -30,6 +30,8 @@ TEST_SUITE("ArrowArray array_data converters")
                 sparrow::test::make_test_array_data<uint8_t>(5, 0, {1}),
             };
             const auto arrow_array_vec = sparrow::to_vector_of_arrow_array_shared_ptr(std::move(array_data_vec));
+            CHECK(array_data_vec[0].buffers[0].empty());
+            CHECK(array_data_vec[1].buffers[0].empty());
             CHECK_EQ(arrow_array_vec.size(), 2);
 
             CHECK_EQ(arrow_array_vec[0]->length, 10);
@@ -55,6 +57,8 @@ TEST_SUITE("ArrowArray array_data converters")
                 sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9}),
                 sparrow::test::make_test_array_data<uint8_t>(5, 0, {1}),
             };
+            CHECK_EQ(array_data_vec[0].buffers[0].size(), 10);
+            CHECK_EQ(array_data_vec[0].buffers[1].size(), 5);
 
             const auto arrow_array_vec = sparrow::to_vector_of_arrow_array_shared_ptr(array_data_vec);
             CHECK_EQ(arrow_array_vec.size(), 2);
@@ -83,6 +87,7 @@ TEST_SUITE("ArrowArray array_data converters")
         {
             auto array_data = sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9});
             const auto buffers = sparrow::arrow_array_buffer_from_array_data(std::move(array_data));
+            CHECK(array_data.buffers[0].empty());
             REQUIRE_EQ(buffers.size(), 2);
             REQUIRE_EQ(buffers[0].size(), 2);
             CHECK_EQ(buffers[1].size(), 10);
@@ -99,6 +104,7 @@ TEST_SUITE("ArrowArray array_data converters")
         {
             const auto array_data = sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9});
             const auto buffers = sparrow::arrow_array_buffer_from_array_data(array_data);
+            CHECK_EQ(array_data.buffers[0].size(), 10);
             REQUIRE_EQ(buffers.size(), 2);
             REQUIRE_EQ(buffers[0].size(), 2);
             CHECK_EQ(buffers[1].size(), 10);
@@ -119,6 +125,7 @@ TEST_SUITE("ArrowArray array_data converters")
         {
             auto array_data = sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9});
             const auto arrow_array = sparrow::to_arrow_array_unique_ptr(std::move(array_data));
+            CHECK(array_data.buffers[0].empty());
             CHECK_EQ(arrow_array->length, 10);
             CHECK_EQ(arrow_array->null_count, 5);
             CHECK_EQ(arrow_array->offset, 1);
@@ -132,6 +139,7 @@ TEST_SUITE("ArrowArray array_data converters")
         {
             const auto array_data = sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9});
             const auto arrow_array = sparrow::to_arrow_array_unique_ptr(array_data);
+            CHECK_EQ(array_data.buffers[0].size(), 10);
             CHECK_EQ(arrow_array->length, 10);
             CHECK_EQ(arrow_array->null_count, 5);
             CHECK_EQ(arrow_array->offset, 1);
