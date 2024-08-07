@@ -43,6 +43,7 @@ set(SPARROW_TESTS_SOURCES
     test_array_data_factory.cpp
     test_array.cpp
     test_array_data.cpp
+    test_array_data_to_arrow_array_converters.cpp
     test_arrow_array_schema_utils.cpp
     test_arrow_array.cpp
     test_arrow_schema.cpp
@@ -132,10 +133,14 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         $<$<CXX_COMPILER_ID:GNU>:-Wno-subobject-linkage> # suppress warnings about subobject linkage
         $<$<CXX_COMPILER_ID:GNU>:-Wuseless-cast> # warn if you perform a cast to the same type
     )
+    target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
 endif()
 
-target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
-target_compile_options(${test_target} PRIVATE ${compiles_options} $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>)
+target_compile_options(${test_target}
+    PRIVATE
+        ${compiles_options}
+        $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>
+        )
 target_link_options(${test_target}
     PRIVATE
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)

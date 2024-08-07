@@ -84,6 +84,16 @@ namespace sparrow
         const_iterator cbegin() const;
         const_iterator cend() const;
 
+        const storage_type& buffer() const noexcept
+        {
+            return m_buffer;
+        }
+
+        storage_type& buffer() noexcept
+        {
+            return m_buffer;
+        }
+
     protected:
 
         dynamic_bitset_base(storage_type&& buffer, size_type size);
