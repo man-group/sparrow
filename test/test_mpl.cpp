@@ -175,4 +175,10 @@ namespace sparrow
     static_assert(mpl::testable<std::optional<int>>);
     static_assert(mpl::testable<std::shared_ptr<int>>);
     static_assert(not mpl::testable<std::vector<int>>);
+
+    // T_matches_qualifier_if_Y_is
+    static_assert(mpl::T_matches_qualifier_if_Y_is<int, int, std::is_const>);
+    static_assert(not mpl::T_matches_qualifier_if_Y_is<int, const int, std::is_const>);
+    static_assert(mpl::T_matches_qualifier_if_Y_is<const int, const int, std::is_const>);
+    static_assert(mpl::T_matches_qualifier_if_Y_is<const int, int, std::is_const>);
 }
