@@ -39,7 +39,7 @@ namespace sparrow
         TEST_CASE("fixed_size_layout")
         {
             auto data = test::make_test_external_array_data<std::int32_t, true>(16);
-            const fixed_size_layout<std::int32_t, external_array_data> layout(data);
+            const fixed_size_layout<const std::int32_t, external_array_data> layout(data);
 
             CHECK_EQ(layout.size(), std::size_t(length(data)));
             for (std::size_t i = 0; i < 16u; ++i)

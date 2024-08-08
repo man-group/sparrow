@@ -18,7 +18,6 @@
 #include "doctest/doctest.h"
 
 using namespace sparrow;
-//using sparrow::test::to_value_type;
 
 namespace
 {

@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <type_traits>
+#include "sparrow/array/array_data_concepts.hpp"
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/layout/fixed_size_layout.hpp"
 #include "sparrow/layout/null_layout.hpp"
@@ -27,7 +29,9 @@ namespace sparrow
     {
         using value_type = T;
         template <class DS>
-        using default_layout = fixed_size_layout<T, DS>;
+        using layout_T = std::conditional_t<immutable_data_storage<DS>, const value_type, value_type>;
+        template <class DS>
+        using default_layout = fixed_size_layout<layout_T<DS>, DS>;
     };
 
     template <>

@@ -202,7 +202,7 @@ namespace sparrow
     buffer_adaptor<To, FromBufferRef>::buffer_adaptor(const FromBufferRef buf)
         requires(is_const)
         : m_buffer(buf)
-        , m_max_size(m_buffer.get().max_size() / m_to_from_size_ratio)
+        , m_max_size(m_buffer.get().size() / m_to_from_size_ratio)
     {
     }
 

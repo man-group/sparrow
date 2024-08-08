@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <compare>
-#include <optional>
 #include <vector>
 
 #include "sparrow/array/data_type.hpp"
@@ -61,8 +59,8 @@ namespace sparrow
 
     constexpr std::size_t buffers_size(const array_data& data) noexcept;
     constexpr void buffers_clear() noexcept;
-    array_data::buffer_type& buffer_at(array_data& data, std::size_t i);
-    const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i);
+    constexpr array_data::buffer_type& buffer_at(array_data& data, std::size_t i);
+    constexpr const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i);
 
     constexpr std::size_t child_data_size(const array_data& data) noexcept;
     constexpr void child_data_clear() noexcept;
@@ -111,13 +109,13 @@ namespace sparrow
         data.buffers.clear();
     }
 
-    inline array_data::buffer_type& buffer_at(array_data& data, std::size_t i)
+    constexpr array_data::buffer_type& buffer_at(array_data& data, std::size_t i)
     {
         SPARROW_ASSERT_TRUE(i < buffers_size(data));
         return data.buffers[i];
     }
 
-    inline const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i)
+    constexpr const array_data::buffer_type& buffer_at(const array_data& data, std::size_t i)
     {
         SPARROW_ASSERT_TRUE(i < buffers_size(data));
         return data.buffers[i];

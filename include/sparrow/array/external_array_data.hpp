@@ -14,11 +14,9 @@
 
 #pragma once
 
-#include "sparrow/c_interface.hpp"
 #include "sparrow/array/array_data_concepts.hpp"
-#include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
-#include "sparrow/utils/contracts.hpp"
+#include "sparrow/c_interface.hpp"
 #include "sparrow/utils/memory.hpp"
 
 namespace sparrow
@@ -54,7 +52,9 @@ namespace sparrow
             // doesnt even delete the pointed structure.
             struct dont_release_anything
             {
-                void operator()(T*) const {}
+                void operator()(T*) const
+                {
+                }
             };
 
             // `shared_ptr` deleter that only release
@@ -75,10 +75,7 @@ namespace sparrow
 
             std::shared_ptr<T> p_data = nullptr;
         };
-
-
     }
-
 
     /**
      * Holds raw Arrow data allocated outside of this library.
@@ -100,7 +97,6 @@ namespace sparrow
         using bitmap_type = dynamic_bitset_view<const block_type>;
         using buffer_type = buffer_view<const block_type>;
         using length_type = std::int64_t;
-
 
         /**
          * Constructor acquiring data from `ArrowArray` and `ArrowSchema` C structures.
@@ -153,10 +149,9 @@ namespace sparrow
 
     const value_ptr<external_array_data>& dictionary(const external_array_data& data);
 
-
     // `external_array_data` must always be usable as a data-storage that layout implementations can use.
-    static_assert(data_storage<external_array_data>);
-
+    static_assert(immutable_data_storage<external_array_data>);
+    static_assert(!mutable_data_storage<external_array_data>);
 
     /***********************************
      * external_wrapper implementation *
@@ -175,7 +170,7 @@ namespace sparrow
             }
             else
             {
-                p_data = std::shared_ptr<T>(new T(std::forward<U>(u))); // default shared_ptr deleter
+                p_data = std::shared_ptr<T>(new T(std::forward<U>(u)));  // default shared_ptr deleter
             }
         }
 
@@ -211,7 +206,7 @@ namespace sparrow
         {
             if (t->release)
             {
-                t->release(t); // implies `t->release = nullptr;`
+                t->release(t);  // implies `t->release = nullptr;`
             }
         }
 
@@ -220,7 +215,7 @@ namespace sparrow
         {
             if (t->release)
             {
-                t->release(t); // implies `t->release = nullptr;`
+                t->release(t);  // implies `t->release = nullptr;`
             }
             delete t;
         }
@@ -283,7 +278,9 @@ namespace sparrow
     {
         if (schema().dictionary && array().dictionary)
         {
-            m_dictionary = value_ptr(external_array_data(schema().dictionary, array().dictionary, doesnt_own_arrow_data));
+            m_dictionary = value_ptr(
+                external_array_data(schema().dictionary, array().dictionary, doesnt_own_arrow_data)
+            );
         }
         else
         {
@@ -297,8 +294,7 @@ namespace sparrow
 
     namespace impl
     {
-        inline const external_array_data::block_type*
-        buffer_at(const external_array_data& data, std::size_t i)
+        inline const external_array_data::block_type* buffer_at(const external_array_data& data, std::size_t i)
         {
             using block_type = external_array_data::block_type;
             return reinterpret_cast<const block_type*>(data.array().buffers[i]);
@@ -310,8 +306,7 @@ namespace sparrow
         return data_descriptor(data.schema().format);
     }
 
-    inline external_array_data::length_type
-    length(const external_array_data& data)
+    inline external_array_data::length_type length(const external_array_data& data)
     {
         return data.array().length;
     }
@@ -321,12 +316,10 @@ namespace sparrow
         return data.array().offset;
     }
 
-    inline external_array_data::bitmap_type
-    bitmap(const external_array_data& data)
+    inline external_array_data::bitmap_type bitmap(const external_array_data& data)
     {
         using return_type = external_array_data::bitmap_type;
-        return return_type(impl::buffer_at(data, 0u),
-                           static_cast<std::size_t>(length(data)));
+        return return_type(impl::buffer_at(data, 0u), static_cast<std::size_t>(length(data)));
     }
 
     inline std::size_t buffers_size(const external_array_data& data)
@@ -340,13 +333,11 @@ namespace sparrow
         return static_cast<std::size_t>(data.array().n_buffers - 1);
     }
 
-    inline external_array_data::buffer_type
-    buffer_at(const external_array_data& data, std::size_t i)
+    inline external_array_data::buffer_type buffer_at(const external_array_data& data, std::size_t i)
     {
         using return_type = external_array_data::buffer_type;
         // The first buffer in external data is used for the bitmap
-        return return_type(impl::buffer_at(data, i + 1u),
-                           static_cast<std::size_t>(length(data)));
+        return return_type(impl::buffer_at(data, i + 1u), static_cast<std::size_t>(length(data)));
     }
 
     inline std::size_t child_data_size(const external_array_data& data)
@@ -363,7 +354,4 @@ namespace sparrow
     {
         return data.dictionary();
     }
-
-
 }
-
