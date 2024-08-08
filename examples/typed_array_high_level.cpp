@@ -1,4 +1,4 @@
-/** @example typed_array.cpp
+/** @example typed_array_high_level.cpp
  * Create a typed_array object from a range.
  * The range can be a range of values or a range of nullable values.
  */

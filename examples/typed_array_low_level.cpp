@@ -1,4 +1,4 @@
-/** @example typed_array.cpp
+/** @example typed_array_low_level.cpp
  * Create a typed_array object from an array_data object.
  * The array_data object is created with 5 float32 elements where the value at index 2 is missing.
  * The typed_array is created from the array_data and the data is accessed.
