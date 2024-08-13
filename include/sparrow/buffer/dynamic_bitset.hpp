@@ -17,6 +17,7 @@
 #include <climits>
 #include <concepts>
 #include <ranges>
+#include <string>
 #include <utility>
 
 #include "sparrow/buffer/buffer.hpp"
@@ -58,31 +59,41 @@ namespace sparrow
         using reference = bitset_reference<self_type>;
         using const_reference = bool;
         using size_type = typename storage_type::size_type;
+        using difference_type = typename storage_type::difference_type;
         using iterator = bitset_iterator<self_type, false>;
         using const_iterator = bitset_iterator<self_type, true>;
 
-        size_type size() const noexcept;
-        size_type null_count() const noexcept;
+        constexpr size_type size() const noexcept;
+        constexpr bool empty() const noexcept;
+        constexpr size_type null_count() const noexcept;
 
-        bool test(size_type pos) const;
-        void set(size_type pos, value_type value);
+        constexpr bool test(size_type pos) const;
+        constexpr void set(size_type pos, value_type value);
 
-        reference operator[](size_type i);
-        const_reference operator[](size_type i) const;
+        constexpr const_reference at(size_type pos) const;
+        constexpr reference at(size_type pos);
 
-        block_type* data() noexcept;
-        const block_type* data() const noexcept;
-        size_type block_count() const noexcept;
+        constexpr reference operator[](size_type i);
+        constexpr const_reference operator[](size_type i) const;
 
-        void swap(self_type&) noexcept;
+        constexpr block_type* data() noexcept;
+        constexpr const block_type* data() const noexcept;
+        constexpr size_type block_count() const noexcept;
 
-        iterator begin();
-        iterator end();
+        constexpr void swap(self_type&) noexcept;
 
-        const_iterator begin() const;
-        const_iterator end() const;
-        const_iterator cbegin() const;
-        const_iterator cend() const;
+        constexpr iterator begin();
+        constexpr iterator end();
+
+        constexpr const_iterator begin() const;
+        constexpr const_iterator end() const;
+        constexpr const_iterator cbegin() const;
+        constexpr const_iterator cend() const;
+
+        constexpr reference front();
+        constexpr const_reference front() const;
+        constexpr reference back();
+        constexpr const_reference back() const;
 
         const storage_type& buffer() const noexcept
         {
@@ -96,31 +107,45 @@ namespace sparrow
 
     protected:
 
-        dynamic_bitset_base(storage_type&& buffer, size_type size);
-        dynamic_bitset_base(storage_type&& buffer, size_type size, size_type null_count);
-        ~dynamic_bitset_base() = default;
+        constexpr dynamic_bitset_base(storage_type&& buffer, size_type size);
+        constexpr dynamic_bitset_base(storage_type&& buffer, size_type size, size_type null_count);
+        constexpr ~dynamic_bitset_base() = default;
 
-        dynamic_bitset_base(const dynamic_bitset_base&) = default;
-        dynamic_bitset_base(dynamic_bitset_base&&) = default;
+        constexpr dynamic_bitset_base(const dynamic_bitset_base&) = default;
+        constexpr dynamic_bitset_base(dynamic_bitset_base&&) = default;
 
-        dynamic_bitset_base& operator=(const dynamic_bitset_base&) = default;
-        dynamic_bitset_base& operator=(dynamic_bitset_base&&) = default;
+        constexpr dynamic_bitset_base& operator=(const dynamic_bitset_base&) = default;
+        constexpr dynamic_bitset_base& operator=(dynamic_bitset_base&&) = default;
 
-        void resize(size_type n, value_type b = false);
+        constexpr void resize(size_type n, value_type b = false);
+        constexpr void clear() noexcept;
 
-        size_type compute_block_count(size_type bits_count) const noexcept;
+        constexpr iterator insert(const_iterator pos, value_type value);
+        constexpr iterator insert(const_iterator pos, size_type count, value_type value);
+        template <std::input_iterator InputIt>
+        constexpr iterator insert(const_iterator pos, InputIt first, InputIt last);
+        constexpr iterator insert(const_iterator pos, std::initializer_list<value_type> ilist);
+        constexpr iterator emplace(const_iterator pos, value_type value);
+        constexpr iterator erase(const_iterator pos);
+        constexpr iterator erase(const_iterator first, const_iterator last);
+
+        constexpr void push_back(value_type value);
+        constexpr void pop_back();
+
+        constexpr size_type compute_block_count(size_type bits_count) const noexcept;
+
 
     private:
 
         static constexpr std::size_t s_bits_per_block = sizeof(block_type) * CHAR_BIT;
-        static size_type block_index(size_type pos) noexcept;
-        static size_type bit_index(size_type pos) noexcept;
-        static block_type bit_mask(size_type pos) noexcept;
+        static constexpr size_type block_index(size_type pos) noexcept;
+        static constexpr size_type bit_index(size_type pos) noexcept;
+        static constexpr block_type bit_mask(size_type pos) noexcept;
 
         size_type count_non_null() const noexcept;
-        size_type count_extra_bits() const noexcept;
-        void zero_unused_bits();
-        void update_null_count(bool old_value, bool new_value);
+        constexpr size_type count_extra_bits() const noexcept;
+        constexpr void zero_unused_bits();
+        constexpr void update_null_count(bool old_value, bool new_value);
 
         storage_type m_buffer;
         size_type m_size;
@@ -149,19 +174,25 @@ namespace sparrow
         using value_type = typename base_type::value_type;
         using size_type = typename base_type::size_type;
 
-        dynamic_bitset();
-        explicit dynamic_bitset(size_type n);
-        dynamic_bitset(size_type n, value_type v);
-        dynamic_bitset(block_type* p, size_type n);
-        dynamic_bitset(block_type* p, size_type n, size_type null_count);
+        constexpr dynamic_bitset();
+        constexpr explicit dynamic_bitset(size_type n);
+        constexpr dynamic_bitset(size_type n, value_type v);
+        constexpr dynamic_bitset(block_type* p, size_type n);
+        constexpr dynamic_bitset(block_type* p, size_type n, size_type null_count);
 
-        ~dynamic_bitset() = default;
-        dynamic_bitset(const dynamic_bitset&) = default;
-        dynamic_bitset(dynamic_bitset&&) = default;
+        constexpr ~dynamic_bitset() = default;
+        constexpr dynamic_bitset(const dynamic_bitset&) = default;
+        constexpr dynamic_bitset(dynamic_bitset&&) = default;
 
-        dynamic_bitset& operator=(const dynamic_bitset&) = default;
-        dynamic_bitset& operator=(dynamic_bitset&&) = default;
+        constexpr dynamic_bitset& operator=(const dynamic_bitset&) = default;
+        constexpr dynamic_bitset& operator=(dynamic_bitset&&) = default;
 
+        using base_type::clear;
+        using base_type::emplace;
+        using base_type::erase;
+        using base_type::insert;
+        using base_type::pop_back;
+        using base_type::push_back;
         using base_type::resize;
     };
 
@@ -182,15 +213,15 @@ namespace sparrow
         using block_type = typename base_type::block_type;
         using size_type = typename base_type::size_type;
 
-        dynamic_bitset_view(block_type* p, size_type n);
-        dynamic_bitset_view(block_type* p, size_type n, size_type null_count);
-        ~dynamic_bitset_view() = default;
+        constexpr dynamic_bitset_view(block_type* p, size_type n);
+        constexpr dynamic_bitset_view(block_type* p, size_type n, size_type null_count);
+        constexpr ~dynamic_bitset_view() = default;
 
-        dynamic_bitset_view(const dynamic_bitset_view&) = default;
-        dynamic_bitset_view(dynamic_bitset_view&&) = default;
+        constexpr dynamic_bitset_view(const dynamic_bitset_view&) = default;
+        constexpr dynamic_bitset_view(dynamic_bitset_view&&) = default;
 
-        dynamic_bitset_view& operator=(const dynamic_bitset_view&) = default;
-        dynamic_bitset_view& operator=(dynamic_bitset_view&&) = default;
+        constexpr dynamic_bitset_view& operator=(const dynamic_bitset_view&) = default;
+        constexpr dynamic_bitset_view& operator=(dynamic_bitset_view&&) = default;
     };
 
     /**
@@ -208,20 +239,20 @@ namespace sparrow
 
         using self_type = bitset_reference<B>;
 
-        bitset_reference(const bitset_reference&) = default;
-        bitset_reference(bitset_reference&&) = default;
+        constexpr bitset_reference(const bitset_reference&) noexcept = default;
+        constexpr bitset_reference(bitset_reference&&) noexcept = default;
 
-        self_type& operator=(const self_type&) noexcept;
-        self_type& operator=(self_type&&) noexcept;
-        self_type& operator=(bool) noexcept;
+        constexpr self_type& operator=(const self_type&) noexcept;
+        constexpr self_type& operator=(self_type&&) noexcept;
+        constexpr self_type& operator=(bool) noexcept;
 
-        operator bool() const noexcept;
+        constexpr operator bool() const noexcept;
 
-        bool operator~() const noexcept;
+        constexpr bool operator~() const noexcept;
 
-        self_type& operator&=(bool) noexcept;
-        self_type& operator|=(bool) noexcept;
-        self_type& operator^=(bool) noexcept;
+        constexpr self_type& operator&=(bool) noexcept;
+        constexpr self_type& operator|=(bool) noexcept;
+        constexpr self_type& operator^=(bool) noexcept;
 
     private:
 
@@ -230,9 +261,9 @@ namespace sparrow
 
         bitset_reference(bitset_type& bitset, block_type& block, block_type mask);
 
-        void assign(bool) noexcept;
-        void set() noexcept;
-        void reset() noexcept;
+        constexpr void assign(bool) noexcept;
+        constexpr void set() noexcept;
+        constexpr void reset() noexcept;
 
         bitset_type& m_bitset;
         block_type& m_block;
@@ -281,21 +312,21 @@ namespace sparrow
         using bitset_type = mpl::constify_t<B, is_const>;
         using size_type = typename B::size_type;
 
-        bitset_iterator() noexcept = default;
-        bitset_iterator(bitset_type* bitset, block_type* block, size_type index);
+        constexpr bitset_iterator() noexcept = default;
+        constexpr bitset_iterator(bitset_type* bitset, block_type* block, size_type index);
 
     private:
 
-        reference dereference() const;
-        void increment();
-        void decrement();
-        void advance(difference_type n);
-        difference_type distance_to(const self_type& rhs) const;
-        bool equal(const self_type& rhs) const;
-        bool less_than(const self_type& rhs) const;
+        constexpr reference dereference() const noexcept;
+        constexpr void increment();
+        constexpr void decrement();
+        constexpr void advance(difference_type n);
+        constexpr difference_type distance_to(const self_type& rhs) const noexcept;
+        constexpr bool equal(const self_type& rhs) const noexcept;
+        constexpr bool less_than(const self_type& rhs) const noexcept;
 
-        bool is_first_bit_of_block(size_type index) const;
-        difference_type distance_to_begin() const;
+        constexpr bool is_first_bit_of_block(size_type index) const noexcept;
+        constexpr difference_type distance_to_begin() const;
 
         bitset_type* p_bitset = nullptr;
         block_type* p_block = nullptr;
@@ -311,40 +342,45 @@ namespace sparrow
      **************************************/
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::size() const noexcept -> size_type
+    constexpr auto dynamic_bitset_base<B>::size() const noexcept -> size_type
     {
         return m_size;
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::null_count() const noexcept -> size_type
+    constexpr bool dynamic_bitset_base<B>::empty() const noexcept
+    {
+        return m_size == 0;
+    }
+
+    template <random_access_range B>
+    constexpr auto dynamic_bitset_base<B>::null_count() const noexcept -> size_type
     {
         return m_null_count;
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
+    constexpr auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
     {
         SPARROW_ASSERT_TRUE(pos < size());
         return reference(*this, m_buffer.data()[block_index(pos)], bit_mask(pos));
     }
 
     template <random_access_range B>
-    bool dynamic_bitset_base<B>::operator[](size_type pos) const
+    constexpr bool dynamic_bitset_base<B>::operator[](size_type pos) const
+    {
+        return test(pos);
+    }
+
+    template <random_access_range B>
+    constexpr bool dynamic_bitset_base<B>::test(size_type pos) const
     {
         SPARROW_ASSERT_TRUE(pos < size());
         return !m_null_count || m_buffer.data()[block_index(pos)] & bit_mask(pos);
     }
 
     template <random_access_range B>
-    bool dynamic_bitset_base<B>::test(size_type pos) const
-    {
-        SPARROW_ASSERT_TRUE(pos < size());
-        return !m_null_count || m_buffer.data()[block_index(pos)] & bit_mask(pos);
-    }
-
-    template <random_access_range B>
-    void dynamic_bitset_base<B>::set(size_type pos, value_type value)
+    constexpr void dynamic_bitset_base<B>::set(size_type pos, value_type value)
     {
         SPARROW_ASSERT_TRUE(pos < size());
         block_type& block = m_buffer.data()[block_index(pos)];
@@ -361,25 +397,25 @@ namespace sparrow
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::data() noexcept -> block_type*
+    constexpr auto dynamic_bitset_base<B>::data() noexcept -> block_type*
     {
         return m_buffer.data();
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::data() const noexcept -> const block_type*
+    constexpr auto dynamic_bitset_base<B>::data() const noexcept -> const block_type*
     {
         return m_buffer.data();
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::block_count() const noexcept -> size_type
+    constexpr auto dynamic_bitset_base<B>::block_count() const noexcept -> size_type
     {
         return m_buffer.size();
     }
 
     template <random_access_range B>
-    void dynamic_bitset_base<B>::swap(self_type& rhs) noexcept
+    constexpr void dynamic_bitset_base<B>::swap(self_type& rhs) noexcept
     {
         using std::swap;
         swap(m_buffer, rhs.m_buffer);
@@ -388,45 +424,95 @@ namespace sparrow
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::begin() -> iterator
+    constexpr auto dynamic_bitset_base<B>::begin() -> iterator
     {
         return iterator(this, data(), 0u);
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::end() -> iterator
+    constexpr auto dynamic_bitset_base<B>::end() -> iterator
     {
         block_type* block = m_buffer.size() ? data() + m_buffer.size() - 1 : data();
         return iterator(this, block, size() % s_bits_per_block);
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::begin() const -> const_iterator
+    constexpr auto dynamic_bitset_base<B>::begin() const -> const_iterator
     {
         return cbegin();
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::end() const -> const_iterator
+    constexpr auto dynamic_bitset_base<B>::end() const -> const_iterator
     {
         return cend();
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::cbegin() const -> const_iterator
+    constexpr auto dynamic_bitset_base<B>::cbegin() const -> const_iterator
     {
         return const_iterator(this, data(), 0u);
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::cend() const -> const_iterator
+    constexpr auto dynamic_bitset_base<B>::cend() const -> const_iterator
     {
         const block_type* block = m_buffer.size() ? data() + m_buffer.size() - 1 : data();
         return const_iterator(this, block, size() % s_bits_per_block);
     }
 
     template <random_access_range B>
-    dynamic_bitset_base<B>::dynamic_bitset_base(storage_type&& buf, size_type size)
+    constexpr auto dynamic_bitset_base<B>::at(size_type pos) -> reference
+    {
+        if (pos >= size())
+        {
+            throw std::out_of_range(
+                "dynamic_bitset_base::at: index out of range for dynamic_bitset_base of size"
+                + std::to_string(size()) + " at index " + std::to_string(pos)
+            );
+        }
+        return (*this)[pos];
+    }
+
+    template <random_access_range B>
+    constexpr auto dynamic_bitset_base<B>::at(size_type pos) const -> const_reference
+    {
+        if (pos >= size())
+        {
+            throw std::out_of_range(
+                "dynamic_bitset_base::at: index out of range for dynamic_bitset_base of size"
+                + std::to_string(size()) + " at index " + std::to_string(pos)
+            );
+        }
+        return test(pos);
+    }
+
+    template <random_access_range B>
+    constexpr auto dynamic_bitset_base<B>::front() -> reference
+    {
+        return (*this)[0];
+    }
+
+    template <random_access_range B>
+    constexpr auto dynamic_bitset_base<B>::front() const -> const_reference
+    {
+        return (*this)[0];
+    }
+
+    template <random_access_range B>
+    constexpr auto dynamic_bitset_base<B>::back() -> reference
+    {
+        return (*this)[size() - 1];
+    }
+
+    template <random_access_range B>
+    constexpr auto dynamic_bitset_base<B>::back() const -> const_reference
+    {
+        return (*this)[size() - 1];
+    }
+
+    template <random_access_range B>
+    constexpr dynamic_bitset_base<B>::dynamic_bitset_base(storage_type&& buf, size_type size)
         : m_buffer(std::move(buf))
         , m_size(size)
         , m_null_count(m_size - count_non_null())
@@ -438,7 +524,7 @@ namespace sparrow
     }
 
     template <random_access_range B>
-    dynamic_bitset_base<B>::dynamic_bitset_base(storage_type&& buf, size_type size, size_type null_count)
+    constexpr dynamic_bitset_base<B>::dynamic_bitset_base(storage_type&& buf, size_type size, size_type null_count)
         : m_buffer(std::move(buf))
         , m_size(size)
         , m_null_count(null_count)
@@ -451,25 +537,25 @@ namespace sparrow
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::compute_block_count(size_type bits_count) const noexcept -> size_type
+    constexpr auto dynamic_bitset_base<B>::compute_block_count(size_type bits_count) const noexcept -> size_type
     {
         return bits_count / s_bits_per_block + static_cast<size_type>(bits_count % s_bits_per_block != 0);
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::block_index(size_type pos) noexcept -> size_type
+    constexpr auto dynamic_bitset_base<B>::block_index(size_type pos) noexcept -> size_type
     {
         return pos / s_bits_per_block;
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::bit_index(size_type pos) noexcept -> size_type
+    constexpr auto dynamic_bitset_base<B>::bit_index(size_type pos) noexcept -> size_type
     {
         return pos % s_bits_per_block;
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::bit_mask(size_type pos) noexcept -> block_type
+    constexpr auto dynamic_bitset_base<B>::bit_mask(size_type pos) noexcept -> block_type
     {
         const size_type bit = bit_index(pos);
         return static_cast<block_type>(block_type(1) << bit);
@@ -507,13 +593,13 @@ namespace sparrow
     }
 
     template <random_access_range B>
-    auto dynamic_bitset_base<B>::count_extra_bits() const noexcept -> size_type
+    constexpr auto dynamic_bitset_base<B>::count_extra_bits() const noexcept -> size_type
     {
         return bit_index(size());
     }
 
     template <random_access_range B>
-    void dynamic_bitset_base<B>::zero_unused_bits()
+    constexpr void dynamic_bitset_base<B>::zero_unused_bits()
     {
         const size_type extra_bits = count_extra_bits();
         if (extra_bits != 0)
@@ -523,7 +609,7 @@ namespace sparrow
     }
 
     template <random_access_range B>
-    void dynamic_bitset_base<B>::update_null_count(bool old_value, bool new_value)
+    constexpr void dynamic_bitset_base<B>::update_null_count(bool old_value, bool new_value)
     {
         if (new_value && !old_value)
         {
@@ -536,7 +622,7 @@ namespace sparrow
     }
 
     template <random_access_range B>
-    void dynamic_bitset_base<B>::resize(size_type n, value_type b)
+    constexpr void dynamic_bitset_base<B>::resize(size_type n, value_type b)
     {
         const size_type old_block_count = m_buffer.size();
         const size_type new_block_count = compute_block_count(n);
@@ -561,24 +647,150 @@ namespace sparrow
         zero_unused_bits();
     }
 
+    template <random_access_range B>
+    constexpr void dynamic_bitset_base<B>::clear() noexcept
+    {
+        resize(0);
+    }
+
+    template <random_access_range B>
+    constexpr dynamic_bitset_base<B>::iterator
+    dynamic_bitset_base<B>::insert(const_iterator pos, value_type value)
+    {
+        return insert(pos, 1, value);
+    }
+
+    template <random_access_range B>
+    constexpr dynamic_bitset_base<B>::iterator
+    dynamic_bitset_base<B>::insert(const_iterator pos, size_type count, value_type value)
+    {
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
+        const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
+        const size_type old_size = size();
+        const size_type new_size = old_size + count;
+
+        resize(new_size);
+
+        for (size_type i = old_size + count - 1; i >= index + count; --i)
+        {
+            set(i, test(i - count));
+        }
+
+        for (size_type i = 0; i < count; ++i)
+        {
+            set(index + i, value);
+        }
+
+        auto block = data() + block_index(index);
+        return iterator(this, block, bit_index(index));
+    }
+
+    template <random_access_range B>
+    template <std::input_iterator InputIt>
+    constexpr dynamic_bitset_base<B>::iterator
+    dynamic_bitset_base<B>::insert(const_iterator pos, InputIt first, InputIt last)
+    {
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
+        const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
+        const size_type old_size = size();
+        const size_type count = static_cast<size_type>(std::distance(first, last));
+        const size_type new_size = old_size + count;
+
+        resize(new_size);
+
+        for (size_type i = old_size + count - 1; i >= index + count; --i)
+        {
+            set(i, test(i - count));
+        }
+
+        for (size_type i = 0; i < count; ++i)
+        {
+            set(index + i, *first++);
+        }
+
+        auto block = data() + block_index(index);
+        return iterator(this, block, bit_index(index));
+    }
+
+    template <random_access_range B>
+    constexpr dynamic_bitset_base<B>::iterator
+    dynamic_bitset_base<B>::emplace(const_iterator pos, value_type value)
+    {
+        return insert(pos, value);
+    }
+
+    template <random_access_range B>
+    constexpr dynamic_bitset_base<B>::iterator dynamic_bitset_base<B>::erase(const_iterator pos)
+    {
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos < cend());
+
+        return erase(pos, pos + 1);
+    }
+
+    template <random_access_range B>
+    constexpr dynamic_bitset_base<B>::iterator
+    dynamic_bitset_base<B>::erase(const_iterator first, const_iterator last)
+    {
+        SPARROW_ASSERT_TRUE(cbegin() <= first);
+        SPARROW_ASSERT_TRUE(first <= last);
+        SPARROW_ASSERT_TRUE(last <= cend());
+
+        const auto first_index = static_cast<size_type>(std::distance(cbegin(), first));
+
+        if (last == cend())
+        {
+            resize(first_index);
+            return end();
+        }
+
+        const auto last_index = static_cast<size_type>(std::distance(cbegin(), last));
+        const size_type count = last_index - first_index;
+
+        const size_type bit_to_move = size() - last_index;
+        for (size_type i = 0; i < bit_to_move; ++i)
+        {
+            set(first_index + i, test(last_index + i));
+        }
+
+        resize(size() - count);
+
+        auto block = data() + block_index(first_index);
+        return iterator(this, block, bit_index(first_index));
+    }
+
+    template <random_access_range B>
+    constexpr void dynamic_bitset_base<B>::push_back(value_type value)
+    {
+        resize(size() + 1, value);
+    }
+
+    template <random_access_range B>
+    constexpr void dynamic_bitset_base<B>::pop_back()
+    {
+        resize(size() - 1);
+    }
+
     /*********************************
      * dynamic_bitset implementation *
      *********************************/
 
     template <std::integral T>
-    dynamic_bitset<T>::dynamic_bitset()
+    constexpr dynamic_bitset<T>::dynamic_bitset()
         : base_type(storage_type(), 0u)
     {
     }
 
     template <std::integral T>
-    dynamic_bitset<T>::dynamic_bitset(size_type n)
+    constexpr dynamic_bitset<T>::dynamic_bitset(size_type n)
         : dynamic_bitset(n, false)
     {
     }
 
     template <std::integral T>
-    dynamic_bitset<T>::dynamic_bitset(size_type n, value_type value)
+    constexpr dynamic_bitset<T>::dynamic_bitset(size_type n, value_type value)
         : base_type(
               storage_type(this->compute_block_count(n), value ? block_type(~block_type(0)) : block_type(0)),
               n,
@@ -588,13 +800,13 @@ namespace sparrow
     }
 
     template <std::integral T>
-    dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n)
+    constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n)
         : base_type(storage_type(p, this->compute_block_count(n)), n)
     {
     }
 
     template <std::integral T>
-    dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type null_count)
+    constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type null_count)
         : base_type(storage_type(p, this->compute_block_count(n)), n, null_count)
     {
     }
@@ -604,56 +816,56 @@ namespace sparrow
      *************************************/
 
     template <std::integral T>
-    dynamic_bitset_view<T>::dynamic_bitset_view(block_type* p, size_type n)
+    constexpr dynamic_bitset_view<T>::dynamic_bitset_view(block_type* p, size_type n)
         : base_type(storage_type(p, this->compute_block_count(n)), n)
     {
     }
 
     template <std::integral T>
-    dynamic_bitset_view<T>::dynamic_bitset_view(block_type* p, size_type n, size_type null_count)
+    constexpr dynamic_bitset_view<T>::dynamic_bitset_view(block_type* p, size_type n, size_type null_count)
         : base_type(storage_type(p, this->compute_block_count(n)), n, null_count)
     {
     }
-    
+
     /***********************************
      * bitset_reference implementation *
      ***********************************/
 
     template <class B>
-    auto bitset_reference<B>::operator=(const self_type& rhs) noexcept -> self_type&
+    constexpr auto bitset_reference<B>::operator=(const self_type& rhs) noexcept -> self_type&
     {
         assign(rhs);
         return *this;
     }
 
     template <class B>
-    auto bitset_reference<B>::operator=(self_type&& rhs) noexcept -> self_type&
+    constexpr auto bitset_reference<B>::operator=(self_type&& rhs) noexcept -> self_type&
     {
         assign(rhs);
         return *this;
     }
 
     template <class B>
-    auto bitset_reference<B>::operator=(bool rhs) noexcept -> self_type&
+    constexpr auto bitset_reference<B>::operator=(bool rhs) noexcept -> self_type&
     {
         assign(rhs);
         return *this;
     }
 
     template <class B>
-    bitset_reference<B>::operator bool() const noexcept
+    constexpr bitset_reference<B>::operator bool() const noexcept
     {
         return (m_block & m_mask) != 0;
     }
 
     template <class B>
-    bool bitset_reference<B>::operator~() const noexcept
+    constexpr bool bitset_reference<B>::operator~() const noexcept
     {
         return (m_block & m_mask) == 0;
     }
 
     template <class B>
-    auto bitset_reference<B>::operator&=(bool rhs) noexcept -> self_type&
+    constexpr auto bitset_reference<B>::operator&=(bool rhs) noexcept -> self_type&
     {
         if (!rhs)
         {
@@ -663,7 +875,7 @@ namespace sparrow
     }
 
     template <class B>
-    auto bitset_reference<B>::operator|=(bool rhs) noexcept -> self_type&
+    constexpr auto bitset_reference<B>::operator|=(bool rhs) noexcept -> self_type&
     {
         if (rhs)
         {
@@ -673,7 +885,7 @@ namespace sparrow
     }
 
     template <class B>
-    auto bitset_reference<B>::operator^=(bool rhs) noexcept -> self_type&
+    constexpr auto bitset_reference<B>::operator^=(bool rhs) noexcept -> self_type&
     {
         if (rhs)
         {
@@ -693,13 +905,13 @@ namespace sparrow
     }
 
     template <class B>
-    void bitset_reference<B>::assign(bool rhs) noexcept
+    constexpr void bitset_reference<B>::assign(bool rhs) noexcept
     {
         rhs ? set() : reset();
     }
 
     template <class B>
-    void bitset_reference<B>::set() noexcept
+    constexpr void bitset_reference<B>::set() noexcept
     {
         bool old_value = m_block & m_mask;
         m_block |= m_mask;
@@ -707,7 +919,7 @@ namespace sparrow
     }
 
     template <class B>
-    void bitset_reference<B>::reset() noexcept
+    constexpr void bitset_reference<B>::reset() noexcept
     {
         bool old_value = m_block & m_mask;
         m_block &= ~m_mask;
@@ -731,7 +943,7 @@ namespace sparrow
      **********************************/
 
     template <class B, bool is_const>
-    bitset_iterator<B, is_const>::bitset_iterator(bitset_type* bitset, block_type* block, size_type index)
+    constexpr bitset_iterator<B, is_const>::bitset_iterator(bitset_type* bitset, block_type* block, size_type index)
         : p_bitset(bitset)
         , p_block(block)
         , m_index(index)
@@ -740,7 +952,7 @@ namespace sparrow
     }
 
     template <class B, bool is_const>
-    auto bitset_iterator<B, is_const>::dereference() const -> reference
+    constexpr auto bitset_iterator<B, is_const>::dereference() const noexcept -> reference
     {
         if constexpr (is_const)
         {
@@ -753,7 +965,7 @@ namespace sparrow
     }
 
     template <class B, bool is_const>
-    void bitset_iterator<B, is_const>::increment()
+    constexpr void bitset_iterator<B, is_const>::increment()
     {
         ++m_index;
         // If we have reached next block
@@ -766,7 +978,7 @@ namespace sparrow
     }
 
     template <class B, bool is_const>
-    void bitset_iterator<B, is_const>::decrement()
+    constexpr void bitset_iterator<B, is_const>::decrement()
     {
         // decreasing moves to previous block
         if (is_first_bit_of_block(m_index))
@@ -782,7 +994,7 @@ namespace sparrow
     }
 
     template <class B, bool is_const>
-    void bitset_iterator<B, is_const>::advance(difference_type n)
+    constexpr void bitset_iterator<B, is_const>::advance(difference_type n)
     {
         if (n >= 0)
         {
@@ -828,7 +1040,8 @@ namespace sparrow
     }
 
     template <class B, bool is_const>
-    auto bitset_iterator<B, is_const>::distance_to(const self_type& rhs) const -> difference_type
+    constexpr auto
+    bitset_iterator<B, is_const>::distance_to(const self_type& rhs) const noexcept -> difference_type
     {
         if (p_block == rhs.p_block)
         {
@@ -843,25 +1056,25 @@ namespace sparrow
     }
 
     template <class B, bool is_const>
-    bool bitset_iterator<B, is_const>::equal(const self_type& rhs) const
+    constexpr bool bitset_iterator<B, is_const>::equal(const self_type& rhs) const noexcept
     {
         return p_block == rhs.p_block && m_index == rhs.m_index;
     }
 
     template <class B, bool is_const>
-    bool bitset_iterator<B, is_const>::less_than(const self_type& rhs) const
+    constexpr bool bitset_iterator<B, is_const>::less_than(const self_type& rhs) const noexcept
     {
         return (p_block < rhs.p_block) || (p_block == rhs.p_block && m_index < rhs.m_index);
     }
 
     template <class B, bool is_const>
-    bool bitset_iterator<B, is_const>::is_first_bit_of_block(size_type index) const
+    constexpr bool bitset_iterator<B, is_const>::is_first_bit_of_block(size_type index) const noexcept
     {
         return index % bitset_type::s_bits_per_block == 0;
     }
 
     template <class B, bool is_const>
-    auto bitset_iterator<B, is_const>::distance_to_begin() const -> difference_type
+    constexpr auto bitset_iterator<B, is_const>::distance_to_begin() const -> difference_type
     {
         const difference_type distance = p_block - p_bitset->begin().p_block;
         SPARROW_ASSERT_TRUE(distance >= 0);
