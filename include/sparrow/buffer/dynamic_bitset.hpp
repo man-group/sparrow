@@ -64,7 +64,7 @@ namespace sparrow
         using const_iterator = bitset_iterator<self_type, true>;
 
         constexpr size_type size() const noexcept;
-        constexpr bool empty() const noexcept;
+        [[nodiscard]] constexpr bool empty() const noexcept;
         constexpr size_type null_count() const noexcept;
 
         constexpr bool test(size_type pos) const;
@@ -112,10 +112,10 @@ namespace sparrow
         constexpr ~dynamic_bitset_base() = default;
 
         constexpr dynamic_bitset_base(const dynamic_bitset_base&) = default;
-        constexpr dynamic_bitset_base(dynamic_bitset_base&&) = default;
+        constexpr dynamic_bitset_base(dynamic_bitset_base&&) noexcept = default;
 
         constexpr dynamic_bitset_base& operator=(const dynamic_bitset_base&) = default;
-        constexpr dynamic_bitset_base& operator=(dynamic_bitset_base&&) = default;
+        constexpr dynamic_bitset_base& operator=(dynamic_bitset_base&&) noexcept = default;
 
         constexpr void resize(size_type n, value_type b = false);
         constexpr void clear() noexcept;
@@ -182,10 +182,10 @@ namespace sparrow
 
         constexpr ~dynamic_bitset() = default;
         constexpr dynamic_bitset(const dynamic_bitset&) = default;
-        constexpr dynamic_bitset(dynamic_bitset&&) = default;
+        constexpr dynamic_bitset(dynamic_bitset&&) noexcept = default;
 
         constexpr dynamic_bitset& operator=(const dynamic_bitset&) = default;
-        constexpr dynamic_bitset& operator=(dynamic_bitset&&) = default;
+        constexpr dynamic_bitset& operator=(dynamic_bitset&&) noexcept = default;
 
         using base_type::clear;
         using base_type::emplace;
@@ -218,10 +218,10 @@ namespace sparrow
         constexpr ~dynamic_bitset_view() = default;
 
         constexpr dynamic_bitset_view(const dynamic_bitset_view&) = default;
-        constexpr dynamic_bitset_view(dynamic_bitset_view&&) = default;
+        constexpr dynamic_bitset_view(dynamic_bitset_view&&) noexcept = default;
 
         constexpr dynamic_bitset_view& operator=(const dynamic_bitset_view&) = default;
-        constexpr dynamic_bitset_view& operator=(dynamic_bitset_view&&) = default;
+        constexpr dynamic_bitset_view& operator=(dynamic_bitset_view&&) noexcept = default;
     };
 
     /**
@@ -670,6 +670,8 @@ namespace sparrow
         const size_type old_size = size();
         const size_type new_size = old_size + count;
 
+        // TODO: The current implementation is not efficient. It can be improved.
+
         resize(new_size);
 
         for (size_type i = old_size + count - 1; i >= index + count; --i)
@@ -699,6 +701,8 @@ namespace sparrow
         const size_type new_size = old_size + count;
 
         resize(new_size);
+
+        // TODO: The current implementation is not efficient. It can be improved.
 
         for (size_type i = old_size + count - 1; i >= index + count; --i)
         {
@@ -745,6 +749,8 @@ namespace sparrow
             resize(first_index);
             return end();
         }
+
+        // TODO: The current implementation is not efficient. It can be improved.
 
         const auto last_index = static_cast<size_type>(std::distance(cbegin(), last));
         const size_type count = last_index - first_index;
