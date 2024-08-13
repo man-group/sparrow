@@ -270,4 +270,15 @@ namespace sparrow
             CHECK_EQ(a[0], 3);
         }
     }
+
+    TEST_SUITE("misc")
+    {
+        TEST_CASE("next")
+        {
+            const std::array<int, 3> a = {2, 4, 6};
+            const auto iter = make_pointer_iterator(&a[0]);
+            const auto iter2 = next(iter, 2);
+            CHECK_EQ(*iter2, a[2]);
+        }
+    }
 }

@@ -42,18 +42,19 @@ set(SPARROW_TESTS_SOURCES
     test_array_data_creation.cpp
     test_array_data_factory.cpp
     test_array.cpp
-    test_array_data.cpp
     test_array_data_to_arrow_array_converters.cpp
+    test_array_data.cpp
     test_arrow_array_schema_utils.cpp
     test_arrow_array.cpp
     test_arrow_schema.cpp
+    test_bit.cpp
     test_buffer_adaptor.cpp
     test_buffer.cpp
     test_dictionary_encoded_layout.cpp
     test_list_layout.cpp
     test_dynamic_bitset.cpp
-    test_external_array.cpp
     test_external_array_data.cpp
+    test_external_array.cpp
     test_fixed_size_layout.cpp
     test_iterator.cpp
     test_memory.cpp

@@ -57,7 +57,8 @@ void check_common(
         CHECK_EQ(array->children[i], children_ptr[i]);
     }
     CHECK_EQ(array->dictionary, dictionary_pointer);
-    CHECK_EQ(array->release, sparrow::release_arrow_array);
+    const bool is_release_arrow_array = array->release == &sparrow::release_arrow_array;
+    CHECK(is_release_arrow_array);
     CHECK_NE(array->private_data, nullptr);
 }
 
@@ -77,7 +78,8 @@ TEST_SUITE("C Data Interface")
                 CHECK_EQ(array->n_children, 0);
                 CHECK_EQ(array->buffers, nullptr);
                 CHECK_EQ(array->children, nullptr);
-                CHECK_EQ(array->release, nullptr);
+                const bool is_release_nullptr = array->release == nullptr;
+                CHECK(is_release_nullptr);
                 CHECK_EQ(array->private_data, nullptr);
             }
 
@@ -111,7 +113,8 @@ TEST_SUITE("C Data Interface")
                     const sparrow::arrow_array_shared_ptr array;
                     CHECK_FALSE(array);
                     const auto deleter = array.get_deleter();
-                    CHECK_EQ(*deleter, &sparrow::arrow_array_custom_deleter);
+                    const bool is_release_arrow_array_custom_deleter = deleter == &sparrow::arrow_array_custom_deleter;
+                    CHECK(is_release_arrow_array_custom_deleter);
                 }
 
                 SUBCASE("from arrow_array_unique_ptr")
@@ -123,7 +126,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(shared_array->length, 99);
                     CHECK_EQ(shared_array->null_count, 42);
                     const auto del_p = shared_array.get_deleter();
-                    CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
+                    const auto is_release_arrow_array_custom_deleter = *del_p == &sparrow::arrow_array_custom_deleter;
+                    CHECK(is_release_arrow_array_custom_deleter);
                 }
 
                 SUBCASE("move")
@@ -136,7 +140,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(shared_array_2->length, 99);
                     CHECK_EQ(shared_array_2->null_count, 42);
                     const auto del_p = shared_array_2.get_deleter();
-                    CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
+                    const bool is_release_arrow_array_custom_deleter = *del_p == &sparrow::arrow_array_custom_deleter;
+                    CHECK(is_release_arrow_array_custom_deleter);
                 }
 
                 SUBCASE("copy")
@@ -149,7 +154,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(shared_array_2->length, 99);
                     CHECK_EQ(shared_array_2->null_count, 42);
                     const auto del_p = shared_array_2.get_deleter();
-                    CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
+                    const bool is_release_arrow_array_custom_deleter = *del_p == &sparrow::arrow_array_custom_deleter;
+                    CHECK(is_release_arrow_array_custom_deleter);
                 }
 
                 SUBCASE("nullptr")
@@ -157,7 +163,8 @@ TEST_SUITE("C Data Interface")
                     const sparrow::arrow_array_shared_ptr shared_array(nullptr);
                     CHECK_FALSE(shared_array);
                     const auto del_p = shared_array.get_deleter();
-                    CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
+                    const bool is_release_arrow_array_custom_deleter = *del_p == &sparrow::arrow_array_custom_deleter;
+                    CHECK(is_release_arrow_array_custom_deleter);
                 }
             }
 
@@ -174,7 +181,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(shared_array_2->null_count, 42);
                     // obtain pointer to the deleter:
                     const auto del_p = shared_array_2.get_deleter();
-                    CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
+                    const bool is_release_arrow_array_custom_deleter = *del_p == &sparrow::arrow_array_custom_deleter;
+                    CHECK(is_release_arrow_array_custom_deleter);
                 }
 
                 SUBCASE("copy")
@@ -188,7 +196,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(shared_array_2->length, 99);
                     CHECK_EQ(shared_array_2->null_count, 42);
                     const auto del_p = shared_array_2.get_deleter();
-                    CHECK_EQ(*del_p, &sparrow::arrow_array_custom_deleter);
+                    const bool is_release_arrow_array_custom_deleter = *del_p == &sparrow::arrow_array_custom_deleter;
+                    CHECK(is_release_arrow_array_custom_deleter);
                 }
             }
         }
@@ -252,7 +261,8 @@ TEST_SUITE("C Data Interface")
             CHECK_EQ(array->n_children, 0);
             CHECK_EQ(array->buffers, nullptr);
             CHECK_EQ(array->children, nullptr);
-            CHECK_EQ(array->release, nullptr);
+            const bool is_release_nullptr = array->release == nullptr;
+            CHECK(is_release_nullptr);
             CHECK_EQ(array->private_data, nullptr);
         }
 
@@ -269,7 +279,8 @@ TEST_SUITE("C Data Interface")
             CHECK_EQ(array->n_children, 0);
             CHECK_EQ(array->buffers, nullptr);
             CHECK_EQ(array->children, nullptr);
-            CHECK_EQ(array->release, nullptr);
+            const bool is_release_nullptr = array->release == nullptr;
+            CHECK(is_release_nullptr);
             CHECK_EQ(array->private_data, nullptr);
         }
     }

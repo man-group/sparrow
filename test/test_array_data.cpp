@@ -13,9 +13,11 @@
 // limitations under the License.
 
 #include <numeric>
+
 #include "sparrow/array/array_data.hpp"
 
 #include "doctest/doctest.h"
+
 
 namespace sparrow
 {
@@ -34,27 +36,41 @@ namespace sparrow
             using base_type::size;
             using base_type::operator[];
             using base_type::begin;
-            using base_type::end;
             using base_type::cbegin;
             using base_type::cend;
+            using base_type::end;
 
             template <class U>
             U* data()
             {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
                 return reinterpret_cast<U*>(base_type::data());
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
             }
 
             template <class U>
             const U* data() const
             {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
                 return reinterpret_cast<const U*>(base_type::data());
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
             }
         };
     };
 
     struct test_array_data
     {
-        constexpr static bool is_mutable = false;
+        static constexpr bool is_mutable = false;
         using block_type = std::uint8_t;
         using bitmap_type = dynamic_bitset_view<const block_type>;
         using buffer_type = test::cast_vector<block_type>;
@@ -164,9 +180,24 @@ namespace sparrow
 
         TEST_CASE("variable_size_binary_layout")
         {
-            std::vector<std::string> words =
-                {"once", "upon", "a", "time", "I", "was", "writing", "clean",
-                 "code", "now", "I'm", "only", "drawing", "flowcharts", "Bonnie", "Compyler" };
+            std::vector<std::string> words = {
+                "once",
+                "upon",
+                "a",
+                "time",
+                "I",
+                "was",
+                "writing",
+                "clean",
+                "code",
+                "now",
+                "I'm",
+                "only",
+                "drawing",
+                "flowcharts",
+                "Bonnie",
+                "Compyler"
+            };
             test_array_data td;
             {
                 td.type = data_descriptor(data_type::STRING);
@@ -195,9 +226,10 @@ namespace sparrow
                 };
                 for (size_t i = 0; i < words.size(); ++i)
                 {
-                    offset_func(
-                    )[i + 1] = offset_func()[i]
-                               + static_cast<sparrow::test_array_data::buffer_type::difference_type>(words[i].size());
+                    offset_func()[i + 1] = offset_func()[i]
+                                           + static_cast<sparrow::test_array_data::buffer_type::difference_type>(
+                                               words[i].size()
+                                           );
                     std::ranges::copy(words[i], iter);
                     iter += static_cast<sparrow::test_array_data::buffer_type::difference_type>(words[i].size());
                 }
@@ -212,11 +244,11 @@ namespace sparrow
             {
                 CHECK_EQ(layout[i], words[i]);
             }
-            
+
             auto iter = layout.cbegin();
             auto words_iter = words.cbegin();
             auto words_end = words.cend();
-            while(words_iter != words_end)
+            while (words_iter != words_end)
             {
                 CHECK_EQ(*words_iter++, *iter++);
             }

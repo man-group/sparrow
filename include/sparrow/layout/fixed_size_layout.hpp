@@ -279,7 +279,9 @@ namespace sparrow
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::bitmap_begin() -> bitmap_iterator
     {
-        return sparrow::bitmap(storage()).begin() + offset(storage());
+        auto it = sparrow::bitmap(storage()).begin();
+        std::advance(it, offset(storage()));
+        return it;
     }
 
     template <class T, data_storage DS>
@@ -293,7 +295,9 @@ namespace sparrow
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::bitmap_cbegin() const -> const_bitmap_iterator
     {
-        return sparrow::bitmap(storage()).cbegin() + offset(storage());
+        auto it = sparrow::bitmap(storage()).cbegin();
+        std::advance(it, offset(storage()));
+        return it;
     }
 
     template <class T, data_storage DS>
