@@ -21,15 +21,14 @@
 int main() {
 
     // raw data
-    std::vector<std::vector<int>> values = {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}};
-    // flatter by hand
+    std::vector<std::vector<int>> values = {{0, 1, 2, 3}, {4, 5}, {6, 7, 8, 9, 10}};
+    // flatten by hand
     std::vector<int> flat_values;
     for(auto & v : values){
         for(auto & e : v){
             flat_values.push_back(e);
         }
     }
-
 
     using data_storage = sparrow::array_data;
 
@@ -41,11 +40,6 @@ int main() {
 
     // inner layout (not needed to build the list)
     inner_layout_type inner_layout(values_array_data);
-
-    for(auto i = 0; i < inner_layout.size(); ++i){
-        std::cout << inner_layout.begin()[i].value() << "\n";
-    }
-
 
     auto list_array_data = sparrow::array_data{};
 
@@ -60,14 +54,6 @@ int main() {
         offset_buffer_ptr[i+1] = offset_buffer_ptr[i] + values[i].size();
     }
 
-    // print all offsets
-    std::cout<<"offsets:\n";
-    for(auto i = 0; i < values.size() + 1; ++i){
-        std::cout <<i<<" "<<offset_buffer_ptr[i] << "\n";
-    }
-    
-
-
     list_array_data.buffers.push_back(std::move(offset_buffer));
     list_array_data.child_data.push_back(std::move(values_array_data));
 
@@ -81,25 +67,26 @@ int main() {
 
     list_layout_type list_layout(list_array_data);
 
-
+    std::cout << "{\n";
     for(auto maybe_list : list_layout){
         if(maybe_list.has_value()){
             auto list = maybe_list.value();
-            std::cout<<"size: "<<list.size()<<"\n";
+            std::cout << "  {" ;
             for(auto value : list){
                 if(value.has_value()){
-                    std::cout << value.value() << " ";
+                    std::cout << value.value() << ", ";
                 }
                 else{
-                    std::cout << "missing value ";
+                    std::cout << "?";
                 }
             }
-            std::cout << "\n";
+            std::cout << "},\n";
         }
         else{
-            std::cout << "missing value\n";
+            std::cout << "?\n";
         }
 
     }
+    std::cout << "}\n";
 
 }
