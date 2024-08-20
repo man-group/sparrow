@@ -14,18 +14,7 @@
 
 #pragma once
 
-#include <functional>
-#include <ranges>
-#include <string_view>
-
-#include "sparrow/array/array_data_concepts.hpp"
-#include "sparrow/array/array_data.hpp"
-#include "sparrow/layout/layout_iterator.hpp"
-#include "sparrow/utils/algorithm.hpp"
-#include "sparrow/utils/contracts.hpp"
-#include "sparrow/utils/iterator.hpp"
-#include "sparrow/utils/mp_utils.hpp"
-#include "sparrow/utils/nullable.hpp"
+#include <iterator>
 
 namespace sparrow
 {   
@@ -88,7 +77,18 @@ namespace sparrow
         {
            return this->begin()[static_cast<difference_type>(index)];
         }
-        
-
     };
+
+    template<class T>
+    struct is_list_value : std::false_type
+    {
+    };
+    template<class ITER, bool IS_CONST>
+    struct is_list_value<list_value<ITER, IS_CONST>> : std::true_type
+    {
+    };
+
+    template<class T>
+    inline constexpr bool is_list_value_v = is_list_value<T>::value;
+
 }

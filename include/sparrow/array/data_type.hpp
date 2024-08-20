@@ -30,6 +30,7 @@ namespace date = std::chrono;
 #include <vector>
 
 #include "sparrow/utils/mp_utils.hpp"
+#include "sparrow/layout/list_layout/list_value.hpp"
 
 #if __cplusplus > 202002L and defined(__STDCPP_FLOAT16_T__) and defined(__STDCPP_FLOAT32_T__) \
     and defined(__STDCPP_FLOAT64_T__)
@@ -142,6 +143,8 @@ namespace sparrow
         // Number of nanoseconds since the UNIX epoch with an optional timezone.
         // See: https://arrow.apache.org/docs/python/timestamps.html#timestamps
         TIMESTAMP = 18,
+        LIST = 19,
+        LARGE_LIST = 20 // 
     };
 
     /// @returns The data_type value matching the provided format string or `data_type::NA`
@@ -204,6 +207,14 @@ namespace sparrow
         {
             return data_type::TIMESTAMP;
         }
+        else if (format == "+l")
+        {
+            return data_type::LIST;
+        }
+        else if (format == "+L")
+        {
+            return data_type::LARGE_LIST;
+        }
 
         return data_type::NA;
     }
@@ -231,6 +242,8 @@ namespace sparrow
             case data_type::STRING : return "u";
             case data_type::FIXED_SIZE_BINARY : return "z";
             case data_type::TIMESTAMP : return "tDm";
+            case data_type::LIST : return "+l";
+            case data_type::LARGE_LIST : return "+L";
         }
 
         mpl::unreachable();
@@ -266,6 +279,19 @@ namespace sparrow
     /// Matches C++ representation types which are supported by default.
     template <class T>
     concept is_arrow_base_type = mpl::contains<T>(all_base_types);
+
+
+
+    
+
+
+    /// is arrow base type or arrow compound type (list<T>, struct<T> etc.)
+    template <class T>
+    concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
+
+
+
+
 
     using all_base_types_extended_t = mpl::append_t<all_base_types_t, char, std::string_view>;
 

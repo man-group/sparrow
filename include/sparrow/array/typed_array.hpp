@@ -33,7 +33,7 @@ namespace sparrow
 {
 
     // forward declaration
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     class typed_array_impl;
 
     /*
@@ -63,7 +63,7 @@ namespace sparrow
      * @tparam L The layout type of the array. Defaults to the default layout defined by the `arrow_traits` of
      * `T`.
      */
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     class typed_array_impl
     {
     public:
@@ -302,21 +302,21 @@ namespace sparrow
     // Constructors
 
     // empty constructor
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     typed_array_impl<T, L>::typed_array_impl()  requires  std::same_as<array_data, typename L::data_storage_type>
         : m_data(make_default_array_data<L>())
         , m_layout{m_data}
     {
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     typed_array_impl<T, L>::typed_array_impl(data_storage_type data)
         : m_data(std::move(data))
         , m_layout(m_data)
     {
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     template <std::ranges::input_range ValueRange>
     // in simple words: either a range of values or a range of nullable values but not a typed array
     requires  
@@ -335,7 +335,7 @@ namespace sparrow
     {
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     template<class U>
     requires is_arrow_base_type_extended<std::decay_t<U>>
     typed_array_impl<T, L>::typed_array_impl(size_type n,  U&& value)
@@ -346,21 +346,21 @@ namespace sparrow
 
 
     // Value semantics
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     typed_array_impl<T, L>::typed_array_impl(const typed_array_impl& rhs)
         : m_data(rhs.m_data)
         , m_layout(m_data)
     {
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     typed_array_impl<T, L>::typed_array_impl(typed_array_impl&& rhs)
         : m_data(std::move(rhs.m_data))
         , m_layout(m_data)
     {
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     typed_array_impl<T, L>& typed_array_impl<T, L>::operator=(const typed_array_impl& rhs)
     {
         m_data = rhs.m_data;
@@ -368,7 +368,7 @@ namespace sparrow
         return *this;
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     typed_array_impl<T, L>& typed_array_impl<T, L>::operator=(typed_array_impl&& rhs)
     {
         m_data = std::move(rhs.m_data);
@@ -378,7 +378,7 @@ namespace sparrow
 
     // Element access
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::at(size_type i) -> reference
     {
         if (i >= size())
@@ -392,7 +392,7 @@ namespace sparrow
         return m_layout[i];
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::at(size_type i) const -> const_reference
     {
         if (i >= size())
@@ -406,42 +406,42 @@ namespace sparrow
         return m_layout[i];
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::operator[](size_type i) -> reference
     {
         SPARROW_ASSERT_TRUE(i < size())
         return m_layout[i];
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size())
         return m_layout[i];
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::front() -> reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return m_layout[0];
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::front() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return m_layout[0];
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::back() -> reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return m_layout[size() - 1];
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::back() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
@@ -450,49 +450,49 @@ namespace sparrow
 
     // Iterators
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::begin() -> iterator
     {
         return m_layout.begin();
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::begin() const -> const_iterator
     {
         return m_layout.cbegin();
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::end() -> iterator
     {
         return m_layout.end();
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::end() const -> const_iterator
     {
         return m_layout.cend();
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::cbegin() const -> const_iterator
     {
         return begin();
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::cend() const -> const_iterator
     {
         return end();
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::bitmap() const -> const_bitmap_range
     {
         return m_layout.bitmap();
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::values() const -> const_value_range
     {
         return m_layout.values();
@@ -500,13 +500,13 @@ namespace sparrow
 
     // Capacity
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     bool typed_array_impl<T, L>::empty() const
     {
         return m_layout.size() == 0;
     }
 
-    template <is_arrow_base_type T, arrow_layout L>
+    template <is_arrow_base_type_or_compound T, arrow_layout L>
     auto typed_array_impl<T, L>::size() const -> size_type
     {
         return m_layout.size();

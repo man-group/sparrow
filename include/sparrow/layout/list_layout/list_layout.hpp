@@ -198,7 +198,6 @@ namespace sparrow
             const size_type pos = i + static_cast<size_type>(sparrow::offset(storage()));
             return sparrow::bitmap(storage())[pos];
         }
-
     
         offset_type element_offset(size_type i)const
         {
@@ -208,7 +207,6 @@ namespace sparrow
             
         offset_type element_length(size_type i)const
         {
-            
             // delta between the offsets of the current and the next element
             const size_type j = static_cast<size_type>(sparrow::offset(storage())) + i;
             const auto offset_ptr = buffer_at(storage(), 0u).template data<const offset_type>();

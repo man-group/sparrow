@@ -30,7 +30,6 @@
 namespace sparrow
 {
    
-
 // flatten a vector of vectors
 template <class T>
 std::vector<T> flatten(std::vector<std::vector<T>> values)
@@ -58,10 +57,6 @@ std::vector<T> flatten_tree(std::vector<std::vector<std::vector<T>>> values)
     }
     return flat_values;
 }
-
-
-
-
 
 TEST_SUITE("list_layout")
 {
