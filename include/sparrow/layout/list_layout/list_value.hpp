@@ -50,8 +50,6 @@ namespace sparrow
             // default move assignment
             subrange& operator=(subrange&&) = default;
 
-            
-
 
             subrange(iterator begin, iterator end)
                 : begin_(begin), end_(end) {}
