@@ -33,7 +33,6 @@ namespace sparrow
     template<class CHILD_LAYOUT,  bool IS_CONST>
     using list_value_t  = list_value<std::conditional_t<IS_CONST, typename CHILD_LAYOUT::const_iterator, typename CHILD_LAYOUT::iterator>, IS_CONST>;
 
-
     template<class LIST_LAYOUT_TYPE, class CHILD_LAYOUT_TYPE, class OFFSET_TYPE, bool IS_CONST>
     class list_layout_value_iterator: public iterator_base<
             // derived
@@ -50,9 +49,6 @@ namespace sparrow
             using self_type = list_layout_value_iterator<LIST_LAYOUT_TYPE, CHILD_LAYOUT_TYPE, OFFSET_TYPE, IS_CONST>;
             using layout_ptr_type = std::conditional_t<IS_CONST, const LIST_LAYOUT_TYPE*, LIST_LAYOUT_TYPE*>;
             using child_layout_reference = std::conditional_t<IS_CONST, const  CHILD_LAYOUT_TYPE &, CHILD_LAYOUT_TYPE &>;
-
-
-            //using list_value_type = list_value<CHILD_LAYOUT_TYPE, OFFSET_TYPE, IS_CONST>;
 
             using list_value_type =list_value_t<CHILD_LAYOUT_TYPE, IS_CONST>;
 
@@ -107,8 +103,6 @@ namespace sparrow
                 return m_index < rhs.m_index;
             }
             
-
-
         private:
             using list_layout_type = LIST_LAYOUT_TYPE;
 
