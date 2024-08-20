@@ -59,8 +59,6 @@ namespace sparrow
         using difference_type = std::ptrdiff_t;
         using iterator_tag = std::random_access_iterator_tag;
 
-
-
         using const_value_iterator = list_layout_value_iterator<self_type, child_layout_type,offset_type, true>;
         using const_bitmap_iterator = data_storage_type::bitmap_type::const_iterator;
 
@@ -160,7 +158,6 @@ namespace sparrow
         }
         value_iterator value_end()
         {
-            // with an offset we get a smaller array in total
             return value_iterator(this, static_cast<size_type>(sparrow::length(storage())));
         }
 
@@ -207,7 +204,6 @@ namespace sparrow
             
         offset_type element_length(size_type i)const
         {
-            // delta between the offsets of the current and the next element
             const size_type j = static_cast<size_type>(sparrow::offset(storage())) + i;
             const auto offset_ptr = buffer_at(storage(), 0u).template data<const offset_type>();
             const auto size = offset_ptr[j + 1] - offset_ptr[j];

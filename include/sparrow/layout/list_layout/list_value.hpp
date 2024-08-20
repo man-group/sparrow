@@ -21,8 +21,6 @@ namespace sparrow
     /// \cond
     namespace detail
     {
-
-        // using std::ranges::subrange is not working :/
         template <typename Iter>
         class subrange {
         public:
@@ -62,20 +60,12 @@ namespace sparrow
         using base_type = detail::subrange<ITERATOR>;
         using base_type::base_type;
         using reference =  typename ITERATOR::reference;
-        // using assignment operator from base class
         using base_type::operator=;
-
         using difference_type = typename std::iterator_traits<ITERATOR>::difference_type;
-
 
         reference operator[](std::size_t index)
         {
             return this->begin()[static_cast<difference_type>(index)];
-        }
-
-        reference at(std::size_t index) const
-        {
-           return this->begin()[static_cast<difference_type>(index)];
         }
     };
 
@@ -90,5 +80,4 @@ namespace sparrow
 
     template<class T>
     inline constexpr bool is_list_value_v = is_list_value<T>::value;
-
 }
