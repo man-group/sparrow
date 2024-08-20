@@ -41,6 +41,19 @@ TEST_SUITE("typed_array")
         using typed_array_type = typed_array<list_value_t<list_layout_type, true>, list_layout_type>;
 
         typed_array_type array{list_array_data};
+
+        REQUIRE(array.size() == 3);
+        for(std::size_t i = 0; i < array.size(); ++i)
+        {   
+            CHECK(array[i].has_value());
+            auto value = array[i].value();
+            for(std::size_t j = 0; j <value.size(); ++j)
+            {
+                CHECK(value[j].has_value());
+                CHECK(value[j].value() == values[i][j]);
+            }
+        }
+
         
 
    }

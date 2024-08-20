@@ -46,7 +46,7 @@ namespace sparrow
             iterator begin() const { return begin_; }
             iterator end() const { return end_; }
 
-            difference_type size() const { return std::distance(begin_, end_); }
+            std::size_t size() const { return static_cast<std::size_t>(std::distance(begin_, end_)); }
 
         private:
             iterator begin_;
