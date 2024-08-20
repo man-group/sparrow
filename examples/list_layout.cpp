@@ -8,7 +8,7 @@
 #include <sparrow/array/array_data_factory.hpp>
 #include <sparrow/array.hpp>
 
-#include <sparrow/layout/list_layout.hpp>
+#include <sparrow/layout/list_layout/list_layout.hpp>
 
 #include <vector>
 #include <iostream>

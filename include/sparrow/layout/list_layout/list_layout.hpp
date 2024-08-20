@@ -21,6 +21,8 @@
 #include "sparrow/array/array_data_concepts.hpp"
 #include "sparrow/array/array_data.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
+#include "sparrow/layout/list_layout/list_value.hpp"
+#include "sparrow/layout/list_layout/list_layout_value_iterator.hpp"
 #include "sparrow/utils/algorithm.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
@@ -29,154 +31,6 @@
 
 namespace sparrow
 {
-
-
-    template <class CHILD_LAYOUT, class OFFSET_TYPE, bool IS_CONST>
-    class list_proxy
-    {
-    public:
-        using child_layout_type = CHILD_LAYOUT;
-        using self_type = list_proxy<CHILD_LAYOUT, OFFSET_TYPE, IS_CONST>;
-        using offset_type = OFFSET_TYPE;
-    
-        using value_type = typename child_layout_type::value_type;
-        using reference = std::conditional_t<IS_CONST, typename child_layout_type::const_reference, typename child_layout_type::reference>;
-        using const_reference = typename child_layout_type::const_reference;
-
-        using iterator = std::conditional_t<IS_CONST, typename child_layout_type::const_iterator, typename child_layout_type::iterator>;
-        using const_iterator = typename child_layout_type::const_iterator;
-
-
-        using size_type = offset_type;
-    
-
-        list_proxy(child_layout_type* layout, size_type index, size_type size)
-            : p_child_layout(layout), m_child_offset(index), m_size(size)
-        {
-    
-        }
-        list_proxy(const list_proxy&) = default;
-        list_proxy(list_proxy&&) = default;
-
-        // template <std::ranges::range T>
-        // self_type& operator=(T&& rhs)
-        // {
-        //     if(rhs.size() != m_size)
-        //     {
-        //         throw std::invalid_argument("cannot assign rhs to range: size mismatch");
-        //     }
-        //     std::ranges::copy(rhs, this.begin());
-        // }
-
-        size_type size() const
-        {
-            return this->m_size;
-        }
-        iterator begin(){
-            return this->p_child_layout->begin() + this->m_child_offset;
-        }
-        iterator end(){
-            return this->p_child_layout->begin() + this->m_child_offset + this->m_size;
-        }
-        const_iterator begin() const{
-            return this->p_child_layout->begin() + this->m_child_offset;
-        }
-        const_iterator end() const{
-            return this->p_child_layout->begin() + this->m_child_offset + this->m_size;
-        }
-        const_iterator cbegin() const{
-            return this->p_child_layout->begin() + this->m_child_offset;
-        }
-        const_iterator cend() const{
-            return this->p_child_layout->begin() + this->m_child_offset + this->m_size;
-        }
-
-        reference operator[](size_type i){
-            return this->p_child_layout->operator[](this->m_child_offset + i);
-        }
-        const_reference operator[](size_type i) const{
-            return this->p_child_layout->operator[](this->m_child_offset + i);
-        }
-
-    private:
-
-        child_layout_type* p_child_layout = nullptr;
-
-        size_type m_child_offset = size_type(0);
-        size_type m_size = size_type(0);
-    };
-
-
-    template<class LIST_LAYOUT_TYPE, class CHILD_LAYOUT_TYPE, class OFFSET_TYPE, bool IS_CONST>
-    class list_layout_value_iterator: public iterator_base<
-            // derived
-            list_layout_value_iterator<LIST_LAYOUT_TYPE, CHILD_LAYOUT_TYPE, OFFSET_TYPE , IS_CONST>, 
-            // element
-            list_proxy<CHILD_LAYOUT_TYPE, OFFSET_TYPE, IS_CONST>,
-            // category
-            std::random_access_iterator_tag,
-            // REFERENCE
-            list_proxy<CHILD_LAYOUT_TYPE, OFFSET_TYPE, IS_CONST> 
-        >
-    {
-        public:
-            using self_type = list_layout_value_iterator<LIST_LAYOUT_TYPE, CHILD_LAYOUT_TYPE, OFFSET_TYPE, IS_CONST>;
-            using list_proxy_type = list_proxy<CHILD_LAYOUT_TYPE, OFFSET_TYPE, IS_CONST>;
-            using size_type = typename LIST_LAYOUT_TYPE::size_type;
-
-            list_layout_value_iterator(
-                LIST_LAYOUT_TYPE* layout, size_type index)
-                : p_layout(layout), m_index(index)
-            {
-            }
-
-            list_layout_value_iterator() = default;
-            list_layout_value_iterator(const self_type& rhs) = default;
-            list_layout_value_iterator(self_type&& rhs) = default;
-            self_type& operator=(const self_type& rhs) = default;
-
-
-            list_proxy_type dereference() const
-            {
-                return list_proxy_type(&(p_layout->m_child_layout), p_layout->element_offset(m_index),  p_layout->element_length(m_index));
-            }
-
-            bool equal(const self_type& rhs) const
-            {
-                return m_index == rhs.m_index;
-            }
-
-            void increment()
-            {
-                ++m_index;
-            }
-            void decrement()
-            {
-                --m_index; 
-            }
-            void advance(std::ptrdiff_t n)
-            {
-                m_index += n;
-            }
-            std::ptrdiff_t distance_to(const self_type& rhs) const
-            {
-                return rhs.m_index - m_index;
-            }
-            bool less_than(const self_type& rhs) const
-            {
-                return m_index < rhs.m_index;
-            }
-            
-
-
-        private:
-            using list_layout_type = LIST_LAYOUT_TYPE;
-
-            list_layout_type* p_layout = nullptr;
-            size_type m_index = size_type(0);
-
-    };
-
 
     template <class CHILD_LAYOUT, data_storage DS = array_data, layout_offset OT = std::int64_t>
     class list_layout
@@ -191,9 +45,9 @@ namespace sparrow
 
         using data_storage_type = DS;
         using offset_type = OT;
-        using inner_value_type = list_proxy<child_layout_type, offset_type, true>;
-        using inner_reference = list_proxy<child_layout_type, offset_type, false>;
-        using inner_const_reference = list_proxy<child_layout_type, offset_type, true>;
+        using inner_value_type = list_value_t<child_layout_type, true>;
+        using inner_reference = list_value_t<child_layout_type, false>;
+        using inner_const_reference = list_value_t<child_layout_type, true>;
 
         using bitmap_type = typename data_storage_type::bitmap_type;
         using bitmap_reference = typename bitmap_type::reference;
