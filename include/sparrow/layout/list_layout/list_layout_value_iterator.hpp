@@ -96,11 +96,11 @@ namespace sparrow
             }
             void advance(std::ptrdiff_t n)
             {
-                m_index += n;
+                m_index += static_cast<size_type>(n);
             }
             std::ptrdiff_t distance_to(const self_type& rhs) const
             {
-                return rhs.m_index - m_index;
+                return static_cast<ptrdiff_t>(rhs.m_index) - static_cast<std::ptrdiff_t>(m_index);
             }
             bool less_than(const self_type& rhs) const
             {

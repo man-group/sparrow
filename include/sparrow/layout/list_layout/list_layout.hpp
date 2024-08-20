@@ -98,10 +98,37 @@ namespace sparrow
         }
 
         reference operator[](size_type i)
-        {
-            auto child_index = sparrow::offset(m_data.get()) + i;
+        {   
+            auto bitmap_ref = has_value(i);
+            if(bitmap_ref){
+                return reference(
+                    inner_reference(
+                        m_child_layout.begin() + element_offset(i),
+                        m_child_layout.begin() + element_offset(i) + element_length(i)
+                    ),
+                    bitmap_ref
+                );
+            }
+            else{
+               return reference(inner_reference(), bitmap_ref);
+            }
         }
-        const_reference operator[](size_type i) const;
+        const_reference operator[](size_type i) const
+        {
+            auto bitmap_ref = has_value(i);
+            if(bitmap_ref){
+                return const_reference(
+                    inner_const_reference(
+                        m_child_layout.begin() + element_offset(i),
+                        m_child_layout.begin() + element_offset(i) + element_length(i)
+                    ),
+                    bitmap_ref
+                );
+            }
+            else{
+                return const_reference(inner_const_reference(), bitmap_ref);
+            }
+        }
 
         iterator begin(){
             return iterator(value_begin(), bitmap_begin());
@@ -129,12 +156,12 @@ namespace sparrow
 
         value_iterator value_begin()
         {
-            return value_iterator(this, offset(storage()));
+            return value_iterator(this,  static_cast<size_type>(offset(storage())));
         }
         value_iterator value_end()
         {
             // with an offset we get a smaller array in total
-            return value_iterator(this, sparrow::length(storage()));
+            return value_iterator(this, static_cast<size_type>(sparrow::length(storage())));
         }
 
         const_value_iterator value_cbegin() const
@@ -159,20 +186,31 @@ namespace sparrow
         }
         const_bitmap_iterator bitmap_cend() const {
             return sparrow::bitmap(storage()).cend();
+        }   
+
+        bitmap_reference has_value(size_type i) 
+        {
+            const size_type pos = i + static_cast<size_type>(sparrow::offset(storage()));
+            return sparrow::bitmap(storage())[pos];
+        }
+        bitmap_const_reference has_value(size_type i) const
+        {
+            const size_type pos = i + static_cast<size_type>(sparrow::offset(storage()));
+            return sparrow::bitmap(storage())[pos];
         }
 
     
         offset_type element_offset(size_type i)const
         {
-            const auto j = sparrow::offset(storage()) + i;
-            return buffer_at(storage(), 0u).template data<const offset_type>()[j]; 
+            const size_type pos = i + static_cast<size_type>(sparrow::offset(storage()));
+            return buffer_at(storage(), 0u).template data<const offset_type>()[pos]; 
         }
             
         offset_type element_length(size_type i)const
         {
             
             // delta between the offsets of the current and the next element
-            const auto j = sparrow::offset(storage()) + i;
+            const size_type j = static_cast<size_type>(sparrow::offset(storage())) + i;
             const auto offset_ptr = buffer_at(storage(), 0u).template data<const offset_type>();
             const auto size = offset_ptr[j + 1] - offset_ptr[j];
             return size;

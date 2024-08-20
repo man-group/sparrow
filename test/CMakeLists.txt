@@ -50,6 +50,7 @@ set(SPARROW_TESTS_SOURCES
     test_buffer_adaptor.cpp
     test_buffer.cpp
     test_dictionary_encoded_layout.cpp
+    test_list_layout.cpp
     test_dynamic_bitset.cpp
     test_external_array.cpp
     test_external_array_data.cpp

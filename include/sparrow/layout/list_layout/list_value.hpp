@@ -39,7 +39,7 @@ namespace sparrow
         public:
             using iterator = Iter;
             using value_type = typename std::iterator_traits<iterator>::value_type;
-
+            using difference_type = typename std::iterator_traits<Iter>::difference_type;
             subrange() = default;
             // default copy constructor
             subrange(const subrange&) = default;
@@ -50,6 +50,8 @@ namespace sparrow
             // default move assignment
             subrange& operator=(subrange&&) = default;
 
+            
+
 
             subrange(iterator begin, iterator end)
                 : begin_(begin), end_(end) {}
@@ -57,7 +59,7 @@ namespace sparrow
             iterator begin() const { return begin_; }
             iterator end() const { return end_; }
 
-            std::size_t size() const { return std::distance(begin_, end_); }
+            difference_type size() const { return std::distance(begin_, end_); }
 
         private:
             iterator begin_;
@@ -72,9 +74,23 @@ namespace sparrow
         public:
         using base_type = detail::subrange<ITERATOR>;
         using base_type::base_type;
-
+        using reference =  typename ITERATOR::reference;
         // using assignment operator from base class
         using base_type::operator=;
+
+        using difference_type = typename std::iterator_traits<ITERATOR>::difference_type;
+
+
+        reference operator[](std::size_t index)
+        {
+            return this->begin()[static_cast<difference_type>(index)];
+        }
+
+        reference at(std::size_t index) const
+        {
+           return this->begin()[static_cast<difference_type>(index)];
+        }
+        
 
     };
 }
