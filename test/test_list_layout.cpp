@@ -211,9 +211,8 @@ TEST_SUITE("list_layout")
 
     TEST_CASE_TEMPLATE_INVOKE(
         generic_scalar_test,
-        // bool,
-        std::uint8_t
-        ,
+        bool,
+        std::uint8_t,
         std::int8_t,
         std::uint16_t,
         std::int16_t,
