@@ -68,7 +68,7 @@ TEST_SUITE("list_layout")
                     for(std::size_t j = 0; j < values[i].size(); j++)
                     {
                         auto maybe_value = list[j];
-                        CHECK_EQ(maybe_value.has_value(), true);
+                        REQUIRE_EQ(maybe_value.has_value(), true);
                         CHECK_EQ(maybe_value.value(), values[i][j]);
                     }
                 }
@@ -126,7 +126,7 @@ TEST_SUITE("list_layout")
                         for(std::size_t k = 0; k < values[i][j].size(); k++)
                         {
                             auto maybe_value = inner_list[k];
-                            CHECK_EQ(maybe_value.has_value(), true);
+                            REQUIRE_EQ(maybe_value.has_value(), true);
                             CHECK_EQ(maybe_value.value(), values[i][j][k]);
                         }
                     }
