@@ -6,7 +6,7 @@ on:
       branches: [main]
 
 jobs:
-  setup-conan:
+  conan-package:
     runs-on: ubuntu-24.04
 
     steps:
@@ -39,3 +39,6 @@ jobs:
       - name: Run examples
         working-directory: build/build/Release
         run: cmake --build . --config Release --target run_examples
+
+      - name: Conan create package
+        run: conan create . --version=0.0.0 -s:a build_type=Release --build=missing -s:a compiler.cppstd=20 -o:a generate_documentation=True 
