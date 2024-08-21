@@ -72,6 +72,20 @@ namespace sparrow
 
     static_assert(std::same_as<mpl::rename<test_list, std::variant>, std::variant<int, char>>);
 
+
+    //////////////////////////////////////////////////
+    //// Miscellaneous ///////////////////////////////
+
+    // constify
+    static_assert(std::same_as<mpl::constify_t<int, true>, const int>);
+    static_assert(std::same_as<mpl::constify_t<int, false>, int>);
+    static_assert(std::same_as<mpl::constify_t<int&, true>, const int&>);
+    static_assert(std::same_as<mpl::constify_t<int&, false>, int&>);
+    static_assert(std::same_as<mpl::constify_t<const int, true>, const int>);
+    static_assert(std::same_as<mpl::constify_t<const int, false>, const int>);
+    static_assert(std::same_as<mpl::constify_t<const int&, true>, const int&>);
+    static_assert(std::same_as<mpl::constify_t<const int&, false>, const int&>);
+
     //////////////////////////////////////////////////////////////////////////////
     // Algorithm
 

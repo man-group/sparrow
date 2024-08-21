@@ -366,9 +366,16 @@ namespace sparrow::mpl
     template <class T>
     using add_const_lvalue_reference_t = typename add_const_lvalue_reference<T>::type;
 
-    template <class T, bool is_const>
-    struct constify : std::conditional<is_const, const T, T>
+    template <typename T, bool is_const>
+    struct constify
     {
+        using type = std::conditional_t<is_const, const T, T>;
+    };
+
+    template <typename T, bool is_const>
+    struct constify<T&, is_const>
+    {
+        using type = std::conditional_t<is_const, const T&, T&>;
     };
 
     // `constify_t` is required since `std::add_const_t<T&>`
@@ -422,20 +429,20 @@ namespace sparrow::mpl
     }
 
     /// Matches range types whose elements are convertible to bool.
-    template<class BoolRange>
-    concept bool_convertible_range = std::ranges::range<BoolRange> &&
-        std::convertible_to<std::ranges::range_value_t<BoolRange>, bool>;
+    template <class BoolRange>
+    concept bool_convertible_range = std::ranges::range<BoolRange>
+                                     && std::convertible_to<std::ranges::range_value_t<BoolRange>, bool>;
 
     /// Matches types that can be convertible to and assignable from bool. We do not use
     /// `std::convertible_to` because we don't want to impose an implicit conversion.
     template <class T>
-    concept boolean_like = std::is_assignable_v<std::add_lvalue_reference_t<std::decay_t<T>>, bool> and 
-                           requires { static_cast<bool>(std::declval<T>()); };
-    
+    concept boolean_like = std::is_assignable_v<std::add_lvalue_reference_t<std::decay_t<T>>, bool>
+                           and requires { static_cast<bool>(std::declval<T>()); };
+
     /// Matches range types From whose elements are convertible to elements of range type To.
     template <class From, class To>
     concept convertible_ranges = std::convertible_to<std::ranges::range_value_t<From>, std::ranges::range_value_t<To>>;
-                   
+
     // Matches any `unique_ptr` instance.
     template <typename T>
     concept unique_ptr = mpl::is_type_instance_of_v<std::remove_reference_t<T>, std::unique_ptr>;
@@ -464,5 +471,5 @@ namespace sparrow::mpl
 
     // Matches any type that is testable
     template <class T>
-    concept testable = requires(T t) {  t ? true : false; };
+    concept testable = requires(T t) { t ? true : false; };
 }
