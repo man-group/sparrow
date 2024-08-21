@@ -69,6 +69,33 @@ namespace sparrow
         {
             return this->begin()[static_cast<difference_type>(index)];
         }
+        reference operator[](std::size_t index)const
+        {
+            return this->begin()[static_cast<difference_type>(index)];
+        }
+
+        template<class OTHER_ITERATOR, bool OTHER_IS_CONST>
+        bool operator==(const list_value<OTHER_ITERATOR, OTHER_IS_CONST>& rhs) const
+        {
+            if(this->size() != rhs.size())
+            {
+                return false;
+            }
+            for(std::size_t i = 0; i < this->size(); ++i)
+            {
+                if(this->operator[](i) != rhs[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        template<class OTHER_ITERATOR, bool OTHER_IS_CONST>
+        bool operator!=(const list_value<OTHER_ITERATOR, OTHER_IS_CONST>& rhs) const
+        {
+            return !(*this == rhs);
+        }
     };
 
     template<class T>
