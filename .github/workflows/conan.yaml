@@ -25,8 +25,7 @@ jobs:
           conan install . --output-folder=build --build=missing -s:a compiler.cppstd=20 -o:a generate_documentation=True
           
       - name: CMake configuration
-        run: |
-          cmake --preset conan-release -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
+        run: cmake --preset conan-release -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
       
       - name: Build
         working-directory: build/build/Release
