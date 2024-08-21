@@ -25,7 +25,7 @@
 #include "doctest/doctest.h"
 
 #include "array_data_creation.hpp"
-
+#include "layout_tester.hpp"
 
 namespace sparrow
 {
@@ -99,10 +99,11 @@ TEST_SUITE("list_layout")
             using inner_list_layout_type = sparrow::list_layout<inner_layout_type, data_storage,  std::int64_t>;
             using outer_list_layout_type = sparrow::list_layout<inner_list_layout_type, data_storage,  std::int64_t>;
             
+            outer_list_layout_type outer_list_layout(outer_list_array_data);
+            CHECK_EQ(outer_list_layout.size(), values.size());
+            
             SUBCASE("operator[]")
             {
-                outer_list_layout_type outer_list_layout(outer_list_array_data);
-                CHECK_EQ(outer_list_layout.size(), values.size());
                 for(std::size_t i = 0; i < values.size(); i++)
                 {
                     auto maybe_list = outer_list_layout[i];
@@ -124,136 +125,9 @@ TEST_SUITE("list_layout")
                     }
                 }
             }
-            SUBCASE("values")
-            {
-                SUBCASE("const")
-                {
-                    outer_list_layout_type outer_list_layout(outer_list_array_data);
-                    const outer_list_layout_type& const_outer_list_layout = outer_list_layout;
-                    for(auto list : const_outer_list_layout.values())
-                    {
-                        for(auto elemets  : list)
-                        {
-                            CHECK_EQ(elemets.has_value(), true);
-                        }
-                    }
-                }
-                SUBCASE("non-const")
-                {
-                    outer_list_layout_type outer_list_layout(outer_list_array_data);
-                    CHECK_EQ(outer_list_layout.size(), values.size());
-                    for(auto list : outer_list_layout.values())
-                    {
-                        for(auto elemets  : list)
-                        {
-                            CHECK_EQ(elemets.has_value(), true);
-                        }
-                    }
-                }
-            }
-            SUBCASE("bitmap")
-            {
-                SUBCASE("const")
-                {
-                    outer_list_layout_type outer_list_layout(outer_list_array_data);
-                    const outer_list_layout_type& const_outer_list_layout = outer_list_layout;
-                    CHECK_EQ(const_outer_list_layout.size(), values.size());
-                    for(auto mp : const_outer_list_layout.bitmap())
-                    {
-                        CHECK_EQ(bool(mp), true);
-                    }
-                }
-                SUBCASE("non-const")
-                {
-                    outer_list_layout_type outer_list_layout(outer_list_array_data);
-                    CHECK_EQ(outer_list_layout.size(), values.size());
-                    for(auto mp : outer_list_layout.bitmap())
-                    {
-                        CHECK_EQ(bool(mp), true);
-                    }
-                }
-            }
-            SUBCASE("const operator[]")
+            SUBCASE("consitency")
             {
                 outer_list_layout_type outer_list_layout(outer_list_array_data);
-                const outer_list_layout_type& const_outer_list_layout = outer_list_layout;
-                CHECK_EQ(const_outer_list_layout.size(), values.size());
-                for(std::size_t i = 0; i < values.size(); i++)
-                {
-                    auto maybe_list = const_outer_list_layout[i];
-                    CHECK_EQ(maybe_list.has_value(), true);
-                    auto list = maybe_list.value();
-                    CHECK_EQ(list.size(), values[i].size());
-                    for(std::size_t j = 0; j < values[i].size(); j++)
-                    {
-                        auto maybe_inner_list = list[j];
-                        CHECK_EQ(maybe_inner_list.has_value(), true);
-                        auto inner_list = maybe_inner_list.value();
-                        CHECK_EQ(inner_list.size(), values[i][j].size());
-                        for(std::size_t k = 0; k < values[i][j].size(); k++)
-                        {
-                            auto maybe_value = inner_list[k];
-                            CHECK_EQ(maybe_value.has_value(), true);
-                            CHECK_EQ(maybe_value.value(), values[i][j][k]);
-                        }
-                    }
-                }
-            }
-            SUBCASE("iterator")
-            {
-                outer_list_layout_type outer_list_layout(outer_list_array_data);
-                using difference_type = typename outer_list_layout_type::iterator::difference_type;
-                auto layout_iter  = outer_list_layout.begin();
-                for(std::size_t i = 0; i < values.size(); i++)
-                {
-                    auto maybe_list = layout_iter[static_cast<difference_type>(i)];
-                    CHECK_EQ(maybe_list.has_value(), true);
-                    auto list = maybe_list.value();
-                    auto iter = list.begin();
-                    CHECK_EQ(list.size(), values[i].size());
-                    for(std::size_t j = 0; j < values[i].size(); j++)
-                    {
-                        auto maybe_inner_list = iter[static_cast<difference_type>(j)];
-                        CHECK_EQ(maybe_inner_list.has_value(), true);
-                        auto inner_list = maybe_inner_list.value();
-                        auto inner_iter = inner_list.begin();
-                        CHECK_EQ(inner_list.size(), values[i][j].size());
-                        for(std::size_t k = 0; k < values[i][j].size(); k++)
-                        {
-                            auto maybe_value = inner_iter[static_cast<difference_type>(k)];
-                            CHECK_EQ(maybe_value.has_value(), true);
-                            CHECK_EQ(maybe_value.value(), values[i][j][k]);
-                        }
-                    }
-                }
-            }
-            SUBCASE("const-iterator")
-            {
-                outer_list_layout_type outer_list_layout(outer_list_array_data);
-                using difference_type = typename outer_list_layout_type::iterator::difference_type;
-                auto layout_iter  = outer_list_layout.cbegin();
-                for(std::size_t i = 0; i < values.size(); i++)
-                {
-                    auto maybe_list = layout_iter[static_cast<difference_type>(i)];
-                    CHECK_EQ(maybe_list.has_value(), true);
-                    auto list = maybe_list.value();
-                    auto iter = list.cbegin();
-                    CHECK_EQ(list.size(), values[i].size());
-                    for(std::size_t j = 0; j < values[i].size(); j++)
-                    {
-                        auto maybe_inner_list = iter[static_cast<difference_type>(j)];
-                        CHECK_EQ(maybe_inner_list.has_value(), true);
-                        auto inner_list = maybe_inner_list.value();
-                        auto inner_iter = inner_list.cbegin();
-                        CHECK_EQ(inner_list.size(), values[i][j].size());
-                        for(std::size_t k = 0; k < values[i][j].size(); k++)
-                        {
-                            auto maybe_value = inner_iter[static_cast<difference_type>(k)];
-                            CHECK_EQ(maybe_value.has_value(), true);
-                            CHECK_EQ(maybe_value.value(), values[i][j][k]);
-                        }
-                    }
-                }
             }
         }
     }
