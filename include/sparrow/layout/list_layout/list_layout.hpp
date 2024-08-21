@@ -174,7 +174,7 @@ namespace sparrow
         }
         const_value_iterator value_cend() const
         {
-            return const_value_iterator(this, sparrow::length(storage()));
+            return const_value_iterator(this, static_cast<size_type>(sparrow::length(storage())));
         }
 
         bitmap_iterator bitmap_begin(){

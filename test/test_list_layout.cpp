@@ -124,6 +124,18 @@ TEST_SUITE("list_layout")
                     }
                 }
             }
+            SUBCASE("values")
+            {
+                outer_list_layout_type outer_list_layout(outer_list_array_data);
+                CHECK_EQ(outer_list_layout.size(), values.size());
+                for(auto list : outer_list_layout.values())
+                {
+                    for(auto elemets  : list)
+                    {
+                        CHECK_EQ(elemets.has_value(), true);
+                    }
+                }
+            }
             SUBCASE("const operator[]")
             {
                 outer_list_layout_type outer_list_layout(outer_list_array_data);
