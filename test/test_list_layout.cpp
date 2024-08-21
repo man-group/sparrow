@@ -37,7 +37,7 @@ TEST_SUITE("list_layout")
     // it will **not** work for non-scalar types (ie std::string)
     TEST_CASE_TEMPLATE_DEFINE("generic-scalar-test", T, generic_scalar_test)
     {
-        SUBCASE("list<int>")
+        SUBCASE("list<T>")
         { 
 
             auto d = test::iota_vector<T>(11);
