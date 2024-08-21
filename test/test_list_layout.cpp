@@ -30,34 +30,6 @@
 namespace sparrow
 {
    
-// flatten a vector of vectors
-template <class T>
-std::vector<T> flatten(std::vector<std::vector<T>> values)
-{
-    std::vector<T> flat_values;
-    for (auto& v : values) {
-        for (auto& e : v) {
-            flat_values.push_back(e);
-        }
-    }
-    return flat_values;
-}
-
-// flatten tree nested vectors
-template <class T>
-std::vector<T> flatten_tree(std::vector<std::vector<std::vector<T>>> values)
-{
-    std::vector<T> flat_values;
-    for (auto& v : values) {
-        for (auto& e : v) {
-            for (auto& f : e) {
-                flat_values.push_back(f);
-            }
-        }
-    }
-    return flat_values;
-}
-
 TEST_SUITE("list_layout")
 {
     TEST_CASE("list<int>"){ 
