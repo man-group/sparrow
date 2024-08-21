@@ -49,7 +49,7 @@ TEST_SUITE("typed_array")
             auto value = array[i].value();
             for(std::size_t j = 0; j <value.size(); ++j)
             {
-                CHECK(value[j].has_value());
+                REQUIRE(value[j].has_value());
                 CHECK(value[j].value() == values[i][j]);
             }
         }
