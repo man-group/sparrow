@@ -126,23 +126,51 @@ TEST_SUITE("list_layout")
             }
             SUBCASE("values")
             {
-                outer_list_layout_type outer_list_layout(outer_list_array_data);
-                CHECK_EQ(outer_list_layout.size(), values.size());
-                for(auto list : outer_list_layout.values())
+                SUBCASE("const")
                 {
-                    for(auto elemets  : list)
+                    outer_list_layout_type outer_list_layout(outer_list_array_data);
+                    const outer_list_layout_type& const_outer_list_layout = outer_list_layout;
+                    for(auto list : const_outer_list_layout.values())
                     {
-                        CHECK_EQ(elemets.has_value(), true);
+                        for(auto elemets  : list)
+                        {
+                            CHECK_EQ(elemets.has_value(), true);
+                        }
+                    }
+                }
+                SUBCASE("non-const")
+                {
+                    outer_list_layout_type outer_list_layout(outer_list_array_data);
+                    CHECK_EQ(outer_list_layout.size(), values.size());
+                    for(auto list : outer_list_layout.values())
+                    {
+                        for(auto elemets  : list)
+                        {
+                            CHECK_EQ(elemets.has_value(), true);
+                        }
                     }
                 }
             }
             SUBCASE("bitmap")
             {
-                outer_list_layout_type outer_list_layout(outer_list_array_data);
-                CHECK_EQ(outer_list_layout.size(), values.size());
-                for(auto mp : outer_list_layout.bitmap())
+                SUBCASE("const")
                 {
-                    CHECK_EQ(bool(mp), true);
+                    outer_list_layout_type outer_list_layout(outer_list_array_data);
+                    const outer_list_layout_type& const_outer_list_layout = outer_list_layout;
+                    CHECK_EQ(const_outer_list_layout.size(), values.size());
+                    for(auto mp : const_outer_list_layout.bitmap())
+                    {
+                        CHECK_EQ(bool(mp), true);
+                    }
+                }
+                SUBCASE("non-const")
+                {
+                    outer_list_layout_type outer_list_layout(outer_list_array_data);
+                    CHECK_EQ(outer_list_layout.size(), values.size());
+                    for(auto mp : outer_list_layout.bitmap())
+                    {
+                        CHECK_EQ(bool(mp), true);
+                    }
                 }
             }
             SUBCASE("const operator[]")
