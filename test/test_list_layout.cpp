@@ -114,7 +114,7 @@ TEST_SUITE("list_layout")
                 for(std::size_t i = 0; i < values.size(); i++)
                 {
                     auto maybe_list = outer_list_layout[i];
-                    CHECK_EQ(maybe_list.has_value(), true);
+                    REQUIRE_EQ(maybe_list.has_value(), true);
                     auto list = maybe_list.value();
                     REQUIRE_EQ(list.size(), values[i].size());
                     for(std::size_t j = 0; j < values[i].size(); j++)
