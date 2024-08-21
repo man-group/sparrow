@@ -136,6 +136,15 @@ TEST_SUITE("list_layout")
                     }
                 }
             }
+            SUBCASE("bitmap")
+            {
+                outer_list_layout_type outer_list_layout(outer_list_array_data);
+                CHECK_EQ(outer_list_layout.size(), values.size());
+                for(auto mp : outer_list_layout.bitmap())
+                {
+                    CHECK_EQ(bool(mp), true);
+                }
+            }
             SUBCASE("const operator[]")
             {
                 outer_list_layout_type outer_list_layout(outer_list_array_data);
