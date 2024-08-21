@@ -135,6 +135,13 @@ namespace sparrow
             return iterator(value_end(), bitmap_end());
         }
 
+        const_iterator begin() const{
+            return const_iterator(value_cbegin(), bitmap_cbegin());
+        }
+        const_iterator end() const{
+            return const_iterator(value_cend(), bitmap_cend());
+        }
+
         const_iterator cbegin() const{
             return const_iterator(value_cbegin(), bitmap_cbegin());
         }
@@ -163,7 +170,7 @@ namespace sparrow
 
         const_value_iterator value_cbegin() const
         {
-            return const_value_iterator(this, offset(storage()));
+            return const_value_iterator(this, static_cast<size_type>(offset(storage())));
         }
         const_value_iterator value_cend() const
         {

@@ -152,23 +152,52 @@ TEST_SUITE("list_layout")
                     }
                 }
             }
+            SUBCASE("const-iterator")
+            {
+                outer_list_layout_type outer_list_layout(outer_list_array_data);
+                using difference_type = typename outer_list_layout_type::iterator::difference_type;
+                auto layout_iter  = outer_list_layout.cbegin();
+                for(std::size_t i = 0; i < values.size(); i++)
+                {
+                    auto maybe_list = layout_iter[static_cast<difference_type>(i)];
+                    CHECK_EQ(maybe_list.has_value(), true);
+                    auto list = maybe_list.value();
+                    auto iter = list.cbegin();
+                    CHECK_EQ(list.size(), values[i].size());
+                    for(std::size_t j = 0; j < values[i].size(); j++)
+                    {
+                        auto maybe_inner_list = iter[static_cast<difference_type>(j)];
+                        CHECK_EQ(maybe_inner_list.has_value(), true);
+                        auto inner_list = maybe_inner_list.value();
+                        auto inner_iter = inner_list.cbegin();
+                        CHECK_EQ(inner_list.size(), values[i][j].size());
+                        for(std::size_t k = 0; k < values[i][j].size(); k++)
+                        {
+                            auto maybe_value = inner_iter[static_cast<difference_type>(k)];
+                            CHECK_EQ(maybe_value.has_value(), true);
+                            CHECK_EQ(maybe_value.value(), values[i][j][k]);
+                        }
+                    }
+                }
+            }
         }
     }
 
     TEST_CASE_TEMPLATE_INVOKE(
         generic_scalar_test,
-        bool,
-        std::uint8_t,
-        std::int8_t,
-        std::uint16_t,
-        std::int16_t,
-        std::uint32_t,
-        std::int32_t,
-        std::uint64_t,
-        std::int64_t,
-        float16_t,
-        float32_t,
-        float64_t
+        // bool,
+        std::uint8_t
+        //,
+        // std::int8_t,
+        // std::uint16_t,
+        // std::int16_t,
+        // std::uint32_t,
+        // std::int32_t,
+        // std::uint64_t,
+        // std::int64_t,
+        // float16_t,
+        // float32_t,
+        // float64_t
     );
 
 

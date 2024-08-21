@@ -43,6 +43,8 @@ namespace sparrow
 
             iterator begin() const { return begin_; }
             iterator end() const { return end_; }
+            iterator cbegin() const { return begin_; }
+            iterator cend() const { return end_; }
 
             std::size_t size() const { return static_cast<std::size_t>(std::distance(begin_, end_)); }
 

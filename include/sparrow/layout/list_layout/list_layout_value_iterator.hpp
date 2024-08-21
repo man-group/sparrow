@@ -56,7 +56,7 @@ namespace sparrow
             using size_type = typename LIST_LAYOUT_TYPE::size_type;
 
             list_layout_value_iterator(
-                LIST_LAYOUT_TYPE* layout, size_type index)
+                layout_ptr_type layout, size_type index)
                 : p_layout(layout), m_index(index)
             {
             }
@@ -72,6 +72,7 @@ namespace sparrow
                 const auto offset = p_layout->element_offset(m_index);
                 const auto length = p_layout->element_length(m_index);
 
+                
                 return list_value_type(
                     child_layout.begin() + offset,
                     child_layout.begin() + offset + length);
