@@ -1,5 +1,10 @@
 #include "doctest/doctest.h"
 
+#include <type_traits>
+#include <ranges>
+#include <vector>
+#include <iterator>
+
 namespace  sparrow::test
 {  
 
