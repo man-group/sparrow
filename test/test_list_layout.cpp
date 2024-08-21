@@ -245,7 +245,7 @@ TEST_SUITE("list_layout")
                         CHECK_EQ(maybe_inner_list.has_value(), true);
                         auto inner_list = maybe_inner_list.value();
                         auto inner_iter = inner_list.cbegin();
-                        CHECK_EQ(inner_list.size(), values[i][j].size());
+                        REQUIRE_EQ(inner_list.size(), values[i][j].size());
                         for(std::size_t k = 0; k < values[i][j].size(); k++)
                         {
                             auto maybe_value = inner_iter[static_cast<difference_type>(k)];
