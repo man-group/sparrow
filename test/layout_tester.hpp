@@ -3,7 +3,6 @@
 namespace  sparrow::test
 {  
 
-
     template<class Layout>
     void layout_tester_impl(Layout && layout)
     {
@@ -17,7 +16,6 @@ namespace  sparrow::test
         auto iter_cend = layout.cend();
         auto values_range = layout.values();
         auto bitmap_range = layout.bitmap();
-
 
         using value_range_diff_type = std::ranges::range_difference_t<decltype(values_range)>;
         using bitmap_range_diff_type = std::ranges::range_difference_t<decltype(bitmap_range)>;
@@ -61,16 +59,13 @@ namespace  sparrow::test
         }
     }
 
-
-
     template<class Layout>
     void layout_tester(Layout & layout)
     {
-
         // check that the values of [] are the same for const and non-const
         using layout_type = std::decay_t<Layout>;
         using size_type = typename layout_type::size_type;
-        
+
         const layout_type & const_layout = layout;
         const auto size = layout.size();
         for( size_type i = 0; i < size; ++i){
@@ -84,16 +79,13 @@ namespace  sparrow::test
             }
         }
         
-        
         SUBCASE("non-const"){
             layout_tester_impl(layout);
         }
         SUBCASE("const"){
             layout_tester_impl(const_layout);
         }
-
     
     }
-
     
 } // namespace  sparrow
