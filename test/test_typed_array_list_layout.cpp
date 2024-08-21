@@ -45,7 +45,7 @@ TEST_SUITE("typed_array")
         REQUIRE(array.size() == 3);
         for(std::size_t i = 0; i < array.size(); ++i)
         {   
-            CHECK(array[i].has_value());
+            REQUIRE(array[i].has_value());
             auto value = array[i].value();
             for(std::size_t j = 0; j <value.size(); ++j)
             {
