@@ -72,7 +72,7 @@ TEST_SUITE("list_layout")
             }
     
         }
-        SUBCASE("list<list<int>>")
+        SUBCASE("list<list<T>>")
         {
             auto d = test::iota_vector<T>(28);
             std::vector<std::vector<std::vector<T>>> values = {
