@@ -56,7 +56,7 @@ TEST_SUITE("list_layout")
             list_layout_type list_layout(list_array_data);
 
 
-            CHECK_EQ(list_layout.size(), values.size());
+            REQUIRE_EQ(list_layout.size(), values.size());
             for(std::size_t i = 0; i < values.size(); i++)
             {
                 auto maybe_list = list_layout[i];
