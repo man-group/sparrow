@@ -64,16 +64,35 @@ namespace  sparrow::test
 
 
     template<class Layout>
-    void layout_tester(Layout && layout)
+    void layout_tester(Layout & layout)
     {
+
+        // check that the values of [] are the same for const and non-const
+        using layout_type = std::decay_t<Layout>;
+        using size_type = typename layout_type::size_type;
+        
+        const layout_type & const_layout = layout;
+        const auto size = layout.size();
+        for( size_type i = 0; i < size; ++i){
+            auto maybe_value = layout[i];
+            auto maybe_const_value = const_layout[i];
+            CHECK(maybe_value.has_value() == maybe_const_value.has_value());
+            if(maybe_value.has_value()){
+                auto value = maybe_value.value();
+                auto const_value = maybe_const_value.value();
+                CHECK(value == const_value);
+            }
+        }
+        
+        
         SUBCASE("non-const"){
-            layout_tester_impl(std::forward<Layout>(layout));
+            layout_tester_impl(layout);
         }
         SUBCASE("const"){
-            using layout_type = std::decay_t<Layout>;
-            const layout_type & const_layout = layout;
             layout_tester_impl(const_layout);
         }
+
+    
     }
 
     

@@ -57,18 +57,25 @@ TEST_SUITE("list_layout")
 
 
             REQUIRE_EQ(list_layout.size(), values.size());
-            for(std::size_t i = 0; i < values.size(); i++)
+            SUBCASE("operator[]")
             {
-                auto maybe_list = list_layout[i];
-                CHECK_EQ(maybe_list.has_value(), true);
-                auto list = maybe_list.value();
-                CHECK_EQ(list.size(), values[i].size());
-                for(std::size_t j = 0; j < values[i].size(); j++)
+                for(std::size_t i = 0; i < values.size(); i++)
                 {
-                    auto maybe_value = list[j];
-                    CHECK_EQ(maybe_value.has_value(), true);
-                    CHECK_EQ(maybe_value.value(), values[i][j]);
+                    auto maybe_list = list_layout[i];
+                    CHECK_EQ(maybe_list.has_value(), true);
+                    auto list = maybe_list.value();
+                    CHECK_EQ(list.size(), values[i].size());
+                    for(std::size_t j = 0; j < values[i].size(); j++)
+                    {
+                        auto maybe_value = list[j];
+                        CHECK_EQ(maybe_value.has_value(), true);
+                        CHECK_EQ(maybe_value.value(), values[i][j]);
+                    }
                 }
+            }
+            SUBCASE("consistency-test")
+            {
+                test::layout_tester(list_layout);
             }
     
         }
@@ -125,7 +132,7 @@ TEST_SUITE("list_layout")
                     }
                 }
             }
-            SUBCASE("consistency")
+            SUBCASE("consistency-test")
             {
                 test::layout_tester(outer_list_layout);
             }
@@ -134,18 +141,18 @@ TEST_SUITE("list_layout")
 
     TEST_CASE_TEMPLATE_INVOKE(
         generic_scalar_test,
-        //bool,
-        std::uint8_t//,
-        // std::int8_t,
-        // std::uint16_t,
-        // std::int16_t,
-        // std::uint32_t,
-        // std::int32_t,
-        // std::uint64_t,
-        // std::int64_t,
-        // float16_t,
-        // float32_t,
-        // float64_t
+        bool,
+        std::uint8_t,
+        std::int8_t,
+        std::uint16_t,
+        std::int16_t,
+        std::uint32_t,
+        std::int32_t,
+        std::uint64_t,
+        std::int64_t,
+        float16_t,
+        float32_t,
+        float64_t
     );
 
 
