@@ -216,6 +216,7 @@ namespace sparrow::test
 
 
     template<class C>
+    // requ
     sparrow::array_data::buffer_type build_offsets(C && values)
     {
         std::vector<std::int64_t> offsets(values.size() + 1, 0);
@@ -237,7 +238,7 @@ namespace sparrow::test
         
         std::vector<T> flat_values;
         for(auto & v : values){
-            for(auto & e : v){
+            for(auto e : v){
                 flat_values.push_back(e);
             }
         }
@@ -277,7 +278,7 @@ namespace sparrow::test
         // semi flatten the values
         std::vector<std::vector<T>> half_flat_values;
         for (auto& v : values) {
-            for (auto& e : v) {
+            for (auto e : v) {
                 half_flat_values.push_back(e);
             }
         }
