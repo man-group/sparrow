@@ -93,6 +93,10 @@ namespace sparrow
         iterator begin();
         iterator end();
 
+        const_iterator begin() const;
+        const_iterator end() const;
+
+
         const_iterator cbegin() const;
         const_iterator cend() const;
 
@@ -204,6 +208,19 @@ namespace sparrow
     {
         return const_iterator(value_cend(), bitmap_cend());
     }
+
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::begin() const -> const_iterator
+    {
+        return const_iterator(value_cbegin(), bitmap_cbegin());
+    }
+
+    template <class T, data_storage DS>
+    auto fixed_size_layout<T, DS>::end() const -> const_iterator
+    {
+        return const_iterator(value_cend(), bitmap_cend());
+    }
+
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::bitmap() const -> const_bitmap_range

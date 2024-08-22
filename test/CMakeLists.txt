@@ -50,6 +50,7 @@ set(SPARROW_TESTS_SOURCES
     test_buffer_adaptor.cpp
     test_buffer.cpp
     test_dictionary_encoded_layout.cpp
+    test_list_layout.cpp
     test_dynamic_bitset.cpp
     test_external_array.cpp
     test_external_array_data.cpp
@@ -62,6 +63,7 @@ set(SPARROW_TESTS_SOURCES
     test_traits.cpp
     test_typed_array_timestamp.cpp
     test_typed_array.cpp
+    test_typed_array_list_layout.cpp
     test_variable_size_binary_layout.cpp
     better_junit_reporter.hpp
     junit.hpp

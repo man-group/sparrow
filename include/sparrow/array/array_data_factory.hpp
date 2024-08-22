@@ -32,6 +32,7 @@
 #include "sparrow/layout/dictionary_encoded_layout.hpp"
 #include "sparrow/layout/fixed_size_layout.hpp"
 #include "sparrow/layout/variable_size_binary_layout.hpp"
+#include "sparrow/layout/list_layout/list_layout.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/memory.hpp"
@@ -85,7 +86,8 @@ namespace sparrow
     concept arrow_layout = mpl::is_type_instance_of_v<Layout, null_layout>
                            || mpl::is_type_instance_of_v<Layout, fixed_size_layout>
                            || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
-                           || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>;
+                           || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>
+                           || mpl::is_type_instance_of_v<Layout, list_layout>;
 
     /*
      * \brief Creates an array_data object for a null layout.
@@ -223,6 +225,20 @@ namespace sparrow
             .offset = 0,
             .bitmap = {},
             .buffers = {{}, array_data::buffer_type(sizeof(std::int64_t), 0)},
+            .child_data = {},
+            .dictionary = nullptr
+        };
+    }
+
+    template <typename LAYOUT>
+    array_data make_array_data_for_list_layout()
+    {
+        return {
+            .type = std::is_same_v<typename LAYOUT::offset_type, std::int32_t> ?  data_type::LIST : data_type::LARGE_LIST,
+            .length = 0,
+            .offset = 0,
+            .bitmap = {},
+            .buffers = {array_data::buffer_type(sizeof(std::int64_t), 0)},
             .child_data = {},
             .dictionary = nullptr
         };
@@ -525,6 +541,10 @@ namespace sparrow
         else if constexpr (mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>)
         {
             return make_array_data_for_dictionary_encoded_layout(std::forward<ValueRange>(values), std::forward<BitmapRange>(bitmap), offset);
+        }
+        else if constexpr (mpl::is_type_instance_of_v<Layout, list_layout>)
+        {
+            return make_array_data_for_null_layout(std::ranges::size(values));
         }
         else
         {

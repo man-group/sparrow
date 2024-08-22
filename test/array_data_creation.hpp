@@ -18,6 +18,8 @@
 #include <numeric>
 
 #include "sparrow/array/array_data.hpp"
+#include "sparrow/array/array_data_factory.hpp"
+#include "sparrow/layout/fixed_size_layout.hpp"
 #include "sparrow/array/data_traits.hpp"
 
 namespace sparrow::test
@@ -211,6 +213,90 @@ namespace sparrow::test
         }
         return v;
     }   
+
+
+    template<class C>
+    // requ
+    sparrow::array_data::buffer_type build_offsets(C && values)
+    {
+        std::vector<std::int64_t> offsets(values.size() + 1, 0);
+        for(std::size_t i = 0; i < values.size(); i++)
+        {
+            offsets[i+1] = offsets[i] + static_cast<std::int64_t>(values[i].size());
+        }
+
+        sparrow::array_data::buffer_type offset_buffer(sizeof(std::int64_t) * (values.size() + 1), 0);
+        auto offset_buffer_ptr = offset_buffer.data<std::int64_t>();
+        std::copy(offsets.begin(), offsets.end(), offset_buffer_ptr);
+        return offset_buffer;
+    }
+
+    template<class T>
+    sparrow::array_data make_array_data_for_list_of_scalars(
+        const std::vector<std::vector<T>>& values)
+    {
+        
+        std::vector<T> flat_values;
+        for(auto & v : values){
+            for(auto e : v){
+                flat_values.push_back(e);
+            }
+        }
+
+        using data_storage = sparrow::array_data;
+
+        // layout type of the inner flat array
+        using inner_layout_type = sparrow::fixed_size_layout<T, data_storage>;
+
+        // inner list as array_data
+        auto values_array_data = sparrow::make_default_array_data<inner_layout_type>(flat_values);
+
+        // inner layout (not needed to build the list)
+        inner_layout_type inner_layout(values_array_data);
+
+        auto list_array_data = sparrow::array_data{};
+
+        // create the buffer for the offsets of the outer list
+        auto offset_buffer = build_offsets(values);
+
+        list_array_data.buffers.push_back(std::move(offset_buffer));
+        list_array_data.child_data.push_back(std::move(values_array_data));
+
+        // create the bitmap for the outer list
+        sparrow::dynamic_bitset<uint8_t> bitmap(values.size(), true);
+        list_array_data.bitmap = std::move(bitmap);
+        list_array_data.length = static_cast<typename array_data::length_type>(values.size());
+
+        return list_array_data;
+    } 
+
+
+    template<class T>
+    sparrow::array_data make_array_data_for_list_of_list_of_scalars(
+        std::vector<std::vector<std::vector<T>>> values)
+    {
+        // semi flatten the values
+        std::vector<std::vector<T>> half_flat_values;
+        for (auto& v : values) {
+            for (auto e : v) {
+                half_flat_values.push_back(e);
+            }
+        }
+
+        // build array data for the inner list
+        auto inner_list_array_data = make_array_data_for_list_of_scalars(half_flat_values);
+
+        // build the outer list
+        auto outer_list_array_data = sparrow::array_data{};
+        auto outer_offset_buffer = build_offsets(values);
+        outer_list_array_data.buffers.push_back(std::move(outer_offset_buffer));
+        outer_list_array_data.child_data.push_back(inner_list_array_data);
+        sparrow::dynamic_bitset<uint8_t> outer_bitmap(values.size(), true);
+        outer_list_array_data.bitmap = std::move(outer_bitmap);
+        outer_list_array_data.length = static_cast<typename array_data::length_type>(values.size());
+
+        return outer_list_array_data;        
+    }
 
 
 }
