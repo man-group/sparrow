@@ -2,7 +2,7 @@ from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.files import copy
 from conan.tools.build.cppstd import check_min_cppstd
-from conan.tools.cmake import cmake_layout
+from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
 from conan.tools.scm import Version
 import os
 
@@ -19,18 +19,18 @@ class SparrowRecipe(ConanFile):
     package_type = "header-library"
     no_copy_source = True
     exports_sources = "include/*", "LICENSE"
-    generators = "CMakeToolchain", "CMakeDeps"
+    generators = "CMakeDeps"
     options = {
-        "use_howardhinnant_date": [True, False],
+        "use_date_polyfill": [True, False],
         "generate_documentation": [True, False],
     }
     default_options = {
-        "use_howardhinnant_date": True,
+        "use_date_polyfill": True,
         "generate_documentation": False,
     }
 
     def requirements(self):
-        if self.options.get_safe("use_howardhinnant_date"):
+        if self.options.get_safe("use_date_polyfill"):
             self.requires("date/3.0.1")
         self.test_requires("doctest/2.4.11")
 
@@ -65,6 +65,14 @@ class SparrowRecipe(ConanFile):
     def layout(self):
         cmake_layout(self)
 
+    def generate(self):
+        tc = CMakeToolchain(self)
+        tc.variables["USE_DATE_POLYFILL"] = self.options.get_safe(
+            "use_date_polyfill", False)
+        tc.variables["BUILD_DOCS"] = self.options.get_safe(
+            "generate_documentation", False)
+        tc.generate()
+        
     def package(self):
         copy(self, "LICENSE",
              dst=os.path.join(self.package_folder, "licenses"),
