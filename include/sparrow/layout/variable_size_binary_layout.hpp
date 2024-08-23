@@ -603,9 +603,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::bitmap_begin() -> bitmap_iterator
     {
-        auto it = sparrow::bitmap(storage()).begin();
-        std::advance(it, sparrow::offset(storage()));
-        return it;
+        return sparrow::next(sparrow::bitmap(storage()).begin(), sparrow::offset(storage()));
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
@@ -617,9 +615,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::bitmap_cbegin() const -> const_bitmap_iterator
     {
-        auto it = sparrow::bitmap(storage()).cbegin();
-        std::advance(it, sparrow::offset(storage()));
-        return it;
+        return sparrow::next(sparrow::bitmap(storage()).cbegin(), sparrow::offset(storage()));
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
