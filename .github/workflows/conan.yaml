@@ -39,5 +39,13 @@ jobs:
         working-directory: build/build/Release
         run: cmake --build . --config Release --target run_examples
 
+      - name: Extract Sparrow version
+        run: |
+          VERSION_MAJOR=$(sed -n 's/^.*SPARROW_VERSION_MAJOR = \([0-9]*\);.*$/\1/p' include/sparrow/config/sparrow_version.hpp)
+          VERSION_MINOR=$(sed -n 's/^.*SPARROW_VERSION_MINOR = \([0-9]*\);.*$/\1/p' include/sparrow/config/sparrow_version.hpp)
+          VERSION_PATCH=$(sed -n 's/^.*SPARROW_VERSION_PATCH = \([0-9]*\);.*$/\1/p' include/sparrow/config/sparrow_version.hpp)
+          echo "Version: $VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+          echo "::set-output name=version::$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+
       - name: Conan create package
-        run: conan create . --version=0.0.0 -s:a build_type=Release --build=missing -s:a compiler.cppstd=20 -o:a generate_documentation=True 
+        run: conan create . --version=${{ steps.extract-version.outputs.version }} -s:a build_type=Release --build=missing -s:a compiler.cppstd=20 -o:a generate_documentation=True 
