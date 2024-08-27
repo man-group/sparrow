@@ -1,0 +1,52 @@
+name: Conan
+on:
+    workflow_dispatch:
+    pull_request:
+    push:
+      branches: [main]
+
+jobs:
+  conan-package:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Conan Environment
+        uses: hankhsu1996/setup-conan@v1.0.0
+        with:
+          cache-dependencies: true
+          cache-tool: true
+  
+      - name: Install conan dependencies
+        run: |
+          conan profile detect --force
+          conan install . --output-folder=build --build=missing -s:a compiler.cppstd=20 -o:a generate_documentation=True
+          
+      - name: CMake configuration
+        run: cmake --preset conan-release -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
+      
+      - name: Build
+        working-directory: build/build/Release
+        run: cmake --build . --config Release --target test_sparrow_lib
+
+      - name: Run tests
+        working-directory: build/build/Release
+        run: cmake --build . --config Release --target run_tests_with_junit_report
+
+      - name: Run examples
+        working-directory: build/build/Release
+        run: cmake --build . --config Release --target run_examples
+
+      - name: Extract Sparrow version
+        id: extract-version
+        run: |
+          VERSION_MAJOR=$(sed -n 's/^.*SPARROW_VERSION_MAJOR = \([0-9]*\);.*$/\1/p' include/sparrow/config/sparrow_version.hpp)
+          VERSION_MINOR=$(sed -n 's/^.*SPARROW_VERSION_MINOR = \([0-9]*\);.*$/\1/p' include/sparrow/config/sparrow_version.hpp)
+          VERSION_PATCH=$(sed -n 's/^.*SPARROW_VERSION_PATCH = \([0-9]*\);.*$/\1/p' include/sparrow/config/sparrow_version.hpp)
+          echo "Version: $VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+          echo "version=$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH" >> $GITHUB_OUTPUT
+
+      - name: Conan create package
+        run: conan create . --version=${{ steps.extract-version.outputs.version }} -s:a build_type=Release --build=missing -s:a compiler.cppstd=20 -o:a generate_documentation=True 
