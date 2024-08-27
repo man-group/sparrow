@@ -580,14 +580,28 @@ namespace sparrow
     template <class U>
     constexpr U* buffer<T>::data() noexcept
     {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
         return reinterpret_cast<U*>(get_data().p_begin);
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
     }
 
     template <class T>
     template <class U>
     constexpr const U* buffer<T>::data() const noexcept
     {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
         return reinterpret_cast<U*>(get_data().p_begin);
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
     }
 
     template <class T>

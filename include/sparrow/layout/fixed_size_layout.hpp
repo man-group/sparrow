@@ -257,9 +257,7 @@ namespace sparrow
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::value_end() -> value_iterator
     {
-        value_iterator it = value_begin();
-        std::advance(it, size());
-        return it;
+        return sparrow::next(value_begin(), size());
     }
 
     template <class T, data_storage DS>
@@ -271,37 +269,31 @@ namespace sparrow
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::value_cend() const -> const_value_iterator
     {
-        auto it = value_cbegin();
-        std::advance(it, size());
-        return it;
+        return sparrow::next(value_cbegin(), size());
     }
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::bitmap_begin() -> bitmap_iterator
     {
-        return sparrow::bitmap(storage()).begin() + offset(storage());
+        return sparrow::next(sparrow::bitmap(storage()).begin(), offset(storage()));
     }
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::bitmap_end() -> bitmap_iterator
     {
-        bitmap_iterator it = bitmap_begin();
-        std::advance(it, size());
-        return it;
+        return sparrow::next(bitmap_begin(), size());
     }
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::bitmap_cbegin() const -> const_bitmap_iterator
     {
-        return sparrow::bitmap(storage()).cbegin() + offset(storage());
+        return sparrow::next(sparrow::bitmap(storage()).cbegin(), offset(storage()));
     }
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::bitmap_cend() const -> const_bitmap_iterator
     {
-        const_bitmap_iterator it = bitmap_cbegin();
-        std::advance(it, size());
-        return it;
+        return sparrow::next(bitmap_cbegin(), size());
     }
 
     template <class T, data_storage DS>

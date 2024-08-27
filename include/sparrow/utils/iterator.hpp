@@ -498,4 +498,11 @@ namespace sparrow
     {
         return pointer_iterator<T*>(t);
     }
+
+    template <class InputIt, std::integral Distance>
+    constexpr InputIt next(InputIt it, Distance n)
+    {
+        std::advance(it, n);
+        return it;
+    }
 }

@@ -13,13 +13,19 @@
 // limitations under the License.
 
 #include <array>
+#include <bit>
 #include <cstdint>
 #include <list>
 
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
+#include "sparrow/utils/bit.hpp"
 
 #include "doctest/doctest.h"
+
+constexpr uint8_t operator"" _u8(unsigned long long int value) {
+    return static_cast<uint8_t>(value);
+}
 
 namespace sparrow
 {
@@ -77,8 +83,8 @@ namespace sparrow
                 buffer<uint8_t> buf(input);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 auto data = buffer_adapt.data();
-                CHECK_EQ(data[0], 0x04030201);
-                CHECK_EQ(data[1], 0x08070605);
+                CHECK_EQ(data[0], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(data[1], to_native_endian<std::endian::little>(0x08070605u));
             }
 
             SUBCASE("from const data")
@@ -86,8 +92,8 @@ namespace sparrow
                 const buffer<uint8_t> buf(input);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto data = const_buffer_adapt.data();
-                CHECK_EQ(data[0], 0x04030201);
-                CHECK_EQ(data[1], 0x08070605);
+                CHECK_EQ(data[0], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(data[1], to_native_endian<std::endian::little>(0x08070605u));
             }
         }
 
@@ -98,8 +104,8 @@ namespace sparrow
                 buffer<uint8_t> buf(input);
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto data = const_buffer_adapt.data();
-                CHECK_EQ(data[0], 0x04030201);
-                CHECK_EQ(data[1], 0x08070605);
+                CHECK_EQ(data[0], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(data[1], to_native_endian<std::endian::little>(0x08070605u));
             }
 
             SUBCASE("from const data")
@@ -107,8 +113,8 @@ namespace sparrow
                 const buffer<uint8_t> buf(input);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto data = const_buffer_adapt.data();
-                CHECK_EQ(data[0], 0x04030201);
-                CHECK_EQ(data[1], 0x08070605);
+                CHECK_EQ(data[0], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(data[1], to_native_endian<std::endian::little>(0x08070605u));
             }
         }
 
@@ -118,10 +124,10 @@ namespace sparrow
             {
                 buffer<uint8_t> buf(input);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
-                CHECK_EQ(buffer_adapt[0], 0x04030201);
-                CHECK_EQ(buffer_adapt[1], 0x08070605);
+                CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
 
-                buffer_adapt[0] = 0x11111111;
+                buffer_adapt[0] = 0x11111111u;
                 CHECK_EQ(buf[0], 0x11);
             }
 
@@ -129,8 +135,8 @@ namespace sparrow
             {
                 const buffer<uint8_t> buf(input);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
-                CHECK_EQ(const_buffer_adapt[0], 0x04030201);
-                CHECK_EQ(const_buffer_adapt[1], 0x08070605);
+                CHECK_EQ(const_buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(const_buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
             }
         }
 
@@ -140,16 +146,16 @@ namespace sparrow
             {
                 buffer<uint8_t> buf(input);
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
-                CHECK_EQ(const_buffer_adapt[0], 0x04030201);
-                CHECK_EQ(const_buffer_adapt[1], 0x08070605);
+                CHECK_EQ(const_buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(const_buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
             }
 
             SUBCASE("from const data")
             {
                 const buffer<uint8_t> buf(input);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
-                CHECK_EQ(const_buffer_adapt[0], 0x04030201);
-                CHECK_EQ(const_buffer_adapt[1], 0x08070605);
+                CHECK_EQ(const_buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(const_buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
             }
         }
 
@@ -159,14 +165,14 @@ namespace sparrow
             {
                 buffer<uint8_t> buf(input);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
-                CHECK_EQ(buffer_adapt.front(), 0x04030201);
+                CHECK_EQ(buffer_adapt.front(), to_native_endian<std::endian::little>(0x04030201u));
             }
 
             SUBCASE("from const data")
             {
                 const buffer<uint8_t> buf(input);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
-                CHECK_EQ(const_buffer_adapt.front(), 0x04030201);
+                CHECK_EQ(const_buffer_adapt.front(), to_native_endian<std::endian::little>(0x04030201u));
             }
         }
 
@@ -176,14 +182,14 @@ namespace sparrow
             {
                 buffer<uint8_t> buf(input);
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
-                CHECK_EQ(const_buffer_adapt.front(), 0x04030201);
+                CHECK_EQ(const_buffer_adapt.front(), to_native_endian<std::endian::little>(0x04030201u));
             }
 
             SUBCASE("from const data")
             {
                 const buffer<uint8_t> buf(input);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
-                CHECK_EQ(const_buffer_adapt.front(), 0x04030201);
+                CHECK_EQ(const_buffer_adapt.front(), to_native_endian<std::endian::little>(0x04030201u));
             }
         }
 
@@ -193,14 +199,14 @@ namespace sparrow
             {
                 buffer<uint8_t> buf(input);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
-                CHECK_EQ(buffer_adapt.back(), 0x08070605);
+                CHECK_EQ(buffer_adapt.back(), to_native_endian<std::endian::little>(0x08070605u));
             }
 
             SUBCASE("from const data")
             {
                 const buffer<uint8_t> buf(input);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
-                CHECK_EQ(const_buffer_adapt.back(), 0x08070605);
+                CHECK_EQ(const_buffer_adapt.back(), to_native_endian<std::endian::little>(0x08070605u));
             }
         }
 
@@ -210,14 +216,14 @@ namespace sparrow
             {
                 buffer<uint8_t> buf(input);
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
-                CHECK_EQ(const_buffer_adapt.back(), 0x08070605);
+                CHECK_EQ(const_buffer_adapt.back(), to_native_endian<std::endian::little>(0x08070605u));
             }
 
             SUBCASE("from const data")
             {
                 const buffer<uint8_t> buf(input);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
-                CHECK_EQ(const_buffer_adapt.back(), 0x08070605);
+                CHECK_EQ(const_buffer_adapt.back(), to_native_endian<std::endian::little>(0x08070605u));
             }
         }
 
@@ -230,7 +236,7 @@ namespace sparrow
             {
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 auto it = buffer_adapt.begin();
-                CHECK_EQ(*it, 0x04030201);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x04030201u));
             }
 
             SUBCASE("end")
@@ -244,7 +250,7 @@ namespace sparrow
             {
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto it = const_buffer_adapt.begin();
-                CHECK_EQ(*it, 0x04030201);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x04030201u));
             }
 
             SUBCASE("const end")
@@ -258,7 +264,7 @@ namespace sparrow
             {
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto it = const_buffer_adapt.cbegin();
-                CHECK_EQ(*it, 0x04030201);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x04030201u));
             }
 
             SUBCASE("const cend")
@@ -272,9 +278,9 @@ namespace sparrow
             {
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 auto it = buffer_adapt.rbegin();
-                CHECK_EQ(*it, 0x08070605);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x08070605u));
                 std::advance(it, 1);
-                CHECK_EQ(*it, 0x04030201);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x04030201u));
                 std::advance(it, 1);
                 CHECK_EQ(it, buffer_adapt.rend());
             }
@@ -284,9 +290,9 @@ namespace sparrow
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 auto it = buffer_adapt.rend();
                 std::advance(it, -1);
-                CHECK_EQ(*it, 0x04030201);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x04030201u));
                 std::advance(it, -1);
-                CHECK_EQ(*it, 0x08070605);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x08070605u));
                 CHECK_EQ(it, buffer_adapt.rbegin());
             }
 
@@ -294,9 +300,9 @@ namespace sparrow
             {
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto it = const_buffer_adapt.rbegin();
-                CHECK_EQ(*it, 0x08070605);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x08070605u));
                 std::advance(it, 1);
-                CHECK_EQ(*it, 0x04030201);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x04030201u));
                 std::advance(it, 1);
                 CHECK_EQ(it, const_buffer_adapt.rend());
             }
@@ -306,9 +312,9 @@ namespace sparrow
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto it = const_buffer_adapt.rend();
                 std::advance(it, -1);
-                CHECK_EQ(*it, 0x04030201);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x04030201u));
                 std::advance(it, -1);
-                CHECK_EQ(*it, 0x08070605);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x08070605u));
                 CHECK_EQ(it, const_buffer_adapt.rbegin());
             }
 
@@ -316,9 +322,9 @@ namespace sparrow
             {
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto it = const_buffer_adapt.crbegin();
-                CHECK_EQ(*it, 0x08070605);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x08070605u));
                 std::advance(it, 1);
-                CHECK_EQ(*it, 0x04030201);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x04030201u));
                 std::advance(it, 1);
                 CHECK_EQ(it, const_buffer_adapt.crend());
             }
@@ -328,9 +334,9 @@ namespace sparrow
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto it = const_buffer_adapt.crend();
                 std::advance(it, -1);
-                CHECK_EQ(*it, 0x04030201);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x04030201u));
                 std::advance(it, -1);
-                CHECK_EQ(*it, 0x08070605);
+                CHECK_EQ(*it, to_native_endian<std::endian::little>(0x08070605u));
                 CHECK_EQ(it, const_buffer_adapt.crbegin());
             }
         }
@@ -418,8 +424,8 @@ namespace sparrow
                     CHECK_EQ(result, buffer_adapt.begin());
                     REQUIRE_EQ(buffer_adapt.size(), 3);
                     CHECK_EQ(buffer_adapt[0], to_insert);
-                    CHECK_EQ(buffer_adapt[1], 0x04030201);
-                    CHECK_EQ(buffer_adapt[2], 0x08070605);
+                    CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x04030201u));
+                    CHECK_EQ(buffer_adapt[2], to_native_endian<std::endian::little>(0x08070605u));
                     CHECK_EQ(buf.size(), 12);
                 }
 
@@ -428,7 +434,7 @@ namespace sparrow
                     buffer<uint8_t> buf(input);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     const auto it = std::next(buffer_adapt.cbegin());
-                    constexpr uint32_t to_insert = 0x09999999;
+                    constexpr uint32_t to_insert = to_native_endian<std::endian::little>(0x09999999u);
                     const buffer_adaptor<uint32_t, decltype(buf)&>::iterator result = buffer_adapt.insert(
                         it,
                         to_insert
@@ -436,9 +442,9 @@ namespace sparrow
                     CHECK_EQ(*result, to_insert);
                     CHECK_EQ(result, std::next(buffer_adapt.begin()));
                     REQUIRE_EQ(buffer_adapt.size(), 3);
-                    CHECK_EQ(buffer_adapt[0], 0x04030201);
+                    CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
                     CHECK_EQ(buffer_adapt[1], to_insert);
-                    CHECK_EQ(buffer_adapt[2], 0x08070605);
+                    CHECK_EQ(buffer_adapt[2], to_native_endian<std::endian::little>(0x08070605u));
                     CHECK_EQ(buf.size(), 12);
                 }
 
@@ -455,8 +461,8 @@ namespace sparrow
                     CHECK_EQ(*result, to_insert);
                     CHECK_EQ(result, std::prev(buffer_adapt.end()));
                     REQUIRE_EQ(buffer_adapt.size(), 3);
-                    CHECK_EQ(buffer_adapt[0], 0x04030201);
-                    CHECK_EQ(buffer_adapt[1], 0x08070605);
+                    CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                    CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
                     CHECK_EQ(buffer_adapt[2], to_insert);
                     CHECK_EQ(buf.size(), 12);
                 }
@@ -480,8 +486,8 @@ namespace sparrow
                     REQUIRE_EQ(buffer_adapt.size(), 4);
                     CHECK_EQ(buffer_adapt[0], to_insert);
                     CHECK_EQ(buffer_adapt[1], to_insert);
-                    CHECK_EQ(buffer_adapt[2], 0x04030201);
-                    CHECK_EQ(buffer_adapt[3], 0x08070605);
+                    CHECK_EQ(buffer_adapt[2], to_native_endian<std::endian::little>(0x04030201u));
+                    CHECK_EQ(buffer_adapt[3], to_native_endian<std::endian::little>(0x08070605u));
                     CHECK_EQ(buf.size(), 16);
                 }
 
@@ -499,10 +505,10 @@ namespace sparrow
                     CHECK_EQ(*result, to_insert);
                     CHECK_EQ(result, std::next(buffer_adapt.begin()));
                     REQUIRE_EQ(buffer_adapt.size(), 4);
-                    CHECK_EQ(buffer_adapt[0], 0x04030201);
+                    CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
                     CHECK_EQ(buffer_adapt[1], to_insert);
                     CHECK_EQ(buffer_adapt[2], to_insert);
-                    CHECK_EQ(buffer_adapt[3], 0x08070605);
+                    CHECK_EQ(buffer_adapt[3], to_native_endian<std::endian::little>(0x08070605u));
                     CHECK_EQ(buf.size(), 16);
                 }
 
@@ -520,8 +526,8 @@ namespace sparrow
                     CHECK_EQ(*result, to_insert);
                     CHECK_EQ(result, std::prev(buffer_adapt.end(), 2));
                     REQUIRE_EQ(buffer_adapt.size(), 4);
-                    CHECK_EQ(buffer_adapt[0], 0x04030201);
-                    CHECK_EQ(buffer_adapt[1], 0x08070605);
+                    CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                    CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
                     CHECK_EQ(buffer_adapt[2], to_insert);
                     CHECK_EQ(buffer_adapt[3], to_insert);
                     CHECK_EQ(buf.size(), 16);
@@ -546,8 +552,8 @@ namespace sparrow
                     REQUIRE_EQ(buffer_adapt.size(), 4);
                     CHECK_EQ(buffer_adapt[0], to_insert[0]);
                     CHECK_EQ(buffer_adapt[1], to_insert[1]);
-                    CHECK_EQ(buffer_adapt[2], 0x04030201);
-                    CHECK_EQ(buffer_adapt[3], 0x08070605);
+                    CHECK_EQ(buffer_adapt[2], to_native_endian<std::endian::little>(0x04030201u));
+                    CHECK_EQ(buffer_adapt[3], to_native_endian<std::endian::little>(0x08070605u));
                     CHECK_EQ(buf.size(), 16);
                 }
 
@@ -565,10 +571,10 @@ namespace sparrow
                     CHECK_EQ(*result, to_insert[0]);
                     CHECK_EQ(result, std::next(buffer_adapt.begin()));
                     REQUIRE_EQ(buffer_adapt.size(), 4);
-                    CHECK_EQ(buffer_adapt[0], 0x04030201);
+                    CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
                     CHECK_EQ(buffer_adapt[1], to_insert[0]);
                     CHECK_EQ(buffer_adapt[2], to_insert[1]);
-                    CHECK_EQ(buffer_adapt[3], 0x08070605);
+                    CHECK_EQ(buffer_adapt[3], to_native_endian<std::endian::little>(0x08070605u));
                     CHECK_EQ(buf.size(), 16);
                 }
 
@@ -586,8 +592,8 @@ namespace sparrow
                     CHECK_EQ(*result, to_insert[0]);
                     CHECK_EQ(result, std::prev(buffer_adapt.end(), 2));
                     REQUIRE_EQ(buffer_adapt.size(), 4);
-                    CHECK_EQ(buffer_adapt[0], 0x04030201);
-                    CHECK_EQ(buffer_adapt[1], 0x08070605);
+                    CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                    CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
                     CHECK_EQ(buffer_adapt[2], to_insert[0]);
                     CHECK_EQ(buffer_adapt[3], to_insert[1]);
                     CHECK_EQ(buf.size(), 16);
@@ -611,8 +617,8 @@ namespace sparrow
                 CHECK_EQ(result, buffer_adapt.begin());
                 REQUIRE_EQ(buffer_adapt.size(), 3);
                 CHECK_EQ(buffer_adapt[0], to_insert);
-                CHECK_EQ(buffer_adapt[1], 0x04030201);
-                CHECK_EQ(buffer_adapt[2], 0x08070605);
+                CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(buffer_adapt[2], to_native_endian<std::endian::little>(0x08070605u));
                 CHECK_EQ(buf.size(), 12);
             }
 
@@ -621,7 +627,7 @@ namespace sparrow
                 buffer<uint8_t> buf(input);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 auto it = std::next(buffer_adapt.cbegin());
-                constexpr uint32_t to_insert = 0x09999999;
+                constexpr uint32_t to_insert = 0x09999999u;
                 const buffer_adaptor<uint32_t, decltype(buf)&>::iterator result = buffer_adapt.emplace(
                     it,
                     to_insert
@@ -629,9 +635,9 @@ namespace sparrow
                 CHECK_EQ(*result, to_insert);
                 CHECK_EQ(result, std::next(buffer_adapt.begin()));
                 REQUIRE_EQ(buffer_adapt.size(), 3);
-                CHECK_EQ(buffer_adapt[0], 0x04030201);
+                CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
                 CHECK_EQ(buffer_adapt[1], to_insert);
-                CHECK_EQ(buffer_adapt[2], 0x08070605);
+                CHECK_EQ(buffer_adapt[2], to_native_endian<std::endian::little>(0x08070605u));
                 CHECK_EQ(buf.size(), 12);
             }
 
@@ -640,7 +646,7 @@ namespace sparrow
                 buffer<uint8_t> buf(input);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 auto it = buffer_adapt.cend();
-                constexpr uint32_t to_insert = 0x09999999;
+                constexpr uint32_t to_insert = 0x09999999u;
                 const buffer_adaptor<uint32_t, decltype(buf)&>::iterator result = buffer_adapt.emplace(
                     it,
                     to_insert
@@ -648,8 +654,8 @@ namespace sparrow
                 CHECK_EQ(*result, to_insert);
                 CHECK_EQ(result, std::prev(buffer_adapt.end()));
                 REQUIRE_EQ(buffer_adapt.size(), 3);
-                CHECK_EQ(buffer_adapt[0], 0x04030201);
-                CHECK_EQ(buffer_adapt[1], 0x08070605);
+                CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
                 CHECK_EQ(buffer_adapt[2], to_insert);
                 CHECK_EQ(buf.size(), 12);
             }
@@ -669,12 +675,12 @@ namespace sparrow
                         const buffer_adaptor<uint32_t, decltype(buf)&>::iterator result = buffer_adapt.erase(it);
                         CHECK_EQ(result, buffer_adapt.begin());
                         REQUIRE_EQ(buffer_adapt.size(), 1);
-                        CHECK_EQ(buffer_adapt[0], 0x08070605);
+                        CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x08070605u));
                         CHECK_EQ(buf.size(), 4);
-                        CHECK_EQ(buf[0], 0x05);
-                        CHECK_EQ(buf[1], 0x06);
-                        CHECK_EQ(buf[2], 0x07);
-                        CHECK_EQ(buf[3], 0x08);
+                        CHECK_EQ(buf[0], 0x05_u8);
+                        CHECK_EQ(buf[1], 0x06_u8);
+                        CHECK_EQ(buf[2], 0x07_u8);
+                        CHECK_EQ(buf[3], 0x08_u8);
                     }
 
                     SUBCASE("in the middle")
@@ -685,12 +691,12 @@ namespace sparrow
                         const buffer_adaptor<uint32_t, decltype(buf)&>::iterator result = buffer_adapt.erase(it);
                         CHECK_EQ(result, std::next(buffer_adapt.begin()));
                         REQUIRE_EQ(buffer_adapt.size(), 1);
-                        CHECK_EQ(buffer_adapt[0], 0x04030201);
+                        CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
                         REQUIRE_EQ(buf.size(), 4);
-                        CHECK_EQ(buf[0], 0x01);
-                        CHECK_EQ(buf[1], 0x02);
-                        CHECK_EQ(buf[2], 0x03);
-                        CHECK_EQ(buf[3], 0x04);
+                        CHECK_EQ(buf[0], 0x01_u8);
+                        CHECK_EQ(buf[1], 0x02_u8);
+                        CHECK_EQ(buf[2], 0x03_u8);
+                        CHECK_EQ(buf[3], 0x04_u8);
                     }
 
                     SUBCASE("at the end")
@@ -701,12 +707,12 @@ namespace sparrow
                         const buffer_adaptor<uint32_t, decltype(buf)&>::iterator result = buffer_adapt.erase(it);
                         CHECK_EQ(result, buffer_adapt.end());
                         REQUIRE_EQ(buffer_adapt.size(), 1);
-                        CHECK_EQ(buffer_adapt[0], 0x04030201);
+                        CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
                         REQUIRE_EQ(buf.size(), 4);
-                        CHECK_EQ(buf[0], 0x01);
-                        CHECK_EQ(buf[1], 0x02);
-                        CHECK_EQ(buf[2], 0x03);
-                        CHECK_EQ(buf[3], 0x04);
+                        CHECK_EQ(buf[0], 0x01_u8);
+                        CHECK_EQ(buf[1], 0x02_u8);
+                        CHECK_EQ(buf[2], 0x03_u8);
+                        CHECK_EQ(buf[3], 0x04_u8);
                     }
                 }
 
@@ -753,8 +759,8 @@ namespace sparrow
                         );
                         CHECK_EQ(result, std::prev(buffer_adapt.end()));
                         REQUIRE_EQ(buffer_adapt.size(), 2);
-                        CHECK_EQ(buffer_adapt[0], 0x04030201);
-                        CHECK_EQ(buffer_adapt[1], 0x0C0B0A09);
+                        CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                        CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x0C0B0A09u));
                         CHECK_EQ(buf.size(), 8);
                     }
 
@@ -770,8 +776,8 @@ namespace sparrow
                         );
                         CHECK_EQ(result, buffer_adapt.end());
                         REQUIRE_EQ(buffer_adapt.size(), 2);
-                        CHECK_EQ(buffer_adapt[0], 0x04030201);
-                        CHECK_EQ(buffer_adapt[1], 0x08070605);
+                        CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                        CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
                         CHECK_EQ(buf.size(), 8);
                     }
                 }
@@ -796,16 +802,17 @@ namespace sparrow
         {
             buffer<uint8_t> buf(input);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
-            buffer_adapt.push_back(0x05040302);
+            constexpr uint32_t to_push = to_native_endian<std::endian::little>(0x05040302u);
+            buffer_adapt.push_back(to_push);
             REQUIRE_EQ(buffer_adapt.size(), 3);
-            CHECK_EQ(buffer_adapt[0], 0x04030201);
-            CHECK_EQ(buffer_adapt[1], 0x08070605);
-            CHECK_EQ(buffer_adapt[2], 0x05040302);
+            CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+            CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
+            CHECK_EQ(buffer_adapt[2], to_push);
 
-            CHECK_EQ(buf[8], 0x02);
-            CHECK_EQ(buf[9], 0x03);
-            CHECK_EQ(buf[10], 0x04);
-            CHECK_EQ(buf[11], 0x05);
+            CHECK_EQ(buf[8], 0x02u);
+            CHECK_EQ(buf[9], 0x03u);
+            CHECK_EQ(buf[10], 0x04u);
+            CHECK_EQ(buf[11], 0x05u);
         }
 
         TEST_CASE("pop_back")
@@ -814,7 +821,7 @@ namespace sparrow
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             buffer_adapt.pop_back();
             REQUIRE_EQ(buffer_adapt.size(), 1);
-            CHECK_EQ(buffer_adapt[0], 0x04030201);
+            CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
             CHECK_EQ(buf.size(), 4);
         }
 
@@ -826,10 +833,10 @@ namespace sparrow
             {
                 buffer_adapt.resize(4);
                 REQUIRE_EQ(buffer_adapt.size(), 4);
-                CHECK_EQ(buffer_adapt[0], 0x04030201);
-                CHECK_EQ(buffer_adapt[1], 0x08070605);
-                CHECK_EQ(buffer_adapt[2], 0x00000000);
-                CHECK_EQ(buffer_adapt[3], 0x00000000);
+                CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
+                CHECK_EQ(buffer_adapt[2], to_native_endian<std::endian::little>(0x00000000u));
+                CHECK_EQ(buffer_adapt[3], to_native_endian<std::endian::little>(0x00000000u));
                 CHECK_EQ(buf.size(), 16);
             }
 
@@ -838,8 +845,8 @@ namespace sparrow
                 constexpr uint32_t value = 0x0999999;
                 buffer_adapt.resize(4, value);
                 REQUIRE_EQ(buffer_adapt.size(), 4);
-                CHECK_EQ(buffer_adapt[0], 0x04030201);
-                CHECK_EQ(buffer_adapt[1], 0x08070605);
+                CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
+                CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
                 CHECK_EQ(buffer_adapt[2], value);
                 CHECK_EQ(buffer_adapt[3], value);
                 CHECK_EQ(buf.size(), 16);

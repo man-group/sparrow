@@ -101,8 +101,8 @@ namespace sparrow
             if(bitmap_ref){
                 return reference(
                     inner_reference(
-                        m_child_layout.begin() + element_offset(i),
-                        m_child_layout.begin() + element_offset(i) + element_length(i)
+                        sparrow::next(m_child_layout.begin(), element_offset(i)),
+                        sparrow::next(m_child_layout.begin(), element_offset(i) + element_length(i))
                     ),
                     bitmap_ref
                 );
@@ -117,8 +117,8 @@ namespace sparrow
             if(bitmap_ref){
                 return const_reference(
                     inner_const_reference(
-                        m_child_layout.begin() + element_offset(i),
-                        m_child_layout.begin() + element_offset(i) + element_length(i)
+                        sparrow::next(m_child_layout.begin(), element_offset(i)),
+                        sparrow::next(m_child_layout.begin(), element_offset(i) + element_length(i))
                     ),
                     bitmap_ref
                 );
@@ -178,7 +178,7 @@ namespace sparrow
         }
 
         bitmap_iterator bitmap_begin(){
-            return sparrow::bitmap(storage()).begin() + sparrow::offset(storage());
+            return sparrow::next(sparrow::bitmap(storage()).begin(), sparrow::offset(storage()));
         }
 
         bitmap_iterator bitmap_end(){
@@ -186,7 +186,7 @@ namespace sparrow
         }
 
         const_bitmap_iterator bitmap_cbegin() const{
-            return sparrow::bitmap(storage()).cbegin() + sparrow::offset(storage());
+            return sparrow::next(sparrow::bitmap(storage()).cbegin(), sparrow::offset(storage()));
         }
         const_bitmap_iterator bitmap_cend() const {
             return sparrow::bitmap(storage()).cend();

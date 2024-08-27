@@ -35,7 +35,8 @@ TEST_SUITE("C Data Interface")
                     sparrow::arrow_schema_shared_ptr schema;
                     CHECK_EQ(schema.get(), nullptr);
                     const auto deleter = schema.get_deleter();
-                    CHECK_EQ(*deleter, &sparrow::arrow_schema_custom_deleter);
+                    const auto is_arrow_schema_custom_deleter = *deleter == &sparrow::arrow_schema_custom_deleter;
+                    CHECK(is_arrow_schema_custom_deleter);
                 }
 
                 SUBCASE("from arrow_schema_unique_ptr")
@@ -48,7 +49,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(schema_shared->n_children, 99);
                     CHECK_EQ(schema_shared->flags, 1);
                     const auto deleter = schema_shared.get_deleter();
-                    CHECK_EQ(*deleter, &sparrow::arrow_schema_custom_deleter);
+                    const auto is_arrow_schema_custom_deleter = *deleter == &sparrow::arrow_schema_custom_deleter;
+                    CHECK(is_arrow_schema_custom_deleter);
                 }
 
                 SUBCASE("copy")
@@ -62,7 +64,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(schema_shared_2->n_children, 99);
                     CHECK_EQ(schema_shared_2->flags, 1);
                     const auto deleter = schema_shared.get_deleter();
-                    CHECK_EQ(*deleter, &sparrow::arrow_schema_custom_deleter);
+                    const bool is_arrow_schema_custom_deleter = *deleter == &sparrow::arrow_schema_custom_deleter;
+                    CHECK(is_arrow_schema_custom_deleter);
                 }
             }
 
@@ -80,7 +83,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(schema_shared_2->n_children, 99);
                     CHECK_EQ(schema_shared_2->flags, 1);
                     const auto deleter = schema_shared_2.get_deleter();
-                    CHECK_EQ(*deleter, &sparrow::arrow_schema_custom_deleter);
+                    const bool is_arrow_schema_custom_deleter = *deleter == &sparrow::arrow_schema_custom_deleter;
+                    CHECK(is_arrow_schema_custom_deleter);
                 }
 
                 SUBCASE("copy")
@@ -95,7 +99,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(schema_shared_2->n_children, 99);
                     CHECK_EQ(schema_shared_2->flags, 1);
                     const auto deleter = schema_shared.get_deleter();
-                    CHECK_EQ(*deleter, &sparrow::arrow_schema_custom_deleter);
+                    const bool is_arrow_schema_custom_deleter = *deleter == &sparrow::arrow_schema_custom_deleter;
+                    CHECK(is_arrow_schema_custom_deleter);
                 }
             }
         }
@@ -142,7 +147,8 @@ TEST_SUITE("C Data Interface")
             CHECK_EQ(schema->children[0], children_1_ptr);
             CHECK_EQ(schema->children[1], children_2_ptr);
             CHECK_EQ(schema->dictionary, dictionary_ptr);
-            CHECK_EQ(schema->release, sparrow::release_arrow_schema);
+            const bool is_release_arrow_schema = schema->release == &sparrow::release_arrow_schema;
+            CHECK(is_release_arrow_schema);
             CHECK_NE(schema->private_data, nullptr);
         }
 
@@ -167,7 +173,8 @@ TEST_SUITE("C Data Interface")
             CHECK_EQ(schema->n_children, 0);
             CHECK_EQ(schema->children, nullptr);
             CHECK_EQ(schema->dictionary, nullptr);
-            CHECK_EQ(schema->release, sparrow::release_arrow_schema);
+            const bool is_release_arrow_schema = schema->release == &sparrow::release_arrow_schema;
+            CHECK(is_release_arrow_schema);
             CHECK_NE(schema->private_data, nullptr);
         }
 
@@ -196,7 +203,8 @@ TEST_SUITE("C Data Interface")
             CHECK_EQ(schema->metadata, nullptr);
             CHECK_EQ(schema->children, nullptr);
             CHECK_EQ(schema->dictionary, nullptr);
-            CHECK_EQ(schema->release, nullptr);
+            const bool is_nullptr = schema->release == nullptr;
+            CHECK(is_nullptr);
             CHECK_EQ(schema->private_data, nullptr);
         }
 
@@ -218,7 +226,8 @@ TEST_SUITE("C Data Interface")
             CHECK_EQ(schema->metadata, nullptr);
             CHECK_EQ(schema->children, nullptr);
             CHECK_EQ(schema->dictionary, nullptr);
-            CHECK_EQ(schema->release, nullptr);
+            const bool is_nullptr = schema->release == nullptr;
+            CHECK(is_nullptr);
             CHECK_EQ(schema->private_data, nullptr);
         }
     }

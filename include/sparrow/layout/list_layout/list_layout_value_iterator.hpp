@@ -74,8 +74,8 @@ namespace sparrow
 
                 
                 return list_value_type(
-                    child_layout.begin() + offset,
-                    child_layout.begin() + offset + length);
+                    sparrow::next(child_layout.begin(), offset),
+                    sparrow::next(child_layout.begin(), offset + length));
             }
 
             bool equal(const self_type& rhs) const

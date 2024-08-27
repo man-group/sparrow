@@ -1,0 +1,97 @@
+name: Exotic architectures
+on: 
+    workflow_dispatch:
+    pull_request:
+    push:
+        branches: [main]
+
+jobs:
+  build_job:
+    runs-on: ubuntu-22.04
+    name: Build on ${{ matrix.target.arch }} / ${{ matrix.target.distro }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.target.date-polyfill}}
+
+    strategy:
+      matrix:
+        target:
+          - { arch: armv6, distro: alpine_latest, date-polyfill: 'ON' }
+          - { arch: armv7, distro: alpine_latest, date-polyfill: 'ON' }
+          - { arch: aarch64, distro: alpine_latest, date-polyfill: 'ON' }
+          - { arch: aarch64, distro: alpine_latest, date-polyfill: 'OFF' }
+          - { arch: riscv64, distro: alpine_latest, date-polyfill: 'ON' }
+          - { arch: s390x, distro: alpine_latest, date-polyfill: 'ON' }
+          - { arch: s390x, distro: alpine_latest, date-polyfill: 'OFF' }
+          - { arch: ppc64le, distro: alpine_latest, date-polyfill: 'ON' }
+          - { arch: ppc64le, distro: alpine_latest, date-polyfill: 'OFF' }
+
+        config:
+          - { name: Debug }
+          - { name: Release }
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: uraimo/run-on-arch-action@v2
+        name: Build artifact
+        id: build
+        with:
+          arch: ${{matrix.target.arch}}
+          distro: ${{matrix.target.distro}}
+
+          # Not required, but speeds up builds
+          githubToken: ${{github.token}}
+
+          # Create an artifacts directory
+          setup: |
+            mkdir -p "${PWD}/artifacts"
+
+          # Mount the artifacts directory as /artifacts in the container
+          dockerRunArgs: |
+            --volume "${PWD}/artifacts:/artifacts"
+
+          # The shell to run commands with in the container
+          shell: /bin/sh
+
+          # Install some dependencies in the container. This speeds up builds if
+          # you are also using githubToken. Any dependencies installed here will
+          # be part of the container image that gets cached, so subsequent
+          # builds don't have to re-install them. The image layer is cached
+          # publicly in your project's package repository, so it is vital that
+          # no secrets are present in the container state or logs.
+          install: |
+            case "${{matrix.target.distro}}" in
+              ubuntu*|bookworm)
+                apt-get update -q -y
+                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-dev tzdata g++ ninja-build build-essential
+                ;;
+              fedora*)
+                dnf -y update
+                dnf -y groupinstall "Development Tools"
+                dnf -y install git which cmake make doctest-devel date date-devel tzdata gcc-c++ ninja-build
+                ;;
+              alpine*)
+                apk update
+                apk add git cmake make doctest-dev date-dev tzdata g++ samurai
+                ;;
+            esac
+
+          run: |
+            CC=gcc
+            export CC
+            CXX=g++
+            export CXX
+            echo "Configuring"
+            cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
+            cd build
+            echo "Building"
+            cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib
+            echo "Running examples"
+            cmake --build . --config ${{matrix.config.name}} --target run_examples
+            echo "Running tests"
+            cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+            name: test_sparrow_lib_report_Linux_${{matrix.target.distro}}_${{matrix.target.arch}}_${{matrix.config.name}}_date-polyfill_${{matrix.target.date-polyfill}}
+            path: '**/test_sparrow_lib_report.xml'
