@@ -131,7 +131,7 @@ namespace sparrow
         return m_dictionary;
     }
 
-    [[nodiscard]] ArrowSchema* arrow_schema_private_data::dictionary_pointer() noexcept
+    [[nodiscard]] inline ArrowSchema* arrow_schema_private_data::dictionary_pointer() noexcept
     {
         if (!m_dictionary)
         {

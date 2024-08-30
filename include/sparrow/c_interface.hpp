@@ -14,8 +14,13 @@
 
 #pragma once
 
+#include <algorithm>
+#include <array>
 #include <concepts>
 #include <cstdint>
+#include <stdexcept>
+#include <vector>
+
 
 #ifndef ARROW_C_DATA_INTERFACE
 #    define ARROW_C_DATA_INTERFACE
@@ -107,7 +112,7 @@ namespace sparrow
     };
 
     /// Matches only the C interface structs for Arrow.
-    template<class T>
+    template <class T>
     concept any_arrow_c_interface = std::same_as<std::remove_cvref_t<T>, ArrowArray>
                                     or std::same_as<std::remove_cvref_t<T>, ArrowSchema>;
 

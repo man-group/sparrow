@@ -97,17 +97,16 @@ endif()
 
 set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/array_common.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_concepts.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/external_array_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_factory.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array/data_storages.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/data_traits.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/data_type.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/data_storages.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array/external_array_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/typed_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_array_schema_proxy.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/deleter.hpp
@@ -118,10 +117,11 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/smart_pointers.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/allocator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_adaptor.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_view.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config/config.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_layout.hpp
@@ -129,6 +129,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/null_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/algorithm.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/contracts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/iterator.hpp

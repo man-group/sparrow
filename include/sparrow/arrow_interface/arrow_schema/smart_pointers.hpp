@@ -68,38 +68,38 @@ namespace sparrow
         [[nodiscard]] inline auto& get_deleter() noexcept;
     };
 
-    arrow_schema_shared_ptr::arrow_schema_shared_ptr() noexcept
+    inline arrow_schema_shared_ptr::arrow_schema_shared_ptr() noexcept
         : std::shared_ptr<ArrowSchema>(nullptr, arrow_schema_custom_deleter)
     {
     }
 
-    arrow_schema_shared_ptr::arrow_schema_shared_ptr(arrow_schema_shared_ptr&& ptr) noexcept
+    inline arrow_schema_shared_ptr::arrow_schema_shared_ptr(arrow_schema_shared_ptr&& ptr) noexcept
         : std::shared_ptr<ArrowSchema>(std::move(ptr))
     {
     }
 
-    arrow_schema_shared_ptr::arrow_schema_shared_ptr(const arrow_schema_shared_ptr& ptr) noexcept
+    inline arrow_schema_shared_ptr::arrow_schema_shared_ptr(const arrow_schema_shared_ptr& ptr) noexcept
         : std::shared_ptr<ArrowSchema>(ptr)
     {
     }
 
-    arrow_schema_shared_ptr::arrow_schema_shared_ptr(arrow_schema_unique_ptr&& ptr) noexcept
+    inline arrow_schema_shared_ptr::arrow_schema_shared_ptr(arrow_schema_unique_ptr&& ptr) noexcept
         : std::shared_ptr<ArrowSchema>(std::move(ptr).release(), arrow_schema_custom_deleter)
     {
     }
 
-    arrow_schema_shared_ptr::arrow_schema_shared_ptr(std::nullptr_t) noexcept
+    inline arrow_schema_shared_ptr::arrow_schema_shared_ptr(std::nullptr_t) noexcept
         : std::shared_ptr<ArrowSchema>(nullptr, arrow_schema_custom_deleter)
     {
     }
 
-    arrow_schema_shared_ptr& arrow_schema_shared_ptr::operator=(arrow_schema_shared_ptr&& ptr) noexcept
+    inline arrow_schema_shared_ptr& arrow_schema_shared_ptr::operator=(arrow_schema_shared_ptr&& ptr) noexcept
     {
         std::shared_ptr<ArrowSchema>::operator=(std::move(ptr));
         return *this;
     };
 
-    arrow_schema_shared_ptr& arrow_schema_shared_ptr::operator=(const arrow_schema_shared_ptr& ptr) noexcept
+    inline arrow_schema_shared_ptr& arrow_schema_shared_ptr::operator=(const arrow_schema_shared_ptr& ptr) noexcept
     {
         std::shared_ptr<ArrowSchema>::operator=(ptr);
         return *this;
