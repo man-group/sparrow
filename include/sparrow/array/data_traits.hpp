@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <concepts>
+
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/layout/fixed_size_layout.hpp"
 #include "sparrow/layout/null_layout.hpp"
@@ -39,83 +41,14 @@ namespace sparrow
         using default_layout = null_layout<DS>;
     };
 
-    template <>
-    struct arrow_traits<bool> : common_native_types_traits<bool>
+    // Define automatically all standard floating-point and integral types support, including `bool`.
+    template <class T>
+        requires std::integral<T> or std::floating_point<T>
+    struct arrow_traits<T> : common_native_types_traits<T>
     {
-        static constexpr data_type type_id = data_type::BOOL;
+        static constexpr data_type type_id = data_type_from_size<T>();
     };
 
-    template <>
-    struct arrow_traits<std::uint8_t> : common_native_types_traits<std::uint8_t>
-    {
-        static constexpr data_type type_id = data_type::UINT8;
-    };
-
-    template <>
-    struct arrow_traits<std::int8_t> : common_native_types_traits<std::int8_t>
-    {
-        static constexpr data_type type_id = data_type::INT8;
-    };
-
-    template <>
-    struct arrow_traits<char> : common_native_types_traits<char>
-    {
-        static constexpr data_type type_id = data_type::UINT8;
-    };
-
-    template <>
-    struct arrow_traits<std::uint16_t> : common_native_types_traits<std::uint16_t>
-    {
-        static constexpr data_type type_id = data_type::UINT16;
-    };
-
-    template <>
-    struct arrow_traits<std::int16_t> : common_native_types_traits<std::int16_t>
-    {
-        static constexpr data_type type_id = data_type::INT16;
-    };
-
-    template <>
-    struct arrow_traits<std::uint32_t> : common_native_types_traits<std::uint32_t>
-    {
-        static constexpr data_type type_id = data_type::UINT32;
-    };
-
-    template <>
-    struct arrow_traits<std::int32_t> : common_native_types_traits<std::int32_t>
-    {
-        static constexpr data_type type_id = data_type::INT32;
-    };
-
-    template <>
-    struct arrow_traits<std::uint64_t> : common_native_types_traits<std::uint64_t>
-    {
-        static constexpr data_type type_id = data_type::UINT64;
-    };
-
-    template <>
-    struct arrow_traits<std::int64_t> : common_native_types_traits<std::int64_t>
-    {
-        static constexpr data_type type_id = data_type::INT64;
-    };
-
-    template <>
-    struct arrow_traits<float16_t> : common_native_types_traits<float16_t>
-    {
-        static constexpr data_type type_id = data_type::HALF_FLOAT;
-    };
-
-    template <>
-    struct arrow_traits<float32_t> : common_native_types_traits<float32_t>
-    {
-        static constexpr data_type type_id = data_type::FLOAT;
-    };
-
-    template <>
-    struct arrow_traits<float64_t> : common_native_types_traits<float64_t>
-    {
-        static constexpr data_type type_id = data_type::DOUBLE;
-    };
 
     template <>
     struct arrow_traits<std::string>

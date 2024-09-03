@@ -26,6 +26,7 @@ namespace date = std::chrono;
 #include <climits>
 #include <cstdint>
 #include <cstring>
+#include <concepts>
 #include <string>
 #include <vector>
 
@@ -244,6 +245,63 @@ namespace sparrow
             case data_type::TIMESTAMP : return "tDm";
             case data_type::LIST : return "+l";
             case data_type::LARGE_LIST : return "+L";
+        }
+
+        mpl::unreachable();
+    }
+
+    /// @returns The default floating-point `data_type`  that should be associated with the provided type.
+    ///          The deduction will be based on the size of the type. Calling this function with unsupported sizes
+    ///          will not compile.
+    template<std::floating_point T>
+        requires (sizeof(T) >= 2 && sizeof(T) <= 8)
+    constexpr data_type data_type_from_size(T = {})
+    {
+        // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
+        switch(sizeof(T))
+        {
+            case 2: return data_type::HALF_FLOAT;
+            case 4: return data_type::FLOAT;
+            case 8: return data_type::DOUBLE;
+        }
+
+        mpl::unreachable();
+    }
+
+    /// @returns The default integral `data_type`  that should be associated with the provided type.
+    ///          The deduction will be based on the size of the type. Calling this function with unsupported
+    ///          sizes will not compile.
+    template <std::integral T>
+        requires(sizeof(T) >= 1 && sizeof(T) <= 8)
+    constexpr data_type data_type_from_size(T = {})
+    {
+        if constexpr (std::same_as<bool, T>)
+        {
+            return data_type::BOOL;
+        }
+        else if constexpr (std::signed_integral<T>)
+        {
+            // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
+            switch (sizeof(T))
+            {
+                case 1: return data_type::INT8;
+                case 2: return data_type::INT16;
+                case 4: return data_type::INT32;
+                case 8: return data_type::INT64;
+            }
+        }
+        else
+        {
+            static_assert(std::unsigned_integral<T>);
+
+            // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
+            switch (sizeof(T))
+            {
+                case 1: return data_type::UINT8;
+                case 2: return data_type::UINT16;
+                case 4: return data_type::UINT32;
+                case 8: return data_type::UINT64;
+            }
         }
 
         mpl::unreachable();
