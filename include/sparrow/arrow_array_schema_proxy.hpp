@@ -413,21 +413,25 @@ namespace sparrow
         return array().private_data;
     }
 
-    template <typename... Callable>
-    struct visitor : Callable...
+    template <class... Ts>
+    struct overloaded : Ts...
     {
-        using Callable::operator()...;
+        using Ts::operator()...;
     };
+    // Although not required in C++20, clang needs it to build the code below
+    template <class... Ts>
+    overloaded(Ts...) -> overloaded<Ts...>;
 
     template <typename T>
     [[nodiscard]] T& get_variant(auto& var)
     {
         return std::visit(
-            visitor{
+            overloaded{
                 [](T* ptr) -> T&
                 {
                     if (ptr == nullptr)
                     {
+                        // TODO: Replace with a more specific exception
                         throw std::runtime_error("Null pointer");
                     }
                     return *ptr;
