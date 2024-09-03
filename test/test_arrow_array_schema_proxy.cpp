@@ -16,6 +16,8 @@
 #include <utility>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
+#include "sparrow/buffer/buffer_adaptor.hpp"
+#include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
 
 #include "doctest/doctest.h"
@@ -118,11 +120,28 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     TEST_CASE("buffers")
     {
         auto [schema, array] = make_default_arrow_schema_and_array();
-        const sparrow::arrow_proxy proxy(&array, &schema);
-        const auto buffers = proxy.buffers();
+        sparrow::arrow_proxy proxy(&array, &schema);
+        auto buffers = proxy.buffers();
         REQUIRE_EQ(buffers.size(), 2);
         CHECK_EQ(buffers[0].size(), 2);
+        sparrow::dynamic_bitset<uint8_t> bitmap(buffers[0].data(), 10);
+        CHECK(bitmap.test(0));
+        CHECK(bitmap.test(1));
+        CHECK_FALSE(bitmap.test(2));
+        CHECK_FALSE(bitmap.test(3));
+        CHECK(bitmap.test(4));
+        CHECK(bitmap.test(5));
+        CHECK(bitmap.test(6));
+        CHECK(bitmap.test(7));
+        CHECK(bitmap.test(8));
+        CHECK(bitmap.test(9));
         CHECK_EQ(buffers[1].size(), sizeof(uint32_t) * 10);
+        const auto values = sparrow::make_buffer_adaptor<const uint32_t>(buffers[1]);
+        REQUIRE_EQ(values.size(), 10);
+        for(std::size_t i = 0; i < 10; ++i)
+        {
+            CHECK_EQ(values[i], i);
+        }
     }
 
     TEST_CASE("children")
