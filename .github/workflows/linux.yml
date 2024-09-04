@@ -119,11 +119,11 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: asan-log-${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.config.name }}-${{ matrix.sys.date-polyfill }}
-        path: *asan_log_*
+        path: **asan_log_*
 
     - name: Upload LEAK log
       if: always()
       uses: actions/upload-artifact@v2
       with:
         name: leak-log-${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.config.name }}-${{ matrix.sys.date-polyfill }}
-        path: *leak_log_*
+        path: **leak_log_*
