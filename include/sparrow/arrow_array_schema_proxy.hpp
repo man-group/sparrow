@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma once
+
 #include <cstdint>
 #include <variant>
 #include <vector>
@@ -23,6 +25,7 @@
 #include "sparrow/buffer/buffer_view.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/mp_utils.hpp"
+#include "sparrow/utils/variant_visitor.hpp"
 
 namespace sparrow
 {
@@ -268,15 +271,6 @@ namespace sparrow
     {
         return array().private_data;
     }
-
-    template <class... Ts>
-    struct overloaded : Ts...
-    {
-        using Ts::operator()...;
-    };
-    // Although not required in C++20, clang needs it to build the code below
-    template <class... Ts>
-    overloaded(Ts...) -> overloaded<Ts...>;
 
     template <typename T>
     [[nodiscard]] T& get_value_reference_of_variant(auto& var)
