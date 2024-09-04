@@ -42,10 +42,46 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         }
 
+        SUBCASE("move pointer")
+        {
+            auto [schema, array] = make_default_arrow_schema_and_array();
+            sparrow::arrow_proxy proxy(std::move(array), &schema);
+        }
+
         SUBCASE("pointer")
         {
             auto [schema, array] = make_default_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(&array, &schema);
+        }
+    }
+
+    TEST_CASE("destructor")
+    {
+        SUBCASE("move")
+        {
+            auto [schema, array] = make_default_arrow_schema_and_array();
+            {
+                sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+            }
+        }
+
+        SUBCASE("move pointer")
+        {
+            auto [schema, array] = make_default_arrow_schema_and_array();
+            {
+                sparrow::arrow_proxy proxy(std::move(array), &schema);
+            }
+            CHECK_NE(schema.release, nullptr);
+        }
+
+        SUBCASE("pointer")
+        {
+            auto [schema, array] = make_default_arrow_schema_and_array();
+            {
+                sparrow::arrow_proxy proxy(&array, &schema);
+            }
+            CHECK_NE(schema.release, nullptr);
+            CHECK_NE(schema.release, nullptr);
         }
     }
 
@@ -73,8 +109,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     TEST_CASE("flags")
     {
         auto [schema, array] = make_default_arrow_schema_and_array();
-        schema.flags |= static_cast<int64_t>(sparrow::ArrowFlag::MAP_KEYS_SORTED) |
-                        static_cast<int64_t>(sparrow::ArrowFlag::NULLABLE);
+        schema.flags |= static_cast<int64_t>(sparrow::ArrowFlag::MAP_KEYS_SORTED)
+                        | static_cast<int64_t>(sparrow::ArrowFlag::NULLABLE);
         const sparrow::arrow_proxy proxy(&array, &schema);
         const auto flags = proxy.flags();
         REQUIRE_EQ(flags.size(), 2);
@@ -138,7 +174,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         CHECK_EQ(buffers[1].size(), sizeof(uint32_t) * 10);
         const auto values = sparrow::make_buffer_adaptor<const uint32_t>(buffers[1]);
         REQUIRE_EQ(values.size(), 10);
-        for(std::size_t i = 0; i < 10; ++i)
+        for (std::size_t i = 0; i < 10; ++i)
         {
             CHECK_EQ(values[i], i);
         }
@@ -192,5 +228,4 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         const sparrow::arrow_proxy proxy(&array, &schema);
         CHECK_EQ(proxy.private_data(), nullptr);
     }
-
 }

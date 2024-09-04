@@ -205,7 +205,11 @@ namespace sparrow
     public:
 
         explicit arrow_proxy(ArrowArray&& array, ArrowSchema&& schema);
+        explicit arrow_proxy(ArrowArray&& array, ArrowSchema* schema);
         explicit arrow_proxy(ArrowArray* array, ArrowSchema* schema);
+        
+
+        ~arrow_proxy();
 
         [[nodiscard]] std::string_view format() const;
         [[nodiscard]] std::string_view name() const;
@@ -216,8 +220,8 @@ namespace sparrow
         [[nodiscard]] int64_t offset() const;
         [[nodiscard]] int64_t n_buffers() const;
         [[nodiscard]] int64_t n_children() const;
-        [[nodiscard]] std::vector<sparrow::buffer_view<uint8_t>> buffers() const;
-        [[nodiscard]] std::vector<arrow_proxy> children() const;
+        [[nodiscard]] const std::vector<sparrow::buffer_view<uint8_t>>& buffers() const;
+        [[nodiscard]] const std::vector<arrow_proxy>& children() const;
         [[nodiscard]] std::optional<arrow_proxy> dictionary() const;
 
         [[nodiscard]] bool is_created_with_sparrow() const;
@@ -231,6 +235,11 @@ namespace sparrow
 
         std::variant<ArrowArray*, ArrowArray> m_array;
         std::variant<ArrowSchema*, ArrowSchema> m_schema;
+        std::vector<sparrow::buffer_view<uint8_t>> m_buffers;
+        std::vector<arrow_proxy> m_children;
+
+        void initialize_children();
+        void initialize_buffers();
 
         void validate_array_and_schema() const;
 
@@ -243,6 +252,32 @@ namespace sparrow
         [[nodiscard]] std::size_t
         compute_buffer_size(buffer_type buffer_type, int64_t length, data_type data_type) const;
     };
+
+    void arrow_proxy::initialize_children()
+    {
+        m_children.reserve(static_cast<std::size_t>(array().n_children));
+        for (int64_t i = 0; i < array().n_children; ++i)
+        {
+            m_children.emplace_back(array().children[i], schema().children[i]);
+        }
+    }
+
+    void arrow_proxy::initialize_buffers()
+    {
+        m_buffers.clear();
+        const auto buffer_count = static_cast<size_t>(array().n_buffers);
+        m_buffers.reserve(buffer_count);
+        const data_type data_type = format_to_data_type(schema().format);
+        const std::vector<buffer_type> buffers_type = get_buffer_types_from_data_type(data_type);
+        for (std::size_t i = 0; i < buffer_count; ++i)
+        {
+            const auto buffer_type = buffers_type[i];
+            auto buffer = array().buffers[i];
+            const std::size_t buffer_size = compute_buffer_size(buffer_type, length(), data_type);
+            auto* ptr = reinterpret_cast<uint8_t*>(const_cast<void*>(buffer));
+            m_buffers.emplace_back(ptr, buffer_size);
+        }
+    }
 
     void arrow_proxy::validate_array_and_schema() const
     {
@@ -265,6 +300,18 @@ namespace sparrow
         , m_schema(std::forward<ArrowSchema>(schema))
     {
         validate_array_and_schema();
+        initialize_children();
+        initialize_buffers();
+    }
+
+    arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema* schema)
+        : m_array(std::forward<ArrowArray>(array))
+        , m_schema(schema)
+    {
+        SPARROW_ASSERT_TRUE(schema != nullptr);
+        validate_array_and_schema();
+        initialize_children();
+        initialize_buffers();
     }
 
     arrow_proxy::arrow_proxy(ArrowArray* array, ArrowSchema* schema)
@@ -274,6 +321,30 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(array != nullptr);
         SPARROW_ASSERT_TRUE(schema != nullptr);
         validate_array_and_schema();
+        initialize_children();
+        initialize_buffers();
+    }
+
+    arrow_proxy::~arrow_proxy()
+    {
+        if(m_array.index() == 1)
+        {
+            ArrowArray& array = std::get<1>(m_array);
+            if(array.release != nullptr)
+            {
+                array.release(&array);
+            }
+        }
+
+        if(m_schema.index() == 1)
+        {
+            ArrowSchema& schema = std::get<1>(m_schema);
+            if(schema.release != nullptr)
+            {
+                schema.release(&schema);
+            }
+        }
+
     }
 
     [[nodiscard]] std::string_view arrow_proxy::format() const
@@ -347,33 +418,14 @@ namespace sparrow
         mpl::unreachable();
     }
 
-    [[nodiscard]] std::vector<sparrow::buffer_view<uint8_t>> arrow_proxy::buffers() const
+    [[nodiscard]] const std::vector<sparrow::buffer_view<uint8_t>>& arrow_proxy::buffers() const
     {
-        const auto buffer_count = static_cast<size_t>(array().n_buffers);
-        std::vector<sparrow::buffer_view<uint8_t>> buffers;
-        buffers.reserve(buffer_count);
-        const data_type data_type = format_to_data_type(schema().format);
-        const std::vector<buffer_type> buffers_type = get_buffer_types_from_data_type(data_type);
-        for (std::size_t i = 0; i < buffer_count; ++i)
-        {
-            const auto buffer_type = buffers_type[i];
-            auto buffer = array().buffers[i];
-            const std::size_t buffer_size = compute_buffer_size(buffer_type, length(), data_type);
-            auto* ptr = reinterpret_cast<uint8_t*>(const_cast<void*>(buffer));
-            buffers.emplace_back(ptr, buffer_size);
-        }
-        return buffers;
+        return m_buffers;
     }
 
-    [[nodiscard]] std::vector<arrow_proxy> arrow_proxy::children() const
+    [[nodiscard]] const std::vector<arrow_proxy>& arrow_proxy::children() const
     {
-        std::vector<arrow_proxy> children;
-        children.reserve(static_cast<std::size_t>(array().n_children));
-        for (int64_t i = 0; i < array().n_children; ++i)
-        {
-            children.emplace_back(array().children[i], schema().children[i]);
-        }
-        return children;
+        return m_children;
     }
 
     [[nodiscard]] std::optional<arrow_proxy> arrow_proxy::dictionary() const
@@ -423,7 +475,7 @@ namespace sparrow
     overloaded(Ts...) -> overloaded<Ts...>;
 
     template <typename T>
-    [[nodiscard]] T& get_variant(auto& var)
+    [[nodiscard]] T& get_value_reference_of_variant(auto& var)
     {
         return std::visit(
             overloaded{
@@ -447,21 +499,21 @@ namespace sparrow
 
     [[nodiscard]] const ArrowArray& arrow_proxy::array() const
     {
-        return get_variant<const ArrowArray>(m_array);
+        return get_value_reference_of_variant<const ArrowArray>(m_array);
     }
 
     [[nodiscard]] const ArrowSchema& arrow_proxy::schema() const
     {
-        return get_variant<const ArrowSchema>(m_schema);
+        return get_value_reference_of_variant<const ArrowSchema>(m_schema);
     }
 
     [[nodiscard]] ArrowArray& arrow_proxy::array()
     {
-        return get_variant<ArrowArray>(m_array);
+        return get_value_reference_of_variant<ArrowArray>(m_array);
     }
 
     [[nodiscard]] ArrowSchema& arrow_proxy::schema()
     {
-        return get_variant<ArrowSchema>(m_schema);
+        return get_value_reference_of_variant<ArrowSchema>(m_schema);
     }
 }
