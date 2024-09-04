@@ -48,6 +48,7 @@ OPTION(BUILD_TESTS "Build sparrow test suite" OFF)
 OPTION(BUILD_DOCS  "Build sparrow documentation" OFF)
 OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
+OPTION(BUILD_REFACTORING "Build the refactoring target" OFF)
 
 include(CheckCXXSymbolExists)
 
@@ -138,6 +139,13 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
 )
 
+if (BUILD_REFACTORING)
+    set(SPARROW_V01_HEADERS
+        ${SPARROW_INCLUDE_DIR}/sparrow_v01/utils/memory.hpp
+    )
+    list(APPEND SPARROW_HEADERS ${SPARROW_V01_HEADERS})
+endif ()
+
 add_library(sparrow INTERFACE ${SPARROW_HEADERS})
 
 target_include_directories(sparrow INTERFACE
@@ -153,6 +161,9 @@ target_compile_features(sparrow INTERFACE cxx_std_20)
 if (BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
+    if (BUILD_REFACTORING)
+        add_subdirectory(test_v01)
+    endif ()
 endif ()
 
 # Docs
@@ -186,6 +197,10 @@ install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         PATTERN ".clang-*" EXCLUDE
         PATTERN "README.md" EXCLUDE)
+if (BUILD_REFACTORING)
+    install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow_v01
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif ()
 
 set(SPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
     STRING "install path for sparrowConfig.cmake")
