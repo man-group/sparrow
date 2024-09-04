@@ -195,26 +195,6 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         CHECK_FALSE(proxy.dictionary().has_value());
     }
 
-    TEST_CASE("release")
-    {
-        auto [schema, array] = make_default_arrow_schema_and_array();
-        sparrow::arrow_proxy proxy(&array, &schema);
-        proxy.release();
-        const bool array_release_is_null = array.release == nullptr;
-        CHECK(array_release_is_null);
-        const bool schema_release_is_null = schema.release == nullptr;
-        CHECK(schema_release_is_null);
-    }
-
-    TEST_CASE("is_released")
-    {
-        auto [schema, array] = make_default_arrow_schema_and_array();
-        sparrow::arrow_proxy proxy(&array, &schema);
-        CHECK_FALSE(proxy.is_released());
-        proxy.release();
-        CHECK(proxy.is_released());
-    }
-
     TEST_CASE("is_created_with_sparrow")
     {
         auto [schema, array] = make_default_arrow_schema_and_array();
