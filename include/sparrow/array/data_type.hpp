@@ -271,6 +271,8 @@ namespace sparrow
         return data_type::NA;
     }
 
+    /// @returns The number of buffers expected for the provided data_type.
+    ///         The returned value is guaranteed to be in the range [0, 3].
     constexpr std::size_t get_expected_buffer_count(data_type type)
     {
         switch (type)
@@ -311,7 +313,7 @@ namespace sparrow
         mpl::unreachable();
     }
     
-       /// @returns The default floating-point `data_type`  that should be associated with the provided type.
+    /// @returns The default floating-point `data_type`  that should be associated with the provided type.
     ///          The deduction will be based on the size of the type. Calling this function with unsupported sizes
     ///          will not compile.
     template<std::floating_point T>
