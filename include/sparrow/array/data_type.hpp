@@ -419,6 +419,7 @@ namespace sparrow
         }
     }
 
+    /// @returns True if the provided data_type is a primitive type, false otherwise.
     constexpr bool data_type_is_primitive(data_type dt)
     {
         switch (dt)
@@ -441,6 +442,7 @@ namespace sparrow
         }
     }
 
+    /// @returns The number of bytes required to store the provided primitive data type.
     constexpr std::size_t primitive_bytes_count(data_type data_type, int64_t length)
     {
         SPARROW_ASSERT_TRUE(data_type_is_primitive(data_type));
