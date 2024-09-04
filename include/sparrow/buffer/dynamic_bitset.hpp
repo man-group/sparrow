@@ -490,24 +490,28 @@ namespace sparrow
     template <random_access_range B>
     constexpr auto dynamic_bitset_base<B>::front() -> reference
     {
+        SPARROW_ASSERT_TRUE(size() >= 1);
         return (*this)[0];
     }
 
     template <random_access_range B>
     constexpr auto dynamic_bitset_base<B>::front() const -> const_reference
     {
+        SPARROW_ASSERT_TRUE(size() >= 1);
         return (*this)[0];
     }
 
     template <random_access_range B>
     constexpr auto dynamic_bitset_base<B>::back() -> reference
     {
+        SPARROW_ASSERT_TRUE(size() >= 1);
         return (*this)[size() - 1];
     }
 
     template <random_access_range B>
     constexpr auto dynamic_bitset_base<B>::back() const -> const_reference
     {
+        SPARROW_ASSERT_TRUE(size() >= 1);
         return (*this)[size() - 1];
     }
 
@@ -650,7 +654,9 @@ namespace sparrow
     template <random_access_range B>
     constexpr void dynamic_bitset_base<B>::clear() noexcept
     {
-        resize(0);
+        m_buffer.clear();
+        m_size = 0;
+        m_null_count = 0;
     }
 
     template <random_access_range B>
