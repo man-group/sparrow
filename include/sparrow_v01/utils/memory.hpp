@@ -35,7 +35,7 @@ namespace sparrow
     };
 
     /**
-     * @brief smart pointer behaving like a copiable std::unique_ptr.
+     * Smart pointer behaving like a copiable std::unique_ptr.
      * 
      * `cloning_ptr` owns and manages another object through a pointer, like
      * `std::unique_ptr`. The difference with `std::unique_ptr` is that 
