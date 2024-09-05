@@ -66,9 +66,7 @@ namespace sparrow
         constexpr cloning_ptr(self_type&& rhs) noexcept = default;
 
         template <class U>
-        requires std::convertible_to<
-            typename cloning_ptr<U>::pointer,
-            typename cloning_ptr<T>::pointer>
+        requires std::convertible_to<U*, T*>
         constexpr cloning_ptr(const cloning_ptr<U>& rhs) noexcept;
 
         template <class U>
@@ -172,7 +170,8 @@ namespace sparrow
 
     template <clonable T>
     template <class U>
-    requires std::convertible_to<typename cloning_ptr<U>::pointer, typename cloning_ptr<T>::pointer>
+    //requires std::convertible_to<typename cloning_ptr<U>::pointer, typename cloning_ptr<T>::pointer>
+    requires std::convertible_to<U*, T*>
     constexpr cloning_ptr<T>::cloning_ptr(const cloning_ptr<U>& rhs) noexcept
         : m_data(rhs->clone())
     {
