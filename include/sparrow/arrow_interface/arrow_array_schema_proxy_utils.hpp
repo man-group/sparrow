@@ -87,6 +87,8 @@ namespace sparrow
         SIZES_64BIT,
     };
 
+    /// Provide a vector of buffer types for a given data type.
+    /// This information helps how interpret and parse each buffer in an ArrowArray.
     constexpr std::vector<buffer_type> get_buffer_types_from_data_type(data_type data_type)
     {
         switch (data_type)
@@ -133,6 +135,7 @@ namespace sparrow
         mpl::unreachable();
     }
 
+    /// Get The expected offset element count for a given data type and array length.
     constexpr std::size_t get_offset_size(data_type data_type, int64_t length)
     {
         switch (data_type)
