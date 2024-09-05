@@ -66,11 +66,15 @@ namespace sparrow
         constexpr cloning_ptr(self_type&& rhs) noexcept = default;
 
         template <class U>
-        requires std::convertible_to<typename cloning_ptr<U>::pointer, pointer>
+        requires std::convertible_to<
+            typename cloning_ptr<U>::pointer,
+            typename cloning_ptr<T>::pointer>
         constexpr cloning_ptr(const cloning_ptr<U>& rhs) noexcept;
 
         template <class U>
-        requires std::convertible_to<typename cloning_ptr<U>::pointer, pointer>
+        requires std::convertible_to<
+            typename cloning_ptr<U>::pointer,
+            typename cloning_ptr<T>::pointer>
         constexpr cloning_ptr(cloning_ptr<U>&& rhs) noexcept;
 
         constexpr self_type& operator=(const self_type&) noexcept;
@@ -78,11 +82,15 @@ namespace sparrow
         constexpr self_type& operator=(std::nullptr_t) noexcept;
 
         template <class U>
-        requires std::convertible_to<typename cloning_ptr<U>::pointer, pointer>
+        requires std::convertible_to<
+            typename cloning_ptr<U>::pointer,
+            typename cloning_ptr<T>::pointer>
         constexpr self_type& operator=(const cloning_ptr<U>& rhs) noexcept;
 
         template <class U>
-        requires std::convertible_to<typename cloning_ptr<U>::pointer, pointer>
+        requires std::convertible_to<
+            typename cloning_ptr<U>::pointer,
+            typename cloning_ptr<T>::pointer>
         constexpr self_type& operator=(cloning_ptr<U>&& rhs) noexcept;
 
         // Modifiers
