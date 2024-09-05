@@ -29,6 +29,10 @@
 
 namespace sparrow
 {
+    /**
+     * Proxy class over ArrowArray and ArrowSchema.
+     * It ease the use of ArrowArray and ArrowSchema by providing a more user-friendly interface.
+     */
     class arrow_proxy
     {
     public:

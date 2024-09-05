@@ -71,7 +71,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             {
                 sparrow::arrow_proxy proxy(std::move(array), &schema);
             }
-            CHECK_NE(schema.release, nullptr);
+            const bool is_schema_release_null = schema.release == nullptr;
+            CHECK_FALSE(is_schema_release_null);
         }
 
         SUBCASE("pointer")
@@ -80,8 +81,10 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             {
                 sparrow::arrow_proxy proxy(&array, &schema);
             }
-            CHECK_NE(schema.release, nullptr);
-            CHECK_NE(schema.release, nullptr);
+            const bool is_schema_release_null = schema.release == nullptr;
+            const bool is_array_release_null = array.release == nullptr;
+            CHECK_FALSE(is_schema_release_null);
+            CHECK_FALSE(is_array_release_null);
         }
     }
 
