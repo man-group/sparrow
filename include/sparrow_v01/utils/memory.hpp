@@ -35,11 +35,13 @@ namespace sparrow
     };
 
     /**
-     * @brief smart pointer behaving like a deep copiable std::unique_ptr.
+     * @brief smart pointer behaving like a copiable std::unique_ptr.
      * 
      * `cloning_ptr` owns and manages another object through a pointer, like
      * `std::unique_ptr`. The difference with `std::unique_ptr` is that 
      * `cloning_ptr`calls the `clone` method of the managed object upon copy.
+     * `Therefore, `cloning_ptr` is meant to be used with hierarchies of
+     * classes which provide a `clone` method.
      * 
      * @tparam T The type of the object managed by the `cloning_ptr`. It must
      * satisfy the `clonable` concept.
@@ -47,10 +49,10 @@ namespace sparrow
     template <clonable T>
     class cloning_ptr
     {
+        using internal_pointer = std::unique_ptr<T>;
     public:
 
         using self_type = cloning_ptr<T>;
-        using internal_pointer = std::unique_ptr<T>;
         using pointer = typename internal_pointer::pointer;
         using element_type = typename internal_pointer::element_type;
 
@@ -65,30 +67,24 @@ namespace sparrow
         constexpr cloning_ptr(const self_type& rhs) noexcept;
         constexpr cloning_ptr(self_type&& rhs) noexcept = default;
 
-        template <class U>
+        template <clonable U>
         requires std::convertible_to<U*, T*>
         constexpr cloning_ptr(const cloning_ptr<U>& rhs) noexcept;
 
-        template <class U>
-        requires std::convertible_to<
-            typename cloning_ptr<U>::pointer,
-            typename cloning_ptr<T>::pointer>
+        template <clonable U>
+        requires std::convertible_to<U*, T*>
         constexpr cloning_ptr(cloning_ptr<U>&& rhs) noexcept;
 
         constexpr self_type& operator=(const self_type&) noexcept;
         constexpr self_type& operator=(self_type&&) noexcept = default;
         constexpr self_type& operator=(std::nullptr_t) noexcept;
 
-        template <class U>
-        requires std::convertible_to<
-            typename cloning_ptr<U>::pointer,
-            typename cloning_ptr<T>::pointer>
+        template <clonable U>
+        requires std::convertible_to<U*, T*>
         constexpr self_type& operator=(const cloning_ptr<U>& rhs) noexcept;
 
-        template <class U>
-        requires std::convertible_to<
-            typename cloning_ptr<U>::pointer,
-            typename cloning_ptr<T>::pointer>
+        template <clonable U>
+        requires std::convertible_to<U*, T*>
         constexpr self_type& operator=(cloning_ptr<U>&& rhs) noexcept;
 
         // Modifiers
@@ -169,8 +165,7 @@ namespace sparrow
     }
 
     template <clonable T>
-    template <class U>
-    //requires std::convertible_to<typename cloning_ptr<U>::pointer, typename cloning_ptr<T>::pointer>
+    template <clonable U>
     requires std::convertible_to<U*, T*>
     constexpr cloning_ptr<T>::cloning_ptr(const cloning_ptr<U>& rhs) noexcept
         : m_data(rhs->clone())
@@ -178,8 +173,8 @@ namespace sparrow
     }
     
     template <clonable T>
-    template <class U>
-    requires std::convertible_to<typename cloning_ptr<U>::pointer, typename cloning_ptr<T>::pointer>
+    template <clonable U>
+    requires std::convertible_to<U*, T*>
     constexpr cloning_ptr<T>::cloning_ptr(cloning_ptr<U>&& rhs) noexcept
         : m_data(rhs.release())
     {
@@ -200,8 +195,8 @@ namespace sparrow
     }
 
     template <clonable T>
-    template <class U>
-    requires std::convertible_to<typename cloning_ptr<U>::pointer, typename cloning_ptr<T>::pointer>
+    template <clonable U>
+    requires std::convertible_to<U*, T*>
     constexpr auto cloning_ptr<T>::operator=(const cloning_ptr<U>& rhs) noexcept -> self_type&
     {
         reset(rhs->clone());
@@ -209,8 +204,8 @@ namespace sparrow
     }
 
     template <clonable T>
-    template <class U>
-    requires std::convertible_to<typename cloning_ptr<U>::pointer, typename cloning_ptr<T>::pointer>
+    template <clonable U>
+    requires std::convertible_to<U*, T*>
     constexpr auto cloning_ptr<T>::operator=(cloning_ptr<U>&& rhs) noexcept -> self_type&
     {
         reset(rhs.release());
