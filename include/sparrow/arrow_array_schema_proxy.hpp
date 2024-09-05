@@ -99,7 +99,7 @@ namespace sparrow
             const auto buffer_type = buffers_type[i];
             auto buffer = array().buffers[i];
             const std::size_t buffer_size = compute_buffer_size(buffer_type, length(), data_type);
-            auto* ptr = reinterpret_cast<uint8_t*>(const_cast<void*>(buffer));
+            auto* ptr = static_cast<uint8_t*>(const_cast<void*>(buffer));
             m_buffers.emplace_back(ptr, buffer_size);
         }
     }

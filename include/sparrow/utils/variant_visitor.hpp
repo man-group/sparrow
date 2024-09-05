@@ -21,7 +21,7 @@ namespace sparrow
     {
         using Ts::operator()...;
     };
-    // Although not required in C++20, clang needs it to build the code below
+    // Although not required in C++20, clang needs it to build where it is used.
     template <class... Ts>
     overloaded(Ts...) -> overloaded<Ts...>;
 }

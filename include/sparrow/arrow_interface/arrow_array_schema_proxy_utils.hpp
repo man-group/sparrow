@@ -19,12 +19,14 @@
 
 namespace sparrow
 {
+    /// Validates the number of buffers in an ArrowArray for a given data type.
     constexpr bool validate_buffers_count(data_type data_type, int64_t n_buffers)
     {
         const std::size_t expected_buffer_count = get_expected_buffer_count(data_type);
         return static_cast<std::size_t>(n_buffers) == expected_buffer_count;
     }
 
+    /// Get the expected number of children for a given data type.
     constexpr std::size_t get_expected_children_count(data_type data_type)
     {
         switch (data_type)
@@ -64,6 +66,7 @@ namespace sparrow
         mpl::unreachable();
     }
 
+    /// Validates the format of an ArrowArray for a given data type.
     bool validate_format_with_arrow_array(data_type data_type, const ArrowArray& array)
     {
         const bool buffers_count_valid = validate_buffers_count(data_type, array.n_buffers);
