@@ -16,6 +16,7 @@
 
 namespace sparrow
 {
+    /// Check that the given value is a valid ArrowFlag value.
     constexpr bool is_valid_ArrowFlag_value(int64_t value) noexcept
     {
         constexpr std::array<ArrowFlag, 3> valid_values = {
@@ -32,6 +33,7 @@ namespace sparrow
         );
     }
 
+    /// Convert a bitfield of ArrowFlag values to a vector of ArrowFlag values.
     constexpr std::vector<ArrowFlag> to_vector_of_ArrowFlags(int64_t flag_values)
     {
         constexpr size_t n_bits = sizeof(flag_values) * 8;
@@ -52,6 +54,7 @@ namespace sparrow
         return flags;
     }
 
+    /// Convert a vector of ArrowFlag values to a bitfield of ArrowFlag values.
     constexpr int64_t to_ArrowFlag_value(const std::vector<ArrowFlag>& flags)
     {
         int64_t flag_values = 0;
