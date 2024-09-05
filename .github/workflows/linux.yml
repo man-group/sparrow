@@ -84,16 +84,17 @@ jobs:
     - name: Run tests
       working-directory: build
       run: |
-        echo "ASAN_OPTIONS=log_path=asan_log_:alloc_dealloc_mismatch=0:halt_on_error=0:handle_abort=0:exitcode=0" >> $GITHUB_ENV
+        export ASAN_OPTIONS=log_path=asan_log_:alloc_dealloc_mismatch=0:halt_on_error=0:handle_abort=0:exitcode=0
+        export LEAK_OPTIONS=log_path=leak_log_
         cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
       # env:
-        # log_path is set to the path where ASAN will write the error report (seems ineffective)
-        # alloc_dealloc_mismatch is set to 0 to deactivate unwanted ASAN warnings.
-        # halt_on_error is set to 0 to avoid crashing the program after printing the first error report.
-        # handle_abort is set to 0 to deactivate calls are handled as crashes by ASAN.
-        # exitcode is set to 0 to avoid reporting the build as failed if ASAN detects an error.
-        # ASAN_OPTIONS: log_path=asan_log_:alloc_dealloc_mismatch=0:halt_on_error=0:handle_abort=0:exitcode=0
-        # LEAK_OPTIONS: log_path=leak_log_
+      #   # log_path is set to the path where ASAN will write the error report (seems ineffective)
+      #   # alloc_dealloc_mismatch is set to 0 to deactivate unwanted ASAN warnings.
+      #   # halt_on_error is set to 0 to avoid crashing the program after printing the first error report.
+      #   # handle_abort is set to 0 to deactivate calls are handled as crashes by ASAN.
+      #   # exitcode is set to 0 to avoid reporting the build as failed if ASAN detects an error.
+      #   ASAN_OPTIONS: log_path=asan_log_:alloc_dealloc_mismatch=0:halt_on_error=0:handle_abort=0:exitcode=0
+      #   LEAK_OPTIONS: log_path=leak_log_
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
