@@ -26,6 +26,18 @@
 #    define USING_LIBCPP_PRE_17 0
 #endif
 
+#if defined(_WIN32)
+#   if defined(SPARROW_STATIC_LIB)
+#       define SPARROW_API
+#   elif defined(SPARROW_EXPORTS)
+#       define SPARROW_API __declspec(dllexport)
+#   else
+#       define SPARROW_API __declspec(dllimport)
+#   endif
+#else
+#   define SPARROW_API __attribute__((visibility("default")))
+#endif
+
 consteval bool is_apple_compiler()
 {
     return static_cast<bool>(COMPILING_WITH_APPLE_CLANG);

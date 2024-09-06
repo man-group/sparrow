@@ -26,6 +26,7 @@ project(sparrow CXX)
 include(CMakeDependentOption)
 
 set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(SPARROW_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src_v01)
 
 # Versionning
 # ===========
@@ -140,24 +141,53 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
 )
 
+set(SPARROW_SRC
+    ${SPARROW_SOURCE_DIR}/dummy.cpp
+)
+
 if (BUILD_REFACTORING)
     set(SPARROW_V01_HEADERS
+        ${SPARROW_INCLUDE_DIR}/sparrow_v01/dummy.hpp
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/utils/memory.hpp
     )
     list(APPEND SPARROW_HEADERS ${SPARROW_V01_HEADERS})
 endif ()
 
-add_library(sparrow INTERFACE ${SPARROW_HEADERS})
-
-target_include_directories(sparrow INTERFACE
-    $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
-    $<INSTALL_INTERFACE:include>)
-
-target_link_libraries(sparrow INTERFACE ${SPARROW_INTERFACE_DEPENDENCIES})
-
-# We do not use non-standard C++
-set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
-target_compile_features(sparrow INTERFACE cxx_std_20)
+if (BUILD_REFACTORING)
+    add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
+    # TODO: handle static lib, so name and versionning
+    if (UNIX)
+        set_target_properties(
+            sparrow
+            PROPERTIES
+            PUBLIC_HEADER "${SPARROW_HEADERS}"
+            COMPILE_OPTIONS "-fvisibility=hidden"
+        )
+    else ()
+        set_target_properties(
+            sparrow
+            PROPERTIES
+            PUBLIC_HEADER "${SPARROW_HEADERS}"
+            COMPILE_DEFINITIONS "SPARROW_EXPORTS"
+        )
+    endif ()
+    target_include_directories(sparrow PUBLIC
+        $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:include>)
+    # We do not use non-standard C++
+    set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
+    target_compile_features(sparrow PUBLIC cxx_std_20)
+    target_link_libraries(sparrow PUBLIC ${SPARROW_INTERFACE_DEPENDENCIES})
+else ()
+    add_library(sparrow INTERFACE ${SPARROW_HEADERS})
+    target_include_directories(sparrow INTERFACE
+        $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:include>)
+    # We do not use non-standard C++
+    set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
+    target_compile_features(sparrow INTERFACE cxx_std_20)
+    target_link_libraries(sparrow INTERFACE ${SPARROW_INTERFACE_DEPENDENCIES})
+endif ()
 
 if (BUILD_TESTS)
     enable_testing()
