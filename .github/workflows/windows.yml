@@ -65,11 +65,16 @@ jobs:
     - name: Configure using CMake
       run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON  -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} -DBUILD_REFACTORING=${{matrix.sys.build_refactoring}} -G "${{matrix.build-system}}"
 
+    - name: Build
+      if: matrix.sys.build_refactoring == 'ON'
+      working-directory: build
+      run: cmake --build . --config ${{matrix.config.name}} --target sparrow --parallel 8
+
     - name: Install
       working-directory: build
       run: cmake --install . --config ${{matrix.config.name}}
 
-    - name: Build
+    - name: Build tests
       working-directory: build
       run: cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib --parallel 8
 
