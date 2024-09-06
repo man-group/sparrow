@@ -59,6 +59,7 @@ set(SPARROW_TESTS_SOURCES
     test_iterator.cpp
     test_memory.cpp
     test_mpl.cpp
+    test_arrow_array_schema_proxy.cpp
     test_null_layout.cpp
     test_nullable.cpp
     test_traits.cpp

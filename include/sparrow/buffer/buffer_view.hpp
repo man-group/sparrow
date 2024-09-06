@@ -55,6 +55,7 @@ namespace sparrow
 
         [[nodiscard]] bool empty() const noexcept;
         [[nodiscard]] size_type size() const noexcept;
+        [[nodiscard]] size_type max_size() const noexcept;
 
         reference operator[](size_type);
         const_reference operator[](size_type) const;
@@ -141,6 +142,12 @@ namespace sparrow
     auto buffer_view<T>::size() const noexcept -> size_type
     {
         return m_size;
+    }
+
+    template <class T>
+    auto buffer_view<T>::max_size() const noexcept -> size_type
+    {
+        return size();
     }
 
     template <class T>

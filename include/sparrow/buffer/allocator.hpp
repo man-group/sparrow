@@ -14,12 +14,14 @@
 
 #pragma once
 
-#include <cstdint>
 #include <memory>
 #include <memory_resource>
 #include <type_traits>
 #include <typeindex>
 #include <variant>
+
+#include "sparrow/utils/variant_visitor.hpp"
+
 
 namespace sparrow
 {
@@ -149,15 +151,6 @@ namespace sparrow
             return std::forward<A>(alloc);
         }
 
-        template <class... Ts>
-        struct overloaded : Ts...
-        {
-            using Ts::operator()...;
-        };
-        // Although not required in C++20, clang needs it to build the code below
-        template <class... Ts>
-        overloaded(Ts...) -> overloaded<Ts...>;
-
         storage_type copy_storage(const storage_type& rhs) const
         {
             return std::visit(
@@ -236,7 +229,8 @@ namespace sparrow
 #        endif
 #    endif
 #endif
-    void any_allocator<T>::deallocate(T* p, std::size_t n)
+    void
+    any_allocator<T>::deallocate(T* p, std::size_t n)
     {
         return visit_storage(
             [n, p](auto& allocator)

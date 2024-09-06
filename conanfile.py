@@ -31,7 +31,7 @@ class SparrowRecipe(ConanFile):
 
     def requirements(self):
         if self.options.get_safe("use_date_polyfill"):
-            self.requires("date/3.0.1")
+            self.requires("date/3.0.1#032e24ad8bd1fd136dd33c932563d3d1")
         self.test_requires("doctest/2.4.11")
 
     def build_requirements(self):

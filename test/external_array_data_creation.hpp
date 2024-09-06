@@ -46,6 +46,7 @@ namespace sparrow::test
     {
         schema.format = sparrow::data_type_format_of<T>().data();
         schema.name = "test";
+        schema.metadata = "test metadata";
         schema.n_children = 0;
         schema.children = nullptr;
         schema.dictionary = nullptr;

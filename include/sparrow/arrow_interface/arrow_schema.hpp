@@ -71,7 +71,7 @@ namespace sparrow
      */
     arrow_schema_unique_ptr default_arrow_schema_unique_ptr();
 
-    void release_arrow_schema(ArrowSchema* schema)
+    inline void release_arrow_schema(ArrowSchema* schema)
     {
         SPARROW_ASSERT_FALSE(schema == nullptr);
         SPARROW_ASSERT_TRUE(schema->release == std::addressof(release_arrow_schema));
@@ -83,7 +83,7 @@ namespace sparrow
         *schema = {};
     }
 
-/**
+    /**
      * Creates a unique pointer to an ArrowSchema with default values.
      * All integers are set to 0 and pointers to nullptr.
      * The ArrowSchema is in an invalid state and should not bu used as is.

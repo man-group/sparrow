@@ -28,10 +28,11 @@ namespace date = std::chrono;
 #include <cstring>
 #include <concepts>
 #include <string>
-#include <vector>
 
-#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/layout/list_layout/list_value.hpp"
+#include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/mp_utils.hpp"
+
 
 #if __cplusplus > 202002L and defined(__STDCPP_FLOAT16_T__) and defined(__STDCPP_FLOAT32_T__) \
     and defined(__STDCPP_FLOAT64_T__)
@@ -138,14 +139,24 @@ namespace sparrow
         // UTF8 variable-length string
         STRING = 13,
         // Variable-length bytes (no guarantee of UTF8-ness)
-        //BINARY = 14,
+        // BINARY = 14,
         // Fixed-size binary. Each value occupies the same number of bytes
         FIXED_SIZE_BINARY = 15,
         // Number of nanoseconds since the UNIX epoch with an optional timezone.
         // See: https://arrow.apache.org/docs/python/timestamps.html#timestamps
         TIMESTAMP = 18,
         LIST = 19,
-        LARGE_LIST = 20 // 
+        LARGE_LIST = 20,
+        LIST_VIEW = 21,
+        LARGE_LIST_VIEW = 22,
+        FIXED_SIZED_LIST = 23,
+        STRUCT = 24,
+        MAP = 25,
+        DENSE_UNION,
+        SPARSE_UNION,
+        RUN_ENCODED,
+        DECIMAL,
+        FIXED_WIDTH_BINARY
     };
 
     /// @returns The data_type value matching the provided format string or `data_type::NA`
@@ -157,53 +168,53 @@ namespace sparrow
         // https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
         if (format.size() == 1)
         {
-            switch(format[0])
+            switch (format[0])
             {
-            case 'n':
-                return data_type::NA;
-            case 'b':
-                return data_type::BOOL;
-            case 'C':
-                return data_type::UINT8;
-            case 'c':
-                return data_type::INT8;
-            case 'S':
-                return data_type::UINT16;
-            case 's':
-                return data_type::INT16;
-            case 'I':
-                return data_type::UINT32;
-            case 'i':
-                return data_type::INT32;
-            case 'L':
-                return data_type::UINT64;
-            case 'l':
-                return data_type::INT64;
-            case 'e':
-                return data_type::HALF_FLOAT;
-            case 'f':
-                return data_type::FLOAT;
-            case 'g':
-                return data_type::DOUBLE;
-            case 'u':
-            case 'U': // large string
-                return data_type::STRING;
-            case 'z': // binary
-            case 'Z': // large binary
-                return data_type::FIXED_SIZE_BINARY;
-            default:
-                return data_type::NA;
+                case 'n':
+                    return data_type::NA;
+                case 'b':
+                    return data_type::BOOL;
+                case 'C':
+                    return data_type::UINT8;
+                case 'c':
+                    return data_type::INT8;
+                case 'S':
+                    return data_type::UINT16;
+                case 's':
+                    return data_type::INT16;
+                case 'I':
+                    return data_type::UINT32;
+                case 'i':
+                    return data_type::INT32;
+                case 'L':
+                    return data_type::UINT64;
+                case 'l':
+                    return data_type::INT64;
+                case 'e':
+                    return data_type::HALF_FLOAT;
+                case 'f':
+                    return data_type::FLOAT;
+                case 'g':
+                    return data_type::DOUBLE;
+                case 'u':
+                case 'U':  // large string
+                    return data_type::STRING;
+                case 'z':  // binary
+                case 'Z':  // large binary
+                    return data_type::FIXED_SIZE_BINARY;
+                default:
+                    return data_type::NA;
             }
         }
-        else if (format == "vu") // string view
+        else if (format == "vu")  // string view
         {
             return data_type::STRING;
         }
-        else if (format == "vz") // binary view
+        else if (format == "vz")  // binary view
         {
             return data_type::FIXED_SIZE_BINARY;
         }
-        // TODO: add propper timetstamp support below
+        // TODO: add propper timestamp support below
         else if (format.starts_with("t"))
         {
             return data_type::TIMESTAMP;
@@ -216,40 +227,92 @@ namespace sparrow
         {
             return data_type::LARGE_LIST;
         }
+        else if (format == "+vl")
+        {
+            return data_type::LIST_VIEW;
+        }
+        else if (format == "+vL")
+        {
+            return data_type::LARGE_LIST_VIEW;
+        }
+        else if (format.starts_with("+w:"))
+        {
+            return data_type::FIXED_SIZED_LIST;
+        }
+        else if (format == "+s")
+        {
+            return data_type::STRUCT;
+        }
+        else if (format == "+m")
+        {
+            return data_type::MAP;
+        }
+        else if (format.starts_with("+ud:"))
+        {
+            return data_type::DENSE_UNION;
+        }
+        else if (format.starts_with("+us:"))
+        {
+            return data_type::SPARSE_UNION;
+        }
+        else if (format.starts_with("+r"))
+        {
+            return data_type::RUN_ENCODED;
+        }
+        else if (format.starts_with("d:"))
+        {
+            return data_type::DECIMAL;
+        }
+        else if (format.starts_with("w:"))
+        {
+            return data_type::FIXED_WIDTH_BINARY;
+        }
 
         return data_type::NA;
     }
 
-    /// @returns Format string matching the provided data_type.
-    ///          The returned string is guaranteed to be null-terminated and to have static storage lifetime.
-    ///          (this means you can do data_type_to_format(mytype).data() to get a C pointer.
-    constexpr std::string_view data_type_to_format(data_type type)
+    /// @returns The number of buffers expected for the provided data_type.
+    ///         The returned value is guaranteed to be in the range [0, 3].
+    constexpr std::size_t get_expected_buffer_count(data_type type)
     {
-        switch(type)
+        switch (type)
         {
-            case data_type::NA : return "n";
-            case data_type::BOOL : return "b";
-            case data_type::UINT8 : return "C";
-            case data_type::INT8 : return "c";
-            case data_type::UINT16 : return "S";
-            case data_type::INT16 : return "s";
-            case data_type::UINT32 : return "I";
-            case data_type::INT32 : return "i";
-            case data_type::UINT64 : return "L";
-            case data_type::INT64 : return "l";
-            case data_type::HALF_FLOAT : return "e";
-            case data_type::FLOAT : return "f";
-            case data_type::DOUBLE : return "g";
-            case data_type::STRING : return "u";
-            case data_type::FIXED_SIZE_BINARY : return "z";
-            case data_type::TIMESTAMP : return "tDm";
-            case data_type::LIST : return "+l";
-            case data_type::LARGE_LIST : return "+L";
+            case data_type::NA:
+            case data_type::RUN_ENCODED:
+                return 0;
+            case data_type::STRUCT:
+            case data_type::SPARSE_UNION:
+                return 1;
+            case data_type::BOOL:
+            case data_type::UINT8:
+            case data_type::INT8:
+            case data_type::UINT16:
+            case data_type::INT16:
+            case data_type::UINT32:
+            case data_type::INT32:
+            case data_type::FLOAT:
+            case data_type::UINT64:
+            case data_type::INT64:
+            case data_type::DOUBLE:
+            case data_type::HALF_FLOAT:
+            case data_type::FIXED_WIDTH_BINARY:
+            case data_type::DECIMAL:
+            case data_type::LIST:
+            case data_type::LARGE_LIST:
+            case data_type::MAP:
+            case data_type::FIXED_SIZED_LIST:
+            case data_type::DENSE_UNION:
+                return 2;
+            case data_type::STRING:
+            case data_type::FIXED_SIZE_BINARY:
+            case data_type::TIMESTAMP:
+            case data_type::LIST_VIEW:
+            case data_type::LARGE_LIST_VIEW:
+                return 3;
         }
-
         mpl::unreachable();
     }
-
+    
     /// @returns The default floating-point `data_type`  that should be associated with the provided type.
     ///          The deduction will be based on the size of the type. Calling this function with unsupported sizes
     ///          will not compile.
@@ -307,6 +370,114 @@ namespace sparrow
         mpl::unreachable();
     }
 
+    /// @returns Format string matching the provided data_type.
+    ///          The returned string is guaranteed to be null-terminated and to have static storage
+    ///          lifetime. (this means you can do data_type_to_format(mytype).data() to get a C pointer.
+    constexpr std::string_view data_type_to_format(data_type type)
+    {
+        switch (type)
+        {
+            case data_type::NA:
+                return "n";
+            case data_type::BOOL:
+                return "b";
+            case data_type::UINT8:
+                return "C";
+            case data_type::INT8:
+                return "c";
+            case data_type::UINT16:
+                return "S";
+            case data_type::INT16:
+                return "s";
+            case data_type::UINT32:
+                return "I";
+            case data_type::INT32:
+                return "i";
+            case data_type::UINT64:
+                return "L";
+            case data_type::INT64:
+                return "l";
+            case data_type::HALF_FLOAT:
+                return "e";
+            case data_type::FLOAT:
+                return "f";
+            case data_type::DOUBLE:
+                return "g";
+            case data_type::STRING:
+                return "u";
+            case data_type::FIXED_SIZE_BINARY:
+                return "z";
+            case data_type::TIMESTAMP:
+                return "tDm";
+            case data_type::LIST:
+                return "+l";
+            case data_type::LARGE_LIST:
+                return "+L";
+            default:
+                // TODO: add missing types
+                throw std::runtime_error("Unsupported data type");
+        }
+    }
+
+    /// @returns True if the provided data_type is a primitive type, false otherwise.
+    constexpr bool data_type_is_primitive(data_type dt)
+    {
+        switch (dt)
+        {
+            case data_type::BOOL:
+            case data_type::UINT8:
+            case data_type::INT8:
+            case data_type::UINT16:
+            case data_type::INT16:
+            case data_type::UINT32:
+            case data_type::INT32:
+            case data_type::UINT64:
+            case data_type::INT64:
+            case data_type::HALF_FLOAT:
+            case data_type::FLOAT:
+            case data_type::DOUBLE:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// @returns The number of bytes required to store the provided primitive data type.
+    constexpr std::size_t primitive_bytes_count(data_type data_type, int64_t length)
+    {
+        SPARROW_ASSERT_TRUE(data_type_is_primitive(data_type));
+        const auto size = static_cast<std::size_t>(length);
+        constexpr double bit_per_byte = 8.;
+        switch (data_type)
+        {
+            case data_type::BOOL:
+                return static_cast<std::size_t>(std::ceil(static_cast<double>(size) / bit_per_byte));
+            case data_type::UINT8:
+                return size;
+            case data_type::INT8:
+                return size;
+            case data_type::UINT16:
+                return sizeof(std::uint16_t) / sizeof(std::uint8_t) * size;
+            case data_type::INT16:
+                return sizeof(std::int16_t) / sizeof(std::uint8_t) * size;
+            case data_type::UINT32:
+                return sizeof(std::uint32_t) / sizeof(std::uint8_t) * size;
+            case data_type::INT32:
+                return sizeof(std::int32_t) / sizeof(std::uint8_t) * size;
+            case data_type::UINT64:
+                return sizeof(std::uint64_t) / sizeof(std::uint8_t) * size;
+            case data_type::INT64:
+                return sizeof(std::int64_t) / sizeof(std::uint8_t) * size;
+            case data_type::HALF_FLOAT:
+                return sizeof(float16_t) / sizeof(std::uint8_t) * size;
+            case data_type::FLOAT:
+                return sizeof(float32_t) / sizeof(std::uint8_t) * size;
+            case data_type::DOUBLE:
+                return sizeof(float64_t) / sizeof(std::uint8_t) * size;
+            default:
+                throw std::runtime_error("Unsupported data type");
+        }
+    }
 
     /// C++ types value representation types matching Arrow types.
     // NOTE: this needs to be in sync-order with `data_type`
@@ -325,7 +496,7 @@ namespace sparrow
         float32_t,
         float64_t,
         std::string,
-        //std::vector<byte_t>,
+        // std::vector<byte_t>,
         sparrow::timestamp
         // TODO: add missing fundamental types here
         >;
@@ -339,16 +510,9 @@ namespace sparrow
     concept is_arrow_base_type = mpl::contains<T>(all_base_types);
 
 
-
-    
-
-
     /// is arrow base type or arrow compound type (list<T>, struct<T> etc.)
     template <class T>
     concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
-
-
-
 
 
     using all_base_types_extended_t = mpl::append_t<all_base_types_t, char, std::string_view>;
@@ -360,7 +524,8 @@ namespace sparrow
     /// Checks if a type is an extended base type for Arrow.
     ///
     /// This concept checks if a given type `T` is an extended base type for Arrow.
-    /// It uses the `mpl::contains` function to check if `T` is present in the `all_base_types_extended` list.
+    /// It uses the `mpl::contains` function to check if `T` is present in the `all_base_types_extended`
+    /// list.
     ///
     /// @tparam T The type to check.
     /// @return `true` if `T` is an extended base type for Arrow, `false` otherwise.
@@ -397,7 +562,9 @@ namespace sparrow
     namespace detail
     {
         template <template <class> class>
-        struct accepts_template {};
+        struct accepts_template
+        {
+        };
     }
     /// Matches valid and complete `arrow_traits` specializations for type T.
     /// Every type that needs to be compatible with this library's interface must
@@ -450,13 +617,10 @@ namespace sparrow
     /// @returns Format string matching the arrow data-type mathcing the provided
     ///          arrow type.
     template <has_arrow_type_traits T>
-    constexpr
-    std::string_view data_type_format_of()
+    constexpr std::string_view data_type_format_of()
     {
         return data_type_to_format(arrow_type_id<T>());
     }
-
-
 
     /// Binary layout type to use by default for the given C++ representation T of an arrow value.
     template <has_arrow_type_traits T>
