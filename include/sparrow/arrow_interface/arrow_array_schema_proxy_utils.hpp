@@ -19,14 +19,15 @@
 
 namespace sparrow
 {
-    /// Validates the number of buffers in an ArrowArray for a given data type.
+    /// @returns `true` if the number of buffers in an `ArrowArray` for a given data type is valid, `false`
+    /// otherwise.
     constexpr bool validate_buffers_count(data_type data_type, int64_t n_buffers)
     {
         const std::size_t expected_buffer_count = get_expected_buffer_count(data_type);
         return static_cast<std::size_t>(n_buffers) == expected_buffer_count;
     }
 
-    /// Get the expected number of children for a given data type.
+    /// @returns The the expected number of children for a given data type.
     constexpr std::size_t get_expected_children_count(data_type data_type)
     {
         switch (data_type)
@@ -66,7 +67,7 @@ namespace sparrow
         mpl::unreachable();
     }
 
-    /// Validates the format of an ArrowArray for a given data type.
+    /// @returns `true` if  the format of an `ArrowArray` for a given data type is valid, `false` otherwise.
     bool validate_format_with_arrow_array(data_type data_type, const ArrowArray& array)
     {
         const bool buffers_count_valid = validate_buffers_count(data_type, array.n_buffers);
@@ -87,7 +88,7 @@ namespace sparrow
         SIZES_64BIT,
     };
 
-    /// Provide a vector of buffer types for a given data type.
+    /// @returns A vector of buffer types for a given data type.
     /// This information helps how interpret and parse each buffer in an ArrowArray.
     constexpr std::vector<buffer_type> get_buffer_types_from_data_type(data_type data_type)
     {
@@ -135,7 +136,7 @@ namespace sparrow
         mpl::unreachable();
     }
 
-    /// Get The expected offset element count for a given data type and array length.
+    /// @returns The expected offset element count for a given data type and array length.
     constexpr std::size_t get_offset_size(data_type data_type, int64_t length)
     {
         switch (data_type)

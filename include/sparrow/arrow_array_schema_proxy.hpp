@@ -32,13 +32,22 @@ namespace sparrow
     /**
      * Proxy class over ArrowArray and ArrowSchema.
      * It ease the use of ArrowArray and ArrowSchema by providing a more user-friendly interface.
+     * It can take ownership of the ArrowArray and ArrowSchema or use them as pointers.
+     * If the arrow_proxy takes ownership of the ArrowArray and ArrowSchema, they are released when the
+     * arrow_proxy is destroyed. Otherwise, the arrow_proxy does not release the ArrowArray and ArrowSchema.
      */
     class arrow_proxy
     {
     public:
 
+        /// Constructs an arrow_proxy which takes the ownership of the ArrowArray and ArrowSchema.
+        /// The array and schema are released when the arrow_proxy is destroyed.
         explicit arrow_proxy(ArrowArray&& array, ArrowSchema&& schema);
+        /// Constructs an arrow_proxy which takes the ownership of the ArrowArray and uses the provided
+        /// ArrowSchema. The array is released when the arrow_proxy is destroyed. The schema is not released.
         explicit arrow_proxy(ArrowArray&& array, ArrowSchema* schema);
+        /// Constructs an arrow_proxy which uses the provided ArrowArray and ArrowSchema.
+        /// Neither the array nor the schema are released when the arrow_proxy is destroyed.
         explicit arrow_proxy(ArrowArray* array, ArrowSchema* schema);
 
         ~arrow_proxy();
@@ -161,7 +170,19 @@ namespace sparrow
             ArrowArray& array = std::get<1>(m_array);
             if (array.release != nullptr)
             {
-                array.release(&array);
+                try
+                {
+                    array.release(&array);
+                }
+                catch (...)
+                {
+#if defined(SPARROW_CONTRACTS_DEFAULT_ABORT_ON_FAILURE)
+                    SPARROW_CONTRACTS_DEFAULT_ON_FAILURE(
+                        "~arrow_proxy",
+                        "Exception thrown during array.release in arrow_proxy destructor."
+                    );
+#endif
+                }
             }
         }
 
@@ -170,7 +191,19 @@ namespace sparrow
             ArrowSchema& schema = std::get<1>(m_schema);
             if (schema.release != nullptr)
             {
-                schema.release(&schema);
+                try
+                {
+                    schema.release(&schema);
+                }
+                catch (...)
+                {
+#if defined(SPARROW_CONTRACTS_DEFAULT_ABORT_ON_FAILURE)
+                    SPARROW_CONTRACTS_DEFAULT_ON_FAILURE(
+                        "~arrow_proxy",
+                        "Exception thrown during schema.release in arrow_proxy destructor."
+                    );
+#endif
+                }
             }
         }
     }
