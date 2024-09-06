@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <iostream>
 #include <ranges>
 
 #include "sparrow_v01/layout/array_base.hpp"
@@ -178,7 +179,7 @@ namespace sparrow
 
     inline auto null_array::size() const -> size_type
     {
-        return static_cast<size_type>(m_proxy.length());
+        return data().length();
     }
 
     inline auto null_array::operator[](size_type i) -> reference

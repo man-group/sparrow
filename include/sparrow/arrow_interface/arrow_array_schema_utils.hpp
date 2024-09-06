@@ -26,6 +26,37 @@
 
 namespace sparrow
 {
+    template <class T>
+    void release_common_arrow(T* t)
+    {
+        if (t->dictionary)
+        {
+            if (t->dictionary->release)
+            {
+                t->dictionary->release(t->dictionary);
+            }
+            t->dictionary = nullptr;
+        }
+
+        if (t->children)
+        {
+            for (int64_t i = 0; i < t->n_children; ++i)
+            {
+                if (t->children[i])
+                {
+                    if (t->children[i]->release)
+                    {
+                        t->children[i]->release(t->children[i]);
+                    }
+                }
+            }
+            delete[] t->children;
+        }
+
+        t->children = nullptr;
+        t->release = nullptr;
+    }
+
     /**
      * Get the size of a range, a tuple or an optional.
      * If the range is a sized range, the size is obtained by calling `std::ranges::size()`.
@@ -52,7 +83,7 @@ namespace sparrow
      *          If the variable is an object, the pointer is returned by calling the address-of operator.
      */
     template <typename T, typename U>
-    T* get_raw_ptr(U& var);
+    constexpr T* get_raw_ptr(U& var);
 
     /**
      * Create a vector of pointers to elements from a range.
@@ -66,7 +97,7 @@ namespace sparrow
      */
     template <class T, std::ranges::input_range Range, class Allocator = std::allocator<T*>>
         requires(!std::ranges::view<Range>)
-    std::vector<T*, Allocator> to_raw_ptr_vec(Range& range);
+    constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Range& range);
 
     /**
      * Create a vector of pointers to elements from a std::optional<range>.
@@ -80,7 +111,7 @@ namespace sparrow
      */
     template <class T, class Optional, class Allocator = std::allocator<T*>>
         requires(mpl::is_type_instance_of_v<Optional, std::optional>)
-    std::vector<T*, Allocator> to_raw_ptr_vec(Optional& optional);
+    constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Optional& optional);
 
     /**
      * Create a vector of pointers to elements of a tuple.
@@ -96,7 +127,7 @@ namespace sparrow
      */
     template <class T, class Tuple, class Allocator = std::allocator<T*>>
         requires mpl::is_type_instance_of_v<Tuple, std::tuple>
-    std::vector<T*, Allocator> to_raw_ptr_vec(Tuple& tuple);
+    constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Tuple& tuple);
 
     /**
      * Check if all elements of a range or std::optional<range> are valid by caling their bool operator. If
@@ -107,7 +138,7 @@ namespace sparrow
                  || (mpl::is_type_instance_of_v<T, std::optional>
                      && mpl::testable<std::ranges::range_value_t<typename T::value_type>>)
                  || (std::ranges::range<T> && mpl::testable<std::ranges::range_value_t<T>>)
-    bool all_element_are_true(const T& elements);
+    constexpr bool all_element_are_true(const T& elements);
 
     template <class T>
     constexpr int64_t ssize(const T& value)
@@ -138,7 +169,7 @@ namespace sparrow
     }
 
     template <typename T, typename U>
-    T* get_raw_ptr(U& var)
+    constexpr T* get_raw_ptr(U& var)
     {
         if constexpr (std::is_pointer_v<U>)
         {
@@ -176,7 +207,7 @@ namespace sparrow
 
     template <class T, std::ranges::input_range Range, class Allocator>
         requires(!std::ranges::view<Range>)
-    std::vector<T*, Allocator> to_raw_ptr_vec(Range& range)
+    constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Range& range)
     {
         std::vector<T*, Allocator> raw_ptr_vec;
         raw_ptr_vec.reserve(range.size());
@@ -193,7 +224,7 @@ namespace sparrow
 
     template <class T, class Optional, class Allocator>
         requires(mpl::is_type_instance_of_v<Optional, std::optional>)
-    std::vector<T*, Allocator> to_raw_ptr_vec(Optional& optional)
+    constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Optional& optional)
     {
         if (!optional.has_value())
         {
@@ -204,7 +235,7 @@ namespace sparrow
 
     template <class T, class Tuple, class Allocator>
         requires mpl::is_type_instance_of_v<Tuple, std::tuple>
-    std::vector<T*, Allocator> to_raw_ptr_vec(Tuple& tuple)
+    constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Tuple& tuple)
     {
         std::vector<T*, Allocator> raw_ptr_vec;
         raw_ptr_vec.reserve(std::tuple_size_v<Tuple>);
@@ -223,7 +254,7 @@ namespace sparrow
                  || (mpl::is_type_instance_of_v<T, std::optional>
                      && mpl::testable<std::ranges::range_value_t<typename T::value_type>>)
                  || (std::ranges::range<T> && mpl::testable<std::ranges::range_value_t<T>>)
-    bool all_element_are_true(const T& elements)
+    constexpr bool all_element_are_true(const T& elements)
     {
         if constexpr (!std::same_as<T, std::nullopt_t>)
         {

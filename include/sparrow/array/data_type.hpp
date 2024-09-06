@@ -443,37 +443,36 @@ namespace sparrow
     }
 
     /// @returns The number of bytes required to store the provided primitive data type.
-    constexpr std::size_t primitive_bytes_count(data_type data_type, int64_t length)
+    constexpr std::size_t primitive_bytes_count(data_type data_type, size_t length)
     {
         SPARROW_ASSERT_TRUE(data_type_is_primitive(data_type));
-        const auto size = static_cast<std::size_t>(length);
         constexpr double bit_per_byte = 8.;
         switch (data_type)
         {
             case data_type::BOOL:
-                return static_cast<std::size_t>(std::ceil(static_cast<double>(size) / bit_per_byte));
+                return static_cast<std::size_t>(std::ceil(static_cast<double>(length) / bit_per_byte));
             case data_type::UINT8:
-                return size;
+                return length;
             case data_type::INT8:
-                return size;
+                return length;
             case data_type::UINT16:
-                return sizeof(std::uint16_t) / sizeof(std::uint8_t) * size;
+                return sizeof(std::uint16_t) / sizeof(std::uint8_t) * length;
             case data_type::INT16:
-                return sizeof(std::int16_t) / sizeof(std::uint8_t) * size;
+                return sizeof(std::int16_t) / sizeof(std::uint8_t) * length;
             case data_type::UINT32:
-                return sizeof(std::uint32_t) / sizeof(std::uint8_t) * size;
+                return sizeof(std::uint32_t) / sizeof(std::uint8_t) * length;
             case data_type::INT32:
-                return sizeof(std::int32_t) / sizeof(std::uint8_t) * size;
+                return sizeof(std::int32_t) / sizeof(std::uint8_t) * length;
             case data_type::UINT64:
-                return sizeof(std::uint64_t) / sizeof(std::uint8_t) * size;
+                return sizeof(std::uint64_t) / sizeof(std::uint8_t) * length;
             case data_type::INT64:
-                return sizeof(std::int64_t) / sizeof(std::uint8_t) * size;
+                return sizeof(std::int64_t) / sizeof(std::uint8_t) * length;
             case data_type::HALF_FLOAT:
-                return sizeof(float16_t) / sizeof(std::uint8_t) * size;
+                return sizeof(float16_t) / sizeof(std::uint8_t) * length;
             case data_type::FLOAT:
-                return sizeof(float32_t) / sizeof(std::uint8_t) * size;
+                return sizeof(float32_t) / sizeof(std::uint8_t) * length;
             case data_type::DOUBLE:
-                return sizeof(float64_t) / sizeof(std::uint8_t) * size;
+                return sizeof(float64_t) / sizeof(std::uint8_t) * length;
             default:
                 throw std::runtime_error("Unsupported data type");
         }

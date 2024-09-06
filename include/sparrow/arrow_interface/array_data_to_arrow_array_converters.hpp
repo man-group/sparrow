@@ -29,9 +29,9 @@ namespace sparrow
      * @param ads The array_data vector to convert.
      * @return The converted array_data elements
      */
-    template <typename R>
-        requires std::ranges::input_range<R> && std::same_as<std::ranges::range_value_t<R>, array_data>
-    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(R&& ads);
+    // template <typename R>
+    //     requires std::ranges::input_range<R> && std::same_as<std::ranges::range_value_t<R>, array_data>
+    // std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(R&& ads);
 
     /**
      * Convert array_data buffers to ArrowArray buffers.
@@ -51,9 +51,9 @@ namespace sparrow
      * @param ad The array_data to convert.
      * @return The converted ArrowArray.
      */
-    template <class T>
-        requires std::same_as<std::remove_cvref_t<T>, array_data>
-    arrow_array_unique_ptr to_arrow_array_unique_ptr(T&& ad);
+    // template <class T>
+    //     requires std::same_as<std::remove_cvref_t<T>, array_data>
+    // arrow_array_unique_ptr to_arrow_array_unique_ptr(T&& ad);
 
     template <class T>
         requires std::same_as<std::remove_cvref_t<T>, array_data>
@@ -73,39 +73,39 @@ namespace sparrow
         return buffers;
     }
 
-    template <class T>
-        requires std::same_as<std::remove_cvref_t<T>, array_data>
-    arrow_array_unique_ptr to_arrow_array_unique_ptr(T&& ad)
-    {
-        arrow_array_shared_ptr dictionary = ad.dictionary.has_value()
-                                                ? to_arrow_array_unique_ptr(std::move(*ad.dictionary))
-                                                : nullptr;
-        auto children = to_vector_of_arrow_array_shared_ptr(std::move(ad.child_data));
-        return make_arrow_array_unique_ptr(
-            ad.length,
-            static_cast<int64_t>(ad.bitmap.null_count()),
-            ad.offset,
-            to_vector_of_buffer(std::move(ad)),
-            std::move(children),
-            std::move(dictionary)
-        );
-    }
+    // template <class T>
+    //     requires std::same_as<std::remove_cvref_t<T>, array_data>
+    // arrow_array_unique_ptr to_arrow_array_unique_ptr(T&& ad)
+    // {
+    //     arrow_array_shared_ptr dictionary = ad.dictionary.has_value()
+    //                                             ? to_arrow_array_unique_ptr(std::move(*ad.dictionary))
+    //                                             : nullptr;
+    //     auto children = to_vector_of_arrow_array_shared_ptr(std::move(ad.child_data));
+    //     return make_arrow_array_unique_ptr(
+    //         ad.length,
+    //         static_cast<int64_t>(ad.bitmap.null_count()),
+    //         ad.offset,
+    //         to_vector_of_buffer(std::move(ad)),
+    //         std::move(children),
+    //         std::move(dictionary)
+    //     );
+    // }
 
-    template <typename R>
-        requires std::ranges::input_range<R> && std::same_as<std::ranges::range_value_t<R>, array_data>
-    std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(R&& ads)
-    {
-        std::vector<arrow_array_shared_ptr> result;
-        result.reserve(ads.size());
-        std::transform(
-            std::make_move_iterator(ads.begin()),
-            std::make_move_iterator(ads.end()),
-            std::back_inserter(result),
-            []<typename AD>(AD&& ad)
-            {
-                return to_arrow_array_unique_ptr(std::forward<AD>(ad));
-            }
-        );
-        return result;
-    }
+    // template <typename R>
+    //     requires std::ranges::input_range<R> && std::same_as<std::ranges::range_value_t<R>, array_data>
+    // std::vector<arrow_array_shared_ptr> to_vector_of_arrow_array_shared_ptr(R&& ads)
+    // {
+    //     std::vector<arrow_array_shared_ptr> result;
+    //     result.reserve(ads.size());
+    //     std::transform(
+    //         std::make_move_iterator(ads.begin()),
+    //         std::make_move_iterator(ads.end()),
+    //         std::back_inserter(result),
+    //         []<typename AD>(AD&& ad)
+    //         {
+    //             return to_arrow_array_unique_ptr(std::forward<AD>(ad));
+    //         }
+    //     );
+    //     return result;
+    // }
 }

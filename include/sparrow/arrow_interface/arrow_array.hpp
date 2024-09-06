@@ -14,16 +14,18 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
+#include "sparrow/arrow_interface/arrow_array/smart_pointers.hpp"
+#include "sparrow/c_interface.hpp"
 
 namespace sparrow
 {
     /**
-     * Creates an ArrowArray with provided data, with unique ownership.  
-     * 
+     * Creates an ArrowArray with provided data, with unique ownership.
+     *
      * @tparam B Value, reference or rvalue of std::vector<sparrow::buffer<uint8_t>>
-     * @tparam C Value, reference or rvalue of std::vector<arrow_array_shared_ptr>
-     * @tparam D Value, reference or rvalue of arrow_array_shared_ptr
      * @param length The logical length of the array (i.e. its number of items). Must be 0 or positive.
      * @param null_count The number of null items in the array. May be -1 if not yet computed. Must be 0 or
      * positive otherwise.
@@ -38,19 +40,17 @@ namespace sparrow
      * @param dictionary arrow_array_shared_ptr or nullptr.
      * @return The created ArrowArray.
      */
-    template <class B, class C, class D>
+    template <class B>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
-                 && std::constructible_from<arrow_array_private_data::ChildrenType, C>
-                 && std::constructible_from<arrow_array_private_data::DictionaryType, D>
     arrow_array_unique_ptr make_arrow_array_unique_ptr(
         int64_t length,
         int64_t null_count,
         int64_t offset,
         int64_t n_buffers,
         B buffers,
-        int64_t n_children,
-        C children,
-        D dictionary
+        size_t n_children,
+        ArrowArray** children,
+        ArrowArray* dictionary
     );
 
     /**
@@ -59,8 +59,6 @@ namespace sparrow
      * This function creates a unique pointer to an Arrow array with the specified parameters.
      *
      * @tparam B Value, reference or rvalue of std::vector<sparrow::buffer<uint8_t>>
-     * @tparam C Value, reference or rvalue of std::vector<arrow_array_shared_ptr>
-     * @tparam D Value, reference or rvalue of arrow_array_shared_ptr
      * @param length The logical length of the array (i.e. its number of items). Must be 0 or positive.
      * @param null_count The number of null items in the array. May be -1 if not yet computed. Must be 0 or
      * positive otherwise.
@@ -68,18 +66,22 @@ namespace sparrow
      *               the buffers). Must be 0 or positive.
      * @param buffers Vector of sparrow::buffer<uint8_t>.
      * @param children Vector of arrow_array_shared_ptr representing the children of the ArrowArray.
-        * @param dictionary arrow_array_shared_ptr or nullptr.mp
+     * @param dictionary arrow_array_shared_ptr or nullptr.mp
      * @return The created ArrowArray.
      */
-    template <class B, class C, class D>
+    template <class B>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
-                 && std::constructible_from<arrow_array_private_data::ChildrenType, C>
-                 && std::constructible_from<arrow_array_private_data::DictionaryType, D>
-    arrow_array_unique_ptr
-    make_arrow_array_unique_ptr(int64_t length, int64_t null_count, int64_t offset, B buffers, C children, D dictionary);
+    arrow_array_unique_ptr make_arrow_array_unique_ptr(
+        int64_t length,
+        int64_t null_count,
+        int64_t offset,
+        B buffers,
+        size_t n_children,
+        ArrowArray** children,
+        ArrowArray* dictionary
+    );
 
     /**
-     * Creates a unique pointer to an ArrowArray with default values.
      * All integers are set to 0 and pointers to nullptr.
      * The ArrowArray is in an invalid state and should not bu used as is.
      *
@@ -92,26 +94,23 @@ namespace sparrow
      */
     void release_arrow_array(ArrowArray* array);
 
-    template <class B, class C, class D>
+    template <class B>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
-                 && std::constructible_from<arrow_array_private_data::ChildrenType, C>
-                 && std::constructible_from<arrow_array_private_data::DictionaryType, D>
     arrow_array_unique_ptr make_arrow_array_unique_ptr(
         int64_t length,
         int64_t null_count,
         int64_t offset,
         int64_t n_buffers,
         B buffers,
-        int64_t n_children,
-        C children,
-        D dictionary
+        size_t n_children,
+        ArrowArray** children,
+        ArrowArray* dictionary
     )
     {
         SPARROW_ASSERT_TRUE(length >= 0);
         SPARROW_ASSERT_TRUE(null_count >= -1);
         SPARROW_ASSERT_TRUE(offset >= 0);
         SPARROW_ASSERT_TRUE(n_buffers >= 0);
-        SPARROW_ASSERT_TRUE(n_children >= 0);
 
         arrow_array_unique_ptr array = default_arrow_array_unique_ptr();
 
@@ -121,35 +120,37 @@ namespace sparrow
         array->n_buffers = n_buffers;
 
         array->private_data = new arrow_array_private_data(
-            std::move(buffers),
-            std::move(children),
-            std::move(dictionary)
+            std::move(buffers)
         );
         const auto private_data = static_cast<arrow_array_private_data*>(array->private_data);
         array->buffers = private_data->buffers_ptrs<void>();
-        array->n_children = n_children;
-        array->children = private_data->children_pointers();
-        array->dictionary = private_data->dictionary_pointer();
+        array->n_children = static_cast<int64_t>(n_children);
+        array->children = children;
+        array->dictionary = dictionary;
         array->release = release_arrow_array;
         return array;
     }
 
-    template <class B, class C, class D>
+    template <class B>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
-                 && std::constructible_from<arrow_array_private_data::ChildrenType, C>
-                 && std::constructible_from<arrow_array_private_data::DictionaryType, D>
-    arrow_array_unique_ptr
-    make_arrow_array_unique_ptr(int64_t length, int64_t null_count, int64_t offset, B buffers, C children, D dictionary)
+    arrow_array_unique_ptr make_arrow_array_unique_ptr(
+        int64_t length,
+        int64_t null_count,
+        int64_t offset,
+        B buffers,
+        size_t n_children,
+        ArrowArray** children,
+        ArrowArray* dictionary
+    )
     {
         const int64_t buffer_count = sparrow::ssize(buffers);
-        const int64_t children_count =  sparrow::ssize(children);
-        return make_arrow_array_unique_ptr<B, C, D>(
+        return make_arrow_array_unique_ptr<B>(
             length,
             null_count,
             offset,
             buffer_count,
             std::move(buffers),
-            children_count,
+            n_children,
             std::move(children),
             std::move(dictionary)
         );
@@ -172,13 +173,12 @@ namespace sparrow
         array->offset = 0;
         array->n_children = 0;
         array->children = nullptr;
-        array->dictionary = nullptr;
         if (array->private_data != nullptr)
         {
             const auto private_data = static_cast<arrow_array_private_data*>(array->private_data);
             delete private_data;
         }
         array->private_data = nullptr;
-        array->release = nullptr;
+        release_common_arrow(array);
     }
 }

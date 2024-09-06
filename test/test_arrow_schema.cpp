@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -107,12 +108,12 @@ TEST_SUITE("C Data Interface")
 
         SUBCASE("make_schema_constructor")
         {
-            std::vector<sparrow::arrow_schema_shared_ptr> children;
-            children.emplace_back(sparrow::default_arrow_schema_unique_ptr());
-            children.emplace_back(sparrow::default_arrow_schema_unique_ptr());
+            ArrowSchema** children = new ArrowSchema*[2];
+            children[0] = sparrow::default_arrow_schema_unique_ptr().release();
+            children[1] = sparrow::default_arrow_schema_unique_ptr().release();
 
-            const auto children_1_ptr = children[0].get();
-            const auto children_2_ptr = children[1].get();
+            const auto children_1_ptr = children[0];
+            const auto children_2_ptr = children[1];
 
             auto dictionnary = sparrow::default_arrow_schema_unique_ptr();
             dictionnary->name = "dictionary";
@@ -127,8 +128,9 @@ TEST_SUITE("C Data Interface")
                 name,
                 metadata,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                std::move(children),
-                std::move(dictionary)
+                2,
+                children,
+                dictionary_ptr
             );
 
             const auto schema_format = std::string_view(schema->format);
@@ -154,13 +156,13 @@ TEST_SUITE("C Data Interface")
 
         SUBCASE("make_schema_constructor no children, no dictionary, no name and metadata")
         {
-            std::vector<sparrow::arrow_schema_shared_ptr> children;
             const auto schema = sparrow::make_arrow_schema_unique_ptr(
                 "format"s,
                 std::nullopt,
                 std::nullopt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                std::nullopt,
+                0,
+                nullptr,
                 nullptr
             );
 
@@ -180,10 +182,9 @@ TEST_SUITE("C Data Interface")
 
         SUBCASE("ArrowSchema release")
         {
-            std::vector<sparrow::arrow_schema_shared_ptr> children;
-            children.emplace_back(sparrow::default_arrow_schema_unique_ptr());
-            children.emplace_back(sparrow::default_arrow_schema_unique_ptr());
-            sparrow::arrow_schema_shared_ptr dictionary(sparrow::default_arrow_schema_unique_ptr());
+            ArrowSchema** children = new ArrowSchema*[2];
+            children[0] = sparrow::default_arrow_schema_unique_ptr().release();
+            children[1] = sparrow::default_arrow_schema_unique_ptr().release();
 
             std::string metadata = "0000";
 
@@ -192,8 +193,9 @@ TEST_SUITE("C Data Interface")
                 "name"s,
                 metadata,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                std::move(children),
-                std::move(dictionary)
+                2,
+                children,
+                sparrow::default_arrow_schema_unique_ptr().release()
             );
 
             schema->release(schema.get());
@@ -215,7 +217,8 @@ TEST_SUITE("C Data Interface")
                 std::nullopt,
                 std::nullopt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                std::nullopt,
+                0,
+                nullptr,
                 nullptr
             );
 

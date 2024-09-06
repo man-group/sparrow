@@ -14,12 +14,12 @@
 
 #pragma once
 
-#include <optional>
 #include <vector>
 
-#include "sparrow/buffer/buffer.hpp"
-#include "sparrow/arrow_interface/arrow_array/smart_pointers.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
+#include "sparrow/buffer/buffer.hpp"
+#include "sparrow/buffer/buffer_view.hpp"
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
@@ -36,84 +36,67 @@ namespace sparrow
     public:
 
         using BufferType = std::vector<buffer<std::uint8_t>>;
-        using ChildrenType = std::optional<std::vector<arrow_array_shared_ptr>>;
-        using DictionaryType = arrow_array_shared_ptr;
 
-        arrow_array_private_data(BufferType buffers, ChildrenType children, DictionaryType dictionary);
+        explicit constexpr arrow_array_private_data(BufferType buffers);
 
-        [[nodiscard]] const BufferType& buffers() const noexcept;
+        [[nodiscard]] constexpr const BufferType& buffers() const noexcept;
+        constexpr void resize_buffers(std::size_t size);
+        void set_buffer(std::size_t index, buffer<std::uint8_t>&& buffer);
+        void set_buffer(std::size_t index, const buffer_view<std::uint8_t>& buffer);
+        constexpr void resize_buffer(std::size_t index, std::size_t size, std::uint8_t value);
 
         template <class T>
-        [[nodiscard]] const T** buffers_ptrs() noexcept;
-
-        [[nodiscard]] const ChildrenType& children() const noexcept;
-
-        [[nodiscard]] ArrowArray** children_pointers() noexcept;
-
-        [[nodiscard]] const DictionaryType& dictionary() const noexcept;
-
-        [[nodiscard]] ArrowArray* dictionary_pointer() noexcept;
+        [[nodiscard]] constexpr const T** buffers_ptrs() noexcept;
 
     private:
 
         BufferType m_buffers;
         std::vector<std::uint8_t*> m_buffers_pointers;
-        ChildrenType m_children;
-        std::vector<ArrowArray*> m_children_pointers;
-        DictionaryType m_dictionary;
     };
 
-    inline arrow_array_private_data::arrow_array_private_data(
-        BufferType buffers,
-        ChildrenType children,
-        DictionaryType dictionary
-    )
+    constexpr arrow_array_private_data::arrow_array_private_data(BufferType buffers)
         : m_buffers(std::move(buffers))
         , m_buffers_pointers(to_raw_ptr_vec<std::uint8_t>(m_buffers))
-        , m_children(std::move(children))
-        , m_children_pointers(to_raw_ptr_vec<ArrowArray>(m_children))
-        , m_dictionary(std::move(dictionary))
     {
     }
 
-    [[nodiscard]] inline const std::vector<buffer<std::uint8_t>>&
+    [[nodiscard]] constexpr const std::vector<buffer<std::uint8_t>>&
     arrow_array_private_data::buffers() const noexcept
     {
         return m_buffers;
     }
 
+    constexpr void arrow_array_private_data::resize_buffers(std::size_t size)
+    {
+        m_buffers.resize(size);
+        m_buffers_pointers = to_raw_ptr_vec<std::uint8_t>(m_buffers);
+    }
+
+    inline void arrow_array_private_data::set_buffer(std::size_t index, buffer<std::uint8_t>&& buffer)
+    {
+        SPARROW_ASSERT_TRUE(index < m_buffers.size());
+        m_buffers[index] = std::move(buffer);
+        m_buffers_pointers[index] = m_buffers[index].data();
+    }
+
+    inline void arrow_array_private_data::set_buffer(std::size_t index, const buffer_view<std::uint8_t>& buffer)
+    {
+        SPARROW_ASSERT_TRUE(index < m_buffers.size());
+        m_buffers[index] = buffer;
+        m_buffers_pointers[index] = m_buffers[index].data();
+    }
+
+    constexpr void
+    arrow_array_private_data::resize_buffer(std::size_t index, std::size_t size, std::uint8_t value)
+    {
+        SPARROW_ASSERT_TRUE(index < m_buffers.size());
+        m_buffers[index].resize(size, value);
+        m_buffers_pointers[index] = m_buffers[index].data();
+    }
+
     template <class T>
-    [[nodiscard]] inline const T** arrow_array_private_data::buffers_ptrs() noexcept
+    [[nodiscard]] constexpr const T** arrow_array_private_data::buffers_ptrs() noexcept
     {
         return const_cast<const T**>(reinterpret_cast<T**>(m_buffers_pointers.data()));
-    }
-
-    [[nodiscard]] inline const std::optional<std::vector<arrow_array_shared_ptr>>&
-    arrow_array_private_data::children() const noexcept
-    {
-        return m_children;
-    }
-
-    [[nodiscard]] inline ArrowArray** arrow_array_private_data::children_pointers() noexcept
-    {
-        if (m_children_pointers.empty())
-        {
-            return nullptr;
-        }
-        return m_children_pointers.data();
-    }
-
-    [[nodiscard]] inline const arrow_array_shared_ptr& arrow_array_private_data::dictionary() const noexcept
-    {
-        return m_dictionary;
-    }
-
-    [[nodiscard]] inline ArrowArray* arrow_array_private_data::dictionary_pointer() noexcept
-    {
-        if (!m_dictionary)
-        {
-            return nullptr;
-        }
-        return m_dictionary.get();
     }
 }

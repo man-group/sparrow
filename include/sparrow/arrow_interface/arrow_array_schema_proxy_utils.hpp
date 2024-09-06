@@ -138,18 +138,18 @@ namespace sparrow
     }
 
     /// @returns The expected offset element count for a given data type and array length.
-    constexpr std::size_t get_offset_size(data_type data_type, int64_t length)
+    constexpr std::size_t get_offset_buffer_size(data_type data_type, size_t length, size_t offset)
     {
         switch (data_type)
         {
             case data_type::STRING:
             case data_type::LIST:
             case data_type::LARGE_LIST:
-                return static_cast<std::size_t>(length) + 1;
+                return length + offset + 1;
             case data_type::LIST_VIEW:
             case data_type::LARGE_LIST_VIEW:
             case data_type::DENSE_UNION:
-                return static_cast<std::size_t>(length);
+                return length + offset;
             default:
                 throw std::runtime_error("Unsupported data type");
         }
