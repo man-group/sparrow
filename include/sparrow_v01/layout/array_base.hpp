@@ -68,7 +68,7 @@ namespace sparrow
 
     private:
 
-        bitmap_type init_bitmap() const;
+        bitmap_type make_bitmap() const;
         bitmap_type m_bitmap;
     };
 
@@ -97,14 +97,14 @@ namespace sparrow
 
     inline array_with_bitmap::array_with_bitmap(arrow_proxy proxy)
         : array_base(std::move(proxy))
-        , m_bitmap(init_bitmap())
+        , m_bitmap(make_bitmap())
     {
     }
 
 
     inline array_with_bitmap::array_with_bitmap(const array_with_bitmap& rhs)
         : array_base(rhs)
-        , m_bitmap(init_bitmap())
+        , m_bitmap(make_bitmap())
     {
     }
 
@@ -113,8 +113,9 @@ namespace sparrow
         return m_bitmap;
     }
 
-    inline auto array_with_bitmap::init_bitmap() const -> bitmap_type
+    inline auto array_with_bitmap::make_bitmap() const -> bitmap_type
     {
+        SPARROW_ASSERT_TRUE(array_base::data().buffers().size() != 0);
         return bitmap_type(array_base::data().buffers()[0].data(),
                            array_base::data().buffers()[0].size());
     }
