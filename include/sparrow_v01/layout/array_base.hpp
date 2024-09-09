@@ -36,16 +36,16 @@ namespace sparrow
 
     protected:
 
-        array_base(array_proxy proxy);
+        array_base(arrow_proxy proxy);
         array_base(const array_base&) = default;
 
-        const array_proxy& data() const;
+        const arrow_proxy& data() const;
 
     private:
 
         virtual array_base* clone_impl() const = 0;
 
-        array_proxy m_proxy;
+        arrow_proxy m_proxy;
     };
 
     /**
@@ -55,19 +55,67 @@ namespace sparrow
     {
     public:
 
-        using bitmap_type = dynamic_bitset_view<std::int8_t>;
+        using bitmap_type = dynamic_bitset_view<const std::uint8_t>;
 
         virtual ~array_with_bitmap() = default;
 
     protected:
 
-        array_with_bitmap(array_proxy proxy);
+        array_with_bitmap(arrow_proxy proxy);
         array_with_bitmap(const array_with_bitmap&);
 
         const bitmap_type& bitmap() const;
 
     private:
 
+        bitmap_type init_bitmap() const;
         bitmap_type m_bitmap;
     };
+
+    /*****************************
+     * array_base implementation *
+     *****************************/
+
+    inline array_base* array_base::clone() const
+    {
+        return clone_impl();
+    }
+
+    inline array_base::array_base(arrow_proxy proxy)
+        : m_proxy(std::move(proxy))
+    {
+    }
+
+    inline const arrow_proxy& array_base::data() const
+    {
+        return m_proxy;
+    }
+
+    /************************************
+     * array_with_bitmap implementation *
+     ************************************/
+
+    inline array_with_bitmap::array_with_bitmap(arrow_proxy proxy)
+        : array_base(std::move(proxy))
+        , m_bitmap(init_bitmap())
+    {
+    }
+
+
+    inline array_with_bitmap::array_with_bitmap(const array_with_bitmap& rhs)
+        : array_base(rhs)
+        , m_bitmap(init_bitmap())
+    {
+    }
+
+    inline auto array_with_bitmap::bitmap() const -> const bitmap_type&
+    {
+        return m_bitmap;
+    }
+
+    inline auto array_with_bitmap::init_bitmap() const -> bitmap_type
+    {
+        return bitmap_type(array_base::data().buffers()[0].data(),
+                           array_base::data().buffers()[0].size());
+    }
 }
