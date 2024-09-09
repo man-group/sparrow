@@ -33,12 +33,14 @@ else()
 endif()
 
 set(SPARROW_V1_TESTS_SOURCES
+    ../test/external_array_data_creation.cpp
     ../test/main.cpp
     ../test/better_junit_reporter.hpp
     ../test/junit.hpp
     ../test/junit.cpp
     ../test/junit_xml_writer.hpp
     test_memory.cpp
+    test_null_array.cpp
 )
 set(test_target_v01 "test_sparrow_lib_v01")
 add_executable(${test_target_v01} ${SPARROW_V1_TESTS_SOURCES})

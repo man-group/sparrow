@@ -134,8 +134,8 @@ namespace sparrow
     }
 
     arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema&& schema)
-        : m_array(std::forward<ArrowArray>(array))
-        , m_schema(std::forward<ArrowSchema>(schema))
+        : m_array(std::move(array))
+        , m_schema(std::move(schema))
     {
         validate_array_and_schema();
         initialize_children();
@@ -143,7 +143,7 @@ namespace sparrow
     }
 
     arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema* schema)
-        : m_array(std::forward<ArrowArray>(array))
+        : m_array(std::move(array))
         , m_schema(schema)
     {
         SPARROW_ASSERT_TRUE(schema != nullptr);
