@@ -24,8 +24,8 @@ namespace sparrow
 {
     arrow_proxy make_proxy_for_null_array(std::size_t size)
     {
-        ArrowSchema sc;
-        ArrowArray ar;
+        ArrowSchema sc{};
+        ArrowArray ar{};
         test::fill_schema_and_array<null_type>(sc, ar, size, 0u, {});
         return arrow_proxy(std::move(ar), std::move(sc));
     }
