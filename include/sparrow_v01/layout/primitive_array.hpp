@@ -106,11 +106,38 @@ namespace sparrow
      * primitive_array implementation *
      **********************************/
 
+    namespace detail
+    {
+        bool check_primitive_data_type(std::string_view format)
+        {
+            constexpr std::array<data_type, 14> dtypes =
+            {
+                data_type::BOOL,
+                data_type::UINT8,
+                data_type::INT8,
+                data_type::UINT16,
+                data_type::INT16,
+                data_type::UINT32,
+                data_type::INT32,
+                data_type::UINT64,
+                data_type::INT64,
+                data_type::HALF_FLOAT,
+                data_type::FLOAT,
+                data_type::DOUBLE,
+                data_type::FIXED_SIZE_BINARY,
+                data_type::TIMESTAMP
+            };
+            return std::find(dtypes.cbegin(), dtypes.cend(),
+                    format_to_data_type(format)) != dtypes.cend();
+        }
+    }
+
     template <class T>
     primitive_array<T>::primitive_array(arrow_proxy proxy)
         : array_base()
         , base_type(std::move(proxy))
     {
+        SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(proxy.format()));
     }
 
     template <class T>
@@ -130,14 +157,12 @@ namespace sparrow
     template <class T>
     auto primitive_array<T>::data() -> pointer
     {
-        SPARROW_ASSERT_TRUE(storage().n_buffers() > 1);
         return storage().buffers()[1u].template data<inner_value_type>();
     }
 
     template <class T>
     auto primitive_array<T>::data() const -> const_pointer
     {
-        SPARROW_ASSERT_TRUE(storage().n_buffers() > 1);
         return storage().buffers()[1u].template data<const inner_value_type>();
     }
     

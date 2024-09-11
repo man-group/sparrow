@@ -173,7 +173,7 @@ namespace sparrow
     inline null_array::null_array(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
     {
-        SPARROW_ASSERT_TRUE(m_proxy.n_buffers() == 0);
+        SPARROW_ASSERT_TRUE(format_to_data_type(m_proxy.format()) == data_type::NA);
     }
 
     inline auto null_array::size() const -> size_type

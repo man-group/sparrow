@@ -55,6 +55,9 @@ namespace sparrow
 
     /**
      * Base class defining common interface for arrays.
+     *
+     * This class is a CRTP base class that defines and
+     * implements comme interface for arrays with a bitmap.
      */
     template <class D>
     class array_crtp_base
