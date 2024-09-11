@@ -117,18 +117,18 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("move constructor")
         {
-            auto [schema, array] = make_default_arrow_schema_and_array();
+            auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             auto proxy2 = std::move(proxy);
-            CHECK_EQ(proxy2.format(), "I");
+            CHECK_EQ(proxy2.format(), "C");
         }
 
         SUBCASE("move assignment")
         {
-            auto [schema, array] = make_default_arrow_schema_and_array();
+            auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
 
-            auto [schema2, array2] = make_default_arrow_schema_and_array();
+            auto [schema2, array2] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy2(std::move(array2), std::move(schema2));
 
             proxy = std::move(proxy2);

@@ -77,8 +77,8 @@ namespace sparrow
         arrow_proxy& operator=(const arrow_proxy&);
 
         // Move constructors
-        arrow_proxy(arrow_proxy&&) noexcept;
-        arrow_proxy& operator=(arrow_proxy&&) noexcept;
+        arrow_proxy(arrow_proxy&&);
+        arrow_proxy& operator=(arrow_proxy&&);
 
         ~arrow_proxy();
 
@@ -253,7 +253,7 @@ namespace sparrow
         return *this;
     }
 
-    arrow_proxy::arrow_proxy(arrow_proxy&& other) noexcept :
+    arrow_proxy::arrow_proxy(arrow_proxy&& other) :
         m_array(std::move(other.m_array)),
         m_array_ref(m_array.index() == 0 ? *std::get<0>(m_array) : std::get<1>(m_array)),
         m_schema(std::move(other.m_schema)),
@@ -263,11 +263,10 @@ namespace sparrow
         other.m_schema = {};
         other.m_buffers.clear();
 
-        validate_array_and_schema();
         initialize_buffers();
     }
 
-    arrow_proxy& arrow_proxy::operator=(arrow_proxy&& other) noexcept
+    arrow_proxy& arrow_proxy::operator=(arrow_proxy&& other)
     {
         if (this == &other)
         {
@@ -282,8 +281,6 @@ namespace sparrow
         other.m_array = {};
         other.m_schema = {};
         other.m_buffers.clear();
-
-        validate_array_and_schema();
         initialize_buffers();
 
         return *this;
@@ -331,16 +328,6 @@ namespace sparrow
                 }
             }
         }
-    }
-    
-    inline arrow_proxy::arrow_proxy(arrow_proxy&& rhs)
-        : m_array(std::move(rhs.m_array))
-        , m_schema(std::move(rhs.m_schema))
-    {
-        initialize_children();
-        initialize_buffers();
-        rhs.array().release = nullptr;
-        rhs.schema().release = nullptr;
     }
 
     [[nodiscard]] inline const std::string_view arrow_proxy::format() const
