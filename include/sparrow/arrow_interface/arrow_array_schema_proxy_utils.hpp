@@ -68,6 +68,7 @@ namespace sparrow
     }
 
     /// @returns `true` if  the format of an `ArrowArray` for a given data type is valid, `false` otherwise.
+    inline 
     bool validate_format_with_arrow_array(data_type data_type, const ArrowArray& array)
     {
         const bool buffers_count_valid = validate_buffers_count(data_type, array.n_buffers);
