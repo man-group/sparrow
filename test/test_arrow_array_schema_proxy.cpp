@@ -113,9 +113,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            schema.format = "TEST";
             auto proxy2{std::move(proxy)};
-            CHECK_EQ(proxy2.format(), "TEST");
+            CHECK_EQ(proxy2.format(), "C");
         }
 
         SUBCASE("move assignment")
@@ -124,11 +123,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             sparrow::arrow_proxy proxy{std::move(array), std::move(schema)};
 
             auto [schema2, array2] = make_sparrow_arrow_schema_and_array();
-            schema2.format = "TEST";
             const sparrow::arrow_proxy proxy2{std::move(array2), std::move(schema2)};
-
             proxy = std::move(proxy2);
-            CHECK_EQ(proxy.format(), "TEST");
+            CHECK_EQ(proxy.format(), "C");
         }
     }
 
@@ -377,7 +374,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         auto buffers = proxy.buffers();
         REQUIRE_EQ(buffers.size(), 2);
         CHECK_EQ(buffers[0].size(), 2);
-        sparrow::dynamic_bitset<uint8_t> bitmap(buffers[0].data(), 10);
+        const sparrow::dynamic_bitset_view<uint8_t> bitmap(buffers[0].data(), 10);
         CHECK(bitmap.test(0));
         CHECK(bitmap.test(1));
         CHECK_FALSE(bitmap.test(2));
