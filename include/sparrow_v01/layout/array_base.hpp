@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <ranges>
+
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 
@@ -36,39 +38,85 @@ namespace sparrow
 
     protected:
 
-        array_base(arrow_proxy proxy);
+        array_base() = default;
         array_base(const array_base&) = default;
-
-        const arrow_proxy& data() const;
 
     private:
 
         virtual array_base* clone_impl() const = 0;
-
-        arrow_proxy m_proxy;
     };
 
     /**
-     * Base class for arrays with bitmap
+     * traits class that must be specialized by array
+     * classes inheriting from array_crtp_base.
      */
-    class array_with_bitmap : public array_base
+    template <class D>
+    struct array_inner_types;
+
+    /**
+     * Base class defining common interface for arrays.
+     */
+    template <class D>
+    class array_crtp_base
     {
     public:
 
-        using bitmap_type = dynamic_bitset_view<const std::uint8_t>;
+        using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
+        using bitmap_type = dynamic_bitset_view<std::uint8_t>;
+        using bitmap_reference = bitmap_type::reference;
+        using bitmap_const_reference = bitmap_type::const_reference;
+        using bitmap_iterator = bitmap_type::iterator;
+        using const_bitmap_iterator = bitmap_type::const_iterator;
+        using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
-        virtual ~array_with_bitmap() = default;
+        using derived_type = D;
+        using inner_types = array_inner_types<derived_type>;
+        using iterator = typename inner_types::iterator;
+        using const_iterator = typename inner_types::const_iterator;
+        using value_iterator = typename inner_types::value_iterator;
+        using const_value_iterator = typename inner_types::const_value_iterator;
+        using const_value_range = std::ranges::subrange<const_value_iterator>;
+
+        size_type size() const;
+
+        iterator begin();
+        iterator end();
+
+        const_iterator begin() const;
+        const_iterator end() const;
+
+        const_iterator cbegin() const;
+        const_iterator cend() const;
+
+        const_bitmap_range bitmap() const;
+        const_value_range values() const;
 
     protected:
 
-        array_with_bitmap(arrow_proxy proxy);
-        array_with_bitmap(const array_with_bitmap&);
+        array_crtp_base(arrow_proxy);
+        array_crtp_base(const array_crtp_base&);
 
-        const bitmap_type& bitmap() const;
+        arrow_proxy& storage();
+        const arrow_proxy& storage() const;
+
+        bitmap_reference has_value(size_type i);
+        bitmap_const_reference has_value(size_type i) const;
+
+        bitmap_iterator bitmap_begin();
+        bitmap_iterator bitmap_end();
+
+        const_bitmap_iterator bitmap_begin() const;
+        const_bitmap_iterator bitmap_end() const;
 
     private:
+        
+        bitmap_type make_bitmap();
 
-        bitmap_type make_bitmap() const;
+        derived_type& derived_cast();
+        const derived_type& derived_cast() const;
+
+        arrow_proxy m_proxy;
         bitmap_type m_bitmap;
     };
 
@@ -81,42 +129,147 @@ namespace sparrow
         return clone_impl();
     }
 
-    inline array_base::array_base(arrow_proxy proxy)
+    /**********************************
+     * array_crtp_base implementation *
+     **********************************/
+
+    template <class D>
+    auto array_crtp_base<D>::size() const -> size_type
+    {
+        SPARROW_ASSERT_TRUE(storage().offset() <= storage().length());
+        return static_cast<size_type>(storage().length() - storage().offset());
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::begin() -> iterator
+    {
+        return iterator(derived_cast().value_begin(), derived_cast().bitmap_begin());
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::end() -> iterator
+    {
+        return iterator(derived_cast().value_end(), derived_cast().bitmap_end());
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::begin() const -> const_iterator
+    {
+        return cbegin();
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::end() const -> const_iterator
+    {
+        return cend();
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::cbegin() const -> const_iterator
+    {
+        return const_iterator(derived_cast().value_cbegin(), derived_cast().bitmap_begin());
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::cend() const -> const_iterator
+    {
+        return const_iterator(derived_cast().value_cend(), derived_cast().bitmap_end());
+    }
+
+
+    template <class D>
+    auto array_crtp_base<D>::bitmap() const -> const_bitmap_range
+    {
+        return std::ranges::subrange(bitmap_begin(), bitmap_end());
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::values() const -> const_value_range
+    {
+        return std::ranges::subrange(derived_cast().value_cbegin(), derived_cast().value_cend());
+    }
+
+    template <class D>
+    array_crtp_base<D>::array_crtp_base(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
+        , m_bitmap(make_bitmap())
     {
     }
 
-    inline const arrow_proxy& array_base::data() const
+    template <class D>
+    array_crtp_base<D>::array_crtp_base(const array_crtp_base& rhs)
+        : m_proxy(rhs.m_proxy)
+        , m_bitmap(make_bitmap())
+    {
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::storage() -> arrow_proxy&
     {
         return m_proxy;
     }
 
-    /************************************
-     * array_with_bitmap implementation *
-     ************************************/
-
-    inline array_with_bitmap::array_with_bitmap(arrow_proxy proxy)
-        : array_base(std::move(proxy))
-        , m_bitmap(make_bitmap())
+    template <class D>
+    auto array_crtp_base<D>::storage() const -> const arrow_proxy&
     {
+        return m_proxy;
+    }
+    
+    template <class D>
+    auto array_crtp_base<D>::has_value(size_type i) -> bitmap_reference
+    {
+        SPARROW_ASSERT_TRUE(i < size());
+        return m_bitmap[i + static_cast<size_type>(storage().offset())];
     }
 
-
-    inline array_with_bitmap::array_with_bitmap(const array_with_bitmap& rhs)
-        : array_base(rhs)
-        , m_bitmap(make_bitmap())
+    template <class D>
+    auto array_crtp_base<D>::has_value(size_type i) const -> bitmap_const_reference
     {
+        SPARROW_ASSERT_TRUE(i < size());
+        return m_bitmap[i + static_cast<size_type>(storage().offset())];
     }
 
-    inline auto array_with_bitmap::bitmap() const -> const bitmap_type&
+    template <class D>
+    auto array_crtp_base<D>::bitmap_begin() -> bitmap_iterator
     {
-        return m_bitmap;
+        return sparrow::next(m_bitmap.begin(), storage().offset());
     }
 
-    inline auto array_with_bitmap::make_bitmap() const -> bitmap_type
+    template <class D>
+    auto array_crtp_base<D>::bitmap_end() -> bitmap_iterator
     {
-        SPARROW_ASSERT_TRUE(array_base::data().buffers().size() != 0);
-        return bitmap_type(array_base::data().buffers()[0].data(),
-                           array_base::data().buffers()[0].size());
+        return sparrow::next(bitmap_begin(), size());
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::bitmap_begin() const -> const_bitmap_iterator
+    {
+        return sparrow::next(m_bitmap.cbegin(), storage().offset());
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::bitmap_end() const -> const_bitmap_iterator
+    {
+        return sparrow::next(bitmap_begin(), size());
+    }
+    
+    template <class D>
+    auto array_crtp_base<D>::make_bitmap() -> bitmap_type
+    {
+        SPARROW_ASSERT_TRUE(storage().buffers().size() != 0);
+        return bitmap_type(storage().buffers()[0].data(),
+                           static_cast<std::size_t>(storage().length()));
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::derived_cast() -> derived_type&
+    {
+        return *static_cast<derived_type*>(this);
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::derived_cast() const -> const derived_type&
+    {
+        return *static_cast<const derived_type*>(this);
     }
 }

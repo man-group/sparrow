@@ -148,6 +148,9 @@ set(SPARROW_SRC
 if (BUILD_REFACTORING)
     set(SPARROW_V01_HEADERS
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/dummy.hpp
+        ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/array_base.hpp
+        ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/null_array.hpp
+        ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/primitive_array.hpp
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/utils/memory.hpp
     )
     list(APPEND SPARROW_HEADERS ${SPARROW_V01_HEADERS})
