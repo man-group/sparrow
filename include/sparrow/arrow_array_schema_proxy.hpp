@@ -52,6 +52,13 @@ namespace sparrow
 
         ~arrow_proxy();
 
+        // TODO: implement them with the modifiers
+        arrow_proxy(const arrow_proxy&) = default;
+        arrow_proxy& operator=(const arrow_proxy&) = default;
+
+        arrow_proxy(arrow_proxy&&);
+        arrow_proxy& operator=(arrow_proxy&&);
+
         [[nodiscard]] std::string_view format() const;
         [[nodiscard]] std::string_view name() const;
         [[nodiscard]] std::string_view metadata() const;
@@ -94,6 +101,7 @@ namespace sparrow
     inline
     void arrow_proxy::initialize_children()
     {
+        m_children.clear();
         m_children.reserve(static_cast<std::size_t>(array().n_children));
         for (int64_t i = 0; i < array().n_children; ++i)
         {
@@ -214,7 +222,26 @@ namespace sparrow
             }
         }
     }
+    
+    inline arrow_proxy::arrow_proxy(arrow_proxy&& rhs)
+        : m_array(std::move(rhs.m_array))
+        , m_schema(std::move(rhs.m_schema))
+    {
+        initialize_children();
+        initialize_buffers();
+        rhs.array().release = nullptr;
+        rhs.schema().release = nullptr;
+    }
 
+    inline arrow_proxy& arrow_proxy::operator=(arrow_proxy&& rhs)
+    {
+        std::swap(m_array, rhs.m_array);
+        std::swap(m_schema, rhs.m_schema);
+        initialize_children();
+        initialize_buffers();
+        return *this;
+    }
+    
     [[nodiscard]] inline std::string_view arrow_proxy::format() const
     {
         return schema().format;
