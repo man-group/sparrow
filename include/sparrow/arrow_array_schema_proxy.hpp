@@ -269,6 +269,7 @@ namespace sparrow
         , m_schema_ref(m_schema.index() == 0 ? *std::get<0>(m_schema) : std::get<1>(m_schema))
         , m_data_ownership(other.m_data_ownership)
     {
+        other.m_data_ownership = doesnt_own_arrow_data;
         other.m_array = {};
         other.m_schema = {};
         other.m_buffers.clear();
@@ -276,22 +277,24 @@ namespace sparrow
         initialize_buffers();
     }
 
-    arrow_proxy& arrow_proxy::operator=(arrow_proxy&& other)
+    arrow_proxy& arrow_proxy::operator=(arrow_proxy&& rhs)
     {
-        if (this == &other)
+        if (this == &rhs)
         {
             return *this;
         }
 
-        m_array = std::move(other.m_array);
+        m_array = std::move(rhs.m_array);
         m_array_ref = m_array.index() == 0 ? *std::get<0>(m_array) : std::get<1>(m_array);
-        m_schema = std::move(other.m_schema);
+        m_schema = std::move(rhs.m_schema);
         m_schema_ref = m_schema.index() == 0 ? *std::get<0>(m_schema) : std::get<1>(m_schema);
-        m_data_ownership = other.m_data_ownership;
+        m_data_ownership = rhs.m_data_ownership;
 
-        other.m_array = {};
-        other.m_schema = {};
-        other.m_buffers.clear();
+        rhs.m_data_ownership = doesnt_own_arrow_data;
+        rhs.m_array = {};
+        rhs.m_schema = {};
+        rhs.m_buffers.clear();
+
         initialize_buffers();
 
         return *this;
