@@ -69,9 +69,8 @@ namespace sparrow
         /// Neither the array nor the schema are released when the arrow_proxy is destroyed.
         explicit arrow_proxy(
             ArrowArray* array,
-            ownership array_ownership,
             ArrowSchema* schema,
-            ownership schema_ownership
+            arrow_data_ownership data_ownership
         );
 
         // Copy constructors
@@ -193,7 +192,7 @@ namespace sparrow
         , m_array_ref(std::get<1>(m_array))
         , m_schema(std::move(schema))
         , m_schema_ref(std::get<1>(m_schema))
-        , m_data_ownership({.schema = ownership::owning, .array = ownership::owning})
+        , m_data_ownership(owns_arrow_data)
     {
         array = {};
         schema = {};
@@ -216,15 +215,14 @@ namespace sparrow
 
     inline arrow_proxy::arrow_proxy(
         ArrowArray* array,
-        ownership array_ownership,
         ArrowSchema* schema,
-        ownership schema_ownership
+        arrow_data_ownership data_ownership
     )
         : m_array(array)
         , m_array_ref(*std::get<0>(m_array))
         , m_schema(schema)
         , m_schema_ref(*std::get<0>(m_schema))
-        , m_data_ownership({.schema = schema_ownership, .array = array_ownership})
+        , m_data_ownership(std::move(data_ownership))
     {
         SPARROW_ASSERT_TRUE(array != nullptr);
         SPARROW_ASSERT_TRUE(schema != nullptr);
@@ -267,7 +265,7 @@ namespace sparrow
         , m_array_ref(m_array.index() == 0 ? *std::get<0>(m_array) : std::get<1>(m_array))
         , m_schema(std::move(other.m_schema))
         , m_schema_ref(m_schema.index() == 0 ? *std::get<0>(m_schema) : std::get<1>(m_schema))
-        , m_data_ownership(other.m_data_ownership)
+        , m_data_ownership(std::move(other.m_data_ownership))
     {
         other.m_data_ownership = doesnt_own_arrow_data;
         other.m_array = {};
@@ -288,7 +286,7 @@ namespace sparrow
         m_array_ref = m_array.index() == 0 ? *std::get<0>(m_array) : std::get<1>(m_array);
         m_schema = std::move(rhs.m_schema);
         m_schema_ref = m_schema.index() == 0 ? *std::get<0>(m_schema) : std::get<1>(m_schema);
-        m_data_ownership = rhs.m_data_ownership;
+        m_data_ownership = std::move(rhs.m_data_ownership);
 
         rhs.m_data_ownership = doesnt_own_arrow_data;
         rhs.m_array = {};
@@ -617,9 +615,8 @@ namespace sparrow
         {
             children.emplace_back(
                 m_array_ref.children[i],
-                ownership::not_owning,
                 m_schema_ref.children[i],
-                ownership::not_owning
+                doesnt_own_arrow_data
             );
         }
         return children;
@@ -644,9 +641,8 @@ namespace sparrow
         }
         return arrow_proxy{
             m_array_ref.dictionary,
-            ownership::not_owning,
             m_schema_ref.dictionary,
-            ownership::not_owning
+            doesnt_own_arrow_data
         };
     }
 
