@@ -15,10 +15,10 @@
 #pragma once
 
 #include <cstdint>
+
+#include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_schema/smart_pointers.hpp"
-
-#include "arrow_array_schema_utils.hpp"
 
 namespace sparrow
 {
@@ -123,9 +123,9 @@ namespace sparrow
     )
     {
         SPARROW_ASSERT_FALSE(format.empty());
-        if(children)
+        if (children)
         {
-            for(int64_t i = 0; i < n_children; ++i)
+            for (int64_t i = 0; i < n_children; ++i)
             {
                 SPARROW_ASSERT_FALSE(children[i] == nullptr);
             }

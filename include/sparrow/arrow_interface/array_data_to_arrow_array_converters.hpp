@@ -19,7 +19,6 @@
 #include <type_traits>
 
 #include "sparrow/array/array_data.hpp"
-#include "sparrow/arrow_interface/arrow_array.hpp"
 
 namespace sparrow
 {

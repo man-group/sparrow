@@ -15,8 +15,6 @@
 #pragma once
 
 #include <cstddef>
-#include <functional>
-#include <iostream>
 #include <ranges>
 
 #include "sparrow_v01/layout/array_base.hpp"

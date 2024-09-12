@@ -36,8 +36,8 @@ namespace sparrow
      *                  for the the binary or utf-8 view type, which has one additional buffer compared to
      *                  the Columnar format specification (see Binary view arrays). Must be 0 or positive.
      * @param buffers Vector of sparrow::buffer
-     * @param children Vector of arrow_array_shared_ptr representing the children of the ArrowArray.
-     * @param dictionary arrow_array_shared_ptr or nullptr.
+     * @param children Raw vector of ArrowArray pointers or nullptr.
+     * @param dictionary ArrowArray pointer or nullptr.
      * @return The created ArrowArray.
      */
     template <class B>
@@ -65,8 +65,8 @@ namespace sparrow
      * @param offset The logical offset inside the array (i.e. the number of items from the physical start of
      *               the buffers). Must be 0 or positive.
      * @param buffers Vector of sparrow::buffer<uint8_t>.
-     * @param children Vector of arrow_array_shared_ptr representing the children of the ArrowArray.
-     * @param dictionary arrow_array_shared_ptr or nullptr.mp
+     * @param children Raw vector of ArrowArray pointers or nullptr.
+     * @param dictionary ArrowArray pointer or nullptr.
      * @return The created ArrowArray.
      */
     template <class B>
