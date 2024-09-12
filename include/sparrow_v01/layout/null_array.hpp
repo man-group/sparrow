@@ -177,7 +177,7 @@ namespace sparrow
 
     inline auto null_array::size() const -> size_type
     {
-        return data().length();
+        return m_proxy.length();
     }
 
     inline auto null_array::operator[](size_type i) -> reference
