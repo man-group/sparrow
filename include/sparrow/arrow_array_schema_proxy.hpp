@@ -163,17 +163,17 @@ namespace sparrow
         }
     }
 
-    bool arrow_proxy::array_created_with_sparrow() const
+    inline bool arrow_proxy::array_created_with_sparrow() const
     {
         return m_array_ref.release == &sparrow::release_arrow_array;
     }
 
-    bool arrow_proxy::schema_created_with_sparrow() const
+    inline bool arrow_proxy::schema_created_with_sparrow() const
     {
         return m_schema_ref.release == &sparrow::release_arrow_schema;
     }
 
-    void arrow_proxy::validate_array_and_schema() const
+    inline void arrow_proxy::validate_array_and_schema() const
     {
         SPARROW_ASSERT_TRUE(m_array_ref.release != nullptr);
         SPARROW_ASSERT_TRUE(m_schema_ref.release != nullptr);
@@ -230,7 +230,7 @@ namespace sparrow
         initialize_buffers();
     }
 
-    arrow_proxy::arrow_proxy(const arrow_proxy& other)
+    inline arrow_proxy::arrow_proxy(const arrow_proxy& other)
         : m_array(&other.m_array_ref)
         , m_array_ref(*std::get<0>(m_array))
         , m_schema(&other.m_schema_ref)
@@ -241,7 +241,7 @@ namespace sparrow
         initialize_buffers();
     }
 
-    arrow_proxy& arrow_proxy::operator=(const arrow_proxy& other)
+    inline arrow_proxy& arrow_proxy::operator=(const arrow_proxy& other)
     {
         if (this == &other)
         {
@@ -260,7 +260,7 @@ namespace sparrow
         return *this;
     }
 
-    arrow_proxy::arrow_proxy(arrow_proxy&& other)
+    inline arrow_proxy::arrow_proxy(arrow_proxy&& other)
         : m_array(std::move(other.m_array))
         , m_array_ref(m_array.index() == 0 ? *std::get<0>(m_array) : std::get<1>(m_array))
         , m_schema(std::move(other.m_schema))
@@ -275,7 +275,7 @@ namespace sparrow
         initialize_buffers();
     }
 
-    arrow_proxy& arrow_proxy::operator=(arrow_proxy&& rhs)
+    inline arrow_proxy& arrow_proxy::operator=(arrow_proxy&& rhs)
     {
         if (this == &rhs)
         {
@@ -356,12 +356,12 @@ namespace sparrow
         m_schema_ref.format = get_schema_private_data()->format_ptr();
     }
 
-    [[nodiscard]] enum data_type arrow_proxy::data_type() const
+    [[nodiscard]] inline enum data_type arrow_proxy::data_type() const
     {
         return format_to_data_type(m_schema_ref.format);
     }
 
-    void arrow_proxy::set_data_type(enum data_type data_type)
+    inline void arrow_proxy::set_data_type(enum data_type data_type)
     {
         if (!is_created_with_sparrow())
         {
@@ -371,7 +371,7 @@ namespace sparrow
         m_schema_ref.format = get_schema_private_data()->format_ptr();
     }
 
-    [[nodiscard]] std::optional<const std::string_view> arrow_proxy::name() const
+    [[nodiscard]] inline std::optional<const std::string_view> arrow_proxy::name() const
     {
         if (m_schema_ref.name == nullptr)
         {
@@ -380,7 +380,7 @@ namespace sparrow
         return std::string_view(m_schema_ref.name);
     }
 
-    void arrow_proxy::set_name(std::optional<const std::string_view> name)
+    inline void arrow_proxy::set_name(std::optional<const std::string_view> name)
     {
         if (!is_created_with_sparrow())
         {
@@ -390,7 +390,7 @@ namespace sparrow
         m_schema_ref.name = get_schema_private_data()->name_ptr();
     }
 
-    [[nodiscard]] std::optional<const std::string_view> arrow_proxy::metadata() const
+    [[nodiscard]] inline std::optional<const std::string_view> arrow_proxy::metadata() const
     {
         if (m_schema_ref.metadata == nullptr)
         {
@@ -399,7 +399,7 @@ namespace sparrow
         return std::string_view(m_schema_ref.metadata);
     }
 
-    void arrow_proxy::set_metadata(std::optional<const std::string_view> metadata)
+    inline void arrow_proxy::set_metadata(std::optional<const std::string_view> metadata)
     {
         if (!is_created_with_sparrow())
         {
@@ -414,7 +414,7 @@ namespace sparrow
         return to_vector_of_ArrowFlags(m_schema_ref.flags);
     }
 
-    void arrow_proxy::set_flags(const std::vector<ArrowFlag>& flags)
+    inline void arrow_proxy::set_flags(const std::vector<ArrowFlag>& flags)
     {
         if (!is_created_with_sparrow())
         {
@@ -423,14 +423,14 @@ namespace sparrow
         m_schema_ref.flags = to_ArrowFlag_value(flags);
     }
 
-    [[nodiscard]] size_t arrow_proxy::length() const
+    [[nodiscard]] inline size_t arrow_proxy::length() const
     {
         SPARROW_ASSERT_TRUE(m_array_ref.length >= 0);
         SPARROW_ASSERT_TRUE(std::cmp_less(m_array_ref.length, std::numeric_limits<size_t>::max()));
         return static_cast<size_t>(m_array_ref.length);
     }
 
-    void arrow_proxy::set_length(size_t length)
+    inline void arrow_proxy::set_length(size_t length)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(length, std::numeric_limits<int64_t>::max()));
         if (!is_created_with_sparrow())
@@ -445,7 +445,7 @@ namespace sparrow
         return m_array_ref.null_count;
     }
 
-    void arrow_proxy::set_null_count(int64_t null_count)
+    inline void arrow_proxy::set_null_count(int64_t null_count)
     {
         if (!is_created_with_sparrow())
         {
@@ -454,12 +454,12 @@ namespace sparrow
         m_array_ref.null_count = null_count;
     }
 
-    [[nodiscard]] size_t arrow_proxy::offset() const
+    [[nodiscard]] inline size_t arrow_proxy::offset() const
     {
         return static_cast<size_t>(m_array_ref.offset);
     }
 
-    void arrow_proxy::set_offset(size_t offset)
+    inline void arrow_proxy::set_offset(size_t offset)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(offset, std::numeric_limits<int64_t>::max()));
         if (!is_created_with_sparrow())
@@ -469,12 +469,12 @@ namespace sparrow
         m_array_ref.offset = static_cast<int64_t>(offset);
     }
 
-    [[nodiscard]] size_t arrow_proxy::n_buffers() const
+    [[nodiscard]] inline size_t arrow_proxy::n_buffers() const
     {
         return static_cast<size_t>(m_array_ref.n_buffers);
     }
 
-    void arrow_proxy::set_n_buffers(size_t n_buffers)
+    inline void arrow_proxy::set_n_buffers(size_t n_buffers)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(n_buffers, std::numeric_limits<int64_t>::max()));
         if (!is_created_with_sparrow())
@@ -488,12 +488,12 @@ namespace sparrow
         m_array_ref.n_buffers = static_cast<int64_t>(n_buffers);
     }
 
-    [[nodiscard]] size_t arrow_proxy::n_children() const
+    [[nodiscard]] inline size_t arrow_proxy::n_children() const
     {
         return static_cast<size_t>(m_array_ref.n_children);
     }
 
-    void arrow_proxy::set_n_children(size_t children_count)
+    inline void arrow_proxy::set_n_children(size_t children_count)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(children_count, std::numeric_limits<int64_t>::max()));
         if (!is_created_with_sparrow())
@@ -531,7 +531,7 @@ namespace sparrow
         m_schema_ref.n_children = static_cast<int64_t>(children_count);
     }
 
-    [[nodiscard]] std::size_t
+    [[nodiscard]] inline std::size_t
     arrow_proxy::compute_buffer_size(buffer_type buffer_type, size_t length, size_t offset, enum data_type data_type) const
     {
         constexpr double bit_per_byte = 8.;
@@ -557,29 +557,29 @@ namespace sparrow
         mpl::unreachable();
     }
 
-    arrow_schema_private_data* arrow_proxy::get_schema_private_data()
+    inline arrow_schema_private_data* arrow_proxy::get_schema_private_data()
     {
         SPARROW_ASSERT_TRUE(schema_created_with_sparrow());
         return static_cast<arrow_schema_private_data*>(m_schema_ref.private_data);
     }
 
-    arrow_array_private_data* arrow_proxy::get_array_private_data()
+    inline arrow_array_private_data* arrow_proxy::get_array_private_data()
     {
         SPARROW_ASSERT_TRUE(array_created_with_sparrow());
         return static_cast<arrow_array_private_data*>(m_array_ref.private_data);
     }
 
-    [[nodiscard]] const std::vector<sparrow::buffer_view<uint8_t>>& arrow_proxy::buffers() const
+    [[nodiscard]] inline const std::vector<sparrow::buffer_view<uint8_t>>& arrow_proxy::buffers() const
     {
         return m_buffers;
     }
 
-    [[nodiscard]] std::vector<sparrow::buffer_view<uint8_t>>& arrow_proxy::buffers()
+    [[nodiscard]] inline std::vector<sparrow::buffer_view<uint8_t>>& arrow_proxy::buffers()
     {
         return m_buffers;
     }
 
-    void arrow_proxy::set_buffer(size_t index, const buffer_view<uint8_t>& buffer)
+    inline void arrow_proxy::set_buffer(size_t index, const buffer_view<uint8_t>& buffer)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(index, n_buffers()));
         if (!is_created_with_sparrow())
@@ -593,7 +593,7 @@ namespace sparrow
         initialize_buffers();
     }
 
-    void arrow_proxy::set_buffer(size_t index, buffer<uint8_t>&& buffer)
+    inline void arrow_proxy::set_buffer(size_t index, buffer<uint8_t>&& buffer)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(index, n_buffers()));
         if (!is_created_with_sparrow())
@@ -607,7 +607,7 @@ namespace sparrow
         initialize_buffers();
     }
 
-    [[nodiscard]] std::vector<arrow_proxy> arrow_proxy::children() const
+    [[nodiscard]] inline std::vector<arrow_proxy> arrow_proxy::children() const
     {
         std::vector<arrow_proxy> children;
         children.reserve(static_cast<std::size_t>(m_array_ref.n_children));
@@ -622,7 +622,7 @@ namespace sparrow
         return children;
     }
 
-    void arrow_proxy::set_child(size_t index, ArrowArray* child_array, ArrowSchema* child_schema)
+    inline void arrow_proxy::set_child(size_t index, ArrowArray* child_array, ArrowSchema* child_schema)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(index, n_children()));
         if (!is_created_with_sparrow())
@@ -646,7 +646,7 @@ namespace sparrow
         };
     }
 
-    void arrow_proxy::set_dictionary(ArrowArray* array_dictionary, ArrowSchema* schema_dictionary)
+    inline void arrow_proxy::set_dictionary(ArrowArray* array_dictionary, ArrowSchema* schema_dictionary)
     {
         if (!is_created_with_sparrow())
         {
@@ -696,7 +696,7 @@ namespace sparrow
         return m_schema_ref;
     }
 
-    void arrow_proxy::update_null_count()
+    inline void arrow_proxy::update_null_count()
     {
         const auto buffer_types = get_buffer_types_from_data_type(data_type());
         const auto validity_it = std::ranges::find(buffer_types, buffer_type::VALIDITY);
