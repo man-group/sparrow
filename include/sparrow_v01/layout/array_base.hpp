@@ -47,6 +47,17 @@ namespace sparrow
     };
 
     /**
+     * Base class for array_inner_types specialization
+     *
+     * It defines common typs used in the array implementation
+     * classes.
+     * */
+    struct array_inner_types_base
+    {
+        using bitmap_type = dynamic_bitset_view<std::uint8_t>;
+    };
+
+    /**
      * traits class that must be specialized by array
      * classes inheriting from array_crtp_base.
      */
@@ -63,18 +74,16 @@ namespace sparrow
     class array_crtp_base
     {
     public:
-
+        using derived_type = D;
+        using inner_types = array_inner_types<derived_type>;
         using size_type = std::size_t;
         using difference_type = std::ptrdiff_t;
-        using bitmap_type = dynamic_bitset_view<std::uint8_t>;
+        using bitmap_type = typename inner_types::bitmap_type;
         using bitmap_reference = bitmap_type::reference;
         using bitmap_const_reference = bitmap_type::const_reference;
         using bitmap_iterator = bitmap_type::iterator;
         using const_bitmap_iterator = bitmap_type::const_iterator;
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
-
-        using derived_type = D;
-        using inner_types = array_inner_types<derived_type>;
         using iterator = typename inner_types::iterator;
         using const_iterator = typename inner_types::const_iterator;
         using value_iterator = typename inner_types::value_iterator;

@@ -25,7 +25,7 @@ namespace sparrow
     class primitive_array;
 
     template <class T>
-    struct array_inner_types<primitive_array<T>>
+    struct array_inner_types<primitive_array<T>> : array_inner_types_base
     {
         using array_type = primitive_array<T>;
 
