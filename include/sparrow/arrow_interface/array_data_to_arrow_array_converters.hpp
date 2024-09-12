@@ -33,7 +33,6 @@ namespace sparrow
         requires std::same_as<std::remove_cvref_t<T>, array_data>
     std::vector<sparrow::buffer<uint8_t>> to_vector_of_buffer(T&& ad);
 
-
     template <class T>
         requires std::same_as<std::remove_cvref_t<T>, array_data>
     std::vector<sparrow::buffer<uint8_t>> to_vector_of_buffer(T&& ad)
