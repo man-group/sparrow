@@ -105,12 +105,12 @@ namespace sparrow
     
     private:
 
-        using array_base::data;
-
         difference_type ssize() const;
 
         null_array(const null_array&) = default;
         null_array* clone_impl() const override;
+
+        arrow_proxy m_proxy;
     };
 
     // TODO: uncomment when null_layout.hpp is removed
@@ -171,14 +171,14 @@ namespace sparrow
      *****************************/
 
     inline null_array::null_array(arrow_proxy proxy)
-        : array_base(std::move(proxy))
+        : m_proxy(std::move(proxy))
     {
-        SPARROW_ASSERT_TRUE(data().n_buffers() == 0);
+        SPARROW_ASSERT_TRUE(format_to_data_type(m_proxy.format()) == data_type::NA);
     }
 
     inline auto null_array::size() const -> size_type
     {
-        return static_cast<size_type>(data().length());
+        return static_cast<size_type>(m_proxy.length());
     }
 
     inline auto null_array::operator[](size_type i) -> reference

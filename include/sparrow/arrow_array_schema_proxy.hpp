@@ -68,6 +68,7 @@ namespace sparrow
         [[nodiscard]] int64_t offset() const;
         [[nodiscard]] int64_t n_buffers() const;
         [[nodiscard]] int64_t n_children() const;
+        [[nodiscard]] std::vector<sparrow::buffer_view<uint8_t>>& buffers();
         [[nodiscard]] const std::vector<sparrow::buffer_view<uint8_t>>& buffers() const;
         [[nodiscard]] const std::vector<arrow_proxy>& children() const;
         [[nodiscard]] std::optional<arrow_proxy> dictionary() const;
@@ -311,6 +312,11 @@ namespace sparrow
                 return static_cast<std::size_t>(length);
         }
         mpl::unreachable();
+    }
+
+    [[nodiscard]] inline std::vector<sparrow::buffer_view<uint8_t>>& arrow_proxy::buffers()
+    {
+        return m_buffers;
     }
 
     [[nodiscard]] inline const std::vector<sparrow::buffer_view<uint8_t>>& arrow_proxy::buffers() const
