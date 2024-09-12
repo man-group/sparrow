@@ -21,12 +21,20 @@
 #include <type_traits>
 #include <vector>
 
+#include "sparrow/c_interface.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
+    /**
+     * Release the children and dictionnary of an ArrowArray or ArrowSchema.
+     * 
+     * @tparam T ArrowArray or ArrowSchema
+     * @param t The ArrowArray or ArrowSchema to release.
+     */
     template <class T>
+    requires std::same_as<T, ArrowArray> || std::same_as<T, ArrowSchema>
     void release_common_arrow(T* t)
     {
         if (t->dictionary)
