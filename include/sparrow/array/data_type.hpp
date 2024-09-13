@@ -444,6 +444,25 @@ namespace sparrow
         }
     }
 
+    constexpr bool data_type_is_integer(data_type dt)
+    {
+        switch (dt)
+        {
+            case data_type::BOOL:
+            case data_type::UINT8:
+            case data_type::INT8:
+            case data_type::UINT16:
+            case data_type::INT16:
+            case data_type::UINT32:
+            case data_type::INT32:
+            case data_type::UINT64:
+            case data_type::INT64:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     /// @returns The number of bytes required to store the provided primitive data type.
     template<std::integral T>
     constexpr size_t primitive_bytes_count(data_type data_type, T size)

@@ -125,12 +125,16 @@ namespace sparrow
             case data_type::BINARY:
             case data_type::STRING:
                 return {buffer_type::VALIDITY, buffer_type::OFFSETS_32BIT, buffer_type::DATA};
+
             case data_type::LIST:
                 return {buffer_type::VALIDITY, buffer_type::OFFSETS_32BIT};
+
             case data_type::LARGE_LIST:
                 return {buffer_type::VALIDITY, buffer_type::OFFSETS_64BIT};
+
             case data_type::LIST_VIEW:
                 return {buffer_type::VALIDITY, buffer_type::OFFSETS_32BIT, buffer_type::SIZES_32BIT};
+
             case data_type::LARGE_LIST_VIEW:
                 return {buffer_type::VALIDITY, buffer_type::OFFSETS_64BIT, buffer_type::SIZES_64BIT};
             case data_type::FIXED_SIZED_LIST:
@@ -188,11 +192,11 @@ namespace sparrow
         buffer_type previous_buffer_type
     )
     {
-        constexpr double bit_per_byte = 8.;
+        constexpr size_t bit_per_byte = 8.;
         switch (bt)
         {
             case buffer_type::VALIDITY:
-                return static_cast<std::size_t>(std::ceil(static_cast<double>(length + offset) / bit_per_byte));
+                return (length + offset + bit_per_byte - 1) / bit_per_byte;
             case buffer_type::DATA:
                 if (bt == buffer_type::DATA && (dt == data_type::STRING || dt == data_type::BINARY))
                 {

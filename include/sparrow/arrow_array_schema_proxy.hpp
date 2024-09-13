@@ -227,6 +227,12 @@ namespace sparrow
 
         [[nodiscard]] void* private_data() const;
 
+        [[nodiscard]] ArrowArray& array();
+        [[nodiscard]] const ArrowArray& array() const;
+
+        [[nodiscard]] ArrowSchema& schema();
+        [[nodiscard]] const ArrowSchema& schema() const;
+        
         /**
          * get a non-owning view of the arrow_proxy.
          */
@@ -260,12 +266,6 @@ namespace sparrow
         [[nodiscard]] bool schema_created_with_sparrow() const;
 
         void validate_array_and_schema() const;
-
-        [[nodiscard]] ArrowArray& array();
-        [[nodiscard]] const ArrowArray& array() const;
-
-        [[nodiscard]] ArrowSchema& schema();
-        [[nodiscard]] const ArrowSchema& schema() const;
 
         arrow_schema_private_data* get_schema_private_data();
         arrow_array_private_data* get_array_private_data();
