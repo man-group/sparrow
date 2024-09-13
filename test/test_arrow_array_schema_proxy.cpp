@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <cstdint>
+#include <string_view>
 #include <utility>
 
 #include "sparrow/array/data_type.hpp"
@@ -168,8 +169,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            proxy.set_format("U");
-            CHECK_EQ(proxy.format(), "U");
+            constexpr std::string_view format = "U";
+            proxy.set_format(format);
+            CHECK_EQ(proxy.format(), format);
         }
 
         SUBCASE("on external c structure")
