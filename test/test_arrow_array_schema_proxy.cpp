@@ -64,12 +64,20 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+            const bool is_schema_release_null = schema.release == nullptr;
+            const bool is_array_release_null = array.release == nullptr;
+            CHECK(is_schema_release_null);
+            CHECK(is_array_release_null);
         }
 
         SUBCASE("pointer")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(&array, &schema);
+            const bool is_schema_release_null = schema.release == nullptr;
+            const bool is_array_release_null = array.release == nullptr;
+            CHECK_FALSE(is_schema_release_null);
+            CHECK_FALSE(is_array_release_null);
         }
     }
 

@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <type_traits>
 #include <utility>
 
 #include "sparrow/array/data_type.hpp"
@@ -65,10 +66,7 @@ namespace sparrow
         explicit arrow_proxy(ArrowArray&& array, ArrowSchema* schema);
         /// Constructs an arrow_proxy which uses the provided ArrowArray and ArrowSchema.
         /// Neither the array nor the schema are released when the arrow_proxy is destroyed.
-        explicit arrow_proxy(
-            ArrowArray* array,
-            ArrowSchema* schema
-        );
+        explicit arrow_proxy(ArrowArray* array, ArrowSchema* schema);
 
         // Copy constructors
         arrow_proxy(const arrow_proxy&);
@@ -120,6 +118,9 @@ namespace sparrow
         std::variant<ArrowSchema*, ArrowSchema> m_schema;
         ArrowSchema& m_schema_ref;
         std::vector<sparrow::buffer_view<uint8_t>> m_buffers;
+
+        template <typename AA, typename AS>
+        arrow_proxy(AA&& array, AS&& schema, bool);
 
         void initialize_buffers();
         [[nodiscard]] bool array_created_with_sparrow() const;
@@ -183,43 +184,48 @@ namespace sparrow
         }
     }
 
-    inline arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema&& schema)
+    template <typename AA, typename AS>
+    arrow_proxy::arrow_proxy(AA&& array, AS&& schema, bool)
         : m_array(std::move(array))
-        , m_array_ref(std::get<1>(m_array))
+        , m_array_ref(m_array.index() == 0 ? *std::get<0>(m_array) : std::get<1>(m_array))
         , m_schema(std::move(schema))
-        , m_schema_ref(std::get<1>(m_schema))
+        , m_schema_ref(m_schema.index() == 0 ? *std::get<0>(m_schema) : std::get<1>(m_schema))
     {
-        array = {};
-        schema = {};
+        if constexpr (std::is_rvalue_reference_v<AA&&>)
+        {
+            array = {};
+        }
+        else if constexpr (std::is_pointer_v<std::remove_cvref_t<AA>>)
+        {
+            SPARROW_ASSERT_TRUE(array != nullptr);
+        }
+
+        if constexpr (std::is_rvalue_reference_v<AS&&>)
+        {
+            schema = {};
+        }
+        else if constexpr (std::is_pointer_v<std::remove_cvref_t<AS>>)
+        {
+            SPARROW_ASSERT_TRUE(schema != nullptr);
+        }
+
         validate_array_and_schema();
         initialize_buffers();
+    }
+
+    inline arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema&& schema)
+        : arrow_proxy(std::move(array), std::move(schema), true)
+    {
     }
 
     inline arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema* schema)
-        : m_array(std::move(array))
-        , m_array_ref(std::get<1>(m_array))
-        , m_schema(schema)
-        , m_schema_ref(*std::get<0>(m_schema))
+        : arrow_proxy(std::move(array), schema, true)
     {
-        array = {};
-        SPARROW_ASSERT_TRUE(schema != nullptr);
-        validate_array_and_schema();
-        initialize_buffers();
     }
 
-    inline arrow_proxy::arrow_proxy(
-        ArrowArray* array,
-        ArrowSchema* schema
-    )
-        : m_array(array)
-        , m_array_ref(*std::get<0>(m_array))
-        , m_schema(schema)
-        , m_schema_ref(*std::get<0>(m_schema))
+    inline arrow_proxy::arrow_proxy(ArrowArray* array, ArrowSchema* schema)
+        : arrow_proxy(array, schema, true)
     {
-        SPARROW_ASSERT_TRUE(array != nullptr);
-        SPARROW_ASSERT_TRUE(schema != nullptr);
-        validate_array_and_schema();
-        initialize_buffers();
     }
 
     inline arrow_proxy::arrow_proxy(const arrow_proxy& other)
@@ -286,7 +292,7 @@ namespace sparrow
 
     inline arrow_proxy::~arrow_proxy()
     {
-        if (m_array.index() == 1) // We own the array
+        if (m_array.index() == 1)  // We own the array
         {
             if (m_array_ref.release != nullptr)
             {
@@ -306,7 +312,7 @@ namespace sparrow
             }
         }
 
-        if (m_schema.index() == 1) // We own the schema
+        if (m_schema.index() == 1)  // We own the schema
         {
             if (m_schema_ref.release != nullptr)
             {
@@ -599,10 +605,7 @@ namespace sparrow
         children.reserve(static_cast<std::size_t>(m_array_ref.n_children));
         for (int64_t i = 0; i < m_array_ref.n_children; ++i)
         {
-            children.emplace_back(
-                m_array_ref.children[i],
-                m_schema_ref.children[i]
-            );
+            children.emplace_back(m_array_ref.children[i], m_schema_ref.children[i]);
         }
         return children;
     }
@@ -624,10 +627,7 @@ namespace sparrow
         {
             return std::nullopt;
         }
-        return arrow_proxy{
-            m_array_ref.dictionary,
-            m_schema_ref.dictionary
-        };
+        return arrow_proxy{m_array_ref.dictionary, m_schema_ref.dictionary};
     }
 
     inline void arrow_proxy::set_dictionary(ArrowArray* array_dictionary, ArrowSchema* schema_dictionary)
