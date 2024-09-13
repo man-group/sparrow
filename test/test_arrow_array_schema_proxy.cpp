@@ -18,7 +18,6 @@
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
 
