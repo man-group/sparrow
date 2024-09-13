@@ -137,7 +137,7 @@ namespace sparrow
         : array_base()
         , base_type(std::move(proxy))
     {
-        SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(proxy.format()));
+        SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().format()));
     }
 
     template <class T>
