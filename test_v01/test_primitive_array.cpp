@@ -35,7 +35,7 @@ namespace sparrow
             CHECK_EQ(ar.size(), size - offset);
         }
 
-        TEST_CASE("operator[]")
+        TEST_CASE("const operator[]")
         {
             auto pr = make_arrow_proxy<scalar_value_type>(size, offset);
             std::vector<scalar_value_type> ref(size - offset);

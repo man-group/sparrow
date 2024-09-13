@@ -14,10 +14,13 @@
 
 #pragma once
 
-#include "sparrow_v01/layout/array_base.hpp"
+#include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
+
+#include "sparrow_v01/layout/array_base.hpp"
+
 
 namespace sparrow
 {
@@ -79,10 +82,10 @@ namespace sparrow
 
     private:
 
-        using base_type::storage;
-        using base_type::has_value;
         using base_type::bitmap_begin;
         using base_type::bitmap_end;
+        using base_type::has_value;
+        using base_type::storage;
 
         pointer data();
         const_pointer data() const;
@@ -112,8 +115,7 @@ namespace sparrow
     {
         inline bool check_primitive_data_type(data_type dt)
         {
-            constexpr std::array<data_type, 14> dtypes =
-            {
+            constexpr std::array<data_type, 14> dtypes = {
                 data_type::BOOL,
                 data_type::UINT8,
                 data_type::INT8,
@@ -168,7 +170,7 @@ namespace sparrow
         return storage().buffers()[DATA_BUFFER_INDEX].template data<const inner_value_type>()
             + static_cast<size_type>(storage().offset());
     }
-    
+
     template <class T>
     auto primitive_array<T>::value(size_type i) -> inner_reference
     {

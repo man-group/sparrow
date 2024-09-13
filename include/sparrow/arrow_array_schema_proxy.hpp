@@ -180,7 +180,8 @@ namespace sparrow
 
         /**
          * Add children.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with sparrow.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
+         * sparrow.
          * @param arrow_array_and_schema_pointers The children to add.
          */
         template <std::ranges::input_range R>
@@ -189,7 +190,8 @@ namespace sparrow
 
         /**
          * Pop n children.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with sparrow.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
+         * sparrow.
          * @param n The number of children to pop.
          */
         void pop_children(size_t n);
@@ -198,8 +200,10 @@ namespace sparrow
         [[nodiscard]] std::vector<arrow_proxy>& children();
 
         /**
-         * Set the child at the given index. It takes the ownership on the `ArrowArray` and `ArrowSchema` passed by pointers.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with sparrow.
+         * Set the child at the given index. It takes the ownership on the `ArrowArray` and `ArrowSchema`
+         * passed by pointers.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
+         * sparrow.
          * @param index The index of the child to set.
          * @param array The `ArrowArray` to set as child.
          * @param schema The `ArrowSchema` to set as child.
@@ -210,8 +214,10 @@ namespace sparrow
         [[nodiscard]] std::unique_ptr<arrow_proxy>& dictionary();
 
         /**
-         * Set the dictionary. It takes the ownership on the `ArrowArray` and `ArrowSchema` passed by pointers.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with sparrow.
+         * Set the dictionary. It takes the ownership on the `ArrowArray` and `ArrowSchema` passed by
+         * pointers.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
+         * sparrow.
          * @param array The `ArrowArray` to set.
          * @param schema The `ArrowSchema` to set.
          */
@@ -229,7 +235,9 @@ namespace sparrow
         std::vector<arrow_proxy> m_children;
         std::unique_ptr<arrow_proxy> m_dictionary;
 
-        struct impl_tag{};
+        struct impl_tag
+        {
+        };
 
         template <typename AA, typename AS>
             requires std::same_as<std::remove_pointer_t<std::remove_cvref_t<AA>>, ArrowArray>
@@ -266,19 +274,7 @@ namespace sparrow
 
     inline void arrow_proxy::update_buffers()
     {
-        m_buffers.clear();
-        const auto buffer_count = static_cast<size_t>(array().n_buffers);
-        m_buffers.reserve(buffer_count);
-        const auto data_type = format_to_data_type(schema().format);
-        const std::vector<buffer_type> buffers_type = get_buffer_types_from_data_type(data_type);
-        for (std::size_t i = 0; i < buffer_count; ++i)
-        {
-            const auto buffer_type = buffers_type[i];
-            auto buffer = array().buffers[i];
-            const std::size_t buffer_size = compute_buffer_size(buffer_type, length(), offset(), data_type);
-            auto* ptr = static_cast<uint8_t*>(const_cast<void*>(buffer));
-            m_buffers.emplace_back(ptr, buffer_size);
-        }
+        m_buffers = get_arrow_array_buffers(array(), schema());
     }
 
     inline void arrow_proxy::update_children()
@@ -661,7 +657,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(std::cmp_less(children_count, std::numeric_limits<int64_t>::max()));
         if (!is_created_with_sparrow())
         {
-            throw arrow_proxy_exception("Cannot set n_children on non-sparrow created ArrowArray or ArrowSchema");
+            throw arrow_proxy_exception("Cannot set n_children on non-sparrow created ArrowArray or ArrowSchema"
+            );
         }
 
         // Check that the release callback is valid for all children
@@ -782,7 +779,8 @@ namespace sparrow
     {
         if (!is_created_with_sparrow())
         {
-            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema");
+            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema"
+            );
         }
 
         if (array().dictionary != nullptr)

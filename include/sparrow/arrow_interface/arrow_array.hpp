@@ -279,7 +279,7 @@ namespace sparrow
         const auto buffer_count = static_cast<size_t>(array.n_buffers);
         buffers.reserve(buffer_count);
         const enum data_type data_type = format_to_data_type(schema.format);
-        const std::vector<buffer_type> buffers_type = get_buffer_types_from_data_type(data_type);
+        const std::span<const buffer_type> buffers_type = get_buffer_types_from_data_type(data_type);
         for (std::size_t i = 0; i < buffer_count; ++i)
         {
             const auto buffer_type = buffers_type[i];
@@ -288,7 +288,9 @@ namespace sparrow
                 buffer_type,
                 static_cast<size_t>(array.length),
                 static_cast<size_t>(array.offset),
-                data_type
+                data_type,
+                buffers,
+                i == 0 ? buffer_type : buffers_type[i - 1]
             );
             auto* ptr = static_cast<uint8_t*>(const_cast<void*>(buffer));
             buffers.emplace_back(ptr, buffer_size);
@@ -330,12 +332,13 @@ namespace sparrow
         target.offset = source_array.offset;
         target.n_buffers = source_array.n_buffers;
 
+
         std::vector<buffer<std::uint8_t>> buffers_copy;
         buffers_copy.reserve(static_cast<std::size_t>(source_array.n_buffers));
         const auto buffers = get_arrow_array_buffers(source_array, source_schema);
         for (const auto& buffer : buffers)
         {
-            buffers_copy.emplace_back(buffer.begin(), buffer.end());
+            buffers_copy.emplace_back(buffer);
         }
         target.private_data = new arrow_array_private_data(std::move(buffers_copy));
         const auto private_data = static_cast<arrow_array_private_data*>(target.private_data);
