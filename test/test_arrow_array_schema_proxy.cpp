@@ -70,7 +70,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         SUBCASE("pointer")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
-            sparrow::arrow_proxy proxy(&array, &schema, sparrow::owns_arrow_data);
+            sparrow::arrow_proxy proxy(&array, &schema);
         }
     }
 
@@ -88,7 +88,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             {
-                sparrow::arrow_proxy proxy(std::move(array), &schema, sparrow::ownership::not_owning);
+                sparrow::arrow_proxy proxy(std::move(array), &schema);
             }
             const bool is_schema_release_null = schema.release == nullptr;
             CHECK_FALSE(is_schema_release_null);
@@ -98,7 +98,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             {
-                sparrow::arrow_proxy proxy(&array, &schema, sparrow::doesnt_own_arrow_data);
+                sparrow::arrow_proxy proxy(&array, &schema);
             }
             const bool is_schema_release_null = schema.release == nullptr;
             const bool is_array_release_null = array.release == nullptr;
