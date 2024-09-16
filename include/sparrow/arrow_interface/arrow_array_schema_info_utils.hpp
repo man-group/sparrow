@@ -24,7 +24,7 @@ namespace sparrow
     constexpr bool validate_buffers_count(data_type data_type, int64_t n_buffers)
     {
         const std::size_t expected_buffer_count = get_expected_buffer_count(data_type);
-        return static_cast<std::size_t>(n_buffers) == expected_buffer_count;
+        return to_native_size(n_buffers) == expected_buffer_count;
     }
 
     /// @returns The the expected number of children for a given data type.
@@ -71,7 +71,7 @@ namespace sparrow
     inline bool validate_format_with_arrow_array(data_type data_type, const ArrowArray& array)
     {
         const bool buffers_count_valid = validate_buffers_count(data_type, array.n_buffers);
-        const bool children_count_valid = static_cast<std::size_t>(array.n_children)
+        const bool children_count_valid = to_native_size(array.n_children)
                                           == get_expected_children_count(data_type);
         return buffers_count_valid && children_count_valid;
     }

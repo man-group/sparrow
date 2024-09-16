@@ -267,7 +267,7 @@ namespace sparrow
     inline void arrow_proxy::update_buffers()
     {
         m_buffers.clear();
-        const auto buffer_count = static_cast<size_t>(array().n_buffers);
+        const auto buffer_count = to_native_size(array().n_buffers);
         m_buffers.reserve(buffer_count);
         const auto data_type = format_to_data_type(schema().format);
         const std::vector<buffer_type> buffers_type = get_buffer_types_from_data_type(data_type);
@@ -551,18 +551,18 @@ namespace sparrow
     [[nodiscard]] inline size_t arrow_proxy::length() const
     {
         SPARROW_ASSERT_TRUE(array().length >= 0);
-        SPARROW_ASSERT_TRUE(std::cmp_less(array().length, std::numeric_limits<size_t>::max()));
-        return static_cast<size_t>(array().length);
+        SPARROW_ASSERT_TRUE(std::cmp_less(array().length, max_arrow_length));
+        return to_native_size(array().length);
     }
 
     inline void arrow_proxy::set_length(size_t length)
     {
-        SPARROW_ASSERT_TRUE(std::cmp_less(length, std::numeric_limits<int64_t>::max()));
+        SPARROW_ASSERT_TRUE(std::cmp_less(length, max_arrow_length));
         if (!array_created_with_sparrow())
         {
             throw arrow_proxy_exception("Cannot set length on non-sparrow created ArrowArray");
         }
-        array().length = static_cast<int64_t>(length);
+        array().length = to_arrow_length(length);
     }
 
     [[nodiscard]] inline int64_t arrow_proxy::null_count() const
@@ -581,41 +581,41 @@ namespace sparrow
 
     [[nodiscard]] inline size_t arrow_proxy::offset() const
     {
-        return static_cast<size_t>(array().offset);
+        return to_native_size(array().offset);
     }
 
     inline void arrow_proxy::set_offset(size_t offset)
     {
-        SPARROW_ASSERT_TRUE(std::cmp_less(offset, std::numeric_limits<int64_t>::max()));
+        SPARROW_ASSERT_TRUE(std::cmp_less(offset, max_arrow_length));
         if (!array_created_with_sparrow())
         {
             throw arrow_proxy_exception("Cannot set offset on non-sparrow created ArrowArray");
         }
-        array().offset = static_cast<int64_t>(offset);
+        array().offset = to_arrow_length(offset);
     }
 
     [[nodiscard]] inline size_t arrow_proxy::n_buffers() const
     {
-        return static_cast<size_t>(array().n_buffers);
+        return to_native_size(array().n_buffers);
     }
 
     inline void arrow_proxy::set_n_buffers(size_t n_buffers)
     {
-        SPARROW_ASSERT_TRUE(std::cmp_less(n_buffers, std::numeric_limits<int64_t>::max()));
+        SPARROW_ASSERT_TRUE(std::cmp_less(n_buffers, max_arrow_length));
         if (!array_created_with_sparrow())
         {
             throw arrow_proxy_exception("Cannot set n_buffers on non-sparrow created ArrowArray");
         }
-        array().n_buffers = static_cast<int64_t>(n_buffers);
+        array().n_buffers = to_arrow_length(n_buffers);
         arrow_array_private_data* private_data = get_array_private_data();
         private_data->resize_buffers(n_buffers);
         array().buffers = private_data->buffers_ptrs<void>();
-        array().n_buffers = static_cast<int64_t>(n_buffers);
+        array().n_buffers = to_arrow_length(n_buffers);
     }
 
     [[nodiscard]] inline size_t arrow_proxy::n_children() const
     {
-        return static_cast<size_t>(array().n_children);
+        return to_native_size(array().n_children);
     }
 
     template <std::ranges::input_range R>
@@ -660,7 +660,7 @@ namespace sparrow
 
     inline void arrow_proxy::resize_children(size_t children_count)
     {
-        SPARROW_ASSERT_TRUE(std::cmp_less(children_count, std::numeric_limits<int64_t>::max()));
+        SPARROW_ASSERT_TRUE(std::cmp_less(children_count, max_arrow_length));
         if (!is_created_with_sparrow())
         {
             throw arrow_proxy_exception("Cannot set n_children on non-sparrow created ArrowArray or ArrowSchema");
@@ -676,7 +676,7 @@ namespace sparrow
         }
 
         // Release the remaining children if the new size is smaller than the current size
-        for (size_t i = children_count; i < static_cast<size_t>(array().n_children); ++i)
+        for (size_t i = children_count; i < to_native_size(array().n_children); ++i)
         {
             schema().children[i]->release(schema().children[i]);
             array().children[i]->release(array().children[i]);
@@ -684,7 +684,8 @@ namespace sparrow
 
         auto arrow_array_children = new ArrowArray*[children_count];
         auto arrow_schemas_children = new ArrowSchema*[children_count];
-        for (size_t i = 0; i < std::min(children_count, static_cast<size_t>(array().n_children)); ++i)
+        const auto min_children_count = std::min(children_count, to_native_size(array().n_children));
+        for (size_t i = 0; i < min_children_count; ++i)
         {
             arrow_array_children[i] = array().children[i];
             arrow_schemas_children[i] = schema().children[i];
@@ -692,10 +693,10 @@ namespace sparrow
 
         delete[] array().children;
         array().children = arrow_array_children;
-        array().n_children = static_cast<int64_t>(children_count);
+        array().n_children = to_arrow_length(children_count);
         delete[] schema().children;
         schema().children = arrow_schemas_children;
-        schema().n_children = static_cast<int64_t>(children_count);
+        schema().n_children = to_arrow_length(children_count);
     }
 
     inline arrow_schema_private_data* arrow_proxy::get_schema_private_data()
@@ -849,7 +850,7 @@ namespace sparrow
         auto& validity_buffer = buffers()[static_cast<size_t>(validity_index)];
         const dynamic_bitset_view<std::uint8_t> bitmap(validity_buffer.data(), validity_buffer.size());
         const auto null_count = bitmap.null_count();
-        set_null_count(static_cast<int64_t>(null_count));
+        set_null_count(to_arrow_length(null_count));
     }
 
     inline bool arrow_proxy::is_arrow_array_valid() const

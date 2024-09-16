@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 
+#include "sparrow/array/data_type.hpp"
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_view.hpp"
 #include "sparrow/utils/contracts.hpp"
@@ -519,12 +520,16 @@ namespace sparrow
     constexpr dynamic_bitset_base<B>::dynamic_bitset_base(storage_type&& buf, size_type size)
         : m_buffer(std::move(buf))
         , m_size(size)
-        , m_null_count(m_size - count_non_null())
     {
         if constexpr (!std::is_const_v<block_type>)
         {
             zero_unused_bits();
         }
+
+        const auto null_count = count_non_null();
+        m_null_count = m_size - null_count;
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(size));
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(m_null_count));
     }
 
     template <random_access_range B>
@@ -533,6 +538,8 @@ namespace sparrow
         , m_size(size)
         , m_null_count(null_count)
     {
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(size));
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(m_null_count));
         if constexpr (!std::is_const_v<block_type>)
         {
             zero_unused_bits();
@@ -593,6 +600,7 @@ namespace sparrow
         {
             res += table[*p];
         }
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(res));
         return res;
     }
 

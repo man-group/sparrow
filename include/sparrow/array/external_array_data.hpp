@@ -272,7 +272,7 @@ namespace sparrow
 
     inline void external_array_data::build_children()
     {
-        const auto size = static_cast<std::size_t>(array().n_children);
+        const auto size = to_native_size(array().n_children);
         m_children.reserve(size);
         for (std::size_t i = 0; i < size; ++i)
         {
@@ -327,7 +327,7 @@ namespace sparrow
     {
         using return_type = external_array_data::bitmap_type;
         return return_type(impl::buffer_at(data, 0u),
-                           static_cast<std::size_t>(length(data)));
+                           to_native_size(length(data)));
     }
 
     inline std::size_t buffers_size(const external_array_data& data)
@@ -338,7 +338,7 @@ namespace sparrow
             return std::size_t(0);
         }
         // The first buffer in external data is used for the bitmap
-        return static_cast<std::size_t>(data.array().n_buffers - 1);
+        return sum_arrow_offsets<std::size_t>(data.array().n_buffers, - 1);
     }
 
     inline external_array_data::buffer_type
@@ -347,12 +347,12 @@ namespace sparrow
         using return_type = external_array_data::buffer_type;
         // The first buffer in external data is used for the bitmap
         return return_type(impl::buffer_at(data, i + 1u),
-                           static_cast<std::size_t>(length(data)));
+                           to_native_size(length(data)));
     }
 
     inline std::size_t child_data_size(const external_array_data& data)
     {
-        return static_cast<std::size_t>(data.array().n_children);
+        return to_native_size(data.array().n_children);
     }
 
     inline const external_array_data& child_data_at(const external_array_data& data, std::size_t i)

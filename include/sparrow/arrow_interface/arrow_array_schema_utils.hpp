@@ -29,7 +29,7 @@ namespace sparrow
 {
     /**
      * Release the children and dictionnary of an `ArrowArray` or `ArrowSchema`.
-     * 
+     *
      * @tparam T `ArrowArray` or `ArrowSchema`
      * @param t The `ArrowArray` or `ArrowSchema` to release.
      */
@@ -41,7 +41,7 @@ namespace sparrow
         {
             return;
         }
-        
+
         if (t.dictionary)
         {
             if (t.dictionary->release)

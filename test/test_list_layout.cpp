@@ -29,21 +29,21 @@
 
 namespace sparrow
 {
-   
+
 TEST_SUITE("list_layout")
 {
     // this test will be invoked for each **scalar** type.
-    // Since this test uses  a "fixed_size_layout" as the inner layout, 
+    // Since this test uses  a "fixed_size_layout" as the inner layout,
     // it will **not** work for non-scalar types (ie std::string)
     TEST_CASE_TEMPLATE_DEFINE("generic-scalar-test", T, generic_scalar_test)
     {
         SUBCASE("list<T>")
-        { 
+        {
 
             auto d = test::iota_vector<T>(11);
             std::vector<std::vector<T>> values = {
-                {d[0],d[1], d[2], d[3]}, 
-                {d[4], d[5]}, 
+                {d[0],d[1], d[2], d[3]},
+                {d[4], d[5]},
                 {d[6], d[7], d[8], d[9], d[10]}
             };
 
@@ -77,38 +77,38 @@ TEST_SUITE("list_layout")
             {
                 test::layout_tester(list_layout);
             }
-    
+
         }
         SUBCASE("list<list<T>>")
         {
             auto d = test::iota_vector<T>(28);
             std::vector<std::vector<std::vector<T>>> values = {
                 {
-                    {d[0],d[1], d[2], d[3]}, 
+                    {d[0],d[1], d[2], d[3]},
                     {d[4], d[5], d[6]},
                     {d[7], d[8], d[9], d[10]}
                 },
                 {
-                    {d[11],d[12], d[13], d[14]}, 
-                    {d[15], d[16]}, 
+                    {d[11],d[12], d[13], d[14]},
+                    {d[15], d[16]},
                     {d[17], d[18], d[19], d[20], d[21]}
                 },
                 {
-                    {d[22],d[23], d[24], d[25]}, 
+                    {d[22],d[23], d[24], d[25]},
                     {d[26], d[27]}
                 }
             };
 
             auto outer_list_array_data = test::make_array_data_for_list_of_list_of_scalars(values);
-        
+
             using data_storage = sparrow::array_data;
             using inner_layout_type = sparrow::fixed_size_layout<T, data_storage>;
             using inner_list_layout_type = sparrow::list_layout<inner_layout_type, data_storage,  std::int64_t>;
             using outer_list_layout_type = sparrow::list_layout<inner_list_layout_type, data_storage,  std::int64_t>;
-            
+
             outer_list_layout_type outer_list_layout(outer_list_array_data);
             REQUIRE_EQ(outer_list_layout.size(), values.size());
-            
+
             SUBCASE("operator[]")
             {
                 for(std::size_t i = 0; i < values.size(); i++)
