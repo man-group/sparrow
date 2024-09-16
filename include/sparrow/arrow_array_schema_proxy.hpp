@@ -344,13 +344,17 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set format on non-sparrow created ArrowArray");
         }
-#if defined(__GNUC__)
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wrestrict"
+#if defined(__GNUC__) && !defined(__clang__)
+#    if __GNUC__ == 12
+#        pragma GCC diagnostic push
+#        pragma GCC diagnostic ignored "-Wrestrict"
+#    endif
 #endif
         get_schema_private_data()->format() = format;
-#if defined(__GNUC__)
-#    pragma GCC diagnostic pop
+#if defined(__GNUC__) && !defined(__clang__)
+#    if __GNUC__ == 12
+#        pragma GCC diagnostic pop
+#    endif
 #endif
         m_schema_ref.format = get_schema_private_data()->format_ptr();
     }
