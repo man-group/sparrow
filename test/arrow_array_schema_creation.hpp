@@ -22,7 +22,7 @@
 #include <utility>
 
 
-constexpr std::pair<ArrowSchema, ArrowArray> make_external_arrow_schema_and_array()
+inline std::pair<ArrowSchema, ArrowArray> make_external_arrow_schema_and_array()
 {
     std::pair<ArrowSchema, ArrowArray> pair;
     constexpr size_t size = 10;
