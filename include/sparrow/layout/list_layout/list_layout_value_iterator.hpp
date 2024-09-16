@@ -36,13 +36,13 @@ namespace sparrow
     template<class LIST_LAYOUT_TYPE, class CHILD_LAYOUT_TYPE, class OFFSET_TYPE, bool IS_CONST>
     class list_layout_value_iterator: public iterator_base<
             // derived
-            list_layout_value_iterator<LIST_LAYOUT_TYPE, CHILD_LAYOUT_TYPE, OFFSET_TYPE , IS_CONST>, 
+            list_layout_value_iterator<LIST_LAYOUT_TYPE, CHILD_LAYOUT_TYPE, OFFSET_TYPE , IS_CONST>,
             // element
             list_value_t<CHILD_LAYOUT_TYPE, IS_CONST>,
             // category
             std::random_access_iterator_tag,
             // REFERENCE
-            list_value_t<CHILD_LAYOUT_TYPE, IS_CONST> 
+            list_value_t<CHILD_LAYOUT_TYPE, IS_CONST>
         >
     {
         public:
@@ -67,15 +67,16 @@ namespace sparrow
             self_type& operator=(const self_type& rhs) = default;
 
             list_value_type dereference() const
-            {   
+            {
                 child_layout_reference child_layout = p_layout->m_child_layout;
                 const auto offset = p_layout->element_offset(m_index);
                 const auto length = p_layout->element_length(m_index);
 
-                
+
                 return list_value_type(
-                    sparrow::next(child_layout.begin(), offset),
-                    sparrow::next(child_layout.begin(), offset + length));
+                    sparrow::next(child_layout.begin(), to_native_offset(offset)),
+                    sparrow::next(child_layout.begin(), to_native_offset(offset + length))
+                );
             }
 
             bool equal(const self_type& rhs) const
@@ -87,23 +88,27 @@ namespace sparrow
             {
                 ++m_index;
             }
+
             void decrement()
             {
-                --m_index; 
+                --m_index;
             }
+
             void advance(std::ptrdiff_t n)
             {
                 m_index += static_cast<size_type>(n);
             }
+
             std::ptrdiff_t distance_to(const self_type& rhs) const
             {
                 return static_cast<ptrdiff_t>(rhs.m_index) - static_cast<std::ptrdiff_t>(m_index);
             }
+
             bool less_than(const self_type& rhs) const
             {
                 return m_index < rhs.m_index;
             }
-            
+
         private:
             using list_layout_type = LIST_LAYOUT_TYPE;
 

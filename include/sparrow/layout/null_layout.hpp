@@ -196,7 +196,7 @@ namespace sparrow
     template <data_storage DS>
     auto null_layout<DS>::size() const -> size_type
     {
-        return static_cast<size_type>(length(storage()));
+        return to_native_size(length(storage()));
     }
 
     template <data_storage DS>

@@ -236,7 +236,7 @@ namespace sparrow
      * private:
      *     std::vector<T> m_values;
      *     std::vector<bool> m_flags;
-     * 
+     *
      * public:
      *
      *     using reference = nullable<double&, bool&>;
@@ -287,21 +287,21 @@ namespace sparrow
         using flag_const_reference = typename flag_traits::const_reference;
         using flag_rvalue_reference = typename flag_traits::rvalue_reference;
         using flag_const_rvalue_reference = typename flag_traits::const_rvalue_reference;
-        
+
         template <std::default_initializable U = T, std::default_initializable BB = B>
         constexpr nullable() noexcept
             : m_value()
             , m_null_flag(false)
         {
         }
-        
+
         template <std::default_initializable U = T, std::default_initializable BB = B>
         constexpr nullable(nullval_t) noexcept
             : m_value()
             , m_null_flag(false)
         {
         }
-        
+
         template <class U>
         requires (
             not std::same_as<self_type, std::decay_t<U>> and
@@ -436,7 +436,7 @@ namespace sparrow
         constexpr const_reference get() const & noexcept;
         constexpr rvalue_reference get() && noexcept;
         constexpr const_rvalue_reference get() const && noexcept;
-        
+
         constexpr reference value() &;
         constexpr const_reference value() const &;
         constexpr rvalue_reference value() &&;
@@ -470,7 +470,7 @@ namespace sparrow
 
     template <class T, mpl::boolean_like B>
     constexpr std::strong_ordering operator<=>(const nullable<T, B>& lhs, nullval_t) noexcept;
-    
+
     template <class T, class B, class U>
     constexpr bool operator==(const nullable<T, B>& lhs, const U& rhs) noexcept;
 
@@ -490,7 +490,7 @@ namespace sparrow
     // to their argument, making the deduction impossible.
     template <class T, mpl::boolean_like B = bool>
     constexpr nullable<T, B> make_nullable(T&& value, B&& flag = true);
-    
+
     /**
      * variant of nullable, exposing has_value for convenience
      *
@@ -536,13 +536,13 @@ namespace sparrow
     {
         return m_null_flag;
     }
-    
+
     template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::null_flag() const & noexcept -> flag_const_reference
     {
         return m_null_flag;
     }
-    
+
     template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::null_flag() && noexcept -> flag_rvalue_reference
     {
@@ -555,7 +555,7 @@ namespace sparrow
             return flag_rvalue_reference(m_null_flag);
         }
     }
-    
+
     template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::null_flag() const && noexcept -> flag_const_rvalue_reference
     {
@@ -580,7 +580,7 @@ namespace sparrow
     {
         return m_value;
     }
-    
+
     template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::get() && noexcept -> rvalue_reference
     {
@@ -620,7 +620,7 @@ namespace sparrow
         throw_if_null();
         return get();
     }
-    
+
     template <class T, mpl::boolean_like B>
     constexpr auto nullable<T, B>::value() && -> rvalue_reference
     {
@@ -639,14 +639,14 @@ namespace sparrow
     template <class U>
     constexpr auto nullable<T, B>::value_or(U&& default_value) const & -> value_type
     {
-        return *this ? get() : value_type(std::forward<U>(default_value)); 
+        return *this ? get() : value_type(std::forward<U>(default_value));
     }
 
     template <class T, mpl::boolean_like B>
     template <class U>
     constexpr auto nullable<T, B>::value_or(U&& default_value) && -> value_type
     {
-        return *this ? get() : value_type(std::forward<U>(default_value)); 
+        return *this ? get() : value_type(std::forward<U>(default_value));
     }
 
     template <class T, mpl::boolean_like B>
@@ -662,7 +662,7 @@ namespace sparrow
     {
         m_null_flag = false;
     }
-    
+
     template <class T, mpl::boolean_like B>
     void nullable<T, B>::throw_if_null() const
     {
@@ -689,7 +689,7 @@ namespace sparrow
     {
         return lhs <=> false;
     }
-    
+
     template <class T, class B, class U>
     constexpr bool operator==(const nullable<T, B>& lhs, const U& rhs) noexcept
     {
@@ -744,7 +744,7 @@ namespace sparrow
         base_type::operator=(std::move(rhs));
         return *this;
     }
-    
+
     template <class... T>
     requires (is_nullable_v<T> && ...)
     constexpr nullable_variant<T...>::operator bool() const
