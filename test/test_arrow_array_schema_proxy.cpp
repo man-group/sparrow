@@ -12,50 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cstdint>
-#include <string_view>
-#include <utility>
 
-#include "sparrow/array/data_type.hpp"
+#include <string_view>
+
 #include "sparrow/arrow_array_schema_proxy.hpp"
-#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
 
+#include "arrow_array_schema_creation.hpp"
 #include "doctest/doctest.h"
-#include "external_array_data_creation.hpp"
 
-std::pair<ArrowSchema, ArrowArray> make_external_arrow_schema_and_array()
-{
-    std::pair<ArrowSchema, ArrowArray> pair;
-    constexpr size_t size = 10;
-    constexpr size_t offset = 1;
-    sparrow::test::fill_schema_and_array<uint32_t>(pair.first, pair.second, size, offset, {2, 3});
-    return pair;
-}
-
-std::pair<ArrowSchema, ArrowArray> make_sparrow_arrow_schema_and_array()
-{
-    using namespace std::literals;
-    ArrowSchema schema = *sparrow::make_arrow_schema_unique_ptr(
-                              sparrow::data_type_to_format(sparrow::data_type::UINT8),
-                              "test"sv,
-                              "test metadata"sv,
-                              std::nullopt,
-                              0,
-                              nullptr,
-                              nullptr
-    )
-                              .release();
-
-    std::vector<sparrow::buffer<std::uint8_t>> buffers_dummy = {
-        sparrow::buffer<std::uint8_t>({0xF3, 0xFF}),
-        sparrow::buffer<std::uint8_t>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
-    };
-    ArrowArray array = *sparrow::make_arrow_array_unique_ptr(10, 2, 0, 2, buffers_dummy, 0, nullptr, nullptr)
-                            .release();
-    return {schema, array};
-}
 
 TEST_SUITE("ArrowArrowSchemaProxy")
 {
@@ -143,16 +109,21 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            const auto proxy2(proxy);
+            auto proxy2(proxy);
             CHECK_EQ(proxy2.format(), "C");
+            proxy2.set_format("L");
+            CHECK_EQ(proxy.format(), "C");
         }
 
         SUBCASE("copy assignment")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            const sparrow::arrow_proxy proxy2 = proxy;
+            sparrow::arrow_proxy proxy2 = proxy;
+            CHECK_EQ(proxy.format(), "C");
             CHECK_EQ(proxy2.format(), "C");
+            proxy2.set_format("L");
+            CHECK_EQ(proxy.format(), "C");
         }
     }
 

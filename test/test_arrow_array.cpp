@@ -19,7 +19,9 @@
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/c_interface.hpp"
 
+#include "arrow_array_schema_creation.hpp"
 #include "doctest/doctest.h"
+
 
 
 using buffer_type = sparrow::buffer<uint8_t>;
@@ -289,6 +291,52 @@ TEST_SUITE("C Data Interface")
             const bool is_release_nullptr = array->release == nullptr;
             CHECK(is_release_nullptr);
             CHECK_EQ(array->private_data, nullptr);
+        }
+
+        SUBCASE("validate_format_with_arrow_array")
+        {
+            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            CHECK(sparrow::validate_format_with_arrow_array(sparrow::data_type::INT8, array));
+            CHECK_FALSE(sparrow::validate_format_with_arrow_array(sparrow::data_type::INT16, array));
+        }
+
+        SUBCASE("compute_buffer_size")
+        {
+            CHECK_EQ(sparrow::compute_buffer_size(
+                sparrow::buffer_type::DATA,
+                10,
+                0,
+                sparrow::data_type::INT8
+            ), 10);
+
+            CHECK_EQ(sparrow::compute_buffer_size(
+                sparrow::buffer_type::DATA,
+                10,
+                5,
+                sparrow::data_type::INT8
+            ), 15);
+
+            CHECK_EQ(sparrow::compute_buffer_size(
+                sparrow::buffer_type::DATA,
+                10,
+                5,
+                sparrow::data_type::INT16
+            ), 30);
+
+            CHECK_EQ(sparrow::compute_buffer_size(
+                sparrow::buffer_type::DATA,
+                10,
+                5,
+                sparrow::data_type::INT32
+            ), 60);
+
+            CHECK_EQ(sparrow::compute_buffer_size(
+                sparrow::buffer_type::VALIDITY,
+                10,
+                5,
+                sparrow::data_type::UINT8
+            ), 1);
+
         }
     }
 }

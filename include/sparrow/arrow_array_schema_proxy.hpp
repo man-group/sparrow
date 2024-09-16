@@ -22,7 +22,6 @@
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
-#include "sparrow/arrow_interface/arrow_array_schema_proxy_utils.hpp"
 #include "sparrow/arrow_interface/arrow_flag_utils.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
@@ -30,7 +29,6 @@
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/utils/contracts.hpp"
-#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -134,13 +132,19 @@ namespace sparrow
         [[nodiscard]] ArrowSchema& schema();
         [[nodiscard]] const ArrowSchema& schema() const;
 
-        [[nodiscard]] std::size_t
-        compute_buffer_size(buffer_type buffer_type, size_t length, size_t offset, enum data_type data_type) const;
-
         arrow_schema_private_data* get_schema_private_data();
         arrow_array_private_data* get_array_private_data();
 
+        std::pair<ArrowSchema, ArrowSchema> copy_data() const;
+
         void update_null_count();
+
+        ArrowArray* copy_array(const ArrowArray& array);
+        ArrowSchema* copy_schema(const ArrowSchema& schema);
+
+        [[nodiscard]] bool is_arrow_array_valid() const;
+        [[nodiscard]] bool is_arrow_schema_valid() const;
+        [[nodiscard]] bool is_proxy_valid() const;
     };
 
     inline void arrow_proxy::initialize_buffers()
@@ -229,10 +233,10 @@ namespace sparrow
     }
 
     inline arrow_proxy::arrow_proxy(const arrow_proxy& other)
-        : m_array(&other.m_array_ref)
-        , m_array_ref(*std::get<0>(m_array))
-        , m_schema(&other.m_schema_ref)
-        , m_schema_ref(*std::get<0>(m_schema))
+        : m_array(deep_copy_array(other.m_array_ref, other.m_schema_ref))
+        , m_array_ref(std::get<1>(m_array))
+        , m_schema(deep_copy_schema(other.m_schema_ref))
+        , m_schema_ref(std::get<1>(m_schema))
     {
         validate_array_and_schema();
         initialize_buffers();
@@ -245,10 +249,13 @@ namespace sparrow
             return *this;
         }
 
-        m_array = &other.m_array_ref;
-        m_array_ref = *std::get<0>(m_array);
-        m_schema = &other.m_schema_ref;
-        m_schema_ref = *std::get<0>(m_schema);
+        m_array = ArrowArray{};
+        m_array_ref = std::get<1>(m_array);
+        deep_copy_array(other.m_array_ref, other.m_schema_ref, m_array_ref);
+
+        m_schema = ArrowSchema{};
+        m_schema_ref = std::get<1>(m_schema);
+        deep_copy_schema(other.m_schema_ref, m_schema_ref);
 
         validate_array_and_schema();
         initialize_buffers();
@@ -344,7 +351,8 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set format on non-sparrow created ArrowArray");
         }
-#if defined(__GNUC__) && !defined(__clang__)
+#if defined(__GNUC__) && !defined(__clang__)  // Bypass the bug:
+                                              // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651
 #    if __GNUC__ == 12
 #        pragma GCC diagnostic push
 #        pragma GCC diagnostic ignored "-Wrestrict"
@@ -528,36 +536,12 @@ namespace sparrow
             arrow_schemas_children[i] = m_schema_ref.children[i];
         }
 
+        delete[] m_array_ref.children;
         m_array_ref.children = arrow_array_children;
         m_array_ref.n_children = static_cast<int64_t>(children_count);
+        delete[] m_schema_ref.children;
         m_schema_ref.children = arrow_schemas_children;
         m_schema_ref.n_children = static_cast<int64_t>(children_count);
-    }
-
-    [[nodiscard]] inline std::size_t
-    arrow_proxy::compute_buffer_size(buffer_type buffer_type, size_t length, size_t offset, enum data_type data_type) const
-    {
-        constexpr double bit_per_byte = 8.;
-        switch (buffer_type)
-        {
-            case buffer_type::VALIDITY:
-                return static_cast<std::size_t>(std::ceil(static_cast<double>(length) / bit_per_byte));
-            case buffer_type::DATA:
-                return primitive_bytes_count(data_type, length);
-            case buffer_type::OFFSETS_32BIT:
-            case buffer_type::SIZES_32BIT:
-                return get_offset_buffer_size(data_type, length, offset) * sizeof(std::int32_t);
-            case buffer_type::OFFSETS_64BIT:
-            case buffer_type::SIZES_64BIT:
-                return get_offset_buffer_size(data_type, length, offset) * sizeof(std::int64_t);
-            case buffer_type::VIEWS:
-                // TODO: Implement
-                SPARROW_ASSERT(false, "Not implemented");
-                return 0;
-            case buffer_type::TYPE_IDS:
-                return length;
-        }
-        mpl::unreachable();
     }
 
     inline arrow_schema_private_data* arrow_proxy::get_schema_private_data()
@@ -704,5 +688,20 @@ namespace sparrow
         const dynamic_bitset_view<std::uint8_t> bitmap(validity_buffer.data(), validity_buffer.size());
         const auto null_count = bitmap.null_count();
         set_null_count(static_cast<int64_t>(null_count));
+    }
+
+    inline bool arrow_proxy::is_arrow_array_valid() const
+    {
+        return m_array_ref.release != nullptr;
+    }
+
+    inline bool arrow_proxy::is_arrow_schema_valid() const
+    {
+        return m_schema_ref.release != nullptr;
+    }
+
+    inline bool arrow_proxy::is_proxy_valid() const
+    {
+        return is_arrow_array_valid() && is_arrow_schema_valid();
     }
 }

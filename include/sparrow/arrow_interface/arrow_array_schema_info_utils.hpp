@@ -76,6 +76,9 @@ namespace sparrow
         return buffers_count_valid && children_count_valid;
     }
 
+    /**
+     * @brief The type of buffer in an ArrowArray.
+     */
     enum class buffer_type
     {
         VALIDITY,
@@ -152,6 +155,32 @@ namespace sparrow
             default:
                 throw std::runtime_error("Unsupported data type");
         }
+    }
+
+    /// @returns The number of bytes required according to the provided buffer type, length, offset and data type.
+    constexpr std::size_t compute_buffer_size(buffer_type buffer_type, size_t length, size_t offset, enum data_type data_type)
+    {
+        constexpr double bit_per_byte = 8.;
+        switch (buffer_type)
+        {
+            case buffer_type::VALIDITY:
+                return static_cast<std::size_t>(std::ceil(static_cast<double>(length) / bit_per_byte));
+            case buffer_type::DATA:
+                return primitive_bytes_count(data_type, length);
+            case buffer_type::OFFSETS_32BIT:
+            case buffer_type::SIZES_32BIT:
+                return get_offset_buffer_size(data_type, length, offset) * sizeof(std::int32_t);
+            case buffer_type::OFFSETS_64BIT:
+            case buffer_type::SIZES_64BIT:
+                return get_offset_buffer_size(data_type, length, offset) * sizeof(std::int64_t);
+            case buffer_type::VIEWS:
+                // TODO: Implement
+                SPARROW_ASSERT(false, "Not implemented");
+                return 0;
+            case buffer_type::TYPE_IDS:
+                return length;
+        }
+        mpl::unreachable();
     }
 
 }

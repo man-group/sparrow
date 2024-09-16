@@ -16,8 +16,11 @@
 
 #include <cstddef>
 #include <cstdint>
+
+#include "sparrow/array/data_type.hpp"
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_array/smart_pointers.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
 #include "sparrow/c_interface.hpp"
 
 namespace sparrow
@@ -96,6 +99,36 @@ namespace sparrow
 
     template <class B>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
+    void fill_arrow_array(
+        ArrowArray& array,
+        int64_t length,
+        int64_t null_count,
+        int64_t offset,
+        B buffers,
+        size_t n_children,
+        ArrowArray** children,
+        ArrowArray* dictionary
+    )
+    {
+        SPARROW_ASSERT_TRUE(length >= 0);
+        SPARROW_ASSERT_TRUE(null_count >= -1);
+        SPARROW_ASSERT_TRUE(offset >= 0);
+
+        array.length = length;
+        array.null_count = null_count;
+        array.offset = offset;
+        array.n_buffers = sparrow::ssize(buffers);
+        array.private_data = new arrow_array_private_data(std::move(buffers));
+        const auto private_data = static_cast<arrow_array_private_data*>(array.private_data);
+        array.buffers = private_data->buffers_ptrs<void>();
+        array.n_children = static_cast<int64_t>(n_children);
+        array.children = children;
+        array.dictionary = dictionary;
+        array.release = release_arrow_array;
+    }
+
+    template <class B>
+        requires std::constructible_from<arrow_array_private_data::BufferType, B>
     arrow_array_unique_ptr make_arrow_array_unique_ptr(
         int64_t length,
         int64_t null_count,
@@ -113,21 +146,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(n_buffers >= 0);
 
         arrow_array_unique_ptr array = default_arrow_array_unique_ptr();
-
-        array->length = length;
-        array->null_count = null_count;
-        array->offset = offset;
-        array->n_buffers = n_buffers;
-
-        array->private_data = new arrow_array_private_data(
-            std::move(buffers)
-        );
-        const auto private_data = static_cast<arrow_array_private_data*>(array->private_data);
-        array->buffers = private_data->buffers_ptrs<void>();
-        array->n_children = static_cast<int64_t>(n_children);
-        array->children = children;
-        array->dictionary = dictionary;
-        array->release = release_arrow_array;
+        fill_arrow_array(*array, length, null_count, offset, std::move(buffers), n_children, children, dictionary);
         return array;
     }
 
@@ -177,8 +196,84 @@ namespace sparrow
         {
             const auto private_data = static_cast<arrow_array_private_data*>(array->private_data);
             delete private_data;
+            array->private_data = nullptr;
         }
-        array->private_data = nullptr;
         release_common_arrow(array);
     }
+
+    inline std::vector<sparrow::buffer_view<uint8_t>>
+    get_arrow_array_buffers(const ArrowArray& array, const ArrowSchema& schema)
+    {
+        std::vector<sparrow::buffer_view<uint8_t>> buffers;
+        const auto buffer_count = static_cast<size_t>(array.n_buffers);
+        buffers.reserve(buffer_count);
+        const enum data_type data_type = format_to_data_type(schema.format);
+        const std::vector<buffer_type> buffers_type = get_buffer_types_from_data_type(data_type);
+        for (std::size_t i = 0; i < buffer_count; ++i)
+        {
+            const auto buffer_type = buffers_type[i];
+            auto buffer = array.buffers[i];
+            const std::size_t buffer_size = compute_buffer_size(buffer_type, static_cast<size_t>(array.length), static_cast<size_t>(array.offset), data_type);
+            auto* ptr = static_cast<uint8_t*>(const_cast<void*>(buffer));
+            buffers.emplace_back(ptr, buffer_size);
+        }
+        return buffers;
+    }
+
+    /**
+     * Fill the target ArrowArray with a deep copy of the data from the source ArrowArray.
+     */
+    inline void deep_copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema, ArrowArray& target)
+    {
+        SPARROW_ASSERT_TRUE(source_array.release != nullptr);
+        SPARROW_ASSERT_TRUE(source_schema.release != nullptr);
+        SPARROW_ASSERT_TRUE(source_array.n_children == source_schema.n_children);
+        SPARROW_ASSERT_TRUE((source_array.dictionary == nullptr) == (source_schema.dictionary == nullptr));
+
+        target.n_children = source_array.n_children;
+        if (source_array.n_children > 0)
+        {
+            target.children = new ArrowArray*[static_cast<std::size_t>(source_array.n_children)];
+            for (int64_t i = 0; i < source_array.n_children; ++i)
+            {
+                target.children[i] = new ArrowArray{};
+                deep_copy_array(*source_array.children[i], *source_schema.children[i], *target.children[i]);
+            }
+        }
+
+        if (source_array.dictionary != nullptr)
+        {
+            target.dictionary = new ArrowArray{};
+            deep_copy_array(*source_array.dictionary, *source_schema.dictionary, *target.dictionary);
+        }
+
+        target.length = source_array.length;
+        target.null_count = source_array.null_count;
+        target.offset = source_array.offset;
+        target.n_buffers = source_array.n_buffers;
+
+        std::vector<buffer<std::uint8_t>> buffers_copy;
+        buffers_copy.reserve(static_cast<std::size_t>(source_array.n_buffers));
+        const auto buffers = get_arrow_array_buffers(source_array, source_schema);
+        for (const auto& buffer : buffers)
+        {
+            buffers_copy.emplace_back(buffer.begin(), buffer.end());
+        }
+        target.private_data = new arrow_array_private_data(std::move(buffers_copy));
+        const auto private_data = static_cast<arrow_array_private_data*>(target.private_data);
+        target.buffers = private_data->buffers_ptrs<void>();
+        target.release = release_arrow_array;
+    }
+
+    /**
+     * Create a deep copy of the source ArrowArray. The buffers, children and dictionary are deep copied.
+     */
+    inline ArrowArray deep_copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema)
+    {
+        ArrowArray target{};
+        deep_copy_array(source_array, source_schema, target);
+        return target;
+    }
+
+
 }

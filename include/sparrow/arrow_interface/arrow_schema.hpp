@@ -150,4 +150,49 @@ namespace sparrow
         schema->release = release_arrow_schema;
         return schema;
     };
+
+    /**
+     * Fill the target ArrowSchema with a deep copy of the data from the source ArrowSchema.
+     */
+    inline void deep_copy_schema(const ArrowSchema& source, ArrowSchema& target)
+    {
+        target.flags = source.flags;
+        target.n_children = source.n_children;
+        if (source.n_children > 0)
+        {
+            target.children = new ArrowSchema*[static_cast<std::size_t>(source.n_children)];
+            for (int64_t i = 0; i < source.n_children; ++i)
+            {
+                target.children[i] = new ArrowSchema{};
+                deep_copy_schema(*source.children[i], *target.children[i]);
+            }
+        }
+
+        if (source.dictionary != nullptr)
+        {
+            target.dictionary = new ArrowSchema{};
+            deep_copy_schema(*source.dictionary, *target.dictionary);
+        }
+
+        target.private_data = new arrow_schema_private_data(source.format, source.name, source.metadata);
+        auto* private_data = static_cast<arrow_schema_private_data*>(target.private_data);
+        target.format = private_data->format_ptr();
+        target.name = private_data->name_ptr();
+        target.metadata = private_data->metadata_ptr();
+        target.release = release_arrow_schema;
+    }
+
+    /**
+     * Deep copy an ArrowSchema.
+     *
+     * @param source The source ArrowSchema.
+     * @return The deep copy of the ArrowSchema.
+     */
+    [[nodiscard]]
+    inline ArrowSchema deep_copy_schema(const ArrowSchema& source)
+    {
+        ArrowSchema target{};
+        deep_copy_schema(source, target);
+        return target;
+    }
 }
