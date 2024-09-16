@@ -164,9 +164,9 @@ namespace sparrow
         switch (buffer_type)
         {
             case buffer_type::VALIDITY:
-                return static_cast<std::size_t>(std::ceil(static_cast<double>(length) / bit_per_byte));
+                return static_cast<std::size_t>(std::ceil(static_cast<double>(length + offset) / bit_per_byte));
             case buffer_type::DATA:
-                return primitive_bytes_count(data_type, length);
+                return primitive_bytes_count(data_type, length + offset);
             case buffer_type::OFFSETS_32BIT:
             case buffer_type::SIZES_32BIT:
                 return get_offset_buffer_size(data_type, length, offset) * sizeof(std::int32_t);
@@ -178,7 +178,7 @@ namespace sparrow
                 SPARROW_ASSERT(false, "Not implemented");
                 return 0;
             case buffer_type::TYPE_IDS:
-                return length;
+                return length + offset;
         }
         mpl::unreachable();
     }
