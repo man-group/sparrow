@@ -24,6 +24,31 @@ namespace sparrow::test
     void release_arrow_schema(ArrowSchema* schema);
     void release_arrow_array(ArrowArray* arr);
 
+    inline std::uint8_t* make_offset_buffer_from_sizes(const std::vector<size_t>& sizes, bool big)
+    {
+        const auto n = sizes.size() + 1;
+        auto buf = new std::uint8_t[n * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
+        if (big)
+        {
+            auto* ptr = reinterpret_cast<std::uint64_t*>(buf);
+            ptr[0] = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                ptr[i+1] = ptr[i] + sizes[i];
+            }
+        }
+        else
+        {
+            auto* ptr = reinterpret_cast<std::uint32_t*>(buf);
+            ptr[0] = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                ptr[i+1] = ptr[i] + static_cast<std::uint32_t>(sizes[i]);
+            }
+        }
+        return buf;
+    }
+
     inline std::uint8_t* make_bitmap_buffer(size_t n, const std::vector<size_t>& false_bitmap)
     {
         auto tmp_bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
@@ -192,5 +217,16 @@ namespace sparrow::test
             return sparrow::external_array_data(std::move(schema), std::move(arr), owns_arrow_data);
         }
     }
+
+
+    void fill_schema_and_array_for_list_layout(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        ArrowSchema & flat_value_schema,
+        ArrowArray & flat_value_arr,
+        const std::vector<std::size_t> & list_lengths,
+        const std::vector<std::size_t> & false_postions,
+        bool big_list
+    );
 }
 

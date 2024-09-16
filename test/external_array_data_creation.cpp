@@ -53,5 +53,50 @@ namespace sparrow::test
         arr->buffers = nullptr;
         detail::release_common_arrow(arr);
     }
+
+
+    void fill_schema_and_array_for_list_layout(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        ArrowSchema & flat_value_schema,
+        ArrowArray & flat_value_arr,
+        const std::vector<std::size_t> & list_lengths,
+        const std::vector<std::size_t> & false_postions,
+        bool big_list
+    ){
+        schema.format = big_list ? "+L" : "+l";
+        schema.name = "test";
+        schema.metadata = "test metadata";
+
+        schema.n_children = 1;
+        schema.children = new ArrowSchema*[1];
+        schema.children[0] = &flat_value_schema;
+
+        schema.dictionary = nullptr;
+        schema.release = &release_arrow_schema;
+
+
+        arr.length = static_cast<std::int64_t>(list_lengths.size());
+        arr.null_count = static_cast<std::int64_t>(false_postions.size());
+        arr.offset = 0;
+
+        arr.n_buffers = 2;
+        arr.n_children = 1;
+
+        std::uint8_t** buf = new std::uint8_t*[2];
+        buf[0] = make_bitmap_buffer(static_cast<std::size_t>(arr.length), false_postions);
+
+        buf[1] = make_offset_buffer_from_sizes(list_lengths, big_list);
+
+        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
+
+        arr.children = new ArrowArray*[1];
+        arr.children[0] = &flat_value_arr;
+
+        arr.dictionary = nullptr;
+        arr.release = &release_arrow_array;
+
+
+    }
 }
 
