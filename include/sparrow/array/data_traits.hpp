@@ -28,8 +28,6 @@ namespace sparrow
     struct common_native_types_traits
     {
         using value_type = T;
-        template <class DS>
-        using default_layout = fixed_size_layout<T, DS>;
     };
 
     template <>
@@ -37,8 +35,6 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::NA;
         using value_type = null_type;
-        template <class DS>
-        using default_layout = null_layout<DS>;
     };
 
     // Define automatically all standard floating-point and integral types support, including `bool`.
@@ -55,8 +51,6 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::STRING;
         using value_type = std::string;
-        template <class DS>
-        using default_layout = variable_size_binary_layout<value_type, const std::string_view, DS>;
     };
 
     template <>
@@ -64,8 +58,6 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::STRING;
         using value_type = std::vector<byte_t>;
-        template <class DS>
-        using default_layout = variable_size_binary_layout<value_type, const std::span<byte_t>, DS>;
     };
 
     template <>
@@ -75,6 +67,12 @@ namespace sparrow
         // By default duration in milliseconds, but see
         // https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
         // for other possibilities
+    };
+
+    template <>
+    struct arrow_traits<list_value2> : common_native_types_traits<list_value2>
+    {
+        static constexpr data_type type_id = data_type::LIST;
     };
 
     namespace predicate

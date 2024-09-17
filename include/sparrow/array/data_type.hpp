@@ -479,6 +479,8 @@ namespace sparrow
         }
     }
 
+    class list_value2;
+
     /// C++ types value representation types matching Arrow types.
     // NOTE: this needs to be in sync-order with `data_type`
     using all_base_types_t = mpl::typelist<
@@ -497,8 +499,9 @@ namespace sparrow
         float64_t,
         std::string,
         // std::vector<byte_t>,
-        sparrow::timestamp
+        sparrow::timestamp,
         // TODO: add missing fundamental types here
+        list_value2
         >;
 
     /// Type list of every C++ representation types supported by default, in order matching `data_type`
@@ -580,7 +583,7 @@ namespace sparrow
         typename T::value_type;
 
         /// The arrow (binary) layout to use by default for representing a set of data for that type.
-        typename detail::accepts_template<T::template default_layout>;
+        //typename detail::accepts_template<T::template default_layout>;
 
         // TODO: add more interface requirements on the traits here
         // TODO: add conversion operations between bytes and the value type
