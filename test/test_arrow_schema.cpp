@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cstddef>
 #include <memory>
 #include <optional>
 #include <ostream>  // Needed by doctest
@@ -24,6 +23,41 @@
 
 
 using namespace std::string_literals;
+
+void compare_arrow_schema(const ArrowSchema& schema, const ArrowSchema& schema_copy)
+{
+    CHECK_NE(&schema, &schema_copy);
+    CHECK_EQ(std::string_view(schema.format), std::string_view(schema_copy.format));
+    CHECK_EQ(std::string_view(schema.name), std::string_view(schema_copy.name));
+    CHECK_EQ(std::string_view(schema.metadata), std::string_view(schema_copy.metadata));
+    CHECK_EQ(schema.flags, schema_copy.flags);
+    CHECK_EQ(schema.n_children, schema_copy.n_children);
+    if (schema.n_children > 0)
+    {
+        REQUIRE_NE(schema.children, nullptr);
+        REQUIRE_NE(schema_copy.children, nullptr);
+        for (int64_t i = 0; i < schema.n_children; ++i)
+        {
+            CHECK_NE(schema.children[i], nullptr);
+            compare_arrow_schema(*schema.children[i], *schema_copy.children[i]);
+        }
+    }
+    else
+    {
+        CHECK_EQ(schema.children, nullptr);
+        CHECK_EQ(schema_copy.children, nullptr);
+    }
+
+    if (schema.dictionary != nullptr)
+    {
+        REQUIRE_NE(schema_copy.dictionary, nullptr);
+        compare_arrow_schema(*schema.dictionary, *schema_copy.dictionary);
+    }
+    else
+    {
+        CHECK_EQ(schema_copy.dictionary, nullptr);
+    }
+}
 
 TEST_SUITE("C Data Interface")
 {
@@ -187,6 +221,7 @@ TEST_SUITE("C Data Interface")
             CHECK_NE(schema->private_data, nullptr);
         }
 
+
         SUBCASE("ArrowSchema release")
         {
             ArrowSchema** children = new ArrowSchema*[2];
@@ -285,17 +320,7 @@ TEST_SUITE("C Data Interface")
 
             auto schema_copy = sparrow::deep_copy_schema(*schema);
 
-            CHECK_NE(schema->format, schema_copy.format);
-            CHECK_EQ(std::string_view(schema->format), std::string_view(schema_copy.format));
-            CHECK_NE(schema->name, schema_copy.name);
-            CHECK_EQ(std::string_view(schema->name), std::string_view(schema_copy.name));
-            CHECK_NE(schema->metadata, schema_copy.metadata);
-            CHECK_EQ(std::string_view(schema->metadata), std::string_view(schema_copy.metadata));
-            CHECK_EQ(schema->flags, schema_copy.flags);
-            CHECK_EQ(schema->n_children, schema_copy.n_children);
-            CHECK_NE(schema->children, schema_copy.children);
-            CHECK_NE(schema->dictionary, schema_copy.dictionary);
-            CHECK_NE(schema->private_data, schema_copy.private_data);
+            compare_arrow_schema(*schema, schema_copy);
         }
     }
 }
