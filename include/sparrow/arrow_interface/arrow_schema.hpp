@@ -156,6 +156,7 @@ namespace sparrow
      */
     inline void deep_copy_schema(const ArrowSchema& source, ArrowSchema& target)
     {
+        SPARROW_ASSERT_TRUE(&source != &target);
         target.flags = source.flags;
         target.n_children = source.n_children;
         if (source.n_children > 0)
@@ -163,6 +164,7 @@ namespace sparrow
             target.children = new ArrowSchema*[static_cast<std::size_t>(source.n_children)];
             for (int64_t i = 0; i < source.n_children; ++i)
             {
+                SPARROW_ASSERT_TRUE(source.children[i] != nullptr);
                 target.children[i] = new ArrowSchema{};
                 deep_copy_schema(*source.children[i], *target.children[i]);
             }

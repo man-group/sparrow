@@ -225,6 +225,7 @@ namespace sparrow
      */
     inline void deep_copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema, ArrowArray& target)
     {
+        SPARROW_ASSERT_TRUE(&source_array != &target);
         SPARROW_ASSERT_TRUE(source_array.release != nullptr);
         SPARROW_ASSERT_TRUE(source_schema.release != nullptr);
         SPARROW_ASSERT_TRUE(source_array.n_children == source_schema.n_children);
@@ -236,6 +237,7 @@ namespace sparrow
             target.children = new ArrowArray*[static_cast<std::size_t>(source_array.n_children)];
             for (int64_t i = 0; i < source_array.n_children; ++i)
             {
+                SPARROW_ASSERT_TRUE(source_array.children[i] != nullptr);
                 target.children[i] = new ArrowArray{};
                 deep_copy_array(*source_array.children[i], *source_schema.children[i], *target.children[i]);
             }

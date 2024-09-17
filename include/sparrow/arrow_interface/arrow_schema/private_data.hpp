@@ -16,6 +16,7 @@
 
 #include <optional>
 #include <string>
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
@@ -71,6 +72,7 @@ namespace sparrow
         , m_name(std::move(name))
         , m_metadata(std::move(metadata))
     {
+        SPARROW_ASSERT_TRUE(!m_format.empty())
     }
 
     [[nodiscard]] inline const char* arrow_schema_private_data::format_ptr() const noexcept

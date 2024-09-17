@@ -293,6 +293,30 @@ TEST_SUITE("C Data Interface")
             CHECK_EQ(array->private_data, nullptr);
         }
 
+        SUBCASE("deep_copy")
+        {
+            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto array_copy = sparrow::deep_copy_array(array, schema);
+            CHECK_EQ(array.length , array_copy.length);
+            CHECK_EQ(array.null_count , array_copy.null_count);
+            CHECK_EQ(array.offset , array_copy.offset);
+            CHECK_EQ(array.n_buffers , array_copy.n_buffers);
+            CHECK_EQ(array.n_children , array_copy.n_children);
+            CHECK_NE(array.buffers , array_copy.buffers);
+            CHECK_NE(array.private_data , array_copy.private_data);
+            for(size_t i = 0; i < static_cast<size_t>(array.n_buffers); ++i)
+            {
+                CHECK_NE(array.buffers[i] , array_copy.buffers[i]);
+            }
+            auto array_buffers = reinterpret_cast<const int8_t**>(array.buffers);
+            auto array_copy_buffers = reinterpret_cast<const int8_t**>(array_copy.buffers);
+
+            for(size_t i = 0; i < static_cast<size_t>(array.length); ++i)
+            {
+                CHECK_EQ(array_buffers[1][i], array_copy_buffers[1][i]);
+            }
+        }
+
         SUBCASE("validate_format_with_arrow_array")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
