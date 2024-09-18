@@ -412,18 +412,36 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         CHECK_EQ(children.size(), 0);
     }
 
-    TEST_CASE("set_child")
+    TEST_CASE("add_children")
     {
         SUBCASE("on sparrow c structure")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            proxy.set_n_children(1);
+          
             auto [schema_child, array_child] = make_sparrow_arrow_schema_and_array();
-            proxy.set_child(0, &array_child, &schema_child);
+            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{&array_child, &schema_child}}};
+            proxy.add_children(array_child_ptr);
             const auto children = proxy.children();
             CHECK_EQ(children.size(), 1);
             CHECK_EQ(children[0].format(), "C");
+        }
+    }
+
+    TEST_CASE("pop_children")
+    {
+        SUBCASE("on sparrow c structure")
+        {
+            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+
+            auto [schema_child, array_child] = make_sparrow_arrow_schema_and_array();
+            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{&array_child, &schema_child}}};
+            proxy.add_children(array_child_ptr);
+            proxy.pop_children(1);
+            const auto& children = proxy.children();
+            CHECK_EQ(children.size(), 0);
+            CHECK_EQ(proxy.n_children(), 0);
         }
     }
 
@@ -431,7 +449,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         auto [schema, array] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-        CHECK_FALSE(proxy.dictionary().has_value());
+        CHECK_FALSE(proxy.dictionary());
     }
 
     TEST_CASE("set_dictionary")
@@ -442,8 +460,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             auto [schema_dict, array_dict] = make_sparrow_arrow_schema_and_array();
             proxy.set_dictionary(&array_dict, &schema_dict);
-            const auto dictionary = proxy.dictionary();
-            CHECK(dictionary.has_value());
+            const auto& dictionary = proxy.dictionary();
+            REQUIRE(dictionary);
             CHECK_EQ(dictionary->format(), "C");
         }
 

@@ -15,6 +15,7 @@
 #pragma once
 
 #include "sparrow_v01/layout/array_base.hpp"
+#include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
@@ -84,6 +85,13 @@ namespace sparrow
         using base_type::bitmap_begin;
         using base_type::bitmap_end;
 
+        static constexpr size_t m_data_buffer_index = get_buffer_type_index(
+            data_type::UINT16,
+            buffer_type::DATA
+        );
+
+        buffer_adaptor<inner_value_type, buffer_view<uint8_t>> m_data_buffer_with_offset;
+
         pointer data();
         const_pointer data() const;
 
@@ -135,9 +143,10 @@ namespace sparrow
     template <class T>
     primitive_array<T>::primitive_array(arrow_proxy proxy)
         : array_base()
-        , base_type(std::move(proxy))
+        , base_type(std::move(proxy)),
+            m_data_buffer_with_offset(storage().buffers()[m_data_buffer_index])
     {
-        SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().format()));
+        SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(proxy.format()));
     }
 
     template <class T>
@@ -157,33 +166,33 @@ namespace sparrow
     template <class T>
     auto primitive_array<T>::data() -> pointer
     {
-        return storage().buffers()[1u].template data<inner_value_type>();
+        return m_data_buffer_with_offset.data();
     }
 
     template <class T>
     auto primitive_array<T>::data() const -> const_pointer
     {
-        return storage().buffers()[1u].template data<const inner_value_type>();
+        return m_data_buffer_with_offset.data();
     }
     
     template <class T>
     auto primitive_array<T>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + static_cast<size_type>(storage().offset())];
+        return m_data_buffer_with_offset[i];
     }
 
     template <class T>
     auto primitive_array<T>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + static_cast<size_type>(storage().offset())];
+        return m_data_buffer_with_offset[i];
     }
 
     template <class T>
     auto primitive_array<T>::value_begin() -> value_iterator
     {
-        return value_iterator{data() + storage().offset()};
+        return value_iterator{data()};
     }
 
     template <class T>
@@ -195,7 +204,7 @@ namespace sparrow
     template <class T>
     auto primitive_array<T>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator{data() + storage().offset()};
+        return const_value_iterator{data()};
     }
 
     template <class T>
