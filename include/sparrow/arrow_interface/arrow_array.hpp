@@ -113,7 +113,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(length >= 0);
         SPARROW_ASSERT_TRUE(null_count >= -1);
         SPARROW_ASSERT_TRUE(offset >= 0);
-        SPARROW_ASSERT_TRUE(n_children > 0 ? children != nullptr : children == nullptr);
+        SPARROW_ASSERT_TRUE((n_children == 0) == (children == nullptr));
 
         array.length = length;
         array.null_count = null_count;
@@ -145,7 +145,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(null_count >= -1);
         SPARROW_ASSERT_TRUE(offset >= 0);
         SPARROW_ASSERT_TRUE(n_buffers >= 0);
-        SPARROW_ASSERT_TRUE(n_children > 0 ? children != nullptr : children == nullptr);
+        SPARROW_ASSERT_TRUE((n_children == 0) == (children == nullptr));
 
         arrow_array_unique_ptr array = default_arrow_array_unique_ptr();
         fill_arrow_array(*array, length, null_count, offset, std::move(buffers), n_children, children, dictionary);
@@ -168,7 +168,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(null_count >= -1);
         SPARROW_ASSERT_TRUE(offset >= 0);
         SPARROW_ASSERT_TRUE(buffers.size() >= 0);
-        SPARROW_ASSERT_TRUE(n_children > 0 ? children != nullptr : children == nullptr);
+        SPARROW_ASSERT_TRUE((n_children == 0) == (children == nullptr));
 
         const int64_t buffer_count = sparrow::ssize(buffers);
         return make_arrow_array_unique_ptr<B>(

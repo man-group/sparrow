@@ -288,14 +288,12 @@ namespace sparrow
 
     inline void arrow_proxy::update_children()
     {
-        auto range = std::ranges::transform_view(
-            std::views::iota(size_t(0), n_children()),
-            [this](size_t i)
-            {
-                return arrow_proxy(m_array_ptr->children[i], m_schema_ptr->children[i]);
-            }
-        );
-        m_children.assign(range.begin(), range.end());
+        m_children.clear();
+        m_children.reserve(n_children());
+        for (size_t i = 0; i < n_children(); ++i)
+        {
+            m_children.emplace_back(m_array_ptr->children[i], m_schema_ptr->children[i]);
+        }
     }
 
     inline void arrow_proxy::update_dictionary()
