@@ -894,5 +894,65 @@ namespace sparrow
         }
         TEST_CASE_TEMPLATE_APPLY(inequality_comparison_id, testing_types);
     }
+
+    TEST_SUITE("nullable_variant")
+    {
+        using nullable_variant_type = nullable_variant<nullable<short>, nullable<int>, nullable<double>>;
+
+        TEST_CASE("has_value")
+        {
+            nullable<double> d = 1.2;
+            nullable_variant_type v = d;
+            CHECK(v.has_value());
+
+            nullable_variant_type v2 = nullable<int>();
+            CHECK(!v2.has_value());
+        }
+
+        TEST_CASE("oprator bool")
+        {
+            nullable<double> d = 1.2;
+            nullable_variant_type v = d;
+            CHECK(bool(v));
+
+            nullable_variant_type v2 = nullable<int>();
+            CHECK(!bool(v2));
+        }
+
+        TEST_CASE("visit")
+        {
+            double vd = 1.2;
+            nullable<double> d = vd;
+            nullable_variant_type v = d;
+
+            bool res = std::visit([vd](const auto& val) { return val.has_value() && val.value() == vd; }, v);
+            CHECK(res);
+        }
+
+        TEST_CASE("assignment")
+        {
+            nullable<double> d = 1.2;
+            nullable_variant_type nv = d;
+            nullable<double> d2 = 2.3;
+            nullable_variant_type nv2 = d2;
+
+            CHECK_NE(nv, nv2);
+            nv2 = nv;
+            CHECK_EQ(nv, nv2);
+        }
+
+        TEST_CASE("move assign")
+        {
+            nullable<double> d = 1.2;
+            nullable_variant_type nv = d;
+            nullable<double> d2 = 2.3;
+            nullable_variant_type nv2 = d2;
+            nullable_variant_type nv3(nv);
+
+            CHECK_NE(nv, nv2);
+            nv2 = std::move(nv3);
+            CHECK_EQ(nv, nv2);
+        }
+    }
 }
 

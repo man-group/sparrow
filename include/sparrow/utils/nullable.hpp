@@ -18,6 +18,7 @@
 #include <concepts>
 #include <exception>
 #include <type_traits>
+#include <variant>
 
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -27,7 +28,7 @@
 
 // clang workaround: clang instantiates the constructor in SFINAE context,
 // which is incompatible with the implementation of standard libraries which
-// are not libc++.This leads to wrong compilation errors. Making the constructor
+// are not libc++. This leads to wrong compilation errors. Making the constructor
 // not constexpr prevents the compiler from instantiating it.
 #if defined(__clang__) && not defined(_LIBCPP_VERSION)
 #   define SPARROW_CONSTEXPR
@@ -321,7 +322,7 @@ namespace sparrow
             not impl::initializable_from_refs<T, nullable<TO, BO>>
         )
         explicit(not impl::both_convertible_from_cref<T, TO, B, BO>)
-        constexpr nullable(const nullable<TO, BO>& rhs)
+        SPARROW_CONSTEXPR nullable(const nullable<TO, BO>& rhs)
             : m_value(rhs.get())
             , m_null_flag(rhs.null_flag())
         {
@@ -490,6 +491,30 @@ namespace sparrow
     template <class T, mpl::boolean_like B = bool>
     constexpr nullable<T, B> make_nullable(T&& value, B&& flag = true);
     
+    /**
+     * variant of nullable, exposing has_value for convenience
+     *
+     * @tparam T the list of nullable in the variant
+     */
+    template <class... T>
+        requires (is_nullable_v<T> && ...)
+    class nullable_variant : public std::variant<T...>
+    {
+    public:
+
+        using base_type = std::variant<T...>;
+        using base_type::base_type;
+
+        constexpr nullable_variant(const nullable_variant&) = default;
+        constexpr nullable_variant(nullable_variant&&) noexcept = default;
+
+        constexpr nullable_variant& operator=(const nullable_variant&);
+        constexpr nullable_variant& operator=(nullable_variant&&);
+
+        constexpr explicit operator bool() const;
+        constexpr bool has_value() const;
+    };
+
     /***************************
      * nullable implementation *
      ***************************/
@@ -696,6 +721,42 @@ namespace sparrow
     constexpr nullable<T, B> make_nullable(T&& value, B&& flag)
     {
         return nullable<T, B>(std::forward<T>(value), std::forward<B>(flag));
+    }
+
+    /***********************************
+     * nullable_variant implementation *
+     ***********************************/
+
+    template <class... T>
+    requires (is_nullable_v<T> && ...)
+    constexpr nullable_variant<T...>&
+    nullable_variant<T...>::operator=(const nullable_variant& rhs)
+    {
+        base_type::operator=(rhs);
+        return *this;
+    }
+
+    template <class... T>
+    requires (is_nullable_v<T> && ...)
+    constexpr nullable_variant<T...>&
+    nullable_variant<T...>::operator=(nullable_variant&& rhs)
+    {
+        base_type::operator=(std::move(rhs));
+        return *this;
+    }
+    
+    template <class... T>
+    requires (is_nullable_v<T> && ...)
+    constexpr nullable_variant<T...>::operator bool() const
+    {
+        return has_value();
+    }
+
+    template <class... T>
+    requires (is_nullable_v<T> && ...)
+    constexpr bool nullable_variant<T...>::has_value() const
+    {
+        return std::visit([](const auto& v) { return v.has_value(); }, *this);
     }
 }
 
