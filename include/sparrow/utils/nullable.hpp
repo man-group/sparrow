@@ -322,7 +322,7 @@ namespace sparrow
             not impl::initializable_from_refs<T, nullable<TO, BO>>
         )
         explicit(not impl::both_convertible_from_cref<T, TO, B, BO>)
-        constexpr nullable(const nullable<TO, BO>& rhs)
+        SPARROW_CONSTEXPR nullable(const nullable<TO, BO>& rhs)
             : m_value(rhs.get())
             , m_null_flag(rhs.null_flag())
         {
