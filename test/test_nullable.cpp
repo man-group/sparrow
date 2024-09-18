@@ -928,6 +928,31 @@ namespace sparrow
             bool res = std::visit([vd](const auto& val) { return val.has_value() && val.value() == vd; }, v);
             CHECK(res);
         }
+
+        TEST_CASE("assignment")
+        {
+            nullable<double> d = 1.2;
+            nullable_variant_type nv = d;
+            nullable<double> d2 = 2.3;
+            nullable_variant_type nv2 = d2;
+
+            CHECK_NE(nv, nv2);
+            nv2 = nv;
+            CHECK_EQ(nv, nv2);
+        }
+
+        TEST_CASE("move assign")
+        {
+            nullable<double> d = 1.2;
+            nullable_variant_type nv = d;
+            nullable<double> d2 = 2.3;
+            nullable_variant_type nv2 = d2;
+            nullable_variant_type nv3(nv);
+
+            CHECK_NE(nv, nv2);
+            nv2 = std::move(nv3);
+            CHECK_EQ(nv, nv2);
+        }
     }
 }
 

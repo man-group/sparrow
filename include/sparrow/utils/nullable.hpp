@@ -497,13 +497,19 @@ namespace sparrow
      * @tparam T the list of nullable in the variant
      */
     template <class... T>
-    requires (is_nullable_v<T> && ...)
+        requires (is_nullable_v<T> && ...)
     class nullable_variant : public std::variant<T...>
     {
     public:
 
         using base_type = std::variant<T...>;
         using base_type::base_type;
+
+        nullable_variant(const nullable_variant&) = default;
+        nullable_variant(nullable_variant&&) = default;
+
+        constexpr nullable_variant& operator=(const nullable_variant&);
+        constexpr nullable_variant& operator=(nullable_variant&&);
 
         constexpr explicit operator bool() const;
         constexpr bool has_value() const;
@@ -721,6 +727,24 @@ namespace sparrow
      * nullable_variant implementation *
      ***********************************/
 
+    template <class... T>
+    requires (is_nullable_v<T> && ...)
+    constexpr nullable_variant<T...>&
+    nullable_variant<T...>::operator=(const nullable_variant& rhs)
+    {
+        base_type::operator=(rhs);
+        return *this;
+    }
+
+    template <class... T>
+    requires (is_nullable_v<T> && ...)
+    constexpr nullable_variant<T...>&
+    nullable_variant<T...>::operator=(nullable_variant&& rhs)
+    {
+        base_type::operator=(std::move(rhs));
+        return *this;
+    }
+    
     template <class... T>
     requires (is_nullable_v<T> && ...)
     constexpr nullable_variant<T...>::operator bool() const
