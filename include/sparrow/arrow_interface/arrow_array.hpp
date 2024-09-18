@@ -39,7 +39,7 @@ namespace sparrow
      *                  for the the binary or utf-8 view type, which has one additional buffer compared to
      *                  the Columnar format specification (see Binary view arrays). Must be 0 or positive.
      * @param buffers Vector of sparrow::buffer
-     * @param children Pointer to a sequence of `ArrowArray` pointers or nullptr. Must be nullptr if n_children is 0.
+     * @param children Pointer to a sequence of `ArrowArray` pointers or `nullptr`. Must be `nullptr` if `n_children` is `0`.
      * @param dictionary `ArrowArray` pointer or nullptr.
      * @return The created `ArrowArray`.
      */
@@ -61,15 +61,15 @@ namespace sparrow
      *
      * This function creates a unique pointer to an Arrow array with the specified parameters.
      *
-     * @tparam B Value, reference or rvalue of std::vector<sparrow::buffer<uint8_t>>
+     * @tparam B Value, reference or rvalue of `std::vector<sparrow::buffer<uint8_t>>`
      * @param length The logical length of the array (i.e. its number of items). Must be 0 or positive.
      * @param null_count The number of null items in the array. May be -1 if not yet computed. Must be 0 or
      * positive otherwise.
      * @param offset The logical offset inside the array (i.e. the number of items from the physical start of
      *               the buffers). Must be 0 or positive.
-     * @param buffers Vector of sparrow::buffer<uint8_t>.
-     * @param children Pointer to a sequence of `ArrowArray` pointers or nullptr. Must be nullptr if n_children is 0.
-     * @param dictionary ArrowArray pointer or nullptr.
+     * @param buffers Vector of `sparrow::buffer<uint8_t>`.
+     * @param children Pointer to a sequence of `ArrowArray` pointers or nullptr. Must be `nullptr` if `n_children` is `0`.
+     * @param dictionary ArrowArray pointer or `nullptr`.
      * @return The created ArrowArray.
      */
     template <class B>

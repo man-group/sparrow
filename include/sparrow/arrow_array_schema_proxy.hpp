@@ -231,15 +231,12 @@ namespace sparrow
         std::vector<arrow_proxy> m_children;
         std::unique_ptr<arrow_proxy> m_dictionary;
 
-        enum class constructor_tag
-        {
-            private_constructor
-        };
+        struct impl_tag{};
 
         template <typename AA, typename AS>
             requires std::same_as<std::remove_pointer_t<std::remove_cvref_t<AA>>, ArrowArray>
                      && std::same_as<std::remove_pointer_t<std::remove_cvref_t<AS>>, ArrowSchema>
-        arrow_proxy(AA&& array, AS&& schema, constructor_tag);
+        arrow_proxy(AA&& array, AS&& schema, impl_tag);
 
         void resize_children(size_t children_count);
 
@@ -334,7 +331,7 @@ namespace sparrow
     template <typename AA, typename AS>
         requires std::same_as<std::remove_pointer_t<std::remove_cvref_t<AA>>, ArrowArray>
                      && std::same_as<std::remove_pointer_t<std::remove_cvref_t<AS>>, ArrowSchema>
-    arrow_proxy::arrow_proxy(AA&& array, AS&& schema, constructor_tag)
+    arrow_proxy::arrow_proxy(AA&& array, AS&& schema, impl_tag)
         : m_array(std::move(array))
         , m_array_ptr(m_array.index() == 0 ? std::get<0>(m_array) : &std::get<1>(m_array))
         , m_schema(std::move(schema))
@@ -365,17 +362,17 @@ namespace sparrow
     }
 
     inline arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema&& schema)
-        : arrow_proxy(std::move(array), std::move(schema), constructor_tag::private_constructor)
+        : arrow_proxy(std::move(array), std::move(schema), impl_tag{})
     {
     }
 
     inline arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema* schema)
-        : arrow_proxy(std::move(array), schema, constructor_tag::private_constructor)
+        : arrow_proxy(std::move(array), schema, impl_tag{})
     {
     }
 
     inline arrow_proxy::arrow_proxy(ArrowArray* array, ArrowSchema* schema)
-        : arrow_proxy(array, schema, constructor_tag::private_constructor)
+        : arrow_proxy(array, schema, impl_tag{})
     {
     }
 

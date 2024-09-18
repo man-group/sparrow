@@ -37,9 +37,9 @@ namespace sparrow
      * `ArrowSchema.children` structures.
      * @param flags A bitfield of flags enriching the type description. Its value is computed by OR’ing
      *              together the flag values.
-     * @param children Pointers to children. Vector pointer can be null. Children pointers must not be null.
+     * @param children Pointer to a sequence of `ArrowSchema` pointers or `nullptr`. Must be `nullptr` if `n_children` is `0`.
      * @param dictionary Pointer to `an ArrowSchema`. Must be present if the `ArrowSchema` represents a
-     * dictionary-encoded type. Must be nullptr otherwise.
+     * dictionary-encoded type. Must be `nullptr` otherwise.
      * @return The created `ArrowSchema` unique pointer.
      */
     template <class F, class N, class M>
