@@ -108,7 +108,7 @@ namespace sparrow
 
     namespace detail
     {
-        bool check_primitive_data_type(std::string_view format)
+        inline bool check_primitive_data_type(std::string_view format)
         {
             constexpr std::array<data_type, 14> dtypes =
             {
@@ -151,7 +151,7 @@ namespace sparrow
     auto primitive_array<T>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return reference(value(i), has_value(i));
+        return const_reference(value(i), has_value(i));
     }
 
     template <class T>
