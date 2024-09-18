@@ -9,7 +9,7 @@
 
 namespace sparrow
 {
-    std::unique_ptr<array_base> create_array(arrow_proxy proxy)
+    std::unique_ptr<array_base> array_factory(arrow_proxy proxy)
     {
         if(proxy.format().size() == 1)
         {
@@ -39,6 +39,8 @@ namespace sparrow
                     return std::make_unique<primitive_array<float>>(std::move(proxy));
                 case 'd':
                     return std::make_unique<primitive_array<double>>(std::move(proxy));
+                default:
+                    throw std::runtime_error("Unsupported format"); // todo use appropriate exception
                 
             }
         }
@@ -54,7 +56,7 @@ namespace sparrow
             else
             {
                 throw std::runtime_error("Unsupported format"); // todo use appropriate exception
-            }
+            } 
         }
     }
     

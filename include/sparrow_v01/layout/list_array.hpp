@@ -231,13 +231,27 @@ namespace sparrow
 
 
 
-        list_array_impl(arrow_proxy proxy)
-        :   m_proxy(proxy),
+        explicit list_array_impl(arrow_proxy proxy)
+        :   array_base(),
+            base_type(std::move(proxy)),
             p_list_offsets(reinterpret_cast<flat_array_offset_type*>(proxy.buffers()[1].data() + proxy.offset())),
             p_flat_array(std::move(array_factory(proxy.children()[0])))
         {
         }
         
+        virtual ~list_array_impl() = default;
+        list_array_impl(const list_array_impl& rhs):
+            array_base(),
+            base_type(rhs.storage()),
+            p_list_offsets(rhs.p_list_offsets),
+            p_flat_array(rhs.p_flat_array->clone())
+        {
+        }
+        list_array_impl* clone_impl() const override{
+            return new list_array_impl(*this);
+        }
+
+
         private:
 
 
@@ -262,7 +276,6 @@ namespace sparrow
         }
 
         // data members
-        arrow_proxy m_proxy;
         flat_array_offset_type * p_list_offsets;
 
         std::unique_ptr<array_base>  p_flat_array;
