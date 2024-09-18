@@ -525,7 +525,7 @@ namespace sparrow
 
     template <std::ranges::input_range R>
         requires std::same_as<std::ranges::range_value_t<R>, arrow_array_and_schema_pointers>
-    void arrow_proxy::add_children(const R& arrow_array_and_schema_pointers)
+    inline void arrow_proxy::add_children(const R& arrow_array_and_schema_pointers)
     {
         if (!is_created_with_sparrow())
         {
@@ -766,7 +766,7 @@ namespace sparrow
         return is_arrow_array_valid() && is_arrow_schema_valid();
     }
 
-    void arrow_proxy::swap(arrow_proxy& lhs, arrow_proxy& rhs)
+    inline void arrow_proxy::swap(arrow_proxy& lhs, arrow_proxy& rhs)
     {
         if (&lhs == &rhs)
         {
