@@ -547,7 +547,7 @@ namespace sparrow
         }
     }
 
-    void arrow_proxy::pop_children(size_t n)
+    inline void arrow_proxy::pop_children(size_t n)
     {
         if (!is_created_with_sparrow())
         {
