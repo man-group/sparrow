@@ -503,18 +503,10 @@ namespace sparrow
     public:
 
         using base_type = std::variant<T...>;
-        //using base_type::base_type;
+        using base_type::base_type;
 
-        constexpr nullable_variant() = default;
-        
-        template <class U>
-        SPARROW_CONSTEXPR nullable_variant(U&& u)
-            : base_type(std::forward<U>(u))
-        {
-        }
-
-        nullable_variant(const nullable_variant&) = default;
-        nullable_variant(nullable_variant&&) noexcept = default;
+        constexpr nullable_variant(const nullable_variant&) = default;
+        constexpr nullable_variant(nullable_variant&&) noexcept = default;
 
         constexpr nullable_variant& operator=(const nullable_variant&);
         constexpr nullable_variant& operator=(nullable_variant&&);
