@@ -18,6 +18,8 @@
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
+#include "sparrow/layout/layout_iterator.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
 {
@@ -74,8 +76,10 @@ namespace sparrow
     class array_crtp_base
     {
     public:
+        using self_type = array_crtp_base<D>;
         using derived_type = D;
         using inner_types = array_inner_types<derived_type>;
+
         using size_type = std::size_t;
         using difference_type = std::ptrdiff_t;
         using bitmap_type = typename inner_types::bitmap_type;
@@ -84,8 +88,22 @@ namespace sparrow
         using bitmap_iterator = bitmap_type::iterator;
         using const_bitmap_iterator = bitmap_type::const_iterator;
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
-        using iterator = typename inner_types::iterator;
-        using const_iterator = typename inner_types::const_iterator;
+
+        using inner_value_type = typename inner_types::inner_value_type;
+        using inner_reference = typename inner_types::inner_reference;
+        using inner_const_reference = typename inner_types::inner_const_reference;
+        using reference = nullable<inner_reference, bitmap_reference>;
+        using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
+        
+        using value_type = nullable<inner_value_type>;
+        using iterator_tag = typename inner_types::iterator_tag;
+
+        using iterator = layout_iterator<self_type, false>;
+        using const_iterator = layout_iterator<self_type, true>;
+
+
+
+
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
         using const_value_range = std::ranges::subrange<const_value_iterator>;
@@ -130,6 +148,13 @@ namespace sparrow
 
         arrow_proxy m_proxy;
         bitmap_type m_bitmap;
+
+        // template <class Layout, bool is_const>
+        // class layout_iterator
+
+        // friend classes
+        friend class layout_iterator<self_type, false>;
+        friend class layout_iterator<self_type, true>;
     };
 
     /*****************************

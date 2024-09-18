@@ -143,6 +143,7 @@ set(SPARROW_HEADERS
 
 set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/dummy.cpp
+    # ${SPARROW_SOURCE_DIR}/array_factory.cpp
 )
 
 if (BUILD_REFACTORING)

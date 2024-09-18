@@ -38,8 +38,8 @@ namespace sparrow
         using value_iterator = pointer_iterator<pointer>;
         using const_value_iterator = pointer_iterator<const_pointer>;
 
-        using iterator = layout_iterator<array_type, false>;
-        using const_iterator = layout_iterator<array_type, true>;
+        using iterator_tag = std::contiguous_iterator_tag;
+
     };
 
     template <class T>
@@ -108,7 +108,7 @@ namespace sparrow
 
     namespace detail
     {
-        bool check_primitive_data_type(std::string_view format)
+        inline bool check_primitive_data_type(std::string_view format)
         {
             constexpr std::array<data_type, 14> dtypes =
             {
