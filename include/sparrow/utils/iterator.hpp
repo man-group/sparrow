@@ -18,9 +18,36 @@
 #include <iterator>
 #include <memory>
 #include <type_traits>
+#include <utility>  // for std::move
 
 namespace sparrow
-{
+{   
+
+
+
+    // Custom subrange class without requiring default constructibility
+    template <typename Iter, typename Sent = Iter>
+    class subrange {
+    public:
+
+        subrange(const subrange&) = default;
+        subrange& operator=(const subrange&) = default;
+        subrange(subrange&&) = default;
+        subrange& operator=(subrange&&) = default;
+
+
+        // Constructor taking an iterator and sentinel (or two iterators)
+        subrange(Iter first, Sent last) 
+            : begin_(std::move(first)), end_(std::move(last)) {}
+
+        // Begin and end accessors
+        Iter begin() const { return begin_; }
+        Sent end() const { return end_; }
+
+    private:
+        Iter begin_;  // The starting iterator
+        Sent end_;    // The ending iterator or sentinel
+    };
 
     namespace detail
     {
@@ -505,78 +532,4 @@ namespace sparrow
         std::advance(it, n);
         return it;
     }
-
-
-
-    // this class helps to generate an iterator that returns the result of a functor.
-    // the argument to the functor is the index of the iterator.
-
-    template<class FUNCTOR>
-    class functor_index_iterator : public iterator_base<
-        functor_index_iterator<FUNCTOR>,   // Derived
-        std::invoke_result_t<FUNCTOR, std::size_t>,  // Element
-        std::random_access_iterator_tag,
-        std::invoke_result_t<FUNCTOR, std::size_t> & // Reference
-    >
-    {
-      public:
-        friend class iterator_access;
-        
-        using result_type = std::invoke_result_t<FUNCTOR, std::size_t>;
-        using self_type = functor_index_iterator<FUNCTOR>;
-        using difference_type = std::ptrdiff_t;
-
-
-        functor_index_iterator(FUNCTOR functor, std::size_t index)
-            : m_functor(functor)
-            , m_index(index)
-        {
-        }
-      private:
-
-        const result_type &  dereference()
-        {
-            m_value =  m_functor(m_index);
-            return m_value;
-        }
-
-        bool equal(const self_type& rhs) const
-        {
-            return m_index == rhs.m_index;
-        }
-
-        void increment()
-        {
-            ++m_index;
-        }
-        void decrement()
-        {
-            --m_index;
-        }
-        void advance(difference_type n)
-        {
-            m_index += n;
-        }
-        difference_type distance_to(const self_type& rhs) const
-        {
-            return rhs.m_index - m_index;
-        }
-
-        bool less_than(const self_type& rhs) const
-        {
-            return m_index < rhs.m_index;
-        }
-        FUNCTOR m_functor;
-        std::size_t m_index;
-
-        private:
-        result_type m_value;
-    };
-
-
-
-
-
-
-
 }

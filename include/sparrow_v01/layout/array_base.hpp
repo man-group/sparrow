@@ -20,6 +20,7 @@
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/utils/iterator.hpp"
 
 namespace sparrow
 {
@@ -94,7 +95,7 @@ namespace sparrow
         using inner_const_reference = typename inner_types::inner_const_reference;
         using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
-        
+
         using value_type = nullable<inner_value_type>;
         using iterator_tag = typename inner_types::iterator_tag;
 
@@ -106,7 +107,9 @@ namespace sparrow
 
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
-        using const_value_range = std::ranges::subrange<const_value_iterator>;
+        using const_value_range = subrange<
+            const_value_iterator
+        >;
 
         size_type size() const;
 
@@ -217,13 +220,13 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::bitmap() const -> const_bitmap_range
     {
-        return std::ranges::subrange(bitmap_begin(), bitmap_end());
+        return const_bitmap_range(bitmap_begin(), bitmap_end());
     }
 
     template <class D>
     auto array_crtp_base<D>::values() const -> const_value_range
     {
-        return std::ranges::subrange(derived_cast().value_cbegin(), derived_cast().value_cend());
+        return const_value_range(derived_cast().value_cbegin(), derived_cast().value_cend());
     }
 
     template <class D>
