@@ -318,7 +318,7 @@ TEST_SUITE("C Data Interface")
                     .release()
             );
 
-            auto schema_copy = sparrow::deep_copy_schema(*schema);
+            auto schema_copy = sparrow::copy_schema(*schema);
 
             compare_arrow_schema(*schema, schema_copy);
         }

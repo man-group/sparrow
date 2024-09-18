@@ -28,41 +28,42 @@
 namespace sparrow
 {
     /**
-     * Release the children and dictionnary of an ArrowArray or ArrowSchema.
+     * Release the children and dictionnary of an `ArrowArray` or `ArrowSchema`.
      * 
-     * @tparam T ArrowArray or ArrowSchema
-     * @param t The ArrowArray or ArrowSchema to release.
+     * @tparam T `ArrowArray` or `ArrowSchema`
+     * @param t The `ArrowArray` or `ArrowSchema` to release.
      */
     template <class T>
     requires std::same_as<T, ArrowArray> || std::same_as<T, ArrowSchema>
-    void release_common_arrow(T* t)
+    void release_common_arrow(T& t)
     {
-        if (t->dictionary)
+        if (t.dictionary)
         {
-            if (t->dictionary->release)
+            if (t.dictionary->release)
             {
-                t->dictionary->release(t->dictionary);
+                t.dictionary->release(t.dictionary);
             }
-            t->dictionary = nullptr;
         }
 
-        if (t->children)
+        if (t.children)
         {
-            for (int64_t i = 0; i < t->n_children; ++i)
+            for (int64_t i = 0; i < t.n_children; ++i)
             {
-                if (t->children[i])
+                T* child = t.children[i];
+                if (child)
                 {
-                    if (t->children[i]->release)
+                    if (child->release)
                     {
-                        t->children[i]->release(t->children[i]);
+                        child->release(child);
+                        delete child;
                     }
                 }
             }
-            delete[] t->children;
+            delete[] t.children;
+            t.children = nullptr;
         }
 
-        t->children = nullptr;
-        t->release = nullptr;
+        t.release = nullptr;
     }
 
     /**

@@ -19,13 +19,14 @@
 #include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_schema/smart_pointers.hpp"
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
     /**
-     * Creates an ArrowSchema owned by a `unique_ptr` and holding the provided data.
+     * Creates an `ArrowSchema` owned by a `unique_ptr` and holding the provided data.
      *
-     * @tparam C Value, reference or rvalue of std::vector<arrow_schema_shared_ptr>
+     * @tparam C Value, reference or rvalue of `std::vector<arrow_schema_shared_ptr>`
      * @param format A mandatory, null-terminated, UTF8-encoded string describing the data type. If the data
      *               type is nested, child types are not encoded here but in the ArrowSchema.children
      *               structures.
@@ -33,13 +34,13 @@ namespace sparrow
      *             This is mainly used to reconstruct child fields of nested types.
      * @param metadata An optional, binary string describing the type’s metadata. If the data type
      *                 is nested, the metadata for child types are not encoded here but in the
-     * ArrowSchema.children structures.
+     * `ArrowSchema.children` structures.
      * @param flags A bitfield of flags enriching the type description. Its value is computed by OR’ing
      *              together the flag values.
      * @param children Pointers to children. Vector pointer can be null. Children pointers must not be null.
-     * @param dictionary Pointer to an ArrowSchema. Must be present if the ArrowSchema represents a
+     * @param dictionary Pointer to `an ArrowSchema`. Must be present if the `ArrowSchema` represents a
      * dictionary-encoded type. Must be nullptr otherwise.
-     * @return The created ArrowSchema unique pointer.
+     * @return The created `ArrowSchema` unique pointer.
      */
     template <class F, class N, class M>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
@@ -76,9 +77,9 @@ namespace sparrow
     void release_arrow_schema(ArrowSchema* schema);
 
     /**
-     * Creates a default ArrowSchema unique pointer.
+     * Creates a default `ArrowSchema` unique pointer.
      *
-     * @return The created ArrowSchema unique pointer.
+     * @return The created `ArrowSchema` unique pointer.
      */
     arrow_schema_unique_ptr default_arrow_schema_unique_ptr();
 
@@ -92,16 +93,16 @@ namespace sparrow
             const auto private_data = static_cast<arrow_schema_private_data*>(schema->private_data);
             delete private_data;
         }
-        release_common_arrow(schema);
+        release_common_arrow(*schema);
         *schema = {};
     }
 
     /**
-     * Creates a unique pointer to an ArrowSchema with default values.
-     * All integers are set to 0 and pointers to nullptr.
-     * The ArrowSchema is in an invalid state and should not bu used as is.
+     * Creates a unique pointer to an `ArrowSchema` with default values.
+     * All integers are set to 0 and pointers to `nullptr`.
+     * The `ArrowSchema` is in an invalid state and should not bu used as is.
      *
-     * @return The created ArrowSchema.
+     * @return The created `ArrowSchema`.
      */
     inline arrow_schema_unique_ptr default_arrow_schema_unique_ptr()
     {
@@ -122,6 +123,8 @@ namespace sparrow
         ArrowSchema* dictionary
     )
     {
+        SPARROW_ASSERT_TRUE(n_children >= 0);
+        SPARROW_ASSERT_TRUE(n_children > 0 ? children != nullptr : children == nullptr);
         SPARROW_ASSERT_FALSE(format.empty());
         if (children)
         {
@@ -152,9 +155,9 @@ namespace sparrow
     };
 
     /**
-     * Fill the target ArrowSchema with a deep copy of the data from the source ArrowSchema.
+     * Fills the target `ArrowSchema` with a deep copy of the data from the source `ArrowSchema`.
      */
-    inline void deep_copy_schema(const ArrowSchema& source, ArrowSchema& target)
+    inline void copy_schema(const ArrowSchema& source, ArrowSchema& target)
     {
         SPARROW_ASSERT_TRUE(&source != &target);
         target.flags = source.flags;
@@ -166,14 +169,14 @@ namespace sparrow
             {
                 SPARROW_ASSERT_TRUE(source.children[i] != nullptr);
                 target.children[i] = new ArrowSchema{};
-                deep_copy_schema(*source.children[i], *target.children[i]);
+                copy_schema(*source.children[i], *target.children[i]);
             }
         }
 
         if (source.dictionary != nullptr)
         {
             target.dictionary = new ArrowSchema{};
-            deep_copy_schema(*source.dictionary, *target.dictionary);
+            copy_schema(*source.dictionary, *target.dictionary);
         }
 
         target.private_data = new arrow_schema_private_data(source.format, source.name, source.metadata);
@@ -185,16 +188,16 @@ namespace sparrow
     }
 
     /**
-     * Deep copy an ArrowSchema.
+     * Deep copy an `ArrowSchema`.
      *
-     * @param source The source ArrowSchema.
-     * @return The deep copy of the ArrowSchema.
+     * @param source The source `ArrowSchema`.
+     * @return The deep copy of the `ArrowSchema`.
      */
     [[nodiscard]]
-    inline ArrowSchema deep_copy_schema(const ArrowSchema& source)
+    inline ArrowSchema copy_schema(const ArrowSchema& source)
     {
         ArrowSchema target{};
-        deep_copy_schema(source, target);
+        copy_schema(source, target);
         return target;
     }
 }

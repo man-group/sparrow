@@ -26,9 +26,9 @@
 namespace sparrow
 {
     /**
-     * Creates an ArrowArray with provided data, with unique ownership.
+     * Creates an `ArrowArray` with provided data, with unique ownership.
      *
-     * @tparam B Value, reference or rvalue of std::vector<sparrow::buffer<uint8_t>>
+     * @tparam B Value, reference or rvalue of `std::vector<sparrow::buffer<uint8_t>>`
      * @param length The logical length of the array (i.e. its number of items). Must be 0 or positive.
      * @param null_count The number of null items in the array. May be -1 if not yet computed. Must be 0 or
      * positive otherwise.
@@ -39,9 +39,9 @@ namespace sparrow
      *                  for the the binary or utf-8 view type, which has one additional buffer compared to
      *                  the Columnar format specification (see Binary view arrays). Must be 0 or positive.
      * @param buffers Vector of sparrow::buffer
-     * @param children Raw vector of ArrowArray pointers or nullptr.
-     * @param dictionary ArrowArray pointer or nullptr.
-     * @return The created ArrowArray.
+     * @param children Pointer to a sequence of `ArrowArray` pointers or nullptr. Must be nullptr if n_children is 0.
+     * @param dictionary `ArrowArray` pointer or nullptr.
+     * @return The created `ArrowArray`.
      */
     template <class B>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
@@ -57,7 +57,7 @@ namespace sparrow
     );
 
     /**
-     * Creates a unique pointer to an Arrow array.
+     * Creates a unique pointer to an `ArrowArray`.
      *
      * This function creates a unique pointer to an Arrow array with the specified parameters.
      *
@@ -68,7 +68,7 @@ namespace sparrow
      * @param offset The logical offset inside the array (i.e. the number of items from the physical start of
      *               the buffers). Must be 0 or positive.
      * @param buffers Vector of sparrow::buffer<uint8_t>.
-     * @param children Raw vector of ArrowArray pointers or nullptr.
+     * @param children Pointer to a sequence of `ArrowArray` pointers or nullptr. Must be nullptr if n_children is 0.
      * @param dictionary ArrowArray pointer or nullptr.
      * @return The created ArrowArray.
      */
@@ -85,10 +85,10 @@ namespace sparrow
     );
 
     /**
-     * All integers are set to 0 and pointers to nullptr.
-     * The ArrowArray is in an invalid state and should not bu used as is.
+     * All integers are set to 0 and pointers to `nullptr`.
+     * The `ArrowArray` is in an invalid state and should not bu used as is.
      *
-     * @return The created ArrowArray.
+     * @return The created `ArrowArray`.
      */
     arrow_array_unique_ptr default_arrow_array_unique_ptr();
 
@@ -113,6 +113,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(length >= 0);
         SPARROW_ASSERT_TRUE(null_count >= -1);
         SPARROW_ASSERT_TRUE(offset >= 0);
+        SPARROW_ASSERT_TRUE(n_children > 0 ? children != nullptr : children == nullptr);
 
         array.length = length;
         array.null_count = null_count;
@@ -144,6 +145,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(null_count >= -1);
         SPARROW_ASSERT_TRUE(offset >= 0);
         SPARROW_ASSERT_TRUE(n_buffers >= 0);
+        SPARROW_ASSERT_TRUE(n_children > 0 ? children != nullptr : children == nullptr);
 
         arrow_array_unique_ptr array = default_arrow_array_unique_ptr();
         fill_arrow_array(*array, length, null_count, offset, std::move(buffers), n_children, children, dictionary);
@@ -162,6 +164,12 @@ namespace sparrow
         ArrowArray* dictionary
     )
     {
+        SPARROW_ASSERT_TRUE(length >= 0);
+        SPARROW_ASSERT_TRUE(null_count >= -1);
+        SPARROW_ASSERT_TRUE(offset >= 0);
+        SPARROW_ASSERT_TRUE(buffers.size() >= 0);
+        SPARROW_ASSERT_TRUE(n_children > 0 ? children != nullptr : children == nullptr);
+
         const int64_t buffer_count = sparrow::ssize(buffers);
         return make_arrow_array_unique_ptr<B>(
             length,
@@ -185,20 +193,14 @@ namespace sparrow
         SPARROW_ASSERT_FALSE(array == nullptr)
         SPARROW_ASSERT_TRUE(array->release == std::addressof(release_arrow_array))
 
-        array->buffers = nullptr;
-        array->n_buffers = 0;
-        array->length = 0;
-        array->null_count = 0;
-        array->offset = 0;
-        array->n_children = 0;
-        array->children = nullptr;
         if (array->private_data != nullptr)
         {
             const auto private_data = static_cast<arrow_array_private_data*>(array->private_data);
             delete private_data;
             array->private_data = nullptr;
         }
-        release_common_arrow(array);
+        array->buffers = nullptr;
+        release_common_arrow(*array);
     }
 
     inline std::vector<sparrow::buffer_view<uint8_t>>
@@ -223,7 +225,7 @@ namespace sparrow
     /**
      * Fill the target ArrowArray with a deep copy of the data from the source ArrowArray.
      */
-    inline void deep_copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema, ArrowArray& target)
+    inline void copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema, ArrowArray& target)
     {
         SPARROW_ASSERT_TRUE(&source_array != &target);
         SPARROW_ASSERT_TRUE(source_array.release != nullptr);
@@ -239,14 +241,14 @@ namespace sparrow
             {
                 SPARROW_ASSERT_TRUE(source_array.children[i] != nullptr);
                 target.children[i] = new ArrowArray{};
-                deep_copy_array(*source_array.children[i], *source_schema.children[i], *target.children[i]);
+                copy_array(*source_array.children[i], *source_schema.children[i], *target.children[i]);
             }
         }
 
         if (source_array.dictionary != nullptr)
         {
             target.dictionary = new ArrowArray{};
-            deep_copy_array(*source_array.dictionary, *source_schema.dictionary, *target.dictionary);
+            copy_array(*source_array.dictionary, *source_schema.dictionary, *target.dictionary);
         }
 
         target.length = source_array.length;
@@ -270,10 +272,10 @@ namespace sparrow
     /**
      * Create a deep copy of the source ArrowArray. The buffers, children and dictionary are deep copied.
      */
-    inline ArrowArray deep_copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema)
+    inline ArrowArray copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema)
     {
         ArrowArray target{};
-        deep_copy_array(source_array, source_schema, target);
+        copy_array(source_array, source_schema, target);
         return target;
     }
 

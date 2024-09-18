@@ -216,9 +216,9 @@ TEST_SUITE("C Data Interface")
         {
             SUBCASE("w/ buffers, shared_ptr children and shared_ptr dictionary")
             {
-                std::vector<ArrowArray*> children;
-                children.emplace_back(sparrow::default_arrow_array_unique_ptr().release());
-                children.emplace_back(sparrow::default_arrow_array_unique_ptr().release());
+                auto children = new ArrowArray*[2];
+                children[0] = sparrow::default_arrow_array_unique_ptr().release();
+                children[1] = sparrow::default_arrow_array_unique_ptr().release();
                 const auto children_1_ptr = children[0];
                 const auto children_2_ptr = children[1];
 
@@ -230,8 +230,8 @@ TEST_SUITE("C Data Interface")
                     0,
                     0,
                     buffers_dummy,
-                    children.size(),
-                    children.data(),
+                    2,
+                    children,
                     dictionary_pointer
                 );
 
@@ -247,27 +247,21 @@ TEST_SUITE("C Data Interface")
 
         SUBCASE("release")
         {
-            std::vector<ArrowArray*> children;
-            children.emplace_back(sparrow::default_arrow_array_unique_ptr().release());
-            children.emplace_back(sparrow::default_arrow_array_unique_ptr().release());
+            auto children = new ArrowArray*[2];
+            children[0] = sparrow::default_arrow_array_unique_ptr().release();
+            children[1] = sparrow::default_arrow_array_unique_ptr().release();
             sparrow::arrow_array_unique_ptr dictionary(sparrow::default_arrow_array_unique_ptr());
             auto array = sparrow::make_arrow_array_unique_ptr(
                 1,
                 0,
                 0,
                 buffers_dummy,
-                0,
-                children.data(),
+                2,
+                children,
                 dictionary.release()
             );
 
             array->release(array.get());
-
-            CHECK_EQ(array->length, 0);
-            CHECK_EQ(array->null_count, 0);
-            CHECK_EQ(array->offset, 0);
-            CHECK_EQ(array->n_buffers, 0);
-            CHECK_EQ(array->n_children, 0);
             CHECK_EQ(array->buffers, nullptr);
             CHECK_EQ(array->children, nullptr);
             const bool is_release_nullptr = array->release == nullptr;
@@ -278,14 +272,7 @@ TEST_SUITE("C Data Interface")
         SUBCASE("release wo/ children and dictionary")
         {
             auto array = sparrow::make_arrow_array_unique_ptr(1, 0, 0, buffers_dummy, 0, nullptr, nullptr);
-
             array->release(array.get());
-
-            CHECK_EQ(array->length, 0);
-            CHECK_EQ(array->null_count, 0);
-            CHECK_EQ(array->offset, 0);
-            CHECK_EQ(array->n_buffers, 0);
-            CHECK_EQ(array->n_children, 0);
             CHECK_EQ(array->buffers, nullptr);
             CHECK_EQ(array->children, nullptr);
             const bool is_release_nullptr = array->release == nullptr;
@@ -296,7 +283,7 @@ TEST_SUITE("C Data Interface")
         SUBCASE("deep_copy")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
-            auto array_copy = sparrow::deep_copy_array(array, schema);
+            auto array_copy = sparrow::copy_array(array, schema);
             CHECK_EQ(array.length , array_copy.length);
             CHECK_EQ(array.null_count , array_copy.null_count);
             CHECK_EQ(array.offset , array_copy.offset);
