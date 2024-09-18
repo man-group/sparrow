@@ -21,30 +21,14 @@
 
 namespace sparrow
 {
-    namespace
-    {
-        using scalar_value_type = std::int32_t;
-        arrow_proxy make_proxy(std::size_t n = 10, std::size_t offset = 0)
-        {
-            ArrowSchema sc{};
-            ArrowArray ar{};
-            test::fill_schema_and_array<scalar_value_type>(sc, ar, n, offset, {});
-            return arrow_proxy(std::move(ar), std::move(sc));
-        }
-
-        // TODO: remove this when we have the nullable_variant
-        template <class... T>
-        bool has_value(const std::variant<T...>& val)
-        {
-            return std::visit([](const auto& v) { return v.has_value(); }, val);
-        }
-    }
+    using scalar_value_type = std::int32_t;
+    using test::make_arrow_proxy;
 
     TEST_SUITE("value_list")
     {
         TEST_CASE("size")
         {
-            primitive_array<scalar_value_type> ar(make_proxy());
+            primitive_array<scalar_value_type> ar(make_arrow_proxy<scalar_value_type>());
             list_value2 l(&ar, 2u, 7u);
 
             CHECK_EQ(l.size(), 5u);
@@ -54,11 +38,11 @@ namespace sparrow
         {
             std::size_t begin = 2u;
             std::size_t end = 7u;
-            primitive_array<scalar_value_type> ar(make_proxy());
+            primitive_array<scalar_value_type> ar(make_arrow_proxy<scalar_value_type>());
             list_value2 l(&ar, begin, end);
             for (std::size_t i = begin; i < end; ++i)
             {
-                CHECK_EQ(has_value(l[i]), ar[begin+i].has_value());
+                CHECK_EQ(l[i].has_value(), ar[begin+i].has_value());
                 if (ar[begin+i].has_value())
                 {
                     CHECK_EQ(std::get<primitive_array<scalar_value_type>::const_reference>(l[i]).value(), ar[begin+i].value());

@@ -88,9 +88,8 @@ namespace sparrow
 
     struct array_traits
     {
-        using base_types_variant = mpl::rename<all_base_types_t, std::variant>;
-        using value_type = mpl::transform<array_value_type_t, base_types_variant>;
-        using const_reference = mpl::transform<array_const_reference_t, base_types_variant>; 
+        using value_type = mpl::rename<mpl::transform<array_value_type_t, all_base_types_t>, nullable_variant>;
+        using const_reference = mpl::rename<mpl::transform<array_const_reference_t, all_base_types_t>, nullable_variant>; 
     };
 
     namespace predicate

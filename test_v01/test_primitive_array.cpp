@@ -22,17 +22,7 @@ namespace sparrow
 {
     using scalar_value_type = std::int32_t;
     using array_test_type = primitive_array<scalar_value_type>;
-
-    namespace
-    {
-        arrow_proxy make_proxy(std::size_t n = 10, std::size_t offset = 0)
-        {
-            ArrowSchema sc{};
-            ArrowArray ar{};
-            test::fill_schema_and_array<scalar_value_type>(sc, ar, n, offset, {});
-            return arrow_proxy(std::move(ar), std::move(sc));
-        }
-    }
+    using test::make_arrow_proxy;
 
     TEST_SUITE("primitive_array")
     {
@@ -41,14 +31,14 @@ namespace sparrow
         
         TEST_CASE("constructor")
         {
-            auto pr = make_proxy(size, offset);
+            auto pr = make_arrow_proxy<scalar_value_type>(size, offset);
             array_test_type ar(std::move(pr));
             CHECK_EQ(ar.size(), size - offset);
         }
 
         TEST_CASE("operator[]")
         {
-            auto pr = make_proxy(size, offset);
+            auto pr = make_arrow_proxy<scalar_value_type>(size, offset);
             std::vector<scalar_value_type> ref(size - offset);
             std::copy(pr.buffers()[1].data<scalar_value_type>() + offset, 
                       pr.buffers()[1].data<scalar_value_type>() + size,
@@ -62,7 +52,7 @@ namespace sparrow
 
         TEST_CASE("value_iterator_ordering")
         {
-            array_test_type ar(make_proxy(size, offset));
+            array_test_type ar(make_arrow_proxy<scalar_value_type>(size, offset));
             auto ar_values = ar.values();
             array_test_type::const_value_iterator citer = ar_values.begin();
             CHECK(citer < ar_values.end());
@@ -70,7 +60,7 @@ namespace sparrow
 
         TEST_CASE("value_iterator_equality")
         {
-            array_test_type ar(make_proxy(size, offset));
+            array_test_type ar(make_arrow_proxy<scalar_value_type>(size, offset));
             auto ar_values = ar.values();
             array_test_type::const_value_iterator citer = ar_values.begin();
             for (std::size_t i = 0; i < ar.size(); ++i)
@@ -82,7 +72,7 @@ namespace sparrow
 
         TEST_CASE("const_value_iterator_ordering")
         {
-            array_test_type ar(make_proxy(size, offset));
+            array_test_type ar(make_arrow_proxy<scalar_value_type>(size, offset));
             auto ar_values = ar.values();
             array_test_type::const_value_iterator citer = ar_values.begin();
             CHECK(citer < ar_values.end());
@@ -90,7 +80,7 @@ namespace sparrow
 
         TEST_CASE("const_value_iterator_equality")
         {
-            array_test_type ar(make_proxy(size, offset));
+            array_test_type ar(make_arrow_proxy<scalar_value_type>(size, offset));
             auto ar_values = ar.values();
             for (std::size_t i = 0; i < ar.size(); ++i)
             {
@@ -106,7 +96,7 @@ namespace sparrow
 
         TEST_CASE("const_bitmap_iterator_ordering")
         {
-            array_test_type ar(make_proxy(size, offset));
+            array_test_type ar(make_arrow_proxy<scalar_value_type>(size, offset));
             auto ar_bitmap = ar.bitmap();
             array_test_type::const_bitmap_iterator citer = ar_bitmap.begin();
             CHECK(citer < ar_bitmap.end());
@@ -114,7 +104,7 @@ namespace sparrow
 
         TEST_CASE("const_bitmap_iterator_equality")
         {
-            array_test_type ar(make_proxy(size, offset));
+            array_test_type ar(make_arrow_proxy<scalar_value_type>(size, offset));
             auto ar_bitmap = ar.bitmap();
             for (std::size_t i = 0; i < ar.size(); ++i)
             {
@@ -133,7 +123,7 @@ namespace sparrow
 
         TEST_CASE("iterator")
         {
-            array_test_type ar(make_proxy(size, offset));
+            array_test_type ar(make_arrow_proxy<scalar_value_type>(size, offset));
             auto it = ar.begin();
             auto end = ar.end();
 
@@ -150,7 +140,7 @@ namespace sparrow
                 CHECK(v.has_value());
             }
 
-            array_test_type ar_empty(make_proxy(0, 0));
+            array_test_type ar_empty(make_arrow_proxy<scalar_value_type>(0, 0));
             CHECK_EQ(ar_empty.begin(), ar_empty.end());
         }
     }

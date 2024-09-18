@@ -21,25 +21,7 @@
 
 namespace sparrow
 {
-    namespace
-    {
-        template <class T>
-        arrow_proxy make_proxy(std::size_t n = 10, std::size_t offset = 0)
-        {
-            ArrowSchema sc{};
-            ArrowArray ar{};
-            test::fill_schema_and_array<T>(sc, ar, n, offset, {});
-            return arrow_proxy(std::move(ar), std::move(sc));
-        }
-
-        // TODO: remove this when we have the nullable_variant
-        template <class... T>
-        bool has_value(const std::variant<T...>& val)
-        {
-            return std::visit([](const auto& v) { return v.has_value(); }, val);
-        }
-    }
-
+    using test::make_arrow_proxy;
     using testing_types = std::tuple<
         null_array, 
         primitive_array<std::int8_t>,
@@ -60,7 +42,7 @@ namespace sparrow
         TEST_CASE_TEMPLATE_DEFINE("array_size", AR, array_size_id)
         {
             using array_type = AR;
-            array_type ar(make_proxy<typename AR::inner_value_type>());
+            array_type ar(make_arrow_proxy<typename AR::inner_value_type>());
 
             const array_base& ar_base = ar;
             auto size = array_size(ar_base);
@@ -72,14 +54,14 @@ namespace sparrow
         TEST_CASE_TEMPLATE_DEFINE("array_element", AR, array_element_id)
         {
             using array_type = AR;
-            array_type ar(make_proxy<typename AR::inner_value_type>());
+            array_type ar(make_arrow_proxy<typename AR::inner_value_type>());
 
             const array_base& ar_base = ar;
             for (std::size_t i = 0; i < ar.size(); ++i)
             {
                 auto elem = array_element(ar_base, i);
-                CHECK_EQ(has_value(elem), ar[i].has_value());
-                if (has_value(elem))
+                CHECK_EQ(elem.has_value(), ar[i].has_value());
+                if (elem.has_value())
                 {
                     CHECK_EQ(std::get<typename AR::const_reference>(elem).value(), ar[i].value());
                 }
