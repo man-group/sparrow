@@ -122,6 +122,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config/config.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_layout/list_value.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_size_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_iterator.hpp
@@ -140,6 +141,7 @@ set(SPARROW_HEADERS
 
 set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/dummy.cpp
+    ${SPARROW_SOURCE_DIR}/list_value.cpp
 )
 
 if (BUILD_REFACTORING)

@@ -40,6 +40,7 @@ set(SPARROW_V1_TESTS_SOURCES
     ../test/junit.cpp
     ../test/junit_xml_writer.hpp
     test_dispatch.cpp
+    test_list_value.cpp
     test_memory.cpp
     test_null_array.cpp
     test_primitive_array.cpp
