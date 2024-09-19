@@ -76,7 +76,7 @@ namespace sparrow
                 array_base * flat_values = list.raw_flat_array();
 
                 // cast into a primitive array
-                primitive_array<std::int32_t> * flat_values_int = static_cast<primitive_array<int> *>(flat_values);
+                primitive_array<std::int32_t> * flat_values_int = static_cast<primitive_array<std::int32_t> *>(flat_values);
 
                 // check the size
                 REQUIRE(flat_values_int->size() == n_flat);
