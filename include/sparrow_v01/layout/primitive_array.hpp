@@ -74,9 +74,6 @@ namespace sparrow
 
         using base_type::size;
 
-        reference operator[](size_type i);
-        const_reference operator[](size_type i) const;
-
     private:
 
         using base_type::storage;
@@ -138,20 +135,6 @@ namespace sparrow
         , base_type(std::move(proxy))
     {
         SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(proxy.format()));
-    }
-
-    template <class T>
-    auto primitive_array<T>::operator[](size_type i) -> reference
-    {
-        SPARROW_ASSERT_TRUE(i < size());
-        return reference(value(i), has_value(i));
-    }
-
-    template <class T>
-    auto primitive_array<T>::operator[](size_type i) const -> const_reference
-    {
-        SPARROW_ASSERT_TRUE(i < size());
-        return reference(value(i), has_value(i));
     }
 
     template <class T>

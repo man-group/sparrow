@@ -124,6 +124,18 @@ namespace sparrow
 
         const_bitmap_range bitmap() const;
         const_value_range values() const;
+        reference operator[](size_type i){
+            return reference(
+                inner_reference(derived_cast().value(i)),
+                derived_cast().has_value(i)
+            );
+        }
+        const_reference operator[](size_type i) const{
+            return const_reference(
+                inner_const_reference(derived_cast().value(i)),
+                derived_cast().has_value(i)
+            );
+        }
 
     protected:
 
@@ -141,6 +153,8 @@ namespace sparrow
 
         const_bitmap_iterator bitmap_begin() const;
         const_bitmap_iterator bitmap_end() const;
+
+
 
     private:
         
