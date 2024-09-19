@@ -14,13 +14,50 @@
 
 #include <memory>
 #include <optional>
+#include <ostream>  // Needed by doctest
 #include <string_view>
 
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 
 #include "doctest/doctest.h"
 
+
 using namespace std::string_literals;
+
+void compare_arrow_schema(const ArrowSchema& schema, const ArrowSchema& schema_copy)
+{
+    CHECK_NE(&schema, &schema_copy);
+    CHECK_EQ(std::string_view(schema.format), std::string_view(schema_copy.format));
+    CHECK_EQ(std::string_view(schema.name), std::string_view(schema_copy.name));
+    CHECK_EQ(std::string_view(schema.metadata), std::string_view(schema_copy.metadata));
+    CHECK_EQ(schema.flags, schema_copy.flags);
+    CHECK_EQ(schema.n_children, schema_copy.n_children);
+    if (schema.n_children > 0)
+    {
+        REQUIRE_NE(schema.children, nullptr);
+        REQUIRE_NE(schema_copy.children, nullptr);
+        for (int64_t i = 0; i < schema.n_children; ++i)
+        {
+            CHECK_NE(schema.children[i], nullptr);
+            compare_arrow_schema(*schema.children[i], *schema_copy.children[i]);
+        }
+    }
+    else
+    {
+        CHECK_EQ(schema.children, nullptr);
+        CHECK_EQ(schema_copy.children, nullptr);
+    }
+
+    if (schema.dictionary != nullptr)
+    {
+        REQUIRE_NE(schema_copy.dictionary, nullptr);
+        compare_arrow_schema(*schema.dictionary, *schema_copy.dictionary);
+    }
+    else
+    {
+        CHECK_EQ(schema_copy.dictionary, nullptr);
+    }
+}
 
 TEST_SUITE("C Data Interface")
 {
@@ -35,7 +72,8 @@ TEST_SUITE("C Data Interface")
                     sparrow::arrow_schema_shared_ptr schema;
                     CHECK_EQ(schema.get(), nullptr);
                     const auto deleter = schema.get_deleter();
-                    const auto is_arrow_schema_custom_deleter = *deleter == &sparrow::arrow_schema_custom_deleter;
+                    const auto is_arrow_schema_custom_deleter = *deleter
+                                                                == &sparrow::arrow_schema_custom_deleter;
                     CHECK(is_arrow_schema_custom_deleter);
                 }
 
@@ -49,7 +87,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(schema_shared->n_children, 99);
                     CHECK_EQ(schema_shared->flags, 1);
                     const auto deleter = schema_shared.get_deleter();
-                    const auto is_arrow_schema_custom_deleter = *deleter == &sparrow::arrow_schema_custom_deleter;
+                    const auto is_arrow_schema_custom_deleter = *deleter
+                                                                == &sparrow::arrow_schema_custom_deleter;
                     CHECK(is_arrow_schema_custom_deleter);
                 }
 
@@ -64,7 +103,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(schema_shared_2->n_children, 99);
                     CHECK_EQ(schema_shared_2->flags, 1);
                     const auto deleter = schema_shared.get_deleter();
-                    const bool is_arrow_schema_custom_deleter = *deleter == &sparrow::arrow_schema_custom_deleter;
+                    const bool is_arrow_schema_custom_deleter = *deleter
+                                                                == &sparrow::arrow_schema_custom_deleter;
                     CHECK(is_arrow_schema_custom_deleter);
                 }
             }
@@ -83,7 +123,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(schema_shared_2->n_children, 99);
                     CHECK_EQ(schema_shared_2->flags, 1);
                     const auto deleter = schema_shared_2.get_deleter();
-                    const bool is_arrow_schema_custom_deleter = *deleter == &sparrow::arrow_schema_custom_deleter;
+                    const bool is_arrow_schema_custom_deleter = *deleter
+                                                                == &sparrow::arrow_schema_custom_deleter;
                     CHECK(is_arrow_schema_custom_deleter);
                 }
 
@@ -99,7 +140,8 @@ TEST_SUITE("C Data Interface")
                     CHECK_EQ(schema_shared_2->n_children, 99);
                     CHECK_EQ(schema_shared_2->flags, 1);
                     const auto deleter = schema_shared.get_deleter();
-                    const bool is_arrow_schema_custom_deleter = *deleter == &sparrow::arrow_schema_custom_deleter;
+                    const bool is_arrow_schema_custom_deleter = *deleter
+                                                                == &sparrow::arrow_schema_custom_deleter;
                     CHECK(is_arrow_schema_custom_deleter);
                 }
             }
@@ -107,12 +149,12 @@ TEST_SUITE("C Data Interface")
 
         SUBCASE("make_schema_constructor")
         {
-            std::vector<sparrow::arrow_schema_shared_ptr> children;
-            children.emplace_back(sparrow::default_arrow_schema_unique_ptr());
-            children.emplace_back(sparrow::default_arrow_schema_unique_ptr());
+            ArrowSchema** children = new ArrowSchema*[2];
+            children[0] = sparrow::default_arrow_schema_unique_ptr().release();
+            children[1] = sparrow::default_arrow_schema_unique_ptr().release();
 
-            const auto children_1_ptr = children[0].get();
-            const auto children_2_ptr = children[1].get();
+            const auto children_1_ptr = children[0];
+            const auto children_2_ptr = children[1];
 
             auto dictionnary = sparrow::default_arrow_schema_unique_ptr();
             dictionnary->name = "dictionary";
@@ -127,8 +169,9 @@ TEST_SUITE("C Data Interface")
                 name,
                 metadata,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                std::move(children),
-                std::move(dictionary)
+                2,
+                children,
+                dictionary_ptr
             );
 
             const auto schema_format = std::string_view(schema->format);
@@ -154,13 +197,13 @@ TEST_SUITE("C Data Interface")
 
         SUBCASE("make_schema_constructor no children, no dictionary, no name and metadata")
         {
-            std::vector<sparrow::arrow_schema_shared_ptr> children;
             const auto schema = sparrow::make_arrow_schema_unique_ptr(
                 "format"s,
                 std::nullopt,
                 std::nullopt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                std::nullopt,
+                0,
+                nullptr,
                 nullptr
             );
 
@@ -178,12 +221,12 @@ TEST_SUITE("C Data Interface")
             CHECK_NE(schema->private_data, nullptr);
         }
 
+
         SUBCASE("ArrowSchema release")
         {
-            std::vector<sparrow::arrow_schema_shared_ptr> children;
-            children.emplace_back(sparrow::default_arrow_schema_unique_ptr());
-            children.emplace_back(sparrow::default_arrow_schema_unique_ptr());
-            sparrow::arrow_schema_shared_ptr dictionary(sparrow::default_arrow_schema_unique_ptr());
+            ArrowSchema** children = new ArrowSchema*[2];
+            children[0] = sparrow::default_arrow_schema_unique_ptr().release();
+            children[1] = sparrow::default_arrow_schema_unique_ptr().release();
 
             std::string metadata = "0000";
 
@@ -192,8 +235,9 @@ TEST_SUITE("C Data Interface")
                 "name"s,
                 metadata,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                std::move(children),
-                std::move(dictionary)
+                2,
+                children,
+                sparrow::default_arrow_schema_unique_ptr().release()
             );
 
             schema->release(schema.get());
@@ -215,7 +259,8 @@ TEST_SUITE("C Data Interface")
                 std::nullopt,
                 std::nullopt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                std::nullopt,
+                0,
+                nullptr,
                 nullptr
             );
 
@@ -229,6 +274,53 @@ TEST_SUITE("C Data Interface")
             const bool is_nullptr = schema->release == nullptr;
             CHECK(is_nullptr);
             CHECK_EQ(schema->private_data, nullptr);
+        }
+
+        SUBCASE("deep_copy_schema")
+        {
+            auto children = new ArrowSchema*[2];
+            children[0] = sparrow::make_arrow_schema_unique_ptr(
+                              "format"s,
+                              "child1"s,
+                              "metadata"s,
+                              sparrow::ArrowFlag::MAP_KEYS_SORTED,
+                              0,
+                              nullptr,
+                              nullptr
+            )
+                              .release();
+            children[1] = sparrow::make_arrow_schema_unique_ptr(
+                              "format"s,
+                              "child2"s,
+                              "metadata"s,
+                              sparrow::ArrowFlag::NULLABLE,
+                              0,
+                              nullptr,
+                              nullptr
+            )
+                              .release();
+            auto schema = sparrow::make_arrow_schema_unique_ptr(
+                "format"s,
+                "name"s,
+                "metadata"s,
+                sparrow::ArrowFlag::DICTIONARY_ORDERED,
+                2,
+                children,
+                sparrow::make_arrow_schema_unique_ptr(
+                    "format"s,
+                    "dictionary"s,
+                    "metadata"s,
+                    sparrow::ArrowFlag::MAP_KEYS_SORTED,
+                    0,
+                    nullptr,
+                    nullptr
+                )
+                    .release()
+            );
+
+            auto schema_copy = sparrow::copy_schema(*schema);
+
+            compare_arrow_schema(*schema, schema_copy);
         }
     }
 }

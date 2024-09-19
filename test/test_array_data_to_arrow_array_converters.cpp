@@ -21,66 +21,6 @@
 
 TEST_SUITE("ArrowArray array_data converters")
 {
-    TEST_CASE("to_vector_of_arrow_array_shared_ptr")
-    {
-        SUBCASE("move")
-        {
-            std::vector<sparrow::array_data> array_data_vec{
-                sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9}),
-                sparrow::test::make_test_array_data<uint8_t>(5, 0, {1}),
-            };
-            const auto arrow_array_vec = sparrow::to_vector_of_arrow_array_shared_ptr(std::move(array_data_vec));
-            CHECK(array_data_vec[0].buffers[0].empty());
-            CHECK(array_data_vec[1].buffers[0].empty());
-            CHECK_EQ(arrow_array_vec.size(), 2);
-
-            CHECK_EQ(arrow_array_vec[0]->length, 10);
-            CHECK_EQ(arrow_array_vec[0]->null_count, 5);
-            CHECK_EQ(arrow_array_vec[0]->offset, 1);
-            CHECK_EQ(arrow_array_vec[0]->n_buffers, 2);
-            CHECK_EQ(arrow_array_vec[0]->n_children, 1);
-            CHECK_NE(arrow_array_vec[0]->children, nullptr);
-            CHECK_EQ(arrow_array_vec[0]->dictionary, nullptr);
-
-            CHECK_EQ(arrow_array_vec[1]->length, 5);
-            CHECK_EQ(arrow_array_vec[1]->null_count, 1);
-            CHECK_EQ(arrow_array_vec[1]->offset, 0);
-            CHECK_EQ(arrow_array_vec[1]->n_buffers, 2);
-            CHECK_EQ(arrow_array_vec[1]->n_children, 1);
-            CHECK_NE(arrow_array_vec[1]->children, nullptr);
-            CHECK_EQ(arrow_array_vec[1]->dictionary, nullptr);
-        }
-
-        SUBCASE("copy")
-        {
-            const std::vector<sparrow::array_data> array_data_vec{
-                sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9}),
-                sparrow::test::make_test_array_data<uint8_t>(5, 0, {1}),
-            };
-            CHECK_EQ(array_data_vec[0].buffers[0].size(), 10);
-            CHECK_EQ(array_data_vec[1].buffers[0].size(), 5);
-
-            const auto arrow_array_vec = sparrow::to_vector_of_arrow_array_shared_ptr(array_data_vec);
-            CHECK_EQ(arrow_array_vec.size(), 2);
-
-            CHECK_EQ(arrow_array_vec[0]->length, 10);
-            CHECK_EQ(arrow_array_vec[0]->null_count, 5);
-            CHECK_EQ(arrow_array_vec[0]->offset, 1);
-            CHECK_EQ(arrow_array_vec[0]->n_buffers, 2);
-            CHECK_EQ(arrow_array_vec[0]->n_children, 1);
-            CHECK_NE(arrow_array_vec[0]->children, nullptr);
-            CHECK_EQ(arrow_array_vec[0]->dictionary, nullptr);
-
-            CHECK_EQ(arrow_array_vec[1]->length, 5);
-            CHECK_EQ(arrow_array_vec[1]->null_count, 1);
-            CHECK_EQ(arrow_array_vec[1]->offset, 0);
-            CHECK_EQ(arrow_array_vec[1]->n_buffers, 2);
-            CHECK_EQ(arrow_array_vec[1]->n_children, 1);
-            CHECK_NE(arrow_array_vec[1]->children, nullptr);
-            CHECK_EQ(arrow_array_vec[1]->dictionary, nullptr);
-        }
-    }
-
     TEST_CASE("to_vector_of_buffer")
     {
         SUBCASE("move")
@@ -116,37 +56,6 @@ TEST_SUITE("ArrowArray array_data converters")
             {
                 CHECK_EQ(buffers[1][i], i);
             }
-        }
-    }
-
-    TEST_CASE("to_arrow_array_unique_ptr")
-    {
-        SUBCASE("move")
-        {
-            auto array_data = sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9});
-            const auto arrow_array = sparrow::to_arrow_array_unique_ptr(std::move(array_data));
-            CHECK(array_data.buffers[0].empty());
-            CHECK_EQ(arrow_array->length, 10);
-            CHECK_EQ(arrow_array->null_count, 5);
-            CHECK_EQ(arrow_array->offset, 1);
-            CHECK_EQ(arrow_array->n_buffers, 2);
-            CHECK_EQ(arrow_array->n_children, 1);
-            CHECK_NE(arrow_array->children, nullptr);
-            CHECK_EQ(arrow_array->dictionary, nullptr);
-        }
-
-        SUBCASE("copy")
-        {
-            const auto array_data = sparrow::test::make_test_array_data<uint8_t>(10, 1, {1, 3, 5, 7, 9});
-            const auto arrow_array = sparrow::to_arrow_array_unique_ptr(array_data);
-            CHECK_EQ(array_data.buffers[0].size(), 10);
-            CHECK_EQ(arrow_array->length, 10);
-            CHECK_EQ(arrow_array->null_count, 5);
-            CHECK_EQ(arrow_array->offset, 1);
-            CHECK_EQ(arrow_array->n_buffers, 2);
-            CHECK_EQ(arrow_array->n_children, 1);
-            CHECK_NE(arrow_array->children, nullptr);
-            CHECK_EQ(arrow_array->dictionary, nullptr);
         }
     }
 }

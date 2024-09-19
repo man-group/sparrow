@@ -16,10 +16,7 @@
 
 #include <optional>
 #include <string>
-#include <vector>
-
-#include "sparrow/arrow_interface/arrow_schema/smart_pointers.hpp"
-#include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
@@ -37,8 +34,6 @@ namespace sparrow
         using FormatType = std::string;
         using NameType = std::optional<std::string>;
         using MetadataType = std::optional<std::string>;
-        using ChildrenType = std::optional<std::vector<arrow_schema_shared_ptr>>;
-        using DictionaryType = arrow_schema_shared_ptr;
 
         arrow_schema_private_data() = delete;
         arrow_schema_private_data(const arrow_schema_private_data&) = delete;
@@ -48,55 +43,49 @@ namespace sparrow
 
         ~arrow_schema_private_data() = default;
 
-
-        template <class F, class N, class M, class C, class D>
+        template <class F, class N, class M>
             requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                      && std::constructible_from<arrow_schema_private_data::NameType, N>
                      && std::constructible_from<arrow_schema_private_data::MetadataType, M>
-                     && std::constructible_from<arrow_schema_private_data::ChildrenType, C>
-                     && std::constructible_from<arrow_schema_private_data::DictionaryType, D>
-        arrow_schema_private_data(F format, N name, M metadata, C children, D dictionary);
+        arrow_schema_private_data(F format, N name, M metadata);
 
-        [[nodiscard]] const char* format() const noexcept;
-        [[nodiscard]] const char* name() const noexcept;
-        [[nodiscard]] const char* metadata() const noexcept;
-        [[nodiscard]] const ChildrenType& children() noexcept;
-        [[nodiscard]] ArrowSchema** children_pointers() noexcept;
-        [[nodiscard]] const DictionaryType& dictionary() const noexcept;
-        [[nodiscard]] ArrowSchema* dictionary_pointer() noexcept;
+        [[nodiscard]] const char* format_ptr() const noexcept;
+        FormatType& format() noexcept;
+        [[nodiscard]] const char* name_ptr() const noexcept;
+        NameType& name() noexcept;
+        [[nodiscard]] const char* metadata_ptr() const noexcept;
+        MetadataType& metadata() noexcept;
 
     private:
 
         FormatType m_format;
         NameType m_name;
         MetadataType m_metadata;
-        ChildrenType m_children;
-        std::vector<ArrowSchema*> m_children_pointers;
-        DictionaryType m_dictionary;
     };
 
-    template <class F, class N, class M, class C, class D>
+    template <class F, class N, class M>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                      && std::constructible_from<arrow_schema_private_data::NameType, N>
                      && std::constructible_from<arrow_schema_private_data::MetadataType, M>
-                     && std::constructible_from<arrow_schema_private_data::ChildrenType, C>
-                     && std::constructible_from<arrow_schema_private_data::DictionaryType, D>
-    arrow_schema_private_data::arrow_schema_private_data(F format, N name, M metadata, C children, D dictionary)
+    arrow_schema_private_data::arrow_schema_private_data(F format, N name, M metadata)
         : m_format(std::move(format))
         , m_name(std::move(name))
         , m_metadata(std::move(metadata))
-        , m_children(std::move(children))
-        , m_children_pointers(to_raw_ptr_vec<ArrowSchema>(m_children))
-        , m_dictionary(std::move(dictionary))
     {
+        SPARROW_ASSERT_TRUE(!m_format.empty())
     }
 
-    [[nodiscard]] inline const char* arrow_schema_private_data::format() const noexcept
+    [[nodiscard]] inline const char* arrow_schema_private_data::format_ptr() const noexcept
     {
         return m_format.data();
     }
 
-    [[nodiscard]] inline const char* arrow_schema_private_data::name() const noexcept
+    inline arrow_schema_private_data::FormatType& arrow_schema_private_data::format() noexcept
+    {
+        return m_format;
+    }
+
+    [[nodiscard]] inline const char* arrow_schema_private_data::name_ptr() const noexcept
     {
         if (m_name.has_value())
         {
@@ -105,7 +94,12 @@ namespace sparrow
         return nullptr;
     }
 
-    [[nodiscard]] inline const char* arrow_schema_private_data::metadata() const noexcept
+    inline arrow_schema_private_data::NameType& arrow_schema_private_data::name() noexcept
+    {
+        return m_name;
+    }
+
+    [[nodiscard]] inline const char* arrow_schema_private_data::metadata_ptr() const noexcept
     {
         if (m_metadata.has_value())
         {
@@ -114,30 +108,9 @@ namespace sparrow
         return nullptr;
     }
 
-    [[nodiscard]] inline const arrow_schema_private_data::ChildrenType&
-    arrow_schema_private_data::children() noexcept
+    inline arrow_schema_private_data::MetadataType& arrow_schema_private_data::metadata() noexcept
     {
-        return m_children;
-    }
-
-    [[nodiscard]] inline ArrowSchema** arrow_schema_private_data::children_pointers() noexcept
-    {
-        return m_children_pointers.data();
-    }
-
-    [[nodiscard]] inline const arrow_schema_private_data::DictionaryType&
-    arrow_schema_private_data::dictionary() const noexcept
-    {
-        return m_dictionary;
-    }
-
-    [[nodiscard]] inline ArrowSchema* arrow_schema_private_data::dictionary_pointer() noexcept
-    {
-        if (!m_dictionary)
-        {
-            return nullptr;
-        }
-        return m_dictionary.get();
+        return m_metadata;
     }
 
 }
