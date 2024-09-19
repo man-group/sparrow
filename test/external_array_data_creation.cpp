@@ -23,14 +23,19 @@ namespace sparrow::test
         {
             if (t->dictionary)
             {
+                std::cout<<"delete dictionary"<<std::endl;
                 delete t->dictionary;
                 t->dictionary = nullptr;
             }
 
+            std::cout<<"delete n = "<<t->n_children<<" children"<<std::endl;
             for (std::int64_t i = 0; i < t->n_children; ++i)
             {
+                std::cout<<"delete "<<i<<"-th child at address "<<t->children[i]<<std::endl;
+                std::cout<<"addr of release = "<<t->children[i]->release<<std::endl;
                 t->children[i]->release(t->children[i]);
             }
+            std::cout<<"delete children array"<<std::endl;
             delete[] t->children;
             t->children = nullptr;
 
@@ -40,18 +45,25 @@ namespace sparrow::test
 
     void release_arrow_schema(ArrowSchema* schema)
     {
+        std::cout<<"release_arrow_schema"<<std::endl;
         detail::release_common_arrow(schema);
+        std::cout<<"release_arrow_schema done"<<std::endl;        
     }
 
     void release_arrow_array(ArrowArray* arr)
     {
+        std::cout<<"release_arrow_array with "<<arr->n_buffers<<" buffers"<<std::endl;
         for (std::int64_t i = 0; i < arr->n_buffers; ++i)
         {
+            std::cout<<"delete buffer "<<i<<std::endl;
             delete[] reinterpret_cast<const std::uint8_t*>(arr->buffers[i]);
+            std::cout<<"delete buffer "<<i<<" done"<<std::endl;
         }
         delete[] reinterpret_cast<const std::uint8_t**>(arr->buffers);
         arr->buffers = nullptr;
+        std::cout<<"release common"<<std::endl;
         detail::release_common_arrow(arr);
+        std::cout<<"release_arrow_array done"<<std::endl;
     }
 
 
@@ -97,6 +109,12 @@ namespace sparrow::test
         arr.release = &release_arrow_array;
 
 
+        std::cout<<"addres flat_value_arr = "<<&flat_value_arr<<std::endl;
+        std::cout<<"addres flat_value_schema = "<<&flat_value_schema<<std::endl;
+
+        std::cout<<"addres of releaser of flat_value_arr = "<<flat_value_arr.release<<std::endl;
+        std::cout<<"addres 2 "<<arr.children[0]->release<<std::endl;
+        std::cout<<"addres of expected function = "<<&release_arrow_array<<std::endl;
     }
 }
 

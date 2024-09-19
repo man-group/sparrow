@@ -46,18 +46,22 @@ namespace sparrow
             ArrowSchema flat_schema{};
             test::fill_schema_and_array<int>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
 
-
             ArrowArray arr{};
             ArrowSchema schema{};
             test::fill_schema_and_array_for_list_layout(schema, arr, flat_schema, flat_arr, sizes, {}, 0);
 
-
             // make an arrow proxy
-            arrow_proxy proxy(std::move(arr), std::move(schema));
+            arrow_proxy proxy(std::move(arr), std::move(schema)); // crashes on releasing the children of arr (ie flat_arr):
+                                                                  // this tries to call children[0]->release(t->children[0]);
+                                                                  // but at some point t->children[0] is set to a nullptr
+                                                                  // -> hence this crashes
+
+            //arrow_proxy proxy(&arr, &schema);                   // works fine
 
             // create a list array
-            list_array ar(std::move(proxy));
+            list_array ar(proxy);
 
+            std::cout<<"DONE"<<std::endl;
 
         }
     }
