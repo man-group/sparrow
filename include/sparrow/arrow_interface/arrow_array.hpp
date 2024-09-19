@@ -26,11 +26,13 @@
 namespace sparrow
 {
     /**
-     * Creates an `ArrowArray` with provided data, with unique ownership.
+     * Creates a unique pointer to an `ArrowArray`.
+     *
+     * This function creates a unique pointer to an Arrow array with the specified parameters.
      *
      * @tparam B Value, reference or rvalue of `std::vector<sparrow::buffer<uint8_t>>`
      * @param length The logical length of the array (i.e. its number of items). Must be 0 or positive.
-     * @param null_count The number of null items in the array. May be -1 if not yet computed. Must be 0 or
+     * @param null_count The number of null items in the array. May be `-1` if not yet computed. Must be 0 or
      * positive otherwise.
      * @param offset The logical offset inside the array (i.e. the number of items from the physical start of
      *               the buffers). Must be 0 or positive.
@@ -38,10 +40,11 @@ namespace sparrow
      *                  function of the data type, as described in the Columnar format specification, except
      *                  for the the binary or utf-8 view type, which has one additional buffer compared to
      *                  the Columnar format specification (see Binary view arrays). Must be 0 or positive.
-     * @param buffers Vector of sparrow::buffer
-     * @param children Pointer to a sequence of `ArrowArray` pointers or `nullptr`. Must be `nullptr` if `n_children` is `0`.
-     * @param dictionary `ArrowArray` pointer or nullptr.
-     * @return The created `ArrowArray`.
+     * @param buffers Vector of `sparrow::buffer`
+     * @param children Pointer to a sequence of `ArrowArray` pointers or `nullptr`. Must be `nullptr` if
+     * `n_children` is `0`.
+     * @param dictionary `ArrowArray` pointer or `nullptr`.
+     * @return The created `arrow_array_unique_ptr`.
      */
     template <class B>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
@@ -59,22 +62,50 @@ namespace sparrow
     /**
      * Creates a unique pointer to an `ArrowArray`.
      *
-     * This function creates a unique pointer to an Arrow array with the specified parameters.
+     * This function creates a unique pointer to an `ArrowArray` with the specified parameters.
      *
      * @tparam B Value, reference or rvalue of `std::vector<sparrow::buffer<uint8_t>>`
-     * @param length The logical length of the array (i.e. its number of items). Must be 0 or positive.
+     * @param length The logical length of the array (i.e. its number of items). Must be `0` or positive.
      * @param null_count The number of null items in the array. May be -1 if not yet computed. Must be 0 or
      * positive otherwise.
      * @param offset The logical offset inside the array (i.e. the number of items from the physical start of
-     *               the buffers). Must be 0 or positive.
+     *               the buffers). Must be `0` or positive.
      * @param buffers Vector of `sparrow::buffer<uint8_t>`.
-     * @param children Pointer to a sequence of `ArrowArray` pointers or nullptr. Must be `nullptr` if `n_children` is `0`.
-     * @param dictionary ArrowArray pointer or `nullptr`.
-     * @return The created ArrowArray.
+     * @param children Pointer to a sequence of `ArrowArray` pointers or `nullptr`. Must be `nullptr` if
+     * `n_children` is `0`.
+     * @param dictionary `ArrowArray` pointer or `nullptr`.
+     * @return The created `arrow_array_unique_ptr`.
      */
     template <class B>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
     arrow_array_unique_ptr make_arrow_array_unique_ptr(
+        int64_t length,
+        int64_t null_count,
+        int64_t offset,
+        B buffers,
+        size_t n_children,
+        ArrowArray** children,
+        ArrowArray* dictionary
+    );
+
+    /**
+     * Creates an `ArrowArray`.
+     *
+     * @tparam B Value, reference or rvalue of `std::vector<sparrow::buffer<uint8_t>>`
+     * @param length The logical length of the array (i.e. its number of items). Must be `0` or positive.
+     * @param null_count The number of null items in the array. May be `-1` if not yet computed. Must be `0` or
+     * positive otherwise.
+     * @param offset The logical offset inside the array (i.e. the number of items from the physical start of
+     *               the buffers). Must be `0` or positive.
+     * @param buffers Vector of `sparrow::buffer<uint8_t>`.
+     * @param children Pointer to a sequence of `ArrowArray` pointers or nullptr. Must be `nullptr` if
+     * `n_children` is `0`.
+     * @param dictionary `ArrowArray` pointer or `nullptr`.
+     * @return The created `ArrowArray`.
+     */
+    template <class B>
+        requires std::constructible_from<arrow_array_private_data::BufferType, B>
+    ArrowArray make_arrow_array(
         int64_t length,
         int64_t null_count,
         int64_t offset,
@@ -97,6 +128,21 @@ namespace sparrow
      */
     void release_arrow_array(ArrowArray* array);
 
+/**
+     * Fill an `ArrowArray` object.
+     *
+     * @tparam B Value, reference or rvalue of `std::vector<sparrow::buffer<uint8_t>>`
+     * @param array The `ArrowArray` to fill.
+     * @param length The logical length of the array (i.e. its number of items). Must be 0 or positive.
+     * @param null_count The number of null items in the array. May be -1 if not yet computed. Must be 0 or
+     * positive otherwise.
+     * @param offset The logical offset inside the array (i.e. the number of items from the physical start of
+     *               the buffers). Must be 0 or positive.
+     * @param buffers Vector of `sparrow::buffer<uint8_t>`.
+     * @param children Pointer to a sequence of `ArrowArray` pointers or `nullptr`. Must be `nullptr` if
+     * `n_children` is `0`.
+     * @param dictionary `ArrowArray` pointer or `nullptr`.
+     */
     template <class B>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
     void fill_arrow_array(
@@ -183,6 +229,29 @@ namespace sparrow
         );
     }
 
+    template <class B>
+        requires std::constructible_from<arrow_array_private_data::BufferType, B>
+    ArrowArray make_arrow_array(
+        int64_t length,
+        int64_t null_count,
+        int64_t offset,
+        B buffers,
+        size_t n_children,
+        ArrowArray** children,
+        ArrowArray* dictionary
+    )
+    {
+        SPARROW_ASSERT_TRUE(length >= 0);
+        SPARROW_ASSERT_TRUE(null_count >= -1);
+        SPARROW_ASSERT_TRUE(offset >= 0);
+        SPARROW_ASSERT_TRUE(buffers.size() >= 0);
+        SPARROW_ASSERT_TRUE((n_children == 0) == (children == nullptr));
+
+        ArrowArray array{};
+        fill_arrow_array(array, length, null_count, offset, std::move(buffers), n_children, children, dictionary);
+        return array;
+    }
+
     inline arrow_array_unique_ptr default_arrow_array_unique_ptr()
     {
         return arrow_array_unique_ptr(new ArrowArray{});
@@ -215,7 +284,12 @@ namespace sparrow
         {
             const auto buffer_type = buffers_type[i];
             auto buffer = array.buffers[i];
-            const std::size_t buffer_size = compute_buffer_size(buffer_type, static_cast<size_t>(array.length), static_cast<size_t>(array.offset), data_type);
+            const std::size_t buffer_size = compute_buffer_size(
+                buffer_type,
+                static_cast<size_t>(array.length),
+                static_cast<size_t>(array.offset),
+                data_type
+            );
             auto* ptr = static_cast<uint8_t*>(const_cast<void*>(buffer));
             buffers.emplace_back(ptr, buffer_size);
         }

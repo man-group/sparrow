@@ -34,23 +34,24 @@ inline std::pair<ArrowSchema, ArrowArray> make_external_arrow_schema_and_array()
 inline sparrow::arrow_array_and_schema_pointers make_sparrow_arrow_schema_and_array_pointers()
 {
     using namespace std::literals;
-    ArrowSchema* schema = sparrow::make_arrow_schema_unique_ptr(
-                              sparrow::data_type_to_format(sparrow::data_type::UINT8),
-                              "test"sv,
-                              "test metadata"sv,
-                              std::nullopt,
-                              0,
-                              nullptr,
-                              nullptr
-    )
-                              .release();
+    ArrowSchema* schema = new ArrowSchema{};
+    sparrow::fill_arrow_schema(
+        *schema,
+        sparrow::data_type_to_format(sparrow::data_type::UINT8),
+        "test"sv,
+        "test metadata"sv,
+        std::nullopt,
+        0,
+        nullptr,
+        nullptr
+    );
 
     std::vector<sparrow::buffer<std::uint8_t>> buffers_dummy = {
         sparrow::buffer<std::uint8_t>({0xF3, 0xFF}),
         sparrow::buffer<std::uint8_t>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
     };
-    ArrowArray* array = sparrow::make_arrow_array_unique_ptr(10, 2, 0, 2, buffers_dummy, 0, nullptr, nullptr)
-                            .release();
+    ArrowArray* array = new ArrowArray{};
+    sparrow::fill_arrow_array(*array, 10, 2, 0, buffers_dummy, 0, nullptr, nullptr);
     return {array, schema};
 }
 
