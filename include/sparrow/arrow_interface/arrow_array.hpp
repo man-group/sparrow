@@ -268,7 +268,7 @@ namespace sparrow
             delete private_data;
             array->private_data = nullptr;
         }
-        array->buffers = nullptr;
+        array->buffers = nullptr; // The buffers were deleted with the private data
         release_common_arrow(*array);
     }
 

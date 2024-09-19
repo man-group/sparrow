@@ -418,9 +418,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-          
-            auto [array_child, schema_child] = make_sparrow_arrow_schema_and_array_pointers();
-            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{array_child, schema_child}}};
+            auto array_schema_pair = make_sparrow_arrow_schema_and_array();
+            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{&array_schema_pair.second ,&array_schema_pair.first}}};
             proxy.add_children(array_child_ptr);
             const auto children = proxy.children();
             CHECK_EQ(children.size(), 1);
@@ -435,8 +434,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
 
-            auto [array_child, schema_child] = make_sparrow_arrow_schema_and_array_pointers();
-            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{array_child, schema_child}}};
+            auto array_schema_pair  = make_sparrow_arrow_schema_and_array();
+            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{&array_schema_pair.second ,&array_schema_pair.first}}};
             proxy.add_children(array_child_ptr);
             proxy.pop_children(1);
             const auto& children = proxy.children();
@@ -458,8 +457,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            auto [array_dict, schema_dict] = make_sparrow_arrow_schema_and_array_pointers();
-            proxy.set_dictionary(array_dict, schema_dict);
+            auto array_schema_pair  = make_sparrow_arrow_schema_and_array();
+            proxy.set_dictionary(&array_schema_pair.second, &array_schema_pair.first);
             const auto& dictionary = proxy.dictionary();
             REQUIRE(dictionary);
             CHECK_EQ(dictionary->format(), "C");

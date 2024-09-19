@@ -162,6 +162,7 @@ namespace sparrow
         {
             const auto private_data = static_cast<arrow_schema_private_data*>(schema->private_data);
             delete private_data;
+            schema->private_data = nullptr;
         }
         release_common_arrow(*schema);
         *schema = {};
