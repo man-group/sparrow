@@ -41,7 +41,7 @@ set(SPARROW_TESTS_SOURCES
     test_array_data_concepts.cpp
     test_array_data_creation.cpp
     test_array_data_factory.cpp
-    test_array.cpp
+    #test_array.cpp
     test_array_data_to_arrow_array_converters.cpp
     test_array_data.cpp
     test_arrow_array_schema_utils.cpp
@@ -54,7 +54,7 @@ set(SPARROW_TESTS_SOURCES
     test_list_layout.cpp
     test_dynamic_bitset.cpp
     test_external_array_data.cpp
-    test_external_array.cpp
+    #test_external_array.cpp
     test_fixed_size_layout.cpp
     test_iterator.cpp
     test_memory.cpp
@@ -63,9 +63,9 @@ set(SPARROW_TESTS_SOURCES
     test_null_layout.cpp
     test_nullable.cpp
     test_traits.cpp
-    test_typed_array_timestamp.cpp
-    test_typed_array.cpp
-    test_typed_array_list_layout.cpp
+    #test_typed_array_timestamp.cpp
+    #test_typed_array.cpp
+    #test_typed_array_list_layout.cpp
     test_variable_size_binary_layout.cpp
     better_junit_reporter.hpp
     junit.hpp

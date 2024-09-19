@@ -97,8 +97,6 @@ endif()
 # =====
 
 set(SPARROW_HEADERS
-    ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_common.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_concepts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data.hpp
@@ -106,7 +104,6 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/array/data_traits.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/data_type.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/external_array_data.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/typed_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_array_schema_proxy.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
@@ -125,6 +122,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config/config.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_layout/list_value.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_size_layout.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_iterator.hpp
@@ -144,6 +142,7 @@ set(SPARROW_HEADERS
 set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/dummy.cpp
     ${SPARROW_SOURCE_DIR}/array_factory.cpp
+    ${SPARROW_SOURCE_DIR}/list_value.cpp
 )
 
 if (BUILD_REFACTORING)

@@ -5,14 +5,13 @@
  */
 
 #include <sparrow/array/array_data.hpp>
-#include <sparrow/array.hpp>
 
 int main() {
     /////////////////////////////////////////////////
     // create array_data with 5 float32 elements
     // where the value at index 2 is missing
     /////////////////////////////////////////////////
-    using value_type = float;
+    /*using value_type = float;
     static const float no_value = NAN;
     auto n = 5;
 
@@ -52,7 +51,7 @@ int main() {
         } else {
             std::cout << "missing value" << std::endl;
         }
-    }
+    }*/
 
     return 0;
 }

@@ -443,41 +443,44 @@ namespace sparrow
     }
 
     /// @returns The number of bytes required to store the provided primitive data type.
-    constexpr std::size_t primitive_bytes_count(data_type data_type, int64_t length)
+    template<std::integral T>
+    constexpr size_t primitive_bytes_count(data_type data_type, T length)
     {
         SPARROW_ASSERT_TRUE(data_type_is_primitive(data_type));
-        const auto size = static_cast<std::size_t>(length);
         constexpr double bit_per_byte = 8.;
         switch (data_type)
         {
+            
             case data_type::BOOL:
-                return static_cast<std::size_t>(std::ceil(static_cast<double>(size) / bit_per_byte));
+                return static_cast<std::size_t>(std::ceil(static_cast<double>(length) / bit_per_byte));
             case data_type::UINT8:
-                return size;
+            // TODO: Replace static_cast<std::size_t> by the 32 bit fix check function
             case data_type::INT8:
-                return size;
+                return static_cast<std::size_t>(length);
             case data_type::UINT16:
-                return sizeof(std::uint16_t) / sizeof(std::uint8_t) * size;
+                return (sizeof(std::uint16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
             case data_type::INT16:
-                return sizeof(std::int16_t) / sizeof(std::uint8_t) * size;
+                return (sizeof(std::int16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
             case data_type::UINT32:
-                return sizeof(std::uint32_t) / sizeof(std::uint8_t) * size;
+                return (sizeof(std::uint32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
             case data_type::INT32:
-                return sizeof(std::int32_t) / sizeof(std::uint8_t) * size;
+                return (sizeof(std::int32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
             case data_type::UINT64:
-                return sizeof(std::uint64_t) / sizeof(std::uint8_t) * size;
+                return (sizeof(std::uint64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
             case data_type::INT64:
-                return sizeof(std::int64_t) / sizeof(std::uint8_t) * size;
+                return (sizeof(std::int64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
             case data_type::HALF_FLOAT:
-                return sizeof(float16_t) / sizeof(std::uint8_t) * size;
+                return (sizeof(float16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
             case data_type::FLOAT:
-                return sizeof(float32_t) / sizeof(std::uint8_t) * size;
+                return (sizeof(float32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
             case data_type::DOUBLE:
-                return sizeof(float64_t) / sizeof(std::uint8_t) * size;
+                return (sizeof(float64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
             default:
                 throw std::runtime_error("Unsupported data type");
         }
     }
+
+    class list_value2;
 
     /// C++ types value representation types matching Arrow types.
     // NOTE: this needs to be in sync-order with `data_type`
@@ -497,8 +500,9 @@ namespace sparrow
         float64_t,
         std::string,
         // std::vector<byte_t>,
-        sparrow::timestamp
+        sparrow::timestamp,
         // TODO: add missing fundamental types here
+        list_value2
         >;
 
     /// Type list of every C++ representation types supported by default, in order matching `data_type`
@@ -580,7 +584,7 @@ namespace sparrow
         typename T::value_type;
 
         /// The arrow (binary) layout to use by default for representing a set of data for that type.
-        typename detail::accepts_template<T::template default_layout>;
+        //typename detail::accepts_template<T::template default_layout>;
 
         // TODO: add more interface requirements on the traits here
         // TODO: add conversion operations between bytes and the value type

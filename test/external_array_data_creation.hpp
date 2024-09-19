@@ -18,6 +18,7 @@
 
 #include "sparrow/array/external_array_data.hpp"
 #include "sparrow/array/data_traits.hpp"
+#include "sparrow/arrow_array_schema_proxy.hpp"
 
 namespace sparrow::test
 {
@@ -216,6 +217,15 @@ namespace sparrow::test
             fill_schema_and_array<T>(schema, arr, n, offset, false_bitmap);
             return sparrow::external_array_data(std::move(schema), std::move(arr), owns_arrow_data);
         }
+    }
+
+    template <class T>
+    arrow_proxy make_arrow_proxy(std::size_t n = 10, std::size_t offset = 0)
+    {
+        ArrowSchema sc{};
+        ArrowArray ar{};
+        test::fill_schema_and_array<T>(sc, ar, n, offset, {});
+        return arrow_proxy(std::move(ar), std::move(sc));
     }
 
 

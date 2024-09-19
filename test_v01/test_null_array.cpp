@@ -22,13 +22,7 @@
 
 namespace sparrow
 {
-    arrow_proxy make_proxy_for_null_array(std::size_t size)
-    {
-        ArrowSchema sc{};
-        ArrowArray ar{};
-        test::fill_schema_and_array<null_type>(sc, ar, size, 0u, {});
-        return arrow_proxy(std::move(ar), std::move(sc));
-    }
+    using test::make_arrow_proxy;
 
     TEST_SUITE("null array")
     {
@@ -36,15 +30,15 @@ namespace sparrow
         TEST_CASE("constructor")
         {
             constexpr std::size_t size = 10u;
-            null_array ar(make_proxy_for_null_array(size));
+            null_array ar(make_arrow_proxy<null_type>(size));
             CHECK_EQ(ar.size(), size);
         }
 
         TEST_CASE("operator[]")
         {
             constexpr std::size_t size = 10u;
-            null_array ar(make_proxy_for_null_array(size));
-            const null_array car(make_proxy_for_null_array(size));
+            null_array ar(make_arrow_proxy<null_type>(size));
+            const null_array car(make_arrow_proxy<null_type>(size));
 
             CHECK_EQ(ar[2], nullval);
             CHECK_EQ(car[2], nullval);
@@ -53,7 +47,7 @@ namespace sparrow
         TEST_CASE("iterator")
         {
             constexpr std::size_t size = 3u;
-            null_array ar(make_proxy_for_null_array(size));
+            null_array ar(make_arrow_proxy<null_type>(size));
 
             auto iter = ar.begin();
             auto citer = ar.cbegin();
@@ -74,7 +68,7 @@ namespace sparrow
         TEST_CASE("const_value_iterator")
         {
             constexpr std::size_t size = 3u;
-            null_array ar(make_proxy_for_null_array(size));
+            null_array ar(make_arrow_proxy<null_type>(size));
 
             auto value_range = ar.values();
             auto iter = value_range.begin();
@@ -86,7 +80,7 @@ namespace sparrow
         TEST_CASE("const_bitmap_iterator")
         {
             constexpr std::size_t size = 3u;
-            null_array ar(make_proxy_for_null_array(size));
+            null_array ar(make_arrow_proxy<null_type>(size));
 
             auto bitmap_range = ar.bitmap();
             auto iter = bitmap_range.begin();

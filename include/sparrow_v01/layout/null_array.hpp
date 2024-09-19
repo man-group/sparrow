@@ -15,7 +15,6 @@
 #pragma once
 
 #include <cstddef>
-#include <functional>
 #include <ranges>
 
 #include "sparrow_v01/layout/array_base.hpp"
@@ -171,14 +170,15 @@ namespace sparrow
      *****************************/
 
     inline null_array::null_array(arrow_proxy proxy)
-        : m_proxy(std::move(proxy))
+        : array_base(proxy.format())
+        , m_proxy(std::move(proxy))
     {
         SPARROW_ASSERT_TRUE(format_to_data_type(m_proxy.format()) == data_type::NA);
     }
 
     inline auto null_array::size() const -> size_type
     {
-        return static_cast<size_type>(m_proxy.length());
+        return m_proxy.length();
     }
 
     inline auto null_array::operator[](size_type i) -> reference

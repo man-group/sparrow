@@ -15,6 +15,8 @@
 #pragma once
 
 #include <ranges>
+#include <string>
+#include <string_view>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
@@ -39,13 +41,16 @@ namespace sparrow
 
         array_base* clone() const;
 
+        const std::string& format() const;
+
     protected:
 
-        array_base() = default;
+        array_base(std::string_view format);
         array_base(const array_base&) = default;
 
     private:
 
+        std::string m_format;
         virtual array_base* clone_impl() const = 0;
     };
 
@@ -181,6 +186,16 @@ namespace sparrow
     inline array_base* array_base::clone() const
     {
         return clone_impl();
+    }
+
+    inline const std::string& array_base::format() const
+    {
+        return m_format;
+    }
+
+    inline array_base::array_base(std::string_view format)
+        : m_format(format)
+    {
     }
 
     /**********************************

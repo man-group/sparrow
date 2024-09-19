@@ -68,8 +68,7 @@ namespace sparrow
     }
 
     /// @returns `true` if  the format of an `ArrowArray` for a given data type is valid, `false` otherwise.
-    inline 
-    bool validate_format_with_arrow_array(data_type data_type, const ArrowArray& array)
+    inline bool validate_format_with_arrow_array(data_type data_type, const ArrowArray& array)
     {
         const bool buffers_count_valid = validate_buffers_count(data_type, array.n_buffers);
         const bool children_count_valid = static_cast<std::size_t>(array.n_children)
@@ -77,6 +76,9 @@ namespace sparrow
         return buffers_count_valid && children_count_valid;
     }
 
+    /**
+     * @brief The type of buffer in an ArrowArray.
+     */
     enum class buffer_type
     {
         VALIDITY,
@@ -138,21 +140,47 @@ namespace sparrow
     }
 
     /// @returns The expected offset element count for a given data type and array length.
-    constexpr std::size_t get_offset_size(data_type data_type, int64_t length)
+    constexpr std::size_t get_offset_buffer_size(data_type data_type, size_t length, size_t offset)
     {
         switch (data_type)
         {
             case data_type::STRING:
             case data_type::LIST:
             case data_type::LARGE_LIST:
-                return static_cast<std::size_t>(length) + 1;
+                return length + offset + 1;
             case data_type::LIST_VIEW:
             case data_type::LARGE_LIST_VIEW:
             case data_type::DENSE_UNION:
-                return static_cast<std::size_t>(length);
+                return length + offset;
             default:
                 throw std::runtime_error("Unsupported data type");
         }
+    }
+
+    /// @returns The number of bytes required according to the provided buffer type, length, offset and data type.
+    constexpr std::size_t compute_buffer_size(buffer_type buffer_type, size_t length, size_t offset, enum data_type data_type)
+    {
+        constexpr double bit_per_byte = 8.;
+        switch (buffer_type)
+        {
+            case buffer_type::VALIDITY:
+                return static_cast<std::size_t>(std::ceil(static_cast<double>(length + offset) / bit_per_byte));
+            case buffer_type::DATA:
+                return primitive_bytes_count(data_type, length + offset);
+            case buffer_type::OFFSETS_32BIT:
+            case buffer_type::SIZES_32BIT:
+                return get_offset_buffer_size(data_type, length, offset) * sizeof(std::int32_t);
+            case buffer_type::OFFSETS_64BIT:
+            case buffer_type::SIZES_64BIT:
+                return get_offset_buffer_size(data_type, length, offset) * sizeof(std::int64_t);
+            case buffer_type::VIEWS:
+                // TODO: Implement
+                SPARROW_ASSERT(false, "Not implemented");
+                return 0;
+            case buffer_type::TYPE_IDS:
+                return length + offset;
+        }
+        mpl::unreachable();
     }
 
 }

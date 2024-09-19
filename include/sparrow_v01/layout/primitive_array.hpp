@@ -131,11 +131,12 @@ namespace sparrow
 
     template <class T>
     primitive_array<T>::primitive_array(arrow_proxy proxy)
-        : array_base()
+        : array_base(proxy.format())
         , base_type(std::move(proxy))
     {
-        SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(proxy.format()));
+        SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().format()));
     }
+
 
     template <class T>
     auto primitive_array<T>::data() -> pointer
