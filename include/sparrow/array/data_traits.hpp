@@ -28,6 +28,7 @@ namespace sparrow
     struct common_native_types_traits
     {
         using value_type = T;
+        using const_reference = const T&;
     };
 
     template <>
@@ -35,6 +36,7 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::NA;
         using value_type = null_type;
+        using const_reference = null_type;
     };
 
     // Define automatically all standard floating-point and integral types support, including `bool`.
@@ -51,6 +53,7 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::STRING;
         using value_type = std::string;
+        using const_reference = std::string_view;
     };
 
     template <>
@@ -70,9 +73,23 @@ namespace sparrow
     };
 
     template <>
-    struct arrow_traits<list_value2> : common_native_types_traits<list_value2>
+    struct arrow_traits<list_value2>
     {
         static constexpr data_type type_id = data_type::LIST;
+        using value_type = list_value2;
+        using const_reference = list_value2;
+    };
+    
+    template <class T>
+    using array_value_type_t = nullable<typename arrow_traits<T>::value_type>;
+
+    template <class T>
+    using array_const_reference_t = nullable<typename arrow_traits<T>::const_reference>;
+
+    struct array_traits
+    {
+        using value_type = mpl::rename<mpl::transform<array_value_type_t, all_base_types_t>, nullable_variant>;
+        using const_reference = mpl::rename<mpl::transform<array_const_reference_t, all_base_types_t>, nullable_variant>; 
     };
 
     namespace predicate
