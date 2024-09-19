@@ -108,7 +108,7 @@ namespace sparrow
 
     namespace detail
     {
-        inline bool check_primitive_data_type(std::string_view format)
+        inline bool check_primitive_data_type(data_type dt)
         {
             constexpr std::array<data_type, 14> dtypes =
             {
@@ -127,17 +127,16 @@ namespace sparrow
                 data_type::FIXED_SIZE_BINARY,
                 data_type::TIMESTAMP
             };
-            return std::find(dtypes.cbegin(), dtypes.cend(),
-                    format_to_data_type(format)) != dtypes.cend();
+            return std::find(dtypes.cbegin(), dtypes.cend(), dt) != dtypes.cend();
         }
     }
 
     template <class T>
     primitive_array<T>::primitive_array(arrow_proxy proxy)
-        : array_base(proxy.format())
+        : array_base(proxy.data_type())
         , base_type(std::move(proxy))
     {
-        SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().format()));
+        SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().data_type()));
     }
 
     template <class T>
