@@ -252,6 +252,13 @@ namespace sparrow
         }
 
 
+        const array_base * raw_flat_array() const{
+            return p_flat_array.get();
+        }
+        array_base * raw_flat_array(){
+            return p_flat_array.get();
+        }
+
         private:
 
 

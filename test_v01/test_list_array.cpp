@@ -44,7 +44,7 @@ namespace sparrow
             // first we create a flat array of integers
             ArrowArray flat_arr{};
             ArrowSchema flat_schema{};
-            test::fill_schema_and_array<int>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
+            test::fill_schema_and_array<std::int32_t>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
 
             ArrowArray arr{};
             ArrowSchema schema{};
@@ -60,13 +60,33 @@ namespace sparrow
 
             // create a list array
             list_array list(std::move(proxy));
-
-           
             REQUIRE(list.size() == n);
-            for(std::size_t i = 0; i < n; ++i){
-                REQUIRE(list[i].value().size() == sizes[i]);
-            }
 
+            SUBCASE("element-sizes")
+            {
+                for(std::size_t i = 0; i < n; ++i){
+                    CHECK(list[i].value().size() == sizes[i]);
+                }
+            }   
+
+
+            SUBCASE("cast flat array")
+            {
+                // get the flat values (offset is not applied)
+                array_base * flat_values = list.raw_flat_array();
+
+                // cast into a primitive array
+                primitive_array<std::int32_t> * flat_values_int = static_cast<primitive_array<int> *>(flat_values);
+
+                // check the size
+                REQUIRE(flat_values_int->size() == n_flat);
+
+                // check that flat values are "iota"
+                for(std::int32_t i = 0; i < static_cast<std::int32_t>(n_flat); ++i){
+                    CHECK((*flat_values_int)[i] == i);
+                }
+            }
+            
         }
     }
 
