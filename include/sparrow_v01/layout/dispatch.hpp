@@ -40,43 +40,35 @@ namespace sparrow
     template <class F>
     visit_result_t<F> visit(F&& func, const array_base& ar)
     {
-        const auto& format = ar.format();
-        if (format.size() == 1)
+        switch(ar.data_type())
         {
-            switch(format[0])
-            {
-            case 'n':
-                return func(static_cast<const null_array&>(ar));;
-            case 'b':
-                return func(static_cast<const primitive_array<bool>&>(ar));
-            case 'c':
-                return func(static_cast<const primitive_array<std::int8_t>&>(ar));
-            case 'C':
-                return func(static_cast<const primitive_array<std::uint8_t>&>(ar));
-            case 's':
-                return func(static_cast<const primitive_array<std::int16_t>&>(ar));
-            case 'S':
-                return func(static_cast<const primitive_array<std::uint16_t>&>(ar));
-            case 'i':
-                return func(static_cast<const primitive_array<std::int32_t>&>(ar));
-            case 'I':
-                return func(static_cast<const primitive_array<std::uint32_t>&>(ar));
-            case 'l':
-                return func(static_cast<const primitive_array<std::int64_t>&>(ar));
-            case 'L':
-                return func(static_cast<const primitive_array<std::uint64_t>&>(ar));
-            case 'e':
-                return func(static_cast<const primitive_array<float16_t>&>(ar));
-            case 'f':
-                return func(static_cast<const primitive_array<float32_t>&>(ar));
-            case 'g':
-                return func(static_cast<const primitive_array<float64_t>&>(ar));
-            default:
-                throw std::invalid_argument("array type not supported");
-            }
-        }
-        else
-        {
+        case data_type::NA:
+            return func(static_cast<const null_array&>(ar));;
+        case data_type::BOOL:
+            return func(static_cast<const primitive_array<bool>&>(ar));
+        case data_type::UINT8:
+            return func(static_cast<const primitive_array<std::uint8_t>&>(ar));
+        case data_type::INT8:
+            return func(static_cast<const primitive_array<std::int8_t>&>(ar));
+        case data_type::UINT16:
+            return func(static_cast<const primitive_array<std::uint16_t>&>(ar));
+        case data_type::INT16:
+            return func(static_cast<const primitive_array<std::int16_t>&>(ar));
+        case data_type::UINT32:
+            return func(static_cast<const primitive_array<std::uint32_t>&>(ar));
+        case data_type::INT32:
+            return func(static_cast<const primitive_array<std::int32_t>&>(ar));
+        case data_type::UINT64:
+            return func(static_cast<const primitive_array<std::uint64_t>&>(ar));
+        case data_type::INT64:
+            return func(static_cast<const primitive_array<std::int64_t>&>(ar));
+        case data_type::HALF_FLOAT:
+            return func(static_cast<const primitive_array<float16_t>&>(ar));
+        case data_type::FLOAT:
+            return func(static_cast<const primitive_array<float32_t>&>(ar));
+        case data_type::DOUBLE:
+            return func(static_cast<const primitive_array<float64_t>&>(ar));
+        default:
             throw std::invalid_argument("array type not supported");
         }
     }
