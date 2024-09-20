@@ -25,10 +25,16 @@ namespace sparrow
     {
         public:
         using base_type = std::ranges::subrange<ITERATOR>;
-        using base_type::base_type;
+        //using base_type::base_type;
         using reference =  typename ITERATOR::reference;
         using base_type::operator=;
         using difference_type = typename std::iterator_traits<ITERATOR>::difference_type;
+
+        constexpr list_value() = default;
+        constexpr list_value(ITERATOR begin, ITERATOR end)
+            : base_type(begin, end)
+        {
+        }
 
         reference operator[](std::size_t index)
         {
