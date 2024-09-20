@@ -296,14 +296,16 @@ namespace sparrow
         : p_layout(layout)
         , m_index(static_cast<difference_type>(index))
     {
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(m_index));
     }
 
     template <class L, bool is_const>
     auto vs_binary_value_iterator<L, is_const>::dereference() const -> reference
     {
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(m_index));
         if constexpr (is_const)
         {
-            return p_layout->value(m_index);
+            return p_layout->value(static_cast<difference_type>(m_index));
         }
         else
         {
@@ -315,18 +317,21 @@ namespace sparrow
     void vs_binary_value_iterator<L, is_const>::increment()
     {
         ++m_index;
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(m_index));
     }
 
     template <class L, bool is_const>
     void vs_binary_value_iterator<L, is_const>::decrement()
     {
         --m_index;
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(m_index));
     }
 
     template <class L, bool is_const>
     void vs_binary_value_iterator<L, is_const>::advance(difference_type n)
     {
         m_index += n;
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(m_index));
     }
 
     template <class L, bool is_const>
@@ -539,9 +544,11 @@ namespace sparrow
         typename data_storage_type::buffer_type& data_buffer = buffer_at(storage(), 1u);
         const auto layout_data_length = size();
 
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(*offset(index)));
         const auto offset_beg = to_native_offset(*offset(index));
         const auto offset_end = to_native_offset(*offset(index + 1));
-        const std::size_t initial_value_length = offset_end - offset_beg;
+        const std::size_t initial_value_length = static_cast<std::size_t>(offset_end - offset_beg);
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(initial_value_length));
         const auto new_value_length = std::ranges::size(rhs);
         if (new_value_length > initial_value_length)
         {

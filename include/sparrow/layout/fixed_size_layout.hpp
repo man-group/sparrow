@@ -161,14 +161,14 @@ namespace sparrow
     auto fixed_size_layout<T, DS>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + to_native_offset(offset(storage()))];
+        return data()[i + to_native_size(offset(storage()))];
     }
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + to_native_offset(offset(storage()))];
+        return data()[i + to_native_size(offset(storage()))];
     }
 
     template <class T, data_storage DS>
@@ -238,14 +238,14 @@ namespace sparrow
     auto fixed_size_layout<T, DS>::has_value(size_type i) -> bitmap_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return sparrow::bitmap(storage())[i + to_native_offset(offset(storage()))];
+        return sparrow::bitmap(storage())[i + to_native_size(offset(storage()))];
     }
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::has_value(size_type i) const -> bitmap_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return sparrow::bitmap(storage())[i + to_native_offset(offset(storage()))];
+        return sparrow::bitmap(storage())[i + to_native_size(offset(storage()))];
     }
 
     template <class T, data_storage DS>
