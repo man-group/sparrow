@@ -99,6 +99,8 @@ namespace sparrow
         primitive_array(const primitive_array&) = default;
         primitive_array* clone_impl() const override;
 
+        static constexpr size_type DATA_BUFFER_INDEX = 1;
+
         friend class array_crtp_base<self_type>;
     };
 
@@ -156,33 +158,35 @@ namespace sparrow
     template <class T>
     auto primitive_array<T>::data() -> pointer
     {
-        return storage().buffers()[1u].template data<inner_value_type>();
+        return storage().buffers()[DATA_BUFFER_INDEX].template data<inner_value_type>()
+            + static_cast<size_type>(storage().offset());
     }
 
     template <class T>
     auto primitive_array<T>::data() const -> const_pointer
     {
-        return storage().buffers()[1u].template data<const inner_value_type>();
+        return storage().buffers()[DATA_BUFFER_INDEX].template data<const inner_value_type>()
+            + static_cast<size_type>(storage().offset());
     }
     
     template <class T>
     auto primitive_array<T>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + static_cast<size_type>(storage().offset())];
+        return data()[i];
     }
 
     template <class T>
     auto primitive_array<T>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + static_cast<size_type>(storage().offset())];
+        return data()[i];
     }
 
     template <class T>
     auto primitive_array<T>::value_begin() -> value_iterator
     {
-        return value_iterator{data() + storage().offset()};
+        return value_iterator{data()};
     }
 
     template <class T>
@@ -194,7 +198,7 @@ namespace sparrow
     template <class T>
     auto primitive_array<T>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator{data() + storage().offset()};
+        return const_value_iterator{data()};
     }
 
     template <class T>
