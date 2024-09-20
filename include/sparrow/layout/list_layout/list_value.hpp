@@ -15,19 +15,17 @@
 #pragma once
 
 #include <iterator>
+#include <ranges>
 
 namespace sparrow
 {   
 
     template<class ITERATOR,  bool IS_CONST>
-    //class list_value : public detail::subrange<ITERATOR>
     class list_value : public std::ranges::subrange<ITERATOR>
     {
         public:
         using base_type = std::ranges::subrange<ITERATOR>;
-        //using base_type::base_type;
         using reference =  typename ITERATOR::reference;
-        using base_type::operator=;
         using difference_type = typename std::iterator_traits<ITERATOR>::difference_type;
 
         constexpr list_value() = default;
