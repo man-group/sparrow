@@ -27,7 +27,6 @@ namespace date = std::chrono;
 #include <cstdint>
 #include <cstring>
 #include <concepts>
-#include <format>
 #include <string>
 #include <utility>
 
@@ -157,27 +156,38 @@ namespace sparrow
             if (not is_valid_arrow_length(size_or_offset))
             {
                 throw std::runtime_error(  // TODO: replace by sparrow-specific error
+                    std::string("size/length/offset is outside the valid arrow length limits [0:")
+                    + std::to_string(max_arrow_length) + "] : " + std::to_string(size_or_offset) + "("
+                    + typeid(size_or_offset).name() + ") "
+                    /*
+                        TODO: when possible, replace by
                     std::format(
                         "size/length/offset is outside the valid arrow length limits [0:{}] : {} ({})",
                         max_arrow_length,
                         size_or_offset,
                         typeid(size_or_offset).name()
-                    )
+                    )*/
                 );
             }
 
-            if constexpr (not std::same_as<arrow_length, TargetRepr>)  // Already checked in `is_valid_size()` otherwise
+            if constexpr (not std::same_as<arrow_length, TargetRepr>)  // Already checked in `is_valid_size()`
+                                                                       // otherwise
             {
                 // check that the value is representable by the specified type TargetRepr
                 if (not std::in_range<TargetRepr>(size_or_offset))
                 {
                     throw std::runtime_error(  // TODO: replace by sparrow-specific error
+                        std::string("size/length/offset cannot be represented by ") + typeid(TargetRepr).name()
+                        + ": " + std::to_string(size_or_offset) + " (" + typeid(size_or_offset).name() + ")"
+                        /*
+                            TODO: when possible, replace by
+
                         std::format(
                             "size/length/offset cannot be represented by {} : {} ({})",
                             typeid(TargetRepr).name(),
                             size_or_offset,
                             typeid(size_or_offset).name()
-                        )
+                        )*/
                     );
                 }
             }
