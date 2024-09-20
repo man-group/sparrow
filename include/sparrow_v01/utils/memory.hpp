@@ -160,7 +160,7 @@ namespace sparrow
 
     template <clonable T>
     constexpr cloning_ptr<T>::cloning_ptr(const cloning_ptr& rhs) noexcept
-        : m_data(rhs->clone())
+        : m_data(rhs ? rhs->clone() : nullptr)
     {
     }
 
@@ -168,7 +168,7 @@ namespace sparrow
     template <clonable U>
     requires std::convertible_to<U*, T*>
     constexpr cloning_ptr<T>::cloning_ptr(const cloning_ptr<U>& rhs) noexcept
-        : m_data(rhs->clone())
+        : m_data(rhs ? rhs->clone() : nullptr)
     {
     }
     
@@ -183,7 +183,7 @@ namespace sparrow
     template <clonable T>
     constexpr auto cloning_ptr<T>::operator=(const self_type& rhs) noexcept -> self_type&
     {
-        reset(rhs->clone());
+        reset(rhs ? rhs->clone() : nullptr);
         return *this;
     }
 
@@ -199,7 +199,7 @@ namespace sparrow
     requires std::convertible_to<U*, T*>
     constexpr auto cloning_ptr<T>::operator=(const cloning_ptr<U>& rhs) noexcept -> self_type&
     {
-        reset(rhs->clone());
+        reset(rhs ? rhs->clone() : nullptr);
         return *this;
     }
 
