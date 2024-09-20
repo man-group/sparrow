@@ -305,7 +305,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(is_valid_arrow_length(m_index));
         if constexpr (is_const)
         {
-            return p_layout->value(static_cast<difference_type>(m_index));
+            return p_layout->value(static_cast<size_type>(m_index));
         }
         else
         {
