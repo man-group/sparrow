@@ -121,6 +121,20 @@ namespace sparrow
                 CHECK_EQ(mock_derived::instance_count(), 2);
                 CHECK_NE(p1.get(), p2.get());
             }
+
+            SUBCASE("null cloning_ptr")
+            {
+                cloning_ptr<mock_base> p1 = nullptr;
+                cloning_ptr<mock_base> p2(p1);
+                CHECK_EQ(p2.get(), nullptr);
+            }
+
+            SUBCASE("null cloning_ptr with conversion")
+            {
+                cloning_ptr<mock_derived> p1 = nullptr;
+                cloning_ptr<mock_base> p2(p1);
+                CHECK_EQ(p2.get(), nullptr);
+            }
         }
 
         TEST_CASE("move constructor")
@@ -180,6 +194,26 @@ namespace sparrow
                 p = nullptr;
                 CHECK_EQ(mock_derived::instance_count(), 0);
                 CHECK_EQ(p.get(), nullptr);
+            }
+
+            SUBCASE("from null cloning_ptr")
+            {
+                cloning_ptr<mock_base> p1(new mock_derived());
+                CHECK_EQ(mock_derived::instance_count(), 1);
+                cloning_ptr<mock_base> p2 = nullptr;
+                p1 = p2;
+                CHECK_EQ(mock_derived::instance_count(), 0);
+                CHECK_EQ(p1.get(), nullptr);
+            }
+
+            SUBCASE("from null cloning_ptr with conversion")
+            {
+                cloning_ptr<mock_base> p1(new mock_derived());
+                CHECK_EQ(mock_derived::instance_count(), 1);
+                cloning_ptr<mock_derived> p2 = nullptr;
+                p1 = p2;
+                CHECK_EQ(mock_derived::instance_count(), 0);
+                CHECK_EQ(p1.get(), nullptr);
             }
         }
 
