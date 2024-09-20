@@ -550,9 +550,8 @@ namespace sparrow
         {
 
             case data_type::BOOL:
-                return static_cast<std::size_t>(std::ceil(static_cast<double>(length) / bit_per_byte));
+                return static_cast<std::size_t>(std::ceil(static_cast<double>(size) / bit_per_byte));
             case data_type::UINT8:
-            // TODO: Replace static_cast<std::size_t> by the 32 bit fix check function
             case data_type::INT8:
                 return size;
             case data_type::UINT16:
@@ -566,7 +565,7 @@ namespace sparrow
             case data_type::UINT64:
                 return (sizeof(std::uint64_t) / sizeof(std::uint8_t)) * size;
             case data_type::INT64:
-                return (sizeof(std::int64_t) / sizeof(std::uint8_t)) * size);
+                return (sizeof(std::int64_t) / sizeof(std::uint8_t)) * size;
             case data_type::HALF_FLOAT:
                 return (sizeof(float16_t) / sizeof(std::uint8_t)) * size;
             case data_type::FLOAT:
