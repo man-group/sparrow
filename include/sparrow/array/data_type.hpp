@@ -554,7 +554,7 @@ namespace sparrow
     {
         // TODO: check that the obtained size is not bigger than the limit set by options
         SPARROW_ASSERT_TRUE(data_type_is_primitive(data_type));
-        const auto size = to_native_size(length);
+        const auto size = to_native_size(to_arrow_length(length));
         constexpr double bit_per_byte = 8.;
         switch (data_type)
         {
