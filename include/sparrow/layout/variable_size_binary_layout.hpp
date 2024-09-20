@@ -653,16 +653,16 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::has_value(size_type i) -> bitmap_reference
     {
-        SPARROW_ASSERT_TRUE(sparrow::offset(storage()) >= 0);
-        const size_type pos = i + to_native_offset(sparrow::offset(storage()));
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(sparrow::offset(storage())));
+        const size_type pos = i + to_native_size(sparrow::offset(storage()));
         return sparrow::bitmap(storage())[pos];
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
     auto variable_size_binary_layout<T, CR, DS, OT>::has_value(size_type i) const -> bitmap_const_reference
     {
-        SPARROW_ASSERT_TRUE(sparrow::offset(storage()) >= 0);
-        const size_type pos = i + to_native_offset(sparrow::offset(storage()));
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(sparrow::offset(storage())));
+        const size_type pos = i + to_native_size(sparrow::offset(storage()));
         return sparrow::bitmap(storage())[pos];
     }
 
@@ -676,9 +676,9 @@ namespace sparrow
     auto variable_size_binary_layout<T, CR, DS, OT>::value(size_type i) const -> inner_const_reference
     {
         const auto offset_i = *offset(i);
-        SPARROW_ASSERT_TRUE(offset_i >= 0);
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(offset_i));
         const auto offset_next = *offset(i + 1);
-        SPARROW_ASSERT_TRUE(offset_next >= 0);
+        SPARROW_ASSERT_TRUE(is_valid_arrow_length(offset_next));
         const const_data_iterator pointer1 = data(to_native_size(offset_i));
         const const_data_iterator pointer2 = data(to_native_size(offset_next));
         return inner_const_reference(pointer1, pointer2);
