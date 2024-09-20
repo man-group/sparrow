@@ -44,9 +44,11 @@ namespace sparrow
                       pr.buffers()[1].data<scalar_value_type>() + size,
                       ref.begin());
             array_test_type ar(std::move(pr));
+            const array_test_type& car = ar;
             for (std::size_t i = 0; i < ref.size(); ++i)
             {
                 CHECK_EQ(ar[i], ref[i]);
+                CHECK_EQ(car[i], ref[i]);
             }
         }
 
