@@ -16,8 +16,7 @@ namespace sparrow
             switch(proxy.format()[0])
             {
                 case 'n':
-                    return cloning_ptr<null_array>( new null_array(std::move(proxy)));
-                    //return make_cloning_ptr<null_array>(std::move(proxy));
+                    return make_cloning_ptr<null_array>(std::move(proxy));
                 case 'b':
                     return make_cloning_ptr<primitive_array<bool>>(std::move(proxy));
                 case 'c':

@@ -137,7 +137,11 @@ namespace sparrow
         size_type m_index_end;
     };
 
-    using the_list_value = list_value2;
+    // THIS works because this is a **complete type**
+    using the_list_value = list_value3;
+    
+    // THIS does not work because this is an **incomplete type**
+    // using the_list_value = list_value2;
     
 
 
