@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "../test/external_array_data_creation.hpp"
+#include "doctest/doctest.h"
 #include "sparrow_v01/layout/primitive_array.hpp"
 
-#include "doctest/doctest.h"
-
-#include "../test/external_array_data_creation.hpp"
 
 namespace sparrow
 {
@@ -28,7 +27,7 @@ namespace sparrow
     {
         constexpr std::size_t size = 10u;
         constexpr std::size_t offset = 1u;
-        
+
         TEST_CASE("constructor")
         {
             auto pr = make_arrow_proxy<scalar_value_type>(size, offset);
@@ -40,9 +39,11 @@ namespace sparrow
         {
             auto pr = make_arrow_proxy<scalar_value_type>(size, offset);
             std::vector<scalar_value_type> ref(size - offset);
-            std::copy(pr.buffers()[1].data<scalar_value_type>() + offset, 
-                      pr.buffers()[1].data<scalar_value_type>() + size,
-                      ref.begin());
+            std::copy(
+                pr.buffers()[1].data<scalar_value_type>() + offset,
+                pr.buffers()[1].data<scalar_value_type>() + size,
+                ref.begin()
+            );
             array_test_type ar(std::move(pr));
             const array_test_type& car = ar;
             for (std::size_t i = 0; i < ref.size(); ++i)
@@ -146,7 +147,4 @@ namespace sparrow
             CHECK_EQ(ar_empty.begin(), ar_empty.end());
         }
     }
-
-
 }
-
