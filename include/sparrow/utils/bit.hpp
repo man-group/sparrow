@@ -36,7 +36,7 @@ namespace sparrow
         std::ranges::reverse(value_representation);
         return std::bit_cast<T>(value_representation);
     }
-    
+
     template <std::endian input_value_endianess>
     constexpr auto to_native_endian(std::integral auto value) noexcept
     {

@@ -194,24 +194,24 @@ namespace sparrow
 
         bitmap_reference has_value(size_type i)
         {
-            const size_type pos = i + to_native_offset(sparrow::offset(storage()));
+            const size_type pos = sum_arrow_offsets<size_type>(i, sparrow::offset(storage()));
             return sparrow::bitmap(storage())[pos];
         }
         bitmap_const_reference has_value(size_type i) const
         {
-            const size_type pos = i + to_native_offset(sparrow::offset(storage()));
+            const size_type pos = sum_arrow_offsets<size_type>(i, sparrow::offset(storage()));
             return sparrow::bitmap(storage())[pos];
         }
 
         offset_type element_offset(size_type i)const
         {
-            const size_type pos = i + to_native_offset(sparrow::offset(storage()));
+            const size_type pos = sum_arrow_offsets<size_type>(i, sparrow::offset(storage()));
             return buffer_at(storage(), 0u).template data<const offset_type>()[pos];
         }
 
         offset_type element_length(size_type i)const
         {
-            const size_type j = to_native_offset(sparrow::offset(storage())) + i;
+            const size_type j = sum_arrow_offsets<size_type>(sparrow::offset(storage()), i);
             const auto offset_ptr = buffer_at(storage(), 0u).template data<const offset_type>();
             const auto size = offset_ptr[j + 1] - offset_ptr[j];
             return size;

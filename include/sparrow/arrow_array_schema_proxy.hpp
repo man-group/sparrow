@@ -684,7 +684,8 @@ namespace sparrow
 
         auto arrow_array_children = new ArrowArray*[children_count];
         auto arrow_schemas_children = new ArrowSchema*[children_count];
-        for (size_t i = 0; i < std::min(children_count, to_native_size(array().n_children)); ++i)
+        const auto min_children_count = std::min(children_count, to_native_size(array().n_children));
+        for (size_t i = 0; i < min_children_count; ++i)
         {
             arrow_array_children[i] = array().children[i];
             arrow_schemas_children[i] = schema().children[i];

@@ -133,10 +133,10 @@ namespace sparrow
     /// @returns True if the provided value is between zero and max_arrow_length.
     template <std::integral T>
     inline constexpr
-    bool is_valid_arrow_length(T size_or_offset) noexcept
+    bool is_valid_arrow_length(T size_or_offset, bool allow_negatives = false) noexcept
     {
         return std::in_range<arrow_length>(size_or_offset)
-           and size_or_offset >= T(0)
+           and (allow_negatives or size_or_offset >= T(0))
            and size_or_offset <= max_arrow_length
            ;
     }
@@ -148,12 +148,12 @@ namespace sparrow
     /// otherwise this function is no-op.
     template<std::integral TargetRepr = arrow_length>
     inline constexpr
-    void throw_if_invalid_size(std::integral auto size_or_offset)
+    void throw_if_invalid_size(std::integral auto size_or_offset, bool allow_negatives = false)
     {
         if constexpr (config::enable_size_limit_runtime_check)
         {
             // checks that the value is in range of arrow length in general
-            if (not is_valid_arrow_length(size_or_offset))
+            if (not is_valid_arrow_length(size_or_offset, allow_negatives))
             {
                 throw std::runtime_error(  // TODO: replace by sparrow-specific error
                     std::string("size/length/offset is outside the valid arrow length limits [0:")
@@ -196,7 +196,8 @@ namespace sparrow
 
     /// @returns The provided arrow length value as represented by the native standard size type `std::size_t`.
     ///          If `config::enable_size_limit_runtime_check == true` it will also check that the value is
-    ///          a valid arrow length and representable by `std::size_t` or throw otherwise.
+    ///          a valid arrow length and representable by `std::size_t` or throws otherwise.
+    /// @throws  @see `throw_if_invalid_size()` for details.
     inline constexpr
     auto to_native_size(arrow_length length) -> std::size_t
     {
@@ -206,22 +207,41 @@ namespace sparrow
 
     /// @returns The provided arrow length value as represented by the native standard offset type `std::ptrdiff_t`.
     ///          If `config::enable_size_limit_runtime_check == true` it will also check that the value is
-    ///          a valid arrow length and representable by `std::ptrdiff_t` or throw otherwise.
+    ///          a valid arrow length and representable by `std::ptrdiff_t` or throws otherwise.
+    /// @throws  @see `throw_if_invalid_size()` for details.
     inline constexpr
     auto to_native_offset(arrow_length offset) -> std::ptrdiff_t
     {
-        throw_if_invalid_size<std::ptrdiff_t>(offset);
+        throw_if_invalid_size<std::ptrdiff_t>(offset, true);
         return static_cast<std::ptrdiff_t>(offset);
     }
 
     /// @returns The provided size or offset value as represented by an arrow-length type (int64_t).
     ///          If `config::enable_size_limit_runtime_check == true` it will also check that the value is
-    ///          a valid arrow length and representable in `int64_t` or throw otherwise.
+    ///          a valid arrow length and representable in `int64_t` or throws otherwise.
+    /// @throws  @see `throw_if_invalid_size()` for details.
     inline constexpr
-    auto to_arrow_length(std::integral auto size_or_offset) -> arrow_length
+    auto to_arrow_length(std::integral auto size_or_offset, bool allow_negatives = false) -> arrow_length
     {
-        throw_if_invalid_size(size_or_offset);
+        throw_if_invalid_size(size_or_offset, allow_negatives);
         return static_cast<arrow_length>(size_or_offset);
+    }
+
+    /// @returns The sum of the provided offsets with `R` representation, whatever the offset types as long as
+    ///          they are integrals and can represent and arrow length.
+    ///          If `config::enable_size_limit_runtime_check == true` it will also check that each value and the resulting sum are
+    ///          valid arrow lengths and representable in the specified result `R` or throws otherwise.
+    /// @throws  @see `throw_if_invalid_size()` for details.
+    template<std::integral R = arrow_length>
+    inline constexpr
+    auto sum_arrow_offsets(std::integral auto... offsets) -> R
+    {
+        // We cast every offset as an arrow length, then sum them as arrow length representation,
+        // and finally cast back to the expected result type after verifying that
+        // the resulting value is still a valid arrow length.
+        auto result = (to_arrow_length(offsets, true) + ...);
+        throw_if_invalid_size<R>(result, false); // dont allow negatives as the result must be a size
+        return static_cast<R>(result);
     }
 
     /// Runtime identifier of arrow data types, usually associated with raw bytes with the associated value.

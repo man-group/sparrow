@@ -661,7 +661,7 @@ namespace sparrow
     auto variable_size_binary_layout<T, CR, DS, OT>::has_value(size_type i) -> bitmap_reference
     {
         SPARROW_ASSERT_TRUE(is_valid_arrow_length(sparrow::offset(storage())));
-        const size_type pos = i + to_native_size(sparrow::offset(storage()));
+        const size_type pos = sum_arrow_offsets<size_type>(i, sparrow::offset(storage()));
         return sparrow::bitmap(storage())[pos];
     }
 
@@ -669,7 +669,7 @@ namespace sparrow
     auto variable_size_binary_layout<T, CR, DS, OT>::has_value(size_type i) const -> bitmap_const_reference
     {
         SPARROW_ASSERT_TRUE(is_valid_arrow_length(sparrow::offset(storage())));
-        const size_type pos = i + to_native_size(sparrow::offset(storage()));
+        const size_type pos = sum_arrow_offsets<size_type>(i, sparrow::offset(storage()));
         return sparrow::bitmap(storage())[pos];
     }
 
@@ -695,7 +695,7 @@ namespace sparrow
     auto variable_size_binary_layout<T, CR, DS, OT>::offset(size_type i) -> offset_iterator
     {
         SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
-        return buffer_at(storage(), 0u).template data<OT>() + to_native_offset(sparrow::offset(storage())) + i;
+        return buffer_at(storage(), 0u).template data<OT>() + sum_arrow_offsets<size_t>(sparrow::offset(storage()), i);
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>
@@ -716,7 +716,7 @@ namespace sparrow
     auto variable_size_binary_layout<T, CR, DS, OT>::offset(size_type i) const -> const_offset_iterator
     {
         SPARROW_ASSERT_FALSE(buffers_size(storage()) == 0u);
-        return buffer_at(storage(), 0u).template data<const OT>() + to_native_offset(sparrow::offset(storage())) + i;
+        return buffer_at(storage(), 0u).template data<const OT>() + sum_arrow_offsets<size_type>(sparrow::offset(storage()), i);
     }
 
     template <std::ranges::sized_range T, class CR, data_storage DS, layout_offset OT>

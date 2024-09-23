@@ -338,7 +338,7 @@ namespace sparrow
             return std::size_t(0);
         }
         // The first buffer in external data is used for the bitmap
-        return to_native_size(data.array().n_buffers - 1);
+        return sum_arrow_offsets<std::size_t>(data.array().n_buffers, - 1);
     }
 
     inline external_array_data::buffer_type
