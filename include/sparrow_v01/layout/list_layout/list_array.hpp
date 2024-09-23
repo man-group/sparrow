@@ -16,7 +16,7 @@
 
 #include "sparrow_v01/layout/array_base.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
-#include "sparrow/layout/list_layout/list_value.hpp"
+#include "sparrow_v01/layout/list_layout/list_value.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/array/data_traits.hpp"
@@ -138,10 +138,10 @@ namespace sparrow
     };
 
     // THIS works because this is a **complete type**
-    using the_list_value = list_value3;
+    //using the_list_value = list_value3;
     
     // THIS does not work because this is an **incomplete type**
-    // using the_list_value = list_value2;
+    using the_list_value = list_value2;
     
 
 
