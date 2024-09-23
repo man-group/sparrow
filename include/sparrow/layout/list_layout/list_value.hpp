@@ -15,55 +15,24 @@
 #pragma once
 
 #include <iterator>
+#include <ranges>
 
 namespace sparrow
 {   
-    /// \cond
-    namespace detail
-    {
-        template <typename Iter>
-        class subrange {
-        public:
-            using iterator = Iter;
-            using value_type = typename std::iterator_traits<iterator>::value_type;
-            using difference_type = typename std::iterator_traits<Iter>::difference_type;
-            subrange() = default;
-            // default copy constructor
-            subrange(const subrange&) = default;
-            // default move constructor
-            subrange(subrange&&) = default;
-            // default copy assignment
-            subrange& operator=(const subrange&) = default;
-            // default move assignment
-            subrange& operator=(subrange&&) = default;
-
-
-            subrange(iterator begin, iterator end)
-                : begin_(begin), end_(end) {}
-
-            iterator begin() const { return begin_; }
-            iterator end() const { return end_; }
-            iterator cbegin() const { return begin_; }
-            iterator cend() const { return end_; }
-
-            std::size_t size() const { return static_cast<std::size_t>(std::distance(begin_, end_)); }
-
-        private:
-            iterator begin_;
-            iterator end_;
-        };
-    }
-    /// \endcond
 
     template<class ITERATOR,  bool IS_CONST>
-    class list_value : public detail::subrange<ITERATOR>
+    class list_value : public std::ranges::subrange<ITERATOR>
     {
         public:
-        using base_type = detail::subrange<ITERATOR>;
-        using base_type::base_type;
+        using base_type = std::ranges::subrange<ITERATOR>;
         using reference =  typename ITERATOR::reference;
-        using base_type::operator=;
         using difference_type = typename std::iterator_traits<ITERATOR>::difference_type;
+
+        constexpr list_value() = default;
+        constexpr list_value(ITERATOR begin, ITERATOR end)
+            : base_type(begin, end)
+        {
+        }
 
         reference operator[](std::size_t index)
         {

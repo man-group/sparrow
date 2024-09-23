@@ -41,16 +41,16 @@ namespace sparrow
 
         array_base* clone() const;
 
-        const std::string& format() const;
+        enum data_type data_type() const;
 
     protected:
 
-        array_base(std::string_view format);
+        array_base(enum data_type dt);
         array_base(const array_base&) = default;
 
     private:
 
-        std::string m_format;
+        enum data_type m_data_type;
         virtual array_base* clone_impl() const = 0;
     };
 
@@ -188,13 +188,13 @@ namespace sparrow
         return clone_impl();
     }
 
-    inline const std::string& array_base::format() const
+    inline enum data_type array_base::data_type() const
     {
-        return m_format;
+        return m_data_type;
     }
 
-    inline array_base::array_base(std::string_view format)
-        : m_format(format)
+    inline array_base::array_base(enum data_type dt)
+        : m_data_type(dt)
     {
     }
 
