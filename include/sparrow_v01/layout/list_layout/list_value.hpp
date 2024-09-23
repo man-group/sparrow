@@ -28,14 +28,14 @@ namespace sparrow
         using const_reference = array_traits::const_reference;
         using size_type = std::size_t;
 
-        list_value2(array_base* flat_array, size_type index_begin, size_type index_end);
+        list_value2(const array_base* flat_array, size_type index_begin, size_type index_end);
 
         size_type size() const;
         const_reference operator[](size_type i) const;
 
     private:
 
-        array_base* p_flat_array;
+        const array_base* p_flat_array;
         size_type m_index_begin;
         size_type m_index_end;
     };

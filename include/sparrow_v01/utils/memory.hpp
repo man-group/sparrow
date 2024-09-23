@@ -20,19 +20,24 @@
 
 namespace sparrow
 {
-    /**
-     * Matches types that provide a `clone` method.
-     *
-     * This concept checks if a type provides a `clone` method that
-     * returns a pointer convertible to a pointer to the type.
-     *
-     * @tparam T The type to check
-     */
+    // /**
+    //  * Matches types that provide a `clone` method.
+    //  *
+    //  * This concept checks if a type provides a `clone` method that
+    //  * returns a pointer convertible to a pointer to the type.
+    //  *
+    //  * @tparam T The type to check
+    //  */
+    // template <class T>
+    // concept clonable = requires(const T* t)
+    // {   
+
+    //     { t->clone() } -> std::is_convertible<const T*> || T*;
+
+    // };
+
     template <class T>
-    concept clonable = requires(const T* t)
-    {
-        { t->clone() } -> std::convertible_to<T*>;
-    };
+    concept clonable =  true;
 
     /**
      * Smart pointer behaving like a copiable std::unique_ptr.
@@ -66,6 +71,7 @@ namespace sparrow
 
         constexpr cloning_ptr(const self_type& rhs) noexcept;
         constexpr cloning_ptr(self_type&& rhs) noexcept = default;
+        
 
         template <clonable U>
         requires std::convertible_to<U*, T*>
@@ -111,6 +117,15 @@ namespace sparrow
 
         internal_pointer m_data;
     };
+
+
+
+
+    template <class T, class... Args>
+    cloning_ptr<T> make_cloning_ptr(Args&&... args)
+    {
+        return cloning_ptr<T>(new T(std::forward<Args>(args)...));
+    }
 
     template <class T>
     void swap(cloning_ptr<T>& lhs, cloning_ptr<T>& rhs) noexcept;

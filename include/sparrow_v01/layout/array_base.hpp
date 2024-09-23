@@ -141,14 +141,14 @@ namespace sparrow
                 derived_cast().has_value(i)
             );
         }
-
+        const arrow_proxy& storage() const;
+        arrow_proxy& storage();
     protected:
 
         array_crtp_base(arrow_proxy);
         array_crtp_base(const array_crtp_base&);
 
-        arrow_proxy& storage();
-        const arrow_proxy& storage() const;
+
 
         bitmap_reference has_value(size_type i);
         bitmap_const_reference has_value(size_type i) const;
