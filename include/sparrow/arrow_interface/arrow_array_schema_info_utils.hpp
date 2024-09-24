@@ -15,7 +15,6 @@
 #pragma once
 
 #include <algorithm>
-#include <ranges>
 
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
@@ -210,31 +209,8 @@ namespace sparrow
         }
     }
 
-    // template <std::integral T, std::ranges::input_range offset_buffer>
-    // constexpr size_t
-    // binary_bytes_count(buffer_type offset_buffer_type, T size, const offset_buffer& offset_buf)
-    // {
-    //     SPARROW_ASSERT_TRUE(
-    //         offset_buffer_type == buffer_type::OFFSETS_32BIT || offset_buffer_type ==
-    //         buffer_type::OFFSETS_64BIT
-    //     );
-    //     if (offset_buf.empty())
-    //     {
-    //         return 0;
-    //     }
-    //     if (offset_buffer_type == buffer_type::OFFSETS_32BIT)
-    //     {
-    //         return make_buffer_adaptor<int32_t>(offset_buf).back();
-    //     }
-    //     else
-    //     {
-    //         return make_buffer_adaptor<int64_t>(offset_buf).back();
-    //     }
-    // }
-
     /// @returns The number of bytes required according to the provided buffer type, length, offset and data
     /// type.
-
     inline std::size_t compute_buffer_size(
         buffer_type bt,
         size_t length,

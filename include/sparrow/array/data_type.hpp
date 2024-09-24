@@ -29,7 +29,6 @@ namespace date = std::chrono;
 #include <cstring>
 #include <concepts>
 #include <string>
-#include <ranges>
 
 #include "sparrow/layout/list_layout/list_value.hpp"
 #include "sparrow/utils/contracts.hpp"

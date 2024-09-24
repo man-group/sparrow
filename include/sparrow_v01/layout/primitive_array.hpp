@@ -14,13 +14,11 @@
 
 #pragma once
 
-#include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 #include "sparrow_v01/layout/array_base.hpp"
-
 
 namespace sparrow
 {
@@ -161,14 +159,14 @@ namespace sparrow
     auto primitive_array<T>::data() -> pointer
     {
         return storage().buffers()[DATA_BUFFER_INDEX].template data<inner_value_type>()
-            + static_cast<size_type>(storage().offset());
+               + static_cast<size_type>(storage().offset());
     }
 
     template <class T>
     auto primitive_array<T>::data() const -> const_pointer
     {
         return storage().buffers()[DATA_BUFFER_INDEX].template data<const inner_value_type>()
-            + static_cast<size_type>(storage().offset());
+               + static_cast<size_type>(storage().offset());
     }
 
     template <class T>
