@@ -529,8 +529,6 @@ namespace sparrow
     auto variable_size_binary_array<T, CR, OT>::offset(size_type i) -> offset_iterator
     {
         SPARROW_ASSERT_TRUE(i < size() + storage().offset());
-        const auto offset_buffer = make_buffer_adaptor<int32_t>(storage().buffers()[OFFSET_BUFFER_INDEX]);
-        [[maybe_unused]] std::vector<int32_t> offset_data(offset_buffer.begin(), offset_buffer.end());
         return storage().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
                + static_cast<size_type>(storage().offset()) + i;
     }
@@ -539,8 +537,6 @@ namespace sparrow
     auto variable_size_binary_array<T, CR, OT>::offset(size_type i) const -> const_offset_iterator
     {
         SPARROW_ASSERT_TRUE(i < size() + storage().offset());
-        const auto offset_buffer = make_buffer_adaptor<int32_t>(storage().buffers()[OFFSET_BUFFER_INDEX]);
-        [[maybe_unused]] std::vector<int32_t> offset_data(offset_buffer.begin(), offset_buffer.end());
         return storage().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
                + static_cast<size_type>(storage().offset()) + i;
     }

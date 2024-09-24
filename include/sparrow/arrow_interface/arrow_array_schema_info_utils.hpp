@@ -261,7 +261,6 @@ namespace sparrow
                     else if (previous_buffer_type == buffer_type::OFFSETS_32BIT)
                     {
                         const auto offset_buf = make_buffer_adaptor<int32_t>(previous_buffers.back());
-                        [[maybe_unused]] const std::vector<uint32_t> offsets(offset_buf.begin(), offset_buf.end());
                         return static_cast<std::size_t>(offset_buf.back());
                     }
                     else

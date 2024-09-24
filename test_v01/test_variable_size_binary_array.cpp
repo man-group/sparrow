@@ -52,9 +52,7 @@ namespace sparrow
             ArrowArray array{};
             const std::vector<size_t> false_bitmap{m_false_bitmap.begin(), m_false_bitmap.end()};
             test::fill_schema_and_array<std::string>(schema, array, m_length, m_offset, false_bitmap);
-            auto ar = arrow_proxy{std::move(array), std::move(schema)};
-            [[maybe_unused]] const auto& lol = ar.buffers();
-            return ar;
+            return arrow_proxy{std::move(array), std::move(schema)};
         }
     };
 
