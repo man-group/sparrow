@@ -160,7 +160,7 @@ namespace sparrow::test
         auto offset_buf = new int32_t[size + 1];
         auto value_buf = new char[value_size];
 
-        offset_buf[0] = std::int32_t(0);
+        offset_buf[0] = 0;
         char* ptr = value_buf;
         for (std::size_t i = 0; i < size; ++i)
         {
