@@ -1,6 +1,7 @@
 #pragma once
 #include "doctest/doctest.h"
 
+#include <algorithm>
 
 namespace sparrow::test
 {
