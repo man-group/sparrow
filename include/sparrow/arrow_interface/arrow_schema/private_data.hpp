@@ -92,7 +92,10 @@ namespace sparrow
         {
             return std::string(t.cbegin(), t.cend());
         }
-        mpl::unreachable();
+        else
+        {
+            mpl::unreachable();
+        }
     }
 
     template <class F, class N, class M>
