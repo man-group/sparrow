@@ -401,6 +401,8 @@ namespace sparrow
         other.m_schema = {};
         other.m_buffers.clear();
         update_buffers();
+        update_children();
+        update_dictionary();
     }
 
     inline arrow_proxy& arrow_proxy::operator=(arrow_proxy&& rhs)
