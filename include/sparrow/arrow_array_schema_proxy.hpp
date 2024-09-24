@@ -83,6 +83,30 @@ namespace sparrow
         arrow_proxy(arrow_proxy&&);
         arrow_proxy& operator=(arrow_proxy&&);
 
+
+        // make a non-owning proxy from this
+        arrow_proxy view() {
+
+            std::cout<<"array-created-with-sparrow "<<array_created_with_sparrow()<<std::endl;
+
+            std::cout<<"index: m_array "<<m_array.index()<<std::endl;
+            std::cout<<"\n";
+
+
+            std::cout<<"index: m_schema "<<m_schema.index()<<std::endl;
+            std::cout<<"\n";
+            std::cout<<"view:: get name"<<std::endl;
+
+
+
+            std::cout<<schema().name<<std::endl;
+            return arrow_proxy(
+                &array(), 
+                &schema()
+            );
+        }
+
+
         ~arrow_proxy();
 
         [[nodiscard]] const std::string_view format() const;
@@ -221,7 +245,7 @@ namespace sparrow
 
         [[nodiscard]] void* private_data() const;
 
-    private:
+    public:
 
         std::variant<ArrowArray*, ArrowArray> m_array;
         std::variant<ArrowSchema*, ArrowSchema> m_schema;
@@ -253,7 +277,7 @@ namespace sparrow
 
         [[nodiscard]] ArrowSchema& schema();
         [[nodiscard]] const ArrowSchema& schema() const;
-
+private:
         arrow_schema_private_data* get_schema_private_data();
         arrow_array_private_data* get_array_private_data();
 
@@ -401,6 +425,8 @@ namespace sparrow
         other.m_schema = {};
         other.m_buffers.clear();
         update_buffers();
+        update_children();
+        update_dictionary();
     }
 
     inline arrow_proxy& arrow_proxy::operator=(arrow_proxy&& rhs)

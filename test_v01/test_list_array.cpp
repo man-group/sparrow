@@ -17,6 +17,7 @@
 
 #include "doctest/doctest.h"
 
+#include "test_utils.hpp"
 #include "../test/external_array_data_creation.hpp"
 
 namespace sparrow
@@ -26,7 +27,10 @@ namespace sparrow
 
 
     TEST_SUITE("list_array")
-    {
+    {   
+
+
+    
 
         
         TEST_CASE("constructor")
@@ -45,22 +49,32 @@ namespace sparrow
             ArrowArray flat_arr{};
             ArrowSchema flat_schema{};
             test::fill_schema_and_array<std::int32_t>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
+            flat_schema.name = "the flat array";
+
 
             ArrowArray arr{};
             ArrowSchema schema{};
             test::fill_schema_and_array_for_list_layout(schema, arr, flat_schema, flat_arr, sizes, {}, 0);
 
             // make an arrow proxy
-            //arrow_proxy proxy(std::move(arr), std::move(schema)); // crashes on releasing the children of arr (ie flat_arr):
-                                                                  // this tries to call children[0]->release(t->children[0]);
-                                                                  // but at some point t->children[0] is set to a nullptr
-                                                                  // -> hence this crashes
+            // arrow_proxy proxy(std::move(arr), std::move(schema)); // crashes on releasing the children of arr (ie flat_arr):
+                                                                //   this tries to call children[0]->release(t->children[0]);
+                                                                //   but at some point t->children[0] is set to a nullptr
+                                                                //   -> hence this crashes
 
             arrow_proxy proxy(&arr, &schema);                   // works fine
+
+
 
             // create a list array
             list_array list(std::move(proxy));
             REQUIRE(list.size() == n);
+
+
+            SUBCASE("consitency")
+            {   
+                test::generic_consistency_test(list);
+            }
 
             SUBCASE("element-sizes")
             {

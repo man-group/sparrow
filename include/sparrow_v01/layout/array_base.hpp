@@ -162,7 +162,9 @@ namespace sparrow
 
 
     private:
-        
+
+        static constexpr std::size_t m_bitmap_buffer_index = 0;
+
         bitmap_type make_bitmap();
 
         derived_type& derived_cast();
@@ -205,8 +207,7 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::size() const -> size_type
     {
-        SPARROW_ASSERT_TRUE(storage().offset() <= storage().length());
-        return static_cast<size_type>(storage().length() - storage().offset());
+        return static_cast<size_type>(storage().length());
     }
 
     template <class D>
@@ -245,7 +246,6 @@ namespace sparrow
         return const_iterator(derived_cast().value_cend(), derived_cast().bitmap_end());
     }
 
-
     template <class D>
     auto array_crtp_base<D>::bitmap() const -> const_bitmap_range
     {
@@ -283,7 +283,7 @@ namespace sparrow
     {
         return m_proxy;
     }
-    
+
     template <class D>
     auto array_crtp_base<D>::has_value(size_type i) -> bitmap_reference
     {
@@ -321,13 +321,13 @@ namespace sparrow
     {
         return sparrow::next(bitmap_begin(), size());
     }
-    
+
     template <class D>
     auto array_crtp_base<D>::make_bitmap() -> bitmap_type
     {
-        SPARROW_ASSERT_TRUE(storage().buffers().size() != 0);
-        return bitmap_type(storage().buffers()[0].data(),
-                           static_cast<std::size_t>(storage().length()));
+        SPARROW_ASSERT_TRUE(storage().buffers().size() > m_bitmap_buffer_index);
+        const auto bitmap_size = static_cast<std::size_t>(storage().length() + storage().offset());
+        return bitmap_type(storage().buffers()[m_bitmap_buffer_index].data(), bitmap_size);
     }
 
     template <class D>

@@ -60,9 +60,16 @@ namespace sparrow
 
         functor_index_iterator(FUNCTOR functor, std::size_t index)
             : m_functor(functor)
-            , m_index(index)
+            , m_index(index),
+              m_value(functor(index))
         {
         }
+
+        difference_type distance_to(const self_type& rhs) const
+        {
+            return rhs.m_index - m_index;
+        }
+
       private:
 
         const result_type &  dereference()
@@ -88,11 +95,7 @@ namespace sparrow
         {
             m_index += n;
         }
-        difference_type distance_to(const self_type& rhs) const
-        {
-            return rhs.m_index - m_index;
-        }
-
+        
         bool less_than(const self_type& rhs) const
         {
             return m_index < rhs.m_index;
@@ -124,34 +127,11 @@ namespace sparrow
 
 
 
-    struct list_value3{
-        using size_type = std::size_t;
-
-        template<class ARR>
-        list_value3(ARR* , std::size_t index_begin, std::size_t index_end)
-        :  m_index_begin(index_begin), m_index_end(index_end)
-        {
-        }
-        size_type size() const{return m_index_end - m_index_begin;}
-        size_type m_index_begin;
-        size_type m_index_end;
-    };
-
-    // THIS works because this is a **complete type**
-    //using the_list_value = list_value3;
-    
-    // THIS does not work because this is an **incomplete type**
-    using the_list_value = list_value2;
-    
-
-
-
-
     template<bool BIG, bool CONST>
     class ListArrayValueIteratorFunctor
     {
         // the value type of a list
-        using value_type = list_value3;
+        using value_type = list_value2;
 
 
         public:
@@ -175,9 +155,9 @@ namespace sparrow
     template <bool BIG>
     struct array_inner_types<list_array_impl<BIG>> : array_inner_types_base
     {
-        using inner_value_type = the_list_value;
-        using inner_reference  = the_list_value;
-        using inner_const_reference = the_list_value;
+        using inner_value_type = list_value2;
+        using inner_reference  = list_value2;
+        using inner_const_reference = list_value2;
 
         using value_iterator = detail::functor_index_iterator<ListArrayValueIteratorFunctor<BIG, false>>;
         using const_value_iterator = detail::functor_index_iterator<ListArrayValueIteratorFunctor<BIG, true>>;
@@ -195,15 +175,17 @@ namespace sparrow
         using self_type = list_array_impl<BIG>;
         using base_type = array_crtp_base<self_type>;
         using inner_types = array_inner_types<self_type>;
+        using value_iterator = typename inner_types::value_iterator;
+        using const_value_iterator = typename inner_types::const_value_iterator;
         using size_type = typename base_type::size_type;
         
         using bitmap_type = typename base_type::bitmap_type;
         using bitmap_reference = typename base_type::bitmap_reference;
         using bitmap_const_reference = typename base_type::bitmap_const_reference;
 
-        using inner_value_type =  the_list_value;
-        using inner_reference =  the_list_value;
-        using inner_const_reference =  the_list_value;
+        using inner_value_type =  list_value2;
+        using inner_reference =  list_value2;
+        using inner_const_reference =  list_value2;
 
 
         using value_type = nullable<inner_value_type>;
@@ -221,9 +203,32 @@ namespace sparrow
         explicit list_array_impl(arrow_proxy proxy)
         :   array_base(proxy.data_type()),
             base_type(std::move(proxy)),
-            p_list_offsets(reinterpret_cast<flat_array_offset_type*>(proxy.buffers()[1].data() + proxy.offset())),
-            p_flat_array(std::move(array_factory(proxy.children()[0])))
+            p_list_offsets(nullptr),
+            p_flat_array(nullptr)
+            // p_list_offsets(reinterpret_cast<flat_array_offset_type*>(proxy.buffers()[1].data() + proxy.offset())),
+            // p_flat_array(std::move(array_factory(proxy.children()[0])))
         {
+            
+            std::cout<<"access byuffers"<<std::endl;
+            p_list_offsets = reinterpret_cast<flat_array_offset_type*>(this->storage().buffers()[1].data() + this->storage().offset());
+            
+  
+
+
+
+            // make a non-owning proxy
+
+            std::cout<<"get child proxy"<<std::endl;
+            auto & child = this->storage().children()[0];
+
+            std::cout<<"make child_proxy_view"<<std::endl;
+            auto child_proxy_view  = child.view();
+
+            std::cout<<"make array"<<std::endl;
+            auto cptr = array_factory(std::move(child_proxy_view));
+
+            std::cout<<"move the p_flat_array"<<std::endl;
+            p_flat_array = std::move(cptr);
         }
         
         virtual ~list_array_impl() = default;
@@ -240,17 +245,34 @@ namespace sparrow
         array_base * raw_flat_array(){
             return p_flat_array.get();
         }
+        
 
         private:
+
+        value_iterator value_begin(){
+            return value_iterator(ListArrayValueIteratorFunctor<BIG, false>(this), 0);
+        }
+        
+        value_iterator value_end(){
+            return value_iterator(ListArrayValueIteratorFunctor<BIG, false>(this), this->size());
+        }
+
+        const_value_iterator value_cbegin() const{
+            return const_value_iterator(ListArrayValueIteratorFunctor<BIG, true>(this), 0);
+        }
+
+        const_value_iterator value_cend() const{
+            return const_value_iterator(ListArrayValueIteratorFunctor<BIG, true>(this), this->size());
+        }
 
 
         // get the raw value
         inner_reference value(size_type i){
-            return  the_list_value{p_flat_array.get(), offset_begin(i), offset_end(i)};
+            return  list_value2{p_flat_array.get(), offset_begin(i), offset_end(i)};
         }
 
         inner_const_reference value(size_type i) const{
-            return the_list_value(p_flat_array.get(), offset_begin(i), offset_end(i));
+            return list_value2(p_flat_array.get(), offset_begin(i), offset_end(i));
         }
         
         // helper functions

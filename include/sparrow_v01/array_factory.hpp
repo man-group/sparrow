@@ -7,6 +7,6 @@
 
 namespace sparrow
 {
-    SPARROW_API cloning_ptr<array_base> array_factory(arrow_proxy proxy);
+    SPARROW_API cloning_ptr<array_base> array_factory(arrow_proxy && proxy);
     
 }
