@@ -72,7 +72,7 @@ namespace sparrow
 
       private:
 
-        const result_type &  dereference()
+        const result_type &  dereference() const
         {
             m_value =  m_functor(m_index);
             return m_value;
