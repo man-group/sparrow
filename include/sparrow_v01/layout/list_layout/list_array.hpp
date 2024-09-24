@@ -38,7 +38,7 @@ namespace sparrow
     >
     {
       public:
-        friend class iterator_access;
+        friend class sparrow::iterator_access;
         
         using result_type = std::invoke_result_t<FUNCTOR, std::size_t>;
         using self_type = functor_index_iterator<FUNCTOR>;
@@ -104,7 +104,7 @@ namespace sparrow
         std::size_t m_index;
 
         private:
-        result_type m_value;
+        mutable result_type m_value;
     };
 
     }
