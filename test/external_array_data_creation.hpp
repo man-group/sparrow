@@ -26,7 +26,11 @@ namespace sparrow::test
     void release_arrow_array(ArrowArray* arr);
 
     inline std::uint8_t* make_offset_buffer_from_sizes(const std::vector<size_t>& sizes, bool big)
-    {
+    {   
+
+        // ignore -Werror=cast-align]
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-align"
         const auto n = sizes.size() + 1;
         auto buf = new std::uint8_t[n * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
         if (big)
@@ -35,7 +39,7 @@ namespace sparrow::test
             ptr[0] = 0;
             for (std::size_t i = 0; i < sizes.size(); ++i)
             {
-                ptr[i+1] = ptr[i] + sizes[i];
+                ptr[i+1] = ptr[i] + static_cast<std::uint64_t>(sizes[i]);
             }
         }
         else
@@ -47,6 +51,7 @@ namespace sparrow::test
                 ptr[i+1] = ptr[i] + static_cast<std::uint32_t>(sizes[i]);
             }
         }
+        #pragma GCC diagnostic pop
         return buf;
     }
 
