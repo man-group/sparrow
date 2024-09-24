@@ -34,7 +34,7 @@ namespace sparrow
         functor_index_iterator<FUNCTOR>,   // Derived
         std::invoke_result_t<FUNCTOR, std::size_t>,  // Element
         std::random_access_iterator_tag,
-        std::invoke_result_t<FUNCTOR, std::size_t> & // Reference
+        std::invoke_result_t<FUNCTOR, std::size_t>  // Reference
     >
     {
       public:
@@ -60,8 +60,7 @@ namespace sparrow
 
         functor_index_iterator(FUNCTOR functor, std::size_t index)
             : m_functor(functor)
-            , m_index(index),
-              m_value(functor(index))
+            , m_index(index)
         {
         }
 
@@ -72,10 +71,9 @@ namespace sparrow
 
       private:
 
-        const result_type &  dereference() const
+        result_type  dereference() const
         {
-            m_value =  m_functor(m_index);
-            return m_value;
+            return m_functor(m_index);
         }
 
         bool equal(const self_type& rhs) const
@@ -103,8 +101,6 @@ namespace sparrow
         FUNCTOR m_functor;
         std::size_t m_index;
 
-        private:
-        mutable result_type m_value;
     };
 
     }
