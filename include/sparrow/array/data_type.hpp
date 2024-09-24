@@ -194,6 +194,12 @@ namespace sparrow
         }
     }
 
+
+#if defined(__GNUC__) && !defined(__clang__)
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wuseless-cast" // We want to be able to cast type aliases to their real types.
+#endif
+
     /// @returns The provided arrow length value as represented by the native standard size type `std::size_t`.
     ///          If `config::enable_size_limit_runtime_check == true` it will also check that the value is
     ///          a valid arrow length and representable by `std::size_t` or throws otherwise.
@@ -243,6 +249,10 @@ namespace sparrow
         throw_if_invalid_size<R>(result, false); // dont allow negatives as the result must be a size
         return static_cast<R>(result);
     }
+#if defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC diagnostic pop
+#endif
+
 
     /// Runtime identifier of arrow data types, usually associated with raw bytes with the associated value.
     // TODO: does not support all types specified by the Arrow specification
