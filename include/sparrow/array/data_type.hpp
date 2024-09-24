@@ -195,7 +195,7 @@ namespace sparrow
     }
 
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__clang__)
 #   pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wuseless-cast" // We want to be able to cast type aliases to their real types.
 #endif
@@ -249,7 +249,7 @@ namespace sparrow
         throw_if_invalid_size<R>(result, false); // dont allow negatives as the result must be a size
         return static_cast<R>(result);
     }
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__clang__)
 #    pragma GCC diagnostic pop
 #endif
 
