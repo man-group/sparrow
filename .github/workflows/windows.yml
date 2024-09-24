@@ -159,7 +159,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: matrix.toolchain.build_refactoring == 'ON' && (success() || failure())
       with:
-        name: test_sparrow_lib_report_Windows_v01_${{ matrix.toolchain.compiler }}_${{ matrix.target-arch.name }}_${{ matrix.build-system }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}_refactoring_${{ matrix.toolchain.build_refactoring }}
+        name: test_sparrow_lib_report_Windows_v01_${{ matrix.toolchain.compiler }}_${{ matrix.target-arch.name }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}_refactoring_${{ matrix.toolchain.build_refactoring }}
         path: '**/test_sparrow_lib_report_v01.xml'
 
     - name: Run all examples
