@@ -29,8 +29,10 @@ namespace sparrow::test
     {   
 
         // ignore -Werror=cast-align]
+        #ifdef __GNUC__
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wcast-align"
+        #endif
         const auto n = sizes.size() + 1;
         auto buf = new std::uint8_t[n * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
         if (big)
@@ -51,7 +53,9 @@ namespace sparrow::test
                 ptr[i+1] = ptr[i] + static_cast<std::uint32_t>(sizes[i]);
             }
         }
+        #ifdef __GNUC__
         #pragma GCC diagnostic pop
+        #endif
         return buf;
     }
 
