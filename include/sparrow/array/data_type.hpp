@@ -198,9 +198,6 @@ namespace sparrow
 #if defined(__GNUC__)
 #   pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wuseless-cast" // We want to be able to cast type aliases to their real types.
-#elif defined(__clang__)
-#   pragma clang diagnostic push
-#   pragma clang diagnostic ignored "-Wuseless-cast" // We want to be able to cast type aliases to their real types.
 #endif
 
     /// @returns The provided arrow length value as represented by the native standard size type `std::size_t`.
@@ -254,8 +251,6 @@ namespace sparrow
     }
 #if defined(__GNUC__)
 #    pragma GCC diagnostic pop
-#elif defined(__clang__)
-#    pragma clang diagnostic pop
 #endif
 
 
