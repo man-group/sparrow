@@ -203,32 +203,9 @@ namespace sparrow
         explicit list_array_impl(arrow_proxy proxy)
         :   array_base(proxy.data_type()),
             base_type(std::move(proxy)),
-            p_list_offsets(nullptr),
-            p_flat_array(nullptr)
-            // p_list_offsets(reinterpret_cast<flat_array_offset_type*>(proxy.buffers()[1].data() + proxy.offset())),
-            // p_flat_array(std::move(array_factory(proxy.children()[0])))
+            p_list_offsets(reinterpret_cast<flat_array_offset_type*>(this->storage().buffers()[1].data() + this->storage().offset())),
+            p_flat_array(std::move(array_factory(this->storage().children()[0].view())))
         {
-            
-            std::cout<<"access byuffers"<<std::endl;
-            p_list_offsets = reinterpret_cast<flat_array_offset_type*>(this->storage().buffers()[1].data() + this->storage().offset());
-            
-  
-
-
-
-            // make a non-owning proxy
-
-            std::cout<<"get child proxy"<<std::endl;
-            auto & child = this->storage().children()[0];
-
-            std::cout<<"make child_proxy_view"<<std::endl;
-            auto child_proxy_view  = child.view();
-
-            std::cout<<"make array"<<std::endl;
-            auto cptr = array_factory(std::move(child_proxy_view));
-
-            std::cout<<"move the p_flat_array"<<std::endl;
-            p_flat_array = std::move(cptr);
         }
         
         virtual ~list_array_impl() = default;
