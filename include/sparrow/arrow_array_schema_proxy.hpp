@@ -271,7 +271,7 @@ private:
         void swap(arrow_proxy& other) noexcept;
     };
 
-    inline arrow_proxy::arrow_proxy arrow_proxy::view() {
+    inline arrow_proxy arrow_proxy::view() {
         return arrow_proxy(
             &array(), 
             &schema()
