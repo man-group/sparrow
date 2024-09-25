@@ -291,14 +291,16 @@ TEST_SUITE("C Data Interface")
             CHECK_EQ(array.n_children , array_copy.n_children);
             CHECK_NE(array.buffers , array_copy.buffers);
             CHECK_NE(array.private_data , array_copy.private_data);
-            for(size_t i = 0; i < static_cast<size_t>(array.n_buffers); ++i)
+            const auto buffer_count = sparrow::to_native_size(array.n_buffers);
+            for (size_t i = 0; i < buffer_count; ++i)
             {
                 CHECK_NE(array.buffers[i] , array_copy.buffers[i]);
             }
             auto array_buffers = reinterpret_cast<const int8_t**>(array.buffers);
             auto array_copy_buffers = reinterpret_cast<const int8_t**>(array_copy.buffers);
 
-            for(size_t i = 0; i < static_cast<size_t>(array.length); ++i)
+            const auto length = sparrow::to_native_size(array.length);
+            for(size_t i = 0; i < length; ++i)
             {
                 CHECK_EQ(array_buffers[1][i], array_copy_buffers[1][i]);
             }

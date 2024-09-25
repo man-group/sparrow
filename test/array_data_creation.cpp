@@ -58,8 +58,8 @@ namespace sparrow::test
         }
 
         ad.buffers.push_back(b);
-        ad.length = static_cast<std::int64_t>(n);
-        ad.offset = static_cast<std::int64_t>(offset);
+        ad.length = to_arrow_length(n);
+        ad.offset = to_arrow_length(offset);
         ad.child_data.emplace_back();
         return ad;
     }

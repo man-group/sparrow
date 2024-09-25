@@ -335,7 +335,7 @@ namespace sparrow
     template <class T>
     buffer_base<T>::~buffer_base()
     {
-        deallocate(m_data.p_begin, static_cast<size_type>(m_data.p_storage_end - m_data.p_begin));
+        deallocate(m_data.p_begin, static_cast<size_type>(std::distance(m_data.p_begin, m_data.p_storage_end)));
     }
 
     template <class T>
