@@ -83,7 +83,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /we4928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /we5038 # data member 'member1' will be initialized after data member 'member2'
         /Zc:__cplusplus)
-elseif(FASLE AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+elseif((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
     set(compiles_options
         -pedantic # Warn on language extensions
         -Wall # reasonable and standard

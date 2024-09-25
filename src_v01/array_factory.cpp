@@ -37,7 +37,7 @@ namespace sparrow
                     return make_cloning_ptr<primitive_array<std::uint64_t>>(proxy);
                 case 'f':
                     return make_cloning_ptr<primitive_array<float>>(proxy);
-                case 'd':
+                case 'g':
                     return make_cloning_ptr<primitive_array<double>>(proxy);
                 default:
                     throw std::runtime_error("Unsupported format"); // todo use appropriate exception

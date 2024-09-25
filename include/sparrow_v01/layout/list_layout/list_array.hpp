@@ -68,8 +68,6 @@ namespace sparrow
         using iterator_tag = std::random_access_iterator_tag;
     };
 
-
-
     template <bool BIG>
     class list_array_impl final : public array_base,
                                   public array_crtp_base<list_array_impl<BIG>>
@@ -100,7 +98,6 @@ namespace sparrow
         using flat_array_offset_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
         using list_size_type = flat_array_offset_type;
         using flat_array_offset_pointer = flat_array_offset_type*;
-
 
 
         explicit list_array_impl(arrow_proxy proxy)
@@ -153,21 +150,13 @@ namespace sparrow
             return list_value2{p_flat_array.get(), p_list_offsets[i], p_list_offsets[i + 1]};
         }
         
-        // helper functions
-        list_size_type list_size(size_type i) const{
-            return offset_end(i) - offset_begin(i);
-        }
-
         // data members
         flat_array_offset_type * p_list_offsets;
 
         cloning_ptr<array_base>  p_flat_array;
 
-        // friend class(es)
+        // friend classes
         friend class array_crtp_base<self_type>;
-
-        template<bool CONST_VALUE>
-        friend class ListValue;
 
         template<bool BIG_LIST, bool CONST_ITER>
         friend class ListArrayValueIteratorFunctor;

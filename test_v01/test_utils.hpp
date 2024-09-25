@@ -6,7 +6,6 @@
 namespace sparrow::test
 {
 
-
     template<class ARRAY_TYPE>
     void generic_consistency_test_impl(ARRAY_TYPE && array){
         

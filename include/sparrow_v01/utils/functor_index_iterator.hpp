@@ -56,7 +56,7 @@ namespace sparrow
 
         difference_type distance_to(const self_type& rhs) const
         {
-            return rhs.m_index - m_index;
+            return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);
         }
 
       private:

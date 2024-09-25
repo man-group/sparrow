@@ -33,74 +33,86 @@ namespace sparrow
     
 
         
-        TEST_CASE("constructor")
+        TEST_CASE_TEMPLATE("list[T]",T, std::uint8_t, std::int32_t, float, double)
         {
+            using inner_scalar_type = T;
+            using inner_nullable_type = nullable<inner_scalar_type>;
+
             // number of elements in the flatted array
             const std::size_t n_flat = 10; //1+2+3+4
-
             // number of elements in the list array
             const std::size_t n = 4;
-
             // vector of sizes
             std::vector<std::size_t> sizes = {1, 2, 3, 4};
-
 
             // first we create a flat array of integers
             ArrowArray flat_arr{};
             ArrowSchema flat_schema{};
-            test::fill_schema_and_array<std::int32_t>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
+            test::fill_schema_and_array<inner_scalar_type>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
             flat_schema.name = "the flat array";
-
 
             ArrowArray arr{};
             ArrowSchema schema{};
             test::fill_schema_and_array_for_list_layout(schema, arr, flat_schema, flat_arr, sizes, {}, 0);
-
-            // make an arrow proxy
-            // arrow_proxy proxy(std::move(arr), std::move(schema)); // crashes on releasing the children of arr (ie flat_arr):
-                                                                //   this tries to call children[0]->release(t->children[0]);
-                                                                //   but at some point t->children[0] is set to a nullptr
-                                                                //   -> hence this crashes
-
-            arrow_proxy proxy(&arr, &schema);                   // works fine
-
+            arrow_proxy proxy(&arr, &schema);         
 
 
             // create a list array
-            list_array list(std::move(proxy));
-            REQUIRE(list.size() == n);
-
-
-            SUBCASE("consitency")
-            {   
-                test::generic_consistency_test(list);
-            }
+            list_array list_arr(std::move(proxy));
+            REQUIRE(list_arr.size() == n);
 
             SUBCASE("element-sizes")
             {
                 for(std::size_t i = 0; i < n; ++i){
-                    CHECK(list[i].value().size() == sizes[i]);
+                    REQUIRE(list_arr[i].has_value());
+                    CHECK(list_arr[i].value().size() == sizes[i]);
                 }
             }   
+            SUBCASE("element-values")
+            {
+                std::size_t flat_index = 0;
+                for(std::size_t i = 0; i < n; ++i){
+                    auto list = list_arr[i].value();
+                    for(std::size_t j = 0; j < sizes[i]; ++j){
+                       
+                        auto value_variant = list[j];
+                        // visit the variant
+                        std::visit([&](auto && value){
+                          if constexpr(std::is_same_v<std::decay_t<decltype(value)>, inner_nullable_type>){
+                            CHECK(value == flat_index);
+                          }
+                        }, value_variant);
+                        ++flat_index;
+                    }
+                }
+            }
 
+            SUBCASE("consitency")
+            {   
+                test::generic_consistency_test(list_arr);
+            }
 
+            
             SUBCASE("cast flat array")
             {
                 // get the flat values (offset is not applied)
-                array_base * flat_values = list.raw_flat_array();
+                array_base * flat_values = list_arr.raw_flat_array();
 
                 // cast into a primitive array
-                primitive_array<std::int32_t> * flat_values_int = static_cast<primitive_array<std::int32_t> *>(flat_values);
+                primitive_array<inner_scalar_type> * flat_values_casted = static_cast<primitive_array<inner_scalar_type> *>(flat_values);
 
                 // check the size
-                REQUIRE(flat_values_int->size() == n_flat);
+                REQUIRE(flat_values_casted->size() == n_flat);
 
                 // check that flat values are "iota"
-                for(std::int32_t i = 0; i < static_cast<std::int32_t>(n_flat); ++i){
-                    CHECK((*flat_values_int)[i] == i);
+                if constexpr(std::is_integral_v<inner_scalar_type>)
+                {
+                    for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
+                        CHECK((*flat_values_casted)[static_cast<std::uint64_t>(i)].value() == i);
+                    }
                 }
             }
-            
+              
         }
     }
 
