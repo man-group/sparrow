@@ -159,6 +159,6 @@ namespace sparrow
         friend class array_crtp_base<self_type>;
 
         template<bool BIG_LIST, bool CONST_ITER>
-        friend class ListArrayValueIteratorFunctor;
+        friend class detail::ListArrayValueIteratorFunctor;
     };
 }
