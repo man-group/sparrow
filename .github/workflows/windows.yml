@@ -118,8 +118,18 @@ jobs:
         echo "VCPKG_TARGET_TRIPLET='x86-windows'" >> $GITHUB_ENV
         echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
 
+    - name: Enable runtime size/length/offset validity checks
+      if: matrix.config.name == 'Debug'
+      run: |
+        echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPAROW_ENABLE_SIZE_CHECKS=ON'" >> $GITHUB_ENV
+
+    - name: Enable runtime 32bit size/length/offset limit
+      if: matrix.target-arch.name == 'Win32' # Note: this is not a mandatory limitation in any context, we add this just to have at least one configuration testing that feature
+      run: |
+        echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPAROW_ENABLE_32BIT_SIZE_LIMIT=ON'" >> $GITHUB_ENV
+
     - name: Configure using CMake
-      run: cmake -S ./ -B ./build -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} -DBUILD_REFACTORING=${{matrix.toolchain.build_refactoring}} -G "${{matrix.build-system.name}}" $GENERATOR_EXTRA_FLAGS
+      run: cmake -S ./ -B ./build -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} -DBUILD_REFACTORING=${{matrix.toolchain.build_refactoring}} -G "${{matrix.build-system.name}}" $GENERATOR_EXTRA_FLAGS $SPARROW_CHECKS
 
     - name: Build
       if: matrix.toolchain.build_refactoring == 'ON'
