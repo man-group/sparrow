@@ -70,14 +70,14 @@ namespace sparrow
 
             for (size_t i = 0; i < lwords.size(); ++i)
             {
-                offset()[i + 1] = offset()[i] + static_cast<std::int64_t>(lwords[i].size());
+                offset()[i + 1] = sum_arrow_offsets(offset()[i], lwords[i].size());
                 std::ranges::copy(lwords[i], iter);
                 iter += static_cast<array_data::buffer_type::difference_type>(lwords[i].size());
                 dictionary.bitmap.set(i, true);
             }
             dictionary.bitmap.set(4, false);
 
-            dictionary.length = static_cast<int64_t>(lwords.size());
+            dictionary.length = to_arrow_length(lwords.size());
             dictionary.offset = 0;
             return dictionary;
         }

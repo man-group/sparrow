@@ -16,6 +16,7 @@
 
 #include <cstdint>
 
+#include "sparrow/array/data_type.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_schema/smart_pointers.hpp"
@@ -151,7 +152,7 @@ namespace sparrow
         schema.dictionary = dictionary;
         schema.release = release_arrow_schema;
     }
-    
+
 
     inline void release_arrow_schema(ArrowSchema* schema)
     {
@@ -250,7 +251,7 @@ namespace sparrow
         target.n_children = source.n_children;
         if (source.n_children > 0)
         {
-            target.children = new ArrowSchema*[static_cast<std::size_t>(source.n_children)];
+            target.children = new ArrowSchema*[ to_native_size(source.n_children) ];
             for (int64_t i = 0; i < source.n_children; ++i)
             {
                 SPARROW_ASSERT_TRUE(source.children[i] != nullptr);
