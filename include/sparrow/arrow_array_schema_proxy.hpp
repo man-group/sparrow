@@ -84,14 +84,6 @@ namespace sparrow
         arrow_proxy& operator=(arrow_proxy&&);
 
 
-        // make a non-owning proxy from this
-        arrow_proxy view() {
-            return arrow_proxy(
-                &array(), 
-                &schema()
-            );
-        }
-
 
         ~arrow_proxy();
 
@@ -231,6 +223,11 @@ namespace sparrow
 
         [[nodiscard]] void* private_data() const;
 
+        /**
+         * get a non-owning view of the arrow_proxy.
+         */
+        [[nodiscard]] arrow_proxy view();
+
     public:
 
         std::variant<ArrowArray*, ArrowArray> m_array;
@@ -274,6 +271,13 @@ private:
         void swap(arrow_proxy& other) noexcept;
     };
 
+    inline arrow_proxy::arrow_proxy arrow_proxy::view() {
+        return arrow_proxy(
+            &array(), 
+            &schema()
+        );
+    }
+ 
     inline void arrow_proxy::update_buffers()
     {
         m_buffers.clear();
