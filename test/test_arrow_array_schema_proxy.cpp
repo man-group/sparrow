@@ -416,11 +416,13 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
-            sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             auto array_schema_pair = make_sparrow_arrow_schema_and_array();
             std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{&array_schema_pair.second ,&array_schema_pair.first}}};
+
+            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             proxy.add_children(array_child_ptr);
+
             const auto children = proxy.children();
             CHECK_EQ(children.size(), 1);
             CHECK_EQ(children[0].format(), "C");
@@ -455,10 +457,12 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
+            auto array_schema_pair  = make_sparrow_arrow_schema_and_array();
+
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            auto array_schema_pair  = make_sparrow_arrow_schema_and_array();
             proxy.set_dictionary(&array_schema_pair.second, &array_schema_pair.first);
+
             const auto& dictionary = proxy.dictionary();
             REQUIRE(dictionary);
             CHECK_EQ(dictionary->format(), "C");
@@ -466,9 +470,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("on external c structure")
         {
+            auto [schema_dict, array_dict] = make_external_arrow_schema_and_array();
             auto [schema, array] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            auto [schema_dict, array_dict] = make_external_arrow_schema_and_array();
             CHECK_THROWS_AS(proxy.set_dictionary(&array_dict, &schema_dict), std::runtime_error);
         }
     }
