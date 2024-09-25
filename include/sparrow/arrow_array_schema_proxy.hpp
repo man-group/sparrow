@@ -86,20 +86,6 @@ namespace sparrow
 
         // make a non-owning proxy from this
         arrow_proxy view() {
-
-            std::cout<<"array-created-with-sparrow "<<array_created_with_sparrow()<<std::endl;
-
-            std::cout<<"index: m_array "<<m_array.index()<<std::endl;
-            std::cout<<"\n";
-
-
-            std::cout<<"index: m_schema "<<m_schema.index()<<std::endl;
-            std::cout<<"\n";
-            std::cout<<"view:: get name"<<std::endl;
-
-
-
-            std::cout<<schema().name<<std::endl;
             return arrow_proxy(
                 &array(), 
                 &schema()

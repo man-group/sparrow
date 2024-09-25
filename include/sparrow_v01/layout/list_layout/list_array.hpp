@@ -22,131 +22,38 @@
 #include "sparrow/array/data_traits.hpp"
 #include "sparrow_v01/array_factory.hpp"
 #include "sparrow_v01/utils/memory.hpp"
-
+#include "sparrow_v01/utils/functor_index_iterator.hpp"
 
 namespace sparrow
 {
-
-    namespace detail{
-
-    template<class FUNCTOR>
-    class functor_index_iterator : public iterator_base<
-        functor_index_iterator<FUNCTOR>,   // Derived
-        std::invoke_result_t<FUNCTOR, std::size_t>,  // Element
-        std::random_access_iterator_tag,
-        std::invoke_result_t<FUNCTOR, std::size_t>  // Reference
-    >
-    {
-      public:
-        friend class sparrow::iterator_access;
-        
-        using result_type = std::invoke_result_t<FUNCTOR, std::size_t>;
-        using self_type = functor_index_iterator<FUNCTOR>;
-        using difference_type = std::ptrdiff_t;
-
-
-        // copy constructor
-        functor_index_iterator(const self_type& other) = default;
-
-        // copy assignment
-        self_type& operator=(const self_type& other) = default;
-
-        // move constructor
-        functor_index_iterator(self_type&& other) = default;
-
-        // move assignment
-        self_type& operator=(self_type&& other) = default;
-
-
-        functor_index_iterator(FUNCTOR functor, std::size_t index)
-            : m_functor(functor)
-            , m_index(index)
-        {
-        }
-
-        difference_type distance_to(const self_type& rhs) const
-        {
-            return rhs.m_index - m_index;
-        }
-
-      private:
-
-        result_type  dereference() const
-        {
-            return m_functor(m_index);
-        }
-
-        bool equal(const self_type& rhs) const
-        {
-            return m_index == rhs.m_index;
-        }
-
-        void increment()
-        {
-            ++m_index;
-        }
-        void decrement()
-        {
-            --m_index;
-        }
-        void advance(difference_type n)
-        {
-            m_index += n;
-        }
-        
-        bool less_than(const self_type& rhs) const
-        {
-            return m_index < rhs.m_index;
-        }
-        FUNCTOR m_functor;
-        std::size_t m_index;
-
-    };
-
-    }
-
-
-
-
-
-
-
-
-
-
     template <bool BIG>
     class list_array_impl;
 
     using list_array = list_array_impl<false>;
     using big_list_array = list_array_impl<true>;
 
-
-
-
-    template<bool BIG, bool CONST>
-    class ListArrayValueIteratorFunctor
-    {
-        // the value type of a list
-        using value_type = list_value2;
-
-
-        public:
-        using list_array_ptr = std::conditional_t<CONST, const list_array_impl<BIG>*, list_array_impl<BIG>*>;
-
-
-        ListArrayValueIteratorFunctor(list_array_ptr list_array)
-        : p_list_array(list_array)
+    namespace detail{
+        template<bool BIG, bool CONST>
+        class ListArrayValueIteratorFunctor
         {
-        }
+            // the value type of a list
+            using value_type = list_value2;
 
-        value_type operator()(std::size_t i) const
-        {
-            return p_list_array->value(i);
-        }
+            public:
+            using list_array_ptr = std::conditional_t<CONST, const ::sparrow::list_array_impl<BIG>*, ::sparrow::list_array_impl<BIG>*>;
 
-        private:
-        list_array_ptr p_list_array;
-    };
+            ListArrayValueIteratorFunctor(list_array_ptr list_array)
+            : p_list_array(list_array)
+            {
+            }
+            value_type operator()(std::size_t i) const
+            {
+                return p_list_array->value(i);
+            }
+            private:
+            list_array_ptr p_list_array;
+        };
+    }
 
     template <bool BIG>
     struct array_inner_types<list_array_impl<BIG>> : array_inner_types_base
@@ -155,8 +62,8 @@ namespace sparrow
         using inner_reference  = list_value2;
         using inner_const_reference = list_value2;
 
-        using value_iterator = detail::functor_index_iterator<ListArrayValueIteratorFunctor<BIG, false>>;
-        using const_value_iterator = detail::functor_index_iterator<ListArrayValueIteratorFunctor<BIG, true>>;
+        using value_iterator = functor_index_iterator<detail::ListArrayValueIteratorFunctor<BIG, false>>;
+        using const_value_iterator = functor_index_iterator<detail::ListArrayValueIteratorFunctor<BIG, true>>;
         
         using iterator_tag = std::random_access_iterator_tag;
     };
@@ -219,42 +126,34 @@ namespace sparrow
             return p_flat_array.get();
         }
         
-
         private:
 
         value_iterator value_begin(){
-            return value_iterator(ListArrayValueIteratorFunctor<BIG, false>(this), 0);
+            return value_iterator(detail::ListArrayValueIteratorFunctor<BIG, false>(this), 0);
         }
         
         value_iterator value_end(){
-            return value_iterator(ListArrayValueIteratorFunctor<BIG, false>(this), this->size());
+            return value_iterator(detail::ListArrayValueIteratorFunctor<BIG, false>(this), this->size());
         }
 
         const_value_iterator value_cbegin() const{
-            return const_value_iterator(ListArrayValueIteratorFunctor<BIG, true>(this), 0);
+            return const_value_iterator(detail::ListArrayValueIteratorFunctor<BIG, true>(this), 0);
         }
 
         const_value_iterator value_cend() const{
-            return const_value_iterator(ListArrayValueIteratorFunctor<BIG, true>(this), this->size());
+            return const_value_iterator(detail::ListArrayValueIteratorFunctor<BIG, true>(this), this->size());
         }
-
 
         // get the raw value
         inner_reference value(size_type i){
-            return  list_value2{p_flat_array.get(), offset_begin(i), offset_end(i)};
+            return  list_value2{p_flat_array.get(), p_list_offsets[i], p_list_offsets[i + 1]};
         }
 
         inner_const_reference value(size_type i) const{
-            return list_value2(p_flat_array.get(), offset_begin(i), offset_end(i));
+            return list_value2{p_flat_array.get(), p_list_offsets[i], p_list_offsets[i + 1]};
         }
         
         // helper functions
-        list_size_type offset_begin(size_type i) const{
-            return p_list_offsets[i];
-        }
-        list_size_type offset_end(size_type i) const{
-            return p_list_offsets[i + 1];
-        }
         list_size_type list_size(size_type i) const{
             return offset_end(i) - offset_begin(i);
         }
@@ -273,7 +172,4 @@ namespace sparrow
         template<bool BIG_LIST, bool CONST_ITER>
         friend class ListArrayValueIteratorFunctor;
     };
-
-
-   
 }
