@@ -36,19 +36,19 @@ namespace sparrow
 
 
         // copy constructor
-        functor_index_iterator(const self_type& other) = default;
+        constexpr functor_index_iterator(const self_type& other) = default;
 
         // copy assignment
-        self_type& operator=(const self_type& other) = default;
+        constexpr self_type& operator=(const self_type& other) = default;
 
         // move constructor
-        functor_index_iterator(self_type&& other) = default;
+        constexpr functor_index_iterator(self_type&& other) = default;
 
         // move assignment
-        self_type& operator=(self_type&& other) = default;
+        constexpr self_type& operator=(self_type&& other) = default;
 
 
-        functor_index_iterator(FUNCTOR functor, std::size_t index)
+        constexpr functor_index_iterator(FUNCTOR functor, std::size_t index)
             : m_functor(functor)
             , m_index(index)
         {
