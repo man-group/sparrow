@@ -98,5 +98,51 @@ namespace sparrow::test
 
 
     }
+
+    void fill_schema_and_array_for_struct_layout(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        std::vector<ArrowSchema> & children_schemas,
+        std::vector<ArrowArray> & children_arrays,
+        const std::vector<std::size_t> & false_postions
+    )
+    {
+        schema.format = "+s";
+        schema.name = "test";
+        schema.metadata = "test metadata";
+
+        schema.n_children = static_cast<std::int64_t>(children_schemas.size());
+        schema.children = new ArrowSchema*[children_schemas.size()];
+        for (std::size_t i = 0; i < children_schemas.size(); ++i)
+        {
+            schema.children[i] = &children_schemas[i];
+        }
+
+        schema.dictionary = nullptr;
+        schema.release = &release_arrow_schema;
+        
+        arr.length = children_arrays.front().length;
+
+        arr.null_count = static_cast<std::int64_t>(false_postions.size());
+        arr.offset = 0;
+
+        arr.n_buffers = 1;
+        std::uint8_t** buf = new std::uint8_t*[2];
+        buf[0] = make_bitmap_buffer(static_cast<std::size_t>(arr.length), false_postions);
+
+        arr.n_children = static_cast<std::int64_t>(children_arrays.size());
+
+        arr.buffers = nullptr;
+
+        arr.children = new ArrowArray*[children_arrays.size()];
+        for (std::size_t i = 0; i < children_arrays.size(); ++i)
+        {
+            arr.children[i] = &children_arrays[i];
+        }
+
+        arr.dictionary = nullptr;
+        arr.release = &release_arrow_array;
+    }
+
 }
 

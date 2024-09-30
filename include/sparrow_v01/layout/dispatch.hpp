@@ -20,7 +20,8 @@
 #include "sparrow_v01/layout/array_base.hpp"
 #include "sparrow_v01/layout/null_array.hpp"
 #include "sparrow_v01/layout/primitive_array.hpp"
-#include "sparrow_v01/layout/list_layout/list_value.hpp"
+#include "sparrow_v01/layout/nested_value_types.hpp"
+
 
 namespace sparrow
 {

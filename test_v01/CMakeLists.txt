@@ -46,6 +46,7 @@ set(SPARROW_V1_TESTS_SOURCES
     test_null_array.cpp
     test_primitive_array.cpp
     test_list_array.cpp
+    test_struct_array.cpp
 )
 set(test_target_v01 "test_sparrow_lib_v01")
 add_executable(${test_target_v01} ${SPARROW_V1_TESTS_SOURCES})

@@ -481,6 +481,7 @@ namespace sparrow
     }
 
     class list_value2;
+    class struct_value;
 
     /// C++ types value representation types matching Arrow types.
     // NOTE: this needs to be in sync-order with `data_type`
@@ -502,7 +503,8 @@ namespace sparrow
         // std::vector<byte_t>,
         sparrow::timestamp,
         // TODO: add missing fundamental types here
-        list_value2
+        list_value2,
+        struct_value
         >;
 
     /// Type list of every C++ representation types supported by default, in order matching `data_type`
