@@ -42,7 +42,7 @@ namespace sparrow
             public:
             using list_array_ptr = std::conditional_t<CONST, const ::sparrow::list_array_impl<BIG>*, ::sparrow::list_array_impl<BIG>*>;
 
-            ListArrayValueIteratorFunctor(list_array_ptr list_array)
+            constexpr ListArrayValueIteratorFunctor(list_array_ptr list_array)
             : p_list_array(list_array)
             {
             }
