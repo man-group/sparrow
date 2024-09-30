@@ -112,7 +112,7 @@ namespace sparrow
 
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
-        using const_value_range = std::ranges::subrange<
+        using const_value_range = subrange<
             const_value_iterator
         >;
 

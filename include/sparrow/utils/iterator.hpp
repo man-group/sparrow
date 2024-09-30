@@ -25,29 +25,29 @@ namespace sparrow
 
 
 
-    // // Custom subrange class without requiring default constructibility
-    // template <typename Iter, typename Sent = Iter>
-    // class subrange {
-    // public:
+    // Custom subrange class without requiring default constructibility
+    template <typename Iter, typename Sent = Iter>
+    class subrange {
+    public:
 
-    //     subrange(const subrange&) = default;
-    //     subrange& operator=(const subrange&) = default;
-    //     subrange(subrange&&) = default;
-    //     subrange& operator=(subrange&&) = default;
+        subrange(const subrange&) = default;
+        subrange& operator=(const subrange&) = default;
+        subrange(subrange&&) = default;
+        subrange& operator=(subrange&&) = default;
 
 
-    //     // Constructor taking an iterator and sentinel (or two iterators)
-    //     subrange(Iter first, Sent last) 
-    //         : begin_(std::move(first)), end_(std::move(last)) {}
+        // Constructor taking an iterator and sentinel (or two iterators)
+        subrange(Iter first, Sent last) 
+            : begin_(std::move(first)), end_(std::move(last)) {}
 
-    //     // Begin and end accessors
-    //     Iter begin() const { return begin_; }
-    //     Sent end() const { return end_; }
+        // Begin and end accessors
+        Iter begin() const { return begin_; }
+        Sent end() const { return end_; }
 
-    // private:
-    //     Iter begin_;  // The starting iterator
-    //     Sent end_;    // The ending iterator or sentinel
-    // };
+    private:
+        Iter begin_;  // The starting iterator
+        Sent end_;    // The ending iterator or sentinel
+    };
 
     namespace detail
     {
