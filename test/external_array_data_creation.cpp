@@ -132,7 +132,7 @@ namespace sparrow::test
 
         arr.n_children = static_cast<std::int64_t>(children_arrays.size());
 
-        arr.buffers = nullptr;
+        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
 
         arr.children = new ArrowArray*[children_arrays.size()];
         for (std::size_t i = 0; i < children_arrays.size(); ++i)

@@ -5,6 +5,7 @@
 
 #include "sparrow_v01/layout/primitive_array.hpp"
 #include "sparrow_v01/layout/list_layout/list_array.hpp"
+#include "sparrow_v01/layout/struct_layout/struct_array.hpp"
 #include "sparrow_v01/layout/null_array.hpp"
 
 namespace sparrow
@@ -40,7 +41,7 @@ namespace sparrow
                 case 'g':
                     return make_cloning_ptr<primitive_array<double>>(std::move(proxy));
                 default:
-                    throw std::runtime_error("Unsupported format"); // todo use appropriate exception
+                    throw std::runtime_error(std::string("Unsupported data type: ") + std::string(proxy.format()));
                 
             }
         }
@@ -53,9 +54,13 @@ namespace sparrow
             {   
                 return make_cloning_ptr<big_list_array>(std::move(proxy));
             }
+            else if(proxy.format() == "+s")
+            {
+                return make_cloning_ptr<struct_array>(std::move(proxy));
+            }
             else
             {
-                throw std::runtime_error("Unsupported format"); // todo use appropriate exception
+                throw std::runtime_error(std::string("Unsupported data type: ") + std::string(proxy.format()));
             } 
         }
     }
