@@ -22,17 +22,8 @@
 
 namespace sparrow
 {
-
-
-
-
     TEST_SUITE("list_array")
     {   
-
-
-    
-
-        
         TEST_CASE_TEMPLATE("list[T]",T, std::uint8_t, std::int32_t, float, double)
         {
             using inner_scalar_type = T;
@@ -92,7 +83,6 @@ namespace sparrow
                 test::generic_consistency_test(list_arr);
             }
 
-            
             SUBCASE("cast flat array")
             {
                 // get the flat values (offset is not applied)

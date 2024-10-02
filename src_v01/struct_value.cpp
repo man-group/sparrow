@@ -17,8 +17,6 @@
 
 namespace sparrow
 {
-
-
     struct_value::struct_value(  const std::vector<cloning_ptr<array_base>>& children, size_type index)
         : m_children(children)
         , m_index(index)
