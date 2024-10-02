@@ -23,8 +23,3 @@ foreach(EXAMPLE ${EXAMPLES})
         COMMENT "Running ${EXAMPLE_NAME}"
     )
 endforeach()
-
-
-
-add_executable(bar bar.cpp)
-target_link_libraries(bar PRIVATE sparrow)
