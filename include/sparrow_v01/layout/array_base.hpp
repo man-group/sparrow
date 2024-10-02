@@ -85,7 +85,6 @@ namespace sparrow
         using self_type = array_crtp_base<D>;
         using derived_type = D;
         using inner_types = array_inner_types<derived_type>;
-
         using size_type = std::size_t;
         using difference_type = std::ptrdiff_t;
         using bitmap_type = typename inner_types::bitmap_type;
@@ -106,10 +105,7 @@ namespace sparrow
 
         using iterator = layout_iterator<self_type, false>;
         using const_iterator = layout_iterator<self_type, true>;
-
-
-
-
+         
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
         using const_value_range = subrange<
@@ -149,7 +145,6 @@ namespace sparrow
         array_crtp_base(const array_crtp_base&);
 
 
-
         bitmap_reference has_value(size_type i);
         bitmap_const_reference has_value(size_type i) const;
 
@@ -158,8 +153,6 @@ namespace sparrow
 
         const_bitmap_iterator bitmap_begin() const;
         const_bitmap_iterator bitmap_end() const;
-
-
 
     private:
 
@@ -172,9 +165,6 @@ namespace sparrow
 
         arrow_proxy m_proxy;
         bitmap_type m_bitmap;
-
-        // template <class Layout, bool is_const>
-        // class layout_iterator
 
         // friend classes
         friend class layout_iterator<self_type, false>;

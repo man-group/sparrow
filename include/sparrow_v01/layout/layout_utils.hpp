@@ -30,14 +30,11 @@ namespace sparrow
             using layout_type = LAYOUT_TYPE;
             using value_type = decltype(std::declval<layout_type>().value(0));
 
-
             LayoutValueFunctor() = default;
             LayoutValueFunctor& operator=(LayoutValueFunctor&&) = default;
             LayoutValueFunctor(const LayoutValueFunctor&) = default;
             LayoutValueFunctor(LayoutValueFunctor&&) = default;
             LayoutValueFunctor& operator=(const LayoutValueFunctor&) = default;
-
-
 
             constexpr LayoutValueFunctor(layout_type * layout_ptr)
             : p_layout(layout_ptr)

@@ -34,7 +34,6 @@ namespace sparrow
         using self_type = functor_index_iterator<FUNCTOR>;
         using difference_type = std::ptrdiff_t;
 
-
         // copy constructor
         constexpr functor_index_iterator(const self_type& other) = default;
 

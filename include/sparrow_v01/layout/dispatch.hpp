@@ -22,7 +22,6 @@
 #include "sparrow_v01/layout/primitive_array.hpp"
 #include "sparrow_v01/layout/nested_value_types.hpp"
 
-
 namespace sparrow
 {
     template <class F>

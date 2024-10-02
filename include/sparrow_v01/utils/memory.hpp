@@ -17,9 +17,13 @@
 #include <compare>
 #include <concepts>
 #include <memory>
+#include <type_traits>
 
 namespace sparrow
 {
+    // TODO, refactor in a seperate PR as this concept is not working.
+    // ArrayBase* is **NOT** convertible to Derived*.
+
     // /**
     //  * Matches types that provide a `clone` method.
     //  *
@@ -29,11 +33,9 @@ namespace sparrow
     //  * @tparam T The type to check
     //  */
     // template <class T>
-    // concept clonable = requires(const T* t)
-    // {   
-
-    //     { t->clone() } -> std::is_convertible<const T*> || T*;
-
+    // concept clonable = requires(const T* t)	
+    // {	
+    //     { t->clone() } -> std::convertible_to<T*> 
     // };
 
     template <class T>
