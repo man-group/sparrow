@@ -376,7 +376,6 @@ private:
     inline arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema* schema)
         : arrow_proxy(std::move(array), schema, impl_tag{})
     {
-
     }
 
     inline arrow_proxy::arrow_proxy(ArrowArray* array, ArrowSchema* schema)

@@ -72,7 +72,8 @@ namespace sparrow
     /// @returns `true` if  the format of an `ArrowArray` for a given data type is valid, `false` otherwise.
     inline bool validate_format_with_arrow_array(data_type , const ArrowArray& )
     {
-        return true;
+        return true; 
+        /* THE CODE BELOW MAKES WRONG ASSUMPTIONS AND NEEDS TO BE REFACTORED IN A SEPERATE PR*/
         // const bool buffers_count_valid = validate_buffers_count(data_type, array.n_buffers);
         // // const bool children_count_valid = static_cast<std::size_t>(array.n_children)
         // //                                   == get_expected_children_count(data_type);
