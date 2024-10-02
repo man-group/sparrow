@@ -23,50 +23,23 @@
 #include "sparrow_v01/array_factory.hpp"
 #include "sparrow_v01/utils/memory.hpp"
 #include "sparrow_v01/utils/functor_index_iterator.hpp"
+#include "sparrow_v01/layout/layout_utils.hpp"
 
 namespace sparrow
 {
-
     class struct_array;
-
-
-
-    namespace detail{
-        template<bool CONST>
-        class StructArrayValueIteratorFunctor
-        {
-            // the value type of a list
-            using value_type = ::sparrow::struct_value;
-
-            public:
-            using struct_array_ptr = std::conditional_t<CONST, const ::sparrow::struct_array*, ::sparrow::struct_array*>;
-
-            constexpr StructArrayValueIteratorFunctor(struct_array_ptr arr)
-            : p_struct_array(arr)
-            {
-            }
-            value_type operator()(std::size_t i) const
-            {
-                return p_struct_array->value(i);
-            }
-            private:
-            struct_array_ptr p_struct_array;
-        };
-    }
 
     template <>
     struct array_inner_types<struct_array> : array_inner_types_base
-    {
+    {   
+        using array_type = struct_array;
         using inner_value_type = struct_value;
         using inner_reference  = struct_value;
         using inner_const_reference = struct_value;
-
-        using value_iterator = functor_index_iterator<detail::StructArrayValueIteratorFunctor<false>>;
-        using const_value_iterator = functor_index_iterator<detail::StructArrayValueIteratorFunctor<true>>;
-        
+        using value_iterator = functor_index_iterator<detail::LayoutValueFunctor<array_type>>;
+        using const_value_iterator = functor_index_iterator<detail::LayoutValueFunctor<const array_type>>;
         using iterator_tag = std::random_access_iterator_tag;
     };
-
 
     class struct_array final : public array_base,
                                   public array_crtp_base<struct_array>
@@ -87,12 +60,10 @@ namespace sparrow
         using inner_reference =  struct_value;
         using inner_const_reference =  struct_value;
 
-
         using value_type = nullable<inner_value_type>;
         using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using iterator_tag = std::contiguous_iterator_tag;
-
 
 
         explicit struct_array(arrow_proxy proxy)
@@ -112,7 +83,6 @@ namespace sparrow
             return new struct_array(*this);
         }
 
-
         const array_base * raw_child(std::size_t i) const{
             return m_children[i].get();
         }
@@ -123,22 +93,21 @@ namespace sparrow
         private:
 
         value_iterator value_begin(){
-            return value_iterator(detail::StructArrayValueIteratorFunctor<false>(this), 0);
+            return value_iterator(detail::LayoutValueFunctor<self_type>(this), 0);
         }
         
         value_iterator value_end(){
-            return value_iterator(detail::StructArrayValueIteratorFunctor<false>(this), this->size());
+            return value_iterator(detail::LayoutValueFunctor<self_type>(this), this->size());
         }
 
         const_value_iterator value_cbegin() const{
-            return const_value_iterator(detail::StructArrayValueIteratorFunctor<true>(this), 0);
+            return const_value_iterator(detail::LayoutValueFunctor<const self_type>(this), 0);
         }
 
         const_value_iterator value_cend() const{
-            return const_value_iterator(detail::StructArrayValueIteratorFunctor<true>(this), this->size());
+            return const_value_iterator(detail::LayoutValueFunctor<const self_type>(this), this->size());
         }
 
-        // get the raw value
         inner_reference value(size_type i){
             return  struct_value{m_children, i};
         }
@@ -153,7 +122,8 @@ namespace sparrow
         // friend classes
         friend class array_crtp_base<self_type>;
 
-        template<bool CONST_ITER>
-        friend class detail::StructArrayValueIteratorFunctor;
+        // needs access to this->value(i)
+        friend class detail::LayoutValueFunctor<self_type>;
+        friend class detail::LayoutValueFunctor<const self_type>;
     };
 }

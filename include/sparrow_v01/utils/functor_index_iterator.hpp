@@ -45,11 +45,11 @@ namespace sparrow
         constexpr functor_index_iterator(self_type&& other) = default;
 
         // move assignment
-        constexpr self_type& operator=(self_type&& other) = default;
+        constexpr self_type& operator=(self_type&& other) = delete;
 
 
         constexpr functor_index_iterator(FUNCTOR functor, std::size_t index)
-            : m_functor(functor)
+            : m_functor(std::move(functor))
             , m_index(index)
         {
         }

@@ -23,6 +23,7 @@
 #include "sparrow_v01/array_factory.hpp"
 #include "sparrow_v01/utils/memory.hpp"
 #include "sparrow_v01/utils/functor_index_iterator.hpp"
+#include "sparrow_v01/layout/layout_utils.hpp"
 
 namespace sparrow
 {
@@ -32,39 +33,15 @@ namespace sparrow
     using list_array = list_array_impl<false>;
     using big_list_array = list_array_impl<true>;
 
-    namespace detail{
-        template<bool BIG, bool CONST>
-        class ListArrayValueIteratorFunctor
-        {
-            // the value type of a list
-            using value_type = list_value2;
-
-            public:
-            using list_array_ptr = std::conditional_t<CONST, const ::sparrow::list_array_impl<BIG>*, ::sparrow::list_array_impl<BIG>*>;
-
-            constexpr ListArrayValueIteratorFunctor(list_array_ptr list_array)
-            : p_list_array(list_array)
-            {
-            }
-            value_type operator()(std::size_t i) const
-            {
-                return p_list_array->value(i);
-            }
-            private:
-            list_array_ptr p_list_array;
-        };
-    }
-
     template <bool BIG>
     struct array_inner_types<list_array_impl<BIG>> : array_inner_types_base
     {
+        using array_type = list_array_impl<BIG>;
         using inner_value_type = list_value2;
         using inner_reference  = list_value2;
         using inner_const_reference = list_value2;
-
-        using value_iterator = functor_index_iterator<detail::ListArrayValueIteratorFunctor<BIG, false>>;
-        using const_value_iterator = functor_index_iterator<detail::ListArrayValueIteratorFunctor<BIG, true>>;
-        
+        using value_iterator = functor_index_iterator<detail::LayoutValueFunctor<array_type>>;
+        using const_value_iterator = functor_index_iterator<detail::LayoutValueFunctor<const array_type>>;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
@@ -126,19 +103,19 @@ namespace sparrow
         private:
 
         value_iterator value_begin(){
-            return value_iterator(detail::ListArrayValueIteratorFunctor<BIG, false>(this), 0);
+            return value_iterator(detail::LayoutValueFunctor<self_type>(this), 0);
         }
         
         value_iterator value_end(){
-            return value_iterator(detail::ListArrayValueIteratorFunctor<BIG, false>(this), this->size());
+            return value_iterator(detail::LayoutValueFunctor<self_type>(this), this->size());
         }
 
         const_value_iterator value_cbegin() const{
-            return const_value_iterator(detail::ListArrayValueIteratorFunctor<BIG, true>(this), 0);
+            return const_value_iterator(detail::LayoutValueFunctor<const self_type>(this), 0);
         }
 
         const_value_iterator value_cend() const{
-            return const_value_iterator(detail::ListArrayValueIteratorFunctor<BIG, true>(this), this->size());
+            return const_value_iterator(detail::LayoutValueFunctor<const self_type>(this), this->size());
         }
 
         // get the raw value
@@ -158,7 +135,8 @@ namespace sparrow
         // friend classes
         friend class array_crtp_base<self_type>;
 
-        template<bool BIG_LIST, bool CONST_ITER>
-        friend class detail::ListArrayValueIteratorFunctor;
+        // needs access to this->value(i)
+        friend class detail::LayoutValueFunctor<self_type>;
+        friend class detail::LayoutValueFunctor<const self_type>;
     };
 }
