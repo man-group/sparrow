@@ -83,8 +83,6 @@ namespace sparrow
         arrow_proxy(arrow_proxy&&);
         arrow_proxy& operator=(arrow_proxy&&);
 
-
-
         ~arrow_proxy();
 
         [[nodiscard]] const std::string_view format() const;
@@ -228,7 +226,6 @@ namespace sparrow
          */
         [[nodiscard]] arrow_proxy view();
 
-    public:
 
         std::variant<ArrowArray*, ArrowArray> m_array;
         std::variant<ArrowSchema*, ArrowSchema> m_schema;
