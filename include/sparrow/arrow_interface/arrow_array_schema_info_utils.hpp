@@ -16,7 +16,6 @@
 
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/c_interface.hpp"
-#include <iosfwd>
 
 namespace sparrow
 {
@@ -97,22 +96,6 @@ namespace sparrow
         SIZES_64BIT,
     };
 
-    // cout for buffer_type
-    // Overload the stream insertion operator (<<) to output the string form of the enum
-    inline std::ostream& operator<<(std::ostream& os, const buffer_type& bt) {
-        switch (bt) {
-            case buffer_type::VALIDITY:      os << "VALIDITY"; break;
-            case buffer_type::DATA:          os << "DATA"; break;
-            case buffer_type::OFFSETS_32BIT: os << "OFFSETS_32BIT"; break;
-            case buffer_type::OFFSETS_64BIT: os << "OFFSETS_64BIT"; break;
-            case buffer_type::VIEWS:         os << "VIEWS"; break;
-            case buffer_type::TYPE_IDS:      os << "TYPE_IDS"; break;
-            case buffer_type::SIZES_32BIT:   os << "SIZES_32BIT"; break;
-            case buffer_type::SIZES_64BIT:   os << "SIZES_64BIT"; break;
-            default: os.setstate(std::ios_base::failbit);  // Set failbit in case of an invalid enum value
-        }
-        return os;
-    }
 
     /// @returns A vector of buffer types for a given data type.
     /// This information helps how interpret and parse each buffer in an ArrowArray.
