@@ -18,12 +18,10 @@
 #include <iterator>
 #include <memory>
 #include <type_traits>
-#include <utility>  // for std::move
+#include <utility>
 
 namespace sparrow
 {   
-
-
 
     // Custom subrange class without requiring default constructibility
     template <typename Iter, typename Sent = Iter>
@@ -34,7 +32,6 @@ namespace sparrow
         subrange& operator=(const subrange&) = default;
         subrange(subrange&&) = default;
         subrange& operator=(subrange&&) = default;
-
 
         // Constructor taking an iterator and sentinel (or two iterators)
         subrange(Iter first, Sent last) 

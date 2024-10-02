@@ -21,11 +21,9 @@ namespace sparrow
 {
     /// @returns `true` if the number of buffers in an `ArrowArray` for a given data type is valid, `false`
     /// otherwise.
-    //constexpr 
-    inline bool validate_buffers_count(data_type data_type, int64_t n_buffers)
+    constexpr  bool validate_buffers_count(data_type data_type, int64_t n_buffers)
     {
         const std::size_t expected_buffer_count = get_expected_buffer_count(data_type);
-        std::cout<<"expected_buffer_count: "<<expected_buffer_count<<" n_buffers: "<<n_buffers<<std::endl;
         return static_cast<std::size_t>(n_buffers) == expected_buffer_count;
     }
 

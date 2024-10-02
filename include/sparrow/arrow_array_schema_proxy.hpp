@@ -226,6 +226,7 @@ namespace sparrow
          */
         [[nodiscard]] arrow_proxy view();
 
+        private:
 
         std::variant<ArrowArray*, ArrowArray> m_array;
         std::variant<ArrowSchema*, ArrowSchema> m_schema;
@@ -257,7 +258,7 @@ namespace sparrow
 
         [[nodiscard]] ArrowSchema& schema();
         [[nodiscard]] const ArrowSchema& schema() const;
-private:
+
         arrow_schema_private_data* get_schema_private_data();
         arrow_array_private_data* get_array_private_data();
 
