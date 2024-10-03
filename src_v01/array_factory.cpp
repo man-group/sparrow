@@ -10,59 +10,59 @@
 
 namespace sparrow
 {
+
+
+
     cloning_ptr<array_base> array_factory(arrow_proxy proxy)
     {
-        if(proxy.format().size() == 1)
+        const auto dt = proxy.data_type();
+        switch(dt)
         {
-            switch(proxy.format()[0])
-            {
-                case 'n':
-                    return make_cloning_ptr<null_array>(std::move(proxy));
-                case 'b':
-                    return make_cloning_ptr<primitive_array<bool>>(std::move(proxy));
-                case 'c':
-                    return make_cloning_ptr<primitive_array<std::int8_t>>(std::move(proxy));
-                case 'C':
-                    return make_cloning_ptr<primitive_array<std::uint8_t>>(std::move(proxy));
-                case 's':
-                    return make_cloning_ptr<primitive_array<std::int16_t>>(std::move(proxy));
-                case 'S':
-                    return make_cloning_ptr<primitive_array<std::uint16_t>>(std::move(proxy));
-                case 'i':
-                    return make_cloning_ptr<primitive_array<std::int32_t>>(std::move(proxy));
-                case 'I':
-                    return make_cloning_ptr<primitive_array<std::uint32_t>>(std::move(proxy));
-                case 'l':
-                    return make_cloning_ptr<primitive_array<std::int64_t>>(std::move(proxy));
-                case 'L':
-                    return make_cloning_ptr<primitive_array<std::uint64_t>>(std::move(proxy));
-                case 'f':
-                    return make_cloning_ptr<primitive_array<float>>(std::move(proxy));
-                case 'g':
-                    return make_cloning_ptr<primitive_array<double>>(std::move(proxy));
-                default:
-                    throw std::runtime_error(std::string("Unsupported data type: ") + std::string(proxy.format()));
-                
-            }
-        }
-        else{
-            if(proxy.format() == "+l")
-            {
+            case data_type::NA:
+                return make_cloning_ptr<null_array>(std::move(proxy));
+            case data_type::BOOL:
+                return make_cloning_ptr<primitive_array<bool>>(std::move(proxy));
+            case data_type::INT8:
+                return make_cloning_ptr<primitive_array<std::int8_t>>(std::move(proxy));
+            case data_type::UINT8:
+                return make_cloning_ptr<primitive_array<std::uint8_t>>(std::move(proxy));
+            case data_type::INT16:
+                return make_cloning_ptr<primitive_array<std::int16_t>>(std::move(proxy));
+            case data_type::UINT16:
+                return make_cloning_ptr<primitive_array<std::uint16_t>>(std::move(proxy));
+            case data_type::INT32:
+                return make_cloning_ptr<primitive_array<std::int32_t>>(std::move(proxy));
+            case data_type::UINT32:
+                return make_cloning_ptr<primitive_array<std::uint32_t>>(std::move(proxy));
+            case data_type::INT64:
+                return make_cloning_ptr<primitive_array<std::int64_t>>(std::move(proxy));
+            case data_type::UINT64:
+                return make_cloning_ptr<primitive_array<std::uint64_t>>(std::move(proxy));
+            case data_type::FLOAT:
+                return make_cloning_ptr<primitive_array<float>>(std::move(proxy));
+            case data_type::DOUBLE:
+                return make_cloning_ptr<primitive_array<double>>(std::move(proxy));
+            case data_type::LIST:
                 return make_cloning_ptr<list_array>(std::move(proxy));
-            }
-            else if(proxy.format() == "+L")
-            {   
+            case data_type::LARGE_LIST:
                 return make_cloning_ptr<big_list_array>(std::move(proxy));
-            }
-            else if(proxy.format() == "+s")
-            {
+            case data_type::STRUCT:
                 return make_cloning_ptr<struct_array>(std::move(proxy));
-            }
-            else
-            {
-                throw std::runtime_error(std::string("Unsupported data type: ") + std::string(proxy.format()));
-            } 
+            case data_type::STRING:
+            case data_type::FIXED_SIZE_BINARY:
+            case data_type::TIMESTAMP:
+            case data_type::LIST_VIEW:
+            case data_type::LARGE_LIST_VIEW:
+            case data_type::FIXED_SIZED_LIST:
+            case data_type::MAP:
+            case data_type::DENSE_UNION:
+            case data_type::SPARSE_UNION:
+            case data_type::RUN_ENCODED:
+            case data_type::DECIMAL:
+            case data_type::FIXED_WIDTH_BINARY:
+                throw std::runtime_error("not yet supported data type");
+            default:
+                throw std::runtime_error("not yet supported data type");
         }
     }
-    
 }

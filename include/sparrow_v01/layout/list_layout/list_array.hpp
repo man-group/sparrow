@@ -49,6 +49,8 @@ namespace sparrow
     class list_array_impl final : public array_base,
                                   public array_crtp_base<list_array_impl<BIG>>
     {
+        private:
+        constexpr static std::size_t OFFSET_BUFFER_INDEX = 1;
         public:
         using self_type = list_array_impl<BIG>;
         using base_type = array_crtp_base<self_type>;
@@ -80,7 +82,7 @@ namespace sparrow
         explicit list_array_impl(arrow_proxy proxy)
         :   array_base(proxy.data_type()),
             base_type(std::move(proxy)),
-            p_list_offsets(reinterpret_cast<flat_array_offset_type*>(this->storage().buffers()[1].data() + this->storage().offset())),
+            p_list_offsets(reinterpret_cast<flat_array_offset_type*>(this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset())),
             p_flat_array(std::move(array_factory(this->storage().children()[0].view())))
         {
         }
