@@ -62,7 +62,7 @@ namespace sparrow
             case data_type::FIXED_WIDTH_BINARY:
                 throw std::runtime_error("not yet supported data type");
             default:
-                throw std::runtime_error("not yet supported data type");
+                throw std::runtime_error("not supported data type");
         }
     }
 }
