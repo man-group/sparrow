@@ -67,6 +67,48 @@ TEST_SUITE("value_ptr")
         ));
     }
 
+    TEST_CASE("throw_if_invalid_size")
+    {
+        using namespace sparrow;
+        throw_if_invalid_size(0);
+        throw_if_invalid_size(1);
+        throw_if_invalid_size(1024);
+        throw_if_invalid_size(std::numeric_limits<std::int32_t>::max());
+        throw_if_invalid_size(max_arrow_length);
 
+        CHECK_THROWS(throw_if_invalid_size(-1));
+        CHECK_THROWS(throw_if_invalid_size(-1024));
+        CHECK_THROWS(throw_if_invalid_size(std::numeric_limits<std::int32_t>::min()));
+        throw_if_invalid_size(-1, arrow_length_kind::offset);
+        throw_if_invalid_size(-1024, arrow_length_kind::offset);
+        throw_if_invalid_size(std::numeric_limits<std::int32_t>::min(), arrow_length_kind::offset);
+
+        throw_if_invalid_size(std::size_t{0});
+        throw_if_invalid_size(std::size_t{1});
+        throw_if_invalid_size(std::ptrdiff_t{0});
+        throw_if_invalid_size(std::ptrdiff_t{1});
+        throw_if_invalid_size(std::ptrdiff_t{-1}, arrow_length_kind::offset);
+
+        // When not contrained to 32bit length and native offsets can represent less or equal values of arrow
+        // lengh, we check that the native offset types are usable as expected as arrow length.
+        if constexpr (sizeof(std::ptrdiff_t) <= max_arrow_length and config::enable_32bit_size_limit == false)
+        {
+            throw_if_invalid_size(std::numeric_limits<std::ptrdiff_t>::max());
+            throw_if_invalid_size(std::numeric_limits<std::ptrdiff_t>::max(), arrow_length_kind::offset);
+            throw_if_invalid_size(std::numeric_limits<std::ptrdiff_t>::min(), arrow_length_kind::offset);
+        }
+
+        // We always support at least 32bit lengths
+        throw_if_invalid_size(std::size_t(std::numeric_limits<std::int32_t>::max()));
+        throw_if_invalid_size(std::ptrdiff_t(std::numeric_limits<std::int32_t>::max()));
+        throw_if_invalid_size(
+            std::ptrdiff_t(std::numeric_limits<std::int32_t>::max()),
+            arrow_length_kind::offset
+        );
+        throw_if_invalid_size(
+            std::ptrdiff_t(std::numeric_limits<std::int32_t>::min()),
+            arrow_length_kind::offset
+        );
+    }
 
 }
