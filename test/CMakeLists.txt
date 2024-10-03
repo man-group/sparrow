@@ -47,6 +47,7 @@ set(SPARROW_TESTS_SOURCES
     test_arrow_array_schema_utils.cpp
     test_arrow_array.cpp
     test_arrow_schema.cpp
+    test_arrow_length.cpp
     test_bit.cpp
     test_buffer_adaptor.cpp
     test_buffer.cpp
@@ -75,7 +76,7 @@ set(SPARROW_TESTS_SOURCES
 set(test_target "test_sparrow_lib")
 add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
 target_link_libraries(${test_target}
-    PRIVATE 
+    PRIVATE
         sparrow doctest::doctest $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
 include(doctest)

@@ -38,7 +38,37 @@
 #   define SPARROW_API __attribute__((visibility("default")))
 #endif
 
-consteval bool is_apple_compiler()
+namespace sparrow
 {
-    return static_cast<bool>(COMPILING_WITH_APPLE_CLANG);
+    consteval bool is_apple_compiler()
+    {
+        return static_cast<bool>(COMPILING_WITH_APPLE_CLANG);
+    }
+
+    namespace config
+    {
+        inline constexpr bool enable_size_limit_runtime_check =
+#if defined(SPAROW_ENABLE_SIZE_CHECKS)
+#   if SPAROW_ENABLE_SIZE_CHECKS == 1
+            true
+#   else
+            false
+#   endif
+#else
+#   ifndef NDEBUG // if not specified, by default in debug builds, we enable these checks
+            true
+#   else
+            false
+#   endif
+#endif
+            ;
+
+        inline constexpr bool enable_32bit_size_limit =
+#if defined(SPAROW_ENABLE_32BIT_SIZE_LIMIT)
+            true
+#else
+            false
+#endif
+            ;
+    }
 }

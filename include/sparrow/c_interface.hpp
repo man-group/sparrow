@@ -92,10 +92,10 @@ namespace sparrow
     /// through `ArrowArray` and `ArrowSchema`
     struct arrow_data_ownership
     {
-        ///< Specifies if the ownership of the schema data
+        /// Specifies if the ownership of the schema data
         ownership schema = ownership::not_owning;
 
-        ///< Specifies if the ownership of the array data
+        /// Specifies if the ownership of the array data
         ownership array = ownership::not_owning;
     };
 

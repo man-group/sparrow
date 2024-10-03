@@ -51,7 +51,7 @@ namespace sparrow
             auto buffer_data = ad.buffers[0].data<data_type_t>();
             for (std::size_t i = 0; i < lt.size(); ++i)
             {
-                CHECK_EQ(lt[i].value(), buffer_data[i + static_cast<size_t>(ad.offset)]);
+                CHECK_EQ(lt[i].value(), buffer_data[ sum_arrow_offsets<size_t>(i, ad.offset) ]);
             }
         }
 
@@ -65,7 +65,7 @@ namespace sparrow
             auto buffer_data = ad2.buffers[0].data<data_type_t>();
             for (std::size_t i = 0; i < lt.size(); ++i)
             {
-                CHECK_EQ(lt[i].value(), buffer_data[i + static_cast<size_t>(ad2.offset)]);
+                CHECK_EQ(lt[i].value(), buffer_data[ sum_arrow_offsets<size_t>(i, ad2.offset) ]);
             }
         }
 

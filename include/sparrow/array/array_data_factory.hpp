@@ -98,7 +98,7 @@ namespace sparrow
     {
         return {
             .type = data_descriptor(arrow_type_id<null_type>()),
-            .length = static_cast<std::int64_t>(size),
+            .length = to_arrow_length(size),
             .offset = 0,
             .bitmap = {},
             .buffers = {},
@@ -200,7 +200,7 @@ namespace sparrow
 
         return {
             .type = data_descriptor(arrow_type_id<U>()),
-            .length = static_cast<int64_t>(size),
+            .length = to_arrow_length(size),
             .offset = offset,
             .bitmap = detail::make_array_data_bitmap(std::forward<BitmapRange>(bitmap)),
             .buffers = std::move(buffers),
@@ -281,7 +281,7 @@ namespace sparrow
 
         std::vector<array_data::buffer_type> buffers(2);
         buffers[0].resize(sizeof(std::int64_t) * (values_size + 1), 0);
-        size_t acc_size = 0; 
+        size_t acc_size = 0;
         auto bitmap_iter = bitmap.begin();
         auto value_iter = values.begin();
         for(std::size_t i = 0;i < values_size; ++i, ++bitmap_iter, ++value_iter)
@@ -296,8 +296,8 @@ namespace sparrow
         auto iter = buffers[1].begin();
         const auto offsets = buffers[0].data<std::int64_t>();
         offsets[0] = 0;
-        
- 
+
+
         value_iter = values.begin();
         bitmap_iter = bitmap.begin();
         for(std::size_t i = 0; i < values_size; ++i, ++bitmap_iter, ++value_iter)
@@ -308,7 +308,7 @@ namespace sparrow
                 SPARROW_ASSERT_TRUE(
                     std::cmp_less(unwraped_value.size(), std::numeric_limits<std::int64_t>::max())
                 );
-                offsets[i + 1] = offsets[i] + static_cast<std::int64_t>(unwraped_value.size());
+                offsets[i + 1] = offsets[i] + to_arrow_length(unwraped_value.size());
                 std::ranges::copy(unwraped_value, iter);
                 std::advance(iter, unwraped_value.size());
             }
@@ -316,13 +316,13 @@ namespace sparrow
             {
                 offsets[i + 1] = offsets[i];
             }
-        }        
+        }
 
         using T = std::unwrap_ref_decay_t<std::unwrap_ref_decay_t<std::ranges::range_value_t<ValueRange>>>;
         using U = get_corresponding_arrow_type_t<T>;
         return {
             .type = data_descriptor(arrow_type_id<U>()),
-            .length = static_cast<array_data::length_type>(values.size()),
+            .length = to_arrow_length(values.size()),
             .offset = offset,
             .bitmap = detail::make_array_data_bitmap(std::forward<BitmapRange>(bitmap)),
             .buffers = std::move(buffers),
@@ -460,7 +460,7 @@ namespace sparrow
         };
         return {
             .type = data_descriptor(arrow_type_id<std::uint64_t>()),
-            .length = static_cast<array_data::length_type>(indexes.size()),
+            .length = to_arrow_length(indexes.size()),
             .offset = offset,
             .bitmap = detail::make_array_data_bitmap(std::forward<BitmapRange>(bitmap)),
             .buffers = {create_buffer()},
@@ -619,16 +619,16 @@ namespace sparrow
 
     /**
      * \brief Creates a default array_data object with the specified layout and values.
-     * 
+     *
      * @tparam Layout The layout of the array_data object.
      * @tparam T The type of the value to be repeated.
-     * 
+     *
      * @param n The number of times the value should be repeated.
      * @param value The value to be repeated.
      */
     template <arrow_layout Layout, class T>
     requires is_arrow_base_type_extended<std::decay_t<T>>
-    array_data make_default_array_data( 
+    array_data make_default_array_data(
         typename Layout::size_type n
         ,  T && value)
     {

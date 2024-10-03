@@ -141,7 +141,7 @@ namespace sparrow
     {
         // We only require the presence of the bitmap and the first buffer.
         SPARROW_ASSERT_TRUE(buffers_size(storage()) > 0);
-        SPARROW_ASSERT_TRUE(static_cast<size_type>(length(storage())) == sparrow::bitmap(storage()).size())
+        SPARROW_ASSERT_TRUE(to_native_size(length(storage())) == sparrow::bitmap(storage()).size())
     }
 
     template <class T, data_storage DS>
@@ -154,21 +154,21 @@ namespace sparrow
     auto fixed_size_layout<T, DS>::size() const -> size_type
     {
         SPARROW_ASSERT_TRUE(offset(storage()) <= length(storage()));
-        return static_cast<size_type>(length(storage()) - offset(storage()));
+        return sum_arrow_offsets<size_type>(length(storage()), -offset(storage()));
     }
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + static_cast<size_type>(offset(storage()))];
+        return data()[ sum_arrow_offsets<size_type>(i, offset(storage())) ];
     }
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return data()[i + static_cast<size_type>(offset(storage()))];
+        return data()[ sum_arrow_offsets<size_type>(i, offset(storage())) ];
     }
 
     template <class T, data_storage DS>
@@ -238,20 +238,20 @@ namespace sparrow
     auto fixed_size_layout<T, DS>::has_value(size_type i) -> bitmap_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return sparrow::bitmap(storage())[i + static_cast<size_type>(offset(storage()))];
+        return sparrow::bitmap(storage())[ sum_arrow_offsets<size_type>(i, offset(storage())) ];
     }
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::has_value(size_type i) const -> bitmap_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return sparrow::bitmap(storage())[i + static_cast<size_type>(offset(storage()))];
+        return sparrow::bitmap(storage())[ sum_arrow_offsets<size_type>( i, offset(storage())) ];
     }
 
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::value_begin() -> value_iterator
     {
-        return value_iterator{data() + offset(storage())};
+        return value_iterator{data() + to_native_offset(offset(storage()))};
     }
 
     template <class T, data_storage DS>
@@ -263,7 +263,7 @@ namespace sparrow
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator{data() + offset(storage())};
+        return const_value_iterator{data() + to_native_offset(offset(storage()))};
     }
 
     template <class T, data_storage DS>
@@ -275,7 +275,7 @@ namespace sparrow
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::bitmap_begin() -> bitmap_iterator
     {
-        return sparrow::next(sparrow::bitmap(storage()).begin(), offset(storage()));
+        return sparrow::next(sparrow::bitmap(storage()).begin(), to_native_offset(offset(storage())));
     }
 
     template <class T, data_storage DS>
@@ -287,7 +287,7 @@ namespace sparrow
     template <class T, data_storage DS>
     auto fixed_size_layout<T, DS>::bitmap_cbegin() const -> const_bitmap_iterator
     {
-        return sparrow::next(sparrow::bitmap(storage()).cbegin(), offset(storage()));
+        return sparrow::next(sparrow::bitmap(storage()).cbegin(), to_native_offset(offset(storage())));
     }
 
     template <class T, data_storage DS>

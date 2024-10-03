@@ -168,7 +168,7 @@ namespace sparrow
         array.private_data = new arrow_array_private_data(std::move(buffers));
         const auto private_data = static_cast<arrow_array_private_data*>(array.private_data);
         array.buffers = private_data->buffers_ptrs<void>();
-        array.n_children = static_cast<int64_t>(n_children);
+        array.n_children = to_arrow_length(n_children);
         array.children = children;
         array.dictionary = dictionary;
         array.release = release_arrow_array;
@@ -276,7 +276,7 @@ namespace sparrow
     get_arrow_array_buffers(const ArrowArray& array, const ArrowSchema& schema)
     {
         std::vector<sparrow::buffer_view<uint8_t>> buffers;
-        const auto buffer_count = static_cast<size_t>(array.n_buffers);
+        const auto buffer_count = to_native_size(array.n_buffers);
         buffers.reserve(buffer_count);
         const enum data_type data_type = format_to_data_type(schema.format);
         const std::vector<buffer_type> buffers_type = get_buffer_types_from_data_type(data_type);
@@ -286,8 +286,8 @@ namespace sparrow
             auto buffer = array.buffers[i];
             const std::size_t buffer_size = compute_buffer_size(
                 buffer_type,
-                static_cast<size_t>(array.length),
-                static_cast<size_t>(array.offset),
+                to_native_size(array.length),
+                to_native_size(array.offset),
                 data_type
             );
             auto* ptr = static_cast<uint8_t*>(const_cast<void*>(buffer));
@@ -310,7 +310,7 @@ namespace sparrow
         target.n_children = source_array.n_children;
         if (source_array.n_children > 0)
         {
-            target.children = new ArrowArray*[static_cast<std::size_t>(source_array.n_children)];
+            target.children = new ArrowArray*[ to_native_size(source_array.n_children) ];
             for (int64_t i = 0; i < source_array.n_children; ++i)
             {
                 SPARROW_ASSERT_TRUE(source_array.children[i] != nullptr);
@@ -331,7 +331,7 @@ namespace sparrow
         target.n_buffers = source_array.n_buffers;
 
         std::vector<buffer<std::uint8_t>> buffers_copy;
-        buffers_copy.reserve(static_cast<std::size_t>(source_array.n_buffers));
+        buffers_copy.reserve(to_native_size(source_array.n_buffers));
         const auto buffers = get_arrow_array_buffers(source_array, source_schema);
         for (const auto& buffer : buffers)
         {

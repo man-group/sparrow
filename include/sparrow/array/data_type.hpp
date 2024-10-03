@@ -28,7 +28,9 @@ namespace date = std::chrono;
 #include <cstring>
 #include <concepts>
 #include <string>
+#include <utility>
 
+#include "sparrow/config/config.hpp"
 #include "sparrow/layout/list_layout/list_value.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/mp_utils.hpp"
@@ -113,10 +115,149 @@ namespace sparrow
     {
     };
 
-    inline bool operator==(const null_type&, const null_type&)
+    inline bool operator==(const null_type&, const null_type&) noexcept
     {
         return true;
     }
+
+    /// Type representing an Arrow length (sizes, offsets) in the Arrow specification and storage.
+    /// This is used internally but is not always directly convertible to `std::size_t` and `std::ptrdiff_t`
+    /// which are the "native" types to represent sizes and offsets.
+    /// For conversion purposes:
+    /// - @see `to_native_size()`
+    /// - @see `to_native_offset()`
+    /// - @see `to_arrow_length()`
+    /// - @see `sum_arrow_offsets()`
+    using arrow_length = std::int64_t;
+
+    /// Clarifies if a length value is supposed to be a size/length or an offset.
+    /// Offsets can be negative, sizes cannot. This is only important for runtime checks
+    /// and should only be used when calling functions that do runtime checks on sizes
+    /// and offsets values validity.
+    enum class arrow_length_kind
+    {
+        size, offset
+    };
+
+    /// Maximum size allowed for arrow lengths.
+    /// This can be constrained to 32bit signed values using configuration options.
+    /// See: https://arrow.apache.org/docs/format/Columnar.html#array-lengths
+    static constexpr arrow_length max_arrow_length = config::enable_32bit_size_limit
+                                                         ? std::numeric_limits<std::int32_t>::max()
+                                                         : std::numeric_limits<arrow_length>::max();
+
+    /// @returns True if the provided value is in a valid range for an arrow size.
+    ///          By default the range is zero to `max_arrow_length`, but if it is specified
+    ///          that the value is an offset, we allow negatives values too.
+    template <std::integral T>
+    inline constexpr
+    bool is_valid_arrow_length(T size_or_offset, arrow_length_kind kind = arrow_length_kind::size) noexcept
+    {
+        return std::in_range<arrow_length>(size_or_offset)
+           and (kind == arrow_length_kind::offset or size_or_offset >= T(0))
+           and size_or_offset <= max_arrow_length
+           ;
+    }
+
+    /// Throws `std::runtime_error` if the provided value is not in the
+    /// valid range of arrow length values or if the value is not representable
+    /// in the specified `TargetRepr` type.
+    /// The checks is only enabled if `config::enable_size_limit_runtime_check == true`,
+    /// otherwise this function is no-op.
+    template<std::integral TargetRepr = arrow_length>
+    inline constexpr
+    void throw_if_invalid_size(std::integral auto size_or_offset,
+                               arrow_length_kind kind = arrow_length_kind::size)
+    {
+        if constexpr (config::enable_size_limit_runtime_check)
+        {
+            // checks that the value is in range of arrow length in general
+            if (not is_valid_arrow_length(size_or_offset, kind))
+            {
+                throw std::runtime_error(  // TODO: replace by sparrow-specific error
+                    // TODO: use std::format instead once available
+                    std::string("size/length/offset is outside the valid arrow length limits [0:")
+                    + std::to_string(max_arrow_length) + "] : " + std::to_string(size_or_offset) + "("
+                    + typeid(size_or_offset).name() + ") "
+                );
+            }
+
+            if constexpr (not std::same_as<arrow_length, TargetRepr>) // Already checked in `is_valid_size()` otherwise
+            {
+                // check that the value is representable by the specified type TargetRepr
+                if (not std::in_range<TargetRepr>(size_or_offset))
+                {
+                    throw std::runtime_error(  // TODO: replace by sparrow-specific error
+                        // TODO: use std::format instead once available
+                        std::string("size/length/offset cannot be represented by ") + typeid(TargetRepr).name()
+                        + ": " + std::to_string(size_or_offset) + " (" + typeid(size_or_offset).name() + ")"
+                    );
+                }
+            }
+        }
+    }
+
+
+#if defined(__GNUC__) && !defined(__clang__)
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wuseless-cast" // We want to be able to cast type aliases to their real types.
+#endif
+
+    /// @returns The provided arrow length value as represented by the native standard size type `std::size_t`.
+    ///          If `config::enable_size_limit_runtime_check == true` it will also check that the value is
+    ///          a valid arrow length and representable by `std::size_t` or throws otherwise.
+    /// @throws  @see `throw_if_invalid_size()` for details.
+    inline constexpr
+    auto to_native_size(arrow_length length) -> std::size_t
+    {
+        throw_if_invalid_size<std::size_t>(length);
+        return static_cast<std::size_t>(length);
+    }
+
+    /// @returns The provided arrow length value as represented by the native standard offset type `std::ptrdiff_t`.
+    ///          If `config::enable_size_limit_runtime_check == true` it will also check that the value is
+    ///          a valid arrow length and representable by `std::ptrdiff_t` or throws otherwise.
+    /// @throws  @see `throw_if_invalid_size()` for details.
+    inline constexpr
+    auto to_native_offset(arrow_length offset) -> std::ptrdiff_t
+    {
+        throw_if_invalid_size<std::ptrdiff_t>(offset, arrow_length_kind::offset);
+        return static_cast<std::ptrdiff_t>(offset);
+    }
+
+    /// @returns The provided size or offset value as represented by an arrow-length type (int64_t).
+    ///          If `config::enable_size_limit_runtime_check == true` it will also check that the value is
+    ///          a valid arrow length and representable in `int64_t` or throws otherwise.
+    /// @throws  @see `throw_if_invalid_size()` for details.
+    inline constexpr
+    auto
+    to_arrow_length(std::integral auto size_or_offset, arrow_length_kind kind = arrow_length_kind::size)
+        -> arrow_length
+    {
+        throw_if_invalid_size(size_or_offset, kind);
+        return static_cast<arrow_length>(size_or_offset);
+    }
+
+    /// @returns The sum of the provided offsets with `R` representation, whatever the offset types as long as
+    ///          they are integrals and can represent and arrow length.
+    ///          If `config::enable_size_limit_runtime_check == true` it will also check that each value and the resulting sum are
+    ///          valid arrow lengths and representable in the specified result `R` or throws otherwise.
+    /// @throws  @see `throw_if_invalid_size()` for details.
+    template<std::integral R = arrow_length>
+    inline constexpr
+    auto sum_arrow_offsets(std::integral auto... offsets) -> R
+    {
+        // We cast every offset as an arrow length, then sum them as arrow length representation,
+        // and finally cast back to the expected result type after verifying that
+        // the resulting value is still a valid arrow length.
+        auto result = (to_arrow_length(offsets, arrow_length_kind::offset) + ...);
+        throw_if_invalid_size<R>(result, arrow_length_kind::size); // dont allow negatives as the result must be a size
+        return static_cast<R>(result);
+    }
+#if defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC diagnostic pop
+#endif
+
 
     /// Runtime identifier of arrow data types, usually associated with raw bytes with the associated value.
     // TODO: does not support all types specified by the Arrow specification
@@ -312,7 +453,7 @@ namespace sparrow
         }
         mpl::unreachable();
     }
-    
+
     /// @returns The default floating-point `data_type`  that should be associated with the provided type.
     ///          The deduction will be based on the size of the type. Calling this function with unsupported sizes
     ///          will not compile.
@@ -446,35 +587,36 @@ namespace sparrow
     template<std::integral T>
     constexpr size_t primitive_bytes_count(data_type data_type, T length)
     {
+        // TODO: check that the obtained size is not bigger than the limit set by options
         SPARROW_ASSERT_TRUE(data_type_is_primitive(data_type));
+        const auto size = to_native_size(to_arrow_length(length));
         constexpr double bit_per_byte = 8.;
         switch (data_type)
         {
-            
+
             case data_type::BOOL:
-                return static_cast<std::size_t>(std::ceil(static_cast<double>(length) / bit_per_byte));
+                return static_cast<std::size_t>(std::ceil(static_cast<double>(size) / bit_per_byte));
             case data_type::UINT8:
-            // TODO: Replace static_cast<std::size_t> by the 32 bit fix check function
             case data_type::INT8:
-                return static_cast<std::size_t>(length);
+                return size;
             case data_type::UINT16:
-                return (sizeof(std::uint16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::uint16_t) / sizeof(std::uint8_t)) * size;
             case data_type::INT16:
-                return (sizeof(std::int16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::int16_t) / sizeof(std::uint8_t)) * size;
             case data_type::UINT32:
-                return (sizeof(std::uint32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::uint32_t) / sizeof(std::uint8_t)) * size;
             case data_type::INT32:
-                return (sizeof(std::int32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::int32_t) / sizeof(std::uint8_t)) * size;
             case data_type::UINT64:
-                return (sizeof(std::uint64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::uint64_t) / sizeof(std::uint8_t)) * size;
             case data_type::INT64:
-                return (sizeof(std::int64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::int64_t) / sizeof(std::uint8_t)) * size;
             case data_type::HALF_FLOAT:
-                return (sizeof(float16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(float16_t) / sizeof(std::uint8_t)) * size;
             case data_type::FLOAT:
-                return (sizeof(float32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(float32_t) / sizeof(std::uint8_t)) * size;
             case data_type::DOUBLE:
-                return (sizeof(float64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(float64_t) / sizeof(std::uint8_t)) * size;
             default:
                 throw std::runtime_error("Unsupported data type");
         }
@@ -570,6 +712,7 @@ namespace sparrow
         {
         };
     }
+
     /// Matches valid and complete `arrow_traits` specializations for type T.
     /// Every type that needs to be compatible with this library's interface must
     /// provide a specialization of `arrow_traits`
@@ -618,7 +761,7 @@ namespace sparrow
         return arrow_type_id<T>();
     }
 
-    /// @returns Format string matching the arrow data-type mathcing the provided
+    /// @returns Format string matching the arrow data-type matching the provided
     ///          arrow type.
     template <has_arrow_type_traits T>
     constexpr std::string_view data_type_format_of()
@@ -675,4 +818,7 @@ namespace sparrow
 
     template <class T>
     concept layout_offset = std::same_as<T, std::int32_t> || std::same_as<T, std::int64_t>;
+
+
+
 }

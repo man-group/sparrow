@@ -50,6 +50,8 @@ OPTION(BUILD_DOCS  "Build sparrow documentation" OFF)
 OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
 OPTION(BUILD_REFACTORING "Build the refactoring target" OFF)
+OPTION(SPAROW_ENABLE_SIZE_CHECKS "Enables runtime checks that values of sizes/lengths/offsets from the various C++ types are always in range of the supported Arrow lengths" OFF)
+OPTION(SPAROW_ENABLE_32BIT_SIZE_LIMIT "Once enabled, all the sizes are assumed to be in the range of 32bit representation. Can be checked at runtime with `SPAROW_ENABLE_SIZE_CHECKS=ON`" OFF)
 
 include(CheckCXXSymbolExists)
 
@@ -66,6 +68,7 @@ if(LIBCPP)
   # as some formatter for new types.
   add_compile_definitions(_LIBCPP_DISABLE_AVAILABILITY)
 endif()
+
 
 # Linter options
 # =============
@@ -207,6 +210,16 @@ if (BUILD_TESTS)
         add_subdirectory(test_v01)
     endif ()
 endif ()
+
+if (SPAROW_ENABLE_SIZE_CHECKS)
+    target_compile_definitions(sparrow INTERFACE SPAROW_ENABLE_SIZE_CHECKS 1)
+    message("-> sparrow config: size limit runtime checks enabled (SPAROW_ENABLE_SIZE_CHECKS=ON): sizes will be checked at runtime to be between zero and max(in64_t) (or max(int32_t if SPAROW_ENABLE_32BIT_SIZE_LIMIT=ON)")
+endif()
+
+if (SPAROW_ENABLE_32BIT_SIZE_LIMIT)
+    target_compile_definitions(sparrow INTERFACE SPAROW_ENABLE_32BIT_SIZE_LIMIT)
+    message("-> sparrow config: 32bit size limit enabled (SPAROW_ENABLE_32BIT_SIZE_LIMIT=ON): valid size values are restricted to range zero to max(int32_t)")
+endif()
 
 # Docs
 # ====
