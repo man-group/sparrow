@@ -7,7 +7,7 @@
 #include "sparrow_v01/layout/list_layout/list_array.hpp"
 #include "sparrow_v01/layout/struct_layout/struct_array.hpp"
 #include "sparrow_v01/layout/null_array.hpp"
-
+#include "sparrow_v01/layout/variable_size_binary_array.hpp"
 namespace sparrow
 {
 
@@ -49,6 +49,7 @@ namespace sparrow
             case data_type::STRUCT:
                 return make_cloning_ptr<struct_array>(std::move(proxy));
             case data_type::STRING:
+                return make_cloning_ptr<variable_size_binary_array<std::string, std::string_view>>(std::move(proxy));
             case data_type::FIXED_SIZE_BINARY:
             case data_type::TIMESTAMP:
             case data_type::LIST_VIEW:
