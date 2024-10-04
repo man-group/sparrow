@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+
 #include "sparrow_v01/layout/dictionary_encoded_array/dictionary_encoded_array_bitmap_iterator.hpp"
 
 #pragma once
@@ -66,20 +68,21 @@ namespace sparrow
     template <typename KeysArray, typename ValuesArrayBitmapRange>
     size_t dictionary_bitmap<KeysArray, ValuesArrayBitmapRange>::calculate_null_count() const
     {
-        size_t null_count = 0;
-        for (size_t i = 0; i < m_keys->size(); ++i)
-        {
-            const auto index = (*m_keys)[i];
-            if (!index.has_value() || !m_values_bitmap_range[index.value()])
+        return static_cast<size_t>(std::count_if(
+            m_keys->begin(),
+            m_keys->end(),
+            [this](const auto& index)
             {
-                ++null_count;
+                return !index.has_value() || !m_values_bitmap_range[index.value()];
             }
-        }
-        return null_count;
+        ));
     }
 
     template <typename KeysArray, typename ValuesArrayBitmapRange>
-    dictionary_bitmap<KeysArray, ValuesArrayBitmapRange>::dictionary_bitmap(KeysArray& keys, ValuesArrayBitmapRange values_array_bitmap_range)
+    dictionary_bitmap<KeysArray, ValuesArrayBitmapRange>::dictionary_bitmap(
+        KeysArray& keys,
+        ValuesArrayBitmapRange values_array_bitmap_range
+    )
         : m_keys(&keys)
         , m_values_bitmap_range(values_array_bitmap_range)
         , m_null_count(calculate_null_count())

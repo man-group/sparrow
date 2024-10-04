@@ -81,23 +81,10 @@ namespace sparrow
 
     private:
 
-        static auto make_bitmap(arrow_proxy& arrow_proxy) -> bitmap_type
-        {
-            constexpr size_t bitmap_buffer_index = 0;
-            SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
-            const auto bitmap_size = arrow_proxy.length() + arrow_proxy.offset();
-            return bitmap_type(arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size);
-        }
+        static bitmap_type make_bitmap(arrow_proxy& arrow_proxy);
 
-        bitmap_offset<bitmap_type>& get_bitmap()
-        {
-            return m_bitmap_with_offset;
-        }
-
-        const bitmap_offset<bitmap_type>& get_bitmap() const
-        {
-            return m_bitmap_with_offset;
-        }
+        bitmap_offset<bitmap_type>& get_bitmap();
+        const bitmap_offset<bitmap_type>& get_bitmap() const;
 
         using base_type::bitmap_begin;
         using base_type::bitmap_end;
@@ -221,5 +208,26 @@ namespace sparrow
     primitive_array<T>* primitive_array<T>::clone_impl() const
     {
         return new primitive_array<T>(*this);
+    }
+
+    template <class T>
+    auto primitive_array<T>::make_bitmap(arrow_proxy& arrow_proxy) -> bitmap_type
+    {
+        constexpr size_t bitmap_buffer_index = 0;
+        SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
+        const auto bitmap_size = arrow_proxy.length() + arrow_proxy.offset();
+        return bitmap_type(arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size);
+    }
+
+    template <class T>
+    auto primitive_array<T>::get_bitmap() -> bitmap_offset<bitmap_type>&
+    {
+        return m_bitmap_with_offset;
+    }
+
+    template <class T>
+    auto primitive_array<T>::get_bitmap() const -> const bitmap_offset<bitmap_type>&
+    {
+        return m_bitmap_with_offset;
     }
 }

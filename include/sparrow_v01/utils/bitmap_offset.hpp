@@ -97,16 +97,14 @@ namespace sparrow
     template <typename Bitmap>
     size_t bitmap_offset<Bitmap>::calculate_null_count() const
     {
-        size_t null_count = 0;
-        for (size_t i = 0; i < size(); ++i)
-        {
-            if (!test(i))
+        return static_cast<size_t>(std::count_if(
+            cbegin(),
+            cend(),
+            [](const auto& value)
             {
-                ++null_count;
+                return !value;
             }
-        }
-
-        return null_count;
+        ));
     }
 
     template <typename Bitmap>
