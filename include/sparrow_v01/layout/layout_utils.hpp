@@ -23,18 +23,17 @@ namespace sparrow
         //
         // This is usefull to create a iterator over the values of a layout.
         // This functor will be passed to the functor_index_iterator.
-        template<class LAYOUT_TYPE>
+        template<class LAYOUT_TYPE, class VALUE_TYPE>
         class LayoutValueFunctor
         {
             public:
             using layout_type = LAYOUT_TYPE;
-            using value_type = decltype(std::declval<layout_type>().value(0));
-
-            LayoutValueFunctor() = default;
-            LayoutValueFunctor& operator=(LayoutValueFunctor&&) = default;
-            LayoutValueFunctor(const LayoutValueFunctor&) = default;
-            LayoutValueFunctor(LayoutValueFunctor&&) = default;
-            LayoutValueFunctor& operator=(const LayoutValueFunctor&) = default;
+            using value_type = VALUE_TYPE;
+            constexpr LayoutValueFunctor() = default;
+            constexpr LayoutValueFunctor& operator=(LayoutValueFunctor&&) = default;
+            constexpr LayoutValueFunctor(const LayoutValueFunctor&) = default;
+            constexpr LayoutValueFunctor(LayoutValueFunctor&&) = default;
+            constexpr LayoutValueFunctor& operator=(const LayoutValueFunctor&) = default;
 
             constexpr LayoutValueFunctor(layout_type * layout_ptr)
             : p_layout(layout_ptr)

@@ -28,6 +28,16 @@ namespace sparrow
     >
     {
       public:
+
+        class sized_sentinel{
+            public:
+            constexpr sized_sentinel() = default;
+            private:
+            std::uint64_t m_size = 0;
+        };
+
+        using sentinel_type = sized_sentinel;
+
         friend class iterator_access;
         
         using result_type = std::invoke_result_t<FUNCTOR, std::size_t>;
@@ -44,7 +54,7 @@ namespace sparrow
         constexpr functor_index_iterator(self_type&& other) = default;
 
         // move assignment
-        constexpr self_type& operator=(self_type&& other) = delete;
+        constexpr self_type& operator=(self_type&& other) = default; 
 
 
         constexpr functor_index_iterator(FUNCTOR functor, std::size_t index)
@@ -53,11 +63,17 @@ namespace sparrow
         {
         }
 
+        // assignable from sentinel
+        self_type& operator=(sized_sentinel s)
+        {
+            m_index = s.m_size;
+            return *this;
+        }
+
         difference_type distance_to(const self_type& rhs) const
         {
             return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);
         }
-
       private:
 
         result_type  dereference() const
@@ -88,8 +104,33 @@ namespace sparrow
             return m_index < rhs.m_index;
         }
         FUNCTOR m_functor;
-        std::size_t m_index;
+        std::uint64_t m_index;
 
     };
+
+
+    // for sentinel-for concept
+    template<class FUNCTOR>
+    bool operator == (const functor_index_iterator<FUNCTOR>& i,  typename functor_index_iterator<FUNCTOR>::sized_sentinel s)
+    {
+        return i.m_index == s.m_size;
+    }
+
+
+    // for sizes-sentinel-for concept
+    template<class FUNCTOR>
+    std::int64_t operator - (const functor_index_iterator<FUNCTOR>& i,  typename functor_index_iterator<FUNCTOR>::sized_sentinel s)
+    {
+        return static_cast<std::int64_t>(i.m_index) - static_cast<std::int64_t>(s.m_size);
+    }
+
+    template<class FUNCTOR>
+    std::int64_t operator - (typename functor_index_iterator<FUNCTOR>::sized_sentinel s, const functor_index_iterator<FUNCTOR>& i)
+    {
+        return static_cast<std::int64_t>(s.m_size) - static_cast<std::int64_t>(i.m_index);
+    }
+
+
+    
     
 }

@@ -63,6 +63,7 @@ namespace sparrow
     struct array_inner_types_base
     {
         using bitmap_type = dynamic_bitset_view<std::uint8_t>;
+        using const_value_iterator_sentinel_type = std::monostate; 
     };
 
     /**
@@ -108,8 +109,16 @@ namespace sparrow
          
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
-        using const_value_range = subrange<
-            const_value_iterator
+
+        // does the const_value_iterator need a sentinel?
+        using const_value_iterator_sentinel_type = std::conditional_t<
+            std::is_same_v<typename inner_types::const_value_iterator_sentinel_type, std::monostate>,
+            typename inner_types::const_value_iterator,
+            typename inner_types::const_value_iterator_sentinel_type
+        >;
+
+        using const_value_range = std::ranges::subrange<
+            const_value_iterator, const_value_iterator_sentinel_type
         >;
 
         size_type size() const;
