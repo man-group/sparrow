@@ -448,7 +448,6 @@ namespace sparrow
     {
         switch (dt)
         {
-            case data_type::BOOL:
             case data_type::UINT8:
             case data_type::INT8:
             case data_type::UINT16:
