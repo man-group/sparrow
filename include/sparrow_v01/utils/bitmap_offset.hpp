@@ -175,7 +175,7 @@ namespace sparrow
     template <typename Bitmap>
     typename bitmap_offset<Bitmap>::iterator bitmap_offset<Bitmap>::begin()
     {
-        return sparrow::next(bitmap().cbegin(), m_offset);
+        return sparrow::next(bitmap().begin(), m_offset);
     }
 
     template <typename Bitmap>

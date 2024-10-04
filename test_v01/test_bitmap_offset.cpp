@@ -54,28 +54,28 @@ namespace sparrow
         TEST_CASE("size")
         {
             const auto bitset = create_bitset();
-            bitmap_offset bitmap{bitset, 2};
+            const bitmap_offset bitmap{bitset, 2};
             CHECK_EQ(bitmap.size(), 13);
         }
 
         TEST_CASE("empty")
         {
             const auto bitset = create_bitset();
-            bitmap_offset bitmap{bitset, 2};
+            const bitmap_offset bitmap{bitset, 2};
             CHECK_FALSE(bitmap.empty());
         }
 
         TEST_CASE("null_count")
         {
             const auto bitset = create_bitset();
-            bitmap_offset bitmap{bitset, 2};
+            const bitmap_offset bitmap{bitset, 2};
             CHECK_EQ(bitmap.null_count(), 2);
         }
 
         TEST_CASE("test")
         {
             const auto bitset = create_bitset();
-            bitmap_offset bitmap{bitset, 2};
+            const bitmap_offset bitmap{bitset, 2};
             CHECK(bitmap.test(0));
             CHECK(bitmap.test(1));
             CHECK(bitmap.test(2));
@@ -173,23 +173,166 @@ namespace sparrow
             }
         }
 
-        // TEST_CASE("begin")
-        // {
-        //     const auto bitset = create_bitset();
-        //     bitmap_offset bitmap{bitset, 2};
-        //     auto citer = bitmap.begin();
-        //     CHECK(*citer);
-        //     citer++;
-        //     CHECK(*citer);
-        //     citer++;
-        //     CHECK_FALSE(*citer);
-        //     citer++;
-        //     CHECK(*citer);
-        //     citer++;
-        //     CHECK_FALSE(*citer);
-        //     citer++;
-        //     CHECK(*citer);
-        //     citer++;
-        // }
+        TEST_CASE("begin")
+        {
+            SUBCASE("mutable")
+            {
+                auto bitset = create_bitset();
+                bitmap_offset bitmap{bitset, 2};
+                auto iter = bitmap.begin();
+                CHECK(*iter);
+            }
+
+            SUBCASE("const")
+            {
+                const auto bitset = create_bitset();
+                const bitmap_offset bitmap{bitset, 2};
+                auto iter = bitmap.begin();
+                CHECK(*iter);
+            }
+        }
+
+        TEST_CASE("end")
+        {
+            SUBCASE("mutable")
+            {
+                auto bitset = create_bitset();
+                bitmap_offset bitmap{bitset, 2};
+                auto iter = bitmap.end();
+                CHECK_FALSE(*iter);
+            }
+
+            SUBCASE("const")
+            {
+                const auto bitset = create_bitset();
+                const bitmap_offset bitmap{bitset, 2};
+                auto iter = bitmap.end();
+                CHECK_FALSE(*iter);
+            }
+        }
+
+        TEST_CASE("cbegin")
+        {
+            const auto bitset = create_bitset();
+            bitmap_offset bitmap{bitset, 2};
+            auto iter = bitmap.cbegin();
+            CHECK(*iter);
+        }
+
+        TEST_CASE("cend")
+        {
+            const auto bitset = create_bitset();
+            bitmap_offset bitmap{bitset, 2};
+            auto iter = bitmap.cend();
+            CHECK_FALSE(*iter);
+        }
+
+        TEST_CASE("front")
+        {
+            SUBCASE("mutable")
+            {
+                auto bitset = create_bitset();
+                bitmap_offset bitmap{bitset, 2};
+                CHECK(bitmap.front());
+            }
+
+            SUBCASE("const")
+            {
+                const auto bitset = create_bitset();
+                const bitmap_offset bitmap{bitset, 2};
+                CHECK(bitmap.front());
+            }
+        }
+
+        TEST_CASE("back")
+        {
+            SUBCASE("mutable")
+            {
+                auto bitset = create_bitset();
+                bitmap_offset bitmap{bitset, 2};
+                CHECK(bitmap.back());
+            }
+
+            SUBCASE("const")
+            {
+                const auto bitset = create_bitset();
+                const bitmap_offset bitmap{bitset, 2};
+                CHECK(bitmap.back());
+            }
+        }
+
+        TEST_CASE("iterator")
+        {
+            auto bitset = create_bitset();
+            bitmap_offset bitmap{bitset, 2};
+            auto iter = bitmap.begin();
+            CHECK(*iter);
+            ++iter;
+            CHECK(*iter);
+            ++iter;
+        }
+
+        TEST_CASE("const_iterator")
+        {
+            const auto bitset = create_bitset();
+            const bitmap_offset bitmap{bitset, 2};
+            auto iter = bitmap.begin();
+            CHECK(*iter);
+            ++iter;
+            CHECK(*iter);
+            ++iter;
+        }
+
+        TEST_CASE("equality")
+        {
+            const auto bitset = create_bitset();
+            const bitmap_offset bitmap{bitset, 2};
+            auto iter = bitmap.begin();
+            CHECK_EQ(iter, bitmap.begin());
+            CHECK_NE(iter, bitmap.end());
+        }
+
+        TEST_CASE("ordering")
+        {
+            const auto bitset = create_bitset();
+            const bitmap_offset bitmap{bitset, 2};
+            CHECK_LT(bitmap.begin(), bitmap.end());
+            CHECK_LE(bitmap.begin(), bitmap.end());
+            CHECK_GT(bitmap.end(), bitmap.begin());
+            CHECK_GE(bitmap.end(), bitmap.begin());
+        }
+
+        TEST_CASE("increment")
+        {
+            const auto bitset = create_bitset();
+            const bitmap_offset bitmap{bitset, 2};
+            auto iter = bitmap.begin();
+            CHECK(*iter++);
+            CHECK(*iter++);
+            CHECK(*iter++);
+            CHECK_FALSE(*iter++);
+        }
+
+        TEST_CASE("decrement")
+        {
+            const auto bitset = create_bitset();
+            const bitmap_offset bitmap{bitset, 2};
+            auto iter = bitmap.end();
+            CHECK(*--iter);
+            CHECK(*--iter);
+            CHECK_FALSE(*--iter);
+            CHECK_EQ(*--iter, true);
+        }
+
+        TEST_CASE("advance")
+        {
+            const auto bitset = create_bitset();
+            const bitmap_offset bitmap{bitset, 2};
+            auto iter = bitmap.begin();
+            iter += 3;
+            CHECK_EQ(*iter, false);
+            iter -= 2;
+            CHECK_EQ(*iter, true);
+        }
     }
 }
