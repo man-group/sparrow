@@ -16,7 +16,10 @@
 
 #include <optional>
 #include <string>
+#include <type_traits>
+
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -63,14 +66,46 @@ namespace sparrow
         MetadataType m_metadata;
     };
 
+    template <class T>
+    constexpr std::optional<std::string> to_optional_string(T&& t)
+    {
+        if constexpr (std::same_as<std::remove_cvref_t<T>, std::string>)
+        {
+            return std::forward<T>(t);
+        }
+        else if constexpr (std::same_as<std::nullopt_t, T>)
+        {
+            return std::nullopt;
+        }
+        else if constexpr (std::is_pointer_v<T>)
+        {
+            if (t == nullptr)
+            {
+                return std::nullopt;
+            }
+            else
+            {
+                return std::string(t);
+            }
+        }
+        else if constexpr (std::ranges::range<T>)
+        {
+            return std::string(t.cbegin(), t.cend());
+        }
+        else
+        {
+            mpl::unreachable();
+        }
+    }
+
     template <class F, class N, class M>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                      && std::constructible_from<arrow_schema_private_data::NameType, N>
                      && std::constructible_from<arrow_schema_private_data::MetadataType, M>
     arrow_schema_private_data::arrow_schema_private_data(F format, N name, M metadata)
         : m_format(std::move(format))
-        , m_name(std::move(name))
-        , m_metadata(std::move(metadata))
+        , m_name(to_optional_string(std::forward<N>(name)))
+        , m_metadata(to_optional_string(std::forward<M>(metadata)))
     {
         SPARROW_ASSERT_TRUE(!m_format.empty())
     }

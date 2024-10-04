@@ -14,8 +14,13 @@
 
 #pragma once
 
+#include <algorithm>
+
 #include "sparrow/array/data_type.hpp"
+#include "sparrow/buffer/buffer_adaptor.hpp"
+#include "sparrow/buffer/buffer_view.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
@@ -51,6 +56,7 @@ namespace sparrow
             case data_type::DECIMAL:
             case data_type::FIXED_WIDTH_BINARY:
             case data_type::STRING:
+            case data_type::BINARY:
                 return 0;
             case data_type::LIST:
             case data_type::LARGE_LIST:
@@ -80,10 +86,7 @@ namespace sparrow
         // return buffers_count_valid //&& children_count_valid;
     }
 
-    /**
-     * @brief The type of buffer in an ArrowArray.
-     */
-    enum class buffer_type
+    enum class buffer_type : uint8_t
     {
         VALIDITY,
         DATA,
@@ -119,6 +122,7 @@ namespace sparrow
             case data_type::DECIMAL:
             case data_type::FIXED_WIDTH_BINARY:
                 return {buffer_type::VALIDITY, buffer_type::DATA};
+            case data_type::BINARY:
             case data_type::STRING:
                 return {buffer_type::VALIDITY, buffer_type::OFFSETS_32BIT, buffer_type::DATA};
             case data_type::LIST:
@@ -144,8 +148,19 @@ namespace sparrow
         mpl::unreachable();
     }
 
+    constexpr size_t get_buffer_type_index(data_type data_type, buffer_type buffer_type)
+    {
+        const auto buffer_types = get_buffer_types_from_data_type(data_type);
+        const auto it = std::find(buffer_types.begin(), buffer_types.end(), buffer_type);
+        if (it == buffer_types.end())
+        {
+            throw std::runtime_error("Unsupported buffer type");
+        }
+        return static_cast<size_t>(std::distance(buffer_types.begin(), it));
+    }
+
     /// @returns The expected offset element count for a given data type and array length.
-    constexpr std::size_t get_offset_buffer_size(data_type data_type, size_t length, size_t offset)
+    constexpr std::size_t get_offset_element_count(data_type data_type, size_t length, size_t offset)
     {
         switch (data_type)
         {
@@ -162,22 +177,51 @@ namespace sparrow
         }
     }
 
-    /// @returns The number of bytes required according to the provided buffer type, length, offset and data type.
-    constexpr std::size_t compute_buffer_size(buffer_type buffer_type, size_t length, size_t offset, enum data_type data_type)
+    /// @returns The number of bytes required according to the provided buffer type, length, offset and data
+    /// type.
+    inline std::size_t compute_buffer_size(
+        buffer_type bt,
+        size_t length,
+        size_t offset,
+        data_type dt,
+        const std::vector<sparrow::buffer_view<uint8_t>>& previous_buffers,
+        buffer_type previous_buffer_type
+    )
     {
         constexpr double bit_per_byte = 8.;
-        switch (buffer_type)
+        switch (bt)
         {
             case buffer_type::VALIDITY:
                 return static_cast<std::size_t>(std::ceil(static_cast<double>(length + offset) / bit_per_byte));
             case buffer_type::DATA:
-                return primitive_bytes_count(data_type, length + offset);
+                if (bt == buffer_type::DATA && (dt == data_type::STRING || dt == data_type::BINARY))
+                {
+                    SPARROW_ASSERT_TRUE(
+                        previous_buffer_type == buffer_type::OFFSETS_32BIT
+                        || previous_buffer_type == buffer_type::OFFSETS_64BIT
+                    );
+                    if (previous_buffers.back().empty())
+                    {
+                        return 0;
+                    }
+                    else if (previous_buffer_type == buffer_type::OFFSETS_32BIT)
+                    {
+                        const auto offset_buf = make_buffer_adaptor<int32_t>(previous_buffers.back());
+                        return static_cast<std::size_t>(offset_buf.back());
+                    }
+                    else
+                    {
+                        const auto offset_buf = make_buffer_adaptor<int64_t>(previous_buffers.back());
+                        return static_cast<std::size_t>(offset_buf.back());
+                    }
+                }
+                return primitive_bytes_count(dt, length + offset);
             case buffer_type::OFFSETS_32BIT:
             case buffer_type::SIZES_32BIT:
-                return get_offset_buffer_size(data_type, length, offset) * sizeof(std::int32_t);
+                return get_offset_element_count(dt, length, offset) * sizeof(std::int32_t);
             case buffer_type::OFFSETS_64BIT:
             case buffer_type::SIZES_64BIT:
-                return get_offset_buffer_size(data_type, length, offset) * sizeof(std::int64_t);
+                return get_offset_element_count(dt, length, offset) * sizeof(std::int64_t);
             case buffer_type::VIEWS:
                 // TODO: Implement
                 SPARROW_ASSERT(false, "Not implemented");

@@ -17,6 +17,7 @@
 #include <chrono>
 #include <version>
 
+
 #if defined(SPARROW_USE_DATE_POLYFILL)
 #    include <date/tz.h>
 #else
@@ -121,7 +122,7 @@ namespace sparrow
     /// Runtime identifier of arrow data types, usually associated with raw bytes with the associated value.
     // TODO: does not support all types specified by the Arrow specification
     // yet
-    enum class data_type
+    enum class data_type : uint8_t
     {
         NA = 0,
         BOOL = 1,
@@ -139,7 +140,7 @@ namespace sparrow
         // UTF8 variable-length string
         STRING = 13,
         // Variable-length bytes (no guarantee of UTF8-ness)
-        // BINARY = 14,
+        BINARY = 14,
         // Fixed-size binary. Each value occupies the same number of bytes
         FIXED_SIZE_BINARY = 15,
         // Number of nanoseconds since the UNIX epoch with an optional timezone.
@@ -201,7 +202,7 @@ namespace sparrow
                     return data_type::STRING;
                 case 'z':  // binary
                 case 'Z':  // large binary
-                    return data_type::FIXED_SIZE_BINARY;
+                    return data_type::BINARY;
                 default:
                     return data_type::NA;
             }
@@ -304,6 +305,7 @@ namespace sparrow
             case data_type::DENSE_UNION:
                 return 2;
             case data_type::STRING:
+            case data_type::BINARY:
             case data_type::FIXED_SIZE_BINARY:
             case data_type::TIMESTAMP:
             case data_type::LIST_VIEW:
@@ -405,7 +407,7 @@ namespace sparrow
                 return "g";
             case data_type::STRING:
                 return "u";
-            case data_type::FIXED_SIZE_BINARY:
+            case data_type::BINARY:
                 return "z";
             case data_type::TIMESTAMP:
                 return "tDm";
@@ -444,37 +446,36 @@ namespace sparrow
 
     /// @returns The number of bytes required to store the provided primitive data type.
     template<std::integral T>
-    constexpr size_t primitive_bytes_count(data_type data_type, T length)
+    constexpr size_t primitive_bytes_count(data_type data_type, T size)
     {
         SPARROW_ASSERT_TRUE(data_type_is_primitive(data_type));
         constexpr double bit_per_byte = 8.;
         switch (data_type)
         {
-            
             case data_type::BOOL:
-                return static_cast<std::size_t>(std::ceil(static_cast<double>(length) / bit_per_byte));
+                return static_cast<std::size_t>(std::ceil(static_cast<double>(size) / bit_per_byte));
             case data_type::UINT8:
             // TODO: Replace static_cast<std::size_t> by the 32 bit fix check function
             case data_type::INT8:
-                return static_cast<std::size_t>(length);
+                return static_cast<std::size_t>(size);
             case data_type::UINT16:
-                return (sizeof(std::uint16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::uint16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
             case data_type::INT16:
-                return (sizeof(std::int16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::int16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
             case data_type::UINT32:
-                return (sizeof(std::uint32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::uint32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
             case data_type::INT32:
-                return (sizeof(std::int32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::int32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
             case data_type::UINT64:
-                return (sizeof(std::uint64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::uint64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
             case data_type::INT64:
-                return (sizeof(std::int64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(std::int64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
             case data_type::HALF_FLOAT:
-                return (sizeof(float16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(float16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
             case data_type::FLOAT:
-                return (sizeof(float32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(float32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
             case data_type::DOUBLE:
-                return (sizeof(float64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(length);
+                return (sizeof(float64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
             default:
                 throw std::runtime_error("Unsupported data type");
         }
