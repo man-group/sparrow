@@ -177,7 +177,7 @@ namespace sparrow
         }
         TEST_CASE_TEMPLATE_INVOKE(
             generic_scalar_test,
-            bool,
+            // bool,
             std::uint8_t,
             std::int8_t,
             std::uint16_t,

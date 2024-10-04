@@ -237,7 +237,7 @@ namespace sparrow
         {
             constexpr size_t bitmap_buffer_index = 0;
             SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
-            const auto bitmap_size = static_cast<std::size_t>(arrow_proxy.length() + arrow_proxy.offset());
+            const auto bitmap_size = arrow_proxy.length() + arrow_proxy.offset();
             return bitmap_type(arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size);
         }
 
