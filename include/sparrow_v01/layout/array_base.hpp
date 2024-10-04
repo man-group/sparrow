@@ -23,6 +23,7 @@
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -63,7 +64,7 @@ namespace sparrow
     struct array_inner_types_base
     {
         using bitmap_type = dynamic_bitset_view<std::uint8_t>;
-        using const_value_iterator_sentinel_type = std::monostate; 
+        using const_value_iterator_sentinel_type = mpl::placeholder_type;
     };
 
     /**
@@ -110,11 +111,11 @@ namespace sparrow
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
 
-        // does the const_value_iterator need a sentinel?
-        using const_value_iterator_sentinel_type = std::conditional_t<
-            std::is_same_v<typename inner_types::const_value_iterator_sentinel_type, std::monostate>,
-            typename inner_types::const_value_iterator,
-            typename inner_types::const_value_iterator_sentinel_type
+        // does the const_value_iterator need a special sentinel type or is 
+        // the iterator itself fine as a sentinel
+        using const_value_iterator_sentinel_type = mpl::replace_if_placeholder_t<
+            typename inner_types::const_value_iterator_sentinel_type,
+            const_value_iterator
         >;
 
         using const_value_range = std::ranges::subrange<
@@ -134,25 +135,16 @@ namespace sparrow
 
         const_bitmap_range bitmap() const;
         const_value_range values() const;
-        reference operator[](size_type i){
-            return reference(
-                inner_reference(derived_cast().value(i)),
-                derived_cast().has_value(i)
-            );
-        }
-        const_reference operator[](size_type i) const{
-            return const_reference(
-                inner_const_reference(derived_cast().value(i)),
-                derived_cast().has_value(i)
-            );
-        }
-        const arrow_proxy& storage() const;
-        arrow_proxy& storage();
+        reference operator[](size_type i);
+        const_reference operator[](size_type i) const;
+
     protected:
 
         array_crtp_base(arrow_proxy);
         array_crtp_base(const array_crtp_base&);
 
+        const arrow_proxy& storage() const;
+        arrow_proxy& storage();
 
         bitmap_reference has_value(size_type i);
         bitmap_const_reference has_value(size_type i) const;
@@ -255,6 +247,24 @@ namespace sparrow
     auto array_crtp_base<D>::values() const -> const_value_range
     {
         return const_value_range(derived_cast().value_cbegin(), derived_cast().value_cend());
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::operator[](size_type i) -> reference
+    {
+        return reference(
+            inner_reference(derived_cast().value(i)),
+            derived_cast().has_value(i)
+        );
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::operator[](size_type i) const -> const_reference
+    {
+        return const_reference(
+            inner_const_reference(derived_cast().value(i)),
+            derived_cast().has_value(i)
+        );
     }
 
     template <class D>

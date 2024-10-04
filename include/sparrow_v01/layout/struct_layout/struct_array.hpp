@@ -36,8 +36,8 @@ namespace sparrow
         using inner_value_type = struct_value;
         using inner_reference  = struct_value;
         using inner_const_reference = struct_value;
-        using value_iterator = functor_index_iterator<detail::LayoutValueFunctor<array_type, inner_value_type>>;
-        using const_value_iterator = functor_index_iterator<detail::LayoutValueFunctor<const array_type, inner_value_type>>;
+        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
+        using const_value_iterator = functor_index_iterator<detail::layout_value_functor<const array_type, inner_value_type>>;
         using const_value_iterator_sentinel_type = typename const_value_iterator::sentinel_type;
         using iterator_tag = std::random_access_iterator_tag;
     };
@@ -45,7 +45,7 @@ namespace sparrow
     class struct_array final : public array_base,
                                   public array_crtp_base<struct_array>
     {
-        public:
+    public:
         using self_type = struct_array;
         using base_type = array_crtp_base<self_type>;
         using inner_types = array_inner_types<self_type>;
@@ -67,55 +67,21 @@ namespace sparrow
         using iterator_tag = std::contiguous_iterator_tag;
 
 
-        explicit struct_array(arrow_proxy proxy)
-        :   array_base(proxy.data_type()),
-            base_type(std::move(proxy)),
-            m_children(this->storage().children().size(), nullptr)
-        {
-            for(std::size_t i = 0; i < m_children.size(); ++i){
-                m_children[i] = array_factory(this->storage().children()[i].view());
-            }
-        }
-        
+        explicit struct_array(arrow_proxy proxy);
         virtual ~struct_array() = default;
         struct_array(const struct_array& rhs) = default;
-
-        struct_array* clone_impl() const override{
-            return new struct_array(*this);
-        }
-
-        const array_base * raw_child(std::size_t i) const{
-            return m_children[i].get();
-        }
-        array_base * raw_child(std::size_t i){
-            return m_children[i].get();
-        }
+        struct_array* clone_impl() const override;
+        const array_base * raw_child(std::size_t i) const;
+        array_base * raw_child(std::size_t i);
         
-        private:
+    private:
 
-        value_iterator value_begin(){
-            return value_iterator(detail::LayoutValueFunctor<self_type, inner_value_type>(this), 0);
-        }
-        
-        value_iterator value_end(){
-            return value_iterator(detail::LayoutValueFunctor<self_type, inner_value_type>(this), this->size());
-        }
-
-        const_value_iterator value_cbegin() const{
-            return const_value_iterator(detail::LayoutValueFunctor<const self_type, inner_value_type>(this), 0);
-        }
-
-        const_value_iterator value_cend() const{
-            return const_value_iterator(detail::LayoutValueFunctor<const self_type, inner_value_type>(this), this->size());
-        }
-
-        inner_reference value(size_type i){
-            return  struct_value{m_children, i};
-        }
-
-        inner_const_reference value(size_type i) const{
-            return struct_value{m_children, i};
-        }
+        value_iterator value_begin();
+        value_iterator value_end();
+        const_value_iterator value_cbegin() const;
+        const_value_iterator value_cend() const;
+        inner_reference value(size_type i);
+        inner_const_reference value(size_type i) const;
         
         // data members
         std::vector<cloning_ptr<array_base>> m_children;
@@ -124,7 +90,64 @@ namespace sparrow
         friend class array_crtp_base<self_type>;
 
         // needs access to this->value(i)
-        friend class detail::LayoutValueFunctor<self_type, inner_value_type>;
-        friend class detail::LayoutValueFunctor<const self_type, inner_value_type>;
+        friend class detail::layout_value_functor<self_type, inner_value_type>;
+        friend class detail::layout_value_functor<const self_type, inner_value_type>;
     };
+
+
+
+    inline struct_array::struct_array(arrow_proxy proxy)
+    :   array_base(proxy.data_type()),
+        base_type(std::move(proxy)),
+        m_children(this->storage().children().size(), nullptr)
+    {
+        for(std::size_t i = 0; i < m_children.size(); ++i){
+            m_children[i] = array_factory(this->storage().children()[i].view());
+        }
+    }
+    
+    inline auto struct_array::clone_impl() const -> struct_array*
+    {
+        return new struct_array(*this);
+    }
+
+    inline auto struct_array::raw_child(std::size_t i) const -> const array_base *
+    {
+        return m_children[i].get();
+    }
+
+    inline auto struct_array::raw_child(std::size_t i) -> array_base *  
+    {
+        return m_children[i].get();
+    }
+    
+    inline auto struct_array::value_begin() -> value_iterator
+    {
+        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), 0);
+    }
+    
+    inline auto struct_array::value_end()-> value_iterator
+    {
+        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), this->size());
+    }
+
+    inline auto struct_array::value_cbegin() const -> const_value_iterator
+    {
+        return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), 0);
+    }
+
+    inline auto struct_array::value_cend() const -> const_value_iterator
+    {
+        return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), this->size());
+    }
+
+    inline auto struct_array::value(size_type i)-> inner_reference
+    {
+        return  struct_value{m_children, i};
+    }
+
+    inline auto struct_array::value(size_type i) const -> inner_const_reference
+    {
+        return struct_value{m_children, i};
+    }
 }

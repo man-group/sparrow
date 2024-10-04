@@ -101,6 +101,12 @@ namespace sparrow
                         CHECK((*flat_values_casted)[static_cast<std::uint64_t>(i)].value() == i);
                     }
                 }
+                else
+                {
+                    for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
+                        CHECK((*flat_values_casted)[static_cast<std::uint64_t>(i)].value() == doctest::Approx(static_cast<double>(i)));
+                    }
+                }
             }
               
         }

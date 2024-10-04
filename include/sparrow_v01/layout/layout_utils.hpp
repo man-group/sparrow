@@ -16,35 +16,34 @@
 
 #include "sparrow_v01/utils/functor_index_iterator.hpp"
 
-namespace sparrow
+namespace sparrow::detail
 {
-    namespace detail{
-        // Functor to get the value of the layout at index i.
-        //
-        // This is usefull to create a iterator over the values of a layout.
-        // This functor will be passed to the functor_index_iterator.
-        template<class LAYOUT_TYPE, class VALUE_TYPE>
-        class LayoutValueFunctor
-        {
-            public:
-            using layout_type = LAYOUT_TYPE;
-            using value_type = VALUE_TYPE;
-            constexpr LayoutValueFunctor() = default;
-            constexpr LayoutValueFunctor& operator=(LayoutValueFunctor&&) = default;
-            constexpr LayoutValueFunctor(const LayoutValueFunctor&) = default;
-            constexpr LayoutValueFunctor(LayoutValueFunctor&&) = default;
-            constexpr LayoutValueFunctor& operator=(const LayoutValueFunctor&) = default;
+    // Functor to get the value of the layout at index i.
+    //
+    // This is usefull to create a iterator over the values of a layout.
+    // This functor will be passed to the functor_index_iterator.
+    template<class LAYOUT_TYPE, class VALUE_TYPE>
+    class layout_value_functor
+    {
+        public:
+        using layout_type = LAYOUT_TYPE;
+        using value_type = VALUE_TYPE;
+        constexpr layout_value_functor() = default;
+        constexpr layout_value_functor& operator=(layout_value_functor&&) = default;
+        constexpr layout_value_functor(const layout_value_functor&) = default;
+        constexpr layout_value_functor(layout_value_functor&&) = default;
+        constexpr layout_value_functor& operator=(const layout_value_functor&) = default;
 
-            constexpr LayoutValueFunctor(layout_type * layout_ptr)
-            : p_layout(layout_ptr)
-            {
-            }
-            value_type operator()(std::size_t i) const
-            {
-                return p_layout->value(i);
-            }
-            private:
-            layout_type * p_layout = nullptr;
-        };
-    }
-};
+        constexpr layout_value_functor(layout_type * layout_ptr)
+        : p_layout(layout_ptr)
+        {
+        }
+        value_type operator()(std::size_t i) const
+        {
+            return p_layout->value(i);
+        }
+        private:
+        layout_type * p_layout = nullptr;
+    };
+
+}; // namespace sparrow::detail
