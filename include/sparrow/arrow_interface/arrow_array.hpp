@@ -279,7 +279,7 @@ namespace sparrow
         const auto buffer_count = static_cast<size_t>(array.n_buffers);
         buffers.reserve(buffer_count);
         const enum data_type data_type = format_to_data_type(schema.format);
-        const std::span<const buffer_type> buffers_type = get_buffer_types_from_data_type(data_type);
+        const auto buffers_type = get_buffer_types_from_data_type(data_type);
         for (std::size_t i = 0; i < buffer_count; ++i)
         {
             const auto buffer_type = buffers_type[i];

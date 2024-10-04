@@ -94,46 +94,9 @@ namespace sparrow
         SIZES_64BIT,
     };
 
-    constexpr std::array<buffer_type, 2> buffers_types_validity_data{buffer_type::VALIDITY, buffer_type::DATA};
-    constexpr std::array<buffer_type, 2> buffers_types_validity_offset32{
-        buffer_type::VALIDITY,
-        buffer_type::OFFSETS_32BIT
-    };
-    constexpr std::array<buffer_type, 2> buffers_types_validity_offset64{
-        buffer_type::VALIDITY,
-        buffer_type::OFFSETS_64BIT
-    };
-    constexpr std::array<buffer_type, 3> buffers_types_validity_offsets32_data{
-        buffer_type::VALIDITY,
-        buffer_type::OFFSETS_32BIT,
-        buffer_type::DATA
-    };
-    constexpr std::array<buffer_type, 3> buffers_types_validity_offsets64_data{
-        buffer_type::VALIDITY,
-        buffer_type::OFFSETS_64BIT,
-        buffer_type::DATA
-    };
-    constexpr std::array<buffer_type, 3> buffers_types_validity_offsets32_sizes32{
-        buffer_type::VALIDITY,
-        buffer_type::OFFSETS_32BIT,
-        buffer_type::SIZES_32BIT
-    };
-    constexpr std::array<buffer_type, 3> buffers_types_validity_offsets64_sizes64{
-        buffer_type::VALIDITY,
-        buffer_type::OFFSETS_64BIT,
-        buffer_type::SIZES_64BIT
-    };
-    constexpr std::array<buffer_type, 1> buffers_types_validity{buffer_type::VALIDITY};
-    constexpr std::array<buffer_type, 1> buffers_types_types_ids{buffer_type::TYPE_IDS};
-    constexpr std::array<buffer_type, 2> buffers_types_types_ids_offset32{
-        buffer_type::TYPE_IDS,
-        buffer_type::OFFSETS_32BIT
-    };
-    constexpr std::array<buffer_type, 0> buffers_types_empty{};
-
     /// @returns A vector of buffer types for a given data type.
     /// This information helps how interpret and parse each buffer in an ArrowArray.
-    constexpr std::span<const buffer_type> get_buffer_types_from_data_type(data_type data_type)
+    constexpr std::vector<buffer_type> get_buffer_types_from_data_type(data_type data_type)
     {
         switch (data_type)
         {
@@ -153,29 +116,29 @@ namespace sparrow
             case data_type::FIXED_SIZE_BINARY:
             case data_type::DECIMAL:
             case data_type::FIXED_WIDTH_BINARY:
-                return buffers_types_validity_data;
+                return {buffer_type::VALIDITY, buffer_type::DATA};
             case data_type::BINARY:
             case data_type::STRING:
-                return buffers_types_validity_offsets32_data;
+                return {buffer_type::VALIDITY, buffer_type::OFFSETS_32BIT, buffer_type::DATA};
             case data_type::LIST:
-                return buffers_types_validity_offset32;
+                return {buffer_type::VALIDITY, buffer_type::OFFSETS_32BIT};
             case data_type::LARGE_LIST:
-                return buffers_types_validity_offset64;
+                return {buffer_type::VALIDITY, buffer_type::OFFSETS_64BIT};
             case data_type::LIST_VIEW:
-                return buffers_types_validity_offsets32_sizes32;
+                return {buffer_type::VALIDITY, buffer_type::OFFSETS_32BIT, buffer_type::SIZES_32BIT};
             case data_type::LARGE_LIST_VIEW:
-                return buffers_types_validity_offsets64_sizes64;
+                return {buffer_type::VALIDITY, buffer_type::OFFSETS_64BIT, buffer_type::SIZES_64BIT};
             case data_type::FIXED_SIZED_LIST:
             case data_type::STRUCT:
-                return buffers_types_validity;
+                return {buffer_type::VALIDITY};
             case data_type::SPARSE_UNION:
-                return buffers_types_types_ids;
+                return {buffer_type::TYPE_IDS};
             case data_type::DENSE_UNION:
-                return buffers_types_types_ids_offset32;
+                return {buffer_type::TYPE_IDS, buffer_type::OFFSETS_32BIT};
             case data_type::NA:
             case data_type::MAP:
             case data_type::RUN_ENCODED:
-                return buffers_types_empty;
+                return {};
         }
         mpl::unreachable();
     }
@@ -228,8 +191,10 @@ namespace sparrow
             case buffer_type::DATA:
                 if (bt == buffer_type::DATA && (dt == data_type::STRING || dt == data_type::BINARY))
                 {
-                    SPARROW_ASSERT_TRUE(previous_buffer_type == buffer_type::OFFSETS_32BIT
-                                        || previous_buffer_type == buffer_type::OFFSETS_64BIT);
+                    SPARROW_ASSERT_TRUE(
+                        previous_buffer_type == buffer_type::OFFSETS_32BIT
+                        || previous_buffer_type == buffer_type::OFFSETS_64BIT
+                    );
                     if (previous_buffers.back().empty())
                     {
                         return 0;
