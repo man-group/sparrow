@@ -10,9 +10,6 @@
 #include "sparrow_v01/layout/variable_size_binary_array.hpp"
 namespace sparrow
 {
-
-
-
     cloning_ptr<array_base> array_factory(arrow_proxy proxy)
     {
         const auto dt = proxy.data_type();

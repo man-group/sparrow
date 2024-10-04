@@ -42,7 +42,6 @@ namespace sparrow
         using inner_const_reference = list_value2;
         using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
         using const_value_iterator = functor_index_iterator<detail::layout_value_functor<const array_type, inner_value_type>>;
-        using const_value_iterator_sentinel_type = typename const_value_iterator::sentinel_type;
         using iterator_tag = std::random_access_iterator_tag;
     };
 

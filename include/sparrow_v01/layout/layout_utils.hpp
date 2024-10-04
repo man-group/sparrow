@@ -34,10 +34,11 @@ namespace sparrow::detail
         constexpr layout_value_functor(layout_value_functor&&) = default;
         constexpr layout_value_functor& operator=(const layout_value_functor&) = default;
 
-        constexpr layout_value_functor(layout_type * layout_ptr)
-        : p_layout(layout_ptr)
+        constexpr layout_value_functor(layout_type * p_layout)
+        : p_layout(p_layout)
         {
         }
+
         value_type operator()(std::size_t i) const
         {
             return p_layout->value(i);

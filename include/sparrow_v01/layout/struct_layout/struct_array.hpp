@@ -38,7 +38,6 @@ namespace sparrow
         using inner_const_reference = struct_value;
         using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
         using const_value_iterator = functor_index_iterator<detail::layout_value_functor<const array_type, inner_value_type>>;
-        using const_value_iterator_sentinel_type = typename const_value_iterator::sentinel_type;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
@@ -123,7 +122,7 @@ namespace sparrow
     
     inline auto struct_array::value_begin() -> value_iterator
     {
-        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), 0);
+        return value_iterator{detail::layout_value_functor<self_type, inner_value_type>{this}, 0};
     }
     
     inline auto struct_array::value_end()-> value_iterator

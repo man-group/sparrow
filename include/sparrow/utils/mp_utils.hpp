@@ -22,17 +22,7 @@
 
 namespace sparrow::mpl
 {
-    struct placeholder_type
-    {
-    };
-
-
-    // helper to choose between two types.
-    // if the first type is placeholder_type, the second type is chosen.
-    template<class A, class B>
-    using replace_if_placeholder_t = std::conditional_t<std::is_same_v<A, placeholder_type>, B, A>;
-
-
+    
     /// Workaround to replace static_assert(false) in template code.
     /// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
     template <class... T>
