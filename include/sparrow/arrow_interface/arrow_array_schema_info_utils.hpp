@@ -125,16 +125,12 @@ namespace sparrow
             case data_type::BINARY:
             case data_type::STRING:
                 return {buffer_type::VALIDITY, buffer_type::OFFSETS_32BIT, buffer_type::DATA};
-
             case data_type::LIST:
                 return {buffer_type::VALIDITY, buffer_type::OFFSETS_32BIT};
-
             case data_type::LARGE_LIST:
                 return {buffer_type::VALIDITY, buffer_type::OFFSETS_64BIT};
-
             case data_type::LIST_VIEW:
                 return {buffer_type::VALIDITY, buffer_type::OFFSETS_32BIT, buffer_type::SIZES_32BIT};
-
             case data_type::LARGE_LIST_VIEW:
                 return {buffer_type::VALIDITY, buffer_type::OFFSETS_64BIT, buffer_type::SIZES_64BIT};
             case data_type::FIXED_SIZED_LIST:
