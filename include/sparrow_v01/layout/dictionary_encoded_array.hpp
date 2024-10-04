@@ -26,7 +26,6 @@
 #include "sparrow_v01/layout/primitive_array.hpp"
 #include "sparrow_v01/utils/bitmap_offset.hpp"
 
-
 namespace sparrow
 {
     /*
@@ -134,34 +133,13 @@ namespace sparrow
         bitmap_type m_bitmap;
         bitmap_offset<bitmap_type> m_bitmap_with_offset;
 
-        bitmap_offset<bitmap_type>& get_bitmap()
-        {
-            return m_bitmap_with_offset;
-        }
+        bitmap_offset<bitmap_type>& get_bitmap();
+        const bitmap_offset<bitmap_type>& get_bitmap() const;
 
-        const bitmap_offset<bitmap_type>& get_bitmap() const
-        {
-            return m_bitmap_with_offset;
-        }
-
-        static const const_reference& dummy_const_reference()
-        {
-            static const typename values_layout::inner_value_type dummy_inner_value;
-            static const const_reference instance(dummy_inner_value, false);
-            return instance;
-        }
-
-        static keys_layout create_keys_layout(arrow_proxy& proxy)
-        {
-            return keys_layout{arrow_proxy{&proxy.array(), &proxy.schema()}};
-        }
-
+        static const const_reference& dummy_const_reference();
+        static keys_layout create_keys_layout(arrow_proxy& proxy);
         static values_layout create_values_layout(arrow_proxy& proxy);
-
-        auto make_bitmap(keys_layout& keys, values_layout& values) -> bitmap_type
-        {
-            return bitmap_type{keys, values.bitmap()};
-        }
+        bitmap_type make_bitmap(keys_layout& keys, values_layout& values);
 
         friend class array_crtp_base<self_type>;
         friend class dictionary_iterator<dictionary_value_traits<inner_types, true>>;
@@ -263,5 +241,39 @@ namespace sparrow
         arrow_proxy ar_dictionary{&(dictionary->array()), &(dictionary->schema())};
         return values_layout{std::move(ar_dictionary)};
     }
+
+    template <std::integral IT, class SL, layout_offset OT>
+    auto dictionary_encoded_array<IT, SL, OT>::get_bitmap() -> bitmap_offset<bitmap_type>&
+    {
+        return m_bitmap_with_offset;
+    }
+
+    template <std::integral IT, class SL, layout_offset OT>
+    auto dictionary_encoded_array<IT, SL, OT>::get_bitmap() const -> const bitmap_offset<bitmap_type>&
+    {
+        return m_bitmap_with_offset;
+    }
+
+    template <std::integral IT, class SL, layout_offset OT>
+    auto dictionary_encoded_array<IT, SL, OT>::dummy_const_reference() -> const const_reference&
+    {
+        static const typename values_layout::inner_value_type dummy_inner_value;
+        static const const_reference instance(dummy_inner_value, false);
+        return instance;
+    }
+
+    template <std::integral IT, class SL, layout_offset OT>
+    auto dictionary_encoded_array<IT, SL, OT>::create_keys_layout(arrow_proxy& proxy) -> keys_layout
+    {
+        return keys_layout{arrow_proxy{&proxy.array(), &proxy.schema()}};
+    }
+
+    template <std::integral IT, class SL, layout_offset OT>
+    auto
+    dictionary_encoded_array<IT, SL, OT>::make_bitmap(keys_layout& keys, values_layout& values) -> bitmap_type
+    {
+        return bitmap_type{keys, values.bitmap()};
+    }
+
 
 }

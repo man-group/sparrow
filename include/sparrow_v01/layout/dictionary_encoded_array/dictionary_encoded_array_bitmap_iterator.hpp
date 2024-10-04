@@ -113,6 +113,7 @@ namespace sparrow
         }
         else
         {
+            SPARROW_ASSERT_TRUE(std::abs(n) <= static_cast<difference_type>(m_index));
             m_index -= static_cast<size_type>(-n);
         }
     }

@@ -15,6 +15,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
@@ -25,21 +26,21 @@
 #include "sparrow_v01/utils/buffers.hpp"
 #include "sparrow_v01/utils/offsets.hpp"
 
-
 namespace sparrow
 {
     inline ArrowSchema make_dictionary_encoded_arrow_schema(data_type value_data_type, data_type keys_data_type)
     {
-        ArrowSchema* values_schema = make_arrow_schema_unique_ptr(
-                                         data_type_to_format(value_data_type),
-                                         "dictionary values",
-                                         std::nullopt,
-                                         std::nullopt,
-                                         0,
-                                         nullptr,
-                                         nullptr
-        )
-                                         .release();
+        ArrowSchema* values_schema = new ArrowSchema;
+        fill_arrow_schema(
+            *values_schema,
+            data_type_to_format(value_data_type),
+            "dictionary values",
+            std::nullopt,
+            std::nullopt,
+            0,
+            nullptr,
+            nullptr
+        );
 
         ArrowSchema keys_schema = make_arrow_schema(
             data_type_to_format(keys_data_type),
@@ -98,21 +99,6 @@ namespace sparrow
         return make_arrow_array(length, null_count, offset, std::move(value_buffers), 0, nullptr, nullptr);
     }
 
-    //  constexpr ArrowArray make_primitive_arrow_array(data_type dt)
-    // {
-    //     ArrowSchema schema = make_arrow_schema(
-    //         data_type_to_format(dt),
-    //         "dictionary keys",
-    //         std::nullopt,
-    //         std::nullopt,
-    //         0,
-    //         nullptr,
-    //         values_schema
-    //     );
-
-    //     return schema;}
-
-
     template <
         std::ranges::sized_range Keys,
         std::ranges::sized_range KeyNulls,
@@ -138,5 +124,4 @@ namespace sparrow
         );
         return keys_arrow_array;
     }
-
 }

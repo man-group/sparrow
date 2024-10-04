@@ -188,7 +188,7 @@ namespace sparrow
         buffer_type previous_buffer_type
     )
     {
-        constexpr size_t bit_per_byte = 8.;
+        constexpr size_t bit_per_byte = 8;
         switch (bt)
         {
             case buffer_type::VALIDITY:

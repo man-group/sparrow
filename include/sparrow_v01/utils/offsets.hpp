@@ -14,7 +14,6 @@
 
 #include <numeric>
 #include <ranges>
-#include <execution>
 
 #include "sparrow/array/data_type.hpp"
 #include "sparrow/buffer/buffer.hpp"
@@ -29,7 +28,7 @@ namespace sparrow
     {
         const size_t range_size = std::ranges::size(range);
         buffer<OT> offsets(range_size + 1, 0);
-        std::transform(std::execution::unseq, range.cbegin(), range.cend(), offsets.begin() + 1, [](const auto& elem) {
+        std::transform(range.cbegin(), range.cend(), offsets.begin() + 1, [](const auto& elem) {
             return static_cast<OT>(elem.size());
         });
         std::partial_sum(offsets.begin(), offsets.end(), offsets.begin());
