@@ -61,6 +61,7 @@ namespace sparrow
         using const_iterator = layout_iterator<array_type, true>;
 
         using size_type = typename base_type::size_type;
+        using iterator_tag = std::random_access_iterator_tag;
     };
 
     /**

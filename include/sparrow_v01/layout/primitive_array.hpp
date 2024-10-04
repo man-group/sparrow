@@ -39,8 +39,8 @@ namespace sparrow
         using value_iterator = pointer_iterator<pointer>;
         using const_value_iterator = pointer_iterator<const_pointer>;
 
-        using iterator = layout_iterator<array_type, false>;
-        using const_iterator = layout_iterator<array_type, true>;
+        using iterator_tag = std::contiguous_iterator_tag;
+
     };
 
     template <class T>
@@ -74,9 +74,6 @@ namespace sparrow
         virtual ~primitive_array() = default;
 
         using base_type::size;
-
-        reference operator[](size_type i);
-        const_reference operator[](size_type i) const;
 
     private:
 
@@ -141,19 +138,6 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().data_type()));
     }
 
-    template <class T>
-    auto primitive_array<T>::operator[](size_type i) -> reference
-    {
-        SPARROW_ASSERT_TRUE(i < size());
-        return reference(value(i), has_value(i));
-    }
-
-    template <class T>
-    auto primitive_array<T>::operator[](size_type i) const -> const_reference
-    {
-        SPARROW_ASSERT_TRUE(i < size());
-        return const_reference(value(i), has_value(i));
-    }
 
     template <class T>
     auto primitive_array<T>::data() -> pointer

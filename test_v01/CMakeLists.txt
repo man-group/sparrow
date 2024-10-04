@@ -39,11 +39,14 @@ set(SPARROW_V1_TESTS_SOURCES
     ../test/junit.hpp
     ../test/junit.cpp
     ../test/junit_xml_writer.hpp
+    test_utils.cpp
     test_dispatch.cpp
     test_list_value.cpp
     test_memory.cpp
     test_null_array.cpp
     test_primitive_array.cpp
+    test_list_array.cpp
+    test_struct_array.cpp
     test_variable_size_binary_array.cpp
 )
 set(test_target_v01 "test_sparrow_lib_v01")
@@ -82,7 +85,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /we4928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /we5038 # data member 'member1' will be initialized after data member 'member2'
         /Zc:__cplusplus)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+elseif((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
     set(compiles_options
         -pedantic # Warn on language extensions
         -Wall # reasonable and standard

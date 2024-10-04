@@ -25,6 +25,40 @@ namespace sparrow::test
     void release_arrow_schema(ArrowSchema* schema);
     void release_arrow_array(ArrowArray* arr);
 
+    inline std::uint8_t* make_offset_buffer_from_sizes(const std::vector<size_t>& sizes, bool big)
+    {   
+
+        // ignore -Werror=cast-align]
+        #ifdef __GNUC__
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-align"
+        #endif
+        const auto n = sizes.size() + 1;
+        auto buf = new std::uint8_t[n * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
+        if (big)
+        {
+            auto* ptr = reinterpret_cast<std::uint64_t*>(buf);
+            ptr[0] = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                ptr[i+1] = ptr[i] + static_cast<std::uint64_t>(sizes[i]);
+            }
+        }
+        else
+        {
+            auto* ptr = reinterpret_cast<std::uint32_t*>(buf);
+            ptr[0] = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                ptr[i+1] = ptr[i] + static_cast<std::uint32_t>(sizes[i]);
+            }
+        }
+        #ifdef __GNUC__
+        #pragma GCC diagnostic pop
+        #endif
+        return buf;
+    }
+
     inline std::uint8_t* make_bitmap_buffer(size_t n, const std::vector<size_t>& false_bitmap)
     {
         auto tmp_bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
@@ -226,4 +260,23 @@ namespace sparrow::test
         test::fill_schema_and_array<T>(sc, ar, n, offset, {});
         return arrow_proxy(std::move(ar), std::move(sc));
     }
+
+
+    void fill_schema_and_array_for_list_layout(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        ArrowSchema & flat_value_schema,
+        ArrowArray & flat_value_arr,
+        const std::vector<std::size_t> & list_lengths,
+        const std::vector<std::size_t> & false_postions,
+        bool big_list
+    );
+
+    void fill_schema_and_array_for_struct_layout(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        std::vector<ArrowSchema> & children_schemas,
+        std::vector<ArrowArray> & children_arrays,
+        const std::vector<std::size_t> & false_postions
+    );
 }

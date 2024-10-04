@@ -150,7 +150,9 @@ set(SPARROW_HEADERS
 
 set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/dummy.cpp
+    ${SPARROW_SOURCE_DIR}/array_factory.cpp
     ${SPARROW_SOURCE_DIR}/list_value.cpp
+    ${SPARROW_SOURCE_DIR}/struct_value.cpp
 )
 
 if (BUILD_REFACTORING)

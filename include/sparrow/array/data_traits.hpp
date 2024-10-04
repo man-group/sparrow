@@ -79,6 +79,14 @@ namespace sparrow
         using value_type = list_value2;
         using const_reference = list_value2;
     };
+
+    template <>
+    struct arrow_traits<struct_value>
+    {
+        static constexpr data_type type_id = data_type::STRUCT;
+        using value_type = struct_value;
+        using const_reference = struct_value;
+    };
     
     template <class T>
     using array_value_type_t = nullable<typename arrow_traits<T>::value_type>;

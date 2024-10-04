@@ -22,6 +22,7 @@
 
 namespace sparrow::mpl
 {
+    
     /// Workaround to replace static_assert(false) in template code.
     /// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
     template <class... T>

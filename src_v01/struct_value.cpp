@@ -12,25 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow_v01/layout/list_layout/list_value.hpp"
+#include "sparrow_v01/layout/struct_layout/struct_value.hpp"
 #include "sparrow_v01/layout/dispatch.hpp"
 
 namespace sparrow
 {
-    list_value2::list_value2(const array_base* flat_array, size_type index_begin, size_type index_end)
-        : p_flat_array(flat_array)
-        , m_index_begin(index_begin)
-        , m_index_end(index_end)
+    struct_value::struct_value(  const std::vector<cloning_ptr<array_base>>& children, size_type index)
+        : m_children(children)
+        , m_index(index)
     {
     }
 
-    auto list_value2::size() const -> size_type
+    auto struct_value::size() const -> size_type
     {
-        return m_index_end - m_index_begin;
+        return m_children.size();
     }
 
-    auto list_value2::operator[](size_type i) const -> const_reference
+    auto struct_value::operator[](size_type i) const -> const_reference
     {
-        return array_element(*p_flat_array, m_index_begin + i);
+        return array_element(*(m_children[i].get()), m_index);
     }
 }
