@@ -157,14 +157,14 @@ namespace sparrow::test
                 return res + s.size();
             }
         );
-        auto offset_buf = new int64_t[size + 1];
+        auto offset_buf = new int32_t[size + 1];
         auto value_buf = new char[value_size];
 
-        offset_buf[0] = std::int64_t(0);
+        offset_buf[0] = 0;
         char* ptr = value_buf;
         for (std::size_t i = 0; i < size; ++i)
         {
-            offset_buf[i + 1] = offset_buf[i] + static_cast<std::int64_t>(words[i].size());
+            offset_buf[i + 1] = offset_buf[i] + static_cast<std::int32_t>(words[i].size());
             std::ranges::copy(words[i], ptr);
             ptr += words[i].size();
         }

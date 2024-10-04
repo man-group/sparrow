@@ -159,6 +159,7 @@ if (BUILD_REFACTORING)
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/array_base.hpp
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/null_array.hpp
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/primitive_array.hpp
+        ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/variable_size_binary_array.hpp
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/utils/memory.hpp
     )
     list(APPEND SPARROW_HEADERS ${SPARROW_V01_HEADERS})

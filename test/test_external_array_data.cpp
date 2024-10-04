@@ -59,7 +59,7 @@ namespace sparrow
         {
             constexpr std::size_t nb_words = 16u;
             auto data = test::make_test_external_array_data<std::string, false>(nb_words);
-            using layout_type = variable_size_binary_layout<std::string, const std::string_view, external_array_data>;
+            using layout_type = variable_size_binary_layout<std::string, const std::string_view, external_array_data, std::int32_t>;
             const layout_type layout(data);
 
             auto words = test::make_testing_words(nb_words);
