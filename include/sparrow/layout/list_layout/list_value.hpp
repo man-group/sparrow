@@ -14,68 +14,30 @@
 
 #pragma once
 
-#include <iterator>
-#include <ranges>
+#include "sparrow/config/config.hpp"
+#include "sparrow/array/data_traits.hpp"
+#include "sparrow_v01/layout/array_base.hpp"
 
 namespace sparrow
-{   
-
-    template<class ITERATOR,  bool IS_CONST>
-    class list_value : public std::ranges::subrange<ITERATOR>
+{
+    class SPARROW_API list_value2
     {
-        public:
-        using base_type = std::ranges::subrange<ITERATOR>;
-        using reference =  typename ITERATOR::reference;
-        using difference_type = typename std::iterator_traits<ITERATOR>::difference_type;
+    public:
 
-        constexpr list_value() = default;
-        constexpr list_value(ITERATOR begin, ITERATOR end)
-            : base_type(begin, end)
-        {
-        }
+        using value_type = array_traits::value_type;
+        using const_reference = array_traits::const_reference;
+        using size_type = std::size_t;
 
-        reference operator[](std::size_t index)
-        {
-            return this->begin()[static_cast<difference_type>(index)];
-        }
-        reference operator[](std::size_t index)const
-        {
-            return this->begin()[static_cast<difference_type>(index)];
-        }
+        list_value2(const array_base* flat_array, size_type index_begin, size_type index_end);
 
-        template<class OTHER_ITERATOR, bool OTHER_IS_CONST>
-        bool operator==(const list_value<OTHER_ITERATOR, OTHER_IS_CONST>& rhs) const
-        {
-            if(this->size() != rhs.size())
-            {
-                return false;
-            }
-            for(std::size_t i = 0; i < this->size(); ++i)
-            {
-                if(this->operator[](i) != rhs[i])
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+        size_type size() const;
+        const_reference operator[](size_type i) const;
 
-        template<class OTHER_ITERATOR, bool OTHER_IS_CONST>
-        bool operator!=(const list_value<OTHER_ITERATOR, OTHER_IS_CONST>& rhs) const
-        {
-            return !(*this == rhs);
-        }
+    private:
+
+        const array_base* p_flat_array;
+        size_type m_index_begin;
+        size_type m_index_end;
     };
-
-    template<class T>
-    struct is_list_value : std::false_type
-    {
-    };
-    template<class ITER, bool IS_CONST>
-    struct is_list_value<list_value<ITER, IS_CONST>> : std::true_type
-    {
-    };
-
-    template<class T>
-    inline constexpr bool is_list_value_v = is_list_value<T>::value;
 }
+
