@@ -71,11 +71,11 @@ namespace sparrow
     };
 
     template <>
-    struct arrow_traits<list_value2>
+    struct arrow_traits<list_value>
     {
         static constexpr data_type type_id = data_type::LIST;
-        using value_type = list_value2;
-        using const_reference = list_value2;
+        using value_type = list_value;
+        using const_reference = list_value;
     };
 
     template <>

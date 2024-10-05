@@ -17,19 +17,19 @@
 
 namespace sparrow
 {
-    list_value2::list_value2(const array_base* flat_array, size_type index_begin, size_type index_end)
+    list_value::list_value(const array_base* flat_array, size_type index_begin, size_type index_end)
         : p_flat_array(flat_array)
         , m_index_begin(index_begin)
         , m_index_end(index_end)
     {
     }
 
-    auto list_value2::size() const -> size_type
+    auto list_value::size() const -> size_type
     {
         return m_index_end - m_index_begin;
     }
 
-    auto list_value2::operator[](size_type i) const -> const_reference
+    auto list_value::operator[](size_type i) const -> const_reference
     {
         return array_element(*p_flat_array, m_index_begin + i);
     }

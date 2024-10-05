@@ -37,9 +37,9 @@ namespace sparrow
     struct array_inner_types<list_array_impl<BIG>> : array_inner_types_base
     {
         using array_type = list_array_impl<BIG>;
-        using inner_value_type = list_value2;
-        using inner_reference  = list_value2;
-        using inner_const_reference = list_value2;
+        using inner_value_type = list_value;
+        using inner_reference  = list_value;
+        using inner_const_reference = list_value;
         using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
         using const_value_iterator = functor_index_iterator<detail::layout_value_functor<const array_type, inner_value_type>>;
         using iterator_tag = std::random_access_iterator_tag;
@@ -62,9 +62,9 @@ namespace sparrow
         using bitmap_reference = typename base_type::bitmap_reference;
         using bitmap_const_reference = typename base_type::bitmap_const_reference;
 
-        using inner_value_type =  list_value2;
-        using inner_reference =  list_value2;
-        using inner_const_reference =  list_value2;
+        using inner_value_type =  list_value;
+        using inner_reference =  list_value;
+        using inner_const_reference =  list_value;
 
 
         using value_type = nullable<inner_value_type>;
@@ -161,13 +161,13 @@ namespace sparrow
     template <bool BIG>
     auto list_array_impl<BIG>::value(size_type i) -> inner_reference
     {
-        return  list_value2{p_flat_array.get(), p_list_offsets[i], p_list_offsets[i + 1]};
+        return  list_value{p_flat_array.get(), p_list_offsets[i], p_list_offsets[i + 1]};
     }
 
     template <bool BIG>
     auto list_array_impl<BIG>::value(size_type i) const -> inner_const_reference
     {
-        return list_value2{p_flat_array.get(), p_list_offsets[i], p_list_offsets[i + 1]};
+        return list_value{p_flat_array.get(), p_list_offsets[i], p_list_offsets[i + 1]};
     }
         
 }

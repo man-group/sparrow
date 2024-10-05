@@ -30,7 +30,7 @@ namespace sparrow
         TEST_CASE("size")
         {
             primitive_array<scalar_value_type> ar(make_arrow_proxy<scalar_value_type>());
-            list_value2 l(&ar, 2u, 7u);
+            list_value l(&ar, 2u, 7u);
 
             CHECK_EQ(l.size(), 5u);
         }
@@ -40,7 +40,7 @@ namespace sparrow
             std::size_t begin = 2u;
             std::size_t end = 7u;
             primitive_array<scalar_value_type> ar(make_arrow_proxy<scalar_value_type>());
-            list_value2 l(&ar, begin, end);
+            list_value l(&ar, begin, end);
             for (std::size_t i = begin; i < end; ++i)
             {
                 CHECK_EQ(l[i].has_value(), ar[begin+i].has_value());

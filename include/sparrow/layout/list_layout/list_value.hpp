@@ -20,7 +20,7 @@
 
 namespace sparrow
 {
-    class SPARROW_API list_value2
+    class SPARROW_API list_value
     {
     public:
 
@@ -28,7 +28,7 @@ namespace sparrow
         using const_reference = array_traits::const_reference;
         using size_type = std::size_t;
 
-        list_value2(const array_base* flat_array, size_type index_begin, size_type index_end);
+        list_value(const array_base* flat_array, size_type index_begin, size_type index_end);
 
         size_type size() const;
         const_reference operator[](size_type i) const;
