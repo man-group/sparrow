@@ -106,13 +106,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${BINARY_BUILD_DIR}")
 
 set(SPARROW_HEADERS
     # array
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_concepts.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_factory.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/data_storages.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/data_traits.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array/data_type.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/external_array_data.hpp
     # arrow_interface
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/deleter.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/private_data.hpp
@@ -120,7 +115,6 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/deleter.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/smart_pointers.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/array_data_to_arrow_array_converters.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_info_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp

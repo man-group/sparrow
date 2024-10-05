@@ -17,7 +17,6 @@
 #include <numeric>
 
 #include "sparrow/array/data_traits.hpp"
-#include "sparrow/array/external_array_data.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
 
 namespace sparrow::test
@@ -230,26 +229,6 @@ namespace sparrow::test
         arr.children = nullptr;
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
-    }
-
-    template <class T, bool make_ptr = false>
-    sparrow::external_array_data
-    make_test_external_array_data(size_t n = 10, size_t offset = 0, const std::vector<size_t>& false_bitmap = {})
-    {
-        if constexpr (make_ptr)
-        {
-            ArrowSchema* schema = new ArrowSchema;
-            ArrowArray* arr = new ArrowArray;
-            fill_schema_and_array<T>(*schema, *arr, n, offset, false_bitmap);
-            return sparrow::external_array_data(schema, arr, owns_arrow_data);
-        }
-        else
-        {
-            ArrowSchema schema;
-            ArrowArray arr;
-            fill_schema_and_array<T>(schema, arr, n, offset, false_bitmap);
-            return sparrow::external_array_data(std::move(schema), std::move(arr), owns_arrow_data);
-        }
     }
 
     template <class T>

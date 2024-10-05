@@ -33,8 +33,6 @@ else()
 endif()
 
 set(SPARROW_TESTS_SOURCES
-    array_data_creation.cpp
-    array_data_creation.hpp
     arrow_array_schema_creation.hpp
     better_junit_reporter.hpp
     external_array_data_creation.cpp
@@ -42,15 +40,9 @@ set(SPARROW_TESTS_SOURCES
     junit.cpp
     junit.hpp
     junit_xml_writer.hpp
-    layout_tester.hpp
     main.cpp
     test_algorithm.cpp
     test_allocator.cpp
-    #test_array_data.cpp
-    test_array_data_concepts.cpp
-    test_array_data_creation.cpp
-    #test_array_data_factory.cpp
-    test_array_data_to_arrow_array_converters.cpp
     test_arrow_array.cpp
     test_arrow_array_schema_proxy.cpp
     test_arrow_array_schema_utils.cpp
@@ -60,7 +52,6 @@ set(SPARROW_TESTS_SOURCES
     test_buffer_adaptor.cpp
     test_dispatch.cpp
     test_dynamic_bitset.cpp
-    #test_external_array_data.cpp
     test_iterator.cpp
     test_list_array.cpp
     test_list_value.cpp
