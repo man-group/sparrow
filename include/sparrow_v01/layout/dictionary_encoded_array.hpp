@@ -131,10 +131,9 @@ namespace sparrow
         keys_layout m_keys_layout;
         values_layout m_values_layout;
         bitmap_type m_bitmap;
-        bitmap_offset<bitmap_type> m_bitmap_with_offset;
 
-        bitmap_offset<bitmap_type>& get_bitmap();
-        const bitmap_offset<bitmap_type>& get_bitmap() const;
+        bitmap_type& get_bitmap();
+        const bitmap_type& get_bitmap() const;
 
         static const const_reference& dummy_const_reference();
         static keys_layout create_keys_layout(arrow_proxy& proxy);
@@ -157,7 +156,6 @@ namespace sparrow
         , m_keys_layout(create_keys_layout(storage()))
         , m_values_layout(create_values_layout(storage()))
         , m_bitmap(make_bitmap(m_keys_layout, m_values_layout))
-        , m_bitmap_with_offset(m_bitmap, 0)
     {
         SPARROW_ASSERT_TRUE(data_type_is_integer(storage().data_type()));
     }
@@ -243,15 +241,15 @@ namespace sparrow
     }
 
     template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::get_bitmap() -> bitmap_offset<bitmap_type>&
+    auto dictionary_encoded_array<IT, SL, OT>::get_bitmap() -> bitmap_type&
     {
-        return m_bitmap_with_offset;
+        return m_bitmap;
     }
 
     template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::get_bitmap() const -> const bitmap_offset<bitmap_type>&
+    auto dictionary_encoded_array<IT, SL, OT>::get_bitmap() const -> const bitmap_type&
     {
-        return m_bitmap_with_offset;
+        return m_bitmap;
     }
 
     template <std::integral IT, class SL, layout_offset OT>
