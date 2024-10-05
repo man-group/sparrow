@@ -14,16 +14,16 @@
 
 #pragma once
 
-#include "sparrow_v01/layout/array_base.hpp"
+#include "sparrow/array_factory.hpp"
+#include "sparrow/array/data_traits.hpp"
+#include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
-#include "sparrow_v01/layout/nested_value_types.hpp"
+#include "sparrow/layout/layout_utils.hpp"
+#include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/array/data_traits.hpp"
-#include "sparrow_v01/array_factory.hpp"
-#include "sparrow_v01/utils/memory.hpp"
-#include "sparrow_v01/utils/functor_index_iterator.hpp"
-#include "sparrow_v01/layout/layout_utils.hpp"
+#include "sparrow/utils/memory.hpp"
 
 namespace sparrow
 {

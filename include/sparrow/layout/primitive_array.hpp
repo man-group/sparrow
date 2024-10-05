@@ -14,11 +14,10 @@
 
 #pragma once
 
+#include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-
-#include "sparrow_v01/layout/array_base.hpp"
 
 namespace sparrow
 {

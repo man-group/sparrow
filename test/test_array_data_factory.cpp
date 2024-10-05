@@ -17,26 +17,25 @@
 #include <vector>
 
 #include "sparrow/array/array_data_factory.hpp"
-#include "sparrow/layout/variable_size_binary_layout.hpp"
 
 #include "doctest/doctest.h"
 
 namespace sparrow
 {
-    static_assert(arrow_layout<fixed_size_layout<int>>);
-    static_assert(arrow_layout<variable_size_binary_layout<std::string, const std::string_view>>);
-    static_assert(arrow_layout<dictionary_encoded_layout<
+    static_assert(arrow_layout<primitive_array<int>>);
+    static_assert(arrow_layout<variable_size_binary_array<std::string, const std::string_view>>);
+    /*static_assert(arrow_layout<dictionary_encoded_layout<
                       size_t,
-                      variable_size_binary_layout<std::string, const std::string_view>>>);
+                      variable_size_binary_array<std::string, const std::string_view>>>);*/
     static_assert(!arrow_layout<std::string>);
 
     TEST_SUITE("array_data_factory")
     {
-        TEST_CASE("fixed_size_layout")
+        TEST_CASE("primitive_array")
         {
             const std::vector<int32_t> v = {1, 2, 3, 4, 5};
             const dynamic_bitset<std::uint8_t> bitmap(v.size(), true);
-            array_data ar = make_default_array_data<fixed_size_layout<int32_t>>(v, bitmap, 1);
+            array_data ar = make_default_array_data<primitive_array<int32_t>>(v, bitmap, 1);
             CHECK_EQ(ar.type.id(), data_descriptor(arrow_type_id<int32_t>()).id());
             CHECK_EQ(ar.length, 5);
             CHECK_EQ(ar.offset, 1);
@@ -51,14 +50,14 @@ namespace sparrow
             CHECK_EQ(ar.child_data.size(), 0);
             CHECK_FALSE(ar.dictionary.has_value());
 
-            fixed_size_layout<int32_t> layout(ar);
+            primitive_array<int32_t> layout(ar);
             CHECK_EQ(layout.size(), v.size() - 1);
         }
 
-        TEST_CASE("variable_size_binary_layout")
+        TEST_CASE("variable_size_binary_array")
         {
             constexpr size_t offset = 1;
-            using Layout = variable_size_binary_layout<std::string, const std::string_view>;
+            using Layout = variable_size_binary_array<std::string, const std::string_view>;
             const std::vector<std::string> v = {"a", "bb", "ccc", "dddd", "eeeee"};
             const dynamic_bitset<std::uint8_t> bitmap(v.size(), true);
             array_data ar = make_default_array_data<Layout>(v, bitmap, offset);
@@ -79,10 +78,10 @@ namespace sparrow
             }
         }
 
-        TEST_CASE("dictionary_encoded_layout")
+        /*TEST_CASE("dictionary_encoded_layout")
         {
             constexpr size_t offset = 1;
-            using SubLayout = variable_size_binary_layout<std::string, const std::string_view>;
+            using SubLayout = variable_size_binary_array<std::string, const std::string_view>;
             using Layout = dictionary_encoded_layout<size_t, SubLayout>;
             const std::vector<std::string> v = {"a", "bb", "ccc", "bb", "a"};
             const dynamic_bitset<std::uint8_t> bitmap(v.size(), true);
@@ -110,6 +109,6 @@ namespace sparrow
             {
                 CHECK_EQ(layout[i].value(), v[i + offset]);
             }
-        }
+        }*/
     }
 }

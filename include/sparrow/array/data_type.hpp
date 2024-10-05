@@ -30,7 +30,6 @@ namespace date = std::chrono;
 #include <concepts>
 #include <string>
 
-#include "sparrow/layout/list_layout/list_value.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -518,8 +517,8 @@ namespace sparrow
 
 
     /// is arrow base type or arrow compound type (list<T>, struct<T> etc.)
-    template <class T>
-    concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
+    //template <class T>
+    //concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
 
 
     using all_base_types_extended_t = mpl::append_t<all_base_types_t, char, std::string_view>;

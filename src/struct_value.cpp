@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow_v01/layout/struct_layout/struct_value.hpp"
-#include "sparrow_v01/layout/dispatch.hpp"
+#include "sparrow/layout/struct_layout/struct_value.hpp"
+#include "sparrow/layout/dispatch.hpp"
 
 namespace sparrow
 {

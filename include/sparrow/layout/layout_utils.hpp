@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "sparrow_v01/utils/functor_index_iterator.hpp"
+#include "sparrow/utils/functor_index_iterator.hpp"
 
 namespace sparrow::detail
 {

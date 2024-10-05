@@ -17,10 +17,10 @@
 #include <type_traits>
 
 #include "sparrow/array/data_traits.hpp"
-#include "sparrow_v01/layout/array_base.hpp"
-#include "sparrow_v01/layout/null_array.hpp"
-#include "sparrow_v01/layout/primitive_array.hpp"
-#include "sparrow_v01/layout/nested_value_types.hpp"
+#include "sparrow/layout/array_base.hpp"
+#include "sparrow/layout/null_array.hpp"
+#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/nested_value_types.hpp"
 
 namespace sparrow
 {

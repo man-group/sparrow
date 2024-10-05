@@ -139,15 +139,15 @@ namespace sparrow
 // test_array_data free functions must be defined before including the layout
 // headers, otherwise they are not found.
 
-#include "sparrow/layout/fixed_size_layout.hpp"
-#include "sparrow/layout/null_layout.hpp"
-#include "sparrow/layout/variable_size_binary_layout.hpp"
+#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/null_array.hpp"
+#include "sparrow/layout/variable_size_binary_array.hpp"
 
 namespace sparrow
 {
     TEST_SUITE("array_data")
     {
-        TEST_CASE("fixed_size_layout")
+        TEST_CASE("primitive_array")
         {
             using buffer_type = test_array_data::buffer_type;
             test_array_data td;
@@ -163,7 +163,7 @@ namespace sparrow
                 }
             }
 
-            const fixed_size_layout<std::int32_t, test_array_data> layout(td);
+            const primitive_array<std::int32_t> layout(td);
             CHECK_EQ(layout.size(), std::size_t(td.length));
             for (std::size_t i = 0; i < 16u; ++i)
             {
@@ -178,7 +178,7 @@ namespace sparrow
             CHECK_EQ(iter, layout.cend());
         }
 
-        TEST_CASE("variable_size_binary_layout")
+        TEST_CASE("variable_size_binary_array")
         {
             std::vector<std::string> words = {
                 "once",
@@ -235,7 +235,7 @@ namespace sparrow
                 }
             }
 
-            using layout_type = variable_size_binary_layout<std::string, const std::string_view, test_array_data>;
+            using layout_type = variable_size_binary_array<std::string, const std::string_view, test_array_data>;
             const layout_type layout(td);
 
             CHECK_EQ(layout.size(), words.size());

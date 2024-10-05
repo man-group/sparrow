@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow_v01/layout/primitive_array.hpp"
-#include "sparrow_v01/layout/list_layout/list_array.hpp"
+#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/list_layout/list_array.hpp"
 
 #include "doctest/doctest.h"
 

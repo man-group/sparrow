@@ -16,7 +16,7 @@
 
 #include "sparrow/config/config.hpp"
 #include "sparrow/array/data_traits.hpp"
-#include "sparrow_v01/layout/array_base.hpp"
+#include "sparrow/layout/array_base.hpp"
 
 namespace sparrow
 {

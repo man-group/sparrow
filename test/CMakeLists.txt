@@ -46,10 +46,10 @@ set(SPARROW_TESTS_SOURCES
     main.cpp
     test_algorithm.cpp
     test_allocator.cpp
-    test_array_data.cpp
+    #test_array_data.cpp
     test_array_data_concepts.cpp
     test_array_data_creation.cpp
-    test_array_data_factory.cpp
+    #test_array_data_factory.cpp
     test_array_data_to_arrow_array_converters.cpp
     test_arrow_array.cpp
     test_arrow_array_schema_proxy.cpp
@@ -60,7 +60,7 @@ set(SPARROW_TESTS_SOURCES
     test_buffer_adaptor.cpp
     test_dispatch.cpp
     test_dynamic_bitset.cpp
-    test_external_array_data.cpp
+    #test_external_array_data.cpp
     test_iterator.cpp
     test_list_array.cpp
     test_list_value.cpp

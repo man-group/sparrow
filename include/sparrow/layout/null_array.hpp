@@ -17,17 +17,13 @@
 #include <cstddef>
 #include <ranges>
 
-#include "sparrow_v01/layout/array_base.hpp"
+#include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 
-// For the definition of empty_iterator
-#include "sparrow/layout/null_layout.hpp"
-
 namespace sparrow
 {
-    // TODO: uncomment when null_layout.hpp is removed
     /*
      * @class empty_iterator
      *
@@ -35,7 +31,7 @@ namespace sparrow
      *
      * @tparam T the value_type of the iterator
      */
-    /*template <class T>
+    template <class T>
     class empty_iterator : public iterator_base<empty_iterator<T>, T, std::contiguous_iterator_tag, T>
     {
     public:
@@ -60,7 +56,7 @@ namespace sparrow
         difference_type m_index;
 
         friend class iterator_access;
-    };*/
+    };
 
     class null_array final : public array_base
     {
@@ -112,12 +108,11 @@ namespace sparrow
         arrow_proxy m_proxy;
     };
 
-    // TODO: uncomment when null_layout.hpp is removed
     /*********************************
      * empty_iterator implementation *
      *********************************/
 
-    /*template <class T>
+    template <class T>
     empty_iterator<T>::empty_iterator(difference_type index) noexcept
         : m_index(index)
     {
@@ -163,7 +158,7 @@ namespace sparrow
     bool empty_iterator<T>::less_than(const self_type& rhs) const
     {
         return m_index < rhs.m_index;
-    }*/
+    }
 
     /*****************************
      * null_array implementation *

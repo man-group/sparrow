@@ -29,10 +29,10 @@
 #include "sparrow/array/array_data.hpp"
 #include "sparrow/array/data_traits.hpp"
 #include "sparrow/array/data_type.hpp"
-#include "sparrow/layout/dictionary_encoded_layout.hpp"
-#include "sparrow/layout/fixed_size_layout.hpp"
-#include "sparrow/layout/variable_size_binary_layout.hpp"
-#include "sparrow/layout/list_layout/list_layout.hpp"
+#include "sparrow/layout/list_layout/list_array.hpp"
+#include "sparrow/layout/null_array.hpp"
+#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/variable_size_binary_array.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/memory.hpp"
@@ -77,24 +77,24 @@ namespace sparrow
     /**
      * Concept to check if a layout is a supported layout.
      *
-     * A layout is considered supported if it is an instance of `fixed_size_layout`,
-     * `variable_size_binary_layout`, or `dictionary_encoded_layout`.
+     * A layout is considered supported if it is an instance of `primitive_array`,
+     * `variable_size_binary_array`, or `dictionary_encoded_layout`.
      *
      * @tparam Layout The layout type to check.
      */
     template <class Layout>
-    concept arrow_layout = mpl::is_type_instance_of_v<Layout, null_layout>
-                           || mpl::is_type_instance_of_v<Layout, fixed_size_layout>
-                           || mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>
-                           || mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>
-                           || mpl::is_type_instance_of_v<Layout, list_layout>;
+    concept arrow_layout = mpl::is_type_instance_of_v<Layout, null_array>
+                           || mpl::is_type_instance_of_v<Layout, primitive_array>
+                           || mpl::is_type_instance_of_v<Layout, variable_size_binary_array>
+                           //|| mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>
+                           || mpl::is_type_instance_of_v<Layout, list_array>;
 
     /*
      * \brief Creates an array_data object for a null layout.
      *
      * This function creates an array_data object.
      */
-    inline array_data make_array_data_for_null_layout(std::size_t size = 0u)
+    inline array_data make_array_data_for_null_array(std::size_t size = 0u)
     {
         return {
             .type = data_descriptor(arrow_type_id<null_type>()),
@@ -116,7 +116,7 @@ namespace sparrow
      * @return The created array_data object.
      */
     template <typename T>
-    array_data make_array_data_for_fixed_size_layout()
+    array_data make_array_data_for_primitive_array()
     {
         using U = get_corresponding_arrow_type_t<T>;
         return {
@@ -164,7 +164,7 @@ namespace sparrow
      * @return The created array_data object.
      */
     template <range_for_array_data ValueRange, mpl::bool_convertible_range BitmapRange>
-    array_data make_array_data_for_fixed_size_layout(
+    array_data make_array_data_for_primitive_array(
         ValueRange&& values,
         BitmapRange && bitmap,
         std::int64_t offset
@@ -216,7 +216,7 @@ namespace sparrow
      * @return The created array_data object.
      */
     template <typename T>
-    array_data make_array_data_for_variable_size_binary_layout()
+    array_data make_array_data_for_variable_size_binary_array()
     {
         using U = get_corresponding_arrow_type_t<T>;
         return {
@@ -231,7 +231,7 @@ namespace sparrow
     }
 
     template <typename LAYOUT>
-    array_data make_array_data_for_list_layout()
+    array_data make_array_data_for_list_array()
     {
         return {
             .type = std::is_same_v<typename LAYOUT::offset_type, std::int32_t> ?  data_type::LIST : data_type::LARGE_LIST,
@@ -256,7 +256,7 @@ namespace sparrow
      * @return The created array_data object.
      */
     template <range_for_array_data ValueRange, mpl::bool_convertible_range BitmapRange>
-    array_data make_array_data_for_variable_size_binary_layout(
+    array_data make_array_data_for_variable_size_binary_array(
         ValueRange&& values,
         BitmapRange && bitmap,
         std::int64_t offset
@@ -424,7 +424,7 @@ namespace sparrow
             .bitmap = {},
             .buffers = {array_data::buffer_type(sizeof(std::int64_t), 0)},
             .child_data = {},
-            .dictionary = value_ptr<array_data>(make_array_data_for_variable_size_binary_layout<T>())
+            .dictionary = value_ptr<array_data>(make_array_data_for_variable_size_binary_array<T>())
         };
     }
 
@@ -465,7 +465,7 @@ namespace sparrow
             .bitmap = detail::make_array_data_bitmap(std::forward<BitmapRange>(bitmap)),
             .buffers = {create_buffer()},
             .child_data = {},
-            .dictionary = value_ptr<array_data>(make_array_data_for_variable_size_binary_layout(
+            .dictionary = value_ptr<array_data>(make_array_data_for_variable_size_binary_array(
                 vec_and_indexes.values,
                 array_data::bitmap_type(vec_and_indexes.values.size(), true),
                 0
@@ -486,22 +486,22 @@ namespace sparrow
     template <arrow_layout Layout>
     array_data make_default_array_data()
     {
-        if constexpr (mpl::is_type_instance_of_v<Layout, null_layout>)
+        if constexpr (mpl::is_type_instance_of_v<Layout, null_array>)
         {
-            return make_array_data_for_null_layout();
+            return make_array_data_for_null_array();
         }
-        else if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
+        else if constexpr (mpl::is_type_instance_of_v<Layout, primitive_array>)
         {
-            return make_array_data_for_fixed_size_layout<typename Layout::inner_value_type>();
+            return make_array_data_for_primitive_array<typename Layout::inner_value_type>();
         }
-        else if constexpr (mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>)
+        else if constexpr (mpl::is_type_instance_of_v<Layout, variable_size_binary_array>)
         {
-            return make_array_data_for_variable_size_binary_layout<typename Layout::inner_value_type>();
+            return make_array_data_for_variable_size_binary_array<typename Layout::inner_value_type>();
         }
-        else if constexpr (mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>)
+        /*else if constexpr (mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>)
         {
             return make_array_data_for_dictionary_encoded_layout<typename Layout::inner_value_type>();
-        }
+        }*/
         else
         {
             static_assert(
@@ -530,21 +530,21 @@ namespace sparrow
     array_data
     make_default_array_data(ValueRange&& values, BitmapRange && bitmap, std::int64_t offset)
     {
-        if constexpr (mpl::is_type_instance_of_v<Layout, fixed_size_layout>)
+        if constexpr (mpl::is_type_instance_of_v<Layout, primitive_array>)
         {
-            return make_array_data_for_fixed_size_layout(std::forward<ValueRange>(values), std::forward<BitmapRange>(bitmap), offset);
+            return make_array_data_for_primitive_array(std::forward<ValueRange>(values), std::forward<BitmapRange>(bitmap), offset);
         }
-        else if constexpr (mpl::is_type_instance_of_v<Layout, variable_size_binary_layout>)
+        else if constexpr (mpl::is_type_instance_of_v<Layout, variable_size_binary_array>)
         {
-            return make_array_data_for_variable_size_binary_layout(std::forward<ValueRange>(values), std::forward<BitmapRange>(bitmap), offset);
+            return make_array_data_for_variable_size_binary_array(std::forward<ValueRange>(values), std::forward<BitmapRange>(bitmap), offset);
         }
-        else if constexpr (mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>)
+        /*else if constexpr (mpl::is_type_instance_of_v<Layout, dictionary_encoded_layout>)
         {
             return make_array_data_for_dictionary_encoded_layout(std::forward<ValueRange>(values), std::forward<BitmapRange>(bitmap), offset);
-        }
-        else if constexpr (mpl::is_type_instance_of_v<Layout, list_layout>)
+        }*/
+        else if constexpr (mpl::is_type_instance_of_v<Layout, list_array>)
         {
-            return make_array_data_for_null_layout(std::ranges::size(values));
+            return make_array_data_for_null_array(std::ranges::size(values));
         }
         else
         {

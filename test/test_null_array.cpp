@@ -14,7 +14,7 @@
 
 #include <numeric>
 
-#include "sparrow_v01/layout/null_array.hpp"
+#include "sparrow/layout/null_array.hpp"
 
 #include "doctest/doctest.h"
 

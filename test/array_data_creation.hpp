@@ -19,7 +19,6 @@
 
 #include "sparrow/array/array_data.hpp"
 #include "sparrow/array/array_data_factory.hpp"
-#include "sparrow/layout/fixed_size_layout.hpp"
 #include "sparrow/array/data_traits.hpp"
 
 namespace sparrow::test
@@ -243,10 +242,8 @@ namespace sparrow::test
             }
         }
 
-        using data_storage = sparrow::array_data;
-
         // layout type of the inner flat array
-        using inner_layout_type = sparrow::fixed_size_layout<T, data_storage>;
+        using inner_layout_type = sparrow::primitive_array<T>;
 
         // inner list as array_data
         auto values_array_data = sparrow::make_default_array_data<inner_layout_type>(flat_values);

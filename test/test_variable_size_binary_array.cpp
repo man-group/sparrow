@@ -17,7 +17,7 @@
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
-#include "sparrow_v01/layout/variable_size_binary_array.hpp"
+#include "sparrow/layout/variable_size_binary_array.hpp"
 
 
 namespace sparrow
