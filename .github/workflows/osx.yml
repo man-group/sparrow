@@ -58,7 +58,7 @@ jobs:
         echo "CMAKE_CXX_COMPILER=/usr/bin/clang++" >> $GITHUB_ENV
 
     - name: Configure using CMake
-      run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DBUILD_REFACTORING=ON
+      run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
 
     - name: Build
       working-directory: build
@@ -83,21 +83,6 @@ jobs:
         name: test_sparrow_lib_report_OSX_${{ matrix.os }}_${{ matrix.config.name }}_${{ matrix.compiler }}
         path: '**/test_sparrow_lib_report.xml'
 
-    - name: Build refactoring
-      working-directory: build
-      run: cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib_v01 --parallel 8
-
-    - name: Run refactoring tests
-      working-directory: build
-      run: cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report_v01
-
-    - name: Upload refactoring test results
-      uses: actions/upload-artifact@v4
-      if: success() || failure()
-      with:
-        name: test_sparrow_lib_report_OSX_v01_${{ matrix.os }}_${{ matrix.config.name }}_${{ matrix.compiler }}
-        path: '**/test_sparrow_lib_report_v01.xml'   
-    
     - name: Run all examples
       working-directory: build
       run: cmake --build . --config ${{matrix.config.name}} --target run_examples
