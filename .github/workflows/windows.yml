@@ -65,6 +65,10 @@ jobs:
     - name: Configure using CMake
       run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON  -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} -G "${{matrix.build-system}}"
 
+    - name: Build library
+      working-directory: build
+      run: cmake --build . --confic ${{matric.config.name}} --target sparrow --parallel 8
+
     - name: Install
       working-directory: build
       run: cmake --install . --config ${{matrix.config.name}}
