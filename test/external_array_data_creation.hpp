@@ -16,8 +16,8 @@
 
 #include <numeric>
 
-#include "sparrow/array/data_traits.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
+#include "sparrow/types/data_traits.hpp"
 
 namespace sparrow::test
 {

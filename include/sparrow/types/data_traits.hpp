@@ -16,7 +16,7 @@
 
 #include <concepts>
 
-#include "sparrow/array/data_type.hpp"
+#include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 namespace sparrow

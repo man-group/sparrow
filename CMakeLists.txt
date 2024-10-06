@@ -105,9 +105,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${BINARY_BUILD_DIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${BINARY_BUILD_DIR}")
 
 set(SPARROW_HEADERS
-    # array
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/data_traits.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/data_type.hpp
     # arrow_interface
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/deleter.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/private_data.hpp
@@ -144,6 +141,9 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/null_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/primitive_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_array.hpp
+    # array
+    ${SPARROW_INCLUDE_DIR}/sparrow/types/data_traits.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/types/data_type.hpp
     # Utils
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/algorithm.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/bit.hpp

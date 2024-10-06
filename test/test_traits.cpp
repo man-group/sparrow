@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <sparrow/array/data_traits.hpp>
 #include <sparrow/layout/primitive_array.hpp>
+#include <sparrow/types/data_traits.hpp>
 
 
 /////////////////////////////////////////////////////////////////////////////////////////

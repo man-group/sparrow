@@ -17,10 +17,10 @@
 #include <concepts>
 #include <cstdint>
 
-#include "sparrow/array/data_type.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
+#include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"

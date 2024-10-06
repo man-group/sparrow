@@ -15,8 +15,8 @@
 #pragma once
 
 #include "sparrow/config/config.hpp"
-#include "sparrow/array/data_traits.hpp"
 #include "sparrow/layout/array_base.hpp"
+#include "sparrow/types/data_traits.hpp"
 
 namespace sparrow
 {

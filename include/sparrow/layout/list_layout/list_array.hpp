@@ -15,11 +15,11 @@
 #pragma once
 
 #include "sparrow/array_factory.hpp"
-#include "sparrow/array/data_traits.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"

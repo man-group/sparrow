@@ -17,11 +17,11 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "sparrow/array/data_type.hpp"
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_array/smart_pointers.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/types/data_type.hpp"
 
 namespace sparrow
 {

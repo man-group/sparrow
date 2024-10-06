@@ -16,10 +16,10 @@
 
 #include <algorithm>
 
-#include "sparrow/array/data_type.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/buffer/buffer_view.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
