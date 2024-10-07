@@ -147,8 +147,7 @@ namespace sparrow
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
         
-        // data members
-        //flat_array_offset_type * p_list_offsets;
+        // data members 
         cloning_ptr<array_base>  p_flat_array;
 
         // friend classes
@@ -341,11 +340,14 @@ namespace sparrow
     :   base_type(std::move(proxy)),
         m_list_size(0)
     {
-        // get the list size from the format string
-        const auto format = std::string(this->storage().format());
-        const auto n_digits = format.size() - 3;
-        const auto list_size_str = format.substr(3, n_digits);
-        m_list_size = std::stoull(list_size_str);
+
+        auto get_list_size = [](const std::string_view format) -> std::size_t
+        {
+            const auto n_digits = format.size() - 3;
+            const auto list_size_str = format.substr(3, n_digits);
+            return std::stoull(std::string(list_size_str));
+        };
+        m_list_size = get_list_size(this->storage().format());
     }
 
     inline auto fixed_sized_list_array::offset_range(size_type i) const -> std::pair<offset_type,offset_type>{
