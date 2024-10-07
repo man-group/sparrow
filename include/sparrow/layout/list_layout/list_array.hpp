@@ -218,6 +218,7 @@ namespace sparrow
 
         explicit fixed_sized_list_array(arrow_proxy proxy);
     private:
+        static uint64_t list_size_from_format(const std::string_view format);
         std::pair<offset_type,offset_type>  offset_range(size_type i) const;
         // friend classes
         friend class array_crtp_base<self_type>;
@@ -335,19 +336,19 @@ namespace sparrow
         const auto offset = p_list_offsets[i];
         return std::make_pair(offset, offset + p_list_sizes[i]);
     }
+
+    inline auto fixed_sized_list_array::list_size_from_format(const std::string_view format) -> uint64_t
+    {
+        SPARROW_ASSERT(format.size() >= 3, "Invalid format string");
+        const auto n_digits = format.size() - 3;
+        const auto list_size_str = format.substr(3, n_digits);
+        return std::stoull(std::string(list_size_str));
+    }
     
     inline fixed_sized_list_array::fixed_sized_list_array(arrow_proxy proxy)
     :   base_type(std::move(proxy)),
-        m_list_size(0)
+        m_list_size(fixed_sized_list_array::list_size_from_format(this->storage().format()))
     {
-
-        auto get_list_size = [](const std::string_view format) -> std::size_t
-        {
-            const auto n_digits = format.size() - 3;
-            const auto list_size_str = format.substr(3, n_digits);
-            return std::stoull(std::string(list_size_str));
-        };
-        m_list_size = get_list_size(this->storage().format());
     }
 
     inline auto fixed_sized_list_array::offset_range(size_type i) const -> std::pair<offset_type,offset_type>{
