@@ -280,14 +280,16 @@ namespace sparrow
     auto list_array_crtp_base<DERIVED>::value(size_type i) -> inner_reference
     {
         const auto r = this->derived_cast().offset_range(i);
-        return list_value{p_flat_array.get(), r.first, r.second};
+        using st = typename list_value::size_type;
+        return list_value{p_flat_array.get(), static_cast<st>(r.first), static_cast<st>(r.second)};
     }
 
     template <class DERIVED>
     auto list_array_crtp_base<DERIVED>::value(size_type i) const -> inner_const_reference
     {
         const auto r = this->derived_cast().offset_range(i);
-        return list_value{p_flat_array.get(), r.first, r.second};
+        using st = typename list_value::size_type;
+        return list_value{p_flat_array.get(), static_cast<st>(r.first), static_cast<st>(r.second)};
     }
 
     #ifdef __GNUC__
