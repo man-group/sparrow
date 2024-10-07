@@ -290,17 +290,32 @@ namespace sparrow
         return list_value{p_flat_array.get(), r.first, r.second};
     }
 
+    #ifdef __GNUC__
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wcast-align"
+    #endif
+
+
     template<bool BIG>
     inline list_array_impl<BIG>::list_array_impl(arrow_proxy proxy)
     :   base_type(std::move(proxy)),
         p_list_offsets(reinterpret_cast<offset_type*>(this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()))
     {
     }
+    #ifdef __GNUC__
+    #pragma GCC diagnostic pop
+    #endif
+    
 
     template<bool BIG>
     auto list_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type,offset_type>{
         return std::make_pair(p_list_offsets[i], p_list_offsets[i+1]);
     }
+
+    #ifdef __GNUC__
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wcast-align"
+    #endif
 
     template<bool BIG>
     inline list_view_array_impl<BIG>::list_view_array_impl(arrow_proxy proxy)
@@ -309,6 +324,10 @@ namespace sparrow
         p_list_sizes(reinterpret_cast<offset_type*>(this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()))
     {
     }
+
+    #ifdef __GNUC__
+    #pragma GCC diagnostic pop
+    #endif
 
     template<bool BIG>
     inline auto list_view_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type,offset_type> {
