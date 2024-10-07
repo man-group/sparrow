@@ -79,7 +79,7 @@ jobs:
 
     - name: Run tests
       working-directory: build
-      run:    ./bin/${{matrix.config.name}}/test_sparrow_lib  # cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
+      run: cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
 
     
 
