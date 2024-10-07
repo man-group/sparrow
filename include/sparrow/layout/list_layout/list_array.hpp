@@ -155,8 +155,8 @@ namespace sparrow
         friend class array_crtp_base<DERIVED>;
 
         // needs access to this->value(i)
-        friend class detail::layout_value_functor<self_type, inner_value_type>;
-        friend class detail::layout_value_functor<const self_type, inner_value_type>;
+        friend class detail::layout_value_functor<DERIVED, inner_value_type>;
+        friend class detail::layout_value_functor<const DERIVED, inner_value_type>;
     };  
 
     template<bool BIG>
