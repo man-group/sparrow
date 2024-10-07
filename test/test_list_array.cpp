@@ -185,6 +185,7 @@ namespace sparrow
                 // cast into a primitive array
                 primitive_array<inner_scalar_type> * flat_values_casted = static_cast<primitive_array<inner_scalar_type> *>(flat_values);
 
+                using primitive_size_type = typename primitive_array<inner_scalar_type>::size_type;
                 // check the size
                 REQUIRE(flat_values_casted->size() == n_flat);
 
@@ -192,13 +193,13 @@ namespace sparrow
                 if constexpr(std::is_integral_v<inner_scalar_type>)
                 {
                     for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
-                        CHECK((*flat_values_casted)[static_cast<std::uint64_t>(i)].value() == i);
+                        CHECK((*flat_values_casted)[static_cast<primitive_size_type>(i)].value() == i);
                     }
                 }
                 else
                 {
                     for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
-                        CHECK((*flat_values_casted)[static_cast<std::uint64_t>(i)].value() == doctest::Approx(static_cast<double>(i)));
+                        CHECK((*flat_values_casted)[static_cast<primitive_size_type>(i)].value() == doctest::Approx(static_cast<double>(i)));
                     }
                 }
             }
