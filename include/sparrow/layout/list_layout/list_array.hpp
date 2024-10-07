@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <string> // for std::stoull
+
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
@@ -201,7 +203,7 @@ namespace sparrow
         friend class array_crtp_base<self_type>;
         friend class list_array_crtp_base<self_type>;
         offset_type* p_list_offsets;
-        list_size_type* p_list_sizes;
+        offset_type* p_list_sizes;
 
     };
 
@@ -304,7 +306,7 @@ namespace sparrow
     inline list_view_array_impl<BIG>::list_view_array_impl(arrow_proxy proxy)
     :   base_type(std::move(proxy)),
         p_list_offsets(reinterpret_cast<offset_type*>(this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset())),
-        p_list_sizes(reinterpret_cast<list_size_type*>(this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()))
+        p_list_sizes(reinterpret_cast<offset_type*>(this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()))
     {
     }
 
@@ -316,8 +318,14 @@ namespace sparrow
     
     inline fixed_sized_list_array::fixed_sized_list_array(arrow_proxy proxy)
     :   base_type(std::move(proxy)),
-        m_list_size(this->storage().children()[0].length() / this->storage().length())
+        m_list_size(0)
     {
+        // get the list size from the format string
+        const auto format = std::string(this->storage().format());
+        const auto list_size_str = format.substr(2, format.size() - 3);
+        std::cout<<"list_size_str: "<<list_size_str<<std::endl;
+        m_list_size = static_cast<std::uint64_t>(std::stoull(list_size_str));
+        std::cout<<"m_list_size: "<<m_list_size<<std::endl;
     }
 
     inline auto fixed_sized_list_array::offset_range(size_type i) const -> std::pair<offset_type,offset_type>{
