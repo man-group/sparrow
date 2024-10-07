@@ -100,13 +100,13 @@ namespace sparrow
                 if constexpr(std::is_integral_v<inner_scalar_type>)
                 {
                     for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
-                        CHECK((*flat_values_casted)[primitive_size_type>(i)].value() == i);
+                        CHECK((*flat_values_casted)[static_cast<primitive_size_type>(i)].value() == i);
                     }
                 }
                 else
                 {
                     for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
-                        CHECK((*flat_values_casted)[primitive_size_type>(i)].value() == doctest::Approx(static_cast<double>(i)));
+                        CHECK((*flat_values_casted)[static_cast<primitive_size_type>(i)].value() == doctest::Approx(static_cast<double>(i)));
                     }
                 }
             }
