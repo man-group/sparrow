@@ -17,10 +17,11 @@
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/utils/memory.hpp"
 
 namespace sparrow
 {
-    class SPARROW_API list_value
+    class SPARROW_API struct_value
     {
     public:
 
@@ -28,16 +29,14 @@ namespace sparrow
         using const_reference = array_traits::const_reference;
         using size_type = std::size_t;
 
-        list_value(const array_base* flat_array, size_type index_begin, size_type index_end);
-
+        struct_value(const std::vector<cloning_ptr<array_base>>& children, size_type index);
         size_type size() const;
         const_reference operator[](size_type i) const;
 
     private:
-
-        const array_base* p_flat_array;
-        size_type m_index_begin;
-        size_type m_index_end;
+    
+        const std::vector<cloning_ptr<array_base>>&  m_children;
+        size_type m_index;
     };
 }
 

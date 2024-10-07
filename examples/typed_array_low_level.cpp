@@ -4,7 +4,7 @@
  * The typed_array is created from the array_data and the data is accessed.
  */
 
-#include <sparrow/array/array_data.hpp>
+//#include <sparrow/array/array_data.hpp>
 
 int main() {
     /////////////////////////////////////////////////

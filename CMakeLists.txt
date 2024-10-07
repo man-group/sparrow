@@ -26,7 +26,7 @@ project(sparrow CXX)
 include(CMakeDependentOption)
 
 set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(SPARROW_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src_v01)
+set(SPARROW_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Versionning
 # ===========
@@ -49,7 +49,6 @@ OPTION(BUILD_TESTS "Build sparrow test suite" OFF)
 OPTION(BUILD_DOCS  "Build sparrow documentation" OFF)
 OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
-OPTION(BUILD_REFACTORING "Build the refactoring target" OFF)
 
 include(CheckCXXSymbolExists)
 
@@ -106,109 +105,97 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${BINARY_BUILD_DIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${BINARY_BUILD_DIR}")
 
 set(SPARROW_HEADERS
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_concepts.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data_factory.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/array_data.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/data_storages.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/data_traits.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/data_type.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array/external_array_data.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_array_schema_proxy.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
+    # arrow_interface
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/deleter.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/smart_pointers.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/deleter.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/smart_pointers.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_info_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_flag_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema.hpp
+    # buffer
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/allocator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_adaptor.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_view.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
+    # config
     ${SPARROW_INCLUDE_DIR}/sparrow/config/config.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp
+    # detail
+    ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
+    # layout
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_layout/list_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_layout/list_value.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_layout.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_size_layout.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_layout/struct_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_layout/struct_value.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/dispatch.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_iterator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/null_layout.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/nested_value_types.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/null_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/primitive_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_array.hpp
+    # array
+    ${SPARROW_INCLUDE_DIR}/sparrow/types/data_traits.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/types/data_type.hpp
+    # Utils
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/algorithm.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/bit.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/contracts.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/functor_index_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/memory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/mp_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/nullable.hpp
-
-    ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/reference_wrapper_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
+    # ../
+    ${SPARROW_INCLUDE_DIR}/sparrow/array_factory.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_array_schema_proxy.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
 )
 
 set(SPARROW_SRC
-    ${SPARROW_SOURCE_DIR}/dummy.cpp
     ${SPARROW_SOURCE_DIR}/array_factory.cpp
     ${SPARROW_SOURCE_DIR}/list_value.cpp
     ${SPARROW_SOURCE_DIR}/struct_value.cpp
 )
 
-if (BUILD_REFACTORING)
-    set(SPARROW_V01_HEADERS
-        ${SPARROW_INCLUDE_DIR}/sparrow_v01/dummy.hpp
-        ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/array_base.hpp
-        ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/null_array.hpp
-        ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/primitive_array.hpp
-        ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/variable_size_binary_array.hpp
-        ${SPARROW_INCLUDE_DIR}/sparrow_v01/utils/memory.hpp
+add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
+# TODO: handle static lib, so name and versionning
+if (UNIX)
+    set_target_properties(
+        sparrow
+        PROPERTIES
+        PUBLIC_HEADER "${SPARROW_HEADERS}"
+        COMPILE_OPTIONS "-fvisibility=hidden"
     )
-    list(APPEND SPARROW_HEADERS ${SPARROW_V01_HEADERS})
-endif ()
-
-if (BUILD_REFACTORING)
-    add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
-    # TODO: handle static lib, so name and versionning
-    if (UNIX)
-        set_target_properties(
-            sparrow
-            PROPERTIES
-            PUBLIC_HEADER "${SPARROW_HEADERS}"
-            COMPILE_OPTIONS "-fvisibility=hidden"
-        )
-    else ()
-        set_target_properties(
-            sparrow
-            PROPERTIES
-            PUBLIC_HEADER "${SPARROW_HEADERS}"
-            COMPILE_DEFINITIONS "SPARROW_EXPORTS"
-        )
-    endif ()
-    target_include_directories(sparrow PUBLIC
-        $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
-        $<INSTALL_INTERFACE:include>)
-    # We do not use non-standard C++
-    set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
-    target_compile_features(sparrow PUBLIC cxx_std_20)
-    target_link_libraries(sparrow PUBLIC ${SPARROW_INTERFACE_DEPENDENCIES})
 else ()
-    add_library(sparrow INTERFACE ${SPARROW_HEADERS})
-    target_include_directories(sparrow INTERFACE
-        $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
-        $<INSTALL_INTERFACE:include>)
-    # We do not use non-standard C++
-    set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
-    target_compile_features(sparrow INTERFACE cxx_std_20)
-    target_link_libraries(sparrow INTERFACE ${SPARROW_INTERFACE_DEPENDENCIES})
+    set_target_properties(
+        sparrow
+        PROPERTIES
+        PUBLIC_HEADER "${SPARROW_HEADERS}"
+        COMPILE_DEFINITIONS "SPARROW_EXPORTS"
+    )
 endif ()
+target_include_directories(sparrow PUBLIC
+    $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>)
+# We do not use non-standard C++
+set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
+target_compile_features(sparrow PUBLIC cxx_std_20)
+target_link_libraries(sparrow PUBLIC ${SPARROW_INTERFACE_DEPENDENCIES})
 
 if (BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
-    if (BUILD_REFACTORING)
-        add_subdirectory(test_v01)
-    endif ()
 endif ()
 
 # Docs
@@ -242,10 +229,6 @@ install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         PATTERN ".clang-*" EXCLUDE
         PATTERN "README.md" EXCLUDE)
-if (BUILD_REFACTORING)
-    install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow_v01
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-endif ()
 
 set(SPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
     STRING "install path for sparrowConfig.cmake")

@@ -18,14 +18,14 @@ jobs:
       fail-fast: false
       matrix:
         sys:
-        - {compiler: clang, version: '16', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON', build_refactoring: 'ON' }
+        - {compiler: clang, version: '16', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON' }
         # - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
-        - {compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON', build_refactoring: 'OFF' }
+        - {compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON' }
         # - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
 
-        - {compiler: gcc, version: '12', config-flags: '', date-polyfill: 'ON', build_refactoring: 'OFF' }
-        - {compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON', build_refactoring: 'OFF' }
-        - {compiler: gcc, version: '13', config-flags: '', date-polyfill: 'OFF', build_refactoring: 'ON' }
+        - {compiler: gcc, version: '12', config-flags: '', date-polyfill: 'ON' }
+        - {compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON' }
+        - {compiler: gcc, version: '13', config-flags: '', date-polyfill: 'OFF' }
 
         config:
         - { name: Debug }
@@ -63,10 +63,9 @@ jobs:
         cache-downloads: true
 
     - name: Configure using CMake
-      run: cmake -G Ninja -Bbuild ${{matrix.sys.config-flags}} -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DBUILD_REFACTORING=${{matrix.sys.build_refactoring}}
+      run: cmake -G Ninja -Bbuild ${{matrix.sys.config-flags}} -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
 
-    - name: Build
-      if: matrix.sys.build_refactoring == 'ON'
+    - name: Build library
       working-directory: build
       run: cmake --build . --config ${{matrix.config.name}} --target sparrow --parallel 8
 
@@ -88,23 +87,6 @@ jobs:
       with:
         name: test_sparrow_lib_report_Linux_${{ matrix.sys.compiler }}_${{ matrix.sys.version }}_${{ matrix.sys.stdlib }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.sys.date-polyfill}}
         path: '**/test_sparrow_lib_report.xml'
-    
-    - name: Build refactoring
-      if: matrix.sys.build_refactoring == 'ON'
-      working-directory: build
-      run: cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib_v01 --parallel 8
-
-    - name: Run refactoring tests
-      if: matrix.sys.build_refactoring == 'ON'
-      working-directory: build
-      run: cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report_v01
-
-    - name: Upload refactoring test results
-      uses: actions/upload-artifact@v4
-      if: matrix.sys.build_refactoring == 'ON' && (success() || failure())
-      with:
-        name: test_sparrow_lib_report_Linux_v01_${{ matrix.sys.compiler }}_${{ matrix.sys.version }}_${{ matrix.sys.stdlib }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.sys.date-polyfill}}
-        path: '**/test_sparrow_lib_report_v01.xml'
 
     - name: Run all examples
       working-directory: build

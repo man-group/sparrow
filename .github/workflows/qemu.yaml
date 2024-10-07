@@ -82,7 +82,9 @@ jobs:
             echo "Configuring"
             cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
             cd build
-            echo "Building"
+            echo "Building library"
+            cmake --build . --config ${{matrix.config.name}} --target sparrow
+            echo "Building tests"
             cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib
             echo "Running examples"
             cmake --build . --config ${{matrix.config.name}} --target run_examples
