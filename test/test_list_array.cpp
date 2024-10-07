@@ -56,7 +56,7 @@ namespace sparrow
                         test::fill_schema_and_array_for_list_view_layout(schema, arr, flat_schema, flat_arr, sizes, {}, 0);
                     }
                     else
-                    {
+                    {   
                         test::fill_schema_and_array_for_list_layout(schema, arr, flat_schema, flat_arr, sizes, {}, 0);
                     }
                     arrow_proxy proxy(&arr, &schema);         
