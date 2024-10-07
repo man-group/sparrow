@@ -206,7 +206,6 @@ namespace sparrow
     }
 
 
-
     TEST_SUITE("fixed_sized_list_array")
     {   
         TEST_CASE_TEMPLATE("fixed_sized_array_list[T]",T, std::uint8_t, std::int32_t, float, double)
@@ -271,8 +270,6 @@ namespace sparrow
             }
             
         }
-        
-
     }
 
 }
