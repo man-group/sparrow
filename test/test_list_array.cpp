@@ -18,7 +18,7 @@
 #include "doctest/doctest.h"
 
 #include "test_utils.hpp"
-#include "../test/external_array_data_creation.hpp"
+#include "external_array_data_creation.hpp"
 
 namespace sparrow
 {

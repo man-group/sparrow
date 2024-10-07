@@ -188,11 +188,11 @@ namespace sparrow
         buffer_type previous_buffer_type
     )
     {
-        constexpr double bit_per_byte = 8.;
+        constexpr size_t bit_per_byte = 8;
         switch (bt)
         {
             case buffer_type::VALIDITY:
-                return static_cast<std::size_t>(std::ceil(static_cast<double>(length + offset) / bit_per_byte));
+                return (length + offset + bit_per_byte - 1) / bit_per_byte;
             case buffer_type::DATA:
                 if (bt == buffer_type::DATA && (dt == data_type::STRING || dt == data_type::BINARY))
                 {

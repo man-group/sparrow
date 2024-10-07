@@ -18,7 +18,6 @@
 
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/array_base.hpp"
-#include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/types/data_traits.hpp"
@@ -54,10 +53,11 @@ namespace sparrow
         using list_size_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
         using array_type = list_array_impl<BIG>;
         using inner_value_type = list_value;
-        using inner_reference  = list_value;
+        using inner_reference = list_value;
         using inner_const_reference = list_value;
         using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
-        using const_value_iterator = functor_index_iterator<detail::layout_value_functor<const array_type, inner_value_type>>;
+        using const_value_iterator = functor_index_iterator<
+            detail::layout_value_functor<const array_type, inner_value_type>>;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
@@ -110,14 +110,17 @@ namespace sparrow
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
         using size_type = typename base_type::size_type;
-        
+
         using bitmap_type = typename base_type::bitmap_type;
         using bitmap_reference = typename base_type::bitmap_reference;
         using bitmap_const_reference = typename base_type::bitmap_const_reference;
 
-        using inner_value_type =  list_value;
-        using inner_reference =  list_value;
-        using inner_const_reference =  list_value;
+        using bitmap_range = typename base_type::bitmap_range;
+        using const_bitmap_range = typename base_type::const_bitmap_range;
+
+        using inner_value_type = list_value;
+        using inner_reference = list_value;
+        using inner_const_reference = list_value;
 
 
         using value_type = nullable<inner_value_type>;
@@ -134,7 +137,6 @@ namespace sparrow
         const array_base * raw_flat_array() const;
         array_base * raw_flat_array();
 
-        
     private:
         using list_size_type = inner_types::list_size_type;
 

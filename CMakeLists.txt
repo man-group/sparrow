@@ -106,17 +106,18 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${BINARY_BUILD_DIR}")
 
 set(SPARROW_HEADERS
     # arrow_interface
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_factory.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_info_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/deleter.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/smart_pointers.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_flag_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/deleter.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/smart_pointers.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_info_utils.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_flag_utils.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema.hpp
     # buffer
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/allocator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
@@ -129,17 +130,21 @@ set(SPARROW_HEADERS
     # detail
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
     # layout
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_layout/list_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_layout/list_value.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_layout/struct_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_layout/struct_value.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_bitmap_iterator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_bitmap.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dispatch.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_layout/list_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_layout/list_value.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/nested_value_types.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/null_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/primitive_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_layout/struct_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_layout/struct_value.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_array.hpp
     # array
     ${SPARROW_INCLUDE_DIR}/sparrow/types/data_traits.hpp
@@ -147,12 +152,14 @@ set(SPARROW_HEADERS
     # Utils
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/algorithm.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/bit.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/buffers.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/contracts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/functor_index_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/memory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/mp_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/nullable.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/offsets.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/reference_wrapper_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
     # ../
