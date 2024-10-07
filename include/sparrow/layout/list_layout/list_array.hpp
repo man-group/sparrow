@@ -101,7 +101,6 @@ namespace sparrow
     class list_array_crtp_base  : public array_base,
                                   public array_crtp_base<DERIVED>
     {
-        
     public:
         using self_type = list_array_crtp_base<DERIVED>;
         using base_type = array_crtp_base<DERIVED>;
@@ -158,14 +157,10 @@ namespace sparrow
         friend class detail::layout_value_functor<const self_type, inner_value_type>;
     };  
 
-
-
     template<bool BIG>
     class list_array_impl final : public list_array_crtp_base<list_array_impl<BIG>>
     {
-        private:
-        constexpr static std::size_t OFFSET_BUFFER_INDEX = 1;
-        public:
+    public:
         using self_type = list_array_impl<BIG>;
         using inner_types = array_inner_types<self_type>;
         using base_type = list_array_crtp_base<list_array_impl<BIG>>;
@@ -173,17 +168,11 @@ namespace sparrow
         using size_type = typename base_type::size_type; 
         using offset_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
 
-        explicit list_array_impl(arrow_proxy proxy)
-        :   base_type(std::move(proxy)),
-            p_list_offsets(reinterpret_cast<offset_type*>(this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()))
-        {
-        }
+        explicit list_array_impl(arrow_proxy proxy);
+    private:
+        constexpr static std::size_t OFFSET_BUFFER_INDEX = 1;
+        std::pair<offset_type,offset_type>  offset_range(size_type i) const;
         
-        private:
-        std::pair<offset_type,offset_type>  offset_range(size_type i) const{
-            return std::make_pair(p_list_offsets[i], p_list_offsets[i+1]);
-        }
-
         // friend classes
         friend class array_crtp_base<self_type>;
         friend class list_array_crtp_base<self_type>;
@@ -191,14 +180,10 @@ namespace sparrow
 
     };
 
-
     template<bool BIG>
     class list_view_array_impl final : public list_array_crtp_base<list_view_array_impl<BIG>>
     {
-        private:
-        constexpr static std::size_t OFFSET_BUFFER_INDEX = 1;
-        constexpr static std::size_t SIZES_BUFFER_INDEX = 2;
-        public:
+    public:
         using self_type = list_view_array_impl<BIG>;
         using inner_types = array_inner_types<self_type>;
         using base_type = list_array_crtp_base<list_view_array_impl<BIG>>;
@@ -206,18 +191,12 @@ namespace sparrow
         using size_type = typename base_type::size_type; 
         using offset_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
 
-        explicit list_view_array_impl(arrow_proxy proxy)
-        :   base_type(std::move(proxy)),
-            p_list_offsets(reinterpret_cast<offset_type*>(this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset())),
-            p_list_sizes(reinterpret_cast<list_size_type*>(this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()))
-        {
-        }
-        
-        private:
-        std::pair<offset_type,offset_type>  offset_range(size_type i) const{
-            const auto offset = p_list_offsets[i];
-            return std::make_pair(offset, offset + p_list_sizes[i]);
-        }
+        explicit list_view_array_impl(arrow_proxy proxy);
+    private:
+
+        constexpr static std::size_t OFFSET_BUFFER_INDEX = 1;
+        constexpr static std::size_t SIZES_BUFFER_INDEX = 2;
+        std::pair<offset_type,offset_type>  offset_range(size_type i) const;
 
         // friend classes
         friend class array_crtp_base<self_type>;
@@ -229,34 +208,22 @@ namespace sparrow
 
     class fixed_sized_list_array final : public list_array_crtp_base<fixed_sized_list_array>
     {
-        public:
+    public:
         using self_type = fixed_sized_list_array;
         using inner_types = array_inner_types<self_type>;
         using base_type = list_array_crtp_base<self_type>;
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type; 
         using offset_type = std::uint64_t;
-
-        explicit fixed_sized_list_array(arrow_proxy proxy)
-        :   base_type(std::move(proxy)),
-            m_list_size(this->storage().children()[0].length() / this->storage().length())
-        {
-        }
-        
-        private:
-        std::pair<offset_type,offset_type>  offset_range(size_type i) const{
-            const auto offset = i * m_list_size;
-            return std::make_pair(offset, offset + m_list_size);
-        }
-
+        explicit fixed_sized_list_array(arrow_proxy proxy);
+    private:
+        std::pair<offset_type,offset_type>  offset_range(size_type i) const;
         // friend classes
         friend class array_crtp_base<self_type>;
         friend class list_array_crtp_base<self_type>;
         uint64_t m_list_size;
 
     };
-
-
 
     template <class DERIVED>
     list_array_crtp_base<DERIVED>::list_array_crtp_base(arrow_proxy proxy)
@@ -320,5 +287,41 @@ namespace sparrow
         const auto r = this->derived_cast().offset_range(i);
         return list_value{p_flat_array.get(), r.first, r.second};
     }
-        
+
+    template<bool BIG>
+    inline list_array_impl<BIG>::list_array_impl(arrow_proxy proxy)
+    :   base_type(std::move(proxy)),
+        p_list_offsets(reinterpret_cast<offset_type*>(this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()))
+    {
+    }
+
+    template<bool BIG>
+    auto list_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type,offset_type>{
+        return std::make_pair(p_list_offsets[i], p_list_offsets[i+1]);
+    }
+
+    template<bool BIG>
+    inline list_view_array_impl<BIG>::list_view_array_impl(arrow_proxy proxy)
+    :   base_type(std::move(proxy)),
+        p_list_offsets(reinterpret_cast<offset_type*>(this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset())),
+        p_list_sizes(reinterpret_cast<list_size_type*>(this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()))
+    {
+    }
+
+    template<bool BIG>
+    inline auto list_view_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type,offset_type> {
+        const auto offset = p_list_offsets[i];
+        return std::make_pair(offset, offset + p_list_sizes[i]);
+    }
+    
+    inline fixed_sized_list_array::fixed_sized_list_array(arrow_proxy proxy)
+    :   base_type(std::move(proxy)),
+        m_list_size(this->storage().children()[0].length() / this->storage().length())
+    {
+    }
+
+    inline auto fixed_sized_list_array::offset_range(size_type i) const -> std::pair<offset_type,offset_type>{
+        const auto offset = i * m_list_size;
+        return std::make_pair(offset, offset + m_list_size);
+    }
 }
