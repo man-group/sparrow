@@ -345,7 +345,7 @@ namespace sparrow
         const auto format = std::string(this->storage().format());
         const auto n_digits = format.size() - 3;
         const auto list_size_str = format.substr(3, n_digits);
-        m_list_size = static_cast<std::uint64_t>(std::stoull(list_size_str));
+        m_list_size = std::stoull(list_size_str);
     }
 
     inline auto fixed_sized_list_array::offset_range(size_type i) const -> std::pair<offset_type,offset_type>{
