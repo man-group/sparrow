@@ -52,7 +52,6 @@ set(SPARROW_V1_TESTS_SOURCES
     test_utils_offsets.cpp
     test_utils_buffers.cpp
     test_arrow_array_schema_factory.cpp
-    test_bitmap_offset.cpp
 )
 set(test_target_v01 "test_sparrow_lib_v01")
 add_executable(${test_target_v01} ${SPARROW_V1_TESTS_SOURCES})

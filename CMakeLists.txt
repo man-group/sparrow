@@ -168,7 +168,6 @@ if (BUILD_REFACTORING)
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/layout/dictionary_encoded_array/dictionary_encoded_array_bitmap_iterator.hpp
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/arrow_interface/arrow_array_schema_factory.hpp
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/utils/memory.hpp
-        ${SPARROW_INCLUDE_DIR}/sparrow_v01/utils/bitmap_offset.hpp
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/utils/buffers.hpp
         ${SPARROW_INCLUDE_DIR}/sparrow_v01/utils/offsets.hpp
     )
