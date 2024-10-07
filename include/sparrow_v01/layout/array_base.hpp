@@ -90,6 +90,7 @@ namespace sparrow
         using bitmap_reference = bitmap_type::reference;
         using bitmap_const_reference = bitmap_type::const_reference;
         using bitmap_iterator = bitmap_type::iterator;
+        using bitmap_range = std::ranges::subrange<bitmap_iterator>;
         using const_bitmap_iterator = bitmap_type::const_iterator;
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
@@ -279,14 +280,14 @@ namespace sparrow
     auto array_crtp_base<D>::has_value(size_type i) -> bitmap_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return derived_cast().get_bitmap()[i];
+        return derived_cast().get_bitmap()[static_cast<difference_type>(i)];
     }
 
     template <typename D>
     auto array_crtp_base<D>::has_value(size_type i) const -> bitmap_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return derived_cast().get_bitmap()[i];
+        return derived_cast().get_bitmap()[static_cast<difference_type>(i)];
     }
 
     template <typename D>
@@ -304,7 +305,7 @@ namespace sparrow
     template <typename D>
     auto array_crtp_base<D>::bitmap_begin() const -> const_bitmap_iterator
     {
-        return derived_cast().get_bitmap().cbegin();
+        return derived_cast().get_bitmap().begin();
     }
 
     template <typename D>

@@ -14,16 +14,18 @@
 
 #pragma once
 
-#include "sparrow_v01/layout/array_base.hpp"
+#include "sparrow/array/data_traits.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
-#include "sparrow_v01/layout/nested_value_types.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/array/data_traits.hpp"
+
 #include "sparrow_v01/array_factory.hpp"
-#include "sparrow_v01/utils/memory.hpp"
-#include "sparrow_v01/utils/functor_index_iterator.hpp"
+#include "sparrow_v01/layout/array_base.hpp"
 #include "sparrow_v01/layout/layout_utils.hpp"
+#include "sparrow_v01/layout/nested_value_types.hpp"
+#include "sparrow_v01/utils/functor_index_iterator.hpp"
+#include "sparrow_v01/utils/memory.hpp"
+
 
 namespace sparrow
 {
@@ -31,34 +33,36 @@ namespace sparrow
 
     template <>
     struct array_inner_types<struct_array> : array_inner_types_base
-    {   
+    {
         using array_type = struct_array;
         using inner_value_type = struct_value;
-        using inner_reference  = struct_value;
+        using inner_reference = struct_value;
         using inner_const_reference = struct_value;
         using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
-        using const_value_iterator = functor_index_iterator<detail::layout_value_functor<const array_type, inner_value_type>>;
+        using const_value_iterator = functor_index_iterator<
+            detail::layout_value_functor<const array_type, inner_value_type>>;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
     class struct_array final : public array_base,
-                                  public array_crtp_base<struct_array>
+                               public array_crtp_base<struct_array>
     {
     public:
+
         using self_type = struct_array;
         using base_type = array_crtp_base<self_type>;
         using inner_types = array_inner_types<self_type>;
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
         using size_type = typename base_type::size_type;
-        
+
         using bitmap_type = typename base_type::bitmap_type;
         using bitmap_reference = typename base_type::bitmap_reference;
         using bitmap_const_reference = typename base_type::bitmap_const_reference;
 
-        using inner_value_type =  struct_value;
-        using inner_reference =  struct_value;
-        using inner_const_reference =  struct_value;
+        using inner_value_type = struct_value;
+        using inner_reference = struct_value;
+        using inner_const_reference = struct_value;
 
         using value_type = nullable<inner_value_type>;
         using reference = nullable<inner_reference, bitmap_reference>;
@@ -70,9 +74,9 @@ namespace sparrow
         virtual ~struct_array() = default;
         struct_array(const struct_array& rhs) = default;
         struct_array* clone_impl() const override;
-        const array_base * raw_child(std::size_t i) const;
-        array_base * raw_child(std::size_t i);
-        
+        const array_base* raw_child(std::size_t i) const;
+        array_base* raw_child(std::size_t i);
+
     private:
 
         value_iterator value_begin();
@@ -81,9 +85,13 @@ namespace sparrow
         const_value_iterator value_cend() const;
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
-        
+
+        bitmap_range get_bitmap();
+        const_bitmap_range get_bitmap() const;
+
         // data members
         std::vector<cloning_ptr<array_base>> m_children;
+        bitmap_type m_bitmap;
 
         // friend classes
         friend class array_crtp_base<self_type>;
@@ -93,39 +101,42 @@ namespace sparrow
         friend class detail::layout_value_functor<const self_type, inner_value_type>;
     };
 
-
-
     inline struct_array::struct_array(arrow_proxy proxy)
-    :   array_base(proxy.data_type()),
-        base_type(std::move(proxy)),
-        m_children(this->storage().children().size(), nullptr)
+        : array_base(proxy.data_type())
+        , base_type(std::move(proxy))
+        , m_children(this->storage().children().size(), nullptr)
+        , m_bitmap(bitmap_type{
+              this->storage().buffers()[0].data(),
+              this->storage().length() + this->storage().offset()
+          })
     {
-        for(std::size_t i = 0; i < m_children.size(); ++i){
+        for (std::size_t i = 0; i < m_children.size(); ++i)
+        {
             m_children[i] = array_factory(this->storage().children()[i].view());
         }
     }
-    
+
     inline auto struct_array::clone_impl() const -> struct_array*
     {
         return new struct_array(*this);
     }
 
-    inline auto struct_array::raw_child(std::size_t i) const -> const array_base *
+    inline auto struct_array::raw_child(std::size_t i) const -> const array_base*
     {
         return m_children[i].get();
     }
 
-    inline auto struct_array::raw_child(std::size_t i) -> array_base *  
+    inline auto struct_array::raw_child(std::size_t i) -> array_base*
     {
         return m_children[i].get();
     }
-    
+
     inline auto struct_array::value_begin() -> value_iterator
     {
         return value_iterator{detail::layout_value_functor<self_type, inner_value_type>{this}, 0};
     }
-    
-    inline auto struct_array::value_end()-> value_iterator
+
+    inline auto struct_array::value_end() -> value_iterator
     {
         return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), this->size());
     }
@@ -137,16 +148,30 @@ namespace sparrow
 
     inline auto struct_array::value_cend() const -> const_value_iterator
     {
-        return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), this->size());
+        return const_value_iterator(
+            detail::layout_value_functor<const self_type, inner_value_type>(this),
+            this->size()
+        );
     }
 
-    inline auto struct_array::value(size_type i)-> inner_reference
+    inline auto struct_array::value(size_type i) -> inner_reference
     {
-        return  struct_value{m_children, i};
+        return struct_value{m_children, i};
     }
 
     inline auto struct_array::value(size_type i) const -> inner_const_reference
     {
         return struct_value{m_children, i};
     }
+
+    auto struct_array::get_bitmap() -> bitmap_range
+    {
+        return bitmap_range(sparrow::next(m_bitmap.begin(), storage().offset()), m_bitmap.end());
+    }
+
+    auto struct_array::get_bitmap() const -> const_bitmap_range
+    {
+        return const_bitmap_range(sparrow::next(m_bitmap.cbegin(), storage().offset()), m_bitmap.cend());
+    }
+
 }

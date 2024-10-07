@@ -24,7 +24,6 @@
 #include "sparrow_v01/layout/dictionary_encoded_array/dictionary_encoded_array_bitmap.hpp"
 #include "sparrow_v01/layout/dictionary_encoded_array/dictionary_encoded_array_iterator.hpp"
 #include "sparrow_v01/layout/primitive_array.hpp"
-#include "sparrow_v01/utils/bitmap_offset.hpp"
 
 namespace sparrow
 {
@@ -66,6 +65,8 @@ namespace sparrow
         using value_iterator = dictionary_iterator<dictionary_value_traits<array_inner_types<array_type>, false>>;
         using const_value_iterator = dictionary_iterator<dictionary_value_traits<array_inner_types<array_type>, true>>;
 
+        using iterator_tag = std::random_access_iterator_tag;
+
         using iterator = layout_iterator<array_type, false>;
         using const_iterator = layout_iterator<array_type, true>;
 
@@ -94,7 +95,7 @@ namespace sparrow
         using size_type = typename base_type::size_type;
         using difference_type = typename base_type::difference_type;
         using keys_layout = typename inner_types::keys_layout;
-        using iterator_tag = std::random_access_iterator_tag;
+        using iterator_tag =  typename base_type::iterator_tag;
 
         using value_iterator = typename base_type::value_iterator;
         using const_value_iterator = typename base_type::const_value_iterator;

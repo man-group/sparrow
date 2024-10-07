@@ -24,7 +24,6 @@
 #include "sparrow/utils/nullable.hpp"
 
 #include "sparrow_v01/layout/array_base.hpp"
-#include "sparrow_v01/utils/bitmap_offset.hpp"
 
 namespace sparrow
 {
@@ -207,6 +206,8 @@ namespace sparrow
         using data_iterator = typename inner_types::data_iterator;
         using const_data_iterator = typename inner_types::const_data_iterator;
         using data_value_type = typename inner_types::data_value_type;
+        
+        using bitmap_range = typename base_type::bitmap_range;
         using const_bitmap_range = typename base_type::const_bitmap_range;
 
         using value_iterator = typename inner_types::value_iterator;
@@ -222,15 +223,14 @@ namespace sparrow
 
     private:
 
-        bitmap_offset<bitmap_type>& get_bitmap();
-        const bitmap_offset<bitmap_type>& get_bitmap() const;
+        bitmap_range get_bitmap();
+        const_bitmap_range get_bitmap() const;
 
         static bitmap_type make_bitmap(arrow_proxy& arrow_proxy);
 
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
         bitmap_type m_bitmap;
-        bitmap_offset<bitmap_type> m_bitmap_with_offset;
 
         using base_type::bitmap_begin;
         using base_type::bitmap_end;
@@ -453,7 +453,6 @@ namespace sparrow
         : array_base(proxy.data_type())
         , base_type(std::move(proxy))
         , m_bitmap(make_bitmap(storage()))
-        , m_bitmap_with_offset(m_bitmap, storage().offset())
     {
         const auto type = storage().data_type();
         SPARROW_ASSERT_TRUE(type == data_type::STRING || type == data_type::BINARY);  // TODO: Add
@@ -605,15 +604,15 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array<T, CR, OT>::get_bitmap() -> bitmap_offset<bitmap_type>&
+    auto variable_size_binary_array<T, CR, OT>::get_bitmap() -> bitmap_range
     {
-        return m_bitmap_with_offset;
+        return bitmap_range(sparrow::next(m_bitmap.begin(), storage().offset()), m_bitmap.end());
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array<T, CR, OT>::get_bitmap() const -> const bitmap_offset<bitmap_type>&
+    auto variable_size_binary_array<T, CR, OT>::get_bitmap() const -> const_bitmap_range
     {
-        return m_bitmap_with_offset;
+        return const_bitmap_range(sparrow::next(m_bitmap.cbegin(), storage().offset()), m_bitmap.end());
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>

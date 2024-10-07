@@ -14,14 +14,11 @@
 
 #pragma once
 
-
 #include "sparrow/arrow_array_schema_proxy.hpp"
-#include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 #include "sparrow_v01/layout/array_base.hpp"
-#include "sparrow_v01/utils/bitmap_offset.hpp"
 
 namespace sparrow
 {
@@ -43,7 +40,6 @@ namespace sparrow
         using const_value_iterator = pointer_iterator<const_pointer>;
 
         using iterator_tag = std::contiguous_iterator_tag;
-
     };
 
     template <class T>
@@ -71,6 +67,7 @@ namespace sparrow
         using iterator_tag = std::contiguous_iterator_tag;
 
         using value_iterator = typename base_type::value_iterator;
+        using bitmap_range = typename base_type::bitmap_range;
         using const_value_iterator = typename base_type::const_value_iterator;
         using const_bitmap_range = typename base_type::const_bitmap_range;
 
@@ -83,8 +80,8 @@ namespace sparrow
 
         static bitmap_type make_bitmap(arrow_proxy& arrow_proxy);
 
-        bitmap_offset<bitmap_type>& get_bitmap();
-        const bitmap_offset<bitmap_type>& get_bitmap() const;
+        bitmap_range get_bitmap();
+        const_bitmap_range get_bitmap() const;
 
         using base_type::bitmap_begin;
         using base_type::bitmap_end;
@@ -108,7 +105,6 @@ namespace sparrow
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         bitmap_type m_bitmap;
-        bitmap_offset<bitmap_type> m_bitmap_with_offset;
 
         friend class array_crtp_base<self_type>;
     };
@@ -146,11 +142,9 @@ namespace sparrow
         : array_base(proxy.data_type())
         , base_type(std::move(proxy))
         , m_bitmap(make_bitmap(storage()))
-        , m_bitmap_with_offset(m_bitmap, storage().offset())
     {
         SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().data_type()));
     }
-
 
     template <class T>
     auto primitive_array<T>::data() -> pointer
@@ -220,14 +214,14 @@ namespace sparrow
     }
 
     template <class T>
-    auto primitive_array<T>::get_bitmap() -> bitmap_offset<bitmap_type>&
+    auto primitive_array<T>::get_bitmap() -> bitmap_range
     {
-        return m_bitmap_with_offset;
+        return bitmap_range(sparrow::next(m_bitmap.begin(), storage().offset()), m_bitmap.end());
     }
 
     template <class T>
-    auto primitive_array<T>::get_bitmap() const -> const bitmap_offset<bitmap_type>&
+    auto primitive_array<T>::get_bitmap() const -> const_bitmap_range
     {
-        return m_bitmap_with_offset;
+        return const_bitmap_range(sparrow::next(m_bitmap.cbegin(), storage().offset()), m_bitmap.cend());
     }
 }
