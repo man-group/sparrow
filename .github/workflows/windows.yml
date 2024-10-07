@@ -67,7 +67,7 @@ jobs:
 
     - name: Build library
       working-directory: build
-      run: cmake --build . --confic ${{matrix.config.name}} --target sparrow --parallel 8
+      run: cmake --build . --config ${{matrix.config.name}} --target sparrow --parallel 8
 
     - name: Install
       working-directory: build
