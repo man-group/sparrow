@@ -27,15 +27,22 @@
 
 namespace sparrow
 {
-    template <bool BIG>
+    template <class DERIVED>
+    class list_array_crtp_base;
+
+    template<bool BIG>
     class list_array_impl;
 
-    using list_array = list_array_impl<false>;
-    using big_list_array = list_array_impl<true>;
+    template<bool BIG>
+    class list_array_view_impl;
+
+
+    class fixed_size_list;
 
     template <bool BIG>
     struct array_inner_types<list_array_impl<BIG>> : array_inner_types_base
-    {
+    {   
+        using list_size_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
         using array_type = list_array_impl<BIG>;
         using inner_value_type = list_value;
         using inner_reference  = list_value;
@@ -46,14 +53,52 @@ namespace sparrow
     };
 
     template <bool BIG>
-    class list_array_impl final : public array_base,
-                                  public array_crtp_base<list_array_impl<BIG>>
+    struct array_inner_types<list_array_view_impl<BIG>> : array_inner_types_base
+    {   
+        using list_size_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
+        using array_type = list_array_view_impl<BIG>;
+        using inner_value_type = list_value;
+        using inner_reference  = list_value;
+        using inner_const_reference = list_value;
+        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
+        using const_value_iterator = functor_index_iterator<detail::layout_value_functor<const array_type, inner_value_type>>;
+        using iterator_tag = std::random_access_iterator_tag;
+    };
+
+
+    template <>
+    struct array_inner_types<fixed_size_list> : array_inner_types_base
+    {   
+        using list_size_type = std::uint64_t;
+        using array_type = fixed_size_list;
+        using inner_value_type = list_value;
+        using inner_reference  = list_value;
+        using inner_const_reference = list_value;
+        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
+        using const_value_iterator = functor_index_iterator<detail::layout_value_functor<const array_type, inner_value_type>>;
+        using iterator_tag = std::random_access_iterator_tag;
+    };
+
+
+
+    // using list_array = list_array_crtp_base<false>;
+    // using big_list_array = list_array_crtp_base<true>;
+
+    // this is the base class for
+    // - list-array
+    // - big-list-array
+    // - list-view-array
+    // - big-list-view-array
+    // - fixed-size-list-array
+    template <class DERIVED>
+    class list_array_crtp_base  : public array_base,
+                                  public array_crtp_base<DERIVED>
     {
         
     public:
-        using self_type = list_array_impl<BIG>;
-        using base_type = array_crtp_base<self_type>;
-        using inner_types = array_inner_types<self_type>;
+        using self_type = list_array_crtp_base<DERIVED>;
+        using base_type = array_crtp_base<DERIVED>;
+        using inner_types = array_inner_types<DERIVED>;
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
         using size_type = typename base_type::size_type;
@@ -73,20 +118,19 @@ namespace sparrow
         using iterator_tag = std::contiguous_iterator_tag;
 
 
-        using flat_array_offset_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
-        using list_size_type = flat_array_offset_type;
-        using flat_array_offset_pointer = flat_array_offset_type*;
 
-        explicit list_array_impl(arrow_proxy proxy);
-        virtual ~list_array_impl() = default;
-        list_array_impl(const list_array_impl& rhs) = default;
-        list_array_impl* clone_impl() const override;
+        explicit list_array_crtp_base(arrow_proxy proxy);
+        virtual ~list_array_crtp_base() = default;
+        list_array_crtp_base(const list_array_crtp_base& rhs) = default;
+        list_array_crtp_base* clone_impl() const override;
         const array_base * raw_flat_array() const;
         array_base * raw_flat_array();
 
         
     private:
-        constexpr static std::size_t OFFSET_BUFFER_INDEX = 1;
+        using list_size_type = inner_types::list_size_type;
+
+
         value_iterator value_begin();
         value_iterator value_end();
         const_value_iterator value_cbegin() const;
@@ -96,78 +140,189 @@ namespace sparrow
         inner_const_reference value(size_type i) const;
         
         // data members
-        flat_array_offset_type * p_list_offsets;
+        //flat_array_offset_type * p_list_offsets;
         cloning_ptr<array_base>  p_flat_array;
 
         // friend classes
-        friend class array_crtp_base<self_type>;
+        friend class array_crtp_base<DERIVED>;
 
         // needs access to this->value(i)
         friend class detail::layout_value_functor<self_type, inner_value_type>;
         friend class detail::layout_value_functor<const self_type, inner_value_type>;
+    };  
+
+
+
+    template<bool BIG>
+    class list_array_impl final : public list_array_crtp_base<list_array_impl<BIG>>
+    {
+        private:
+        constexpr static std::size_t OFFSET_BUFFER_INDEX = 1;
+        public:
+        using self_type = list_array_impl<BIG>;
+        using inner_types = array_inner_types<self_type>;
+        using base_type = list_array_crtp_base<list_array_impl<BIG>>;
+        using list_size_type = inner_types::list_size_type;
+        using size_type = typename base_type::size_type; 
+        using offset_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
+
+        explicit list_array_impl(arrow_proxy proxy)
+        :   base_type(std::move(proxy)),
+            p_list_offsets(reinterpret_cast<offset_type*>(this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()))
+        {
+        }
+        
+        private:
+        std::pair<offset_type,offset_type>  offset_range(size_type i) const{
+            return std::make_pair(p_list_offsets[i], p_list_offsets[i+1]);
+        }
+
+        // friend classes
+        friend class array_crtp_base<self_type>;
+        friend class list_array_crtp_base<self_type>;
+        offset_type* p_list_offsets;
+
     };
 
 
-    template <bool BIG>
-    list_array_impl<BIG>::list_array_impl(arrow_proxy proxy)
+    using list_array = list_array_impl<false>;
+    using big_list_array = list_array_impl<true>;
+
+
+    template<bool BIG>
+    class list_array_view_impl final : public list_array_crtp_base<list_array_view_impl<BIG>>
+    {
+        private:
+        constexpr static std::size_t OFFSET_BUFFER_INDEX = 1;
+        constexpr static std::size_t SIZES_BUFFER_INDEX = 2;
+        public:
+        using self_type = list_array_view_impl<BIG>;
+        using inner_types = array_inner_types<self_type>;
+        using base_type = list_array_crtp_base<list_array_view_impl<BIG>>;
+        using list_size_type = inner_types::list_size_type;
+        using size_type = typename base_type::size_type; 
+        using offset_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
+
+        explicit list_array_view_impl(arrow_proxy proxy)
+        :   base_type(std::move(proxy)),
+            p_list_offsets(reinterpret_cast<offset_type*>(this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset())),
+            p_list_sizes(reinterpret_cast<list_size_type*>(this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()))
+        {
+        }
+        
+        private:
+        std::pair<offset_type,offset_type>  offset_range(size_type i) const{
+            const auto offset = p_list_offsets[i];
+            return std::make_pair(offset, offset + p_list_sizes[i]);
+        }
+
+        // friend classes
+        friend class array_crtp_base<self_type>;
+        friend class list_array_crtp_base<self_type>;
+        offset_type* p_list_offsets;
+        list_size_type* p_list_sizes;
+
+    };
+
+
+    using list_array_view = list_array_view_impl<false>;
+    using big_list_array_view = list_array_view_impl<true>;
+
+
+
+
+    class fixed_size_list final : public list_array_crtp_base<fixed_size_list>
+    {
+        public:
+        using self_type = fixed_size_list;
+        using inner_types = array_inner_types<self_type>;
+        using base_type = list_array_crtp_base<self_type>;
+        using list_size_type = inner_types::list_size_type;
+        using size_type = typename base_type::size_type; 
+        using offset_type = std::uint64_t;
+
+        explicit fixed_size_list(arrow_proxy proxy)
+        :   base_type(std::move(proxy)),
+            m_list_size(this->storage().children()[0].length() / this->storage().length())
+        {
+        }
+        
+        private:
+        std::pair<offset_type,offset_type>  offset_range(size_type i) const{
+            const auto offset = i * m_list_size;
+            return std::make_pair(offset, offset + m_list_size);
+        }
+
+        // friend classes
+        friend class array_crtp_base<self_type>;
+        friend class list_array_crtp_base<self_type>;
+        uint64_t m_list_size;
+
+    };
+
+
+
+    template <class DERIVED>
+    list_array_crtp_base<DERIVED>::list_array_crtp_base(arrow_proxy proxy)
     :   array_base(proxy.data_type()),
         base_type(std::move(proxy)),
-        p_list_offsets(reinterpret_cast<flat_array_offset_type*>(this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset())),
         p_flat_array(std::move(array_factory(this->storage().children()[0].view())))
     {
     }
     
-    template <bool BIG>
-    auto list_array_impl<BIG>::clone_impl() const -> list_array_impl* 
+    template <class DERIVED>
+    auto list_array_crtp_base<DERIVED>::clone_impl() const -> list_array_crtp_base* 
     {
-        return new list_array_impl(*this);
+        return new list_array_crtp_base(*this);
     }
 
-    template <bool BIG>
-    auto list_array_impl<BIG>::raw_flat_array() const -> const array_base * 
+    template <class DERIVED>
+    auto list_array_crtp_base<DERIVED>::raw_flat_array() const -> const array_base * 
     {
         return p_flat_array.get();
     }
-    template <bool BIG>
-    auto list_array_impl<BIG>::raw_flat_array()-> array_base * 
+    template <class DERIVED>
+    auto list_array_crtp_base<DERIVED>::raw_flat_array()-> array_base * 
     {
         return p_flat_array.get();
     }
     
-    template <bool BIG>
-    auto list_array_impl<BIG>::value_begin() -> value_iterator 
+    template <class DERIVED>
+    auto list_array_crtp_base<DERIVED>::value_begin() -> value_iterator 
     {
-        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), 0);
+        return value_iterator(detail::layout_value_functor<DERIVED, inner_value_type>(&this->derived_cast()), 0);
     }
     
-    template <bool BIG>
-    auto list_array_impl<BIG>::value_end() -> value_iterator
+    template <class DERIVED>
+    auto list_array_crtp_base<DERIVED>::value_end() -> value_iterator
     {
-        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), this->size());
+        return value_iterator(detail::layout_value_functor<DERIVED, inner_value_type>(&this->derived_cast()), this->size());
     }
 
-    template <bool BIG>
-    auto list_array_impl<BIG>::value_cbegin() const -> const_value_iterator
+    template <class DERIVED>
+    auto list_array_crtp_base<DERIVED>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), 0);
+        return const_value_iterator(detail::layout_value_functor<const DERIVED, inner_value_type>(&this->derived_cast()), 0);
     }
 
-    template <bool BIG>
-    auto list_array_impl<BIG>::value_cend() const -> const_value_iterator
+    template <class DERIVED>
+    auto list_array_crtp_base<DERIVED>::value_cend() const -> const_value_iterator
     {
-        return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), this->size());
+        return const_value_iterator(detail::layout_value_functor<const DERIVED, inner_value_type>(&this->derived_cast()), this->size());
     }
 
-    template <bool BIG>
-    auto list_array_impl<BIG>::value(size_type i) -> inner_reference
+    template <class DERIVED>
+    auto list_array_crtp_base<DERIVED>::value(size_type i) -> inner_reference
     {
-        return  list_value{p_flat_array.get(), p_list_offsets[i], p_list_offsets[i + 1]};
+        const auto r = this->derived_cast().offset_range(i);
+        return list_value{p_flat_array.get(), r.first, r.second};
     }
 
-    template <bool BIG>
-    auto list_array_impl<BIG>::value(size_type i) const -> inner_const_reference
+    template <class DERIVED>
+    auto list_array_crtp_base<DERIVED>::value(size_type i) const -> inner_const_reference
     {
-        return list_value{p_flat_array.get(), p_list_offsets[i], p_list_offsets[i + 1]};
+        const auto r = this->derived_cast().offset_range(i);
+        return list_value{p_flat_array.get(), r.first, r.second};
     }
         
 }
