@@ -130,7 +130,7 @@ namespace sparrow::test
         arr.null_count = static_cast<std::int64_t>(false_postions.size());
         arr.offset = 0;
 
-        arr.n_buffers = 2;
+        arr.n_buffers = 1;
         arr.n_children = 1;
 
         std::uint8_t** buf = new std::uint8_t*[1];

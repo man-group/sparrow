@@ -221,6 +221,8 @@ namespace sparrow
 
             const std::size_t n = n_flat / list_size;
 
+            CHECK(n == 4);
+
 
             // first we create a flat array of integers
             ArrowArray flat_arr{};
