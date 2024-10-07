@@ -178,7 +178,7 @@ namespace sparrow::test
         buf[0] = make_bitmap_buffer(static_cast<std::size_t>(arr.length), false_postions);
 
         buf[1] = make_offset_buffer_from_sizes(list_lengths, big_list);
-        buf[2] = new std::uint8_t[static_cast<std::uint64_t>(list_lengths.size())  * (big_list ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
+        buf[2] = new std::uint8_t[list_lengths.size()  * (big_list ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
 
         if(big_list)
         {
