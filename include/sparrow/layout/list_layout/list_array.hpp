@@ -193,7 +193,6 @@ namespace sparrow
 
         explicit list_view_array_impl(arrow_proxy proxy);
     private:
-
         constexpr static std::size_t OFFSET_BUFFER_INDEX = 1;
         constexpr static std::size_t SIZES_BUFFER_INDEX = 2;
         std::pair<offset_type,offset_type>  offset_range(size_type i) const;
@@ -215,6 +214,7 @@ namespace sparrow
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type; 
         using offset_type = std::uint64_t;
+
         explicit fixed_sized_list_array(arrow_proxy proxy);
     private:
         std::pair<offset_type,offset_type>  offset_range(size_type i) const;

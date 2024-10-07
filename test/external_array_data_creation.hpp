@@ -251,6 +251,17 @@ namespace sparrow::test
         bool big_list
     );
 
+    void fill_schema_and_array_for_list_view_layout(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        ArrowSchema & flat_value_schema,
+        ArrowArray & flat_value_arr,
+        const std::vector<std::size_t> & list_lengths,
+        const std::vector<std::size_t> & false_postions,
+        bool big_list
+    );
+
+
     void fill_schema_and_array_for_struct_layout(
         ArrowSchema& schema,
         ArrowArray& arr,

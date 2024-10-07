@@ -96,6 +96,66 @@ namespace sparrow::test
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
 
+    }
+
+
+    void fill_schema_and_array_for_list_view_layout(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        ArrowSchema & flat_value_schema,
+        ArrowArray & flat_value_arr,
+        const std::vector<std::size_t> & list_lengths,
+        const std::vector<std::size_t> & false_postions,
+        bool big_list
+    ){
+        schema.format = big_list ? "+L" : "+l";
+        schema.name = "test";
+        schema.metadata = "test metadata";
+
+        schema.n_children = 1;
+        schema.children = new ArrowSchema*[1];
+        schema.children[0] = &flat_value_schema;
+
+        schema.dictionary = nullptr;
+        schema.release = &release_arrow_schema;
+
+
+        arr.length = static_cast<std::int64_t>(list_lengths.size());
+        arr.null_count = static_cast<std::int64_t>(false_postions.size());
+        arr.offset = 0;
+
+        arr.n_buffers = 2;
+        arr.n_children = 1;
+
+        std::uint8_t** buf = new std::uint8_t*[3];
+        buf[0] = make_bitmap_buffer(static_cast<std::size_t>(arr.length), false_postions);
+
+        buf[1] = make_offset_buffer_from_sizes(list_lengths, big_list);
+        buf[2] = new std::uint8_t[static_cast<std::uint64_t>(flat_value_arr.length)  * (big_list ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
+
+        if(big_list)
+        {
+            std::uint64_t* size_buf = reinterpret_cast<std::uint64_t*>(buf[2]);
+            for(std::size_t i = 0; i < list_lengths.size(); ++i)
+            {
+                size_buf[i] = list_lengths[i];
+            }
+        }
+        else{
+            std::uint32_t* size_buf = reinterpret_cast<std::uint32_t*>(buf[2]);
+            for(std::size_t i = 0; i < list_lengths.size(); ++i)
+            {
+                size_buf[i] = static_cast<std::uint32_t>(list_lengths[i]);
+            }
+        }
+
+        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
+
+        arr.children = new ArrowArray*[1];
+        arr.children[0] = &flat_value_arr;
+
+        arr.dictionary = nullptr;
+        arr.release = &release_arrow_array;
 
     }
 
