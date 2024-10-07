@@ -180,6 +180,12 @@ namespace sparrow::test
         buf[1] = make_offset_buffer_from_sizes(list_lengths, big_list);
         buf[2] = new std::uint8_t[list_lengths.size()  * (big_list ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
 
+        // ignore -Werror=cast-align]
+        #ifdef __GNUC__
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-align"
+        #endif
+
         if(big_list)
         {
             std::uint64_t* size_buf = reinterpret_cast<std::uint64_t*>(buf[2]);
@@ -195,7 +201,9 @@ namespace sparrow::test
                 size_buf[i] = static_cast<std::uint32_t>(list_lengths[i]);
             }
         }
-
+        #ifdef __GNUC__
+        #pragma GCC diagnostic pop
+        #endif
         arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
 
         arr.children = new ArrowArray*[1];
