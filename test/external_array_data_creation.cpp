@@ -113,8 +113,8 @@ namespace sparrow::test
         SPARROW_ASSERT(list_size < 10, "just a test limitation st. format string can be on stack");
         // convert list size to string
         std::string list_size_str = std::to_string(list_size);
-        schema.format = "+w:X"; // X is a placeholder for the list size
-        const_cast<char*>(schema.format)[3] = list_size_str[0];
+        schema.format = new char[5]{'+', 'w',':', list_size_str[0], '\0'};
+
         schema.name = "test";
         schema.metadata = "test metadata";
 

@@ -322,10 +322,9 @@ namespace sparrow
     {
         // get the list size from the format string
         const auto format = std::string(this->storage().format());
-        const auto list_size_str = format.substr(2, format.size() - 3);
-        std::cout<<"list_size_str: "<<list_size_str<<std::endl;
+        const auto n_digits = format.size() - 3;
+        const auto list_size_str = format.substr(3, n_digits);
         m_list_size = static_cast<std::uint64_t>(std::stoull(list_size_str));
-        std::cout<<"m_list_size: "<<m_list_size<<std::endl;
     }
 
     inline auto fixed_sized_list_array::offset_range(size_type i) const -> std::pair<offset_type,offset_type>{

@@ -268,7 +268,7 @@ namespace sparrow
                     }
                 }
             }
-            
+            delete schema.format;
         }
     }
 
