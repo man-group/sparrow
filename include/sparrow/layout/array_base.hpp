@@ -145,14 +145,14 @@ namespace sparrow
         const_bitmap_iterator bitmap_begin() const;
         const_bitmap_iterator bitmap_end() const;
 
+        derived_type& derived_cast();
+        const derived_type& derived_cast() const;
+
     private:
 
         static constexpr std::size_t m_bitmap_buffer_index = 0;
 
         bitmap_type make_bitmap();
-
-        derived_type& derived_cast();
-        const derived_type& derived_cast() const;
 
         arrow_proxy m_proxy;
         bitmap_type m_bitmap;
