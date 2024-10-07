@@ -57,15 +57,18 @@ namespace sparrow
             return make_cloning_ptr<list_array>(std::move(proxy));
         case data_type::LARGE_LIST:
             return make_cloning_ptr<big_list_array>(std::move(proxy));
+        case data_type::LIST_VIEW:
+            return make_cloning_ptr<list_view_array>(std::move(proxy));
+        case data_type::LARGE_LIST_VIEW:
+            return make_cloning_ptr<big_list_view_array>(std::move(proxy));
+        case data_type::FIXED_SIZED_LIST:
+            return make_cloning_ptr<fixed_sized_list_array>(std::move(proxy));
         case data_type::STRUCT:
             return make_cloning_ptr<struct_array>(std::move(proxy));
         case data_type::STRING:
             return make_cloning_ptr<variable_size_binary_array<std::string, std::string_view>>(std::move(proxy));
         case data_type::FIXED_SIZE_BINARY:
         case data_type::TIMESTAMP:
-        case data_type::LIST_VIEW:
-        case data_type::LARGE_LIST_VIEW:
-        case data_type::FIXED_SIZED_LIST:
         case data_type::MAP:
         case data_type::DENSE_UNION:
         case data_type::SPARSE_UNION:

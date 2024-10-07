@@ -34,10 +34,17 @@ namespace sparrow
     class list_array_impl;
 
     template<bool BIG>
-    class list_array_view_impl;
+    class list_view_array_impl;
 
 
-    class fixed_size_list;
+    using list_array = list_array_impl<false>;
+    using big_list_array = list_array_impl<true>;
+
+
+    using list_view_array = list_view_array_impl<false>;
+    using big_list_view_array = list_view_array_impl<true>;
+
+    class fixed_sized_list_array;
 
     template <bool BIG>
     struct array_inner_types<list_array_impl<BIG>> : array_inner_types_base
@@ -53,10 +60,10 @@ namespace sparrow
     };
 
     template <bool BIG>
-    struct array_inner_types<list_array_view_impl<BIG>> : array_inner_types_base
+    struct array_inner_types<list_view_array_impl<BIG>> : array_inner_types_base
     {   
         using list_size_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
-        using array_type = list_array_view_impl<BIG>;
+        using array_type = list_view_array_impl<BIG>;
         using inner_value_type = list_value;
         using inner_reference  = list_value;
         using inner_const_reference = list_value;
@@ -67,10 +74,10 @@ namespace sparrow
 
 
     template <>
-    struct array_inner_types<fixed_size_list> : array_inner_types_base
+    struct array_inner_types<fixed_sized_list_array> : array_inner_types_base
     {   
         using list_size_type = std::uint64_t;
-        using array_type = fixed_size_list;
+        using array_type = fixed_sized_list_array;
         using inner_value_type = list_value;
         using inner_reference  = list_value;
         using inner_const_reference = list_value;
@@ -185,25 +192,21 @@ namespace sparrow
     };
 
 
-    using list_array = list_array_impl<false>;
-    using big_list_array = list_array_impl<true>;
-
-
     template<bool BIG>
-    class list_array_view_impl final : public list_array_crtp_base<list_array_view_impl<BIG>>
+    class list_view_array_impl final : public list_array_crtp_base<list_view_array_impl<BIG>>
     {
         private:
         constexpr static std::size_t OFFSET_BUFFER_INDEX = 1;
         constexpr static std::size_t SIZES_BUFFER_INDEX = 2;
         public:
-        using self_type = list_array_view_impl<BIG>;
+        using self_type = list_view_array_impl<BIG>;
         using inner_types = array_inner_types<self_type>;
-        using base_type = list_array_crtp_base<list_array_view_impl<BIG>>;
+        using base_type = list_array_crtp_base<list_view_array_impl<BIG>>;
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type; 
         using offset_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
 
-        explicit list_array_view_impl(arrow_proxy proxy)
+        explicit list_view_array_impl(arrow_proxy proxy)
         :   base_type(std::move(proxy)),
             p_list_offsets(reinterpret_cast<offset_type*>(this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset())),
             p_list_sizes(reinterpret_cast<list_size_type*>(this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()))
@@ -224,24 +227,17 @@ namespace sparrow
 
     };
 
-
-    using list_array_view = list_array_view_impl<false>;
-    using big_list_array_view = list_array_view_impl<true>;
-
-
-
-
-    class fixed_size_list final : public list_array_crtp_base<fixed_size_list>
+    class fixed_sized_list_array final : public list_array_crtp_base<fixed_sized_list_array>
     {
         public:
-        using self_type = fixed_size_list;
+        using self_type = fixed_sized_list_array;
         using inner_types = array_inner_types<self_type>;
         using base_type = list_array_crtp_base<self_type>;
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type; 
         using offset_type = std::uint64_t;
 
-        explicit fixed_size_list(arrow_proxy proxy)
+        explicit fixed_sized_list_array(arrow_proxy proxy)
         :   base_type(std::move(proxy)),
             m_list_size(this->storage().children()[0].length() / this->storage().length())
         {
