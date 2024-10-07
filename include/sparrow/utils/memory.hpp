@@ -24,7 +24,6 @@
 
 namespace sparrow
 {
-
     /**
      * @brief A value_ptr is a smart pointer that behaves like a value.
      * It manages the lifetime of an object of type T which is not stored in the `value_ptr` but a pointer,
@@ -134,26 +133,17 @@ namespace sparrow
 
         std::unique_ptr<T> value_;
     };
-
-    // TODO, refactor in a seperate PR as this concept is not working.
-    // ArrayBase* is **NOT** convertible to Derived*.
-
-    // /**
-    //  * Matches types that provide a `clone` method.
-    //  *
-    //  * This concept checks if a type provides a `clone` method that
-    //  * returns a pointer convertible to a pointer to the type.
-    //  *
-    //  * @tparam T The type to check
-    //  */
-    // template <class T>
-    // concept clonable = requires(const T* t)	
-    // {	
-    //     { t->clone() } -> std::convertible_to<T*> 
-    // };
-
+   
+    /**
+     * Matches types that provide a `clone` method.
+     *
+     * This concept checks if a type T provides a `clone` method that
+     * returns a pointer to an object whose type is a base of T.
+     *
+     * @tparam T The type to check
+     */
     template <class T>
-    concept clonable =  true;
+    concept clonable = std::derived_from<T, std::decay_t<decltype(*std::declval<T*>()->clone())>>;
 
     /**
      * Smart pointer behaving like a copiable std::unique_ptr.
@@ -234,15 +224,6 @@ namespace sparrow
         internal_pointer m_data;
     };
 
-
-
-
-    template <class T, class... Args>
-    cloning_ptr<T> make_cloning_ptr(Args&&... args)
-    {
-        return cloning_ptr<T>(new T(std::forward<Args>(args)...));
-    }
-
     template <class T>
     void swap(cloning_ptr<T>& lhs, cloning_ptr<T>& rhs) noexcept;
 
@@ -272,6 +253,9 @@ namespace sparrow
     constexpr
     std::compare_three_way_result_t<typename cloning_ptr<T>::pointer>
     operator<=>(const cloning_ptr<T>& lhs, std::nullptr_t) noexcept;
+
+    template <class T, class... Args>
+    cloning_ptr<T> make_cloning_ptr(Args&&... args);
 
     /******************************
      * cloning_ptr implementation *
@@ -447,5 +431,11 @@ namespace sparrow
     {
         using pointer = typename cloning_ptr<T>::pointer;
         return lhs.get() <=> static_cast<pointer>(nullptr);
+    }
+
+    template <class T, class... Args>
+    cloning_ptr<T> make_cloning_ptr(Args&&... args)
+    {
+        return cloning_ptr<T>(new T(std::forward<Args>(args)...));
     }
 }
