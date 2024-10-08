@@ -88,7 +88,7 @@ namespace sparrow
             return false;
         }
         const auto key_value = key.value();
-        const bool value_validity = m_value_array_bitmap[key_value];
+        const bool value_validity = m_value_array_bitmap[static_cast<difference_type>(key_value)];
         return value_validity;
     }
 
