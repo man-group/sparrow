@@ -17,6 +17,7 @@
 #include <numeric>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
+#include "sparrow/types/data_type.hpp"
 #include "sparrow/types/data_traits.hpp"
 
 namespace sparrow::test
@@ -25,13 +26,12 @@ namespace sparrow::test
     void release_arrow_array(ArrowArray* arr);
 
     inline std::uint8_t* make_offset_buffer_from_sizes(const std::vector<size_t>& sizes, bool big)
-    {   
-
-        // ignore -Werror=cast-align]
-        #ifdef __GNUC__
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wcast-align"
-        #endif
+    {
+// ignore -Werror=cast-align]
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
         const auto n = sizes.size() + 1;
         auto buf = new std::uint8_t[n * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
         if (big)
@@ -40,7 +40,7 @@ namespace sparrow::test
             ptr[0] = 0;
             for (std::size_t i = 0; i < sizes.size(); ++i)
             {
-                ptr[i+1] = ptr[i] + static_cast<std::uint64_t>(sizes[i]);
+                ptr[i + 1] = ptr[i] + static_cast<std::uint64_t>(sizes[i]);
             }
         }
         else
@@ -49,12 +49,12 @@ namespace sparrow::test
             ptr[0] = 0;
             for (std::size_t i = 0; i < sizes.size(); ++i)
             {
-                ptr[i+1] = ptr[i] + static_cast<std::uint32_t>(sizes[i]);
+                ptr[i + 1] = ptr[i] + static_cast<std::uint32_t>(sizes[i]);
             }
         }
-        #ifdef __GNUC__
-        #pragma GCC diagnostic pop
-        #endif
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
         return buf;
     }
 
@@ -240,14 +240,13 @@ namespace sparrow::test
         return arrow_proxy(std::move(ar), std::move(sc));
     }
 
-
     void fill_schema_and_array_for_list_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema & flat_value_schema,
-        ArrowArray & flat_value_arr,
-        const std::vector<std::size_t> & list_lengths,
-        const std::vector<std::size_t> & false_postions,
+        ArrowSchema& flat_value_schema,
+        ArrowArray& flat_value_arr,
+        const std::vector<std::size_t>& list_lengths,
+        const std::vector<std::size_t>& false_postions,
         bool big_list
     );
 
@@ -274,8 +273,8 @@ namespace sparrow::test
     void fill_schema_and_array_for_struct_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        std::vector<ArrowSchema> & children_schemas,
-        std::vector<ArrowArray> & children_arrays,
-        const std::vector<std::size_t> & false_postions
+        std::vector<ArrowSchema>& children_schemas,
+        std::vector<ArrowArray>& children_arrays,
+        const std::vector<std::size_t>& false_postions
     );
 }

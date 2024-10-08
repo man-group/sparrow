@@ -43,13 +43,15 @@ set(SPARROW_TESTS_SOURCES
     main.cpp
     test_algorithm.cpp
     test_allocator.cpp
-    test_arrow_array.cpp
+    test_arrow_array_schema_factory.cpp
     test_arrow_array_schema_proxy.cpp
     test_arrow_array_schema_utils.cpp
+    test_arrow_array.cpp
     test_arrow_schema.cpp
     test_bit.cpp
-    test_buffer.cpp
     test_buffer_adaptor.cpp
+    test_buffer.cpp
+    test_dictionary_encoded_array.cpp
     test_dispatch.cpp
     test_dynamic_bitset.cpp
     test_iterator.cpp
@@ -62,7 +64,8 @@ set(SPARROW_TESTS_SOURCES
     test_primitive_array.cpp
     test_struct_array.cpp
     test_traits.cpp
-    test_utils.cpp
+    test_utils_buffers.cpp
+    test_utils_offsets.cpp
     test_utils.hpp
     test_variable_size_binary_array.cpp
 )

@@ -17,14 +17,12 @@
 #include <concepts>
 #include <cstdint>
 
-#include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-
 
 namespace sparrow
 {
@@ -71,11 +69,12 @@ namespace sparrow
      * @tparam is_const a boolean flag specifying whether this iterator is const.
      */
     template <class L, bool is_const>
-    class variable_size_binary_value_iterator : public iterator_base<
-                                                    variable_size_binary_value_iterator<L, is_const>,
-                                                    mpl::constify_t<typename array_inner_types<L>::inner_value_type, is_const>,
-                                                    std::contiguous_iterator_tag,
-                                                    impl::get_inner_reference_t<array_inner_types<L>, is_const>>
+    class variable_size_binary_value_iterator
+        : public iterator_base<
+              variable_size_binary_value_iterator<L, is_const>,
+              mpl::constify_t<typename array_inner_types<L>::inner_value_type, is_const>,
+              std::contiguous_iterator_tag,
+              impl::get_inner_reference_t<array_inner_types<L>, is_const>>
     {
     public:
 
@@ -207,6 +206,9 @@ namespace sparrow
         using const_data_iterator = typename inner_types::const_data_iterator;
         using data_value_type = typename inner_types::data_value_type;
 
+        using bitmap_range = typename base_type::bitmap_range;
+        using const_bitmap_range = typename base_type::const_bitmap_range;
+
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
 
@@ -220,8 +222,12 @@ namespace sparrow
 
     private:
 
+        bitmap_type::iterator bitmap_begin_impl();
+        bitmap_type::const_iterator bitmap_begin_impl() const;
+
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
+        bitmap_type m_bitmap;
 
         using base_type::bitmap_begin;
         using base_type::bitmap_end;
@@ -443,6 +449,7 @@ namespace sparrow
     variable_size_binary_array<T, CR, OT>::variable_size_binary_array(arrow_proxy proxy)
         : array_base(proxy.data_type())
         , base_type(std::move(proxy))
+        , m_bitmap(make_simple_bitmap(storage()))
     {
         const auto type = storage().data_type();
         SPARROW_ASSERT_TRUE(type == data_type::STRING || type == data_type::BINARY);  // TODO: Add
@@ -591,5 +598,17 @@ namespace sparrow
     variable_size_binary_array<T, CR, OT>* variable_size_binary_array<T, CR, OT>::clone_impl() const
     {
         return new variable_size_binary_array<T, CR, OT>(*this);
+    }
+
+    template <std::ranges::sized_range T, class CR, layout_offset OT>
+    auto variable_size_binary_array<T, CR, OT>::bitmap_begin_impl() -> bitmap_type::iterator
+    {
+        return next(m_bitmap.begin(), storage().offset());
+    }
+
+    template <std::ranges::sized_range T, class CR, layout_offset OT>
+    auto variable_size_binary_array<T, CR, OT>::bitmap_begin_impl() const -> bitmap_type::const_iterator
+    {
+        return next(m_bitmap.begin(), storage().offset());
     }
 }

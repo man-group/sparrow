@@ -14,10 +14,11 @@
 
 #pragma once
 
+#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/array_base.hpp"
-#include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
+
 
 namespace sparrow
 {
@@ -39,7 +40,6 @@ namespace sparrow
         using const_value_iterator = pointer_iterator<const_pointer>;
 
         using iterator_tag = std::contiguous_iterator_tag;
-
     };
 
     template <class T>
@@ -67,14 +67,18 @@ namespace sparrow
         using iterator_tag = std::contiguous_iterator_tag;
 
         using value_iterator = typename base_type::value_iterator;
+        using bitmap_range = typename base_type::bitmap_range;
         using const_value_iterator = typename base_type::const_value_iterator;
+        using const_bitmap_range = typename base_type::const_bitmap_range;
 
         explicit primitive_array(arrow_proxy);
-        virtual ~primitive_array() = default;
+        ~primitive_array() override = default;
 
         using base_type::size;
 
     private:
+        bitmap_type::iterator bitmap_begin_impl();
+        bitmap_type::const_iterator bitmap_begin_impl() const;
 
         using base_type::bitmap_begin;
         using base_type::bitmap_end;
@@ -97,6 +101,7 @@ namespace sparrow
         primitive_array* clone_impl() const override;
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
+        bitmap_type m_bitmap;
 
         friend class array_crtp_base<self_type>;
     };
@@ -133,10 +138,10 @@ namespace sparrow
     primitive_array<T>::primitive_array(arrow_proxy proxy)
         : array_base(proxy.data_type())
         , base_type(std::move(proxy))
+        , m_bitmap(make_simple_bitmap(storage()))
     {
         SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().data_type()));
     }
-
 
     template <class T>
     auto primitive_array<T>::data() -> pointer
@@ -194,5 +199,17 @@ namespace sparrow
     primitive_array<T>* primitive_array<T>::clone_impl() const
     {
         return new primitive_array<T>(*this);
+    }
+
+    template <class T>
+    auto primitive_array<T>::bitmap_begin_impl() -> bitmap_type::iterator
+    {
+        return next(m_bitmap.begin(), storage().offset());
+    }
+
+    template <class T>
+    auto primitive_array<T>::bitmap_begin_impl() const -> bitmap_type::const_iterator
+    {
+        return next(m_bitmap.begin(), storage().offset());
     }
 }
