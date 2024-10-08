@@ -77,11 +77,8 @@ namespace sparrow
         using base_type::size;
 
     private:
-
-        static bitmap_type make_bitmap(arrow_proxy& arrow_proxy);
-
-        bitmap_range get_bitmap();
-        const_bitmap_range get_bitmap() const;
+        bitmap_type::iterator bitmap_begin_impl();
+        bitmap_type::const_iterator bitmap_begin_impl() const;
 
         using base_type::bitmap_begin;
         using base_type::bitmap_end;
@@ -141,7 +138,7 @@ namespace sparrow
     primitive_array<T>::primitive_array(arrow_proxy proxy)
         : array_base(proxy.data_type())
         , base_type(std::move(proxy))
-        , m_bitmap(make_bitmap(storage()))
+        , m_bitmap(make_simple_bitmap(storage()))
     {
         SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().data_type()));
     }
@@ -205,23 +202,14 @@ namespace sparrow
     }
 
     template <class T>
-    auto primitive_array<T>::make_bitmap(arrow_proxy& arrow_proxy) -> bitmap_type
+    auto primitive_array<T>::bitmap_begin_impl() -> bitmap_type::iterator
     {
-        constexpr size_t bitmap_buffer_index = 0;
-        SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
-        const auto bitmap_size = arrow_proxy.length() + arrow_proxy.offset();
-        return bitmap_type(arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size);
+        return next(m_bitmap.begin(), storage().offset());
     }
 
     template <class T>
-    auto primitive_array<T>::get_bitmap() -> bitmap_range
+    auto primitive_array<T>::bitmap_begin_impl() const -> bitmap_type::const_iterator
     {
-        return bitmap_range(sparrow::next(m_bitmap.begin(), storage().offset()), m_bitmap.end());
-    }
-
-    template <class T>
-    auto primitive_array<T>::get_bitmap() const -> const_bitmap_range
-    {
-        return const_bitmap_range(sparrow::next(m_bitmap.cbegin(), storage().offset()), m_bitmap.cend());
+        return next(m_bitmap.begin(), storage().offset());
     }
 }

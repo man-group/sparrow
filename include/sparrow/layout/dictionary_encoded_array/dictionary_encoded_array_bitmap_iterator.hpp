@@ -55,7 +55,7 @@ namespace sparrow
         constexpr bool less_than(const self_type& rhs) const noexcept;
 
         const index_array_type* m_keys_array;
-        const value_array_bitmap_range_type* m_value_array_bitmap;
+        value_array_bitmap_range_type m_value_array_bitmap;
         size_type m_index;
 
         friend class iterator_access;
@@ -72,7 +72,7 @@ namespace sparrow
         size_type index
     )
         : m_keys_array(&index_array)
-        , m_value_array_bitmap(&value_bitmap)
+        , m_value_array_bitmap(value_bitmap)
         , m_index(index)
     {
         SPARROW_ASSERT_TRUE(m_index < m_keys_array->size());
@@ -88,7 +88,7 @@ namespace sparrow
             return false;
         }
         const auto key_value = key.value();
-        const bool value_validity = (*m_value_array_bitmap)[key_value];
+        const bool value_validity = m_value_array_bitmap[key_value];
         return value_validity;
     }
 

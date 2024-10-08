@@ -85,8 +85,8 @@ namespace sparrow
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
 
-        bitmap_range get_bitmap();
-        const_bitmap_range get_bitmap() const;
+        bitmap_type::iterator bitmap_begin_impl();
+        bitmap_type::const_iterator bitmap_begin_impl() const;
 
         // data members
         std::vector<cloning_ptr<array_base>> m_children;
@@ -104,10 +104,7 @@ namespace sparrow
         : array_base(proxy.data_type())
         , base_type(std::move(proxy))
         , m_children(this->storage().children().size(), nullptr)
-        , m_bitmap(bitmap_type{
-              this->storage().buffers()[0].data(),
-              this->storage().length() + this->storage().offset()
-          })
+        , m_bitmap(make_simple_bitmap(storage()))
     {
         for (std::size_t i = 0; i < m_children.size(); ++i)
         {
@@ -163,13 +160,13 @@ namespace sparrow
         return struct_value{m_children, i};
     }
 
-    auto struct_array::get_bitmap() -> bitmap_range
+    auto struct_array::bitmap_begin_impl() -> bitmap_type::iterator
     {
-        return bitmap_range(sparrow::next(m_bitmap.begin(), storage().offset()), m_bitmap.end());
+        return next(m_bitmap.begin(), storage().offset());
     }
 
-    auto struct_array::get_bitmap() const -> const_bitmap_range
+    auto struct_array::bitmap_begin_impl() const -> bitmap_type::const_iterator
     {
-        return const_bitmap_range(sparrow::next(m_bitmap.cbegin(), storage().offset()), m_bitmap.cend());
+        return next(m_bitmap.begin(), storage().offset());
     }
 }

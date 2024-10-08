@@ -23,8 +23,9 @@
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
-#include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/memory.hpp"
+#include "sparrow/utils/nullable.hpp"
+
 
 namespace sparrow
 {

@@ -16,12 +16,11 @@
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/array_base.hpp"
-#include "sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_bitmap.hpp"
+#include "sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_bitmap_iterator.hpp"
 #include "sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_iterator.hpp"
 #include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/contracts.hpp"
-
 
 namespace sparrow
 {
@@ -44,6 +43,15 @@ namespace sparrow
         static constexpr bool is_const = IC;
     };
 
+    template <typename KeysArray, typename ValuesArrayBitmapRange, typename ValuesArrayConstBitmapRange>
+    struct dictionary_bitmap_types
+    {
+        using size_type = size_t;
+        using reference = bool;
+        using const_reference = bool;
+        using iterator = validity_iterator<KeysArray, ValuesArrayBitmapRange>;
+        using const_iterator = validity_iterator<KeysArray, ValuesArrayConstBitmapRange>;
+    };
 
     template <std::integral IT, class SL, layout_offset OT = std::int64_t>
     class dictionary_encoded_array;
@@ -68,7 +76,7 @@ namespace sparrow
         using iterator = layout_iterator<array_type, false>;
         using const_iterator = layout_iterator<array_type, true>;
 
-        using bitmap_type = dictionary_bitmap<keys_layout, typename values_layout::const_bitmap_range>;
+        using bitmap_type = dictionary_bitmap_types<keys_layout, typename values_layout::bitmap_range, typename values_layout::const_bitmap_range>;
     };
 
     template <std::integral IT, class SL, layout_offset OT>
@@ -129,15 +137,13 @@ namespace sparrow
 
         keys_layout m_keys_layout;
         values_layout m_values_layout;
-        bitmap_type m_bitmap;
 
-        bitmap_type& get_bitmap();
-        const bitmap_type& get_bitmap() const;
+        bitmap_type::iterator bitmap_begin_impl();
+        bitmap_type::const_iterator bitmap_begin_impl() const;
 
         static const const_reference& dummy_const_reference();
         static keys_layout create_keys_layout(arrow_proxy& proxy);
         static values_layout create_values_layout(arrow_proxy& proxy);
-        bitmap_type make_bitmap(keys_layout& keys, values_layout& values);
 
         friend class array_crtp_base<self_type>;
         friend class dictionary_iterator<dictionary_value_traits<inner_types, true>>;
@@ -154,7 +160,6 @@ namespace sparrow
         , base_type(std::move(proxy))
         , m_keys_layout(create_keys_layout(storage()))
         , m_values_layout(create_values_layout(storage()))
-        , m_bitmap(make_bitmap(m_keys_layout, m_values_layout))
     {
         SPARROW_ASSERT_TRUE(data_type_is_integer(storage().data_type()));
     }
@@ -240,18 +245,6 @@ namespace sparrow
     }
 
     template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::get_bitmap() -> bitmap_type&
-    {
-        return m_bitmap;
-    }
-
-    template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::get_bitmap() const -> const bitmap_type&
-    {
-        return m_bitmap;
-    }
-
-    template <std::integral IT, class SL, layout_offset OT>
     auto dictionary_encoded_array<IT, SL, OT>::dummy_const_reference() -> const const_reference&
     {
         static const typename values_layout::inner_value_type dummy_inner_value;
@@ -266,9 +259,14 @@ namespace sparrow
     }
 
     template <std::integral IT, class SL, layout_offset OT>
-    auto
-    dictionary_encoded_array<IT, SL, OT>::make_bitmap(keys_layout& keys, values_layout& values) -> bitmap_type
+    auto dictionary_encoded_array<IT, SL, OT>::bitmap_begin_impl() -> bitmap_type::iterator
     {
-        return bitmap_type{keys, values.bitmap()};
+        return {m_keys_layout, m_values_layout.bitmap(), 0};
+    }
+
+    template <std::integral IT, class SL, layout_offset OT>
+    auto dictionary_encoded_array<IT, SL, OT>::bitmap_begin_impl() const -> bitmap_type::const_iterator
+    {
+        return {m_keys_layout, m_values_layout.bitmap(), 0};
     }
 }

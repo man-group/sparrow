@@ -24,7 +24,6 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 
-
 namespace sparrow
 {
     template <std::ranges::sized_range T, class CR, layout_offset OT = std::int32_t>
@@ -223,10 +222,8 @@ namespace sparrow
 
     private:
 
-        bitmap_range get_bitmap();
-        const_bitmap_range get_bitmap() const;
-
-        static bitmap_type make_bitmap(arrow_proxy& arrow_proxy);
+        bitmap_type::iterator bitmap_begin_impl();
+        bitmap_type::const_iterator bitmap_begin_impl() const;
 
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
@@ -452,7 +449,7 @@ namespace sparrow
     variable_size_binary_array<T, CR, OT>::variable_size_binary_array(arrow_proxy proxy)
         : array_base(proxy.data_type())
         , base_type(std::move(proxy))
-        , m_bitmap(make_bitmap(storage()))
+        , m_bitmap(make_simple_bitmap(storage()))
     {
         const auto type = storage().data_type();
         SPARROW_ASSERT_TRUE(type == data_type::STRING || type == data_type::BINARY);  // TODO: Add
@@ -604,23 +601,14 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array<T, CR, OT>::get_bitmap() -> bitmap_range
+    auto variable_size_binary_array<T, CR, OT>::bitmap_begin_impl() -> bitmap_type::iterator
     {
-        return bitmap_range(sparrow::next(m_bitmap.begin(), storage().offset()), m_bitmap.end());
+        return next(m_bitmap.begin(), storage().offset());
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array<T, CR, OT>::get_bitmap() const -> const_bitmap_range
+    auto variable_size_binary_array<T, CR, OT>::bitmap_begin_impl() const -> bitmap_type::const_iterator
     {
-        return const_bitmap_range(sparrow::next(m_bitmap.cbegin(), storage().offset()), m_bitmap.end());
-    }
-
-    template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array<T, CR, OT>::make_bitmap(arrow_proxy& arrow_proxy) -> bitmap_type
-    {
-        constexpr size_t bitmap_buffer_index = 0;
-        SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
-        const auto bitmap_size = arrow_proxy.length() + arrow_proxy.offset();
-        return bitmap_type(arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size);
+        return next(m_bitmap.begin(), storage().offset());
     }
 }

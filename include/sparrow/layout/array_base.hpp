@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <ranges>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
@@ -24,6 +25,17 @@
 
 namespace sparrow
 {
+    /**
+     * Make a simple bitmap from an arrow proxy.
+     */
+    inline dynamic_bitset_view<uint8_t> make_simple_bitmap(arrow_proxy& arrow_proxy)
+    {
+        constexpr size_t bitmap_buffer_index = 0;
+        SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
+        const auto bitmap_size = arrow_proxy.length() + arrow_proxy.offset();
+        return {arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size};
+    }
+
     /**
      * Base class for array type erasure
      */
@@ -281,20 +293,20 @@ namespace sparrow
     auto array_crtp_base<D>::has_value(size_type i) -> bitmap_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return derived_cast().get_bitmap()[static_cast<difference_type>(i)];
+        return *sparrow::next(bitmap_begin(), i);
     }
 
     template <class D>
     auto array_crtp_base<D>::has_value(size_type i) const -> bitmap_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return derived_cast().get_bitmap()[static_cast<difference_type>(i)];
+        return *sparrow::next(bitmap_begin(), i);
     }
 
     template <class D>
     auto array_crtp_base<D>::bitmap_begin() -> bitmap_iterator
     {
-        return derived_cast().get_bitmap().begin();
+        return derived_cast().bitmap_begin_impl();
     }
 
     template <class D>
@@ -306,7 +318,7 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::bitmap_begin() const -> const_bitmap_iterator
     {
-        return derived_cast().get_bitmap().begin();
+        return derived_cast().bitmap_begin_impl();
     }
 
     template <class D>
