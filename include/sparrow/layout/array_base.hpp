@@ -160,9 +160,6 @@ namespace sparrow
 
     private:
 
-        derived_type& derived_cast();
-        const derived_type& derived_cast() const;
-
         arrow_proxy m_proxy;
 
         // friend classes
