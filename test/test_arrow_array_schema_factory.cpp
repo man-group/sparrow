@@ -34,7 +34,8 @@ namespace sparrow
             CHECK_EQ(schema.flags, 0);
             CHECK_EQ(schema.n_children, 0);
             CHECK_EQ(schema.children, nullptr);
-            CHECK_EQ(schema.release, release_arrow_schema);
+            const bool is_release_arrow_schema = schema.release == release_arrow_schema;
+            CHECK(is_release_arrow_schema);
             REQUIRE_NE(schema.dictionary, nullptr);
             ArrowSchema* dictionary = schema.dictionary;
             CHECK_EQ(std::string_view(dictionary->format), "u");
