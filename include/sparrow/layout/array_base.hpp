@@ -167,6 +167,9 @@ namespace sparrow
         friend class layout_iterator<self_type, true>;
     };
 
+    template <class D>
+    bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs);
+
     /*****************************
      * array_base implementation *
      *****************************/
@@ -334,5 +337,12 @@ namespace sparrow
     auto array_crtp_base<D>::derived_cast() const -> const derived_type&
     {
         return *static_cast<const derived_type*>(this);
+    }
+
+    template <class D>
+    bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs)
+    {
+        return lhs.size() == rhs.size() && std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin());
+        //return std::ranges::equal(lhs, rhs);
     }
 }

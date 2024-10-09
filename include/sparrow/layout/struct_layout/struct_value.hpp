@@ -15,7 +15,7 @@
 #pragma once
 
 #include "sparrow/config/config.hpp"
-#include "sparrow/layout/array_base.hpp"
+#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/memory.hpp"
 
@@ -28,14 +28,15 @@ namespace sparrow
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
         using size_type = std::size_t;
+        using child_ptr = cloning_ptr<array_wrapper>;
 
-        struct_value(const std::vector<cloning_ptr<array_base>>& children, size_type index);
+        struct_value(const std::vector<child_ptr>& children, size_type index);
         size_type size() const;
         const_reference operator[](size_type i) const;
 
     private:
     
-        const std::vector<cloning_ptr<array_base>>&  m_children;
+        const std::vector<child_ptr>&  m_children;
         size_type m_index;
     };
 }

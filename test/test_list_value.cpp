@@ -23,14 +23,17 @@
 namespace sparrow
 {
     using scalar_value_type = std::int32_t;
+    using array_type = primitive_array<scalar_value_type>;
+    using wrapper_type = array_wrapper_impl<array_type>;
     using test::make_arrow_proxy;
 
     TEST_SUITE("value_list")
     {
         TEST_CASE("size")
         {
-            primitive_array<scalar_value_type> ar(make_arrow_proxy<scalar_value_type>());
-            list_value l(&ar, 2u, 7u);
+            array_type ar(make_arrow_proxy<scalar_value_type>());
+            wrapper_type w(&ar);
+            list_value l(&w, 2u, 7u);
 
             CHECK_EQ(l.size(), 5u);
         }
@@ -39,8 +42,10 @@ namespace sparrow
         {
             std::size_t begin = 2u;
             std::size_t end = 7u;
-            primitive_array<scalar_value_type> ar(make_arrow_proxy<scalar_value_type>());
-            list_value l(&ar, begin, end);
+            array_type ar(make_arrow_proxy<scalar_value_type>());
+            wrapper_type w(&ar);
+
+            list_value l(&w, begin, end);
             for (std::size_t i = begin; i < end; ++i)
             {
                 CHECK_EQ(l[i].has_value(), ar[begin+i].has_value());

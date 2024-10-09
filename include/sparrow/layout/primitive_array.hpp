@@ -43,8 +43,7 @@ namespace sparrow
     };
 
     template <class T>
-    class primitive_array final : public array_base,
-                                  public array_crtp_base<primitive_array<T>>
+    class primitive_array final : public array_crtp_base<primitive_array<T>>
     {
     public:
 
@@ -72,11 +71,11 @@ namespace sparrow
         using const_bitmap_range = typename base_type::const_bitmap_range;
 
         explicit primitive_array(arrow_proxy);
-        ~primitive_array() override = default;
 
         using base_type::size;
 
     private:
+
         bitmap_type::iterator bitmap_begin_impl();
         bitmap_type::const_iterator bitmap_begin_impl() const;
 
@@ -96,9 +95,6 @@ namespace sparrow
 
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
-
-        primitive_array(const primitive_array&) = default;
-        primitive_array* clone_impl() const override;
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         bitmap_type m_bitmap;
@@ -136,8 +132,7 @@ namespace sparrow
 
     template <class T>
     primitive_array<T>::primitive_array(arrow_proxy proxy)
-        : array_base(proxy.data_type())
-        , base_type(std::move(proxy))
+        : base_type(std::move(proxy))
         , m_bitmap(make_simple_bitmap(storage()))
     {
         SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().data_type()));
@@ -193,12 +188,6 @@ namespace sparrow
     auto primitive_array<T>::value_cend() const -> const_value_iterator
     {
         return sparrow::next(value_cbegin(), size());
-    }
-
-    template <class T>
-    primitive_array<T>* primitive_array<T>::clone_impl() const
-    {
-        return new primitive_array<T>(*this);
     }
 
     template <class T>

@@ -15,7 +15,7 @@
 #pragma once
 
 #include "sparrow/config/config.hpp"
-#include "sparrow/layout/array_base.hpp"
+#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/types/data_traits.hpp"
 
 namespace sparrow
@@ -28,14 +28,14 @@ namespace sparrow
         using const_reference = array_traits::const_reference;
         using size_type = std::size_t;
 
-        list_value(const array_base* flat_array, size_type index_begin, size_type index_end);
+        list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end);
 
         size_type size() const;
         const_reference operator[](size_type i) const;
 
     private:
 
-        const array_base* p_flat_array;
+        const array_wrapper* p_flat_array;
         size_type m_index_begin;
         size_type m_index_end;
     };

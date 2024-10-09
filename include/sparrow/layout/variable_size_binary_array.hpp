@@ -179,8 +179,7 @@ namespace sparrow
     };
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    class variable_size_binary_array final : public array_base,
-                                             public array_crtp_base<variable_size_binary_array<T, CR, OT>>
+    class variable_size_binary_array final : public array_crtp_base<variable_size_binary_array<T, CR, OT>>
     {
     public:
 
@@ -213,7 +212,6 @@ namespace sparrow
         using const_value_iterator = typename inner_types::const_value_iterator;
 
         explicit variable_size_binary_array(arrow_proxy);
-        ~variable_size_binary_array() override = default;
 
         using base_type::size;
 
@@ -254,9 +252,6 @@ namespace sparrow
 
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
-
-        variable_size_binary_array(const variable_size_binary_array&) = default;
-        variable_size_binary_array* clone_impl() const override;
 
         friend class array_crtp_base<self_type>;
         friend class variable_size_binary_reference<self_type>;
@@ -447,8 +442,7 @@ namespace sparrow
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     variable_size_binary_array<T, CR, OT>::variable_size_binary_array(arrow_proxy proxy)
-        : array_base(proxy.data_type())
-        , base_type(std::move(proxy))
+        : base_type(std::move(proxy))
         , m_bitmap(make_simple_bitmap(storage()))
     {
         const auto type = storage().data_type();
@@ -592,12 +586,6 @@ namespace sparrow
     auto variable_size_binary_array<T, CR, OT>::value_cend() const -> const_value_iterator
     {
         return sparrow::next(value_cbegin(), size());
-    }
-
-    template <std::ranges::sized_range T, class CR, layout_offset OT>
-    variable_size_binary_array<T, CR, OT>* variable_size_binary_array<T, CR, OT>::clone_impl() const
-    {
-        return new variable_size_binary_array<T, CR, OT>(*this);
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>

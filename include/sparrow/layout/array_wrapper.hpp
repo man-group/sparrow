@@ -17,7 +17,7 @@
 #include <memory>
 #include <variant>
 
-#include "sparrow/types/data_type.hpp"
+#include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/memory.hpp"
 
 namespace sparrow
@@ -25,49 +25,55 @@ namespace sparrow
     /**
      * Base class for array type erasure
      */
-    class array_wrapper_base
+    class array_wrapper
     {
     public:
 
-        virtual ~array_wrapper_base() = default;
+        using wrapper_ptr = std::unique_ptr<array_wrapper>;
 
-        array_wrapper_base(array_wrapper_base&&) = delete;
-        array_wrapper_base& operator=(const array_wrapper_base&) = delete;
-        array_wrapper_base& operator=(array_wrapper_base&&) = delete;
+        virtual ~array_wrapper() = default;
 
-        array_wrapper_base* clone() const;
+        array_wrapper(array_wrapper&&) = delete;
+        array_wrapper& operator=(const array_wrapper&) = delete;
+        array_wrapper& operator=(array_wrapper&&) = delete;
+
+        wrapper_ptr clone() const;
 
         enum data_type data_type() const;
 
     protected:
 
-        array_wrapper_base(enum data_type dt);
-        array_wrapper_base(const array_wrapper_base&) = default;
+        array_wrapper(enum data_type dt);
+        array_wrapper(const array_wrapper&) = default;
 
     private:
 
         enum data_type m_data_type;
-        virtual array_wrapper_base* clone_impl() const = 0;
+        virtual wrapper_ptr clone_impl() const = 0;
     };
 
     template <class T>
-    class array_wrapper : public array_wrapper_base
+    class array_wrapper_impl : public array_wrapper
     {
     public:
 
-        array_wrapper(T&& ar);
-        array_wrapper(T* ar);
-        array_wrapper(std::shared_ptr<T> ar);
+        array_wrapper_impl(T&& ar);
+        array_wrapper_impl(T* ar);
+        array_wrapper_impl(std::shared_ptr<T> ar);
 
-        virtual ~array_wrapper() = default;
+        virtual ~array_wrapper_impl() = default;
 
         T& get_wrapped();
         const T& get_wrapped() const;
         
     private:
 
-        array_wrapper(const array_wrapper&);
-        array_wrapper* clone_impl() const override;
+        using wrapper_ptr = array_wrapper::wrapper_ptr;
+
+        constexpr enum data_type get_data_type() const;
+
+        array_wrapper_impl(const array_wrapper_impl&);
+        wrapper_ptr clone_impl() const override;
 
         using storage_type = std::variant<value_ptr<T>, std::shared_ptr<T>, T*>;
         storage_type m_storage;
@@ -75,73 +81,79 @@ namespace sparrow
     };
 
     template <class T>
-    T& unwrap_array(array_wrapper_base&);
+    T& unwrap_array(array_wrapper&);
 
     template <class T>
-    const T& unwrap_array(const array_wrapper_base&);
-
-    /*************************************
-     * array_wrapper_base implementation *
-     *************************************/
-
-    inline array_wrapper_base* array_wrapper_base::clone() const
-    {
-        return clone_impl();
-    }
-
-    inline enum data_type array_wrapper_base::data_type() const
-    {
-        return m_data_type;
-    }
-
-    inline array_wrapper_base::array_wrapper_base(enum data_type dt)
-        : m_data_type(dt)
-    {
-    }
+    const T& unwrap_array(const array_wrapper&);
 
     /********************************
      * array_wrapper implementation *
      ********************************/
 
+    inline auto array_wrapper::clone() const -> wrapper_ptr
+    {
+        return clone_impl();
+    }
+
+    inline enum data_type array_wrapper::data_type() const
+    {
+        return m_data_type;
+    }
+
+    inline array_wrapper::array_wrapper(enum data_type dt)
+        : m_data_type(dt)
+    {
+    }
+
+    /*************************************
+     * array_wrapper_impl implementation *
+     *************************************/
+
     template <class T>
-    array_wrapper<T>::array_wrapper(T&& ar)
-        : array_wrapper_base(ar.data_type())
+    array_wrapper_impl<T>::array_wrapper_impl(T&& ar)
+        : array_wrapper(this->get_data_type())
         , m_storage(value_ptr<T>(std::move(ar)))
         , p_array(std::get<value_ptr<T>>(m_storage).get())
     {
     }
 
     template <class T>
-    array_wrapper<T>::array_wrapper(T* ar)
-        : array_wrapper_base(ar->data_type())
+    array_wrapper_impl<T>::array_wrapper_impl(T* ar)
+        : array_wrapper(this->get_data_type())
         , m_storage(ar)
         , p_array(ar)
     {
     }
 
     template <class T>
-    array_wrapper<T>::array_wrapper(std::shared_ptr<T> ar)
-        : array_wrapper_base(ar->data_type())
+    array_wrapper_impl<T>::array_wrapper_impl(std::shared_ptr<T> ar)
+        : array_wrapper(this->get_data_type())
         , m_storage(ar)
         , p_array(ar.get())
     {
     }
 
     template <class T>
-    T& array_wrapper<T>::get_wrapped()
+    T& array_wrapper_impl<T>::get_wrapped()
     {
         return *p_array;
     }
 
     template <class T>
-    const T& array_wrapper<T>::get_wrapped() const
+    const T& array_wrapper_impl<T>::get_wrapped() const
     {
         return *p_array;
     }
 
     template <class T>
-    array_wrapper<T>::array_wrapper(const array_wrapper& rhs)
-        : array_wrapper_base(rhs)
+    constexpr enum data_type array_wrapper_impl<T>::get_data_type() const
+    {
+        return arrow_traits<typename T::inner_value_type>::type_id;
+    }
+
+    template <class T>
+    array_wrapper_impl<T>::array_wrapper_impl(const array_wrapper_impl& rhs)
+        : array_wrapper(rhs)
         , m_storage(rhs.m_storage)
     {
         p_array = std::visit([](auto&& arg)
@@ -155,21 +167,21 @@ namespace sparrow
     }
 
     template <class T>
-    array_wrapper<T>* array_wrapper<T>::clone_impl() const
+    auto array_wrapper_impl<T>::clone_impl() const -> wrapper_ptr
     {
-        return new array_wrapper<T>(*this);
+        return wrapper_ptr{new array_wrapper_impl<T>(*this)};
     }
 
     template <class T>
-    T& unwrap_array(array_wrapper_base& ar)
+    T& unwrap_array(array_wrapper& ar)
     {
-        return static_cast<array_wrapper<T>&>(ar).get_wrapped();
+        return static_cast<array_wrapper_impl<T>&>(ar).get_wrapped();
     }
 
     template <class T>
-    const T& unwrap_array(const array_wrapper_base& ar)
+    const T& unwrap_array(const array_wrapper& ar)
     {
-        return static_cast<const array_wrapper<T>&>(ar).get_wrapped();
+        return static_cast<const array_wrapper_impl<T>&>(ar).get_wrapped();
     }
 }
 
