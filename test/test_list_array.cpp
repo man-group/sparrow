@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
+#include "sparrow/layout/primitive_array.hpp"
 
 #include "doctest/doctest.h"
-
-#include "test_utils.hpp"
 #include "external_array_data_creation.hpp"
+#include "test_utils.hpp"
+
 
 namespace sparrow
 {
@@ -41,14 +41,14 @@ namespace sparrow
     }
 
     TEST_SUITE("list_array")
-    {   
-        TEST_CASE_TEMPLATE("list[T]",T, std::uint8_t, std::int32_t, float, double)
+    {
+        TEST_CASE_TEMPLATE("list[T]", T, std::uint8_t, std::int32_t, float, double)
         {
             using inner_scalar_type = T;
             using inner_nullable_type = nullable<inner_scalar_type>;
 
             // number of elements in the flatted array
-            const std::size_t n_flat = 10; //1+2+3+4
+            const std::size_t n_flat = 10;  // 1+2+3+4
             // number of elements in the list array
             const std::size_t n = 4;
             // vector of sizes
@@ -88,25 +88,32 @@ namespace sparrow
 
             SUBCASE("element-sizes")
             {
-                for(std::size_t i = 0; i < n; ++i){
+                for (std::size_t i = 0; i < n; ++i)
+                {
                     REQUIRE(list_arr[i].has_value());
                     CHECK(list_arr[i].value().size() == sizes[i]);
                 }
-            }   
+            }
             SUBCASE("element-values")
             {
                 std::size_t flat_index = 0;
-                for(std::size_t i = 0; i < n; ++i){
+                for (std::size_t i = 0; i < n; ++i)
+                {
                     auto list = list_arr[i].value();
-                    for(std::size_t j = 0; j < sizes[i]; ++j){
-                    
+                    for (std::size_t j = 0; j < sizes[i]; ++j)
+                    {
                         auto value_variant = list[j];
                         // visit the variant
-                        std::visit([&](auto && value){
-                        if constexpr(std::is_same_v<std::decay_t<decltype(value)>, inner_nullable_type>){
-                            CHECK(value == flat_index);
-                        }
-                        }, value_variant);
+                        std::visit(
+                            [&](auto&& value)
+                            {
+                                if constexpr (std::is_same_v<std::decay_t<decltype(value)>, inner_nullable_type>)
+                                {
+                                    CHECK(value == flat_index);
+                                }
+                            },
+                            value_variant
+                        );
                         ++flat_index;
                     }
                 }
@@ -130,7 +137,7 @@ namespace sparrow
                 REQUIRE(flat_values_casted.size() == n_flat);
 
                 // check that flat values are "iota"
-                if constexpr(std::is_integral_v<inner_scalar_type>)
+                if constexpr (std::is_integral_v<inner_scalar_type>)
                 {
                     for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
                         CHECK(flat_values_casted[static_cast<primitive_size_type>(i)].value() == i);
@@ -165,14 +172,14 @@ namespace sparrow
     }
 
     TEST_SUITE("list_view_array")
-    {   
-        TEST_CASE_TEMPLATE("list_view_array[T]",T, std::uint8_t, std::int32_t, float, double)
+    {
+        TEST_CASE_TEMPLATE("list_view_array[T]", T, std::uint8_t, std::int32_t, float, double)
         {
             using inner_scalar_type = T;
             using inner_nullable_type = nullable<inner_scalar_type>;
 
             // number of elements in the flatted array
-            const std::size_t n_flat = 10; //1+2+3+4
+            const std::size_t n_flat = 10;  // 1+2+3+4
             // number of elements in the list array
             const std::size_t n = 4;
             // vector of sizes
@@ -212,7 +219,8 @@ namespace sparrow
 
             SUBCASE("element-sizes")
             {
-                for(std::size_t i = 0; i < n; ++i){
+                for (std::size_t i = 0; i < n; ++i)
+                {
                     REQUIRE(list_arr[i].has_value());
                     CHECK(list_arr[i].value().size() == sizes[i]);
                 }
@@ -221,17 +229,23 @@ namespace sparrow
             SUBCASE("element-values")
             {
                 std::size_t flat_index = 0;
-                for(std::size_t i = 0; i < n; ++i){
+                for (std::size_t i = 0; i < n; ++i)
+                {
                     auto list = list_arr[i].value();
-                    for(std::size_t j = 0; j < sizes[i]; ++j){
-                    
+                    for (std::size_t j = 0; j < sizes[i]; ++j)
+                    {
                         auto value_variant = list[j];
                         // visit the variant
-                        std::visit([&](auto && value){
-                        if constexpr(std::is_same_v<std::decay_t<decltype(value)>, inner_nullable_type>){
-                            CHECK(value == flat_index);
-                        }
-                        }, value_variant);
+                        std::visit(
+                            [&](auto&& value)
+                            {
+                                if constexpr (std::is_same_v<std::decay_t<decltype(value)>, inner_nullable_type>)
+                                {
+                                    CHECK(value == flat_index);
+                                }
+                            },
+                            value_variant
+                        );
                         ++flat_index;
                     }
                 }
@@ -255,7 +269,7 @@ namespace sparrow
                 REQUIRE(flat_values_casted.size() == n_flat);
 
                 // check that flat values are "iota"
-                if constexpr(std::is_integral_v<inner_scalar_type>)
+                if constexpr (std::is_integral_v<inner_scalar_type>)
                 {
                     for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
                         CHECK(flat_values_casted[static_cast<primitive_size_type>(i)].value() == i);
@@ -290,15 +304,14 @@ namespace sparrow
     }
 
     TEST_SUITE("fixed_sized_list_array")
-    {   
-        TEST_CASE_TEMPLATE("fixed_sized_array_list[T]",T, std::uint8_t, std::int32_t, float, double)
+    {
+        TEST_CASE_TEMPLATE("fixed_sized_array_list[T]", T, std::uint8_t, std::int32_t, float, double)
         {
-       
             using inner_scalar_type = T;
             using inner_nullable_type = nullable<inner_scalar_type>;
 
             // number of elements in the flatted array
-            const std::size_t n_flat = 20; 
+            const std::size_t n_flat = 20;
             // the size of each list =
             const std::size_t list_size = 5;
 
@@ -343,7 +356,8 @@ namespace sparrow
 
             SUBCASE("element-sizes")
             {
-                for(std::size_t i = 0; i < list_arr.size(); ++i){
+                for (std::size_t i = 0; i < list_arr.size(); ++i)
+                {
                     REQUIRE(list_arr[i].has_value());
                     REQUIRE(list_arr[i].value().size() == list_size);
                 }
@@ -352,23 +366,27 @@ namespace sparrow
             SUBCASE("element-values")
             {
                 std::size_t flat_index = 0;
-                for(std::size_t i = 0; i < n; ++i){
+                for (std::size_t i = 0; i < n; ++i)
+                {
                     auto list = list_arr[i].value();
-                    for(std::size_t j = 0; j < list.size(); ++j){
-                    
+                    for (std::size_t j = 0; j < list.size(); ++j)
+                    {
                         auto value_variant = list[j];
                         // visit the variant
-                        std::visit([&](auto && value){
-                        if constexpr(std::is_same_v<std::decay_t<decltype(value)>, inner_nullable_type>){
-                            CHECK(value == flat_index);
-                        }
-                        }, value_variant);
+                        std::visit(
+                            [&](auto&& value)
+                            {
+                                if constexpr (std::is_same_v<std::decay_t<decltype(value)>, inner_nullable_type>)
+                                {
+                                    CHECK(value == flat_index);
+                                }
+                            },
+                            value_variant
+                        );
                         ++flat_index;
                     }
                 }
             }
         }
     }
-
 }
-

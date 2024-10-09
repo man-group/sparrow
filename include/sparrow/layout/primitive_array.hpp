@@ -14,13 +14,22 @@
 
 #pragma once
 
+#include <cstddef>
+
 #include "sparrow/arrow_array_schema_proxy.hpp"
+#include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
-{   
+{
+    class run_end_encoded_array;
+
+    template <typename I, typename T>
+    concept iterator_of_type = std::input_iterator<I>
+                               && std::same_as<typename std::iterator_traits<I>::value_type, T>;
+
     template <class T>
     class primitive_array;
 
@@ -55,6 +64,8 @@ namespace sparrow
         using bitmap_type = typename base_type::bitmap_type;
         using bitmap_reference = typename base_type::bitmap_reference;
         using bitmap_const_reference = typename base_type::bitmap_const_reference;
+        using bitmap_iterator = typename base_type::bitmap_iterator;
+        using const_bitmap_iterator = typename base_type::const_bitmap_iterator;
         using value_type = nullable<inner_value_type>;
         using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
@@ -68,6 +79,9 @@ namespace sparrow
         using bitmap_range = typename base_type::bitmap_range;
         using const_value_iterator = typename base_type::const_value_iterator;
         using const_bitmap_range = typename base_type::const_bitmap_range;
+
+        using iterator = typename base_type::iterator;
+        using const_iterator = typename base_type::const_iterator;
 
         explicit primitive_array(arrow_proxy);
 
@@ -88,6 +102,19 @@ namespace sparrow
 
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
+
+        // Modifiers
+
+        buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
+
+        void resize_values(size_type new_length, inner_value_type value);
+
+        value_iterator insert_value(const_value_iterator pos, inner_value_type value, size_type count);
+
+        template <iterator_of_type<T> InputIt>
+        value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
+
+        value_iterator erase_values(const_value_iterator pos, size_type count);
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
 
@@ -127,7 +154,7 @@ namespace sparrow
     primitive_array<T>::primitive_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
     {
-        SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().data_type()));
+        SPARROW_ASSERT_TRUE(storage().data_type() == arrow_traits<T>::type_id);
     }
 
     template <class T>
@@ -180,5 +207,57 @@ namespace sparrow
     auto primitive_array<T>::value_cend() const -> const_value_iterator
     {
         return sparrow::next(value_cbegin(), size());
+    }
+
+    template <class T>
+    buffer_adaptor<T, buffer<uint8_t>&> primitive_array<T>::get_data_buffer()
+    {
+        auto& buffers = storage().get_array_private_data()->buffers();
+        return make_buffer_adaptor<T>(buffers[DATA_BUFFER_INDEX]);
+    }
+
+    template <class T>
+    void primitive_array<T>::resize_values(size_type new_length, inner_value_type value)
+    {
+        const size_t new_size = new_length + static_cast<size_t>(storage().offset());
+        get_data_buffer().resize(new_size, value);
+    }
+
+    template <class T>
+    auto primitive_array<T>::insert_value(const_value_iterator pos, inner_value_type value, size_type count)
+        -> value_iterator
+    {
+        SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
+        SPARROW_ASSERT_TRUE(pos <= value_cend());
+        const auto distance = std::distance(value_cbegin(), sparrow::next(pos, storage().offset()));
+        get_data_buffer().insert(pos, count, value);
+        return sparrow::next(this->value_begin(), distance);
+    }
+
+    template <class T>
+    template <iterator_of_type<T> InputIt>
+    auto
+    primitive_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last) -> value_iterator
+    {
+        SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
+        SPARROW_ASSERT_TRUE(pos <= value_cend());
+        const auto distance = std::distance(value_cbegin(), sparrow::next(pos, storage().offset()));
+        get_data_buffer().insert(pos, first, last);
+        return sparrow::next(this->value_begin(), distance);
+    }
+
+    template <class T>
+    auto primitive_array<T>::erase_values(const_value_iterator pos, size_type count) -> value_iterator
+    {
+        SPARROW_ASSERT_TRUE(this->value_cbegin() <= pos)
+        SPARROW_ASSERT_TRUE(pos < this->value_cend());
+        const size_type distance = static_cast<size_t>(
+            std::distance(this->value_cbegin(), sparrow::next(pos, storage().offset()))
+        );
+        auto data_buffer = get_data_buffer();
+        const auto first = sparrow::next(data_buffer.cbegin(), distance);
+        const auto last = sparrow::next(first, count);
+        data_buffer.erase(first, last);
+        return sparrow::next(this->value_begin(), distance);
     }
 }
