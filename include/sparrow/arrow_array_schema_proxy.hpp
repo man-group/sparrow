@@ -20,6 +20,7 @@
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/buffer/buffer_view.hpp"
+#include "sparrow/buffer/dynamic_bitset/non_owning_dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/types/data_type.hpp"
@@ -122,7 +123,9 @@ namespace sparrow
         [[nodiscard]] SPARROW_API size_t length() const;
 
         /**
-         * Set the length of the `ArrowArray`.
+         * Set the length of the `ArrowArray`. This method does not resize the buffers of the `ArrowArray`.
+         * You have to change the length before replacing/resizing the buffers to have the right sizes when
+         * calling `buffers()`.
          * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
          * @param length The length to set.
          */
@@ -130,7 +133,7 @@ namespace sparrow
         [[nodiscard]] SPARROW_API int64_t null_count() const;
 
         /**
-         * Set the null count of the `ArrowArray`.
+         * Set the null count of the `ArrowArray`. This method does not change the bitmap.
          * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
          * @param null_count The null count to set.
          */
@@ -146,7 +149,8 @@ namespace sparrow
         [[nodiscard]] SPARROW_API size_t n_buffers() const;
 
         /**
-         * Set the number of buffers of the `ArrowArray`.
+         * Set the number of buffers of the `ArrowArray`. Resize the buffers vector of the `ArrowArray`
+         * private data.
          * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
          * @param n_buffers The number of buffers to set.
          */
@@ -156,7 +160,8 @@ namespace sparrow
         [[nodiscard]] SPARROW_API std::vector<sparrow::buffer_view<uint8_t>>& buffers();
 
         /**
-         * Set the buffer at the given index.
+         * Set the buffer at the given index. You have to call the `set_length` method before calling this
+         * method to have the right sizes when calling `buffers()`.
          * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
          * @param index The index of the buffer to set.
          * @param buffer The buffer to set.
@@ -164,12 +169,32 @@ namespace sparrow
         SPARROW_API void set_buffer(size_t index, const buffer_view<uint8_t>& buffer);
 
         /**
-         * Set the buffer at the given index.
+         * Set the buffer at the given index. You have to call the `set_length` method before calling this
+         * method to have the right sizes when calling `buffers()`.
          * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
          * @param index The index of the buffer to set.
          * @param buffer The buffer to set.
          */
         SPARROW_API void set_buffer(size_t index, buffer<uint8_t>&& buffer);
+
+        /**
+         * Resize the bitmap buffer of the `ArrowArray`.
+         */
+        SPARROW_API void resize_bitmap(size_t new_size);
+
+        SPARROW_API size_t insert_bitmap(size_t index, bool value);
+        SPARROW_API size_t insert_bitmap(size_t index, bool value, size_t count);
+        SPARROW_API size_t insert_bitmap(size_t index, std::initializer_list<bool> values);
+        template <std::input_iterator InputIt>
+        SPARROW_API size_t insert_bitmap(size_t index, InputIt first, InputIt last);
+        template <std::ranges::input_range R>
+        SPARROW_API size_t insert_bitmap(size_t index, const R& range);
+
+        SPARROW_API size_t erase_bitmap(size_t index);
+        SPARROW_API size_t erase_bitmap(size_t index, size_t count);
+
+        SPARROW_API void push_back_bitmap(bool value);
+        SPARROW_API void pop_back_bitmap();
 
         /**
          * Add children.
@@ -235,6 +260,8 @@ namespace sparrow
         [[nodiscard]] SPARROW_API ArrowSchema& schema();
         [[nodiscard]] SPARROW_API const ArrowSchema& schema() const;
 
+        SPARROW_API void update_buffers();
+
     private:
 
         std::variant<ArrowArray*, ArrowArray> m_array;
@@ -254,7 +281,8 @@ namespace sparrow
 
         SPARROW_API void resize_children(size_t children_count);
 
-        void update_buffers();
+        [[nodiscard]] non_owning_dynamic_bitset<uint8_t> get_non_owning_dynamic_bitset();
+
         void update_children();
         void update_dictionary();
         void update_null_count();
@@ -297,5 +325,32 @@ namespace sparrow
                 arrow_array_and_schema_pointers[i].schema
             );
         }
+    }
+
+    template <std::input_iterator InputIt>
+    size_t arrow_proxy::insert_bitmap(size_t index, InputIt first, InputIt last)
+    {
+        if (!is_created_with_sparrow())
+        {
+            throw arrow_proxy_exception("Cannot modify the bitmap on non-sparrow created ArrowArray");
+        }
+        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
+        SPARROW_ASSERT_TRUE(first <= last)
+        SPARROW_ASSERT_TRUE(index <= length())
+
+        auto bitmap = get_non_owning_dynamic_bitset();
+        const auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), first, last);
+        return static_cast<size_t>(std::distance(bitmap.begin(), it));
+    }
+
+    template <std::ranges::input_range R>
+    size_t arrow_proxy::insert_bitmap(size_t index, const R& range)
+    {
+        if (!is_created_with_sparrow())
+        {
+            throw arrow_proxy_exception("Cannot modify the bitmap on non-sparrow created ArrowArray");
+        }
+        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
+        return insert_bitmap(index, std::ranges::begin(range), std::ranges::end(range));
     }
 }

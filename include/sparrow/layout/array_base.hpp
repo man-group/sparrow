@@ -14,18 +14,33 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <ranges>
+#include <utility>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
-#include "sparrow/buffer/dynamic_bitset.hpp"
+#include "sparrow/arrow_array_schema_proxy_bitmap_manipulation.hpp"
+#include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
-#include "sparrow/utils/nullable.hpp"
-#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/crtp_base.hpp"
+#include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
 {
+    /**
+     * Make a simple bitmap from an arrow proxy.
+     */
+    [[nodiscard]] inline dynamic_bitset_view<uint8_t> make_simple_bitmap(arrow_proxy& arrow_proxy)
+    {
+        constexpr size_t bitmap_buffer_index = 0;
+        SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
+        const auto bitmap_size = arrow_proxy.length() + arrow_proxy.offset();
+        return {arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size};
+    }
+
     /**
      * Base class for array_inner_types specialization
      *
@@ -54,6 +69,7 @@ namespace sparrow
     class array_crtp_base : public crtp_base<D>
     {
     public:
+
         using self_type = array_crtp_base<D>;
         using derived_type = D;
         using inner_types = array_inner_types<derived_type>;
@@ -78,13 +94,13 @@ namespace sparrow
 
         using iterator = layout_iterator<self_type, false>;
         using const_iterator = layout_iterator<self_type, true>;
-         
+
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
 
         using const_value_range = std::ranges::subrange<const_value_iterator>;
 
-        size_type size() const;
+        [[nodiscard]] size_type size() const;
 
         reference operator[](size_type i);
         const_reference operator[](size_type i) const;
@@ -100,6 +116,22 @@ namespace sparrow
 
         const_bitmap_range bitmap() const;
         const_value_range values() const;
+
+        void resize(size_type new_size, const value_type& value);
+
+        iterator insert(const_iterator pos, const value_type& value);
+        iterator insert(const_iterator pos, const value_type& value, size_type count);
+        iterator insert(const_iterator pos, std::initializer_list<value_type> values);
+        template <typename InputIt>
+        iterator insert(const_iterator pos, InputIt first, InputIt last);
+        template <std::ranges::input_range R>
+        iterator insert(const_iterator pos, const R& range);
+
+        iterator erase(const_iterator pos);
+        iterator erase(const_iterator first, const_iterator last);
+
+        void push_back(const value_type& value);
+        void pop_back();
 
     protected:
 
@@ -166,7 +198,17 @@ namespace sparrow
 
     private:
 
-        static constexpr std::size_t m_bitmap_buffer_index = 0;
+        non_owning_dynamic_bitset<uint8_t> get_non_owning_dynamic_bitset();
+
+        void resize_bitmap(size_type new_length);
+
+        bitmap_iterator insert_bitmap(const_bitmap_iterator pos, bool value, size_type count);
+
+        template <std::input_iterator InputIt>
+            requires std::same_as<typename std::iterator_traits<InputIt>::value_type, bool>
+        bitmap_iterator insert_bitmap(const_bitmap_iterator pos, InputIt first, InputIt last);
+
+        bitmap_iterator erase_bitmap(const_bitmap_iterator pos, size_type count);
 
         bitmap_type make_bitmap();
         bitmap_type m_bitmap;
@@ -185,19 +227,16 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::operator[](size_type i) -> reference
     {
-        SPARROW_ASSERT_TRUE(i < this->derived_cast().size());
-        return reference(
-            inner_reference(this->derived_cast().value(i)),
-            this->derived_cast().has_value(i)
-        );
+        SPARROW_ASSERT_TRUE(i < derived_cast().size());
+        return reference(inner_reference(this->derived_cast().value(i)), this->derived_cast().has_value(i));
     }
 
     template <class D>
     auto array_crtp_base<D>::operator[](size_type i) const -> const_reference
     {
-        SPARROW_ASSERT_TRUE(i < this->derived_cast().size());
+        SPARROW_ASSERT_TRUE(i < derived_cast().size());
         return const_reference(
-            inner_const_reference(this->derived_cast().value(i)),
+            inner_const_reference(derived_cast().value(i)),
             this->derived_cast().has_value(i)
         );
     }
@@ -229,13 +268,13 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::cbegin() const -> const_iterator
     {
-        return const_iterator(this->derived_cast().value_cbegin(), this->derived_cast().bitmap_begin());
+        return const_iterator(derived_cast().value_cbegin(), bitmap_begin());
     }
 
     template <class D>
     auto array_crtp_base<D>::cend() const -> const_iterator
     {
-        return const_iterator(this->derived_cast().value_cend(), this->derived_cast().bitmap_end());
+        return const_iterator(derived_cast().value_cend(), bitmap_end());
     }
 
     template <class D>
@@ -247,7 +286,7 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::values() const -> const_value_range
     {
-        return const_value_range(this->derived_cast().value_cbegin(), this->derived_cast().value_cend());
+        return const_value_range(derived_cast().value_cbegin(), derived_cast().value_cend());
     }
 
     template <class D>

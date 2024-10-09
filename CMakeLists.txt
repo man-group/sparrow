@@ -120,10 +120,15 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/smart_pointers.hpp
     # buffer
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/allocator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_adaptor.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_view.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/bitset_iterator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/bitset_reference.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp
     # config
     ${SPARROW_INCLUDE_DIR}/sparrow/config/config.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp
@@ -179,6 +184,7 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/list_value.cpp
     ${SPARROW_SOURCE_DIR}/run_encoded_array.cpp
     ${SPARROW_SOURCE_DIR}/struct_value.cpp
+    ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy_bitmap_manipulation.cpp
 )
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
