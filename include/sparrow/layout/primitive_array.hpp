@@ -39,7 +39,7 @@ namespace sparrow
         using value_iterator = pointer_iterator<pointer>;
         using const_value_iterator = pointer_iterator<const_pointer>;
 
-        using iterator_tag = std::contiguous_iterator_tag;
+        using iterator_tag = std::random_access_iterator_tag;
     };
 
     template <class T>
@@ -63,7 +63,7 @@ namespace sparrow
         using const_pointer = typename inner_types::const_pointer;
         using size_type = typename base_type::size_type;
         using difference_type = typename base_type::difference_type;
-        using iterator_tag = std::contiguous_iterator_tag;
+        using iterator_tag = typename base_type::iterator_tag;
 
         using value_iterator = typename base_type::value_iterator;
         using bitmap_range = typename base_type::bitmap_range;

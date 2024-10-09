@@ -66,7 +66,7 @@ namespace sparrow
         using value_type = nullable<inner_value_type>;
         using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
-        using iterator_tag = std::contiguous_iterator_tag;
+        using iterator_tag = base_type::iterator_tag;
 
         explicit struct_array(arrow_proxy proxy);
 

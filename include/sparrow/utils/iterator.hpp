@@ -39,8 +39,6 @@ namespace sparrow
         {
             struct proxy
             {
-                using element_type = Reference;
-
                 explicit proxy(const Reference& x)
                     : m_reference(x)
                 {

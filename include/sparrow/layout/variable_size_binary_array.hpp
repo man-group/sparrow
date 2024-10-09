@@ -200,7 +200,7 @@ namespace sparrow
         using const_offset_iterator = typename inner_types::const_offset_iterator;
         using size_type = typename base_type::size_type;
         using difference_type = typename base_type::difference_type;
-        using iterator_tag = std::contiguous_iterator_tag;
+        using iterator_tag = typename base_type::iterator_tag;
         using data_iterator = typename inner_types::data_iterator;
         using const_data_iterator = typename inner_types::const_data_iterator;
         using data_value_type = typename inner_types::data_value_type;

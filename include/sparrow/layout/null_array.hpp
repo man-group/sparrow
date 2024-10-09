@@ -70,7 +70,7 @@ namespace sparrow
         using const_reference = const_iterator::reference;
         using size_type = std::size_t;
         using difference_type = iterator::difference_type;
-        using iterator_tag = std::contiguous_iterator_tag;
+        using iterator_tag = std::random_access_iterator_tag;
 
         using const_value_iterator = empty_iterator<int>;
         using const_bitmap_iterator = empty_iterator<bool>;
