@@ -295,24 +295,6 @@ namespace sparrow
     template <class D>
     bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs)
     {
-        if (lhs.size() != rhs.size())
-        {
-            return false;
-        }
-        auto liter = lhs.cbegin();
-        auto liter_end = lhs.cend();
-        auto riter = rhs.cbegin();
-        for (; liter != liter_end; ++liter, ++riter)
-        {
-            if (!(*liter == *riter))
-            {
-                return false;
-            }
-        }
-        return true;
-        // The following triggers a bug on OSX
-        //return lhs.size() == rhs.size() && std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin());
-        // The following requires a common reference for nullable proxy types
-        //return std::ranges::equal(lhs, rhs);
+        return std::ranges::equal(lhs, rhs);
     }
 }
