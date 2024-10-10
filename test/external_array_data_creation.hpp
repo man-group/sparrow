@@ -277,4 +277,16 @@ namespace sparrow::test
         std::vector<ArrowArray>& children_arrays,
         const std::vector<std::size_t>& false_postions
     );
+
+    void fill_schema_and_array_for_run_end_encoded(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        ArrowSchema &  acc_length_schema,
+        ArrowArray &   acc_length_arr,
+        ArrowSchema &  value_schema,
+        ArrowArray &   value_arr,
+        std::size_t length
+    );
+
+    
 }

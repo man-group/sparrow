@@ -259,5 +259,46 @@ namespace sparrow::test
         arr.release = &release_arrow_array;
     }
 
+    void fill_schema_and_array_for_run_end_encoded(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        ArrowSchema &  acc_length_schema,
+        ArrowArray &   acc_length_arr,
+        ArrowSchema &  value_schema,
+        ArrowArray &   value_arr,
+        std::size_t  length
+    ){
+        schema.format = "+r";
+        schema.name = "test";
+        schema.metadata = "test metadata";
+
+        schema.n_children = 2;
+        schema.children = new ArrowSchema*[2];
+        schema.children[0] = &acc_length_schema;
+        schema.children[1] = &value_schema;
+
+        schema.dictionary = nullptr;
+        schema.release = &release_arrow_schema;
+
+        arr.length = static_cast<std::int64_t>(length);
+
+
+        arr.null_count = 0;
+        arr.offset = 0;
+
+        arr.n_buffers = 0;
+        arr.n_children = 2;
+
+        arr.buffers = nullptr;
+
+        arr.children = new ArrowArray*[2];
+        arr.children[0] = &acc_length_arr;
+        arr.children[1] = &value_arr;
+
+        arr.dictionary = nullptr;
+        arr.release = &release_arrow_array;
+
+    }
+
 }
 
