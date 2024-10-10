@@ -125,6 +125,12 @@ TEST_SUITE("value_ptr")
         CHECK_EQ(vp->at(0), 42);
     }
 
+    TEST_CASE("get")
+    {
+        value_ptr vp(std::vector<int>{42});
+        CHECK_EQ(vp.get(), std::addressof(*vp));
+    }
+
     TEST_CASE("operator bool")
     {
         value_ptr<int> vp;

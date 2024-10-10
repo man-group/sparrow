@@ -26,9 +26,6 @@ namespace sparrow
     {   
         TEST_CASE_TEMPLATE("list[T]",T, std::uint8_t, std::int32_t, float, double)
         {
-
-    
-                    
             using inner_scalar_type = T;
             using inner_nullable_type = nullable<inner_scalar_type>;
 
@@ -88,39 +85,36 @@ namespace sparrow
             SUBCASE("cast flat array")
             {
                 // get the flat values (offset is not applied)
-                array_base * flat_values = list_arr.raw_flat_array();
+                array_wrapper* flat_values = list_arr.raw_flat_array();
 
                 // cast into a primitive array
-                primitive_array<inner_scalar_type> * flat_values_casted = static_cast<primitive_array<inner_scalar_type> *>(flat_values);
+                auto& flat_values_casted = unwrap_array<primitive_array<inner_scalar_type>>(*flat_values);
+
                 using primitive_size_type = typename primitive_array<inner_scalar_type>::size_type;
                 // check the size
-                REQUIRE(flat_values_casted->size() == n_flat);
+                REQUIRE(flat_values_casted.size() == n_flat);
 
                 // check that flat values are "iota"
                 if constexpr(std::is_integral_v<inner_scalar_type>)
                 {
                     for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
-                        CHECK((*flat_values_casted)[static_cast<primitive_size_type>(i)].value() == i);
+                        CHECK(flat_values_casted[static_cast<primitive_size_type>(i)].value() == i);
                     }
                 }
                 else
                 {
                     for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
-                        CHECK((*flat_values_casted)[static_cast<primitive_size_type>(i)].value() == doctest::Approx(static_cast<double>(i)));
+                        CHECK(flat_values_casted[static_cast<primitive_size_type>(i)].value() == doctest::Approx(static_cast<double>(i)));
                     }
                 }
             }
         }
     }
 
-
     TEST_SUITE("list_view_array")
     {   
         TEST_CASE_TEMPLATE("list_view_array[T]",T, std::uint8_t, std::int32_t, float, double)
         {
-
-    
-                    
             using inner_scalar_type = T;
             using inner_nullable_type = nullable<inner_scalar_type>;
 
@@ -140,7 +134,7 @@ namespace sparrow
             ArrowArray arr{};
             ArrowSchema schema{};
             test::fill_schema_and_array_for_list_view_layout(schema, arr, flat_schema, flat_arr, sizes, {}, 0);
-            arrow_proxy proxy(&arr, &schema);         
+            arrow_proxy proxy(&arr, &schema);
 
             // create a list array
             list_view_array list_arr(std::move(proxy));
@@ -152,7 +146,8 @@ namespace sparrow
                     REQUIRE(list_arr[i].has_value());
                     CHECK(list_arr[i].value().size() == sizes[i]);
                 }
-            }   
+            }
+
             SUBCASE("element-values")
             {
                 std::size_t flat_index = 0;
@@ -180,26 +175,26 @@ namespace sparrow
             SUBCASE("cast flat array")
             {
                 // get the flat values (offset is not applied)
-                array_base * flat_values = list_arr.raw_flat_array();
+                array_wrapper* flat_values = list_arr.raw_flat_array();
 
                 // cast into a primitive array
-                primitive_array<inner_scalar_type> * flat_values_casted = static_cast<primitive_array<inner_scalar_type> *>(flat_values);
+                auto& flat_values_casted = unwrap_array<primitive_array<inner_scalar_type>>(*flat_values);
 
                 using primitive_size_type = typename primitive_array<inner_scalar_type>::size_type;
                 // check the size
-                REQUIRE(flat_values_casted->size() == n_flat);
+                REQUIRE(flat_values_casted.size() == n_flat);
 
                 // check that flat values are "iota"
                 if constexpr(std::is_integral_v<inner_scalar_type>)
                 {
                     for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
-                        CHECK((*flat_values_casted)[static_cast<primitive_size_type>(i)].value() == i);
+                        CHECK(flat_values_casted[static_cast<primitive_size_type>(i)].value() == i);
                     }
                 }
                 else
                 {
                     for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
-                        CHECK((*flat_values_casted)[static_cast<primitive_size_type>(i)].value() == doctest::Approx(static_cast<double>(i)));
+                        CHECK(flat_values_casted[static_cast<primitive_size_type>(i)].value() == doctest::Approx(static_cast<double>(i)));
                     }
                 }
             }

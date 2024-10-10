@@ -18,6 +18,7 @@
 
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/array_base.hpp"
+#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/types/data_traits.hpp"
@@ -99,8 +100,7 @@ namespace sparrow
     // - big-list-view-array
     // - fixed-size-list-array
     template <class DERIVED>
-    class list_array_crtp_base : public array_base,
-                                 public array_crtp_base<DERIVED>
+    class list_array_crtp_base : public array_crtp_base<DERIVED>
     {
     public:
 
@@ -122,19 +122,15 @@ namespace sparrow
         using inner_reference = list_value;
         using inner_const_reference = list_value;
 
-
         using value_type = nullable<inner_value_type>;
         using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
-        using iterator_tag = std::contiguous_iterator_tag;
-
+        using iterator_tag = typename base_type::iterator_tag;
 
         explicit list_array_crtp_base(arrow_proxy proxy);
-        virtual ~list_array_crtp_base() = default;
-        list_array_crtp_base(const list_array_crtp_base& rhs) = default;
-        list_array_crtp_base* clone_impl() const override;
-        const array_base* raw_flat_array() const;
-        array_base* raw_flat_array();
+
+        const array_wrapper* raw_flat_array() const;
+        array_wrapper* raw_flat_array();
 
     private:
 
@@ -152,7 +148,7 @@ namespace sparrow
         bitmap_type::const_iterator bitmap_begin_impl() const;
 
         // data members
-        cloning_ptr<array_base> p_flat_array;
+        cloning_ptr<array_wrapper> p_flat_array;
         bitmap_type m_bitmap;
 
         // friend classes
@@ -182,10 +178,11 @@ namespace sparrow
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
         std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
+        offset_type* p_list_offsets;
+
         // friend classes
         friend class array_crtp_base<self_type>;
         friend class list_array_crtp_base<self_type>;
-        offset_type* p_list_offsets;
     };
 
     template <bool BIG>
@@ -208,11 +205,12 @@ namespace sparrow
         static constexpr std::size_t SIZES_BUFFER_INDEX = 2;
         std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
+        offset_type* p_list_offsets;
+        offset_type* p_list_sizes;
+
         // friend classes
         friend class array_crtp_base<self_type>;
         friend class list_array_crtp_base<self_type>;
-        offset_type* p_list_offsets;
-        offset_type* p_list_sizes;
     };
 
     class fixed_sized_list_array final : public list_array_crtp_base<fixed_sized_list_array>
@@ -242,27 +240,20 @@ namespace sparrow
 
     template <class DERIVED>
     list_array_crtp_base<DERIVED>::list_array_crtp_base(arrow_proxy proxy)
-        : array_base(proxy.data_type())
-        , base_type(std::move(proxy))
+        : base_type(std::move(proxy))
         , p_flat_array(std::move(array_factory(this->storage().children()[0].view())))
         , m_bitmap(make_simple_bitmap(this->storage()))
     {
     }
 
     template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::clone_impl() const -> list_array_crtp_base*
-    {
-        return new list_array_crtp_base(*this);
-    }
-
-    template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::raw_flat_array() const -> const array_base*
+    auto list_array_crtp_base<DERIVED>::raw_flat_array() const -> const array_wrapper*
     {
         return p_flat_array.get();
     }
 
     template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::raw_flat_array() -> array_base*
+    auto list_array_crtp_base<DERIVED>::raw_flat_array() -> array_wrapper*
     {
         return p_flat_array.get();
     }

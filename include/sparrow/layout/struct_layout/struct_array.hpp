@@ -16,6 +16,7 @@
 
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/array_base.hpp"
+#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
@@ -40,8 +41,7 @@ namespace sparrow
         using iterator_tag = std::random_access_iterator_tag;
     };
 
-    class struct_array final : public array_base,
-                               public array_crtp_base<struct_array>
+    class struct_array final : public array_crtp_base<struct_array>
     {
     public:
 
@@ -66,15 +66,12 @@ namespace sparrow
         using value_type = nullable<inner_value_type>;
         using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
-        using iterator_tag = std::contiguous_iterator_tag;
-
+        using iterator_tag = base_type::iterator_tag;
 
         explicit struct_array(arrow_proxy proxy);
-        virtual ~struct_array() = default;
-        struct_array(const struct_array& rhs) = default;
-        struct_array* clone_impl() const override;
-        const array_base* raw_child(std::size_t i) const;
-        array_base* raw_child(std::size_t i);
+
+        const array_wrapper* raw_child(std::size_t i) const;
+        array_wrapper* raw_child(std::size_t i);
 
     private:
 
@@ -89,7 +86,7 @@ namespace sparrow
         bitmap_type::const_iterator bitmap_begin_impl() const;
 
         // data members
-        std::vector<cloning_ptr<array_base>> m_children;
+        std::vector<cloning_ptr<array_wrapper>> m_children;
         bitmap_type m_bitmap;
 
         // friend classes
@@ -101,8 +98,7 @@ namespace sparrow
     };
 
     inline struct_array::struct_array(arrow_proxy proxy)
-        : array_base(proxy.data_type())
-        , base_type(std::move(proxy))
+        : base_type(std::move(proxy))
         , m_children(this->storage().children().size(), nullptr)
         , m_bitmap(make_simple_bitmap(storage()))
     {
@@ -112,17 +108,12 @@ namespace sparrow
         }
     }
 
-    inline auto struct_array::clone_impl() const -> struct_array*
-    {
-        return new struct_array(*this);
-    }
-
-    inline auto struct_array::raw_child(std::size_t i) const -> const array_base*
+    inline auto struct_array::raw_child(std::size_t i) const -> const array_wrapper*
     {
         return m_children[i].get();
     }
 
-    inline auto struct_array::raw_child(std::size_t i) -> array_base*
+    inline auto struct_array::raw_child(std::size_t i) -> array_wrapper*
     {
         return m_children[i].get();
     }

@@ -58,7 +58,7 @@ namespace sparrow
         friend class iterator_access;
     };
 
-    class null_array final : public array_base
+    class null_array
     {
     public:
 
@@ -70,7 +70,7 @@ namespace sparrow
         using const_reference = const_iterator::reference;
         using size_type = std::size_t;
         using difference_type = iterator::difference_type;
-        using iterator_tag = std::contiguous_iterator_tag;
+        using iterator_tag = std::random_access_iterator_tag;
 
         using const_value_iterator = empty_iterator<int>;
         using const_bitmap_iterator = empty_iterator<bool>;
@@ -79,7 +79,6 @@ namespace sparrow
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
         explicit null_array(arrow_proxy);
-        virtual ~null_array() = default;
 
         size_type size() const;
 
@@ -102,11 +101,10 @@ namespace sparrow
 
         difference_type ssize() const;
 
-        null_array(const null_array&) = default;
-        null_array* clone_impl() const override;
-
         arrow_proxy m_proxy;
     };
+
+    bool operator==(const null_array& lhs, const null_array& rhs);
 
     /*********************************
      * empty_iterator implementation *
@@ -165,8 +163,7 @@ namespace sparrow
      *****************************/
 
     inline null_array::null_array(arrow_proxy proxy)
-        : array_base(proxy.data_type())
-        , m_proxy(std::move(proxy))
+        : m_proxy(std::move(proxy))
     {
         SPARROW_ASSERT_TRUE(m_proxy.data_type() == data_type::NA);
     }
@@ -233,9 +230,9 @@ namespace sparrow
         return static_cast<difference_type>(size());
     }
 
-    inline null_array* null_array::clone_impl() const
+    inline bool operator==(const null_array& lhs, const null_array& rhs)
     {
-        return new null_array(*this);
+        return lhs.size() == rhs.size();
     }
 }
 
