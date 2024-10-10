@@ -74,6 +74,8 @@ namespace sparrow
 
         using base_type::size;
 
+        pointer data();
+        const_pointer data() const;
     private:
 
         bitmap_type::iterator bitmap_begin_impl();
@@ -84,8 +86,6 @@ namespace sparrow
         using base_type::has_value;
         using base_type::storage;
 
-        pointer data();
-        const_pointer data() const;
 
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
