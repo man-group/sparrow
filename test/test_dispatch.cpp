@@ -42,10 +42,10 @@ namespace sparrow
         TEST_CASE_TEMPLATE_DEFINE("array_size", AR, array_size_id)
         {
             using array_type = AR;
+            using wrapper_type = array_wrapper_impl<AR>;
             array_type ar(make_arrow_proxy<typename AR::inner_value_type>());
-
-            const array_base& ar_base = ar;
-            auto size = array_size(ar_base);
+            wrapper_type w(&ar);
+            auto size = array_size(w);
             CHECK_EQ(size, ar.size());
         }
 
@@ -54,12 +54,13 @@ namespace sparrow
         TEST_CASE_TEMPLATE_DEFINE("array_element", AR, array_element_id)
         {
             using array_type = AR;
+            using wrapper_type = array_wrapper_impl<AR>;
             array_type ar(make_arrow_proxy<typename AR::inner_value_type>());
+            wrapper_type w(&ar);
 
-            const array_base& ar_base = ar;
             for (std::size_t i = 0; i < ar.size(); ++i)
             {
-                auto elem = array_element(ar_base, i);
+                auto elem = array_element(w, i);
                 CHECK_EQ(elem.has_value(), ar[i].has_value());
                 if (elem.has_value())
                 {

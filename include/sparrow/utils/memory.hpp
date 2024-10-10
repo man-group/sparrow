@@ -35,103 +35,51 @@ namespace sparrow
     template <class T>
     class value_ptr
     {
+        using internal_pointer = std::unique_ptr<T>;
     public:
 
+        using self_type = value_ptr<T>;
+        using pointer = typename internal_pointer::pointer;
+        using element_type = typename internal_pointer::element_type;
+
+        // Value semantic
+
         constexpr value_ptr() noexcept = default;
-
-        constexpr value_ptr(std::nullptr_t) noexcept
-        {
-        }
-
-        explicit value_ptr(T value)
-            : value_(std::make_unique<T>(std::move(value)))
-        {
-        }
-
-        explicit value_ptr(T* value)
-            : value_(value != nullptr ? std::make_unique<T>(*value) : std::unique_ptr<T>())
-        {
-        }
-
-        value_ptr(const value_ptr& other)
-            : value_(other.value_ ? std::make_unique<T>(*other.value_) : std::unique_ptr<T>())
-        {
-        }
-
-        value_ptr(value_ptr&& other) noexcept = default;
+        constexpr value_ptr(std::nullptr_t) noexcept;
+        explicit value_ptr(T value);
+        explicit value_ptr(T* value);
 
         ~value_ptr() = default;
 
-        value_ptr& operator=(const value_ptr& other)
-        {
-            if (other.has_value())
-            {
-                if (value_)
-                {
-                    *value_ = *other.value_;
-                }
-                else
-                {
-                    value_ = std::make_unique<T>(*other.value_);
-                }
-            }
-            else
-            {
-                value_.reset();
-            }
-            return *this;
-        }
+        value_ptr(const value_ptr& other);
+        value_ptr(value_ptr&& other) noexcept = default;
 
+        value_ptr& operator=(const value_ptr& other);
         value_ptr& operator=(value_ptr&& other) noexcept = default;
 
-        value_ptr& operator=(std::nullptr_t) noexcept
-        {
-            reset();
-            return *this;
-        }
+        value_ptr& operator=(std::nullptr_t) noexcept;
 
-        T& operator*()
-        {
-            SPARROW_ASSERT_TRUE(value_);
-            return *value_;
-        }
+        // Modifiers
 
-        const T& operator*() const
-        {
-            SPARROW_ASSERT_TRUE(value_);
-            return *value_;
-        }
+        void reset() noexcept;
 
-        T* operator->()
-        {
-            SPARROW_ASSERT_TRUE(value_);
-            return &*value_;
-        }
+        // Observers
 
-        const T* operator->() const
-        {
-            SPARROW_ASSERT_TRUE(value_);
-            return &*value_;
-        }
+        T* get() noexcept;
+        const T* get() const noexcept;
 
-        explicit operator bool() const noexcept
-        {
-            return has_value();
-        }
+        explicit operator bool() const noexcept;
+        bool has_value() const noexcept;
 
-        bool has_value() const noexcept
-        {
-            return bool(value_);
-        }
+        T& operator*();
+        const T& operator*() const;
 
-        void reset() noexcept
-        {
-            value_.reset();
-        }
+        T* operator->();
+        const T* operator->() const;
 
     private:
 
-        std::unique_ptr<T> value_;
+        internal_pointer value_;
     };
    
     /**
@@ -256,6 +204,119 @@ namespace sparrow
 
     template <class T, class... Args>
     cloning_ptr<T> make_cloning_ptr(Args&&... args);
+
+    /****************************
+     * value_ptr implementation *
+     ****************************/
+
+    template <class T>
+    constexpr value_ptr<T>::value_ptr(std::nullptr_t) noexcept
+    {
+    }
+
+    template <class T>
+    value_ptr<T>::value_ptr(T value)
+        : value_(std::make_unique<T>(std::move(value)))
+    {
+    }
+
+    template <class T>
+    value_ptr<T>::value_ptr(T* value)
+        : value_(value != nullptr ? std::make_unique<T>(*value) : std::unique_ptr<T>())
+    {
+    }
+
+    template <class T>
+    value_ptr<T>::value_ptr(const value_ptr& other)
+        : value_(other.value_ ? std::make_unique<T>(*other.value_) : std::unique_ptr<T>())
+    {
+    }
+
+    template <class T>
+    value_ptr<T>& value_ptr<T>::operator=(const value_ptr& other)
+    {
+        if (other.has_value())
+        {
+            if (value_)
+            {
+                *value_ = *other.value_;
+            }
+            else
+            {
+                value_ = std::make_unique<T>(*other.value_);
+            }
+        }
+        else
+        {
+            value_.reset();
+        }
+        return *this;
+    }
+
+    template <class T>
+    value_ptr<T>& value_ptr<T>::operator=(std::nullptr_t) noexcept
+    {
+        reset();
+        return *this;
+    }
+
+    template <class T>
+    void value_ptr<T>::reset() noexcept
+    {
+        value_.reset();
+    }
+
+    template <class T>
+    T* value_ptr<T>::get() noexcept
+    {
+        return value_.get();
+    }
+
+    template <class T>
+    const T* value_ptr<T>::get() const noexcept
+    {
+        return value_.get();
+    }
+
+    template <class T>
+    value_ptr<T>::operator bool() const noexcept
+    {
+        return has_value();
+    }
+
+    template <class T>
+    bool value_ptr<T>::has_value() const noexcept
+    {
+        return bool(value_);
+    }
+
+    template <class T>
+    T& value_ptr<T>::operator*()
+    {
+        SPARROW_ASSERT_TRUE(value_);
+        return *value_;
+    }
+
+    template <class T>
+    const T& value_ptr<T>::operator*() const
+    {
+        SPARROW_ASSERT_TRUE(value_);
+        return *value_;
+    }
+
+    template <class T>
+    T* value_ptr<T>::operator->()
+    {
+        SPARROW_ASSERT_TRUE(value_);
+        return &*value_;
+    }
+
+    template <class T>
+    const T* value_ptr<T>::operator->() const
+    {
+        SPARROW_ASSERT_TRUE(value_);
+        return &*value_;
+    }
 
     /******************************
      * cloning_ptr implementation *

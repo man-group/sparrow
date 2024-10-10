@@ -17,7 +17,7 @@
 
 namespace sparrow
 {
-    list_value::list_value(const array_base* flat_array, size_type index_begin, size_type index_end)
+    list_value::list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end)
         : p_flat_array(flat_array)
         , m_index_begin(index_begin)
         , m_index_end(index_end)

@@ -514,7 +514,27 @@ namespace sparrow
         constexpr explicit operator bool() const;
         constexpr bool has_value() const;
     };
+}
 
+namespace std
+{
+    namespace mpl = sparrow::mpl;
+
+    // Specialization of basic_common_reference for nullable proxies so 
+    // we can use ranges algorithm on iterators returning nullable
+    template <class T, mpl::boolean_like TB, class U, mpl::boolean_like UB,
+             template <class> class TQual, template <class> class UQual>
+    struct basic_common_reference<sparrow::nullable<T, TB>, sparrow::nullable<U, UB>, TQual, UQual>
+    {
+        using type = sparrow::nullable<
+            std::common_reference_t<TQual<T>, UQual<U>>,
+            std::common_reference_t<TQual<TB>, UQual<UB>>
+        >;
+    };
+}
+
+namespace sparrow
+{
     /***************************
      * nullable implementation *
      ***************************/

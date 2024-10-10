@@ -43,6 +43,7 @@ set(SPARROW_TESTS_SOURCES
     main.cpp
     test_algorithm.cpp
     test_allocator.cpp
+    test_array_wrapper.cpp
     test_arrow_array_schema_factory.cpp
     test_arrow_array_schema_proxy.cpp
     test_arrow_array_schema_utils.cpp

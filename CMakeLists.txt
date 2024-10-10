@@ -131,6 +131,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
     # layout
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_wrapper.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_bitmap_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_iterator.hpp

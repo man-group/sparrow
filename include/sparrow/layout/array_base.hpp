@@ -37,34 +37,6 @@ namespace sparrow
     }
 
     /**
-     * Base class for array type erasure
-     */
-    class array_base
-    {
-    public:
-
-        virtual ~array_base() = default;
-
-        array_base(array_base&&) = delete;
-        array_base& operator=(const array_base&) = delete;
-        array_base& operator=(array_base&&) = delete;
-
-        array_base* clone() const;
-
-        enum data_type data_type() const;
-
-    protected:
-
-        array_base(enum data_type dt);
-        array_base(const array_base&) = default;
-
-    private:
-
-        enum data_type m_data_type;
-        virtual array_base* clone_impl() const = 0;
-    };
-
-    /**
      * Base class for array_inner_types specialization
      *
      * It defines common typs used in the array implementation
@@ -167,24 +139,8 @@ namespace sparrow
         friend class layout_iterator<self_type, true>;
     };
 
-    /*****************************
-     * array_base implementation *
-     *****************************/
-
-    inline array_base* array_base::clone() const
-    {
-        return clone_impl();
-    }
-
-    inline enum data_type array_base::data_type() const
-    {
-        return m_data_type;
-    }
-
-    inline array_base::array_base(enum data_type dt)
-        : m_data_type(dt)
-    {
-    }
+    template <class D>
+    bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs);
 
     /**********************************
      * array_crtp_base implementation *
@@ -334,5 +290,11 @@ namespace sparrow
     auto array_crtp_base<D>::derived_cast() const -> const derived_type&
     {
         return *static_cast<const derived_type*>(this);
+    }
+
+    template <class D>
+    bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs)
+    {
+        return std::ranges::equal(lhs, rhs);
     }
 }

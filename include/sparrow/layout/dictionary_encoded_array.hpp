@@ -16,6 +16,7 @@
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/array_base.hpp"
+#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_bitmap_iterator.hpp"
 #include "sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_iterator.hpp"
 #include "sparrow/layout/primitive_array.hpp"
@@ -80,8 +81,7 @@ namespace sparrow
     };
 
     template <std::integral IT, class SL, layout_offset OT>
-    class dictionary_encoded_array final : public array_base,
-                                           public array_crtp_base<dictionary_encoded_array<IT, SL, OT>>
+    class dictionary_encoded_array final : public array_crtp_base<dictionary_encoded_array<IT, SL, OT>>
     {
     public:
 
@@ -109,7 +109,6 @@ namespace sparrow
         using const_bitmap_range = typename base_type::const_bitmap_range;
 
         explicit dictionary_encoded_array(arrow_proxy);
-        ~dictionary_encoded_array() override = default;
 
         using base_type::size;
 
@@ -132,9 +131,6 @@ namespace sparrow
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
 
-        dictionary_encoded_array(const dictionary_encoded_array&) = default;
-        dictionary_encoded_array* clone_impl() const override;
-
         keys_layout m_keys_layout;
         values_layout m_values_layout;
 
@@ -156,8 +152,7 @@ namespace sparrow
 
     template <std::integral IT, class SL, layout_offset OT>
     dictionary_encoded_array<IT, SL, OT>::dictionary_encoded_array(arrow_proxy proxy)
-        : array_base(proxy.data_type())
-        , base_type(std::move(proxy))
+        : base_type(std::move(proxy))
         , m_keys_layout(create_keys_layout(storage()))
         , m_values_layout(create_values_layout(storage()))
     {
@@ -225,13 +220,6 @@ namespace sparrow
     auto dictionary_encoded_array<IT, SL, OT>::value_cend() const -> const_value_iterator
     {
         return sparrow::next(value_cbegin(), size());
-    }
-
-    template <std::integral IT, class SL, layout_offset OT>
-    dictionary_encoded_array<IT, SL, OT>* dictionary_encoded_array<IT, SL, OT>::clone_impl() const
-    {
-        arrow_proxy copy = storage();
-        return new dictionary_encoded_array<IT, SL, OT>(std::move(copy));
     }
 
     template <std::integral T, class SL, layout_offset OT>

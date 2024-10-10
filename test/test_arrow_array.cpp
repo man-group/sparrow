@@ -22,8 +22,6 @@
 #include "arrow_array_schema_creation.hpp"
 #include "doctest/doctest.h"
 
-
-
 using buffer_type = sparrow::buffer<uint8_t>;
 const buffer_type buffer_dummy({0, 1, 2, 3, 4});
 using buffers_type = std::vector<buffer_type>;
