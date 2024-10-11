@@ -18,7 +18,6 @@
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-//#include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 
 namespace sparrow
 {   

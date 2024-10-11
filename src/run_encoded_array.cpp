@@ -6,28 +6,14 @@
 
 
 namespace sparrow   
-{
+{    
     template<class T>
-    struct is_usable_array : std::false_type
-    {
-    };
-    template<>
-    struct is_usable_array<primitive_array<std::uint16_t>> : std::true_type
-    {
-    };
-    template<>
-    struct is_usable_array<primitive_array<std::uint32_t>> : std::true_type
-    {
-    };
-    template<>
-    struct is_usable_array<primitive_array<std::uint64_t>> : std::true_type
-    {
-    };
-
-
+    concept usable_array =
+             mpl::is_type_instance_of_v<T, primitive_array> && (
+             std::same_as<typename T::inner_value_type, std::uint16_t> ||
+             std::same_as<typename T::inner_value_type, std::uint32_t> ||
+             std::same_as<typename T::inner_value_type, std::uint64_t>);
     
-    
-
     auto run_end_encoded_array::get_acc_lengths_ptr(const array_wrapper& ar) -> acc_length_ptr_variant_type
     {
 
@@ -35,7 +21,8 @@ namespace sparrow
             [](const auto& actual_arr) -> acc_length_ptr_variant_type
             {
                 using array_type = std::decay_t<decltype(actual_arr)>;
-                if constexpr( is_usable_array<array_type>::value)
+                
+                if constexpr(usable_array<array_type>)
                 {
                     return actual_arr.data();
                 }
