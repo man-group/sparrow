@@ -13,7 +13,8 @@
 // limitations under the License.
 
 #include "sparrow/layout/list_layout/list_value.hpp"
-#include "sparrow/layout/dispatch_lib.hpp"
+#include "sparrow/layout/array_helper.hpp"
+#include "sparrow/layout/dispatch.hpp"
 
 namespace sparrow
 {
@@ -32,5 +33,15 @@ namespace sparrow
     auto list_value::operator[](size_type i) const -> const_reference
     {
         return array_element(*p_flat_array, m_index_begin + i);
+    }
+
+    bool operator==(const list_value& lhs, const list_value& rhs)
+    {
+        bool res = lhs.size() == rhs.size();
+        for (std::size_t i = 0; res && i < lhs.size(); ++i)
+        {
+            res = lhs[i] == rhs[i];
+        }
+        return res;
     }
 }

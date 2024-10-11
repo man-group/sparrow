@@ -131,10 +131,9 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
     # layout
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_helper.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_wrapper.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_bitmap_iterator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dispatch.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_utils.hpp
@@ -171,6 +170,7 @@ set(SPARROW_HEADERS
 
 set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/array_factory.cpp
+    ${SPARROW_SOURCE_DIR}/array_helper.cpp
     ${SPARROW_SOURCE_DIR}/list_value.cpp
     ${SPARROW_SOURCE_DIR}/struct_value.cpp
     ${SPARROW_SOURCE_DIR}/dispatch_lib.cpp

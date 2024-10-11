@@ -13,12 +13,11 @@
 // limitations under the License.
 
 #pragma once
-#include "sparrow/utils/iterator.hpp"
 
+#include "sparrow/utils/iterator.hpp"
 
 namespace sparrow
 {
-
     template<class FUNCTOR>
     class functor_index_iterator : public iterator_base<
         functor_index_iterator<FUNCTOR>,   // Derived
@@ -27,37 +26,54 @@ namespace sparrow
         std::invoke_result_t<FUNCTOR, std::size_t>  // Reference
     >
     {
-      public:
+    public:
 
-
-        constexpr functor_index_iterator() = default;
-        constexpr functor_index_iterator(const functor_index_iterator&) = default;
-        constexpr functor_index_iterator& operator=(const functor_index_iterator&) = default;
-        constexpr functor_index_iterator(functor_index_iterator&&) = default;
-        constexpr functor_index_iterator& operator=(functor_index_iterator&&) = default;
-        
-
-        friend class iterator_access;
-        
         using result_type = std::invoke_result_t<FUNCTOR, std::size_t>;
         using self_type = functor_index_iterator<FUNCTOR>;
         using difference_type = std::ptrdiff_t;
+        using size_type = std::size_t;
 
-        constexpr functor_index_iterator(FUNCTOR functor, std::size_t index)
+        constexpr functor_index_iterator() = default;
+        
+        constexpr functor_index_iterator(FUNCTOR functor, size_type index)
             : m_functor(std::move(functor))
             , m_index(index)
         {
         }
+     
+    private:
 
+        result_type dereference() const
+        {
+            return m_functor(m_index);
+        }
+
+        void increment()
+        {
+            ++m_index;
+        }
+
+        void decrement()
+        {
+            --m_index;
+        }
+
+        void advance(difference_type n)
+        {
+            if (n >= 0)
+            {
+                m_index += static_cast<size_type>(n);
+            }
+            else
+            {
+                SPARROW_ASSERT_TRUE(std::abs(n) <= static_cast<difference_type>(m_index));
+                m_index -= static_cast<size_type>(-n);
+            }
+        }
+        
         difference_type distance_to(const self_type& rhs) const
         {
             return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);
-        }
-      private:
-
-        result_type  dereference() const
-        {
-            return m_functor(m_index);
         }
 
         bool equal(const self_type& rhs) const
@@ -65,25 +81,15 @@ namespace sparrow
             return m_index == rhs.m_index;
         }
 
-        void increment()
-        {
-            ++m_index;
-        }
-        void decrement()
-        {
-            --m_index;
-        }
-        void advance(difference_type n)
-        {
-            m_index += n;
-        }
-        
         bool less_than(const self_type& rhs) const
         {
             return m_index < rhs.m_index;
         }
-        FUNCTOR m_functor = FUNCTOR{};
-        std::uint64_t m_index = 0;
 
+        FUNCTOR m_functor = FUNCTOR{};
+        size_type m_index = 0;
+
+        friend class iterator_access;
     };
 }
+

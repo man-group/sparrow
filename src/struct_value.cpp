@@ -13,7 +13,8 @@
 // limitations under the License.
 
 #include "sparrow/layout/struct_layout/struct_value.hpp"
-#include "sparrow/layout/dispatch_lib.hpp"
+#include "sparrow/layout/array_helper.hpp"
+#include "sparrow/layout/dispatch.hpp"
 
 namespace sparrow
 {
@@ -31,5 +32,15 @@ namespace sparrow
     auto struct_value::operator[](size_type i) const -> const_reference
     {
         return array_element(*(m_children[i].get()), m_index);
+    }
+
+    bool operator==(const struct_value& lhs, const struct_value& rhs)
+    {
+        bool res = lhs.size() == rhs.size();
+        for (std::size_t i = 0; res && i < lhs.size(); ++i)
+        {
+            res = lhs[i] == rhs[i];
+        }
+        return res;
     }
 }

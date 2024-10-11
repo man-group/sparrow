@@ -14,33 +14,25 @@
 
 #pragma once
 
+// N.B. This file is temporary, its goal is to make it easier to not include
+// dispatch.hpp in other headers to avoid bloating the header dependencies.
+// On the long run these free functions should probably become methods of
+// the array facade.
+
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
-#include "sparrow/types/data_traits.hpp"
-#include "sparrow/utils/memory.hpp"
 
 namespace sparrow
 {
-    class SPARROW_API struct_value
-    {
-    public:
-
-        using value_type = array_traits::value_type;
-        using const_reference = array_traits::const_reference;
-        using size_type = std::size_t;
-        using child_ptr = cloning_ptr<array_wrapper>;
-
-        struct_value(const std::vector<child_ptr>& children, size_type index);
-        size_type size() const;
-        const_reference operator[](size_type i) const;
-
-    private:
-    
-        const std::vector<child_ptr>&  m_children;
-        size_type m_index;
-    };
+    SPARROW_API
+    std::size_t array_size(const array_wrapper& ar);
 
     SPARROW_API
-    bool operator==(const struct_value& lhs, const struct_value& rhs);
-}
+    bool array_has_value(const array_wrapper& ar, std::size_t index);
 
+    SPARROW_API
+    array_traits::const_reference array_element(const array_wrapper& ar, std::size_t index);
+
+    SPARROW_API
+    array_traits::inner_value_type array_default_element_value(const array_wrapper& ar);
+}

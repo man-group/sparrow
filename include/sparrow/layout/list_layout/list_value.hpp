@@ -39,5 +39,8 @@ namespace sparrow
         size_type m_index_begin;
         size_type m_index_end;
     };
+
+    SPARROW_API
+    bool operator==(const list_value& lhs, const list_value& rhs);
 }
 

@@ -13,8 +13,9 @@
 // limitations under the License.
 
 
-#include "sparrow/layout/dispatch_lib.hpp"
+#include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/dispatch.hpp"
+
 #include "doctest/doctest.h"
 
 #include "../test/external_array_data_creation.hpp"

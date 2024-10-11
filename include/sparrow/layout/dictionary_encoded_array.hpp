@@ -14,166 +14,126 @@
 
 #pragma once
 
+#include "sparrow/array_factory.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/array_base.hpp"
+#include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
-#include "sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_bitmap_iterator.hpp"
-#include "sparrow/layout/dictionary_encoded_array/dictionary_encoded_array_iterator.hpp"
+#include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/layout/primitive_array.hpp"
-#include "sparrow/types/data_type.hpp"
+#include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/functor_index_iterator.hpp"
+#include "sparrow/utils/memory.hpp"
 
 namespace sparrow
 {
-    /*
-     * Traits class for the iterator over the data values
-     * of a dictionary encoded layout.
-     *
-     * @tparam L the layout type
-     * @tparam IC a constnat indicating whether the inner types
-     * must be defined for a constant iterator.
-     */
-    template <class L, bool IC>
-    struct dictionary_value_traits
-    {
-        using layout_type = L;
-        using value_type = typename L::inner_value_type;
-        using tag = std::random_access_iterator_tag;
-        using const_reference = typename L::inner_const_reference;
-        static constexpr bool is_value = true;
-        static constexpr bool is_const = IC;
-    };
-
-    template <typename KeysArray, typename ValuesArrayBitmapRange, typename ValuesArrayConstBitmapRange>
-    struct dictionary_bitmap_types
-    {
-        using size_type = size_t;
-        using reference = bool;
-        using const_reference = bool;
-        using iterator = validity_iterator<KeysArray, ValuesArrayBitmapRange>;
-        using const_iterator = validity_iterator<KeysArray, ValuesArrayConstBitmapRange>;
-    };
-
-    template <std::integral IT, class SL, layout_offset OT = std::int64_t>
-    class dictionary_encoded_array;
-
-    template <std::integral IT, class SL, layout_offset OT>
-    struct array_inner_types<dictionary_encoded_array<IT, SL, OT>>
-    {
-        using array_type = dictionary_encoded_array<IT, SL, OT>;
-
-        using keys_layout = primitive_array<IT>;
-        using values_layout = SL;
-
-        using inner_value_type = SL::inner_value_type;
-        using inner_reference = SL::inner_reference;
-        using inner_const_reference = SL::inner_const_reference;
-
-        using value_iterator = dictionary_iterator<dictionary_value_traits<array_inner_types<array_type>, false>>;
-        using const_value_iterator = dictionary_iterator<dictionary_value_traits<array_inner_types<array_type>, true>>;
-
-        using iterator_tag = std::random_access_iterator_tag;
-
-        using iterator = layout_iterator<array_type, false>;
-        using const_iterator = layout_iterator<array_type, true>;
-
-        using bitmap_type = dictionary_bitmap_types<keys_layout, typename values_layout::bitmap_range, typename values_layout::const_bitmap_range>;
-    };
-
-    template <std::integral IT, class SL, layout_offset OT>
-    class dictionary_encoded_array final : public array_crtp_base<dictionary_encoded_array<IT, SL, OT>>
+    template <class Layout, bool is_const>
+    class layout_element_functor
     {
     public:
 
-        using self_type = dictionary_encoded_array<IT, SL, OT>;
-        using index_type = IT;
-        using values_layout = SL;
-        using base_type = array_crtp_base<self_type>;
-        using inner_types = array_inner_types<self_type>;
-        using inner_value_type = typename inner_types::inner_value_type;
-        using inner_reference = typename inner_types::inner_reference;
-        using inner_const_reference = typename inner_types::inner_const_reference;
-        using bitmap_type = typename base_type::bitmap_type;
-        using bitmap_const_reference = typename base_type::bitmap_const_reference;
-        using value_type = SL::value_type;
-        using reference = SL::reference;
-        using const_reference = SL::const_reference;
-        using size_type = typename base_type::size_type;
-        using difference_type = typename base_type::difference_type;
-        using keys_layout = typename inner_types::keys_layout;
-        using iterator_tag = typename base_type::iterator_tag;
+        using layout_type = Layout;
+        using storage_type = std::conditional_t<is_const, const layout_type*, layout_type>;
+        using return_type = std::conditional_t<is_const, typename layout_type::const_reference, typename layout_type::reference>;
 
-        using value_iterator = typename base_type::value_iterator;
-        using const_value_iterator = typename base_type::const_value_iterator;
+        constexpr layout_element_functor() = default;
 
-        using const_bitmap_range = typename base_type::const_bitmap_range;
-
-        explicit dictionary_encoded_array(arrow_proxy);
-
-        using base_type::size;
-
-        reference operator[](size_type i);
-        const_reference operator[](size_type i) const;
+        constexpr explicit layout_element_functor(storage_type layout)
+            : p_layout(layout)
+        {
+        }
+        
+        return_type operator()(std::size_t i) const
+        {
+            return p_layout->operator[](i);
+        }
 
     private:
 
-        using base_type::bitmap_begin;
-        using base_type::bitmap_end;
-        using base_type::has_value;
-        using base_type::storage;
+        storage_type p_layout;
+    };
 
-        // inner_reference value(size_type i);
-        inner_const_reference value(size_type i) const;
+    template <std::integral IT>
+    class dictionary_encoded_array
+    {
+    public:
 
-        // value_iterator value_begin();
-        // value_iterator value_end();
+        using self_type = dictionary_encoded_array<IT>;
+        using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
 
-        const_value_iterator value_cbegin() const;
-        const_value_iterator value_cend() const;
+        using inner_value_type = array_traits::inner_value_type;
 
-        keys_layout m_keys_layout;
-        values_layout m_values_layout;
+        using value_type = array_traits::value_type;
+        using reference = array_traits::const_reference;
+        using const_reference = array_traits::const_reference;
 
-        bitmap_type::iterator bitmap_begin_impl();
-        bitmap_type::const_iterator bitmap_begin_impl() const;
+        using functor_type = layout_element_functor<self_type, true>;
+        using const_functor_type = layout_element_functor<self_type, true>;
 
-        static const const_reference& dummy_const_reference();
+        using iterator = functor_index_iterator<functor_type>;
+        using const_iterator = functor_index_iterator<const_functor_type>;
+
+        explicit dictionary_encoded_array(arrow_proxy);
+
+        size_type size() const;
+
+        const_reference operator[](size_type i) const;
+
+        iterator begin();
+        iterator end();
+
+        const_iterator begin() const;
+        const_iterator end() const;
+
+        const_iterator cbegin() const;
+        const_iterator cend() const;
+
+    private:
+
+        using keys_layout = primitive_array<IT>;
+        using values_layout = cloning_ptr<array_wrapper>;
+
+        const inner_value_type& dummy_inner_value() const;
+        //inner_const_reference dummy_inner_const_reference() const;
+        const_reference dummy_const_reference() const;
+
         static keys_layout create_keys_layout(arrow_proxy& proxy);
         static values_layout create_values_layout(arrow_proxy& proxy);
 
-        friend class array_crtp_base<self_type>;
-        friend class dictionary_iterator<dictionary_value_traits<inner_types, true>>;
-        friend class dictionary_iterator<dictionary_value_traits<inner_types, false>>;
+        arrow_proxy m_proxy;
+        keys_layout m_keys_layout;
+        values_layout p_values_layout;
     };
 
     /*******************************************
      * dictionary_encoded_array implementation *
      *******************************************/
 
-    template <std::integral IT, class SL, layout_offset OT>
-    dictionary_encoded_array<IT, SL, OT>::dictionary_encoded_array(arrow_proxy proxy)
-        : base_type(std::move(proxy))
-        , m_keys_layout(create_keys_layout(storage()))
-        , m_values_layout(create_values_layout(storage()))
+    template <std::integral IT>
+    dictionary_encoded_array<IT>::dictionary_encoded_array(arrow_proxy proxy)
+        : m_proxy(std::move(proxy))
+        , m_keys_layout(create_keys_layout(m_proxy))
+        , p_values_layout(create_values_layout(m_proxy))
     {
-        SPARROW_ASSERT_TRUE(data_type_is_integer(storage().data_type()));
+        SPARROW_ASSERT_TRUE(data_type_is_integer(m_proxy.data_type()));
     }
 
-    // template <std::integral IT, class SL, layout_offset OT>
-    // auto dictionary_encoded_array<IT, SL, OT>::operator[](size_type i) -> reference
-    // {
-    //     SPARROW_ASSERT_TRUE(i < size());
-    //     return reference(value(i), has_value(i));
-    // }
-
-    template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::operator[](size_type i) const -> const_reference
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::size() const -> size_type
+    {
+        return m_proxy.length();
+    }
+    
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         const auto index = m_keys_layout[i];
         if (index.has_value())
         {
-            return m_values_layout[index.value()];
+            return array_element(*p_values_layout, index.value());
         }
         else
         {
@@ -181,80 +141,82 @@ namespace sparrow
         }
     }
 
-    template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::value(size_type i) const -> inner_const_reference
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::begin() -> iterator
     {
-        SPARROW_ASSERT_TRUE(i < size());
-        const auto index = m_keys_layout[i];
-        if (index.has_value())
-        {
-            auto ref = m_values_layout[index.value()];
-            if (ref.has_value())
-            {
-                return ref.value();
-            }
-        }
-
-        return inner_const_reference();
+        return iterator(functor_type(this), 0u);
+    }
+    
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::end() -> iterator
+    {
+        return iterator(functor_type(this), size());
     }
 
-    // template <std::integral IT, class SL, layout_offset OT>
-    // auto dictionary_encoded_array<IT, SL, OT>::value_begin() -> value_iterator
-    // {
-    //     return value_iterator{m_keys_layout.cbegin(), m_values_layout};
-    // }
-
-    // template <std::integral IT, class SL, layout_offset OT>
-    // auto dictionary_encoded_array<IT, SL, OT>::value_end() -> value_iterator
-    // {
-    //     return sparrow::next(value_begin(), size());
-    // }
-
-    template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::value_cbegin() const -> const_value_iterator
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::begin() const -> const_iterator
     {
-        return const_value_iterator{m_keys_layout.cbegin(), m_values_layout};
+        return cbegin();
+    }
+    
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::end() const -> const_iterator
+    {
+        return cend();
     }
 
-    template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::value_cend() const -> const_value_iterator
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::cbegin() const -> const_iterator
     {
-        return sparrow::next(value_cbegin(), size());
+        return const_iterator(const_functor_type(this), 0u);
     }
 
-    template <std::integral T, class SL, layout_offset OT>
-    typename dictionary_encoded_array<T, SL, OT>::values_layout
-    dictionary_encoded_array<T, SL, OT>::create_values_layout(arrow_proxy& proxy)
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::cend() const -> const_iterator
+    {
+        return const_iterator(const_functor_type(this), size());
+    }
+
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::dummy_inner_value() const -> const inner_value_type&
+    {
+        static const inner_value_type instance = array_default_element_value(*p_values_layout);
+        return instance;
+    }
+
+    /*template <std::integral IT>
+    auto dictionary_encoded_array<IT>::dummy_inner_const_reference() const -> inner_const_reference
+    {
+        static const inner_const_reference instance = 
+            std::visit([](const auto& val) -> inner_const_reference { return val; }, dummy_inner_value());
+        return instance;
+    }*/
+
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::dummy_const_reference() const -> const_reference
+    {
+        static const const_reference instance = 
+            std::visit([](const auto& val) -> const_reference {
+                using inner_ref = typename arrow_traits<std::decay_t<decltype(val)>>::const_reference;
+                return nullable<inner_ref>(inner_ref(val), false);
+            },
+            dummy_inner_value());
+        return instance;
+    }
+
+    template <std::integral IT>
+    typename dictionary_encoded_array<IT>::values_layout
+    dictionary_encoded_array<IT>::create_values_layout(arrow_proxy& proxy)
     {
         const auto& dictionary = proxy.dictionary();
         SPARROW_ASSERT_TRUE(dictionary);
         arrow_proxy ar_dictionary{&(dictionary->array()), &(dictionary->schema())};
-        return values_layout{std::move(ar_dictionary)};
+        return array_factory(std::move(ar_dictionary));
     }
-
-    template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::dummy_const_reference() -> const const_reference&
-    {
-        static const typename values_layout::inner_value_type dummy_inner_value;
-        static const const_reference instance(dummy_inner_value, false);
-        return instance;
-    }
-
-    template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::create_keys_layout(arrow_proxy& proxy) -> keys_layout
+    
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::create_keys_layout(arrow_proxy& proxy) -> keys_layout
     {
         return keys_layout{arrow_proxy{&proxy.array(), &proxy.schema()}};
-    }
-
-    template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::bitmap_begin_impl() -> bitmap_type::iterator
-    {
-        return {m_keys_layout, m_values_layout.bitmap(), 0};
-    }
-
-    template <std::integral IT, class SL, layout_offset OT>
-    auto dictionary_encoded_array<IT, SL, OT>::bitmap_begin_impl() const -> bitmap_type::const_iterator
-    {
-        return {m_keys_layout, m_values_layout.bitmap(), 0};
     }
 }

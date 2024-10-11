@@ -19,6 +19,7 @@
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/null_array.hpp"
 #include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/variable_size_binary_array.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
@@ -29,13 +30,6 @@ namespace sparrow
 {
     template <class F>
     using visit_result_t = std::invoke_result_t<F, null_array>;
-
-    template <class F>
-    visit_result_t<F> visit(F&& func, const array_wrapper& ar);
-
-    /******************
-     * Implementation *
-     ******************/
 
     template <class F>
     visit_result_t<F> visit(F&& func, const array_wrapper& ar)
@@ -68,6 +62,8 @@ namespace sparrow
             return func(unwrap_array<primitive_array<float32_t>>(ar));
         case data_type::DOUBLE:
             return func(unwrap_array<primitive_array<float64_t>>(ar));
+        case data_type::STRING:
+            return func(unwrap_array<variable_size_binary_array<std::string, std::string_view>>(ar));
         case data_type::RUN_ENCODED:
             return func(unwrap_array<run_end_encoded_array>(ar));
         case data_type::LIST:
