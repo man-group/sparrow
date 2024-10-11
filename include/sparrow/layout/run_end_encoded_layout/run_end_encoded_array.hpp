@@ -14,8 +14,8 @@
 
 #pragma once
 
+#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/array_factory.hpp"
-#include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/iterator.hpp"
