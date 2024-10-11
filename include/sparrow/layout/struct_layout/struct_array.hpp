@@ -151,12 +151,12 @@ namespace sparrow
         return struct_value{m_children, i};
     }
 
-    auto struct_array::bitmap_begin_impl() -> bitmap_type::iterator
+    inline auto struct_array::bitmap_begin_impl() -> bitmap_type::iterator
     {
         return next(m_bitmap.begin(), storage().offset());
     }
 
-    auto struct_array::bitmap_begin_impl() const -> bitmap_type::const_iterator
+    inline auto struct_array::bitmap_begin_impl() const -> bitmap_type::const_iterator
     {
         return next(m_bitmap.begin(), storage().offset());
     }

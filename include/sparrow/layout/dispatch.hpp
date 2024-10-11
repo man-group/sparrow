@@ -21,6 +21,8 @@
 #include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
+#include "sparrow/layout/list_layout/list_array.hpp"
+#include "sparrow/layout/struct_layout/struct_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 
 namespace sparrow
@@ -71,6 +73,18 @@ namespace sparrow
             return func(unwrap_array<primitive_array<float64_t>>(ar));
         case data_type::RUN_ENCODED:
             return func(unwrap_array<run_end_encoded_array>(ar));
+        case data_type::LIST:
+            return func(unwrap_array<list_array>(ar));
+        case data_type::LARGE_LIST:
+            return func(unwrap_array<big_list_array>(ar));
+        case data_type::LIST_VIEW:
+            return func(unwrap_array<list_view_array>(ar));
+        case data_type::LARGE_LIST_VIEW:
+            return func(unwrap_array<big_list_view_array>(ar));
+        case data_type::FIXED_SIZED_LIST:
+            return func(unwrap_array<fixed_sized_list_array>(ar));
+        case data_type::STRUCT:
+            return func(unwrap_array<struct_array>(ar));
         default:
             throw std::invalid_argument("array type not supported");
         }
