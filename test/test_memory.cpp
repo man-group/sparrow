@@ -170,7 +170,7 @@ namespace sparrow::cloning_test
         mock_base& operator=(const mock_base&) = delete;
         mock_base& operator=(mock_base&&) = delete;
 
-        virtual mock_base* clone() const = 0;
+        virtual std::unique_ptr<mock_base> clone() const = 0;
 
     protected:
 
@@ -192,9 +192,9 @@ namespace sparrow::cloning_test
             --m_instance_count;
         }
 
-        mock_derived* clone() const override
+        std::unique_ptr<mock_base> clone() const override
         {
-            return new mock_derived(*this);
+            return std::unique_ptr<mock_derived>{new mock_derived(*this)};
         }
 
         static int instance_count() { return m_instance_count; };
@@ -307,8 +307,8 @@ namespace sparrow
             SUBCASE("default")
             {
                 auto d = new mock_derived();
-                cloning_ptr<mock_derived> p1(d);
-                cloning_ptr<mock_derived> p2(new mock_derived());
+                cloning_ptr<mock_base> p1(d);
+                cloning_ptr<mock_base> p2(new mock_derived());
                 CHECK_EQ(mock_derived::instance_count(), 2);
                 p1 = p2;
                 CHECK_EQ(mock_derived::instance_count(), 2);
