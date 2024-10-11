@@ -18,10 +18,13 @@
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-
+//#include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 
 namespace sparrow
-{
+{   
+
+    class run_end_encoded_array;
+
     template <class T>
     class primitive_array;
 
@@ -74,8 +77,6 @@ namespace sparrow
 
         using base_type::size;
 
-        pointer data();
-        const_pointer data() const;
     private:
 
         bitmap_type::iterator bitmap_begin_impl();
@@ -86,6 +87,8 @@ namespace sparrow
         using base_type::has_value;
         using base_type::storage;
 
+        pointer data();
+        const_pointer data() const;
 
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
@@ -100,6 +103,7 @@ namespace sparrow
         bitmap_type m_bitmap;
 
         friend class array_crtp_base<self_type>;
+        friend class run_end_encoded_array;
     };
 
     /**********************************
