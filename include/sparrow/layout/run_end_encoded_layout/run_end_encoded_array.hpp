@@ -88,7 +88,7 @@ namespace sparrow
     template<bool CONST>
     typename array_traits::const_reference run_encoded_array_iterator<CONST>::dereference() const
     {
-        return array_element(*p_encoded_values_array, m_run_end_index);
+        return array_element(*p_encoded_values_array, static_cast<std::size_t>(m_run_end_index));
     }
 
     class run_end_encoded_array final 
@@ -213,8 +213,8 @@ namespace sparrow
                     i
                 );
                 // std::lower_bound returns an iterator, so we need to convert it to an index
-                const auto index = static_cast<std::uint64_t>(std::distance(acc_lengths_ptr, it));
-                return array_element(*p_encoded_values_array, index);
+                const auto index = static_cast<std::size_t>(std::distance(acc_lengths_ptr, it));
+                return array_element(*p_encoded_values_array, static_cast<std::size_t>(index));
             },
             m_acc_lengths
         );
