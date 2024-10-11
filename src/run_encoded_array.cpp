@@ -16,7 +16,6 @@ namespace sparrow
     
     auto run_end_encoded_array::get_acc_lengths_ptr(const array_wrapper& ar) -> acc_length_ptr_variant_type
     {
-
         return visit(
             [](const auto& actual_arr) -> acc_length_ptr_variant_type
             {
@@ -38,12 +37,10 @@ namespace sparrow
 
     auto run_end_encoded_array::operator[](std::uint64_t i) const -> array_traits::const_reference
     {
-        // visit the variant
-        auto ret =visit(
+        return visit(
             [i, this](const auto& acc_lengths_ptr) -> array_traits::const_reference
             {
-                
-                auto it = std::upper_bound(
+                const auto it = std::upper_bound(
                     acc_lengths_ptr,
                     acc_lengths_ptr + this->m_encoded_length,
                     i
@@ -54,7 +51,5 @@ namespace sparrow
             },
             m_acc_lengths
         );
-        
-        return ret;
     }
 }
