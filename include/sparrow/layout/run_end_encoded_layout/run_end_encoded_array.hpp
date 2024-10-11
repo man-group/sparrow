@@ -146,7 +146,7 @@ namespace sparrow
     }
     inline auto run_end_encoded_array::size() const -> size_type
     {
-        return static_cast<size_type>(m_proxy.length());
+        return m_proxy.length();
     }
 
     inline auto run_end_encoded_array::get_acc_lengths_ptr(const array_wrapper& ar) -> acc_length_ptr_variant_type
