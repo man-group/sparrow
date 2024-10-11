@@ -14,6 +14,10 @@
 
 #pragma once
 
-#include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
-#include "sparrow/buffer/dynamic_bitset/non_owning_dynamic_bitset.hpp"
-#include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include <ranges>
+
+namespace sparrow
+{
+    template <class T>
+    concept random_access_range = std::ranges::random_access_range<T>;
+}

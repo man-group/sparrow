@@ -39,7 +39,9 @@ namespace sparrow
 
         explicit constexpr arrow_array_private_data(BufferType buffers);
 
+        [[nodiscard]] constexpr BufferType& buffers() noexcept;
         [[nodiscard]] constexpr const BufferType& buffers() const noexcept;
+        
         constexpr void resize_buffers(std::size_t size);
         void set_buffer(std::size_t index, buffer<std::uint8_t>&& buffer);
         void set_buffer(std::size_t index, const buffer_view<std::uint8_t>& buffer);
@@ -58,6 +60,12 @@ namespace sparrow
         : m_buffers(std::move(buffers))
         , m_buffers_pointers(to_raw_ptr_vec<std::uint8_t>(m_buffers))
     {
+    }
+
+    [[nodiscard]] constexpr std::vector<buffer<std::uint8_t>>&
+    arrow_array_private_data::buffers() noexcept
+    {
+        return m_buffers;
     }
 
     [[nodiscard]] constexpr const std::vector<buffer<std::uint8_t>>&
