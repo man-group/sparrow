@@ -33,6 +33,7 @@ namespace sparrow
     template<bool CONST>
     class run_encoded_array_iterator : public iterator_base<
         run_encoded_array_iterator<CONST>,
+        array_traits::const_reference,
         std::forward_iterator_tag,
         array_traits::const_reference
     >
@@ -62,6 +63,10 @@ namespace sparrow
 
         void increment()
         {
+            std::cout<<"incrementig from "<<m_index<<" to "<<m_index+1<<" runs_left: "<<m_runs_left<<std::endl;
+
+
+
             ++m_index;
             --m_runs_left;
             if(m_runs_left == 0)
@@ -109,6 +114,8 @@ namespace sparrow
         using self_type = run_end_encoded_array;
         using base_type = array_crtp_base<self_type>;
         using size_type = std::size_t;
+        using iterator = run_encoded_array_iterator<false>;
+        using const_iterator = run_encoded_array_iterator<true>;
 
         
         explicit run_end_encoded_array(arrow_proxy proxy);
@@ -116,11 +123,21 @@ namespace sparrow
         array_traits::const_reference operator[](std::uint64_t i);
         array_traits::const_reference operator[](std::uint64_t i) const;
 
+        iterator begin();
+        iterator end();
+
+        const_iterator begin() const;
+        const_iterator end() const;
+
+        const_iterator cbegin() const;
+        const_iterator cend() const;
+
+        size_type size() const;
+
     private:    
-        using acc_length_ptr_variant_type = std::variant< const std::int16_t*, const std::int32_t*,const std::int64_t*>;
+        using acc_length_ptr_variant_type = std::variant< const std::uint16_t*, const std::uint32_t*,const std::uint64_t*> ;
 
         static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);
-        size_type size() const;
         std::uint64_t get_run_length(std::uint64_t run_index) const;
 
         arrow_proxy m_proxy;
@@ -128,7 +145,7 @@ namespace sparrow
         
         cloning_ptr<array_wrapper> p_acc_lengths_array;
         cloning_ptr<array_wrapper> p_encoded_values_array;
-        std::variant< const std::int16_t*, const std::int32_t*,const std::int64_t*> m_acc_lengths;
+        acc_length_ptr_variant_type m_acc_lengths;
 
         // friend classes
         friend class array_crtp_base<self_type>;
@@ -158,20 +175,21 @@ namespace sparrow
                 using value_type = typename array_type::value_type;
                 using raw_inner_value_type = typename value_type::value_type;
                 using inner_value_type = std::decay_t<raw_inner_value_type>;
-                if constexpr(std::is_same_v<inner_value_type, std::int16_t>)
+                if constexpr(std::is_same_v<inner_value_type, std::uint16_t>)
                 {
                     return ar.data();
                 }
-                else if constexpr(std::is_same_v<inner_value_type, std::int32_t>)
+                else if constexpr(std::is_same_v<inner_value_type, std::uint32_t>)
                 {
                     return ar.data();
                 }
-                else if constexpr(std::is_same_v<inner_value_type, std::int64_t>)
+                else if constexpr(std::is_same_v<inner_value_type, std::uint64_t>)
                 {
                     return ar.data();
                 }
                 else
                 {
+                    std::cout<<"type with name "<<typeid(inner_value_type).name()<<" not supported"<<std::endl;
                     throw std::invalid_argument("array type not supported");
                 }
 
@@ -182,7 +200,8 @@ namespace sparrow
 
     auto run_end_encoded_array::get_run_length(std::uint64_t run_index) const -> std::uint64_t
     {
-        return std::visit(
+
+        auto ret =  std::visit(
             [run_index](auto&& acc_lengths_ptr) -> std::uint64_t
             {
                 if(run_index == 0)
@@ -196,33 +215,69 @@ namespace sparrow
             },
             m_acc_lengths
         );
+        return ret;
     }
 
     inline auto run_end_encoded_array::operator[](std::uint64_t i) const -> array_traits::const_reference
     {
         // visit the variant
-        return visit(
+        auto ret =visit(
             [i, this](const auto& acc_lengths_ptr) -> array_traits::const_reference
             {
                 
-                auto it = std::lower_bound(
+                auto it = std::upper_bound(
                     acc_lengths_ptr,
                     acc_lengths_ptr + this->m_encoded_length,
                     i
                 );
                 // std::lower_bound returns an iterator, so we need to convert it to an index
                 const auto index = static_cast<std::uint64_t>(std::distance(acc_lengths_ptr, it));
+                std::cout<<"i "<<i<<" index "<<index<<std::endl;
                 return array_element(*p_encoded_values_array, index);
             },
             m_acc_lengths
         );
-
+        
+        return ret;
     }
     
     inline auto run_end_encoded_array::operator[](std::uint64_t i) -> array_traits::const_reference
     {
         return static_cast<const run_end_encoded_array*>(this)->operator[](i);
     }
+
+    auto run_end_encoded_array::begin() -> iterator
+    {
+        return iterator(this, 0, 0);
+    }
+
+    auto run_end_encoded_array::end() -> iterator
+    {
+        return iterator(this, size(), 0);
+    }
+
+    auto run_end_encoded_array::begin() const -> const_iterator
+    {
+        return this->cbegin();
+    }
+
+    auto run_end_encoded_array::end() const -> const_iterator
+    {
+        return this->cend();
+    }
+
+    auto run_end_encoded_array::cbegin() const -> const_iterator
+    {
+        return const_iterator(this, 0, 0);
+    }
+
+    auto run_end_encoded_array::cend() const -> const_iterator
+    {
+        return const_iterator(this, size(), 0);
+    }
+
+
+
 
 
 } // namespace sparrow

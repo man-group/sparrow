@@ -31,7 +31,7 @@ namespace sparrow
         TEST_CASE("run_length_encoded")
         {
             using acc_type = std::uint32_t;
-            using inner_value_type = std::uint8_t;
+            using inner_value_type = std::uint64_t;
 
 
             // lets encode the following: (length: 8)
@@ -66,16 +66,15 @@ namespace sparrow
             auto ptr = reinterpret_cast<acc_type*>(const_cast<void*>(children_arrays[0].buffers[1]));
             std::copy(acc_values.begin(), acc_values.end(), ptr);
 
-            auto bitmap_buffer = reinterpret_cast<std::uint8_t*>(const_cast<void*>(children_arrays[0].buffers[0]));
-            bitmap_buffer[0] |= 1 << (1 % 8);
-            bitmap_buffer[0] |= 1 << (3 % 8);
-
-    
-
-
             // schema for values
-            test::fill_schema_and_array<inner_value_type>(children_schemas[1], children_arrays[1], child_length, 0/*offset*/, {});
+            test::fill_schema_and_array<inner_value_type>(children_schemas[1], children_arrays[1], child_length, 0/*offset*/, {1,3});
             children_schemas[1].name = "values";
+
+            // fill values buffer
+            std::vector<inner_value_type> values{1, 0, 42, 0, 9};
+            auto ptr2 = reinterpret_cast<inner_value_type*>(const_cast<void*>(children_arrays[1].buffers[1]));
+            std::copy(values.begin(), values.end(), ptr2);
+
 
 
             ArrowArray arr{};
@@ -94,7 +93,38 @@ namespace sparrow
             run_end_encoded_array rle_array(std::move(proxy));
 
 
+            // check size
+            CHECK(rle_array.size() == n);
 
+            std::vector<bool> expected_bitmap{1,0,0,1,1,1,0,1};
+            std::vector<inner_value_type> expected_values{1,0,0, 42,42, 42,0,9};
+
+            //check elements
+            for(std::size_t i=0; i<n; ++i){
+                REQUIRE(rle_array[i].has_value() == bool(expected_bitmap[i]));
+                if(expected_bitmap[i]){
+                    array_traits::const_reference val = rle_array[i];
+                    CHECK(val.has_value() == val.has_value());
+                    // // visit the variant
+                    std::visit([&]( auto && nullable) -> void {
+                            using T = std::decay_t<decltype(nullable)>;
+                            using inner_type = std::decay_t<typename T::value_type>;
+                            if constexpr(std::is_same_v<inner_type, inner_value_type>){
+                                if(nullable.has_value()){
+                                    CHECK(nullable.value() == expected_values[i]);
+                                }
+                                else{
+                                    CHECK(false);
+                                }
+                            }
+                            else{
+                                CHECK(false);
+                            }
+                        },
+                        val
+                    );
+                }
+            }
         }
     }
 
