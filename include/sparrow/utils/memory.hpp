@@ -82,16 +82,32 @@ namespace sparrow
         internal_pointer value_;
     };
    
+    namespace detail
+    {
+        template <class T>
+        struct is_unique_ptr : std::false_type
+        {
+        };
+
+        template <class T, class D>
+        struct is_unique_ptr<std::unique_ptr<T, D>> : std::true_type
+        {
+        };
+
+        template <class T>
+        constexpr bool is_unique_ptr_v = is_unique_ptr<T>::value;
+    }
     /**
      * Matches types that provide a `clone` method.
      *
      * This concept checks if a type T provides a `clone` method that
-     * returns a pointer to an object whose type is a base of T.
+     * returns a unique pointer to an object whose type is a base of T.
      *
      * @tparam T The type to check
      */
     template <class T>
-    concept clonable = std::derived_from<T, std::decay_t<decltype(*std::declval<T*>()->clone())>>;
+    concept clonable = std::derived_from<T, std::decay_t<decltype(*std::declval<T*>()->clone())>>
+                    && detail::is_unique_ptr_v<decltype(std::declval<T*>()->clone())>;
 
     /**
      * Smart pointer behaving like a copiable std::unique_ptr.
@@ -100,7 +116,7 @@ namespace sparrow
      * `std::unique_ptr`. The difference with `std::unique_ptr` is that 
      * `cloning_ptr`calls the `clone` method of the managed object upon copy.
      * `Therefore, `cloning_ptr` is meant to be used with hierarchies of
-     * classes which provide a `clone` method.
+     * classes which provide a `clone` method which returns a unique pointer.
      * 
      * @tparam T The type of the object managed by the `cloning_ptr`. It must
      * satisfy the `clonable` concept.
@@ -359,7 +375,7 @@ namespace sparrow
     template <clonable T>
     constexpr auto cloning_ptr<T>::operator=(const self_type& rhs) noexcept -> self_type&
     {
-        reset(rhs ? rhs->clone() : nullptr);
+        m_data = rhs ? rhs->clone() : nullptr;
         return *this;
     }
 
@@ -375,7 +391,7 @@ namespace sparrow
     requires std::convertible_to<U*, T*>
     constexpr auto cloning_ptr<T>::operator=(const cloning_ptr<U>& rhs) noexcept -> self_type&
     {
-        reset(rhs ? rhs->clone() : nullptr);
+        m_data = rhs ? rhs->clone() : nullptr;
         return *this;
     }
 
