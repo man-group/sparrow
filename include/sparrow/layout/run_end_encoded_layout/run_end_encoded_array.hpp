@@ -21,12 +21,27 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/layout/dispatch_lib.hpp"
 
 namespace sparrow
 {
+
     class run_end_encoded_array;
 
+    namespace detail
+    {
+        template<class T>
+        struct get_data_type_from_array;
 
+        template<>
+        struct get_data_type_from_array<sparrow::run_end_encoded_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::RUN_ENCODED;
+            }
+        };
+    }
 
     // this iteratas over the **actual** values of the run encoded array
     // Ie nullabes values, not values !!! 
@@ -91,7 +106,7 @@ namespace sparrow
         return array_element(*p_encoded_values_array, static_cast<std::size_t>(m_run_end_index));
     }
 
-    class run_end_encoded_array final 
+    class SPARROW_API run_end_encoded_array final 
     {
     public:
         using self_type = run_end_encoded_array;
@@ -149,37 +164,6 @@ namespace sparrow
         return m_proxy.length();
     }
 
-    inline auto run_end_encoded_array::get_acc_lengths_ptr(const array_wrapper& ar) -> acc_length_ptr_variant_type
-    {
-        return visit(
-            [](const auto& actual_arr) -> acc_length_ptr_variant_type
-            {
-                using array_type = std::decay_t<decltype(actual_arr)>;
-                using value_type = typename array_type::value_type;
-                using raw_inner_value_type = typename value_type::value_type;
-                using inner_value_type = std::decay_t<raw_inner_value_type>;
-                if constexpr(std::is_same_v<inner_value_type, std::uint16_t>)
-                {
-                    return actual_arr.data();
-                }
-                else if constexpr(std::is_same_v<inner_value_type, std::uint32_t>)
-                {
-                    return actual_arr.data();
-                }
-                else if constexpr(std::is_same_v<inner_value_type, std::uint64_t>)
-                {
-                    return actual_arr.data();
-                }
-                else
-                {
-                    throw std::invalid_argument("array type not supported");
-                }
-
-            },
-            ar
-        );
-    }
-
     inline auto run_end_encoded_array::get_run_length(std::uint64_t run_index) const -> std::uint64_t
     {
 
@@ -197,28 +181,6 @@ namespace sparrow
             },
             m_acc_lengths
         );
-        return ret;
-    }
-
-    inline auto run_end_encoded_array::operator[](std::uint64_t i) const -> array_traits::const_reference
-    {
-        // visit the variant
-        auto ret =visit(
-            [i, this](const auto& acc_lengths_ptr) -> array_traits::const_reference
-            {
-                
-                auto it = std::upper_bound(
-                    acc_lengths_ptr,
-                    acc_lengths_ptr + this->m_encoded_length,
-                    i
-                );
-                // std::lower_bound returns an iterator, so we need to convert it to an index
-                const auto index = static_cast<std::size_t>(std::distance(acc_lengths_ptr, it));
-                return array_element(*p_encoded_values_array, static_cast<std::size_t>(index));
-            },
-            m_acc_lengths
-        );
-        
         return ret;
     }
     

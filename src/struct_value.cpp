@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/layout/struct_layout/struct_value.hpp"
-#include "sparrow/layout/dispatch.hpp"
+#include "sparrow/layout/dispatch_lib.hpp"
 
 namespace sparrow
 {

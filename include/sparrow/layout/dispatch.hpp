@@ -20,6 +20,7 @@
 #include "sparrow/layout/null_array.hpp"
 #include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 
 namespace sparrow
@@ -68,20 +69,11 @@ namespace sparrow
             return func(unwrap_array<primitive_array<float32_t>>(ar));
         case data_type::DOUBLE:
             return func(unwrap_array<primitive_array<float64_t>>(ar));
+        case data_type::RUN_ENCODED:
+            return func(unwrap_array<run_end_encoded_array>(ar));
         default:
             throw std::invalid_argument("array type not supported");
         }
-    }
-
-    inline std::size_t array_size(const array_wrapper& ar)
-    {
-        return visit([](const auto& impl) { return impl.size(); }, ar);
-    }
-
-    inline array_traits::const_reference array_element(const array_wrapper& ar, std::size_t index)
-    {
-        using return_type = array_traits::const_reference;
-        return visit([index](const auto& impl) -> return_type { return return_type(impl[index]); }, ar);
     }
 }
 
