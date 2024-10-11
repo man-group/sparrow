@@ -29,7 +29,7 @@ namespace sparrow
 
 
     // this iteratas over the **actual** values of the run encoded array
-    // Ie nullabes values, not values.
+    // Ie nullabes values, not values !!! 
     template<bool CONST>
     class run_encoded_array_iterator : public iterator_base<
         run_encoded_array_iterator<CONST>,
@@ -42,45 +42,11 @@ namespace sparrow
         using array_ptr_type = std::conditional_t<CONST, const run_end_encoded_array *, run_end_encoded_array*>;
         public:
         run_encoded_array_iterator() = default;
-
-
-        run_encoded_array_iterator(array_ptr_type array_ptr, std::uint64_t index, std::uint64_t run_end_index)
-        : 
-            p_array(array_ptr),
-            p_encoded_values_array(array_ptr->p_encoded_values_array.get()),
-            m_index(index), 
-            m_run_end_index(run_end_index),
-            m_runs_left(array_ptr->get_run_length(index))
-        {
-        }
-        
+        run_encoded_array_iterator(array_ptr_type array_ptr, std::uint64_t index, std::uint64_t run_end_index);
         private:
-
-        bool equal(const run_encoded_array_iterator& rhs) const
-        {
-            return m_index == rhs.m_index;
-        }
-
-        void increment()
-        {
-            std::cout<<"incrementig from "<<m_index<<" to "<<m_index+1<<" runs_left: "<<m_runs_left<<std::endl;
-
-
-
-            ++m_index;
-            --m_runs_left;
-            if(m_runs_left == 0)
-            {
-                ++m_run_end_index;
-                m_runs_left = p_array->get_run_length(m_index);
-            }
-        }
-
-        array_traits::const_reference dereference() const
-        {
-            return array_element(*p_encoded_values_array, m_run_end_index);
-        }
-
+        bool equal(const run_encoded_array_iterator& rhs) const;
+        void increment();
+        array_traits::const_reference dereference() const;
         array_ptr_type p_array = nullptr;
         array_wrapper * p_encoded_values_array = nullptr;
         std::uint64_t m_index = 0 ;          // the current index / the index the user sees
@@ -89,26 +55,40 @@ namespace sparrow
 
         friend class iterator_access;
     };
-    
+
+    run_encoded_array_iterator::run_encoded_array_iterator(array_ptr_type array_ptr, std::uint64_t index, std::uint64_t run_end_index)
+        : 
+        p_array(array_ptr),
+        p_encoded_values_array(array_ptr->p_encoded_values_array.get()),
+        m_index(index), 
+        m_run_end_index(run_end_index),
+        m_runs_left(array_ptr->get_run_length(index))
+    {
+    }
 
 
+    bool run_encoded_array_iterator::equal(const run_encoded_array_iterator& rhs) const
+    {
+        return m_index == rhs.m_index;
+    }
 
+    void run_encoded_array_iterator::increment()
+    {
+        ++m_index;
+        --m_runs_left;
+        if(m_runs_left == 0 && m_index < p_array->size())
+        {
+            ++m_run_end_index;
+            m_runs_left = p_array->get_run_length(m_run_end_index);
+        }
+    }
 
+    array_traits::const_reference run_encoded_array_iterator::dereference() const
+    {
+        return array_element(*p_encoded_values_array, m_run_end_index);
+    }
 
-
-
-
-
-    
-
-    // template <>
-    // struct array_inner_types<run_end_encoded_array> : array_inner_types_base
-    // {
-
-    //     using iterator_tag = std::forward_iterator_tag;
-    // };
-
-    class run_end_encoded_array final //: public array_crtp_base<run_end_encoded_array>
+    class run_end_encoded_array final 
     {
     public:
         using self_type = run_end_encoded_array;
@@ -189,7 +169,6 @@ namespace sparrow
                 }
                 else
                 {
-                    std::cout<<"type with name "<<typeid(inner_value_type).name()<<" not supported"<<std::endl;
                     throw std::invalid_argument("array type not supported");
                 }
 
@@ -232,7 +211,6 @@ namespace sparrow
                 );
                 // std::lower_bound returns an iterator, so we need to convert it to an index
                 const auto index = static_cast<std::uint64_t>(std::distance(acc_lengths_ptr, it));
-                std::cout<<"i "<<i<<" index "<<index<<std::endl;
                 return array_element(*p_encoded_values_array, index);
             },
             m_acc_lengths
@@ -275,9 +253,5 @@ namespace sparrow
     {
         return const_iterator(this, size(), 0);
     }
-
-
-
-
 
 } // namespace sparrow

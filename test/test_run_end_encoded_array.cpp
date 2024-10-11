@@ -94,36 +94,71 @@ namespace sparrow
 
 
             // check size
-            CHECK(rle_array.size() == n);
+            REQUIRE(rle_array.size() == n);
 
             std::vector<bool> expected_bitmap{1,0,0,1,1,1,0,1};
             std::vector<inner_value_type> expected_values{1,0,0, 42,42, 42,0,9};
-
-            //check elements
-            for(std::size_t i=0; i<n; ++i){
-                REQUIRE(rle_array[i].has_value() == bool(expected_bitmap[i]));
-                if(expected_bitmap[i]){
-                    array_traits::const_reference val = rle_array[i];
-                    CHECK(val.has_value() == val.has_value());
-                    // // visit the variant
-                    std::visit([&]( auto && nullable) -> void {
-                            using T = std::decay_t<decltype(nullable)>;
-                            using inner_type = std::decay_t<typename T::value_type>;
-                            if constexpr(std::is_same_v<inner_type, inner_value_type>){
-                                if(nullable.has_value()){
-                                    CHECK(nullable.value() == expected_values[i]);
+            
+            SUBCASE("operator[]"){
+                //check elements
+                for(std::size_t i=0; i<n; ++i){
+                    REQUIRE(rle_array[i].has_value() == bool(expected_bitmap[i]));
+                    if(expected_bitmap[i]){
+                        array_traits::const_reference val = rle_array[i];
+                        CHECK(val.has_value() == val.has_value());
+                        // // visit the variant
+                        std::visit([&]( auto && nullable) -> void {
+                                using T = std::decay_t<decltype(nullable)>;
+                                using inner_type = std::decay_t<typename T::value_type>;
+                                if constexpr(std::is_same_v<inner_type, inner_value_type>){
+                                    if(nullable.has_value()){
+                                        CHECK(nullable.value() == expected_values[i]);
+                                    }
+                                    else{
+                                        CHECK(false);
+                                    }
                                 }
                                 else{
                                     CHECK(false);
                                 }
-                            }
-                            else{
-                                CHECK(false);
-                            }
-                        },
-                        val
-                    );
+                            },
+                            val
+                        );
+                    }
                 }
+            }
+            SUBCASE("iterator"){
+                auto iter = rle_array.begin();
+                //check elements
+                for(std::size_t i=0; i<n; ++i){
+                    REQUIRE(iter != rle_array.end());
+                    CHECK(iter->has_value() == bool(expected_bitmap[i]));
+                    if(iter->has_value()){
+                        auto val = *iter;
+                        std::visit([&]( auto && nullable) -> void {
+                                using T = std::decay_t<decltype(nullable)>;
+                                using inner_type = std::decay_t<typename T::value_type>;
+                                if constexpr(std::is_same_v<inner_type, inner_value_type>){
+                                    if(nullable.has_value()){
+                                        CHECK(nullable.value() == expected_values[i]);
+                                    }
+                                    else{
+                                        CHECK(false);
+                                    }
+                                }
+                                else{
+                                    CHECK(false);
+                                }
+                            },
+                            val
+                        );
+                    }
+                    ++iter;
+                }
+            }
+            SUBCASE("consitency")
+            {   
+                test::generic_consistency_test(rle_array);
             }
         }
     }
