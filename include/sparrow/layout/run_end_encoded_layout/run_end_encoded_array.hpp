@@ -152,23 +152,23 @@ namespace sparrow
     inline auto run_end_encoded_array::get_acc_lengths_ptr(const array_wrapper& ar) -> acc_length_ptr_variant_type
     {
         return visit(
-            [](const auto& ar) -> acc_length_ptr_variant_type
+            [](const auto& actual_arr) -> acc_length_ptr_variant_type
             {
-                using array_type = std::decay_t<decltype(ar)>;
+                using array_type = std::decay_t<decltype(actual_arr)>;
                 using value_type = typename array_type::value_type;
                 using raw_inner_value_type = typename value_type::value_type;
                 using inner_value_type = std::decay_t<raw_inner_value_type>;
                 if constexpr(std::is_same_v<inner_value_type, std::uint16_t>)
                 {
-                    return ar.data();
+                    return actual_arr.data();
                 }
                 else if constexpr(std::is_same_v<inner_value_type, std::uint32_t>)
                 {
-                    return ar.data();
+                    return actual_arr.data();
                 }
                 else if constexpr(std::is_same_v<inner_value_type, std::uint64_t>)
                 {
-                    return ar.data();
+                    return actual_arr.data();
                 }
                 else
                 {
