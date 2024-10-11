@@ -55,8 +55,9 @@ namespace sparrow
 
         friend class iterator_access;
     };
-
-    run_encoded_array_iterator::run_encoded_array_iterator(array_ptr_type array_ptr, std::uint64_t index, std::uint64_t run_end_index)
+    
+    template<bool CONST>
+    run_encoded_array_iterator<CONST>::run_encoded_array_iterator(array_ptr_type array_ptr, std::uint64_t index, std::uint64_t run_end_index)
         : 
         p_array(array_ptr),
         p_encoded_values_array(array_ptr->p_encoded_values_array.get()),
@@ -66,13 +67,14 @@ namespace sparrow
     {
     }
 
-
-    bool run_encoded_array_iterator::equal(const run_encoded_array_iterator& rhs) const
+    template<bool CONST>
+    bool run_encoded_array_iterator<CONST>::equal(const run_encoded_array_iterator& rhs) const
     {
         return m_index == rhs.m_index;
     }
 
-    void run_encoded_array_iterator::increment()
+    template<bool CONST>
+    void run_encoded_array_iterator<CONST>::increment()
     {
         ++m_index;
         --m_runs_left;
@@ -83,7 +85,8 @@ namespace sparrow
         }
     }
 
-    array_traits::const_reference run_encoded_array_iterator::dereference() const
+    template<bool CONST>
+    typename array_traits::const_reference run_encoded_array_iterator<CONST>::dereference() const
     {
         return array_element(*p_encoded_values_array, m_run_end_index);
     }
@@ -133,7 +136,7 @@ namespace sparrow
         friend class run_encoded_array_iterator<true>;
     };
 
-    run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy) 
+    inline run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy) 
     :   m_proxy(std::move(proxy)),
         m_encoded_length(m_proxy.children()[0].length()),
         p_acc_lengths_array(array_factory(m_proxy.children()[0].view())),
@@ -177,7 +180,7 @@ namespace sparrow
         );
     }
 
-    auto run_end_encoded_array::get_run_length(std::uint64_t run_index) const -> std::uint64_t
+    inline auto run_end_encoded_array::get_run_length(std::uint64_t run_index) const -> std::uint64_t
     {
 
         auto ret =  std::visit(
@@ -224,32 +227,32 @@ namespace sparrow
         return static_cast<const run_end_encoded_array*>(this)->operator[](i);
     }
 
-    auto run_end_encoded_array::begin() -> iterator
+    inline auto run_end_encoded_array::begin() -> iterator
     {
         return iterator(this, 0, 0);
     }
 
-    auto run_end_encoded_array::end() -> iterator
+    inline auto run_end_encoded_array::end() -> iterator
     {
         return iterator(this, size(), 0);
     }
 
-    auto run_end_encoded_array::begin() const -> const_iterator
+    inline auto run_end_encoded_array::begin() const -> const_iterator
     {
         return this->cbegin();
     }
 
-    auto run_end_encoded_array::end() const -> const_iterator
+    inline auto run_end_encoded_array::end() const -> const_iterator
     {
         return this->cend();
     }
 
-    auto run_end_encoded_array::cbegin() const -> const_iterator
+    inline auto run_end_encoded_array::cbegin() const -> const_iterator
     {
         return const_iterator(this, 0, 0);
     }
 
-    auto run_end_encoded_array::cend() const -> const_iterator
+    inline auto run_end_encoded_array::cend() const -> const_iterator
     {
         return const_iterator(this, size(), 0);
     }
