@@ -241,7 +241,7 @@ namespace sparrow
     template <class DERIVED>
     list_array_crtp_base<DERIVED>::list_array_crtp_base(arrow_proxy proxy)
         : base_type(std::move(proxy))
-        , p_flat_array(std::move(array_factory(this->storage().children()[0].view())))
+        , p_flat_array(array_factory(this->storage().children()[0].view()))
         , m_bitmap(make_simple_bitmap(this->storage()))
     {
     }
