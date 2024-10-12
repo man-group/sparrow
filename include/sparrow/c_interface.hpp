@@ -21,6 +21,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "sparrow/config/config.hpp"
+
 
 #ifndef ARROW_C_DATA_INTERFACE
 #    define ARROW_C_DATA_INTERFACE
