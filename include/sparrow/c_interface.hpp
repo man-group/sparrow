@@ -27,7 +27,7 @@
 
 extern "C"
 {
-    struct ArrowSchema
+    struct SPARROW_API ArrowSchema
     {
         // Array type description
         const char* format;
@@ -44,7 +44,7 @@ extern "C"
         void* private_data;
     };
 
-    struct ArrowArray
+    struct SPARROW_API ArrowArray
     {
         // Array data description
         int64_t length;
