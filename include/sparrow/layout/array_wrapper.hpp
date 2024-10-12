@@ -148,8 +148,8 @@ namespace sparrow
     template <class T>
     array_wrapper_impl<T>::array_wrapper_impl(std::shared_ptr<T> ar)
         : array_wrapper(this->get_data_type())
-        , m_storage(ar)
-        , p_array(ar.get())
+        , m_storage(std::move(ar))
+        , p_array(std::get<std::shared_ptr<T>>(m_storage).get())
     {
     }
 
