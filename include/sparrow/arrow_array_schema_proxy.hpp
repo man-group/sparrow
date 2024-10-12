@@ -20,6 +20,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "sparrow/config/config.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_flag_utils.hpp"
@@ -36,7 +37,7 @@ namespace sparrow
     /**
      * Exception thrown by the arrow_proxy class.
      */
-    class arrow_proxy_exception : public std::runtime_error
+    class SPARROW_API arrow_proxy_exception : public std::runtime_error
     {
     public:
 
@@ -60,7 +61,7 @@ namespace sparrow
      * arrow_proxy is destroyed. Otherwise, the `arrow_proxy` does not release the `ArrowArray` and
      * `ArrowSchema`.
      */
-    class arrow_proxy
+    class  SPARROW_API arrow_proxy
     {
     public:
 
