@@ -34,16 +34,6 @@
 
 
 
-// on windows
-
-#if defined(_WIN32)
-EXPIMP_TEMPLATE template class SPARROW_API std::variant<ArrowArray*, ArrowArray>;
-EXPIMP_TEMPLATE template class SPARROW_API std::variant<ArrowSchema*, ArrowSchema>;
-EXPIMP_TEMPLATE template class SPARROW_API std::vector<sparrow::buffer_view<uint8_t>>;
-EXPIMP_TEMPLATE template class SPARROW_API std::vector<arrow_proxy>;
-EXPIMP_TEMPLATE template class SPARROW_API std::unique_ptr<arrow_proxy>;
-#endif
-
 
 namespace sparrow
 {
@@ -906,3 +896,16 @@ namespace sparrow
         std::swap(m_dictionary, other.m_dictionary);
     }
 }
+
+
+
+// on windows
+
+#if defined(_WIN32)
+EXPIMP_TEMPLATE template class SPARROW_API std::variant<ArrowArray*, ArrowArray>;
+EXPIMP_TEMPLATE template class SPARROW_API std::variant<ArrowSchema*, ArrowSchema>;
+EXPIMP_TEMPLATE template class SPARROW_API std::vector<sparrow::buffer_view<uint8_t>>;
+EXPIMP_TEMPLATE template class SPARROW_API std::vector<sparrow::arrow_proxy>;
+EXPIMP_TEMPLATE template class SPARROW_API std::unique_ptr<sparrow::arrow_proxy>;
+#endif
+
