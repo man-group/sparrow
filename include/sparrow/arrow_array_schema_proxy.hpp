@@ -32,8 +32,13 @@
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/contracts.hpp"
 
+
+EXPIMP_TEMPLATE template class SPARROW_API std::variant<ArrowArray*, ArrowArray>;
+
 namespace sparrow
 {
+
+
     /**
      * Exception thrown by the arrow_proxy class.
      */

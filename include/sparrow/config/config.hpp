@@ -29,13 +29,23 @@
 #if defined(_WIN32)
 #   if defined(SPARROW_STATIC_LIB)
 #       define SPARROW_API
+#       define EXPIMP_TEMPLATE
 #   elif defined(SPARROW_EXPORTS)
 #       define SPARROW_API __declspec(dllexport)
+#       define EXPIMP_TEMPLATE 
 #   else
 #       define SPARROW_API __declspec(dllimport)
+#       define EXPIMP_TEMPLATE extern
 #   endif
 #else
 #   define SPARROW_API __attribute__((visibility("default")))
+#   if defined(SPARROW_STATIC_LIB)
+#       define EXPIMP_TEMPLATE
+#   elif defined(SPARROW_EXPORTS)
+#       define EXPIMP_TEMPLATE 
+#   else
+#       define EXPIMP_TEMPLATE extern
+#   endif
 #endif
 
 consteval bool is_apple_compiler()
