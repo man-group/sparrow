@@ -23,7 +23,6 @@
 namespace sparrow
 {
 
-
     namespace detail
     {   
         // Helper struct to allow overloading on the type of ARRAY 
@@ -40,7 +39,6 @@ namespace sparrow
             }
         };
     }
-
 
     /**
      * Base class for array type erasure

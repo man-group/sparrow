@@ -42,7 +42,7 @@ namespace sparrow
     /**
      * Exception thrown by the arrow_proxy class.
      */
-    class  arrow_proxy_exception : public std::runtime_error
+    class arrow_proxy_exception : public std::runtime_error
     {
     public:
 
