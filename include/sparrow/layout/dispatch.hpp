@@ -33,9 +33,6 @@ namespace sparrow
     template <class F>
     visit_result_t<F> visit(F&& func, const array_wrapper& ar);
 
-    std::size_t array_size(const array_wrapper& ar);
-    array_traits::const_reference array_element(const array_wrapper& ar, std::size_t index);
-
     /******************
      * Implementation *
      ******************/
