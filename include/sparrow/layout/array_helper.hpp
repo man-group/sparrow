@@ -14,16 +14,25 @@
 
 #pragma once
 
-#include <type_traits>
+// N.B. This file is temporary, its goal is to make it easier to not include
+// dispatch.hpp in other headers to avoid bloating the header dependencies.
+// On the long run these free functions should probably become methods of
+// the array facade.
 
+#include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
-#include "sparrow/layout/null_array.hpp"
-#include "sparrow/layout/primitive_array.hpp"
-#include "sparrow/layout/nested_value_types.hpp"
-#include "sparrow/types/data_traits.hpp"
 
 namespace sparrow
 {
-    SPARROW_API std::size_t array_size(const array_wrapper& ar);
-    SPARROW_API array_traits::const_reference array_element(const array_wrapper& ar, std::size_t index);
+    SPARROW_API
+    std::size_t array_size(const array_wrapper& ar);
+
+    SPARROW_API
+    bool array_has_value(const array_wrapper& ar, std::size_t index);
+
+    SPARROW_API
+    array_traits::const_reference array_element(const array_wrapper& ar, std::size_t index);
+
+    SPARROW_API
+    array_traits::inner_value_type array_default_element_value(const array_wrapper& ar);
 }

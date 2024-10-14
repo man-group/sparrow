@@ -86,16 +86,45 @@ namespace sparrow
         using const_reference = struct_value;
     };
     
-    template <class T>
-    using array_value_type_t = nullable<typename arrow_traits<T>::value_type>;
+    namespace detail
+    {
+        template <class T>
+        using array_inner_value_type_t = typename arrow_traits<T>::value_type;
 
-    template <class T>
-    using array_const_reference_t = nullable<typename arrow_traits<T>::const_reference>;
+        template <class T>
+        using array_inner_const_reference_t = typename arrow_traits<T>::const_reference;
+
+        template <class T>
+        using array_value_type_t = nullable<array_inner_value_type_t<T>>;
+
+        template <class T>
+        using array_const_reference_t = nullable<array_inner_const_reference_t<T>>;
+    }
 
     struct array_traits
     {
-        using value_type = mpl::rename<mpl::transform<array_value_type_t, all_base_types_t>, nullable_variant>;
-        using const_reference = mpl::rename<mpl::transform<array_const_reference_t, all_base_types_t>, nullable_variant>; 
+        using inner_value_type = /* std::variant<null_type, bool, uint8_t, ...> */
+            mpl::rename<all_base_types_t, std::variant>;
+        // std::variant can not hold references, we need to write something based on variant and
+        // reference_wrapper
+        //using inner_const_reference = /* std::variant<null_type, const bool&, const suint8_t&, ....> */
+        /*    mpl::rename<
+                mpl::transform<
+                    detail::array_inner_const_reference_t,
+                    all_base_types_t>,
+                std::variant>;*/
+        using value_type = /* nullable_variant<nullable<null_type>, nullable<bool>, nullable<uint8_t>, ...> */
+            mpl::rename<
+                mpl::transform<
+                    detail::array_value_type_t,
+                    all_base_types_t>,
+                nullable_variant>;
+        using const_reference = /* nullable_variant<nullable<null_type>, nullable<const bool&>, nullable<const uint8_t&>, ...> */
+            mpl::rename<
+                mpl::transform<
+                    detail::array_const_reference_t,
+                    all_base_types_t>,
+                nullable_variant>; 
     };
 
     namespace predicate

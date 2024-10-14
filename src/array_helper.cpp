@@ -12,21 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <type_traits>
+#include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/dispatch.hpp"
-#include "sparrow/layout/dispatch_lib.hpp"
+
 namespace sparrow
 {
-   
     std::size_t array_size(const array_wrapper& ar)
     {
         return visit([](const auto& impl) { return impl.size(); }, ar);
     }
 
+    bool array_has_value(const array_wrapper& ar, std::size_t index)
+    {
+        return visit([index](const auto& impl) { return impl[index].has_value(); }, ar);
+    }
+
     array_traits::const_reference array_element(const array_wrapper& ar, std::size_t index)
-    { 
+    {
         using return_type = array_traits::const_reference;
         return visit([index](const auto& impl) -> return_type { return return_type(impl[index]); }, ar);
     }
-    
+
+    array_traits::inner_value_type array_default_element_value(const array_wrapper& ar)
+    {
+        using return_type = array_traits::inner_value_type;
+        return visit([](const auto& impl) -> return_type {
+            using value_type = typename std::decay_t<decltype(impl)>::inner_value_type;
+            return value_type();
+        }, ar);
+    }
 }

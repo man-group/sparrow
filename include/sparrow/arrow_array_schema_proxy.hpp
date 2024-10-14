@@ -20,7 +20,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "sparrow/config/config.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_flag_utils.hpp"
@@ -239,7 +238,7 @@ namespace sparrow
         [[nodiscard]] ArrowSchema& schema();
         [[nodiscard]] const ArrowSchema& schema() const;
 
-        private:
+    private:
 
         std::variant<ArrowArray*, ArrowArray> m_array;
         std::variant<ArrowSchema*, ArrowSchema> m_schema;
