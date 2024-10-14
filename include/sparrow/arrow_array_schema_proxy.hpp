@@ -263,24 +263,24 @@ namespace sparrow
 
         void resize_children(size_t children_count);
 
-        void update_buffers();
-        void update_children();
-        void update_dictionary();
-        void update_null_count();
+        SPARROW_API void update_buffers();
+        SPARROW_API void update_children();
+        SPARROW_API void update_dictionary();
+        SPARROW_API void update_null_count();
 
-        [[nodiscard]] bool array_created_with_sparrow() const;
-        [[nodiscard]] bool schema_created_with_sparrow() const;
+        [[nodiscard]] SPARROW_API bool array_created_with_sparrow() const;
+        [[nodiscard]] SPARROW_API bool schema_created_with_sparrow() const;
 
-        void validate_array_and_schema() const;
+        SPARROW_API void validate_array_and_schema() const;
 
-        arrow_schema_private_data* get_schema_private_data();
-        arrow_array_private_data* get_array_private_data();
+        SPARROW_API arrow_schema_private_data* get_schema_private_data();
+        SPARROW_API arrow_array_private_data* get_array_private_data();
 
-        [[nodiscard]] bool is_arrow_array_valid() const;
-        [[nodiscard]] bool is_arrow_schema_valid() const;
-        [[nodiscard]] bool is_proxy_valid() const;
+        [[nodiscard]] SPARROW_API bool is_arrow_array_valid() const;
+        [[nodiscard]] SPARROW_API bool is_arrow_schema_valid() const;
+        [[nodiscard]] SPARROW_API bool is_proxy_valid() const;
 
-        void swap(arrow_proxy& other) noexcept;
+        SPARROW_API void swap(arrow_proxy& other) noexcept;
     };
 
     inline arrow_proxy arrow_proxy::view() {
