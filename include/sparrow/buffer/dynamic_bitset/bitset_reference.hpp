@@ -15,8 +15,6 @@
 
 #pragma once
 
-#include "sparrow/buffer/dynamic_bitset/concepts.hpp"
-
 namespace sparrow
 {
     template <class B, bool is_const>
@@ -68,7 +66,7 @@ namespace sparrow
         block_type m_mask;
 
         friend class bitset_iterator<B, false>;
-        template <random_access_range RAR>
+        template <std::ranges::random_access_range RAR>
         friend class dynamic_bitset_base;
     };
 
