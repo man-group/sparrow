@@ -21,7 +21,6 @@
 #include <stdexcept>
 #include <vector>
 
-
 #ifndef ARROW_C_DATA_INTERFACE
 #    define ARROW_C_DATA_INTERFACE
 

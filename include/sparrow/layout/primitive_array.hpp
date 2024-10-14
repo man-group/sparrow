@@ -19,9 +19,11 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 
-
 namespace sparrow
-{
+{   
+
+    class run_end_encoded_array;
+
     template <class T>
     class primitive_array;
 
@@ -100,6 +102,7 @@ namespace sparrow
         bitmap_type m_bitmap;
 
         friend class array_crtp_base<self_type>;
+        friend class run_end_encoded_array;
     };
 
     /**********************************

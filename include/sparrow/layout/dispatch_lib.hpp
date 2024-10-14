@@ -12,25 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/list_layout/list_value.hpp"
-#include "sparrow/layout/dispatch_lib.hpp"
+#pragma once
+
+#include <type_traits>
+
+#include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/null_array.hpp"
+#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/types/data_traits.hpp"
 
 namespace sparrow
 {
-    list_value::list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end)
-        : p_flat_array(flat_array)
-        , m_index_begin(index_begin)
-        , m_index_end(index_end)
-    {
-    }
-
-    auto list_value::size() const -> size_type
-    {
-        return m_index_end - m_index_begin;
-    }
-
-    auto list_value::operator[](size_type i) const -> const_reference
-    {
-        return array_element(*p_flat_array, m_index_begin + i);
-    }
+    SPARROW_API std::size_t array_size(const array_wrapper& ar);
+    SPARROW_API array_traits::const_reference array_element(const array_wrapper& ar, std::size_t index);
 }

@@ -22,6 +22,24 @@
 
 namespace sparrow
 {
+
+    namespace detail
+    {   
+        // Helper struct to allow overloading on the type of ARRAY 
+        // to get the data_type for an array. This is needed since 
+        // some arrays (for instance run_length_encoded_array)
+        // do not have a inner_value_type, therefore we specialize
+        // this in their respecitve headers.
+        template<class ARRAY>
+        struct get_data_type_from_array
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return arrow_traits<typename ARRAY::inner_value_type>::type_id;
+            }
+        };
+    }
+
     /**
      * Base class for array type erasure
      */
@@ -148,7 +166,8 @@ namespace sparrow
     template <class T>
     constexpr enum data_type array_wrapper_impl<T>::get_data_type() const
     {
-        return arrow_traits<typename T::inner_value_type>::type_id;
+        return detail::get_data_type_from_array<T>::get();
+        //return arrow_traits<typename T::inner_value_type>::type_id;
     }
 
     template <class T>
