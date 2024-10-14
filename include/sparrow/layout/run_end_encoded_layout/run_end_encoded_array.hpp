@@ -136,8 +136,8 @@ namespace sparrow
     private:    
         using acc_length_ptr_variant_type = std::variant< const std::uint16_t*, const std::uint32_t*,const std::uint64_t*> ;
 
-        static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);
-        std::uint64_t get_run_length(std::uint64_t run_index) const;
+        SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);
+        SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
 
         arrow_proxy m_proxy;
         std::uint64_t m_encoded_length;
