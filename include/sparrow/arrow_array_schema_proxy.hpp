@@ -91,7 +91,7 @@ namespace sparrow
 
         SPARROW_API ~arrow_proxy();
 
-        SPARROW_API [[nodiscard]] const std::string_view format() const;
+        [[nodiscard]] SPARROW_API const std::string_view format() const;
 
         /**
          * Set the format according to the Arrow format specification:
@@ -100,7 +100,7 @@ namespace sparrow
          * @param format The format to set.
          */
         SPARROW_API void set_format(const std::string_view format);
-        SPARROW_API [[nodiscard]] enum data_type data_type() const;
+        [[nodiscard]] SPARROW_API enum data_type data_type() const;
 
         /**
          * Set the data type. It's a convenient way to set the format of the `ArrowSchema`.
@@ -108,7 +108,7 @@ namespace sparrow
          * @param data_type The data type to set.
          */
         SPARROW_API void set_data_type(enum data_type data_type);
-        SPARROW_API [[nodiscard]] std::optional<const std::string_view> name() const;
+        [[nodiscard]] SPARROW_API std::optional<const std::string_view> name() const;
 
         /**
          * Set the name of the `ArrowSchema`.
@@ -116,7 +116,7 @@ namespace sparrow
          * @param name The name to set.
          */
         SPARROW_API void set_name(std::optional<const std::string_view> name);
-        SPARROW_API [[nodiscard]] std::optional<const std::string_view> metadata() const;
+        [[nodiscard]] SPARROW_API std::optional<const std::string_view> metadata() const;
 
         /**
          * Set the metadata of the `ArrowSchema`.
@@ -124,7 +124,7 @@ namespace sparrow
          * @param metadata The metadata to set.
          */
         SPARROW_API void set_metadata(std::optional<const std::string_view> metadata);
-        SPARROW_API [[nodiscard]] std::vector<ArrowFlag> flags() const;
+        [[nodiscard]] SPARROW_API std::vector<ArrowFlag> flags() const;
 
         /**
          * Set the flags of the `ArrowSchema`.
@@ -132,7 +132,7 @@ namespace sparrow
          * @param flags The flags to set.
          */
         SPARROW_API void set_flags(const std::vector<ArrowFlag>& flags);
-        SPARROW_API [[nodiscard]] size_t length() const;
+        [[nodiscard]] SPARROW_API size_t length() const;
 
         /**
          * Set the length of the `ArrowArray`.
@@ -140,7 +140,7 @@ namespace sparrow
          * @param length The length to set.
          */
         SPARROW_API void set_length(size_t length);
-        SPARROW_API [[nodiscard]] int64_t null_count() const;
+        [[nodiscard]] SPARROW_API int64_t null_count() const;
 
         /**
          * Set the null count of the `ArrowArray`.
@@ -148,7 +148,7 @@ namespace sparrow
          * @param null_count The null count to set.
          */
         SPARROW_API void set_null_count(int64_t null_count);
-        SPARROW_API [[nodiscard]] size_t offset() const;
+        [[nodiscard]] SPARROW_API size_t offset() const;
 
         /**
          * Set the offset of the `ArrowArray`.
@@ -156,7 +156,7 @@ namespace sparrow
          * @param offset The offset to set.
          */
         SPARROW_API void set_offset(size_t offset);
-        SPARROW_API [[nodiscard]] size_t n_buffers() const;
+        [[nodiscard]] SPARROW_API size_t n_buffers() const;
 
         /**
          * Set the number of buffers of the `ArrowArray`.
@@ -164,9 +164,9 @@ namespace sparrow
          * @param n_buffers The number of buffers to set.
          */
         SPARROW_API void set_n_buffers(size_t n_buffers);
-        SPARROW_API [[nodiscard]] size_t n_children() const;
-        SPARROW_API [[nodiscard]] const std::vector<sparrow::buffer_view<uint8_t>>& buffers() const;
-        SPARROW_API [[nodiscard]] std::vector<sparrow::buffer_view<uint8_t>>& buffers();
+        [[nodiscard]] SPARROW_API size_t n_children() const;
+        [[nodiscard]] SPARROW_API const std::vector<sparrow::buffer_view<uint8_t>>& buffers() const;
+        [[nodiscard]] SPARROW_API std::vector<sparrow::buffer_view<uint8_t>>& buffers();
 
         /**
          * Set the buffer at the given index.
@@ -202,8 +202,8 @@ namespace sparrow
          */
         SPARROW_API void pop_children(size_t n);
 
-        SPARROW_API [[nodiscard]] const std::vector<arrow_proxy>& children() const;
-        SPARROW_API [[nodiscard]] std::vector<arrow_proxy>& children();
+        [[nodiscard]] SPARROW_API const std::vector<arrow_proxy>& children() const;
+        [[nodiscard]] SPARROW_API std::vector<arrow_proxy>& children();
 
         /**
          * Set the child at the given index. It takes the ownership on the `ArrowArray` and `ArrowSchema`
@@ -216,8 +216,8 @@ namespace sparrow
          */
         SPARROW_API void set_child(size_t index, ArrowArray* array, ArrowSchema* schema);
 
-        SPARROW_API [[nodiscard]] const std::unique_ptr<arrow_proxy>& dictionary() const;
-        SPARROW_API [[nodiscard]] std::unique_ptr<arrow_proxy>& dictionary();
+        [[nodiscard]] SPARROW_API const std::unique_ptr<arrow_proxy>& dictionary() const;
+        [[nodiscard]] SPARROW_API std::unique_ptr<arrow_proxy>& dictionary();
 
         /**
          * Set the dictionary. It takes the ownership on the `ArrowArray` and `ArrowSchema` passed by
@@ -229,20 +229,20 @@ namespace sparrow
          */
         SPARROW_API void set_dictionary(ArrowArray* array, ArrowSchema* schema);
 
-        SPARROW_API [[nodiscard]] bool is_created_with_sparrow() const;
+        [[nodiscard]] SPARROW_API bool is_created_with_sparrow() const;
 
-        SPARROW_API [[nodiscard]] void* private_data() const;
+        [[nodiscard]] SPARROW_API void* private_data() const;
 
         /**
          * get a non-owning view of the arrow_proxy.
          */
-        SPARROW_API [[nodiscard]] arrow_proxy view();
+        [[nodiscard]] SPARROW_API arrow_proxy view();
 
-        SPARROW_API [[nodiscard]] ArrowArray& array();
-        SPARROW_API [[nodiscard]] const ArrowArray& array() const;
+        [[nodiscard]] SPARROW_API ArrowArray& array();
+        [[nodiscard]] SPARROW_API const ArrowArray& array() const;
 
-        SPARROW_API [[nodiscard]] ArrowSchema& schema();
-        SPARROW_API [[nodiscard]] const ArrowSchema& schema() const;
+        [[nodiscard]] SPARROW_API ArrowSchema& schema();
+        [[nodiscard]] SPARROW_API const ArrowSchema& schema() const;
 
         private:
 
