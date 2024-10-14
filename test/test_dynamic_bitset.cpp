@@ -85,9 +85,9 @@ namespace sparrow
         {
         }
 
-        buffer<uint8_t>& get_buffer()
+        buffer<uint8_t>* get_buffer()
         {
-            return m_bitmap_buffer;
+            return &m_bitmap_buffer;
         }
 
         buffer<uint8_t> m_bitmap_buffer;
@@ -152,60 +152,76 @@ namespace sparrow
                 CHECK_EQ(b2.data(), f.p_expected_buffer);
             }
 
-            if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
+
+            SUBCASE("copy semantic")
             {
-                SUBCASE("copy semantic")
+                const bitmap b(f.get_buffer(), s_bitmap_size);
+                bitmap b2(b);
+
+                REQUIRE_EQ(b.size(), b2.size());
+                CHECK_EQ(b.null_count(), b2.null_count());
+
+                if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
                 {
-                    const bitmap b(f.get_buffer(), s_bitmap_size);
-                    bitmap b2(b);
-
-                    REQUIRE_EQ(b.size(), b2.size());
-                    CHECK_EQ(b.null_count(), b2.null_count());
                     CHECK_NE(b.data(), b2.data());
-                    for (size_t i = 0; i < s_bitmap_blocks_values.size(); ++i)
-                    {
-                        CHECK_EQ(b.data()[i], b2.data()[i]);
-                    }
-
-                    const std::array<std::uint8_t, 2> blocks{37, 2};
-                    fixture f3{blocks};
-                    bitmap b3(f3.get_buffer(), blocks.size() * 8);
-
-                    b2 = b3;
-                    REQUIRE_EQ(b2.size(), b3.size());
-                    CHECK_EQ(b2.null_count(), b3.null_count());
-                    CHECK_NE(b2.data(), b3.data());
-                    for (size_t i = 0; i < blocks.size(); ++i)
-                    {
-                        CHECK_EQ(b2.data()[i], b3.data()[i]);
-                    }
+                }
+                else if constexpr (std::is_same_v<bitmap, non_owning_dynamic_bitset<std::uint8_t>>)
+                {
+                    CHECK_EQ(b.data(), b2.data());
                 }
 
-                SUBCASE("move semantic")
+                for (size_t i = 0; i < s_bitmap_blocks_values.size(); ++i)
                 {
-                    bitmap bref(f.get_buffer(), s_bitmap_size);
-                    bitmap b(bref);
+                    CHECK_EQ(b.data()[i], b2.data()[i]);
+                }
 
-                    bitmap b2(std::move(b));
-                    REQUIRE_EQ(b2.size(), bref.size());
-                    CHECK_EQ(b2.null_count(), bref.null_count());
-                    for (size_t i = 0; i < s_bitmap_blocks_values.size(); ++i)
-                    {
-                        CHECK_EQ(b2.data()[i], bref.data()[i]);
-                    }
+                const std::array<std::uint8_t, 2> blocks{37, 2};
+                fixture f3{blocks};
+                bitmap b3(f3.get_buffer(), blocks.size() * 8);
 
-                    const std::array<std::uint8_t, 2> blocks{37, 2};
-                    fixture f4{blocks};
-                    bitmap b4(f4.get_buffer(), blocks.size() * 8);
-                    bitmap b5(b4);
+                b2 = b3;
+                REQUIRE_EQ(b2.size(), b3.size());
+                CHECK_EQ(b2.null_count(), b3.null_count());
 
-                    b2 = std::move(b4);
-                    REQUIRE_EQ(b2.size(), b5.size());
-                    CHECK_EQ(b2.null_count(), b5.null_count());
-                    for (size_t i = 0; i < blocks.size(); ++i)
-                    {
-                        CHECK_EQ(b2.data()[i], b5.data()[i]);
-                    }
+                if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
+                {
+                    CHECK_NE(b2.data(), b3.data());
+                }
+                else if constexpr (std::is_same_v<bitmap, non_owning_dynamic_bitset<std::uint8_t>>)
+                {
+                    CHECK_EQ(b2.data(), b3.data());
+                }
+
+                for (size_t i = 0; i < blocks.size(); ++i)
+                {
+                    CHECK_EQ(b2.data()[i], b3.data()[i]);
+                }
+            }
+
+            SUBCASE("move semantic")
+            {
+                bitmap bref(f.get_buffer(), s_bitmap_size);
+                bitmap b(bref);
+
+                bitmap b2(std::move(b));
+                REQUIRE_EQ(b2.size(), bref.size());
+                CHECK_EQ(b2.null_count(), bref.null_count());
+                for (size_t i = 0; i < s_bitmap_blocks_values.size(); ++i)
+                {
+                    CHECK_EQ(b2.data()[i], bref.data()[i]);
+                }
+
+                const std::array<std::uint8_t, 2> blocks{37, 2};
+                fixture f4{blocks};
+                bitmap b4(f4.get_buffer(), blocks.size() * 8);
+                bitmap b5(b4);
+
+                b2 = std::move(b4);
+                REQUIRE_EQ(b2.size(), b5.size());
+                CHECK_EQ(b2.null_count(), b5.null_count());
+                for (size_t i = 0; i < blocks.size(); ++i)
+                {
+                    CHECK_EQ(b2.data()[i], b5.data()[i]);
                 }
             }
 

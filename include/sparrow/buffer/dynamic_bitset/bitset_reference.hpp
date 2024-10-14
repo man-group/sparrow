@@ -66,7 +66,8 @@ namespace sparrow
         block_type m_mask;
 
         friend class bitset_iterator<B, false>;
-        template <std::ranges::random_access_range RAR>
+        template <typename RAR>
+            requires std::ranges::random_access_range<std::remove_pointer_t<RAR>>
         friend class dynamic_bitset_base;
     };
 

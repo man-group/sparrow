@@ -20,24 +20,24 @@
 namespace sparrow
 {
     template <std::integral T>
-    class non_owning_dynamic_bitset : public dynamic_bitset_base<buffer<T>&>
+    class non_owning_dynamic_bitset : public dynamic_bitset_base<buffer<T>*>
     {
     public:
 
-        using base_type = dynamic_bitset_base<buffer<T>&>;
+        using base_type = dynamic_bitset_base<buffer<T>*>;
         using storage_type = typename base_type::storage_type;
         using block_type = typename base_type::block_type;
         using value_type = typename base_type::value_type;
         using size_type = typename base_type::size_type;
 
-        constexpr explicit non_owning_dynamic_bitset(buffer<T>& buffer, size_type n);
+        constexpr explicit non_owning_dynamic_bitset(buffer<T>* buffer, size_type n);
 
         constexpr ~non_owning_dynamic_bitset() = default;
-        constexpr non_owning_dynamic_bitset(const non_owning_dynamic_bitset&) = delete;
-        constexpr non_owning_dynamic_bitset(non_owning_dynamic_bitset&&) noexcept = delete;
+        constexpr non_owning_dynamic_bitset(const non_owning_dynamic_bitset&) = default;
+        constexpr non_owning_dynamic_bitset(non_owning_dynamic_bitset&&) noexcept = default;
 
-        constexpr non_owning_dynamic_bitset& operator=(const non_owning_dynamic_bitset&) = delete;
-        constexpr non_owning_dynamic_bitset& operator=(non_owning_dynamic_bitset&&) noexcept = delete;
+        constexpr non_owning_dynamic_bitset& operator=(const non_owning_dynamic_bitset&) = default;
+        constexpr non_owning_dynamic_bitset& operator=(non_owning_dynamic_bitset&&) noexcept = default;
 
         using base_type::clear;
         using base_type::emplace;
@@ -49,7 +49,7 @@ namespace sparrow
     };
 
     template <std::integral T>
-    constexpr non_owning_dynamic_bitset<T>::non_owning_dynamic_bitset(buffer<T>& buffer, size_type n)
+    constexpr non_owning_dynamic_bitset<T>::non_owning_dynamic_bitset(buffer<T>* buffer, size_type n)
         : base_type(buffer, n)
     {
     }
