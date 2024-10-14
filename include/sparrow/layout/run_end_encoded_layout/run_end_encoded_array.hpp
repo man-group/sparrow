@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/layout_utils.hpp"
@@ -106,7 +107,7 @@ namespace sparrow
         return array_element(*p_encoded_values_array, static_cast<std::size_t>(m_run_end_index));
     }
 
-    class SPARROW_API run_end_encoded_array final 
+    class run_end_encoded_array 
     {
     public:
         using self_type = run_end_encoded_array;
@@ -116,21 +117,21 @@ namespace sparrow
         using const_iterator = run_encoded_array_iterator<true>;
 
         
-        explicit run_end_encoded_array(arrow_proxy proxy);
+        SPARROW_API explicit run_end_encoded_array(arrow_proxy proxy);
 
-        array_traits::const_reference operator[](std::uint64_t i);
-        array_traits::const_reference operator[](std::uint64_t i) const;
+        SPARROW_API array_traits::const_reference operator[](std::uint64_t i);
+        SPARROW_API array_traits::const_reference operator[](std::uint64_t i) const;
 
-        iterator begin();
-        iterator end();
+        SPARROW_API iterator begin();
+        SPARROW_API iterator end();
 
-        const_iterator begin() const;
-        const_iterator end() const;
+        SPARROW_API const_iterator begin() const;
+        SPARROW_API const_iterator end() const;
 
-        const_iterator cbegin() const;
-        const_iterator cend() const;
+        SPARROW_API const_iterator cbegin() const;
+        SPARROW_API const_iterator cend() const;
 
-        size_type size() const;
+        SPARROW_API size_type size() const;
 
     private:    
         using acc_length_ptr_variant_type = std::variant< const std::uint16_t*, const std::uint32_t*,const std::uint64_t*> ;
