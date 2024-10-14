@@ -32,13 +32,8 @@
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/contracts.hpp"
 
-
-
-
 namespace sparrow
 {
-
-
     /**
      * Exception thrown by the arrow_proxy class.
      */

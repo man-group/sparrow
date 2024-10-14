@@ -21,15 +21,12 @@
 #include <stdexcept>
 #include <vector>
 
-#include "sparrow/config/config.hpp"
-
-
 #ifndef ARROW_C_DATA_INTERFACE
 #    define ARROW_C_DATA_INTERFACE
 
 extern "C"
 {
-    struct SPARROW_API ArrowSchema
+    struct ArrowSchema
     {
         // Array type description
         const char* format;
@@ -46,7 +43,7 @@ extern "C"
         void* private_data;
     };
 
-    struct SPARROW_API ArrowArray
+    struct ArrowArray
     {
         // Array data description
         int64_t length;
