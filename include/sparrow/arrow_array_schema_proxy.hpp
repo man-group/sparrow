@@ -192,7 +192,7 @@ namespace sparrow
          */
         template <std::ranges::input_range R>
             requires std::same_as<std::ranges::range_value_t<R>, arrow_array_and_schema_pointers>
-        SPARROW_API void add_children(const R& arrow_array_and_schema_pointers);
+        void add_children(const R& arrow_array_and_schema_pointers);
 
         /**
          * Pop n children.
