@@ -55,6 +55,33 @@ namespace sparrow
     };
 
     template <std::integral IT>
+    class dictionary_encoded_array;
+
+    namespace detail
+    {
+        template<class T>
+        struct get_data_type_from_array;
+
+        template<std::integral IT>
+        struct get_data_type_from_array<sparrow::dictionary_encoded_array<IT>>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return arrow_traits<typename primitive_array<IT>::inner_value_type>::type_id;
+            }
+        };
+
+        template <std::integral IT>
+        struct is_dictionary_encoded_array<sparrow::dictionary_encoded_array<IT>>
+        {
+            constexpr static bool get()
+            {
+                return true;
+            }
+        };
+    }
+
+    template <std::integral IT>
     class dictionary_encoded_array
     {
     public:

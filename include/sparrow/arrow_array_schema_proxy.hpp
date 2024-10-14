@@ -238,7 +238,7 @@ namespace sparrow
         [[nodiscard]] ArrowSchema& schema();
         [[nodiscard]] const ArrowSchema& schema() const;
 
-        private:
+    private:
 
         std::variant<ArrowArray*, ArrowArray> m_array;
         std::variant<ArrowSchema*, ArrowSchema> m_schema;

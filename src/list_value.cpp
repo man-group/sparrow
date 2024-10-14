@@ -42,5 +42,7 @@ namespace sparrow
             res = lhs[i] == rhs[i];
         }
         return res;
+        // TODO: refactor with the following when list_value is a range
+        // return std::ranges::equal(lhs, rhs);
     }
 }
