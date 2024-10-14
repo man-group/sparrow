@@ -173,7 +173,6 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/array_helper.cpp
     ${SPARROW_SOURCE_DIR}/list_value.cpp
     ${SPARROW_SOURCE_DIR}/struct_value.cpp
-    ${SPARROW_SOURCE_DIR}/dispatch_lib.cpp
     ${SPARROW_SOURCE_DIR}/run_encoded_array.cpp
 )
 

@@ -20,7 +20,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "sparrow/config/config.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_flag_utils.hpp"

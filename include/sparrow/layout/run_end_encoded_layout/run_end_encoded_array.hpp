@@ -22,12 +22,10 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/layout/dispatch_lib.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_iterator.hpp"
 
 namespace sparrow
 {
-
     class run_end_encoded_array;
 
     namespace detail
@@ -48,10 +46,11 @@ namespace sparrow
     class run_end_encoded_array 
     {
     public:
+
         using size_type = std::size_t;
+        using inner_value_type = array_traits::inner_value_type;
         using iterator = run_encoded_array_iterator<false>;
         using const_iterator = run_encoded_array_iterator<true>;
-
         
         SPARROW_API explicit run_end_encoded_array(arrow_proxy proxy);
 
@@ -69,7 +68,8 @@ namespace sparrow
 
         SPARROW_API size_type size() const;
 
-    private:    
+    private:
+
         using acc_length_ptr_variant_type = std::variant< const std::uint16_t*, const std::uint32_t*,const std::uint64_t*> ;
 
         SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);

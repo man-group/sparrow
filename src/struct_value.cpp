@@ -12,26 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/struct_layout/struct_value.hpp"
+#include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/layout/array_helper.hpp"
-#include "sparrow/layout/dispatch.hpp"
 
 namespace sparrow
 {
     struct_value::struct_value(  const std::vector<child_ptr>& children, size_type index)
-        : m_children(children)
+        : p_children(&children)
         , m_index(index)
     {
     }
 
     auto struct_value::size() const -> size_type
     {
-        return m_children.size();
+        return p_children->size();
     }
 
     auto struct_value::operator[](size_type i) const -> const_reference
     {
-        return array_element(*(m_children[i].get()), m_index);
+        return array_element(*(((*p_children)[i]).get()), m_index);
     }
 
     bool operator==(const struct_value& lhs, const struct_value& rhs)

@@ -28,6 +28,7 @@ namespace sparrow
         using const_reference = array_traits::const_reference;
         using size_type = std::size_t;
 
+        list_value() = default;
         list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end);
 
         size_type size() const;
@@ -35,9 +36,9 @@ namespace sparrow
 
     private:
 
-        const array_wrapper* p_flat_array;
-        size_type m_index_begin;
-        size_type m_index_end;
+        const array_wrapper* p_flat_array = nullptr;
+        size_type m_index_begin = 0u;
+        size_type m_index_end = 0u;
     };
 
     SPARROW_API

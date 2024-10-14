@@ -30,14 +30,16 @@ namespace sparrow
         using size_type = std::size_t;
         using child_ptr = cloning_ptr<array_wrapper>;
 
+        struct_value() = default;
         struct_value(const std::vector<child_ptr>& children, size_type index);
+
         size_type size() const;
         const_reference operator[](size_type i) const;
 
     private:
     
-        const std::vector<child_ptr>&  m_children;
-        size_type m_index;
+        const std::vector<child_ptr>* p_children = nullptr;
+        size_type m_index = 0u;
     };
 
     SPARROW_API

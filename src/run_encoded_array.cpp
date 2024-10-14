@@ -1,9 +1,7 @@
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
-#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/dispatch.hpp"
-#include "sparrow/layout/dispatch_lib.hpp"
-
-
+#include "sparrow/layout/primitive_array.hpp"
 
 namespace sparrow   
 {    
@@ -33,7 +31,6 @@ namespace sparrow
             ar
         );
     }
-
 
     auto run_end_encoded_array::operator[](std::uint64_t i) const -> array_traits::const_reference
     {

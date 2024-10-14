@@ -21,9 +21,6 @@
 
 namespace sparrow
 {   
-
-    class run_end_encoded_array;
-
     template <class T>
     class primitive_array;
 
