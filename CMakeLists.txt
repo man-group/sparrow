@@ -162,6 +162,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/reference_wrapper_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
     # ../
+    ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_array_schema_proxy.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
@@ -169,6 +170,7 @@ set(SPARROW_HEADERS
 )
 
 set(SPARROW_SRC
+    ${SPARROW_SOURCE_DIR}/array.cpp
     ${SPARROW_SOURCE_DIR}/array_factory.cpp
     ${SPARROW_SOURCE_DIR}/array_helper.cpp
     ${SPARROW_SOURCE_DIR}/list_value.cpp

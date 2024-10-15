@@ -113,7 +113,6 @@ namespace sparrow
     protected:
 
         array_crtp_base(arrow_proxy);
-        array_crtp_base(const array_crtp_base&);
 
         const arrow_proxy& storage() const;
         arrow_proxy& storage();
@@ -221,12 +220,6 @@ namespace sparrow
     template <class D>
     array_crtp_base<D>::array_crtp_base(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
-    {
-    }
-
-    template <class D>
-    array_crtp_base<D>::array_crtp_base(const array_crtp_base& rhs)
-        : m_proxy(rhs.m_proxy)
     {
     }
 
