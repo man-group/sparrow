@@ -14,6 +14,12 @@
 
 #include "external_array_data_creation.hpp"
 
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+
+
 namespace sparrow::test
 {
     namespace detail
@@ -376,7 +382,7 @@ namespace sparrow::test
 
         arr.n_buffers = 2;
         std::uint8_t** buf = new std::uint8_t*[2];
-        
+
         buf[0] = new std::uint8_t[type_ids.size()];
         std::copy(type_ids.begin(), type_ids.end(), buf[0]);
 
@@ -399,4 +405,6 @@ namespace sparrow::test
     }
 
 }
-
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
