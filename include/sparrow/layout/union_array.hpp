@@ -131,7 +131,7 @@ namespace sparrow
     template <class DERIVED>
     union_array_crtp_base<DERIVED>::union_array_crtp_base(arrow_proxy proxy)
     :   m_proxy(std::move(proxy)),
-        p_type_ids(reinterpret_cast<std::uint8_t*>(m_proxy.buffers()[0].data())),
+        p_type_ids(reinterpret_cast<std::uint8_t*>(m_proxy.buffers()[0/*index of type-ids*/].data())),
         m_children(m_proxy.children().size(), nullptr),
         m_type_id_map(parse_type_id_map(m_proxy.format()))
     {
