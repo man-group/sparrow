@@ -19,21 +19,16 @@
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
-#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
-#include "sparrow/utils/nullable.hpp"
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/utils/crtp_base.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 
 
-
-
 namespace sparrow
 {   
 
-    
-    // helper crtp-base to have sparse and dense and dense union in the same file
+    // helper crtp-base to have sparse and dense and dense union share most of their code
     template<class DERIVED>
     class union_array_crtp_base : public crtp_base<DERIVED>
     {
@@ -58,24 +53,7 @@ namespace sparrow
 
     protected:
         using type_id_map = std::array<std::uint8_t, 256>;
-        static type_id_map parse_type_id_map(std::string_view format_string)
-        {
-            type_id_map ret;
-            // remove +du: / +su: prefix
-            format_string.remove_prefix(4); 
-
-            // const std::string_view const_format_string = format_string;
-
-            constexpr std::string_view delim { "," };
-            std::size_t child_index = 0;    
-            std::ranges::for_each(format_string | std::views::split(delim), [&](const auto& s) { 
-                // convert s to uint8_t number
-                const auto as_int = std::atoi(std::string(s.begin(), s.end()).c_str());
-                ret[static_cast<std::size_t>(as_int)] = static_cast<std::uint8_t>(child_index);
-                ++child_index;
-            });
-            return ret;
-        }
+        static type_id_map parse_type_id_map(std::string_view format_string);
 
         arrow_proxy m_proxy;
         const std::uint8_t * p_type_ids;
@@ -104,6 +82,23 @@ namespace sparrow
         std::size_t element_offset(std::size_t i) const;
         friend class union_array_crtp_base<sparse_union_array>;
     };
+
+    template <class DERIVED>
+    auto union_array_crtp_base<DERIVED>::parse_type_id_map(std::string_view format_string) -> type_id_map
+    {
+        type_id_map ret;
+        // remove +du: / +su: prefix
+        format_string.remove_prefix(4); 
+ 
+        constexpr std::string_view delim { "," };
+        std::size_t child_index = 0;    
+        std::ranges::for_each(format_string | std::views::split(delim), [&](const auto& s) { 
+            const auto as_int = std::atoi(std::string(s.begin(), s.end()).c_str());
+            ret[static_cast<std::size_t>(as_int)] = static_cast<std::uint8_t>(child_index);
+            ++child_index;
+        });
+        return ret;
+    }
 
     template <class DERIVED>
     union_array_crtp_base<DERIVED>::union_array_crtp_base(arrow_proxy proxy)
