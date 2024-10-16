@@ -154,10 +154,10 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::operator[](size_type i) -> reference
     {
-        SPARROW_ASSERT_TRUE(i < derived_cast().size());
+        SPARROW_ASSERT_TRUE(i < this->derived_cast().size());
         return reference(
-            inner_reference(derived_cast().value(i)),
-            derived_cast().has_value(i)
+            inner_reference(this->derived_cast().value(i)),
+            this->derived_cast().has_value(i)
         );
     }
 
@@ -219,6 +219,7 @@ namespace sparrow
         return const_value_range(this->derived_cast().value_cbegin(), this->derived_cast().value_cend());
     }
 
+    template <class D>
     array_crtp_base<D>::array_crtp_base(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
         , m_bitmap(make_bitmap())
