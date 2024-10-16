@@ -204,7 +204,7 @@ namespace sparrow
     #endif
     inline dense_union_array::dense_union_array(arrow_proxy proxy)
     :   union_array_crtp_base(std::move(proxy)),
-        p_offsets(reinterpret_cast<std::int32_t*>(m_proxy.buffers()[1].data()))
+        p_offsets(reinterpret_cast<std::int32_t*>(m_proxy.buffers()[1/*index of offsets*/].data()))
     {
     }
 
