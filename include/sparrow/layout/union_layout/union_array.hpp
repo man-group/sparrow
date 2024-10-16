@@ -187,6 +187,6 @@ namespace sparrow
 
     inline std::size_t sparse_union_array::element_offset(std::size_t i) const
     {
-        return i + static_cast<std::size_t>(m_proxy.offset());
+        return i + m_proxy.offset();
     }
 }
