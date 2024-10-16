@@ -75,12 +75,6 @@ namespace sparrow
 
     private:
 
-        bitmap_type::iterator bitmap_begin_impl();
-        bitmap_type::const_iterator bitmap_begin_impl() const;
-
-        using base_type::bitmap_begin;
-        using base_type::bitmap_end;
-        using base_type::has_value;
         using base_type::storage;
 
         pointer data();
@@ -96,7 +90,6 @@ namespace sparrow
         const_value_iterator value_cend() const;
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
-        bitmap_type m_bitmap;
 
         friend class array_crtp_base<self_type>;
         friend class run_end_encoded_array;
@@ -133,7 +126,6 @@ namespace sparrow
     template <class T>
     primitive_array<T>::primitive_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
-        , m_bitmap(make_simple_bitmap(storage()))
     {
         SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().data_type()));
     }
@@ -188,17 +180,5 @@ namespace sparrow
     auto primitive_array<T>::value_cend() const -> const_value_iterator
     {
         return sparrow::next(value_cbegin(), size());
-    }
-
-    template <class T>
-    auto primitive_array<T>::bitmap_begin_impl() -> bitmap_type::iterator
-    {
-        return next(m_bitmap.begin(), storage().offset());
-    }
-
-    template <class T>
-    auto primitive_array<T>::bitmap_begin_impl() const -> bitmap_type::const_iterator
-    {
-        return next(m_bitmap.begin(), storage().offset());
     }
 }

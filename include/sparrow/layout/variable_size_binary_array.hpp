@@ -215,21 +215,11 @@ namespace sparrow
 
         using base_type::size;
 
-        // reference operator[](size_type i);
-        const_reference operator[](size_type i) const;
-
     private:
-
-        bitmap_type::iterator bitmap_begin_impl();
-        bitmap_type::const_iterator bitmap_begin_impl() const;
 
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
-        bitmap_type m_bitmap;
 
-        using base_type::bitmap_begin;
-        using base_type::bitmap_end;
-        using base_type::has_value;
         using base_type::storage;
 
         offset_iterator offset(size_type i);
@@ -443,7 +433,6 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     variable_size_binary_array<T, CR, OT>::variable_size_binary_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
-        , m_bitmap(make_simple_bitmap(storage()))
     {
         const auto type = storage().data_type();
         SPARROW_ASSERT_TRUE(type == data_type::STRING || type == data_type::BINARY);  // TODO: Add
@@ -453,20 +442,6 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(
             ((type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>)
         );
-    }
-
-    // template <std::ranges::sized_range T, class CR, layout_offset OT>
-    // auto variable_size_binary_array<T, CR, OT>::operator[](size_type i) -> reference
-    // {
-    //     SPARROW_ASSERT_TRUE(i < size());
-    //     return reference(value(i), has_value(i));
-    // }
-
-    template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array<T, CR, OT>::operator[](size_type i) const -> const_reference
-    {
-        SPARROW_ASSERT_TRUE(i < size());
-        return const_reference(value(i), has_value(i));
     }
 
     // template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -586,17 +561,5 @@ namespace sparrow
     auto variable_size_binary_array<T, CR, OT>::value_cend() const -> const_value_iterator
     {
         return sparrow::next(value_cbegin(), size());
-    }
-
-    template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array<T, CR, OT>::bitmap_begin_impl() -> bitmap_type::iterator
-    {
-        return next(m_bitmap.begin(), storage().offset());
-    }
-
-    template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array<T, CR, OT>::bitmap_begin_impl() const -> bitmap_type::const_iterator
-    {
-        return next(m_bitmap.begin(), storage().offset());
     }
 }
