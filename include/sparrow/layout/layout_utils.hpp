@@ -18,7 +18,7 @@
 
 namespace sparrow::detail
 {
-
+    
     template<class LAYOUT_TYPE>
     class layout_functor_base
     {
@@ -67,7 +67,7 @@ namespace sparrow::detail
     template<class LAYOUT_TYPE, class VALUE_TYPE>
     class layout_bracket_functor : public layout_functor_base<LAYOUT_TYPE>
     {
-        public:
+    public:
         using base_type = layout_functor_base<LAYOUT_TYPE>;
         using base_type::base_type;
         using base_type::operator=;
