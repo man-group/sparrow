@@ -93,13 +93,17 @@ namespace sparrow
             return *this;
         }
 
-        const int& get_value() const { return m_value; }
+        const int& get_value() const
+        {
+            return m_value;
+        }
 
     private:
 
         int m_value;
         bool m_moved = false;
     };
+
     int Custom::counter = 0;
 
     bool operator==(const Custom& lhs, const Custom& rhs)
@@ -122,10 +126,7 @@ namespace sparrow
         return lhs.get_value() <=> rhs;
     }
 
-    using testing_types = std::tuple<
-        double,
-        std::string,
-        Custom>;
+    using testing_types = std::tuple<double, std::string, Custom>;
 
     namespace
     {
@@ -135,37 +136,79 @@ namespace sparrow
         template <>
         struct fixture<double>
         {
-            static double init() { return 1.2; }
-            static double other() { return 2.5; }
-            static int convert_init() { return 3; }
+            static double init()
+            {
+                return 1.2;
+            }
+
+            static double other()
+            {
+                return 2.5;
+            }
+
+            static int convert_init()
+            {
+                return 3;
+            }
 
             using convert_type = int;
 
-            static bool check_move_count(int) { return true; }
+            static bool check_move_count(int)
+            {
+                return true;
+            }
         };
 
         template <>
         struct fixture<std::string>
         {
-            static std::string init() { return "And now young codebase ..."; }
-            static std::string other() { return "Darth Codius"; }
-            static const char* convert_init() { return "Noooooo that's impossible!"; }
+            static std::string init()
+            {
+                return "And now young codebase ...";
+            }
+
+            static std::string other()
+            {
+                return "Darth Codius";
+            }
+
+            static const char* convert_init()
+            {
+                return "Noooooo that's impossible!";
+            }
 
             using convert_type = const char*;
 
-            static bool check_move_count(int) { return true; }
+            static bool check_move_count(int)
+            {
+                return true;
+            }
         };
 
         template <>
         struct fixture<Custom>
         {
-            static Custom init() { return Custom(1); }
-            static Custom other() { return Custom(2); }
-            static int convert_init() { return 3; }
+            static Custom init()
+            {
+                return Custom(1);
+            }
+
+            static Custom other()
+            {
+                return Custom(2);
+            }
+
+            static int convert_init()
+            {
+                return 3;
+            }
 
             using convert_type = int;
 
-            static bool check_move_count(int ref) { return Custom::counter == ref; }
+            static bool check_move_count(int ref)
+            {
+                return Custom::counter == ref;
+            }
         };
     }
 
@@ -925,7 +968,13 @@ namespace sparrow
             nullable<double> d = vd;
             nullable_variant_type v = d;
 
-            bool res = std::visit([vd](const auto& val) { return val.has_value() && val.value() == vd; }, v);
+            bool res = std::visit(
+                [vd](const auto& val)
+                {
+                    return val.has_value() && val.value() == vd;
+                },
+                v
+            );
             CHECK(res);
         }
 
@@ -955,4 +1004,3 @@ namespace sparrow
         }
     }
 }
-

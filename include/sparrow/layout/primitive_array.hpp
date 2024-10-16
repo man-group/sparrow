@@ -20,7 +20,7 @@
 #include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
-{   
+{
     template <class T>
     class primitive_array;
 

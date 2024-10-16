@@ -24,16 +24,16 @@ namespace sparrow
 {
 
     namespace detail
-    {   
-        // Helper struct to allow overloading on the type of ARRAY 
-        // to get the data_type for an array. This is needed since 
+    {
+        // Helper struct to allow overloading on the type of ARRAY
+        // to get the data_type for an array. This is needed since
         // some arrays (for instance run_length_encoded_array)
         // do not have a inner_value_type, therefore we specialize
         // this in their respecitve headers.
-        template<class ARRAY>
+        template <class ARRAY>
         struct get_data_type_from_array
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return arrow_traits<typename ARRAY::inner_value_type>::type_id;
             }
@@ -42,7 +42,7 @@ namespace sparrow
         template <class ARRAY>
         struct is_dictionary_encoded_array
         {
-            constexpr static bool get()
+            static constexpr bool get()
             {
                 return false;
             }
@@ -94,7 +94,7 @@ namespace sparrow
 
         T& get_wrapped();
         const T& get_wrapped() const;
-        
+
     private:
 
         using wrapper_ptr = array_wrapper::wrapper_ptr;
@@ -191,14 +191,21 @@ namespace sparrow
         : array_wrapper(rhs)
         , m_storage(rhs.m_storage)
     {
-        p_array = std::visit([](auto&& arg)
-        {
-            using U = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<U, T*>)
-                return arg;
-            else
-                return arg.get();
-        }, m_storage);
+        p_array = std::visit(
+            [](auto&& arg)
+            {
+                using U = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<U, T*>)
+                {
+                    return arg;
+                }
+                else
+                {
+                    return arg.get();
+                }
+            },
+            m_storage
+        );
     }
 
     template <class T>
@@ -206,7 +213,7 @@ namespace sparrow
     {
         return detail::is_dictionary_encoded_array<T>::get();
     }
-    
+
     template <class T>
     auto array_wrapper_impl<T>::clone_impl() const -> wrapper_ptr
     {
@@ -225,4 +232,3 @@ namespace sparrow
         return static_cast<const array_wrapper_impl<T>&>(ar).get_wrapped();
     }
 }
-

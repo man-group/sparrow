@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "sparrow/buffer/dynamic_bitset/dynamic_bitset_base.hpp"
 #include "sparrow/buffer/buffer.hpp"
+#include "sparrow/buffer/dynamic_bitset/dynamic_bitset_base.hpp"
 
 namespace sparrow
 {

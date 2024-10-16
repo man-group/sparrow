@@ -15,6 +15,7 @@
 #include "sparrow/array.hpp"
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/primitive_array.hpp"
+
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
 
@@ -31,8 +32,7 @@ namespace sparrow
         primitive_array<std::uint64_t>,
         primitive_array<float16_t>,
         primitive_array<float32_t>,
-        primitive_array<float64_t>
-    >;
+        primitive_array<float64_t>>;
 
     namespace test
     {
@@ -74,4 +74,3 @@ namespace sparrow
         TEST_CASE_TEMPLATE_APPLY(access_operator_id, testing_types);
     }
 }
-

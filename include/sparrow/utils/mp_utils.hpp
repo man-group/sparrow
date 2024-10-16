@@ -22,7 +22,7 @@
 
 namespace sparrow::mpl
 {
-    
+
     /// Workaround to replace static_assert(false) in template code.
     /// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
     template <class... T>
@@ -472,7 +472,7 @@ namespace sparrow::mpl
 
     // Matches any type that is testable
     template <class T>
-    concept testable = requires(T t) {  t ? true : false; };
+    concept testable = requires(T t) { t ? true : false; };
 
     // Fails if the Qualifier is true for Y but not for T.
     template <typename T, typename Y, template <typename> typename Qualifier>

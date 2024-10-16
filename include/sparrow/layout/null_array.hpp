@@ -96,7 +96,7 @@ namespace sparrow
 
         const_value_range values() const;
         const_bitmap_range bitmap() const;
-    
+
     private:
 
         difference_type ssize() const;
@@ -235,4 +235,3 @@ namespace sparrow
         return lhs.size() == rhs.size();
     }
 }
-

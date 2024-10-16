@@ -36,6 +36,7 @@ namespace sparrow
     class value_ptr
     {
         using internal_pointer = std::unique_ptr<T>;
+
     public:
 
         using self_type = value_ptr<T>;
@@ -81,7 +82,7 @@ namespace sparrow
 
         internal_pointer value_;
     };
-   
+
     namespace detail
     {
         template <class T>
@@ -107,17 +108,17 @@ namespace sparrow
      */
     template <class T>
     concept clonable = std::derived_from<T, std::decay_t<decltype(*std::declval<T*>()->clone())>>
-                    && detail::is_unique_ptr_v<decltype(std::declval<T*>()->clone())>;
+                       && detail::is_unique_ptr_v<decltype(std::declval<T*>()->clone())>;
 
     /**
      * Smart pointer behaving like a copiable std::unique_ptr.
-     * 
+     *
      * `cloning_ptr` owns and manages another object through a pointer, like
-     * `std::unique_ptr`. The difference with `std::unique_ptr` is that 
+     * `std::unique_ptr`. The difference with `std::unique_ptr` is that
      * `cloning_ptr`calls the `clone` method of the managed object upon copy.
      * `Therefore, `cloning_ptr` is meant to be used with hierarchies of
      * classes which provide a `clone` method which returns a unique pointer.
-     * 
+     *
      * @tparam T The type of the object managed by the `cloning_ptr`. It must
      * satisfy the `clonable` concept.
      */
@@ -125,6 +126,7 @@ namespace sparrow
     class cloning_ptr
     {
         using internal_pointer = std::unique_ptr<T>;
+
     public:
 
         using self_type = cloning_ptr<T>;
@@ -141,14 +143,14 @@ namespace sparrow
 
         constexpr cloning_ptr(const self_type& rhs) noexcept;
         constexpr cloning_ptr(self_type&& rhs) noexcept = default;
-        
+
 
         template <clonable U>
-        requires std::convertible_to<U*, T*>
+            requires std::convertible_to<U*, T*>
         constexpr cloning_ptr(const cloning_ptr<U>& rhs) noexcept;
 
         template <clonable U>
-        requires std::convertible_to<U*, T*>
+            requires std::convertible_to<U*, T*>
         constexpr cloning_ptr(cloning_ptr<U>&& rhs) noexcept;
 
         constexpr self_type& operator=(const self_type&) noexcept;
@@ -156,11 +158,11 @@ namespace sparrow
         constexpr self_type& operator=(std::nullptr_t) noexcept;
 
         template <clonable U>
-        requires std::convertible_to<U*, T*>
+            requires std::convertible_to<U*, T*>
         constexpr self_type& operator=(const cloning_ptr<U>& rhs) noexcept;
 
         template <clonable U>
-        requires std::convertible_to<U*, T*>
+            requires std::convertible_to<U*, T*>
         constexpr self_type& operator=(cloning_ptr<U>&& rhs) noexcept;
 
         // Modifiers
@@ -175,9 +177,8 @@ namespace sparrow
 
         constexpr explicit operator bool() const noexcept;
 
-        constexpr std::add_lvalue_reference_t<T>
-        operator*() const noexcept(noexcept(*std::declval<pointer>()));
-        
+        constexpr std::add_lvalue_reference_t<T> operator*() const noexcept(noexcept(*std::declval<pointer>()));
+
         constexpr pointer operator->() const noexcept;
 
     private:
@@ -192,30 +193,20 @@ namespace sparrow
     void swap(cloning_ptr<T>& lhs, cloning_ptr<T>& rhs) noexcept;
 
     template <class T1, class T2>
-    requires std::equality_comparable_with<
-        typename cloning_ptr<T1>::pointer,
-        typename cloning_ptr<T2>::pointer>
-    constexpr
-    bool operator==(const cloning_ptr<T1>& lhs, const cloning_ptr<T2>& rhs) noexcept;
+        requires std::equality_comparable_with<typename cloning_ptr<T1>::pointer, typename cloning_ptr<T2>::pointer>
+    constexpr bool operator==(const cloning_ptr<T1>& lhs, const cloning_ptr<T2>& rhs) noexcept;
 
     template <class T1, class T2>
-    requires std::three_way_comparable_with<
-        typename cloning_ptr<T1>::pointer,
-        typename cloning_ptr<T2>::pointer>
-    constexpr
-    std::compare_three_way_result_t<
-        typename cloning_ptr<T1>::pointer,
-        typename cloning_ptr<T2>::pointer>
+        requires std::three_way_comparable_with<typename cloning_ptr<T1>::pointer, typename cloning_ptr<T2>::pointer>
+    constexpr std::compare_three_way_result_t<typename cloning_ptr<T1>::pointer, typename cloning_ptr<T2>::pointer>
     operator<=>(const cloning_ptr<T1>& lhs, const cloning_ptr<T2>& rhs) noexcept;
 
     template <class T>
-    constexpr
-    bool operator==(const cloning_ptr<T>& lhs, std::nullptr_t) noexcept;
+    constexpr bool operator==(const cloning_ptr<T>& lhs, std::nullptr_t) noexcept;
 
     template <class T>
-    requires std::three_way_comparable<typename cloning_ptr<T>::pointer>
-    constexpr
-    std::compare_three_way_result_t<typename cloning_ptr<T>::pointer>
+        requires std::three_way_comparable<typename cloning_ptr<T>::pointer>
+    constexpr std::compare_three_way_result_t<typename cloning_ptr<T>::pointer>
     operator<=>(const cloning_ptr<T>& lhs, std::nullptr_t) noexcept;
 
     template <class T, class... Args>
@@ -358,15 +349,15 @@ namespace sparrow
 
     template <clonable T>
     template <clonable U>
-    requires std::convertible_to<U*, T*>
+        requires std::convertible_to<U*, T*>
     constexpr cloning_ptr<T>::cloning_ptr(const cloning_ptr<U>& rhs) noexcept
         : m_data(rhs ? rhs->clone() : nullptr)
     {
     }
-    
+
     template <clonable T>
     template <clonable U>
-    requires std::convertible_to<U*, T*>
+        requires std::convertible_to<U*, T*>
     constexpr cloning_ptr<T>::cloning_ptr(cloning_ptr<U>&& rhs) noexcept
         : m_data(rhs.release())
     {
@@ -388,7 +379,7 @@ namespace sparrow
 
     template <clonable T>
     template <clonable U>
-    requires std::convertible_to<U*, T*>
+        requires std::convertible_to<U*, T*>
     constexpr auto cloning_ptr<T>::operator=(const cloning_ptr<U>& rhs) noexcept -> self_type&
     {
         m_data = rhs ? rhs->clone() : nullptr;
@@ -397,7 +388,7 @@ namespace sparrow
 
     template <clonable T>
     template <clonable U>
-    requires std::convertible_to<U*, T*>
+        requires std::convertible_to<U*, T*>
     constexpr auto cloning_ptr<T>::operator=(cloning_ptr<U>&& rhs) noexcept -> self_type&
     {
         reset(rhs.release());
@@ -436,18 +427,18 @@ namespace sparrow
     }
 
     template <clonable T>
-    constexpr std::add_lvalue_reference_t<T>
-    cloning_ptr<T>::operator*() const noexcept(noexcept(*std::declval<pointer>()))
+    constexpr std::add_lvalue_reference_t<T> cloning_ptr<T>::operator*() const
+        noexcept(noexcept(*std::declval<pointer>()))
     {
         return *get();
     }
-    
+
     template <clonable T>
     constexpr auto cloning_ptr<T>::operator->() const noexcept -> pointer
     {
         return get();
     }
-    
+
     template <clonable T>
     constexpr auto cloning_ptr<T>::ptr_impl() noexcept -> internal_pointer&
     {
@@ -471,39 +462,29 @@ namespace sparrow
     }
 
     template <class T1, class T2>
-    requires std::equality_comparable_with<
-        typename cloning_ptr<T1>::pointer,
-        typename cloning_ptr<T2>::pointer>
-    constexpr
-    bool operator==(const cloning_ptr<T1>& lhs, const cloning_ptr<T2>& rhs) noexcept
+        requires std::equality_comparable_with<typename cloning_ptr<T1>::pointer, typename cloning_ptr<T2>::pointer>
+    constexpr bool operator==(const cloning_ptr<T1>& lhs, const cloning_ptr<T2>& rhs) noexcept
     {
         return lhs.get() == rhs.get();
     }
 
     template <class T1, class T2>
-    requires std::three_way_comparable_with<
-        typename cloning_ptr<T1>::pointer,
-        typename cloning_ptr<T2>::pointer>
-    constexpr
-    std::compare_three_way_result_t<
-        typename cloning_ptr<T1>::pointer,
-        typename cloning_ptr<T2>::pointer>
+        requires std::three_way_comparable_with<typename cloning_ptr<T1>::pointer, typename cloning_ptr<T2>::pointer>
+    constexpr std::compare_three_way_result_t<typename cloning_ptr<T1>::pointer, typename cloning_ptr<T2>::pointer>
     operator<=>(const cloning_ptr<T1>& lhs, const cloning_ptr<T2>& rhs) noexcept
     {
         return lhs.get() <=> rhs.get();
     }
 
     template <class T>
-    constexpr
-    bool operator==(const cloning_ptr<T>& lhs, std::nullptr_t) noexcept
+    constexpr bool operator==(const cloning_ptr<T>& lhs, std::nullptr_t) noexcept
     {
         return !lhs;
     }
 
     template <class T>
-    requires std::three_way_comparable<typename cloning_ptr<T>::pointer>
-    constexpr
-    std::compare_three_way_result_t<typename cloning_ptr<T>::pointer>
+        requires std::three_way_comparable<typename cloning_ptr<T>::pointer>
+    constexpr std::compare_three_way_result_t<typename cloning_ptr<T>::pointer>
     operator<=>(const cloning_ptr<T>& lhs, std::nullptr_t) noexcept
     {
         using pointer = typename cloning_ptr<T>::pointer;

@@ -25,9 +25,9 @@ namespace date = std::chrono;
 #endif
 
 #include <climits>
+#include <concepts>
 #include <cstdint>
 #include <cstring>
-#include <concepts>
 #include <string>
 
 #include "sparrow/utils/contracts.hpp"
@@ -313,20 +313,23 @@ namespace sparrow
         }
         mpl::unreachable();
     }
-    
+
     /// @returns The default floating-point `data_type`  that should be associated with the provided type.
-    ///          The deduction will be based on the size of the type. Calling this function with unsupported sizes
-    ///          will not compile.
-    template<std::floating_point T>
-        requires (sizeof(T) >= 2 && sizeof(T) <= 8)
+    ///          The deduction will be based on the size of the type. Calling this function with unsupported
+    ///          sizes will not compile.
+    template <std::floating_point T>
+        requires(sizeof(T) >= 2 && sizeof(T) <= 8)
     constexpr data_type data_type_from_size(T = {})
     {
         // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
-        switch(sizeof(T))
+        switch (sizeof(T))
         {
-            case 2: return data_type::HALF_FLOAT;
-            case 4: return data_type::FLOAT;
-            case 8: return data_type::DOUBLE;
+            case 2:
+                return data_type::HALF_FLOAT;
+            case 4:
+                return data_type::FLOAT;
+            case 8:
+                return data_type::DOUBLE;
         }
 
         mpl::unreachable();
@@ -348,10 +351,14 @@ namespace sparrow
             // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
             switch (sizeof(T))
             {
-                case 1: return data_type::INT8;
-                case 2: return data_type::INT16;
-                case 4: return data_type::INT32;
-                case 8: return data_type::INT64;
+                case 1:
+                    return data_type::INT8;
+                case 2:
+                    return data_type::INT16;
+                case 4:
+                    return data_type::INT32;
+                case 8:
+                    return data_type::INT64;
             }
         }
         else
@@ -361,10 +368,14 @@ namespace sparrow
             // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
             switch (sizeof(T))
             {
-                case 1: return data_type::UINT8;
-                case 2: return data_type::UINT16;
-                case 4: return data_type::UINT32;
-                case 8: return data_type::UINT64;
+                case 1:
+                    return data_type::UINT8;
+                case 2:
+                    return data_type::UINT16;
+                case 4:
+                    return data_type::UINT32;
+                case 8:
+                    return data_type::UINT64;
             }
         }
 
@@ -463,7 +474,7 @@ namespace sparrow
     }
 
     /// @returns The number of bytes required to store the provided primitive data type.
-    template<std::integral T>
+    template <std::integral T>
     constexpr size_t primitive_bytes_count(data_type data_type, T size)
     {
         SPARROW_ASSERT_TRUE(data_type_is_primitive(data_type));
@@ -523,8 +534,7 @@ namespace sparrow
         sparrow::timestamp,
         // TODO: add missing fundamental types here
         list_value,
-        struct_value
-        >;
+        struct_value>;
 
     /// Type list of every C++ representation types supported by default, in order matching `data_type`
     /// related values.
@@ -536,8 +546,8 @@ namespace sparrow
 
 
     /// is arrow base type or arrow compound type (list<T>, struct<T> etc.)
-    //template <class T>
-    //concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
+    // template <class T>
+    // concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
 
 
     using all_base_types_extended_t = mpl::append_t<all_base_types_t, char, std::string_view>;
@@ -605,7 +615,7 @@ namespace sparrow
         typename T::value_type;
 
         /// The arrow (binary) layout to use by default for representing a set of data for that type.
-        //typename detail::accepts_template<T::template default_layout>;
+        // typename detail::accepts_template<T::template default_layout>;
 
         // TODO: add more interface requirements on the traits here
         // TODO: add conversion operations between bytes and the value type

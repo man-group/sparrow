@@ -22,7 +22,6 @@
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 
-
 namespace sparrow
 {
     /**

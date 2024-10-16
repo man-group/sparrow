@@ -60,16 +60,16 @@ namespace sparrow::test
         detail::release_common_arrow(arr);
     }
 
-
     void fill_schema_and_array_for_list_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema & flat_value_schema,
-        ArrowArray & flat_value_arr,
-        const std::vector<std::size_t> & list_lengths,
-        const std::vector<std::size_t> & false_postions,
+        ArrowSchema& flat_value_schema,
+        ArrowArray& flat_value_arr,
+        const std::vector<std::size_t>& list_lengths,
+        const std::vector<std::size_t>& false_postions,
         bool big_list
-    ){
+    )
+    {
         schema.format = big_list ? "+L" : "+l";
         schema.name = "test";
         schema.metadata = "test metadata";
@@ -101,25 +101,22 @@ namespace sparrow::test
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
-
     }
-
-
-
 
     void fill_schema_and_array_for_fixed_size_list_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema & flat_value_schema,
-        ArrowArray & flat_value_arr,
-        const std::vector<std::size_t> & false_postions,
+        ArrowSchema& flat_value_schema,
+        ArrowArray& flat_value_arr,
+        const std::vector<std::size_t>& false_postions,
         std::size_t list_size
-    ){
+    )
+    {
         SPARROW_ASSERT(list_size > 0, "list size must be greater than 0");
         SPARROW_ASSERT(list_size < 10, "just a test limitation st. format string can be on stack");
         // convert list size to string
         std::string list_size_str = std::to_string(list_size);
-        schema.format = new char[5]{'+', 'w',':', list_size_str[0], '\0'};
+        schema.format = new char[5]{'+', 'w', ':', list_size_str[0], '\0'};
 
         schema.name = "test";
         schema.metadata = "test metadata";
@@ -148,19 +145,18 @@ namespace sparrow::test
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
-
     }
-
 
     void fill_schema_and_array_for_list_view_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema & flat_value_schema,
-        ArrowArray & flat_value_arr,
-        const std::vector<std::size_t> & list_lengths,
-        const std::vector<std::size_t> & false_postions,
+        ArrowSchema& flat_value_schema,
+        ArrowArray& flat_value_arr,
+        const std::vector<std::size_t>& list_lengths,
+        const std::vector<std::size_t>& false_postions,
         bool big_list
-    ){
+    )
+    {
         schema.format = big_list ? "+vL" : "+vl";
         schema.name = "test";
         schema.metadata = "test metadata";
@@ -184,32 +180,33 @@ namespace sparrow::test
         buf[0] = make_bitmap_buffer(static_cast<std::size_t>(arr.length), false_postions);
 
         buf[1] = make_offset_buffer_from_sizes(list_lengths, big_list);
-        buf[2] = new std::uint8_t[list_lengths.size()  * (big_list ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
+        buf[2] = new std::uint8_t[list_lengths.size() * (big_list ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
 
-        // ignore -Werror=cast-align]
-        #ifdef __GNUC__
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wcast-align"
-        #endif
+// ignore -Werror=cast-align]
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
 
-        if(big_list)
+        if (big_list)
         {
             std::uint64_t* size_buf = reinterpret_cast<std::uint64_t*>(buf[2]);
-            for(std::size_t i = 0; i < list_lengths.size(); ++i)
+            for (std::size_t i = 0; i < list_lengths.size(); ++i)
             {
                 size_buf[i] = list_lengths[i];
             }
         }
-        else{
+        else
+        {
             std::uint32_t* size_buf = reinterpret_cast<std::uint32_t*>(buf[2]);
-            for(std::size_t i = 0; i < list_lengths.size(); ++i)
+            for (std::size_t i = 0; i < list_lengths.size(); ++i)
             {
                 size_buf[i] = static_cast<std::uint32_t>(list_lengths[i]);
             }
         }
-        #ifdef __GNUC__
-        #pragma GCC diagnostic pop
-        #endif
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
         arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
 
         arr.children = new ArrowArray*[1];
@@ -217,15 +214,14 @@ namespace sparrow::test
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
-
     }
 
     void fill_schema_and_array_for_struct_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        std::vector<ArrowSchema> & children_schemas,
-        std::vector<ArrowArray> & children_arrays,
-        const std::vector<std::size_t> & false_postions
+        std::vector<ArrowSchema>& children_schemas,
+        std::vector<ArrowArray>& children_arrays,
+        const std::vector<std::size_t>& false_postions
     )
     {
         schema.format = "+s";
@@ -241,7 +237,7 @@ namespace sparrow::test
 
         schema.dictionary = nullptr;
         schema.release = &release_arrow_schema;
-        
+
         arr.length = children_arrays.front().length;
 
         arr.null_count = static_cast<std::int64_t>(false_postions.size());
@@ -268,12 +264,13 @@ namespace sparrow::test
     void fill_schema_and_array_for_run_end_encoded(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema &  acc_length_schema,
-        ArrowArray &   acc_length_arr,
-        ArrowSchema &  value_schema,
-        ArrowArray &   value_arr,
-        std::size_t  length
-    ){
+        ArrowSchema& acc_length_schema,
+        ArrowArray& acc_length_arr,
+        ArrowSchema& value_schema,
+        ArrowArray& value_arr,
+        std::size_t length
+    )
+    {
         schema.format = "+r";
         schema.name = "test";
         schema.metadata = "test metadata";
@@ -303,17 +300,17 @@ namespace sparrow::test
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
-
     }
 
     void fill_schema_and_array_for_sparse_union(
         ArrowSchema& schema,
         ArrowArray& arr,
-        std::vector<ArrowSchema>  & children_schemas,
-        std::vector<ArrowArray>   & children_arrays,
-        const std::vector<std::uint8_t> & type_ids,
-        const std::string & format
-    ){
+        std::vector<ArrowSchema>& children_schemas,
+        std::vector<ArrowArray>& children_arrays,
+        const std::vector<std::uint8_t>& type_ids,
+        const std::string& format
+    )
+    {
         schema.format = format.c_str();
         schema.name = "test";
         schema.metadata = "test metadata";
@@ -355,12 +352,13 @@ namespace sparrow::test
     void fill_schema_and_array_for_dense_union(
         ArrowSchema& schema,
         ArrowArray& arr,
-        std::vector<ArrowSchema>  & children_schemas,
-        std::vector<ArrowArray>   & children_arrays,
-        const std::vector<std::uint8_t> & type_ids,
-        const std::vector<std::int32_t> & offsets,
-        const std::string & format
-    ){
+        std::vector<ArrowSchema>& children_schemas,
+        std::vector<ArrowArray>& children_arrays,
+        const std::vector<std::uint8_t>& type_ids,
+        const std::vector<std::int32_t>& offsets,
+        const std::string& format
+    )
+    {
         schema.format = format.c_str();
         schema.name = "test";
         schema.metadata = "test metadata";

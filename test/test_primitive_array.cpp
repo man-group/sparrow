@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../test/external_array_data_creation.hpp"
-#include "doctest/doctest.h"
 #include "sparrow/layout/primitive_array.hpp"
 
+#include "../test/external_array_data_creation.hpp"
+#include "doctest/doctest.h"
 
 namespace sparrow
 {

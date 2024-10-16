@@ -44,4 +44,3 @@ namespace sparrow
     SPARROW_API
     bool operator==(const list_value& lhs, const list_value& rhs);
 }
-

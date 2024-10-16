@@ -26,11 +26,12 @@ namespace sparrow
      * return reference proxies when it is dereferenced.
      */
     template <class Layout, bool is_const>
-    class layout_iterator : public iterator_base<
-                                layout_iterator<Layout, is_const>,
-                                mpl::constify_t<typename Layout::value_type, is_const>,
-                                typename Layout::iterator_tag,
-                                std::conditional_t<is_const, typename Layout::const_reference, typename Layout::reference>>
+    class layout_iterator
+        : public iterator_base<
+              layout_iterator<Layout, is_const>,
+              mpl::constify_t<typename Layout::value_type, is_const>,
+              typename Layout::iterator_tag,
+              std::conditional_t<is_const, typename Layout::const_reference, typename Layout::reference>>
     {
     public:
 
@@ -43,9 +44,11 @@ namespace sparrow
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
 
-        using value_iterator = std::conditional_t<is_const, typename Layout::const_value_iterator, typename Layout::value_iterator>;
+        using value_iterator = std::
+            conditional_t<is_const, typename Layout::const_value_iterator, typename Layout::value_iterator>;
 
-        using bitmap_iterator = std::conditional_t<is_const, typename Layout::const_bitmap_iterator, typename Layout::bitmap_iterator>;
+        using bitmap_iterator = std::
+            conditional_t<is_const, typename Layout::const_bitmap_iterator, typename Layout::bitmap_iterator>;
 
         layout_iterator() noexcept = default;
         layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter);
@@ -122,4 +125,3 @@ namespace sparrow
         return m_value_iter < rhs.m_value_iter && m_bitmap_iter < rhs.m_bitmap_iter;
     }
 }
-

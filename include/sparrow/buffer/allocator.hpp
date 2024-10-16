@@ -22,7 +22,6 @@
 
 #include "sparrow/utils/variant_visitor.hpp"
 
-
 namespace sparrow
 {
     /*

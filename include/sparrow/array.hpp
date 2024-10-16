@@ -29,13 +29,13 @@ namespace sparrow
         using size_type = std::size_t;
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
- 
+
         SPARROW_API array() = default;
 
         SPARROW_API array(ArrowArray&& array, ArrowSchema&& schema);
         SPARROW_API array(ArrowArray&& array, ArrowSchema* schema);
         SPARROW_API array(ArrowArray* array, ArrowSchema* schema);
-        
+
         SPARROW_API size_type size() const;
         SPARROW_API const_reference operator[](size_type) const;
 
@@ -44,4 +44,3 @@ namespace sparrow
         cloning_ptr<array_wrapper> p_array = nullptr;
     };
 }
-

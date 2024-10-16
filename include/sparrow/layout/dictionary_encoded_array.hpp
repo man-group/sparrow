@@ -35,7 +35,8 @@ namespace sparrow
 
         using layout_type = Layout;
         using storage_type = std::conditional_t<is_const, const layout_type*, layout_type>;
-        using return_type = std::conditional_t<is_const, typename layout_type::const_reference, typename layout_type::reference>;
+        using return_type = std::
+            conditional_t<is_const, typename layout_type::const_reference, typename layout_type::reference>;
 
         constexpr layout_element_functor() = default;
 
@@ -43,7 +44,7 @@ namespace sparrow
             : p_layout(layout)
         {
         }
-        
+
         return_type operator()(std::size_t i) const
         {
             return p_layout->operator[](i);
@@ -59,13 +60,13 @@ namespace sparrow
 
     namespace detail
     {
-        template<class T>
+        template <class T>
         struct get_data_type_from_array;
 
-        template<std::integral IT>
+        template <std::integral IT>
         struct get_data_type_from_array<sparrow::dictionary_encoded_array<IT>>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return arrow_traits<typename primitive_array<IT>::inner_value_type>::type_id;
             }
@@ -74,7 +75,7 @@ namespace sparrow
         template <std::integral IT>
         struct is_dictionary_encoded_array<sparrow::dictionary_encoded_array<IT>>
         {
-            constexpr static bool get()
+            static constexpr bool get()
             {
                 return true;
             }
@@ -123,7 +124,7 @@ namespace sparrow
         using values_layout = cloning_ptr<array_wrapper>;
 
         const inner_value_type& dummy_inner_value() const;
-        //inner_const_reference dummy_inner_const_reference() const;
+        // inner_const_reference dummy_inner_const_reference() const;
         const_reference dummy_const_reference() const;
 
         static keys_layout create_keys_layout(arrow_proxy& proxy);
@@ -152,7 +153,7 @@ namespace sparrow
     {
         return m_proxy.length();
     }
-    
+
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::operator[](size_type i) const -> const_reference
     {
@@ -173,7 +174,7 @@ namespace sparrow
     {
         return iterator(functor_type(this), 0u);
     }
-    
+
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::end() -> iterator
     {
@@ -185,7 +186,7 @@ namespace sparrow
     {
         return cbegin();
     }
-    
+
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::end() const -> const_iterator
     {
@@ -214,7 +215,7 @@ namespace sparrow
     /*template <std::integral IT>
     auto dictionary_encoded_array<IT>::dummy_inner_const_reference() const -> inner_const_reference
     {
-        static const inner_const_reference instance = 
+        static const inner_const_reference instance =
             std::visit([](const auto& val) -> inner_const_reference { return val; }, dummy_inner_value());
         return instance;
     }*/
@@ -222,12 +223,14 @@ namespace sparrow
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::dummy_const_reference() const -> const_reference
     {
-        static const const_reference instance = 
-            std::visit([](const auto& val) -> const_reference {
+        static const const_reference instance = std::visit(
+            [](const auto& val) -> const_reference
+            {
                 using inner_ref = typename arrow_traits<std::decay_t<decltype(val)>>::const_reference;
                 return nullable<inner_ref>(inner_ref(val), false);
             },
-            dummy_inner_value());
+            dummy_inner_value()
+        );
         return instance;
     }
 
@@ -240,7 +243,7 @@ namespace sparrow
         arrow_proxy ar_dictionary{&(dictionary->array()), &(dictionary->schema())};
         return array_factory(std::move(ar_dictionary));
     }
-    
+
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::create_keys_layout(arrow_proxy& proxy) -> keys_layout
     {
