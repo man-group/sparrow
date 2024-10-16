@@ -18,7 +18,6 @@
 
 #include "doctest/doctest.h"
 
-
 namespace sparrow
 {
     TEST_SUITE("number_of_bytes")

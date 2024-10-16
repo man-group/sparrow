@@ -99,7 +99,8 @@ namespace sparrow
         return *this;
     };
 
-    inline arrow_schema_shared_ptr& arrow_schema_shared_ptr::operator=(const arrow_schema_shared_ptr& ptr) noexcept
+    inline arrow_schema_shared_ptr&
+    arrow_schema_shared_ptr::operator=(const arrow_schema_shared_ptr& ptr) noexcept
     {
         std::shared_ptr<ArrowSchema>::operator=(ptr);
         return *this;

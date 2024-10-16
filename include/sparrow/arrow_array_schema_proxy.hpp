@@ -135,7 +135,7 @@ namespace sparrow
          * @param null_count The null count to set.
          */
         SPARROW_API void set_null_count(int64_t null_count);
-        [[nodiscard]] SPARROW_API  size_t offset() const;
+        [[nodiscard]] SPARROW_API size_t offset() const;
 
         /**
          * Set the offset of the `ArrowArray`.

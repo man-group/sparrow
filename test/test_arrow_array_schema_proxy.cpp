@@ -22,7 +22,6 @@
 #include "arrow_array_schema_creation.hpp"
 #include "doctest/doctest.h"
 
-
 TEST_SUITE("ArrowArrowSchemaProxy")
 {
     TEST_CASE("constructors")
@@ -417,7 +416,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         SUBCASE("on sparrow c structure")
         {
             auto array_schema_pair = make_sparrow_arrow_schema_and_array();
-            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{&array_schema_pair.second ,&array_schema_pair.first}}};
+            std::array<sparrow::arrow_array_and_schema_pointers, 1> array_child_ptr{
+                {{&array_schema_pair.second, &array_schema_pair.first}}
+            };
 
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
@@ -436,8 +437,10 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
 
-            auto array_schema_pair  = make_sparrow_arrow_schema_and_array();
-            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{&array_schema_pair.second ,&array_schema_pair.first}}};
+            auto array_schema_pair = make_sparrow_arrow_schema_and_array();
+            std::array<sparrow::arrow_array_and_schema_pointers, 1> array_child_ptr{
+                {{&array_schema_pair.second, &array_schema_pair.first}}
+            };
             proxy.add_children(array_child_ptr);
             proxy.pop_children(1);
             const auto& children = proxy.children();
@@ -457,7 +460,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto array_schema_pair  = make_sparrow_arrow_schema_and_array();
+            auto array_schema_pair = make_sparrow_arrow_schema_and_array();
 
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));

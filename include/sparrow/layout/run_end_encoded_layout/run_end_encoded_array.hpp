@@ -14,15 +14,15 @@
 
 #pragma once
 
+#include "sparrow/array_factory.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
-#include "sparrow/array_factory.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/layout/run_end_encoded_layout/run_end_encoded_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/layout/run_end_encoded_layout/run_end_encoded_iterator.hpp"
 
 namespace sparrow
 {
@@ -30,20 +30,20 @@ namespace sparrow
 
     namespace detail
     {
-        template<class T>
+        template <class T>
         struct get_data_type_from_array;
 
-        template<>
+        template <>
         struct get_data_type_from_array<sparrow::run_end_encoded_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::RUN_ENCODED;
             }
         };
     }
 
-    class run_end_encoded_array 
+    class run_end_encoded_array
     {
     public:
 
@@ -51,7 +51,7 @@ namespace sparrow
         using inner_value_type = array_traits::inner_value_type;
         using iterator = run_encoded_array_iterator<false>;
         using const_iterator = run_encoded_array_iterator<true>;
-        
+
         SPARROW_API explicit run_end_encoded_array(arrow_proxy proxy);
 
         SPARROW_API array_traits::const_reference operator[](std::uint64_t i);
@@ -70,14 +70,14 @@ namespace sparrow
 
     private:
 
-        using acc_length_ptr_variant_type = std::variant< const std::uint16_t*, const std::uint32_t*,const std::uint64_t*> ;
+        using acc_length_ptr_variant_type = std::variant<const std::uint16_t*, const std::uint32_t*, const std::uint64_t*>;
 
         SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);
         SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
 
         arrow_proxy m_proxy;
         std::uint64_t m_encoded_length;
-        
+
         cloning_ptr<array_wrapper> p_acc_lengths_array;
         cloning_ptr<array_wrapper> p_encoded_values_array;
         acc_length_ptr_variant_type m_acc_lengths;
@@ -87,14 +87,15 @@ namespace sparrow
         friend class run_encoded_array_iterator<true>;
     };
 
-    inline run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy) 
-    :   m_proxy(std::move(proxy)),
-        m_encoded_length(m_proxy.children()[0].length()),
-        p_acc_lengths_array(array_factory(m_proxy.children()[0].view())),
-        p_encoded_values_array(array_factory(m_proxy.children()[1].view())),
-        m_acc_lengths(run_end_encoded_array::get_acc_lengths_ptr(*p_acc_lengths_array))
+    inline run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy)
+        : m_proxy(std::move(proxy))
+        , m_encoded_length(m_proxy.children()[0].length())
+        , p_acc_lengths_array(array_factory(m_proxy.children()[0].view()))
+        , p_encoded_values_array(array_factory(m_proxy.children()[1].view()))
+        , m_acc_lengths(run_end_encoded_array::get_acc_lengths_ptr(*p_acc_lengths_array))
     {
     }
+
     inline auto run_end_encoded_array::size() const -> size_type
     {
         return m_proxy.length();
@@ -102,24 +103,25 @@ namespace sparrow
 
     inline auto run_end_encoded_array::get_run_length(std::uint64_t run_index) const -> std::uint64_t
     {
-
-        auto ret =  std::visit(
+        auto ret = std::visit(
             [run_index](auto&& acc_lengths_ptr) -> std::uint64_t
             {
-                if(run_index == 0)
-                {   
+                if (run_index == 0)
+                {
                     return static_cast<std::uint64_t>(acc_lengths_ptr[run_index]);
                 }
                 else
                 {
-                    return static_cast<std::uint64_t>(acc_lengths_ptr[run_index] - acc_lengths_ptr[run_index - 1]);
+                    return static_cast<std::uint64_t>(
+                        acc_lengths_ptr[run_index] - acc_lengths_ptr[run_index - 1]
+                    );
                 }
             },
             m_acc_lengths
         );
         return ret;
     }
-    
+
     inline auto run_end_encoded_array::operator[](std::uint64_t i) -> array_traits::const_reference
     {
         return static_cast<const run_end_encoded_array*>(this)->operator[](i);
@@ -155,4 +157,4 @@ namespace sparrow
         return const_iterator(this, size(), 0);
     }
 
-} // namespace sparrow
+}  // namespace sparrow

@@ -18,9 +18,9 @@
 #include <string>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
-#include "sparrow/types/data_type.hpp"
-#include "sparrow/types/data_traits.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/types/data_traits.hpp"
+#include "sparrow/types/data_type.hpp"
 
 namespace sparrow::test
 {
@@ -255,19 +255,19 @@ namespace sparrow::test
     void fill_schema_and_array_for_list_view_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema & flat_value_schema,
-        ArrowArray & flat_value_arr,
-        const std::vector<std::size_t> & list_lengths,
-        const std::vector<std::size_t> & false_postions,
+        ArrowSchema& flat_value_schema,
+        ArrowArray& flat_value_arr,
+        const std::vector<std::size_t>& list_lengths,
+        const std::vector<std::size_t>& false_postions,
         bool big_list
     );
 
     void fill_schema_and_array_for_fixed_size_list_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema & flat_value_schema,
-        ArrowArray & flat_value_arr,
-        const std::vector<std::size_t> & false_postions,
+        ArrowSchema& flat_value_schema,
+        ArrowArray& flat_value_arr,
+        const std::vector<std::size_t>& false_postions,
         std::size_t list_size
     );
 
@@ -283,30 +283,30 @@ namespace sparrow::test
     void fill_schema_and_array_for_run_end_encoded(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema &  acc_length_schema,
-        ArrowArray &   acc_length_arr,
-        ArrowSchema &  value_schema,
-        ArrowArray &   value_arr,
+        ArrowSchema& acc_length_schema,
+        ArrowArray& acc_length_arr,
+        ArrowSchema& value_schema,
+        ArrowArray& value_arr,
         std::size_t length
     );
 
     void fill_schema_and_array_for_sparse_union(
         ArrowSchema& schema,
         ArrowArray& arr,
-        std::vector<ArrowSchema>  & children_schemas,
-        std::vector<ArrowArray>   & children_arrays,
-        const std::vector<std::uint8_t> & type_ids,
-        const std::string & format
+        std::vector<ArrowSchema>& children_schemas,
+        std::vector<ArrowArray>& children_arrays,
+        const std::vector<std::uint8_t>& type_ids,
+        const std::string& format
     );
 
     void fill_schema_and_array_for_dense_union(
         ArrowSchema& schema,
         ArrowArray& arr,
-        std::vector<ArrowSchema>  & children_schemas,
-        std::vector<ArrowArray>   & children_arrays,
-        const std::vector<std::uint8_t> & type_ids,
-        const std::vector<std::int32_t> & offsets,
-        const std::string & format
+        std::vector<ArrowSchema>& children_schemas,
+        std::vector<ArrowArray>& children_arrays,
+        const std::vector<std::uint8_t>& type_ids,
+        const std::vector<std::int32_t>& offsets,
+        const std::string& format
     );
-    
+
 }

@@ -16,22 +16,19 @@
 #include "sparrow/layout/struct_layout/struct_array.hpp"
 #include "sparrow/utils/nullable.hpp"
 
-#include "doctest/doctest.h"
-
-#include "test_utils.hpp"
 #include "../test/external_array_data_creation.hpp"
-
+#include "doctest/doctest.h"
+#include "test_utils.hpp"
 
 namespace sparrow
 {
 
     TEST_SUITE("struct_array")
-    {   
-        
-        TEST_CASE_TEMPLATE("struct[T, uint8]",T,  std::uint8_t, std::int32_t, float, double)
+    {
+        TEST_CASE_TEMPLATE("struct[T, uint8]", T, std::uint8_t, std::int32_t, float, double)
         {
             using inner_scalar_type = T;
-            //using inner_nullable_type = nullable<inner_scalar_type>;
+            // using inner_nullable_type = nullable<inner_scalar_type>;
 
             // number of elements in the struct array
             const std::size_t n = 4;
@@ -40,17 +37,23 @@ namespace sparrow
             std::vector<ArrowArray> children_arrays(2);
             std::vector<ArrowSchema> children_schemas(2);
 
-            test::fill_schema_and_array<inner_scalar_type>(children_schemas[0], children_arrays[0], n, 0/*offset*/, {});
+            test::fill_schema_and_array<inner_scalar_type>(
+                children_schemas[0],
+                children_arrays[0],
+                n,
+                0 /*offset*/,
+                {}
+            );
             children_schemas[0].name = "item 0";
 
-            test::fill_schema_and_array<uint8_t>(children_schemas[1], children_arrays[1], n, 0/*offset*/, {});
+            test::fill_schema_and_array<uint8_t>(children_schemas[1], children_arrays[1], n, 0 /*offset*/, {});
             children_schemas[1].name = "item 1";
 
 
             ArrowArray arr{};
             ArrowSchema schema{};
             test::fill_schema_and_array_for_struct_layout(schema, arr, children_schemas, children_arrays, {});
-            arrow_proxy proxy(&arr, &schema);         
+            arrow_proxy proxy(&arr, &schema);
 
 
             // create a struct array
@@ -74,9 +77,9 @@ namespace sparrow
                     REQUIRE(val1_variant.has_value());
 
 
-                    //using const_scalar_ref = const inner_scalar_type&;
-                    using nullable_inner_scalar_type = nullable<const inner_scalar_type &, bool >;
-                    using nullable_uint8_t = nullable<const  std::uint8_t & , bool >;
+                    // using const_scalar_ref = const inner_scalar_type&;
+                    using nullable_inner_scalar_type = nullable<const inner_scalar_type&, bool>;
+                    using nullable_uint8_t = nullable<const std::uint8_t&, bool>;
 
                     // visit the variant
                     std::visit(
@@ -108,7 +111,6 @@ namespace sparrow
                         },
                         val1_variant
                     );
-
                 }
             }
 
@@ -119,12 +121,11 @@ namespace sparrow
             }
 
             SUBCASE("consitency")
-            {   
+            {
                 test::generic_consistency_test(struct_arr);
-            }  
+            }
         }
     }
 
 
 }
-

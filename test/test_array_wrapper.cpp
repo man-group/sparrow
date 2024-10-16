@@ -16,15 +16,14 @@
 #include "sparrow/layout/null_array.hpp"
 #include "sparrow/layout/primitive_array.hpp"
 
-#include "external_array_data_creation.hpp"
-
 #include "doctest/doctest.h"
+#include "external_array_data_creation.hpp"
 
 namespace sparrow
 {
     using test::make_arrow_proxy;
     using testing_types = std::tuple<
-        null_array, 
+        null_array,
         primitive_array<std::int8_t>,
         primitive_array<std::uint8_t>,
         primitive_array<std::int16_t>,
@@ -35,8 +34,7 @@ namespace sparrow
         primitive_array<std::uint64_t>,
         primitive_array<float16_t>,
         primitive_array<float32_t>,
-        primitive_array<float64_t>
-    >;
+        primitive_array<float64_t>>;
 
     TEST_SUITE("array_wrapper")
     {
@@ -138,4 +136,4 @@ namespace sparrow
         }
         TEST_CASE_TEMPLATE_APPLY(array_wrapper_clone, testing_types);
     }
-} 
+}

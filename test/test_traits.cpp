@@ -15,7 +15,6 @@
 #include <sparrow/layout/primitive_array.hpp>
 #include <sparrow/types/data_traits.hpp>
 
-
 /////////////////////////////////////////////////////////////////////////////////////////
 // Opt-in support for custom C++ representations of arrow data types.
 
@@ -42,15 +41,21 @@ namespace sparrow
     static_assert(mpl::all_of(all_base_types_t{}, predicate::has_arrow_traits));
 
 
-// Native basic standard types support
+    // Native basic standard types support
 
     using basic_native_types = mpl::typelist<
         bool,
-        char, unsigned char, signed char,
-        short, unsigned short,
-        int, unsigned int,
-        long, unsigned long, // `long long` could be bigger than 64bits and is not supported
-        float, double, // `long double` could be bigger than 64bit and is not supported
+        char,
+        unsigned char,
+        signed char,
+        short,
+        unsigned short,
+        int,
+        unsigned int,
+        long,
+        unsigned long,  // `long long` could be bigger than 64bits and is not supported
+        float,
+        double,  // `long double` could be bigger than 64bit and is not supported
         std::uint8_t,
         std::int8_t,
         std::uint16_t,
@@ -61,12 +66,10 @@ namespace sparrow
         std::int64_t,
         float16_t,
         float32_t,
-        float64_t
-        >;
+        float64_t>;
 
     template <std::integral T>
-    consteval
-    bool is_possible_arrow_data_type(data_type type_id)
+    consteval bool is_possible_arrow_data_type(data_type type_id)
     {
         // NOTE:
         // `char` is not specified by the C and C++ standard to be `signed` or `unsigned`.
@@ -121,8 +124,7 @@ namespace sparrow
     }
 
     template <std::floating_point T>
-    consteval
-    bool is_possible_arrow_data_type(data_type type_id)
+    consteval bool is_possible_arrow_data_type(data_type type_id)
     {
         switch (type_id)
         {
@@ -142,8 +144,7 @@ namespace sparrow
     {
         template <class T>
             requires has_arrow_type_traits<T>
-        consteval
-        bool operator()(mpl::typelist<T>)
+        consteval bool operator()(mpl::typelist<T>)
         {
             constexpr auto deduced_type_id = data_type_from_size<T>();
             static_assert(deduced_type_id == arrow_traits<T>::type_id);

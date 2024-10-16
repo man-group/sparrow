@@ -14,26 +14,26 @@
 
 #pragma once
 
-
 namespace sparrow
 {
-    template<class DERIVED>
+    template <class DERIVED>
     class crtp_base
     {
     protected:
+
         using derived_type = DERIVED;
 
         derived_type& derived_cast();
         const derived_type& derived_cast() const;
     };
 
-    template<class DERIVED>
+    template <class DERIVED>
     auto crtp_base<DERIVED>::derived_cast() -> derived_type&
     {
         return static_cast<derived_type&>(*this);
     }
 
-    template<class DERIVED>
+    template <class DERIVED>
     auto crtp_base<DERIVED>::derived_cast() const -> const derived_type&
     {
         return static_cast<const derived_type&>(*this);

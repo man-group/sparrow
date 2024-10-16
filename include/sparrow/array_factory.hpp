@@ -24,5 +24,5 @@
 namespace sparrow
 {
     SPARROW_API cloning_ptr<array_wrapper> array_factory(arrow_proxy proxy);
-    
+
 }

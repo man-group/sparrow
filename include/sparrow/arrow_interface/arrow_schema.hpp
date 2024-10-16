@@ -16,7 +16,6 @@
 
 #include <cstdint>
 
-
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_schema/smart_pointers.hpp"
 #include "sparrow/config/config.hpp"
@@ -107,7 +106,6 @@ namespace sparrow
      * @return The created `ArrowSchema` unique pointer.
      */
     arrow_schema_unique_ptr default_arrow_schema_unique_ptr();
-
 
     template <class F, class N, class M>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>

@@ -26,7 +26,7 @@ namespace sparrow
 {
     /// @returns `true` if the number of buffers in an `ArrowArray` for a given data type is valid, `false`
     /// otherwise.
-    constexpr  bool validate_buffers_count(data_type data_type, int64_t n_buffers)
+    constexpr bool validate_buffers_count(data_type data_type, int64_t n_buffers)
     {
         const std::size_t expected_buffer_count = get_expected_buffer_count(data_type);
         return static_cast<std::size_t>(n_buffers) == expected_buffer_count;
@@ -74,16 +74,17 @@ namespace sparrow
     }
 
     /// @returns `true` if  the format of an `ArrowArray` for a given data type is valid, `false` otherwise.
-    inline bool validate_format_with_arrow_array(data_type , const ArrowArray& )
+    inline bool validate_format_with_arrow_array(data_type, const ArrowArray&)
     {
-        return true; 
+        return true;
         /* THE CODE BELOW MAKES WRONG ASSUMPTIONS AND NEEDS TO BE REFACTORED IN A SEPERATE PR*/
         // const bool buffers_count_valid = validate_buffers_count(data_type, array.n_buffers);
         // // const bool children_count_valid = static_cast<std::size_t>(array.n_children)
         // //                                   == get_expected_children_count(data_type);
 
-        // //std::cout<<"child cound: "<<array.n_children<<" expected: "<<get_expected_children_count(data_type)<<std::endl;
-        // return buffers_count_valid //&& children_count_valid;
+        // //std::cout<<"child cound: "<<array.n_children<<" expected:
+        // "<<get_expected_children_count(data_type)<<std::endl; return buffers_count_valid //&&
+        // children_count_valid;
     }
 
     enum class buffer_type : uint8_t
@@ -97,7 +98,6 @@ namespace sparrow
         SIZES_32BIT,
         SIZES_64BIT,
     };
-
 
     /// @returns A vector of buffer types for a given data type.
     /// This information helps how interpret and parse each buffer in an ArrowArray.
