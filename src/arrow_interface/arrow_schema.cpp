@@ -13,11 +13,12 @@
 // limitations under the License.
 
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+
 #include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
+
 
 namespace sparrow
 {
-     
     void release_arrow_schema(ArrowSchema* schema)
     {
         SPARROW_ASSERT_FALSE(schema == nullptr);
