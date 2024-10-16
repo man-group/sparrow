@@ -296,5 +296,15 @@ namespace sparrow::test
         const std::vector<std::uint8_t> & type_ids,
         const std::string & format
     );
+
+    void fill_schema_and_array_for_dense_union(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        std::vector<ArrowSchema>  & children_schemas,
+        std::vector<ArrowArray>   & children_arrays,
+        const std::vector<std::uint8_t> & type_ids,
+        const std::vector<std::int32_t> & offsets,
+        const std::string & format
+    );
     
 }

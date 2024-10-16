@@ -346,5 +346,57 @@ namespace sparrow::test
         arr.release = &release_arrow_array;
     }
 
+    void fill_schema_and_array_for_dense_union(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        std::vector<ArrowSchema>  & children_schemas,
+        std::vector<ArrowArray>   & children_arrays,
+        const std::vector<std::uint8_t> & type_ids,
+        const std::vector<std::int32_t> & offsets,
+        const std::string & format
+    ){
+        schema.format = format.c_str();
+        schema.name = "test";
+        schema.metadata = "test metadata";
+
+        schema.n_children = static_cast<std::int64_t>(children_schemas.size());
+        schema.children = new ArrowSchema*[children_schemas.size()];
+        for (std::size_t i = 0; i < children_schemas.size(); ++i)
+        {
+            schema.children[i] = &children_schemas[i];
+        }
+
+        schema.dictionary = nullptr;
+        schema.release = &release_arrow_schema;
+
+        arr.length = static_cast<std::int64_t>(type_ids.size());
+
+        arr.null_count = 0;
+        arr.offset = 0;
+
+        arr.n_buffers = 2;
+        std::uint8_t** buf = new std::uint8_t*[2];
+        
+        buf[0] = new std::uint8_t[type_ids.size()];
+        std::copy(type_ids.begin(), type_ids.end(), buf[0]);
+
+        buf[1] = new std::uint8_t[offsets.size() * sizeof(std::int32_t)];
+        std::copy(offsets.begin(), offsets.end(), reinterpret_cast<std::int32_t*>(buf[1]));
+
+
+        arr.n_children = static_cast<std::int64_t>(children_arrays.size());
+
+        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
+
+        arr.children = new ArrowArray*[children_arrays.size()];
+        for (std::size_t i = 0; i < children_arrays.size(); ++i)
+        {
+            arr.children[i] = &children_arrays[i];
+        }
+
+        arr.dictionary = nullptr;
+        arr.release = &release_arrow_array;
+    }
+
 }
 
