@@ -175,11 +175,20 @@ namespace sparrow
         return const_iterator(detail::layout_bracket_functor<const derived_type, value_type>{this}, this->size());
     }
 
+    #ifdef __GNUC__
+    #    pragma GCC diagnostic push
+    #    pragma GCC diagnostic ignored "-Wcast-align"
+    #endif
     inline dense_union_array::dense_union_array(arrow_proxy proxy)
     :   union_array_crtp_base(std::move(proxy)),
         p_offsets(reinterpret_cast<std::int32_t*>(m_proxy.buffers()[1].data()))
     {
     }
+
+    #ifdef __GNUC__
+    #    pragma GCC diagnostic pop
+    #endif
+
     inline std::size_t dense_union_array::element_offset(std::size_t i) const
     {
         return static_cast<std::size_t>(p_offsets[i]) + m_proxy.offset();
