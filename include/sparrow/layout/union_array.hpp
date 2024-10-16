@@ -83,13 +83,17 @@ namespace sparrow
         using type_id_map = std::array<std::uint8_t, 256>;
         static type_id_map parse_type_id_map(std::string_view format_string);
 
+        arrow_proxy& get_arrow_proxy();
+
         arrow_proxy m_proxy;
         const std::uint8_t * p_type_ids;
         std::vector<cloning_ptr<array_wrapper>> m_children;
 
         // map from type-id to child-index
         std::array<std::uint8_t, 256> m_type_id_map;
-        
+
+        template <class T>
+        friend class array_wrapper_impl;
     };  
 
     class dense_union_array : public union_array_crtp_base<dense_union_array>
@@ -126,6 +130,12 @@ namespace sparrow
             ++child_index;
         });
         return ret;
+    }
+
+    template <class DERIVED>
+    arrow_proxy& union_array_crtp_base<DERIVED>::get_arrow_proxy()
+    {
+        return m_proxy;
     }
 
     template <class DERIVED>

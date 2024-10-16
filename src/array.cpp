@@ -32,7 +32,41 @@ namespace sparrow
         : p_array(array_factory(arrow_proxy(array, schema)))
     {
     }
-    
+
+    bool array::owns_arrow_array() const
+    {
+        return p_array->get_arrow_proxy().owns_array();
+    }
+
+    array& array::get_arrow_array(ArrowArray*& dst)
+    {
+        dst = &(p_array->get_arrow_proxy().array());
+        return *this;
+    }
+
+    array&& array::extract_arrow_array(ArrowArray& dst) &&
+    {
+        dst = p_array->get_arrow_proxy().extract_array();
+        return std::move(*this);
+    }
+
+    bool array::owns_arrow_schema() const
+    {
+        return p_array->get_arrow_proxy().owns_schema();
+    }
+
+    array& array::get_arrow_schema(ArrowSchema*& dst)
+    {
+        dst = &(p_array->get_arrow_proxy().schema());
+        return *this;
+    }
+
+    array&& array::extract_arrow_schema(ArrowSchema& dst) &&
+    {
+        dst = p_array->get_arrow_proxy().extract_schema();
+        return std::move(*this);
+    }
+
     array::size_type array::size() const
     {
         return array_size(*p_array);

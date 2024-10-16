@@ -17,6 +17,7 @@
 #include <memory>
 #include <variant>
 
+#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/memory.hpp"
 
@@ -68,6 +69,7 @@ namespace sparrow
 
         enum data_type data_type() const;
         bool is_dictionary() const;
+        arrow_proxy& get_arrow_proxy();
 
     protected:
 
@@ -78,6 +80,7 @@ namespace sparrow
 
         enum data_type m_data_type;
         virtual bool is_dictionary_impl() const = 0;
+        virtual arrow_proxy& get_arrow_proxy_impl() = 0;
         virtual wrapper_ptr clone_impl() const = 0;
     };
 
@@ -103,6 +106,7 @@ namespace sparrow
 
         array_wrapper_impl(const array_wrapper_impl&);
         bool is_dictionary_impl() const override;
+        arrow_proxy& get_arrow_proxy_impl() override;
         wrapper_ptr clone_impl() const override;
 
         using storage_type = std::variant<value_ptr<T>, std::shared_ptr<T>, T*>;
@@ -133,6 +137,11 @@ namespace sparrow
     inline bool array_wrapper::is_dictionary() const
     {
         return is_dictionary_impl();
+    }
+
+    inline arrow_proxy& array_wrapper::get_arrow_proxy()
+    {
+        return get_arrow_proxy_impl();
     }
 
     inline array_wrapper::array_wrapper(enum data_type dt)
@@ -206,7 +215,13 @@ namespace sparrow
     {
         return detail::is_dictionary_encoded_array<T>::get();
     }
-    
+
+    template <class T>
+    arrow_proxy& array_wrapper_impl<T>::get_arrow_proxy_impl()
+    {
+        return p_array->get_arrow_proxy();
+    }
+
     template <class T>
     auto array_wrapper_impl<T>::clone_impl() const -> wrapper_ptr
     {

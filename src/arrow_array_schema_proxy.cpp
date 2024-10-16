@@ -57,6 +57,13 @@ namespace sparrow
         }
     }
 
+    void arrow_proxy::reset()
+    {
+        m_buffers.clear();
+        m_children.clear();
+        m_dictionary.reset();
+    }
+
     bool arrow_proxy::array_created_with_sparrow() const
     {
         return array().release == &sparrow::release_arrow_array;
@@ -549,6 +556,16 @@ namespace sparrow
         return var.index() == 0 ? *std::get<0>(var) : std::get<1>(var);
     }
 
+    [[nodiscard]] bool arrow_proxy::owns_array() const
+    {
+        return std::holds_alternative<ArrowArray>(m_array);
+    }
+
+    [[nodiscard]] bool arrow_proxy::owns_schema() const
+    {
+        return std::holds_alternative<ArrowSchema>(m_schema);
+    }
+
     [[nodiscard]] const ArrowArray& arrow_proxy::array() const
     {
         return get_value_reference_of_variant<const ArrowArray>(m_array);
@@ -567,6 +584,32 @@ namespace sparrow
     [[nodiscard]] ArrowSchema& arrow_proxy::schema()
     {
         return get_value_reference_of_variant<ArrowSchema>(m_schema);
+    }
+
+    [[nodiscard]] ArrowArray arrow_proxy::extract_array()
+    {
+        if (std::holds_alternative<ArrowArray*>(m_array))
+        {
+            throw std::runtime_error("cannot extract an ArrowArray not owned by the structure");
+        }
+
+        ArrowArray res = std::get<ArrowArray>(std::move(m_array));
+        m_array = ArrowArray{};
+        reset();
+        return res;
+    }
+
+    [[nodiscard]] ArrowSchema arrow_proxy::extract_schema()
+    {
+        if (std::holds_alternative<ArrowSchema*>(m_schema))
+        {
+            throw std::runtime_error("cannot extract an ArrowSchema not owned by the structure");
+        }
+
+        ArrowSchema res = std::get<ArrowSchema>(std::move(m_schema));
+        m_schema = ArrowSchema{};
+        reset();
+        return res;
     }
 
     void arrow_proxy::update_null_count()
