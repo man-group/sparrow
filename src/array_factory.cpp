@@ -22,6 +22,7 @@
 #include "sparrow/layout/null_array.hpp"
 #include "sparrow/layout/variable_size_binary_array.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
+
 namespace sparrow
 {
     namespace detail
@@ -85,6 +86,8 @@ namespace sparrow
                 return detail::make_wrapper_ptr<primitive_array<std::int64_t>>(std::move(proxy));
             case data_type::UINT64:
                 return detail::make_wrapper_ptr<primitive_array<std::uint64_t>>(std::move(proxy));
+            case data_type::HALF_FLOAT:
+                return detail::make_wrapper_ptr<primitive_array<float16_t>>(std::move(proxy));
             case data_type::FLOAT:
                 return detail::make_wrapper_ptr<primitive_array<float>>(std::move(proxy));
             case data_type::DOUBLE:

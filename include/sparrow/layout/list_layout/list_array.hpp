@@ -144,12 +144,8 @@ namespace sparrow
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
 
-        bitmap_type::iterator bitmap_begin_impl();
-        bitmap_type::const_iterator bitmap_begin_impl() const;
-
         // data members
         cloning_ptr<array_wrapper> p_flat_array;
-        bitmap_type m_bitmap;
 
         // friend classes
         friend class array_crtp_base<DERIVED>;
@@ -242,7 +238,6 @@ namespace sparrow
     list_array_crtp_base<DERIVED>::list_array_crtp_base(arrow_proxy proxy)
         : base_type(std::move(proxy))
         , p_flat_array(array_factory(this->storage().children()[0].view()))
-        , m_bitmap(make_simple_bitmap(this->storage()))
     {
     }
 
@@ -305,18 +300,6 @@ namespace sparrow
         const auto r = this->derived_cast().offset_range(i);
         using st = typename list_value::size_type;
         return list_value{p_flat_array.get(), static_cast<st>(r.first), static_cast<st>(r.second)};
-    }
-
-    template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::bitmap_begin_impl() -> bitmap_type::iterator
-    {
-        return next(m_bitmap.begin(), this->storage().offset());
-    }
-
-    template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::bitmap_begin_impl() const -> bitmap_type::const_iterator
-    {
-        return next(m_bitmap.begin(), this->storage().offset());
     }
 
 #ifdef __GNUC__

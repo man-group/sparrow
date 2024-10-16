@@ -82,12 +82,8 @@ namespace sparrow
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
 
-        bitmap_type::iterator bitmap_begin_impl();
-        bitmap_type::const_iterator bitmap_begin_impl() const;
-
         // data members
         std::vector<cloning_ptr<array_wrapper>> m_children;
-        bitmap_type m_bitmap;
 
         // friend classes
         friend class array_crtp_base<self_type>;
@@ -100,7 +96,6 @@ namespace sparrow
     inline struct_array::struct_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
         , m_children(this->storage().children().size(), nullptr)
-        , m_bitmap(make_simple_bitmap(storage()))
     {
         for (std::size_t i = 0; i < m_children.size(); ++i)
         {
@@ -149,15 +144,5 @@ namespace sparrow
     inline auto struct_array::value(size_type i) const -> inner_const_reference
     {
         return struct_value{m_children, i};
-    }
-
-    inline auto struct_array::bitmap_begin_impl() -> bitmap_type::iterator
-    {
-        return next(m_bitmap.begin(), storage().offset());
-    }
-
-    inline auto struct_array::bitmap_begin_impl() const -> bitmap_type::const_iterator
-    {
-        return next(m_bitmap.begin(), storage().offset());
     }
 }
