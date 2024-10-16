@@ -112,6 +112,12 @@ namespace sparrow
                 }
             }
 
+            SUBCASE("operator==(struct_value, struct_value)")
+            {
+                CHECK(struct_arr[0] == struct_arr[0]);
+                CHECK(struct_arr[0] != struct_arr[1]);
+            }
+
             SUBCASE("consitency")
             {   
                 test::generic_consistency_test(struct_arr);

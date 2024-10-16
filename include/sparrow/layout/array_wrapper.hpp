@@ -38,6 +38,15 @@ namespace sparrow
                 return arrow_traits<typename ARRAY::inner_value_type>::type_id;
             }
         };
+
+        template <class ARRAY>
+        struct is_dictionary_encoded_array
+        {
+            constexpr static bool get()
+            {
+                return false;
+            }
+        };
     }
 
     /**
@@ -58,6 +67,7 @@ namespace sparrow
         wrapper_ptr clone() const;
 
         enum data_type data_type() const;
+        bool is_dictionary() const;
 
     protected:
 
@@ -67,6 +77,7 @@ namespace sparrow
     private:
 
         enum data_type m_data_type;
+        virtual bool is_dictionary_impl() const = 0;
         virtual wrapper_ptr clone_impl() const = 0;
     };
 
@@ -91,6 +102,7 @@ namespace sparrow
         constexpr enum data_type get_data_type() const;
 
         array_wrapper_impl(const array_wrapper_impl&);
+        bool is_dictionary_impl() const override;
         wrapper_ptr clone_impl() const override;
 
         using storage_type = std::variant<value_ptr<T>, std::shared_ptr<T>, T*>;
@@ -116,6 +128,11 @@ namespace sparrow
     inline enum data_type array_wrapper::data_type() const
     {
         return m_data_type;
+    }
+
+    inline bool array_wrapper::is_dictionary() const
+    {
+        return is_dictionary_impl();
     }
 
     inline array_wrapper::array_wrapper(enum data_type dt)
@@ -167,7 +184,6 @@ namespace sparrow
     constexpr enum data_type array_wrapper_impl<T>::get_data_type() const
     {
         return detail::get_data_type_from_array<T>::get();
-        //return arrow_traits<typename T::inner_value_type>::type_id;
     }
 
     template <class T>
@@ -185,6 +201,12 @@ namespace sparrow
         }, m_storage);
     }
 
+    template <class T>
+    bool array_wrapper_impl<T>::is_dictionary_impl() const
+    {
+        return detail::is_dictionary_encoded_array<T>::get();
+    }
+    
     template <class T>
     auto array_wrapper_impl<T>::clone_impl() const -> wrapper_ptr
     {

@@ -54,6 +54,7 @@ set(SPARROW_TESTS_SOURCES
     test_buffer.cpp
     test_dictionary_encoded_array.cpp
     test_dispatch.cpp
+    test_dynamic_bitset_view.cpp
     test_dynamic_bitset.cpp
     test_iterator.cpp
     test_list_array.cpp

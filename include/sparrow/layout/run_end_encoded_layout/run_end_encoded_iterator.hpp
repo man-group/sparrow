@@ -17,12 +17,12 @@
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/array_factory.hpp"
+#include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/layout/dispatch_lib.hpp"
 
 namespace sparrow
 {
@@ -39,12 +39,14 @@ namespace sparrow
         array_traits::const_reference
     >
     {   
+
     private:
         using array_ptr_type = std::conditional_t<CONST, const run_end_encoded_array *, run_end_encoded_array*>;
     public:
         run_encoded_array_iterator() = default;
         run_encoded_array_iterator(array_ptr_type array_ptr, std::uint64_t index, std::uint64_t run_end_index);
     private:
+
         bool equal(const run_encoded_array_iterator& rhs) const;
         void increment();
         array_traits::const_reference dereference() const;

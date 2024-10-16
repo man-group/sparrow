@@ -55,5 +55,23 @@ namespace sparrow
                 }
             }
         }
+
+        TEST_CASE("equality")
+        {
+            std::size_t begin = 2u;
+            std::size_t end = 7u;
+            std::size_t end3 = 8u;
+            array_type ar(make_arrow_proxy<scalar_value_type>());
+            array_type ar2(make_arrow_proxy<scalar_value_type>());
+            wrapper_type w(&ar);
+            wrapper_type w2(&ar);
+
+            list_value l(&w, begin, end);
+            list_value l2(&w2, begin, end);
+            list_value l3(&w, begin, end3);
+
+            CHECK(l != l3);
+            CHECK(l == l2);
+        }
     }
 }
