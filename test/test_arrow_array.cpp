@@ -17,6 +17,7 @@
 #include <ranges>
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
 #include "sparrow/c_interface.hpp"
 
 #include "arrow_array_schema_creation.hpp"
@@ -282,21 +283,21 @@ TEST_SUITE("C Data Interface")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             auto array_copy = sparrow::copy_array(array, schema);
-            CHECK_EQ(array.length , array_copy.length);
-            CHECK_EQ(array.null_count , array_copy.null_count);
-            CHECK_EQ(array.offset , array_copy.offset);
-            CHECK_EQ(array.n_buffers , array_copy.n_buffers);
-            CHECK_EQ(array.n_children , array_copy.n_children);
-            CHECK_NE(array.buffers , array_copy.buffers);
-            CHECK_NE(array.private_data , array_copy.private_data);
-            for(size_t i = 0; i < static_cast<size_t>(array.n_buffers); ++i)
+            CHECK_EQ(array.length, array_copy.length);
+            CHECK_EQ(array.null_count, array_copy.null_count);
+            CHECK_EQ(array.offset, array_copy.offset);
+            CHECK_EQ(array.n_buffers, array_copy.n_buffers);
+            CHECK_EQ(array.n_children, array_copy.n_children);
+            CHECK_NE(array.buffers, array_copy.buffers);
+            CHECK_NE(array.private_data, array_copy.private_data);
+            for (size_t i = 0; i < static_cast<size_t>(array.n_buffers); ++i)
             {
-                CHECK_NE(array.buffers[i] , array_copy.buffers[i]);
+                CHECK_NE(array.buffers[i], array_copy.buffers[i]);
             }
             auto array_buffers = reinterpret_cast<const int8_t**>(array.buffers);
             auto array_copy_buffers = reinterpret_cast<const int8_t**>(array_copy.buffers);
 
-            for(size_t i = 0; i < static_cast<size_t>(array.length); ++i)
+            for (size_t i = 0; i < static_cast<size_t>(array.length); ++i)
             {
                 CHECK_EQ(array_buffers[1][i], array_copy_buffers[1][i]);
             }
@@ -306,56 +307,71 @@ TEST_SUITE("C Data Interface")
         {
             auto [schema, array] = make_sparrow_arrow_schema_and_array();
             CHECK(sparrow::validate_format_with_arrow_array(sparrow::data_type::INT8, array));
-            //CHECK_FALSE(sparrow::validate_format_with_arrow_array(sparrow::data_type::FIXED_SIZED_LIST, array));
+            // CHECK_FALSE(sparrow::validate_format_with_arrow_array(sparrow::data_type::FIXED_SIZED_LIST,
+            // array));
         }
 
         SUBCASE("compute_buffer_size")
         {
-            CHECK_EQ(sparrow::compute_buffer_size(
-                sparrow::buffer_type::DATA,
-                10,
-                0,
-                sparrow::data_type::INT8,
-                {},
-                sparrow::buffer_type::VALIDITY
-            ), 10);
+            CHECK_EQ(
+                sparrow::compute_buffer_size(
+                    sparrow::buffer_type::DATA,
+                    10,
+                    0,
+                    sparrow::data_type::INT8,
+                    {},
+                    sparrow::buffer_type::VALIDITY
+                ),
+                10
+            );
 
-            CHECK_EQ(sparrow::compute_buffer_size(
-                sparrow::buffer_type::DATA,
-                10,
-                5,
-                sparrow::data_type::INT8,
-                {},
-                sparrow::buffer_type::VALIDITY
-            ), 15);
+            CHECK_EQ(
+                sparrow::compute_buffer_size(
+                    sparrow::buffer_type::DATA,
+                    10,
+                    5,
+                    sparrow::data_type::INT8,
+                    {},
+                    sparrow::buffer_type::VALIDITY
+                ),
+                15
+            );
 
-            CHECK_EQ(sparrow::compute_buffer_size(
-                sparrow::buffer_type::DATA,
-                10,
-                5,
-                sparrow::data_type::INT16,
-                {},
-                sparrow::buffer_type::VALIDITY
-            ), 30);
+            CHECK_EQ(
+                sparrow::compute_buffer_size(
+                    sparrow::buffer_type::DATA,
+                    10,
+                    5,
+                    sparrow::data_type::INT16,
+                    {},
+                    sparrow::buffer_type::VALIDITY
+                ),
+                30
+            );
 
-            CHECK_EQ(sparrow::compute_buffer_size(
-                sparrow::buffer_type::DATA,
-                10,
-                5,
-                sparrow::data_type::INT32,
-                {},
-                sparrow::buffer_type::VALIDITY
-            ), 60);
+            CHECK_EQ(
+                sparrow::compute_buffer_size(
+                    sparrow::buffer_type::DATA,
+                    10,
+                    5,
+                    sparrow::data_type::INT32,
+                    {},
+                    sparrow::buffer_type::VALIDITY
+                ),
+                60
+            );
 
-            CHECK_EQ(sparrow::compute_buffer_size(
-                sparrow::buffer_type::VALIDITY,
-                10,
-                5,
-                sparrow::data_type::UINT8,
-                {},
-                sparrow::buffer_type::VALIDITY
-            ), 2);
-
+            CHECK_EQ(
+                sparrow::compute_buffer_size(
+                    sparrow::buffer_type::VALIDITY,
+                    10,
+                    5,
+                    sparrow::data_type::UINT8,
+                    {},
+                    sparrow::buffer_type::VALIDITY
+                ),
+                2
+            );
         }
     }
 }
