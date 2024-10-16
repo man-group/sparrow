@@ -15,10 +15,12 @@
 #pragma once
 
 #include <numeric>
+#include <string>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 
 namespace sparrow::test
 {

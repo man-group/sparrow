@@ -16,9 +16,10 @@
 
 #include <cstdint>
 
-#include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
+
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_schema/smart_pointers.hpp"
+#include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
@@ -98,7 +99,7 @@ namespace sparrow
     /**
      * Release function to use for the `ArrowSchema.release` member.
      */
-    void release_arrow_schema(ArrowSchema* schema);
+    SPARROW_API void release_arrow_schema(ArrowSchema* schema);
 
     /**
      * Creates a default `ArrowSchema` unique pointer.
@@ -150,22 +151,6 @@ namespace sparrow
         schema.children = children;
         schema.dictionary = dictionary;
         schema.release = release_arrow_schema;
-    }
-    
-
-    inline void release_arrow_schema(ArrowSchema* schema)
-    {
-        SPARROW_ASSERT_FALSE(schema == nullptr);
-        SPARROW_ASSERT_TRUE(schema->release == std::addressof(release_arrow_schema));
-
-        if (schema->private_data != nullptr)
-        {
-            const auto private_data = static_cast<arrow_schema_private_data*>(schema->private_data);
-            delete private_data;
-            schema->private_data = nullptr;
-        }
-        release_common_arrow(*schema);
-        *schema = {};
     }
 
     /**
@@ -243,35 +228,7 @@ namespace sparrow
     /**
      * Fills the target `ArrowSchema` with a deep copy of the data from the source `ArrowSchema`.
      */
-    inline void copy_schema(const ArrowSchema& source, ArrowSchema& target)
-    {
-        SPARROW_ASSERT_TRUE(&source != &target);
-        target.flags = source.flags;
-        target.n_children = source.n_children;
-        if (source.n_children > 0)
-        {
-            target.children = new ArrowSchema*[static_cast<std::size_t>(source.n_children)];
-            for (int64_t i = 0; i < source.n_children; ++i)
-            {
-                SPARROW_ASSERT_TRUE(source.children[i] != nullptr);
-                target.children[i] = new ArrowSchema{};
-                copy_schema(*source.children[i], *target.children[i]);
-            }
-        }
-
-        if (source.dictionary != nullptr)
-        {
-            target.dictionary = new ArrowSchema{};
-            copy_schema(*source.dictionary, *target.dictionary);
-        }
-
-        target.private_data = new arrow_schema_private_data(source.format, source.name, source.metadata);
-        auto* private_data = static_cast<arrow_schema_private_data*>(target.private_data);
-        target.format = private_data->format_ptr();
-        target.name = private_data->name_ptr();
-        target.metadata = private_data->metadata_ptr();
-        target.release = release_arrow_schema;
-    }
+    SPARROW_API void copy_schema(const ArrowSchema& source, ArrowSchema& target);
 
     /**
      * Deep copy an `ArrowSchema`.
