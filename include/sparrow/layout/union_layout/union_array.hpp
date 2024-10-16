@@ -22,7 +22,7 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/layout/dispatch_lib.hpp"
+#include "sparrow/layout/array_helper.hpp"
 #include "sparrow/utils/crtp_base.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 
