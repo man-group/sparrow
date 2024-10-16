@@ -25,6 +25,7 @@
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
 #include "sparrow/layout/struct_layout/struct_array.hpp"
+#include "sparrow/layout/union_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 
 namespace sparrow
@@ -105,6 +106,10 @@ namespace sparrow
                 return func(unwrap_array<fixed_sized_list_array>(ar));
             case data_type::STRUCT:
                 return func(unwrap_array<struct_array>(ar));
+            case data_type::DENSE_UNION:
+                return func(unwrap_array<dense_union_array>(ar));
+            case data_type::SPARSE_UNION:
+                return func(unwrap_array<sparse_union_array>(ar));
             default:
                 throw std::invalid_argument("array type not supported");
             }

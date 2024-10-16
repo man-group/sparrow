@@ -18,33 +18,65 @@
 
 namespace sparrow::detail
 {
+    
+    template<class LAYOUT_TYPE>
+    class layout_functor_base
+    {
+        public:
+        using layout_type = LAYOUT_TYPE;
+        constexpr layout_functor_base() = default;
+        constexpr layout_functor_base& operator=(layout_functor_base&&) = default;
+        constexpr layout_functor_base(const layout_functor_base&) = default;
+        constexpr layout_functor_base(layout_functor_base&&) = default;
+        constexpr layout_functor_base& operator=(const layout_functor_base&) = default;
+
+        constexpr layout_functor_base(layout_type * layout)
+        : p_layout(layout)
+        {
+        }
+
+        protected:
+        layout_type * p_layout = nullptr;
+    };
+
+
     // Functor to get the value of the layout at index i.
     //
     // This is usefull to create a iterator over the values of a layout.
     // This functor will be passed to the functor_index_iterator.
     template<class LAYOUT_TYPE, class VALUE_TYPE>
-    class layout_value_functor
+    class layout_value_functor : public layout_functor_base<LAYOUT_TYPE>
     {
         public:
-        using layout_type = LAYOUT_TYPE;
+        using base_type = layout_functor_base<LAYOUT_TYPE>;
+        using base_type::base_type;
+        using base_type::operator=;
         using value_type = VALUE_TYPE;
-        constexpr layout_value_functor() = default;
-        constexpr layout_value_functor& operator=(layout_value_functor&&) = default;
-        constexpr layout_value_functor(const layout_value_functor&) = default;
-        constexpr layout_value_functor(layout_value_functor&&) = default;
-        constexpr layout_value_functor& operator=(const layout_value_functor&) = default;
-
-        constexpr layout_value_functor(layout_type * layout)
-        : p_layout(layout)
-        {
-        }
 
         value_type operator()(std::size_t i) const
         {
-            return p_layout->value(i);
+            return this->p_layout->value(i);
         }
-        private:
-        layout_type * p_layout = nullptr;
+    };
+
+
+    // Functor to get the optional-value of the layout at index i.
+    //
+    // This is usefull to create a iterator over the nullable-values of a layout.
+    // This functor will be passed to the functor_index_iterator.
+    template<class LAYOUT_TYPE, class VALUE_TYPE>
+    class layout_bracket_functor : public layout_functor_base<LAYOUT_TYPE>
+    {
+    public:
+        using base_type = layout_functor_base<LAYOUT_TYPE>;
+        using base_type::base_type;
+        using base_type::operator=;
+        using value_type = VALUE_TYPE;
+
+        value_type operator()(std::size_t i) const
+        {
+            return this->p_layout->operator[](i);
+        }
     };
 
 }; // namespace sparrow::detail

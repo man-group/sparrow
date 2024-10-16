@@ -39,13 +39,12 @@ namespace sparrow
         array_traits::const_reference
     >
     {   
+
+    private:
         using array_ptr_type = std::conditional_t<CONST, const run_end_encoded_array *, run_end_encoded_array*>;
-
     public:
-
         run_encoded_array_iterator() = default;
         run_encoded_array_iterator(array_ptr_type array_ptr, std::uint64_t index, std::uint64_t run_end_index);
-
     private:
 
         bool equal(const run_encoded_array_iterator& rhs) const;

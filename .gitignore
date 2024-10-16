@@ -44,3 +44,6 @@
 # Clangd cache
 .cache
 CMakeUserPresets.json
+
+# MacOS
+.DS_Store

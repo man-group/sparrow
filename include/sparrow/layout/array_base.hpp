@@ -22,6 +22,7 @@
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/crtp_base.hpp"
 
 namespace sparrow
 {
@@ -50,7 +51,7 @@ namespace sparrow
      * implements comme interface for arrays with a bitmap.
      */
     template <class D>
-    class array_crtp_base
+    class array_crtp_base : public crtp_base<D>
     {
     public:
         using self_type = array_crtp_base<D>;
@@ -122,8 +123,6 @@ namespace sparrow
         const_bitmap_iterator bitmap_begin() const;
         const_bitmap_iterator bitmap_end() const;
 
-        derived_type& derived_cast();
-        const derived_type& derived_cast() const;
 
     private:
 
@@ -155,33 +154,33 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::operator[](size_type i) -> reference
     {
-        SPARROW_ASSERT_TRUE(i < derived_cast().size());
+        SPARROW_ASSERT_TRUE(i < this->derived_cast().size());
         return reference(
-            inner_reference(derived_cast().value(i)),
-            derived_cast().has_value(i)
+            inner_reference(this->derived_cast().value(i)),
+            this->derived_cast().has_value(i)
         );
     }
 
     template <class D>
     auto array_crtp_base<D>::operator[](size_type i) const -> const_reference
     {
-        SPARROW_ASSERT_TRUE(i < derived_cast().size());
+        SPARROW_ASSERT_TRUE(i < this->derived_cast().size());
         return const_reference(
-            inner_const_reference(derived_cast().value(i)),
-            derived_cast().has_value(i)
+            inner_const_reference(this->derived_cast().value(i)),
+            this->derived_cast().has_value(i)
         );
     }
 
     template <class D>
     auto array_crtp_base<D>::begin() -> iterator
     {
-        return iterator(derived_cast().value_begin(), derived_cast().bitmap_begin());
+        return iterator(this->derived_cast().value_begin(), this->derived_cast().bitmap_begin());
     }
 
     template <class D>
     auto array_crtp_base<D>::end() -> iterator
     {
-        return iterator(derived_cast().value_end(), derived_cast().bitmap_end());
+        return iterator(this->derived_cast().value_end(), this->derived_cast().bitmap_end());
     }
 
     template <class D>
@@ -199,13 +198,13 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::cbegin() const -> const_iterator
     {
-        return const_iterator(derived_cast().value_cbegin(), derived_cast().bitmap_begin());
+        return const_iterator(this->derived_cast().value_cbegin(), this->derived_cast().bitmap_begin());
     }
 
     template <class D>
     auto array_crtp_base<D>::cend() const -> const_iterator
     {
-        return const_iterator(derived_cast().value_cend(), derived_cast().bitmap_end());
+        return const_iterator(this->derived_cast().value_cend(), this->derived_cast().bitmap_end());
     }
 
     template <class D>
@@ -217,7 +216,7 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::values() const -> const_value_range
     {
-        return const_value_range(derived_cast().value_cbegin(), derived_cast().value_cend());
+        return const_value_range(this->derived_cast().value_cbegin(), this->derived_cast().value_cend());
     }
 
     template <class D>
@@ -292,17 +291,6 @@ namespace sparrow
         return sparrow::next(bitmap_begin(), size());
     }
 
-    template <class D>
-    auto array_crtp_base<D>::derived_cast() -> derived_type&
-    {
-        return *static_cast<derived_type*>(this);
-    }
-
-    template <class D>
-    auto array_crtp_base<D>::derived_cast() const -> const derived_type&
-    {
-        return *static_cast<const derived_type*>(this);
-    }
 
     template <class D>
     auto array_crtp_base<D>::make_bitmap() -> bitmap_type
