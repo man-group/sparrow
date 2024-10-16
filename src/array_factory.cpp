@@ -22,6 +22,8 @@
 #include "sparrow/layout/null_array.hpp"
 #include "sparrow/layout/variable_size_binary_array.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
+#include "sparrow/layout/union_array.hpp"
+
 namespace sparrow
 {
     namespace detail
@@ -105,11 +107,13 @@ namespace sparrow
                 return detail::make_wrapper_ptr<variable_size_binary_array<std::string, std::string_view>>(std::move(proxy));
             case data_type::RUN_ENCODED:
                 return detail::make_wrapper_ptr<run_end_encoded_array>(std::move(proxy));
+            case data_type::DENSE_UNION:
+                return detail::make_wrapper_ptr<dense_union_array>(std::move(proxy));
+            case data_type::SPARSE_UNION:
+                return detail::make_wrapper_ptr<sparse_union_array>(std::move(proxy));
             case data_type::FIXED_SIZE_BINARY:
             case data_type::TIMESTAMP:
             case data_type::MAP:
-            case data_type::DENSE_UNION:
-            case data_type::SPARSE_UNION:
             case data_type::DECIMAL:
             case data_type::FIXED_WIDTH_BINARY:
                 throw std::runtime_error("not yet supported data type");

@@ -20,7 +20,7 @@
 #include "test_utils.hpp"
 #include "../test/external_array_data_creation.hpp"
 
-#include "sparrow/layout/union_layout/union_array.hpp"
+#include "sparrow/layout/union_array.hpp"
 
 namespace sparrow
 {
