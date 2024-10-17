@@ -332,6 +332,8 @@ namespace sparrow
             throw arrow_proxy_exception("Cannot set length on non-sparrow created ArrowArray");
         }
         array().length = static_cast<int64_t>(length);
+        update_buffers();
+        update_null_count();
     }
 
     [[nodiscard]] int64_t arrow_proxy::null_count() const
@@ -677,8 +679,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         auto bitmap = get_non_owning_dynamic_bitset();
         bitmap.resize(new_size, true);
-        set_null_count(bitmap.null_count());
         update_buffers();
+        set_null_count(static_cast<int64_t>(get_null_count()));
     }
 
     size_t arrow_proxy::insert_bitmap(size_t index, bool value)
@@ -688,6 +690,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(std::cmp_less_equal(index, length()))
         auto bitmap = get_non_owning_dynamic_bitset();
         auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), value);
+        update_buffers();
+        set_null_count(static_cast<int64_t>(get_null_count()));
         return std::distance(bitmap.begin(), it);
     }
 
@@ -702,6 +706,8 @@ namespace sparrow
         }
         auto bitmap = get_non_owning_dynamic_bitset();
         auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), count, value);
+        update_buffers();
+        set_null_count(static_cast<int64_t>(get_null_count()));
         return std::distance(bitmap.begin(), it);
     }
 
@@ -716,6 +722,8 @@ namespace sparrow
         }
         auto bitmap = get_non_owning_dynamic_bitset();
         auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), values.begin(), values.end());
+        update_buffers();
+        set_null_count(static_cast<int64_t>(get_null_count()));
         return std::distance(bitmap.begin(), it);
     }
 
@@ -726,6 +734,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(std::cmp_less(index, length()))
         auto bitmap = get_non_owning_dynamic_bitset();
         auto it = bitmap.erase(sparrow::next(bitmap.cbegin(), index));
+        update_buffers();
+        set_null_count(static_cast<int64_t>(get_null_count()));
         return std::distance(bitmap.begin(), it);
     }
 
@@ -738,6 +748,8 @@ namespace sparrow
         const auto it_first = sparrow::next(bitmap.cbegin(), index);
         const auto it_last = sparrow::next(it_first, count);
         const auto it = bitmap.erase(it_first, it_last);
+        update_buffers();
+        set_null_count(static_cast<int64_t>(get_null_count()));
         return std::distance(bitmap.begin(), it);
     }
 
@@ -746,6 +758,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(is_created_with_sparrow())
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         insert_bitmap(length(), value);
+        update_buffers();
+        set_null_count(static_cast<int64_t>(get_null_count()));
     }
 
     void arrow_proxy::pop_back_bitmap()
@@ -753,16 +767,24 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(is_created_with_sparrow())
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         erase_bitmap(length() - 1);
+        update_buffers();
+        set_null_count(static_cast<int64_t>(get_null_count()));
     }
 
-    size_t arrow_proxy::get_null_count()
+    size_t arrow_proxy::get_null_count() const
     {
         const size_t bitmap_size = length() + offset();
         const dynamic_bitset_view<const uint8_t> bitmap{
             buffers()[bitmap_buffer_index].data(),
             bitmap_size
         };
-        return bitmap.null_count();
+        const size_t null_count_after_before_offset = std::count_if(
+            bitmap.begin(),
+            sparrow::next(bitmap.begin() ,offset()),
+            [](const bool value) { return !value; }
+        );
+
+        return bitmap.null_count() - null_count_after_before_offset;
     }
 
 

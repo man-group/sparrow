@@ -183,9 +183,7 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
     ${SPARROW_SOURCE_DIR}/list_value.cpp
     ${SPARROW_SOURCE_DIR}/run_encoded_array.cpp
-    ${SPARROW_SOURCE_DIR}/struct_value.cpp
-    ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy_bitmap_manipulation.cpp
-)
+    ${SPARROW_SOURCE_DIR}/struct_value.cpp)
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
 # TODO: handle static lib, so name and versionning

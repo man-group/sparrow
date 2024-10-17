@@ -17,7 +17,6 @@
 #include <cstddef>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
-#include "sparrow/arrow_array_schema_proxy_bitmap_manipulation.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/iterator.hpp"
@@ -105,6 +104,8 @@ namespace sparrow
         const_value_iterator value_cend() const;
 
         // Modifiers
+
+        buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
 
         void resize_values(size_type new_length, inner_value_type value);
 
@@ -209,12 +210,17 @@ namespace sparrow
     }
 
     template <class T>
+    buffer_adaptor<T, buffer<uint8_t>&> primitive_array<T>::get_data_buffer()
+    {
+        auto& buffers = storage().get_array_private_data()->buffers();
+        return make_buffer_adaptor<T>(buffers[DATA_BUFFER_INDEX]);
+    }
+
+    template <class T>
     void primitive_array<T>::resize_values(size_type new_length, inner_value_type value)
     {
         const size_t new_size = new_length + static_cast<size_t>(storage().offset());
-        auto private_data = static_cast<arrow_array_private_data*>(storage().array().private_data);
-        auto data_buffer = make_buffer_adaptor<T>(private_data->buffers()[DATA_BUFFER_INDEX]);
-        data_buffer.resize(new_size, value);
+        get_data_buffer().resize(new_size, value);
     }
 
     template <class T>
@@ -224,9 +230,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= value_cend());
         const auto distance = std::distance(value_cbegin(), pos);
-        auto private_data = static_cast<arrow_array_private_data*>(storage().array().private_data);
-        auto data_buffer = make_buffer_adaptor<T>(private_data->buffers()[DATA_BUFFER_INDEX]);
-        data_buffer.insert(pos, count, value);
+        get_data_buffer().insert(pos, count, value);
         return sparrow::next(this->value_begin(), distance);
     }
 
@@ -238,9 +242,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= value_cend());
         const auto distance = std::distance(value_cbegin(), pos);
-        auto private_data = static_cast<arrow_array_private_data*>(storage().array().private_data);
-        auto data_buffer = make_buffer_adaptor<T>(private_data->buffers()[DATA_BUFFER_INDEX]);
-        data_buffer.insert(pos, first, last);
+        get_data_buffer().insert(pos, first, last);
         return sparrow::next(this->value_begin(), distance);
     }
 
@@ -250,8 +252,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(this->value_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos < this->value_cend());
         const size_type distance = static_cast<size_t>(std::distance(this->value_cbegin(), pos));
-        auto private_data = static_cast<arrow_array_private_data*>(storage().array().private_data);
-        auto data_buffer = make_buffer_adaptor<T>(private_data->buffers()[DATA_BUFFER_INDEX]);
+        auto data_buffer = get_data_buffer();
         const auto first = sparrow::next(data_buffer.cbegin(), distance);
         const auto last = sparrow::next(first, count);
         data_buffer.erase(first, last);

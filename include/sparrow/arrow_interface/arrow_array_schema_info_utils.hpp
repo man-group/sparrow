@@ -232,7 +232,7 @@ namespace sparrow
         mpl::unreachable();
     }
 
-    bool has_bitmap(data_type dt)
+    constexpr bool has_bitmap(data_type dt)
     {
         switch (dt)
         {
@@ -258,6 +258,9 @@ namespace sparrow
             case data_type::FIXED_SIZE_BINARY:
             case data_type::FIXED_WIDTH_BINARY:
             case data_type::LARGE_LIST:
+            case data_type::LIST_VIEW:
+            case data_type::LARGE_LIST_VIEW:
+            case data_type::FIXED_SIZED_LIST:
                 return true;
             case data_type::NA:
             case data_type::SPARSE_UNION:
