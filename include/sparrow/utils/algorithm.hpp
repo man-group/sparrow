@@ -19,6 +19,7 @@
 #include <concepts>
 
 #include "sparrow/config/config.hpp"
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
@@ -122,6 +123,16 @@ namespace sparrow
     constexpr auto lexicographical_compare(const R1& r1, const R2& r2) -> bool
     {
         return lexicographical_compare_three_way(r1, r2) == std::strong_ordering::less;
+    }
+
+    /**
+     * Rounds up a number to the nearest multiple of another number.
+     */
+    template <std::integral T>
+    constexpr T round_up(T to_round, T multiple)
+    {
+        SPARROW_ASSERT_TRUE(multiple > 0)
+        return ((to_round + multiple - 1) / multiple) * multiple;
     }
 
 }  // namespace sparrow

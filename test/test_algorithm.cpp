@@ -44,4 +44,18 @@ TEST_SUITE("algorithm")
         const std::vector<int> v3 = {};
         CHECK_EQ(sparrow::lexicographical_compare_three_way(v2, v3), std::strong_ordering::equal);
     }
+
+    TEST_CASE("round_up")
+    {
+        CHECK_EQ(sparrow::round_up(0, 4), 0);
+        CHECK_EQ(sparrow::round_up(1, 4), 4);
+        CHECK_EQ(sparrow::round_up(2, 4), 4);
+        CHECK_EQ(sparrow::round_up(3, 4), 4);
+        CHECK_EQ(sparrow::round_up(4, 4), 4);
+        CHECK_EQ(sparrow::round_up(5, 4), 8);
+        CHECK_EQ(sparrow::round_up(6, 4), 8);
+        CHECK_EQ(sparrow::round_up(7, 4), 8);
+        CHECK_EQ(sparrow::round_up(8, 4), 8);
+        CHECK_EQ(sparrow::round_up(9, 4), 12);
+    }
 }

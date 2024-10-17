@@ -55,7 +55,7 @@ namespace sparrow
     }
 
     template <std::ranges::range R>
-        requires(std::integral<std::ranges::range_value_t<R>>)
+        requires(std::integral<std::ranges::range_value_t<R>> && !std::same_as<std::ranges::range_value_t<R>, bool>)
     buffer<uint8_t> make_bitmap_buffer(size_t count, R&& nulls)
     {
         if (!std::ranges::empty(nulls))
@@ -96,6 +96,16 @@ namespace sparrow
             range_to_buffer(std::move(range))
         };
         return make_arrow_array(length, null_count, offset, std::move(value_buffers), 0, nullptr, nullptr);
+    }
+
+    inline ArrowSchema make_primitive_arrow_schema(
+        data_type data_type,
+        std::string_view name,
+        std::optional<std::string_view> metadata,
+        std::optional<ArrowFlag> arrow_flag
+    )
+    {
+        return make_arrow_schema(data_type_to_format(data_type), name, metadata, arrow_flag, 0, nullptr, nullptr);
     }
 
     template <
