@@ -179,12 +179,12 @@ namespace sparrow
     };
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    class variable_size_binary_array final : public array_crtp_base<variable_size_binary_array<T, CR, OT>>
+    class variable_size_binary_array final : public array_bitmap_base<variable_size_binary_array<T, CR, OT>>
     {
     public:
 
         using self_type = variable_size_binary_array<T, CR, OT>;
-        using base_type = array_crtp_base<self_type>;
+        using base_type = array_bitmap_base<self_type>;
         using inner_types = array_inner_types<self_type>;
         using inner_value_type = typename inner_types::inner_value_type;
         using inner_reference = typename inner_types::inner_reference;

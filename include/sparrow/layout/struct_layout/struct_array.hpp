@@ -41,12 +41,12 @@ namespace sparrow
         using iterator_tag = std::random_access_iterator_tag;
     };
 
-    class struct_array final : public array_crtp_base<struct_array>
+    class struct_array final : public array_bitmap_base<struct_array>
     {
     public:
 
         using self_type = struct_array;
-        using base_type = array_crtp_base<self_type>;
+        using base_type = array_bitmap_base<self_type>;
         using inner_types = array_inner_types<self_type>;
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;

@@ -105,8 +105,8 @@ namespace sparrow
 
         array_crtp_base(arrow_proxy);
 
-        array_crtp_base(const array_crtp_base&);
-        array_crtp_base& operator=(const array_crtp_base&);
+        array_crtp_base(const array_crtp_base&) = default;
+        array_crtp_base& operator=(const array_crtp_base&) = default;
 
         array_crtp_base(array_crtp_base&&) = default;
         array_crtp_base& operator=(array_crtp_base&&) = default;
@@ -125,13 +125,9 @@ namespace sparrow
 
     private:
 
-        static constexpr std::size_t m_bitmap_buffer_index = 0;
-
         arrow_proxy& get_arrow_proxy();
-        bitmap_type make_bitmap();
 
         arrow_proxy m_proxy;
-        bitmap_type m_bitmap;
 
         // friend classes
         friend class layout_iterator<self_type, false>;
@@ -142,6 +138,39 @@ namespace sparrow
 
     template <class D>
     bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs);
+
+    /*
+     * Base class for arrays using a validity buffer for
+     * defining their bitmap.
+     */
+    template <class D>
+    class array_bitmap_base : public array_crtp_base<D>
+    {
+    public:
+
+        using base_type = array_crtp_base<D>;
+        using bitmap_type = typename base_type::bitmap_type;
+
+    protected:
+
+        array_bitmap_base(arrow_proxy);
+
+        array_bitmap_base(const array_bitmap_base&);
+        array_bitmap_base& operator=(const array_bitmap_base&);
+
+        array_bitmap_base(array_bitmap_base&&) = default;
+        array_bitmap_base& operator=(array_bitmap_base&&) = default;
+
+        bitmap_type& get_bitmap();
+        const bitmap_type& get_bitmap() const;
+
+    private:
+
+        static constexpr std::size_t m_bitmap_buffer_index = 0;
+
+        bitmap_type make_bitmap();
+        bitmap_type m_bitmap;
+    };
 
     /**********************************
      * array_crtp_base implementation *
@@ -224,23 +253,7 @@ namespace sparrow
     template <class D>
     array_crtp_base<D>::array_crtp_base(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
-        , m_bitmap(make_bitmap())
     {
-    }
-
-    template <class D>
-    array_crtp_base<D>::array_crtp_base(const array_crtp_base& rhs)
-        : m_proxy(rhs.m_proxy)
-        , m_bitmap(make_bitmap())
-    {
-    }
-
-    template <class D>
-    array_crtp_base<D>& array_crtp_base<D>::operator=(const array_crtp_base& rhs)
-    {
-        m_proxy = rhs.m_proxy;
-        m_bitmap = make_bitmap();
-        return *this;
     }
     
     template <class D>
@@ -272,7 +285,7 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::bitmap_begin() -> bitmap_iterator
     {
-        return sparrow::next(m_bitmap.begin(), storage().offset());
+        return sparrow::next(this->derived_cast().get_bitmap().begin(), storage().offset());
     }
 
     template <class D>
@@ -284,7 +297,7 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::bitmap_begin() const -> const_bitmap_iterator
     {
-        return sparrow::next(m_bitmap.cbegin(), storage().offset());
+        return sparrow::next(this->derived_cast().get_bitmap().cbegin(), storage().offset());
     }
 
     template <class D>
@@ -300,16 +313,53 @@ namespace sparrow
     }
 
     template <class D>
-    auto array_crtp_base<D>::make_bitmap() -> bitmap_type
-    {
-        SPARROW_ASSERT_TRUE(storage().buffers().size() > m_bitmap_buffer_index);
-        const auto bitmap_size = static_cast<std::size_t>(storage().length() + storage().offset());
-        return bitmap_type(storage().buffers()[m_bitmap_buffer_index].data(), bitmap_size);
-    }
-
-    template <class D>
     bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs)
     {
         return std::ranges::equal(lhs, rhs);
+    }
+
+    /************************************
+     * array_bitmap_base implementation *
+     ************************************/
+
+    template <class D>
+    array_bitmap_base<D>::array_bitmap_base(arrow_proxy proxy)
+        : base_type(std::move(proxy))
+        , m_bitmap(make_bitmap())
+    {
+    }
+
+    template <class D>
+    array_bitmap_base<D>::array_bitmap_base(const array_bitmap_base& rhs)
+        : base_type(rhs)
+        , m_bitmap(make_bitmap())
+    {
+    }
+    template <class D>
+    array_bitmap_base<D>& array_bitmap_base<D>::operator=(const array_bitmap_base& rhs)
+    {
+        base_type::operator=(rhs);
+        m_bitmap = make_bitmap();
+        return *this;
+    }
+
+    template <class D>
+    auto array_bitmap_base<D>::get_bitmap() -> bitmap_type&
+    {
+        return m_bitmap;
+    }
+
+    template <class D>
+    auto array_bitmap_base<D>::get_bitmap() const -> const bitmap_type&
+    {
+        return m_bitmap;
+    }
+
+    template <class D>
+    auto array_bitmap_base<D>::make_bitmap() -> bitmap_type
+    {
+        SPARROW_ASSERT_TRUE(this->storage().buffers().size() > m_bitmap_buffer_index);
+        const auto bitmap_size = static_cast<std::size_t>(this->storage().length() + this->storage().offset());
+        return bitmap_type(this->storage().buffers()[m_bitmap_buffer_index].data(), bitmap_size);
     }
 }
