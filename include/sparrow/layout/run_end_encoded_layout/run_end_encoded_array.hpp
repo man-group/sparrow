@@ -75,6 +75,8 @@ namespace sparrow
         SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);
         SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
 
+        arrow_proxy& get_arrow_proxy();
+
         arrow_proxy m_proxy;
         std::uint64_t m_encoded_length;
         
@@ -85,6 +87,8 @@ namespace sparrow
         // friend classes
         friend class run_encoded_array_iterator<false>;
         friend class run_encoded_array_iterator<true>;
+        template <class T>
+        friend class array_wrapper_impl;
     };
 
     inline run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy) 
@@ -120,6 +124,11 @@ namespace sparrow
         return ret;
     }
     
+    inline arrow_proxy& run_end_encoded_array::get_arrow_proxy()
+    {
+        return m_proxy;
+    }
+
     inline auto run_end_encoded_array::operator[](std::uint64_t i) -> array_traits::const_reference
     {
         return static_cast<const run_end_encoded_array*>(this)->operator[](i);

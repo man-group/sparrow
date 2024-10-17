@@ -72,6 +72,134 @@ namespace sparrow
             }
         }
         TEST_CASE_TEMPLATE_APPLY(access_operator_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("owns_arrow_strucure", AR, owns_arrow_structure_id)
+        {
+            SUBCASE("owning")
+            {
+                constexpr size_t size = 10;
+                using scalar_value_type = typename AR::inner_value_type;
+                array ar = test::make_array<scalar_value_type>(size);
+
+                CHECK(ar.owns_arrow_array());
+                CHECK(ar.owns_arrow_schema());
+            }
+
+            SUBCASE("not owning")
+            {
+                constexpr size_t offset = 0;
+                constexpr size_t size = 10;
+                using scalar_value_type = typename AR::inner_value_type;
+                ArrowSchema sc{};
+                ArrowArray ar{};
+                test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
+                array a(&ar, &sc);
+
+                CHECK(!a.owns_arrow_array());
+                CHECK(!a.owns_arrow_schema());
+            }
+        }
+        TEST_CASE_TEMPLATE_APPLY(owns_arrow_structure_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("get_arrow_structure", AR, get_arrow_structure_id)
+        {
+            constexpr size_t offset = 0;
+            constexpr size_t size = 10;
+            using scalar_value_type = typename AR::inner_value_type;
+            
+            ArrowSchema sc_ctrl{};
+            ArrowArray ar_ctrl{};
+            test::fill_schema_and_array<scalar_value_type>(sc_ctrl, ar_ctrl, size, offset, {});
+            auto pa_ctrl = primitive_array<scalar_value_type>(arrow_proxy(std::move(ar_ctrl), std::move(sc_ctrl)));
+
+            SUBCASE("not owning")
+            {
+                ArrowSchema sc{};
+                ArrowArray ar{};
+                test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
+                array a(&ar, &sc);
+
+                ArrowSchema* sc_ptr = nullptr;
+                ArrowArray* ar_ptr = nullptr;
+                a.get_arrow_array(ar_ptr).get_arrow_schema(sc_ptr);
+                // Now sc_ptr and ar_ptr points to &sc and &ar
+
+                auto pa = primitive_array<scalar_value_type>(arrow_proxy(ar_ptr, sc_ptr));
+
+                CHECK_EQ(pa, pa_ctrl);
+
+                sc.release(&sc);
+                ar.release(&ar);
+                sc_ptr = nullptr;
+                ar_ptr = nullptr;
+            }
+
+            SUBCASE("owning")
+            {
+                ArrowSchema sc{};
+                ArrowArray ar{};
+                test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
+                array a(std::move(ar), std::move(sc));
+
+                ArrowSchema* sc_ptr = nullptr;
+                ArrowArray* ar_ptr = nullptr;
+                a.get_arrow_array(ar_ptr).get_arrow_schema(sc_ptr);
+                // Now sc_ptr and ar_ptr points to &sc and &ar
+
+                auto pa = primitive_array<scalar_value_type>(arrow_proxy(ar_ptr, sc_ptr));
+
+                CHECK_EQ(pa, pa_ctrl);
+
+                sc_ptr = nullptr;
+                ar_ptr = nullptr;
+            }
+        }
+        TEST_CASE_TEMPLATE_APPLY(get_arrow_structure_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("extract_arrow_structure", AR, extract_arrow_structure_id)
+        {
+            constexpr size_t offset = 0;
+            constexpr size_t size = 10;
+            using scalar_value_type = typename AR::inner_value_type;
+
+            ArrowSchema sc_ctrl{};
+            ArrowArray ar_ctrl{};
+            test::fill_schema_and_array<scalar_value_type>(sc_ctrl, ar_ctrl, size, offset, {});
+            auto pa_ctrl = primitive_array<scalar_value_type>(arrow_proxy(std::move(ar_ctrl), std::move(sc_ctrl)));
+
+            SUBCASE("not owning")
+            {
+                ArrowSchema sc{};
+                ArrowArray ar{};
+                test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
+                array a(&ar, &sc);
+
+                ArrowSchema sc_dst;
+                ArrowArray ar_dst;
+                CHECK_THROWS(std::move(a).extract_arrow_array(ar_dst));
+                CHECK_THROWS(std::move(a).extract_arrow_schema(sc_dst));
+
+                sc.release(&sc);
+                ar.release(&ar);
+            }
+
+            SUBCASE("owning")
+            {
+                ArrowSchema sc{};
+                ArrowArray ar{};
+                test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
+                array a(std::move(ar), std::move(sc));
+
+                ArrowSchema sc_dst;
+                ArrowArray ar_dst;
+                std::move(a).extract_arrow_array(ar_dst).extract_arrow_schema(sc_dst);
+
+                auto pa = primitive_array<scalar_value_type>(arrow_proxy(std::move(ar_dst), std::move(sc_dst)));
+
+                CHECK_EQ(pa, pa_ctrl);
+            }
+        }
+        TEST_CASE_TEMPLATE_APPLY(extract_arrow_structure_id, testing_types);
     }
 }
 

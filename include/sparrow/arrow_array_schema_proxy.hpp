@@ -225,9 +225,13 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API arrow_proxy view();
 
+        [[nodiscard]] SPARROW_API bool owns_array() const;
+        [[nodiscard]] SPARROW_API ArrowArray extract_array();
         [[nodiscard]] SPARROW_API ArrowArray& array();
         [[nodiscard]] SPARROW_API const ArrowArray& array() const;
 
+        [[nodiscard]] SPARROW_API bool owns_schema() const;
+        [[nodiscard]] SPARROW_API ArrowSchema extract_schema();
         [[nodiscard]] SPARROW_API ArrowSchema& schema();
         [[nodiscard]] SPARROW_API const ArrowSchema& schema() const;
 
@@ -254,6 +258,7 @@ namespace sparrow
         void update_children();
         void update_dictionary();
         void update_null_count();
+        void reset();
 
         [[nodiscard]] bool array_created_with_sparrow() const;
         [[nodiscard]] bool schema_created_with_sparrow() const;

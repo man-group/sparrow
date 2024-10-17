@@ -123,11 +123,11 @@ namespace sparrow
         const_bitmap_iterator bitmap_begin() const;
         const_bitmap_iterator bitmap_end() const;
 
-
     private:
 
         static constexpr std::size_t m_bitmap_buffer_index = 0;
 
+        arrow_proxy& get_arrow_proxy();
         bitmap_type make_bitmap();
 
         arrow_proxy m_proxy;
@@ -136,6 +136,8 @@ namespace sparrow
         // friend classes
         friend class layout_iterator<self_type, false>;
         friend class layout_iterator<self_type, true>;
+        template <class T>
+        friend class array_wrapper_impl;
     };
 
     template <class D>
@@ -291,6 +293,11 @@ namespace sparrow
         return sparrow::next(bitmap_begin(), size());
     }
 
+    template <class D>
+    auto array_crtp_base<D>::get_arrow_proxy() -> arrow_proxy&
+    {
+        return m_proxy;
+    }
 
     template <class D>
     auto array_crtp_base<D>::make_bitmap() -> bitmap_type
