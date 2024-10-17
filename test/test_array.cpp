@@ -122,10 +122,16 @@ namespace sparrow
                 ArrowSchema* sc_ptr = nullptr;
                 ArrowArray* ar_ptr = nullptr;
                 a.get_arrow_array(ar_ptr).get_arrow_schema(sc_ptr);
+                // Now sc_ptr and ar_ptr points to &sc and &ar
 
                 auto pa = primitive_array<scalar_value_type>(arrow_proxy(ar_ptr, sc_ptr));
 
                 CHECK_EQ(pa, pa_ctrl);
+
+                sc.release(&sc);
+                ar.release(&ar);
+                sc_ptr = nullptr;
+                ar_ptr = nullptr;
             }
 
             SUBCASE("owning")
@@ -138,10 +144,14 @@ namespace sparrow
                 ArrowSchema* sc_ptr = nullptr;
                 ArrowArray* ar_ptr = nullptr;
                 a.get_arrow_array(ar_ptr).get_arrow_schema(sc_ptr);
+                // Now sc_ptr and ar_ptr points to &sc and &ar
 
                 auto pa = primitive_array<scalar_value_type>(arrow_proxy(ar_ptr, sc_ptr));
 
                 CHECK_EQ(pa, pa_ctrl);
+
+                sc_ptr = nullptr;
+                ar_ptr = nullptr;
             }
         }
         TEST_CASE_TEMPLATE_APPLY(get_arrow_structure_id, testing_types);
@@ -168,6 +178,9 @@ namespace sparrow
                 ArrowArray ar_dst;
                 CHECK_THROWS(std::move(a).extract_arrow_array(ar_dst));
                 CHECK_THROWS(std::move(a).extract_arrow_schema(sc_dst));
+
+                sc.release(&sc);
+                ar.release(&ar);
             }
 
             SUBCASE("owning")
