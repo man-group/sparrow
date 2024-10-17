@@ -100,12 +100,12 @@ namespace sparrow
     // - big-list-view-array
     // - fixed-size-list-array
     template <class DERIVED>
-    class list_array_crtp_base : public array_crtp_base<DERIVED>
+    class list_array_crtp_base : public array_bitmap_base<DERIVED>
     {
     public:
 
         using self_type = list_array_crtp_base<DERIVED>;
-        using base_type = array_crtp_base<DERIVED>;
+        using base_type = array_bitmap_base<DERIVED>;
         using inner_types = array_inner_types<DERIVED>;
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;

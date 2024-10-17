@@ -42,12 +42,12 @@ namespace sparrow
     };
 
     template <class T>
-    class primitive_array final : public array_crtp_base<primitive_array<T>>
+    class primitive_array final : public array_bitmap_base<primitive_array<T>>
     {
     public:
 
         using self_type = primitive_array<T>;
-        using base_type = array_crtp_base<self_type>;
+        using base_type = array_bitmap_base<self_type>;
         using inner_types = array_inner_types<self_type>;
         using inner_value_type = typename inner_types::inner_value_type;
         using inner_reference = typename inner_types::inner_reference;
