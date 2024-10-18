@@ -71,6 +71,29 @@ namespace sparrow
             CHECK_NOTHROW(layout_type{make_arrow_proxy()});
         }
 
+        TEST_CASE("copy")
+        {
+            layout_type ar(make_arrow_proxy());
+            layout_type ar2(ar);
+            CHECK_EQ(ar, ar2);
+
+            layout_type ar3(make_arrow_proxy());
+            ar3 = ar;
+            CHECK_EQ(ar, ar3);
+        }
+
+        TEST_CASE("move")
+        {
+            layout_type ar(make_arrow_proxy());
+            layout_type ar2(ar);
+            layout_type ar3(std::move(ar));
+            CHECK_EQ(ar2, ar3);
+
+            layout_type ar4(make_arrow_proxy());
+            ar4 = std::move(ar3);
+            CHECK_EQ(ar2, ar4);
+        }
+
         TEST_CASE("size")
         {
             const layout_type dict(make_arrow_proxy());

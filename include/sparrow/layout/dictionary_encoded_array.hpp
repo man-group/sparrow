@@ -104,6 +104,12 @@ namespace sparrow
 
         explicit dictionary_encoded_array(arrow_proxy);
 
+        dictionary_encoded_array(const self_type&);
+        self_type& operator=(const self_type&);
+
+        dictionary_encoded_array(self_type&&);
+        self_type& operator=(self_type&&);
+
         size_type size() const;
 
         const_reference operator[](size_type i) const;
@@ -139,6 +145,9 @@ namespace sparrow
         friend class array_wrapper_impl;
     };
 
+    template <class IT>
+    bool operator==(const dictionary_encoded_array<IT>& lhs, const dictionary_encoded_array<IT>& rhs);
+
     /*******************************************
      * dictionary_encoded_array implementation *
      *******************************************/
@@ -150,6 +159,47 @@ namespace sparrow
         , p_values_layout(create_values_layout(m_proxy))
     {
         SPARROW_ASSERT_TRUE(data_type_is_integer(m_proxy.data_type()));
+    }
+
+    template <std::integral IT>
+    dictionary_encoded_array<IT>::dictionary_encoded_array(const self_type& rhs)
+        : m_proxy(rhs.m_proxy)
+        , m_keys_layout(create_keys_layout(m_proxy))
+        , p_values_layout(create_values_layout(m_proxy))
+    {
+    }
+
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::operator=(const self_type& rhs) -> self_type&
+    {
+        if (this != &rhs)
+        {
+            m_proxy = rhs.m_proxy;
+            m_keys_layout = create_keys_layout(m_proxy);
+            p_values_layout = create_values_layout(m_proxy);
+        }
+        return *this;
+    }
+
+    template <std::integral IT>
+    dictionary_encoded_array<IT>::dictionary_encoded_array(self_type&& rhs)
+        : m_proxy(std::move(rhs.m_proxy))
+        , m_keys_layout(create_keys_layout(m_proxy))
+        , p_values_layout(create_values_layout(m_proxy))
+    {
+    }
+
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::operator=(self_type&& rhs) -> self_type&
+    {
+        if (this != &rhs)
+        {
+            using std::swap;
+            swap(m_proxy, rhs.m_proxy);
+            m_keys_layout = create_keys_layout(m_proxy);
+            p_values_layout = create_values_layout(m_proxy);
+        }
+        return *this;
     }
 
     template <std::integral IT>
@@ -256,5 +306,11 @@ namespace sparrow
     auto dictionary_encoded_array<IT>::get_arrow_proxy() -> arrow_proxy&
     {
         return m_proxy;
+    }
+
+    template <class IT>
+    bool operator==(const dictionary_encoded_array<IT>& lhs, const dictionary_encoded_array<IT>& rhs)
+    {
+        return std::ranges::equal(lhs, rhs);
     }
 }

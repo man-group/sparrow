@@ -35,6 +35,33 @@ namespace sparrow
             CHECK_EQ(ar.size(), size - offset);
         }
 
+        TEST_CASE("copy")
+        {
+            array_test_type ar(make_arrow_proxy<scalar_value_type>(size, offset));
+            array_test_type ar2(ar);
+
+            CHECK_EQ(ar, ar2);
+
+            array_test_type ar3(make_arrow_proxy<scalar_value_type>(size + 3u, offset));
+            CHECK_NE(ar, ar3);
+            ar3 = ar;
+            CHECK_EQ(ar, ar3);
+        }
+
+        TEST_CASE("move")
+        {
+            array_test_type ar(make_arrow_proxy<scalar_value_type>(size, offset));
+            array_test_type ar2(ar);
+
+            array_test_type ar3(std::move(ar));
+            CHECK_EQ(ar2, ar3);
+
+            array_test_type ar4(make_arrow_proxy<scalar_value_type>(size + 3u, offset));
+            CHECK_NE(ar2, ar4);
+            ar4 = std::move(ar2);
+            CHECK_EQ(ar3, ar4);
+        }
+
         TEST_CASE("const operator[]")
         {
             auto pr = make_arrow_proxy<scalar_value_type>(size, offset);
