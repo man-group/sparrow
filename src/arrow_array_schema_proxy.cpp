@@ -160,7 +160,7 @@ namespace sparrow
     {
         other.m_array = {};
         other.m_schema = {};
-        other.m_buffers.clear();
+        other.reset();
         update_buffers();
         update_children();
         update_dictionary();

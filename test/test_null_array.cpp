@@ -34,6 +34,33 @@ namespace sparrow
             CHECK_EQ(ar.size(), size);
         }
 
+        TEST_CASE("copy")
+        {
+            constexpr std::size_t size = 10u;
+            null_array ar(make_arrow_proxy<null_type>(size));
+            null_array ar2(ar);
+            CHECK_EQ(ar, ar2);
+
+            null_array ar3(make_arrow_proxy<null_type>(size + 2u));
+            CHECK_NE(ar, ar3);
+            ar3 = ar;
+            CHECK_EQ(ar, ar3);
+        }
+
+        TEST_CASE("move")
+        {
+            constexpr std::size_t size = 10u;
+            null_array ar(make_arrow_proxy<null_type>(size));
+            null_array ar2(ar);
+            null_array ar3(std::move(ar));
+            CHECK_EQ(ar3, ar2);
+
+            null_array ar4(make_arrow_proxy<null_type>(size + 3u));
+            CHECK_NE(ar4, ar2);
+            ar4 = std::move(ar3);
+            CHECK_EQ(ar2, ar4);
+        }
+
         TEST_CASE("operator[]")
         {
             constexpr std::size_t size = 10u;
