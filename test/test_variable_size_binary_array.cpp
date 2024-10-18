@@ -71,6 +71,29 @@ namespace sparrow
             }
         }
 
+        TEST_CASE_FIXTURE(variable_size_binary_fixture, "copy")
+        {
+            layout_type ar(m_arrow_proxy);
+            layout_type ar2(ar);
+            CHECK_EQ(ar, ar2);
+
+            layout_type ar3(std::move(m_arrow_proxy));
+            ar3 = ar2;
+            CHECK_EQ(ar2, ar3);
+        }
+
+        TEST_CASE_FIXTURE(variable_size_binary_fixture, "move")
+        {
+            layout_type ar(m_arrow_proxy);
+            layout_type ar2(ar);
+            layout_type ar3(std::move(ar));
+            CHECK_EQ(ar2, ar3);
+
+            layout_type ar4(std::move(m_arrow_proxy));
+            ar4 = std::move(ar3);
+            CHECK_EQ(ar2, ar4);
+        }
+
         TEST_CASE_FIXTURE(variable_size_binary_fixture, "size")
         {
             const layout_type array(std::move(m_arrow_proxy));
