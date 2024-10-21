@@ -280,10 +280,10 @@ namespace sparrow::test
     void fill_schema_and_array_for_run_end_encoded(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema &  acc_length_schema,
-        ArrowArray &   acc_length_arr,
-        ArrowSchema &  value_schema,
-        ArrowArray &   value_arr,
+        ArrowSchema&& acc_length_schema,
+        ArrowArray&& acc_length_arr,
+        ArrowSchema&& value_schema,
+        ArrowArray&& value_arr,
         std::size_t  length
     ){
         schema.format = "+r";
@@ -292,8 +292,8 @@ namespace sparrow::test
 
         schema.n_children = 2;
         schema.children = new ArrowSchema*[2];
-        schema.children[0] = &acc_length_schema;
-        schema.children[1] = &value_schema;
+        schema.children[0] = new ArrowSchema(std::move(acc_length_schema));
+        schema.children[1] = new ArrowSchema(std::move(value_schema));
 
         schema.dictionary = nullptr;
         schema.release = &release_arrow_schema;
@@ -310,8 +310,8 @@ namespace sparrow::test
         arr.buffers = nullptr;
 
         arr.children = new ArrowArray*[2];
-        arr.children[0] = &acc_length_arr;
-        arr.children[1] = &value_arr;
+        arr.children[0] = new ArrowArray(std::move(acc_length_arr));
+        arr.children[1] = new ArrowArray(std::move(value_arr));
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;

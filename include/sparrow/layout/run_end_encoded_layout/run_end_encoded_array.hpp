@@ -47,12 +47,15 @@ namespace sparrow
     {
     public:
 
+        using self_type = run_end_encoded_array;
         using size_type = std::size_t;
         using inner_value_type = array_traits::inner_value_type;
         using iterator = run_encoded_array_iterator<false>;
         using const_iterator = run_encoded_array_iterator<true>;
         
         SPARROW_API explicit run_end_encoded_array(arrow_proxy proxy);
+        SPARROW_API run_end_encoded_array(const self_type&);
+        SPARROW_API self_type& operator=(const self_type&);
 
         SPARROW_API array_traits::const_reference operator[](std::uint64_t i);
         SPARROW_API array_traits::const_reference operator[](std::uint64_t i) const;
@@ -91,14 +94,40 @@ namespace sparrow
         friend class array_wrapper_impl;
     };
 
+    SPARROW_API
+    bool operator==(const run_end_encoded_array& lhs, const run_end_encoded_array& rhs);
+
+    /****************************************
+     * run_end_encoded_array implementation *
+     ****************************************/
+
     inline run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy) 
-    :   m_proxy(std::move(proxy)),
-        m_encoded_length(m_proxy.children()[0].length()),
-        p_acc_lengths_array(array_factory(m_proxy.children()[0].view())),
-        p_encoded_values_array(array_factory(m_proxy.children()[1].view())),
-        m_acc_lengths(run_end_encoded_array::get_acc_lengths_ptr(*p_acc_lengths_array))
+        : m_proxy(std::move(proxy))
+        , m_encoded_length(m_proxy.children()[0].length())
+        , p_acc_lengths_array(array_factory(m_proxy.children()[0].view()))
+        , p_encoded_values_array(array_factory(m_proxy.children()[1].view()))
+        , m_acc_lengths(run_end_encoded_array::get_acc_lengths_ptr(*p_acc_lengths_array))
     {
     }
+
+    inline run_end_encoded_array::run_end_encoded_array(const self_type& rhs)
+        : run_end_encoded_array(rhs.m_proxy)
+    {
+    }
+
+    inline auto run_end_encoded_array::operator=(const self_type& rhs) -> self_type&
+    {
+        if (this != &rhs)
+        {
+            m_proxy = rhs.m_proxy;
+            m_encoded_length = rhs.m_encoded_length;
+            p_acc_lengths_array = array_factory(m_proxy.children()[0].view());
+            p_encoded_values_array = array_factory(m_proxy.children()[1].view());
+            m_acc_lengths = run_end_encoded_array::get_acc_lengths_ptr(*p_acc_lengths_array);
+        }
+        return *this;
+    }
+
     inline auto run_end_encoded_array::size() const -> size_type
     {
         return m_proxy.length();
@@ -164,4 +193,8 @@ namespace sparrow
         return const_iterator(this, size(), 0);
     }
 
+    inline bool operator==(const run_end_encoded_array& lhs, const run_end_encoded_array& rhs)
+    {
+        return std::ranges::equal(lhs, rhs);
+    }
 } // namespace sparrow
