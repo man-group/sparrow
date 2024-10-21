@@ -62,6 +62,9 @@ namespace sparrow
                         child->release(child);
                     }
                 }
+                // TODO: We assume Arrow structures allocated inside sparrow always use operator new
+                //delete child;
+                //t.children[i] = nullptr;
             }
             delete[] t.children;
             t.children = nullptr;

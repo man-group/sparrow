@@ -127,10 +127,15 @@ namespace sparrow
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using iterator_tag = typename base_type::iterator_tag;
 
-        explicit list_array_crtp_base(arrow_proxy proxy);
-
         const array_wrapper* raw_flat_array() const;
         array_wrapper* raw_flat_array();
+
+    protected:
+
+        explicit list_array_crtp_base(arrow_proxy proxy);
+
+        list_array_crtp_base(const self_type&);
+        list_array_crtp_base& operator=(const self_type&);
 
     private:
 
@@ -143,6 +148,8 @@ namespace sparrow
 
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
+
+        cloning_ptr<array_wrapper> make_flat_array();
 
         // data members
         cloning_ptr<array_wrapper> p_flat_array;
@@ -169,10 +176,15 @@ namespace sparrow
 
         explicit list_array_impl(arrow_proxy proxy);
 
+        list_array_impl(const self_type&);
+        list_array_impl& operator=(const self_type&);
+
     private:
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
         std::pair<offset_type, offset_type> offset_range(size_type i) const;
+
+        offset_type* make_list_offsets();
 
         offset_type* p_list_offsets;
 
@@ -195,11 +207,17 @@ namespace sparrow
 
         explicit list_view_array_impl(arrow_proxy proxy);
 
+        list_view_array_impl(const self_type&);
+        list_view_array_impl& operator=(const self_type&);
+
     private:
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr std::size_t SIZES_BUFFER_INDEX = 2;
         std::pair<offset_type, offset_type> offset_range(size_type i) const;
+
+        offset_type* make_list_offsets();
+        offset_type* make_list_sizes();
 
         offset_type* p_list_offsets;
         offset_type* p_list_sizes;
@@ -222,6 +240,9 @@ namespace sparrow
 
         explicit fixed_sized_list_array(arrow_proxy proxy);
 
+        fixed_sized_list_array(const self_type&) = default;
+        fixed_sized_list_array& operator=(const self_type&) = default;
+
     private:
 
         static uint64_t list_size_from_format(const std::string_view format);
@@ -234,11 +255,30 @@ namespace sparrow
         friend class list_array_crtp_base<self_type>;
     };
 
+    /***************************************
+     * list_array_crtp_base implementation *
+     ***************************************/
+
     template <class DERIVED>
     list_array_crtp_base<DERIVED>::list_array_crtp_base(arrow_proxy proxy)
         : base_type(std::move(proxy))
-        , p_flat_array(array_factory(this->storage().children()[0].view()))
+        , p_flat_array(make_flat_array())
     {
+    }
+
+    template <class DERIVED>
+    list_array_crtp_base<DERIVED>::list_array_crtp_base(const self_type& rhs)
+        : base_type(rhs)
+        , p_flat_array(make_flat_array())
+    {
+    }
+
+    template <class DERIVED>
+    auto list_array_crtp_base<DERIVED>::operator=(const self_type& rhs) -> self_type&
+    {
+        base_type::operator=(rhs);
+        p_flat_array = make_flat_array();
+        return *this;
     }
 
     template <class DERIVED>
@@ -302,30 +342,67 @@ namespace sparrow
         return list_value{p_flat_array.get(), static_cast<st>(r.first), static_cast<st>(r.second)};
     }
 
+    template <class DERIVED>
+    cloning_ptr<array_wrapper> list_array_crtp_base<DERIVED>::make_flat_array()
+    {
+        return array_factory(this->storage().children()[0].view());
+    }
+
+    /**********************************
+     * list_array_impl implementation *
+     **********************************/
+
 #ifdef __GNUC__
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wcast-align"
 #endif
 
-
     template <bool BIG>
-    inline list_array_impl<BIG>::list_array_impl(arrow_proxy proxy)
+    list_array_impl<BIG>::list_array_impl(arrow_proxy proxy)
         : base_type(std::move(proxy))
-        , p_list_offsets(reinterpret_cast<offset_type*>(
-              this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()
-          ))
+        , p_list_offsets(make_list_offsets())
     {
     }
+
+    template <bool BIG>
+    list_array_impl<BIG>::list_array_impl(const self_type& rhs)
+        : base_type(rhs)
+        , p_list_offsets(make_list_offsets())
+    {
+    }
+
+    template <bool BIG>
+    auto list_array_impl<BIG>::operator=(const self_type& rhs) -> self_type&
+    {
+        if (this != &rhs)
+        {
+            base_type::operator=(rhs);
+            p_list_offsets = make_list_offsets();
+        }
+        return *this;
+    }
+
 #ifdef __GNUC__
 #    pragma GCC diagnostic pop
 #endif
-
 
     template <bool BIG>
     auto list_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type, offset_type>
     {
         return std::make_pair(p_list_offsets[i], p_list_offsets[i + 1]);
     }
+
+    template <bool BIG>
+    auto list_array_impl<BIG>::make_list_offsets() -> offset_type*
+    {
+        return reinterpret_cast<offset_type*>(
+              this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()
+        );
+    }
+
+    /***************************************
+     * list_view_array_impl implementation *
+     ***************************************/
 
 #ifdef __GNUC__
 #    pragma GCC diagnostic push
@@ -335,13 +412,29 @@ namespace sparrow
     template <bool BIG>
     inline list_view_array_impl<BIG>::list_view_array_impl(arrow_proxy proxy)
         : base_type(std::move(proxy))
-        , p_list_offsets(reinterpret_cast<offset_type*>(
-              this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()
-          ))
-        , p_list_sizes(reinterpret_cast<offset_type*>(
-              this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()
-          ))
+        , p_list_offsets(make_list_offsets())
+        , p_list_sizes(make_list_sizes())
     {
+    }
+
+    template <bool BIG>
+    list_view_array_impl<BIG>::list_view_array_impl(const self_type& rhs)
+        : base_type(rhs)
+        , p_list_offsets(make_list_offsets())
+        , p_list_sizes(make_list_sizes())
+    {
+    }
+
+    template <bool BIG>
+    auto list_view_array_impl<BIG>::operator=(const self_type& rhs) -> self_type&
+    {
+        if (this != &rhs)
+        {
+            base_type::operator=(rhs);
+            p_list_offsets = make_list_offsets();
+            p_list_sizes = make_list_sizes();
+        }
+        return *this;
     }
 
 #ifdef __GNUC__
@@ -355,6 +448,26 @@ namespace sparrow
         const auto offset = p_list_offsets[i];
         return std::make_pair(offset, offset + p_list_sizes[i]);
     }
+
+    template <bool BIG>
+    auto list_view_array_impl<BIG>::make_list_offsets() -> offset_type*
+    {
+        return reinterpret_cast<offset_type*>(
+              this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()
+        );
+    }
+
+    template <bool BIG>
+    auto list_view_array_impl<BIG>::make_list_sizes() -> offset_type*
+    {
+        return reinterpret_cast<offset_type*>(
+              this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()
+        );
+    }
+
+    /*****************************************
+     * fixed_sized_list_array implementation *
+     *****************************************/
 
     inline auto fixed_sized_list_array::list_size_from_format(const std::string_view format) -> uint64_t
     {

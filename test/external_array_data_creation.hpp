@@ -245,8 +245,8 @@ namespace sparrow::test
     void fill_schema_and_array_for_list_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema& flat_value_schema,
-        ArrowArray& flat_value_arr,
+        ArrowSchema&& flat_value_schema,
+        ArrowArray&& flat_value_arr,
         const std::vector<std::size_t>& list_lengths,
         const std::vector<std::size_t>& false_postions,
         bool big_list
@@ -255,8 +255,8 @@ namespace sparrow::test
     void fill_schema_and_array_for_list_view_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema & flat_value_schema,
-        ArrowArray & flat_value_arr,
+        ArrowSchema&& flat_value_schema,
+        ArrowArray&& flat_value_arr,
         const std::vector<std::size_t> & list_lengths,
         const std::vector<std::size_t> & false_postions,
         bool big_list
@@ -265,8 +265,8 @@ namespace sparrow::test
     void fill_schema_and_array_for_fixed_size_list_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema & flat_value_schema,
-        ArrowArray & flat_value_arr,
+        ArrowSchema&& flat_value_schema,
+        ArrowArray&& flat_value_arr,
         const std::vector<std::size_t> & false_postions,
         std::size_t list_size
     );

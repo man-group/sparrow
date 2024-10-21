@@ -22,6 +22,24 @@
 
 namespace sparrow
 {
+    namespace test
+    {
+        template <class T>
+        arrow_proxy make_list_proxy(size_t n_flat, const std::vector<size_t>& sizes)
+        {
+            // first we create a flat array of integers
+            ArrowArray flat_arr{};
+            ArrowSchema flat_schema{};
+            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
+            flat_schema.name = "the flat array";
+
+            ArrowArray arr{};
+            ArrowSchema schema{};
+            test::fill_schema_and_array_for_list_layout(schema, arr, std::move(flat_schema), std::move(flat_arr), sizes, {}, 0);
+            return arrow_proxy(std::move(arr), std::move(schema));
+        }
+    }
+
     TEST_SUITE("list_array")
     {   
         TEST_CASE_TEMPLATE("list[T]",T, std::uint8_t, std::int32_t, float, double)
@@ -36,20 +54,25 @@ namespace sparrow
             // vector of sizes
             std::vector<std::size_t> sizes = {1, 2, 3, 4};
 
-            // first we create a flat array of integers
-            ArrowArray flat_arr{};
-            ArrowSchema flat_schema{};
-            test::fill_schema_and_array<inner_scalar_type>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
-            flat_schema.name = "the flat array";
+            const std::size_t n_flat2 = 8;
+            std::vector<std::size_t> sizes2 = {2, 4, 2};
 
-            ArrowArray arr{};
-            ArrowSchema schema{};
-            test::fill_schema_and_array_for_list_layout(schema, arr, flat_schema, flat_arr, sizes, {}, 0);
-            arrow_proxy proxy(&arr, &schema);         
+            arrow_proxy proxy = test::make_list_proxy<inner_scalar_type>(n_flat, sizes);
 
             // create a list array
             list_array list_arr(std::move(proxy));
             REQUIRE(list_arr.size() == n);
+
+            SUBCASE("copy")
+            {
+                list_array list_arr2(list_arr);
+                CHECK_EQ(list_arr, list_arr2);
+
+                list_array list_arr3(test::make_list_proxy<T>(n_flat2, sizes2));
+                CHECK_NE(list_arr3, list_arr);
+                list_arr3 = list_arr;
+                CHECK_EQ(list_arr3, list_arr);
+            }
 
             SUBCASE("element-sizes")
             {
@@ -77,7 +100,7 @@ namespace sparrow
                 }
             }
 
-            SUBCASE("consitency")
+            SUBCASE("consistency")
             {   
                 test::generic_consistency_test(list_arr);
             }
@@ -111,6 +134,24 @@ namespace sparrow
         }
     }
 
+    namespace test
+    {
+        template <class T>
+        arrow_proxy make_list_view_proxy(size_t n_flat, const std::vector<size_t>& sizes)
+        {
+            // first we create a flat array of integers
+            ArrowArray flat_arr{};
+            ArrowSchema flat_schema{};
+            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
+            flat_schema.name = "the flat array";
+
+            ArrowArray arr{};
+            ArrowSchema schema{};
+            test::fill_schema_and_array_for_list_view_layout(schema, arr, std::move(flat_schema), std::move(flat_arr), sizes, {}, 0);
+            return arrow_proxy(std::move(arr), std::move(schema));
+        }
+    }
+
     TEST_SUITE("list_view_array")
     {   
         TEST_CASE_TEMPLATE("list_view_array[T]",T, std::uint8_t, std::int32_t, float, double)
@@ -125,20 +166,25 @@ namespace sparrow
             // vector of sizes
             std::vector<std::size_t> sizes = {1, 2, 3, 4};
 
-            // first we create a flat array of integers
-            ArrowArray flat_arr{};
-            ArrowSchema flat_schema{};
-            test::fill_schema_and_array<inner_scalar_type>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
-            flat_schema.name = "the flat array";
-
-            ArrowArray arr{};
-            ArrowSchema schema{};
-            test::fill_schema_and_array_for_list_view_layout(schema, arr, flat_schema, flat_arr, sizes, {}, 0);
-            arrow_proxy proxy(&arr, &schema);
+            const std::size_t n_flat2 = 8;
+            std::vector<std::size_t> sizes2 = {2, 4, 2};
+            
+            arrow_proxy proxy = test::make_list_view_proxy<inner_scalar_type>(n_flat, sizes);
 
             // create a list array
             list_view_array list_arr(std::move(proxy));
             REQUIRE(list_arr.size() == n);
+
+            SUBCASE("copy")
+            {
+                list_view_array list_arr2(list_arr);
+                CHECK_EQ(list_arr, list_arr2);
+
+                list_view_array list_arr3(test::make_list_view_proxy<T>(n_flat2, sizes2));
+                CHECK_NE(list_arr3, list_arr);
+                list_arr3 = list_arr;
+                CHECK_EQ(list_arr3, list_arr);
+            }
 
             SUBCASE("element-sizes")
             {
@@ -167,7 +213,7 @@ namespace sparrow
                 }
             }
 
-            SUBCASE("consitency")
+            SUBCASE("consistency")
             {   
                 test::generic_consistency_test(list_arr);
             }
@@ -201,6 +247,23 @@ namespace sparrow
         }
     }
 
+    namespace test
+    {
+        template <class T>
+        arrow_proxy make_fixed_sized_list_proxy(size_t n_flat, size_t list_size)
+        {
+            // first we create a flat array of integers
+            ArrowArray flat_arr{};
+            ArrowSchema flat_schema{};
+            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
+            flat_schema.name = "the flat array";
+
+            ArrowArray arr{};
+            ArrowSchema schema{};
+            test::fill_schema_and_array_for_fixed_size_list_layout(schema, arr, std::move(flat_schema), std::move(flat_arr), {}, list_size);
+            return arrow_proxy(std::move(arr), std::move(schema));
+        }
+    }
 
     TEST_SUITE("fixed_sized_list_array")
     {   
@@ -219,21 +282,24 @@ namespace sparrow
 
             CHECK(n == 4);
 
-
-            // first we create a flat array of integers
-            ArrowArray flat_arr{};
-            ArrowSchema flat_schema{};
-            test::fill_schema_and_array<inner_scalar_type>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
-            flat_schema.name = "the flat array";
-
-
-            ArrowArray arr{};
-            ArrowSchema schema{};
-            test::fill_schema_and_array_for_fixed_size_list_layout(schema, arr, flat_schema, flat_arr, {}, list_size);
-
-            arrow_proxy proxy(&arr, &schema);
+            const std::size_t n_flat2 = 10;
+            const std::size_t list_size2 = 4;
+            
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<inner_scalar_type>(n_flat, list_size);
 
             fixed_sized_list_array list_arr(std::move(proxy));
+
+            SUBCASE("copy")
+            {
+                fixed_sized_list_array list_arr2(list_arr);
+                CHECK_EQ(list_arr, list_arr2);
+
+                fixed_sized_list_array list_arr3(test::make_fixed_sized_list_proxy<T>(n_flat2, list_size2));
+                CHECK_NE(list_arr3, list_arr);
+                list_arr3 = list_arr;
+                CHECK_EQ(list_arr3, list_arr);
+            }
+
             SUBCASE("consitency")
             {   
                 test::generic_consistency_test(list_arr);
@@ -266,7 +332,7 @@ namespace sparrow
                     }
                 }
             }
-            delete schema.format;
+            //delete schema.format;
         }
     }
 
