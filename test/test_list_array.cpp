@@ -286,7 +286,6 @@ namespace sparrow
             const std::size_t list_size2 = 4;
             
             arrow_proxy proxy = test::make_fixed_sized_list_proxy<inner_scalar_type>(n_flat, list_size);
-
             fixed_sized_list_array list_arr(std::move(proxy));
 
             SUBCASE("copy")

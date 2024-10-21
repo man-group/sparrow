@@ -70,10 +70,15 @@ namespace sparrow
 
         explicit struct_array(arrow_proxy proxy);
 
+        struct_array(const struct_array&);
+        struct_array& operator=(const struct_array&);
+
         const array_wrapper* raw_child(std::size_t i) const;
         array_wrapper* raw_child(std::size_t i);
 
     private:
+
+        using children_type = std::vector<cloning_ptr<array_wrapper>>;
 
         value_iterator value_begin();
         value_iterator value_end();
@@ -82,8 +87,10 @@ namespace sparrow
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
 
+        children_type make_children();
+
         // data members
-        std::vector<cloning_ptr<array_wrapper>> m_children;
+        children_type m_children;
 
         // friend classes
         friend class array_crtp_base<self_type>;
@@ -95,12 +102,24 @@ namespace sparrow
 
     inline struct_array::struct_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
-        , m_children(this->storage().children().size(), nullptr)
+        , m_children(make_children())
     {
-        for (std::size_t i = 0; i < m_children.size(); ++i)
+    }
+
+    inline struct_array::struct_array(const struct_array& rhs)
+        : base_type(rhs)
+        , m_children(make_children())
+    {
+    }
+
+    inline struct_array& struct_array::operator=(const struct_array& rhs)
+    {
+        if (this != &rhs)
         {
-            m_children[i] = array_factory(this->storage().children()[i].view());
+            base_type::operator=(rhs);
+            m_children = make_children();
         }
+        return *this;
     }
 
     inline auto struct_array::raw_child(std::size_t i) const -> const array_wrapper*
@@ -144,5 +163,15 @@ namespace sparrow
     inline auto struct_array::value(size_type i) const -> inner_const_reference
     {
         return struct_value{m_children, i};
+    }
+
+    inline auto struct_array::make_children() -> children_type
+    {
+        children_type children(this->storage().children().size(), nullptr);
+        for (std::size_t i = 0; i < children.size(); ++i)
+        {
+            children[i] = array_factory(this->storage().children()[i].view());
+        }
+        return children;
     }
 }

@@ -275,8 +275,8 @@ namespace sparrow::test
     void fill_schema_and_array_for_struct_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        std::vector<ArrowSchema>& children_schemas,
-        std::vector<ArrowArray>& children_arrays,
+        std::vector<ArrowSchema>&& children_schemas,
+        std::vector<ArrowArray>&& children_arrays,
         const std::vector<std::size_t>& false_postions
     );
 

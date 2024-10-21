@@ -226,8 +226,8 @@ namespace sparrow::test
     void fill_schema_and_array_for_struct_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        std::vector<ArrowSchema> & children_schemas,
-        std::vector<ArrowArray> & children_arrays,
+        std::vector<ArrowSchema>&& children_schemas,
+        std::vector<ArrowArray>&& children_arrays,
         const std::vector<std::size_t> & false_postions
     )
     {
@@ -237,10 +237,14 @@ namespace sparrow::test
 
         schema.n_children = static_cast<std::int64_t>(children_schemas.size());
         schema.children = new ArrowSchema*[children_schemas.size()];
-        for (std::size_t i = 0; i < children_schemas.size(); ++i)
+        std::transform(std::make_move_iterator(children_schemas.begin()),
+                       std::make_move_iterator(children_schemas.end()),
+                       schema.children,
+                       [](auto&& child) { return new ArrowSchema(std::move(child)); });
+        /*for (std::size_t i = 0; i < children_schemas.size(); ++i)
         {
             schema.children[i] = &children_schemas[i];
-        }
+        }*/
 
         schema.dictionary = nullptr;
         schema.release = &release_arrow_schema;
@@ -259,10 +263,15 @@ namespace sparrow::test
         arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
 
         arr.children = new ArrowArray*[children_arrays.size()];
-        for (std::size_t i = 0; i < children_arrays.size(); ++i)
+
+        std::transform(std::make_move_iterator(children_arrays.begin()),
+                       std::make_move_iterator(children_arrays.end()),
+                       arr.children,
+                       [](auto&& child) { return new ArrowArray(std::move(child)); });
+        /*for (std::size_t i = 0; i < children_arrays.size(); ++i)
         {
             arr.children[i] = &children_arrays[i];
-        }
+        }*/
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
