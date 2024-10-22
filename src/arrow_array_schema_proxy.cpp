@@ -157,13 +157,13 @@ namespace sparrow
     arrow_proxy::arrow_proxy(arrow_proxy&& other)
         : m_array(std::move(other.m_array))
         , m_schema(std::move(other.m_schema))
+        , m_buffers(std::move(other.m_buffers))
+        , m_children(std::move(other.m_children))
+        , m_dictionary(std::move(other.m_dictionary))
     {
         other.m_array = {};
         other.m_schema = {};
         other.reset();
-        update_buffers();
-        update_children();
-        update_dictionary();
     }
 
     arrow_proxy& arrow_proxy::operator=(arrow_proxy&& rhs)
