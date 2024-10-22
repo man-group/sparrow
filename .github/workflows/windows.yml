@@ -13,46 +13,88 @@ defaults:
 jobs:
   build:
     runs-on: ${{ matrix.runs-on }}
-    name: ${{ matrix.sys.compiler }} / ${{ matrix.build-system }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}}
+    name: ${{ matrix.toolchain.compiler }} / ${{ matrix.build-system.name }} / ${{ matrix.config.name }} / targets ${{ matrix.target-arch.name }} /  date-polyfill ${{ matrix.toolchain.date-polyfill}}
     strategy:
       fail-fast: false
       matrix:
         runs-on: [windows-latest]
-        sys:
+        toolchain:
         - { compiler: msvc, date-polyfill: 'ON' }
         - { compiler: msvc, date-polyfill: 'OFF' }
-        - { compiler: clang, date-polyfill: 'ON' }
-        - { compiler: clang, date-polyfill: 'OFF' }
+        - { compiler: clang, date-polyfill: 'ON', version: 17 }
+        - { compiler: clang, date-polyfill: 'OFF', version: 17 }
+        target-arch:
+        - {
+            name: "Win64",
+            vs-flags: "-A x64", # only used by VS generator
+            cl-flags: "/arch (x64)",
+            gnu-flags: "-m64",
+            msvc-dev-cmd: "win64"
+          }
+        - {
+            name: "Win32",
+            vs-flags: "-A Win32", # only used by VS generator
+            cl-flags: "/arch (x86)",
+            gnu-flags: "-m32",
+            msvc-dev-cmd: "win32"
+          }
         config:
         - { name: Debug }
         - { name: Release }
         build-system:
-        - "Visual Studio 17 2022"
-        - "Ninja"
+        - { name: "Visual Studio 17 2022" }
+        - { name: "Ninja" }
 
     steps:
 
-    - name: Setup MSVC
-      if: matrix.sys.compiler == 'msvc' && matrix.build-system != 'Visual Studio 17 2022'
+    - name: Setup MSVC (only for non-VS buildsystems)
+      if: matrix.toolchain.compiler == 'msvc' && !startsWith(matrix.build-system.name, 'Visual Studio')
       uses: ilammy/msvc-dev-cmd@v1
+      with:
+        # Ninja will take cues of which target architecture to use from the (powershell)
+        # msvc environment so we need to setup everything at this level.
+        arch: ${{matrix.target-arch.msvc-dev-cmd}}
 
     - name: Install LLVM and Clang
-      if: matrix.sys.compiler == 'clang'
+      if: matrix.toolchain.compiler == 'clang'
       uses: egor-tensin/setup-clang@v1
       with:
-        version: ${{matrix.sys.version}}
+        version: ${{matrix.toolchain.version}}
         platform: x64
 
     - name: Setup clang
-      if: matrix.sys.compiler == 'clang'
+      if: matrix.toolchain.compiler == 'clang'
       run: |
         echo "CC=clang" >> $GITHUB_ENV
         echo "CXX=clang++" >> $GITHUB_ENV
 
+    - name: Setup gnu compilers
+      if: matrix.toolchain.compiler != 'msvc'
+      run: |
+        echo "CMAKE_CXX_FLAGS=${{matrix.target-arch.gnu-flags}}" >> $GITHUB_ENV
+        echo "CMAKE_CXX_LINK_FLAGS=${{matrix.target-arch.gnu-flags}}" >> $GITHUB_ENV
+
+    - name: Setup Ninja + msvc
+      if: matrix.toolchain.compiler == 'msvc' && matrix.build-system.name == 'Ninja'
+      run: |
+        echo "CMAKE_CXX_FLAGS=${{matrix.target-arch.cl-flags}}" >> $GITHUB_ENV
+        echo "CMAKE_CXX_LINK_FLAGS=${{matrix.target-arch.cl-flags}}" >> $GITHUB_ENV
+
+    - name: Setup Visual Studio
+      if: startsWith(matrix.build-system.name, 'Visual Studio')
+      run: |
+        echo "GENERATOR_EXTRA_FLAGS=${{matrix.target-arch.vs-flags}}" >> $GITHUB_ENV
+
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Setup vcpkg environment
+      if: matrix.target-arch.name == 'Win32'
+      run: |
+        vcpkg install --triplet=x86-windows
+
     - name: Set conda environment
+      if: matrix.target-arch.name == 'Win64'
       uses: mamba-org/setup-micromamba@main
       with:
         environment-name: myenv
@@ -62,8 +104,34 @@ jobs:
         create-args: |
           ninja
 
+    - name: Set dependencies install prefix dir for 64bit
+      if: matrix.target-arch.name == 'Win64'
+      run: |
+        echo "SPARROW_DEPS_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
+        echo "SPARROW_INSTALL_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
+        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=OFF" >> $GITHUB_ENV
+
+    - name: Set dependencies install prefix dir for 32bit
+      if: matrix.target-arch.name == 'Win32'
+      run: |
+        echo "SPARROW_DEPS_PREFIX=$VCPKG_INSTALLED_DIR" >> $GITHUB_ENV
+        echo "SPARROW_INSTALL_PREFIX=$VCPKG_INSTALLED_DIR" >> $GITHUB_ENV
+        echo "VCPKG_TARGET_TRIPLET='x86-windows'" >> $GITHUB_ENV
+        echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=ON" >> $GITHUB_ENV
+
+    - name: Enable runtime size/length/offset validity checks
+      if: matrix.config.name == 'Debug'
+      run: |
+        echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPARROW_ENABLE_SIZE_CHECKS=ON'" >> $GITHUB_ENV
+
+    - name: Enable runtime 32bit size/length/offset limit
+      if: matrix.target-arch.name == 'Win32' # Note: this is not a mandatory limitation in any context, we add this just to have at least one configuration testing that feature
+      run: |
+        echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPARROW_ENABLE_32BIT_SIZE_LIMIT=ON'" >> $GITHUB_ENV
+
     - name: Configure using CMake
-      run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON  -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} -G "${{matrix.build-system}}"
+      run: cmake -S ./ -B ./build -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} -G "${{matrix.build-system.name}}" $GENERATOR_EXTRA_FLAGS $SPARROW_CHECKS $SPARROW_ADDITIONAL_OPTIONS
 
     - name: Build library
       working-directory: build
@@ -85,7 +153,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: success() || failure()
       with:
-        name: test_sparrow_lib_report_Windows_${{ matrix.sys.compiler }}_${{ matrix.build-system }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.sys.date-polyfill}}
+        name: test_sparrow_lib_report_Windows_${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}
         path: '**/test_sparrow_lib_report.xml'
 
     - name: Run all examples

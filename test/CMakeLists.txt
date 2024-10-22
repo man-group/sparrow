@@ -32,52 +32,59 @@ else()
     message(STATUS "Tests build type is ${CMAKE_BUILD_TYPE}")
 endif()
 
-set(SPARROW_TESTS_SOURCES
-    arrow_array_schema_creation.hpp
-    better_junit_reporter.hpp
-    external_array_data_creation.cpp
-    external_array_data_creation.hpp
-    junit.cpp
-    junit.hpp
-    junit_xml_writer.hpp
-    main.cpp
-    test_algorithm.cpp
-    test_allocator.cpp
-    test_array.cpp
-    test_array_wrapper.cpp
-    test_arrow_array_schema_factory.cpp
-    test_arrow_array_schema_proxy.cpp
-    test_arrow_array_schema_utils.cpp
-    test_arrow_array.cpp
-    test_arrow_schema.cpp
-    test_bit.cpp
-    test_buffer_adaptor.cpp
-    test_buffer.cpp
-    test_dictionary_encoded_array.cpp
-    test_dispatch.cpp
-    test_dynamic_bitset_view.cpp
-    test_dynamic_bitset.cpp
-    test_iterator.cpp
-    test_list_array.cpp
-    test_list_value.cpp
-    test_memory.cpp
-    test_mpl.cpp
-    test_null_array.cpp
-    test_nullable.cpp
-    test_primitive_array.cpp
-    test_struct_array.cpp
-    test_traits.cpp
-    test_utils_buffers.cpp
-    test_utils_offsets.cpp
-    test_utils.hpp
-    test_variable_size_binary_array.cpp
-    test_run_end_encoded_array.cpp
-    test_union_array.cpp
-)
+if (SPARROW_TARGET_32BIT)
+    set(SPARROW_TESTS_SOURCES
+        main.cpp
+    )
+else()
+    set(SPARROW_TESTS_SOURCES
+        arrow_array_schema_creation.hpp
+        better_junit_reporter.hpp
+        external_array_data_creation.cpp
+        external_array_data_creation.hpp
+        junit.cpp
+        junit.hpp
+        junit_xml_writer.hpp
+        main.cpp
+        test_algorithm.cpp
+        test_allocator.cpp
+        test_array.cpp
+        test_array_wrapper.cpp
+        test_arrow_array_schema_factory.cpp
+        test_arrow_array_schema_proxy.cpp
+        test_arrow_array_schema_utils.cpp
+        test_arrow_array.cpp
+        test_arrow_schema.cpp
+        test_bit.cpp
+        test_buffer_adaptor.cpp
+        test_buffer.cpp
+        test_dictionary_encoded_array.cpp
+        test_dispatch.cpp
+        test_dynamic_bitset_view.cpp
+        test_dynamic_bitset.cpp
+        test_iterator.cpp
+        test_list_array.cpp
+        test_list_value.cpp
+        test_memory.cpp
+        test_mpl.cpp
+        test_null_array.cpp
+        test_nullable.cpp
+        test_primitive_array.cpp
+        test_struct_array.cpp
+        test_traits.cpp
+        test_utils_buffers.cpp
+        test_utils_offsets.cpp
+        test_utils.hpp
+        test_variable_size_binary_array.cpp
+        test_run_end_encoded_array.cpp
+        test_union_array.cpp
+    )
+endif()
+
 set(test_target "test_sparrow_lib")
 add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
 target_link_libraries(${test_target}
-    PRIVATE 
+    PRIVATE
         sparrow doctest::doctest $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
 include(doctest)
