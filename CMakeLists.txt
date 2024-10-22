@@ -84,7 +84,10 @@ OPTION(BUILD_DOCS  "Build sparrow documentation" OFF)
 OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
 
-OPTION(SPARROW_TARGET_32BIT "Test 32bit support" OFF)
+OPTION(SPARROW_TARGET_32BIT "Is 32bit build? This will inform configuration only." OFF)
+OPTION(SPARROW_ENABLE_SIZE_CHECKS "Enables runtime checks that values of sizes/lengths/offsets from the various C++ types are always in range of the supported Arrow lengths" OFF)
+OPTION(SPARROW_ENABLE_32BIT_SIZE_LIMIT "Once enabled, all the sizes are assumed to be in the range of 32bit representation. Can be checked at runtime with `SPARROW_ENABLE_SIZE_CHECKS=ON`" OFF)
+
 
 include(CheckCXXSymbolExists)
 
@@ -184,6 +187,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_array.hpp
     # array
     ${SPARROW_INCLUDE_DIR}/sparrow/types/data_traits.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/types/arrow_length.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/types/data_type.hpp
     # Utils
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/algorithm.hpp
@@ -208,25 +212,19 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
 )
 
-if (SPARROW_TARGET_32BIT)
-    set(SPARROW_SRC
-        ${SPARROW_SOURCE_DIR}/dummy32bit.cpp
-    )
-else()
-    set(SPARROW_SRC
-        ${SPARROW_SOURCE_DIR}/array_factory.cpp
-        ${SPARROW_SOURCE_DIR}/array_helper.cpp
-        ${SPARROW_SOURCE_DIR}/array.cpp
-        ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
-        ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
-        ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
-        ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
-        ${SPARROW_SOURCE_DIR}/list_value.cpp
-        ${SPARROW_SOURCE_DIR}/record_batch.cpp
-        ${SPARROW_SOURCE_DIR}/run_encoded_array.cpp
-        ${SPARROW_SOURCE_DIR}/struct_value.cpp
-    )
-endif()
+set(SPARROW_SRC
+    ${SPARROW_SOURCE_DIR}/array.cpp
+    ${SPARROW_SOURCE_DIR}/array_factory.cpp
+    ${SPARROW_SOURCE_DIR}/array_helper.cpp
+    ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
+    ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
+    ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
+    ${SPARROW_SOURCE_DIR}/list_value.cpp
+    ${SPARROW_SOURCE_DIR}/record_batch.cpp
+    ${SPARROW_SOURCE_DIR}/run_encoded_array.cpp
+    ${SPARROW_SOURCE_DIR}/struct_value.cpp
+)
+
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
 
@@ -266,6 +264,17 @@ if (BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
 endif ()
+
+if (SPARROW_ENABLE_SIZE_CHECKS)
+    target_compile_definitions(sparrow INTERFACE SPARROW_ENABLE_SIZE_CHECKS=1)
+    message("-> sparrow config: size limit runtime checks enabled (SPARROW_ENABLE_SIZE_CHECKS=ON): sizes will be checked at runtime to be between zero and max(in64_t) (or max(int32_t if SPARROW_ENABLE_32BIT_SIZE_LIMIT=ON)")
+endif()
+
+if (SPARROW_ENABLE_32BIT_SIZE_LIMIT)
+    target_compile_definitions(sparrow INTERFACE SPARROW_ENABLE_32BIT_SIZE_LIMIT)
+    message("-> sparrow config: 32bit size limit enabled (SPARROW_ENABLE_32BIT_SIZE_LIMIT=ON): valid size values are restricted to range zero to max(int32_t)")
+endif()
+
 
 # Docs
 # ====

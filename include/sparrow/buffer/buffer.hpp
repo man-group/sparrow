@@ -346,7 +346,7 @@ namespace sparrow
     template <class T>
     buffer_base<T>::~buffer_base()
     {
-        deallocate(m_data.p_begin, static_cast<size_type>(m_data.p_storage_end - m_data.p_begin));
+        deallocate(m_data.p_begin, static_cast<size_type>(std::distance(m_data.p_begin, m_data.p_storage_end)));
     }
 
     template <class T>
@@ -697,13 +697,13 @@ namespace sparrow
     template <class T>
     constexpr auto buffer<T>::capacity() const noexcept -> size_type
     {
-        return static_cast<size_type>(get_data().p_storage_end - get_data().p_begin);
+        return static_cast<size_type>(std::distance(get_data().p_begin, get_data().p_storage_end));
     }
 
     template <class T>
     constexpr auto buffer<T>::size() const noexcept -> size_type
     {
-        return static_cast<size_type>(get_data().p_end - get_data().p_begin);
+        return static_cast<size_type>(std::distance(get_data().p_begin, get_data().p_end));
     }
 
     template <class T>
@@ -728,10 +728,7 @@ namespace sparrow
                 std::make_move_iterator(get_data().p_end)
             );
             destroy(get_data().p_begin, get_data().p_end, get_allocator());
-            this->deallocate(
-                get_data().p_begin,
-                static_cast<size_type>(get_data().p_storage_end - get_data().p_begin)
-            );
+            this->deallocate(get_data().p_begin, capacity());
             this->assign_storage(tmp, old_size, new_cap);
         }
     }
