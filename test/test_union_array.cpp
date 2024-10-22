@@ -25,15 +25,10 @@
 namespace sparrow
 {
 
-    TEST_SUITE("union")
-    {   
-        
-        TEST_CASE("sparse_union")
+    namespace test
+    {
+        arrow_proxy make_sparse_union_proxy(const std::string& format_string, std::size_t n, bool altered = false)
         {
-
-            const std::string format_string = "+us:3,4";
-            const std::size_t n = 4;
-
             std::vector<ArrowArray> children_arrays(2);
             std::vector<ArrowSchema> children_schemas(2);
 
@@ -43,21 +38,75 @@ namespace sparrow
             test::fill_schema_and_array<std::uint16_t>(children_schemas[1], children_arrays[1], n, 0/*offset*/, {});
             children_schemas[1].name = "item 1";
 
+            ArrowArray arr{};
+            ArrowSchema schema{};
+
+            std::vector<std::uint8_t> type_ids = {std::uint8_t(3), std::uint8_t(4), std::uint8_t(3), std::uint8_t(4)};
+            if (altered)
+            {
+                type_ids[0] = std::uint8_t(4);
+            }
+            
+            test::fill_schema_and_array_for_sparse_union(
+                schema, arr, std::move(children_schemas), std::move(children_arrays), type_ids, format_string
+            );
+
+            return arrow_proxy(std::move(arr), std::move(schema));
+        }
+
+        arrow_proxy make_dense_union_proxy(const std::string& format_string, std::size_t n_c, bool altered = false)
+        {
+            std::vector<ArrowArray> children_arrays(2);
+            std::vector<ArrowSchema> children_schemas(2);
+
+            test::fill_schema_and_array<float>(children_schemas[0], children_arrays[0], n_c, 0/*offset*/, {});
+            children_schemas[0].name = "item 0";
+
+            test::fill_schema_and_array<std::uint16_t>(children_schemas[1], children_arrays[1], n_c, 0/*offset*/, {});
+            children_schemas[1].name = "item 1";
 
             ArrowArray arr{};
             ArrowSchema schema{};
 
             std::vector<std::uint8_t> type_ids = {std::uint8_t(3), std::uint8_t(4), std::uint8_t(3), std::uint8_t(4)};
+            if (altered)
+            {
+                type_ids[0] = std::uint8_t(4);
+            }
+            std::vector<std::int32_t> offsets = {0,0,1,1};
             
-            test::fill_schema_and_array_for_sparse_union(
-                schema, arr, children_schemas, children_arrays, type_ids, format_string
+            test::fill_schema_and_array_for_dense_union(
+                schema, arr, std::move(children_schemas), std::move(children_arrays), type_ids, offsets, format_string
             );
 
-            arrow_proxy proxy(&arr, &schema);
+            return arrow_proxy(std::move(arr), std::move(schema));
+        }
+    }
 
+    TEST_SUITE("union")
+    {   
+        TEST_CASE("sparse_union")
+        {
+
+            const std::string format_string = "+us:3,4";
+            const std::size_t n = 4;
+
+
+            auto proxy = test::make_sparse_union_proxy(format_string, n);
             sparse_union_array uarr(std::move(proxy));
 
             REQUIRE(uarr.size() == n);
+
+            SUBCASE("copy")
+            {
+                sparse_union_array uarr2(uarr);
+                CHECK_EQ(uarr2, uarr);
+
+                sparse_union_array uarr3(test::make_sparse_union_proxy(format_string, n, true));
+                CHECK_NE(uarr3, uarr);
+                uarr3 = uarr;
+                CHECK_EQ(uarr3, uarr);
+            }
 
             SUBCASE("operator[]")
             {
@@ -125,38 +174,28 @@ namespace sparrow
                 
             }
         }
+
         TEST_CASE("dense_union")
         {
-
             const std::string format_string = "+ud:3,4";
             const std::size_t n_c = 2;
             const std::size_t n = 4;
 
-            std::vector<ArrowArray> children_arrays(2);
-            std::vector<ArrowSchema> children_schemas(2);
-
-            test::fill_schema_and_array<float>(children_schemas[0], children_arrays[0], n_c, 0/*offset*/, {});
-            children_schemas[0].name = "item 0";
-
-            test::fill_schema_and_array<std::uint16_t>(children_schemas[1], children_arrays[1], n_c, 0/*offset*/, {});
-            children_schemas[1].name = "item 1";
-
-
-            ArrowArray arr{};
-            ArrowSchema schema{};
-
-            std::vector<std::uint8_t> type_ids = {std::uint8_t(3), std::uint8_t(4), std::uint8_t(3), std::uint8_t(4)};
-            std::vector<std::int32_t> offsets = {0,0,1,1};
-            
-            test::fill_schema_and_array_for_dense_union(
-                schema, arr, children_schemas, children_arrays, type_ids, offsets, format_string
-            );
-
-            arrow_proxy proxy(&arr, &schema);
-
+            auto proxy = test::make_dense_union_proxy(format_string, n_c);
             dense_union_array uarr(std::move(proxy));
 
             REQUIRE(uarr.size() == n);
+
+            SUBCASE("copy")
+            {
+                dense_union_array uarr2(uarr);
+                CHECK_EQ(uarr2, uarr);
+
+                dense_union_array uarr3(test::make_dense_union_proxy(format_string, n_c, true));
+                CHECK_NE(uarr3, uarr);
+                uarr3 = uarr;
+                CHECK_EQ(uarr3, uarr);
+            }
 
             SUBCASE("operator[]")
             {
