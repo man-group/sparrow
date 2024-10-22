@@ -50,6 +50,8 @@ OPTION(BUILD_DOCS  "Build sparrow documentation" OFF)
 OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
 
+OPTION(SPARROW_TARGET_32BIT "Test 32bit support" OFF)
+
 include(CheckCXXSymbolExists)
 
 if(cxx_std_20 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
@@ -169,19 +171,30 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
 )
 
-set(SPARROW_SRC
-    ${SPARROW_SOURCE_DIR}/array.cpp
-    ${SPARROW_SOURCE_DIR}/array_factory.cpp
-    ${SPARROW_SOURCE_DIR}/array_helper.cpp
-    ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
-    ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
-    ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
-    ${SPARROW_SOURCE_DIR}/list_value.cpp
-    ${SPARROW_SOURCE_DIR}/run_encoded_array.cpp
-    ${SPARROW_SOURCE_DIR}/struct_value.cpp
-)
+if (SPARROW_TARGET_32BIT)
+    set(SPARROW_SRC
+        ${SPARROW_SOURCE_DIR}/dummy32bit.cpp
+    )
+
+else()
+
+    set(SPARROW_SRC
+        ${SPARROW_SOURCE_DIR}/array.cpp
+        ${SPARROW_SOURCE_DIR}/array_factory.cpp
+        ${SPARROW_SOURCE_DIR}/array_helper.cpp
+        ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
+        ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
+        ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
+        ${SPARROW_SOURCE_DIR}/list_value.cpp
+        ${SPARROW_SOURCE_DIR}/run_encoded_array.cpp
+        ${SPARROW_SOURCE_DIR}/struct_value.cpp
+    )
+
+endif()
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
+
+
 # TODO: handle static lib, so name and versionning
 if (UNIX)
     set_target_properties(

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "external_array_data_creation.hpp"
 
 #ifdef __GNUC__
@@ -36,6 +38,7 @@ namespace sparrow::test
             for (std::int64_t i = 0; i < t->n_children; ++i)
             {
                 t->children[i]->release(t->children[i]);
+                delete t->children[i];
             }
             delete[] t->children;
             t->children = nullptr;
@@ -64,8 +67,8 @@ namespace sparrow::test
     void fill_schema_and_array_for_list_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema & flat_value_schema,
-        ArrowArray & flat_value_arr,
+        ArrowSchema&& flat_value_schema,
+        ArrowArray&& flat_value_arr,
         const std::vector<std::size_t> & list_lengths,
         const std::vector<std::size_t> & false_postions,
         bool big_list
@@ -76,7 +79,7 @@ namespace sparrow::test
 
         schema.n_children = 1;
         schema.children = new ArrowSchema*[1];
-        schema.children[0] = &flat_value_schema;
+        schema.children[0] = new ArrowSchema(std::move(flat_value_schema));
 
         schema.dictionary = nullptr;
         schema.release = &release_arrow_schema;
@@ -97,7 +100,7 @@ namespace sparrow::test
         arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
 
         arr.children = new ArrowArray*[1];
-        arr.children[0] = &flat_value_arr;
+        arr.children[0] = new ArrowArray(std::move(flat_value_arr));
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
@@ -110,8 +113,8 @@ namespace sparrow::test
     void fill_schema_and_array_for_fixed_size_list_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema & flat_value_schema,
-        ArrowArray & flat_value_arr,
+        ArrowSchema&& flat_value_schema,
+        ArrowArray&& flat_value_arr,
         const std::vector<std::size_t> & false_postions,
         std::size_t list_size
     ){
@@ -126,7 +129,7 @@ namespace sparrow::test
 
         schema.n_children = 1;
         schema.children = new ArrowSchema*[1];
-        schema.children[0] = &flat_value_schema;
+        schema.children[0] = new ArrowSchema(std::move(flat_value_schema));
 
         schema.dictionary = nullptr;
         schema.release = &release_arrow_schema;
@@ -144,7 +147,7 @@ namespace sparrow::test
         arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
 
         arr.children = new ArrowArray*[1];
-        arr.children[0] = &flat_value_arr;
+        arr.children[0] = new ArrowArray(std::move(flat_value_arr));
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
@@ -155,8 +158,8 @@ namespace sparrow::test
     void fill_schema_and_array_for_list_view_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema & flat_value_schema,
-        ArrowArray & flat_value_arr,
+        ArrowSchema&& flat_value_schema,
+        ArrowArray&& flat_value_arr,
         const std::vector<std::size_t> & list_lengths,
         const std::vector<std::size_t> & false_postions,
         bool big_list
@@ -167,7 +170,7 @@ namespace sparrow::test
 
         schema.n_children = 1;
         schema.children = new ArrowSchema*[1];
-        schema.children[0] = &flat_value_schema;
+        schema.children[0] = new ArrowSchema(std::move(flat_value_schema));
 
         schema.dictionary = nullptr;
         schema.release = &release_arrow_schema;
@@ -213,7 +216,7 @@ namespace sparrow::test
         arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
 
         arr.children = new ArrowArray*[1];
-        arr.children[0] = &flat_value_arr;
+        arr.children[0] = new ArrowArray(std::move(flat_value_arr));
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
@@ -223,8 +226,8 @@ namespace sparrow::test
     void fill_schema_and_array_for_struct_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
-        std::vector<ArrowSchema> & children_schemas,
-        std::vector<ArrowArray> & children_arrays,
+        std::vector<ArrowSchema>&& children_schemas,
+        std::vector<ArrowArray>&& children_arrays,
         const std::vector<std::size_t> & false_postions
     )
     {
@@ -234,10 +237,10 @@ namespace sparrow::test
 
         schema.n_children = static_cast<std::int64_t>(children_schemas.size());
         schema.children = new ArrowSchema*[children_schemas.size()];
-        for (std::size_t i = 0; i < children_schemas.size(); ++i)
-        {
-            schema.children[i] = &children_schemas[i];
-        }
+        std::transform(std::make_move_iterator(children_schemas.begin()),
+                       std::make_move_iterator(children_schemas.end()),
+                       schema.children,
+                       [](auto&& child) { return new ArrowSchema(std::move(child)); });
 
         schema.dictionary = nullptr;
         schema.release = &release_arrow_schema;
@@ -256,10 +259,11 @@ namespace sparrow::test
         arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
 
         arr.children = new ArrowArray*[children_arrays.size()];
-        for (std::size_t i = 0; i < children_arrays.size(); ++i)
-        {
-            arr.children[i] = &children_arrays[i];
-        }
+
+        std::transform(std::make_move_iterator(children_arrays.begin()),
+                       std::make_move_iterator(children_arrays.end()),
+                       arr.children,
+                       [](auto&& child) { return new ArrowArray(std::move(child)); });
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
@@ -268,10 +272,10 @@ namespace sparrow::test
     void fill_schema_and_array_for_run_end_encoded(
         ArrowSchema& schema,
         ArrowArray& arr,
-        ArrowSchema &  acc_length_schema,
-        ArrowArray &   acc_length_arr,
-        ArrowSchema &  value_schema,
-        ArrowArray &   value_arr,
+        ArrowSchema&& acc_length_schema,
+        ArrowArray&& acc_length_arr,
+        ArrowSchema&& value_schema,
+        ArrowArray&& value_arr,
         std::size_t  length
     ){
         schema.format = "+r";
@@ -280,8 +284,8 @@ namespace sparrow::test
 
         schema.n_children = 2;
         schema.children = new ArrowSchema*[2];
-        schema.children[0] = &acc_length_schema;
-        schema.children[1] = &value_schema;
+        schema.children[0] = new ArrowSchema(std::move(acc_length_schema));
+        schema.children[1] = new ArrowSchema(std::move(value_schema));
 
         schema.dictionary = nullptr;
         schema.release = &release_arrow_schema;
@@ -298,8 +302,8 @@ namespace sparrow::test
         arr.buffers = nullptr;
 
         arr.children = new ArrowArray*[2];
-        arr.children[0] = &acc_length_arr;
-        arr.children[1] = &value_arr;
+        arr.children[0] = new ArrowArray(std::move(acc_length_arr));
+        arr.children[1] = new ArrowArray(std::move(value_arr));
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
@@ -309,10 +313,10 @@ namespace sparrow::test
     void fill_schema_and_array_for_sparse_union(
         ArrowSchema& schema,
         ArrowArray& arr,
-        std::vector<ArrowSchema>  & children_schemas,
-        std::vector<ArrowArray>   & children_arrays,
-        const std::vector<std::uint8_t> & type_ids,
-        const std::string & format
+        std::vector<ArrowSchema>&& children_schemas,
+        std::vector<ArrowArray>&& children_arrays,
+        const std::vector<std::uint8_t>& type_ids,
+        const std::string& format
     ){
         schema.format = format.c_str();
         schema.name = "test";
@@ -320,10 +324,10 @@ namespace sparrow::test
 
         schema.n_children = static_cast<std::int64_t>(children_schemas.size());
         schema.children = new ArrowSchema*[children_schemas.size()];
-        for (std::size_t i = 0; i < children_schemas.size(); ++i)
-        {
-            schema.children[i] = &children_schemas[i];
-        }
+        std::transform(std::make_move_iterator(children_schemas.begin()),
+                       std::make_move_iterator(children_schemas.end()),
+                       schema.children,
+                       [](auto&& child) { return new ArrowSchema(std::move(child)); });
 
         schema.dictionary = nullptr;
         schema.release = &release_arrow_schema;
@@ -343,10 +347,10 @@ namespace sparrow::test
         arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
 
         arr.children = new ArrowArray*[children_arrays.size()];
-        for (std::size_t i = 0; i < children_arrays.size(); ++i)
-        {
-            arr.children[i] = &children_arrays[i];
-        }
+        std::transform(std::make_move_iterator(children_arrays.begin()),
+                       std::make_move_iterator(children_arrays.end()),
+                       arr.children,
+                       [](auto&& child) { return new ArrowArray(std::move(child)); });
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
@@ -355,8 +359,8 @@ namespace sparrow::test
     void fill_schema_and_array_for_dense_union(
         ArrowSchema& schema,
         ArrowArray& arr,
-        std::vector<ArrowSchema>  & children_schemas,
-        std::vector<ArrowArray>   & children_arrays,
+        std::vector<ArrowSchema>&& children_schemas,
+        std::vector<ArrowArray>&& children_arrays,
         const std::vector<std::uint8_t> & type_ids,
         const std::vector<std::int32_t> & offsets,
         const std::string & format
@@ -367,10 +371,10 @@ namespace sparrow::test
 
         schema.n_children = static_cast<std::int64_t>(children_schemas.size());
         schema.children = new ArrowSchema*[children_schemas.size()];
-        for (std::size_t i = 0; i < children_schemas.size(); ++i)
-        {
-            schema.children[i] = &children_schemas[i];
-        }
+        std::transform(std::make_move_iterator(children_schemas.begin()),
+                       std::make_move_iterator(children_schemas.end()),
+                       schema.children,
+                       [](auto&& child) { return new ArrowSchema(std::move(child)); });
 
         schema.dictionary = nullptr;
         schema.release = &release_arrow_schema;
@@ -395,10 +399,10 @@ namespace sparrow::test
         arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
 
         arr.children = new ArrowArray*[children_arrays.size()];
-        for (std::size_t i = 0; i < children_arrays.size(); ++i)
-        {
-            arr.children[i] = &children_arrays[i];
-        }
+        std::transform(std::make_move_iterator(children_arrays.begin()),
+                       std::make_move_iterator(children_arrays.end()),
+                       arr.children,
+                       [](auto&& child) { return new ArrowArray(std::move(child)); });
 
         arr.dictionary = nullptr;
         arr.release = &release_arrow_array;
