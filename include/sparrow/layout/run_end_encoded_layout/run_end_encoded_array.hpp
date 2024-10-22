@@ -83,6 +83,7 @@ namespace sparrow
         SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
 
         arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
         arrow_proxy m_proxy;
         std::uint64_t m_encoded_length;
@@ -158,6 +159,11 @@ namespace sparrow
     }
     
     inline arrow_proxy& run_end_encoded_array::get_arrow_proxy()
+    {
+        return m_proxy;
+    }
+
+    inline const arrow_proxy& run_end_encoded_array::get_arrow_proxy() const
     {
         return m_proxy;
     }

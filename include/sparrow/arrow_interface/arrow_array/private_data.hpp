@@ -86,14 +86,14 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(index < m_buffers.size());
         m_buffers[index] = std::move(buffer);
-        update_buffers_ptrs();
+        m_buffers_pointers[index] = m_buffers[index].data();
     }
 
     inline void arrow_array_private_data::set_buffer(std::size_t index, const buffer_view<std::uint8_t>& buffer)
     {
         SPARROW_ASSERT_TRUE(index < m_buffers.size());
         m_buffers[index] = buffer;
-        update_buffers_ptrs();
+        m_buffers_pointers[index] = m_buffers[index].data();
     }
 
     constexpr void
@@ -101,7 +101,7 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(index < m_buffers.size());
         m_buffers[index].resize(size, value);
-        update_buffers_ptrs();
+        m_buffers_pointers[index] = m_buffers[index].data();
     }
 
     template <class T>
