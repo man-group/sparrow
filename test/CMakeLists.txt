@@ -34,6 +34,9 @@ endif()
 
 if (SPARROW_TARGET_32BIT)
     set(SPARROW_TESTS_SOURCES
+        junit.cpp
+        junit.hpp
+        junit_xml_writer.hpp
         main.cpp
     )
 else()
