@@ -73,6 +73,9 @@ namespace sparrow
         struct_array(const struct_array&);
         struct_array& operator=(const struct_array&);
 
+        struct_array(struct_array&&) = default;
+        struct_array& operator=(struct_array&&) = default;
+
         const array_wrapper* raw_child(std::size_t i) const;
         array_wrapper* raw_child(std::size_t i);
 
