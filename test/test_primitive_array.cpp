@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <concepts>
 #include <cstdint>
 #include <ranges>
 
@@ -130,30 +129,16 @@ namespace sparrow
             SUBCASE("const_value_iterator_equality")
             {
                 auto ar_values = ar.values();
-                for (std::size_t i = 0; i < ar.size(); ++i)
-                {
-                    if constexpr (std::same_as<T, float16_t>)
-                    {
-                        ar[i] = float16_t(static_cast<int32_t>(i));
-                    }
-                    else
-                    {
-                        ar[i] = static_cast<T>(i);
-                    }
-                }
-
                 auto citer = ar_values.begin();
-                for (std::size_t i = 0; i < ar.size(); ++i, ++citer)
-                {
-                    if constexpr (std::same_as<T, float16_t>)
-                    {
-                        CHECK_EQ(*citer, float16_t(static_cast<int32_t>(i)));
-                    }
-                    else
-                    {
-                        CHECK_EQ(*citer, i);
-                    }
-                }
+                CHECK_EQ(*citer, values[1]);
+                ++citer;
+                CHECK_EQ(*citer, values[2]);
+                ++citer;
+                CHECK_EQ(*citer, values[3]);
+                ++citer;
+                CHECK_EQ(*citer, values[4]);
+                ++citer;
+                CHECK_EQ(citer, ar_values.end());
             }
 
             SUBCASE("const_bitmap_iterator_ordering")
@@ -165,20 +150,16 @@ namespace sparrow
 
             SUBCASE("const_bitmap_iterator_equality")
             {
-                auto ar_bitmap = ar.bitmap();
-                for (std::size_t i = 0; i < ar.size(); ++i)
-                {
-                    if (i % 2 != 0)
-                    {
-                        ar[i] = nullval;
-                    }
-                }
-
+                const auto ar_bitmap = ar.bitmap();
                 auto citer = ar_bitmap.begin();
-                for (std::size_t i = 0; i < ar.size(); ++i, ++citer)
-                {
-                    CHECK_EQ(*citer, i % 2 == 0);
-                }
+                CHECK(*citer);
+                ++citer;
+                CHECK_FALSE(*citer);
+                ++citer;
+                CHECK(*citer);
+                ++citer;
+                CHECK(*citer);
+                ++citer;
             }
 
             SUBCASE("iterator")

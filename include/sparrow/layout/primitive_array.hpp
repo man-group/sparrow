@@ -18,18 +18,12 @@
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
-#include "sparrow/layout/array_base.hpp"
+#include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
 {
-    class run_end_encoded_array;
-
-    template <typename I, typename T>
-    concept iterator_of_type = std::input_iterator<I>
-                               && std::same_as<typename std::iterator_traits<I>::value_type, T>;
-
     template <class T>
     class primitive_array;
 
@@ -46,17 +40,20 @@ namespace sparrow
 
         using value_iterator = pointer_iterator<pointer>;
         using const_value_iterator = pointer_iterator<const_pointer>;
+        using bitmap_const_reference = bitmap_type::const_reference;
+
+        using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
 
         using iterator_tag = std::random_access_iterator_tag;
     };
 
     template <class T>
-    class primitive_array final : public array_bitmap_base<primitive_array<T>>
+    class primitive_array final : public mutable_array_bitmap_base<primitive_array<T>>
     {
     public:
 
         using self_type = primitive_array<T>;
-        using base_type = array_bitmap_base<self_type>;
+        using base_type = mutable_array_bitmap_base<self_type>;
         using inner_types = array_inner_types<self_type>;
         using inner_value_type = typename inner_types::inner_value_type;
         using inner_reference = typename inner_types::inner_reference;
@@ -87,8 +84,6 @@ namespace sparrow
 
         using base_type::size;
 
-    private:
-
         using base_type::storage;
 
         pointer data();
@@ -105,20 +100,21 @@ namespace sparrow
 
         // Modifiers
 
-        buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
-
         void resize_values(size_type new_length, inner_value_type value);
 
         value_iterator insert_value(const_value_iterator pos, inner_value_type value, size_type count);
 
-        template <iterator_of_type<T> InputIt>
+        template <mpl::iterator_of_type<T> InputIt>
         value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
 
         value_iterator erase_values(const_value_iterator pos, size_type count);
 
+    private:
+
+        buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
+
         static constexpr size_type DATA_BUFFER_INDEX = 1;
 
-        friend class array_crtp_base<self_type>;
         friend class run_end_encoded_array;
     };
 
@@ -235,7 +231,7 @@ namespace sparrow
     }
 
     template <class T>
-    template <iterator_of_type<T> InputIt>
+    template <mpl::iterator_of_type<T> InputIt>
     auto
     primitive_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last) -> value_iterator
     {

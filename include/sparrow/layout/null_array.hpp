@@ -102,6 +102,7 @@ namespace sparrow
         difference_type ssize() const;
 
         arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
         arrow_proxy m_proxy;
 
@@ -239,6 +240,12 @@ namespace sparrow
     {
         return m_proxy;
     }
+
+    inline const arrow_proxy& null_array::get_arrow_proxy() const
+    {
+        return m_proxy;
+    }
+    
     
     inline bool operator==(const null_array& lhs, const null_array& rhs)
     {

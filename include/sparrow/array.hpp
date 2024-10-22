@@ -30,7 +30,7 @@ namespace sparrow
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
  
-        SPARROW_API array() = default;
+        array() = default;
 
         SPARROW_API array(ArrowArray&& array, ArrowSchema&& schema);
         SPARROW_API array(ArrowArray&& array, ArrowSchema* schema);

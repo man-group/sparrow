@@ -136,6 +136,7 @@ namespace sparrow
         static values_layout create_values_layout(arrow_proxy& proxy);
 
         arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
         arrow_proxy m_proxy;
         keys_layout m_keys_layout;
@@ -304,6 +305,12 @@ namespace sparrow
 
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::get_arrow_proxy() -> arrow_proxy&
+    {
+        return m_proxy;
+    }
+
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::get_arrow_proxy() const -> const arrow_proxy&
     {
         return m_proxy;
     }

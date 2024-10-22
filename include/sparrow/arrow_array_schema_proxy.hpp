@@ -26,7 +26,6 @@
 #include "sparrow/config/config.hpp"
 #include "sparrow/types/data_type.hpp"
 
-
 namespace sparrow
 {
     /**
@@ -276,7 +275,7 @@ namespace sparrow
         /**
          * get a non-owning view of the arrow_proxy.
          */
-        [[nodiscard]] SPARROW_API arrow_proxy view();
+        [[nodiscard]] SPARROW_API arrow_proxy view() const;
 
         [[nodiscard]] SPARROW_API bool owns_array() const;
         [[nodiscard]] SPARROW_API ArrowArray extract_array();
@@ -288,10 +287,8 @@ namespace sparrow
         [[nodiscard]] SPARROW_API ArrowSchema& schema();
         [[nodiscard]] SPARROW_API const ArrowSchema& schema() const;
 
-        [[nodiscard]] [[nodiscard]]SPARROW_API arrow_schema_private_data* get_schema_private_data();
+        [[nodiscard]] SPARROW_API arrow_schema_private_data* get_schema_private_data();
         [[nodiscard]] SPARROW_API arrow_array_private_data* get_array_private_data();
-
-        SPARROW_API void update_buffers();
 
     private:
 
@@ -321,6 +318,7 @@ namespace sparrow
         void update_children();
         void update_dictionary();
         void update_null_count();
+        void update_buffers();
         void reset();
 
         [[nodiscard]] bool array_created_with_sparrow() const;
@@ -384,4 +382,5 @@ namespace sparrow
             );
         }
     }
+
 }

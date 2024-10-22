@@ -28,9 +28,11 @@ namespace sparrow
 {
     static constexpr size_t bitmap_buffer_index = 0;
 
-    arrow_proxy arrow_proxy::view()
+    arrow_proxy arrow_proxy::view() const
     {
-        return arrow_proxy(&array(), &schema());
+        ArrowArray* array_ptr = const_cast<ArrowArray*>(&array());
+        ArrowSchema* schema_ptr = const_cast<ArrowSchema*>(&schema());
+        return arrow_proxy(array_ptr, schema_ptr);
     }
 
     void arrow_proxy::update_buffers()
@@ -741,7 +743,7 @@ namespace sparrow
         return bitmap;
     }
 
-    void arrow_proxy::resize_bitmap(size_t new_size)
+    void arrow_proxy::resize_bitmap(size_t new_size, bool value)
     {
         if (!array_created_with_sparrow())
         {
@@ -750,24 +752,8 @@ namespace sparrow
         }
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         auto bitmap = get_non_owning_dynamic_bitset();
-        bitmap.resize(new_size, true);
+        bitmap.resize(new_size, value);
         update_buffers();
-    }
-
-    size_t arrow_proxy::insert_bitmap(size_t index, bool value)
-    {
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception(
-                "Cannot insert value in bitmap on a non-sparrow created ArrowArray or ArrowSchema"
-            );
-        }
-        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
-        SPARROW_ASSERT_TRUE(std::cmp_less_equal(index, length()))
-        auto bitmap = get_non_owning_dynamic_bitset();
-        auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), value);
-        update_buffers();
-        return std::distance(bitmap.begin(), it);
     }
 
     size_t arrow_proxy::insert_bitmap(size_t index, bool value, size_t count)
@@ -786,42 +772,6 @@ namespace sparrow
         }
         auto bitmap = get_non_owning_dynamic_bitset();
         auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), count, value);
-        update_buffers();
-        return std::distance(bitmap.begin(), it);
-    }
-
-    size_t arrow_proxy::insert_bitmap(size_t index, std::initializer_list<bool> values)
-    {
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception(
-                "Cannot insert values in bitmap on a non-sparrow created ArrowArray or ArrowSchema"
-            );
-        }
-        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
-        SPARROW_ASSERT_TRUE(std::cmp_less_equal(index, length()))
-        if (values.size() == 0)
-        {
-            return index;
-        }
-        auto bitmap = get_non_owning_dynamic_bitset();
-        auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), values.begin(), values.end());
-        update_buffers();
-        return std::distance(bitmap.begin(), it);
-    }
-
-    size_t arrow_proxy::erase_bitmap(size_t index)
-    {
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception(
-                "Cannot erase values in bitmap on a non-sparrow created ArrowArray or ArrowSchema"
-            );
-        }
-        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
-        SPARROW_ASSERT_TRUE(std::cmp_less(index, length()))
-        auto bitmap = get_non_owning_dynamic_bitset();
-        auto it = bitmap.erase(sparrow::next(bitmap.cbegin(), index + offset()));
         update_buffers();
         return std::distance(bitmap.begin(), it);
     }
