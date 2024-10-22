@@ -89,8 +89,12 @@ namespace sparrow
         children_type make_children(arrow_proxy& proxy);
 
         explicit union_array_crtp_base(arrow_proxy proxy);
+
         union_array_crtp_base(const self_type& rhs);
         self_type& operator=(const self_type& rhs);
+
+        union_array_crtp_base(self_type&& rhs) = default;
+        self_type& operator=(self_type&& rhs) = default;
 
         arrow_proxy& get_arrow_proxy();
 
@@ -115,8 +119,12 @@ namespace sparrow
         using base_type = union_array_crtp_base<dense_union_array>;
 
         explicit dense_union_array(arrow_proxy proxy);
+
         dense_union_array(const dense_union_array& rhs);
         dense_union_array& operator=(const dense_union_array& rhs);
+
+        dense_union_array(dense_union_array&& rhs) = default;
+        dense_union_array& operator=(dense_union_array&& rhs) = default;
 
     private:
         std::size_t element_offset(std::size_t i) const;

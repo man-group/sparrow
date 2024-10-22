@@ -74,6 +74,18 @@ namespace sparrow
                 CHECK_EQ(list_arr3, list_arr);
             }
 
+            SUBCASE("move")
+            {
+                list_array list_arr2(list_arr);
+                list_array list_arr3(std::move(list_arr2));
+                CHECK_EQ(list_arr3, list_arr);
+
+                list_array list_arr4(test::make_list_proxy<T>(n_flat2, sizes2));
+                CHECK_NE(list_arr4, list_arr);
+                list_arr4 = std::move(list_arr3);
+                CHECK_EQ(list_arr4, list_arr);
+            }
+
             SUBCASE("element-sizes")
             {
                 for(std::size_t i = 0; i < n; ++i){
@@ -184,6 +196,18 @@ namespace sparrow
                 CHECK_NE(list_arr3, list_arr);
                 list_arr3 = list_arr;
                 CHECK_EQ(list_arr3, list_arr);
+            }
+
+            SUBCASE("move")
+            {
+                list_view_array list_arr2(list_arr);
+                list_view_array list_arr3(std::move(list_arr2));
+                CHECK_EQ(list_arr3, list_arr);
+
+                list_view_array list_arr4(test::make_list_view_proxy<T>(n_flat2, sizes2));
+                CHECK_NE(list_arr4, list_arr);
+                list_arr4 = std::move(list_arr3);
+                CHECK_EQ(list_arr4, list_arr);
             }
 
             SUBCASE("element-sizes")
@@ -299,7 +323,19 @@ namespace sparrow
                 CHECK_EQ(list_arr3, list_arr);
             }
 
-            SUBCASE("consitency")
+            SUBCASE("move")
+            {
+                fixed_sized_list_array list_arr2(list_arr);
+                fixed_sized_list_array list_arr3(std::move(list_arr2));
+                CHECK_EQ(list_arr3, list_arr);
+
+                fixed_sized_list_array list_arr4(test::make_fixed_sized_list_proxy<T>(n_flat2, list_size2));
+                CHECK_NE(list_arr4, list_arr);
+                list_arr4 = std::move(list_arr3);
+                CHECK_EQ(list_arr4, list_arr);
+            }
+
+            SUBCASE("consistency")
             {   
                 test::generic_consistency_test(list_arr);
             }
