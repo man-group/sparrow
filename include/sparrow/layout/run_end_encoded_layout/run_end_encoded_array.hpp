@@ -54,8 +54,12 @@ namespace sparrow
         using const_iterator = run_encoded_array_iterator<true>;
         
         SPARROW_API explicit run_end_encoded_array(arrow_proxy proxy);
+
         SPARROW_API run_end_encoded_array(const self_type&);
         SPARROW_API self_type& operator=(const self_type&);
+        
+        SPARROW_API run_end_encoded_array(self_type&&) = default;
+        SPARROW_API self_type& operator=(self_type&&) = default;
 
         SPARROW_API array_traits::const_reference operator[](std::uint64_t i);
         SPARROW_API array_traits::const_reference operator[](std::uint64_t i) const;

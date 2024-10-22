@@ -112,6 +112,19 @@ namespace sparrow
                 CHECK_EQ(rle_array3, rle_array);
             }
 
+            SUBCASE("move")
+            {
+                run_end_encoded_array rle_array2(rle_array);
+                run_end_encoded_array rle_array3(std::move(rle_array2));
+                CHECK_EQ(rle_array3, rle_array);
+
+                run_end_encoded_array rle_array4(
+                        test::make_run_end_encoded_proxy<acc_type, inner_value_type>(n, child_length, true));
+                CHECK_NE(rle_array4, rle_array);
+                rle_array4 = std::move(rle_array3);
+                CHECK_EQ(rle_array4, rle_array);
+            }
+
             SUBCASE("operator[]"){
                 //check elements
                 for(std::size_t i=0; i<n; ++i){
