@@ -382,10 +382,6 @@ namespace sparrow
         return *this;
     }
 
-#ifdef __GNUC__
-#    pragma GCC diagnostic pop
-#endif
-
     template <bool BIG>
     auto list_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type, offset_type>
     {
@@ -403,11 +399,6 @@ namespace sparrow
     /***************************************
      * list_view_array_impl implementation *
      ***************************************/
-
-#ifdef __GNUC__
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wcast-align"
-#endif
 
     template <bool BIG>
     inline list_view_array_impl<BIG>::list_view_array_impl(arrow_proxy proxy)
@@ -437,10 +428,6 @@ namespace sparrow
         return *this;
     }
 
-#ifdef __GNUC__
-#    pragma GCC diagnostic pop
-#endif
-
     template <bool BIG>
     inline auto
     list_view_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type, offset_type>
@@ -464,6 +451,10 @@ namespace sparrow
               this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()
         );
     }
+
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
 
     /*****************************************
      * fixed_sized_list_array implementation *
