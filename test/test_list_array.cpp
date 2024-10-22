@@ -36,11 +36,14 @@ namespace sparrow
             // vector of sizes
             std::vector<std::size_t> sizes = {1, 2, 3, 4};
 
-            // first we create a flat array of integers
-            ArrowArray flat_arr{};
-            ArrowSchema flat_schema{};
-            test::fill_schema_and_array<inner_scalar_type>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
-            flat_schema.name = "the flat array";
+            // // first we create a flat array of integers
+            // ArrowArray flat_arr{};
+            // ArrowSchema flat_schema{};
+            // test::fill_schema_and_array<inner_scalar_type>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
+            // flat_schema.name = "the flat array";
+
+            primitive_array<inner_scalar_type> flat_arr(std::ranges::iota_view{std::size_t(0), n_flat});
+            
 
             ArrowArray arr{};
             ArrowSchema schema{};
