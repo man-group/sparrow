@@ -84,11 +84,11 @@ namespace sparrow
 
         struct iterator_types
         {
-                using value_type = value_type;
-                using reference = const_reference;
-                using value_iterator = const_value_iterator;
-                using bitmap_iterator = const_bitmap_iterator;
-                using iterator_tag = iterator_tag;
+            using value_type = self_type::value_type;
+            using reference = self_type::const_reference;
+            using value_iterator = self_type::const_value_iterator;
+            using bitmap_iterator = self_type::const_bitmap_iterator;
+            using iterator_tag = self_type::iterator_tag;
         };
 
         using const_iterator = layout_iterator<iterator_types>;

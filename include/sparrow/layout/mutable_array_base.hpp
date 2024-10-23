@@ -55,11 +55,11 @@ namespace sparrow
         {
         public:
 
-            using value_type = value_type;
-            using reference = reference;
-            using value_iterator = value_iterator;
-            using bitmap_iterator = bitmap_iterator;
-            using iterator_tag = iterator_tag;
+            using value_type = self_type::value_type;
+            using reference = self_type::reference;
+            using value_iterator = self_type::value_iterator;
+            using bitmap_iterator = self_type::bitmap_iterator;
+            using iterator_tag = self_type::iterator_tag;
         };
 
         using iterator = layout_iterator<iterator_types>;
