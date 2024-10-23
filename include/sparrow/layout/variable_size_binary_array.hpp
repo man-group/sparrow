@@ -62,7 +62,7 @@ namespace sparrow
             using reference = inner_const_reference;
             using value_iterator = const_data_iterator;
             using bitmap_iterator = const_bitmap_iterator;
-            using iterator_tag = iterator_tag;
+            using iterator_tag = array_inner_types<variable_size_binary_array<T, CR, OT>>::iterator_tag;
         };
 
         // using value_iterator = variable_size_binary_value_iterator<array_type, false>;
