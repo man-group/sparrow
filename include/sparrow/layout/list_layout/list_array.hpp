@@ -249,7 +249,7 @@ namespace sparrow
 
         template<class ...ARGS>
         requires(mpl::excludes_copy_and_move_ctor_v<fixed_sized_list_array, ARGS...>)
-        fixed_sized_list_array(ARGS&& ...args): base_type(create_proxy(std::forward<ARGS>(args)...))
+        fixed_sized_list_array(ARGS&& ...args): self_type(create_proxy(std::forward<ARGS>(args)...))
         {}
 
     private:
@@ -473,6 +473,7 @@ namespace sparrow
 
     inline auto fixed_sized_list_array::list_size_from_format(const std::string_view format) -> uint64_t
     {
+        std::cout<<"recieved format string: "<<format<<std::endl;
         SPARROW_ASSERT(format.size() >= 3, "Invalid format string");
         const auto n_digits = format.size() - 3;
         const auto list_size_str = format.substr(3, n_digits);
@@ -483,6 +484,7 @@ namespace sparrow
         : base_type(std::move(proxy))
         , m_list_size(fixed_sized_list_array::list_size_from_format(this->storage().format()))
     {
+        std::cout<<"constructor called"<<std::endl;
     }
 
     inline auto fixed_sized_list_array::offset_range(size_type i) const -> std::pair<offset_type, offset_type>
