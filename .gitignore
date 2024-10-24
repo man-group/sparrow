@@ -47,3 +47,6 @@ CMakeUserPresets.json
 
 # MacOS
 .DS_Store
+
+# Vcpkg
+/vcpkg_installed/
