@@ -60,6 +60,40 @@ namespace sparrow::test
         return buf;
     }
 
+    inline sparrow::buffer<std::uint8_t> make_offset_buffer_from_sizes2(const std::vector<size_t>& sizes, bool big)
+    {
+// ignore -Werror=cast-align]
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+        const auto n = sizes.size() + 1;
+        const auto buf_size = n * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t));
+        auto buf = new std::uint8_t[buf_size];
+        if (big)
+        {
+            auto* ptr = reinterpret_cast<std::uint64_t*>(buf);
+            ptr[0] = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                ptr[i + 1] = ptr[i] + static_cast<std::uint64_t>(sizes[i]);
+            }
+        }
+        else
+        {
+            auto* ptr = reinterpret_cast<std::uint32_t*>(buf);
+            ptr[0] = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                ptr[i + 1] = ptr[i] + static_cast<std::uint32_t>(sizes[i]);
+            }
+        }
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
+        return {buf, buf_size};
+    }
+
     inline std::uint8_t* make_bitmap_buffer(size_t n, const std::vector<size_t>& false_bitmap)
     {
         auto tmp_bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);

@@ -18,6 +18,7 @@
 #include <string>
 #include <type_traits>
 
+#include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -30,7 +31,7 @@ namespace sparrow
      * name and metadata strings, children, and dictionary. It is used in the
      * Sparrow library.
      */
-    class arrow_schema_private_data
+    class arrow_schema_private_data : public children_ownership
     {
     public:
 
@@ -50,7 +51,7 @@ namespace sparrow
             requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                      && std::constructible_from<arrow_schema_private_data::NameType, N>
                      && std::constructible_from<arrow_schema_private_data::MetadataType, M>
-        arrow_schema_private_data(F format, N name, M metadata);
+        arrow_schema_private_data(F format, N name, M metadata, std::size_t children_size = 0);
 
         [[nodiscard]] const char* format_ptr() const noexcept;
         FormatType& format() noexcept;
@@ -102,8 +103,9 @@ namespace sparrow
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                      && std::constructible_from<arrow_schema_private_data::NameType, N>
                      && std::constructible_from<arrow_schema_private_data::MetadataType, M>
-    arrow_schema_private_data::arrow_schema_private_data(F format, N name, M metadata)
-        : m_format(std::move(format))
+    arrow_schema_private_data::arrow_schema_private_data(F format, N name, M metadata, std::size_t children_size)
+        : children_ownership(children_size)
+        , m_format(std::move(format))
         , m_name(to_optional_string(std::forward<N>(name)))
         , m_metadata(to_optional_string(std::forward<M>(metadata)))
     {

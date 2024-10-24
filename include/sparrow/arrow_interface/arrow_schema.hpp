@@ -141,7 +141,8 @@ namespace sparrow
         schema.private_data = new arrow_schema_private_data(
             std::move(format),
             std::move(name),
-            std::move(metadata)
+            std::move(metadata),
+            static_cast<std::size_t>(n_children)
         );
 
         const auto private_data = static_cast<arrow_schema_private_data*>(schema.private_data);

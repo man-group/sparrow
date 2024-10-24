@@ -25,6 +25,7 @@ namespace sparrow
         SPARROW_ASSERT_FALSE(array == nullptr)
         SPARROW_ASSERT_TRUE(array->release == std::addressof(release_arrow_array))
 
+        release_common_arrow(*array);
         if (array->private_data != nullptr)
         {
             const auto private_data = static_cast<arrow_array_private_data*>(array->private_data);
@@ -32,7 +33,6 @@ namespace sparrow
             array->private_data = nullptr;
         }
         array->buffers = nullptr;  // The buffers were deleted with the private data
-        release_common_arrow(*array);
     }
 
     std::vector<sparrow::buffer_view<uint8_t>>
@@ -100,7 +100,10 @@ namespace sparrow
         {
             buffers_copy.emplace_back(buffer);
         }
-        target.private_data = new arrow_array_private_data(std::move(buffers_copy));
+        target.private_data = new arrow_array_private_data(
+            std::move(buffers_copy),
+            static_cast<std::size_t>(target.n_children)
+        );
         const auto private_data = static_cast<arrow_array_private_data*>(target.private_data);
         target.buffers = private_data->buffers_ptrs<void>();
         target.release = release_arrow_array;

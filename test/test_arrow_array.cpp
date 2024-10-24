@@ -281,7 +281,7 @@ TEST_SUITE("C Data Interface")
 
         SUBCASE("deep_copy")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             auto array_copy = sparrow::copy_array(array, schema);
             CHECK_EQ(array.length, array_copy.length);
             CHECK_EQ(array.null_count, array_copy.null_count);
@@ -305,7 +305,7 @@ TEST_SUITE("C Data Interface")
 
         SUBCASE("validate_format_with_arrow_array")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             CHECK(sparrow::validate_format_with_arrow_array(sparrow::data_type::INT8, array));
             // CHECK_FALSE(sparrow::validate_format_with_arrow_array(sparrow::data_type::FIXED_SIZED_LIST,
             // array));

@@ -31,13 +31,13 @@ namespace sparrow
      * It is used in the Sparrow library.
      */
 
-    class arrow_array_private_data
+    class arrow_array_private_data : public children_ownership
     {
     public:
 
         using BufferType = std::vector<buffer<std::uint8_t>>;
 
-        explicit constexpr arrow_array_private_data(BufferType buffers);
+        explicit constexpr arrow_array_private_data(BufferType buffers, std::size_t children_size = 0);
 
         [[nodiscard]] constexpr BufferType& buffers() noexcept;
         [[nodiscard]] constexpr const BufferType& buffers() const noexcept;
@@ -54,10 +54,12 @@ namespace sparrow
 
         BufferType m_buffers;
         std::vector<std::uint8_t*> m_buffers_pointers;
+
     };
 
-    constexpr arrow_array_private_data::arrow_array_private_data(BufferType buffers)
-        : m_buffers(std::move(buffers))
+    constexpr arrow_array_private_data::arrow_array_private_data(BufferType buffers, std::size_t children_size)
+        : children_ownership(children_size)
+        , m_buffers(std::move(buffers))
         , m_buffers_pointers(to_raw_ptr_vec<std::uint8_t>(m_buffers))
     {
     }

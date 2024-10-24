@@ -165,7 +165,7 @@ namespace sparrow
         array.null_count = null_count;
         array.offset = offset;
         array.n_buffers = sparrow::ssize(buffers);
-        array.private_data = new arrow_array_private_data(std::move(buffers));
+        array.private_data = new arrow_array_private_data(std::move(buffers), n_children);
         const auto private_data = static_cast<arrow_array_private_data*>(array.private_data);
         array.buffers = private_data->buffers_ptrs<void>();
         array.n_children = static_cast<int64_t>(n_children);
