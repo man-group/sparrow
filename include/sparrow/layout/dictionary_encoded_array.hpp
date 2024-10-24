@@ -135,7 +135,7 @@ namespace sparrow
         static keys_layout create_keys_layout(arrow_proxy& proxy);
         static values_layout create_values_layout(arrow_proxy& proxy);
 
-        arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
         arrow_proxy m_proxy;

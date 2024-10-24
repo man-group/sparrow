@@ -96,7 +96,7 @@ namespace sparrow
         union_array_crtp_base(self_type&& rhs) = default;
         self_type& operator=(self_type&& rhs) = default;
 
-        arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
         arrow_proxy m_proxy;
