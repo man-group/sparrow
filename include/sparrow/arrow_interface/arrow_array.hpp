@@ -121,7 +121,7 @@ namespace sparrow
      *
      * @return The created `ArrowArray`.
      */
-    SPARROW_API arrow_array_unique_ptr default_arrow_array_unique_ptr();
+    arrow_array_unique_ptr default_arrow_array_unique_ptr();
 
     /**
      * Release function to use for the `ArrowArray.release` member.
