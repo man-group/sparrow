@@ -185,6 +185,65 @@ namespace sparrow
         SPARROW_API void set_buffer(size_t index, buffer<uint8_t>&& buffer);
 
         /**
+         * Resize the bitmap buffer of the `ArrowArray`.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
+         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
+         * @param new_size The new size of the bitmap buffer.
+         * @param value The value to set in the new elements. True by default.
+         */
+        SPARROW_API void resize_bitmap(size_t new_size, bool value = true);
+
+        /**
+         * Insert elements of the same value in the bitmap buffer at the given index.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
+         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
+         * @exception `std::out_of_range` If the index is greater than the length of the bitmap.
+         * @param index The index where to insert the value. Must be less than the length of the bitmap.
+         * @param value The value to insert.
+         * @param count The number of times to insert the value. 1 by default
+         * @return The index of the first inserted value.
+         */
+        SPARROW_API size_t insert_bitmap(size_t index, bool value, size_t count = 1);
+
+        /**
+         * Insert several elements in the bitmap buffer at the given index.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
+         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
+         * @exception `std::out_of_range` If the index is greater than the length of the bitmap.
+         * @param index The index where to insert the values. Must be less than the length of the bitmap.
+         * @param range The range of values to insert.
+         * @return The index of the first inserted value.
+         */
+        template <std::ranges::input_range R>
+        size_t insert_bitmap(size_t index, const R& range);
+
+        /**
+         * Erase several elements in the bitmap buffer at the given index.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
+         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
+         * @exception `std::out_of_range` If the index is greater than the length of the bitmap.
+         * @param index The index of the first value to erase. Must be less than the length of the bitmap.
+         * @param count The number of elements to erase. 1 by default.
+         * @return The index of the first erased value.
+         */
+        SPARROW_API size_t erase_bitmap(size_t index, size_t count = 1);
+
+        /**
+         * Push a value at the end of the bitmap buffer.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
+         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
+         * @param value The value to push.
+         */
+        SPARROW_API void push_back_bitmap(bool value);
+
+        /**
+         * Pop a value at the end of the bitmap buffer.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
+         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
+         */
+        SPARROW_API void pop_back_bitmap();
+
+        /**
          * Add children without taking their ownership.
          * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
          * in this proxy were not created with sparrow.
@@ -381,6 +440,19 @@ namespace sparrow
                 std::move(arrow_arrays_and_schemas[i].schema)
             );
         }
+    }
+
+    template <std::ranges::input_range R>
+    inline size_t arrow_proxy::insert_bitmap(size_t index, const R& range)
+    {
+        if (!is_created_with_sparrow())
+        {
+            throw arrow_proxy_exception("Cannot modify the bitmap on non-sparrow created ArrowArray");
+        }
+        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
+        auto bitmap = get_non_owning_dynamic_bitset();
+        const auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), range.begin(), range.end());
+        return static_cast<size_t>(std::distance(bitmap.begin(), it));
     }
 
 }

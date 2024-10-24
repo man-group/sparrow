@@ -776,6 +776,8 @@ namespace sparrow
         return std::distance(bitmap.begin(), it);
     }
 
+    
+
     size_t arrow_proxy::erase_bitmap(size_t index, size_t count)
     {
         if (!array_created_with_sparrow())
