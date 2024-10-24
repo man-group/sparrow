@@ -45,6 +45,12 @@ namespace sparrow
         ArrowSchema* schema;
     };
 
+    struct arrow_array_and_schema
+    {
+        ArrowArray array;
+        ArrowSchema schema;
+    };
+
     /**
      * Proxy class over `ArrowArray` and `ArrowSchema`.
      * It ease the use of `ArrowArray` and `ArrowSchema` by providing a more user-friendly interface.
@@ -172,9 +178,9 @@ namespace sparrow
         SPARROW_API void set_buffer(size_t index, buffer<uint8_t>&& buffer);
 
         /**
-         * Add children.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
-         * sparrow.
+         * Add children without taking their ownership.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
+         * in this proxy were not created with sparrow.
          * @param arrow_array_and_schema_pointers The children to add.
          */
         template <std::ranges::input_range R>
@@ -182,26 +188,65 @@ namespace sparrow
         void add_children(const R& arrow_array_and_schema_pointers);
 
         /**
-         * Pop n children.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
-         * sparrow.
+         * Add children and take their ownership.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
+         * in this proxy were not created with sparrow.
+         * @param arrow_array_and_schema The children to add.
+         */
+        template <std::ranges::input_range R>
+            requires std::same_as<std::ranges::range_value_t<R>, arrow_array_and_schema>
+        void add_children(R&& arrow_array_and_schemas);
+
+        /**
+         * Add a child without taking its ownership.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
+         * in this proxy were not created with sparrow.
+         * @param array The `ArrowArray` to set as child.
+         * @param schema The `ArrowSchema` to set as child.
+         */
+        SPARROW_API void add_child(ArrowArray* array, ArrowSchema* schema);
+
+        /**
+         * Add a child and takes its ownership.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
+         * in this proxy were not created with sparrow.
+         * @param array The `ArrowArray` to set as child.
+         * @param schema The `ArrowSchema` to set as child.
+         */
+        SPARROW_API void add_child(ArrowArray&& array, ArrowSchema&& schema);
+
+        /**
+         * Pop n children. If the children were created by sparrow or are owned by the proxy,
+         * it will delete them.
          * @param n The number of children to pop.
          */
         SPARROW_API void pop_children(size_t n);
 
-        [[nodiscard]] SPARROW_API const std::vector<arrow_proxy>& children() const;
-        [[nodiscard]] SPARROW_API std::vector<arrow_proxy>& children();
-
         /**
-         * Set the child at the given index. It takes the ownership on the `ArrowArray` and `ArrowSchema`
-         * passed by pointers.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
-         * sparrow.
+         * Set the child at the given index. It does not take the ownership on the `ArrowArray` and
+         * `ArrowSchema` passed by pointers.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
+         * in this proxy were not created with sparrow.
          * @param index The index of the child to set.
          * @param array The `ArrowArray` to set as child.
          * @param schema The `ArrowSchema` to set as child.
          */
         SPARROW_API void set_child(size_t index, ArrowArray* array, ArrowSchema* schema);
+
+        /**
+         * Set the child at the given index. It takes the ownership on the `ArrowArray` and`ArrowSchema`
+         * passed by rvalue referencess.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` wrapped 
+         * in this proxy were not created with
+         * sparrow.
+         * @param index The index of the child to set.
+         * @param array The `ArrowArray` to set as child.
+         * @param schema The `ArrowSchema` to set as child.
+         */
+        SPARROW_API void set_child(size_t index, ArrowArray&& array, ArrowSchema&& schema);
+
+        [[nodiscard]] SPARROW_API const std::vector<arrow_proxy>& children() const;
+        [[nodiscard]] SPARROW_API std::vector<arrow_proxy>& children();
 
         [[nodiscard]] SPARROW_API const std::unique_ptr<arrow_proxy>& dictionary() const;
         [[nodiscard]] SPARROW_API std::unique_ptr<arrow_proxy>& dictionary();
@@ -247,11 +292,15 @@ namespace sparrow
         {
         };
 
+        // Build an empty proxy. Convenient for resizing vector of children
+        arrow_proxy();
+
         template <typename AA, typename AS>
             requires std::same_as<std::remove_pointer_t<std::remove_cvref_t<AA>>, ArrowArray>
                      && std::same_as<std::remove_pointer_t<std::remove_cvref_t<AS>>, ArrowSchema>
         arrow_proxy(AA&& array, AS&& schema, impl_tag);
 
+        [[nodiscard]] bool empty() const;
         SPARROW_API void resize_children(size_t children_count);
 
         void update_buffers();
@@ -287,7 +336,7 @@ namespace sparrow
         const size_t add_children_count = std::ranges::size(arrow_array_and_schema_pointers);
         const size_t original_children_count = n_children();
         const size_t new_children_count = original_children_count + add_children_count;
-
+        
         resize_children(new_children_count);
         for (size_t i = 0; i < add_children_count; ++i)
         {
@@ -295,6 +344,30 @@ namespace sparrow
                 i + original_children_count,
                 arrow_array_and_schema_pointers[i].array,
                 arrow_array_and_schema_pointers[i].schema
+            );
+        }
+    }
+
+    template <std::ranges::input_range R>
+        requires std::same_as<std::ranges::range_value_t<R>, arrow_array_and_schema>
+    void arrow_proxy::add_children(R&& arrow_arrays_and_schemas)
+    {
+        if (!is_created_with_sparrow())
+        {
+            throw arrow_proxy_exception("Cannot set n_buffers on non-sparrow created ArrowArray or ArrowSchema");
+        }
+
+        const size_t add_children_count = std::ranges::size(arrow_arrays_and_schemas);
+        const size_t original_children_count = n_children();
+        const size_t new_children_count = original_children_count + add_children_count;
+        
+        resize_children(new_children_count);
+        for (size_t i = 0; i < add_children_count; ++i)
+        {
+            set_child(
+                i + original_children_count,
+                std::move(arrow_arrays_and_schemas[i].array),
+                std::move(arrow_arrays_and_schemas[i].schema)
             );
         }
     }

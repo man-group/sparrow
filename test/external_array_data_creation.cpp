@@ -14,6 +14,7 @@
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_factory.hpp"
 #include "external_array_data_creation.hpp"
 
 #ifdef __GNUC__
@@ -63,6 +64,28 @@ namespace sparrow::test
         detail::release_common_arrow(arr);
     }
 
+    sparrow::buffer<std::uint8_t> make_size_buffer(const std::vector<size_t>& sizes, bool big)
+    {
+        const auto buf_size = sizes.size()  * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t));
+        std::uint8_t* buf = new std::uint8_t[buf_size];
+        if(big)
+        {
+            std::uint64_t* size_buf = reinterpret_cast<std::uint64_t*>(buf);
+            for(std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                size_buf[i] = sizes[i];
+            }
+        }
+        else
+        {
+            std::uint32_t* size_buf = reinterpret_cast<std::uint32_t*>(buf);
+            for(std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                size_buf[i] = static_cast<std::uint32_t>(sizes[i]);
+            }
+        }
+        return {buf, buf_size};
+    }
 
     void fill_schema_and_array_for_list_layout(
         ArrowSchema& schema,
@@ -70,88 +93,87 @@ namespace sparrow::test
         ArrowSchema&& flat_value_schema,
         ArrowArray&& flat_value_arr,
         const std::vector<std::size_t> & list_lengths,
-        const std::vector<std::size_t> & false_postions,
+        const std::vector<std::size_t> & false_positions,
         bool big_list
     ){
-        schema.format = big_list ? "+L" : "+l";
-        schema.name = "test";
-        schema.metadata = "test metadata";
+        ArrowSchema** schema_children = new ArrowSchema*[1];
+        schema_children[0] = new ArrowSchema(std::move(flat_value_schema));
+        sparrow::fill_arrow_schema(
+            schema,
+            std::string_view(big_list ? "+L" : "+l"),
+            "test",
+            "test metadata",
+            std::nullopt,
+            1,
+            schema_children,
+            nullptr
+        );
 
-        schema.n_children = 1;
-        schema.children = new ArrowSchema*[1];
-        schema.children[0] = new ArrowSchema(std::move(flat_value_schema));
-
-        schema.dictionary = nullptr;
-        schema.release = &release_arrow_schema;
-
-
-        arr.length = static_cast<std::int64_t>(list_lengths.size());
-        arr.null_count = static_cast<std::int64_t>(false_postions.size());
-        arr.offset = 0;
-
-        arr.n_buffers = 2;
-        arr.n_children = 1;
-
-        std::uint8_t** buf = new std::uint8_t*[2];
-        buf[0] = make_bitmap_buffer(static_cast<std::size_t>(arr.length), false_postions);
-
-        buf[1] = make_offset_buffer_from_sizes(list_lengths, big_list);
-
-        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
-
-        arr.children = new ArrowArray*[1];
-        arr.children[0] = new ArrowArray(std::move(flat_value_arr));
-
-        arr.dictionary = nullptr;
-        arr.release = &release_arrow_array;
-
+        using buffer_type = sparrow::buffer<std::uint8_t>;
+        std::vector<buffer_type> arr_buffs = 
+        {
+            sparrow::make_bitmap_buffer(list_lengths.size(), false_positions),
+            make_offset_buffer_from_sizes2(list_lengths, big_list)
+        };
+        
+        ArrowArray** array_children = new ArrowArray*[1];
+        array_children[0] = new ArrowArray(std::move(flat_value_arr));
+        sparrow::fill_arrow_array(
+            arr,
+            static_cast<std::int64_t>(list_lengths.size()),
+            static_cast<std::int64_t>(false_positions.size()),
+            0,
+            std::move(arr_buffs),
+            1u,
+            array_children,
+            nullptr
+        );
     }
-
-
-
 
     void fill_schema_and_array_for_fixed_size_list_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
         ArrowSchema&& flat_value_schema,
         ArrowArray&& flat_value_arr,
-        const std::vector<std::size_t> & false_postions,
+        const std::vector<std::size_t> & false_positions,
         std::size_t list_size
     ){
         SPARROW_ASSERT(list_size > 0, "list size must be greater than 0");
         SPARROW_ASSERT(list_size < 10, "just a test limitation st. format string can be on stack");
         // convert list size to string
-        std::string list_size_str = std::to_string(list_size);
-        schema.format = new char[5]{'+', 'w',':', list_size_str[0], '\0'};
+        std::string format = std::string("+w:") + std::to_string(list_size)[0];
+        ArrowSchema** schema_children = new ArrowSchema*[1];
+        schema_children[0] = new ArrowSchema(std::move(flat_value_schema));
+        sparrow::fill_arrow_schema(
+            schema,
+            std::move(format),
+            "test",
+            "test metadata",
+            std::nullopt,
+            1,
+            schema_children,
+            nullptr
+        );
 
-        schema.name = "test";
-        schema.metadata = "test metadata";
-
-        schema.n_children = 1;
-        schema.children = new ArrowSchema*[1];
-        schema.children[0] = new ArrowSchema(std::move(flat_value_schema));
-
-        schema.dictionary = nullptr;
-        schema.release = &release_arrow_schema;
-
-
-        arr.length = static_cast<std::int64_t>(static_cast<std::uint64_t>(flat_value_arr.length) / list_size);
-        arr.null_count = static_cast<std::int64_t>(false_postions.size());
-        arr.offset = 0;
-
-        arr.n_buffers = 1;
-        arr.n_children = 1;
-
-        std::uint8_t** buf = new std::uint8_t*[1];
-        buf[0] = make_bitmap_buffer(static_cast<std::size_t>(arr.length), false_postions);
-        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
-
-        arr.children = new ArrowArray*[1];
-        arr.children[0] = new ArrowArray(std::move(flat_value_arr));
-
-        arr.dictionary = nullptr;
-        arr.release = &release_arrow_array;
-
+        std::size_t arr_size = static_cast<std::size_t>(flat_value_arr.length) / list_size;
+        using buffer_type = sparrow::buffer<std::uint8_t>;
+        std::vector<buffer_type> arr_buffs = 
+        {
+            sparrow::make_bitmap_buffer(arr_size, false_positions)
+        };
+        
+        ArrowArray** array_children = new ArrowArray*[1];
+        array_children[0] = new ArrowArray(std::move(flat_value_arr));
+        sparrow::fill_arrow_array(
+            arr,
+            static_cast<std::int64_t>(arr_size),
+            static_cast<std::int64_t>(false_positions.size()),
+            0,
+            std::move(arr_buffs),
+            1u,
+            array_children,
+            nullptr
+        );
     }
 
 
@@ -161,66 +183,42 @@ namespace sparrow::test
         ArrowSchema&& flat_value_schema,
         ArrowArray&& flat_value_arr,
         const std::vector<std::size_t> & list_lengths,
-        const std::vector<std::size_t> & false_postions,
+        const std::vector<std::size_t> & false_positions,
         bool big_list
     ){
-        schema.format = big_list ? "+vL" : "+vl";
-        schema.name = "test";
-        schema.metadata = "test metadata";
+        ArrowSchema** schema_children = new ArrowSchema*[1];
+        schema_children[0] = new ArrowSchema(std::move(flat_value_schema));
+        sparrow::fill_arrow_schema(
+            schema,
+            std::string_view(big_list ? "+vL" : "+vl"),
+            "test",
+            "test metadata",
+            std::nullopt,
+            1,
+            schema_children,
+            nullptr
+        );
 
-        schema.n_children = 1;
-        schema.children = new ArrowSchema*[1];
-        schema.children[0] = new ArrowSchema(std::move(flat_value_schema));
-
-        schema.dictionary = nullptr;
-        schema.release = &release_arrow_schema;
-
-
-        arr.length = static_cast<std::int64_t>(list_lengths.size());
-        arr.null_count = static_cast<std::int64_t>(false_postions.size());
-        arr.offset = 0;
-
-        arr.n_buffers = 3;
-        arr.n_children = 1;
-
-        std::uint8_t** buf = new std::uint8_t*[3];
-        buf[0] = make_bitmap_buffer(static_cast<std::size_t>(arr.length), false_postions);
-
-        buf[1] = make_offset_buffer_from_sizes(list_lengths, big_list);
-        buf[2] = new std::uint8_t[list_lengths.size()  * (big_list ? sizeof(std::uint64_t) : sizeof(std::uint32_t))];
-
-        // ignore -Werror=cast-align]
-        #ifdef __GNUC__
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wcast-align"
-        #endif
-
-        if(big_list)
+        using buffer_type = sparrow::buffer<std::uint8_t>;
+        std::vector<buffer_type> arr_buffs = 
         {
-            std::uint64_t* size_buf = reinterpret_cast<std::uint64_t*>(buf[2]);
-            for(std::size_t i = 0; i < list_lengths.size(); ++i)
-            {
-                size_buf[i] = list_lengths[i];
-            }
-        }
-        else{
-            std::uint32_t* size_buf = reinterpret_cast<std::uint32_t*>(buf[2]);
-            for(std::size_t i = 0; i < list_lengths.size(); ++i)
-            {
-                size_buf[i] = static_cast<std::uint32_t>(list_lengths[i]);
-            }
-        }
-        #ifdef __GNUC__
-        #pragma GCC diagnostic pop
-        #endif
-        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
-
-        arr.children = new ArrowArray*[1];
-        arr.children[0] = new ArrowArray(std::move(flat_value_arr));
-
-        arr.dictionary = nullptr;
-        arr.release = &release_arrow_array;
-
+            sparrow::make_bitmap_buffer(list_lengths.size(), false_positions),
+            make_offset_buffer_from_sizes2(list_lengths, big_list),
+            make_size_buffer(list_lengths, big_list)
+        };
+        
+        ArrowArray** array_children = new ArrowArray*[1];
+        array_children[0] = new ArrowArray(std::move(flat_value_arr));
+        sparrow::fill_arrow_array(
+            arr,
+            static_cast<std::int64_t>(list_lengths.size()),
+            static_cast<std::int64_t>(false_positions.size()),
+            0,
+            std::move(arr_buffs),
+            1u,
+            array_children,
+            nullptr
+        );
     }
 
     void fill_schema_and_array_for_struct_layout(
@@ -228,45 +226,48 @@ namespace sparrow::test
         ArrowArray& arr,
         std::vector<ArrowSchema>&& children_schemas,
         std::vector<ArrowArray>&& children_arrays,
-        const std::vector<std::size_t> & false_postions
+        const std::vector<std::size_t> & false_positions
     )
     {
-        schema.format = "+s";
-        schema.name = "test";
-        schema.metadata = "test metadata";
-
-        schema.n_children = static_cast<std::int64_t>(children_schemas.size());
-        schema.children = new ArrowSchema*[children_schemas.size()];
+        ArrowSchema** schema_children = new ArrowSchema*[children_schemas.size()];
         std::transform(std::make_move_iterator(children_schemas.begin()),
                        std::make_move_iterator(children_schemas.end()),
-                       schema.children,
+                       schema_children,
                        [](auto&& child) { return new ArrowSchema(std::move(child)); });
+        sparrow::fill_arrow_schema(
+            schema,
+            std::string_view("+s"),
+            "test",
+            "test metadata",
+            std::nullopt,
+            static_cast<std::int64_t>(children_schemas.size()),
+            schema_children,
+            nullptr
+        );
 
-        schema.dictionary = nullptr;
-        schema.release = &release_arrow_schema;
         
-        arr.length = children_arrays.front().length;
+        int64_t length = children_arrays.front().length;
+        using buffer_type = sparrow::buffer<std::uint8_t>;
+        std::vector<buffer_type> arr_buffs = 
+        {
+            sparrow::make_bitmap_buffer(static_cast<std::size_t>(length), false_positions),
+        };
 
-        arr.null_count = static_cast<std::int64_t>(false_postions.size());
-        arr.offset = 0;
-
-        arr.n_buffers = 1;
-        std::uint8_t** buf = new std::uint8_t*[2];
-        buf[0] = make_bitmap_buffer(static_cast<std::size_t>(arr.length), false_postions);
-
-        arr.n_children = static_cast<std::int64_t>(children_arrays.size());
-
-        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
-
-        arr.children = new ArrowArray*[children_arrays.size()];
-
+        ArrowArray** array_children = new ArrowArray*[children_arrays.size()];
         std::transform(std::make_move_iterator(children_arrays.begin()),
                        std::make_move_iterator(children_arrays.end()),
-                       arr.children,
+                       array_children,
                        [](auto&& child) { return new ArrowArray(std::move(child)); });
-
-        arr.dictionary = nullptr;
-        arr.release = &release_arrow_array;
+        sparrow::fill_arrow_array(
+            arr,
+            length,
+            static_cast<std::int64_t>(false_positions.size()),
+            0,
+            std::move(arr_buffs),
+            children_arrays.size(),
+            array_children,
+            nullptr
+        );
     }
 
     void fill_schema_and_array_for_run_end_encoded(
@@ -278,36 +279,37 @@ namespace sparrow::test
         ArrowArray&& value_arr,
         std::size_t  length
     ){
-        schema.format = "+r";
-        schema.name = "test";
-        schema.metadata = "test metadata";
+        ArrowSchema** schema_children = new ArrowSchema*[2];
+        schema_children[0] = new ArrowSchema(std::move(acc_length_schema));
+        schema_children[1] = new ArrowSchema(std::move(value_schema));
+        sparrow::fill_arrow_schema(
+            schema,
+            std::string_view("+r"),
+            "test",
+            "test metadata",
+            std::nullopt,
+            2,
+            schema_children,
+            nullptr
+        );
 
-        schema.n_children = 2;
-        schema.children = new ArrowSchema*[2];
-        schema.children[0] = new ArrowSchema(std::move(acc_length_schema));
-        schema.children[1] = new ArrowSchema(std::move(value_schema));
+        using buffer_type = sparrow::buffer<std::uint8_t>;
+        std::vector<buffer_type> arr_buffs = {};
 
-        schema.dictionary = nullptr;
-        schema.release = &release_arrow_schema;
+        ArrowArray** array_children = new ArrowArray*[2];
+        array_children[0] = new ArrowArray(std::move(acc_length_arr));
+        array_children[1] = new ArrowArray(std::move(value_arr));
 
-        arr.length = static_cast<std::int64_t>(length);
-
-
-        arr.null_count = 0;
-        arr.offset = 0;
-
-        arr.n_buffers = 0;
-        arr.n_children = 2;
-
-        arr.buffers = nullptr;
-
-        arr.children = new ArrowArray*[2];
-        arr.children[0] = new ArrowArray(std::move(acc_length_arr));
-        arr.children[1] = new ArrowArray(std::move(value_arr));
-
-        arr.dictionary = nullptr;
-        arr.release = &release_arrow_array;
-
+        sparrow::fill_arrow_array(
+            arr,
+            static_cast<std::int64_t>(length),
+            0,
+            0,
+            std::move(arr_buffs),
+            2,
+            array_children,
+            nullptr
+        );
     }
 
     void fill_schema_and_array_for_sparse_union(
@@ -318,42 +320,43 @@ namespace sparrow::test
         const std::vector<std::uint8_t>& type_ids,
         const std::string& format
     ){
-        schema.format = format.c_str();
-        schema.name = "test";
-        schema.metadata = "test metadata";
-
-        schema.n_children = static_cast<std::int64_t>(children_schemas.size());
-        schema.children = new ArrowSchema*[children_schemas.size()];
+        ArrowSchema** schema_children = new ArrowSchema*[children_schemas.size()];
         std::transform(std::make_move_iterator(children_schemas.begin()),
                        std::make_move_iterator(children_schemas.end()),
-                       schema.children,
+                       schema_children,
                        [](auto&& child) { return new ArrowSchema(std::move(child)); });
+        sparrow::fill_arrow_schema(
+            schema,
+            format,
+            "test",
+            "test metadata",
+            std::nullopt,
+            static_cast<std::int64_t>(children_schemas.size()),
+            schema_children,
+            nullptr
+        );
 
-        schema.dictionary = nullptr;
-        schema.release = &release_arrow_schema;
-
-        arr.length = static_cast<std::int64_t>(type_ids.size());
-
-        arr.null_count = 0;
-        arr.offset = 0;
-
-        arr.n_buffers = 1;
-        std::uint8_t** buf = new std::uint8_t*[1];
-        buf[0] = new std::uint8_t[type_ids.size()];
-        std::copy(type_ids.begin(), type_ids.end(), buf[0]);
-
-        arr.n_children = static_cast<std::int64_t>(children_arrays.size());
-
-        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
-
-        arr.children = new ArrowArray*[children_arrays.size()];
+        using buffer_type = sparrow::buffer<std::uint8_t>;
+        buffer_type buf(type_ids.size());
+        std::copy(type_ids.begin(), type_ids.end(), buf.begin());
+        std::vector<buffer_type> arr_buffs = { std::move(buf) };
+        
+        ArrowArray** array_children = new ArrowArray*[children_arrays.size()];
         std::transform(std::make_move_iterator(children_arrays.begin()),
                        std::make_move_iterator(children_arrays.end()),
-                       arr.children,
+                       array_children,
                        [](auto&& child) { return new ArrowArray(std::move(child)); });
 
-        arr.dictionary = nullptr;
-        arr.release = &release_arrow_array;
+        sparrow::fill_arrow_array(
+            arr,
+            static_cast<std::int64_t>(type_ids.size()),
+            0,
+            0,
+            std::move(arr_buffs),
+            2,
+            array_children,
+            nullptr
+        );
     }
 
     void fill_schema_and_array_for_dense_union(
@@ -365,47 +368,48 @@ namespace sparrow::test
         const std::vector<std::int32_t> & offsets,
         const std::string & format
     ){
-        schema.format = format.c_str();
-        schema.name = "test";
-        schema.metadata = "test metadata";
-
-        schema.n_children = static_cast<std::int64_t>(children_schemas.size());
-        schema.children = new ArrowSchema*[children_schemas.size()];
+        ArrowSchema** schema_children = new ArrowSchema*[children_schemas.size()];
         std::transform(std::make_move_iterator(children_schemas.begin()),
                        std::make_move_iterator(children_schemas.end()),
-                       schema.children,
+                       schema_children,
                        [](auto&& child) { return new ArrowSchema(std::move(child)); });
+        sparrow::fill_arrow_schema(
+            schema,
+            format,
+            "test",
+            "test metadata",
+            std::nullopt,
+            static_cast<std::int64_t>(children_schemas.size()),
+            schema_children,
+            nullptr
+        );
 
-        schema.dictionary = nullptr;
-        schema.release = &release_arrow_schema;
+        using buffer_type = sparrow::buffer<std::uint8_t>;
 
-        arr.length = static_cast<std::int64_t>(type_ids.size());
-
-        arr.null_count = 0;
-        arr.offset = 0;
-
-        arr.n_buffers = 2;
-        std::uint8_t** buf = new std::uint8_t*[2];
-
-        buf[0] = new std::uint8_t[type_ids.size()];
-        std::copy(type_ids.begin(), type_ids.end(), buf[0]);
-
-        buf[1] = new std::uint8_t[offsets.size() * sizeof(std::int32_t)];
-        std::copy(offsets.begin(), offsets.end(), reinterpret_cast<std::int32_t*>(buf[1]));
-
-
-        arr.n_children = static_cast<std::int64_t>(children_arrays.size());
-
-        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
-
-        arr.children = new ArrowArray*[children_arrays.size()];
+        buffer_type buf0(type_ids.size());
+        std::copy(type_ids.begin(), type_ids.end(), buf0.begin());
+        
+        buffer_type buf1(offsets.size() * sizeof(std::int32_t));
+        std::copy(offsets.begin(), offsets.end(), buf1.data<std::int32_t>());
+        
+        std::vector<buffer_type> arr_buffs ={ std::move(buf0), std::move(buf1) };
+        
+        ArrowArray** array_children = new ArrowArray*[children_arrays.size()];
         std::transform(std::make_move_iterator(children_arrays.begin()),
                        std::make_move_iterator(children_arrays.end()),
-                       arr.children,
+                       array_children,
                        [](auto&& child) { return new ArrowArray(std::move(child)); });
 
-        arr.dictionary = nullptr;
-        arr.release = &release_arrow_array;
+        sparrow::fill_arrow_array(
+            arr,
+            static_cast<std::int64_t>(type_ids.size()),
+            0,
+            0,
+            std::move(arr_buffs),
+            2,
+            array_children,
+            nullptr
+        );
     }
 
 }

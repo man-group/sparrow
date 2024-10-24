@@ -87,6 +87,12 @@ namespace sparrow
         }
     }
 
+    arrow_proxy::arrow_proxy()
+        : m_array(nullptr)
+        , m_schema(nullptr)
+    {
+    }
+
     template <typename AA, typename AS>
         requires std::same_as<std::remove_pointer_t<std::remove_cvref_t<AA>>, ArrowArray>
                      && std::same_as<std::remove_pointer_t<std::remove_cvref_t<AS>>, ArrowSchema>
@@ -134,13 +140,21 @@ namespace sparrow
     }
 
     arrow_proxy::arrow_proxy(const arrow_proxy& other)
-        : m_array(copy_array(other.array(), other.schema()))
-        , m_schema(copy_schema(other.schema()))
     {
-        validate_array_and_schema();
-        update_buffers();
-        update_children();
-        update_dictionary();
+        if (!other.empty())
+        {
+            m_array = copy_array(other.array(), other.schema());
+            m_schema = copy_schema(other.schema());
+            validate_array_and_schema();
+            update_buffers();
+            update_children();
+            update_dictionary();
+        }
+        else
+        {
+            m_array = nullptr;
+            m_schema = nullptr;
+        }
     }
 
     arrow_proxy& arrow_proxy::operator=(const arrow_proxy& other)
@@ -213,6 +227,11 @@ namespace sparrow
                 }
             }
         }
+    }
+
+    [[nodiscard]] bool arrow_proxy::empty() const
+    {
+        return m_array.index() == 0 && std::get<ArrowArray*>(m_array) == nullptr;
     }
 
     [[nodiscard]] const std::string_view arrow_proxy::format() const
@@ -392,48 +411,49 @@ namespace sparrow
         }
 
         resize_children(n_children() - n);
-        update_children();
     }
 
     void arrow_proxy::resize_children(size_t children_count)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(children_count, std::numeric_limits<int64_t>::max()));
-        if (!is_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set n_children on non-sparrow created ArrowArray or ArrowSchema"
-            );
-        }
 
-        // Check that the release callback is valid for all children
-        for (size_t i = 0; i < n_children(); ++i)
-        {
-            SPARROW_ASSERT_TRUE(schema().children[i] != nullptr);
-            SPARROW_ASSERT_TRUE(schema().children[i]->release != nullptr);
-            SPARROW_ASSERT_TRUE(array().children[i] != nullptr);
-            SPARROW_ASSERT_TRUE(array().children[i]->release != nullptr);
-        }
-
+        arrow_array_private_data* array_private_data = get_array_private_data();
+        arrow_schema_private_data* schema_private_data = get_schema_private_data();
         // Release the remaining children if the new size is smaller than the current size
         for (size_t i = children_count; i < static_cast<size_t>(array().n_children); ++i)
         {
-            schema().children[i]->release(schema().children[i]);
-            array().children[i]->release(array().children[i]);
+            if (schema_private_data->has_child_ownership(i))
+            {
+                schema().children[i]->release(schema().children[i]);
+            }
+            if (array_private_data->has_child_ownership(i))
+            {
+                array().children[i]->release(array().children[i]);
+            }
         }
 
-        auto arrow_array_children = new ArrowArray*[children_count];
-        auto arrow_schemas_children = new ArrowSchema*[children_count];
+        auto new_array_children = std::make_unique<ArrowArray*[]>(children_count);
+        auto new_schema_children = std::make_unique<ArrowSchema*[]>(children_count);
+
         for (size_t i = 0; i < std::min(children_count, static_cast<size_t>(array().n_children)); ++i)
         {
-            arrow_array_children[i] = array().children[i];
-            arrow_schemas_children[i] = schema().children[i];
+            new_array_children[i] = array().children[i];
+            new_schema_children[i] = schema().children[i];
         }
+        auto* tmp_array_children = array().children;
+        auto* tmp_schema_children = schema().children;
 
-        delete[] array().children;
-        array().children = arrow_array_children;
+        array().children = new_array_children.release();
         array().n_children = static_cast<int64_t>(children_count);
-        delete[] schema().children;
-        schema().children = arrow_schemas_children;
+        schema().children = new_schema_children.release();
         schema().n_children = static_cast<int64_t>(children_count);
+
+        array_private_data->resize_children(children_count);
+        schema_private_data->resize_children(children_count);
+        m_children.resize(children_count, arrow_proxy());
+
+        new_array_children.reset(tmp_array_children);
+        new_schema_children.reset(tmp_schema_children);
     }
 
     arrow_schema_private_data* arrow_proxy::get_schema_private_data()
@@ -499,15 +519,49 @@ namespace sparrow
     void arrow_proxy::set_child(size_t index, ArrowArray* child_array, ArrowSchema* child_schema)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(index, n_children()));
+        SPARROW_ASSERT_TRUE(child_array != nullptr);
+        SPARROW_ASSERT_TRUE(child_schema != nullptr);
+        SPARROW_ASSERT_TRUE(child_array->release != nullptr);
+        SPARROW_ASSERT_TRUE(child_array->release != nullptr);
         if (!is_created_with_sparrow())
         {
             throw arrow_proxy_exception("Cannot set child on non-sparrow created ArrowArray or ArrowSchema");
         }
         array().children[index] = child_array;
         schema().children[index] = child_schema;
-        update_children();
+        m_children[index] = arrow_proxy(child_array, child_schema);
+        get_array_private_data()->set_child_ownership(index, false);
+        get_schema_private_data()->set_child_ownership(index, false);
     }
 
+    void arrow_proxy::set_child(size_t index, ArrowArray&& child_array, ArrowSchema&& child_schema)
+    {
+        SPARROW_ASSERT_TRUE(std::cmp_less(index, n_children()));
+        SPARROW_ASSERT_TRUE(child_array.release != nullptr);
+        SPARROW_ASSERT_TRUE(child_array.release != nullptr);
+        if (!is_created_with_sparrow())
+        {
+            throw arrow_proxy_exception("Cannot set child on non-sparrow created ArrowArray or ArrowSchema");
+        }
+        array().children[index] = new ArrowArray(std::move(child_array));
+        schema().children[index] = new ArrowSchema(std::move(child_schema));
+        m_children[index] = arrow_proxy(array().children[index], schema().children[index]);
+        get_array_private_data()->set_child_ownership(index, true);
+        get_schema_private_data()->set_child_ownership(index, true);
+    }
+
+    void arrow_proxy::add_child(ArrowArray* array, ArrowSchema* schema)
+    {
+        using value_type = arrow_array_and_schema_pointers;
+        add_children(std::ranges::single_view(value_type{array, schema}));
+    }
+
+    void arrow_proxy::add_child(ArrowArray&& array, ArrowSchema&& schema)
+    {
+        using value_type = arrow_array_and_schema;
+        add_children(std::ranges::single_view(value_type{std::move(array), std::move(schema)}));
+    }
+    
     [[nodiscard]] const std::unique_ptr<arrow_proxy>& arrow_proxy::dictionary() const
     {
         return m_dictionary;
