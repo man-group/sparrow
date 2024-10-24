@@ -29,7 +29,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("move")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             const bool is_schema_release_null = schema.release == nullptr;
             const bool is_array_release_null = array.release == nullptr;
@@ -39,7 +39,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("pointer")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(&array, &schema);
             const bool is_schema_release_null = schema.release == nullptr;
             const bool is_array_release_null = array.release == nullptr;
@@ -52,7 +52,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("move")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             {
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             }
@@ -60,7 +60,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("move pointer")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             {
                 sparrow::arrow_proxy proxy(std::move(array), &schema);
             }
@@ -70,7 +70,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("pointer")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             {
                 sparrow::arrow_proxy proxy(&array, &schema);
             }
@@ -85,7 +85,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("move constructor")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             auto proxy2{std::move(proxy)};
             CHECK_EQ(proxy2.format(), "C");
@@ -93,10 +93,10 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("move assignment")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy{std::move(array), std::move(schema)};
 
-            auto [schema2, array2] = make_sparrow_arrow_schema_and_array();
+            auto [array2, schema2] = make_sparrow_arrow_schema_and_array();
             const sparrow::arrow_proxy proxy2{std::move(array2), std::move(schema2)};
             proxy = std::move(proxy2);
             CHECK_EQ(proxy.format(), "C");
@@ -107,7 +107,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("copy constructor")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             auto proxy2(proxy);
             CHECK_EQ(proxy2.format(), "C");
@@ -117,7 +117,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("copy assignment")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             sparrow::arrow_proxy proxy2 = proxy;
             CHECK_EQ(proxy.format(), "C");
@@ -129,7 +129,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("format")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         CHECK_EQ(proxy.format(), "C");
     }
@@ -138,7 +138,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             constexpr std::string_view format = "U";
             proxy.set_format(format);
@@ -147,7 +147,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("on external c structure")
         {
-            auto [schema, array] = make_external_arrow_schema_and_array();
+            auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_format("U"), std::runtime_error);
         }
@@ -155,7 +155,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("name")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         CHECK_EQ(proxy.name(), "test");
     }
@@ -164,7 +164,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             proxy.set_name("new name");
             CHECK_EQ(proxy.name(), "new name");
@@ -172,7 +172,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("on external c structure")
         {
-            auto [schema, array] = make_external_arrow_schema_and_array();
+            auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_name("new name"), std::runtime_error);
         }
@@ -180,7 +180,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("metadata")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         CHECK_EQ(proxy.metadata(), "test metadata");
     }
@@ -189,7 +189,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             proxy.set_metadata("new metadata");
             CHECK_EQ(proxy.metadata(), "new metadata");
@@ -197,7 +197,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("on external c structure")
         {
-            auto [schema, array] = make_external_arrow_schema_and_array();
+            auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_metadata("new metadata"), std::runtime_error);
         }
@@ -205,7 +205,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("flags")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         schema.flags |= static_cast<int64_t>(sparrow::ArrowFlag::MAP_KEYS_SORTED)
                         | static_cast<int64_t>(sparrow::ArrowFlag::NULLABLE);
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
@@ -219,7 +219,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             proxy.set_flags({sparrow::ArrowFlag::DICTIONARY_ORDERED, sparrow::ArrowFlag::NULLABLE});
             const auto flags = proxy.flags();
@@ -230,7 +230,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("on external c structure")
         {
-            auto [schema, array] = make_external_arrow_schema_and_array();
+            auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(
                 proxy.set_flags({sparrow::ArrowFlag::DICTIONARY_ORDERED, sparrow::ArrowFlag::NULLABLE}),
@@ -241,7 +241,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("length")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         CHECK_EQ(proxy.length(), 10);
     }
@@ -250,7 +250,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             proxy.set_length(20);
             CHECK_EQ(proxy.length(), 20);
@@ -258,7 +258,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("on external c structure")
         {
-            auto [schema, array] = make_external_arrow_schema_and_array();
+            auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_length(20), std::runtime_error);
         }
@@ -266,7 +266,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("null_count")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         CHECK_EQ(proxy.null_count(), 2);
     }
@@ -275,7 +275,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             proxy.set_null_count(5);
             CHECK_EQ(proxy.null_count(), 5);
@@ -283,7 +283,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("on external c structure")
         {
-            auto [schema, array] = make_external_arrow_schema_and_array();
+            auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_null_count(5), std::runtime_error);
         }
@@ -291,7 +291,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("offset")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         CHECK_EQ(proxy.offset(), 0);
     }
@@ -300,7 +300,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             proxy.set_offset(5);
             CHECK_EQ(proxy.offset(), 5);
@@ -308,7 +308,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("on external c structure")
         {
-            auto [schema, array] = make_external_arrow_schema_and_array();
+            auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_offset(5), std::runtime_error);
         }
@@ -316,7 +316,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("n_buffers")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         CHECK_EQ(proxy.n_buffers(), 2);
     }
@@ -325,7 +325,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_EQ(proxy.n_children(), 0);
             proxy.set_n_buffers(3);
@@ -334,7 +334,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("on external c structure")
         {
-            auto [schema, array] = make_external_arrow_schema_and_array();
+            auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_n_buffers(3), std::runtime_error);
         }
@@ -342,14 +342,14 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("n_children")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         CHECK_EQ(proxy.n_children(), 0);
     }
 
     TEST_CASE("buffers")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         auto buffers = proxy.buffers();
         REQUIRE_EQ(buffers.size(), 2);
@@ -376,7 +376,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             auto buffer = sparrow::buffer<uint8_t>(10);
             for (auto& element : buffer)
@@ -397,7 +397,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("on external c structure")
         {
-            auto [schema, array] = make_external_arrow_schema_and_array();
+            auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             auto buffer = sparrow::buffer<uint8_t>({1, 2, 3});
             CHECK_THROWS_AS(proxy.set_buffer(1, std::move(buffer)), std::runtime_error);
@@ -406,7 +406,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("children")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         const auto children = proxy.children();
         CHECK_EQ(children.size(), 0);
@@ -417,9 +417,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         SUBCASE("on sparrow c structure")
         {
             auto array_schema_pair = make_sparrow_arrow_schema_and_array();
-            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{&array_schema_pair.second ,&array_schema_pair.first}}};
+            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{&array_schema_pair.array ,&array_schema_pair.schema}}};
 
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             proxy.add_children(array_child_ptr);
 
@@ -433,11 +433,11 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
 
             auto array_schema_pair  = make_sparrow_arrow_schema_and_array();
-            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{&array_schema_pair.second ,&array_schema_pair.first}}};
+            std::array<sparrow::arrow_array_and_schema_pointers,1> array_child_ptr{{{&array_schema_pair.array ,&array_schema_pair.schema}}};
             proxy.add_children(array_child_ptr);
             proxy.pop_children(1);
             const auto& children = proxy.children();
@@ -448,7 +448,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("dictionary")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         CHECK_FALSE(proxy.dictionary());
     }
@@ -459,9 +459,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto array_schema_pair  = make_sparrow_arrow_schema_and_array();
 
-            auto [schema, array] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            proxy.set_dictionary(&array_schema_pair.second, &array_schema_pair.first);
+            proxy.set_dictionary(&array_schema_pair.array, &array_schema_pair.schema);
 
             const auto& dictionary = proxy.dictionary();
             REQUIRE(dictionary);
@@ -470,8 +470,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
         SUBCASE("on external c structure")
         {
-            auto [schema_dict, array_dict] = make_external_arrow_schema_and_array();
-            auto [schema, array] = make_external_arrow_schema_and_array();
+            auto [array_dict, schema_dict] = make_external_arrow_schema_and_array();
+            auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_dictionary(&array_dict, &schema_dict), std::runtime_error);
         }
@@ -479,22 +479,22 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("is_created_with_sparrow")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         CHECK(proxy.is_created_with_sparrow());
 
-        auto [schema_ext, array_ext] = make_external_arrow_schema_and_array();
+        auto [array_ext, schema_ext] = make_external_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy_ext(std::move(array_ext), std::move(schema_ext));
         CHECK_FALSE(proxy_ext.is_created_with_sparrow());
     }
 
     TEST_CASE("private_data")
     {
-        auto [schema, array] = make_sparrow_arrow_schema_and_array();
+        auto [array, schema] = make_sparrow_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         CHECK_NE(proxy.private_data(), nullptr);
 
-        auto [schema_ext, array_ext] = make_external_arrow_schema_and_array();
+        auto [array_ext, schema_ext] = make_external_arrow_schema_and_array();
         const sparrow::arrow_proxy proxy_ext(std::move(array_ext), std::move(schema_ext));
         CHECK_EQ(proxy_ext.private_data(), nullptr);
     }

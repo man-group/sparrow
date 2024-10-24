@@ -24,13 +24,13 @@ namespace sparrow
         SPARROW_ASSERT_FALSE(schema == nullptr);
         SPARROW_ASSERT_TRUE(schema->release == std::addressof(release_arrow_schema));
 
+        release_common_arrow(*schema);
         if (schema->private_data != nullptr)
         {
             const auto private_data = static_cast<arrow_schema_private_data*>(schema->private_data);
             delete private_data;
             schema->private_data = nullptr;
         }
-        release_common_arrow(*schema);
         *schema = {};
     }
 
@@ -56,7 +56,12 @@ namespace sparrow
             copy_schema(*source.dictionary, *target.dictionary);
         }
 
-        target.private_data = new arrow_schema_private_data(source.format, source.name, source.metadata);
+        target.private_data = new arrow_schema_private_data(
+            source.format,
+            source.name,
+            source.metadata,
+            static_cast<std::size_t>(target.n_children)
+        );
         auto* private_data = static_cast<arrow_schema_private_data*>(target.private_data);
         target.format = private_data->format_ptr();
         target.name = private_data->name_ptr();

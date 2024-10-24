@@ -141,6 +141,9 @@ namespace sparrow
         list_array_crtp_base(const self_type&);
         list_array_crtp_base& operator=(const self_type&);
 
+        list_array_crtp_base(self_type&&) = default;
+        list_array_crtp_base& operator=(self_type&&) = default;
+
     private:
 
         using list_size_type = inner_types::list_size_type;
@@ -183,6 +186,9 @@ namespace sparrow
         list_array_impl(const self_type&);
         list_array_impl& operator=(const self_type&);
 
+        list_array_impl(self_type&&) = default;
+        list_array_impl& operator=(self_type&&) = default;
+
     private:
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
@@ -213,6 +219,9 @@ namespace sparrow
 
         list_view_array_impl(const self_type&);
         list_view_array_impl& operator=(const self_type&);
+
+        list_view_array_impl(self_type&&) = default;
+        list_view_array_impl& operator=(self_type&&) = default;
 
     private:
 
@@ -246,6 +255,9 @@ namespace sparrow
 
         fixed_sized_list_array(const self_type&) = default;
         fixed_sized_list_array& operator=(const self_type&) = default;
+
+        fixed_sized_list_array(self_type&&) = default;
+        fixed_sized_list_array& operator=(self_type&&) = default;
 
         template<class ...ARGS>
         requires(mpl::excludes_copy_and_move_ctor_v<fixed_sized_list_array, ARGS...>)

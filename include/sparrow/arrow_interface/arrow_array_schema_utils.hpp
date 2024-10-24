@@ -27,6 +27,30 @@
 
 namespace sparrow
 {
+    /*
+     * Class for tracking ownership of children of an `ArrowArray` or
+     * an `ArrowSchema` allocated by sparrow.
+     */
+    class children_ownership
+    {
+    public:
+
+        [[nodiscard]] constexpr std::size_t children_size() const noexcept;
+        constexpr void set_child_ownership(std::size_t child, bool ownership);
+        [[nodiscard]] constexpr bool has_child_ownership(std::size_t child) const;
+
+        constexpr void resize_children(std::size_t size);
+
+    protected:
+
+        constexpr explicit children_ownership(std::size_t size = 0);
+
+    private:
+
+        using children_owner_list = std::vector<bool>;
+        children_owner_list m_children = {};
+    };
+
     /**
      * Release the children and dictionnary of an `ArrowArray` or `ArrowSchema`.
      * 
@@ -35,43 +59,7 @@ namespace sparrow
      */
     template <class T>
     requires std::same_as<T, ArrowArray> || std::same_as<T, ArrowSchema>
-    void release_common_arrow(T& t)
-    {
-        if (t.release == nullptr)
-        {
-            return;
-        }
-        
-        if (t.dictionary)
-        {
-            if (t.dictionary->release)
-            {
-                t.dictionary->release(t.dictionary);
-            }
-        }
-
-        if (t.children)
-        {
-            for (int64_t i = 0; i < t.n_children; ++i)
-            {
-                T* child = t.children[i];
-                if (child)
-                {
-                    if (child->release)
-                    {
-                        child->release(child);
-                    }
-                }
-                // TODO: We assume Arrow structures allocated inside sparrow always use operator new
-                //delete child;
-                //t.children[i] = nullptr;
-            }
-            delete[] t.children;
-            t.children = nullptr;
-        }
-
-        t.release = nullptr;
-    }
+    void release_common_arrow(T& t);
 
     /**
      * Get the size of a range, a tuple or an optional.
@@ -155,6 +143,78 @@ namespace sparrow
                      && mpl::testable<std::ranges::range_value_t<typename T::value_type>>)
                  || (std::ranges::range<T> && mpl::testable<std::ranges::range_value_t<T>>)
     constexpr bool all_element_are_true(const T& elements);
+
+    /******************
+     * Implementation *
+     ******************/
+
+    constexpr children_ownership::children_ownership(std::size_t size)
+        : m_children(size, true)
+    {
+    }
+
+    [[nodiscard]] constexpr std::size_t children_ownership::children_size() const noexcept
+    {
+        return m_children.size();
+    }
+
+    constexpr void children_ownership::set_child_ownership(std::size_t child, bool ownership)
+    {
+        m_children[child] = ownership;
+    }
+
+    [[nodiscard]] constexpr bool children_ownership::has_child_ownership(std::size_t child) const
+    {
+        return m_children[child];
+    }
+
+    constexpr void children_ownership::resize_children(std::size_t size)
+    {
+        m_children.resize(size);
+    }
+
+    template <class T>
+    requires std::same_as<T, ArrowArray> || std::same_as<T, ArrowSchema>
+    void release_common_arrow(T& t)
+    {
+        if (t.release == nullptr)
+        {
+            return;
+        }
+        
+        if (t.dictionary)
+        {
+            if (t.dictionary->release)
+            {
+                t.dictionary->release(t.dictionary);
+            }
+        }
+
+        if (t.children)
+        {
+            for (int64_t i = 0; i < t.n_children; ++i)
+            {
+                T* child = t.children[i];
+                if (child)
+                {
+                    if (child->release)
+                    {
+                        SPARROW_ASSERT_TRUE(t.private_data != nullptr);
+                        children_ownership* own = static_cast<children_ownership*>(t.private_data);
+                        if (own->has_child_ownership(static_cast<std::size_t>(i)))
+                        {
+                            child->release(child);
+                            delete child;
+                            child = nullptr;
+                        }
+                    }
+                }
+            }
+            delete[] t.children;
+            t.children = nullptr;
+        }
+        t.release = nullptr;
+    }
 
     template <class T>
     constexpr int64_t ssize(const T& value)

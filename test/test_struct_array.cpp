@@ -76,6 +76,18 @@ namespace sparrow
                 CHECK_EQ(struct_arr3, struct_arr);
             }
 
+            SUBCASE("move")
+            {
+                struct_array struct_arr2(struct_arr);
+                struct_array struct_arr3(std::move(struct_arr2));
+                CHECK_EQ(struct_arr3, struct_arr);
+
+                struct_array struct_arr4(test::make_struct_proxy<inner_scalar_type, uint8_t>(n2));
+                CHECK_NE(struct_arr4, struct_arr);
+                struct_arr4 = std::move(struct_arr3);
+                CHECK_EQ(struct_arr4, struct_arr);
+            }
+
             SUBCASE("operator[]")
             {
                 for (std::size_t i = 0; i < n; ++i)

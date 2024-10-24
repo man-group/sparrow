@@ -108,6 +108,18 @@ namespace sparrow
                 CHECK_EQ(uarr3, uarr);
             }
 
+            SUBCASE("move")
+            {
+                sparse_union_array uarr2(uarr);
+                sparse_union_array uarr3(std::move(uarr2));
+                CHECK_EQ(uarr3, uarr);
+
+                sparse_union_array uarr4(test::make_sparse_union_proxy(format_string, n, true));
+                CHECK_NE(uarr4, uarr);
+                uarr4 = std::move(uarr3);
+                CHECK_EQ(uarr4, uarr);
+            }
+
             SUBCASE("operator[]")
             {
                 for (std::size_t i = 0; i < n; ++i)
@@ -195,6 +207,18 @@ namespace sparrow
                 CHECK_NE(uarr3, uarr);
                 uarr3 = uarr;
                 CHECK_EQ(uarr3, uarr);
+            }
+
+            SUBCASE("move")
+            {
+                dense_union_array uarr2(uarr);
+                dense_union_array uarr3(std::move(uarr2));
+                CHECK_EQ(uarr3, uarr);
+
+                dense_union_array uarr4(test::make_dense_union_proxy(format_string, n_c, true));
+                CHECK_NE(uarr4, uarr);
+                uarr4 = std::move(uarr3);
+                CHECK_EQ(uarr4, uarr);
             }
 
             SUBCASE("operator[]")
