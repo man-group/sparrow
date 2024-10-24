@@ -199,6 +199,7 @@ namespace sparrow
                 {
                     if (child->release)
                     {
+                        SPARROW_ASSERT_TRUE(t.private_data != nullptr);
                         children_ownership* own = static_cast<children_ownership*>(t.private_data);
                         if (own->has_child_ownership(static_cast<std::size_t>(i)))
                         {

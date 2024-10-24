@@ -195,7 +195,7 @@ namespace sparrow
          */
         template <std::ranges::input_range R>
             requires std::same_as<std::ranges::range_value_t<R>, arrow_array_and_schema>
-        void add_children(R&& arrow_array_and_schema);
+        void add_children(R&& arrow_array_and_schemas);
 
         /**
          * Add a child without taking its ownership.
@@ -350,14 +350,14 @@ namespace sparrow
 
     template <std::ranges::input_range R>
         requires std::same_as<std::ranges::range_value_t<R>, arrow_array_and_schema>
-    void arrow_proxy::add_children(R&& arrow_array_and_schema)
+    void arrow_proxy::add_children(R&& arrow_arrays_and_schemas)
     {
         if (!is_created_with_sparrow())
         {
             throw arrow_proxy_exception("Cannot set n_buffers on non-sparrow created ArrowArray or ArrowSchema");
         }
 
-        const size_t add_children_count = std::ranges::size(arrow_array_and_schema);
+        const size_t add_children_count = std::ranges::size(arrow_arrays_and_schemas);
         const size_t original_children_count = n_children();
         const size_t new_children_count = original_children_count + add_children_count;
         
@@ -366,8 +366,8 @@ namespace sparrow
         {
             set_child(
                 i + original_children_count,
-                std::move(arrow_array_and_schema[i].array),
-                std::move(arrow_array_and_schema[i].schema)
+                std::move(arrow_arrays_and_schemas[i].array),
+                std::move(arrow_arrays_and_schemas[i].schema)
             );
         }
     }
