@@ -81,6 +81,7 @@ else()
         test_variable_size_binary_array.cpp
         test_run_end_encoded_array.cpp
         test_union_array.cpp
+        test_high_level_constructors.cpp
     )
 endif()
 

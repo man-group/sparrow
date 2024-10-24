@@ -23,6 +23,7 @@
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_iterator.hpp"
+#include "sparrow/layout/array_access.hpp"
 
 namespace sparrow
 {
@@ -79,6 +80,7 @@ namespace sparrow
         SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
 
         arrow_proxy& get_arrow_proxy();
+        arrow_proxy && extract_arrow_proxy() &&;
 
         arrow_proxy m_proxy;
         std::uint64_t m_encoded_length;
@@ -92,6 +94,7 @@ namespace sparrow
         friend class run_encoded_array_iterator<true>;
         template <class T>
         friend class array_wrapper_impl;
+        friend class detail::array_access;
     };
 
     SPARROW_API
@@ -156,6 +159,10 @@ namespace sparrow
     inline arrow_proxy& run_end_encoded_array::get_arrow_proxy()
     {
         return m_proxy;
+    }
+    inline arrow_proxy&& run_end_encoded_array::extract_arrow_proxy() &&
+    {
+        return std::move(m_proxy);
     }
 
     inline auto run_end_encoded_array::operator[](std::uint64_t i) -> array_traits::const_reference

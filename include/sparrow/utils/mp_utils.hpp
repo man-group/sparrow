@@ -481,15 +481,17 @@ namespace sparrow::mpl
 
     // this excluded argument is used to exclude copy and move constructors
     template<class CLS, class ... ARGS>
-    struct excludes_copy_annd_move_ctr
+    struct excludes_copy_and_move_ctor
     {   
        constexpr static bool size = sizeof...(ARGS);
-       constexpr static bool value =  size !=1 || !std::is_same_v<CLS, std::remove_cvref_t<
-              std::tuple_element_t<0, std::tuple<ARGS...>>>>;
-       >>;
+       constexpr static bool value =  size !=1 || !std::is_same_v<CLS, 
+                std::remove_cvref_t<
+                    std::tuple_element_t<0, std::tuple<ARGS...>>
+                >
+       >;
     
     };
 
     template<class CLS, class ... ARGS>
-    constexpr bool excludes_copy_annd_move_ctr_v = excludes_copy_annd_move_ctr<CLS, ARGS...>::value;
+    constexpr bool excludes_copy_and_move_ctor_v = excludes_copy_and_move_ctor<CLS, ARGS...>::value;
 }

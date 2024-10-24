@@ -86,8 +86,9 @@ namespace sparrow
 
 
         template <class ... Args>
-        requires(mpl::excludes_copy_annd_move_ctr<primitive_array<T>, Args...>::value)
-        primitive_array(Args&& ...);
+        requires(mpl::excludes_copy_and_move_ctor_v<primitive_array<T>, Args...>)
+        primitive_array(Args&& ... args) : base_type(create_proxy(std::forward<Args>(args) ...))
+        {}
 
         using base_type::size;
 
@@ -137,7 +138,7 @@ namespace sparrow
 
         friend class array_crtp_base<self_type>;
         friend class run_end_encoded_array;
-        friend class array_access;
+        friend class detail::array_access;
     };
 
     /**********************************
@@ -174,13 +175,6 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().data_type()));
     }
-
-    template <class T>
-    template <class ... Args>
-    requires(mpl::excludes_copy_annd_move_ctr<primitive_array<T>, Args...>::value)
-    primitive_array<T>::primitive_array(Args&& ... args)
-    : base_type(create_proxy(std::forward<Args>(args) ...))
-    {}
 
     template <class T>
     template <std::ranges::input_range VALUE_RANGE, std::ranges::input_range BOOL_RANGE>

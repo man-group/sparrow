@@ -16,6 +16,9 @@
 
 #include <string>  // for std::stoull
 
+
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
@@ -26,6 +29,7 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/array.hpp"
 
 namespace sparrow
 {
@@ -243,7 +247,14 @@ namespace sparrow
         fixed_sized_list_array(const self_type&) = default;
         fixed_sized_list_array& operator=(const self_type&) = default;
 
+        template<class ...ARGS>
+        requires(mpl::excludes_copy_and_move_ctor_v<fixed_sized_list_array, ARGS...>)
+        fixed_sized_list_array(ARGS&& ...args): base_type(create_proxy(std::forward<ARGS>(args)...))
+        {}
+
     private:
+
+        static arrow_proxy create_proxy(std::uint64_t list_size, array && flat_values);
 
         static uint64_t list_size_from_format(const std::string_view format);
         std::pair<offset_type, offset_type> offset_range(size_type i) const;
@@ -478,5 +489,72 @@ namespace sparrow
     {
         const auto offset = i * m_list_size;
         return std::make_pair(offset, offset + m_list_size);
+    }
+
+
+    inline arrow_proxy fixed_sized_list_array::create_proxy(std::uint64_t list_size, array && flat_values)
+    {
+
+        const auto flat_size = flat_values.size();
+        const auto size = static_cast<std::uint64_t>(flat_size) / list_size;
+
+
+        // get the array wrapper
+        std::cout<<"extracting array wrapper"<<std::endl;
+        auto wrapper = detail::array_access::extract_array_wrapper(std::move(flat_values));
+
+        // extract the storage from the wrapper
+        std::cout<<"extracting arrow proxy"<<std::endl;
+        auto storage = std::move(*wrapper).extract_arrow_proxy();
+
+        // extract the schema and array from the storage
+        std::cout<<"extracting schema and array"<<std::endl;
+        auto flat_schema = storage.extract_schema();
+        auto flat_arr = storage.extract_array();
+
+
+        std::cout<<"creating format string"<<std::endl;
+        // create the format string
+        const auto format = "w:" + std::to_string(list_size);
+        char * format_str = new char[format.size() + 1];
+        std::copy(format.begin(), format.end(), format_str);
+        format_str[format.size()] = '\0';
+        
+
+        std::cout<<"creating schema and array"<<std::endl;
+        // create the top-level schema / array for fixed-sized list
+        ArrowSchema schema;
+        ArrowArray  arr;
+
+        schema.format = format_str;
+        schema.release = &release_arrow_schema; // actually this needs to be modified! to delete the format_str
+        schema.n_children = 1;
+        schema.children = new ArrowSchema*[1];
+        schema.children[0] = new ArrowSchema(std::move(flat_schema));
+        schema.dictionary = nullptr;
+
+        arr.length = static_cast<std::int64_t>(size);
+        arr.null_count = 0;
+        arr.offset = 0;
+        arr.n_buffers = 1;
+        arr.n_children = 1;
+
+        std::uint8_t** buf = new std::uint8_t*[1];
+
+        const auto bitmap_size = static_cast<std::size_t>((arr.length + 7) / 8);
+        buf[0] = new std::uint8_t[bitmap_size];
+        auto bitmap_ptr = buf[0];
+        std::fill_n(bitmap_ptr, bitmap_size, 0xFF);
+        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
+
+        arr.children = new ArrowArray*[1];
+        arr.children[0] = new ArrowArray(std::move(flat_arr));
+        arr.dictionary = nullptr;
+
+        arr.release = &release_arrow_array;
+        
+        std::cout<<"returning arrow proxy"<<std::endl;
+        return arrow_proxy{std::move(arr), std::move(schema)};
+
     }
 }

@@ -17,6 +17,7 @@
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/types/data_traits.hpp"
 
@@ -29,12 +30,19 @@ namespace sparrow
         using size_type = std::size_t;
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
- 
+
+        // array data will be moved into the array object
+        template<class ARRAY_TYPE>
+        requires std::is_rvalue_reference_v<ARRAY_TYPE&&>
+        array(ARRAY_TYPE&& array);
+  
         SPARROW_API array() = default;
 
         SPARROW_API array(ArrowArray&& array, ArrowSchema&& schema);
         SPARROW_API array(ArrowArray&& array, ArrowSchema* schema);
         SPARROW_API array(ArrowArray* array, ArrowSchema* schema);
+
+        
         
         SPARROW_API bool owns_arrow_array() const;
         SPARROW_API array& get_arrow_array(ArrowArray*&);
@@ -47,9 +55,22 @@ namespace sparrow
         SPARROW_API size_type size() const;
         SPARROW_API const_reference operator[](size_type) const;
 
+        SPARROW_API cloning_ptr<array_wrapper> && extract_array_wrapper() &&;
+
     private:
 
         cloning_ptr<array_wrapper> p_array = nullptr;
+
+        friend detail::array_access;
     };
+
+    template<class ARRAY_TYPE>
+    requires std::is_rvalue_reference_v<ARRAY_TYPE&&>
+    array::array(ARRAY_TYPE&& array)
+    {   
+        auto storage = detail::array_access::extract_arrow_proxy(std::move(array));
+        p_array = array_factory(std::move(storage));
+    }
+
 }
 
