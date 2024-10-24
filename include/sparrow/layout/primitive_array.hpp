@@ -85,9 +85,9 @@ namespace sparrow
 
 
 
-        template <class FirstArg, class ... Args>
-        requires (sizeof ... (Args) > 0 || (! std::is_same_v<std::decay_t<FirstArg>, primitive_array<T> > ))
-        primitive_array(FirstArg && arg, Args&& ...);
+        template <class ... Args>
+        requires(mpl::excludes_copy_annd_move_ctr<primitive_array<T>, Args...>::value)
+        primitive_array(Args&& ...);
 
         using base_type::size;
 
@@ -175,17 +175,12 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().data_type()));
     }
 
-
-
-
-    // variadic constructor
     template <class T>
-    template <class FirstArg, class ... Args>
-    requires (sizeof ... (Args) > 0 || (! std::is_same_v<std::decay_t<FirstArg>, primitive_array<T> > ))
-    primitive_array<T>::primitive_array(FirstArg && arg, Args&& ... args)
-    : base_type(create_proxy(std::forward<FirstArg>(arg), std::forward<Args>(args) ...))
+    template <class ... Args>
+    requires(mpl::excludes_copy_annd_move_ctr<primitive_array<T>, Args...>::value)
+    primitive_array<T>::primitive_array(Args&& ... args)
+    : base_type(create_proxy(std::forward<Args>(args) ...))
     {}
-
 
     template <class T>
     template <std::ranges::input_range VALUE_RANGE, std::ranges::input_range BOOL_RANGE>

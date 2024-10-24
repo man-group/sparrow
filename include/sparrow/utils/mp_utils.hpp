@@ -477,4 +477,19 @@ namespace sparrow::mpl
     // Fails if the Qualifier is true for Y but not for T.
     template <typename T, typename Y, template <typename> typename Qualifier>
     concept T_matches_qualifier_if_Y_is = Qualifier<T>::value || !Qualifier<Y>::value;
+
+
+    // this excluded argument is used to exclude copy and move constructors
+    template<class CLS, class ... ARGS>
+    struct excludes_copy_annd_move_ctr
+    {   
+       constexpr static bool size = sizeof...(ARGS);
+       constexpr static bool value =  size !=1 || !std::is_same_v<CLS, std::remove_cvref_t<
+              std::tuple_element_t<0, std::tuple<ARGS...>>>>;
+       >>;
+    
+    };
+
+    template<class CLS, class ... ARGS>
+    constexpr bool excludes_copy_annd_move_ctr_v = excludes_copy_annd_move_ctr<CLS, ARGS...>::value;
 }
