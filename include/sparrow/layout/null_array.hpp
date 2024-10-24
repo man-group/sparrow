@@ -21,6 +21,7 @@
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/layout/array_access.hpp"
 
 namespace sparrow
 {
@@ -102,11 +103,14 @@ namespace sparrow
         difference_type ssize() const;
 
         arrow_proxy& get_arrow_proxy();
+        arrow_proxy&& extract_arrow_proxy() &&;
 
         arrow_proxy m_proxy;
 
         template <class T>
         friend class array_wrapper_impl;
+
+        friend class detail::array_access;
     };
 
     bool operator==(const null_array& lhs, const null_array& rhs);
@@ -239,7 +243,12 @@ namespace sparrow
     {
         return m_proxy;
     }
-    
+
+    inline arrow_proxy&& null_array::extract_arrow_proxy() &&
+    {
+        return std::move(m_proxy);
+    }
+
     inline bool operator==(const null_array& lhs, const null_array& rhs)
     {
         return lhs.size() == rhs.size();

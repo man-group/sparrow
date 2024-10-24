@@ -14,15 +14,23 @@
 
 #pragma once
 
+
+#include <ranges>
+
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/array_access.hpp"
 
 namespace sparrow
 {   
     template <class T>
     class primitive_array;
+
 
     template <class T>
     struct array_inner_types<primitive_array<T>> : array_inner_types_base
@@ -41,10 +49,14 @@ namespace sparrow
         using iterator_tag = std::random_access_iterator_tag;
     };
 
+
+    
+
     template <class T>
     class primitive_array final : public array_bitmap_base<primitive_array<T>>
     {
     public:
+    
 
         using self_type = primitive_array<T>;
         using base_type = array_bitmap_base<self_type>;
@@ -71,9 +83,42 @@ namespace sparrow
 
         explicit primitive_array(arrow_proxy);
 
+
+
+        template <class ... Args>
+        requires(mpl::excludes_copy_and_move_ctor_v<primitive_array<T>, Args...>)
+        primitive_array(Args&& ... args) : base_type(create_proxy(std::forward<Args>(args) ...))
+        {}
+
         using base_type::size;
 
     private:
+
+        static arrow_proxy create_proxy(size_type n);
+
+        // range of values (no missing values)
+        template <std::ranges::input_range R>
+        requires std::convertible_to<std::ranges::range_value_t<R>, T>
+        static auto create_proxy(R&& range) -> arrow_proxy;
+
+        template<class U>
+        requires std::convertible_to<U, T>
+        static arrow_proxy create_proxy(size_type n, const U& value);
+
+
+        // range of values, range of bool
+        template <std::ranges::input_range R, std::ranges::input_range R2>
+        requires std::convertible_to<std::ranges::range_value_t<R>, T> &&
+                 std::convertible_to<std::ranges::range_value_t<R2>, bool>
+        static arrow_proxy create_proxy(R&&, R2&&);
+
+        // range of nullable values
+        template <std::ranges::input_range R>
+        requires std::is_same_v<
+            std::ranges::range_value_t<R>, nullable<T>>
+        static arrow_proxy create_proxy(R&&);
+
+        
 
         using base_type::storage;
 
@@ -93,6 +138,7 @@ namespace sparrow
 
         friend class array_crtp_base<self_type>;
         friend class run_end_encoded_array;
+        friend class detail::array_access;
     };
 
     /**********************************
@@ -128,6 +174,106 @@ namespace sparrow
         : base_type(std::move(proxy))
     {
         SPARROW_ASSERT_TRUE(detail::check_primitive_data_type(storage().data_type()));
+    }
+
+    template <class T>
+    template <std::ranges::input_range VALUE_RANGE, std::ranges::input_range BOOL_RANGE>
+    requires std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, T> &&
+             std::convertible_to<std::ranges::range_value_t<BOOL_RANGE>, bool>
+    arrow_proxy primitive_array<T>::create_proxy(VALUE_RANGE && values, BOOL_RANGE && is_non_null)
+    {
+        ArrowArray arr{};
+        ArrowSchema schema{};
+
+        schema.format = sparrow::data_type_format_of<T>().data();
+        schema.release = release_arrow_schema;
+        schema.n_children = 0;
+        schema.children = nullptr;
+        schema.dictionary = nullptr;
+        schema.release = &release_arrow_schema;
+
+        const auto range_size = std::ranges::size(values);
+
+        arr.length = static_cast<std::int64_t>(range_size);
+        arr.null_count = 0;
+        arr.offset = 0;
+        arr.n_buffers = 2;
+        arr.n_children = 0;
+
+        // buffers
+        std::uint8_t** buf = new std::uint8_t*[2];
+        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
+        const auto bitmap_size = static_cast<std::size_t>((arr.length + 7) / 8);
+        buf[0] = new std::uint8_t[bitmap_size];
+        auto bitmap_ptr = buf[0];
+
+        // data buffer
+        buf[1] = new std::uint8_t[range_size * sizeof(T)];
+        auto data_ptr = reinterpret_cast<T*>(buf[1]);
+        arr.release = &release_arrow_array;
+
+
+        auto value_iter = std::ranges::begin(values);
+        auto is_non_null_iter = std::ranges::begin(is_non_null);
+
+        for(std::size_t i=0; i < range_size; ++i)
+        {
+            const bool is_non_null_val = *is_non_null_iter;
+            if(is_non_null_val)
+            {
+                const auto value = *value_iter;
+                data_ptr[i] = static_cast<T>(value);
+                // set bit to 1
+                bitmap_ptr[i / 8] |= 1 << (i % 8);
+            }
+            else{
+                // set bit to 0
+                bitmap_ptr[i / 8] &= ~(1 << (i % 8));
+            }
+            ++value_iter;
+            ++is_non_null_iter;
+        }
+        arrow_proxy proxy{std::move(arr), std::move(schema)};
+        return proxy;
+    }
+
+    template <class T>
+    arrow_proxy primitive_array<T>::create_proxy(size_type n)
+    {
+       return create_proxy(n, T{});
+    }
+
+    template <class T>
+    template<class U>
+    requires std::convertible_to<U, T>
+    arrow_proxy primitive_array<T>::create_proxy(size_type n, const U& value)
+    {   
+        std::ranges::iota_view<std::size_t> iota(0, n);
+        std::ranges::transform_view iota_to_value(iota, [value](std::size_t) { return value; });
+        return self_type::create_proxy(iota_to_value);
+    }
+
+    template <class T>
+    template <std::ranges::input_range R>
+    requires std::convertible_to<std::ranges::range_value_t<R>, T>
+    arrow_proxy primitive_array<T>::create_proxy(R&& range)
+    {
+        const std::size_t n = std::ranges::size(range);
+        auto iota = std::ranges::iota_view{std::size_t(0), n};
+        std::ranges::transform_view iota_to_is_non_missing(iota, [](std::size_t) { return true; });
+        return self_type::create_proxy(std::forward<R>(range), std::move(iota_to_is_non_missing));
+    }
+
+    // range of nullable values
+    template <class T>
+    template <std::ranges::input_range R>
+    requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
+    arrow_proxy primitive_array<T>::create_proxy(R&& range)
+    {
+        // split into values and is_non_null ranges
+        auto values = range | std::views::transform([](const auto& v) { return v.value(); });
+        auto is_non_null = range | std::views::transform([](const auto& v) { return v.has_value(); });
+        return self_type::create_proxy(values, is_non_null);
     }
 
     template <class T>

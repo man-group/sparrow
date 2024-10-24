@@ -23,7 +23,7 @@
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/utils/crtp_base.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
-
+#include "sparrow/layout/array_access.hpp"
 
 namespace sparrow
 {   
@@ -97,6 +97,7 @@ namespace sparrow
         self_type& operator=(self_type&& rhs) = default;
 
         arrow_proxy& get_arrow_proxy();
+        arrow_proxy&& extract_arrow_proxy() &&;
 
         arrow_proxy m_proxy;
         const std::uint8_t * p_type_ids;
@@ -107,6 +108,8 @@ namespace sparrow
 
         template <class T>
         friend class array_wrapper_impl;
+
+        friend class detail::array_access;
     };  
 
     template <class D>
@@ -170,6 +173,11 @@ namespace sparrow
     arrow_proxy& union_array_crtp_base<DERIVED>::get_arrow_proxy()
     {
         return m_proxy;
+    }
+    template <class DERIVED>
+    arrow_proxy&& union_array_crtp_base<DERIVED>::extract_arrow_proxy() &&
+    {
+        return std::move(m_proxy);
     }
 
     template <class DERIVED>

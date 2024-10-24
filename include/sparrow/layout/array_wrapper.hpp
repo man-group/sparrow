@@ -70,6 +70,7 @@ namespace sparrow
         enum data_type data_type() const;
         bool is_dictionary() const;
         arrow_proxy& get_arrow_proxy();
+        arrow_proxy && extract_arrow_proxy() &&;
 
     protected:
 
@@ -81,6 +82,7 @@ namespace sparrow
         enum data_type m_data_type;
         virtual bool is_dictionary_impl() const = 0;
         virtual arrow_proxy& get_arrow_proxy_impl() = 0;
+        virtual arrow_proxy&& extract_arrow_proxy_impl() = 0;
         virtual wrapper_ptr clone_impl() const = 0;
     };
 
@@ -107,6 +109,7 @@ namespace sparrow
         array_wrapper_impl(const array_wrapper_impl&);
         bool is_dictionary_impl() const override;
         arrow_proxy& get_arrow_proxy_impl() override;
+        arrow_proxy&& extract_arrow_proxy_impl() override;
         wrapper_ptr clone_impl() const override;
 
         using storage_type = std::variant<value_ptr<T>, std::shared_ptr<T>, T*>;
@@ -144,6 +147,11 @@ namespace sparrow
         return get_arrow_proxy_impl();
     }
 
+    inline arrow_proxy&& array_wrapper::extract_arrow_proxy() &&
+    {
+        return extract_arrow_proxy_impl();
+    }
+   
     inline array_wrapper::array_wrapper(enum data_type dt)
         : m_data_type(dt)
     {
@@ -227,6 +235,13 @@ namespace sparrow
     {
         return wrapper_ptr{new array_wrapper_impl<T>(*this)};
     }
+
+    template <class T>
+    auto array_wrapper_impl<T>::extract_arrow_proxy_impl() -> arrow_proxy&&
+    {
+        return std::move(std::move(*p_array).extract_arrow_proxy());
+    }
+
 
     template <class T>
     T& unwrap_array(array_wrapper& ar)

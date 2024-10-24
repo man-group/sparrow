@@ -23,6 +23,7 @@
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/crtp_base.hpp"
+#include "sparrow/layout/array_access.hpp"
 
 namespace sparrow
 {
@@ -103,7 +104,7 @@ namespace sparrow
 
     protected:
 
-        array_crtp_base(arrow_proxy);
+        explicit array_crtp_base(arrow_proxy);
 
         array_crtp_base(const array_crtp_base&) = default;
         array_crtp_base& operator=(const array_crtp_base&) = default;
@@ -113,6 +114,7 @@ namespace sparrow
 
         const arrow_proxy& storage() const;
         arrow_proxy& storage();
+
 
         bitmap_reference has_value(size_type i);
         bitmap_const_reference has_value(size_type i) const;
@@ -125,6 +127,7 @@ namespace sparrow
 
     private:
 
+        arrow_proxy && extract_arrow_proxy() &&;
         arrow_proxy& get_arrow_proxy();
 
         arrow_proxy m_proxy;
@@ -134,6 +137,8 @@ namespace sparrow
         friend class layout_iterator<self_type, true>;
         template <class T>
         friend class array_wrapper_impl;
+
+        friend class detail::array_access;
     };
 
     template <class D>
@@ -266,6 +271,12 @@ namespace sparrow
     auto array_crtp_base<D>::storage() const -> const arrow_proxy&
     {
         return m_proxy;
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::extract_arrow_proxy() && -> arrow_proxy&&
+    {
+        return std::move(m_proxy);
     }
 
     template <class D>
