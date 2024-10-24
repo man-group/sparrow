@@ -17,11 +17,7 @@
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/array_factory.hpp"
-#include "sparrow/layout/layout_utils.hpp"
-#include "sparrow/layout/nested_value_types.hpp"
-#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
-#include "sparrow/utils/nullable.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_iterator.hpp"
 
 namespace sparrow
@@ -82,7 +78,7 @@ namespace sparrow
         SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);
         SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
 
-        arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
         arrow_proxy m_proxy;

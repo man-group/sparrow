@@ -37,7 +37,7 @@ namespace sparrow
      * Relies on a layout's couple of value iterator and bitmap iterator to
      * return reference proxies when it is dereferenced.
      */
-    template <typename Iterator_types>
+    template <iterator_types Iterator_types>
     class layout_iterator : public iterator_base<
                                 layout_iterator<Iterator_types>,
                                 typename Iterator_types::value_type,
@@ -83,53 +83,53 @@ namespace sparrow
      * layout_iterator implementation *
      **********************************/
 
-    template <typename Iterator_types>
+    template <iterator_types Iterator_types>
     layout_iterator<Iterator_types>::layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter)
         : m_value_iter(value_iter)
         , m_bitmap_iter(bitmap_iter)
     {
     }
 
-    template <typename Iterator_types>
+    template <iterator_types Iterator_types>
     auto layout_iterator<Iterator_types>::dereference() const -> reference
     {
         return reference(*m_value_iter, *m_bitmap_iter);
     }
 
-    template <typename Iterator_types>
+    template <iterator_types Iterator_types>
     void layout_iterator<Iterator_types>::increment()
     {
         ++m_value_iter;
         ++m_bitmap_iter;
     }
 
-    template <typename Iterator_types>
+    template <iterator_types Iterator_types>
     void layout_iterator<Iterator_types>::decrement()
     {
         --m_value_iter;
         --m_bitmap_iter;
     }
 
-    template <typename Iterator_types>
+    template <iterator_types Iterator_types>
     void layout_iterator<Iterator_types>::advance(difference_type n)
     {
         m_value_iter += n;
         m_bitmap_iter += n;
     }
 
-    template <typename Iterator_types>
+    template <iterator_types Iterator_types>
     auto layout_iterator<Iterator_types>::distance_to(const self_type& rhs) const -> difference_type
     {
         return rhs.m_value_iter - m_value_iter;
     }
 
-    template <typename Iterator_types>
+    template <iterator_types Iterator_types>
     bool layout_iterator<Iterator_types>::equal(const self_type& rhs) const
     {
         return m_value_iter == rhs.m_value_iter && m_bitmap_iter == rhs.m_bitmap_iter;
     }
 
-    template <typename Iterator_types>
+    template <iterator_types Iterator_types>
     bool layout_iterator<Iterator_types>::less_than(const self_type& rhs) const
     {
         return m_value_iter < rhs.m_value_iter && m_bitmap_iter < rhs.m_bitmap_iter;

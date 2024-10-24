@@ -68,8 +68,7 @@ namespace sparrow
 
             for (std::size_t i = 0; i < pa.size(); ++i)
             {
-                auto lo = std::get<const_reference>(ar[i]);
-                CHECK_EQ(lo, pa[i]);
+                CHECK_EQ(std::get<const_reference>(ar[i]), pa[i]);
             }
         }
         TEST_CASE_TEMPLATE_APPLY(access_operator_id, testing_types);
