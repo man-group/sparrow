@@ -184,9 +184,10 @@ if (SPARROW_TARGET_32BIT)
 else()
 
     set(SPARROW_SRC
-        ${SPARROW_SOURCE_DIR}/array.cpp
         ${SPARROW_SOURCE_DIR}/array_factory.cpp
         ${SPARROW_SOURCE_DIR}/array_helper.cpp
+        ${SPARROW_SOURCE_DIR}/array.cpp
+        ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
         ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
