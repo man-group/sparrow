@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/arrow_interface/arrow_array.hpp"
-#include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/arrow_interface/arrow_array_schema_factory.hpp"
 #include "external_array_data_creation.hpp"
 
 #ifdef __GNUC__
@@ -28,7 +25,7 @@ namespace sparrow::test
     namespace detail
     {
         template <class T>
-        void release_common_arrow(T* t)
+        void release_external_common_arrow(T* t)
         {
             if (t->dictionary)
             {
@@ -48,12 +45,12 @@ namespace sparrow::test
         }
     }
 
-    void release_arrow_schema(ArrowSchema* schema)
+    void release_external_arrow_schema(ArrowSchema* schema)
     {
-        detail::release_common_arrow(schema);
+        detail::release_external_common_arrow(schema);
     }
 
-    void release_arrow_array(ArrowArray* arr)
+    void release_external_arrow_array(ArrowArray* arr)
     {
         for (std::int64_t i = 0; i < arr->n_buffers; ++i)
         {
@@ -61,7 +58,33 @@ namespace sparrow::test
         }
         delete[] reinterpret_cast<const std::uint8_t**>(arr->buffers);
         arr->buffers = nullptr;
-        detail::release_common_arrow(arr);
+        detail::release_external_common_arrow(arr);
+    }
+
+    sparrow::buffer<std::uint8_t> make_offset_buffer_from_sizes(const std::vector<size_t>& sizes, bool big)
+    {
+        const auto n = sizes.size() + 1;
+        const auto buf_size = n * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t));
+        auto buf = new std::uint8_t[buf_size];
+        if (big)
+        {
+            auto* ptr = reinterpret_cast<std::uint64_t*>(buf);
+            ptr[0] = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                ptr[i + 1] = ptr[i] + static_cast<std::uint64_t>(sizes[i]);
+            }
+        }
+        else
+        {
+            auto* ptr = reinterpret_cast<std::uint32_t*>(buf);
+            ptr[0] = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                ptr[i + 1] = ptr[i] + static_cast<std::uint32_t>(sizes[i]);
+            }
+        }
+        return {buf, buf_size};
     }
 
     sparrow::buffer<std::uint8_t> make_size_buffer(const std::vector<size_t>& sizes, bool big)
@@ -113,7 +136,7 @@ namespace sparrow::test
         std::vector<buffer_type> arr_buffs = 
         {
             sparrow::make_bitmap_buffer(list_lengths.size(), false_positions),
-            make_offset_buffer_from_sizes2(list_lengths, big_list)
+            make_offset_buffer_from_sizes(list_lengths, big_list)
         };
         
         ArrowArray** array_children = new ArrowArray*[1];
@@ -203,7 +226,7 @@ namespace sparrow::test
         std::vector<buffer_type> arr_buffs = 
         {
             sparrow::make_bitmap_buffer(list_lengths.size(), false_positions),
-            make_offset_buffer_from_sizes2(list_lengths, big_list),
+            make_offset_buffer_from_sizes(list_lengths, big_list),
             make_size_buffer(list_lengths, big_list)
         };
         
