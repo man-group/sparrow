@@ -507,13 +507,9 @@ namespace sparrow
     inline arrow_proxy fixed_sized_list_array::create_proxy(std::uint64_t list_size, array && flat_values)
     {
         const auto size = flat_values.size() / list_size;
-        // get the array wrapper
+
         auto wrapper = detail::array_access::extract_array_wrapper(std::move(flat_values));
-
-        // extract the storage from the wrapper
         auto storage = std::move(*wrapper).extract_arrow_proxy();
-
-        // extract the schema and array from the storage
         auto flat_schema = storage.extract_schema();
         auto flat_arr = storage.extract_array();
 
