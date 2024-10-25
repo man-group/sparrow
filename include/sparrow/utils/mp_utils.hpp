@@ -19,7 +19,6 @@
 #include <memory>
 #include <ranges>
 #include <type_traits>
-#include <tuple>
 
 namespace sparrow::mpl
 {
@@ -480,17 +479,24 @@ namespace sparrow::mpl
     concept T_matches_qualifier_if_Y_is = Qualifier<T>::value || !Qualifier<Y>::value;
 
 
-    // this excluded argument is used to exclude copy and move constructors
     template<class CLS, class ... ARGS>
     struct excludes_copy_and_move_ctor
     {   
-       constexpr static bool size = sizeof...(ARGS);
-       constexpr static bool value =  size !=1 || !std::is_same_v<CLS, 
-                std::remove_cvref_t<
-                    typename std::tuple_element<0, std::tuple<ARGS...>>::type
-                >
-       >;
-    
+       constexpr static bool value = true;
+    };
+
+    // Specialization for empty parameter pack
+    template<class CLS>
+    struct excludes_copy_and_move_ctor<CLS>
+    {
+        constexpr static bool value = true;  // Handle empty pack case
+    };
+
+    // Specialization for single parameter in the parameter pack
+    template<class CLS, class T>
+    struct excludes_copy_and_move_ctor<CLS, T>
+    {
+        constexpr static bool value = !std::is_same_v<CLS, std::remove_cvref_t<T>>;
     };
 
     template<class CLS, class ... ARGS>
