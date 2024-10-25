@@ -479,7 +479,8 @@ namespace sparrow::mpl
     concept T_matches_qualifier_if_Y_is = Qualifier<T>::value || !Qualifier<Y>::value;
 
 
-
+    // helper class to exclude copy and move constructors beeing routed
+    // to a constructor with variadic arguments / perfect forwarding
     template<class CLS, class ... ARGS>
     struct excludes_copy_and_move_ctor
     {   

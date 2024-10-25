@@ -24,10 +24,8 @@
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/crtp_base.hpp"
 #include "sparrow/layout/array_access.hpp"
-
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-
 
 namespace sparrow
 {
@@ -131,7 +129,7 @@ namespace sparrow
 
         const_bitmap_iterator bitmap_cbegin() const;
         const_bitmap_iterator bitmap_cend() const;
-   
+
     private:
         arrow_proxy m_proxy;
 
@@ -139,7 +137,6 @@ namespace sparrow
         friend class layout_iterator<iterator_types>;
         template <class T>
         friend class array_wrapper_impl;
-
         friend class detail::array_access;
     };
 

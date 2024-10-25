@@ -96,11 +96,9 @@ namespace sparrow
         union_array_crtp_base(self_type&& rhs) = default;
         self_type& operator=(self_type&& rhs) = default;
 
-
         arrow_proxy&& extract_arrow_proxy() &&;
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
-
 
         arrow_proxy m_proxy;
         const std::uint8_t * p_type_ids;
@@ -111,7 +109,6 @@ namespace sparrow
 
         template <class T>
         friend class array_wrapper_impl;
-
         friend class detail::array_access;
     };  
 

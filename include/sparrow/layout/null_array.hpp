@@ -102,8 +102,6 @@ namespace sparrow
 
         difference_type ssize() const;
 
-
-
         [[nodiscard]] arrow_proxy&& extract_arrow_proxy() &&;
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;

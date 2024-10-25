@@ -53,14 +53,10 @@ namespace sparrow
         using iterator_tag = std::random_access_iterator_tag;
     };
 
-
-    
-
     template <class T>
     class primitive_array final : public mutable_array_bitmap_base<primitive_array<T>>
     {
     public:
-    
 
         using self_type = primitive_array<T>;
         using base_type = mutable_array_bitmap_base<self_type>;
@@ -139,7 +135,6 @@ namespace sparrow
             std::ranges::range_value_t<R>, nullable<T>>
         static arrow_proxy create_proxy(R&&);
 
-        private:
 
         // Modifiers
 
