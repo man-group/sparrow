@@ -15,6 +15,7 @@
 #pragma once
 
 #include "sparrow/array_factory.hpp"
+#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
@@ -167,10 +168,11 @@ namespace sparrow
 
     inline auto struct_array::make_children() -> children_type
     {
-        children_type children(this->storage().children().size(), nullptr);
+        arrow_proxy& proxy = this->get_arrow_proxy();
+        children_type children(proxy.children().size(), nullptr);
         for (std::size_t i = 0; i < children.size(); ++i)
         {
-            children[i] = array_factory(this->storage().children()[i].view());
+            children[i] = array_factory(proxy.children()[i].view());
         }
         return children;
     }

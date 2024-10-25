@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/mutable_array_base.hpp"
 
 namespace sparrow
@@ -138,17 +139,19 @@ namespace sparrow
     auto array_bitmap_base_impl<D, is_mutable>::make_bitmap() -> bitmap_type
     {
         static constexpr size_t bitmap_buffer_index = 0;
-        SPARROW_ASSERT_TRUE(this->storage().buffers().size() > bitmap_buffer_index);
-        const auto bitmap_size = static_cast<std::size_t>(this->storage().length() + this->storage().offset());
-        return bitmap_type(this->storage().buffers()[bitmap_buffer_index].data(), bitmap_size);
+        arrow_proxy& arrow_proxy = this->get_arrow_proxy();
+        SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
+        const auto bitmap_size = static_cast<std::size_t>(arrow_proxy.length() + arrow_proxy.offset());
+        return bitmap_type(arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size);
     }
 
     template <class D, bool is_mutable>
     void array_bitmap_base_impl<D, is_mutable>::resize_bitmap(size_type new_length)
         requires is_mutable
     {
-        const size_t new_size = new_length + static_cast<size_t>(this->storage().offset());
-        this->storage().resize_bitmap(new_size);
+        arrow_proxy& arrow_proxy = this->get_arrow_proxy();
+        const size_t new_size = new_length + static_cast<size_t>(arrow_proxy.offset());
+        arrow_proxy.resize_bitmap(new_size);
     }
 
     template <class D, bool is_mutable>
@@ -160,7 +163,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(this->bitmap_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= this->bitmap_cend())
         const auto pos_index = static_cast<size_t>(std::distance(this->bitmap_cbegin(), pos));
-        const auto idx = this->storage().insert_bitmap(pos_index, value, count);
+        const auto idx = this->get_arrow_proxy().insert_bitmap(pos_index, value, count);
         return sparrow::next(this->bitmap_begin(), idx);
     }
 
@@ -178,7 +181,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(pos <= this->bitmap_cend());
         SPARROW_ASSERT_TRUE(first <= last);
         const auto distance = static_cast<size_t>(std::distance(this->bitmap_cbegin(), pos));
-        const auto idx = this->storage().insert_bitmap(distance, std::ranges::subrange(first, last));
+        const auto idx = this->get_arrow_proxy().insert_bitmap(distance, std::ranges::subrange(first, last));
         return sparrow::next(this->bitmap_begin(), idx);
     }
 
@@ -190,7 +193,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(this->bitmap_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos < this->bitmap_cend())
         const auto pos_idx = static_cast<size_t>(std::distance(this->bitmap_cbegin(), pos));
-        const auto idx = this->storage().erase_bitmap(pos_idx, count);
+        const auto idx = this->get_arrow_proxy().erase_bitmap(pos_idx, count);
         return sparrow::next(this->bitmap_begin(), idx);
     }
 

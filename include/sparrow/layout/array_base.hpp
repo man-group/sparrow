@@ -116,7 +116,8 @@ namespace sparrow
         array_crtp_base(array_crtp_base&&) = default;
         array_crtp_base& operator=(array_crtp_base&&) = default;
 
-        [[nodiscard]] const arrow_proxy& storage() const;
+        [[nodiscard]] arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
         bitmap_const_reference has_value(size_type i) const;
 
@@ -126,9 +127,7 @@ namespace sparrow
         const_bitmap_iterator bitmap_cbegin() const;
         const_bitmap_iterator bitmap_cend() const;
 
-        [[nodiscard]] arrow_proxy& get_arrow_proxy();
-        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
-
+    private:
         arrow_proxy m_proxy;
 
         // friend classes
@@ -147,7 +146,7 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::size() const -> size_type
     {
-        return static_cast<size_type>(storage().length());
+        return static_cast<size_type>(get_arrow_proxy().length());
     }
 
     template <class D>
@@ -203,7 +202,13 @@ namespace sparrow
     }
 
     template <class D>
-    auto array_crtp_base<D>::storage() const -> const arrow_proxy&
+    auto array_crtp_base<D>::get_arrow_proxy() -> arrow_proxy&
+    {
+        return m_proxy;
+    }
+
+    template <class D>
+    auto array_crtp_base<D>::get_arrow_proxy() const -> const arrow_proxy&
     {
         return m_proxy;
     }
@@ -218,7 +223,7 @@ namespace sparrow
     template <class D>
     auto array_crtp_base<D>::bitmap_begin() const -> const_bitmap_iterator
     {
-        return sparrow::next(this->derived_cast().get_bitmap().cbegin(), storage().offset());
+        return sparrow::next(this->derived_cast().get_bitmap().cbegin(), get_arrow_proxy().offset());
     }
 
     template <class D>
@@ -237,18 +242,6 @@ namespace sparrow
     auto array_crtp_base<D>::bitmap_cend() const -> const_bitmap_iterator
     {
         return bitmap_end();
-    }
-
-    template <class D>
-    auto array_crtp_base<D>::get_arrow_proxy() -> arrow_proxy&
-    {
-        return m_proxy;
-    }
-
-    template <class D>
-    auto array_crtp_base<D>::get_arrow_proxy() const -> const arrow_proxy&
-    {
-        return m_proxy;
     }
 
     template <class D>

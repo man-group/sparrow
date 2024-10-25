@@ -357,7 +357,7 @@ namespace sparrow
     template <class DERIVED>
     cloning_ptr<array_wrapper> list_array_crtp_base<DERIVED>::make_flat_array()
     {
-        return array_factory(this->storage().children()[0].view());
+        return array_factory(this->get_arrow_proxy().children()[0].view());
     }
 
     /**********************************
@@ -404,7 +404,7 @@ namespace sparrow
     auto list_array_impl<BIG>::make_list_offsets() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
-              this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()
+              this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
         );
     }
 
@@ -452,7 +452,7 @@ namespace sparrow
     auto list_view_array_impl<BIG>::make_list_offsets() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
-              this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()
+              this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
         );
     }
 
@@ -460,7 +460,7 @@ namespace sparrow
     auto list_view_array_impl<BIG>::make_list_sizes() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
-              this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()
+              this->get_arrow_proxy().buffers()[SIZES_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
         );
     }
 
@@ -482,7 +482,7 @@ namespace sparrow
 
     inline fixed_sized_list_array::fixed_sized_list_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
-        , m_list_size(fixed_sized_list_array::list_size_from_format(this->storage().format()))
+        , m_list_size(fixed_sized_list_array::list_size_from_format(this->get_arrow_proxy().format()))
     {
     }
 

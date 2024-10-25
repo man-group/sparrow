@@ -33,7 +33,7 @@ namespace sparrow
     template <class L>
     class variable_size_binary_reference;
 
-    template <class Layout, typename Iterator_types>
+    template <class Layout, iterator_types Iterator_types>
     class variable_size_binary_value_iterator;
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -78,12 +78,13 @@ namespace sparrow
      * @tparam L the layout type
      * @tparam is_const a boolean flag specifying whether this iterator is const.
      */
-    template <class Layout, typename Iterator_types>
-    class variable_size_binary_value_iterator : public iterator_base<
-                                                    variable_size_binary_value_iterator<Layout, Iterator_types>,
-                                                    typename Iterator_types::value_type,
-                                                    typename Iterator_types::iterator_tag,
-                                                    typename Iterator_types::reference>
+    template <class Layout, iterator_types Iterator_types>
+    class variable_size_binary_value_iterator
+        : public iterator_base<
+              variable_size_binary_value_iterator<Layout, Iterator_types>,
+              typename Iterator_types::value_type,
+              typename Iterator_types::iterator_tag,
+              typename Iterator_types::reference>
     {
     public:
 
@@ -194,7 +195,7 @@ namespace sparrow
     public:
 
         using self_type = variable_size_binary_array<T, CR, OT>;
-        using base_type = array_bitmap_base_impl<self_type, false>;
+        using base_type = array_bitmap_base<self_type>;
         using inner_types = array_inner_types<self_type>;
         using inner_value_type = typename inner_types::inner_value_type;
         // using inner_reference = typename inner_types::inner_reference;
@@ -233,7 +234,7 @@ namespace sparrow
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
 
-        using base_type::storage;
+        using base_type::get_arrow_proxy;
 
         // offset_iterator offset(size_type i);
         // offset_iterator offset_end();
@@ -253,7 +254,7 @@ namespace sparrow
         // value_iterator value_begin();
         // value_iterator value_end();
 
-       
+
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
 
@@ -266,7 +267,7 @@ namespace sparrow
      * variable_size_binary_value_iterator implementation *
      ******************************************************/
 
-    template <class Layout, typename Iterator_types>
+    template <class Layout, iterator_types Iterator_types>
     variable_size_binary_value_iterator<Layout, Iterator_types>::variable_size_binary_value_iterator(
         layout_type* layout,
         size_type index
@@ -276,12 +277,12 @@ namespace sparrow
     {
     }
 
-    template <class Layout, typename Iterator_types>
+    template <class Layout, iterator_types Iterator_types>
     auto variable_size_binary_value_iterator<Layout, Iterator_types>::dereference() const -> reference
     {
         // if constexpr (is_const)
         // {
-            return p_layout->value(static_cast<size_type>(m_index));
+        return p_layout->value(static_cast<size_type>(m_index));
         // }
         // else
         // {
@@ -289,38 +290,38 @@ namespace sparrow
         // }
     }
 
-    template <class Layout, typename Iterator_types>
+    template <class Layout, iterator_types Iterator_types>
     void variable_size_binary_value_iterator<Layout, Iterator_types>::increment()
     {
         ++m_index;
     }
 
-    template <class Layout, typename Iterator_types>
+    template <class Layout, iterator_types Iterator_types>
     void variable_size_binary_value_iterator<Layout, Iterator_types>::decrement()
     {
         --m_index;
     }
 
-    template <class Layout, typename Iterator_types>
+    template <class Layout, iterator_types Iterator_types>
     void variable_size_binary_value_iterator<Layout, Iterator_types>::advance(difference_type n)
     {
         m_index += n;
     }
 
-    template <class Layout, typename Iterator_types>
-    auto
-    variable_size_binary_value_iterator<Layout, Iterator_types>::distance_to(const self_type& rhs) const -> difference_type
+    template <class Layout, iterator_types Iterator_types>
+    auto variable_size_binary_value_iterator<Layout, Iterator_types>::distance_to(const self_type& rhs
+    ) const -> difference_type
     {
         return rhs.m_index - m_index;
     }
 
-    template <class Layout, typename Iterator_types>
+    template <class Layout, iterator_types Iterator_types>
     bool variable_size_binary_value_iterator<Layout, Iterator_types>::equal(const self_type& rhs) const
     {
         return (p_layout == rhs.p_layout) && (m_index == rhs.m_index);
     }
 
-    template <class Layout, typename Iterator_types>
+    template <class Layout, iterator_types Iterator_types>
     bool variable_size_binary_value_iterator<Layout, Iterator_types>::less_than(const self_type& rhs) const
     {
         return (p_layout == rhs.p_layout) && (m_index < rhs.m_index);
@@ -448,7 +449,7 @@ namespace sparrow
     variable_size_binary_array<T, CR, OT>::variable_size_binary_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
     {
-        const auto type = storage().data_type();
+        const auto type = get_arrow_proxy().data_type();
         SPARROW_ASSERT_TRUE(type == data_type::STRING || type == data_type::BINARY);  // TODO: Add
                                                                                       // data_type::LARGE_STRING
                                                                                       // and
@@ -461,22 +462,22 @@ namespace sparrow
     // template <std::ranges::sized_range T, class CR, layout_offset OT>
     // auto variable_size_binary_array<T, CR, OT>::data() -> pointer
     // {
-    //     return storage().buffers()[DATA_BUFFER_INDEX].template data<inner_value_type>()
-    //            + static_cast<size_type>(storage().offset());
+    //     return get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<inner_value_type>()
+    //            + static_cast<size_type>(get_arrow_proxy().offset());
     // }
 
     // template <std::ranges::sized_range T, class CR, layout_offset OT>
     // auto variable_size_binary_array<T, CR, OT>::data(size_type i) -> data_iterator
     // {
-    //     SPARROW_ASSERT_FALSE(storage().buffers()[DATA_BUFFER_INDEX].size() == 0u);
-    //     return storage().buffers()[DATA_BUFFER_INDEX].template data<data_value_type>() + i;
+    //     SPARROW_ASSERT_FALSE(get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].size() == 0u);
+    //     return get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<data_value_type>() + i;
     // }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     auto variable_size_binary_array<T, CR, OT>::data(size_type i) const -> const_data_iterator
     {
-        SPARROW_ASSERT_FALSE(storage().buffers()[DATA_BUFFER_INDEX].size() == 0u);
-        return storage().buffers()[DATA_BUFFER_INDEX].template data<const data_value_type>() + i;
+        SPARROW_ASSERT_FALSE(get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].size() == 0u);
+        return get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<const data_value_type>() + i;
     }
 
     // template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -484,7 +485,7 @@ namespace sparrow
     //     requires mpl::convertible_ranges<U, T>
     // void variable_size_binary_array<T, CR, OT>::assign(U&& rhs, size_type index)
     // {
-    //     auto& data_buffer = storage().buffers()[1];
+    //     auto& data_buffer = get_arrow_proxy().buffers()[1];
     //     const auto offset_beg = *offset(index);
     //     const auto offset_end = *offset(index + 1);
     //     const auto initial_value_length = offset_end - offset_beg;
@@ -519,25 +520,25 @@ namespace sparrow
     // template <std::ranges::sized_range T, class CR, layout_offset OT>
     // auto variable_size_binary_array<T, CR, OT>::offset(size_type i) -> offset_iterator
     // {
-    //     SPARROW_ASSERT_TRUE(i < size() + storage().offset());
-    //     return storage().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
-    //            + static_cast<size_type>(storage().offset()) + i;
+    //     SPARROW_ASSERT_TRUE(i < size() + get_arrow_proxy().offset());
+    //     return get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
+    //            + static_cast<size_type>(get_arrow_proxy().offset()) + i;
     // }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     auto variable_size_binary_array<T, CR, OT>::offset(size_type i) const -> const_offset_iterator
     {
-        SPARROW_ASSERT_TRUE(i < size() + storage().offset());
-        return storage().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
-               + static_cast<size_type>(storage().offset()) + i;
+        SPARROW_ASSERT_TRUE(i < size() + get_arrow_proxy().offset());
+        return get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
+               + static_cast<size_type>(get_arrow_proxy().offset()) + i;
     }
 
     // template <std::ranges::sized_range T, class CR, layout_offset OT>
     // auto variable_size_binary_array<T, CR, OT>::value(size_type i) -> inner_reference
     // {
     //     SPARROW_ASSERT_TRUE(i < size());
-    //     return storage().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
-    //            + static_cast<size_type>(storage().offset()) + i;
+    //     return get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
+    //            + static_cast<size_type>(get_arrow_proxy().offset()) + i;
     // }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
