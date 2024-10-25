@@ -584,7 +584,6 @@ namespace sparrow
 
             SUBCASE("push_back")
             {
-
                 const T new_value{99};
                 ar.push_back(make_nullable<T>(99));
                 REQUIRE_EQ(ar.size(), 5);
@@ -599,7 +598,6 @@ namespace sparrow
                 CHECK(ar[4].has_value());
                 CHECK_EQ(ar[4].value(), new_value);
             }
-
 
             SUBCASE("pop_back")
             {
