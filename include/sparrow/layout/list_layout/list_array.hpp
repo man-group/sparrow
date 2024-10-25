@@ -506,7 +506,7 @@ namespace sparrow
 
     inline arrow_proxy fixed_sized_list_array::create_proxy(std::uint64_t list_size, array && flat_values)
     {
-        const auto size = flat_values.size() / list_size;
+        const auto size = flat_values.size() / static_cast<std::size_t>(list_size);
 
         auto wrapper = detail::array_access::extract_array_wrapper(std::move(flat_values));
         auto storage = std::move(*wrapper).extract_arrow_proxy();
@@ -515,7 +515,7 @@ namespace sparrow
 
         const auto bitmap_size = (size + 7 ) / 8;
         auto bitmap_ptr = new std::uint8_t[bitmap_size];
-        std::fill_n(bitmap_ptr, bitmap_size, 0xFF /*all bits 1*/);
+        std::fill_n(bitmap_ptr, bitmap_size, static_cast<std::uint8_t>(0xFF) /*all bits 1*/);
 
         std::string format = "+w:" + std::to_string(list_size);
         ArrowSchema schema = make_arrow_schema(
