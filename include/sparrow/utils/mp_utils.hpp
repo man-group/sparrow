@@ -487,7 +487,7 @@ namespace sparrow::mpl
        constexpr static bool size = sizeof...(ARGS);
        constexpr static bool value =  size !=1 || !std::is_same_v<CLS, 
                 std::remove_cvref_t<
-                    typename std::tuple_element<0, std::tuple<ARGS...>::type>
+                    typename std::tuple_element<0, std::tuple<ARGS...>>::type
                 >
        >;
     
