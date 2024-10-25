@@ -119,6 +119,7 @@ namespace sparrow
         array_crtp_base(array_crtp_base&&) = default;
         array_crtp_base& operator=(array_crtp_base&&) = default;
 
+        [[nodiscard]] arrow_proxy && extract_arrow_proxy() &&;
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
@@ -128,12 +129,9 @@ namespace sparrow
         const_bitmap_iterator bitmap_begin() const;
         const_bitmap_iterator bitmap_end() const;
 
-
-    private:
-
-        arrow_proxy && extract_arrow_proxy() &&;
-        arrow_proxy& get_arrow_proxy();
-
+        const_bitmap_iterator bitmap_cbegin() const;
+        const_bitmap_iterator bitmap_cend() const;
+   
     private:
         arrow_proxy m_proxy;
 
@@ -215,20 +213,18 @@ namespace sparrow
     {
         return m_proxy;
     }
+
+    template <class D>
+    auto array_crtp_base<D>::get_arrow_proxy() const -> const arrow_proxy&
+    {
+        return m_proxy;
+    }
   
     template <class D>
     auto array_crtp_base<D>::extract_arrow_proxy() && -> arrow_proxy&&
     {
         return std::move(m_proxy);
     }
-  
-    template <class D>
-    auto array_crtp_base<D>::has_value(size_type i) const -> bitmap_const_reference
-    {
-        SPARROW_ASSERT_TRUE(i < size());
-        return *sparrow::next(bitmap_begin(), i);
-    }
-
 
     template <class D>
     auto array_crtp_base<D>::has_value(size_type i) const -> bitmap_const_reference

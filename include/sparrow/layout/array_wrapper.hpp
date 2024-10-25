@@ -69,8 +69,9 @@ namespace sparrow
 
         enum data_type data_type() const;
         bool is_dictionary() const;
+        
 
-
+        [[nodiscard]] arrow_proxy&& extract_arrow_proxy() &&;
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 

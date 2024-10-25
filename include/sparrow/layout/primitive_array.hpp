@@ -92,8 +92,6 @@ namespace sparrow
 
         explicit primitive_array(arrow_proxy);
 
-
-
         template <class ... Args>
         requires(mpl::excludes_copy_and_move_ctor_v<primitive_array<T>, Args...>)
         primitive_array(Args&& ... args) : base_type(create_proxy(std::forward<Args>(args) ...))
@@ -101,6 +99,19 @@ namespace sparrow
 
         using base_type::size;
 
+        using base_type::get_arrow_proxy;
+
+        pointer data();
+        const_pointer data() const;
+
+        inner_reference value(size_type i);
+        inner_const_reference value(size_type i) const;
+
+        value_iterator value_begin();
+        value_iterator value_end();
+
+        const_value_iterator value_cbegin() const;
+        const_value_iterator value_cend() const;
 
     private:
 
@@ -128,25 +139,6 @@ namespace sparrow
             std::ranges::range_value_t<R>, nullable<T>>
         static arrow_proxy create_proxy(R&&);
 
-        
-
-        using base_type::storage;
-
-        using base_type::get_arrow_proxy;
-
-
-        pointer data();
-        const_pointer data() const;
-
-        inner_reference value(size_type i);
-        inner_const_reference value(size_type i) const;
-
-        value_iterator value_begin();
-        value_iterator value_end();
-
-        const_value_iterator value_cbegin() const;
-        const_value_iterator value_cend() const;
-
         private:
 
         // Modifiers
@@ -168,7 +160,6 @@ namespace sparrow
         friend class detail::array_access;
         friend base_type;
         friend base_type::base_type;
-
     };
 
     /**********************************
