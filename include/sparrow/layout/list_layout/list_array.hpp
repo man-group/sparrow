@@ -485,7 +485,6 @@ namespace sparrow
 
     inline auto fixed_sized_list_array::list_size_from_format(const std::string_view format) -> uint64_t
     {
-        std::cout<<"recieved format string: "<<format<<std::endl;
         SPARROW_ASSERT(format.size() >= 3, "Invalid format string");
         const auto n_digits = format.size() - 3;
         const auto list_size_str = format.substr(3, n_digits);
@@ -496,7 +495,6 @@ namespace sparrow
         : base_type(std::move(proxy))
         , m_list_size(fixed_sized_list_array::list_size_from_format(this->storage().format()))
     {
-        std::cout<<"constructor called"<<std::endl;
     }
 
     inline auto fixed_sized_list_array::offset_range(size_type i) const -> std::pair<offset_type, offset_type>
@@ -508,67 +506,44 @@ namespace sparrow
 
     inline arrow_proxy fixed_sized_list_array::create_proxy(std::uint64_t list_size, array && flat_values)
     {
-
-        const auto flat_size = flat_values.size();
-        const auto size = static_cast<std::uint64_t>(flat_size) / list_size;
-
-
+        const auto size = flat_values.size() / list_size;
         // get the array wrapper
-        std::cout<<"extracting array wrapper"<<std::endl;
         auto wrapper = detail::array_access::extract_array_wrapper(std::move(flat_values));
 
         // extract the storage from the wrapper
-        std::cout<<"extracting arrow proxy"<<std::endl;
         auto storage = std::move(*wrapper).extract_arrow_proxy();
 
         // extract the schema and array from the storage
-        std::cout<<"extracting schema and array"<<std::endl;
         auto flat_schema = storage.extract_schema();
         auto flat_arr = storage.extract_array();
 
+        const auto bitmap_size = (size + 7 ) / 8;
+        auto bitmap_ptr = new std::uint8_t[bitmap_size];
+        std::fill_n(bitmap_ptr, bitmap_size, 0xFF /*all bits 1*/);
 
-        std::cout<<"creating format string"<<std::endl;
-        // create the format string
-        const auto format = "w:" + std::to_string(list_size);
-        char * format_str = new char[format.size() + 1];
-        std::copy(format.begin(), format.end(), format_str);
-        format_str[format.size()] = '\0';
-        
+        std::string format = "+w:" + std::to_string(list_size);
+        ArrowSchema schema = make_arrow_schema(
+            format,
+            std::nullopt, // name
+            std::nullopt, // metadata
+            std::nullopt, // flags,
+            1, // n_children
+            new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))}, // children
+            nullptr // dictionary
 
-        std::cout<<"creating schema and array"<<std::endl;
-        // create the top-level schema / array for fixed-sized list
-        ArrowSchema schema;
-        ArrowArray  arr;
+        );
 
-        schema.format = format_str;
-        schema.release = &release_arrow_schema; // actually this needs to be modified! to delete the format_str
-        schema.n_children = 1;
-        schema.children = new ArrowSchema*[1];
-        schema.children[0] = new ArrowSchema(std::move(flat_schema));
-        schema.dictionary = nullptr;
-
-        arr.length = static_cast<std::int64_t>(size);
-        arr.null_count = 0;
-        arr.offset = 0;
-        arr.n_buffers = 1;
-        arr.n_children = 1;
-
-        std::uint8_t** buf = new std::uint8_t*[1];
-
-        const auto bitmap_size = static_cast<std::size_t>((arr.length + 7) / 8);
-        buf[0] = new std::uint8_t[bitmap_size];
-        auto bitmap_ptr = buf[0];
-        std::fill_n(bitmap_ptr, bitmap_size, 0xFF);
-        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
-
-        arr.children = new ArrowArray*[1];
-        arr.children[0] = new ArrowArray(std::move(flat_arr));
-        arr.dictionary = nullptr;
-
-        arr.release = &release_arrow_array;
-        
-        std::cout<<"returning arrow proxy"<<std::endl;
+        ArrowArray arr = make_arrow_array(
+            static_cast<std::int64_t>(size), // length
+            0, // null_count
+            0, // offset
+            std::vector<buffer<std::uint8_t>>{
+                {bitmap_ptr, bitmap_size},
+            },
+            1, // n_children
+            new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))}, // children
+            nullptr // dictionary
+        );
         return arrow_proxy{std::move(arr), std::move(schema)};
-
     }
 }

@@ -182,57 +182,63 @@ namespace sparrow
              std::convertible_to<std::ranges::range_value_t<BOOL_RANGE>, bool>
     arrow_proxy primitive_array<T>::create_proxy(VALUE_RANGE && values, BOOL_RANGE && is_non_null)
     {
-        ArrowArray arr{};
-        ArrowSchema schema{};
-
-        schema.format = sparrow::data_type_format_of<T>().data();
-        schema.release = release_arrow_schema;
-        schema.n_children = 0;
-        schema.children = nullptr;
-        schema.dictionary = nullptr;
-        schema.release = &release_arrow_schema;
 
         const auto range_size = std::ranges::size(values);
 
-        arr.length = static_cast<std::int64_t>(range_size);
-        arr.null_count = 0;
-        arr.offset = 0;
-        arr.n_buffers = 2;
-        arr.n_children = 0;
-
         // buffers
-        std::uint8_t** buf = new std::uint8_t*[2];
-        arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
-        const auto bitmap_size = static_cast<std::size_t>((arr.length + 7) / 8);
-        buf[0] = new std::uint8_t[bitmap_size];
-        auto bitmap_ptr = buf[0];
+        auto bitmap_ptr = new std::uint8_t[(range_size + 7) / 8];
+        auto data_buffer_ptr = new std::uint8_t[range_size * sizeof(T)];
+        auto data_ptr = reinterpret_cast<T*>(data_buffer_ptr);
 
-        // data buffer
-        buf[1] = new std::uint8_t[range_size * sizeof(T)];
-        auto data_ptr = reinterpret_cast<T*>(buf[1]);
-        arr.release = &release_arrow_array;
-
-
+        // iterators to the inputs
         auto value_iter = std::ranges::begin(values);
         auto is_non_null_iter = std::ranges::begin(is_non_null);
 
+        // fill the buffers
         for(std::size_t i=0; i < range_size; ++i)
         {
             const bool is_non_null_val = *is_non_null_iter;
             if(is_non_null_val)
             {
-                const auto value = *value_iter;
-                data_ptr[i] = static_cast<T>(value);
+                data_ptr[i] = static_cast<T>(*value_iter);
                 // set bit to 1
                 bitmap_ptr[i / 8] |= 1 << (i % 8);
             }
-            else{
+            else
+            {
                 // set bit to 0
                 bitmap_ptr[i / 8] &= ~(1 << (i % 8));
             }
             ++value_iter;
             ++is_non_null_iter;
         }
+
+        // create arrow schema and array
+        ArrowSchema schema = make_arrow_schema(
+            sparrow::data_type_format_of<T>(),
+            std::nullopt, // name
+            std::nullopt, // metadata
+            std::nullopt, // flags
+            0, // n_children
+            nullptr, // children
+            nullptr // dictionary
+        );
+
+        // create arrow array
+        ArrowArray arr = make_arrow_array(
+            static_cast<std::int64_t>(range_size), // length
+            0, // null_count
+            0, // offset
+            std::vector<buffer<std::uint8_t>>{
+                {bitmap_ptr, (range_size + 7) / 8},
+                {data_buffer_ptr, range_size * sizeof(T)}
+            },
+            0, // n_children
+            nullptr, // children
+            nullptr // dictionary
+        );
+
+        // move into the proxy
         arrow_proxy proxy{std::move(arr), std::move(schema)};
         return proxy;
     }
