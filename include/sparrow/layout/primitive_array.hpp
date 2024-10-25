@@ -202,12 +202,12 @@ namespace sparrow
             {
                 data_ptr[i] = static_cast<T>(*value_iter);
                 // set bit to 1
-                bitmap_ptr[i / 8] |= 1 << static_cast<uint8_t>(i % 8);
+                bitmap_ptr[i / 8] |= static_cast<std::uint8_t>(1 << (i % 8));
             }
             else
             {
                 // set bit to 0
-                bitmap_ptr[i / 8] &= ~(1 << static_cast<uint8_t>(i % 8));
+                bitmap_ptr[i / 8] &= static_cast<std::uint8_t>(~(1 << (i % 8)));
             }
             ++value_iter;
             ++is_non_null_iter;
