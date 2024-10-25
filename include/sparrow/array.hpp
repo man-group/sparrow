@@ -66,10 +66,9 @@ namespace sparrow
 
     template<class ARRAY_TYPE>
     requires std::is_rvalue_reference_v<ARRAY_TYPE&&>
-    array::array(ARRAY_TYPE&& array)
+    array::array(ARRAY_TYPE&& arr)
+    : p_array( new array_wrapper_impl<std::remove_reference_t<ARRAY_TYPE>>(std::move(arr)))
     {   
-        auto storage = detail::array_access::extract_arrow_proxy(std::move(array));
-        p_array = array_factory(std::move(storage));
     }
 
 }
