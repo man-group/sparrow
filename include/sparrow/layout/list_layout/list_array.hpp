@@ -534,7 +534,7 @@ namespace sparrow
             0, // null_count
             0, // offset
             std::vector<buffer<std::uint8_t>>{
-                {bitmap_ptr, bitmap_size},
+                {bitmap_ptr, static_cast<std::size_t>(bitmap_size)},
             },
             1, // n_children
             new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))}, // children
