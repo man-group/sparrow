@@ -27,7 +27,7 @@ inline std::pair<ArrowArray, ArrowSchema> make_external_arrow_schema_and_array()
     std::pair<ArrowArray, ArrowSchema> pair;
     constexpr size_t size = 10;
     constexpr size_t offset = 1;
-    sparrow::test::fill_schema_and_array<uint32_t>(pair.second, pair.first, size, offset, {2, 3});
+    sparrow::test::fill_external_schema_and_array<uint32_t>(pair.second, pair.first, size, offset, {2, 3});
     return pair;
 }
 

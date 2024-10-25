@@ -93,8 +93,20 @@ namespace sparrow
         {
             return std::string(t.cbegin(), t.cend());
         }
+        else if constexpr (mpl::is_type_instance_of_v<T, std::optional>)
+        {
+            if (t.has_value())
+            {
+                return to_optional_string(*t);
+            }
+            else
+            {
+                return std::nullopt;
+            }
+        }
         else
         {
+            static_assert(mpl::dependent_false<T, T>::value, "to_optional_string: unsupported type.");
             mpl::unreachable();
         }
     }

@@ -39,12 +39,12 @@ namespace sparrow
     private:
 
         static_assert(std::same_as<layout_type::inner_value_type, std::string>);
-        static_assert(std::same_as<layout_type::inner_reference, sparrow::variable_size_binary_reference<layout_type>>);
+        // static_assert(std::same_as<layout_type::inner_reference, sparrow::variable_size_binary_reference<layout_type>>);
         static_assert(std::same_as<layout_type::inner_const_reference, std::string_view>);
         using const_value_iterator = layout_type::const_value_iterator;
         static_assert(std::same_as<const_value_iterator::value_type, std::string>);
 
-        // static_assert(std::same_as<const_value_iterator::reference, std::string_view>);
+        static_assert(std::same_as<const_value_iterator::reference, std::string_view>);
 
         arrow_proxy create_arrow_proxy()
         {

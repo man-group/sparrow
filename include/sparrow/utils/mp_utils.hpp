@@ -22,7 +22,7 @@
 
 namespace sparrow::mpl
 {
-    
+
     /// Workaround to replace static_assert(false) in template code.
     /// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2593r1.html
     template <class... T>
@@ -472,11 +472,12 @@ namespace sparrow::mpl
 
     // Matches any type that is testable
     template <class T>
-    concept testable = requires(T t) {  t ? true : false; };
+    concept testable = requires(T t) { t ? true : false; };
 
     // Fails if the Qualifier is true for Y but not for T.
     template <typename T, typename Y, template <typename> typename Qualifier>
     concept T_matches_qualifier_if_Y_is = Qualifier<T>::value || !Qualifier<Y>::value;
+
 
 
     template<class CLS, class ... ARGS>
@@ -484,15 +485,11 @@ namespace sparrow::mpl
     {   
        constexpr static bool value = true;
     };
-
-    // Specialization for empty parameter pack
     template<class CLS>
     struct excludes_copy_and_move_ctor<CLS>
     {
-        constexpr static bool value = true;  // Handle empty pack case
+        constexpr static bool value = true;  
     };
-
-    // Specialization for single parameter in the parameter pack
     template<class CLS, class T>
     struct excludes_copy_and_move_ctor<CLS, T>
     {
@@ -501,4 +498,19 @@ namespace sparrow::mpl
 
     template<class CLS, class ... ARGS>
     constexpr bool excludes_copy_and_move_ctor_v = excludes_copy_and_move_ctor<CLS, ARGS...>::value;
+
+    /**
+     * Concept to check if an iterator is of a specific type.
+     *
+     * This concept ensures that the given iterator type `I` satisfies the
+     * `std::input_iterator` concept and that the value type of the iterator
+     * matches the specified type `T`.
+     *
+     * @tparam I The iterator type to be checked.
+     * @tparam T The type that the iterator's value type should match.
+     */
+    template <typename I, typename T>
+    concept iterator_of_type = std::input_iterator<I>
+                               && std::same_as<typename std::iterator_traits<I>::value_type, T>;
+
 }

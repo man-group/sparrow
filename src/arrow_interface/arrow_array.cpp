@@ -17,7 +17,6 @@
 #include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
 #include "sparrow/types/data_type.hpp"
 
-
 namespace sparrow
 {
     void release_arrow_array(ArrowArray* array)
@@ -43,6 +42,7 @@ namespace sparrow
         buffers.reserve(buffer_count);
         const enum data_type data_type = format_to_data_type(schema.format);
         const auto buffers_type = get_buffer_types_from_data_type(data_type);
+        SPARROW_ASSERT_TRUE(buffers_type.size() == buffer_count);
         for (std::size_t i = 0; i < buffer_count; ++i)
         {
             const auto buffer_type = buffers_type[i];

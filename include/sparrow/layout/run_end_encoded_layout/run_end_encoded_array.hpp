@@ -17,11 +17,7 @@
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/array_factory.hpp"
-#include "sparrow/layout/layout_utils.hpp"
-#include "sparrow/layout/nested_value_types.hpp"
-#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
-#include "sparrow/utils/nullable.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_iterator.hpp"
 #include "sparrow/layout/array_access.hpp"
 
@@ -83,8 +79,11 @@ namespace sparrow
         SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);
         SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
 
-        arrow_proxy& get_arrow_proxy();
         arrow_proxy && extract_arrow_proxy() &&;
+
+        [[nodiscard]] arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
+
 
         arrow_proxy m_proxy;
         std::uint64_t m_encoded_length;
@@ -167,6 +166,11 @@ namespace sparrow
     inline arrow_proxy&& run_end_encoded_array::extract_arrow_proxy() &&
     {
         return std::move(m_proxy);
+    }
+
+    inline const arrow_proxy& run_end_encoded_array::get_arrow_proxy() const
+    {
+        return m_proxy;
     }
 
     inline auto run_end_encoded_array::operator[](std::uint64_t i) -> array_traits::const_reference

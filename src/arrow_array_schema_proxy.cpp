@@ -14,6 +14,8 @@
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 
+#include <utility>
+
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
 #include "sparrow/arrow_interface/arrow_flag_utils.hpp"
@@ -22,16 +24,25 @@
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
 #include "sparrow/utils/contracts.hpp"
 
-
 namespace sparrow
 {
-    arrow_proxy arrow_proxy::view()
+    static constexpr size_t bitmap_buffer_index = 0;
+
+    arrow_proxy arrow_proxy::view() const
     {
-        return arrow_proxy(&array(), &schema());
+        ArrowArray* array_ptr = const_cast<ArrowArray*>(&array());
+        ArrowSchema* schema_ptr = const_cast<ArrowSchema*>(&schema());
+        return arrow_proxy(array_ptr, schema_ptr);
     }
 
     void arrow_proxy::update_buffers()
     {
+        if (is_created_with_sparrow())
+        {
+            get_array_private_data()->update_buffers_ptrs();
+            array().buffers = get_array_private_data()->buffers_ptrs<void>();
+            array().n_buffers = static_cast<int64_t>(n_buffers());
+        }
         m_buffers = get_arrow_array_buffers(array(), schema());
     }
 
@@ -291,8 +302,9 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set name on non-sparrow created ArrowArray");
         }
-        get_schema_private_data()->name() = name;
-        schema().name = get_schema_private_data()->name_ptr();
+        auto private_data = get_schema_private_data();
+        private_data->name() = name;
+        schema().name = private_data->name_ptr();
     }
 
     [[nodiscard]] std::optional<const std::string_view> arrow_proxy::metadata() const
@@ -310,8 +322,9 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set metadata on non-sparrow created ArrowArray");
         }
-        get_schema_private_data()->metadata() = metadata;
-        schema().metadata = get_schema_private_data()->metadata_ptr();
+        auto private_data = get_schema_private_data();
+        private_data->metadata() = metadata;
+        schema().metadata = private_data->metadata_ptr();
     }
 
     [[nodiscard]] std::vector<ArrowFlag> arrow_proxy::flags() const
@@ -343,6 +356,8 @@ namespace sparrow
             throw arrow_proxy_exception("Cannot set length on non-sparrow created ArrowArray");
         }
         array().length = static_cast<int64_t>(length);
+        update_buffers();
+        update_null_count();
     }
 
     [[nodiscard]] int64_t arrow_proxy::null_count() const
@@ -389,8 +404,7 @@ namespace sparrow
         array().n_buffers = static_cast<int64_t>(n_buffers);
         arrow_array_private_data* private_data = get_array_private_data();
         private_data->resize_buffers(n_buffers);
-        array().buffers = private_data->buffers_ptrs<void>();
-        array().n_buffers = static_cast<int64_t>(n_buffers);
+        update_buffers();
     }
 
     [[nodiscard]] size_t arrow_proxy::n_children() const
@@ -458,13 +472,19 @@ namespace sparrow
 
     arrow_schema_private_data* arrow_proxy::get_schema_private_data()
     {
-        SPARROW_ASSERT_TRUE(schema_created_with_sparrow());
+        if (!schema_created_with_sparrow())
+        {
+            throw arrow_proxy_exception("Cannot get schema private data on non-sparrow created ArrowArray");
+        }
         return static_cast<arrow_schema_private_data*>(schema().private_data);
     }
 
     arrow_array_private_data* arrow_proxy::get_array_private_data()
     {
-        SPARROW_ASSERT_TRUE(array_created_with_sparrow());
+        if (!array_created_with_sparrow())
+        {
+            throw arrow_proxy_exception("Cannot get array private data on non-sparrow created ArrowArray");
+        }
         return static_cast<arrow_array_private_data*>(array().private_data);
     }
 
@@ -485,9 +505,7 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set buffer on non-sparrow created ArrowArray");
         }
-        auto array_private_data = get_array_private_data();
-        array_private_data->set_buffer(index, buffer);
-        array().buffers = array_private_data->buffers_ptrs<void>();
+        get_array_private_data()->set_buffer(index, buffer);
         update_null_count();
         update_buffers();
     }
@@ -499,9 +517,7 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set buffer on non-sparrow created ArrowArray");
         }
-        auto array_private_data = get_array_private_data();
-        array_private_data->set_buffer(index, std::move(buffer));
-        array().buffers = array_private_data->buffers_ptrs<void>();
+        get_array_private_data()->set_buffer(index, std::move(buffer));
         update_null_count();
         update_buffers();
     }
@@ -561,7 +577,7 @@ namespace sparrow
         using value_type = arrow_array_and_schema;
         add_children(std::ranges::single_view(value_type{std::move(array), std::move(schema)}));
     }
-    
+
     [[nodiscard]] const std::unique_ptr<arrow_proxy>& arrow_proxy::dictionary() const
     {
         return m_dictionary;
@@ -676,7 +692,7 @@ namespace sparrow
         }
         const auto validity_index = std::distance(buffer_types.begin(), validity_it);
         auto& validity_buffer = buffers()[static_cast<size_t>(validity_index)];
-        const dynamic_bitset_view<std::uint8_t> bitmap(validity_buffer.data(), validity_buffer.size());
+        const dynamic_bitset_view<std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
         const auto null_count = bitmap.null_count();
         set_null_count(static_cast<int64_t>(null_count));
     }
@@ -707,5 +723,100 @@ namespace sparrow
         std::swap(m_buffers, other.m_buffers);
         std::swap(m_children, other.m_children);
         std::swap(m_dictionary, other.m_dictionary);
+    }
+
+    [[nodiscard]] non_owning_dynamic_bitset<uint8_t> arrow_proxy::get_non_owning_dynamic_bitset()
+    {
+        if (!array_created_with_sparrow())
+        {
+            throw arrow_proxy_exception(
+                "Cannot get non owning dynamic bitset from a non-sparrow created ArrowArray or ArrowSchema"
+            );
+        }
+
+        SPARROW_ASSERT_TRUE(is_created_with_sparrow())
+        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
+        auto private_data = static_cast<arrow_array_private_data*>(array().private_data);
+        auto& bitmap_buffer = private_data->buffers()[bitmap_buffer_index];
+        const size_t current_size = length() + offset();
+        non_owning_dynamic_bitset<uint8_t> bitmap{&bitmap_buffer, current_size};
+        return bitmap;
+    }
+
+    void arrow_proxy::resize_bitmap(size_t new_size, bool value)
+    {
+        if (!array_created_with_sparrow())
+        {
+            throw arrow_proxy_exception("Cannot resize bitmap on a non-sparrow created ArrowArray or ArrowSchema"
+            );
+        }
+        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
+        auto bitmap = get_non_owning_dynamic_bitset();
+        bitmap.resize(new_size, value);
+        update_buffers();
+    }
+
+    size_t arrow_proxy::insert_bitmap(size_t index, bool value, size_t count)
+    {
+        if (!array_created_with_sparrow())
+        {
+            throw arrow_proxy_exception(
+                "Cannot insert values in bitmap on a non-sparrow created ArrowArray or ArrowSchema"
+            );
+        }
+        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
+        SPARROW_ASSERT_TRUE(std::cmp_less_equal(index, length()))
+        if (count == 0)
+        {
+            return index;
+        }
+        auto bitmap = get_non_owning_dynamic_bitset();
+        auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), count, value);
+        update_buffers();
+        return std::distance(bitmap.begin(), it);
+    }
+
+    size_t arrow_proxy::erase_bitmap(size_t index, size_t count)
+    {
+        if (!array_created_with_sparrow())
+        {
+            throw arrow_proxy_exception(
+                "Cannot erase values in bitmap on a non-sparrow created ArrowArray or ArrowSchema"
+            );
+        }
+        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
+        SPARROW_ASSERT_TRUE(std::cmp_less(index, length()))
+        auto bitmap = get_non_owning_dynamic_bitset();
+        const auto it_first = sparrow::next(bitmap.cbegin(), index + offset());
+        const auto it_last = sparrow::next(it_first, count);
+        const auto it = bitmap.erase(it_first, it_last);
+        update_buffers();
+        return std::distance(bitmap.begin(), it);
+    }
+
+    void arrow_proxy::push_back_bitmap(bool value)
+    {
+        if (!array_created_with_sparrow())
+        {
+            throw arrow_proxy_exception(
+                "Cannot push_back value in bitmap on a non-sparrow created ArrowArray or ArrowSchema"
+            );
+        }
+        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
+        insert_bitmap(length(), value);
+        update_buffers();
+    }
+
+    void arrow_proxy::pop_back_bitmap()
+    {
+        if (!array_created_with_sparrow())
+        {
+            throw arrow_proxy_exception(
+                "Cannot pop_back value in bitmap on a non-sparrow created ArrowArray or ArrowSchema"
+            );
+        }
+        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
+        erase_bitmap(length() - 1);
+        update_buffers();
     }
 }

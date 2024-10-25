@@ -136,7 +136,8 @@ namespace sparrow
         static keys_layout create_keys_layout(arrow_proxy& proxy);
         static values_layout create_values_layout(arrow_proxy& proxy);
 
-        arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
         arrow_proxy&& extract_arrow_proxy() &&;
 
@@ -318,7 +319,12 @@ namespace sparrow
     {
         return std::move(m_proxy);
     }
-
+    
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::get_arrow_proxy() const -> const arrow_proxy&
+    {
+        return m_proxy;
+    }
 
     template <class IT>
     bool operator==(const dictionary_encoded_array<IT>& lhs, const dictionary_encoded_array<IT>& rhs)

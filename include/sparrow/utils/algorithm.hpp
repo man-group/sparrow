@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <compare>
-#include <concepts>
 
 #include "sparrow/config/config.hpp"
 
@@ -123,5 +122,4 @@ namespace sparrow
     {
         return lexicographical_compare_three_way(r1, r2) == std::strong_ordering::less;
     }
-
 }  // namespace sparrow
