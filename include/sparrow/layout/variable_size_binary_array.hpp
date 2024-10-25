@@ -225,16 +225,12 @@ namespace sparrow
         explicit variable_size_binary_array(arrow_proxy);
 
         using base_type::size;
-
-        // [[nodiscard]] arrow_proxy& get_arrow_proxy();
-        // [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
+        using base_type::get_arrow_proxy;
 
     private:
 
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
-
-        using base_type::get_arrow_proxy;
 
         // offset_iterator offset(size_type i);
         // offset_iterator offset_end();
