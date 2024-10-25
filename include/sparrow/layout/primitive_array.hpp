@@ -98,6 +98,8 @@ namespace sparrow
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
 
+        private:
+
         // Modifiers
 
         void resize_values(size_type new_length, inner_value_type value);
@@ -109,13 +111,13 @@ namespace sparrow
 
         value_iterator erase_values(const_value_iterator pos, size_type count);
 
-    private:
-
         buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
 
         friend class run_end_encoded_array;
+        friend base_type;
+        friend base_type::base_type;
     };
 
     /**********************************
