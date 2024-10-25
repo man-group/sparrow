@@ -19,6 +19,7 @@
 #include <memory>
 #include <ranges>
 #include <type_traits>
+#include <tuple>
 
 namespace sparrow::mpl
 {

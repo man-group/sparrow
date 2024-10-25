@@ -35,9 +35,9 @@ namespace sparrow
 
             // create a list array (fixed size)
             std::uint64_t list_size = 2;
-            std::size_t n = flat_size / list_size;
             fixed_sized_list_array list_arr(list_size, std::move(arr));
 
+            std::size_t n = flat_size / list_size;
 
             const auto size = list_arr.size();
 
