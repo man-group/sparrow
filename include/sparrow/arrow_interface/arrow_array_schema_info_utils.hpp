@@ -26,7 +26,7 @@ namespace sparrow
 {
     /// @returns `true` if the number of buffers in an `ArrowArray` for a given data type is valid, `false`
     /// otherwise.
-    constexpr  bool validate_buffers_count(data_type data_type, int64_t n_buffers)
+    constexpr bool validate_buffers_count(data_type data_type, int64_t n_buffers)
     {
         const std::size_t expected_buffer_count = get_expected_buffer_count(data_type);
         return static_cast<std::size_t>(n_buffers) == expected_buffer_count;
@@ -74,16 +74,17 @@ namespace sparrow
     }
 
     /// @returns `true` if  the format of an `ArrowArray` for a given data type is valid, `false` otherwise.
-    inline bool validate_format_with_arrow_array(data_type , const ArrowArray& )
+    inline bool validate_format_with_arrow_array(data_type, const ArrowArray&)
     {
-        return true; 
+        return true;
         /* THE CODE BELOW MAKES WRONG ASSUMPTIONS AND NEEDS TO BE REFACTORED IN A SEPERATE PR*/
         // const bool buffers_count_valid = validate_buffers_count(data_type, array.n_buffers);
         // // const bool children_count_valid = static_cast<std::size_t>(array.n_children)
         // //                                   == get_expected_children_count(data_type);
 
-        // //std::cout<<"child cound: "<<array.n_children<<" expected: "<<get_expected_children_count(data_type)<<std::endl;
-        // return buffers_count_valid //&& children_count_valid;
+        // //std::cout<<"child cound: "<<array.n_children<<" expected:
+        // "<<get_expected_children_count(data_type)<<std::endl; return buffers_count_valid //&&
+        // children_count_valid;
     }
 
     enum class buffer_type : uint8_t
@@ -97,7 +98,6 @@ namespace sparrow
         SIZES_32BIT,
         SIZES_64BIT,
     };
-
 
     /// @returns A vector of buffer types for a given data type.
     /// This information helps how interpret and parse each buffer in an ArrowArray.
@@ -232,4 +232,43 @@ namespace sparrow
         mpl::unreachable();
     }
 
+    constexpr bool has_bitmap(data_type dt)
+    {
+        switch (dt)
+        {
+            // List all data types. We use the default warning to catch missing cases.
+            case data_type::BOOL:
+            case data_type::INT8:
+            case data_type::INT16:
+            case data_type::INT32:
+            case data_type::INT64:
+            case data_type::UINT8:
+            case data_type::UINT16:
+            case data_type::UINT32:
+            case data_type::UINT64:
+            case data_type::HALF_FLOAT:
+            case data_type::FLOAT:
+            case data_type::DOUBLE:
+            case data_type::TIMESTAMP:
+            case data_type::DECIMAL:
+            case data_type::LIST:
+            case data_type::STRUCT:
+            case data_type::MAP:
+            case data_type::STRING:
+            case data_type::BINARY:
+            case data_type::FIXED_SIZE_BINARY:
+            case data_type::FIXED_WIDTH_BINARY:
+            case data_type::LARGE_LIST:
+            case data_type::LIST_VIEW:
+            case data_type::LARGE_LIST_VIEW:
+            case data_type::FIXED_SIZED_LIST:
+                return true;
+            case data_type::NA:
+            case data_type::SPARSE_UNION:
+            case data_type::DENSE_UNION:
+            case data_type::RUN_ENCODED:
+                return false;
+        }
+        mpl::unreachable();
+    }
 }

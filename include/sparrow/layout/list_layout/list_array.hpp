@@ -17,7 +17,7 @@
 #include <string>  // for std::stoull
 
 #include "sparrow/array_factory.hpp"
-#include "sparrow/layout/array_base.hpp"
+#include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
@@ -112,10 +112,10 @@ namespace sparrow
         using size_type = typename base_type::size_type;
 
         using bitmap_type = typename base_type::bitmap_type;
-        using bitmap_reference = typename base_type::bitmap_reference;
+        // using bitmap_reference = typename base_type::bitmap_reference;
         using bitmap_const_reference = typename base_type::bitmap_const_reference;
 
-        using bitmap_range = typename base_type::bitmap_range;
+        // using bitmap_range = typename base_type::bitmap_range;
         using const_bitmap_range = typename base_type::const_bitmap_range;
 
         using inner_value_type = list_value;
@@ -123,7 +123,7 @@ namespace sparrow
         using inner_const_reference = list_value;
 
         using value_type = nullable<inner_value_type>;
-        using reference = nullable<inner_reference, bitmap_reference>;
+        // using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using iterator_tag = typename base_type::iterator_tag;
 
@@ -175,7 +175,7 @@ namespace sparrow
         using base_type = list_array_crtp_base<list_array_impl<BIG>>;
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type;
-        using offset_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
+        using offset_type = std::conditional_t<BIG, const std::uint64_t, const std::uint32_t>;
 
         explicit list_array_impl(arrow_proxy proxy);
 
@@ -209,7 +209,7 @@ namespace sparrow
         using base_type = list_array_crtp_base<list_view_array_impl<BIG>>;
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type;
-        using offset_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
+        using offset_type = std::conditional_t<BIG, const std::uint64_t, const std::uint32_t>;
 
         explicit list_view_array_impl(arrow_proxy proxy);
 
@@ -357,7 +357,7 @@ namespace sparrow
     template <class DERIVED>
     cloning_ptr<array_wrapper> list_array_crtp_base<DERIVED>::make_flat_array()
     {
-        return array_factory(this->storage().children()[0].view());
+        return array_factory(this->get_arrow_proxy().children()[0].view());
     }
 
     /**********************************
@@ -404,7 +404,7 @@ namespace sparrow
     auto list_array_impl<BIG>::make_list_offsets() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
-              this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()
+              this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
         );
     }
 
@@ -452,7 +452,7 @@ namespace sparrow
     auto list_view_array_impl<BIG>::make_list_offsets() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
-              this->storage().buffers()[OFFSET_BUFFER_INDEX].data() + this->storage().offset()
+              this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
         );
     }
 
@@ -460,7 +460,7 @@ namespace sparrow
     auto list_view_array_impl<BIG>::make_list_sizes() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
-              this->storage().buffers()[SIZES_BUFFER_INDEX].data() + this->storage().offset()
+              this->get_arrow_proxy().buffers()[SIZES_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
         );
     }
 
@@ -482,7 +482,7 @@ namespace sparrow
 
     inline fixed_sized_list_array::fixed_sized_list_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
-        , m_list_size(fixed_sized_list_array::list_size_from_format(this->storage().format()))
+        , m_list_size(fixed_sized_list_array::list_size_from_format(this->get_arrow_proxy().format()))
     {
     }
 
