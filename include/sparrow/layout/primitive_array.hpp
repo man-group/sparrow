@@ -195,6 +195,8 @@ namespace sparrow
         #endif
         auto data_ptr = reinterpret_cast<T*>(data_buffer_ptr);
         #ifdef __GNUC__
+        #    pragma GCC diagnostic pop
+        #endif
 
         // iterators to the inputs
         auto value_iter = std::ranges::begin(values);
