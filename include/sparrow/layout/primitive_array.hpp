@@ -188,7 +188,13 @@ namespace sparrow
         // buffers
         auto bitmap_ptr = new std::uint8_t[(range_size + 7) / 8];
         auto data_buffer_ptr = new std::uint8_t[range_size * sizeof(T)];
+
+        #ifdef __GNUC__
+        #    pragma GCC diagnostic push
+        #    pragma GCC diagnostic ignored "-Wcast-align"
+        #endif
         auto data_ptr = reinterpret_cast<T*>(data_buffer_ptr);
+        #ifdef __GNUC__
 
         // iterators to the inputs
         auto value_iter = std::ranges::begin(values);
