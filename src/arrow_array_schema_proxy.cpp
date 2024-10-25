@@ -577,7 +577,7 @@ namespace sparrow
         using value_type = arrow_array_and_schema;
         add_children(std::ranges::single_view(value_type{std::move(array), std::move(schema)}));
     }
-    
+
     [[nodiscard]] const std::unique_ptr<arrow_proxy>& arrow_proxy::dictionary() const
     {
         return m_dictionary;
@@ -775,8 +775,6 @@ namespace sparrow
         update_buffers();
         return std::distance(bitmap.begin(), it);
     }
-
-    
 
     size_t arrow_proxy::erase_bitmap(size_t index, size_t count)
     {

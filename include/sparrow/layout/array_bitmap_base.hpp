@@ -31,7 +31,7 @@ namespace sparrow
 
         using base_type = std::conditional_t<is_mutable, mutable_array_base<D>, array_crtp_base<D>>;
 
-        using size_type = std::size_t;// typename base_type::size_type;
+        using size_type = std::size_t;  // typename base_type::size_type;
 
         using bitmap_type = typename base_type::bitmap_type;
         using bitmap_iterator = typename base_type::bitmap_iterator;
@@ -141,7 +141,7 @@ namespace sparrow
         static constexpr size_t bitmap_buffer_index = 0;
         arrow_proxy& arrow_proxy = this->get_arrow_proxy();
         SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
-        const auto bitmap_size = static_cast<std::size_t>(arrow_proxy.length() + arrow_proxy.offset());
+        const auto bitmap_size = arrow_proxy.length() + arrow_proxy.offset();
         return bitmap_type(arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size);
     }
 
@@ -150,7 +150,7 @@ namespace sparrow
         requires is_mutable
     {
         arrow_proxy& arrow_proxy = this->get_arrow_proxy();
-        const size_t new_size = new_length + static_cast<size_t>(arrow_proxy.offset());
+        const size_t new_size = new_length + arrow_proxy.offset();
         arrow_proxy.resize_bitmap(new_size);
     }
 
