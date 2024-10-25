@@ -37,7 +37,7 @@ namespace sparrow
             std::uint64_t list_size = 2;
             fixed_sized_list_array list_arr(list_size, std::move(arr));
 
-            std::size_t n = flat_size / list_size;
+            std::size_t n = flat_size / static_cast<std::size_t>(list_size);
 
             const auto size = list_arr.size();
 
