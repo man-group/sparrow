@@ -110,7 +110,13 @@ namespace sparrow
             }
         }
 
-        static constexpr size_type compute_block_count(size_type bits_count) noexcept;
+        static constexpr size_type compute_block_count(size_type bits_count) noexcept;        
+
+        // storage_type is a value_type 
+        storage_type extract_storage() noexcept requires std::same_as<storage_type, storage_type_without_cvrefpointer>
+        {
+            return std::move(m_buffer);
+        }
 
     protected:
 

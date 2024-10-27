@@ -37,6 +37,21 @@ namespace sparrow
         using value_type = typename base_type::value_type;
         using size_type = typename base_type::size_type;
 
+        template<std::ranges::input_range R>
+        requires std::convertible_to<std::ranges::range_value_t<R>, value_type>
+        explicit dynamic_bitset(const R& r)
+            : dynamic_bitset(std::ranges::size(r), true)
+        {
+            std::size_t i = 0;
+            for(auto value : r)
+            {
+                if(!value){
+                    this->set(i, false);
+                }
+                i++;
+            }
+        }
+
         constexpr dynamic_bitset();
         constexpr explicit dynamic_bitset(size_type n);
         constexpr dynamic_bitset(size_type n, value_type v);
