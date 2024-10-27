@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 #include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
 #include "sparrow/array.hpp"
-
 #include "doctest/doctest.h"
 #include "test_utils.hpp"
+
+#include <ranges>
 
 namespace sparrow
 {
@@ -28,7 +30,8 @@ namespace sparrow
         {   
             // a primite array
             std::size_t flat_size = 10;
-            primitive_array<std::uint16_t> primitive_arr(std::ranges::iota_view{std::uint16_t(0), std::uint16_t(10)}
+            primitive_array<std::uint16_t> primitive_arr(std::ranges::iota_view{std::size_t(0), std::size_t(10)} | std::views::transform([](auto i){
+                return static_cast<std::uint16_t>(i);})
             );
 
             // wrap into an detyped array
