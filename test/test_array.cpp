@@ -222,6 +222,22 @@ namespace sparrow
             }
         }
         TEST_CASE_TEMPLATE_APPLY(extract_arrow_structure_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("visit", AR, visit_id)
+        {
+            constexpr size_t offset = 0;
+            constexpr size_t size = 10;
+            using scalar_value_type = typename AR::inner_value_type;
+
+            ArrowSchema sc{};
+            ArrowArray ar{};
+            test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
+            array arr(std::move(ar), std::move(sc));
+
+            size_t res = arr.visit([](const auto& impl) { return impl.size(); });
+            CHECK_EQ(res, size);
+        }
+        TEST_CASE_TEMPLATE_APPLY(visit_id, testing_types);
     }
 }
 
