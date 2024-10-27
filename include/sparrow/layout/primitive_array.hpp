@@ -201,7 +201,7 @@ namespace sparrow
     auto primitive_array<T>::create_proxy(
             u8_buffer<T>&& data_buffer,    
             validity_bitmap && bitmap
-        ) -> arrow_proxy
+    ) -> arrow_proxy
     {
         const auto size = data_buffer.size();
         const auto bitmap_size = bitmap.size();

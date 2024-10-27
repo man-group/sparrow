@@ -79,7 +79,7 @@ namespace sparrow
         SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);
         SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
 
-        arrow_proxy && extract_arrow_proxy() &&;
+        arrow_proxy  extract_arrow_proxy() &&;
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
@@ -161,7 +161,7 @@ namespace sparrow
     {
         return m_proxy;
     }
-    inline arrow_proxy&& run_end_encoded_array::extract_arrow_proxy() &&
+    inline arrow_proxy run_end_encoded_array::extract_arrow_proxy() &&
     {
         return std::move(m_proxy);
     }
