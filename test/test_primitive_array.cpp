@@ -649,18 +649,21 @@ namespace sparrow
                 CHECK_EQ(arr[1].value(), data[1]);
                 CHECK_EQ(arr[3].value(), data[3]);
             }
-            SUBCASE("from iota")
-            {   
-                primitive_array<T> arr(std::ranges::iota_view{std::size_t(0), std::size_t(4)});
-                REQUIRE(arr.size() == 4);
-                for (std::size_t i = 0; i < 4; ++i) {
-                    REQUIRE(arr[i].has_value());
-                    CHECK_EQ(arr[i].value(), static_cast<inner_value_type>(i));
-                }
+            
+        }
+        TEST_CASE_TEMPLATE_APPLY(primitive_array_id, testing_types);
+
+        TEST_CASE("convenience_constructors_from_iota")
+        {   
+            primitive_array<std::size_t> arr(std::ranges::iota_view{std::size_t(0), std::size_t(4)});
+            REQUIRE(arr.size() == 4);
+            for (std::size_t i = 0; i < 4; ++i) {
+                REQUIRE(arr[i].has_value());
+                CHECK_EQ(arr[i].value(), static_cast<std::size_t>(i));
             }
         }
-      
-        TEST_CASE_TEMPLATE_APPLY(primitive_array_id, testing_types);
+    
+        
 
     }
 }

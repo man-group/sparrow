@@ -205,7 +205,8 @@ namespace sparrow
     {
         const auto size = data_buffer.size();
         const auto bitmap_size = bitmap.size();
-        const auto null_count = bitmap.null_count();
+        const auto null_count = bitmap.empty() == 0 ? 0 : bitmap.null_count();
+
         SPARROW_ASSERT_TRUE(size == bitmap_size || bitmap_size == 0);
 
         // create arrow schema and array

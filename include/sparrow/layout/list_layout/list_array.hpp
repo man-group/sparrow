@@ -30,6 +30,7 @@
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/array.hpp"
+#include "sparrow/buffer/dynamic_bitset.hpp"
 
 namespace sparrow
 {
@@ -266,7 +267,7 @@ namespace sparrow
 
     private:
 
-        static arrow_proxy create_proxy(std::uint64_t list_size, array && flat_values);
+        static arrow_proxy create_proxy(std::uint64_t list_size, array && flat_values, validity_bitmap && bitmaps = validity_bitmap{});
 
         static uint64_t list_size_from_format(const std::string_view format);
         std::pair<offset_type, offset_type> offset_range(size_type i) const;
@@ -504,7 +505,10 @@ namespace sparrow
     }
 
 
-    inline arrow_proxy fixed_sized_list_array::create_proxy(std::uint64_t list_size, array && flat_values)
+    inline arrow_proxy fixed_sized_list_array::create_proxy(
+        std::uint64_t list_size, array && flat_values,
+        validity_bitmap && bitmaps 
+    )
     {
         const auto size = flat_values.size() / static_cast<std::size_t>(list_size);
 
@@ -513,9 +517,15 @@ namespace sparrow
         auto flat_schema = storage.extract_schema();
         auto flat_arr = storage.extract_array();
 
-        const auto bitmap_size = (size + 7 ) / 8;
-        auto bitmap_ptr = new std::uint8_t[bitmap_size];
-        std::fill_n(bitmap_ptr, bitmap_size, static_cast<std::uint8_t>(0xFF) /*all bits 1*/);
+        SPARROW_ASSERT_TRUE( bitmaps.size() == size || bitmaps.size() == 0);
+        const auto null_count = bitmaps.empty() == 0 ? 0 : bitmaps.null_count();
+
+        if(bitmaps.size() == 0)
+        {
+            bitmaps.resize(size, true);
+        }
+
+    
 
         std::string format = "+w:" + std::to_string(list_size);
         ArrowSchema schema = make_arrow_schema(
@@ -528,14 +538,13 @@ namespace sparrow
             nullptr // dictionary
 
         );
+        std::vector<buffer<std::uint8_t>> arr_buffs = {bitmaps.extract_storage()};
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size), // length
-            0, // null_count
+            static_cast<int64_t>(null_count),
             0, // offset
-            std::vector<buffer<std::uint8_t>>{
-                {bitmap_ptr, static_cast<std::size_t>(bitmap_size)},
-            },
+            std::move(arr_buffs),
             1, // n_children
             new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))}, // children
             nullptr // dictionary
