@@ -51,9 +51,31 @@ namespace sparrow
         TEST_CASE_TEMPLATE_DEFINE("constructor", AR, array_constructor_id)
         {
             constexpr size_t size = 10;
-            array spar = test::make_array<typename AR::inner_value_type>(size);
+            using T = typename AR::inner_value_type;
+            SUBCASE("from Arrow C Structures")
+            {
+                array spar = test::make_array<T>(size);
 
-            CHECK_EQ(spar.size(), size);
+                CHECK_EQ(spar.size(), size);
+            }
+            SUBCASE("from moved typed array")
+            {
+                ArrowSchema sc{};
+                ArrowArray ar{};
+                test::fill_schema_and_array<T>(sc, ar, size, 0, {});
+                auto pr = primitive_array<T>(arrow_proxy(std::move(ar), std::move(sc)));
+                auto spar = array(std::move(pr));
+                CHECK_EQ(spar.size(), size);
+            }
+            SUBCASE("from typed array ref")
+            {
+                ArrowSchema sc{};
+                ArrowArray ar{};
+                test::fill_schema_and_array<T>(sc, ar, size, 0, {});
+                auto pr = primitive_array<T>(arrow_proxy(std::move(ar), std::move(sc)));
+                auto spar = array(&pr);
+                CHECK_EQ(spar.size(), size);
+            }
         }
         TEST_CASE_TEMPLATE_APPLY(array_constructor_id, testing_types);
 

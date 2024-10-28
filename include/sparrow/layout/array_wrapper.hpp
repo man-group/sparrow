@@ -24,6 +24,19 @@
 namespace sparrow
 {
 
+    template <class T>
+    concept layout = requires(T& t)
+    {
+        t[std::size_t()];
+        t.size();
+        t.begin();
+        t.end();
+        t.cbegin();
+        t.cend();
+        t.bitmap();
+        t.values();
+    };
+
     namespace detail
     {   
         // Helper struct to allow overloading on the type of ARRAY 

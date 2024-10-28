@@ -32,6 +32,16 @@ namespace sparrow
  
         SPARROW_API array() = default;
 
+        template <layout A>
+        requires (not std::is_lvalue_reference_v<A>)
+        array(A&& a);
+
+        template <layout A>
+        array(A* a);
+
+        template <layout A>
+        array(std::shared_ptr<A> a);
+
         SPARROW_API array(ArrowArray&& array, ArrowSchema&& schema);
         SPARROW_API array(ArrowArray&& array, ArrowSchema* schema);
         SPARROW_API array(ArrowArray* array, ArrowSchema* schema);
@@ -51,5 +61,24 @@ namespace sparrow
 
         cloning_ptr<array_wrapper> p_array = nullptr;
     };
+
+    template <layout A>
+    requires (not std::is_lvalue_reference_v<A>)
+    array::array(A&& a)
+        : p_array(new array_wrapper_impl<A>(std::move(a)))
+    {
+    }
+
+    template <layout A>
+    array::array(A* a)
+        : p_array(new array_wrapper_impl<A>(a))
+    {
+    }
+
+    template <layout A>
+    array::array(std::shared_ptr<A> a)
+        : p_array(new array_wrapper_impl<A>(a))
+    {
+    }
 }
 
