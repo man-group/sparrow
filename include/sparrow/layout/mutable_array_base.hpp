@@ -14,7 +14,10 @@
 
 #pragma once
 
+#include <concepts>
+
 #include "sparrow/layout/array_base.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -88,10 +91,54 @@ namespace sparrow
         iterator insert(const_iterator pos, const value_type& value);
         iterator insert(const_iterator pos, const value_type& value, size_type count);
         iterator insert(const_iterator pos, std::initializer_list<value_type> values);
-        template <typename InputIt>
-        iterator insert(const_iterator pos, InputIt first, InputIt last);
+
+        template <mpl::iterator_of_type<value_type> InputIt>
+        iterator insert(const_iterator pos, InputIt first, InputIt last)
+        {
+            SPARROW_ASSERT_TRUE(pos >= this->cbegin())
+            SPARROW_ASSERT_TRUE(pos <= this->cend());
+            SPARROW_ASSERT_TRUE(first <= last);
+            const difference_type distance = std::distance(this->cbegin(), pos);
+            const auto validity_range = std::ranges::subrange(first, last)
+                                        | std::views::transform(
+                                            [](const value_type& obj)
+                                            {
+                                                return obj.has_value();
+                                            }
+                                        );
+            auto& derived = this->derived_cast();
+            derived.insert_bitmap(
+                sparrow::next(this->bitmap_cbegin(), distance),
+                validity_range.begin(),
+                validity_range.end()
+            );
+
+            const auto value_range = std::ranges::subrange(first, last)
+                                     | std::views::transform(
+                                         [](const value_type& obj)
+                                         {
+                                             return obj.get();
+                                         }
+                                     );
+            derived.insert_values(
+                sparrow::next(derived.value_cbegin(), distance),
+                value_range.begin(),
+                value_range.end()
+            );
+            const difference_type count = std::distance(first, last);
+            // The following must be done after modifying the bitmap and values
+            this->get_arrow_proxy().set_length(this->size() + static_cast<size_t>(count));
+
+            derived.update();
+            return sparrow::next(this->begin(), distance);
+        }
+
         template <std::ranges::input_range R>
-        iterator insert(const_iterator pos, const R& range);
+            requires std::same_as<std::ranges::range_value_t<R>, value_type>
+        iterator insert(const_iterator pos, const R& range)
+        {
+            return insert(pos, std::ranges::begin(range), std::ranges::end(range));
+        }
 
         iterator erase(const_iterator pos);
         iterator erase(const_iterator first, const_iterator last);
@@ -225,9 +272,10 @@ namespace sparrow
         auto& derived = this->derived_cast();
         derived.insert_bitmap(sparrow::next(this->bitmap_cbegin(), distance), value.has_value(), count);
         derived.insert_value(sparrow::next(derived.value_cbegin(), distance), value.get(), count);
-        this->get_arrow_proxy().set_length(this->size() + count);  // Must be done after resizing the bitmap and values
+        this->get_arrow_proxy().set_length(this->size() + count);  // Must be done after resizing the bitmap
+                                                                   // and values
         derived.update();
-        return sparrow::next(begin(), distance);
+        return sparrow::next(this->begin(), distance);
     }
 
     /**
@@ -251,47 +299,47 @@ namespace sparrow
      * @param last The iterator to the element following the last element to insert.
      * @return An iterator pointing to the first element inserted, or \c pos if <tt>first == last</tt>.
      */
-    template <class D>
-    template <typename InputIt>
-    auto mutable_array_base<D>::insert(const_iterator pos, InputIt first, InputIt last) -> iterator
-    {
-        SPARROW_ASSERT_TRUE(pos >= this->cbegin())
-        SPARROW_ASSERT_TRUE(pos <= this->cend());
-        SPARROW_ASSERT_TRUE(first <= last);
-        const difference_type distance = std::distance(this->cbegin(), pos);
-        const auto validity_range = std::ranges::subrange(first, last)
-                                    | std::views::transform(
-                                        [](const value_type& obj)
-                                        {
-                                            return obj.has_value();
-                                        }
-                                    );
-        auto& derived = this->derived_cast();
-        derived.insert_bitmap(
-            sparrow::next(this->bitmap_cbegin(), distance),
-            validity_range.begin(),
-            validity_range.end()
-        );
+    // template <class D>
+    // template <mpl::iterator_of_type<typename mutable_array_base<D>::value_type> InputIt>
+    // auto mutable_array_base<D>::insert(const_iterator pos, InputIt first, InputIt last) -> iterator
+    // {
+    //     SPARROW_ASSERT_TRUE(pos >= this->cbegin())
+    //     SPARROW_ASSERT_TRUE(pos <= this->cend());
+    //     SPARROW_ASSERT_TRUE(first <= last);
+    //     const difference_type distance = std::distance(this->cbegin(), pos);
+    //     const auto validity_range = std::ranges::subrange(first, last)
+    //                                 | std::views::transform(
+    //                                     [](const value_type& obj)
+    //                                     {
+    //                                         return obj.has_value();
+    //                                     }
+    //                                 );
+    //     auto& derived = this->derived_cast();
+    //     derived.insert_bitmap(
+    //         sparrow::next(this->bitmap_cbegin(), distance),
+    //         validity_range.begin(),
+    //         validity_range.end()
+    //     );
 
-        const auto value_range = std::ranges::subrange(first, last)
-                                 | std::views::transform(
-                                     [](const value_type& obj)
-                                     {
-                                         return obj.get();
-                                     }
-                                 );
-        derived.insert_values(
-            sparrow::next(derived.value_cbegin(), distance),
-            value_range.begin(),
-            value_range.end()
-        );
-        const difference_type count = std::distance(first, last);
-        // The following must be done after modifying the bitmap and values
-        this->get_arrow_proxy().set_length(this->size() + static_cast<size_t>(count));
+    //     const auto value_range = std::ranges::subrange(first, last)
+    //                              | std::views::transform(
+    //                                  [](const value_type& obj)
+    //                                  {
+    //                                      return obj.get();
+    //                                  }
+    //                              );
+    //     derived.insert_values(
+    //         sparrow::next(derived.value_cbegin(), distance),
+    //         value_range.begin(),
+    //         value_range.end()
+    //     );
+    //     const difference_type count = std::distance(first, last);
+    //     // The following must be done after modifying the bitmap and values
+    //     this->get_arrow_proxy().set_length(this->size() + static_cast<size_t>(count));
 
-        derived.update();
-        return sparrow::next(begin(), distance);
-    }
+    //     derived.update();
+    //     return sparrow::next(begin(), distance);
+    // }
 
     /**
      * Inserts elements from range \c range before \c pos in the array.
@@ -301,12 +349,13 @@ namespace sparrow
      * @param range The range of values to insert.
      * @return An iterator pointing to the first element inserted, or \c pos if \c range is empty.
      */
-    template <class D>
-    template <std::ranges::input_range R>
-    auto mutable_array_base<D>::insert(const_iterator pos, const R& range) -> iterator
-    {
-        return insert(pos, std::ranges::begin(range), std::ranges::end(range));
-    }
+    // template <class D>
+    // template <std::ranges::input_range R>
+    //     requires std::same_as<std::ranges::range_value_t<R>, typename mutable_array_base<D>::value_type>
+    // auto mutable_array_base<D>::insert(const_iterator pos, const R& range) -> iterator
+    // {
+    //     return insert(pos, std::ranges::begin(range), std::ranges::end(range));
+    // }
 
     /**
      * Removes the element at \c pos from the array.
@@ -344,7 +393,8 @@ namespace sparrow
         auto& derived = this->derived_cast();
         derived.erase_bitmap(sparrow::next(this->bitmap_cbegin(), first_index), count);
         derived.erase_values(sparrow::next(derived.value_cbegin(), first_index), count);
-        this->get_arrow_proxy().set_length(this->size() - count);  // Must be done after modifying the bitmap and values
+        this->get_arrow_proxy().set_length(this->size() - count);  // Must be done after modifying the bitmap
+                                                                   // and values
         derived.update();
         return sparrow::next(begin(), first_index);
     }

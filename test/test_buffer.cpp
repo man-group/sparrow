@@ -787,6 +787,28 @@ namespace sparrow
                 CHECK_EQ(b[5], 102);
                 CHECK_EQ(b[6], 103);
             }
+
+            SUBCASE("pos and range")
+            {
+                SUBCASE("range of T")
+                {
+                    constexpr std::size_t size = 4u;
+                    buffer_test_type b(make_test_buffer(size), size);
+
+                    const std::vector<int32_t> values = {101, 102, 103};
+                    const std::size_t expected_new_size = size + values.size();
+                    b.insert(b.cbegin() + 2, values);
+                    const std::size_t new_size = b.size();
+                    REQUIRE_EQ(new_size, expected_new_size);
+                    CHECK_EQ(b[0], 0);
+                    CHECK_EQ(b[1], 1);
+                    CHECK_EQ(b[2], 101);
+                    CHECK_EQ(b[3], 102);
+                    CHECK_EQ(b[4], 103);
+                    CHECK_EQ(b[5], 2);
+                    CHECK_EQ(b[6], 3);
+                }
+            }
         }
 
         TEST_CASE("erase")

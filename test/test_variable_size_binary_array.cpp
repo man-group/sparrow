@@ -14,11 +14,13 @@
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/layout/variable_size_binary_array.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
-#include "sparrow/layout/variable_size_binary_array.hpp"
 
+using namespace std::literals;
 
 namespace sparrow
 {
@@ -39,7 +41,8 @@ namespace sparrow
     private:
 
         static_assert(std::same_as<layout_type::inner_value_type, std::string>);
-        // static_assert(std::same_as<layout_type::inner_reference, sparrow::variable_size_binary_reference<layout_type>>);
+        // static_assert(std::same_as<layout_type::inner_reference,
+        // sparrow::variable_size_binary_reference<layout_type>>);
         static_assert(std::same_as<layout_type::inner_const_reference, std::string_view>);
         using const_value_iterator = layout_type::const_value_iterator;
         static_assert(std::same_as<const_value_iterator::value_type, std::string>);
@@ -108,66 +111,108 @@ namespace sparrow
                 REQUIRE_EQ(array.size(), m_length - m_offset);
                 const auto cref0 = array[0];
                 REQUIRE(cref0.has_value());
-                CHECK_EQ(cref0.value(), "upon");
+                CHECK_EQ(cref0.get(), "upon");
                 const auto cref1 = array[1];
                 REQUIRE_FALSE(cref1.has_value());
                 const auto cref2 = array[2];
                 REQUIRE(cref2.has_value());
-                CHECK_EQ(cref2.value(), "time");
+                CHECK_EQ(cref2.get(), "time");
                 const auto cref3 = array[3];
                 REQUIRE(cref3.has_value());
-                CHECK_EQ(cref3.value(), "I");
+                CHECK_EQ(cref3.get(), "I");
                 const auto cref4 = array[4];
                 REQUIRE_FALSE(cref4.has_value());
                 const auto cref5 = array[5];
                 REQUIRE(cref5.has_value());
-                CHECK_EQ(cref5.value(), "writing");
+                CHECK_EQ(cref5.get(), "writing");
                 const auto cref6 = array[6];
                 REQUIRE(cref6.has_value());
-                CHECK_EQ(cref6.value(), "clean");
+                CHECK_EQ(cref6.get(), "clean");
                 const auto cref7 = array[7];
                 REQUIRE(cref7.has_value());
-                CHECK_EQ(cref7.value(), "code");
+                CHECK_EQ(cref7.get(), "code");
                 const auto cref8 = array[8];
                 REQUIRE(cref8.has_value());
-                CHECK_EQ(cref8.value(), "now");
+                CHECK_EQ(cref8.get(), "now");
+            }
+
+            SUBCASE("mutable")
+            {
+                layout_type array(std::move(m_arrow_proxy));
+                REQUIRE_EQ(array.size(), m_length - m_offset);
+                auto ref0 = array[0];
+                REQUIRE(ref0.has_value());
+                CHECK_EQ(ref0.get(), "upon");
+                auto ref1 = array[1];
+                REQUIRE_FALSE(ref1.has_value());
+                auto ref2 = array[2];
+                REQUIRE(ref2.has_value());
+                CHECK_EQ(ref2.get(), "time");
+                auto ref3 = array[3];
+                REQUIRE(ref3.has_value());
+                CHECK_EQ(ref3.get(), "I");
+                auto ref4 = array[4];
+                REQUIRE_FALSE(ref4.has_value());
+                auto ref5 = array[5];
+                REQUIRE(ref5.has_value());
+                CHECK_EQ(ref5.get(), "writing");
+                auto ref6 = array[6];
+                REQUIRE(ref6.has_value());
+                CHECK_EQ(ref6.get(), "clean");
+                auto ref7 = array[7];
+                REQUIRE(ref7.has_value());
+                CHECK_EQ(ref7.get(), "code");
+                auto ref8 = array[8];
+                REQUIRE(ref8.has_value());
+                CHECK_EQ(ref8.get(), "now");
+
+                array[6] = make_nullable<std::string>("fabulous");
+                CHECK_EQ(ref6.get(), "fabulous");
+                CHECK_EQ(ref7.get(), "code");
+                CHECK_EQ(ref8.get(), "now");
+
+                array[6] = make_nullable<std::string>("!");
+                CHECK_EQ(ref6.get(), "!");
+                CHECK_EQ(ref7.get(), "code");
+                CHECK_EQ(ref8.get(), "now");
             }
         }
 
-        // TEST_CASE("value_iterator")
-        // {
-        //     SUBCASE("ordering")
-        //     {
-        //     }
-
-        //     SUBCASE("equality")
-        //     {
-        //     }
-        // }
-
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "const_value_iterator")
+        TEST_CASE_FIXTURE(variable_size_binary_fixture, "value")
         {
-            SUBCASE("ordering")
+            SUBCASE("const")
             {
                 const layout_type array(std::move(m_arrow_proxy));
-                const auto vrange = array.values();
-                CHECK(vrange.begin() < vrange.end());
+                CHECK_EQ(array.value(0), "upon");
+                CHECK_EQ(array.value(1), "a");
+                CHECK_EQ(array.value(2), "time");
+                CHECK_EQ(array.value(3), "I");
+                CHECK_EQ(array.value(4), "was");
+                CHECK_EQ(array.value(5), "writing");
+                CHECK_EQ(array.value(6), "clean");
             }
 
-            SUBCASE("equality")
+            SUBCASE("mutable")
             {
-                const layout_type array(std::move(m_arrow_proxy));
-                const auto vrange = array.values();
-                layout_type::const_value_iterator citer = vrange.begin();
-                CHECK_EQ(*citer, "upon");
-                CHECK_EQ(*(++citer), "a");
-                CHECK_EQ(*(++citer), "time");
-                CHECK_EQ(*(++citer), "I");
-                CHECK_EQ(*(++citer), "was");
-                CHECK_EQ(*(++citer), "writing");
-                CHECK_EQ(*(++citer), "clean");
-                CHECK_EQ(*(++citer), "code");
-                CHECK_EQ(*(++citer), "now");
+                layout_type array(std::move(m_arrow_proxy));
+                CHECK_EQ(array.value(0), "upon");
+                CHECK_EQ(array.value(1), "a");
+                CHECK_EQ(array.value(2), "time");
+                CHECK_EQ(array.value(3), "I");
+                CHECK_EQ(array.value(4), "was");
+                CHECK_EQ(array.value(5), "writing");
+                CHECK_EQ(array.value(6), "clean");
+                CHECK_EQ(array.value(7), "code");
+                CHECK_EQ(array.value(8), "now");
+
+                array.value(6) = "fabulous";
+                CHECK_EQ(array.value(6), "fabulous");
+                CHECK_EQ(array.value(7), "code");
+                CHECK_EQ(array.value(8), "now");
+                array.value(6) = "!";
+                CHECK_EQ(array.value(6), "!");
+                CHECK_EQ(array.value(7), "code");
+                CHECK_EQ(array.value(8), "now");
             }
         }
 
@@ -200,45 +245,622 @@ namespace sparrow
 
         TEST_CASE_FIXTURE(variable_size_binary_fixture, "iterator")
         {
-            const layout_type array(std::move(m_arrow_proxy));
-            auto it = array.begin();
+            SUBCASE("const")
+            {
+                const layout_type array(std::move(m_arrow_proxy));
+                auto it = array.cbegin();
 
-            REQUIRE(it->has_value());
-            CHECK_EQ(it->value(), "upon");
-            CHECK_EQ(*it, make_nullable(array[0].value()));
-            ++it;
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->value(), "upon");
+                CHECK_EQ(*it, make_nullable(array[0].value()));
+                ++it;
 
-            CHECK_FALSE(it->has_value());
-            ++it;
+                CHECK_FALSE(it->has_value());
+                CHECK_EQ(it->get(), "a");
+                ++it;
 
-            REQUIRE(it->has_value());
-            CHECK_EQ(it->value(), "time");
-            ++it;
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "time");
+                ++it;
 
-            REQUIRE(it->has_value());
-            CHECK_EQ(it->value(), "I");
-            ++it;
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "I");
+                ++it;
 
-            CHECK_FALSE(it->has_value());
-            ++it;
+                CHECK_FALSE(it->has_value());
+                CHECK_EQ(it->get(), "was");
+                ++it;
 
-            REQUIRE(it->has_value());
-            CHECK_EQ(it->value(), "writing");
-            ++it;
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "writing");
+                ++it;
 
-            REQUIRE(it->has_value());
-            CHECK_EQ(it->value(), "clean");
-            ++it;
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "clean");
+                ++it;
 
-            REQUIRE(it->has_value());
-            CHECK_EQ(it->value(), "code");
-            ++it;
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "code");
+                ++it;
 
-            REQUIRE(it->has_value());
-            CHECK_EQ(it->value(), "now");
-            ++it;
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "now");
+                ++it;
 
-            CHECK_EQ(it, array.end());
+                CHECK_EQ(it, array.end());
+            }
+
+            SUBCASE("non const")
+            {
+                layout_type array(std::move(m_arrow_proxy));
+                auto it = array.begin();
+
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->value(), "upon");
+                CHECK_EQ(*it, make_nullable(array[0].value()));
+                ++it;
+
+                CHECK_FALSE(it->has_value());
+                CHECK_EQ(it->get(), "a");
+                ++it;
+
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "time");
+                ++it;
+
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "I");
+                ++it;
+
+                CHECK_FALSE(it->has_value());
+                CHECK_EQ(it->get(), "was");
+                ++it;
+
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "writing");
+                ++it;
+
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "clean");
+                ++it;
+
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "code");
+                ++it;
+
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "now");
+                ++it;
+
+                CHECK_EQ(it, array.end());
+
+                --it;
+                --it;
+                *it = make_nullable<std::string>("fabulous");
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "fabulous");
+                ++it;
+                REQUIRE(it->has_value());
+                CHECK_EQ(it->get(), "now");
+            }
+        }
+
+        TEST_CASE_FIXTURE(variable_size_binary_fixture, "value_iterator")
+        {
+            SUBCASE("const")
+            {
+                SUBCASE("ordering")
+                {
+                    const layout_type array(std::move(m_arrow_proxy));
+                    CHECK(array.value_cbegin() < array.value_cend());
+                }
+
+                SUBCASE("equality")
+                {
+                    const layout_type array(std::move(m_arrow_proxy));
+                    auto iter = array.value_cbegin();
+                    CHECK_EQ(*iter, "upon");
+                    CHECK_EQ(*(++iter), "a");
+                    CHECK_EQ(*(++iter), "time");
+                    CHECK_EQ(*(++iter), "I");
+                    CHECK_EQ(*(++iter), "was");
+                    CHECK_EQ(*(++iter), "writing");
+                    CHECK_EQ(*(++iter), "clean");
+                    CHECK_EQ(*(++iter), "code");
+                    CHECK_EQ(*(++iter), "now");
+                    CHECK_EQ(++iter, array.value_cend());
+                }
+            }
+
+            SUBCASE("non const")
+            {
+                SUBCASE("ordering")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK(array.value_begin() < array.value_end());
+                }
+
+                SUBCASE("equality")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    auto iter = array.value_begin();
+                    CHECK_EQ(*iter, "upon");
+                    CHECK_EQ(*(++iter), "a");
+                    CHECK_EQ(*(++iter), "time");
+                    CHECK_EQ(*(++iter), "I");
+                    CHECK_EQ(*(++iter), "was");
+                    CHECK_EQ(*(++iter), "writing");
+                    CHECK_EQ(*(++iter), "clean");
+                    CHECK_EQ(*(++iter), "code");
+                    CHECK_EQ(*(++iter), "now");
+                    CHECK_EQ(++iter, array.value_end());
+                }
+
+                SUBCASE("modify")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    auto iter = array.value_begin();
+                    CHECK_EQ(*iter, "upon");
+                    *iter = "fabulous";
+                    CHECK_EQ(*iter, "fabulous");
+                    CHECK_EQ(*(++iter), "a");
+                    CHECK_EQ(*(++iter), "time");
+                }
+            }
+        }
+
+        TEST_CASE_FIXTURE(variable_size_binary_fixture, "resize")
+        {
+            SUBCASE("smaller")
+            {
+                layout_type array(std::move(m_arrow_proxy));
+                REQUIRE_EQ(array.size(), m_length - m_offset);
+                array.resize(3, make_nullable<std::string>("test"));
+                REQUIRE_EQ(array.size(), 3);
+                CHECK_EQ(array.value(0), "upon");
+                CHECK_EQ(array.value(1), "a");
+                CHECK_EQ(array.value(2), "time");
+            }
+
+            SUBCASE("bigger")
+            {
+                layout_type array(std::move(m_arrow_proxy));
+                REQUIRE_EQ(array.size(), m_length - m_offset);
+                array.resize(12, make_nullable<std::string>("test"));
+                REQUIRE_EQ(array.size(), 12);
+                CHECK_EQ(array.value(0), "upon");
+                CHECK_EQ(array.value(1), "a");
+                CHECK_EQ(array.value(2), "time");
+                CHECK_EQ(array.value(3), "I");
+                CHECK_EQ(array.value(4), "was");
+                CHECK_EQ(array.value(5), "writing");
+                CHECK_EQ(array.value(6), "clean");
+                CHECK_EQ(array.value(7), "code");
+                CHECK_EQ(array.value(8), "now");
+                CHECK_EQ(array.value(9), "test");
+                CHECK_EQ(array.value(10), "test");
+                CHECK_EQ(array.value(11), "test");
+            }
+        }
+
+        TEST_CASE_FIXTURE(variable_size_binary_fixture, "insert")
+        {
+            const std::string to_insert = "insert";
+
+            SUBCASE("with pos and value")
+            {
+                SUBCASE("at the beginning")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin();
+                    const auto iter = array.insert(pos, make_nullable(to_insert));
+                    CHECK_EQ(iter, array.begin());
+                    REQUIRE_EQ(array.size(), 10);
+                    CHECK_EQ(array.value(0), to_insert);
+                    CHECK_EQ(array.value(1), "upon");
+                    CHECK_EQ(array.value(2), "a");
+                    CHECK_EQ(array.value(3), "time");
+                    CHECK_EQ(array.value(4), "I");
+                    CHECK_EQ(array.value(5), "was");
+                    CHECK_EQ(array.value(6), "writing");
+                    CHECK_EQ(array.value(7), "clean");
+                    CHECK_EQ(array.value(8), "code");
+                }
+
+                SUBCASE("in the middle")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin() + 3;
+                    const auto iter = array.insert(pos, to_insert);
+                    CHECK_EQ(iter, array.begin() + 3);
+                    REQUIRE_EQ(array.size(), 10);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "time");
+                    CHECK_EQ(array.value(3), to_insert);
+                    CHECK_EQ(array.value(4), "I");
+                    CHECK_EQ(array.value(5), "was");
+                    CHECK_EQ(array.value(6), "writing");
+                    CHECK_EQ(array.value(7), "clean");
+                    CHECK_EQ(array.value(8), "code");
+                }
+
+                SUBCASE("at the end")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cend();
+                    const auto iter = array.insert(pos, to_insert);
+                    CHECK_EQ(iter, array.end() - 1);
+                    REQUIRE_EQ(array.size(), 10);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "time");
+                    CHECK_EQ(array.value(3), "I");
+                    CHECK_EQ(array.value(4), "was");
+                    CHECK_EQ(array.value(5), "writing");
+                    CHECK_EQ(array.value(6), "clean");
+                    CHECK_EQ(array.value(7), "code");
+                    CHECK_EQ(array.value(8), "now");
+                    CHECK_EQ(array.value(9), to_insert);
+                }
+            }
+
+            SUBCASE("with pos, value and count")
+            {
+                SUBCASE("at the beginning")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin();
+                    const auto lol = make_nullable(to_insert);
+                    const auto iter = array.insert(pos, lol, 3);
+                    CHECK_EQ(iter, array.begin());
+                    REQUIRE_EQ(array.size(), 12);
+                    CHECK_EQ(array.value(0), to_insert);
+                    CHECK_EQ(array.value(1), to_insert);
+                    CHECK_EQ(array.value(2), to_insert);
+                    CHECK_EQ(array.value(3), "upon");
+                    CHECK_EQ(array.value(4), "a");
+                    CHECK_EQ(array.value(5), "time");
+                    CHECK_EQ(array.value(6), "I");
+                    CHECK_EQ(array.value(7), "was");
+                    CHECK_EQ(array.value(8), "writing");
+                    CHECK_EQ(array.value(9), "clean");
+                    CHECK_EQ(array.value(10), "code");
+                    CHECK_EQ(array.value(11), "now");
+                }
+
+                SUBCASE("in the middle")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin() + 3;
+                    const auto iter = array.insert(pos, make_nullable(to_insert), 3);
+                    CHECK_EQ(iter, array.begin() + 3);
+                    REQUIRE_EQ(array.size(), 12);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "time");
+                    CHECK_EQ(array.value(3), to_insert);
+                    CHECK_EQ(array.value(4), to_insert);
+                    CHECK_EQ(array.value(5), to_insert);
+                    CHECK_EQ(array.value(6), "I");
+                    CHECK_EQ(array.value(7), "was");
+                    CHECK_EQ(array.value(8), "writing");
+                    CHECK_EQ(array.value(9), "clean");
+                    CHECK_EQ(array.value(10), "code");
+                    CHECK_EQ(array.value(11), "now");
+                }
+
+                SUBCASE("at the end")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cend();
+                    const auto iter = array.insert(pos, make_nullable(to_insert), 3);
+                    REQUIRE_EQ(array.size(), 12);
+                    CHECK_EQ(iter, array.end() - 3);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "time");
+                    CHECK_EQ(array.value(3), "I");
+                    CHECK_EQ(array.value(4), "was");
+                    CHECK_EQ(array.value(5), "writing");
+                    CHECK_EQ(array.value(6), "clean");
+                    CHECK_EQ(array.value(7), "code");
+                    CHECK_EQ(array.value(8), "now");
+                    CHECK_EQ(array.value(9), to_insert);
+                    CHECK_EQ(array.value(10), to_insert);
+                    CHECK_EQ(array.value(11), to_insert);
+                }
+            }
+
+            SUBCASE("with pos and range")
+            {
+                const std::array<nullable<std::string>, 3> new_values{"!", "once", "!"};
+
+                SUBCASE("at the beginning")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin();
+                    const auto iter = array.insert(pos, new_values);
+                    CHECK_EQ(iter, array.begin());
+                    REQUIRE_EQ(array.size(), 12);
+                    CHECK_EQ(array.value(0), "!");
+                    CHECK_EQ(array.value(1), "once");
+                    CHECK_EQ(array.value(2), "!");
+                    CHECK_EQ(array.value(3), "upon");
+                    CHECK_EQ(array.value(4), "a");
+                    CHECK_EQ(array.value(5), "time");
+                    CHECK_EQ(array.value(6), "I");
+                    CHECK_EQ(array.value(7), "was");
+                    CHECK_EQ(array.value(8), "writing");
+                    CHECK_EQ(array.value(9), "clean");
+                    CHECK_EQ(array.value(10), "code");
+                    CHECK_EQ(array.value(11), "now");
+                }
+
+                SUBCASE("in the middle")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin() + 3;
+                    const auto iter = array.insert(pos, new_values);
+                    CHECK_EQ(iter, array.begin() + 3);
+                    REQUIRE_EQ(array.size(), 12);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "time");
+                    CHECK_EQ(array.value(3), "!");
+                    CHECK_EQ(array.value(4), "once");
+                    CHECK_EQ(array.value(5), "!");
+                    CHECK_EQ(array.value(6), "I");
+                    CHECK_EQ(array.value(7), "was");
+                    CHECK_EQ(array.value(8), "writing");
+                    CHECK_EQ(array.value(9), "clean");
+                    CHECK_EQ(array.value(10), "code");
+                }
+
+                SUBCASE("at the end")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cend();
+                    const auto iter = array.insert(pos, new_values);
+                    REQUIRE_EQ(array.size(), 12);
+                    CHECK_EQ(iter, array.end() - 3);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "time");
+                    CHECK_EQ(array.value(3), "I");
+                    CHECK_EQ(array.value(4), "was");
+                    CHECK_EQ(array.value(5), "writing");
+                    CHECK_EQ(array.value(6), "clean");
+                    CHECK_EQ(array.value(7), "code");
+                    CHECK_EQ(array.value(8), "now");
+                    CHECK_EQ(array.value(9), "!");
+                    CHECK_EQ(array.value(10), "once");
+                    CHECK_EQ(array.value(11), "!");
+                }
+            }
+
+            SUBCASE("with pos and initializer list")
+            {
+                SUBCASE("at the beginning")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin();
+                    const auto iter = array.insert(pos, {"!", "once", "!"});
+                    CHECK_EQ(iter, array.begin());
+                    REQUIRE_EQ(array.size(), 12);
+                    CHECK_EQ(array.value(0), "!");
+                    CHECK_EQ(array.value(1), "once");
+                    CHECK_EQ(array.value(2), "!");
+                    CHECK_EQ(array.value(3), "upon");
+                    CHECK_EQ(array.value(4), "a");
+                    CHECK_EQ(array.value(5), "time");
+                    CHECK_EQ(array.value(6), "I");
+                    CHECK_EQ(array.value(7), "was");
+                    CHECK_EQ(array.value(8), "writing");
+                    CHECK_EQ(array.value(9), "clean");
+                    CHECK_EQ(array.value(10), "code");
+                }
+
+                SUBCASE("in the middle")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin() + 3;
+                    const auto iter = array.insert(pos, {"!", "once", "!"});
+                    CHECK_EQ(iter, array.begin() + 3);
+                    REQUIRE_EQ(array.size(), 12);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "time");
+                    CHECK_EQ(array.value(3), "!");
+                    CHECK_EQ(array.value(4), "once");
+                    CHECK_EQ(array.value(5), "!");
+                    CHECK_EQ(array.value(6), "I");
+                    CHECK_EQ(array.value(7), "was");
+                    CHECK_EQ(array.value(8), "writing");
+                    CHECK_EQ(array.value(9), "clean");
+                    CHECK_EQ(array.value(10), "code");
+                }
+
+                SUBCASE("at the end")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cend();
+                    const auto iter = array.insert(pos, {"!", "once", "!"});
+                    REQUIRE_EQ(array.size(), 12);
+                    CHECK_EQ(iter, array.end() - 3);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "time");
+                    CHECK_EQ(array.value(3), "I");
+                    CHECK_EQ(array.value(4), "was");
+                    CHECK_EQ(array.value(5), "writing");
+                    CHECK_EQ(array.value(6), "clean");
+                    CHECK_EQ(array.value(7), "code");
+                    CHECK_EQ(array.value(8), "now");
+                    CHECK_EQ(array.value(9), "!");
+                    CHECK_EQ(array.value(10), "once");
+                    CHECK_EQ(array.value(11), "!");
+                }
+            }
+        }
+
+        TEST_CASE_FIXTURE(variable_size_binary_fixture, "erase")
+        {
+            SUBCASE("with pos")
+            {
+                SUBCASE("at the beginning")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin();
+                    const auto iter = array.erase(pos);
+                    CHECK_EQ(iter, array.begin());
+                    REQUIRE_EQ(array.size(), 8);
+                    CHECK_EQ(array.value(0), "a");
+                    CHECK_EQ(array.value(1), "time");
+                    CHECK_EQ(array.value(2), "I");
+                    CHECK_EQ(array.value(3), "was");
+                    CHECK_EQ(array.value(4), "writing");
+                    CHECK_EQ(array.value(5), "clean");
+                    CHECK_EQ(array.value(6), "code");
+                    CHECK_EQ(array.value(7), "now");
+                }
+
+                SUBCASE("in the middle")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin() + 2;
+                    const auto iter = array.erase(pos);
+                    CHECK_EQ(iter, array.begin() + 2);
+                    REQUIRE_EQ(array.size(), 8);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "I");
+                    CHECK_EQ(array.value(3), "was");
+                    CHECK_EQ(array.value(4), "writing");
+                    CHECK_EQ(array.value(5), "clean");
+                    CHECK_EQ(array.value(6), "code");
+                    CHECK_EQ(array.value(7), "now");
+                }
+
+                SUBCASE("at the end")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = std::prev(array.cend());
+                    const auto iter = array.erase(pos);
+                    CHECK_EQ(iter, array.end());
+                    REQUIRE_EQ(array.size(), 8);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "time");
+                    CHECK_EQ(array.value(3), "I");
+                    CHECK_EQ(array.value(4), "was");
+                    CHECK_EQ(array.value(5), "writing");
+                    CHECK_EQ(array.value(6), "clean");
+                    CHECK_EQ(array.value(7), "code");
+                }
+            }
+
+            SUBCASE("with iterators")
+            {
+                SUBCASE("at the beginning")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin();
+                    const auto iter = array.erase(pos, pos + 3);
+                    CHECK_EQ(iter, array.begin());
+                    REQUIRE_EQ(array.size(), 6);
+                    CHECK_EQ(array.value(0), "I");
+                    CHECK_EQ(array.value(1), "was");
+                    CHECK_EQ(array.value(2), "writing");
+                    CHECK_EQ(array.value(3), "clean");
+                    CHECK_EQ(array.value(4), "code");
+                    CHECK_EQ(array.value(5), "now");
+                }
+
+                SUBCASE("in the middle")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = array.cbegin() + 3;
+                    const auto iter = array.erase(pos, pos + 3);
+                    CHECK_EQ(iter, array.begin() + 3);
+                    REQUIRE_EQ(array.size(), 6);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "time");
+                    CHECK_EQ(array.value(3), "clean");
+                    CHECK_EQ(array.value(4), "code");
+                    CHECK_EQ(array.value(5), "now");
+                }
+
+                SUBCASE("at the end")
+                {
+                    layout_type array(std::move(m_arrow_proxy));
+                    CHECK_EQ(array.size(), 9);
+                    const auto pos = std::prev(array.cend());
+                    const auto iter = array.erase(pos, array.cend());
+                    CHECK_EQ(iter, array.end());
+                    REQUIRE_EQ(array.size(), 8);
+                    CHECK_EQ(array.value(0), "upon");
+                    CHECK_EQ(array.value(1), "a");
+                    CHECK_EQ(array.value(2), "time");
+                    CHECK_EQ(array.value(3), "I");
+                    CHECK_EQ(array.value(4), "was");
+                    CHECK_EQ(array.value(5), "writing");
+                    CHECK_EQ(array.value(6), "clean");
+                    CHECK_EQ(array.value(7), "code");
+                }
+            }
+        }
+
+        TEST_CASE_FIXTURE(variable_size_binary_fixture, "push_back")
+        {
+            layout_type array(std::move(m_arrow_proxy));
+            CHECK_EQ(array.size(), 9);
+            array.push_back("!");
+            REQUIRE_EQ(array.size(), 10);
+            CHECK_EQ(array.value(0), "upon");
+            CHECK_EQ(array.value(1), "a");
+            CHECK_EQ(array.value(2), "time");
+            CHECK_EQ(array.value(3), "I");
+            CHECK_EQ(array.value(4), "was");
+            CHECK_EQ(array.value(5), "writing");
+            CHECK_EQ(array.value(6), "clean");
+            CHECK_EQ(array.value(7), "code");
+            CHECK_EQ(array.value(8), "now");
+            CHECK_EQ(array.value(9), "!");
+        }
+
+        TEST_CASE_FIXTURE(variable_size_binary_fixture, "pop_back")
+        {
+            layout_type array(std::move(m_arrow_proxy));
+            CHECK_EQ(array.size(), 9);
+            array.pop_back();
+            REQUIRE_EQ(array.size(), 8);
+            CHECK_EQ(array.value(0), "upon");
+            CHECK_EQ(array.value(1), "a");
+            CHECK_EQ(array.value(2), "time");
+            CHECK_EQ(array.value(3), "I");
+            CHECK_EQ(array.value(4), "was");
+            CHECK_EQ(array.value(5), "writing");
+            CHECK_EQ(array.value(6), "clean");
+            CHECK_EQ(array.value(7), "code");
         }
     }
 }
