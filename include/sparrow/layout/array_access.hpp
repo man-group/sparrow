@@ -14,9 +14,6 @@
 
 #pragma once
 
-// #include "sparrow/arrow_array_schema_proxy.hpp"
-
-
 namespace sparrow::detail
 {
     
