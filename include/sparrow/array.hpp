@@ -30,11 +30,6 @@ namespace sparrow
         using size_type = std::size_t;
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
-
-        // array data will be moved into the array object
-        template<class ARRAY_TYPE>
-        requires std::is_rvalue_reference_v<ARRAY_TYPE&&>
-        array(ARRAY_TYPE&& array);
   
         SPARROW_API array() = default;
 
