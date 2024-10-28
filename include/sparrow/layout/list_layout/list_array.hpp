@@ -266,8 +266,8 @@ namespace sparrow
         {}
 
     private:
-
-        static arrow_proxy create_proxy(std::uint64_t list_size, array && flat_values, validity_bitmap && bitmaps = validity_bitmap{});
+        template<validity_bitmap_input R = validity_bitmap>
+        static arrow_proxy create_proxy(std::uint64_t list_size, array && flat_values, R && validity_input = validity_bitmap{});
 
         static uint64_t list_size_from_format(const std::string_view format);
         std::pair<offset_type, offset_type> offset_range(size_type i) const;
@@ -504,28 +504,35 @@ namespace sparrow
         return std::make_pair(offset, offset + m_list_size);
     }
 
-
+    template<validity_bitmap_input R>
     inline arrow_proxy fixed_sized_list_array::create_proxy(
         std::uint64_t list_size, array && flat_values,
-        validity_bitmap && bitmaps 
+        R && validity_input 
     )
     {
         const auto size = flat_values.size() / static_cast<std::size_t>(list_size);
+
+        std::cout<<"pre-ensure_validity_bitmap"<<std::endl;
+        std::cout<<"bmp.size() = "<<validity_input.size()<<std::endl;
+        std::cout<<"bmp.null_count() = "<<validity_input.null_count()<<std::endl;
+
+        auto vbitmap = ensure_validity_bitmap(size, std::forward<R>(validity_input));
+
+        std::cout<<"post-ensure_validity_bitmap"<<std::endl;
+        std::cout<<"bmp.size() = "<<vbitmap.size()<<std::endl;
+        std::cout<<"bmp.null_count() = "<<vbitmap.null_count()<<std::endl;
+
+
 
         auto wrapper = detail::array_access::extract_array_wrapper(std::move(flat_values));
         auto storage = std::move(*wrapper).extract_arrow_proxy();
         auto flat_schema = storage.extract_schema();
         auto flat_arr = storage.extract_array();
 
-        SPARROW_ASSERT_TRUE( bitmaps.size() == size || bitmaps.size() == 0);
-        const auto null_count = bitmaps.empty() == 0 ? 0 : bitmaps.null_count();
+        const auto null_count = vbitmap.null_count();
 
-        if(bitmaps.size() == 0)
-        {
-            bitmaps.resize(size, true);
-        }
+        std::cout<<"list_size: "<<list_size<<" null_count: "<<null_count<<std::endl;
 
-    
 
         std::string format = "+w:" + std::to_string(list_size);
         ArrowSchema schema = make_arrow_schema(
@@ -538,7 +545,7 @@ namespace sparrow
             nullptr // dictionary
 
         );
-        std::vector<buffer<std::uint8_t>> arr_buffs = {bitmaps.extract_storage()};
+        std::vector<buffer<std::uint8_t>> arr_buffs = {vbitmap.extract_storage()};
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size), // length

@@ -94,8 +94,24 @@ namespace sparrow
         std::uint8_t* p_expected_buffer;
     };
 
+    dynamic_bitset<std::uint8_t> make_dynamic_bitset( dynamic_bitset<std::uint8_t> && bs)
+    {
+        bs.resize(10, true);
+        return bs;
+    }
+
     TEST_SUITE("dynamic_bitset")
     {
+        TEST_CASE("debug")
+        {
+            dynamic_bitset<std::uint8_t> b;
+            
+            CHECK_EQ(b.size(), 0u);
+            CHECK_EQ(b.null_count(), 0u);
+            b.resize(10, true);
+            CHECK_EQ(b.size(), 10);
+            CHECK_EQ(b.null_count(), 10);
+        }
         TEST_CASE_TEMPLATE_DEFINE("", bitmap, dynamic_bitset_id)
         {
             // type "fixture" is dynamic_bitmap_fixture if "bitmap" is dynamic_bitset<std::uint8_t> else
@@ -613,4 +629,5 @@ namespace sparrow
 
         TEST_CASE_TEMPLATE_APPLY(dynamic_bitset_id, testing_types);
     }
+
 }

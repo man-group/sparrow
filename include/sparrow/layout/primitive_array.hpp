@@ -115,9 +115,10 @@ namespace sparrow
 
         static arrow_proxy create_proxy(size_type n);
 
+        template <validity_bitmap_input R = validity_bitmap>
         static auto create_proxy(
             u8_buffer<T>&& data_buffer,    
-            validity_bitmap && bitmaps = validity_bitmap{}
+            R && bitmaps = validity_bitmap{}
         ) -> arrow_proxy;
 
         // range of values (no missing values)
@@ -129,10 +130,9 @@ namespace sparrow
         requires std::convertible_to<U, T>
         static arrow_proxy create_proxy(size_type n, const U& value = U{});
 
-        // range of values, range of bool
-        template <std::ranges::input_range R, std::ranges::input_range R2>
-        requires std::convertible_to<std::ranges::range_value_t<R>, T> &&
-                 std::convertible_to<std::ranges::range_value_t<R2>, bool>
+        // range of values, validity_bitmap_input
+        template <std::ranges::input_range R, validity_bitmap_input R2>
+        requires(std::convertible_to<std::ranges::range_value_t<R>, T>)
         static arrow_proxy create_proxy(R&&, R2&&);
 
         // range of nullable values
@@ -198,16 +198,15 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(get_arrow_proxy().data_type() == arrow_traits<T>::type_id);
     }
     template <class T>
+    template <validity_bitmap_input R >
     auto primitive_array<T>::create_proxy(
             u8_buffer<T>&& data_buffer,    
-            validity_bitmap && bitmap
+            R && bitmap_input
     ) -> arrow_proxy
     {
         const auto size = data_buffer.size();
-        const auto bitmap_size = bitmap.size();
-        const auto null_count = bitmap.empty() == 0 ? 0 : bitmap.null_count();
-
-        SPARROW_ASSERT_TRUE(size == bitmap_size || bitmap_size == 0);
+        validity_bitmap bitmap = ensure_validity_bitmap(size, std::forward<R>(bitmap_input));
+        const auto null_count =  bitmap.null_count();
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
@@ -220,10 +219,6 @@ namespace sparrow
             nullptr // dictionary
         );
 
-        if(bitmap_size == 0)
-        {
-            bitmap.resize(size, true);
-        }
         std::vector<buffer<uint8_t>> buffers(2);
         buffers[0] = std::move(bitmap).extract_storage();
         buffers[1] = std::move(data_buffer).extract_storage();
@@ -242,21 +237,13 @@ namespace sparrow
     }
 
     template <class T>
-    template <std::ranges::input_range VALUE_RANGE, std::ranges::input_range BOOL_RANGE>
-    requires std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, T> &&
-             std::convertible_to<std::ranges::range_value_t<BOOL_RANGE>, bool>
-    arrow_proxy primitive_array<T>::create_proxy(VALUE_RANGE && values, BOOL_RANGE && is_non_null)
+    template <std::ranges::input_range VALUE_RANGE, validity_bitmap_input R>
+    requires(std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, T>)
+    arrow_proxy primitive_array<T>::create_proxy(VALUE_RANGE && values, R && validity_input)
     {
-        const size_type n = std::ranges::size(values);
-        const size_type bitmap_size = std::ranges::size(is_non_null);
-        SPARROW_ASSERT_TRUE(n == bitmap_size || bitmap_size == 0);
-
         u8_buffer<T> data_buffer(std::forward<VALUE_RANGE>(values));
-        validity_bitmap bitmaps(std::forward<BOOL_RANGE>(is_non_null));
-        return create_proxy(std::move(data_buffer), std::move(bitmaps));
+        return create_proxy(std::move(data_buffer), std::forward<R>(validity_input));
     }
-
-
 
     template <class T>
     template<class U>
