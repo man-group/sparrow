@@ -288,6 +288,16 @@ namespace sparrow
                 b.resize(29);
                 CHECK_EQ(b.size(), 29);
                 CHECK_EQ(b.null_count(), s_bitmap_null_count);
+
+                // Test expansion
+                b.resize(35);
+                CHECK_EQ(b.size(), 35);
+                CHECK_EQ(b.null_count(), s_bitmap_null_count + 6);
+
+                // Test expansion with a value
+                b.resize(40, true);
+                CHECK_EQ(b.size(), 40);
+                CHECK_EQ(b.null_count(), s_bitmap_null_count + 6);
             }
 
             SUBCASE("iterator")

@@ -428,27 +428,21 @@ namespace sparrow
             return 0u;
         }
 
-        // Number of bits set to 1 in i for i from 0 to 255.
-        // This can be seen as a mapping "uint8_t -> number of non null bits"
-        static constexpr unsigned char table[] = {
-            0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-            1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-            1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-            2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-            1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-            2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-            2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-            3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
-        };
-        // This methods sums up the number of non null bits per block of 8 bits.
-        size_type res = 0;
-        const unsigned char* p = reinterpret_cast<const unsigned char*>(buffer().data());
-        const size_type length = buffer().size() * sizeof(block_type);
-        for (size_type i = 0; i < length; ++i, ++p)
+        int res = 0;
+        size_t full_blocks = m_size / s_bits_per_block;
+        for (size_t i = 0; i < full_blocks; ++i)
         {
-            res += table[*p];
+            res += std::popcount(buffer().data()[i]);
         }
-        return res;
+        if (full_blocks != buffer().size())
+        {
+            const size_t bits_count = m_size % s_bits_per_block;
+            const block_type mask = ~block_type(~block_type(0) << bits_count);
+            const block_type block = buffer().data()[full_blocks] & mask;
+            res += std::popcount(block);
+        }
+
+        return static_cast<size_t>(res);
     }
 
     template <typename B>
