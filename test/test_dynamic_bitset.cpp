@@ -613,5 +613,4 @@ namespace sparrow
 
         TEST_CASE_TEMPLATE_APPLY(dynamic_bitset_id, testing_types);
     }
-
 }
