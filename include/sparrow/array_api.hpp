@@ -17,8 +17,8 @@
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
-#include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/layout/null_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 
 namespace sparrow
@@ -30,7 +30,7 @@ namespace sparrow
         using size_type = std::size_t;
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
-  
+ 
         SPARROW_API array() = default;
 
         template <layout A>
@@ -46,8 +46,6 @@ namespace sparrow
         SPARROW_API array(ArrowArray&& array, ArrowSchema&& schema);
         SPARROW_API array(ArrowArray&& array, ArrowSchema* schema);
         SPARROW_API array(ArrowArray* array, ArrowSchema* schema);
-
-        
         
         SPARROW_API bool owns_arrow_array() const;
         SPARROW_API array& get_arrow_array(ArrowArray*&);
@@ -60,32 +58,15 @@ namespace sparrow
         SPARROW_API size_type size() const;
         SPARROW_API const_reference operator[](size_type) const;
 
-        SPARROW_API cloning_ptr<array_wrapper> && extract_array_wrapper() &&;
+        template <class F>
+        using visit_result_t = std::invoke_result_t<F, null_array>;
+        
+        template <class F>
+        visit_result_t<F> visit(F&& func);
 
     private:
 
         cloning_ptr<array_wrapper> p_array = nullptr;
-
-        friend detail::array_access;
     };
-
-
-    template <layout A>
-    requires (not std::is_lvalue_reference_v<A>)
-    array::array(A&& a)
-        : p_array(new array_wrapper_impl<A>(std::move(a)))
-    {
-    }
-
-    template <layout A>
-    array::array(A* a)
-        : p_array(new array_wrapper_impl<A>(a))
-    {
-    }
-
-    template <layout A>
-    array::array(std::shared_ptr<A> a)
-        : p_array(new array_wrapper_impl<A>(a))
-    {
-    }
 }
+

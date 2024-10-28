@@ -170,6 +170,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
     # ../
     ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array_api.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_array_schema_proxy.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
