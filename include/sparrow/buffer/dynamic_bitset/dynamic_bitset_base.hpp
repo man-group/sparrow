@@ -426,8 +426,7 @@ namespace sparrow
         size_t full_blocks = m_size / s_bits_per_block;
         for (size_t i = 0; i < full_blocks; ++i)
         {
-            auto lol = buffer().data()[i];
-            res += std::popcount(lol);
+            res += std::popcount(buffer().data()[i]);
         }
         if (full_blocks != buffer().size())
         {
