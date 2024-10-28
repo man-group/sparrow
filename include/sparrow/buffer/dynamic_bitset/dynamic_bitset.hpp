@@ -130,12 +130,7 @@ namespace sparrow
         {
             if(bitmap.size() == 0)
             {
-                // TODO: fix once the constructor is implemented
-                bitmap.resize(size, false);
-                for(std::size_t i = 0; i < size; i++)
-                {
-                    bitmap.set(i, true);
-                }
+                bitmap.resize(size, true);
             }
             return std::move(bitmap);
         }
