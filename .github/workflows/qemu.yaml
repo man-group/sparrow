@@ -30,6 +30,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Cache builds
+        uses: actions/cache@v4
+        with:
+          key: ${{matrix.target.arch}}_${{matrix.target.distro}}_${{matrix.config.name}}_${{matrix.target.date-polyfill}}_ccache
+          path: ccache_cache
+
       - uses: uraimo/run-on-arch-action@v2
         name: Build artifact
         id: build
@@ -40,13 +47,14 @@ jobs:
           # Not required, but speeds up builds
           githubToken: ${{github.token}}
 
-          # Create an artifacts directory
           setup: |
             mkdir -p "${PWD}/artifacts"
+            mkdir -p "${PWD}/ccache_cache"
 
-          # Mount the artifacts directory as /artifacts in the container
+          # Mount the artifacts directory as /artifacts
+          # Mount the ccache_cache directory as /ccache_cache
           dockerRunArgs: |
-            --volume "${PWD}/artifacts:/artifacts"
+            --volume "${PWD}/artifacts:/artifacts" --volume "${PWD}/ccache_cache:/ccache_cache"
 
           # The shell to run commands with in the container
           shell: /bin/sh
@@ -61,26 +69,29 @@ jobs:
             case "${{matrix.target.distro}}" in
               ubuntu*|bookworm)
                 apt-get update -q -y
-                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-dev tzdata g++ ninja-build build-essential
+                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-dev tzdata g++ ninja-build build-essential ccache
                 ;;
               fedora*)
                 dnf -y update
                 dnf -y groupinstall "Development Tools"
-                dnf -y install git which cmake make doctest-devel date date-devel tzdata gcc-c++ ninja-build
+                dnf -y install git which cmake make doctest-devel date date-devel tzdata gcc-c++ ninja-build ccache
                 ;;
               alpine*)
                 apk update
-                apk add git cmake make doctest-dev date-dev tzdata g++ samurai
+                apk add git cmake make doctest-dev date-dev tzdata g++ samurai ccache
                 ;;
             esac
 
           run: |
+            CCACHE_DIR=/ccache_cache
+            export CCACHE_DIR
+            export CCACHE_MAXSIZE=2G
             CC=gcc
             export CC
             CXX=g++
             export CXX
             echo "Configuring"
-            cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
+            cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
             cd build
             echo "Building library"
             cmake --build . --config ${{matrix.config.name}} --target sparrow
@@ -90,6 +101,8 @@ jobs:
             cmake --build . --config ${{matrix.config.name}} --target run_examples
             echo "Running tests"
             cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
+            ccache --show-stats
+            
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

@@ -14,6 +14,8 @@ jobs:
   build:
     runs-on: macos-${{ matrix.os }}
     name: ${{ matrix.os }} / ${{ matrix.config.name }} / ${{ matrix.compiler }}
+    env:
+      SCCACHE_GHA_ENABLED: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -28,6 +30,9 @@ jobs:
         - apple-clang
 
     steps:
+
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.6
 
     - name: Checkout code
       uses: actions/checkout@v4
@@ -58,7 +63,7 @@ jobs:
         echo "CMAKE_CXX_COMPILER=/usr/bin/clang++" >> $GITHUB_ENV
 
     - name: Configure using CMake
-      run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
+      run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
     - name: Build
       working-directory: build

@@ -14,6 +14,8 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     name: ${{ matrix.sys.compiler }} / ${{ matrix.sys.version }} / ${{ matrix.sys.stdlib }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}}
+    env:
+      SCCACHE_GHA_ENABLED: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -32,6 +34,9 @@ jobs:
         - { name: Release }
 
     steps:
+
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.6
 
     - name: Install GCC
       if: matrix.sys.compiler == 'gcc'
@@ -63,11 +68,15 @@ jobs:
         cache-downloads: true
 
     - name: Configure using CMake
-      run: cmake -G Ninja -Bbuild ${{matrix.sys.config-flags}} -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
+      run: cmake -G Ninja -Bbuild ${{matrix.sys.config-flags}} -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
     - name: Build library
       working-directory: build
       run: cmake --build . --config ${{matrix.config.name}} --target sparrow --parallel 8
+
+    - name: Run sccache stat for check
+      shell: bash
+      run: ${SCCACHE_PATH} --show-stats
 
     - name: Install
       working-directory: build
@@ -80,8 +89,6 @@ jobs:
     - name: Run tests
       working-directory: build
       run: cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
-
-    
 
     - name: Upload test results
       uses: actions/upload-artifact@v4

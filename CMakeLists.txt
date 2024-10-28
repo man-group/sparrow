@@ -21,12 +21,28 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_CXX_EXTENSIONS OFF)
 cmake_policy(SET CMP0091 NEW)
 
+# MSVC debug information format flags are selected via
+# CMAKE_MSVC_DEBUG_INFORMATION_FORMAT, instead of
+# embedding flags in e.g. CMAKE_CXX_FLAGS_RELEASE.
+# New in CMake 3.25.
+#
+# Supports debug info with SCCache
+# (https://github.com/mozilla/sccache?tab=readme-ov-file#usage)
+# avoiding “fatal error C1041: cannot open program database; if
+# multiple CL.EXE write to the same .PDB file, please use /FS"
+set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded)
+cmake_policy(SET CMP0141 NEW)
+
 project(sparrow CXX)
 
 include(CMakeDependentOption)
 
 set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SPARROW_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+if(CMAKE_CXX_COMPILER_LAUNCHER)
+    message(STATUS "Using C++ compiler launcher: ${CMAKE_CXX_COMPILER_LAUNCHER}")
+endif()
 
 # Versionning
 # ===========
