@@ -113,67 +113,68 @@ namespace sparrow
 
     using validity_bitmap = dynamic_bitset<std::uint8_t>;
 
-    inline validity_bitmap ensure_validity_bitmap(std::size_t size, const validity_bitmap & bitmap)
-    {
-        if(bitmap.size() == 0)
-        {
-            return validity_bitmap(size, true);
-        }
-        return bitmap; // copy
-    }
     
-    inline validity_bitmap ensure_validity_bitmap(std::size_t size, validity_bitmap && bitmap)
+    namespace detail
     {
-        if(bitmap.size() == 0)
+        using validity_bitmap = sparrow::validity_bitmap;
+        inline validity_bitmap ensure_validity_bitmap_impl(std::size_t size, const validity_bitmap & bitmap)
         {
-            // TODO: fix once the constructor is implemented
-            bitmap.resize(size, false);
-            for(std::size_t i = 0; i < size; i++)
+            if(bitmap.size() == 0)
             {
-                bitmap.set(i, true);
+                return validity_bitmap(size, true);
             }
+            return bitmap; // copy
         }
-        return std::move(bitmap);
-    }
-
-    // range of booleans
-    template <std::ranges::input_range R>
-    requires(std::same_as<std::ranges::range_value_t<R>, bool>)
-    validity_bitmap ensure_validity_bitmap(std::size_t size, R&& range)
-    {   
-        SPARROW_ASSERT_TRUE(size == std::ranges::size(range) || std::ranges::size(range) == 0);
-        validity_bitmap bitmap(size, true);
-        std::size_t i = 0;
-        for(auto value : range)
+    
+        inline validity_bitmap ensure_validity_bitmap_impl(std::size_t size, validity_bitmap && bitmap)
         {
-            if(!value){
-                bitmap.set(i, false);
+            if(bitmap.size() == 0)
+            {
+                // TODO: fix once the constructor is implemented
+                bitmap.resize(size, false);
+                for(std::size_t i = 0; i < size; i++)
+                {
+                    bitmap.set(i, true);
+                }
             }
-            i++;
+            return std::move(bitmap);
         }
-        return bitmap;
-    }
 
-    // range of indices / integers (but not booleans)
-    template <std::ranges::input_range R>
-    requires(
-        std::unsigned_integral<std::ranges::range_value_t<R>> &&
-        !std::same_as<std::ranges::range_value_t<R>, bool> &&
-        !std::same_as<std::decay_t<R>, validity_bitmap> 
-    )
-    validity_bitmap ensure_validity_bitmap(std::size_t size, R&& range_of_indices)
-    {
-        validity_bitmap bitmap(size, true);
-        std::size_t i = 0;
-        for(auto value : range_of_indices)
-        {
-            if(value == 0){
-                bitmap.set(i, false);
+        // range of booleans
+        template <std::ranges::input_range R>
+        requires(std::same_as<std::ranges::range_value_t<R>, bool>)
+        validity_bitmap ensure_validity_bitmap_impl(std::size_t size, R&& range)
+        {   
+            SPARROW_ASSERT_TRUE(size == std::ranges::size(range) || std::ranges::size(range) == 0);
+            validity_bitmap bitmap(size, true);
+            std::size_t i = 0;
+            for(auto value : range)
+            {
+                if(!value){
+                    bitmap.set(i, false);
+                }
+                i++;
             }
-            i++;
+            return bitmap;
         }
-        return bitmap;
-    }
+
+        // range of indices / integers (but not booleans)
+        template <std::ranges::input_range R>
+        requires(
+            std::unsigned_integral<std::ranges::range_value_t<R>> &&
+            !std::same_as<std::ranges::range_value_t<R>, bool> &&
+            !std::same_as<std::decay_t<R>, validity_bitmap> 
+        )
+        validity_bitmap ensure_validity_bitmap_impl(std::size_t size, R&& range_of_indices)
+        { 
+            validity_bitmap bitmap(size, true);
+            for(auto index : range_of_indices)
+            {
+                bitmap.set(index, false);
+            }
+            return bitmap;
+        }
+    } // namespace detail
 
     // concept to handle what can be passed to ensure_validity_bitmap
     template <class T>
@@ -182,5 +183,12 @@ namespace sparrow
         std::same_as<T, const validity_bitmap&> ||
         (std::ranges::input_range<T> && std::same_as<std::ranges::range_value_t<T>, bool>) ||
         (std::ranges::input_range<T> && std::unsigned_integral<std::ranges::range_value_t<T>> );
+
+
+    template <validity_bitmap_input R>
+    validity_bitmap ensure_validity_bitmap(std::size_t size, R&& validity_input)
+    {
+        return detail::ensure_validity_bitmap_impl(size, std::forward<R>(validity_input));
+    }
        
 } // namespace sparrow
