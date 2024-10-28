@@ -79,6 +79,20 @@ namespace sparrow
         }
         TEST_CASE_TEMPLATE_APPLY(array_constructor_id, testing_types);
 
+        TEST_CASE_TEMPLATE_DEFINE("operator==", AR, equal_operator_id)
+        {
+            constexpr size_t size = 10;
+            using T = typename AR::inner_value_type;
+
+            array spar = test::make_array<T>(size);
+            array spar2 = test::make_array<T>(size);
+            CHECK(spar == spar2);
+
+            array spar3 = test::make_array<T>(size + 2u);
+            CHECK(spar != spar3);
+        }
+        TEST_CASE_TEMPLATE_APPLY(equal_operator_id, testing_types);
+
         TEST_CASE_TEMPLATE_DEFINE("operator[]", AR, access_operator_id)
         {
             using const_reference = typename AR::const_reference;

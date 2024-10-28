@@ -64,7 +64,7 @@ namespace sparrow
         using visit_result_t = std::invoke_result_t<F, null_array>;
         
         template <class F>
-        visit_result_t<F> visit(F&& func);
+        visit_result_t<F> visit(F&& func) const;
 
     private:
         SPARROW_API cloning_ptr<array_wrapper> extract_array_wrapper() &&;
@@ -73,5 +73,8 @@ namespace sparrow
 
         friend class detail::array_access;
     };
+
+    SPARROW_API
+    bool operator==(const array& lhs, const array& rhs);
 }
 
