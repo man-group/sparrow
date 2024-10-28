@@ -117,7 +117,7 @@ namespace sparrow
         array_crtp_base(array_crtp_base&&) = default;
         array_crtp_base& operator=(array_crtp_base&&) = default;
 
-        [[nodiscard]] arrow_proxy && extract_arrow_proxy() &&;
+        [[nodiscard]] arrow_proxy extract_arrow_proxy() &&;
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
@@ -218,7 +218,7 @@ namespace sparrow
     }
   
     template <class D>
-    auto array_crtp_base<D>::extract_arrow_proxy() && -> arrow_proxy&&
+    auto array_crtp_base<D>::extract_arrow_proxy() && -> arrow_proxy
     {
         return std::move(m_proxy);
     }

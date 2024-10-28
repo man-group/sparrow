@@ -36,7 +36,7 @@ namespace sparrow::detail
 
         template<class ARRAY>
         requires(std::is_rvalue_reference_v<ARRAY&&>)
-        static inline sparrow::arrow_proxy&& extract_arrow_proxy(ARRAY&& array)
+        static inline sparrow::arrow_proxy extract_arrow_proxy(ARRAY&& array)
         {
             return std::move(array).extract_arrow_proxy();
         }

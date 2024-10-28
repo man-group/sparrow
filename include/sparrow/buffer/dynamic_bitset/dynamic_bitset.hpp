@@ -171,14 +171,12 @@ namespace sparrow
         }
     } // namespace detail
 
-    // concept to handle what can be passed to ensure_validity_bitmap
     template <class T>
     concept validity_bitmap_input = 
-        std::same_as<T, validity_bitmap&&> ||
+        std::same_as<T, validity_bitmap> || 
         std::same_as<T, const validity_bitmap&> ||
         (std::ranges::input_range<T> && std::same_as<std::ranges::range_value_t<T>, bool>) ||
         (std::ranges::input_range<T> && std::unsigned_integral<std::ranges::range_value_t<T>> );
-
 
     template <validity_bitmap_input R>
     validity_bitmap ensure_validity_bitmap(std::size_t size, R&& validity_input)
