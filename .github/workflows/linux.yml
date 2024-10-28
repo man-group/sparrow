@@ -12,7 +12,7 @@ defaults:
     shell: bash -e -l {0}
 jobs:
   build:
-    runs-on: ${{ matrix.sys.image }}]
+    runs-on: ${{ matrix.sys.image }}
     name: ${{ matrix.sys.compiler }} / ${{ matrix.sys.version }} / ${{ matrix.sys.stdlib }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}}
     env:
       SCCACHE_GHA_ENABLED: "true"
