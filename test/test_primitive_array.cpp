@@ -662,8 +662,22 @@ namespace sparrow
                 CHECK_EQ(arr[i].value(), static_cast<std::size_t>(i));
             }
         }
-    
-        
-
+        TEST_CASE("convenience_constructors_index_of_missing")
+        {   
+            primitive_array<std::size_t> arr(
+                std::ranges::iota_view{std::size_t(0), std::size_t(5)},
+                std::vector<std::size_t>{1,3}
+            );
+            REQUIRE(arr.size() == 5);
+            CHECK(arr[0].has_value());
+            CHECK(!arr[1].has_value());
+            CHECK(arr[2].has_value());
+            CHECK(!arr[3].has_value());
+            CHECK(arr[4].has_value());
+            
+            CHECK_EQ(arr[0].value(), std::size_t(0));
+            CHECK_EQ(arr[2].value(), std::size_t(2));
+            CHECK_EQ(arr[4].value(), std::size_t(4));
+        }
     }
 }
