@@ -190,6 +190,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/array_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_array_schema_proxy.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/record_batch.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
 )
 
