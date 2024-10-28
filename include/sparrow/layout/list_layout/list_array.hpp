@@ -29,7 +29,7 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/array.hpp"
+#include "sparrow/array_api.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 
 namespace sparrow

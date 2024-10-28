@@ -57,8 +57,6 @@ namespace sparrow
         SPARROW_API array& get_arrow_schema(ArrowSchema*&);
         SPARROW_API array&& extract_arrow_schema(ArrowSchema&) &&;
 
-        SPARROW_API 
-
         SPARROW_API size_type size() const;
         SPARROW_API const_reference operator[](size_type) const;
 
