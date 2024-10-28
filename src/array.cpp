@@ -77,7 +77,7 @@ namespace sparrow
         return array_element(*p_array, index);
     }
 
-    cloning_ptr<array_wrapper> && array::extract_array_wrapper() &&
+    cloning_ptr<array_wrapper> array::extract_array_wrapper() &&
     {
         return std::move(p_array);
     }

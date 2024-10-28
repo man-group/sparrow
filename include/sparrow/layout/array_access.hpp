@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "sparrow/arrow_array_schema_proxy.hpp"
+// #include "sparrow/arrow_array_schema_proxy.hpp"
 
 
 namespace sparrow::detail
@@ -24,27 +24,27 @@ namespace sparrow::detail
     {
     public:
         template<class ARRAY>
-        static inline const sparrow::arrow_proxy& storage(const ARRAY& array) 
+        static inline const auto & storage(const ARRAY& array) 
         {
             return array.storage();
         }
 
         template<class ARRAY>
-        static inline sparrow::arrow_proxy& storage(ARRAY& array)
+        static inline auto & storage(ARRAY& array)
         {
             return array.storage();
         }
 
         template<class ARRAY>
         requires(std::is_rvalue_reference_v<ARRAY&&>)
-        static inline sparrow::arrow_proxy&& extract_arrow_proxy(ARRAY&& array)
+        static inline auto && extract_arrow_proxy(ARRAY&& array)
         {
             return std::move(array).extract_arrow_proxy();
         }
 
         template<class ARRAY>
         requires(std::is_rvalue_reference_v<ARRAY&&>)
-        static inline auto && extract_array_wrapper(ARRAY&& array)
+        static inline auto  extract_array_wrapper(ARRAY&& array)
         {
             return std::move(array).extract_array_wrapper();
         }

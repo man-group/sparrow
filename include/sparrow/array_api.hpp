@@ -21,6 +21,8 @@
 #include "sparrow/layout/null_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 
+#include "sparrow/layout/array_access.hpp"
+
 namespace sparrow
 {
     class array
@@ -55,6 +57,8 @@ namespace sparrow
         SPARROW_API array& get_arrow_schema(ArrowSchema*&);
         SPARROW_API array&& extract_arrow_schema(ArrowSchema&) &&;
 
+        SPARROW_API 
+
         SPARROW_API size_type size() const;
         SPARROW_API const_reference operator[](size_type) const;
 
@@ -65,8 +69,11 @@ namespace sparrow
         visit_result_t<F> visit(F&& func);
 
     private:
+        SPARROW_API cloning_ptr<array_wrapper> extract_array_wrapper() &&;
 
         cloning_ptr<array_wrapper> p_array = nullptr;
+
+        friend class detail::array_access;
     };
 }
 
