@@ -18,7 +18,7 @@
 #include "doctest/doctest.h"
 #include "external_array_data_creation.hpp"
 #include "test_utils.hpp"
-
+#include "sparrow/array.hpp"
 
 namespace sparrow
 {
@@ -41,7 +41,61 @@ namespace sparrow
     }
 
     TEST_SUITE("list_array")
-    {
+    {   
+        TEST_CASE("constructors")
+        {
+            // from sizes
+            std::vector<std::size_t> sizes = {2, 2, 3, 4};
+
+            // number of elements in the flatted array
+            std::size_t n_flat = 11;  // 2+2+3+4
+
+            // create flat array of integers
+            primitive_array<std::int16_t> flat_arr(std::ranges::iota_view{std::size_t(0), std::size_t(n_flat)} | std::views::transform([](auto i){
+                return static_cast<std::int16_t>(i);})
+            );
+
+            // wrap into an detyped array
+            array arr(std::move(flat_arr));
+
+            // create a list array
+            list_array list_arr(std::move(arr), list_array::offset_buffer_type::from_sizes(sizes));
+
+            // check the size
+            REQUIRE_EQ(list_arr.size(), sizes.size());
+            
+            // check the sizes
+            for(std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                CHECK_EQ(list_arr[i].value().size(), sizes[i]);
+            }
+
+            // check the values
+            std::int16_t flat_index = 0;
+            for(std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                auto list = list_arr[i].value();
+                for(std::size_t j = 0; j < sizes[i]; ++j)
+                {
+                    auto value_variant = list[j];
+                    // visit the variant
+                    std::visit(
+                        [&](auto&& value)
+                        {
+                            if constexpr(std::is_same_v<std::decay_t<decltype(value)>, nullable<std::int16_t>>)
+                            {
+                                CHECK_EQ(value, flat_index);
+                            }
+                        },
+                        value_variant
+                    );
+                    ++flat_index;
+                }
+            }
+            
+
+
+        }
         TEST_CASE_TEMPLATE("list[T]", T, std::uint8_t, std::int32_t, float, double)
         {
             using inner_scalar_type = T;
