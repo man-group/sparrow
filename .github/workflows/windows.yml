@@ -14,8 +14,6 @@ jobs:
   build:
     runs-on: ${{ matrix.runs-on }}
     name: ${{ matrix.toolchain.compiler }} / ${{ matrix.build-system.name }} / ${{ matrix.config.name }} / targets ${{ matrix.target-arch.name }} /  date-polyfill ${{ matrix.toolchain.date-polyfill}}
-    env:
-      SCCACHE_GHA_ENABLED: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -48,9 +46,6 @@ jobs:
         - { name: "Ninja" }
 
     steps:
-    - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.6
-
     - name: Setup MSVC (only for non-VS buildsystems)
       if: matrix.toolchain.compiler == 'msvc' && !startsWith(matrix.build-system.name, 'Visual Studio')
       uses: ilammy/msvc-dev-cmd@v1
@@ -91,6 +86,11 @@ jobs:
 
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_targets_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}_ccache
 
     - name: Setup vcpkg environment
       if: matrix.target-arch.name == 'Win32'
@@ -135,7 +135,7 @@ jobs:
         echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPARROW_ENABLE_32BIT_SIZE_LIMIT=ON'" >> $GITHUB_ENV
 
     - name: Configure using CMake
-      run: cmake -S ./ -B ./build -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} -G "${{matrix.build-system.name}}" $GENERATOR_EXTRA_FLAGS $SPARROW_CHECKS $SPARROW_ADDITIONAL_OPTIONS -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+      run: cmake -S ./ -B ./build -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} -G "${{matrix.build-system.name}}" $GENERATOR_EXTRA_FLAGS $SPARROW_CHECKS $SPARROW_ADDITIONAL_OPTIONS -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
     - name: Build library
       working-directory: build

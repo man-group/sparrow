@@ -85,7 +85,7 @@ jobs:
           run: |
             CCACHE_DIR=/ccache_cache
             export CCACHE_DIR
-            export CCACHE_MAXSIZE=2G
+            export CCACHE_MAXSIZE=1G
             CC=gcc
             export CC
             CXX=g++
