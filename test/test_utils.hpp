@@ -1,6 +1,7 @@
 #pragma once
 #include "doctest/doctest.h"
 
+#include "sparrow/nullable.hpp"
 #include <algorithm>
 
 namespace sparrow::test
@@ -22,8 +23,6 @@ namespace sparrow::test
             auto it_end = array.cend();
             CHECK(std::distance(it, it_end) == size);
         }
-
-
     }
 
     template<class ARRAY_TYPE>
@@ -35,7 +34,19 @@ namespace sparrow::test
         // const array 
         const auto & const_array = array;
         generic_consistency_test_impl(const_array);
-
-
     }
+
+
+    template <class V, class T>
+    eq(const V & variant, const T & value)
+    {
+        return std::visit([&value](const auto & v) { 
+            if constexpr (std::is_same_v<std::decay_t<decltype(v)>, nullable<T>>)
+            {
+                return v == value;
+            }
+        }, variant);
+    }
+
+    
 };
