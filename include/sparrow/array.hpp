@@ -38,6 +38,16 @@ namespace sparrow
   
         SPARROW_API array() = default;
 
+        template <layout A>
+        requires (not std::is_lvalue_reference_v<A>)
+        array(A&& a);
+
+        template <layout A>
+        array(A* a);
+
+        template <layout A>
+        array(std::shared_ptr<A> a);
+
         SPARROW_API array(ArrowArray&& array, ArrowSchema&& schema);
         SPARROW_API array(ArrowArray&& array, ArrowSchema* schema);
         SPARROW_API array(ArrowArray* array, ArrowSchema* schema);
@@ -64,12 +74,24 @@ namespace sparrow
         friend detail::array_access;
     };
 
-    template<class ARRAY_TYPE>
-    requires std::is_rvalue_reference_v<ARRAY_TYPE&&>
-    array::array(ARRAY_TYPE&& arr)
-    : p_array( new array_wrapper_impl<std::remove_reference_t<ARRAY_TYPE>>(std::move(arr)))
-    {   
+
+    template <layout A>
+    requires (not std::is_lvalue_reference_v<A>)
+    array::array(A&& a)
+        : p_array(new array_wrapper_impl<A>(std::move(a)))
+    {
     }
 
+    template <layout A>
+    array::array(A* a)
+        : p_array(new array_wrapper_impl<A>(a))
+    {
+    }
+
+    template <layout A>
+    array::array(std::shared_ptr<A> a)
+        : p_array(new array_wrapper_impl<A>(a))
+    {
+    }
 }
 
