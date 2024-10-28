@@ -12,6 +12,7 @@ defaults:
     shell: bash -e -l {0}
 jobs:
   build:
+    runs-on: ${{ matrix.sys.image }}]
     name: ${{ matrix.sys.compiler }} / ${{ matrix.sys.version }} / ${{ matrix.sys.stdlib }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}}
     env:
       SCCACHE_GHA_ENABLED: "true"
@@ -19,20 +20,20 @@ jobs:
       fail-fast: false
       matrix:
         sys:
-        - {image: 'ubuntu-22.04', compiler: clang, version: '16', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON' }
+        - {image: ubuntu-22.04, compiler: clang, version: '16', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON' }
         # - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
-        - {image: 'ubuntu-22.04', compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON' }
+        - {image: ubuntu-22.04, compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON' }
         # - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
 
-        - {image: 'ubuntu-22.04', compiler: gcc, version: '12', config-flags: '', date-polyfill: 'ON' }
-        - {image: 'ubuntu-24.04', compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON' }
-        - {image: 'ubuntu-24.04', compiler: gcc, version: '13', config-flags: '', date-polyfill: 'OFF' }
+        - {image: ubuntu-22.04, compiler: gcc, version: '12', config-flags: '', date-polyfill: 'ON' }
+        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON' }
+        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'OFF' }
 
         config:
         - { name: Debug }
         - { name: Release }
       
-      runs-on: ${{ matrix.sys.image }}
+      
 
     steps:
 
