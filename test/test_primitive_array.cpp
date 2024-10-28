@@ -611,6 +611,73 @@ namespace sparrow
                 CHECK_EQ(ar[2].get(), values[3]);
             }
         }
+
+        TEST_CASE_TEMPLATE("convenience_constructors", T, std::uint8_t) 
+        {
+            using inner_value_type = T;
+
+            std::vector<inner_value_type> data = {
+                static_cast<inner_value_type>(0), 
+                static_cast<inner_value_type>(1), 
+                static_cast<inner_value_type>(2),
+                static_cast<inner_value_type>(3)
+            };
+            SUBCASE("range-of-inner-values") {
+                primitive_array<T> arr(data);
+                CHECK_EQ(arr.size(), data.size());
+                for (std::size_t i = 0; i < data.size(); ++i) {
+                    REQUIRE(arr[i].has_value());
+                    CHECK_EQ(arr[i].value(), data[i]);
+                }
+            }
+            SUBCASE("range-of-nullables")
+            {
+                using nullable_type = nullable<inner_value_type>;
+                std::vector<nullable_type> nullable_vector{
+                    nullable_type(data[0]),
+                    nullable_type(data[1]),
+                    nullval,
+                    nullable_type(data[3])
+                };
+                primitive_array<T> arr(nullable_vector);
+                REQUIRE(arr.size() == nullable_vector.size());
+                REQUIRE(arr[0].has_value());
+                REQUIRE(arr[1].has_value());
+                REQUIRE(!arr[2].has_value());
+                REQUIRE(arr[3].has_value());
+                CHECK_EQ(arr[0].value(), data[0]);
+                CHECK_EQ(arr[1].value(), data[1]);
+                CHECK_EQ(arr[3].value(), data[3]);
+            }
+            
+        }
         TEST_CASE_TEMPLATE_APPLY(primitive_array_id, testing_types);
+
+        TEST_CASE("convenience_constructors_from_iota")
+        {   
+            primitive_array<std::size_t> arr(std::ranges::iota_view{std::size_t(0), std::size_t(4)});
+            REQUIRE(arr.size() == 4);
+            for (std::size_t i = 0; i < 4; ++i) {
+                REQUIRE(arr[i].has_value());
+                CHECK_EQ(arr[i].value(), static_cast<std::size_t>(i));
+            }
+        }
+        TEST_CASE("convenience_constructors_index_of_missing")
+        {   
+            primitive_array<std::size_t> arr(
+                std::ranges::iota_view{std::size_t(0), std::size_t(5)},
+                std::vector<std::size_t>{1,3}
+            );
+            REQUIRE(arr.size() == 5);
+            CHECK(arr[0].has_value());
+            CHECK(!arr[1].has_value());
+            CHECK(arr[2].has_value());
+            CHECK(!arr[3].has_value());
+            CHECK(arr[4].has_value());
+            
+            CHECK_EQ(arr[0].value(), std::size_t(0));
+            CHECK_EQ(arr[2].value(), std::size_t(2));
+            CHECK_EQ(arr[4].value(), std::size_t(4));
+        }
     }
 }

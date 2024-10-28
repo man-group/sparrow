@@ -23,6 +23,7 @@
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/crtp_base.hpp"
+#include "sparrow/layout/array_access.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 
@@ -108,7 +109,7 @@ namespace sparrow
 
     protected:
 
-        array_crtp_base(arrow_proxy);
+        explicit array_crtp_base(arrow_proxy);
 
         array_crtp_base(const array_crtp_base&) = default;
         array_crtp_base& operator=(const array_crtp_base&) = default;
@@ -116,8 +117,10 @@ namespace sparrow
         array_crtp_base(array_crtp_base&&) = default;
         array_crtp_base& operator=(array_crtp_base&&) = default;
 
+        [[nodiscard]] arrow_proxy extract_arrow_proxy() &&;
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
+
 
         bitmap_const_reference has_value(size_type i) const;
 
@@ -134,6 +137,7 @@ namespace sparrow
         friend class layout_iterator<iterator_types>;
         template <class T>
         friend class array_wrapper_impl;
+        friend class detail::array_access;
     };
 
     template <class D>
@@ -211,6 +215,12 @@ namespace sparrow
     auto array_crtp_base<D>::get_arrow_proxy() const -> const arrow_proxy&
     {
         return m_proxy;
+    }
+  
+    template <class D>
+    auto array_crtp_base<D>::extract_arrow_proxy() && -> arrow_proxy
+    {
+        return std::move(m_proxy);
     }
 
     template <class D>

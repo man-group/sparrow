@@ -16,6 +16,9 @@
 
 #include <string>  // for std::stoull
 
+
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
@@ -26,6 +29,8 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/array_api.hpp"
+#include "sparrow/buffer/dynamic_bitset.hpp"
 
 namespace sparrow
 {
@@ -255,7 +260,14 @@ namespace sparrow
         fixed_sized_list_array(self_type&&) = default;
         fixed_sized_list_array& operator=(self_type&&) = default;
 
+        template<class ...ARGS>
+        requires(mpl::excludes_copy_and_move_ctor_v<fixed_sized_list_array, ARGS...>)
+        fixed_sized_list_array(ARGS&& ...args): self_type(create_proxy(std::forward<ARGS>(args)...))
+        {}
+
     private:
+        template<validity_bitmap_input R = validity_bitmap>
+        static arrow_proxy create_proxy(std::uint64_t list_size, array && flat_values, R && validity_input = validity_bitmap{});
 
         static uint64_t list_size_from_format(const std::string_view format);
         std::pair<offset_type, offset_type> offset_range(size_type i) const;
@@ -490,5 +502,45 @@ namespace sparrow
     {
         const auto offset = i * m_list_size;
         return std::make_pair(offset, offset + m_list_size);
+    }
+
+    template<validity_bitmap_input R>
+    inline arrow_proxy fixed_sized_list_array::create_proxy(
+        std::uint64_t list_size, array && flat_values,
+        R && validity_input 
+    )
+    {
+        const auto size = flat_values.size() / static_cast<std::size_t>(list_size);
+        auto vbitmap = ensure_validity_bitmap(size, std::forward<R>(validity_input));
+
+        auto wrapper = detail::array_access::extract_array_wrapper(std::move(flat_values));
+        auto storage = std::move(*wrapper).extract_arrow_proxy();
+        auto flat_schema = storage.extract_schema();
+        auto flat_arr = storage.extract_array();
+        const auto null_count = vbitmap.null_count();
+
+        std::string format = "+w:" + std::to_string(list_size);
+        ArrowSchema schema = make_arrow_schema(
+            format,
+            std::nullopt, // name
+            std::nullopt, // metadata
+            std::nullopt, // flags,
+            1, // n_children
+            new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))}, // children
+            nullptr // dictionary
+
+        );
+        std::vector<buffer<std::uint8_t>> arr_buffs = {vbitmap.extract_storage()};
+
+        ArrowArray arr = make_arrow_array(
+            static_cast<std::int64_t>(size), // length
+            static_cast<int64_t>(null_count),
+            0, // offset
+            std::move(arr_buffs),
+            1, // n_children
+            new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))}, // children
+            nullptr // dictionary
+        );
+        return arrow_proxy{std::move(arr), std::move(schema)};
     }
 }

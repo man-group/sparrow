@@ -184,6 +184,19 @@ namespace sparrow
         size_type m_max_size;
     };
 
+
+    template<class T>
+    class holder
+    {
+    public:
+        template<class ...Args>
+        holder(Args&&... args)
+            : value(std::forward<Args>(args)...)
+        {
+        }
+        T value;
+    };
+
     template <typename To, BufferReference<To> FromBufferRef>
         requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
     buffer_adaptor<To, FromBufferRef>::buffer_adaptor(FromBufferRef buf)

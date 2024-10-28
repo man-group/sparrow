@@ -44,4 +44,3 @@ namespace sparrow
         return sparrow::visit(std::forward<F>(func), *p_array);
     }
 }
-

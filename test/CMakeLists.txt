@@ -81,6 +81,7 @@ else()
         test_variable_size_binary_array.cpp
         test_run_end_encoded_array.cpp
         test_union_array.cpp
+        test_high_level_constructors.cpp
     )
 endif()
 
@@ -147,7 +148,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         $<$<CXX_COMPILER_ID:GNU>:-Wduplicated-cond> # warn if if / else chain has duplicated conditions
         $<$<CXX_COMPILER_ID:GNU>:-Wlogical-op> # warn about logical operations being used where bitwise were probably wanted
         $<$<CXX_COMPILER_ID:GNU>:-Wno-subobject-linkage> # suppress warnings about subobject linkage
-        $<$<CXX_COMPILER_ID:GNU>:-Wuseless-cast> # warn if you perform a cast to the same type
     )
     target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
 endif()
