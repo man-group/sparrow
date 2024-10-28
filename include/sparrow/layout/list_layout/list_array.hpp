@@ -511,28 +511,13 @@ namespace sparrow
     )
     {
         const auto size = flat_values.size() / static_cast<std::size_t>(list_size);
-
-        std::cout<<"pre-ensure_validity_bitmap"<<std::endl;
-        std::cout<<"bmp.size() = "<<validity_input.size()<<std::endl;
-        std::cout<<"bmp.null_count() = "<<validity_input.null_count()<<std::endl;
-
         auto vbitmap = ensure_validity_bitmap(size, std::forward<R>(validity_input));
-
-        std::cout<<"post-ensure_validity_bitmap"<<std::endl;
-        std::cout<<"bmp.size() = "<<vbitmap.size()<<std::endl;
-        std::cout<<"bmp.null_count() = "<<vbitmap.null_count()<<std::endl;
-
-
 
         auto wrapper = detail::array_access::extract_array_wrapper(std::move(flat_values));
         auto storage = std::move(*wrapper).extract_arrow_proxy();
         auto flat_schema = storage.extract_schema();
         auto flat_arr = storage.extract_array();
-
         const auto null_count = vbitmap.null_count();
-
-        std::cout<<"list_size: "<<list_size<<" null_count: "<<null_count<<std::endl;
-
 
         std::string format = "+w:" + std::to_string(list_size);
         ArrowSchema schema = make_arrow_schema(

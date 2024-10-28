@@ -124,15 +124,14 @@ namespace sparrow
     
     inline validity_bitmap ensure_validity_bitmap(std::size_t size, validity_bitmap && bitmap)
     {
-        std::cout<<"ensure_validity_bitmap(std::size_t size, validity_bitmap && bitmap)"<<std::endl;
-        std::cout<<"bitmap.size() = "<<bitmap.size()<<std::endl;
-        std::cout<<"null_count() = "<<bitmap.null_count()<<std::endl;
         if(bitmap.size() == 0)
         {
-            std::cout<<"resize bitmap"<<std::endl;
-            bitmap.resize(size, true);
-            std::cout<<"post-resize bitmap.size() = "<<bitmap.size()<<std::endl;
-            std::cout<<"post-resize null_count() = "<<bitmap.null_count()<<std::endl;
+            // TODO: fix once the constructor is implemented
+            bitmap.resize(size, false);
+            for(std::size_t i = 0; i < size; i++)
+            {
+                bitmap.set(i, true);
+            }
         }
         return std::move(bitmap);
     }
