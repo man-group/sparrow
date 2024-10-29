@@ -682,6 +682,19 @@ namespace sparrow
         
         TEST_CASE("primitive_array<bool>")
         {
+            static_assert(
+                std::same_as<
+                    bool&,
+                    std::common_reference_t<
+                        std::add_lvalue_reference_t<bool>,
+                        std::add_lvalue_reference_t<bool>&,
+                        std::add_lvalue_reference_t<bool>&&,
+                        std::add_lvalue_reference_t<bool>const,
+                        std::add_lvalue_reference_t<bool>const&
+                    >
+                >
+            );
+
             constexpr bool conv = std::is_convertible_v<
                 sparrow::nullable<const int &> &&,
                 sparrow::nullable<const int &, const int&>
@@ -694,6 +707,8 @@ namespace sparrow
             >;
 
             CHECK(conv2);
+
+
             /*std::array<bool, 4> data = { true, true, false, true };
             primitive_array<bool> arr0(data);
             primitive_array<bool> arr1(data);
