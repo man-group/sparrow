@@ -14,6 +14,8 @@ jobs:
   build:
     runs-on: ${{ matrix.sys.image }}
     name: ${{ matrix.sys.compiler }} / ${{ matrix.sys.version }} / ${{ matrix.sys.stdlib }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}}
+    env:
+      SCCACHE_GHA_ENABLED: "true"
     strategy:
       fail-fast: false
       matrix:
@@ -33,10 +35,8 @@ jobs:
 
     steps:
 
-    - name: ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: ${{ matrix.sys.compiler }}_${{ matrix.sys.version }}_${{ matrix.sys.stdlib }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.sys.date-polyfill}}_ccache
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.6
 
     - name: Install GCC
       if: matrix.sys.compiler == 'gcc'
@@ -68,11 +68,15 @@ jobs:
         cache-downloads: true
 
     - name: Configure using CMake
-      run: cmake -G Ninja -Bbuild ${{matrix.sys.config-flags}} -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: cmake -G Ninja -Bbuild ${{matrix.sys.config-flags}} -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
     - name: Build library
       working-directory: build
       run: cmake --build . --config ${{matrix.config.name}} --target sparrow --parallel 8
+
+    - name: Run sccache stat for check
+      shell: bash
+      run: ${SCCACHE_PATH} --show-stats
 
     - name: Install
       working-directory: build
