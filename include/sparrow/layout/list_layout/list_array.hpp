@@ -192,9 +192,9 @@ namespace sparrow
         list_array_impl(self_type&&) = default;
         list_array_impl& operator=(self_type&&) = default;
 
-        template<class ...ARGS>
+        template<class ... ARGS>
         requires(mpl::excludes_copy_and_move_ctor_v<list_array_impl<BIG>, ARGS...>)
-        list_array_impl<BIG>(ARGS&& ...args): self_type(create_proxy(std::forward<ARGS>(args)...))
+        list_array_impl(ARGS && ... args): self_type(create_proxy(std::forward<ARGS>(args)...))
         {}
 
         template<std::ranges::range SIZES_RANGE>
@@ -241,7 +241,7 @@ namespace sparrow
 
         template<class ...ARGS>
         requires(mpl::excludes_copy_and_move_ctor_v<list_view_array_impl<BIG>, ARGS...>)
-        list_view_array_impl<BIG>(ARGS&& ...args): self_type(create_proxy(std::forward<ARGS>(args)...))
+        list_view_array_impl(ARGS&& ...args): self_type(create_proxy(std::forward<ARGS>(args)...))
         {}
 
     private:
