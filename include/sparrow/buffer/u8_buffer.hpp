@@ -67,40 +67,48 @@ namespace sparrow
         using buffer_adaptor_type  = buffer_adaptor<T, buffer<std::uint8_t>&>;
         using holder_type::extract_storage;
 
+        u8_buffer(u8_buffer&& other);
+        u8_buffer(const u8_buffer& other);
+        u8_buffer& operator=(u8_buffer&& other) = delete;
+        u8_buffer& operator=(u8_buffer& other) = delete;
+
+        u8_buffer(std::size_t n, const T & val = T{});
         template<std::ranges::input_range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
-        u8_buffer(R&& range)
-            : holder_type{std::ranges::size(range) * sizeof(T)}
-            ,buffer_adaptor_type(holder_type::value)
-        {
-            std::ranges::copy(range, this->begin());
-        }
-
-        // move constructor
-        u8_buffer(u8_buffer&& other)
-            : holder_type(std::move(other).extract_storage())
-            , buffer_adaptor_type(holder_type::value)
-        {
-        }
-        // copy constructor
-        u8_buffer(const u8_buffer& other)
-            : holder_type(other.storage())
-            , buffer_adaptor_type(holder_type::value)
-        {
-        }
-
-        // move assignment
-        u8_buffer& operator=(u8_buffer&& other)
-        {
-            holder_type::assign(std::move(other).extract_storage());
-        }
-
-        u8_buffer(std::size_t n, T val = T{})
-            : holder_type{n * sizeof(T)}
-            , buffer_adaptor_type(holder_type::value)
-        {
-            std::fill(this->begin(), this->end(), val);
-        }
+        u8_buffer(R&& range);
     };
+
+
+    template<class T>
+    u8_buffer<T>::u8_buffer(u8_buffer&& other)
+        : holder_type(std::move(other).extract_storage())
+        , buffer_adaptor_type(holder_type::value)
+    {
+    }
+
+    template<class T>
+    u8_buffer<T>::u8_buffer(const u8_buffer& other)
+        : holder_type(other.storage())
+        , buffer_adaptor_type(holder_type::value)
+    {
+    }
+
+    template<class T>
+    u8_buffer<T>::u8_buffer(std::size_t n, const T & val)
+        : holder_type{n * sizeof(T)}
+        , buffer_adaptor_type(holder_type::value)
+    {
+        std::fill(this->begin(), this->end(), val);
+    }
+
+    template<class T>
+    template<std::ranges::input_range R>
+    requires std::convertible_to<std::ranges::range_value_t<R>, T>
+    u8_buffer<T>::u8_buffer(R&& range)
+        : holder_type{std::ranges::size(range) * sizeof(T)}
+        ,buffer_adaptor_type(holder_type::value)
+    {
+        std::ranges::copy(range, this->begin());
+    }
 
 }
