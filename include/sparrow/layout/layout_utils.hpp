@@ -17,9 +17,7 @@
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/buffer/u8_buffer.hpp"
 
-namespace sparrow
-{
-namespace detail
+namespace sparrow::detail
 {
     // Functor to get the value of the layout at index i.
     //
@@ -76,29 +74,28 @@ namespace detail
         layout_type* p_layout;
     };
 
-} // namespace sparrow::detail
 
 
-template<class OFFSET_TYPE>
-concept offset_type = std::is_same<std::remove_const_t<OFFSET_TYPE>, std::uint32_t>::value || 
-                        std::is_same<std::remove_const_t<OFFSET_TYPE>, std::uint64_t>::value;
+    template<class OFFSET_TYPE>
+    concept offset_type = std::is_same<std::remove_const_t<OFFSET_TYPE>, std::uint32_t>::value || 
+                            std::is_same<std::remove_const_t<OFFSET_TYPE>, std::uint64_t>::value;
 
-template<offset_type OFFSET_TYPE, std::ranges::range SIZES_RANGE>
-requires(std::unsigned_integral<std::ranges::range_value_t<SIZES_RANGE>>)
-u8_buffer<OFFSET_TYPE> offset_buffer_from_sizes(SIZES_RANGE && sizes)
-{
-    u8_buffer<OFFSET_TYPE> buffer(std::ranges::size(sizes) + 1);
-    
-    OFFSET_TYPE offset = 0;
-    auto it = buffer.begin();
-    for(auto size : sizes)
+    template<offset_type OFFSET_TYPE, std::ranges::range SIZES_RANGE>
+    requires(std::unsigned_integral<std::ranges::range_value_t<SIZES_RANGE>>)
+    sparrow::u8_buffer<OFFSET_TYPE> offset_buffer_from_sizes(SIZES_RANGE && sizes)
     {
+        sparrow::u8_buffer<OFFSET_TYPE> buffer(std::ranges::size(sizes) + 1);
+        
+        OFFSET_TYPE offset = 0;
+        auto it = buffer.begin();
+        for(auto size : sizes)
+        {
+            *it = offset;
+            offset += static_cast<OFFSET_TYPE>(size);
+            ++it;
+        }
         *it = offset;
-        offset += static_cast<OFFSET_TYPE>(size);
-        ++it;
-    }
-    *it = offset;
-    return buffer;
-} 
+        return buffer;
+    } 
 
 } // namespace sparrow
