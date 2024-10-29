@@ -32,7 +32,7 @@ namespace sparrow
      * A record batch is a collection of equal-length arrays mapped to
      * names.
      */
-    class SPARROW_API record_batch
+    class record_batch
     {
     public:
 
@@ -48,24 +48,24 @@ namespace sparrow
                     and std::same_as<std::ranges::range_value_t<CR>, array>)
         record_batch(NR&& names, CR&& columns);
 
-        record_batch(initializer_type init);
+        SPARROW_API record_batch(initializer_type init);
 
-        record_batch(const record_batch&);
-        record_batch& operator=(const record_batch&);
+        SPARROW_API record_batch(const record_batch&);
+        SPARROW_API record_batch& operator=(const record_batch&);
 
-        record_batch(record_batch&&) = default;
-        record_batch& operator=(record_batch&&) = default;
+        SPARROW_API record_batch(record_batch&&) = default;
+        SPARROW_API record_batch& operator=(record_batch&&) = default;
 
-        size_type nb_columns() const;
-        size_type nb_rows() const;
+        SPARROW_API size_type nb_columns() const;
+        SPARROW_API size_type nb_rows() const;
 
-        bool contains_column(const name_type& key) const;
-        const name_type& get_column_name(size_type index) const;
-        const array& get_column(const name_type& key) const;
-        const array& get_column(size_type index) const;
+        SPARROW_API bool contains_column(const name_type& key) const;
+        SPARROW_API const name_type& get_column_name(size_type index) const;
+        SPARROW_API const array& get_column(const name_type& key) const;
+        SPARROW_API const array& get_column(size_type index) const;
 
-        name_range names() const;
-        column_range columns() const;
+        SPARROW_API name_range names() const;
+        SPARROW_API column_range columns() const;
 
     private:
 
