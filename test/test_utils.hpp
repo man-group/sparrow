@@ -1,7 +1,7 @@
 #pragma once
 #include "doctest/doctest.h"
 
-#include "sparrow/nullable.hpp"
+#include "sparrow/utils/nullable.hpp"
 #include <algorithm>
 
 namespace sparrow::test
@@ -37,13 +37,37 @@ namespace sparrow::test
     }
 
 
+    // ensure that the variant (of nullables) has a value
+    // and that the value is equal to the expected value
+    // (including the type)
+    #define CHECK_NULLABLE_VARIANT_EQ(variant, value) sparrow::test::check_nullable_variant_eq(variant, value, __FILE__, __LINE__)
+    
     template <class V, class T>
-    eq(const V & variant, const T & value)
+    static void check_nullable_variant_eq(const V & variant, const T & value,const char* file, int line)
     {
-        return std::visit([&value](const auto & v) { 
-            if constexpr (std::is_same_v<std::decay_t<decltype(v)>, nullable<T>>)
+        return std::visit([&](auto && v) { 
+
+            // v is a nullable
+            using nullable_type = std::decay_t<decltype(v)>;
+            using inner_type = std::decay_t<typename nullable_type::value_type>;
+
+            if constexpr(std::is_same_v<inner_type, T>)
             {
-                return v == value;
+                if (v.has_value())
+                {
+                    if(v.value() != value)
+                    {
+                        ADD_FAIL_AT(file, line, "value mismatch: expected " << value << " but got " << v.value());
+                    }
+                }
+                else
+                {
+                    ADD_FAIL_AT(file, line, "value is null");
+                }
+            }
+            else
+            {
+                ADD_FAIL_AT(file, line, "type mismatch");
             }
         }, variant);
     }

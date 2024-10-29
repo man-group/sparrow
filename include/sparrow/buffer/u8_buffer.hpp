@@ -35,6 +35,11 @@ namespace sparrow
             {
             }
             T value;
+
+            T extract_storage() && 
+            {
+                return std::move(value);
+            }
         };
     }
 
@@ -47,6 +52,7 @@ namespace sparrow
     public:
         using holder_type = detail::holder<buffer<std::uint8_t>>;
         using buffer_adaptor_type  = buffer_adaptor<T, buffer<std::uint8_t>&>;
+        using holder_type::extract_storage;
 
         template<std::ranges::input_range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
@@ -57,6 +63,8 @@ namespace sparrow
             std::ranges::copy(range, this->begin());
         }
 
+   
+
         u8_buffer(std::size_t n, T val = T{})
             : holder_type{n * sizeof(T)}
             , buffer_adaptor_type(holder_type::value)
@@ -64,10 +72,14 @@ namespace sparrow
             std::fill(this->begin(), this->end(), val);
         }
 
-        buffer<std::uint8_t> extract_storage() && 
+        // move constructor
+        u8_buffer(u8_buffer&& other)
+            : holder_type(std::move(other).extract_storage())
+            , buffer_adaptor_type(holder_type::value)
         {
-            return std::move(holder_type::value);
         }
+
+    
     };
 
 }
