@@ -35,7 +35,7 @@ namespace sparrow
         return name_list;
     }
 
-    record_batch<> make_record_batch(const std::size_t data_size)
+    record_batch make_record_batch(const std::size_t data_size)
     {
 
         return record_batch(make_name_list(), make_array_list(data_size));
@@ -58,7 +58,7 @@ namespace sparrow
             {
                 auto col_list = make_array_list(col_size);
 
-                record_batch<> record{
+                record_batch record = {
                     { "first", col_list[0]},
                     { "second", col_list[1]},
                     { "third", col_list[2]} };
@@ -136,6 +136,26 @@ namespace sparrow
                 CHECK_EQ(col_list[i], record.get_column(i));
                 CHECK_EQ(col_list[i], record.get_column(name_list[i]));
             }
+        }
+
+        TEST_CASE("names")
+        {
+            auto record = make_record_batch(col_size);
+            auto name_list = make_name_list();
+            auto names = record.names();
+
+            bool res = std::ranges::equal(names, name_list);
+            CHECK(res);
+        }
+
+        TEST_CASE("columns")
+        {
+            auto record = make_record_batch(col_size);
+            auto col_list = make_array_list(col_size);
+            auto columns = record.columns();
+
+            bool res = std::ranges::equal(columns, col_list);
+            CHECK(res);
         }
     }
 }
