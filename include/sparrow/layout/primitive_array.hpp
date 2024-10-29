@@ -95,6 +95,8 @@ namespace sparrow
         primitive_array(Args&& ... args) : base_type(create_proxy(std::forward<Args>(args) ...))
         {}
 
+    private:
+
         pointer data();
         const_pointer data() const;
 
@@ -106,8 +108,6 @@ namespace sparrow
 
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
-
-    private:
 
         static arrow_proxy create_proxy(size_type n);
 
@@ -137,7 +137,6 @@ namespace sparrow
             std::ranges::range_value_t<R>, nullable<T>>
         static arrow_proxy create_proxy(R&&);
 
-
         // Modifiers
 
         void resize_values(size_type new_length, inner_value_type value);
@@ -156,6 +155,7 @@ namespace sparrow
         friend class run_end_encoded_array;
         friend base_type;
         friend base_type::base_type;
+        friend base_type::base_type::base_type;
     };
 
     /**********************************

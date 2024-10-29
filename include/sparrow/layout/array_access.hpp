@@ -22,6 +22,7 @@ namespace sparrow::detail
     class array_access
     {
     public:
+
         template<class ARRAY>
         static const sparrow::arrow_proxy& get_arrow_proxy(const ARRAY& array) 
         {
