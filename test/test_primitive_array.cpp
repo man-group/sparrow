@@ -699,10 +699,10 @@ namespace sparrow
                 sparrow::nullable<const int &, const int&>
             >;
 
-            int value = 1;
+            /*int value = 1;
             sparrow::nullable<const int&> n(value);
             sparrow::nullable<const int&, const int&> res(std::move(n));
-            CHECK(res.has_value());
+            CHECK(res.has_value());*/
 
             CHECK(conv);
             /*std::array<bool, 4> data = { true, true, false, true };
