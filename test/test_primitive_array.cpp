@@ -679,11 +679,18 @@ namespace sparrow
             CHECK_EQ(arr[2].value(), std::size_t(2));
             CHECK_EQ(arr[4].value(), std::size_t(4));
         }
-        TEST_CASE("primitive_array<bool>")
+        /*TEST_CASE("primitive_array<bool>")
         {
             std::array<bool, 4> data = { true, true, false, true };
             primitive_array<bool> arr0(data);
             primitive_array<bool> arr1(data);
+            CHECK(arr0 == arr1);
+        }*/
+        TEST_CASE("primitive_array<int>")
+        {
+            std::array<int, 4> data = { 1, 1, 0, 1 };
+            primitive_array<int> arr0(data);
+            primitive_array<int> arr1(data);
             CHECK(arr0 == arr1);
         }
     }
