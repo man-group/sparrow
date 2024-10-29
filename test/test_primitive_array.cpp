@@ -688,9 +688,7 @@ namespace sparrow
                     std::common_reference_t<
                         std::add_lvalue_reference_t<bool>,
                         std::add_lvalue_reference_t<bool>&,
-                        std::add_lvalue_reference_t<bool>&&,
-                        std::add_lvalue_reference_t<bool>const,
-                        std::add_lvalue_reference_t<bool>const&
+                        std::add_lvalue_reference_t<bool>&&
                     >
                 >
             );
