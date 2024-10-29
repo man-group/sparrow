@@ -328,6 +328,20 @@ namespace sparrow
         {
         }
 
+#ifdef __clang__
+        template <class TO, mpl::boolean_like BO>
+        requires (
+            impl::both_constructible_from_cref<T, TO, B, BO> and
+            std::same_as<std::decay_t<T>, bool>
+        )
+        explicit(not impl::both_convertible_from_cref<T, TO, B, BO>)
+        SPARROW_CONSTEXPR nullable(const nullable<TO, BO>& rhs)
+            : m_value(rhs.get())
+            , m_null_flag(rhs.null_flag())
+        {
+        }
+#endif
+
         constexpr nullable(self_type&&) noexcept = default;
 
         template <class TO, mpl::boolean_like BO>
@@ -342,6 +356,20 @@ namespace sparrow
         {
         }
 
+#ifdef __clang__
+        template <class TO, mpl::boolean_like BO>
+        requires (
+            impl::both_constructible_from_cond_ref<T, TO, B, BO> and
+            std::same_as<std::decay_t<T>, bool>
+        )
+        explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>)
+        SPARROW_CONSTEXPR nullable(nullable<TO, BO>&& rhs)
+            : m_value(std::move(rhs).get())
+            , m_null_flag(std::move(rhs).null_flag())
+        {
+        }
+#endif
+  
         constexpr nullable(value_type&& value, flag_type&& null_flag)
             : m_value(std::move(value))
             , m_null_flag(std::move(null_flag))
