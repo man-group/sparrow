@@ -21,7 +21,10 @@ namespace sparrow
 {
     std::vector<array> make_array_list(const std::size_t data_size)
     {
-        primitive_array<std::uint16_t> pr0(std::ranges::iota_view<std::uint16_t>{std::uint16_t(0), std::uint16_t(data_size)});
+        primitive_array<std::uint16_t> pr0(std::ranges::iota_view{std::size_t(0), std::size_t(data_size)}
+                | std::views::transform([](auto i){
+                return static_cast<std::uint16_t>(i);})
+            );
         primitive_array<std::int32_t> pr1(std::ranges::iota_view{std::int32_t(4), 4 + std::int32_t(data_size)});
         primitive_array<std::int32_t> pr2(std::ranges::iota_view{std::int32_t(2), 2 + std::int32_t(data_size)});
 

@@ -72,9 +72,9 @@ namespace sparrow
         template <class U, class R>
         std::vector<U> to_vector(R&& range) const;
 
-        void init_array_map();
+        SPARROW_API void init_array_map();
 
-        bool check_consistency() const;
+        SPARROW_API bool check_consistency() const;
 
         std::vector<name_type> m_name_list;
         std::vector<array> m_array_list;
