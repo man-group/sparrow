@@ -94,7 +94,7 @@ u8_buffer<OFFSET_TYPE> offset_buffer_from_sizes(SIZES_RANGE && sizes)
     for(auto size : sizes)
     {
         *it = offset;
-        offset += size;
+        offset += static_cast<OFFSET_TYPE>(size);
         ++it;
     }
     *it = offset;
