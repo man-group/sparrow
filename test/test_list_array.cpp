@@ -18,7 +18,7 @@
 #include "doctest/doctest.h"
 #include "external_array_data_creation.hpp"
 #include "test_utils.hpp"
-
+#include "sparrow/array.hpp"
 
 namespace sparrow
 {
@@ -41,11 +41,50 @@ namespace sparrow
     }
 
     TEST_SUITE("list_array")
-    {
+    {   
+        TEST_CASE("constructors")
+        {
+            // from sizes
+            std::vector<std::size_t> sizes = {2, 2, 3, 4};
+
+            // number of elements in the flatted array
+            std::size_t n_flat = 11;  // 2+2+3+4
+
+            // create flat array of integers
+            primitive_array<std::int16_t> flat_arr(std::ranges::iota_view{std::size_t(0), std::size_t(n_flat)} | std::views::transform([](auto i){
+                return static_cast<std::int16_t>(i);})
+            );
+
+            // wrap into an detyped array
+            array arr(std::move(flat_arr));
+
+            // create a list array
+            list_array list_arr(std::move(arr), list_array::offset_from_sizes(sizes));
+
+            // check the size
+            REQUIRE_EQ(list_arr.size(), sizes.size());
+            
+            // check the sizes
+            for(std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                CHECK_EQ(list_arr[i].value().size(), sizes[i]);
+            }
+
+            // check the values
+            std::int16_t flat_index = 0;
+            for(std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                auto list = list_arr[i].value();
+                for(std::size_t j = 0; j < sizes[i]; ++j)
+                {
+                    CHECK_NULLABLE_VARIANT_EQ(list[j], flat_index);
+                    ++flat_index;
+                }
+            }
+        }
         TEST_CASE_TEMPLATE("list[T]", T, std::uint8_t, std::int32_t, float, double)
         {
             using inner_scalar_type = T;
-            using inner_nullable_type = nullable<inner_scalar_type>;
 
             // number of elements in the flatted array
             const std::size_t n_flat = 10;  // 1+2+3+4
@@ -103,17 +142,7 @@ namespace sparrow
                     for (std::size_t j = 0; j < sizes[i]; ++j)
                     {
                         auto value_variant = list[j];
-                        // visit the variant
-                        std::visit(
-                            [&](auto&& value)
-                            {
-                                if constexpr (std::is_same_v<std::decay_t<decltype(value)>, inner_nullable_type>)
-                                {
-                                    CHECK(value == flat_index);
-                                }
-                            },
-                            value_variant
-                        );
+                        CHECK_NULLABLE_VARIANT_EQ(value_variant,  static_cast<inner_scalar_type>(flat_index));
                         ++flat_index;
                     }
                 }
@@ -173,10 +202,63 @@ namespace sparrow
 
     TEST_SUITE("list_view_array")
     {
+        TEST_CASE("constructors")
+        {
+           // flat data is [0,1,2,3,4]
+            std::size_t n_flat = 5;
+
+            // create flat array of integers
+            primitive_array<std::int16_t> flat_arr(std::ranges::iota_view{std::size_t(0), std::size_t(n_flat)} | std::views::transform([](auto i){
+                return static_cast<std::int16_t>(i);})
+            );
+
+            // the desired goal array is
+            // [[3,4],[2,3],NAN, [0,1,2]]
+
+            // vector of sizes
+            std::vector<std::uint32_t> sizes = {2, 2,0, 3};
+            std::vector<std::uint32_t> offsets = {3, 2,0,0};
+
+            std::vector<std::uint32_t> where_missing = {2};
+
+
+            // wrap into an detyped array
+            array arr(std::move(flat_arr));
+
+            list_view_array list_view_arr(std::move(arr), offsets, sizes, where_missing);
+
+            // check the size
+            REQUIRE_EQ(list_view_arr.size(), sizes.size());
+
+            // checkm has_value
+            CHECK(list_view_arr[0].has_value());
+            CHECK(list_view_arr[1].has_value());
+            CHECK_FALSE(list_view_arr[2].has_value());
+            CHECK(list_view_arr[3].has_value());
+
+
+            // check the sizes
+            CHECK_EQ(list_view_arr[0].value().size(), sizes[0]);
+            CHECK_EQ(list_view_arr[1].value().size(), sizes[1]);
+            CHECK_EQ(list_view_arr[3].value().size(), sizes[3]);
+
+
+
+            // check the values
+            CHECK_NULLABLE_VARIANT_EQ(list_view_arr[0].value()[0], std::int16_t(3));
+            CHECK_NULLABLE_VARIANT_EQ(list_view_arr[0].value()[1], std::int16_t(4));
+
+            CHECK_NULLABLE_VARIANT_EQ(list_view_arr[1].value()[0], std::int16_t(2));
+            CHECK_NULLABLE_VARIANT_EQ(list_view_arr[1].value()[1], std::int16_t(3));
+
+            CHECK_NULLABLE_VARIANT_EQ(list_view_arr[3].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(list_view_arr[3].value()[1], std::int16_t(1));
+            CHECK_NULLABLE_VARIANT_EQ(list_view_arr[3].value()[2], std::int16_t(2));
+        }
+
         TEST_CASE_TEMPLATE("list_view_array[T]", T, std::uint8_t, std::int32_t, float, double)
         {
             using inner_scalar_type = T;
-            using inner_nullable_type = nullable<inner_scalar_type>;
 
             // number of elements in the flatted array
             const std::size_t n_flat = 10;  // 1+2+3+4
@@ -235,17 +317,7 @@ namespace sparrow
                     for (std::size_t j = 0; j < sizes[i]; ++j)
                     {
                         auto value_variant = list[j];
-                        // visit the variant
-                        std::visit(
-                            [&](auto&& value)
-                            {
-                                if constexpr (std::is_same_v<std::decay_t<decltype(value)>, inner_nullable_type>)
-                                {
-                                    CHECK(value == flat_index);
-                                }
-                            },
-                            value_variant
-                        );
+                        CHECK_NULLABLE_VARIANT_EQ(value_variant, static_cast<inner_scalar_type>(flat_index));
                         ++flat_index;
                     }
                 }
@@ -308,7 +380,6 @@ namespace sparrow
         TEST_CASE_TEMPLATE("fixed_sized_array_list[T]", T, std::uint8_t, std::int32_t, float, double)
         {
             using inner_scalar_type = T;
-            using inner_nullable_type = nullable<inner_scalar_type>;
 
             // number of elements in the flatted array
             const std::size_t n_flat = 20;
@@ -372,17 +443,7 @@ namespace sparrow
                     for (std::size_t j = 0; j < list.size(); ++j)
                     {
                         auto value_variant = list[j];
-                        // visit the variant
-                        std::visit(
-                            [&](auto&& value)
-                            {
-                                if constexpr (std::is_same_v<std::decay_t<decltype(value)>, inner_nullable_type>)
-                                {
-                                    CHECK(value == flat_index);
-                                }
-                            },
-                            value_variant
-                        );
+                        CHECK_NULLABLE_VARIANT_EQ(value_variant, static_cast<inner_scalar_type>(flat_index));
                         ++flat_index;
                     }
                 }
