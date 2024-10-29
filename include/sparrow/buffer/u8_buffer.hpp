@@ -40,6 +40,19 @@ namespace sparrow
             {
                 return std::move(value);
             }
+
+            const T & storage() const
+            {
+                return value;
+            }
+            T & storage()
+            {
+                return value;
+            }
+            void assign(T&& other)
+            {
+                value = std::move(other);
+            }
         };
     }
 
@@ -63,7 +76,24 @@ namespace sparrow
             std::ranges::copy(range, this->begin());
         }
 
-   
+        // move constructor
+        u8_buffer(u8_buffer&& other)
+            : holder_type(std::move(other).extract_storage())
+            , buffer_adaptor_type(holder_type::value)
+        {
+        }
+        // copy constructor
+        u8_buffer(const u8_buffer& other)
+            : holder_type(other.storage())
+            , buffer_adaptor_type(holder_type::value)
+        {
+        }
+
+        // move assignment
+        u8_buffer& operator=(u8_buffer&& other)
+        {
+            holder_type::assign(std::move(other).extract_storage());
+        }
 
         u8_buffer(std::size_t n, T val = T{})
             : holder_type{n * sizeof(T)}
@@ -71,15 +101,6 @@ namespace sparrow
         {
             std::fill(this->begin(), this->end(), val);
         }
-
-        // move constructor
-        u8_buffer(u8_buffer&& other)
-            : holder_type(std::move(other).extract_storage())
-            , buffer_adaptor_type(holder_type::value)
-        {
-        }
-
-    
     };
 
 }
