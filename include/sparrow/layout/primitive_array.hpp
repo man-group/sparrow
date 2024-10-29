@@ -92,7 +92,12 @@ namespace sparrow
 
         template <class ... Args>
         requires(mpl::excludes_copy_and_move_ctor_v<primitive_array<T>, Args...>)
-        primitive_array(Args&& ... args) : base_type(create_proxy(std::forward<Args>(args) ...))
+        explicit primitive_array(Args&& ... args)
+            : base_type(create_proxy(std::forward<Args>(args) ...))
+        {}
+
+        primitive_array(std::initializer_list<inner_value_type> init)
+            : base_type(create_proxy(init))
         {}
 
     private:
