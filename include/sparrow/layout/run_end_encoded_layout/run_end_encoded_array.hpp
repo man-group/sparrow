@@ -93,8 +93,6 @@ namespace sparrow
         // friend classes
         friend class run_encoded_array_iterator<false>;
         friend class run_encoded_array_iterator<true>;
-        template <class T>
-        friend class array_wrapper_impl;
         friend class detail::array_access;
     };
 

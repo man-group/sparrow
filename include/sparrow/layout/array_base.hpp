@@ -131,12 +131,11 @@ namespace sparrow
         const_bitmap_iterator bitmap_cend() const;
 
     private:
+
         arrow_proxy m_proxy;
 
         // friend classes
         friend class layout_iterator<iterator_types>;
-        template <class T>
-        friend class array_wrapper_impl;
         friend class detail::array_access;
     };
 
