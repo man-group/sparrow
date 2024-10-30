@@ -35,3 +35,13 @@ You can directly install it from the sources:
 cmake -DCMAKE_INSTALL_PREFIX=your_install_prefix
 make install
 ```
+
+## Usage
+
+### Initialize data with sparrow and extract C data structures
+
+```cpp
+#include "sparrow/sparrow.hpp"
+
+primitive_array<int> ar = 
+```
