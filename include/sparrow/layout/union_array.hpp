@@ -107,8 +107,6 @@ namespace sparrow
         // map from type-id to child-index
         std::array<std::uint8_t, 256> m_type_id_map;
 
-        template <class T>
-        friend class array_wrapper_impl;
         friend class detail::array_access;
     };  
 

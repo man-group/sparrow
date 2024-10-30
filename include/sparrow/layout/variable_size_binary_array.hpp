@@ -224,9 +224,6 @@ namespace sparrow
 
         explicit variable_size_binary_array(arrow_proxy);
 
-        using base_type::size;
-        using base_type::get_arrow_proxy;
-
     private:
 
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
@@ -445,7 +442,7 @@ namespace sparrow
     variable_size_binary_array<T, CR, OT>::variable_size_binary_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
     {
-        const auto type = get_arrow_proxy().data_type();
+        const auto type = this->get_arrow_proxy().data_type();
         SPARROW_ASSERT_TRUE(type == data_type::STRING || type == data_type::BINARY);  // TODO: Add
                                                                                       // data_type::LARGE_STRING
                                                                                       // and
@@ -472,8 +469,8 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     auto variable_size_binary_array<T, CR, OT>::data(size_type i) const -> const_data_iterator
     {
-        SPARROW_ASSERT_FALSE(get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].size() == 0u);
-        return get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<const data_value_type>() + i;
+        SPARROW_ASSERT_FALSE(this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].size() == 0u);
+        return this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<const data_value_type>() + i;
     }
 
     // template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -524,9 +521,9 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     auto variable_size_binary_array<T, CR, OT>::offset(size_type i) const -> const_offset_iterator
     {
-        SPARROW_ASSERT_TRUE(i < size() + get_arrow_proxy().offset());
-        return get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
-               + static_cast<size_type>(get_arrow_proxy().offset()) + i;
+        SPARROW_ASSERT_TRUE(i < this->size() + this->get_arrow_proxy().offset());
+        return this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
+               + static_cast<size_type>(this->get_arrow_proxy().offset()) + i;
     }
 
     // template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -540,7 +537,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     auto variable_size_binary_array<T, CR, OT>::value(size_type i) const -> inner_const_reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < this->size());
         const OT offset_begin = *offset(i);
         SPARROW_ASSERT_TRUE(offset_begin >= 0);
         const OT offset_end = *offset(i + 1);
@@ -571,6 +568,6 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     auto variable_size_binary_array<T, CR, OT>::value_cend() const -> const_value_iterator
     {
-        return sparrow::next(value_cbegin(), size());
+        return sparrow::next(value_cbegin(), this->size());
     }
 }

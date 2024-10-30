@@ -145,9 +145,6 @@ namespace sparrow
         keys_layout m_keys_layout;
         values_layout p_values_layout;
 
-        template <class T>
-        friend class array_wrapper_impl;
-
         friend class detail::array_access;
     };
 

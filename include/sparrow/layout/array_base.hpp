@@ -33,7 +33,7 @@ namespace sparrow
     /**
      * Base class for array_inner_types specialization
      *
-     * It defines common typs used in the array implementation
+     * It defines common types used in the array implementation
      * classes.
      * */
     struct array_inner_types_base
@@ -42,17 +42,25 @@ namespace sparrow
     };
 
     /**
-     * traits class that must be specialized by array
+     * Traits class that must be specialized by array
      * classes inheriting from array_crtp_base.
+     *
+     * @tparam D the class inheriting from array_crtp_base.
      */
     template <class D>
     struct array_inner_types;
 
     /**
-     * Base class defining common interface for arrays.
+     * Base class defining common immutable interface for arrays
+     * with a bitmap.
      *
-     * This class is a CRTP base class that defines and
-     * implements comme interface for arrays with a bitmap.
+     * This class is a CRTP base class that defines and implements
+     * common immutable interface for arrays with a bitmap. These
+     * arrays hold nullable elements.
+     *
+     * @tparam D The derived type, i.e. the inheriting class for which
+     *           array_crtp_base provides the interface.
+     * @see nullable
      */
     template <class D>
     class array_crtp_base : public crtp_base<D>
@@ -132,12 +140,11 @@ namespace sparrow
         const_bitmap_iterator bitmap_cend() const;
 
     private:
+
         arrow_proxy m_proxy;
 
         // friend classes
         friend class layout_iterator<iterator_types>;
-        template <class T>
-        friend class array_wrapper_impl;
         friend class detail::array_access;
     };
 
@@ -148,12 +155,20 @@ namespace sparrow
      * array_crtp_base implementation *
      **********************************/
 
+    /**
+     * Returns the number of elements in the array.
+     */
     template <class D>
     auto array_crtp_base<D>::size() const -> size_type
     {
         return static_cast<size_type>(get_arrow_proxy().length());
     }
 
+    /**
+     * Returns a constant reference to the element at the specified position
+     * in the array.
+     * @param i the index of the element in the array.
+     */
     template <class D>
     auto array_crtp_base<D>::operator[](size_type i) const -> const_reference
     {
@@ -164,36 +179,61 @@ namespace sparrow
         );
     }
 
+    /**
+     * Returns a constant iterator to the first element of the array.
+     */
     template <class D>
     auto array_crtp_base<D>::begin() const -> const_iterator
     {
         return cbegin();
     }
 
+    /**
+     * Returns a constant iterator to the element following the last
+     * element of the array.
+     */
     template <class D>
     auto array_crtp_base<D>::end() const -> const_iterator
     {
         return cend();
     }
 
+    /**
+     * Returns a constant iterator to the first element of the array.
+     * This method ensures that a constant iterator is returned, even
+     * when called on a non-const array.
+     */
     template <class D>
     auto array_crtp_base<D>::cbegin() const -> const_iterator
     {
         return const_iterator(this->derived_cast().value_cbegin(), bitmap_begin());
     }
 
+    /**
+     * Returns a constant iterator to the element following the last
+     * elemnt of the array. This method ensures that a constant iterator 
+     * is returned, even when called on a non-const array.
+     */
     template <class D>
     auto array_crtp_base<D>::cend() const -> const_iterator
     {
         return const_iterator(this->derived_cast().value_cend(), bitmap_end());
     }
 
+    /**
+     * Returns the validity bitmap of the array (i.e. the "has_value" part of the
+     * nullable elements) as a constant range.
+     */
     template <class D>
     auto array_crtp_base<D>::bitmap() const -> const_bitmap_range
     {
         return const_bitmap_range(bitmap_begin(), bitmap_end());
     }
 
+    /**
+     * Returns the raw values of the array (i.e. the "value" part og the nullable
+     * elements) as a constant range.
+     */
     template <class D>
     auto array_crtp_base<D>::values() const -> const_value_range
     {

@@ -18,6 +18,17 @@
 
 namespace sparrow
 {
+    /**
+     * Base class definining common interface for arrays
+     * with a bitmap.
+     *
+     * This class is a CRTP base class that defines and implements
+     * common interface for arrays with a bitmap. The immutable
+     * interface is inherited from \ref array_crtp_base.
+     *
+     * @tparam D The derived type, i.e. the inheriting class for which
+     *           mutable_array_base provides the interface.
+     */
     template <class D>
     class mutable_array_base : public array_crtp_base<D>
     {
@@ -66,9 +77,6 @@ namespace sparrow
         reference operator[](size_type i);
         using base_type::operator[];
 
-        bitmap_reference has_value(size_type i);
-        using base_type::has_value;
-
         iterator begin();
         iterator end();
 
@@ -100,7 +108,8 @@ namespace sparrow
         mutable_array_base(mutable_array_base&&) = default;
         mutable_array_base& operator=(mutable_array_base&&) = default;
 
-        using base_type::get_arrow_proxy;
+        bitmap_reference has_value(size_type i);
+        using base_type::has_value;
 
         bitmap_iterator bitmap_begin();
         bitmap_iterator bitmap_end();
@@ -108,24 +117,40 @@ namespace sparrow
         friend class layout_iterator<iterator_types>;
     };
 
+    /*************************************
+     * mutable_array_base implementation *
+     *************************************/
+
     template <class D>
     mutable_array_base<D>::mutable_array_base(arrow_proxy proxy)
         : array_crtp_base<D>(std::forward<arrow_proxy>(proxy))
     {
     }
 
+    /**
+     * Returns an iterator to the first element of the array.
+     */
     template <class D>
     auto mutable_array_base<D>::begin() -> iterator
     {
         return iterator(this->derived_cast().value_begin(), this->derived_cast().bitmap_begin());
     }
 
+    /**
+     * Returns a iterator to the element following the last
+     * element of the array.
+     */
     template <class D>
     auto mutable_array_base<D>::end() -> iterator
     {
         return iterator(this->derived_cast().value_end(), this->derived_cast().bitmap_end());
     }
 
+    /**
+     * Returns a reference to the element at the specified position
+     * in the array.
+     * @param i the index of the element in the array.
+     */
     template <class D>
     auto mutable_array_base<D>::operator[](size_type i) -> reference
     {
@@ -143,7 +168,7 @@ namespace sparrow
     template <class D>
     auto mutable_array_base<D>::bitmap_begin() -> bitmap_iterator
     {
-        return sparrow::next(this->derived_cast().get_bitmap().begin(), get_arrow_proxy().offset());
+        return sparrow::next(this->derived_cast().get_bitmap().begin(), this->get_arrow_proxy().offset());
     }
 
     template <class D>
@@ -152,22 +177,45 @@ namespace sparrow
         return sparrow::next(bitmap_begin(), this->size());
     }
 
+    /**
+     * Resizes the array to contain \c new_length elements, does nothing if <tt>new_length == size()</tt>.
+     * If the current size is greater than \c new_length, the array is reduced to its first \c new_length
+     * elements. If the current size is less than \c new_length, additional copies of \c values are appended.
+     *
+     * @param new_length The new size of the array.
+     * @param value The value to initialize the new elements with.
+     */
     template <class D>
     void mutable_array_base<D>::resize(size_type new_length, const value_type& value)
     {
         auto& derived = this->derived_cast();
         derived.resize_bitmap(new_length);
         derived.resize_values(new_length, value.get());
-        get_arrow_proxy().set_length(new_length);  // Must be done after resizing the bitmap and values
+        this->get_arrow_proxy().set_length(new_length);  // Must be done after resizing the bitmap and values
         derived.update();
     }
 
+    /**
+     * Inserts a copy of \c value before \c pos in the array.
+     *
+     * @param pos The iterator before which the element will be inserted (\c pos may be the end() iterator).
+     * @param value The element to insert.
+     * @return An iterator pointing to the inserted value.
+     */
     template <class D>
     auto mutable_array_base<D>::insert(const_iterator pos, const value_type& value) -> iterator
     {
         return insert(pos, value, 1);
     }
 
+    /**
+     * Inserts \c count copies of \c value before \c pos in the array.
+     *
+     * @param pos The iterator before which the elements will be inserted (\c pos may be the end() iterator).
+     * @param value The element to insert.
+     * @param count The number of elements to insert.
+     * @return An iterator pointing to the first element inserted, or \c pos if <tt>count == 0</tt>.
+     */
     template <class D>
     auto mutable_array_base<D>::insert(const_iterator pos, const value_type& value, size_type count) -> iterator
     {
@@ -177,17 +225,32 @@ namespace sparrow
         auto& derived = this->derived_cast();
         derived.insert_bitmap(sparrow::next(this->bitmap_cbegin(), distance), value.has_value(), count);
         derived.insert_value(sparrow::next(derived.value_cbegin(), distance), value.get(), count);
-        get_arrow_proxy().set_length(this->size() + count);  // Must be done after resizing the bitmap and values
+        this->get_arrow_proxy().set_length(this->size() + count);  // Must be done after resizing the bitmap and values
         derived.update();
         return sparrow::next(begin(), distance);
     }
 
+    /**
+     * Inserts elements from initializer list \c values before \c pos in the array.
+     *
+     * @param pos The iterator before which the elements will be inserted (\c pos may be the end() iterator).
+     * @param values The <tt>std::initializer_list</tt> to insert the values from.
+     * @return An iterator pointing to the first element inserted, or \c pos if \c values is empty.
+     */
     template <class D>
     auto mutable_array_base<D>::insert(const_iterator pos, std::initializer_list<value_type> values) -> iterator
     {
         return insert(pos, values.begin(), values.end());
     }
 
+    /**
+     * Inserts elements from range [\c first , \c last ) before \c pos in the array.
+     *
+     * @param pos The iterator before which the elements will be inserted (\c pos may be the end() iterator).
+     * @param first The iterator to the first element to insert.
+     * @param last The iterator to the element following the last element to insert.
+     * @return An iterator pointing to the first element inserted, or \c pos if <tt>first == last</tt>.
+     */
     template <class D>
     template <typename InputIt>
     auto mutable_array_base<D>::insert(const_iterator pos, InputIt first, InputIt last) -> iterator
@@ -223,12 +286,21 @@ namespace sparrow
             value_range.end()
         );
         const difference_type count = std::distance(first, last);
-        get_arrow_proxy().set_length(this->size() + static_cast<size_t>(count));  // Must be done after modifying
-                                                                              // the bitmap and values
+        // The following must be done after modifying the bitmap and values
+        this->get_arrow_proxy().set_length(this->size() + static_cast<size_t>(count));
+
         derived.update();
         return sparrow::next(begin(), distance);
     }
 
+    /**
+     * Inserts elements from range \c range before \c pos in the array.
+     *
+     * @tparam R the type of range to insert.
+     * @param pos The iterator before which the elements will be inserted (\c pos may be the end() iterator).
+     * @param range The range of values to insert.
+     * @return An iterator pointing to the first element inserted, or \c pos if \c range is empty.
+     */
     template <class D>
     template <std::ranges::input_range R>
     auto mutable_array_base<D>::insert(const_iterator pos, const R& range) -> iterator
@@ -236,6 +308,12 @@ namespace sparrow
         return insert(pos, std::ranges::begin(range), std::ranges::end(range));
     }
 
+    /**
+     * Removes the element at \c pos from the array.
+     *
+     * @param pos The iterator to the element to remove.
+     * @return The iterator following the last element removed.
+     */
     template <class D>
     auto mutable_array_base<D>::erase(const_iterator pos) -> iterator
     {
@@ -244,6 +322,13 @@ namespace sparrow
         return erase(pos, pos + 1);
     }
 
+    /**
+     * Removes the elemens in the range [\cfirst , \clast ) from the array.
+     *
+     * @param first The iterator to the first element to remove.
+     * @param last The iterator to the element following the last element to remove.
+     * @return The iterator following the last element removed.
+     */
     template <class D>
     auto mutable_array_base<D>::erase(const_iterator first, const_iterator last) -> iterator
     {
@@ -259,17 +344,25 @@ namespace sparrow
         auto& derived = this->derived_cast();
         derived.erase_bitmap(sparrow::next(this->bitmap_cbegin(), first_index), count);
         derived.erase_values(sparrow::next(derived.value_cbegin(), first_index), count);
-        get_arrow_proxy().set_length(this->size() - count);  // Must be done after modifying the bitmap and values
+        this->get_arrow_proxy().set_length(this->size() - count);  // Must be done after modifying the bitmap and values
         derived.update();
         return sparrow::next(begin(), first_index);
     }
 
+    /**
+     * Appends a copy of \c value to the end of the array.
+     *
+     * @param value The value o the element to append.
+     */
     template <class D>
     void mutable_array_base<D>::push_back(const value_type& value)
     {
         insert(this->cend(), value);
     }
 
+    /**
+     * Removes the last element of the array.
+     */
     template <class D>
     void mutable_array_base<D>::pop_back()
     {

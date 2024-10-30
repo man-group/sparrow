@@ -106,11 +106,7 @@ namespace sparrow
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
-
         arrow_proxy m_proxy;
-
-        template <class T>
-        friend class array_wrapper_impl;
 
         friend class detail::array_access;
     };

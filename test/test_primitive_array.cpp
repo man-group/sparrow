@@ -611,8 +611,9 @@ namespace sparrow
                 CHECK_EQ(ar[2].get(), values[3]);
             }
         }
+        TEST_CASE_TEMPLATE_APPLY(primitive_array_id, testing_types);
 
-        TEST_CASE_TEMPLATE("convenience_constructors", T, std::uint8_t) 
+        TEST_CASE_TEMPLATE_DEFINE("convenience_constructors", T, convenience_constructors_id)
         {
             using inner_value_type = T;
 
@@ -649,9 +650,15 @@ namespace sparrow
                 CHECK_EQ(arr[1].value(), data[1]);
                 CHECK_EQ(arr[3].value(), data[3]);
             }
-            
+            SUBCASE("initializer list")
+            {
+                primitive_array<T> arr = { T(0), T(1), T(2) };
+                CHECK_EQ(arr[0].value(), T(0));
+                CHECK_EQ(arr[1].value(), T(1));
+                CHECK_EQ(arr[2].value(), T(2));
+            }
         }
-        TEST_CASE_TEMPLATE_APPLY(primitive_array_id, testing_types);
+        TEST_CASE_TEMPLATE_APPLY(convenience_constructors_id, testing_types);
 
         TEST_CASE("convenience_constructors_from_iota")
         {   

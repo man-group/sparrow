@@ -92,12 +92,15 @@ namespace sparrow
 
         template <class ... Args>
         requires(mpl::excludes_copy_and_move_ctor_v<primitive_array<T>, Args...>)
-        primitive_array(Args&& ... args) : base_type(create_proxy(std::forward<Args>(args) ...))
+        explicit primitive_array(Args&& ... args)
+            : base_type(create_proxy(std::forward<Args>(args) ...))
         {}
 
-        using base_type::size;
+        primitive_array(std::initializer_list<inner_value_type> init)
+            : base_type(create_proxy(init))
+        {}
 
-        using base_type::get_arrow_proxy;
+    private:
 
         pointer data();
         const_pointer data() const;
@@ -110,8 +113,6 @@ namespace sparrow
 
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
-
-    private:
 
         static arrow_proxy create_proxy(size_type n);
 
@@ -141,7 +142,6 @@ namespace sparrow
             std::ranges::range_value_t<R>, nullable<T>>
         static arrow_proxy create_proxy(R&&);
 
-
         // Modifiers
 
         void resize_values(size_type new_length, inner_value_type value);
@@ -158,9 +158,9 @@ namespace sparrow
         static constexpr size_type DATA_BUFFER_INDEX = 1;
 
         friend class run_end_encoded_array;
-        friend class detail::array_access;
         friend base_type;
         friend base_type::base_type;
+        friend base_type::base_type::base_type;
     };
 
     /**********************************
@@ -195,7 +195,7 @@ namespace sparrow
     primitive_array<T>::primitive_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
     {
-        SPARROW_ASSERT_TRUE(get_arrow_proxy().data_type() == arrow_traits<T>::type_id);
+        SPARROW_ASSERT_TRUE(this->get_arrow_proxy().data_type() == arrow_traits<T>::type_id);
     }
     template <class T>
     template <validity_bitmap_input R >
@@ -281,28 +281,28 @@ namespace sparrow
     template <class T>
     auto primitive_array<T>::data() -> pointer
     {
-        return get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<inner_value_type>()
-               + static_cast<size_type>(get_arrow_proxy().offset());
+        return this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<inner_value_type>()
+               + static_cast<size_type>(this->get_arrow_proxy().offset());
     }
 
     template <class T>
     auto primitive_array<T>::data() const -> const_pointer
     {
-        return get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<const inner_value_type>()
-               + static_cast<size_type>(get_arrow_proxy().offset());
+        return this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<const inner_value_type>()
+               + static_cast<size_type>(this->get_arrow_proxy().offset());
     }
 
     template <class T>
     auto primitive_array<T>::value(size_type i) -> inner_reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < this->size());
         return data()[i];
     }
 
     template <class T>
     auto primitive_array<T>::value(size_type i) const -> inner_const_reference
     {
-        SPARROW_ASSERT_TRUE(i < size());
+        SPARROW_ASSERT_TRUE(i < this->size());
         return data()[i];
     }
 
@@ -315,7 +315,7 @@ namespace sparrow
     template <class T>
     auto primitive_array<T>::value_end() -> value_iterator
     {
-        return sparrow::next(value_begin(), size());
+        return sparrow::next(value_begin(), this->size());
     }
 
     template <class T>
@@ -327,20 +327,20 @@ namespace sparrow
     template <class T>
     auto primitive_array<T>::value_cend() const -> const_value_iterator
     {
-        return sparrow::next(value_cbegin(), size());
+        return sparrow::next(value_cbegin(), this->size());
     }
 
     template <class T>
     buffer_adaptor<T, buffer<uint8_t>&> primitive_array<T>::get_data_buffer()
     {
-        auto& buffers = get_arrow_proxy().get_array_private_data()->buffers();
+        auto& buffers = this->get_arrow_proxy().get_array_private_data()->buffers();
         return make_buffer_adaptor<T>(buffers[DATA_BUFFER_INDEX]);
     }
 
     template <class T>
     void primitive_array<T>::resize_values(size_type new_length, inner_value_type value)
     {
-        const size_t new_size = new_length + static_cast<size_t>(get_arrow_proxy().offset());
+        const size_t new_size = new_length + static_cast<size_t>(this->get_arrow_proxy().offset());
         get_data_buffer().resize(new_size, value);
     }
 
@@ -350,7 +350,7 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= value_cend());
-        const auto distance = std::distance(value_cbegin(), sparrow::next(pos, get_arrow_proxy().offset()));
+        const auto distance = std::distance(value_cbegin(), sparrow::next(pos, this->get_arrow_proxy().offset()));
         get_data_buffer().insert(pos, count, value);
         return sparrow::next(this->value_begin(), distance);
     }
@@ -362,7 +362,7 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= value_cend());
-        const auto distance = std::distance(value_cbegin(), sparrow::next(pos, get_arrow_proxy().offset()));
+        const auto distance = std::distance(value_cbegin(), sparrow::next(pos, this->get_arrow_proxy().offset()));
         get_data_buffer().insert(pos, first, last);
         return sparrow::next(this->value_begin(), distance);
     }
@@ -373,7 +373,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(this->value_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos < this->value_cend());
         const size_type distance = static_cast<size_t>(
-            std::distance(this->value_cbegin(), sparrow::next(pos, get_arrow_proxy().offset()))
+            std::distance(this->value_cbegin(), sparrow::next(pos, this->get_arrow_proxy().offset()))
         );
         auto data_buffer = get_data_buffer();
         const auto first = sparrow::next(data_buffer.cbegin(), distance);

@@ -18,6 +18,7 @@
 #include <variant>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
+#include "sparrow/layout/array_access.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/memory.hpp"
 
@@ -250,13 +251,13 @@ namespace sparrow
     template <class T>
     arrow_proxy& array_wrapper_impl<T>::get_arrow_proxy_impl()
     {
-        return p_array->get_arrow_proxy();
+        return detail::array_access::get_arrow_proxy(*p_array);
     }
 
     template <class T>
     const arrow_proxy& array_wrapper_impl<T>::get_arrow_proxy_impl() const
     {
-        return p_array->get_arrow_proxy();
+        return detail::array_access::get_arrow_proxy(*p_array);
     }
 
 
@@ -269,7 +270,7 @@ namespace sparrow
     template <class T>
     auto array_wrapper_impl<T>::extract_arrow_proxy_impl() -> arrow_proxy
     {
-        return std::move(*p_array).extract_arrow_proxy();
+        return detail::array_access::extract_arrow_proxy(std::move(*p_array));
     }
 
     template <class T>

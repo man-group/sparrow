@@ -14,27 +14,35 @@
 
 #pragma once
 
-
 namespace sparrow
 {
-    template<class DERIVED>
+    /**
+     * Base class for CRTP base classes.
+     *
+     * This class provides convenient derived cast
+     * methods for CRTP base classes.
+     *
+     * @tparam D The derived type.
+     */
+    template<class D>
     class crtp_base
     {
     protected:
-        using derived_type = DERIVED;
+
+        using derived_type = D;
 
         derived_type& derived_cast();
         const derived_type& derived_cast() const;
     };
 
-    template<class DERIVED>
-    auto crtp_base<DERIVED>::derived_cast() -> derived_type&
+    template<class D>
+    auto crtp_base<D>::derived_cast() -> derived_type&
     {
         return static_cast<derived_type&>(*this);
     }
 
-    template<class DERIVED>
-    auto crtp_base<DERIVED>::derived_cast() const -> const derived_type&
+    template<class D>
+    auto crtp_base<D>::derived_cast() const -> const derived_type&
     {
         return static_cast<const derived_type&>(*this);
     }
