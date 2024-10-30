@@ -16,12 +16,12 @@
 
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
+#include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/layout/null_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 
-#include "sparrow/layout/array_access.hpp"
 
 namespace sparrow
 {
@@ -49,14 +49,6 @@ namespace sparrow
         SPARROW_API array(ArrowArray&& array, ArrowSchema* schema);
         SPARROW_API array(ArrowArray* array, ArrowSchema* schema);
         
-        SPARROW_API bool owns_arrow_array() const;
-        SPARROW_API array& get_arrow_array(ArrowArray*&);
-        SPARROW_API array&& extract_arrow_array(ArrowArray&) &&;
-
-        SPARROW_API bool owns_arrow_schema() const;
-        SPARROW_API array& get_arrow_schema(ArrowSchema*&);
-        SPARROW_API array&& extract_arrow_schema(ArrowSchema&) &&;
-
         SPARROW_API size_type size() const;
         SPARROW_API const_reference operator[](size_type) const;
 
@@ -67,7 +59,9 @@ namespace sparrow
         visit_result_t<F> visit(F&& func) const;
 
     private:
-        SPARROW_API cloning_ptr<array_wrapper> extract_array_wrapper() &&;
+
+        SPARROW_API arrow_proxy& get_arrow_proxy();
+        SPARROW_API const arrow_proxy& get_arrow_proxy() const;
 
         cloning_ptr<array_wrapper> p_array = nullptr;
 
@@ -76,5 +70,32 @@ namespace sparrow
 
     SPARROW_API
     bool operator==(const array& lhs, const array& rhs);
+
+    template <class A>
+    concept layout_or_array = layout<A> or std::same_as<A, array>;
+
+    template <layout_or_array A>
+    bool owns_arrow_array(const A& a);
+
+    template <layout_or_array A>
+    bool owns_arrow_schema(const A& a);
+
+    template <layout_or_array A>
+    ArrowArray* get_arrow_array(A& a);
+
+    template <layout_or_array A>
+    ArrowSchema* get_arrow_schema(A& a);
+
+    template <layout_or_array A>
+    std::pair<ArrowArray*, ArrowSchema*> get_arrow_structures(A& a);
+
+    template <layout_or_array A>
+    ArrowArray extract_arrow_array(A&& a);
+
+    template <layout_or_array A>
+    ArrowSchema extract_arrow_schema(A&& a);
+
+    template <layout_or_array A>
+    std::pair<ArrowArray, ArrowSchema> extract_arrow_structures(A&& a);
 }
 

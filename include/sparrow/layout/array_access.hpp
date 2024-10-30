@@ -34,19 +34,5 @@ namespace sparrow::detail
         {
             return array.get_arrow_proxy();
         }
-
-        template<class ARRAY>
-        requires(std::is_rvalue_reference_v<ARRAY&&>)
-        static sparrow::arrow_proxy extract_arrow_proxy(ARRAY&& array)
-        {
-            return std::move(array).extract_arrow_proxy();
-        }
-
-        template<class ARRAY>
-        requires(std::is_rvalue_reference_v<ARRAY&&>)
-        static auto extract_array_wrapper(ARRAY&& array)
-        {
-            return std::move(array).extract_array_wrapper();
-        }
     };
 }
