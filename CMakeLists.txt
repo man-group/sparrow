@@ -190,6 +190,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/array_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_array_schema_proxy.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/record_batch.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
 )
 
@@ -197,9 +198,7 @@ if (SPARROW_TARGET_32BIT)
     set(SPARROW_SRC
         ${SPARROW_SOURCE_DIR}/dummy32bit.cpp
     )
-
 else()
-
     set(SPARROW_SRC
         ${SPARROW_SOURCE_DIR}/array_factory.cpp
         ${SPARROW_SOURCE_DIR}/array_helper.cpp
@@ -209,10 +208,10 @@ else()
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
         ${SPARROW_SOURCE_DIR}/list_value.cpp
+        ${SPARROW_SOURCE_DIR}/record_batch.cpp
         ${SPARROW_SOURCE_DIR}/run_encoded_array.cpp
         ${SPARROW_SOURCE_DIR}/struct_value.cpp
     )
-
 endif()
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})

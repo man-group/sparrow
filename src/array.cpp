@@ -81,5 +81,23 @@ namespace sparrow
     {
         return std::move(p_array);
     }
+
+    bool operator==(const array& lhs, const array& rhs)
+    {
+        return lhs.visit([&rhs](const auto& typed_lhs) -> bool
+        {
+            return rhs.visit([&typed_lhs](const auto& typed_rhs) -> bool
+            {
+                if constexpr (!std::same_as<decltype(typed_lhs), decltype(typed_rhs)>)
+                {
+                    return false;
+                }
+                else
+                {
+                    return typed_lhs == typed_rhs;
+                }
+            });
+        });
+    }
 }
 

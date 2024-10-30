@@ -39,7 +39,7 @@ namespace sparrow
     }
 
     template <class F>
-    array::visit_result_t<F> array::visit(F&& func)
+    array::visit_result_t<F> array::visit(F&& func) const
     {
         return sparrow::visit(std::forward<F>(func), *p_array);
     }

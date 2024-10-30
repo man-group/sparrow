@@ -73,6 +73,7 @@ else()
         test_null_array.cpp
         test_nullable.cpp
         test_primitive_array.cpp
+        test_record_batch.cpp
         test_struct_array.cpp
         test_traits.cpp
         test_utils_buffers.cpp
