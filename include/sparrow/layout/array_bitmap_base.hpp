@@ -19,9 +19,14 @@
 
 namespace sparrow
 {
-    /*
+    /**
      * Base class for arrays using a validity buffer for
      * defining their bitmap.
+     *
+     * @tparam D The derived type, i.e. the inheriting class for which
+     *           array_bitmap_base_impl provides the interface.
+     * @tparam is_mutable A boolean indicating whether the validity buffer
+     *                    is mutable.
      */
     template <class D, bool is_mutable>
     class array_bitmap_base_impl
@@ -43,8 +48,6 @@ namespace sparrow
         using const_bitmap_range = typename base_type::const_bitmap_range;
 
         using iterator_tag = typename base_type::iterator_tag;
-
-        using base_type::operator[];
 
     protected:
 
@@ -89,9 +92,21 @@ namespace sparrow
         friend mutable_array_base<D>;
     };
 
+    /**
+     * Convenient typedef to be used as a crtp base class for
+     * arrays using an immutable validity buffer.
+     *
+     * @tparam D The derived type,
+     */
     template <class D>
     using array_bitmap_base = array_bitmap_base_impl<D, false>;
 
+    /**
+     * Convenient typedef to be used as a crtp base class for
+     * arrays using a mutable validity buffer.
+     *
+     * @tparam D The derived type,
+     */
     template <class D>
     using mutable_array_bitmap_base = array_bitmap_base_impl<D, true>;
 
