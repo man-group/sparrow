@@ -139,8 +139,6 @@ namespace sparrow
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
-        arrow_proxy extract_arrow_proxy() &&;
-
         arrow_proxy m_proxy;
         keys_layout m_keys_layout;
         values_layout p_values_layout;
@@ -311,12 +309,6 @@ namespace sparrow
         return m_proxy;
     }
 
-    template <std::integral IT>
-    auto dictionary_encoded_array<IT>::extract_arrow_proxy() && -> arrow_proxy
-    {
-        return std::move(m_proxy);
-    }
-    
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::get_arrow_proxy() const -> const arrow_proxy&
     {

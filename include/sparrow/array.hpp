@@ -43,4 +43,54 @@ namespace sparrow
     {
         return sparrow::visit(std::forward<F>(func), *p_array);
     }
+
+    template <layout_or_array A>
+    bool owns_arrow_array(const A& a)
+    {
+        return detail::array_access::get_arrow_proxy(a).owns_array();
+    }
+
+    template <layout_or_array A>
+    bool owns_arrow_schema(const A& a)
+    {
+        return detail::array_access::get_arrow_proxy(a).owns_schema();
+    }
+
+    template <layout_or_array A>
+    ArrowArray* get_arrow_array(A& a)
+    {
+        return &(detail::array_access::get_arrow_proxy(a).array());
+    }
+
+    template <layout_or_array A>
+    ArrowSchema* get_arrow_schema(A& a)
+    {
+        return &(detail::array_access::get_arrow_proxy(a).schema());
+    }
+
+    template <layout_or_array A>
+    std::pair<ArrowArray*, ArrowSchema*> get_arrow_structures(A& a)
+    {
+        arrow_proxy& proxy = detail::array_access::get_arrow_proxy(a);
+        return std::make_pair(&(proxy.array()), &(proxy.schema()));
+    }
+
+    template <layout_or_array A>
+    ArrowArray extract_arrow_array(A&& a)
+    {
+        return detail::array_access::get_arrow_proxy(a).extract_array();
+    }
+
+    template <layout_or_array A>
+    ArrowSchema extract_arrow_schema(A&& a)
+    {
+        return detail::array_access::get_arrow_proxy(a).extract_schema();
+    }
+
+    template <layout_or_array A>
+    std::pair<ArrowArray, ArrowSchema> extract_arrow_structures(A&& a)
+    {
+        arrow_proxy& proxy = detail::array_access::get_arrow_proxy(a);
+        return std::make_pair(proxy.extract_array(), proxy.extract_schema());
+    }
 }

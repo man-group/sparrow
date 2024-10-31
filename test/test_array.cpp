@@ -117,8 +117,8 @@ namespace sparrow
                 using scalar_value_type = typename AR::inner_value_type;
                 array ar = test::make_array<scalar_value_type>(size);
 
-                CHECK(ar.owns_arrow_array());
-                CHECK(ar.owns_arrow_schema());
+                CHECK(owns_arrow_array(ar));
+                CHECK(owns_arrow_schema(ar));
             }
 
             SUBCASE("not owning")
@@ -131,8 +131,8 @@ namespace sparrow
                 test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
                 array a(&ar, &sc);
 
-                CHECK(!a.owns_arrow_array());
-                CHECK(!a.owns_arrow_schema());
+                CHECK(!owns_arrow_array(a));
+                CHECK(!owns_arrow_schema(a));
             }
         }
         TEST_CASE_TEMPLATE_APPLY(owns_arrow_structure_id, testing_types);
@@ -155,9 +155,7 @@ namespace sparrow
                 test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
                 array a(&ar, &sc);
 
-                ArrowSchema* sc_ptr = nullptr;
-                ArrowArray* ar_ptr = nullptr;
-                a.get_arrow_array(ar_ptr).get_arrow_schema(sc_ptr);
+                auto [ar_ptr, sc_ptr] = get_arrow_structures(a);
                 // Now sc_ptr and ar_ptr points to &sc and &ar
 
                 auto pa = primitive_array<scalar_value_type>(arrow_proxy(ar_ptr, sc_ptr));
@@ -177,9 +175,7 @@ namespace sparrow
                 test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
                 array a(std::move(ar), std::move(sc));
 
-                ArrowSchema* sc_ptr = nullptr;
-                ArrowArray* ar_ptr = nullptr;
-                a.get_arrow_array(ar_ptr).get_arrow_schema(sc_ptr);
+                auto [ar_ptr, sc_ptr] = get_arrow_structures(a);
                 // Now sc_ptr and ar_ptr points to &sc and &ar
 
                 auto pa = primitive_array<scalar_value_type>(arrow_proxy(ar_ptr, sc_ptr));
@@ -210,10 +206,8 @@ namespace sparrow
                 test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
                 array a(&ar, &sc);
 
-                ArrowSchema sc_dst;
-                ArrowArray ar_dst;
-                CHECK_THROWS(std::move(a).extract_arrow_array(ar_dst));
-                CHECK_THROWS(std::move(a).extract_arrow_schema(sc_dst));
+                CHECK_THROWS(extract_arrow_array(std::move(a)));
+                CHECK_THROWS(extract_arrow_schema(std::move(a)));
 
                 sc.release(&sc);
                 ar.release(&ar);
@@ -226,9 +220,7 @@ namespace sparrow
                 test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
                 array a(std::move(ar), std::move(sc));
 
-                ArrowSchema sc_dst;
-                ArrowArray ar_dst;
-                std::move(a).extract_arrow_array(ar_dst).extract_arrow_schema(sc_dst);
+                auto [ar_dst, sc_dst] = extract_arrow_structures(std::move(a));
 
                 auto pa = primitive_array<scalar_value_type>(arrow_proxy(std::move(ar_dst), std::move(sc_dst)));
 

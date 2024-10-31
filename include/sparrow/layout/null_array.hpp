@@ -102,7 +102,6 @@ namespace sparrow
 
         difference_type ssize() const;
 
-        [[nodiscard]] arrow_proxy extract_arrow_proxy() &&;
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
@@ -242,11 +241,6 @@ namespace sparrow
         return m_proxy;
     }
 
-    inline arrow_proxy null_array::extract_arrow_proxy() &&
-    {
-        return std::move(m_proxy);
-    }
-  
     inline const arrow_proxy& null_array::get_arrow_proxy() const
     {
         return m_proxy;

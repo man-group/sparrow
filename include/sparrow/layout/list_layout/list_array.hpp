@@ -425,9 +425,7 @@ namespace sparrow
         const auto size = list_offsets.size() - 1;
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
 
-        ArrowArray flat_arr{};
-        ArrowSchema flat_schema{};
-        std::move(flat_values).extract_arrow_array(flat_arr).extract_arrow_schema(flat_schema);
+        auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
 
         const auto null_count = vbitmap.null_count();
 
@@ -515,9 +513,7 @@ namespace sparrow
         const auto size = list_sizes.size();
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
 
-        ArrowArray flat_arr{};
-        ArrowSchema flat_schema{};
-        std::move(flat_values).extract_arrow_array(flat_arr).extract_arrow_schema(flat_schema);
+        auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
 
         const auto null_count = vbitmap.null_count();
 
@@ -630,9 +626,7 @@ namespace sparrow
         const auto size = flat_values.size() / static_cast<std::size_t>(list_size);
         auto vbitmap = ensure_validity_bitmap(size, std::forward<R>(validity_input));
 
-        ArrowArray flat_arr{};
-        ArrowSchema flat_schema{};
-        std::move(flat_values).extract_arrow_array(flat_arr).extract_arrow_schema(flat_schema);
+        auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
 
         const auto null_count = vbitmap.null_count();
 

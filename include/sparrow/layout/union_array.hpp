@@ -96,7 +96,6 @@ namespace sparrow
         union_array_crtp_base(self_type&& rhs) = default;
         self_type& operator=(self_type&& rhs) = default;
 
-        arrow_proxy extract_arrow_proxy() &&;
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
@@ -171,11 +170,6 @@ namespace sparrow
     arrow_proxy& union_array_crtp_base<DERIVED>::get_arrow_proxy()
     {
         return m_proxy;
-    }
-    template <class DERIVED>
-    arrow_proxy union_array_crtp_base<DERIVED>::extract_arrow_proxy() &&
-    {
-        return std::move(m_proxy);
     }
 
     template <class DERIVED>
