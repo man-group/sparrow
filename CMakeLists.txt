@@ -222,14 +222,12 @@ if (UNIX)
     set_target_properties(
         sparrow
         PROPERTIES
-        PUBLIC_HEADER "${SPARROW_HEADERS}"
         COMPILE_OPTIONS "-fvisibility=hidden"
     )
 else ()
     set_target_properties(
         sparrow
         PROPERTIES
-        PUBLIC_HEADER "${SPARROW_HEADERS}"
         COMPILE_DEFINITIONS "SPARROW_EXPORTS"
     )
 endif ()
