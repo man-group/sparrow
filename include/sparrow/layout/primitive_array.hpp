@@ -103,11 +103,43 @@ namespace sparrow
 
         explicit primitive_array(arrow_proxy);
 
+        /**
+         * Constructs a primitive array with the passed range of values and an optional bitmap.
+         *
+         * The first argument can be any range of values as long as its value type is convertible
+         * to \c T.
+         * The second argument can be:
+         * - a bitmap range, i.e. a range of boolean-like values indicating the non-missing values.
+         *   The bitmap range and the value range must have the same size.
+         * \code{.cpp}
+         * std::vector<bool> a_bitmap(10, true);
+         * a_bitmap[3] = false;
+         * primitive_array<int> pr(std::ranges::iota_view{0, 10}, a_bitmap);
+         * \endcode
+         * - a range of indices indicating the missing values.
+         * \code{.cpp}
+         * std::vector<std::size_t> false_pos  { 3, 8 };
+         * primitive_array<int> pr(std::ranges::iota_view{0, 10}, a_bitmap);
+         * \endcode
+         * - omitted: this is equivalent as passing a bitmap range full of \c true.
+         * \code{.cpp}
+         * primitive_array<int> pr((std::ranges::iota_view{0, 10});
+         * \endcode
+         */
         template <class ... Args>
         requires(mpl::excludes_copy_and_move_ctor_v<primitive_array<T>, Args...>)
-        explicit primitive_array(Args&& ... args);
+        explicit primitive_array(Args&& ... args)
+            : base_type(create_proxy(std::forward<Args>(args) ...))
+        {
+        }
 
-        primitive_array(std::initializer_list<inner_value_type> init);
+        /**
+         * Constructs a primitive array from an \c initializer_list of raw values.
+         */
+        primitive_array(std::initializer_list<inner_value_type> init)
+            : base_type(create_proxy(init))
+        {
+        }
 
     private:
 
@@ -205,46 +237,6 @@ namespace sparrow
         : base_type(std::move(proxy))
     {
         SPARROW_ASSERT_TRUE(this->get_arrow_proxy().data_type() == arrow_traits<T>::type_id);
-    }
-
-    /**
-     * Constructs a primitive array with the passed range of values and an optional bitmap.
-     *
-     * The first argument can be any range of values as long as its value type is convertible
-     * to \c T.
-     * The second argument can be:
-     * - a bitmap range, i.e. a range of boolean-like values indicating the non-missing values.
-     *   The bitmap range and the value range must have the same size.
-     * \code{.cpp}
-     * std::vector<bool> a_bitmap(10, true);
-     * a_bitmap[3] = false;
-     * primitive_array<int> pr(std::ranges::iota_view{0, 10}, a_bitmap);
-     * \endcode
-     * - a range of indices indicating the missing values.
-     * \code{.cpp}
-     * std::vector<std::size_t> false_pos  { 3, 8 };
-     * primitive_array<int> pr(std::ranges::iota_view{0, 10}, a_bitmap);
-     * \endcode
-     * - omitted: this is equivalent as passing a bitmap range full of \c true.
-     * \code{.cpp}
-     * primitive_array<int> pr((std::ranges::iota_view{0, 10});
-     * \endcode
-     */
-    template <class T>
-    template <class ... Args>
-    requires(mpl::excludes_copy_and_move_ctor_v<primitive_array<T>, Args...>)
-    primitive_array<T>::primitive_array(Args&& ... args)
-        : base_type(create_proxy(std::forward<Args>(args) ...))
-    {
-    }
-
-    /**
-     * Constructs a primitive array from an \c initializer_list of raw values.
-     */
-    template <class T>
-    primitive_array<T>::primitive_array(std::initializer_list<inner_value_type> init)
-        : base_type(create_proxy(init))
-    {
     }
     
     template <class T>
