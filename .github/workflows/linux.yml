@@ -20,12 +20,12 @@ jobs:
       fail-fast: false
       matrix:
         sys:
-        - {image: ubuntu-22.04, compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON'}
+        - {image: ubuntu-24.04, compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON'}
         # - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
-        - {image: ubuntu-22.04, compiler: clang, version: '18', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON'}
+        - {image: ubuntu-24.04, compiler: clang, version: '18', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON'}
         # - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
 
-        - {image: ubuntu-22.04, compiler: gcc, version: '12', config-flags: '', date-polyfill: 'ON'}
+        - {image: ubuntu-24.04, compiler: gcc, version: '12', config-flags: '', date-polyfill: 'ON'}
         - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON'}
         - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'OFF'}
 
