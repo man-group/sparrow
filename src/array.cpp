@@ -52,7 +52,7 @@ namespace sparrow
     {
         return p_array->get_arrow_proxy();
     }
-    
+
     bool operator==(const array& lhs, const array& rhs)
     {
         return lhs.visit([&rhs](const auto& typed_lhs) -> bool

@@ -14,11 +14,10 @@
 
 #pragma once
 
-
+#include <cstddef>
 #include <ranges>
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
-#include <cstddef>
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
@@ -33,7 +32,6 @@ namespace sparrow
 {
     template <class T>
     class primitive_array;
-
 
     template <class T>
     struct array_inner_types<primitive_array<T>> : array_inner_types_base
@@ -55,6 +53,22 @@ namespace sparrow
         using iterator_tag = std::random_access_iterator_tag;
     };
 
+    /**
+     * Array of values of whose type has fixed binary size.
+     *
+     * The type of the values in the array can be a primitive type, whose size is known at compile
+     * time, or an arbitrary binary type whose fixed size is known at runtime only.
+     * The current implementation supports types whose size is known at compile time only.
+     *
+     * As the other arrays in sparrow, \c primitive_array<T> provides an API as if it was holding
+     * \c nullable<T> values instead of \c T values.
+     *
+     * Internally, the array contains a validity bitmap and a contiguous memory buffer
+     * holding the values.
+     *
+     * @tparam T the type of the values in the array.
+     * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
+     */
     template <class T>
     class primitive_array final : public mutable_array_bitmap_base<primitive_array<T>>
     {
@@ -90,15 +104,43 @@ namespace sparrow
 
         explicit primitive_array(arrow_proxy);
 
+        /**
+         * Constructs a primitive array with the passed range of values and an optional bitmap.
+         *
+         * The first argument can be any range of values as long as its value type is convertible
+         * to \c T.
+         * The second argument can be:
+         * - a bitmap range, i.e. a range of boolean-like values indicating the non-missing values.
+         *   The bitmap range and the value range must have the same size.
+         * ```cpp
+         * std::vector<bool> a_bitmap(10, true);
+         * a_bitmap[3] = false;
+         * primitive_array<int> pr(std::ranges::iota_view{0, 10}, a_bitmap);
+         * ```
+         * - a range of indices indicating the missing values.
+         * ```cpp
+         * std::vector<std::size_t> false_pos  { 3, 8 };
+         * primitive_array<int> pr(std::ranges::iota_view{0, 10}, a_bitmap);
+         * ```
+         * - omitted: this is equivalent as passing a bitmap range full of \c true.
+         * ```cpp
+         * primitive_array<int> pr((std::ranges::iota_view{0, 10});
+         * ```
+         */
         template <class ... Args>
         requires(mpl::excludes_copy_and_move_ctor_v<primitive_array<T>, Args...>)
         explicit primitive_array(Args&& ... args)
             : base_type(create_proxy(std::forward<Args>(args) ...))
-        {}
+        {
+        }
 
+        /**
+         * Constructs a primitive array from an \c initializer_list of raw values.
+         */
         primitive_array(std::initializer_list<inner_value_type> init)
             : base_type(create_proxy(init))
-        {}
+        {
+        }
 
     private:
 
@@ -197,6 +239,7 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(this->get_arrow_proxy().data_type() == arrow_traits<T>::type_id);
     }
+    
     template <class T>
     template <validity_bitmap_input R >
     auto primitive_array<T>::create_proxy(
