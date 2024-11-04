@@ -51,12 +51,13 @@ file(STRINGS "${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp" sparrow
      REGEX "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH)")
 foreach(ver ${sparrow_version_defines})
     if(ver MATCHES "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH) = ([0-9]+);$")
-        set(SPARROW_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
+        set(PROJECT_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
     endif()
 endforeach()
-set(${PROJECT_NAME}_VERSION
-    ${SPARROW_VERSION_MAJOR}.${SPARROW_VERSION_MINOR}.${SPARROW_VERSION_PATCH})
-message(STATUS "Building sparrow v${${PROJECT_NAME}_VERSION}")
+set(CMAKE_PROJECT_VERSION
+    ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+
+message(STATUS "Building sparrow v${CMAKE_PROJECT_VERSION}")
 
 # Build options
 # =============
@@ -216,8 +217,10 @@ endif()
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
 
+set_target_properties(sparrow PROPERTIES VERSION ${CMAKE_PROJECT_VERSION}
+                              SOVERSION ${PROJECT_VERSION_MAJOR})
 
-# TODO: handle static lib, so name and versionning
+# TODO: handle static lib
 if (UNIX)
     set_target_properties(
         sparrow
@@ -289,7 +292,7 @@ configure_package_config_file(${PROJECT_NAME}Config.cmake.in
 set(_SPARROW_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 unset(CMAKE_SIZEOF_VOID_P)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-                                 VERSION ${${PROJECT_NAME}_VERSION}
+                                 VERSION ${CMAKE_PROJECT_VERSION}
                                  COMPATIBILITY AnyNewerVersion)
 set(CMAKE_SIZEOF_VOID_P ${_SPARROW_CMAKE_SIZEOF_VOID_P})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
