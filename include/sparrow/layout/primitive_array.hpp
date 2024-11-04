@@ -54,10 +54,11 @@ namespace sparrow
     };
 
     /**
-     * Array of values having the same binary size.
+     * Array of values of whose type has fixed binary size.
      *
-     * The \c primitive_array class represents an array of values having the same binary size.
-     * The current implementation supports types whose size is known at compile only.
+     * The type of the values in the array can be a primitive type, whose size is known at compile
+     * time, or an arbitrary binary type whose fixed size is known at runtime only.
+     * The current implementation supports types whose size is known at compile time only.
      *
      * As the other arrays in sparrow, \c primitive_array<T> provides an API as if it was holding
      * \c nullable<T> values instead of \c T values.
@@ -111,20 +112,20 @@ namespace sparrow
          * The second argument can be:
          * - a bitmap range, i.e. a range of boolean-like values indicating the non-missing values.
          *   The bitmap range and the value range must have the same size.
-         * \code{.cpp}
+         * ```cpp
          * std::vector<bool> a_bitmap(10, true);
          * a_bitmap[3] = false;
          * primitive_array<int> pr(std::ranges::iota_view{0, 10}, a_bitmap);
-         * \endcode
+         * ```
          * - a range of indices indicating the missing values.
-         * \code{.cpp}
+         * ```cpp
          * std::vector<std::size_t> false_pos  { 3, 8 };
          * primitive_array<int> pr(std::ranges::iota_view{0, 10}, a_bitmap);
-         * \endcode
+         * ```
          * - omitted: this is equivalent as passing a bitmap range full of \c true.
-         * \code{.cpp}
+         * ```cpp
          * primitive_array<int> pr((std::ranges::iota_view{0, 10});
-         * \endcode
+         * ```
          */
         template <class ... Args>
         requires(mpl::excludes_copy_and_move_ctor_v<primitive_array<T>, Args...>)

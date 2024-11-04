@@ -52,7 +52,7 @@ namespace sparrow
          * Constructs an array from the given typed layout. The ownership
          * of the layout is transferred to the array.
          *
-         * @param a An rvalue refernece to the typed layout.
+         * @param a An rvalue reference to the typed layout.
          */
         template <layout A>
         requires (not std::is_lvalue_reference_v<A>)
@@ -80,7 +80,7 @@ namespace sparrow
 
         /**
          * Constructs an array from the given Arrow C structures, whose ownerhips
-         * is tranferred to the array. The user should not use \c array nor \c schema
+         * is transferred to the array. The user should not use \c array nor \c schema
          * after calling this constructor.
          *
          * @param array The ArrowArray structure to transfer into the array.
@@ -101,7 +101,7 @@ namespace sparrow
         /**
          * Constructs an array from the given Arrow C structures. Both structures
          * are referenced from the array and can still be used normally after calling
-         * this cnstructor.
+         * this constructor.
          *
          * @param array The arrowArray structure to reference in the array.
          * @param schema The ArrowSchema to reference in the array.
@@ -109,17 +109,16 @@ namespace sparrow
         SPARROW_API array(ArrowArray* array, ArrowSchema* schema);
         
         /**
-         * Return the number of elements in the array.
+         * @returns the number of elements in the array.
          */
         SPARROW_API size_type size() const;
 
         /**
-         * Returns a constant reference to the element at specified \c index.
+         * @returns a constant reference to the element at specified \c index.
          *
          * @param index The position of the element in the array.
-         * @return A constant reference to the element.
          */
-        SPARROW_API const_reference operator[](size_type) const;
+        SPARROW_API const_reference operator[](size_type index) const;
 
         template <class F>
         using visit_result_t = std::invoke_result_t<F, null_array>;
@@ -146,6 +145,14 @@ namespace sparrow
         friend class detail::array_access;
     };
 
+    /**
+     * Compares the content of two arrays.
+     *
+     * @param lhs the first array to compare
+     * @param rhs the second array to compare
+     * @return \c true if the contents of both arrays
+     * are equal, false otherwise.
+     */
     SPARROW_API
     bool operator==(const array& lhs, const array& rhs);
 
