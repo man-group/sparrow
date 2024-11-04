@@ -40,11 +40,11 @@ namespace sparrow
 
         constexpr layout_element_functor() = default;
 
-        constexpr explicit layout_element_functor(storage_type layout)
-            : p_layout(layout)
+        constexpr explicit layout_element_functor(storage_type layout_)
+            : p_layout(layout_)
         {
         }
-        
+
         return_type operator()(std::size_t i) const
         {
             return p_layout->operator[](i);
@@ -208,7 +208,7 @@ namespace sparrow
     {
         return m_proxy.length();
     }
-    
+
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::operator[](size_type i) const -> const_reference
     {
@@ -229,7 +229,7 @@ namespace sparrow
     {
         return iterator(functor_type(this), 0u);
     }
-    
+
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::end() -> iterator
     {
@@ -241,7 +241,7 @@ namespace sparrow
     {
         return cbegin();
     }
-    
+
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::end() const -> const_iterator
     {
@@ -270,7 +270,7 @@ namespace sparrow
     /*template <std::integral IT>
     auto dictionary_encoded_array<IT>::dummy_inner_const_reference() const -> inner_const_reference
     {
-        static const inner_const_reference instance = 
+        static const inner_const_reference instance =
             std::visit([](const auto& val) -> inner_const_reference { return val; }, dummy_inner_value());
         return instance;
     }*/
@@ -278,7 +278,7 @@ namespace sparrow
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::dummy_const_reference() const -> const_reference
     {
-        static const const_reference instance = 
+        static const const_reference instance =
             std::visit([](const auto& val) -> const_reference {
                 using inner_ref = typename arrow_traits<std::decay_t<decltype(val)>>::const_reference;
                 return nullable<inner_ref>(inner_ref(val), false);
@@ -296,7 +296,7 @@ namespace sparrow
         arrow_proxy ar_dictionary{&(dictionary->array()), &(dictionary->schema())};
         return array_factory(std::move(ar_dictionary));
     }
-    
+
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::create_keys_layout(arrow_proxy& proxy) -> keys_layout
     {
