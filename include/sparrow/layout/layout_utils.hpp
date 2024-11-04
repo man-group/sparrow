@@ -31,8 +31,8 @@ namespace sparrow::detail
         using value_type = VALUE_TYPE;
         using layout_type = LAYOUT_TYPE;
 
-        constexpr explicit layout_value_functor(layout_type* layout = nullptr)
-            : p_layout(layout)
+        constexpr explicit layout_value_functor(layout_type* layout_ = nullptr)
+            : p_layout(layout_)
         {
         }
 
@@ -59,8 +59,8 @@ namespace sparrow::detail
         using value_type = VALUE_TYPE;
         using layout_type = LAYOUT_TYPE;
 
-        constexpr explicit layout_bracket_functor(layout_type* layout = nullptr)
-            : p_layout(layout)
+        constexpr explicit layout_bracket_functor(layout_type* layout_ = nullptr)
+            : p_layout(layout_)
         {
         }
 
@@ -77,7 +77,7 @@ namespace sparrow::detail
 
 
     template<class OFFSET_TYPE>
-    concept offset_type = std::is_same<std::remove_const_t<OFFSET_TYPE>, std::uint32_t>::value || 
+    concept offset_type = std::is_same<std::remove_const_t<OFFSET_TYPE>, std::uint32_t>::value ||
                             std::is_same<std::remove_const_t<OFFSET_TYPE>, std::uint64_t>::value;
 
     template<offset_type OFFSET_TYPE, std::ranges::range SIZES_RANGE>
@@ -85,7 +85,7 @@ namespace sparrow::detail
     sparrow::u8_buffer<OFFSET_TYPE> offset_buffer_from_sizes(SIZES_RANGE && sizes)
     {
         sparrow::u8_buffer<OFFSET_TYPE> buffer(std::ranges::size(sizes) + 1);
-        
+
         OFFSET_TYPE offset = 0;
         auto it = buffer.begin();
         for(auto size : sizes)
@@ -96,6 +96,6 @@ namespace sparrow::detail
         }
         *it = offset;
         return buffer;
-    } 
+    }
 
 } // namespace sparrow
