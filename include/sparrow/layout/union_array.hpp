@@ -90,7 +90,7 @@ namespace sparrow
 
         template <std::ranges::input_range R>
         requires(std::convertible_to<std::ranges::range_value_t<R>, std::uint8_t>)
-        static std::string make_format_string(bool dense, std::size_t n, R&& range);
+        static std::string make_format_string(bool dense, std::size_t n, R&& child_index_to_type_id);
 
         using children_type = std::vector<cloning_ptr<array_wrapper>>;
         children_type make_children(arrow_proxy& proxy);
@@ -395,7 +395,7 @@ namespace sparrow
         std::vector<array> && children,
         type_id_buffer_type && element_type,    
         offset_buffer_type && offsets,
-        TYPE_MAPPING && type_mapping
+        TYPE_MAPPING && child_index_to_type_id
     ) -> arrow_proxy
     {
         const auto n_children = children.size();
@@ -403,13 +403,31 @@ namespace sparrow
         ArrowArray** child_arrays = new ArrowArray*[n_children];
         const auto size = element_type.size();
 
+
+        // inverse type mapping (type_id -> child_index)
+        std::array<std::uint8_t, 256> type_id_to_child_index;
+        if(std::ranges::size(child_index_to_type_id) == 0)
+        {
+            for(std::size_t i=0; i<n_children; ++i)
+            {
+                type_id_to_child_index[i] = static_cast<std::uint8_t>(i);
+            }
+        }
+        else
+        {
+            for (std::size_t i = 0; i < std::ranges::size(child_index_to_type_id); ++i)
+            {
+                type_id_to_child_index[child_index_to_type_id[i]] = static_cast<std::uint8_t>(i);
+            }
+        }
+
         // count nulls (expensive!)
         int64_t null_count = 0;
         for(std::size_t i = 0; i < size; ++i)
         {
             // child_id from type_id
             const auto type_id = static_cast<std::uint8_t>(element_type[i]);
-            const auto child_index = std::ranges::size(type_mapping) == 0 ? type_id : type_mapping[type_id];
+            const auto child_index = type_id_to_child_index[type_id];
             const auto offset = static_cast<std::size_t>(offsets[i]);
             // check if child is null
             if (!children[child_index][offset].has_value())
@@ -426,7 +444,7 @@ namespace sparrow
             child_schemas[i] = new ArrowSchema(std::move(flat_schema));
         }
 
-        std::string format = make_format_string(true /*dense union*/, n_children, std::forward<TYPE_MAPPING>(type_mapping));
+        std::string format = make_format_string(true /*dense union*/, n_children, std::forward<TYPE_MAPPING>(child_index_to_type_id));
 
         ArrowSchema schema = make_arrow_schema(
             format,
@@ -480,7 +498,7 @@ namespace sparrow
     auto sparse_union_array::create_proxy(
         std::vector<array> && children,
         type_id_buffer_type && element_type,
-        TYPE_MAPPING && type_mapping
+        TYPE_MAPPING && child_index_to_type_id
     ) -> arrow_proxy
     {
         const auto n_children = children.size();
@@ -488,13 +506,30 @@ namespace sparrow
         ArrowArray** child_arrays = new ArrowArray*[n_children];
         const auto size = element_type.size();
 
+        // inverse type mapping (type_id -> child_index)
+        std::array<std::uint8_t, 256> type_id_to_child_index;
+        if(std::ranges::size(child_index_to_type_id) == 0)
+        {
+            for(std::size_t i=0; i<n_children; ++i)
+            {
+                type_id_to_child_index[i] = static_cast<std::uint8_t>(i);
+            }
+        }
+        else
+        {
+            for (std::size_t i = 0; i < std::ranges::size(child_index_to_type_id); ++i)
+            {
+                type_id_to_child_index[child_index_to_type_id[i]] = static_cast<std::uint8_t>(i);
+            }
+        }
+
         // count nulls (expensive!)
         int64_t null_count = 0;
         for(std::size_t i = 0; i < size; ++i)
         {
             // child_id from type_id
             const auto type_id = static_cast<std::uint8_t>(element_type[i]);
-            const auto child_index = std::ranges::size(type_mapping) == 0 ? type_id : type_mapping[type_id];
+            const auto child_index = type_id_to_child_index[type_id];
             // check if child is null
             if (!children[child_index][i].has_value())
             {
@@ -510,8 +545,9 @@ namespace sparrow
             child_schemas[i] = new ArrowSchema(std::move(flat_schema));
         }
 
-        std::string format = make_format_string(false /*is dense union*/, n_children, std::forward<TYPE_MAPPING>(type_mapping));
+        std::string format = make_format_string(false /*is dense union*/, n_children, std::forward<TYPE_MAPPING>(child_index_to_type_id));
 
+        std::cout<<"format: "<<format<<std::endl;
         ArrowSchema schema = make_arrow_schema(
             format,
             std::nullopt, // name

@@ -99,23 +99,48 @@ namespace sparrow
             std::vector<array> children = {array(std::move(arr1)), array(std::move(arr2))};
        
 
-            // type ids
-            sparse_union_array::type_id_buffer_type type_ids{{std::uint8_t(0), std::uint8_t(1), std::uint8_t(1)}};
+            SUBCASE("with mapping")
+            {
+                // type ids
+                sparse_union_array::type_id_buffer_type type_ids{{std::uint8_t(2), std::uint8_t(3), std::uint8_t(3)}};
 
-            // the array
-            sparse_union_array arr( std::move(children), std::move(type_ids));
+                // mapping
+                std::vector<std::size_t> type_mapping{2, 3};
 
-            // check the size
-            REQUIRE_EQ(arr.size(), 3);
+                // the array
+                sparse_union_array arr( std::move(children), std::move(type_ids), std::move(type_mapping));
 
-            // check elements have values
-            CHECK(arr[0].has_value());
-            CHECK(!arr[1].has_value());
-            CHECK(arr[2].has_value());
+                // check the size
+                REQUIRE_EQ(arr.size(), 3);
 
-            CHECK_NULLABLE_VARIANT_EQ(arr[0], std::int16_t(2));
-            CHECK_NULLABLE_VARIANT_EQ(arr[2], std::int32_t(5));
+                // check elements have values
+                CHECK(arr[0].has_value());
+                CHECK(!arr[1].has_value());
+                CHECK(arr[2].has_value());
 
+                CHECK_NULLABLE_VARIANT_EQ(arr[0], std::int16_t(2));
+                CHECK_NULLABLE_VARIANT_EQ(arr[2], std::int32_t(5));
+            }
+            SUBCASE("without mapping")
+            {
+                // type ids
+                sparse_union_array::type_id_buffer_type type_ids{{std::uint8_t(0), std::uint8_t(1), std::uint8_t(1)}};
+
+                // the array
+                sparse_union_array arr( std::move(children), std::move(type_ids));
+
+                // check the size
+                REQUIRE_EQ(arr.size(), 3);
+
+                // check elements have values
+                CHECK(arr[0].has_value());
+                CHECK(!arr[1].has_value());
+                CHECK(arr[2].has_value());
+
+                CHECK_NULLABLE_VARIANT_EQ(arr[0], std::int16_t(2));
+                CHECK_NULLABLE_VARIANT_EQ(arr[2], std::int32_t(5));
+            }
+ 
         }
         TEST_CASE("basics")
         {
@@ -234,27 +259,53 @@ namespace sparrow
             std::vector<array> children = {array(std::move(arr1)), array(std::move(arr2))};
        
 
-            // type ids
-            dense_union_array::type_id_buffer_type type_ids{{std::uint8_t(0), std::uint8_t(1), std::uint8_t(0), std::uint8_t(1)}};
-
             // offsets
             dense_union_array::offset_buffer_type offsets{{std::size_t(1), std::size_t(1), std::size_t(0), std::size_t(0)}};
 
-            // the array
-            dense_union_array arr( std::move(children), std::move(type_ids), std::move(offsets));
+            SUBCASE("without mapping")
+            {
+                // type ids
+                dense_union_array::type_id_buffer_type type_ids{{std::uint8_t(0), std::uint8_t(1), std::uint8_t(0), std::uint8_t(1)}};
 
-            // check the size
-            REQUIRE_EQ(arr.size(), 4);
+                // the array
+                dense_union_array arr( std::move(children), std::move(type_ids), std::move(offsets));
 
-            // check elements have values
-            CHECK(arr[0].has_value());
-            CHECK(!arr[1].has_value());
-            CHECK(arr[2].has_value());
-            CHECK(arr[3].has_value());
+                // check the size
+                REQUIRE_EQ(arr.size(), 4);
 
-            CHECK_NULLABLE_VARIANT_EQ(arr[0], std::int16_t(1));
-            CHECK_NULLABLE_VARIANT_EQ(arr[2], std::int16_t(0));
-            CHECK_NULLABLE_VARIANT_EQ(arr[3], std::int32_t(2));
+                // check elements have values
+                CHECK(arr[0].has_value());
+                CHECK(!arr[1].has_value());
+                CHECK(arr[2].has_value());
+                CHECK(arr[3].has_value());
+
+                CHECK_NULLABLE_VARIANT_EQ(arr[0], std::int16_t(1));
+                CHECK_NULLABLE_VARIANT_EQ(arr[2], std::int16_t(0));
+                CHECK_NULLABLE_VARIANT_EQ(arr[3], std::int32_t(2));
+            }
+            SUBCASE("with mapping")
+            {   
+
+                std::vector<std::size_t> child_index_to_type_id{1, 0};
+                // type ids
+                dense_union_array::type_id_buffer_type type_ids{{std::uint8_t(1), std::uint8_t(0), std::uint8_t(1), std::uint8_t(0)}};
+
+                // the array
+                dense_union_array arr( std::move(children), std::move(type_ids), std::move(offsets), std::move(child_index_to_type_id));
+
+                // check the size
+                REQUIRE_EQ(arr.size(), 4);
+
+                // check elements have values
+                CHECK(arr[0].has_value());
+                CHECK(!arr[1].has_value());
+                CHECK(arr[2].has_value());
+                CHECK(arr[3].has_value());
+
+                CHECK_NULLABLE_VARIANT_EQ(arr[0], std::int16_t(1));
+                CHECK_NULLABLE_VARIANT_EQ(arr[2], std::int16_t(0));
+                CHECK_NULLABLE_VARIANT_EQ(arr[3], std::int32_t(2));
+            }
 
         }
         TEST_CASE("basics")
