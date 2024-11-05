@@ -22,5 +22,5 @@ namespace sparrow
 
     constexpr int SPARROW_BINARY_CURRENT = 0;
     constexpr int SPARROW_BINARY_REVISION = 0;
-    constexpr int SPARROW_BINary_AGE = 0;
+    constexpr int SPARROW_BINARY_AGE = 0;
 }
