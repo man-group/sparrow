@@ -26,6 +26,7 @@
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/array_api.hpp"
 
+#include <format>
 #include <numeric>
 
 namespace sparrow
