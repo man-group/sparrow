@@ -26,8 +26,6 @@
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/array_api.hpp"
 
-#include <numeric>
-
 namespace sparrow
 {   
     class dense_union_array;
@@ -220,7 +218,10 @@ namespace sparrow
         std::array<std::uint8_t, 256> ret;
         if(n == 0)
         {
-            std::iota(ret.begin(), ret.end(), 0);
+            for(std::size_t i = 0; i < 256; ++i)
+            {
+                ret[i] = static_cast<std::uint8_t>(i);
+            }
         }
         else
         {
