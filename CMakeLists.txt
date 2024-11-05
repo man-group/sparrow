@@ -51,12 +51,30 @@ file(STRINGS "${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp" sparrow
      REGEX "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH)")
 foreach(ver ${sparrow_version_defines})
     if(ver MATCHES "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH) = ([0-9]+);$")
-        set(SPARROW_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
+        set(PROJECT_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
     endif()
 endforeach()
-set(${PROJECT_NAME}_VERSION
-    ${SPARROW_VERSION_MAJOR}.${SPARROW_VERSION_MINOR}.${SPARROW_VERSION_PATCH})
-message(STATUS "Building sparrow v${${PROJECT_NAME}_VERSION}")
+set(CMAKE_PROJECT_VERSION
+    ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+
+message(STATUS "Building sparrow v${CMAKE_PROJECT_VERSION}")
+
+# Binary version
+# See the following URL for explanations about the binary versionning
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html#Updating-version-info
+
+file(STRINGS "${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp" sparrow_version_defines
+    REGEX "constexpr int SPARROW_BINARY_(CURRENT|REVISION|AGE)")
+foreach(ver ${sparrow_version_defines})
+    if(ver MATCHES "constexpr int SPARROW_BINARY_(CURRENT|REVISION|AGE) = ([0-9]+);$")
+        set(SPARROW_BINARY_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
+    endif()
+endforeach()
+set(SPARROW_BINARY_VERSION
+    ${SPARROW_BINARY_CURRENT}.${SPARROW_BINARY_REVISION}.${SPARROW_BINARY_AGE})
+
+message(STATUS "sparrow binary version: v${SPARROW_BINARY_VERSION}")
+
 
 # Build options
 # =============
@@ -216,18 +234,27 @@ endif()
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
 
-
-# TODO: handle static lib, so name and versionning
+# TODO: handle static lib
 if (UNIX)
+    # CMake does not compute the version number of so files as libtool
+    # does on Linux. Strictly speaking, we should exclude FreeBSD and
+    # Apple from this, but that would require having different version
+    # numbers depending on the platform. We prefer to follow the
+    # libtool pattern everywhere.
+    math(EXPR SPARROW_BINARY_COMPATIBLE "${SPARROW_BINARY_CURRENT} - ${SPARROW_BINARY_AGE}")
     set_target_properties(
         sparrow
         PROPERTIES
+        VERSION "${SPARROW_BINARY_COMPATIBLE}.${SPARROW_BINARY_REVISION}.${SPARROW_BINARY_AGE}"
+        SOVERSION ${SPARROW_BINARY_COMPATIBLE}
         COMPILE_OPTIONS "-fvisibility=hidden"
     )
 else ()
     set_target_properties(
         sparrow
         PROPERTIES
+        VERSION ${SPARROW_BINARY_VERSION}
+        SOVERSION ${SPARROW_BINARY_CURRENT}
         COMPILE_DEFINITIONS "SPARROW_EXPORTS"
     )
 endif ()
@@ -289,7 +316,7 @@ configure_package_config_file(${PROJECT_NAME}Config.cmake.in
 set(_SPARROW_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 unset(CMAKE_SIZEOF_VOID_P)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-                                 VERSION ${${PROJECT_NAME}_VERSION}
+                                 VERSION ${CMAKE_PROJECT_VERSION}
                                  COMPATIBILITY AnyNewerVersion)
 set(CMAKE_SIZEOF_VOID_P ${_SPARROW_CMAKE_SIZEOF_VOID_P})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
