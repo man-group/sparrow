@@ -360,7 +360,7 @@ namespace sparrow
 
     /************************************
      * dense_union_array implementation *
-     ************************************/     
+     ************************************/
 
     #ifdef __GNUC__
     #    pragma GCC diagnostic push
