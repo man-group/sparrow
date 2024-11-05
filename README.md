@@ -67,7 +67,7 @@ auto [arrow_array, arrow_schema] = sp::get_arrow_structures(std::move(ar));
 // Use arrow_array and arrow_schema as you need (serialization, passing it to
 // a third party library)
 // ...
-// do NOT release the C structures in the end, ar will do it for you
+// do NOT release the C structures in the end, the "ar" variable will do it for you
 ```
 
 ### Read data from somewhere and pass it to sparrow
@@ -76,6 +76,7 @@ auto [arrow_array, arrow_schema] = sp::get_arrow_structures(std::move(ar));
 #include "sparrow/sparrow.hpp"
 #include "thrid-party-lib.hpp"
 namesace sp = sparrow;
+namespace tpl = third_party_library;
 
 ArrowArray array;
 ArrowSchema schema;
@@ -95,6 +96,7 @@ arrow_schema.release(&arrow_schema);
 #include "sparrow/sparrow.hpp"
 #include "thrid-party-lib.hpp"
 namesace sp = sparrow;
+namespace tpl = third_party_library;
 
 ArrowArray array;
 ArrowSchema schema;
@@ -103,7 +105,7 @@ tpl::read_arrow_structures(&array, &schema);
 sp::array ar(std::move(array), std::move(schema));
 // Use ar as you need
 // ...
-// do NOT release the C structures in the end, ar will do it for you
+// do NOT release the C structures in the end, the "ar" variable will do it for you
 ```
 
 ## Documentation
