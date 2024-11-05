@@ -26,6 +26,8 @@
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/array_api.hpp"
 
+#include <numeric>
+
 namespace sparrow
 {   
     class dense_union_array;
@@ -87,6 +89,9 @@ namespace sparrow
 
         using type_id_map = std::array<std::uint8_t, 256>;
         static type_id_map parse_type_id_map(std::string_view format_string);
+
+        template <std::ranges::input_range R>
+        static type_id_map type_id_map_from_child_to_type_id(R&& child_index_to_type_id);
 
         template <std::ranges::input_range R>
         requires(std::convertible_to<std::ranges::range_value_t<R>, std::uint8_t>)
@@ -204,6 +209,26 @@ namespace sparrow
             ret[static_cast<std::size_t>(as_int)] = static_cast<std::uint8_t>(child_index);
             ++child_index;
         });
+        return ret;
+    }
+
+    template <class DERIVED>
+    template <std::ranges::input_range R>
+    auto union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(R&& child_index_to_type_id) ->type_id_map
+    {
+        const std::size_t n = std::ranges::size(child_index_to_type_id);
+        std::array<std::uint8_t, 256> ret;
+        if(n == 0)
+        {
+            std::iota(ret.begin(), ret.end(), 0);
+        }
+        else
+        {
+            for(std::size_t i = 0; i < n; ++i)
+            {
+                ret[child_index_to_type_id[i]] = static_cast<std::uint8_t>(i);
+            }
+        }
         return ret;
     }
 
@@ -403,23 +428,8 @@ namespace sparrow
         ArrowArray** child_arrays = new ArrowArray*[n_children];
         const auto size = element_type.size();
 
-
         // inverse type mapping (type_id -> child_index)
-        std::array<std::uint8_t, 256> type_id_to_child_index;
-        if(std::ranges::size(child_index_to_type_id) == 0)
-        {
-            for(std::size_t i=0; i<n_children; ++i)
-            {
-                type_id_to_child_index[i] = static_cast<std::uint8_t>(i);
-            }
-        }
-        else
-        {
-            for (std::size_t i = 0; i < std::ranges::size(child_index_to_type_id); ++i)
-            {
-                type_id_to_child_index[child_index_to_type_id[i]] = static_cast<std::uint8_t>(i);
-            }
-        }
+        auto type_id_to_child_index = type_id_map_from_child_to_type_id(child_index_to_type_id);
 
         // count nulls (expensive!)
         int64_t null_count = 0;
@@ -507,21 +517,7 @@ namespace sparrow
         const auto size = element_type.size();
 
         // inverse type mapping (type_id -> child_index)
-        std::array<std::uint8_t, 256> type_id_to_child_index;
-        if(std::ranges::size(child_index_to_type_id) == 0)
-        {
-            for(std::size_t i=0; i<n_children; ++i)
-            {
-                type_id_to_child_index[i] = static_cast<std::uint8_t>(i);
-            }
-        }
-        else
-        {
-            for (std::size_t i = 0; i < std::ranges::size(child_index_to_type_id); ++i)
-            {
-                type_id_to_child_index[child_index_to_type_id[i]] = static_cast<std::uint8_t>(i);
-            }
-        }
+        auto type_id_to_child_index = type_id_map_from_child_to_type_id(child_index_to_type_id);
 
         // count nulls (expensive!)
         int64_t null_count = 0;
