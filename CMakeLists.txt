@@ -59,6 +59,23 @@ set(CMAKE_PROJECT_VERSION
 
 message(STATUS "Building sparrow v${CMAKE_PROJECT_VERSION}")
 
+# Binary version
+# See the following URL for explanations about the binary versionning
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html#Updating-version-info
+
+file(STRINGS "${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp" sparrow_version_defines
+    REGEX "constexpr int SPARROW_BINARY_(CURRENT|REVISION|AGE)")
+foreach(ver ${sparrow_version_defines})
+    if(ver MATCHES "constexpr int SPARROW_BINARY_(CURRENT|REVISION|AGE) = ([0-9]+);$")
+        set(SPARROW_BINARY_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
+    endif()
+endforeach()
+set(SPARROW_BINARY_VERSION
+    ${SPARROW_BINARY_CURRENT}.${SPARROW_BINARY_REVISION}.${SPARROW_BINARY_AGE})
+
+message(STATUS "sparrow binary version: v${SPARROW_BINARY_VERSION}")
+
+
 # Build options
 # =============
 
@@ -217,20 +234,27 @@ endif()
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
 
-set_target_properties(sparrow PROPERTIES VERSION ${CMAKE_PROJECT_VERSION}
-                              SOVERSION ${PROJECT_VERSION_MAJOR})
-
 # TODO: handle static lib
 if (UNIX)
+    # CMake does not compute the version number of so files as libtool
+    # does on Linux. Strictly speaking, we should exclude FreeBSD and
+    # Apple from this, but that would require having different version
+    # numbers depending on the platform. We prefer to follow the
+    # libtool pattern everywhere.
+    math(EXPR SPARROW_BINARY_COMPATIBLE "${SPARROW_BINARY_CURRENT} - ${SPARROW_BINARY_AGE}")
     set_target_properties(
         sparrow
         PROPERTIES
+        VERSION "${SPARROW_BINARY_COMPATIBLE}.${SPARROW_BINARY_REVISION}.${SPARROW_BINARY_AGE}"
+        SOVERSION ${SPARROW_BINARY_COMPATIBLE}
         COMPILE_OPTIONS "-fvisibility=hidden"
     )
 else ()
     set_target_properties(
         sparrow
         PROPERTIES
+        VERSION ${SPARROW_BINARY_VERSION}
+        SOVERSION ${SPARROW_BINARY_CURRENT}
         COMPILE_DEFINITIONS "SPARROW_EXPORTS"
     )
 endif ()
