@@ -21,6 +21,7 @@
 #include "../test/external_array_data_creation.hpp"
 
 #include "sparrow/layout/union_array.hpp"
+#include "sparrow/array.hpp"
 
 namespace sparrow
 {
@@ -83,9 +84,40 @@ namespace sparrow
         }
     }
 
-    TEST_SUITE("union")
+    TEST_SUITE("sparse_union")
     {   
-        TEST_CASE("sparse_union")
+        TEST_CASE("constructor")
+        {   
+            // the child arrays
+            primitive_array<std::int16_t> arr1({{std::int16_t(2), std::int16_t(5), std::size_t(9)}});
+            primitive_array<std::int32_t> arr2(
+                std::vector<std::int32_t>{std::int32_t(3), std::int32_t(4), std::size_t(5)},
+                std::vector<std::size_t>{1} // INDEX 1 IS MISSING
+            ); 
+
+            // detyped arrays
+            std::vector<array> children = {array(std::move(arr1)), array(std::move(arr2))};
+       
+
+            // type ids
+            sparse_union_array::type_id_buffer_type type_ids{{std::uint8_t(0), std::uint8_t(1), std::uint8_t(1)}};
+
+            // the array
+            sparse_union_array arr( std::move(children), std::move(type_ids));
+
+            // check the size
+            REQUIRE_EQ(arr.size(), 3);
+
+            // check elements have values
+            CHECK(arr[0].has_value());
+            CHECK(!arr[1].has_value());
+            CHECK(arr[2].has_value());
+
+            CHECK_NULLABLE_VARIANT_EQ(arr[0], std::int16_t(2));
+            CHECK_NULLABLE_VARIANT_EQ(arr[2], std::int32_t(5));
+
+        }
+        TEST_CASE("basics")
         {
 
             const std::string format_string = "+us:3,4";
@@ -186,8 +218,46 @@ namespace sparrow
                 
             }
         }
+    }
+    TEST_SUITE("dense_union")
+    {   
+        TEST_CASE("constructor")
+        {   
+            // the child arrays
+            primitive_array<std::int16_t> arr1({{std::int16_t(0), std::int16_t(1)}});
+            primitive_array<std::int32_t> arr2(
+                std::vector<std::int32_t>{std::int32_t(2), std::int32_t(3)},
+                std::vector<std::size_t>{1} // INDEX 1 IS MISSING
+            ); 
 
-        TEST_CASE("dense_union")
+            // detyped arrays
+            std::vector<array> children = {array(std::move(arr1)), array(std::move(arr2))};
+       
+
+            // type ids
+            dense_union_array::type_id_buffer_type type_ids{{std::uint8_t(0), std::uint8_t(1), std::uint8_t(0), std::uint8_t(1)}};
+
+            // offsets
+            dense_union_array::offset_buffer_type offsets{{std::size_t(1), std::size_t(1), std::size_t(0), std::size_t(0)}};
+
+            // the array
+            dense_union_array arr( std::move(children), std::move(type_ids), std::move(offsets));
+
+            // check the size
+            REQUIRE_EQ(arr.size(), 4);
+
+            // check elements have values
+            CHECK(arr[0].has_value());
+            CHECK(!arr[1].has_value());
+            CHECK(arr[2].has_value());
+            CHECK(arr[3].has_value());
+
+            CHECK_NULLABLE_VARIANT_EQ(arr[0], std::int16_t(1));
+            CHECK_NULLABLE_VARIANT_EQ(arr[2], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[3], std::int32_t(2));
+
+        }
+        TEST_CASE("basics")
         {
             const std::string format_string = "+ud:3,4";
             const std::size_t n_c = 2;

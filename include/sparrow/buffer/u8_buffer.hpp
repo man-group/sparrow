@@ -76,6 +76,10 @@ namespace sparrow
         template<std::ranges::input_range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
         u8_buffer(R&& range);
+
+
+        // initializer list
+        u8_buffer(std::initializer_list<T> ilist);
     };
 
 
@@ -100,6 +104,7 @@ namespace sparrow
     {
         std::fill(this->begin(), this->end(), val);
     }
+    
 
     template<class T>
     template<std::ranges::input_range R>
@@ -111,4 +116,11 @@ namespace sparrow
         std::ranges::copy(range, this->begin());
     }
 
+    template<class T>
+    u8_buffer<T>::u8_buffer(std::initializer_list<T> ilist)
+        : holder_type{ilist.size() * sizeof(T)}
+        , buffer_adaptor_type(holder_type::value)
+    {
+        std::copy(ilist.begin(), ilist.end(), this->begin());
+    }
 }

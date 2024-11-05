@@ -166,7 +166,7 @@ namespace sparrow
                 bitmap.set(index, false);
             }
             return bitmap;
-        }
+    }
     } // namespace detail
 
     template <class T>
