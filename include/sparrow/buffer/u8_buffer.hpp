@@ -76,9 +76,6 @@ namespace sparrow
         template<std::ranges::input_range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
         u8_buffer(R&& range);
-
-
-        // initializer list
         u8_buffer(std::initializer_list<T> ilist);
     };
 

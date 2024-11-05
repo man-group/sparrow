@@ -360,11 +360,8 @@ namespace sparrow
 
     /************************************
      * dense_union_array implementation *
-     ************************************/
+     ************************************/     
 
-
-
-    
     #ifdef __GNUC__
     #    pragma GCC diagnostic push
     #    pragma GCC diagnostic ignored "-Wcast-align"
@@ -429,8 +426,6 @@ namespace sparrow
             child_schemas[i] = new ArrowSchema(std::move(flat_schema));
         }
 
-   
-
         std::string format = make_format_string(true /*dense union*/, n_children, std::forward<TYPE_MAPPING>(type_mapping));
 
         ArrowSchema schema = make_arrow_schema(
@@ -459,7 +454,6 @@ namespace sparrow
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
-
 
     #ifdef __GNUC__
     #    pragma GCC diagnostic pop
@@ -515,8 +509,6 @@ namespace sparrow
             child_arrays[i] = new ArrowArray(std::move(flat_arr));
             child_schemas[i] = new ArrowSchema(std::move(flat_schema));
         }
-
-   
 
         std::string format = make_format_string(false /*is dense union*/, n_children, std::forward<TYPE_MAPPING>(type_mapping));
 
