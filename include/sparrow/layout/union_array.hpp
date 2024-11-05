@@ -211,7 +211,7 @@ namespace sparrow
     template <std::ranges::input_range R>
     requires(std::convertible_to<std::ranges::range_value_t<R>, std::uint8_t>)
     std::string union_array_crtp_base<DERIVED>::make_format_string(bool dense, const std::size_t n, R&& range)
-    {
+    {   
         const auto range_size = std::ranges::size(range);
         if(range_size == n || range_size == 0)
         {   
@@ -220,14 +220,14 @@ namespace sparrow
             {
                 for(std::size_t i = 0; i < n; ++i)
                 {
-                    ret += std::to_string(i) + ",";
+                    ret += std::format("{},", i);
                 }
             }
             else
             {
                 for (const auto& v : range)
                 {
-                    ret += std::to_string(v) + ",";
+                    ret += std::format("{},", v);
                 }
             }
             ret.pop_back();
@@ -445,7 +445,7 @@ namespace sparrow
         }
 
         std::string format = make_format_string(true /*dense union*/, n_children, std::forward<TYPE_MAPPING>(child_index_to_type_id));
-
+        
         ArrowSchema schema = make_arrow_schema(
             format,
             std::nullopt, // name
