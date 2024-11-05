@@ -544,7 +544,6 @@ namespace sparrow
 
         std::string format = make_format_string(false /*is dense union*/, n_children, std::forward<TYPE_MAPPING>(child_index_to_type_id));
 
-        std::cout<<"format: "<<format<<std::endl;
         ArrowSchema schema = make_arrow_schema(
             format,
             std::nullopt, // name
