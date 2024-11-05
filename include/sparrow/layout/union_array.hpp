@@ -26,7 +26,6 @@
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/array_api.hpp"
 
-#include <format>
 #include <numeric>
 
 namespace sparrow
@@ -246,14 +245,14 @@ namespace sparrow
             {
                 for(std::size_t i = 0; i < n; ++i)
                 {
-                    ret += std::format("{},", i);
+                    ret += std::to_string(i) + ",";
                 }
             }
             else
             {
                 for (const auto& v : range)
                 {
-                    ret += std::format("{},", v);
+                    ret += std::to_string(v) + ",";
                 }
             }
             ret.pop_back();
