@@ -30,7 +30,6 @@ namespace sparrow
             using acc_type = std::uint32_t;
             using inner_value_type = std::uint64_t;
 
-
             // lets encode the following: (length: 8)
             // [1,null,null, 42, 42, 42, null, 9]
 
@@ -39,15 +38,10 @@ namespace sparrow
 
             // the accumulated lengths are:
             // [1,3,6,7,8]
-            // acc-values child
 
-            // number of elements in the run_length_encoded array
-            // n = 8;
-
-            // size of the children
-            // child_length = 5;
-
-
+            // if alterate is true, all 42s will be replaced by 43s
+            // this is to test EQ/NEQ after copy/move
+     
             // encoded values
             primitive_array<inner_value_type> encoded_values(
                 std::vector<inner_value_type>{
