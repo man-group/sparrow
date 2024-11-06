@@ -33,6 +33,11 @@ namespace sparrow
     {
     }
 
+    enum data_type array::data_type() const
+    {
+        return p_array->data_type();
+    }
+
     array::size_type array::size() const
     {
         return array_size(*p_array);

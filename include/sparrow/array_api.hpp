@@ -109,6 +109,11 @@ namespace sparrow
         SPARROW_API array(ArrowArray* array, ArrowSchema* schema);
         
         /**
+         * @returns the data type of the array.
+         */
+        SPARROW_API enum data_type data_type() const;
+
+        /**
          * @returns the number of elements in the array.
          */
         SPARROW_API size_type size() const;

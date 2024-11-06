@@ -93,6 +93,17 @@ namespace sparrow
         }
         TEST_CASE_TEMPLATE_APPLY(equal_operator_id, testing_types);
 
+        TEST_CASE_TEMPLATE_DEFINE("data_type", AR, data_type_id)
+        {
+            using scalar_value_type = typename AR::inner_value_type;
+            constexpr size_t size = 10;
+            array ar = test::make_array<scalar_value_type>(size);
+            data_type dt = ar.data_type();
+
+            CHECK_EQ(dt, arrow_traits<scalar_value_type>::type_id);
+        }
+        TEST_CASE_TEMPLATE_APPLY(data_type_id, testing_types);
+
         TEST_CASE_TEMPLATE_DEFINE("operator[]", AR, access_operator_id)
         {
             using const_reference = typename AR::const_reference;
