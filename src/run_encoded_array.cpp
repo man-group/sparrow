@@ -70,7 +70,6 @@ namespace sparrow
                 {   
                     auto acc_length_data = acc_lengths_array.data();
                     // get the length of the array (ie last element in the acc_lengths array)
-                    auto acc_lengths = acc_lengths_array.data();
                     length = acc_length_data[raw_size - 1];
 
                     if(raw_null_count == 0){
