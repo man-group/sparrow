@@ -39,6 +39,14 @@ make install
 
 ## Usage
 
+### Requirements
+
+Compilers:
+- Clang 17 or higher
+- GCC 12 or higher
+- Apple Clang 16 or higher
+- MSVC 19.41 or higher
+
 ### Initialize data with sparrow and extract C data structures
 
 ```cpp
