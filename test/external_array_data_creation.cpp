@@ -293,48 +293,6 @@ namespace sparrow::test
         );
     }
 
-    void fill_schema_and_array_for_run_end_encoded(
-        ArrowSchema& schema,
-        ArrowArray& arr,
-        ArrowSchema&& acc_length_schema,
-        ArrowArray&& acc_length_arr,
-        ArrowSchema&& value_schema,
-        ArrowArray&& value_arr,
-        std::size_t  length
-    ){
-        ArrowSchema** schema_children = new ArrowSchema*[2];
-        schema_children[0] = new ArrowSchema(std::move(acc_length_schema));
-        schema_children[1] = new ArrowSchema(std::move(value_schema));
-        sparrow::fill_arrow_schema(
-            schema,
-            std::string_view("+r"),
-            "test",
-            "test metadata",
-            std::nullopt,
-            2,
-            schema_children,
-            nullptr
-        );
-
-        using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = {};
-
-        ArrowArray** array_children = new ArrowArray*[2];
-        array_children[0] = new ArrowArray(std::move(acc_length_arr));
-        array_children[1] = new ArrowArray(std::move(value_arr));
-
-        sparrow::fill_arrow_array(
-            arr,
-            static_cast<std::int64_t>(length),
-            0,
-            0,
-            std::move(arr_buffs),
-            2,
-            array_children,
-            nullptr
-        );
-    }
-
     void fill_schema_and_array_for_sparse_union(
         ArrowSchema& schema,
         ArrowArray& arr,

@@ -20,6 +20,7 @@
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_iterator.hpp"
 #include "sparrow/layout/array_access.hpp"
+#include "sparrow/array_api.hpp"
 
 namespace sparrow
 {
@@ -52,6 +53,13 @@ namespace sparrow
         
         SPARROW_API explicit run_end_encoded_array(arrow_proxy proxy);
 
+        template <class ... Args>
+        requires(mpl::excludes_copy_and_move_ctor_v<run_end_encoded_array, Args...>)
+        explicit run_end_encoded_array(Args&& ... args)
+            : run_end_encoded_array(create_proxy(std::forward<Args>(args) ...))
+        {}
+
+
         SPARROW_API run_end_encoded_array(const self_type&);
         SPARROW_API self_type& operator=(const self_type&);
         
@@ -74,8 +82,14 @@ namespace sparrow
 
     private:
 
+        SPARROW_API static auto create_proxy(
+            array && acc_lengths,
+            array && encoded_values
+        ) -> arrow_proxy;
+
         using acc_length_ptr_variant_type = std::variant< const std::uint16_t*, const std::uint32_t*,const std::uint64_t*> ;
 
+        SPARROW_API static std::pair<std::int64_t, std::int64_t> extract_length_and_null_count( const array&, const array&);
         SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);
         SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
 
@@ -110,6 +124,8 @@ namespace sparrow
         , m_acc_lengths(run_end_encoded_array::get_acc_lengths_ptr(*p_acc_lengths_array))
     {
     }
+
+   
 
     inline run_end_encoded_array::run_end_encoded_array(const self_type& rhs)
         : run_end_encoded_array(rhs.m_proxy)

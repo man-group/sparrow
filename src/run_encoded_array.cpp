@@ -2,6 +2,7 @@
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/dispatch.hpp"
 #include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/array.hpp"
 
 namespace sparrow   
 {    
@@ -48,5 +49,102 @@ namespace sparrow
             },
             m_acc_lengths
         );
+    }
+
+    std::pair<std::int64_t, std::int64_t> run_end_encoded_array::extract_length_and_null_count(
+        const array& acc_lengths_arr, 
+        const array& encoded_values_arr
+    ) 
+    {
+        SPARROW_ASSERT_TRUE(acc_lengths_arr.size() == encoded_values_arr.size());
+
+        // get the raw null count
+        std::uint64_t raw_null_count = detail::array_access::get_arrow_proxy(acc_lengths_arr).null_count();
+        auto raw_size = acc_lengths_arr.size();
+        // visit the acc_lengths array
+        std::int64_t length = 0;
+        std::int64_t null_count = 0;
+        acc_lengths_arr.visit([&](const auto& acc_lengths_array)
+            {
+                if constexpr(usable_array<std::decay_t<decltype(acc_lengths_array)>>)
+                {   
+                    auto acc_length_data = acc_lengths_array.data();
+                    // get the length of the array (ie last element in the acc_lengths array)
+                    auto acc_lengths = acc_lengths_array.data();
+                    length = acc_length_data[raw_size - 1];
+
+                    if(raw_null_count == 0){
+                        return;
+                    }
+                    for(std::size_t i = 0; i < raw_size; ++i)
+                    {
+                        // check if the value is null
+                        if(!encoded_values_arr[i].has_value())
+                        {
+                            // how often is this value repeated?
+                            const auto run_length = i == 0 ? acc_length_data[i] : acc_length_data[i] - acc_length_data[i - 1];
+                            null_count += run_length;
+                            raw_null_count -= 1;
+                            if(raw_null_count == 0){
+                                return;
+                            }
+                        }
+                    }
+                    
+                }
+                else
+                {
+                    throw std::invalid_argument("array type not supported");
+                }
+            }
+        );
+        return {null_count, length};
+    };
+
+
+    auto run_end_encoded_array::create_proxy(
+        array && acc_lengths,
+        array && encoded_values
+    ) -> arrow_proxy
+    {   
+        auto [null_count, length] = extract_length_and_null_count(acc_lengths, encoded_values);
+
+        auto [acc_length_array, acc_length_schema] = extract_arrow_structures(std::move(acc_lengths));
+        auto [encoded_values_array, encoded_values_schema] = extract_arrow_structures(std::move(encoded_values));
+
+        constexpr auto n_children = 2;
+        ArrowSchema** child_schemas = new ArrowSchema*[n_children];
+        ArrowArray** child_arrays = new ArrowArray*[n_children];
+
+        child_schemas[0] = new ArrowSchema(std::move(acc_length_schema));
+        child_schemas[1] = new ArrowSchema(std::move(encoded_values_schema));
+
+        child_arrays[0] = new ArrowArray(std::move(acc_length_array));
+        child_arrays[1] = new ArrowArray(std::move(encoded_values_array));
+
+
+        ArrowSchema schema = make_arrow_schema(
+            std::string("+r"),
+            std::nullopt, // name
+            std::nullopt, // metadata
+            std::nullopt, // flags,
+            n_children,
+            child_schemas, // children
+            nullptr // dictionary
+        );
+
+        std::vector<buffer<std::uint8_t>> arr_buffs = {};
+
+        ArrowArray arr = make_arrow_array(
+            static_cast<std::int64_t>(length), // length
+            static_cast<int64_t>(null_count),
+            0, // offset
+            std::move(arr_buffs),
+            n_children, // n_children
+            child_arrays, // children
+            nullptr // dictionary
+        );
+
+        return arrow_proxy{std::move(arr), std::move(schema)};
     }
 }
