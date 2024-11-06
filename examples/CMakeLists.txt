@@ -2,6 +2,7 @@
 SET(EXAMPLES 
     typed_array_low_level.cpp
     typed_array_high_level.cpp
+    ultimate_builder.cpp
 )
 
 # iterate over all examples
