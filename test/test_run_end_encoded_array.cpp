@@ -53,6 +53,7 @@ namespace sparrow
                 std::vector<inner_value_type>{
                     inner_value_type(1),
                     inner_value_type(),
+                    // to check if arrays differ / are the same
                     alterate ? inner_value_type(43): inner_value_type(42),
                     inner_value_type(),
                     inner_value_type(9)                        
