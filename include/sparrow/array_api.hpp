@@ -156,7 +156,7 @@ namespace sparrow
      * @param lhs the first array to compare
      * @param rhs the second array to compare
      * @return \c true if the contents of both arrays
-     * are equal, false otherwise.
+     * are equal, \c false otherwise.
      */
     SPARROW_API
     bool operator==(const array& lhs, const array& rhs);

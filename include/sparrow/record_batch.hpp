@@ -59,7 +59,7 @@ namespace sparrow
         record_batch(NR&& names, CR&& columns);
 
         /**
-         * Constructs a record_batch from a list of pair "name - array".
+         * Constructs a record_batch from a list of \c std::pair<name_type, array>".
          *
          * @param init a list of pair "name - array".
          */
@@ -87,7 +87,7 @@ namespace sparrow
          * name.
          *
          * @param key The name of the column.
-         * @returns true if the record_batch contains the mapping, false otherwise.
+         * @returns \c true if the record_batch contains the mapping, \c false otherwise.
          */
         SPARROW_API bool contains_column(const name_type& key) const;
 
@@ -99,7 +99,7 @@ namespace sparrow
 
         /**
          * @returns the column mapped ot the specified name in the record_batch.
-         * @param key The name of the column to searhc for.
+         * @param key The name of the column to search for.
          */
         SPARROW_API const array& get_column(const name_type& key) const;
 
@@ -110,7 +110,7 @@ namespace sparrow
         SPARROW_API const array& get_column(size_type index) const;
 
         /**
-         * @returns a range of the names in the reoced_batch.
+         * @returns a range of the names in the record_batch.
          */
         SPARROW_API name_range names() const;
 
@@ -140,7 +140,7 @@ namespace sparrow
      * @param lhs the first record_batch to compare
      * @param rhs the second record_batch to compare
      * @return \c true if the contents of both record_batch
-     * are equal, false otherwise.
+     * are equal, \c false otherwise.
      */
     SPARROW_API
     bool operator==(const record_batch& lhs, const record_batch& rhs);
