@@ -3,7 +3,7 @@
 [![GHA Linux](https://github.com/man-group/sparrow/actions/workflows/linux.yml/badge.svg)](https://github.com/man-group/sparrow/actions/workflows/linux.yml)
 [![GHA OSX](https://github.com/man-group/sparrow/actions/workflows/osx.yml/badge.svg)](https://github.com/man-group/sparrowr/actions/workflows/osx.yml)
 [![GHA Windows](https://github.com/man-group/sparrow/actions/workflows/windows.yml/badge.svg)](https://github.com/man-group/sparrow/actions/workflows/windows.yml)
-[![GHA Docs](https://github.com/man-group/sparrow/actions/workflows/docs.yml/badge.svg)](https://github.com/man-group/sparrow/actions/workflows/docs.yml)
+[![GHA Docs](https://github.com/man-group/sparrow/actions/workflows/docs.yaml/badge.svg)](https://github.com/man-group/sparrow/actions/workflows/docs.yaml)
 
 C++20 idiomatic APIs for the Apache Arrow Columnar Format
 
@@ -75,7 +75,7 @@ auto [arrow_array, arrow_schema] = sp::get_arrow_structures(std::move(ar));
 ```cpp
 #include "sparrow/sparrow.hpp"
 #include "thrid-party-lib.hpp"
-namesace sp = sparrow;
+namespace sp = sparrow;
 namespace tpl = third_party_library;
 
 ArrowArray array;
@@ -95,7 +95,7 @@ arrow_schema.release(&arrow_schema);
 ```cpp
 #include "sparrow/sparrow.hpp"
 #include "thrid-party-lib.hpp"
-namesace sp = sparrow;
+namespace sp = sparrow;
 namespace tpl = third_party_library;
 
 ArrowArray array;
