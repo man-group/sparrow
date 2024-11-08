@@ -30,7 +30,6 @@ concept translate_to_variable_sized_list_layout =
     std::ranges::input_range<T> &&
     std::ranges::input_range<mnv_t<std::ranges::range_value_t<T>>>;
 
-
 template<class T>
 concept translate_to_struct_layout = 
     std::ranges::input_range<T> &&
@@ -76,7 +75,6 @@ struct builder<T>
             array(build(flat_list_view)), 
             type::offset_from_sizes(sizes)
         );
-
     }
 };
 
