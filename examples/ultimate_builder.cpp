@@ -12,19 +12,16 @@ int main()
     // arr[float]
     {   
         std::vector<float> v{1.0, 2.0, 3.0, 4.0, 5.0};
-        std::cout<<"arr[float]:"<<std::endl;
         print_arr(sparrow::build(v));
     }
-    // arr[float] (with nulls)
+    // arr[double] (with nulls)
     {   
-        std::vector<sparrow::nullable<float>> v{1.0, 2.0, 3.0, sparrow::nullval, 5.0};
-        std::cout<<"arr[float]:"<<std::endl;
+        std::vector<sparrow::nullable<double>> v{1.0, 2.0, 3.0, sparrow::nullval, 5.0};
         print_arr(sparrow::build(v));
     }
     // list[float]
     {   
         std::vector<std::vector<float>> v{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
-        std::cout<<std::endl<<"list[float]:"<<std::endl;
         print_arr(sparrow::build(v));
     }
     // list[list[float]]
@@ -33,7 +30,6 @@ int main()
             {{1.2f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f}},
             {{7.0f, 8.0f, 9.0f}, {10.0f, 11.0f, 12.0f}}
         };
-        std::cout<<std::endl<<"list[list[float]]:"<<std::endl;
         print_arr(sparrow::build(v));
     }
     // struct<float, float>
@@ -43,7 +39,6 @@ int main()
             {3.0f, 4.0f},
             {5.0f, 6.0f}
         };
-        std::cout<<std::endl<<"struct<float, float>:"<<std::endl;
         print_arr(sparrow::build(v));
     }
     // struct<list[float], uint16>
@@ -53,7 +48,6 @@ int main()
             {{4.0f, 5.0f, 6.0f}, 2},
             {{7.0f, 8.0f, 9.0f}, 3}
         };
-        std::cout<<std::endl<<"struct<list[float], uint16>:"<<std::endl;
         print_arr(sparrow::build(v));
     }
 

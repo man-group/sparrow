@@ -80,7 +80,10 @@ struct builder<T>
         static_assert( std::is_same_v<passed_value_type, flat_list_view_value_type>);
 
         // build offsets from sizes
-        auto sizes = t | std::views::transform([](const auto& l){ return l.size(); });
+        auto sizes = t | std::views::transform([](const auto& l){ 
+            // for a nullable with missing value this will return 0
+            return get_size_save(l);
+        });
 
 
         auto offsets = type::offset_from_sizes(sizes);
@@ -108,21 +111,14 @@ struct builder<T>
 
         // length of tuple ==> number of children
         constexpr std::size_t n_children = std::tuple_size_v<tuple_type>;
-
         std::vector<array> detyped_children(n_children);
 
-        for_each_index<0, n_children>::apply([&](auto i)
+        for_each_index<n_children>([&](auto i)
         {
-            constexpr std::size_t I = decltype(i)::value;
-
-            // create a view of the i-th element of the tuple
             auto tuple_i_col = t | std::views::transform([](const auto& tuple)
             {
-                return get<I>(tuple);
+                return std::get<decltype(i)::value>(tuple);
             }); 
-
-            using tuple_i_col_type = std::ranges::range_value_t<decltype(tuple_i_col)>;
-            using builder_type = builder<tuple_i_col_type>;
 
             // the child array
             auto col_arr = build(tuple_i_col);
