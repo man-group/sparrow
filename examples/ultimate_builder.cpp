@@ -2,6 +2,7 @@
 #include <string>
 #include <array>
 #include <tuple>
+#include <set>
 
 #include "builder/printer.hpp"
 #include "builder/builder.hpp"
@@ -34,10 +35,10 @@ int main()
     }
     // struct<float, float>
     {   
-        std::vector<std::tuple<float, float>> v{
-            {1.0f, 2.0f},
-            {3.0f, 4.0f},
-            {5.0f, 6.0f}
+        std::vector<std::tuple<float, int>> v{
+            {1.5f, 2},
+            {3.5f, 4},
+            {5.5f, 6}
         };
         print_arr(sparrow::build(v));
     }
@@ -47,6 +48,15 @@ int main()
             {{1.0f, 2.0f, 3.0f}, 1},
             {{4.0f, 5.0f, 6.0f}, 2},
             {{7.0f, 8.0f, 9.0f}, 3}
+        };
+        print_arr(sparrow::build(v));
+    }
+    //
+    {
+        std::vector<std::array<std::uint32_t, 3>> v{
+            {1, 2, 3},
+            {4, 5, 6},
+            {7, 8, 9}
         };
         print_arr(sparrow::build(v));
     }

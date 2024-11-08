@@ -28,12 +28,23 @@ concept translates_to_primitive_layout =
 template<class T>
 concept translate_to_variable_sized_list_layout = 
     std::ranges::input_range<T> &&
-    std::ranges::input_range<mnv_t<std::ranges::range_value_t<T>>>;
+    std::ranges::input_range<mnv_t<std::ranges::range_value_t<T>>> &&
+    !tuple_like<mnv_t<std::ranges::range_value_t<T>>>;
 
 template<class T>
 concept translate_to_struct_layout = 
     std::ranges::input_range<T> &&
-    tuple_like<mnv_t<std::ranges::range_value_t<T>>>;
+    tuple_like<mnv_t<std::ranges::range_value_t<T>>> &&
+    !all_elements_same<mnv_t<std::ranges::range_value_t<T>>>;
+
+template<class T>
+concept translate_to_fixed_sized_list_layout =
+    std::ranges::input_range<T> &&
+    tuple_like<mnv_t<std::ranges::range_value_t<T>>> &&
+    all_elements_same<mnv_t<std::ranges::range_value_t<T>>>;
+
+
+
 
 template<class T>
 struct builder;
@@ -74,6 +85,24 @@ struct builder<T>
         return type(
             array(build(flat_list_view)), 
             type::offset_from_sizes(sizes)
+        );
+    }
+};
+
+template< translate_to_fixed_sized_list_layout T>
+struct builder<T>
+{
+    using type = fixed_sized_list_array;
+    constexpr static std::size_t list_size = std::tuple_size_v<mnv_t<std::ranges::range_value_t<T>>>;
+
+    template<class U>
+    static type create(U && t)
+    {
+        auto flat_list_view = std::ranges::views::join(t);
+
+        return type(
+            static_cast<std::uint64_t>(list_size), 
+            array(build(flat_list_view))
         );
     }
 };
