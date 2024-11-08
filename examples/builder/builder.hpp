@@ -17,7 +17,6 @@
 #include <tuple>
 #include <utility> 
 
-
 namespace sparrow
 {
 
@@ -71,20 +70,10 @@ struct builder<T>
 
         auto flat_list_view = std::ranges::views::join(t);
 
-        using passed_value_type =  std::ranges::range_value_t<std::ranges::range_value_t<T>>;
-
-        using flat_list_view_type = std::decay_t<decltype(flat_list_view)>;
-        using flat_list_view_value_type = std::ranges::range_value_t<flat_list_view_type>;
-
-        // // check that value_types are matching
-        static_assert( std::is_same_v<passed_value_type, flat_list_view_value_type>);
-
         // build offsets from sizes
         auto sizes = t | std::views::transform([](const auto& l){ 
-            // for a nullable with missing value this will return 0
             return get_size_save(l);
         });
-
 
         auto offsets = type::offset_from_sizes(sizes);
         // the child array
@@ -98,19 +87,17 @@ struct builder<T>
     }
 };
 
-
 template< translate_to_struct_layout T>
 struct builder<T>
 {
     using type = struct_array;
+    using tuple_type = mnv_t<std::ranges::range_value_t<T>>;
+    static constexpr std::size_t n_children = std::tuple_size_v<tuple_type>;
 
     template<class U>
     static type create(U&& t)
     {
-        using tuple_type = mnv_t<std::ranges::range_value_t<T>>;
-
         // length of tuple ==> number of children
-        constexpr std::size_t n_children = std::tuple_size_v<tuple_type>;
         std::vector<array> detyped_children(n_children);
 
         for_each_index<n_children>([&](auto i)
