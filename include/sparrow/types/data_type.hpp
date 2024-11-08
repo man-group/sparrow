@@ -221,7 +221,6 @@ namespace sparrow
         }
         else if (format == "+l")
         {
-            throw std::runtime_error("Invalid offset type -- only big");
             return data_type::LIST;
         }
         else if (format == "+L")
