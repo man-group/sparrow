@@ -16,11 +16,10 @@
 
 #include <cstdint>
 
-
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
-#include "sparrow/arrow_interface/arrow_schema/smart_pointers.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
+
 
 namespace sparrow
 {
@@ -60,54 +59,11 @@ namespace sparrow
         ArrowSchema* dictionary
     );
 
-    /**
-     * Creates an `ArrowSchema`.
-     *
-     * @tparam F Value, reference or rvalue of `arrow_schema_private_data::FormatType`
-     * @tparam N Value, reference or rvalue of `arrow_schema_private_data::NameType`
-     * @tparam M Value, reference or rvalue of `arrow_schema_private_data::MetadataType`
-     * @param format A mandatory, null-terminated, UTF8-encoded string describing the data type. If the data
-     *               type is nested, child types are not encoded here but in the ArrowSchema.children
-     *               structures.
-     * @param name An optional, null-terminated, UTF8-encoded string of the field or array name.
-     *             This is mainly used to reconstruct child fields of nested types.
-     * @param metadata An optional, binary string describing the type’s metadata. If the data type
-     *                 is nested, the metadata for child types are not encoded here but in the
-     * `ArrowSchema.children` structures.
-     * @param flags A bitfield of flags enriching the type description. Its value is computed by OR’ing
-     *              together the flag values.
-     * @param children Pointer to a sequence of `ArrowSchema` pointers or `nullptr`. Must be `nullptr` if
-     * `n_children` is `0`.
-     * @param dictionary Pointer to `an ArrowSchema`. Must be present if the `ArrowSchema` represents a
-     * dictionary-encoded type. Must be `nullptr` otherwise.
-     * @return The created `ArrowSchema`.
-     */
-    template <class F, class N, class M>
-        requires std::constructible_from<arrow_schema_private_data::FormatType, F>
-                 && std::constructible_from<arrow_schema_private_data::NameType, N>
-                 && std::constructible_from<arrow_schema_private_data::MetadataType, M>
-    [[nodiscard]] arrow_schema_unique_ptr make_arrow_schema_unique_ptr(
-        F format,
-        N name,
-        M metadata,
-        std::optional<ArrowFlag> flags,
-        int64_t n_children,
-        ArrowSchema** children,
-        ArrowSchema* dictionary
-    );
 
     /**
      * Release function to use for the `ArrowSchema.release` member.
      */
     SPARROW_API void release_arrow_schema(ArrowSchema* schema);
-
-    /**
-     * Creates a default `ArrowSchema` unique pointer.
-     *
-     * @return The created `ArrowSchema` unique pointer.
-     */
-    arrow_schema_unique_ptr default_arrow_schema_unique_ptr();
-
 
     template <class F, class N, class M>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
@@ -154,18 +110,6 @@ namespace sparrow
         schema.release = release_arrow_schema;
     }
 
-    /**
-     * Creates a unique pointer to an `ArrowSchema` with default values.
-     * All integers are set to 0 and pointers to `nullptr`.
-     * The `ArrowSchema` is in an invalid state and should not bu used as is.
-     *
-     * @return The created `ArrowSchema`.
-     */
-    inline arrow_schema_unique_ptr default_arrow_schema_unique_ptr()
-    {
-        return arrow_schema_unique_ptr(new ArrowSchema{});
-    }
-
     template <class F, class N, class M>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                  && std::constructible_from<arrow_schema_private_data::NameType, N>
@@ -193,36 +137,6 @@ namespace sparrow
 
         ArrowSchema schema{};
         fill_arrow_schema(schema, format, name, metadata, flags, n_children, children, dictionary);
-        return schema;
-    };
-
-    template <class F, class N, class M>
-        requires std::constructible_from<arrow_schema_private_data::FormatType, F>
-                 && std::constructible_from<arrow_schema_private_data::NameType, N>
-                 && std::constructible_from<arrow_schema_private_data::MetadataType, M>
-    [[nodiscard]] arrow_schema_unique_ptr make_arrow_schema_unique_ptr(
-        F format,
-        N name,
-        M metadata,
-        std::optional<ArrowFlag> flags,
-        int64_t n_children,
-        ArrowSchema** children,
-        ArrowSchema* dictionary
-    )
-    {
-        SPARROW_ASSERT_TRUE(n_children >= 0);
-        SPARROW_ASSERT_TRUE(n_children > 0 ? children != nullptr : children == nullptr);
-        SPARROW_ASSERT_FALSE(format.empty());
-        if (children)
-        {
-            for (int64_t i = 0; i < n_children; ++i)
-            {
-                SPARROW_ASSERT_FALSE(children[i] == nullptr);
-            }
-        }
-
-        arrow_schema_unique_ptr schema = default_arrow_schema_unique_ptr();
-        fill_arrow_schema(*schema, format, name, metadata, flags, n_children, children, dictionary);
         return schema;
     };
 
