@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <sparrow/layout/list_layout/list_value.hpp>
 #include <sparrow/layout/struct_layout/struct_value.hpp>
