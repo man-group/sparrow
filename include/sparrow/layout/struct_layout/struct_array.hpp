@@ -21,7 +21,6 @@
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
-#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/array_api.hpp"

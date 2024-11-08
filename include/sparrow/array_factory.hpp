@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
@@ -24,5 +22,4 @@
 namespace sparrow
 {
     SPARROW_API cloning_ptr<array_wrapper> array_factory(arrow_proxy proxy);
-    
 }

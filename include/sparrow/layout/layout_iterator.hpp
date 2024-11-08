@@ -15,7 +15,6 @@
 #pragma once
 
 #include "sparrow/utils/iterator.hpp"
-#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {

@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <array>
+
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/layout/variable_size_binary_array.hpp"
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
-#include "sparrow/layout/variable_size_binary_array.hpp"
 
 
 namespace sparrow
@@ -39,7 +41,8 @@ namespace sparrow
     private:
 
         static_assert(std::same_as<layout_type::inner_value_type, std::string>);
-        // static_assert(std::same_as<layout_type::inner_reference, sparrow::variable_size_binary_reference<layout_type>>);
+        // static_assert(std::same_as<layout_type::inner_reference,
+        // sparrow::variable_size_binary_reference<layout_type>>);
         static_assert(std::same_as<layout_type::inner_const_reference, std::string_view>);
         using const_value_iterator = layout_type::const_value_iterator;
         static_assert(std::same_as<const_value_iterator::value_type, std::string>);

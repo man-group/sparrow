@@ -16,21 +16,17 @@
 
 #include <string>  // for std::stoull
 
-
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/array_factory.hpp"
+#include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
-#include "sparrow/layout/nested_value_types.hpp"
-#include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
-#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/array_api.hpp"
-#include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 
 namespace sparrow
