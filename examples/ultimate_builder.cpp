@@ -213,28 +213,23 @@ int main()
     // arr[float]
     {   
         std::vector<float> v{1.0, 2.0, 3.0, 4.0, 5.0};
-        using container_type = std::decay_t<decltype(v)>;
-        using builder_type = sparrow::builder<container_type>;
-
-        auto arr = builder_type::create(v);
-        std::cout<<"arr[float]"<<std::endl;
-        print_arr(arr);
+        std::cout<<"arr[float]:"<<std::endl;
+        print_arr(sparrow::build(v));
     }
     // list[float]
     {   
         std::vector<std::vector<float>> v{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
-        std::cout<<"list[float]"<<std::endl;
-        print_arr(sparrow::build(v))
+        std::cout<<std::endl<<"list[float]:"<<std::endl;
+        print_arr(sparrow::build(v));
     }
     // list[list[float]]
     {   
-        // vector of vector of vector of float
         std::vector<std::vector<std::vector<float>>> v{
             {{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f}},
             {{7.0f, 8.0f, 9.0f}, {10.0f, 11.0f, 12.0f}}
         };
-        std::cout<<"list[list[float]]"<<std::endl;
-        print_arr(sparrow::build(v))
+        std::cout<<std::endl<<"list[list[float]]:"<<std::endl;
+        print_arr(sparrow::build(v));
     }
     // struct<float, float>
     {   
@@ -243,8 +238,8 @@ int main()
             {3.0f, 4.0f},
             {5.0f, 6.0f}
         };
-        std::cout<<"struct<float, float>"<<std::endl;
-        print_arr(sparrow::build(v))
+        std::cout<<std::endl<<"struct<float, float>:"<<std::endl;
+        print_arr(sparrow::build(v));
     }
     // struct<list[float], uint16>
     {   
@@ -253,7 +248,7 @@ int main()
             {{4.0f, 5.0f, 6.0f}, 2},
             {{7.0f, 8.0f, 9.0f}, 3}
         };
-        std::cout<<"struct<list[float], uint16>"<<std::endl;
+        std::cout<<std::endl<<"struct<list[float], uint16>:"<<std::endl;
         print_arr(sparrow::build(v));
     }
 
