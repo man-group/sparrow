@@ -34,7 +34,6 @@ concept translate_to_variable_sized_list_layout =
 template<class T>
 concept translate_to_struct_layout = 
     std::ranges::input_range<T> &&
-    // the value_type of the range is a tuple
     tuple_like<mnv_t<std::ranges::range_value_t<T>>>;
 
 template<class T>
@@ -67,22 +66,16 @@ struct builder<T>
     template<class U>
     static type create(U && t)
     {
-
         auto flat_list_view = std::ranges::views::join(t);
 
-        // build offsets from sizes
         auto sizes = t | std::views::transform([](const auto& l){ 
             return get_size_save(l);
         });
-
-        auto offsets = type::offset_from_sizes(sizes);
-        // the child array
-        auto flat_arr = build(flat_list_view);
-
-        // wrap the flat array into an array
-        array flat_arr_detyped(std::move(flat_arr));
-        
-        return type(std::move(flat_arr_detyped), std::move(offsets));
+ 
+        return type(
+            array(build(flat_list_view)), 
+            type::offset_from_sizes(sizes)
+        );
 
     }
 };
@@ -97,7 +90,6 @@ struct builder<T>
     template<class U>
     static type create(U&& t)
     {
-        // length of tuple ==> number of children
         std::vector<array> detyped_children(n_children);
 
         for_each_index<n_children>([&](auto i)
@@ -107,14 +99,7 @@ struct builder<T>
                 return std::get<decltype(i)::value>(tuple);
             }); 
 
-            // the child array
-            auto col_arr = build(tuple_i_col);
-
-            // wrap the flat array into an array
-            array detyped_col_arr(std::move(col_arr));
-
-            // move the array into the vector
-            detyped_children[i] = std::move(detyped_col_arr);
+            detyped_children[i] = array(build(tuple_i_col));
         });
         return type(std::move(detyped_children));
     }
