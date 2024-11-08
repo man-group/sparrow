@@ -15,7 +15,7 @@
 #pragma once
 
 #include <string>  // for std::stoull
-
+#include <type_traits> 
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
@@ -53,6 +53,63 @@ namespace sparrow
     using big_list_view_array = list_view_array_impl<true>;
 
     class fixed_sized_list_array;
+
+
+
+    namespace detail
+    {
+        template<class T>
+        struct get_data_type_from_array;
+
+        template<>
+        struct get_data_type_from_array<sparrow::list_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::LIST;
+            }
+        };
+
+        template<>
+        struct get_data_type_from_array<sparrow::big_list_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::LARGE_LIST;
+            }
+        };
+
+        template<>
+        struct get_data_type_from_array<sparrow::list_view_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::LIST_VIEW;
+            }
+        };
+
+        template<>
+        struct get_data_type_from_array<sparrow::big_list_view_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::LARGE_LIST_VIEW;
+            }
+        };
+
+        template<>
+        struct get_data_type_from_array<sparrow::fixed_sized_list_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::FIXED_SIZED_LIST;
+            }
+        };
+    }
+
+
+
+
 
     template <bool BIG>
     struct array_inner_types<list_array_impl<BIG>> : array_inner_types_base
@@ -189,13 +246,19 @@ namespace sparrow
         list_array_impl(const self_type&);
         list_array_impl& operator=(const self_type&);
 
-        list_array_impl(self_type&&) = default;
+        list_array_impl(self_type&& other)
+        :   base_type(std::move(other)),
+            p_list_offsets(other.p_list_offsets)
+        {
+        }
+
         list_array_impl& operator=(self_type&&) = default;
 
         template<class ... ARGS>
         requires(mpl::excludes_copy_and_move_ctor_v<list_array_impl<BIG>, ARGS...>)
-        list_array_impl(ARGS && ... args): self_type(create_proxy(std::forward<ARGS>(args)...))
-        {}
+        explicit list_array_impl(ARGS && ... args): self_type(create_proxy(std::forward<ARGS>(args)...))
+        {
+        }
 
         template<std::ranges::range SIZES_RANGE>
         static auto offset_from_sizes(SIZES_RANGE && sizes) -> offset_buffer_type;
@@ -509,7 +572,6 @@ namespace sparrow
         VB && validity_input
     )
     {
-        SPARROW_ASSERT(list_offsets.size() == list_sizes.size() , "sizes and offset must have the same size");
         const auto size = list_sizes.size();
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
 
@@ -550,7 +612,7 @@ namespace sparrow
         : base_type(rhs)
         , p_list_offsets(make_list_offsets())
         , p_list_sizes(make_list_sizes())
-    {
+    {   
     }
 
     template <bool BIG>

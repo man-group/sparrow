@@ -15,6 +15,8 @@
 #include "sparrow/layout/list_layout/list_value.hpp"
 #include "sparrow/layout/dispatch.hpp"
 
+#include <iostream>
+
 namespace sparrow
 {
     list_value::list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end)
@@ -22,6 +24,7 @@ namespace sparrow
         , m_index_begin(index_begin)
         , m_index_end(index_end)
     {
+        SPARROW_ASSERT_TRUE(index_begin<=index_end);
     }
 
     auto list_value::size() const -> size_type

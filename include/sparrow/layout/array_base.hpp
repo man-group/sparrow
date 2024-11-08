@@ -123,7 +123,7 @@ namespace sparrow
         array_crtp_base(const array_crtp_base&) = default;
         array_crtp_base& operator=(const array_crtp_base&) = default;
 
-        array_crtp_base(array_crtp_base&&) = default;
+        array_crtp_base(array_crtp_base&& other) = default;
         array_crtp_base& operator=(array_crtp_base&&) = default;
 
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
@@ -170,8 +170,7 @@ namespace sparrow
      */
     template <class D>
     auto array_crtp_base<D>::operator[](size_type i) const -> const_reference
-    {
-        SPARROW_ASSERT_TRUE(i < this->derived_cast().size());
+    { 
         return const_reference(
             inner_const_reference(this->derived_cast().value(i)),
             this->derived_cast().has_value(i)

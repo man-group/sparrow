@@ -165,7 +165,7 @@ namespace sparrow
         ) -> arrow_proxy;
 
         // range of values (no missing values)
-        template <std::ranges::input_range R>
+        template <std::ranges::range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
         static auto create_proxy(R&& range) -> arrow_proxy;
 
@@ -299,11 +299,21 @@ namespace sparrow
     }
 
     template <class T>
-    template <std::ranges::input_range R>
+    template <std::ranges::range R>
     requires std::convertible_to<std::ranges::range_value_t<R>, T>
     arrow_proxy primitive_array<T>::create_proxy(R&& range)
-    {
-        const std::size_t n = std::ranges::size(range);
+    {   
+        auto range_size = [](auto && r) { 
+            if constexpr (std::ranges::sized_range<R>)
+            {
+                return std::ranges::size(r);
+            }
+            else
+            {
+                return std::ranges::distance(r);
+            }
+        };
+        const std::size_t n = range_size(range);
         auto iota = std::ranges::iota_view{std::size_t(0), n};
         std::ranges::transform_view iota_to_is_non_missing(iota, [](std::size_t) { return true; });
         return self_type::create_proxy(std::forward<R>(range), std::move(iota_to_is_non_missing));

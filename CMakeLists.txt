@@ -128,6 +128,11 @@ if (USE_DATE_POLYFILL)
     add_compile_definitions(SPARROW_USE_DATE_POLYFILL)
 endif()
 
+
+
+# ranges v3 
+find_package(range-v3 CONFIG REQUIRED)
+
 # Build
 # =====
 
@@ -233,6 +238,8 @@ else()
 endif()
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
+
+target_link_libraries(sparrow PUBLIC range-v3::range-v3)
 
 # TODO: handle static lib
 if (UNIX)

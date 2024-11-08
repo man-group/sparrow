@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "sparrow/utils/ranges.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/buffer/u8_buffer.hpp"
 
@@ -84,7 +85,7 @@ namespace sparrow::detail
     requires(std::unsigned_integral<std::ranges::range_value_t<SIZES_RANGE>>)
     sparrow::u8_buffer<OFFSET_TYPE> offset_buffer_from_sizes(SIZES_RANGE && sizes)
     {
-        sparrow::u8_buffer<OFFSET_TYPE> buffer(std::ranges::size(sizes) + 1);
+        sparrow::u8_buffer<OFFSET_TYPE> buffer(range_size(sizes) + 1);
 
         OFFSET_TYPE offset = 0;
         auto it = buffer.begin();
