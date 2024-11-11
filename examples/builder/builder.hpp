@@ -43,9 +43,6 @@ concept translate_to_fixed_sized_list_layout =
     tuple_like<mnv_t<std::ranges::range_value_t<T>>> &&
     all_elements_same<mnv_t<std::ranges::range_value_t<T>>>;
 
-
-
-
 template<class T>
 struct builder;
 
