@@ -73,7 +73,7 @@ struct builder<T>
     template<class U>
     static type create(U && t)
     {
-        auto flat_list_view = std::ranges::views::join(t);
+        auto flat_list_view = std::ranges::views::join(ensure_value_range(t));
 
         auto sizes = t | std::views::transform([](const auto& l){ 
             return get_size_save(l);
@@ -81,7 +81,8 @@ struct builder<T>
  
         return type(
             array(build(flat_list_view)), 
-            type::offset_from_sizes(sizes)
+            type::offset_from_sizes(sizes),
+            where_null(t)
         );
     }
 };
@@ -95,11 +96,12 @@ struct builder<T>
     template<class U>
     static type create(U && t)
     {
-        auto flat_list_view = std::ranges::views::join(t);
+        auto flat_list_view = std::ranges::views::join(ensure_value_range(t));
 
         return type(
             static_cast<std::uint64_t>(list_size), 
-            array(build(flat_list_view))
+            array(build(flat_list_view)),
+            where_null(t)
         );
     }
 };
@@ -108,24 +110,21 @@ template< translate_to_struct_layout T>
 struct builder<T>
 {
     using type = struct_array;
-    using tuple_type = mnv_t<std::ranges::range_value_t<T>>;
-    static constexpr std::size_t n_children = std::tuple_size_v<tuple_type>;
+    static constexpr std::size_t n_children = std::tuple_size_v<mnv_t<std::ranges::range_value_t<T>>>;
 
     template<class U>
-    static type create(U&& t)
+    static type create(U&& t) 
     {
         std::vector<array> detyped_children(n_children);
-
         for_each_index<n_children>([&](auto i)
         {
-            auto tuple_i_col = t | std::views::transform([](const auto& tuple)
+            auto tuple_i_col = t | std::views::transform([](const auto& maybe_nullable_tuple)
             {
-                return std::get<decltype(i)::value>(tuple);
+                return std::get<decltype(i)::value>(ensure_value( ensure_value(maybe_nullable_tuple)));
             }); 
-
             detyped_children[i] = array(build(tuple_i_col));
         });
-        return type(std::move(detyped_children));
+       return type(std::move(detyped_children), where_null(t));
     }
 };
 

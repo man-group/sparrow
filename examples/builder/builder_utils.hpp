@@ -106,8 +106,9 @@ namespace sparrow
     concept is_nullable_like = 
     requires(T t)
     {
+        //typename T::value_type;
         { t.has_value() } -> std::convertible_to<bool>;
-        { t.get() } -> std::convertible_to<typename T::value_type>;
+        { t.get() };// -> std::convertible_to<typename T::value_type>;
     };
 
     template<class T>
@@ -138,6 +139,56 @@ namespace sparrow
     auto get_size_save(const T& t)
     {
         return t.has_value() ? t.size() : 0;
+    }
+
+    
+    template<class T>
+    auto ensure_value(T && t)
+    {
+        return std::forward<T>(t);
+    }
+
+    template<is_nullable_like T>
+    auto ensure_value(T && t)
+    {
+        return t.get();
+    }
+
+    template<std::ranges::range T>
+    requires(is_nullable_like< std::ranges::range_value_t<T>>)
+    std::vector<std::size_t> where_null(T && t)
+    {
+        std::vector<std::size_t> result;
+        for (std::size_t i = 0; i < t.size(); ++i)
+        {
+            if (!t[i].has_value())
+            {
+                result.push_back(i);
+            }
+        }
+        return result;
+    }
+    
+
+    template<class T>
+    std::array<std::size_t,0> where_null(T && )
+    {
+        return {};
+    }
+
+
+    
+    template<class T>
+    T ensure_value_range(T && t)
+    {
+        return std::forward<T>(t);
+    }
+
+    template<class T>
+    requires(is_nullable_like<typename std::decay_t<T>::value_type>)
+    auto ensure_value_range(T && t)
+    {
+        return t | std::views::transform([](auto && v) { return v.get(); });
     }
 
 

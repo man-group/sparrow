@@ -16,6 +16,7 @@
 
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_base.hpp"
 #include "sparrow/buffer/buffer.hpp"
+#include "sparrow/utils/ranges.hpp"
 
 namespace sparrow
 {
@@ -138,7 +139,7 @@ namespace sparrow
         requires(std::same_as<std::ranges::range_value_t<R>, bool>)
         validity_bitmap ensure_validity_bitmap_impl(std::size_t size, R&& range)
         {   
-            SPARROW_ASSERT_TRUE(size == std::ranges::size(range) || std::ranges::size(range) == 0);
+            SPARROW_ASSERT_TRUE(size == range_size(range) || range_size(range) == 0);
             validity_bitmap bitmap(size, true);
             std::size_t i = 0;
             for(auto value : range)
