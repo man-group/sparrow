@@ -26,6 +26,7 @@
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/layout/array_access.hpp"
+#include "sparrow/array_api.hpp"
 
 namespace sparrow
 {
@@ -103,6 +104,8 @@ namespace sparrow
         using iterator = functor_index_iterator<functor_type>;
         using const_iterator = functor_index_iterator<const_functor_type>;
 
+        using keys_buffer_type = u8_buffer<IT>;
+
         explicit dictionary_encoded_array(arrow_proxy);
 
         dictionary_encoded_array(const self_type&);
@@ -124,7 +127,21 @@ namespace sparrow
         const_iterator cbegin() const;
         const_iterator cend() const;
 
+        template <class ... Args>
+        requires(mpl::excludes_copy_and_move_ctor_v<dictionary_encoded_array<IT>, Args...>)
+        explicit dictionary_encoded_array(Args&& ... args)
+            : dictionary_encoded_array(create_proxy(std::forward<Args>(args) ...))
+        {
+        }
+
     private:
+
+        template <validity_bitmap_input R = validity_bitmap>
+        static auto create_proxy(
+            keys_buffer_type && keys,    
+            array && values,
+            R && bitmaps = validity_bitmap{}
+        ) -> arrow_proxy;
 
         using keys_layout = primitive_array<IT>;
         using values_layout = cloning_ptr<array_wrapper>;
@@ -201,6 +218,48 @@ namespace sparrow
             p_values_layout = create_values_layout(m_proxy);
         }
         return *this;
+    }
+
+    template <std::integral IT>
+    template <validity_bitmap_input VBI>
+    auto dictionary_encoded_array<IT>::create_proxy(
+        keys_buffer_type && keys,    
+        array && values,
+        VBI && validity_input
+    ) -> arrow_proxy
+    {
+        const auto size = keys.size();
+        validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VBI>(validity_input));
+
+        auto [value_array, value_schema] = extract_arrow_structures(std::move(values));
+        const auto null_count = vbitmap.null_count();
+
+        // create arrow schema and array
+        ArrowSchema schema = make_arrow_schema(
+            sparrow::data_type_format_of<IT>(),
+            std::nullopt, // name
+            std::nullopt, // metadata
+            std::nullopt, // flags
+            0, // n_children
+            nullptr, // children
+            new ArrowSchema(std::move(value_schema)) // dictionary
+        );
+
+        std::vector<buffer<uint8_t>> buffers(2);
+        buffers[0] = std::move(vbitmap).extract_storage();
+        buffers[1] = std::move(keys).extract_storage();
+
+        // create arrow array
+        ArrowArray arr = make_arrow_array(
+            static_cast<std::int64_t>(size), // length
+            static_cast<int64_t>(null_count),
+            0, // offset
+            std::move(buffers),
+            0, // n_children
+            nullptr, // children
+            new ArrowArray(std::move(value_array)) // dictionary
+        );
+        return arrow_proxy(std::move(arr), std::move(schema));
     }
 
     template <std::integral IT>
