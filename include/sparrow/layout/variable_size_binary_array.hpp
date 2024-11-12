@@ -742,7 +742,7 @@ namespace sparrow
         auto& data_buffer = get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
         auto data_buffer_adaptor = make_buffer_adaptor<data_value_type>(data_buffer);
         auto values = std::ranges::subrange(first, last);
-        const size_t cumulative_sizes = std::reduce(
+        const size_t cumulative_sizes = std::accumulate(
             values.begin(),
             values.end(),
             size_t(0),
