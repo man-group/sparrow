@@ -741,21 +741,36 @@ namespace sparrow
         -> value_iterator
     {
         auto& data_buffer = get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+        auto data_buffer_adaptor = make_buffer_adaptor<data_value_type>(data_buffer);
+        auto values = std::ranges::subrange(first, last);
+        const size_t cumulative_sizes = std::reduce(
+            values.begin(),
+            values.end(),
+            size_t(0),
+            [](size_t acc, const T& value)
+            {
+                return acc + value.size();
+            }
+        );
+        data_buffer_adaptor.resize(data_buffer_adaptor.size() + cumulative_sizes);
         const auto idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
         const OT offset_begin = *offset(idx);
-        auto values = std::ranges::subrange(first, last);
-        auto joined_range = values | std::ranges::views::join;
-        auto casted_joined_range = joined_range
-                                   | std::views::transform(
-                                       [](char c) -> uint8_t
-                                       {
-                                           return static_cast<uint8_t>(c);
-                                       }
-                                   );
-        const auto insert_pos = sparrow::next(data_buffer.cbegin(), offset_begin);
-        std::vector<uint8_t> casted_values;
-        std::ranges::copy(casted_joined_range, std::back_inserter(casted_values));
-        data_buffer.insert(insert_pos, casted_values.begin(), casted_values.end());
+
+        // Move elements to make space for the new value
+        std::move_backward(
+            sparrow::next(data_buffer_adaptor.begin(), offset_begin),
+            sparrow::next(data_buffer_adaptor.end(), -static_cast<difference_type>(cumulative_sizes)),
+            data_buffer_adaptor.end()
+        );
+
+        auto insert_pos = sparrow::next(data_buffer_adaptor.cbegin(), offset_begin);
+
+        for (const T& value : values)
+        {
+            data_buffer_adaptor.insert(insert_pos, value.cbegin(), value.cend());
+            std::advance(insert_pos, value.size());
+        }
+
         const auto sizes_of_each_value = std::ranges::views::transform(
             values,
             [](const T& value) -> offset_type

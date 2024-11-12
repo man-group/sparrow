@@ -92,6 +92,15 @@ namespace sparrow
         iterator insert(const_iterator pos, const value_type& value, size_type count);
         iterator insert(const_iterator pos, std::initializer_list<value_type> values);
 
+        /**
+         * Inserts elements from range [\c first , \c last ) before \c pos in the array.
+         *
+         * @param pos The iterator before which the elements will be inserted (\c pos may be the end()
+         * iterator).
+         * @param first The iterator to the first element to insert.
+         * @param last The iterator to the element following the last element to insert.
+         * @return An iterator pointing to the first element inserted, or \c pos if <tt>first == last</tt>.
+         */
         template <mpl::iterator_of_type<value_type> InputIt>
         iterator insert(const_iterator pos, InputIt first, InputIt last)
         {
@@ -133,6 +142,15 @@ namespace sparrow
             return sparrow::next(this->begin(), distance);
         }
 
+        /**
+         * Inserts elements from range \c range before \c pos in the array.
+         *
+         * @tparam R the type of range to insert.
+         * @param pos The iterator before which the elements will be inserted (\c pos may be the end()
+         * iterator).
+         * @param range The range of values to insert.
+         * @return An iterator pointing to the first element inserted, or \c pos if \c range is empty.
+         */
         template <std::ranges::input_range R>
             requires std::same_as<std::ranges::range_value_t<R>, value_type>
         iterator insert(const_iterator pos, const R& range)
@@ -290,72 +308,6 @@ namespace sparrow
     {
         return insert(pos, values.begin(), values.end());
     }
-
-    /**
-     * Inserts elements from range [\c first , \c last ) before \c pos in the array.
-     *
-     * @param pos The iterator before which the elements will be inserted (\c pos may be the end() iterator).
-     * @param first The iterator to the first element to insert.
-     * @param last The iterator to the element following the last element to insert.
-     * @return An iterator pointing to the first element inserted, or \c pos if <tt>first == last</tt>.
-     */
-    // template <class D>
-    // template <mpl::iterator_of_type<typename mutable_array_base<D>::value_type> InputIt>
-    // auto mutable_array_base<D>::insert(const_iterator pos, InputIt first, InputIt last) -> iterator
-    // {
-    //     SPARROW_ASSERT_TRUE(pos >= this->cbegin())
-    //     SPARROW_ASSERT_TRUE(pos <= this->cend());
-    //     SPARROW_ASSERT_TRUE(first <= last);
-    //     const difference_type distance = std::distance(this->cbegin(), pos);
-    //     const auto validity_range = std::ranges::subrange(first, last)
-    //                                 | std::views::transform(
-    //                                     [](const value_type& obj)
-    //                                     {
-    //                                         return obj.has_value();
-    //                                     }
-    //                                 );
-    //     auto& derived = this->derived_cast();
-    //     derived.insert_bitmap(
-    //         sparrow::next(this->bitmap_cbegin(), distance),
-    //         validity_range.begin(),
-    //         validity_range.end()
-    //     );
-
-    //     const auto value_range = std::ranges::subrange(first, last)
-    //                              | std::views::transform(
-    //                                  [](const value_type& obj)
-    //                                  {
-    //                                      return obj.get();
-    //                                  }
-    //                              );
-    //     derived.insert_values(
-    //         sparrow::next(derived.value_cbegin(), distance),
-    //         value_range.begin(),
-    //         value_range.end()
-    //     );
-    //     const difference_type count = std::distance(first, last);
-    //     // The following must be done after modifying the bitmap and values
-    //     this->get_arrow_proxy().set_length(this->size() + static_cast<size_t>(count));
-
-    //     derived.update();
-    //     return sparrow::next(begin(), distance);
-    // }
-
-    /**
-     * Inserts elements from range \c range before \c pos in the array.
-     *
-     * @tparam R the type of range to insert.
-     * @param pos The iterator before which the elements will be inserted (\c pos may be the end() iterator).
-     * @param range The range of values to insert.
-     * @return An iterator pointing to the first element inserted, or \c pos if \c range is empty.
-     */
-    // template <class D>
-    // template <std::ranges::input_range R>
-    //     requires std::same_as<std::ranges::range_value_t<R>, typename mutable_array_base<D>::value_type>
-    // auto mutable_array_base<D>::insert(const_iterator pos, const R& range) -> iterator
-    // {
-    //     return insert(pos, std::ranges::begin(range), std::ranges::end(range));
-    // }
 
     /**
      * Removes the element at \c pos from the array.
