@@ -754,7 +754,6 @@ namespace sparrow
         data_buffer_adaptor.resize(data_buffer_adaptor.size() + cumulative_sizes);
         const auto idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
         const OT offset_begin = *offset(idx);
-
         auto insert_pos = sparrow::next(data_buffer_adaptor.begin(), offset_begin);
 
         // Move elements to make space for the new value
@@ -764,8 +763,6 @@ namespace sparrow
             data_buffer_adaptor.end()
         );
 
-
-        // Copy values
         for (const T& value : values)
         {
             std::copy(value.begin(), value.end(), insert_pos);
