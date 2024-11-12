@@ -26,6 +26,10 @@
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 
+#if not defined(SPARROW_BUFFER_GROWTH_FACTOR)
+#    define SPARROW_BUFFER_GROWTH_FACTOR 2
+#endif
+
 namespace sparrow
 {
 
@@ -259,6 +263,8 @@ namespace sparrow
 
         template <class It>
         constexpr pointer allocate_and_copy(size_type n, It first, It last);
+
+        constexpr void reserve_with_growth_factor(size_type new_cap);
 
         // The following methods are static because:
         // - they accept an allocator argument, and do not depend on
@@ -726,6 +732,15 @@ namespace sparrow
         }
     }
 
+    template<class T>
+    constexpr void buffer<T>::reserve_with_growth_factor(size_type new_cap)
+    {
+        if(new_cap > capacity())
+        {
+            reserve(new_cap * SPARROW_BUFFER_GROWTH_FACTOR);
+        }
+    }
+
     template <class T>
     constexpr void buffer<T>::shrink_to_fit()
     {
@@ -766,7 +781,7 @@ namespace sparrow
         const difference_type offset = std::distance(cbegin(), pos);
         if (count != 0)
         {
-            reserve(size() + count);
+            reserve_with_growth_factor( size() + count);
             const iterator it = std::next(begin(), offset);
             std::move_backward(it, end(), std::next(end(), static_cast<difference_type>(count)));
             std::fill_n(it, count, value);
@@ -797,6 +812,7 @@ namespace sparrow
         const size_type new_size = size() + static_cast<size_type>(num_elements);
         const difference_type offset = std::distance(cbegin(), pos);
         const size_type old_size = size();
+        reserve_with_growth_factor(new_size);
         resize(new_size);
         const iterator new_pos = std::next(begin(), offset);
         const iterator end_it = std::next(begin(), static_cast<difference_type>(old_size));
@@ -827,7 +843,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const difference_type offset = std::distance(cbegin(), pos);
-        reserve(size() + 1);
+        reserve_with_growth_factor(size() + 1);
         pointer p = get_data().p_begin + offset;
         if (p != get_data().p_end)
         {

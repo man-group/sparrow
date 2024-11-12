@@ -71,22 +71,26 @@ namespace sparrow
             buffer_test_type b0;
             CHECK_EQ(b0.data(), nullptr);
             CHECK_EQ(b0.size(), 0u);
+            CHECK_EQ(b0.capacity(), 0);
 
             const std::size_t expected_size = 4;
             buffer_test_type b1(expected_size);
             CHECK_NE(b1.data(), nullptr);
             CHECK_EQ(b1.size(), expected_size);
+            CHECK_EQ(b1.capacity(), b1.size());
 
             int32_t* mem = make_test_buffer(expected_size);
             buffer_test_type b2(mem, expected_size);
             CHECK_EQ(b2.data(), mem);
             CHECK_EQ(b2.size(), expected_size);
+            CHECK_EQ(b2.capacity(), b2.size());
             CHECK_EQ(b2.data()[2], 2);
 
             const int32_t expected_value = 3;
             buffer_test_type b3(expected_size, expected_value);
             CHECK_NE(b3.data(), nullptr);
             CHECK_EQ(b3.size(), expected_size);
+            CHECK_EQ(b3.capacity(), b3.size());
             for (std::size_t i = 0; i < expected_size; ++i)
             {
                 CHECK_EQ(b3[i], expected_value);
@@ -113,11 +117,13 @@ namespace sparrow
             buffer_test_type b1(make_test_buffer(size), size);
             buffer_test_type b2(b1);
             CHECK_EQ(b1, b2);
+            CHECK_EQ(b1.capacity(), b2.capacity());
 
             const std::size_t size2 = 8u;
             buffer_test_type b3(make_test_buffer(size2, 4), size2);
             b2 = b3;
             CHECK_EQ(b2, b3);
+            CHECK_EQ(b2.capacity(), b2.size());
             CHECK_NE(b1, b2);
         }
 
@@ -137,6 +143,7 @@ namespace sparrow
             buffer_test_type control2(b4);
             b2 = std::move(b4);
             CHECK_EQ(b2, control2);
+            CHECK_EQ(b2.capacity(), b2.size());
             CHECK_EQ(b4, control);
         }
 
@@ -293,6 +300,7 @@ namespace sparrow
             buffer_test_type b(make_test_buffer(size1), size1);
             b.clear();
             CHECK_EQ(b.size(), 0u);
+            CHECK_EQ(b.capacity(), size1);
         }
 
         TEST_CASE("reserve")
@@ -316,16 +324,19 @@ namespace sparrow
             buffer_test_type b(make_test_buffer(size1), size1);
             b.resize(size2);
             CHECK_EQ(b.size(), size2);
+            CHECK_EQ(b.capacity(), size2);
             CHECK_EQ(b.data()[2], 2);
 
             b.resize(size1);
             CHECK_EQ(b.size(), size1);
+            CHECK_EQ(b.capacity(), size2);
             CHECK_EQ(b.data()[2], 2);
 
             const std::size_t size3 = 6u;
             const buffer_test_type::value_type v = 7u;
             b.resize(size3, v);
             CHECK_EQ(b.size(), size3);
+            CHECK_EQ(b.capacity(), size2);
             CHECK_EQ(b.data()[2], 2);
             CHECK_EQ(b.data()[4], v);
             CHECK_EQ(b.data()[5], v);
@@ -378,6 +389,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.emplace(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), 1);
+                CHECK_EQ(b.capacity(), 2);
                 CHECK_EQ(b[0], expected_value);
             }
 
@@ -389,6 +401,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.emplace(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], expected_value);
                 CHECK_EQ(b[1], 0);
                 CHECK_EQ(b[2], 1);
@@ -404,6 +417,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.emplace(b.cbegin() + 2, expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], expected_value);
@@ -419,6 +433,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.emplace(b.cend(), expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], 2);
@@ -435,6 +450,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.insert(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], expected_value);
                 CHECK_EQ(b.back(), expected_value);
                 CHECK_EQ(b.cend()[-1], expected_value);
@@ -448,6 +464,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.insert(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], expected_value);
                 CHECK_EQ(b[1], 0);
                 CHECK_EQ(b[2], 1);
@@ -464,6 +481,7 @@ namespace sparrow
                 std::string movable_expected_value = expected_value;
                 b.insert(b.cbegin(), std::move(movable_expected_value));
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], expected_value);
                 CHECK_EQ(b.front(), expected_value);
                 CHECK_EQ(*b.cbegin(), expected_value);
@@ -476,6 +494,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.insert(b.cbegin() + 2, expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], expected_value);
@@ -492,6 +511,7 @@ namespace sparrow
                 std::string movable_expected_value = expected_value;
                 b.insert(b.cbegin() + 2, std::move(movable_expected_value));
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], "0");
                 CHECK_EQ(b[1], "1");
                 CHECK_EQ(b[2], expected_value);
@@ -507,6 +527,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.insert(b.cend(), expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], 2);
@@ -522,6 +543,7 @@ namespace sparrow
                 std::string movable_expected_value = expected_value;
                 b.insert(b.cend(), std::move(movable_expected_value));
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], "0");
                 CHECK_EQ(b[1], "1");
                 CHECK_EQ(b[2], "2");
@@ -540,6 +562,7 @@ namespace sparrow
                 b.insert(b.cbegin(), count, expected_value);
                 const std::size_t new_size = b.size();
                 REQUIRE_EQ(new_size, expected_new_size);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], expected_value);
                 CHECK_EQ(b[1], expected_value);
                 CHECK_EQ(b[2], expected_value);
@@ -558,8 +581,8 @@ namespace sparrow
                 constexpr std::size_t count = 3u;
                 constexpr std::size_t expected_new_size = size + count;
                 b.insert(b.cbegin() + 2, count, expected_value);
-                const std::size_t new_size = b.size();
-                REQUIRE_EQ(new_size, expected_new_size);
+                REQUIRE_EQ(b.size(), expected_new_size);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], expected_value);
@@ -580,6 +603,7 @@ namespace sparrow
                 b.insert(b.cend(), count, expected_value);
                 const std::size_t new_size = b.size();
                 REQUIRE_EQ(new_size, expected_new_size);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], 2);
@@ -599,6 +623,7 @@ namespace sparrow
                 b.insert(b.cbegin(), values.cbegin(), values.cend());
                 const std::size_t new_size = b.size();
                 REQUIRE_EQ(new_size, expected_new_size);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 101);
                 CHECK_EQ(b[1], 102);
                 CHECK_EQ(b[2], 103);
@@ -620,6 +645,7 @@ namespace sparrow
                     std::make_move_iterator(values.end())
                 );
                 REQUIRE_EQ(b.size(), expected_new_size);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], "101");
                 CHECK_EQ(b[1], "102");
                 CHECK_EQ(b[2], "103");
@@ -639,6 +665,7 @@ namespace sparrow
                 b.insert(b.cbegin() + 2, values.cbegin(), values.cend());
                 const std::size_t new_size = b.size();
                 REQUIRE_EQ(new_size, expected_new_size);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], 101);
@@ -661,6 +688,7 @@ namespace sparrow
                     std::make_move_iterator(values.end())
                 );
                 REQUIRE_EQ(b.size(), expected_new_size);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], "0");
                 CHECK_EQ(b[1], "1");
                 CHECK_EQ(b[2], "101");
@@ -680,6 +708,7 @@ namespace sparrow
                 b.insert(b.cend(), values.cbegin(), values.cend());
                 const std::size_t new_size = b.size();
                 REQUIRE_EQ(new_size, expected_new_size);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], 2);
@@ -698,6 +727,7 @@ namespace sparrow
                 const std::size_t expected_new_size = size + values.size();
                 b.insert(b.cend(), std::make_move_iterator(values.begin()), std::make_move_iterator(values.end()));
                 REQUIRE_EQ(b.size(), expected_new_size);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], "0");
                 CHECK_EQ(b[1], "1");
                 CHECK_EQ(b[2], "2");
@@ -714,6 +744,7 @@ namespace sparrow
 
                 b.insert(b.cbegin(), {101, 102, 103});
                 REQUIRE_EQ(b.size(), size + 3);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 101);
                 CHECK_EQ(b[1], 102);
                 CHECK_EQ(b[2], 103);
@@ -730,6 +761,7 @@ namespace sparrow
 
                 b.insert(b.cbegin() + 2, {101, 102, 103});
                 REQUIRE_EQ(b.size(), size + 3);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], 101);
@@ -746,6 +778,7 @@ namespace sparrow
 
                 b.insert(b.cend(), {101, 102, 103});
                 REQUIRE_EQ(b.size(), size + 3);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], 2);
@@ -765,6 +798,7 @@ namespace sparrow
 
                 b.erase(b.cbegin());
                 REQUIRE_EQ(b.size(), size - 1);
+                CHECK_EQ(b.capacity(), size);
                 CHECK_EQ(b[0], 1);
                 CHECK_EQ(b[1], 2);
                 CHECK_EQ(b[2], 3);
@@ -777,6 +811,7 @@ namespace sparrow
 
                 b.erase(b.cbegin() + 2);
                 REQUIRE_EQ(b.size(), size - 1);
+                CHECK_EQ(b.capacity(), size);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], 3);
@@ -789,6 +824,7 @@ namespace sparrow
 
                 b.erase(b.cend() - 1);
                 REQUIRE_EQ(b.size(), size - 1);
+                CHECK_EQ(b.capacity(), size);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], 2);
@@ -801,6 +837,7 @@ namespace sparrow
 
                 b.erase(b.cbegin(), b.cbegin() + 2);
                 REQUIRE_EQ(b.size(), size - 2);
+                CHECK_EQ(b.capacity(), size);
                 CHECK_EQ(b[0], 2);
                 CHECK_EQ(b[1], 3);
             }
@@ -812,6 +849,7 @@ namespace sparrow
 
                 b.erase(b.cbegin() + 1, b.cbegin() + 3);
                 REQUIRE_EQ(b.size(), size - 2);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 3);
             }
@@ -823,6 +861,7 @@ namespace sparrow
 
                 b.erase(b.cend() - 2, b.cend());
                 REQUIRE_EQ(b.size(), size - 2);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
             }
@@ -838,6 +877,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.push_back(expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], 0);
                 CHECK_EQ(b[1], 1);
                 CHECK_EQ(b[2], 2);
@@ -856,6 +896,7 @@ namespace sparrow
                 std::string movable_expected_value = expected_value;
                 b.push_back(std::move(movable_expected_value));
                 REQUIRE_EQ(b.size(), size + 1);
+                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
                 CHECK_EQ(b[0], "0");
                 CHECK_EQ(b[1], "1");
                 CHECK_EQ(b[2], "2");
