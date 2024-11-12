@@ -218,6 +218,7 @@ namespace std
 
     template <typename Layout, template <typename> typename TQual, template <class> class UQual>
     struct basic_common_reference<std::string, sparrow::variable_size_binary_reference<Layout>, TQual, UQual>
+        : basic_common_reference<sparrow::variable_size_binary_reference<Layout>, std::string, UQual, TQual>
     {
         using type = std::string;
     };
@@ -273,12 +274,6 @@ namespace sparrow
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
 
-        value_iterator value_begin();
-        value_iterator value_end();
-
-        const_value_iterator value_cbegin() const;
-        const_value_iterator value_cend() const;
-
     private:
 
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
@@ -288,6 +283,13 @@ namespace sparrow
         offset_iterator offsets_begin();
         offset_iterator offsets_end();
         data_iterator data(size_type i);
+
+        value_iterator value_begin();
+        value_iterator value_end();
+
+        const_value_iterator value_cbegin() const;
+        const_value_iterator value_cend() const;
+
 
         const_offset_iterator offset(size_type i) const;
         const_offset_iterator offsets_cbegin() const;
@@ -761,11 +763,7 @@ namespace sparrow
                 return static_cast<offset_type>(value.size());
             }
         );
-        insert_offsets(
-            offset(idx + 1),
-            sizes_of_each_value.begin(),
-            sizes_of_each_value.end()
-        );
+        insert_offsets(offset(idx + 1), sizes_of_each_value.begin(), sizes_of_each_value.end());
         return sparrow::next(value_begin(), idx);
     }
 

@@ -352,13 +352,15 @@ namespace sparrow
                 SUBCASE("ordering")
                 {
                     const layout_type array(std::move(m_arrow_proxy));
-                    CHECK(array.value_cbegin() < array.value_cend());
+                    const auto values = array.values();
+                    CHECK(values.begin() < values.end());
                 }
 
                 SUBCASE("equality")
                 {
                     const layout_type array(std::move(m_arrow_proxy));
-                    auto iter = array.value_cbegin();
+                    const auto values = array.values();
+                    auto iter = values.begin();
                     CHECK_EQ(*iter, "upon");
                     CHECK_EQ(*(++iter), "a");
                     CHECK_EQ(*(++iter), "time");
@@ -368,7 +370,7 @@ namespace sparrow
                     CHECK_EQ(*(++iter), "clean");
                     CHECK_EQ(*(++iter), "code");
                     CHECK_EQ(*(++iter), "now");
-                    CHECK_EQ(++iter, array.value_cend());
+                    CHECK_EQ(++iter, values.end());
                 }
             }
 
@@ -377,13 +379,15 @@ namespace sparrow
                 SUBCASE("ordering")
                 {
                     layout_type array(std::move(m_arrow_proxy));
-                    CHECK(array.value_begin() < array.value_end());
+                    auto values = array.values();
+                    CHECK(values.begin() < values.end());
                 }
 
                 SUBCASE("equality")
                 {
                     layout_type array(std::move(m_arrow_proxy));
-                    auto iter = array.value_begin();
+                    auto values = array.values();
+                    auto iter = values.begin();
                     CHECK_EQ(*iter, "upon");
                     CHECK_EQ(*(++iter), "a");
                     CHECK_EQ(*(++iter), "time");
@@ -393,13 +397,14 @@ namespace sparrow
                     CHECK_EQ(*(++iter), "clean");
                     CHECK_EQ(*(++iter), "code");
                     CHECK_EQ(*(++iter), "now");
-                    CHECK_EQ(++iter, array.value_end());
+                    CHECK_EQ(++iter, values.end());
                 }
 
                 SUBCASE("modify")
                 {
                     layout_type array(std::move(m_arrow_proxy));
-                    auto iter = array.value_begin();
+                    auto values = array.values();
+                    auto iter = values.begin();
                     CHECK_EQ(*iter, "upon");
                     *iter = "fabulous";
                     CHECK_EQ(*iter, "fabulous");

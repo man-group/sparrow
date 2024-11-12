@@ -15,11 +15,12 @@
 #pragma once
 
 #include <iterator>
+#include <ranges>
 
 namespace sparrow
 {
     template <class T>
-    class repeat_view
+    class repeat_view : public std::ranges::view_interface<repeat_view<T>>
     {
     public:
 
