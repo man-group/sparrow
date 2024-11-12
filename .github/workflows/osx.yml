@@ -20,12 +20,18 @@ jobs:
         os:
         - 13
         - 14
+        - 15
         config:
         - { name: Debug }
         - { name: Release }
         compiler:
         - clang
         - apple-clang
+        exclude:
+          - os: 13
+            compiler: apple-clang
+          - os: 14
+            compiler: apple-clang
 
     steps:
 
@@ -40,7 +46,7 @@ jobs:
     - name: Add specification of clang++ in the conda environment specification
       if: matrix.compiler == 'clang'
       run: |
-        echo "  - clangxx==17.0.6" >> environment-dev.yml
+        echo "  - clangxx==18.1.8" >> environment-dev.yml
 
     - name: Set conda environment
       uses: mamba-org/setup-micromamba@main

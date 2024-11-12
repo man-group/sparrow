@@ -14,13 +14,11 @@
 
 #pragma once
 
-// N.B. This file is temporary, its goal is to make it easier to not include
-// dispatch.hpp in other headers to avoid bloating the header dependencies.
-// On the long run these free functions should probably become methods of
-// the array facade.
-
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
+
+// File containing helper functions to avoid bloating the
+// include chain.
 
 namespace sparrow
 {

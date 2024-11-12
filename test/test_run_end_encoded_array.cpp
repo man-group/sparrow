@@ -16,19 +16,20 @@
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/layout/dispatch.hpp"
 #include "doctest/doctest.h"
-
 #include "test_utils.hpp"
 #include "../test/external_array_data_creation.hpp"
-
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
+
+#include "sparrow/array.hpp"
 
 namespace sparrow
 {
-    namespace test
-    {
-        template <class acc_type, class inner_value_type>
-        arrow_proxy make_run_end_encoded_proxy(std::size_t n, std::size_t child_length, bool alterate = false)
+    namespace test{
+        run_end_encoded_array make_test_run_encoded_array(bool alterate = false)
         {
+            using acc_type = std::uint32_t;
+            using inner_value_type = std::uint64_t;
+
             // lets encode the following: (length: 8)
             // [1,null,null, 42, 42, 42, null, 9]
 
@@ -37,62 +38,43 @@ namespace sparrow
 
             // the accumulated lengths are:
             // [1,3,6,7,8]
-            // acc-values child
 
-            ArrowSchema acc_schema;
-            ArrowArray acc_array;
-            test::fill_schema_and_array<acc_type>(acc_schema, acc_array, child_length, 0/*offset*/, {});
-            acc_schema.name = "acc";
-            // fill acc-values buffer
-            std::vector<acc_type> acc_values{1,3,6,7,8};
-            if (alterate)
-            {
-                acc_values[3] = 2;
-            }
-            auto ptr = reinterpret_cast<acc_type*>(const_cast<void*>(acc_array.buffers[1]));
-            std::copy(acc_values.begin(), acc_values.end(), ptr);
-
-            // values child
-            ArrowSchema values_schema;
-            ArrowArray values_array;
-            test::fill_schema_and_array<inner_value_type>(values_schema, values_array, child_length, 0/*offset*/, {1,3});
-            values_schema.name = "values";
-
-            // fill values buffer
-            std::vector<inner_value_type> values{1, 0, 42, 0, 9};
-            auto ptr2 = reinterpret_cast<inner_value_type*>(const_cast<void*>(values_array.buffers[1]));
-            std::copy(values.begin(), values.end(), ptr2);
-
-            ArrowArray arr{};
-            ArrowSchema schema{};
-            test::fill_schema_and_array_for_run_end_encoded(
-                schema,
-                arr,
-                std::move(acc_schema),
-                std::move(acc_array),
-                std::move(values_schema),
-                std::move(values_array),
-                n
+            // if alterate is true, all 42s will be replaced by 43s
+            // this is to test EQ/NEQ after copy/move
+     
+            // encoded values
+            primitive_array<inner_value_type> encoded_values(
+                std::vector<inner_value_type>{
+                    inner_value_type(1),
+                    inner_value_type(),
+                    // to check if arrays differ / are the same
+                    alterate ? inner_value_type(43): inner_value_type(42),
+                    inner_value_type(),
+                    inner_value_type(9)                        
+                },
+                std::vector<std::size_t>{1,3} // where we have no value
             );
-            return arrow_proxy(std::move(arr), std::move(schema));
+
+            // accumulated lengths
+            primitive_array<acc_type> acc_lengths{{acc_type(1), acc_type(3), acc_type(6), acc_type(7), acc_type(8)}};
+
+            array acc_lengths_array(std::move(acc_lengths));
+            array encoded_values_array(std::move(encoded_values));
+            
+            return run_end_encoded_array(std::move(acc_lengths_array), std::move(encoded_values_array));
+
         }
     }
+    
 
     TEST_SUITE("run_length_encoded")
     {   
         TEST_CASE("run_length_encoded")
         {
-            using acc_type = std::uint32_t;
             using inner_value_type = std::uint64_t;
-
-            // number of elements in the run_length_encoded array
             const std::size_t n = 8;
 
-            // size of the children
-            const std::size_t child_length = 5;
-
-            auto proxy = test::make_run_end_encoded_proxy<acc_type, inner_value_type>(n, child_length);
-            run_end_encoded_array rle_array(std::move(proxy));
+            run_end_encoded_array rle_array = test::make_test_run_encoded_array();
 
             // check size
             REQUIRE(rle_array.size() == n);
@@ -105,8 +87,7 @@ namespace sparrow
                 run_end_encoded_array rle_array2(rle_array);
                 CHECK_EQ(rle_array2, rle_array);
 
-                run_end_encoded_array rle_array3(
-                        test::make_run_end_encoded_proxy<acc_type, inner_value_type>(n, child_length, true));
+                run_end_encoded_array rle_array3  = test::make_test_run_encoded_array(/*alterate=*/true);
                 CHECK_NE(rle_array3, rle_array);
                 rle_array3 = rle_array;
                 CHECK_EQ(rle_array3, rle_array);
@@ -118,8 +99,7 @@ namespace sparrow
                 run_end_encoded_array rle_array3(std::move(rle_array2));
                 CHECK_EQ(rle_array3, rle_array);
 
-                run_end_encoded_array rle_array4(
-                        test::make_run_end_encoded_proxy<acc_type, inner_value_type>(n, child_length, true));
+                run_end_encoded_array rle_array4 = test::make_test_run_encoded_array(/*alterate*/true);
                 CHECK_NE(rle_array4, rle_array);
                 rle_array4 = std::move(rle_array3);
                 CHECK_EQ(rle_array4, rle_array);
