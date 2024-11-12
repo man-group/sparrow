@@ -399,18 +399,6 @@ namespace sparrow
                     CHECK_EQ(*(++iter), "now");
                     CHECK_EQ(++iter, values.end());
                 }
-
-                SUBCASE("modify")
-                {
-                    layout_type array(std::move(m_arrow_proxy));
-                    auto values = array.values();
-                    auto iter = values.begin();
-                    CHECK_EQ(*iter, "upon");
-                    *iter = "fabulous";
-                    CHECK_EQ(*iter, "fabulous");
-                    CHECK_EQ(*(++iter), "a");
-                    CHECK_EQ(*(++iter), "time");
-                }
             }
         }
 

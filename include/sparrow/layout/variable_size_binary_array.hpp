@@ -218,7 +218,6 @@ namespace std
 
     template <typename Layout, template <typename> typename TQual, template <class> class UQual>
     struct basic_common_reference<std::string, sparrow::variable_size_binary_reference<Layout>, TQual, UQual>
-        : basic_common_reference<sparrow::variable_size_binary_reference<Layout>, std::string, UQual, TQual>
     {
         using type = std::string;
     };
@@ -756,18 +755,20 @@ namespace sparrow
         const auto idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
         const OT offset_begin = *offset(idx);
 
+        auto insert_pos = sparrow::next(data_buffer_adaptor.begin(), offset_begin);
+
         // Move elements to make space for the new value
         std::move_backward(
-            sparrow::next(data_buffer_adaptor.begin(), offset_begin),
+            insert_pos,
             sparrow::next(data_buffer_adaptor.end(), -static_cast<difference_type>(cumulative_sizes)),
             data_buffer_adaptor.end()
         );
 
-        auto insert_pos = sparrow::next(data_buffer_adaptor.cbegin(), offset_begin);
 
+        // Copy values
         for (const T& value : values)
         {
-            data_buffer_adaptor.insert(insert_pos, value.cbegin(), value.cend());
+            std::copy(value.begin(), value.end(), insert_pos);
             std::advance(insert_pos, value.size());
         }
 
