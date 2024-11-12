@@ -28,255 +28,43 @@ const buffer_type buffer_dummy({0, 1, 2, 3, 4});
 using buffers_type = std::vector<buffer_type>;
 const buffers_type buffers_dummy{buffer_dummy, buffer_dummy, buffer_dummy};
 
-template <std::ranges::input_range B>
-void check_common(
-    const sparrow::arrow_array_unique_ptr& array,
-    const B& buffers,
-    std::vector<ArrowArray*> children_ptr,
-    ArrowArray* dictionary_pointer
-)
-{
-    CHECK_EQ(array->length, 1);
-    CHECK_EQ(array->null_count, 0);
-    CHECK_EQ(array->offset, 0);
-    CHECK_EQ(array->n_buffers, buffers.size());
-    const int8_t** buffer_ptr = reinterpret_cast<const int8_t**>(array->buffers);
-    for (size_t i = 0; i < buffers.size(); ++i)
-    {
-        REQUIRE_NE(buffer_ptr[i], nullptr);
-        for (size_t j = 0; j < buffers[i].size(); ++j)
-        {
-            CHECK_EQ(buffer_ptr[i][j], buffers[i][j]);
-        }
-    }
-    CHECK_EQ(array->n_children, children_ptr.size());
-    if (children_ptr.empty())
-    {
-        CHECK_EQ(array->children, nullptr);
-    }
-    for (size_t i = 0; i < children_ptr.size(); ++i)
-    {
-        CHECK_EQ(array->children[i], children_ptr[i]);
-    }
-    CHECK_EQ(array->dictionary, dictionary_pointer);
-    const bool is_release_arrow_array = array->release == &sparrow::release_arrow_array;
-    CHECK(is_release_arrow_array);
-    CHECK_NE(array->private_data, nullptr);
-}
-
 TEST_SUITE("C Data Interface")
 {
     TEST_CASE("ArrowArray")
     {
-        SUBCASE("arrow_array_unique_ptr")
-        {
-            SUBCASE("sparrow::default_arrow_array_unique_ptr")
-            {
-                const sparrow::arrow_array_unique_ptr array = sparrow::default_arrow_array_unique_ptr();
-                CHECK_EQ(array->length, 0);
-                CHECK_EQ(array->null_count, 0);
-                CHECK_EQ(array->offset, 0);
-                CHECK_EQ(array->n_buffers, 0);
-                CHECK_EQ(array->n_children, 0);
-                CHECK_EQ(array->buffers, nullptr);
-                CHECK_EQ(array->children, nullptr);
-                const bool is_release_nullptr = array->release == nullptr;
-                CHECK(is_release_nullptr);
-                CHECK_EQ(array->private_data, nullptr);
-            }
-
-            SUBCASE("default")
-            {
-                const sparrow::arrow_array_unique_ptr array;
-                CHECK_EQ(array, nullptr);
-            }
-
-            SUBCASE("move")
-            {
-                sparrow::arrow_array_unique_ptr array = sparrow::default_arrow_array_unique_ptr();
-                const auto array_2 = std::move(array);
-                CHECK_EQ(array, nullptr);
-                CHECK_NE(array_2, nullptr);
-            }
-
-            SUBCASE("nullptr")
-            {
-                const sparrow::arrow_array_unique_ptr array(nullptr);
-                CHECK_EQ(array, nullptr);
-            }
-        }
-
-        SUBCASE("arrow_array_shared_ptr")
-        {
-            SUBCASE("constructors")
-            {
-                SUBCASE("default")
-                {
-                    const sparrow::arrow_array_shared_ptr array;
-                    CHECK_FALSE(array);
-                    const auto deleter = array.get_deleter();
-                    const bool is_release_arrow_array_custom_deleter = deleter
-                                                                       == &sparrow::arrow_array_custom_deleter;
-                    CHECK(is_release_arrow_array_custom_deleter);
-                }
-
-                SUBCASE("from arrow_array_unique_ptr")
-                {
-                    sparrow::arrow_array_unique_ptr array = sparrow::default_arrow_array_unique_ptr();
-                    array->length = 99;
-                    array->null_count = 42;
-                    const sparrow::arrow_array_shared_ptr shared_array(std::move(array));
-                    CHECK_EQ(shared_array->length, 99);
-                    CHECK_EQ(shared_array->null_count, 42);
-                    const auto del_p = shared_array.get_deleter();
-                    const auto is_release_arrow_array_custom_deleter = *del_p
-                                                                       == &sparrow::arrow_array_custom_deleter;
-                    CHECK(is_release_arrow_array_custom_deleter);
-                }
-
-                SUBCASE("move")
-                {
-                    sparrow::arrow_array_unique_ptr array = sparrow::default_arrow_array_unique_ptr();
-                    array->length = 99;
-                    array->null_count = 42;
-                    sparrow::arrow_array_shared_ptr shared_array(std::move(array));
-                    sparrow::arrow_array_shared_ptr shared_array_2(std::move(shared_array));
-                    CHECK_EQ(shared_array_2->length, 99);
-                    CHECK_EQ(shared_array_2->null_count, 42);
-                    const auto del_p = shared_array_2.get_deleter();
-                    const bool is_release_arrow_array_custom_deleter = *del_p
-                                                                       == &sparrow::arrow_array_custom_deleter;
-                    CHECK(is_release_arrow_array_custom_deleter);
-                }
-
-                SUBCASE("copy")
-                {
-                    sparrow::arrow_array_unique_ptr array = sparrow::default_arrow_array_unique_ptr();
-                    array->length = 99;
-                    array->null_count = 42;
-                    const sparrow::arrow_array_shared_ptr shared_array(std::move(array));
-                    const sparrow::arrow_array_shared_ptr shared_array_2(shared_array);
-                    CHECK_EQ(shared_array_2->length, 99);
-                    CHECK_EQ(shared_array_2->null_count, 42);
-                    const auto del_p = shared_array_2.get_deleter();
-                    const bool is_release_arrow_array_custom_deleter = *del_p
-                                                                       == &sparrow::arrow_array_custom_deleter;
-                    CHECK(is_release_arrow_array_custom_deleter);
-                }
-
-                SUBCASE("nullptr")
-                {
-                    const sparrow::arrow_array_shared_ptr shared_array(nullptr);
-                    CHECK_FALSE(shared_array);
-                    const auto del_p = shared_array.get_deleter();
-                    const bool is_release_arrow_array_custom_deleter = *del_p
-                                                                       == &sparrow::arrow_array_custom_deleter;
-                    CHECK(is_release_arrow_array_custom_deleter);
-                }
-            }
-
-            SUBCASE("operator=")
-            {
-                SUBCASE("move")
-                {
-                    sparrow::arrow_array_unique_ptr array = sparrow::default_arrow_array_unique_ptr();
-                    array->length = 99;
-                    array->null_count = 42;
-                    sparrow::arrow_array_shared_ptr shared_array(std::move(array));
-                    const sparrow::arrow_array_shared_ptr shared_array_2 = std::move(shared_array);
-                    CHECK_EQ(shared_array_2->length, 99);
-                    CHECK_EQ(shared_array_2->null_count, 42);
-                    // obtain pointer to the deleter:
-                    const auto del_p = shared_array_2.get_deleter();
-                    const bool is_release_arrow_array_custom_deleter = *del_p
-                                                                       == &sparrow::arrow_array_custom_deleter;
-                    CHECK(is_release_arrow_array_custom_deleter);
-                }
-
-                SUBCASE("copy")
-                {
-                    sparrow::arrow_array_unique_ptr array = sparrow::default_arrow_array_unique_ptr();
-                    array->length = 99;
-                    array->null_count = 42;
-                    const sparrow::arrow_array_shared_ptr shared_array(std::move(array));
-
-                    sparrow::arrow_array_shared_ptr shared_array_2 = shared_array;
-                    CHECK_EQ(shared_array_2->length, 99);
-                    CHECK_EQ(shared_array_2->null_count, 42);
-                    const auto del_p = shared_array_2.get_deleter();
-                    const bool is_release_arrow_array_custom_deleter = *del_p
-                                                                       == &sparrow::arrow_array_custom_deleter;
-                    CHECK(is_release_arrow_array_custom_deleter);
-                }
-            }
-        }
-
-        SUBCASE("make_array_constructor")
-        {
-            SUBCASE("w/ buffers, shared_ptr children and shared_ptr dictionary")
-            {
-                auto children = new ArrowArray*[2];
-                children[0] = sparrow::default_arrow_array_unique_ptr().release();
-                children[1] = sparrow::default_arrow_array_unique_ptr().release();
-                const auto children_1_ptr = children[0];
-                const auto children_2_ptr = children[1];
-
-                sparrow::arrow_array_shared_ptr dictionary(sparrow::default_arrow_array_unique_ptr());
-                const auto dictionary_pointer = dictionary.get();
-
-                const auto array = sparrow::make_arrow_array_unique_ptr(
-                    1,
-                    0,
-                    0,
-                    buffers_dummy,
-                    2,
-                    children,
-                    dictionary_pointer
-                );
-
-                check_common(array, buffers_dummy, {children_1_ptr, children_2_ptr}, dictionary_pointer);
-            }
-
-            SUBCASE("w/ buffers, wo/ children and dictionary")
-            {
-                const auto array = sparrow::make_arrow_array_unique_ptr(1, 0, 0, buffers_dummy, 0, nullptr, nullptr);
-                check_common(array, buffers_dummy, {}, nullptr);
-            }
-        }
-
         SUBCASE("release")
         {
             auto children = new ArrowArray*[2];
-            children[0] = sparrow::default_arrow_array_unique_ptr().release();
-            children[1] = sparrow::default_arrow_array_unique_ptr().release();
-            sparrow::arrow_array_unique_ptr dictionary(sparrow::default_arrow_array_unique_ptr());
-            auto array = sparrow::make_arrow_array_unique_ptr(
+            children[0] = new ArrowArray();
+            children[1] = new ArrowArray();
+            ArrowArray* dictionary = new ArrowArray();
+            auto array = sparrow::make_arrow_array(
                 1,
                 0,
                 0,
                 buffers_dummy,
                 2,
                 children,
-                dictionary.release()
+                dictionary
             );
 
-            array->release(array.get());
-            CHECK_EQ(array->buffers, nullptr);
-            CHECK_EQ(array->children, nullptr);
-            const bool is_release_nullptr = array->release == nullptr;
+            array.release(&array);
+            CHECK_EQ(array.buffers, nullptr);
+            CHECK_EQ(array.children, nullptr);
+            const bool is_release_nullptr = array.release == nullptr;
             CHECK(is_release_nullptr);
-            CHECK_EQ(array->private_data, nullptr);
+            CHECK_EQ(array.private_data, nullptr);
         }
 
         SUBCASE("release wo/ children and dictionary")
         {
-            auto array = sparrow::make_arrow_array_unique_ptr(1, 0, 0, buffers_dummy, 0, nullptr, nullptr);
-            array->release(array.get());
-            CHECK_EQ(array->buffers, nullptr);
-            CHECK_EQ(array->children, nullptr);
-            const bool is_release_nullptr = array->release == nullptr;
+            auto array = sparrow::make_arrow_array(1, 0, 0, buffers_dummy, 0, nullptr, nullptr);
+            array.release(&array);
+            CHECK_EQ(array.buffers, nullptr);
+            CHECK_EQ(array.children, nullptr);
+            const bool is_release_nullptr = array.release == nullptr;
             CHECK(is_release_nullptr);
-            CHECK_EQ(array->private_data, nullptr);
+            CHECK_EQ(array.private_data, nullptr);
         }
 
         SUBCASE("deep_copy")
