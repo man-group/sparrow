@@ -56,13 +56,11 @@ template< translates_to_primitive_layout T>
 struct builder<T>
 {
     using type = primitive_array<typename maybe_nullable_value_type<std::ranges::range_value_t<T>>::type>;
-
     template<class U>
     static type create(U&& t)
     {
         return type(std::forward<U>(t));
-    }
-
+    } 
 };
 
 template< translate_to_variable_sized_list_layout T>
