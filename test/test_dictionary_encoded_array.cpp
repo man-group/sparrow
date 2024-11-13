@@ -73,7 +73,7 @@ namespace sparrow
             CHECK_NOTHROW(layout_type{make_arrow_proxy()});
         }
 
-        TEST_CASE("convinience_constructors")
+        TEST_CASE("convenience_constructors")
         {   
             using key_type = std::uint32_t;
             using array_type = dictionary_encoded_array<key_type>;

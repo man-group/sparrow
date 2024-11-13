@@ -349,6 +349,11 @@ namespace sparrow
         [[nodiscard]] SPARROW_API arrow_schema_private_data* get_schema_private_data();
         [[nodiscard]] SPARROW_API arrow_array_private_data* get_array_private_data();
 
+        /**
+         * Refresh the buffers views. This method should be called after modifying the buffers of the array.
+         */
+        SPARROW_API void update_buffers();
+
     private:
 
         std::variant<ArrowArray*, ArrowArray> m_array;
@@ -377,7 +382,6 @@ namespace sparrow
         void update_children();
         void update_dictionary();
         void update_null_count();
-        void update_buffers();
         void reset();
 
         [[nodiscard]] bool array_created_with_sparrow() const;

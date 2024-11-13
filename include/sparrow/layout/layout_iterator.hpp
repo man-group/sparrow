@@ -15,7 +15,6 @@
 #pragma once
 
 #include "sparrow/utils/iterator.hpp"
-#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -66,6 +65,7 @@ namespace sparrow
     private:
 
         reference dereference() const;
+        reference dereference();
         void increment();
         void decrement();
         void advance(difference_type n);
@@ -92,6 +92,12 @@ namespace sparrow
 
     template <iterator_types Iterator_types>
     auto layout_iterator<Iterator_types>::dereference() const -> reference
+    {
+        return reference(*m_value_iter, *m_bitmap_iter);
+    }
+
+    template <iterator_types Iterator_types>
+    auto layout_iterator<Iterator_types>::dereference() -> reference
     {
         return reference(*m_value_iter, *m_bitmap_iter);
     }

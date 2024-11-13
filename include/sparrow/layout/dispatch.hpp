@@ -91,7 +91,7 @@ namespace sparrow
             case data_type::DOUBLE:
                 return func(unwrap_array<primitive_array<float64_t>>(ar));
             case data_type::STRING:
-                return func(unwrap_array<variable_size_binary_array<std::string, std::string_view>>(ar));
+                return func(unwrap_array<string_array>(ar));
             case data_type::RUN_ENCODED:
                 return func(unwrap_array<run_end_encoded_array>(ar));
             case data_type::LIST:

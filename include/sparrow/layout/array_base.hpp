@@ -38,7 +38,7 @@ namespace sparrow
      * */
     struct array_inner_types_base
     {
-        using bitmap_type = dynamic_bitset_view<const std::uint8_t>;
+        using bitmap_type = dynamic_bitset_view<std::uint8_t>;
     };
 
     /**

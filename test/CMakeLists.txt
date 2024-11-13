@@ -51,8 +51,8 @@ else()
         main.cpp
         test_algorithm.cpp
         test_allocator.cpp
-        test_array.cpp
         test_array_wrapper.cpp
+        test_array.cpp
         test_arrow_array_schema_factory.cpp
         test_arrow_array_schema_proxy.cpp
         test_arrow_array_schema_utils.cpp
@@ -65,6 +65,7 @@ else()
         test_dispatch.cpp
         test_dynamic_bitset_view.cpp
         test_dynamic_bitset.cpp
+        test_high_level_constructors.cpp
         test_iterator.cpp
         test_list_array.cpp
         test_list_value.cpp
@@ -74,15 +75,15 @@ else()
         test_nullable.cpp
         test_primitive_array.cpp
         test_record_batch.cpp
+        test_repeat_container.cpp
+        test_run_end_encoded_array.cpp
         test_struct_array.cpp
         test_traits.cpp
+        test_union_array.cpp
         test_utils_buffers.cpp
         test_utils_offsets.cpp
         test_utils.hpp
         test_variable_size_binary_array.cpp
-        test_run_end_encoded_array.cpp
-        test_union_array.cpp
-        test_high_level_constructors.cpp
     )
 endif()
 
