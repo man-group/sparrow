@@ -22,7 +22,9 @@
 #include "sparrow/layout/variable_size_binary_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
+#include "sparrow/array.hpp"
 
+#include "test_utils.hpp"
 #include "doctest/doctest.h"
 
 namespace sparrow
@@ -69,6 +71,44 @@ namespace sparrow
         TEST_CASE("constructors")
         {
             CHECK_NOTHROW(layout_type{make_arrow_proxy()});
+        }
+
+        TEST_CASE("convenience_constructors")
+        {   
+            using key_type = std::uint32_t;
+            using array_type = dictionary_encoded_array<key_type>;
+            using keys_buffer_type = typename array_type::keys_buffer_type;
+
+            // the value array
+            primitive_array<float> values{0.0f, 1.0f, 2.0f, 3.0f};
+
+            // detyped array
+            array values_arr(std::move(values));
+
+            // the keys **data**
+            keys_buffer_type keys{3,3,2,1,0};
+
+            // where nulls are 
+            std::vector<std::size_t> where_null{2};
+
+            // create the array
+            auto arr = array_type(std::move(keys), std::move(values_arr), std::move(where_null));
+
+            // check the size
+            REQUIRE_EQ(arr.size(), 5);
+
+            // check bitmap
+            REQUIRE_EQ(arr[0].has_value(), true);
+            REQUIRE_EQ(arr[1].has_value(), true);
+            REQUIRE_EQ(arr[2].has_value(), false);
+            REQUIRE_EQ(arr[3].has_value(), true);
+            REQUIRE_EQ(arr[4].has_value(), true);
+
+            // check the values
+            CHECK_NULLABLE_VARIANT_EQ(arr[0], 3.0f);
+            CHECK_NULLABLE_VARIANT_EQ(arr[1], 3.0f);
+            CHECK_NULLABLE_VARIANT_EQ(arr[3], 1.0f);
+            CHECK_NULLABLE_VARIANT_EQ(arr[4], 0.0f);
         }
 
         TEST_CASE("copy")
