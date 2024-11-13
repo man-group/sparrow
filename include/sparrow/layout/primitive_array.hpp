@@ -395,7 +395,7 @@ namespace sparrow
         auto& buffers = this->get_arrow_proxy().get_array_private_data()->buffers();
         return make_buffer_adaptor<T>(buffers[DATA_BUFFER_INDEX]);
     }
-1
+    
     template <class T>
     void primitive_array<T>::resize_values(size_type new_length, inner_value_type value)
     {
