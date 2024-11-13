@@ -46,25 +46,25 @@ namespace sparrow
         struct variable_size_binary_format;
 
         template<> 
-        struct variable_size_binary_format<std::string, std::uint32_t> 
+        struct variable_size_binary_format<std::string, std::int32_t> 
         {
             static std::string format(){return "u";}
         };
 
         template<>
-        struct variable_size_binary_format<std::string, std::uint64_t>
+        struct variable_size_binary_format<std::string, std::int64_t>
         {
             static std::string format(){return "U";}
         };
 
         template<> 
-        struct variable_size_binary_format<std::vector<std::byte>, std::uint32_t> 
+        struct variable_size_binary_format<std::vector<std::byte>, std::int32_t> 
         {   
             static std::string format(){return "z";}
         };
 
         template<>
-        struct variable_size_binary_format<std::vector<std::byte>, std::uint64_t>
+        struct variable_size_binary_format<std::vector<std::byte>, std::int64_t>
         {
             static std::string format(){return "Z";}
         };
@@ -78,8 +78,8 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     class variable_size_binary_array_impl;
 
-    using string_array =     variable_size_binary_array_impl<std::string, std::string_view, std::uint32_t>;
-    using big_string_array = variable_size_binary_array_impl<std::string, std::string_view, std::uint64_t>;
+    using string_array =     variable_size_binary_array_impl<std::string, std::string_view, std::int32_t>;
+    using big_string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int64_t>;
  
     template <class L>
     class variable_size_binary_reference;
@@ -622,7 +622,6 @@ namespace sparrow
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
         const auto null_count = vbitmap.null_count();
 
-        static_assert(!std::is_same_v<OT, int>);
         ArrowSchema schema = make_arrow_schema(
             detail::variable_size_binary_format<T, OT>::format(),
             std::nullopt, // name
@@ -644,19 +643,20 @@ namespace sparrow
             static_cast<int64_t>(null_count),
             0, // offset
             std::move(arr_buffs),
-            1, // n_children
+            0, // n_children
             nullptr, // children
             nullptr // dictionary
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
+    template <std::ranges::sized_range T, class CR, layout_offset OT>
     template<std::ranges::input_range R, validity_bitmap_input VB  >
     requires(
         std::ranges::input_range<std::ranges::range_value_t<R>> && // a range of ranges
         detail::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>> // inner range is a range of char-like
     )
-    arrow_proxy create_proxy(
+    arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy(
         R&& values,
         VB && validity_input
     )

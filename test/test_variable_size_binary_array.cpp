@@ -68,12 +68,16 @@ namespace sparrow
         {
         //    std::vector<std::string> words{"upon", "a", "time", "I", "was", "writing", "clean", "code", "now"};
         //    string_array array{words};
-            SUBCASE("from buffers")
+            SUBCASE("raw-buffers")
             {
                 u8_buffer<char> data_buffer{'h','e','l','l','o',' ','w','o','r','l','d'};
                 u8_buffer<std::uint32_t> offsets{5, 6, 11};
-
                 string_array array{std::move(data_buffer), std::move(offsets)};
+            }
+            SUBCASE("high-level")
+            {
+                std::vector<std::string> words{"upon", "a", "time", "I", "was", "writing", "clean", "code", "now"};
+                string_array array(words);
             }
         }   
         TEST_CASE_FIXTURE(variable_size_binary_fixture, "constructor")
