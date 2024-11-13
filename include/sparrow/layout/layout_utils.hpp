@@ -76,11 +76,7 @@ namespace sparrow::detail
 
 
 
-    template<class OFFSET_TYPE>
-    concept offset_type = std::is_same<std::remove_const_t<OFFSET_TYPE>, std::uint32_t>::value ||
-                            std::is_same<std::remove_const_t<OFFSET_TYPE>, std::uint64_t>::value;
-
-    template<offset_type OFFSET_TYPE, std::ranges::range SIZES_RANGE>
+    template<layout_offset OFFSET_TYPE, std::ranges::range SIZES_RANGE>
     requires(std::unsigned_integral<std::ranges::range_value_t<SIZES_RANGE>>)
     sparrow::u8_buffer<OFFSET_TYPE> offset_buffer_from_sizes(SIZES_RANGE && sizes)
     {
