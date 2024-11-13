@@ -108,7 +108,7 @@ namespace sparrow
     template<std::ranges::input_range R>
     requires std::convertible_to<std::ranges::range_value_t<R>, T>
     u8_buffer<T>::u8_buffer(R&& range)
-        : holder_type{static_cast<std::size_t>(range_size(range))* sizeof(T)}
+        : holder_type{range_size(range)* sizeof(T)}
         ,buffer_adaptor_type(holder_type::value)
     {
         std::ranges::copy(range, this->begin());
