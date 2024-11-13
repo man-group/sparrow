@@ -512,6 +512,12 @@ namespace sparrow::mpl
      */
     template <typename I, typename T>
     concept iterator_of_type = std::input_iterator<I>
+    
                                && std::same_as<typename std::iterator_traits<I>::value_type, T>;
+
+
+    // todo...make smth better based on sizeof and is pod 
+    template<class T>
+    concept char_like = std::same_as<T, char> || std::same_as<T, std::byte> || std::same_as<T, std::uint8_t>;
 
 }

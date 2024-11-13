@@ -1,3 +1,18 @@
+// Copyright 2024 Man Group Operations Limited
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or mplied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
 #pragma once
 
 #include <vector>
@@ -11,7 +26,6 @@
 #include <sparrow/layout/list_layout/list_array.hpp>
 #include <sparrow/layout/struct_layout/struct_array.hpp>
 #include <sparrow/array.hpp>
-#include "printer.hpp"
 #include "builder_utils.hpp"
 #include <sparrow/utils/ranges.hpp>
 #include <tuple>
@@ -25,11 +39,23 @@ concept translates_to_primitive_layout =
     std::ranges::input_range<T> &&
     std::is_scalar_v<mnv_t<std::ranges::range_value_t<T>>>;
 
+
+// helper to get inner value type of smth like a vector of vector of T
+// we also translate any nullable to the inner type
 template<class T>
+using nested_range_inner_value_t = mnv_t<std::ranges::range_value_t<mnv_t<mnv_t<std::ranges::range_value_t<T>>>>>;
+
+
+
+template<class T> 
 concept translate_to_variable_sized_list_layout = 
-    std::ranges::input_range<T> &&
+    std::ranges::input_range<T> &&     
     std::ranges::input_range<mnv_t<std::ranges::range_value_t<T>>> &&
-    !tuple_like<mnv_t<std::ranges::range_value_t<T>>>;
+    !tuple_like<mnv_t<std::ranges::range_value_t<T>>> && // tuples go to struct layout
+    // value type of inner should not be 'char-like'( char, byte, uint8), these are handled by variable_size_binary_array
+    !mpl::char_like<nested_range_inner_value_t<T>>
+
+;
 
 template<class T>
 concept translate_to_struct_layout = 

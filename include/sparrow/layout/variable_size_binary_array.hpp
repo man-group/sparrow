@@ -68,9 +68,6 @@ namespace sparrow
         {
             static std::string format(){return "Z";}
         };
-
-        template<class T>
-        concept char_like = std::same_as<T, char> || std::same_as<T, std::byte> || std::same_as<T, std::uint8_t>;
     }    
 
 
@@ -333,7 +330,7 @@ namespace sparrow
 
     private:
 
-        template<detail::char_like C,  validity_bitmap_input VB = validity_bitmap >
+        template<mpl::char_like C,  validity_bitmap_input VB = validity_bitmap >
         static arrow_proxy create_proxy(
             u8_buffer<C>&& data_buffer,
             offset_buffer_type && list_offsets,
@@ -343,7 +340,7 @@ namespace sparrow
         template<std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap >
         requires(
             std::ranges::input_range<std::ranges::range_value_t<R>> && // a range of ranges
-            detail::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>> // inner range is a range of char-like
+            mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>> // inner range is a range of char-like
         )
         static arrow_proxy create_proxy(
             R&& values,
@@ -611,7 +608,7 @@ namespace sparrow
 
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    template<detail::char_like C, validity_bitmap_input VB>
+    template<mpl::char_like C, validity_bitmap_input VB>
     arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy(
         u8_buffer<C>&& data_buffer,
         offset_buffer_type && offsets,
@@ -654,7 +651,7 @@ namespace sparrow
     template<std::ranges::input_range R, validity_bitmap_input VB  >
     requires(
         std::ranges::input_range<std::ranges::range_value_t<R>> && // a range of ranges
-        detail::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>> // inner range is a range of char-like
+        mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>> // inner range is a range of char-like
     )
     arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy(
         R&& values,

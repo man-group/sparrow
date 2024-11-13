@@ -27,6 +27,7 @@
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/buffer/u8_buffer.hpp"
+#include "sparrow/utils/ranges.hpp"
 
 namespace sparrow
 {
@@ -309,16 +310,6 @@ namespace sparrow
     requires std::convertible_to<std::ranges::range_value_t<R>, T>
     arrow_proxy primitive_array<T>::create_proxy(R&& range)
     {   
-        auto range_size = [](auto && r) { 
-            if constexpr (std::ranges::sized_range<R>)
-            {
-                return std::ranges::size(r);
-            }
-            else
-            {
-                return std::ranges::distance(r);
-            }
-        };
         const std::size_t n = range_size(range);
         auto iota = std::ranges::iota_view{std::size_t(0), n};
         std::ranges::transform_view iota_to_is_non_missing(iota, [](std::size_t) { return true; });
@@ -395,7 +386,7 @@ namespace sparrow
         auto& buffers = this->get_arrow_proxy().get_array_private_data()->buffers();
         return make_buffer_adaptor<T>(buffers[DATA_BUFFER_INDEX]);
     }
-    
+
     template <class T>
     void primitive_array<T>::resize_values(size_type new_length, inner_value_type value)
     {

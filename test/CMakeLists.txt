@@ -84,6 +84,7 @@ else()
         test_utils_offsets.cpp
         test_utils.hpp
         test_variable_size_binary_array.cpp
+        test_builder.cpp
     )
 endif()
 
