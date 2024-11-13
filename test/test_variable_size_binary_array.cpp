@@ -19,6 +19,7 @@
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
+#include "test_utils.hpp"
 
 #include <vector>
 #include <string>
@@ -66,18 +67,25 @@ namespace sparrow
     {
         TEST_CASE("convenience")
         {
-        //    std::vector<std::string> words{"upon", "a", "time", "I", "was", "writing", "clean", "code", "now"};
-        //    string_array array{words};
-            SUBCASE("raw-buffers")
-            {
-                u8_buffer<char> data_buffer{'h','e','l','l','o',' ','w','o','r','l','d'};
-                u8_buffer<std::uint32_t> offsets{5, 6, 11};
-                string_array array{std::move(data_buffer), std::move(offsets)};
-            }
             SUBCASE("high-level")
             {
-                std::vector<std::string> words{"upon", "a", "time", "I", "was", "writing", "clean", "code", "now"};
-                string_array array(words);
+                std::vector<std::string> words{"hello", " ","ugly","", "world"};
+                std::vector<std::size_t> where_nulls{2,3};
+                string_array array(words, std::move(where_nulls));
+                
+                REQUIRE_EQ(array.size(), words.size());
+
+                // check nulls
+                CHECK_EQ(array[0].has_value(), true);
+                CHECK_EQ(array[1].has_value(), true);
+                CHECK_EQ(array[2].has_value(), false);
+                CHECK_EQ(array[3].has_value(), false);
+                CHECK_EQ(array[4].has_value(), true);
+
+                // check values
+                CHECK_EQ(array[0].value(),  "hello");
+                CHECK_EQ(array[1].value(),  " ");
+                CHECK_EQ(array[4].value(),  "world");
             }
         }   
         TEST_CASE_FIXTURE(variable_size_binary_fixture, "constructor")
