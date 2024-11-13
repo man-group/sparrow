@@ -15,6 +15,9 @@
 namespace sparrow
 {
 
+    template<class T>
+    
+
 
     template<std::size_t I, std::size_t SIZE>
     struct for_each_index_impl

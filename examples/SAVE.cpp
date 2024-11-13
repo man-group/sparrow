@@ -161,47 +161,6 @@ struct builder<T>
 
 
 
-template< translate_to_struct_layout T>
-struct builder<T>
-{
-    using type = struct_array;
-
-    static type create(const T& t)
-    {
-
-        auto flat_list_view = std::ranges::views::join(t);
-
-        using passed_value_type =  std::ranges::range_value_t<std::ranges::range_value_t<T>>;
-
-        using flat_list_view_type = std::decay_t<decltype(flat_list_view)>;
-        using flat_list_view_value_type = std::ranges::range_value_t<flat_list_view_type>;
-
-
-        // // check that value_types are matching
-        static_assert( std::is_same_v<passed_value_type, flat_list_view_value_type>);
-
-
-        // build offsets from sizes
-        auto sizes = t | std::views::transform([](const auto& l){ return l.size(); });
-
-        SPARROW_ASSERT_TRUE(range_size(sizes) == range_size(t));
-
-        auto offsets = type::offset_from_sizes(sizes);
-        SPARROW_ASSERT_TRUE(range_size(sizes) + 1 == offsets.size());
-
-        // the child array
-        auto flat_arr = build(flat_list_view);
-
-        SPARROW_ASSERT_TRUE(flat_arr.size() == range_size(flat_list_view))
-
-
-        // wrap the flat array into an array
-        array flat_arr_detyped(std::move(flat_arr));
-        
-        return type(std::move(flat_arr_detyped), std::move(offsets));
-
-    }
-};
 
 
 

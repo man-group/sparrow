@@ -125,8 +125,6 @@ namespace sparrow
     {
     }
 
-   
-
     inline run_end_encoded_array::run_end_encoded_array(const self_type& rhs)
         : run_end_encoded_array(rhs.m_proxy)
     {

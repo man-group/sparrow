@@ -35,7 +35,8 @@ template<class T>
 concept translate_to_struct_layout = 
     std::ranges::input_range<T> &&
     tuple_like<mnv_t<std::ranges::range_value_t<T>>> &&
-    !all_elements_same<mnv_t<std::ranges::range_value_t<T>>>;
+    !all_elements_same<mnv_t<std::ranges::range_value_t<T>>> &&
+    !associative_container<T>;
 
 template<class T>
 concept translate_to_fixed_sized_list_layout =
@@ -125,5 +126,8 @@ struct builder<T>
        return type(std::move(detyped_children), where_null(t));
     }
 };
+
+
+
 
 }// namespace sparrow
