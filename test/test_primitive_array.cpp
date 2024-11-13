@@ -59,17 +59,38 @@ namespace sparrow
                 CHECK_EQ(ar.size(), 4);
             }
 
-            SUBCASE("const operator[]")
+            SUBCASE("operator[]")
             {
-                REQUIRE_EQ(ar.size(), 4);
-                CHECK(ar[0].has_value());
-                CHECK_EQ(ar[0].get(), values[1]);
-                CHECK_FALSE(ar[1].has_value());
-                CHECK_EQ(ar[1].get(), values[2]);
-                CHECK(ar[2].has_value());
-                CHECK_EQ(ar[2].get(), values[3]);
-                CHECK(ar[3].has_value());
-                CHECK_EQ(ar[3].get(), values[4]);
+                SUBCASE("const")
+                {
+                    const array_test_type const_ar{make_array(values)};
+                    REQUIRE_EQ(const_ar.size(), 4);
+                    CHECK(const_ar[0].has_value());
+                    CHECK_EQ(const_ar[0].get(), values[1]);
+                    CHECK_FALSE(const_ar[1].has_value());
+                    CHECK_EQ(const_ar[1].get(), values[2]);
+                    CHECK(const_ar[2].has_value());
+                    CHECK_EQ(const_ar[2].get(), values[3]);
+                    CHECK(const_ar[3].has_value());
+                    CHECK_EQ(const_ar[3].get(), values[4]);
+                }
+
+                SUBCASE("mutable")
+                {
+                    REQUIRE_EQ(ar.size(), 4);
+                    CHECK(ar[0].has_value());
+                    CHECK_EQ(ar[0].get(), values[1]);
+                    CHECK_FALSE(ar[1].has_value());
+                    CHECK_EQ(ar[1].get(), values[2]);
+                    CHECK(ar[2].has_value());
+                    CHECK_EQ(ar[2].get(), values[3]);
+                    CHECK(ar[3].has_value());
+                    CHECK_EQ(ar[3].get(), values[4]);
+
+                    ar[1] = make_nullable<T>(99);
+                    CHECK(ar[1].has_value());
+                    CHECK_EQ(ar[1].get(), static_cast<T>(99));
+                }
             }
 
             SUBCASE("copy")

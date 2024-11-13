@@ -25,6 +25,7 @@
 #include "sparrow/buffer/allocator.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 #if not defined(SPARROW_BUFFER_GROWTH_FACTOR)
 #    define SPARROW_BUFFER_GROWTH_FACTOR 2
@@ -229,8 +230,11 @@ namespace sparrow
         constexpr iterator insert(const_iterator pos, const T& value);
         constexpr iterator insert(const_iterator pos, T&& value);
         constexpr iterator insert(const_iterator pos, size_type count, const T& value);
-        template <class InputIt>
+        template <mpl::iterator_of_type<T> InputIt>
         constexpr iterator insert(const_iterator pos, InputIt first, InputIt last);
+        template <std::ranges::input_range R>
+            requires std::same_as<std::ranges::range_value_t<R>, T>
+        constexpr iterator insert(const_iterator pos, R&& range);
         constexpr iterator insert(const_iterator pos, std::initializer_list<T> ilist);
 
         template <class... Args>
@@ -804,7 +808,7 @@ namespace sparrow
     constexpr bool is_move_iterator_v = is_move_iterator<T>::value;
 
     template <class T>
-    template <class InputIt>
+    template <mpl::iterator_of_type<T> InputIt>
     constexpr auto buffer<T>::insert(const_iterator pos, InputIt first, InputIt last) -> iterator
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos && pos <= cend());
@@ -826,6 +830,16 @@ namespace sparrow
             std::uninitialized_copy(first, last, new_pos);
         }
         return new_pos;
+    }
+
+    template <class T>
+    template <std::ranges::input_range R>
+        requires std::same_as<std::ranges::range_value_t<R>, T>
+    constexpr auto buffer<T>::insert(const_iterator pos, R&& range) -> iterator
+    {
+        SPARROW_ASSERT_TRUE(cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= cend());
+        return insert(pos, std::ranges::begin(range), std::ranges::end(range));
     }
 
     template <class T>

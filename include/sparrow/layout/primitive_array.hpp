@@ -76,28 +76,33 @@ namespace sparrow
 
         using self_type = primitive_array<T>;
         using base_type = mutable_array_bitmap_base<self_type>;
+
         using inner_types = array_inner_types<self_type>;
         using inner_value_type = typename inner_types::inner_value_type;
         using inner_reference = typename inner_types::inner_reference;
         using inner_const_reference = typename inner_types::inner_const_reference;
+
         using bitmap_type = typename base_type::bitmap_type;
         using bitmap_reference = typename base_type::bitmap_reference;
         using bitmap_const_reference = typename base_type::bitmap_const_reference;
         using bitmap_iterator = typename base_type::bitmap_iterator;
         using const_bitmap_iterator = typename base_type::const_bitmap_iterator;
+        using bitmap_range = typename base_type::bitmap_range;
+        using const_bitmap_range = typename base_type::const_bitmap_range;
+
         using value_type = nullable<inner_value_type>;
         using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
+
         using pointer = typename inner_types::pointer;
         using const_pointer = typename inner_types::const_pointer;
+
         using size_type = typename base_type::size_type;
         using difference_type = typename base_type::difference_type;
         using iterator_tag = typename base_type::iterator_tag;
 
         using value_iterator = typename base_type::value_iterator;
-        using bitmap_range = typename base_type::bitmap_range;
         using const_value_iterator = typename base_type::const_value_iterator;
-        using const_bitmap_range = typename base_type::const_bitmap_range;
 
         using iterator = typename base_type::iterator;
         using const_iterator = typename base_type::const_iterator;
@@ -143,6 +148,7 @@ namespace sparrow
         }
 
     private:
+
 
         pointer data();
         const_pointer data() const;
