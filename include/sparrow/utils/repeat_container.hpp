@@ -14,137 +14,167 @@
 
 #pragma once
 
-#include <iterator>
 #include <ranges>
+
+#include "sparrow/utils/iterator.hpp"
 
 namespace sparrow
 {
-    template <class T>
+
+    template <typename T>
+    class repeat_view_iterator
+        : public sparrow::iterator_base<repeat_view_iterator<T>, const T, std::random_access_iterator_tag>
+    {
+    public:
+
+        using self_type = repeat_view_iterator<T>;
+        using base_type = sparrow::iterator_base<self_type, const T, std::random_access_iterator_tag>;
+
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = T;
+        using reference = typename base_type::reference;
+        using difference_type = typename base_type::difference_type;
+
+        constexpr repeat_view_iterator() = default;
+
+        /**
+         * Constructs a repeat_view_iterator.
+         * @param value The value to repeat
+         * @param index The index of the iterator, representing the current position in the repeated sequence
+         */
+        constexpr repeat_view_iterator(const T& value, size_t index);
+
+    private:
+
+        constexpr reference dereference() const noexcept;
+        constexpr void increment() noexcept;
+        constexpr void decrement() noexcept;
+        constexpr void advance(difference_type n) noexcept;
+        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const noexcept;
+        [[nodiscard]] constexpr bool equal(const self_type& rhs) const noexcept;
+        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const noexcept;
+
+        const T* m_value = nullptr;
+        size_t m_index = 0;
+
+        friend class iterator_access;
+    };
+
+    /**
+     * A view that repeats a value a given number of times.
+     */
+    template <typename T>
     class repeat_view : public std::ranges::view_interface<repeat_view<T>>
     {
     public:
 
-        class iterator
-        {
-        public:
+        using value_type = T;
+        using self_type = repeat_view<value_type>;
+        using const_iterator = repeat_view_iterator<value_type>;
 
-            using iterator_category = std::random_access_iterator_tag;
-            using value_type = T;
-            using difference_type = std::ptrdiff_t;
-            using pointer = const T*;
-            using reference = const T&;
+        /**
+         * Constructs a repeat_view.
+         * @param value The value to repeat
+         * @param count The number of times to repeat the value
+         */
+        constexpr repeat_view(const T& value, size_t count) noexcept;
 
-            iterator() = default;
-
-            iterator(const T& value, size_t index)
-                : m_value(&value)
-                , m_index(index)
-            {
-            }
-
-            reference operator*() const
-            {
-                return *m_value;
-            }
-
-            pointer operator->() const
-            {
-                return m_value;
-            }
-
-            iterator& operator++()
-            {
-                ++m_index;
-                return *this;
-            }
-
-            iterator operator++(int)
-            {
-                iterator tmp = *this;
-                ++m_index;
-                return tmp;
-            }
-
-            iterator& operator--()
-            {
-                --m_index;
-                return *this;
-            }
-
-            iterator operator--(int)
-            {
-                iterator tmp = *this;
-                --m_index;
-                return tmp;
-            }
-
-            iterator& operator+=(difference_type n)
-            {
-                m_index += n;
-                return *this;
-            }
-
-            iterator operator+(difference_type n) const
-            {
-                return iterator(*m_value, m_index + n);
-            }
-
-            iterator& operator-=(difference_type n)
-            {
-                m_index -= n;
-                return *this;
-            }
-
-            iterator operator-(difference_type n) const
-            {
-                return iterator(*m_value, m_index - n);
-            }
-
-            difference_type operator-(const iterator& other) const
-            {
-                return static_cast<difference_type>(m_index - other.m_index);
-            }
-
-            bool operator==(const iterator& other) const
-            {
-                return m_index == other.m_index;
-            }
-
-            auto operator<=>(const iterator& other) const
-            {
-                return m_index <=> other.m_index;
-            }
-
-        private:
-
-            const T* m_value = nullptr;
-            size_t m_index = 0;
-        };
-
-        repeat_view(const T& value, size_t count)
-            : m_value(value)
-            , m_count(count)
-        {
-        }
-
-        iterator begin() const
-        {
-            return iterator(m_value, 0);
-        }
-
-        iterator end() const
-        {
-            return iterator(m_value, m_count);
-        }
-
-        size_t size() const
-        {
-            return m_count;
-        }
+        constexpr const_iterator begin() const noexcept;
+        constexpr const_iterator end() const noexcept;
+        constexpr const_iterator cbegin() const noexcept;
+        constexpr const_iterator cend() const noexcept;
+        [[nodiscard]] constexpr size_t size() const noexcept;
 
     private:
 
         T m_value;
         size_t m_count;
     };
+
+    template <typename T>
+    constexpr repeat_view_iterator<T>::repeat_view_iterator(const T& value, size_t index)
+        : m_value(&value)
+        , m_index(index)
+    {
+    }
+
+    template <typename T>
+    constexpr auto repeat_view_iterator<T>::dereference() const noexcept -> reference
+    {
+        return *m_value;
+    }
+
+    template <typename T>
+    constexpr void repeat_view_iterator<T>::increment() noexcept
+    {
+        ++m_index;
+    }
+
+    template <typename T>
+    constexpr void repeat_view_iterator<T>::decrement() noexcept
+    {
+        --m_index;
+    }
+
+    template <typename T>
+    constexpr void repeat_view_iterator<T>::advance(difference_type n) noexcept
+    {
+        m_index += n;
+    }
+
+    template <typename T>
+    constexpr auto repeat_view_iterator<T>::distance_to(const self_type& rhs) const noexcept -> difference_type
+    {
+        return static_cast<difference_type>(rhs.m_index - m_index);
+    }
+
+    template <typename T>
+    constexpr bool repeat_view_iterator<T>::equal(const self_type& rhs) const noexcept
+    {
+        return m_index == rhs.m_index;
+    }
+
+    template <typename T>
+    constexpr bool repeat_view_iterator<T>::less_than(const self_type& rhs) const noexcept
+    {
+        return m_index < rhs.m_index;
+    }
+
+    template <typename T>
+    constexpr repeat_view<T>::repeat_view(const T& value, size_t count) noexcept
+        : m_value(value)
+        , m_count(count)
+    {
+    }
+
+    template <typename T>
+    constexpr auto repeat_view<T>::begin() const noexcept -> const_iterator
+    {
+        return const_iterator(m_value, 0);
+    }
+
+    template <typename T>
+    constexpr auto repeat_view<T>::end() const noexcept -> const_iterator
+    {
+        return const_iterator(m_value, m_count);
+    }
+
+    template <typename T>
+    constexpr auto repeat_view<T>::cbegin() const noexcept -> const_iterator
+    {
+        return const_iterator(m_value, 0);
+    }
+
+    template <typename T>
+    constexpr auto repeat_view<T>::cend() const noexcept -> const_iterator
+    {
+        return const_iterator(m_value, m_count);
+    }
+
+    template <typename T>
+    [[nodiscard]] constexpr size_t repeat_view<T>::size() const noexcept
+    {
+        return m_count;
+    }
+
 }
