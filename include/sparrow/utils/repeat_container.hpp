@@ -32,7 +32,6 @@ namespace sparrow
 
         using iterator_category = std::random_access_iterator_tag;
         using value_type = T;
-        using difference_type = std::ptrdiff_t;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
 
