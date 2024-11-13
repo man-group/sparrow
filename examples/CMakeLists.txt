@@ -12,7 +12,9 @@ foreach(EXAMPLE ${EXAMPLES})
     target_link_libraries(${EXAMPLE_NAME} PRIVATE sparrow)
     set_target_properties(${EXAMPLE_NAME} PROPERTIES
         FOLDER "Examples"
+        CMAKE_CXX_EXTENSIONS OFF
     )
+    target_compile_features(${EXAMPLE_NAME} PRIVATE cxx_std_20)
 endforeach()
 
 # custom target to run each example
