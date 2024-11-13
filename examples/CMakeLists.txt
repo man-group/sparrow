@@ -5,6 +5,13 @@ SET(EXAMPLES
     record_batch_example.cpp
 )
 
+# custom target to run all examples
+add_custom_target(run_examples
+    COMMENT "Running all examples")
+set_target_properties(run_examples PROPERTIES
+    FOLDER "Examples"
+)
+
 if(NOT SPARROW_TARGET_32BIT) # TODO: To be removed when 32-bit support is ok
     # iterate over all examples
     foreach(EXAMPLE ${EXAMPLES})
@@ -30,15 +37,13 @@ if(NOT SPARROW_TARGET_32BIT) # TODO: To be removed when 32-bit support is ok
         set_target_properties(run_${EXAMPLE_NAME} PROPERTIES
             FOLDER "Examples"
         )
+
+        add_dependencies(run_examples run_${EXAMPLE_NAME})
     endforeach()
 endif()
 
-# custom target to run all examples
-add_custom_target(run_examples
-    COMMENT "Running all examples")
-set_target_properties(run_examples PROPERTIES
-    FOLDER "Examples"
-)
+
+
 foreach(EXAMPLE ${EXAMPLES})
     get_filename_component(EXAMPLE_NAME ${EXAMPLE} NAME_WE)
     add_dependencies(run_examples run_${EXAMPLE_NAME})
