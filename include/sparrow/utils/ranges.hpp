@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-#pragma once
-
-=======
->>>>>>> upstream/main
 // Copyright 2024 Man Group Operations Limited
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-<<<<<<< HEAD
-=======
 #pragma once
->>>>>>> upstream/main
 
 #include <ranges>
 
@@ -27,28 +19,16 @@ namespace sparrow
 {   
     template<std::ranges::input_range R>
     requires(std::ranges::sized_range<R>)
-<<<<<<< HEAD
-    auto range_size(R && r)
-    {
-        return std::ranges::size(r);
-=======
     std::size_t range_size(R && r)
     {
         return static_cast<std::size_t>(std::ranges::size(r));
->>>>>>> upstream/main
     }
 
     template<std::ranges::input_range R>
     requires(!std::ranges::sized_range<R>)
-<<<<<<< HEAD
-    auto range_size(R && r)
-    {
-        return std::ranges::distance(r);
-=======
     std::size_t range_size(R && r)
     {
         return static_cast<std::size_t>(std::ranges::distance(r));
->>>>>>> upstream/main
     }
 
 };
