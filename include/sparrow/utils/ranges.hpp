@@ -19,16 +19,16 @@ namespace sparrow
 {   
     template<std::ranges::input_range R>
     requires(std::ranges::sized_range<R>)
-    auto range_size(R && r)
+    std::size_t range_size(R && r)
     {
-        return std::ranges::size(r);
+        return static_cast<std::size_t>(std::ranges::size(r));
     }
 
     template<std::ranges::input_range R>
     requires(!std::ranges::sized_range<R>)
-    auto range_size(R && r)
+    std::size_t range_size(R && r)
     {
-        return std::ranges::distance(r);
+        return static_cast<std::size_t>(std::ranges::distance(r));
     }
 
 };
