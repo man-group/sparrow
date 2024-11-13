@@ -20,13 +20,16 @@
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
 
+#include <vector>
+#include <string>
+
 using namespace std::literals;
 
 namespace sparrow
 {
     struct variable_size_binary_fixture
     {
-        using layout_type = variable_size_binary_array<std::string, std::string_view>;
+        using layout_type = string_array;
 
         variable_size_binary_fixture()
             : m_arrow_proxy(create_arrow_proxy())
@@ -61,6 +64,18 @@ namespace sparrow
 
     TEST_SUITE("variable_size_binary_array")
     {
+        TEST_CASE("convenience")
+        {
+        //    std::vector<std::string> words{"upon", "a", "time", "I", "was", "writing", "clean", "code", "now"};
+        //    string_array array{words};
+            SUBCASE("from buffers")
+            {
+                u8_buffer<char> data_buffer{'h','e','l','l','o',' ','w','o','r','l','d'};
+                u8_buffer<std::uint32_t> offsets{5, 6, 11};
+
+                string_array array{std::move(data_buffer), std::move(offsets)};
+            }
+        }   
         TEST_CASE_FIXTURE(variable_size_binary_fixture, "constructor")
         {
             SUBCASE("copy arrow_proxy")
