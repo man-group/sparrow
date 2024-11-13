@@ -14,6 +14,10 @@
 
 #include "sparrow/record_batch.hpp"
 
+#include <unordered_set>
+
+#include "sparrow/utils/contracts.hpp"
+
 namespace sparrow
 {
     record_batch::record_batch(initializer_type init)
@@ -21,10 +25,10 @@ namespace sparrow
         m_name_list.reserve(init.size());
         m_array_list.reserve(init.size());
 
-        for(auto& entry: init)
+        for (auto& [name, array] : init)
         {
-            m_name_list.push_back(std::move(entry.first));
-            m_array_list.push_back(std::move(entry.second));
+            m_name_list.push_back(std::move(name));
+            m_array_list.push_back(std::move(array));
         }
 
         init_array_map();
@@ -45,7 +49,7 @@ namespace sparrow
         init_array_map();
         return *this;
     }
-    
+
     auto record_batch::nb_columns() const -> size_type
     {
         return m_array_list.size();
@@ -55,7 +59,7 @@ namespace sparrow
     {
         return m_array_list.empty() ? size_type(0) : m_array_list.front().size();
     }
-    
+
     bool record_batch::contains_column(const name_type& name) const
     {
         return m_array_map.contains(name);
@@ -63,12 +67,13 @@ namespace sparrow
 
     auto record_batch::get_column_name(size_type index) const -> const name_type&
     {
+        SPARROW_ASSERT_TRUE(index < nb_columns());
         return m_name_list[index];
     }
-    
+
     const array& record_batch::get_column(const name_type& name) const
     {
-        auto iter = m_array_map.find(name);
+        const auto iter = m_array_map.find(name);
         if (iter == m_array_map.end())
         {
             throw std::out_of_range("Column's name not found in record batch");
@@ -78,10 +83,11 @@ namespace sparrow
 
     const array& record_batch::get_column(size_type index) const
     {
+        SPARROW_ASSERT_TRUE(index < nb_columns());
         return m_array_list[index];
     }
 
-    auto record_batch::names() const -> name_range 
+    auto record_batch::names() const -> name_range
     {
         return std::ranges::ref_view(m_name_list);
     }
@@ -90,36 +96,45 @@ namespace sparrow
     {
         return std::ranges::ref_view(m_array_list);
     }
-    
+
     void record_batch::init_array_map()
     {
+        m_array_map.clear();
+        m_array_map.reserve(m_name_list.size());
         for (size_t i = 0; i < m_name_list.size(); ++i)
         {
-            m_array_map.insert({m_name_list[i], &(m_array_list[i])});
+            m_array_map.try_emplace(m_name_list[i], &(m_array_list[i]));
         }
     }
 
     bool record_batch::check_consistency() const
     {
-        SPARROW_ASSERT(m_name_list.size() == m_array_list.size(),
-            "The size of the names and of the array list must be the same");
-        bool res = true;
+        SPARROW_ASSERT(
+            m_name_list.size() == m_array_list.size(),
+            "The size of the names and of the array list must be the same"
+        );
+
+        const auto unique_names = std::unordered_set<name_type>(m_name_list.begin(), m_name_list.end());
+        SPARROW_ASSERT(unique_names.size() == m_name_list.size(), "The names of the columns must be unique");
+
         if (!m_array_list.empty())
         {
-            size_type size = m_array_list[0].size();
+            const size_type size = m_array_list[0].size();
             for (size_type i = 1u; i < m_array_list.size(); ++i)
             {
-                SPARROW_ASSERT(m_array_list[i].size() == size,
-                    "The arrays of a record batch must have the same size");
+                const bool same_size = m_array_list[i].size() == size;
+                SPARROW_ASSERT(same_size, "The arrays of a record batch must have the same size");
+                if (!same_size)
+                {
+                    return false;
+                }
             }
         }
-        return res;
+        return true;
     }
 
     bool operator==(const record_batch& lhs, const record_batch& rhs)
     {
-        return std::ranges::equal(lhs.names(), rhs.names()) &&
-            std::ranges::equal(lhs.columns(), rhs.columns());
+        return std::ranges::equal(lhs.names(), rhs.names()) && std::ranges::equal(lhs.columns(), rhs.columns());
     }
 }
-
