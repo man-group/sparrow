@@ -41,10 +41,3 @@ if(NOT SPARROW_TARGET_32BIT) # TODO: To be removed when 32-bit support is ok
         add_dependencies(run_examples run_${EXAMPLE_NAME})
     endforeach()
 endif()
-
-
-
-foreach(EXAMPLE ${EXAMPLES})
-    get_filename_component(EXAMPLE_NAME ${EXAMPLE} NAME_WE)
-    add_dependencies(run_examples run_${EXAMPLE_NAME})
-endforeach()
