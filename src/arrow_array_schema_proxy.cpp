@@ -691,8 +691,8 @@ namespace sparrow
             return;
         }
         const auto validity_index = std::distance(buffer_types.begin(), validity_it);
-        auto& validity_buffer = buffers()[static_cast<size_t>(validity_index)];
-        const dynamic_bitset_view<std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
+        const auto& validity_buffer = buffers()[static_cast<size_t>(validity_index)];
+        const dynamic_bitset_view<const std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
         const auto null_count = bitmap.null_count();
         set_null_count(static_cast<int64_t>(null_count));
     }

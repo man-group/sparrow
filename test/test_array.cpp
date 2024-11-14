@@ -15,6 +15,8 @@
 #include "sparrow/array.hpp"
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/utils/nullable.hpp"
+
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
 
@@ -31,8 +33,7 @@ namespace sparrow
         primitive_array<std::uint64_t>,
         primitive_array<float16_t>,
         primitive_array<float32_t>,
-        primitive_array<float64_t>
-    >;
+        primitive_array<float64_t>>;
 
     namespace test
     {
@@ -194,11 +195,13 @@ namespace sparrow
             constexpr size_t offset = 0;
             constexpr size_t size = 10;
             using scalar_value_type = typename AR::inner_value_type;
-            
+
             ArrowSchema sc_ctrl{};
             ArrowArray ar_ctrl{};
             test::fill_schema_and_array<scalar_value_type>(sc_ctrl, ar_ctrl, size, offset, {});
-            auto pa_ctrl = primitive_array<scalar_value_type>(arrow_proxy(std::move(ar_ctrl), std::move(sc_ctrl)));
+            auto pa_ctrl = primitive_array<scalar_value_type>(
+                arrow_proxy(std::move(ar_ctrl), std::move(sc_ctrl))
+            );
 
             SUBCASE("not owning")
             {
@@ -249,7 +252,9 @@ namespace sparrow
             ArrowSchema sc_ctrl{};
             ArrowArray ar_ctrl{};
             test::fill_schema_and_array<scalar_value_type>(sc_ctrl, ar_ctrl, size, offset, {});
-            auto pa_ctrl = primitive_array<scalar_value_type>(arrow_proxy(std::move(ar_ctrl), std::move(sc_ctrl)));
+            auto pa_ctrl = primitive_array<scalar_value_type>(
+                arrow_proxy(std::move(ar_ctrl), std::move(sc_ctrl))
+            );
 
             SUBCASE("not owning")
             {
@@ -292,10 +297,54 @@ namespace sparrow
             test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
             array arr(std::move(ar), std::move(sc));
 
-            size_t res = arr.visit([](const auto& impl) { return impl.size(); });
+            size_t res = arr.visit(
+                [](const auto& impl)
+                {
+                    return impl.size();
+                }
+            );
             CHECK_EQ(res, size);
         }
         TEST_CASE_TEMPLATE_APPLY(visit_id, testing_types);
+
+
+        TEST_CASE_TEMPLATE_DEFINE("slice", AR, slice_id)
+        {
+            using const_reference = typename AR::const_reference;
+            using scalar_value_type = typename AR::inner_value_type;
+
+            constexpr size_t size = 10;
+            array ar = test::make_array<scalar_value_type>(size);
+
+            REQUIRE_EQ(ar.size(), size);
+            CHECK_EQ(std::get<const_reference>(ar[0]), make_nullable<scalar_value_type>(0));
+            CHECK_EQ(std::get<const_reference>(ar[1]), make_nullable<scalar_value_type>(1));
+            CHECK_EQ(std::get<const_reference>(ar[2]), make_nullable<scalar_value_type>(2));
+            CHECK_EQ(std::get<const_reference>(ar[3]), make_nullable<scalar_value_type>(3));
+            CHECK_EQ(std::get<const_reference>(ar[4]), make_nullable<scalar_value_type>(4));
+            CHECK_EQ(std::get<const_reference>(ar[5]), make_nullable<scalar_value_type>(5));
+            CHECK_EQ(std::get<const_reference>(ar[6]), make_nullable<scalar_value_type>(6));
+            CHECK_EQ(std::get<const_reference>(ar[7]), make_nullable<scalar_value_type>(7));
+            CHECK_EQ(std::get<const_reference>(ar[8]), make_nullable<scalar_value_type>(8));
+            CHECK_EQ(std::get<const_reference>(ar[9]), make_nullable<scalar_value_type>(9));
+
+            ar.slice(1, 5);
+            REQUIRE_EQ(ar.size(), 4);
+            CHECK_EQ(std::get<const_reference>(ar[0]), make_nullable<scalar_value_type>(1));
+            CHECK_EQ(std::get<const_reference>(ar[1]), make_nullable<scalar_value_type>(2));
+            CHECK_EQ(std::get<const_reference>(ar[2]), make_nullable<scalar_value_type>(3));
+            CHECK_EQ(std::get<const_reference>(ar[3]), make_nullable<scalar_value_type>(4));
+
+            ar.slice(2, 8);
+
+            REQUIRE_EQ(ar.size(), 6);
+            CHECK_EQ(std::get<const_reference>(ar[0]), make_nullable<scalar_value_type>(2));
+            CHECK_EQ(std::get<const_reference>(ar[1]), make_nullable<scalar_value_type>(3));
+            CHECK_EQ(std::get<const_reference>(ar[2]), make_nullable<scalar_value_type>(4));
+            CHECK_EQ(std::get<const_reference>(ar[3]), make_nullable<scalar_value_type>(5));
+            CHECK_EQ(std::get<const_reference>(ar[4]), make_nullable<scalar_value_type>(6));
+            CHECK_EQ(std::get<const_reference>(ar[5]), make_nullable<scalar_value_type>(7));
+        }
+        TEST_CASE_TEMPLATE_APPLY(slice_id, testing_types);
     }
 }
-

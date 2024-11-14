@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/array.hpp"
+
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/array_helper.hpp"
 
@@ -64,7 +65,7 @@ namespace sparrow
     {
         return array_element(*p_array, index);
     }
-
+    
     array::const_reference array::front() const
     {
         SPARROW_ASSERT_TRUE(!empty());
@@ -75,6 +76,12 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(!empty());
         return (*this)[size() - 1];
+    }
+
+    void array::slice(size_type start, size_type end)
+    {
+        get_arrow_proxy().set_offset(start);
+        get_arrow_proxy().set_length(end - start);
     }
 
     arrow_proxy& array::get_arrow_proxy()
@@ -89,20 +96,23 @@ namespace sparrow
 
     bool operator==(const array& lhs, const array& rhs)
     {
-        return lhs.visit([&rhs](const auto& typed_lhs) -> bool
-        {
-            return rhs.visit([&typed_lhs](const auto& typed_rhs) -> bool
+        return lhs.visit(
+            [&rhs](const auto& typed_lhs) -> bool
             {
-                if constexpr (!std::same_as<decltype(typed_lhs), decltype(typed_rhs)>)
-                {
-                    return false;
-                }
-                else
-                {
-                    return typed_lhs == typed_rhs;
-                }
-            });
-        });
+                return rhs.visit(
+                    [&typed_lhs](const auto& typed_rhs) -> bool
+                    {
+                        if constexpr (!std::same_as<decltype(typed_lhs), decltype(typed_rhs)>)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            return typed_lhs == typed_rhs;
+                        }
+                    }
+                );
+            }
+        );
     }
 }
-
