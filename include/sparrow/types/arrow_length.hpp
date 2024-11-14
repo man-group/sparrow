@@ -35,15 +35,6 @@ namespace sparrow
     /// - @see `sum_arrow_offsets()`
     using arrow_length = std::int64_t;
 
-    /// Clarifies if a length value is supposed to be a size/length or an offset.
-    /// Offsets can be negative, sizes cannot. This is only important for runtime checks
-    /// and should only be used when calling functions that do runtime checks on sizes
-    /// and offsets values validity.
-    enum class arrow_length_kind
-    {
-        size, offset
-    };
-
     /// Maximum size allowed for arrow lengths.
     /// This can be constrained to 32bit signed values using configuration options.
     /// See: https://arrow.apache.org/docs/format/Columnar.html#array-lengths
@@ -56,10 +47,10 @@ namespace sparrow
     ///          that the value is an offset, we allow negatives values too.
     template <std::integral T>
     inline constexpr
-    bool is_valid_arrow_length(T size_or_offset, arrow_length_kind kind = arrow_length_kind::size) noexcept
+    bool is_valid_arrow_length(T size_or_offset) noexcept
     {
         return std::in_range<arrow_length>(size_or_offset)
-           and (kind == arrow_length_kind::offset or size_or_offset >= T(0))
+           and size_or_offset >= T(0)
            and size_or_offset <= max_arrow_length
            ;
     }
@@ -71,13 +62,12 @@ namespace sparrow
     /// otherwise this function is no-op.
     template<std::integral TargetRepr = arrow_length>
     inline constexpr
-    void throw_if_invalid_size(std::integral auto size_or_offset,
-                               arrow_length_kind kind = arrow_length_kind::size)
+    void throw_if_invalid_size(std::integral auto size_or_offset)
     {
         if constexpr (config::enable_size_limit_runtime_check)
         {
             // checks that the value is in range of arrow length in general
-            if (not is_valid_arrow_length(size_or_offset, kind))
+            if (not is_valid_arrow_length(size_or_offset))
             {
                 throw std::runtime_error(  // TODO: replace by sparrow-specific error
                     // TODO: use std::format instead once available
@@ -126,7 +116,7 @@ namespace sparrow
     inline constexpr
     auto to_native_offset(arrow_length offset) -> std::ptrdiff_t
     {
-        throw_if_invalid_size<std::ptrdiff_t>(offset, arrow_length_kind::offset);
+        throw_if_invalid_size<std::ptrdiff_t>(offset);
         return static_cast<std::ptrdiff_t>(offset);
     }
 
@@ -136,10 +126,10 @@ namespace sparrow
     /// @throws  @see `throw_if_invalid_size()` for details.
     inline constexpr
     auto
-    to_arrow_length(std::integral auto size_or_offset, arrow_length_kind kind = arrow_length_kind::size)
+    to_arrow_length(std::integral auto size_or_offset)
         -> arrow_length
     {
-        throw_if_invalid_size(size_or_offset, kind);
+        throw_if_invalid_size(size_or_offset);
         return static_cast<arrow_length>(size_or_offset);
     }
 
@@ -155,8 +145,8 @@ namespace sparrow
         // We cast every offset as an arrow length, then sum them as arrow length representation,
         // and finally cast back to the expected result type after verifying that
         // the resulting value is still a valid arrow length.
-        auto result = (to_arrow_length(offsets, arrow_length_kind::offset) + ...);
-        throw_if_invalid_size<R>(result, arrow_length_kind::size); // dont allow negatives as the result must be a size
+        auto result = (to_arrow_length(offsets) + ...);
+        throw_if_invalid_size<R>(result); // dont allow negatives as the result must be a size
         return static_cast<R>(result);
     }
 #if defined(__GNUC__) && !defined(__clang__)
