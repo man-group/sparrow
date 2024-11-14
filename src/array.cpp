@@ -80,6 +80,7 @@ namespace sparrow
 
     void array::slice(size_type start, size_type end)
     {
+        SPARROW_ASSERT_TRUE(start <= end);
         get_arrow_proxy().set_offset(start);
         get_arrow_proxy().set_length(end - start);
     }
