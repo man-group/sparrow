@@ -140,12 +140,12 @@ namespace sparrow::detail
     /// @throws  @see `throw_if_invalid_size()` for details.
     template<std::integral R = arrow_length>
     inline constexpr
-    auto sum_arrow_offsets(std::integral auto... offsets) -> R
+    auto sum_arrow_offsets(std::integral auto lhs, std::integral auto rhs) -> R
     {
         // We cast every offset as an arrow length, then sum them as arrow length representation,
         // and finally cast back to the expected result type after verifying that
         // the resulting value is still a valid arrow length.
-        auto result = (to_arrow_length(offsets) + ...);
+        auto result = (to_arrow_length(lhs) + to_arrow_length(rhs));
         throw_if_invalid_size<R>(result); // dont allow negatives as the result must be a size
         return static_cast<R>(result);
     }
