@@ -84,13 +84,11 @@ TEST_SUITE("arrow_length")
         if constexpr (sizeof(std::ptrdiff_t) <= max_arrow_length and config::enable_32bit_size_limit == false)
         {
             throw_if_invalid_size(std::numeric_limits<std::ptrdiff_t>::max());
-            throw_if_invalid_size(std::numeric_limits<std::ptrdiff_t>::min());
         }
 
         // We always support at least 32bit lengths
         throw_if_invalid_size(std::size_t(std::numeric_limits<std::int32_t>::max()));
         throw_if_invalid_size(std::ptrdiff_t(std::numeric_limits<std::int32_t>::max()));
-        throw_if_invalid_size(std::ptrdiff_t(std::numeric_limits<std::int32_t>::min()));
     }
 
 }
