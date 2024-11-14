@@ -117,13 +117,16 @@ namespace sparrow
     // concept which is true for all types which translate to a primitive
     // layouts (ie range of scalars or range of nullable of scalars)
     template <class T>
-    concept is_nullable_like = 
+    concept is_nullable_like_generic = 
     requires(T t)
     {
         //typename T::value_type;
         { t.has_value() } -> std::convertible_to<bool>;
         { t.get() };// -> std::convertible_to<typename T::value_type>;
     };
+
+    template<class T>
+    concept is_nullable_like =(is_nullable_like_generic<T>  ||  is_nullable_v<T>);
 
     template<class T>
     struct maybe_nullable_value_type
@@ -144,6 +147,7 @@ namespace sparrow
     // a save way to return .size from
     // a possibly nullable object
     template<class T>
+    requires(!is_nullable_like<T>)
     auto get_size_save(const T& t)
     {
         return t.size();
@@ -152,7 +156,7 @@ namespace sparrow
     template<is_nullable_like T>
     auto get_size_save(const T& t)
     {
-        return t.has_value() ? t.size() : 0;
+        return t.has_value() ? t.get().size() : 0;
     }
 
     

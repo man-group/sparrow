@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/builder/builder.hpp"
-#include "doctest/doctest.h"
+#include "test_utils.hpp"
 
 namespace sparrow
 {
@@ -33,24 +33,56 @@ namespace sparrow
         TEST_CASE("primitive-layout")
         {
             // arr[float]
+            SUBCASE("float")
             {   
-                std::vector<float> v{1.0, 2.0, 3.0, 4.0, 5.0};
-                sanity_check(sparrow::build(v));
+                std::vector<float> v{1.0, 2.0, 3.0};
+                auto arr = sparrow::build(v);
+                sanity_check(arr);
+                REQUIRE_EQ(arr.size(), 3);
+                CHECK_EQ(arr[0].value(), 1.0);
+                CHECK_EQ(arr[1].value(), 2.0);
+                CHECK_EQ(arr[2].value(), 3.0);
             }
             // arr[double] (with nulls)
+            SUBCASE("float-with-nulls")
             {   
-                std::vector<nt<double>> v{1.0, 2.0, 3.0, sparrow::nullval, 5.0};
-                sanity_check(sparrow::build(v));
+                std::vector<nt<double>> v{1.0, 2.0, sparrow::nullval, 3.0};
+                auto arr = sparrow::build(v);
+                sanity_check(arr);
+                REQUIRE_EQ(arr.size(), 4);
+                REQUIRE(arr[0].has_value());
+                REQUIRE(arr[1].has_value());
+                REQUIRE_FALSE(arr[2].has_value());
+                REQUIRE(arr[3].has_value());
+
+                CHECK_EQ(arr[0].value(), 1.0);
+                CHECK_EQ(arr[1].value(), 2.0);
+                CHECK_EQ(arr[3].value(), 3.0);
+
             }
         }
         TEST_CASE("list-layout")
         {
             // list[float]
+            SUBCASE("list[float]")
             {   
-                std::vector<std::vector<float>> v{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
-                sanity_check(sparrow::build(v));
+                std::vector<std::vector<float>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
+                auto arr = sparrow::build(v);
+                sanity_check(arr);
+
+                REQUIRE_EQ(arr.size(), 2);
+                REQUIRE_EQ(arr[0].value().size(), 3);
+                REQUIRE_EQ(arr[1].value().size(), 2);
+
+                CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0],  1.0f);
+                CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1],  2.0f);
+                CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[2],  3.0f);
+                CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0],  4.0f);
+                CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1],  5.0f);
+
+
             }
-            // list[list[float]]
+            SUBCASE("list[list[float]]")
             {   
                 std::vector<std::vector<std::vector<float>>> v{
                     {{1.2f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f}},
@@ -110,8 +142,44 @@ namespace sparrow
                 sanity_check(sparrow::build(v));
             }
         }
+        TEST_CASE("variable-sized-binary")
+        {
+            // variable_size_binary
+            {   
+                std::vector<std::string> v{
+                    "hello",
+                    " ",
+                    "world",
+                    "!",
+                };
+                auto arr = sparrow::build(v);
+                sanity_check(arr);
+                REQUIRE_EQ(arr.size(), 4);
+                CHECK_EQ(arr[0].value(), "hello");
+                CHECK_EQ(arr[1].value(), " ");
+                CHECK_EQ(arr[2].value(), "world");
+                CHECK_EQ(arr[3].value(), "!");
 
+            }
+            // variable_size_binary with nulls
+            {   
+                std::vector<nt<std::string>> v{
+                    "hello",
+                    sparrow::nullval,
+                    "world!"
+                };
+                auto arr = sparrow::build(v);
+                sanity_check(arr);
+                REQUIRE_EQ(arr.size(), 3);
+                REQUIRE(arr[0].has_value());
+                REQUIRE_FALSE(arr[1].has_value());
+                REQUIRE(arr[2].has_value());
+
+                CHECK_EQ(arr[0].value(), "hello");
+                CHECK_EQ(arr[2].value(), "world!");
+                
+            }
+        }
     }
-    
 }
 

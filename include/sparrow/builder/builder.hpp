@@ -25,6 +25,7 @@
 #include <sparrow/layout/primitive_array.hpp>
 #include <sparrow/layout/list_layout/list_array.hpp>
 #include <sparrow/layout/struct_layout/struct_array.hpp>
+#include <sparrow/layout/variable_size_binary_array.hpp>
 #include <sparrow/array.hpp>
 #include "builder_utils.hpp"
 #include <sparrow/utils/ranges.hpp>
@@ -45,8 +46,6 @@ concept translates_to_primitive_layout =
 template<class T>
 using nested_range_inner_value_t = mnv_t<std::ranges::range_value_t<mnv_t<mnv_t<std::ranges::range_value_t<T>>>>>;
 
-
-
 template<class T> 
 concept translate_to_variable_sized_list_layout = 
     std::ranges::input_range<T> &&     
@@ -54,7 +53,6 @@ concept translate_to_variable_sized_list_layout =
     !tuple_like<mnv_t<std::ranges::range_value_t<T>>> && // tuples go to struct layout
     // value type of inner should not be 'char-like'( char, byte, uint8), these are handled by variable_size_binary_array
     !mpl::char_like<nested_range_inner_value_t<T>>
-
 ;
 
 template<class T>
@@ -67,6 +65,16 @@ template<class T>
 concept translate_to_fixed_sized_list_layout =
     std::ranges::input_range<T> &&
     tuple_like<mnv_t<std::ranges::range_value_t<T>>>;
+
+
+template<class T> 
+concept translate_to_variable_sized_binary_layout = 
+    std::ranges::input_range<T> &&     
+    std::ranges::input_range<mnv_t<std::ranges::range_value_t<T>>> &&
+    !tuple_like<mnv_t<std::ranges::range_value_t<T>>> && // tuples go to struct layout
+    // value type of inner must be char like ( char, byte, uint8)
+    mpl::char_like<nested_range_inner_value_t<T>>
+;
 
 template<class T>
 struct builder;
@@ -151,7 +159,28 @@ struct builder<T>
     }
 };
 
+template< translate_to_variable_sized_binary_layout T>
+struct builder<T>
+{
+    using type = string_array;
 
+    template<class U>
+    static type create(U && t)
+    {
+        auto flat_list_view = std::ranges::views::join(ensure_value_range(t));
+        u8_buffer<char> data_buffer(flat_list_view);
+
+        auto sizes = t | std::views::transform([](const auto& l){ 
+            return get_size_save(l);
+        });
+ 
+        return type(
+            std::move(data_buffer),
+            type::offset_from_sizes(sizes),
+            where_null(t)
+        );
+    }
+};
 
 
 }// namespace sparrow
