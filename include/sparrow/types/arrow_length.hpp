@@ -22,7 +22,7 @@
 
 #include "sparrow/config/config.hpp"
 
-namespace sparrow
+namespace sparrow::detail
 {
 
     /// Type representing an Arrow length (sizes, offsets) in the Arrow specification and storage.
@@ -134,7 +134,7 @@ namespace sparrow
     }
 
     /// @returns The sum of the provided offsets with `R` representation, whatever the offset types as long as
-    ///          they are integrals and can represent and arrow length.
+    ///          they are integrals and can represent an arrow length.
     ///          If `config::enable_size_limit_runtime_check == true` it will also check that each value and the resulting sum are
     ///          valid arrow lengths and representable in the specified result `R` or throws otherwise.
     /// @throws  @see `throw_if_invalid_size()` for details.

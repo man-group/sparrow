@@ -29,6 +29,7 @@ TEST_SUITE("arrow_length")
     TEST_CASE("is_valid_arrow_length")
     {
         using namespace sparrow;
+        using namespace sparrow::detail;
         CHECK(is_valid_arrow_length(0));
         CHECK(is_valid_arrow_length(1));
         CHECK(is_valid_arrow_length(1024));
@@ -61,6 +62,7 @@ TEST_SUITE("arrow_length")
     TEST_CASE("throw_if_invalid_size")
     {
         using namespace sparrow;
+        using namespace sparrow::detail;
         throw_if_invalid_size(0);
         throw_if_invalid_size(1);
         throw_if_invalid_size(1024);
