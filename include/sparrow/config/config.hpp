@@ -48,8 +48,8 @@ namespace sparrow
     namespace config
     {
         inline constexpr bool enable_size_limit_runtime_check =
-#if defined(SPAROW_ENABLE_SIZE_CHECKS)
-#   if SPAROW_ENABLE_SIZE_CHECKS == 1
+#if defined(SPARROW_ENABLE_SIZE_CHECKS)
+#   if SPARROW_ENABLE_SIZE_CHECKS == 1
             true
 #   else
             false
@@ -64,7 +64,7 @@ namespace sparrow
             ;
 
         inline constexpr bool enable_32bit_size_limit =
-#if defined(SPAROW_ENABLE_32BIT_SIZE_LIMIT)
+#if defined(SPARROW_ENABLE_32BIT_SIZE_LIMIT)
             true
 #else
             false
