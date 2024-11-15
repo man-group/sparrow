@@ -150,7 +150,7 @@ struct builder<T>
         for_each_index<n_children>([&](auto i)
         {
             constexpr std::size_t i_value = decltype(i)::value;
-            auto tuple_i_col = t | std::views::transform([](const auto& maybe_nullable_tuple)
+            auto tuple_i_col = t | std::views::transform([&](const auto& maybe_nullable_tuple)
             {
                 return std::get<i_value>(ensure_value( ensure_value(maybe_nullable_tuple)));
             }); 
