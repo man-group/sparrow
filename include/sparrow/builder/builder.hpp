@@ -160,6 +160,17 @@ struct builder<T>
     }
 };
 
+
+
+struct get_size_save_functor
+{
+    template<class T>
+    auto operator()(const T& t) const
+    {
+        return get_size_save(t);
+    }
+};
+
 template< translate_to_variable_sized_binary_layout T>
 struct builder<T>
 {
@@ -171,9 +182,8 @@ struct builder<T>
         auto flat_list_view = std::ranges::views::join(ensure_value_range(t));
         u8_buffer<char> data_buffer(flat_list_view);
 
-        auto sizes = t | std::views::transform([](const auto& l){ 
-            return get_size_save(l);
-        });
+        auto not_lambda = get_size_save_functor();
+        auto sizes = t | std::views::transform(not_lambda);
  
         return type(
             std::move(data_buffer),
