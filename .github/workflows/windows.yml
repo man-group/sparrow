@@ -84,6 +84,11 @@ jobs:
       run: |
         echo "GENERATOR_EXTRA_FLAGS=${{matrix.target-arch.vs-flags}}" >> $GITHUB_ENV
 
+    - name: Setup toolset if we use Visual Studio Build System and Clang
+      if: startsWith(matrix.build-system.name, 'Visual Studio') && matrix.toolchain.compiler == 'clang'
+      run: |
+        echo "GENERATOR_EXTRA_FLAGS=${GENERATOR_EXTRA_FLAGS} -T ClangCL" >> $GITHUB_ENV
+
     - name: Checkout code
       uses: actions/checkout@v4
 
