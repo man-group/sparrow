@@ -125,7 +125,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /Zc:__cplusplus)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(compiles_options
-        
         -Wall # reasonable and standard
         -Wcast-align # warn for potential performance problem casts
         -Wconversion # warn on type conversions that may lose data
@@ -143,6 +142,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         -Wsign-conversion # warn on sign conversions
         -Wunused # warn on anything being unused
         -Wno-c++98-compat # do not warn on use of non-C++98 standard
+        -Wno-documentation
         $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-array-bounds>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-stringop-overread>
