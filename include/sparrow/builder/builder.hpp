@@ -137,6 +137,18 @@ struct builder<T>
     }
 };
 
+
+template<std::size_t I>
+struct get_tuple_element_functor
+{
+    template<class T>
+    auto operator()(T && maybe_nullable_tuple) const
+    {
+        const auto & tuple_val = ensure_value(maybe_nullable_tuple);
+        return std::get<I>(tuple_val);
+    }
+};
+
 template< translate_to_struct_layout T>
 struct builder<T>
 {
@@ -148,12 +160,9 @@ struct builder<T>
     {
         std::vector<array> detyped_children(n_children);
         for_each_index<n_children>([&](auto i)
-        {
-            auto tuple_i_col = t | std::views::transform([](const auto& maybe_nullable_tuple)
-            {
-                const auto & tuple_val = ensure_value(maybe_nullable_tuple);
-                return std::get<decltype(i)::value>(tuple_val);
-            }); 
+        {   
+            get_tuple_element_functor<decltype(i)::value> get_i{};
+            auto tuple_i_col = t | std::views::transform(get_i); 
             detyped_children[decltype(i)::value] = array(build(tuple_i_col));
         });
        return type(std::move(detyped_children), where_null(t));
