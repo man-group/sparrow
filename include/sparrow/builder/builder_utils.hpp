@@ -30,7 +30,7 @@
 namespace sparrow
 {
 
-    namespace detail
+namespace detail
 {
     template <class F, std::size_t... Is>
     void for_each_index_impl(F&& f, std::index_sequence<Is...>)
@@ -38,13 +38,13 @@ namespace sparrow
         // Apply f to each index individually
         (f(std::integral_constant<std::size_t, Is>{}), ...);
     }
-}
+
 
     template <std::size_t SIZE, class F>
     void for_each_index(F&& f)
     {
         // Use std::forward to preserve value category
-        detail::for_each_index_impl(std::forward<F>(f), std::make_index_sequence<SIZE>());
+        for_each_index_impl(std::forward<F>(f), std::make_index_sequence<SIZE>());
     }
 
 
@@ -95,7 +95,7 @@ namespace sparrow
     };
 
     template<class T>
-    concept is_nullable_like =(is_nullable_like_generic<T>  ||  is_nullable_v<T>);
+    concept is_nullable_like =(is_nullable_like_generic<T>  ||  sparrow::is_nullable_v<T>);
 
 
     template<class T>
@@ -181,6 +181,7 @@ namespace sparrow
         return t | std::views::transform([](auto && v) { return v.get(); });
     }
 
+} // namespace detail
 
 
 } // namespace sparrow

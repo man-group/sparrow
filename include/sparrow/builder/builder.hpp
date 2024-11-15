@@ -35,6 +35,21 @@
 namespace sparrow
 {
 
+namespace detail{
+template<class T>
+struct builder;
+} // namespace detail
+
+template<class T>
+auto build(T&& t)
+{
+    return detail::builder<T>::create(std::forward<T>(t));
+}
+
+
+namespace detail
+{
+
 template <class T>
 concept translates_to_primitive_layout = 
     std::ranges::input_range<T> &&
@@ -79,16 +94,10 @@ concept translate_to_variable_sized_binary_layout =
 template<class T>
 struct builder;
 
-template<class T>
-auto build(T&& t)
-{
-    return builder<T>::create(std::forward<T>(t));
-}
-
 template< translates_to_primitive_layout T>
 struct builder<T>
 {
-    using type = primitive_array<typename maybe_nullable_value_type<std::ranges::range_value_t<T>>::type>;
+    using type = sparrow::primitive_array<typename maybe_nullable_value_type<std::ranges::range_value_t<T>>::type>;
     template<class U>
     static type create(U&& t)
     {
@@ -121,7 +130,7 @@ struct builder<T>
 template< translate_to_fixed_sized_list_layout T>
 struct builder<T>
 {
-    using type = fixed_sized_list_array;
+    using type = sparrow::fixed_sized_list_array;
     constexpr static std::size_t list_size = std::tuple_size_v<mnv_t<std::ranges::range_value_t<T>>>;
 
     template<class U>
@@ -131,8 +140,8 @@ struct builder<T>
 
         return type(
             static_cast<std::uint64_t>(list_size), 
-            array(build(flat_list_view))
-            //,where_null(t)
+            array(build(flat_list_view)),
+            where_null(t)
         );
     }
 };
@@ -140,7 +149,7 @@ struct builder<T>
 template< translate_to_struct_layout T>
 struct builder<T>
 {
-    using type = struct_array;
+    using type = sparrow::struct_array;
     static constexpr std::size_t n_children = std::tuple_size_v<mnv_t<std::ranges::range_value_t<T>>>;
 
     template<class U>
@@ -156,8 +165,8 @@ struct builder<T>
             }); 
             detyped_children[decltype(i)::value] = array(build(tuple_i_col));
         });
-       return type(std::move(detyped_children)
-       //, where_null(t)
+       return type(std::move(detyped_children),
+       where_null(t)
        );
     }
 };
@@ -166,7 +175,7 @@ struct builder<T>
 template< translate_to_variable_sized_binary_layout T>
 struct builder<T>
 {
-    using type = string_array;
+    using type = sparrow::string_array;
 
     template<class U>
     static type create(U && t)
@@ -180,11 +189,13 @@ struct builder<T>
  
         return type(
             std::move(data_buffer),
-            type::offset_from_sizes(sizes)
-            //,where_null(t)
+            type::offset_from_sizes(sizes),
+            where_null(t)
         );
     }
 };
+
+} // namespace detail
 
 
 }// namespace sparrow
