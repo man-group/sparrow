@@ -123,7 +123,7 @@ namespace sparrow
         array_crtp_base(const array_crtp_base&) = default;
         array_crtp_base& operator=(const array_crtp_base&) = default;
 
-        array_crtp_base(array_crtp_base&& other) = default;
+        array_crtp_base(array_crtp_base&&) = default;
         array_crtp_base& operator=(array_crtp_base&&) = default;
 
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
