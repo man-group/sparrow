@@ -125,7 +125,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /Zc:__cplusplus)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(compiles_options
-        -pedantic # Warn on language extensions
+        
         -Wall # reasonable and standard
         -Wcast-align # warn for potential performance problem casts
         -Wconversion # warn on type conversions that may lose data
@@ -139,7 +139,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         -Wnull-dereference # warn if a null dereference is detected
         -Wold-style-cast # warn for c-style casts
         -Woverloaded-virtual # warn if you overload (not override) a virtual function
-        -Wpedantic # warn if non-standard C++ is used
         -Wshadow # warn the user if a variable declaration shadows one from a parent context
         -Wsign-conversion # warn on sign conversions
         -Wunused # warn on anything being unused
@@ -151,7 +150,12 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         $<$<CXX_COMPILER_ID:GNU>:-Wlogical-op> # warn about logical operations being used where bitwise were probably wanted
         $<$<CXX_COMPILER_ID:GNU>:-Wno-subobject-linkage> # suppress warnings about subobject linkage
     )
-    target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
+    if (NOT "${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC")
+    {
+        target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
+        target_compile_options(${test_target} PRIVATE "-pedantic")# Warn on language extensions
+    }
+    
 endif()
 
 target_compile_options(${test_target}
