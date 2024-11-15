@@ -30,30 +30,21 @@
 namespace sparrow
 {
 
-    template<std::size_t I, std::size_t SIZE>
-    struct for_each_index_impl
-    {
-        template<class F>
-        static void apply(F&& f)
-        {
-            f(std::integral_constant<std::size_t, I>{});
-            for_each_index_impl<I + 1, SIZE>::apply(std::forward<F>(f));
-        }
-    };
+    namespace detail
+{
+    template <class F, std::size_t... Is>
+    void for_each_index_impl(F&& f, std::index_sequence<Is...>)
+    {   
+        // Apply f to each index individually
+        (f(std::integral_constant<std::size_t, Is>{}), ...);
+    }
+}
 
-    template<std::size_t SIZE>
-    struct for_each_index_impl<SIZE, SIZE>
+    template <std::size_t SIZE, class F>
+    void for_each_index(F&& f)
     {
-        template<class F>
-        static void apply(F&& /*f*/)
-        {
-        }
-    };
-
-    template<std::size_t SIZE, class F>
-    void for_each_index(F && f)
-    {
-        for_each_index_impl<0, SIZE>::apply(std::forward<F>(f));
+        // Use std::forward to preserve value category
+        detail::for_each_index_impl(std::forward<F>(f), std::make_index_sequence<SIZE>());
     }
 
 
@@ -77,25 +68,43 @@ namespace sparrow
     }(std::make_index_sequence<std::tuple_size_v<T>>());
 
 
-    // Helper concept to check if all elements in the tuple-like are the same type
-    template <typename TUPLE,typename FIRST, std::size_t I, std::size_t SIZE>
-    struct all_elements_same_helper
-    {
-        using type = std::tuple_element_t<I, TUPLE>;
-        constexpr static bool value = std::is_same_v<type, FIRST> && all_elements_same_helper<TUPLE, FIRST, I + 1, SIZE>::value;
-    };
+    // // Helper concept to check if all elements in the tuple-like are the same type
+    // template <typename TUPLE,typename FIRST, std::size_t I, std::size_t SIZE>
+    // struct all_elements_same_helper
+    // {
+    //     using type = std::tuple_element_t<I, TUPLE>;
+    //     constexpr static bool value = std::is_same_v<type, FIRST> && all_elements_same_helper<TUPLE, FIRST, I + 1, SIZE>::value;
+    // };
 
-    template <typename TUPLE, typename FIRST, std::size_t SIZE>
-    struct all_elements_same_helper<TUPLE, FIRST, SIZE, SIZE>
-    {
-        constexpr static bool value = true;
-    };
+    // template <typename TUPLE, typename FIRST, std::size_t SIZE>
+    // struct all_elements_same_helper<TUPLE, FIRST, SIZE, SIZE>
+    // {
+    //     constexpr static bool value = true;
+    // };
  
 
-    // Main concept to check if all elements in the tuple-like type are the same
+    // // Main concept to check if all elements in the tuple-like type are the same
+    // template <typename T>
+    // concept all_elements_same = tuple_like<T> &&
+    //     all_elements_same_helper<T, std::tuple_element_t<0, T>, 0, std::tuple_size_v<T>>::value;
+
+
+
+
+    // Simplify the all_elements_same_helper to avoid deep template recursion
+    template <typename Tuple, size_t... Is>
+    constexpr bool all_elements_same_impl(std::index_sequence<Is...>) {
+        return sizeof...(Is) == 0 || ((std::is_same_v<
+            std::tuple_element_t<0, Tuple>, 
+            std::tuple_element_t<Is, Tuple>
+        >) && ...);
+    }
+
     template <typename T>
-    concept all_elements_same = tuple_like<T> &&
-        all_elements_same_helper<T, std::tuple_element_t<0, T>, 0, std::tuple_size_v<T>>::value;
+    concept all_elements_same = tuple_like<T> && 
+        all_elements_same_impl<T>(
+            std::make_index_sequence<std::tuple_size_v<T>>{}
+        );
 
 
     // concept which is true for all types which translate to a primitive
@@ -112,6 +121,7 @@ namespace sparrow
     template<class T>
     concept is_nullable_like =(is_nullable_like_generic<T>  ||  is_nullable_v<T>);
 
+
     template<class T>
     struct maybe_nullable_value_type
     {
@@ -123,6 +133,8 @@ namespace sparrow
     {
         using type = typename T::value_type;
     };
+
+
 
     // shorthand for maybe_nullable_value_type<T>::type
     template<class T>
@@ -145,6 +157,7 @@ namespace sparrow
 
     
     template<class T>
+    requires (!is_nullable_like<T>)
     auto ensure_value(T && t)
     {
         return std::forward<T>(t);
@@ -172,19 +185,21 @@ namespace sparrow
     }
     
     template<class T>
+    requires(!is_nullable_like< std::ranges::range_value_t<T>>)
     std::array<std::size_t,0> where_null(T && )
     {
         return {};
     }
 
     template<class T>
+    requires(!is_nullable_like<std::decay_t<std::ranges::range_value_t<T>>>)
     T ensure_value_range(T && t)
     {
         return std::forward<T>(t);
     }
 
     template<class T>
-    requires(is_nullable_like<typename std::decay_t<T>::value_type>)
+    requires(is_nullable_like<std::decay_t<std::ranges::range_value_t<T>>>)
     auto ensure_value_range(T && t)
     {
         return t | std::views::transform([](auto && v) { return v.get(); });
