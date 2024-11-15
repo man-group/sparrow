@@ -21,8 +21,8 @@ jobs:
         toolchain:
         - {compiler: msvc, date-polyfill: 'ON'}
         - {compiler: msvc, date-polyfill: 'OFF'}
-        - {compiler: clang, date-polyfill: 'ON', version: 17}
-        - {compiler: clang, date-polyfill: 'OFF', version: 17}
+        - {compiler: clang, date-polyfill: 'ON', version: 18}
+        - {compiler: clang, date-polyfill: 'OFF', version: 18}
         target-arch:
         - {
             name: "Win64",
