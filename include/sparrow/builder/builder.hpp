@@ -149,7 +149,7 @@ struct builder<T>
         std::vector<array> detyped_children(n_children);
         for_each_index<n_children>([&](auto i)
         {
-            auto tuple_i_col = t | std::views::transform([&](const auto& maybe_nullable_tuple)
+            auto tuple_i_col = t | std::views::transform([](const auto& maybe_nullable_tuple)
             {
                 return std::get<decltype(i)::value>(ensure_value( ensure_value(maybe_nullable_tuple)));
             }); 
