@@ -137,18 +137,6 @@ struct builder<T>
     }
 };
 
-
-template<std::size_t I>
-struct get_tuple_element_functor
-{
-    template<class T>
-    auto operator()(T && maybe_nullable_tuple) const
-    {
-        const auto & tuple_val = ensure_value(maybe_nullable_tuple);
-        return std::get<I>(tuple_val);
-    }
-};
-
 template< translate_to_struct_layout T>
 struct builder<T>
 {
@@ -160,25 +148,18 @@ struct builder<T>
     {
         std::vector<array> detyped_children(n_children);
         for_each_index<n_children>([&](auto i)
-        {   
-            get_tuple_element_functor<decltype(i)::value> get_i{};
-            auto tuple_i_col = t | std::views::transform(get_i); 
+        {
+            auto tuple_i_col = t | std::views::transform([](const auto& maybe_nullable_tuple)
+            {
+                const auto & tuple_val = ensure_value(maybe_nullable_tuple);
+                return std::get<decltype(i)::value>(tuple_val);
+            }); 
             detyped_children[decltype(i)::value] = array(build(tuple_i_col));
         });
        return type(std::move(detyped_children), where_null(t));
     }
 };
 
-
-
-struct get_size_save_functor
-{
-    template<class T>
-    auto operator()(const T& t) const
-    {
-        return get_size_save(t);
-    }
-};
 
 template< translate_to_variable_sized_binary_layout T>
 struct builder<T>
@@ -191,8 +172,9 @@ struct builder<T>
         auto flat_list_view = std::ranges::views::join(ensure_value_range(t));
         u8_buffer<char> data_buffer(flat_list_view);
 
-        auto not_lambda = get_size_save_functor();
-        auto sizes = t | std::views::transform(not_lambda);
+        auto sizes = t | std::views::transform([](const auto& l){ 
+            return get_size_save(l);
+        });
  
         return type(
             std::move(data_buffer),
