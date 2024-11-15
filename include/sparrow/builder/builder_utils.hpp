@@ -68,30 +68,6 @@ namespace sparrow
     }(std::make_index_sequence<std::tuple_size_v<T>>());
 
 
-    // // Helper concept to check if all elements in the tuple-like are the same type
-    // template <typename TUPLE,typename FIRST, std::size_t I, std::size_t SIZE>
-    // struct all_elements_same_helper
-    // {
-    //     using type = std::tuple_element_t<I, TUPLE>;
-    //     constexpr static bool value = std::is_same_v<type, FIRST> && all_elements_same_helper<TUPLE, FIRST, I + 1, SIZE>::value;
-    // };
-
-    // template <typename TUPLE, typename FIRST, std::size_t SIZE>
-    // struct all_elements_same_helper<TUPLE, FIRST, SIZE, SIZE>
-    // {
-    //     constexpr static bool value = true;
-    // };
- 
-
-    // // Main concept to check if all elements in the tuple-like type are the same
-    // template <typename T>
-    // concept all_elements_same = tuple_like<T> &&
-    //     all_elements_same_helper<T, std::tuple_element_t<0, T>, 0, std::tuple_size_v<T>>::value;
-
-
-
-
-    // Simplify the all_elements_same_helper to avoid deep template recursion
     template <typename Tuple, size_t... Is>
     constexpr bool all_elements_same_impl(std::index_sequence<Is...>) {
         return sizeof...(Is) == 0 || ((std::is_same_v<

@@ -131,8 +131,8 @@ struct builder<T>
 
         return type(
             static_cast<std::uint64_t>(list_size), 
-            array(build(flat_list_view)),
-            where_null(t)
+            array(build(flat_list_view))
+            //,where_null(t)
         );
     }
 };
@@ -156,7 +156,9 @@ struct builder<T>
             }); 
             detyped_children[decltype(i)::value] = array(build(tuple_i_col));
         });
-       return type(std::move(detyped_children), where_null(t));
+       return type(std::move(detyped_children)
+       //, where_null(t)
+       );
     }
 };
 
@@ -178,8 +180,8 @@ struct builder<T>
  
         return type(
             std::move(data_buffer),
-            type::offset_from_sizes(sizes),
-            where_null(t)
+            type::offset_from_sizes(sizes)
+            //,where_null(t)
         );
     }
 };

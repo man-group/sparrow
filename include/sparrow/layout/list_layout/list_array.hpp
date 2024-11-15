@@ -562,6 +562,8 @@ namespace sparrow
         VB && validity_input
     )
     {
+        SPARROW_ASSERT(list_offsets.size() == list_sizes.size() , "sizes and offset must have the same size");
+        
         const auto size = list_sizes.size();
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
 
