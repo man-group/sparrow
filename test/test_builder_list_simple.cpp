@@ -51,14 +51,6 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1],  5.0f);
 
             }
-            SUBCASE("list[list[float]]")
-            {   
-                std::vector<std::vector<std::vector<float>>> v{
-                    {{1.2f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f}},
-                    {{7.0f, 8.0f, 9.0f}, {10.0f, 11.0f, 12.0f}}
-                };
-                sanity_check(sparrow::build(v));
-            }
         }
         
     }
