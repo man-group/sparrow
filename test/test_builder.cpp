@@ -80,7 +80,6 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0],  4.0f);
                 CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1],  5.0f);
 
-
             }
             SUBCASE("list[list[float]]")
             {   

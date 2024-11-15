@@ -107,10 +107,6 @@ namespace sparrow
         };
     }
 
-
-
-
-
     template <bool BIG>
     struct array_inner_types<list_array_impl<BIG>> : array_inner_types_base
     {
@@ -161,7 +157,7 @@ namespace sparrow
     // - big-list-array
     // - list-view-array
     // - big-list-view-array
-    // - fixed-size-list-array
+    // - fixed-size-list-array 
     template <class DERIVED>
     class list_array_crtp_base : public array_bitmap_base<DERIVED>
     {
@@ -246,19 +242,13 @@ namespace sparrow
         list_array_impl(const self_type&);
         list_array_impl& operator=(const self_type&);
 
-        list_array_impl(self_type&& other)
-        :   base_type(std::move(other)),
-            p_list_offsets(other.p_list_offsets)
-        {
-        }
-
+        list_array_impl(self_type&&) = default;
         list_array_impl& operator=(self_type&&) = default;
 
         template<class ... ARGS>
         requires(mpl::excludes_copy_and_move_ctor_v<list_array_impl<BIG>, ARGS...>)
         explicit list_array_impl(ARGS && ... args): self_type(create_proxy(std::forward<ARGS>(args)...))
-        {
-        }
+        {}
 
         template<std::ranges::range SIZES_RANGE>
         static auto offset_from_sizes(SIZES_RANGE && sizes) -> offset_buffer_type;
@@ -612,7 +602,7 @@ namespace sparrow
         : base_type(rhs)
         , p_list_offsets(make_list_offsets())
         , p_list_sizes(make_list_sizes())
-    {   
+    {
     }
 
     template <bool BIG>

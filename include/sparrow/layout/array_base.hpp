@@ -170,7 +170,8 @@ namespace sparrow
      */
     template <class D>
     auto array_crtp_base<D>::operator[](size_type i) const -> const_reference
-    { 
+    {
+        SPARROW_ASSERT_TRUE(i < this->derived_cast().size());
         return const_reference(
             inner_const_reference(this->derived_cast().value(i)),
             this->derived_cast().has_value(i)

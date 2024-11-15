@@ -77,9 +77,6 @@ namespace sparrow
     }(std::make_index_sequence<std::tuple_size_v<T>>());
 
 
-
-
-
     // Helper concept to check if all elements in the tuple-like are the same type
     template <typename TUPLE,typename FIRST, std::size_t I, std::size_t SIZE>
     struct all_elements_same_helper
@@ -99,19 +96,6 @@ namespace sparrow
     template <typename T>
     concept all_elements_same = tuple_like<T> &&
         all_elements_same_helper<T, std::tuple_element_t<0, T>, 0, std::tuple_size_v<T>>::value;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     // concept which is true for all types which translate to a primitive
@@ -187,15 +171,12 @@ namespace sparrow
         return result;
     }
     
-
     template<class T>
     std::array<std::size_t,0> where_null(T && )
     {
         return {};
     }
 
-
-    
     template<class T>
     T ensure_value_range(T && t)
     {

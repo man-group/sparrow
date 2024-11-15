@@ -76,8 +76,7 @@ namespace sparrow
 
         u8_buffer(std::size_t n, const T & val = T{});
         template<std::ranges::input_range R>
-        requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> &&
-                 std::same_as<std::ranges::range_value_t<R>, T>)
+        requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>)
         u8_buffer(R&& range);
         u8_buffer(std::initializer_list<T> ilist);
     };
@@ -108,8 +107,7 @@ namespace sparrow
 
     template<class T>
     template<std::ranges::input_range R>
-    requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> &&
-                 std::same_as<std::ranges::range_value_t<R>, T>)
+    requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>)
     u8_buffer<T>::u8_buffer(R&& range)
         : holder_type{range_size(range)* sizeof(T)}
         ,buffer_adaptor_type(holder_type::value)
@@ -119,7 +117,7 @@ namespace sparrow
 
     template<class T>
     u8_buffer<T>::u8_buffer(std::initializer_list<T> ilist)
-        : holder_type{ilist.size() * sizeof(T)}
+    : holder_type{ilist.size() * sizeof(T)}
         , buffer_adaptor_type(holder_type::value)
     {
         std::copy(ilist.begin(), ilist.end(), this->begin());

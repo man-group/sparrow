@@ -172,7 +172,7 @@ namespace sparrow
         ) -> arrow_proxy;
 
         // range of values (no missing values)
-        template <std::ranges::range R>
+        template <std::ranges::input_range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
         static auto create_proxy(R&& range) -> arrow_proxy;
 
@@ -306,7 +306,7 @@ namespace sparrow
     }
 
     template <class T>
-    template <std::ranges::range R>
+    template <std::ranges::input_range R>
     requires std::convertible_to<std::ranges::range_value_t<R>, T>
     arrow_proxy primitive_array<T>::create_proxy(R&& range)
     {   

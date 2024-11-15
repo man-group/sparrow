@@ -128,9 +128,6 @@ if (USE_DATE_POLYFILL)
     add_compile_definitions(SPARROW_USE_DATE_POLYFILL)
 endif()
 
-
-
-
 # Build
 # =====
 
@@ -232,7 +229,6 @@ else()
 endif()
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
-
 
 # TODO: handle static lib
 if (UNIX)
