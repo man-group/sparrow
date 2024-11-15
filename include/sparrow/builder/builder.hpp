@@ -151,7 +151,8 @@ struct builder<T>
         {
             auto tuple_i_col = t | std::views::transform([](const auto& maybe_nullable_tuple)
             {
-                return std::get<decltype(i)::value>(ensure_value( ensure_value(maybe_nullable_tuple)));
+                const auto & tuple_val = ensure_value(maybe_nullable_tuple);
+                return std::get<decltype(i)::value>(tuple_val);
             }); 
             detyped_children[decltype(i)::value] = array(build(tuple_i_col));
         });
