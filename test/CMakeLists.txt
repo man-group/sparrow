@@ -151,10 +151,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         $<$<CXX_COMPILER_ID:GNU>:-Wno-subobject-linkage> # suppress warnings about subobject linkage
     )
     if (NOT "${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC")
-    {
         target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
         target_compile_options(${test_target} PRIVATE "-pedantic")# Warn on language extensions
-    }
+    endif()
     
 endif()
 
