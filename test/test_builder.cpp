@@ -89,10 +89,23 @@ namespace sparrow
                 };
                 sanity_check(sparrow::build(v));
             }
-            SUBCASE("large-list")
+            SUBCASE("options")
             {   
-                std::vector<std::vector<float>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
-                auto arr = sparrow::build(v, sparrow::large_list_flag);
+                SUBCASE("with_large_list_flag")
+                {
+                    std::vector<std::vector<float>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
+                    auto arr = sparrow::build(v, sparrow::large_list_flag);
+                    using array_type = std::decay_t<decltype(arr)>;
+                    static_assert(std::is_same_v<array_type, sparrow::big_list_array>);
+                }
+                SUBCASE("without_large_list_flag")
+                {
+                    std::vector<std::vector<float>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
+                    auto arr = sparrow::build(v);
+                    using array_type = std::decay_t<decltype(arr)>;
+                    static_assert(std::is_same_v<array_type, sparrow::list_array>);
+                }
+
             }
         }
         TEST_CASE("struct-layout")

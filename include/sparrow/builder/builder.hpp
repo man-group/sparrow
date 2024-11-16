@@ -57,7 +57,7 @@ inline constexpr large_binary_flag_t large_binary_flag;
 template<class T, class ... OPTION_FLAGS>
 auto build(T&& t, OPTION_FLAGS&& ... )
 {
-    using option_flags_type = sparrow::mpl::typelist<OPTION_FLAGS...>;
+    using option_flags_type = sparrow::mpl::typelist<std::decay_t<OPTION_FLAGS>...>;
     return detail::builder<T, option_flags_type>::create(std::forward<T>(t));
 }
 

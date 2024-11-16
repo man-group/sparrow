@@ -238,7 +238,7 @@ namespace sparrow::mpl
     ///          `false` otherwise or if the list is empty.
     template <class Predicate, template <class...> class L, class... T>
         requires any_typelist<L<T...>> and (callable_type_predicate<Predicate, T> && ...)
-    consteval bool any_of(L<T...>, Predicate predicate = {})
+    consteval bool any_of(L<T...>, [[maybe_unused]] Predicate predicate = {})
     {
         return (evaluate<T>(predicate) || ... || false);
     }

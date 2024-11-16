@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <memory>
-
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
 #include "sparrow/layout/struct_layout/struct_array.hpp"
