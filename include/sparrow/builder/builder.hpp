@@ -26,6 +26,7 @@
 #include <sparrow/layout/list_layout/list_array.hpp>
 #include <sparrow/layout/struct_layout/struct_array.hpp>
 #include <sparrow/layout/variable_size_binary_array.hpp>
+#include <sparrow/layout/union_array.hpp>
 #include <sparrow/array.hpp>
 #include "builder_utils.hpp"
 #include <sparrow/utils/ranges.hpp>
@@ -37,14 +38,27 @@ namespace sparrow
 // forward declaration
 namespace detail
 {
-template<class T>
+template<class T, class OPTIONS_TYPE>
 struct builder;
 } // namespace detail
 
-template<class T>
-auto build(T&& t)
+
+struct dense_union_flag_t{};
+struct sparse_union_flag_t{};
+struct large_list_flag_t{};
+struct large_binary_flag_t{};
+
+inline constexpr dense_union_flag_t dense_union_flag;
+inline constexpr sparse_union_flag_t sparse_union_flag;
+inline constexpr large_list_flag_t large_list_flag;
+inline constexpr large_binary_flag_t large_binary_flag;
+
+
+template<class T, class ... OPTION_FLAGS>
+auto build(T&& t, OPTION_FLAGS&& ... )
 {
-    return detail::builder<T>::create(std::forward<T>(t));
+    using option_flags_type = sparrow::mpl::typelist<OPTION_FLAGS...>;
+    return detail::builder<T, option_flags_type>::create(std::forward<T>(t));
 }
 
 
@@ -94,23 +108,17 @@ concept translate_to_variable_sized_binary_layout =
 
 
 
-// template<class T> 
-// concept translate_to_union_layout = 
-//     std::ranges::input_range<T> &&     
-//     // value type must be a variant-like type
+template<class T> 
+concept translate_to_union_layout = 
+    std::ranges::input_range<T> &&     
+    // value type must be a variant-like type
+    variant_like<mnv_t<std::ranges::range_value_t<T>>>
 
-// ;
-
-
-
+;
 
 
-
-template<class T>
-struct builder;
-
-template< translates_to_primitive_layout T>
-struct builder<T>
+template< translates_to_primitive_layout T, class OPTION_FLAGS>
+struct builder<T, OPTION_FLAGS>
 {
     using type = sparrow::primitive_array<typename maybe_nullable_value_type<std::ranges::range_value_t<T>>::type>;
     template<class U>
@@ -120,10 +128,15 @@ struct builder<T>
     } 
 };
 
-template< translate_to_variable_sized_list_layout T>
-struct builder<T>
+template< translate_to_variable_sized_list_layout T, class OPTION_FLAGS>
+struct builder<T, OPTION_FLAGS>
 {
-    using type = big_list_array;
+
+    using type = std::conditional_t<
+        mpl::contains<large_list_flag_t>(OPTION_FLAGS{}),
+        sparrow::big_list_array,
+        sparrow::list_array
+    >;
 
     template<class U>
     static type create(U && t)
@@ -142,8 +155,8 @@ struct builder<T>
     }
 };
 
-template< translate_to_fixed_sized_list_layout T>
-struct builder<T>
+template< translate_to_fixed_sized_list_layout T, class OPTION_FLAGS>
+struct builder<T, OPTION_FLAGS>
 {
     using type = sparrow::fixed_sized_list_array;
     constexpr static std::size_t list_size = std::tuple_size_v<mnv_t<std::ranges::range_value_t<T>>>;
@@ -161,8 +174,8 @@ struct builder<T>
     }
 };
 
-template< translate_to_struct_layout T>
-struct builder<T>
+template< translate_to_struct_layout T, class OPTION_FLAGS>
+struct builder<T, OPTION_FLAGS>
 {
     using type = sparrow::struct_array;
     static constexpr std::size_t n_children = std::tuple_size_v<mnv_t<std::ranges::range_value_t<T>>>;
@@ -187,8 +200,8 @@ struct builder<T>
 };
 
 
-template< translate_to_variable_sized_binary_layout T>
-struct builder<T>
+template< translate_to_variable_sized_binary_layout T, class OPTION_FLAGS>
+struct builder<T, OPTION_FLAGS>
 {
     using type = sparrow::string_array;
 
@@ -209,6 +222,20 @@ struct builder<T>
         );
     }
 };
+
+
+template< translate_to_union_layout T, class OPTION_FLAGS>
+struct builder<T, OPTION_FLAGS>
+{
+    // using type = sparrow::string_array;
+
+    // template<class U>
+    // static type create(U && t)
+    // {
+       
+    // }
+};
+
 
 
 } // namespace detail

@@ -96,7 +96,6 @@ namespace sparrow
             case data_type::DOUBLE:
                 return detail::make_wrapper_ptr<primitive_array<double>>(std::move(proxy));
             case data_type::LIST:{
-                throw std::runtime_error("Invalid offset type");
                 return detail::make_wrapper_ptr<list_array>(std::move(proxy));
             }
             case data_type::LARGE_LIST:{

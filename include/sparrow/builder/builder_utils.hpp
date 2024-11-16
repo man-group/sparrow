@@ -201,6 +201,33 @@ namespace detail
         return t | std::views::transform([](auto && v) { return v.get(); });
     }
 
+    template <typename T>
+    concept variant_like = 
+        // Must not be a reference
+        !std::is_reference_v<T> && 
+
+        // Must have an index() member function returning a size_t
+        requires(const T& v) {
+            { v.index() } -> std::convertible_to<std::size_t>;
+        } &&
+
+        // Must work with std::visit
+        requires(T v) {
+            std::visit([](auto&&) {}, v); // Use a generic lambda to test visitation
+        } &&
+
+        // Must allow std::get with an index
+        requires(T v) {
+            { std::get<0>(v) }; // Access by index
+        } &&
+
+        // Must allow std::get with a type
+        requires(T v) {
+            { std::get<typename std::variant_alternative<0, T>::type>(v) }; // Access by type
+        }
+    ;
+
+
 } // namespace detail
 
 

@@ -280,7 +280,7 @@ namespace sparrow
         using base_type = list_array_crtp_base<list_view_array_impl<BIG>>;
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type;
-        using offset_type = std::conditional_t<BIG, const std::uint64_t, const std::uint32_t>;
+        using offset_type = std::conditional_t<BIG, const std::int64_t, const std::int32_t>;
         using offset_buffer_type  = u8_buffer<std::remove_const_t<offset_type>>;
         using size_buffer_type = u8_buffer<std::remove_const_t<list_size_type>>;
 

@@ -89,6 +89,11 @@ namespace sparrow
                 };
                 sanity_check(sparrow::build(v));
             }
+            SUBCASE("large-list")
+            {   
+                std::vector<std::vector<float>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
+                auto arr = sparrow::build(v, sparrow::large_list_flag);
+            }
         }
         TEST_CASE("struct-layout")
         {
