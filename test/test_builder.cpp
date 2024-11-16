@@ -15,6 +15,10 @@
 #include "sparrow/builder/builder.hpp"
 #include "test_utils.hpp"
 
+#include <vector>
+#include <tuple>
+#include <variant>
+
 namespace sparrow
 {
 
@@ -196,6 +200,26 @@ namespace sparrow
                 CHECK_EQ(arr[2].value(), "world!");
                 
             }
+        }
+    }
+    TEST_CASE("union")
+    {
+        SUBCASE("sparse")
+        {   
+            using variant_type = std::variant<int, float, std::string>;
+            std::vector<variant_type> v{
+                1,
+                2.0f,
+                "hello"
+            };
+
+            auto arr = sparrow::build(v);
+            sanity_check(arr);
+
+            REQUIRE_EQ(arr.size(), 3);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0], 1);
+            CHECK_NULLABLE_VARIANT_EQ(arr[1], 2.0f);
+            CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
         }
     }
 }

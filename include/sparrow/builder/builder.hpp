@@ -22,6 +22,7 @@
 #include <type_traits>
 #include <ranges>
 
+#include <sparrow/utils/ranges.hpp>
 #include <sparrow/layout/primitive_array.hpp>
 #include <sparrow/layout/list_layout/list_array.hpp>
 #include <sparrow/layout/struct_layout/struct_array.hpp>
@@ -112,7 +113,9 @@ template<class T>
 concept translate_to_union_layout = 
     std::ranges::input_range<T> &&     
     // value type must be a variant-like type
-    variant_like<mnv_t<std::ranges::range_value_t<T>>>
+    // *NOTE* we don't check for nullable here, as we want to handle nullable variants
+    // as in the arrow spec, the nulls are handled by the elements **in** the variant
+    variant_like<std::ranges::range_value_t<T>>
 
 ;
 
@@ -227,13 +230,43 @@ struct builder<T, OPTION_FLAGS>
 template< translate_to_union_layout T, class OPTION_FLAGS>
 struct builder<T, OPTION_FLAGS>
 {
-    // using type = sparrow::string_array;
+    using type = sparrow::sparse_union_array; // TODO use options to select between sparse and dense
+    using variant_type = std::ranges::range_value_t<T>;
+    static constexpr std::size_t variant_size = std::variant_size_v<variant_type>;
 
-    // template<class U>
-    // static type create(U && t)
-    // {
-       
-    // }
+
+    template<class U>
+    static type create(U && t) requires(std::is_same_v<type, sparrow::sparse_union_array>)
+    {
+        std::vector<array> detyped_children(variant_size);
+        for_each_index<variant_size>([&](auto i)
+        {
+            using type_at_index = std::variant_alternative_t<decltype(i)::value, variant_type>;
+            auto type_i_col = t | std::views::transform([](const auto& variant)
+            {   
+                if(variant.index() == decltype(i)::value)
+                {
+                    return std::get<type_at_index>(variant);
+                }
+                else
+                {
+                    return type_at_index{};
+                }
+            });
+            detyped_children[decltype(i)::value] = array(build(type_i_col));
+        });
+
+        // type-ids
+        auto type_id_range = t | std::views::transform([](const auto& v){
+            return static_cast<std::uint8_t>(v.index());
+        });
+        u8_buffer<std::uint8_t> type_id_buffer(type_id_range);
+
+        return type(
+            std::move(detyped_children),
+            std::move(type_id_buffer)
+        );
+    }
 };
 
 
