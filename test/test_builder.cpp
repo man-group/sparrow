@@ -202,9 +202,9 @@ namespace sparrow
             }
         }
     }
-    TEST_CASE("union")
+    TEST_CASE("sparse-union")
     {
-        SUBCASE("sparse")
+        SUBCASE("simple")
         {   
             using variant_type = std::variant<int, float, std::string>;
             std::vector<variant_type> v{
@@ -214,6 +214,8 @@ namespace sparrow
             };
 
             auto arr = sparrow::build(v);
+            using arr_type = std::decay_t<decltype(arr)>;
+            static_assert(std::is_same_v<arr_type, sparrow::sparse_union_array>);
             sanity_check(arr);
 
             REQUIRE_EQ(arr.size(), 3);
