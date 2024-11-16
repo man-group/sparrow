@@ -18,6 +18,7 @@
 #include <vector>
 #include <tuple>
 #include <variant>
+#include <array>
 
 namespace sparrow
 {

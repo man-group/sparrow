@@ -65,48 +65,53 @@ auto build(T&& t, OPTION_FLAGS&& ... )
 
 namespace detail
 {
+template<class T, class ... OPTION_FLAGS>
+auto build_impl(T&& t, [[maybe_unused]] sparrow::mpl::typelist<OPTION_FLAGS...> typelist)
+{
+    using option_flags_type = sparrow::mpl::typelist<OPTION_FLAGS...>;
+    return builder<T, option_flags_type>::create(std::forward<T>(t));
+}
 
 template <class T>
 concept translates_to_primitive_layout = 
     std::ranges::input_range<T> &&
-    std::is_scalar_v<mnv_t<std::ranges::range_value_t<T>>>;
+    std::is_scalar_v<ensured_range_value_t<T>>;
 
 
 // helper to get inner value type of smth like a vector of vector of T
 // we also translate any nullable to the inner type
 template<class T>
-using nested_range_inner_value_t = mnv_t<std::ranges::range_value_t<mnv_t<mnv_t<std::ranges::range_value_t<T>>>>>;
+using nested_ensured_range_inner_value_t = ensured_range_value_t<ensured_range_value_t<T>>;
 
 template<class T> 
 concept translate_to_variable_sized_list_layout = 
     std::ranges::input_range<T> &&     
-    std::ranges::input_range<mnv_t<std::ranges::range_value_t<T>>> &&
-    !tuple_like<mnv_t<std::ranges::range_value_t<T>>> && // tuples go to struct layout
+    std::ranges::input_range<ensured_range_value_t<T>> &&
+    !tuple_like<ensured_range_value_t<T>> && // tuples go to struct layout
     // value type of inner should not be 'char-like'( char, byte, uint8), these are handled by variable_size_binary_array
-    !mpl::char_like<nested_range_inner_value_t<T>>
+    !mpl::char_like<nested_ensured_range_inner_value_t<T>>
 ;
 
 template<class T>
 concept translate_to_struct_layout = 
     std::ranges::input_range<T> &&
-    tuple_like<mnv_t<std::ranges::range_value_t<T>>> &&
-    !all_elements_same<mnv_t<std::ranges::range_value_t<T>>>;
+    tuple_like<ensured_range_value_t<T>> &&
+    !all_elements_same<ensured_range_value_t<T>>;
 
 template<class T>
 concept translate_to_fixed_sized_list_layout =
     std::ranges::input_range<T> &&
-    tuple_like<mnv_t<std::ranges::range_value_t<T>>>;
+    tuple_like<ensured_range_value_t<T>>;
 
 
 template<class T> 
 concept translate_to_variable_sized_binary_layout = 
     std::ranges::input_range<T> &&     
-    std::ranges::input_range<mnv_t<std::ranges::range_value_t<T>>> &&
-    !tuple_like<mnv_t<std::ranges::range_value_t<T>>> && // tuples go to struct layout
+    std::ranges::input_range<ensured_range_value_t<T>> &&
+    !tuple_like<ensured_range_value_t<T>> && // tuples go to struct layout
     // value type of inner must be char like ( char, byte, uint8)
-    mpl::char_like<nested_range_inner_value_t<T>>
+    mpl::char_like<nested_ensured_range_inner_value_t<T>>
 ;
-
 
 
 template<class T> 
@@ -123,7 +128,7 @@ concept translate_to_union_layout =
 template< translates_to_primitive_layout T, class OPTION_FLAGS>
 struct builder<T, OPTION_FLAGS>
 {
-    using type = sparrow::primitive_array<typename maybe_nullable_value_type<std::ranges::range_value_t<T>>::type>;
+    using type = sparrow::primitive_array<ensured_range_value_t<T>>;
     template<class U>
     static type create(U&& t)
     {
@@ -151,7 +156,7 @@ struct builder<T, OPTION_FLAGS>
         });
  
         return type(
-            array(build(flat_list_view)), 
+            array(build_impl(flat_list_view, OPTION_FLAGS{})), 
             type::offset_from_sizes(sizes),
             where_null(t)
         );
@@ -171,7 +176,7 @@ struct builder<T, OPTION_FLAGS>
 
         return type(
             static_cast<std::uint64_t>(list_size), 
-            array(build(flat_list_view)),
+            array(build_impl(flat_list_view, OPTION_FLAGS{})),
             where_null(t)
         );
     }
@@ -194,7 +199,7 @@ struct builder<T, OPTION_FLAGS>
                 const auto & tuple_val = ensure_value(maybe_nullable_tuple);
                 return std::get<decltype(i)::value>(tuple_val);
             }); 
-            detyped_children[decltype(i)::value] = array(build(tuple_i_col));
+            detyped_children[decltype(i)::value] = array(build_impl(tuple_i_col, OPTION_FLAGS{}));
         });
        return type(std::move(detyped_children),
        where_null(t)
@@ -226,7 +231,6 @@ struct builder<T, OPTION_FLAGS>
     }
 };
 
-
 template< translate_to_union_layout T, class OPTION_FLAGS>
 struct builder<T, OPTION_FLAGS>
 {
@@ -244,16 +248,10 @@ struct builder<T, OPTION_FLAGS>
             using type_at_index = std::variant_alternative_t<decltype(i)::value, variant_type>;
             auto type_i_col = t | std::views::transform([](const auto& variant)
             {   
-                if(variant.index() == decltype(i)::value)
-                {
-                    return std::get<type_at_index>(variant);
-                }
-                else
-                {
-                    return type_at_index{};
-                }
+                return variant.index() == decltype(i)::value ? 
+                    std::get<type_at_index>(variant) : type_at_index{};
             });
-            detyped_children[decltype(i)::value] = array(build(type_i_col));
+            detyped_children[decltype(i)::value] = array(build_impl(type_i_col,  OPTION_FLAGS{}));
         });
 
         // type-ids

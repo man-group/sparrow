@@ -136,6 +136,11 @@ namespace detail
     template<class T>
     using mnv_t = typename maybe_nullable_value_type<T>::type;
 
+
+    // shorhand for mnv_t<std::ranges::range_value_t<T>>
+    template<class T>
+    using ensured_range_value_t = mnv_t<std::ranges::range_value_t<T>>;
+
     // a save way to return .size from
     // a possibly nullable object
     template<class T>
