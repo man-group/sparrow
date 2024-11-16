@@ -34,8 +34,9 @@
 
 namespace sparrow
 {
-
-namespace detail{
+// forward declaration
+namespace detail
+{
 template<class T>
 struct builder;
 } // namespace detail
@@ -90,6 +91,20 @@ concept translate_to_variable_sized_binary_layout =
     // value type of inner must be char like ( char, byte, uint8)
     mpl::char_like<nested_range_inner_value_t<T>>
 ;
+
+
+
+// template<class T> 
+// concept translate_to_union_layout = 
+//     std::ranges::input_range<T> &&     
+//     // value type must be a variant-like type
+
+// ;
+
+
+
+
+
 
 template<class T>
 struct builder;
@@ -195,7 +210,6 @@ struct builder<T>
     }
 };
 
+
 } // namespace detail
-
-
 }// namespace sparrow

@@ -63,9 +63,9 @@ namespace detail
         std::tuple_size<T>, 
         std::integral_constant<std::size_t, std::tuple_size_v<T>>
         >;
-    } && []<std::size_t... N>(std::index_sequence<N...>) { 
-        return (has_tuple_element<T, N> && ...); 
-    }(std::make_index_sequence<std::tuple_size_v<T>>());
+    };// && []<std::size_t... N>(std::index_sequence<N...>) { 
+    //    return (has_tuple_element<T, N> && ...); 
+    //}(std::make_index_sequence<std::tuple_size_v<T>>());
 
 
     template <typename Tuple, size_t... Is>
@@ -95,7 +95,7 @@ namespace detail
     };
 
     template<class T>
-    concept is_nullable_like =(is_nullable_like_generic<T>  ||  sparrow::is_nullable_v<T>);
+    concept is_nullable_like =(is_nullable_like_generic<T>  );//||  sparrow::is_nullable_v<T>);
 
 
     template<class T>
@@ -142,7 +142,7 @@ namespace detail
     template<is_nullable_like T>
     auto ensure_value(T && t)
     {
-        return t.get();
+       return std::forward<T>(t).get();
     }
 
     template<std::ranges::range T>
