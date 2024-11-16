@@ -101,7 +101,8 @@ concept translate_to_struct_layout =
 template<class T>
 concept translate_to_fixed_sized_list_layout =
     std::ranges::input_range<T> &&
-    tuple_like<ensured_range_value_t<T>>;
+    tuple_like<ensured_range_value_t<T>> &&
+    all_elements_same<ensured_range_value_t<T>>;
 
 
 template<class T> 
