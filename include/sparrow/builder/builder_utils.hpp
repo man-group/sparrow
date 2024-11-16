@@ -43,7 +43,6 @@ namespace detail
     template <std::size_t SIZE, class F>
     void for_each_index(F&& f)
     {
-        // Use std::forward to preserve value category
         for_each_index_impl(std::forward<F>(f), std::make_index_sequence<SIZE>());
     }
 
@@ -55,6 +54,7 @@ namespace detail
         { get<N>(t) } -> std::convertible_to<const std::tuple_element_t<N, T>&>;
     };
 
+    #if 0
     template<class T>
     concept tuple_like = !std::is_reference_v<T> 
     && requires(T t) { 
@@ -66,6 +66,26 @@ namespace detail
     };// && []<std::size_t... N>(std::index_sequence<N...>) { 
     //    return (has_tuple_element<T, N> && ...); 
     //}(std::make_index_sequence<std::tuple_size_v<T>>());
+    #endif
+
+
+    template <typename T, std::size_t... N>
+    constexpr bool check_tuple_elements(std::index_sequence<N...>) {
+        return (has_tuple_element<T, N> && ...);
+    }
+
+    template <typename T>
+    constexpr bool is_tuple_like() {
+        return check_tuple_elements<T>(std::make_index_sequence<std::tuple_size_v<T>>());
+    }
+
+    template <typename T>
+    concept tuple_like = !std::is_reference_v<T>
+        && requires(T t) {
+            typename std::tuple_size<T>::type;
+            requires std::derived_from<std::tuple_size<T>, std::integral_constant<std::size_t, std::tuple_size_v<T>>>;
+        }
+        && is_tuple_like<T>();
 
 
     template <typename Tuple, size_t... Is>
