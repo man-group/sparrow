@@ -84,13 +84,7 @@ else()
         test_utils_offsets.cpp
         test_utils.hpp
         test_variable_size_binary_array.cpp
-        #test_builder.cpp
-        test_builder_primitive.cpp
-        test_builder_list_list.cpp
-        test_builder_list_simple.cpp
-        test_builder_struct_simple.cpp
-        test_builder_struct_list.cpp
-        test_builder_fixed_size.cpp
+        test_builder.cpp
     )
 endif()
 
