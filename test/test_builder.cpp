@@ -88,6 +88,9 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0],  4.0f);
                 CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1],  5.0f);
 
+                // check that the children are **NOT** dict-encoded
+                REQUIRE(!arr.raw_flat_array()->is_dictionary());
+
             }
             SUBCASE("list[list[float]]")
             {   
@@ -260,11 +263,14 @@ namespace sparrow
                 }; 
 
                 auto arr = sparrow::build(v);
+            
+
+
                 using array_type = std::decay_t<decltype(arr)>;
                 static_assert(std::is_same_v<array_type, sparrow::list_array>);
                 sanity_check(arr);
-
-
+                // check that the children are dict-encoded
+                REQUIRE(arr.raw_flat_array()->is_dictionary());
 
                 REQUIRE_EQ(arr.size(), 3);
 
