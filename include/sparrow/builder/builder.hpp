@@ -19,6 +19,7 @@
 #include <string>
 #include <array>
 #include <tuple>
+#include <map>
 #include <type_traits>
 #include <ranges>
 
@@ -28,20 +29,23 @@
 #include <sparrow/layout/struct_layout/struct_array.hpp>
 #include <sparrow/layout/variable_size_binary_array.hpp>
 #include <sparrow/layout/union_array.hpp>
+#include <sparrow/layout/dictionary_encoded_array.hpp>
 #include <sparrow/array.hpp>
-#include "builder_utils.hpp"
+#include <sparrow/builder/builder_utils.hpp>
+#include <sparrow/builder/nested_less.hpp>
 #include <sparrow/utils/ranges.hpp>
 #include <tuple>
 #include <utility> 
 
 namespace sparrow
 {
+
 // forward declaration
 namespace detail
 {
-template<class T, class OPTIONS_TYPE>
-struct builder;
-} // namespace detail
+    template<class T, class OPTIONS_TYPE>
+    struct builder;
+}
 
 
 struct dense_union_flag_t{};
@@ -62,9 +66,11 @@ auto build(T&& t, OPTION_FLAGS&& ... )
     return detail::builder<T, option_flags_type>::create(std::forward<T>(t));
 }
 
-
 namespace detail
 {
+
+// this is called by the nested recursive calls
+// we want to pass the options as a single argumentm typelist
 template<class T, class ... OPTION_FLAGS>
 auto build_impl(T&& t, [[maybe_unused]] sparrow::mpl::typelist<OPTION_FLAGS...> typelist)
 {
@@ -72,20 +78,31 @@ auto build_impl(T&& t, [[maybe_unused]] sparrow::mpl::typelist<OPTION_FLAGS...> 
     return builder<T, option_flags_type>::create(std::forward<T>(t));
 }
 
+
+
+template <class T>
+concept translates_to_dict_encoded = 
+    is_lazy_dict_encoded_vector<T>
+;
+
+template<class T>
+concept non_dict_encoded_base = 
+    std::ranges::input_range<T> &&
+    !translates_to_dict_encoded<T>
+;
+
 template <class T>
 concept translates_to_primitive_layout = 
-    std::ranges::input_range<T> &&
-    std::is_scalar_v<ensured_range_value_t<T>>;
+    non_dict_encoded_base<T> &&
+    std::is_scalar_v<ensured_range_value_t<T>> 
+;
 
 
-// helper to get inner value type of smth like a vector of vector of T
-// we also translate any nullable to the inner type
-template<class T>
-using nested_ensured_range_inner_value_t = ensured_range_value_t<ensured_range_value_t<T>>;
 
 template<class T> 
 concept translate_to_variable_sized_list_layout = 
-    std::ranges::input_range<T> &&     
+    non_dict_encoded_base<T> &&     
+    !translates_to_dict_encoded<T> &&
     std::ranges::input_range<ensured_range_value_t<T>> &&
     !tuple_like<ensured_range_value_t<T>> && // tuples go to struct layout
     // value type of inner should not be 'char-like'( char, byte, uint8), these are handled by variable_size_binary_array
@@ -94,30 +111,33 @@ concept translate_to_variable_sized_list_layout =
 
 template<class T>
 concept translate_to_struct_layout = 
-    std::ranges::input_range<T> &&
+    non_dict_encoded_base<T> &&
+    !translates_to_dict_encoded<T> &&
     tuple_like<ensured_range_value_t<T>> &&
-    !all_elements_same<ensured_range_value_t<T>>;
+    !all_elements_same<ensured_range_value_t<T>>
+;
 
 template<class T>
 concept translate_to_fixed_sized_list_layout =
     std::ranges::input_range<T> &&
     tuple_like<ensured_range_value_t<T>> &&
-    all_elements_same<ensured_range_value_t<T>>;
-
+    all_elements_same<ensured_range_value_t<T>>
+;
 
 template<class T> 
 concept translate_to_variable_sized_binary_layout = 
-    std::ranges::input_range<T> &&     
+    non_dict_encoded_base<T> &&  
+    !translates_to_dict_encoded<T> &&
     std::ranges::input_range<ensured_range_value_t<T>> &&
     !tuple_like<ensured_range_value_t<T>> && // tuples go to struct layout
     // value type of inner must be char like ( char, byte, uint8)
     mpl::char_like<nested_ensured_range_inner_value_t<T>>
 ;
 
-
 template<class T> 
 concept translate_to_union_layout = 
-    std::ranges::input_range<T> &&     
+    non_dict_encoded_base<T> &&
+    !translates_to_dict_encoded<T> &&
     // value type must be a variant-like type
     // *NOTE* we don't check for nullable here, as we want to handle nullable variants
     // as in the arrow spec, the nulls are handled by the elements **in** the variant
@@ -202,8 +222,10 @@ struct builder<T, OPTION_FLAGS>
             }); 
             detyped_children[decltype(i)::value] = array(build_impl(tuple_i_col, OPTION_FLAGS{}));
         });
-       return type(std::move(detyped_children),
-       where_null(t)
+
+        return type(
+            std::move(detyped_children),
+            where_null(t)
        );
     }
 };
@@ -266,6 +288,61 @@ struct builder<T, OPTION_FLAGS>
             std::move(type_id_buffer)
         );
     }
+};
+
+
+
+template< translates_to_dict_encoded T, class OPTION_FLAGS>
+struct builder<T, OPTION_FLAGS>
+{
+    using key_type = dict_dict_encoded_key_t<std::decay_t<T>>;
+    using type = sparrow::dictionary_encoded_array<key_type>;
+
+    // keep the nulls
+    using raw_range_value_type = std::ranges::range_value_t<T>;
+
+    template<class U>
+    static type create(U && t)
+    {   
+
+        key_type key = 0;
+        std::map<raw_range_value_type, key_type, nested_less<raw_range_value_type>> value_map;
+        std::vector<raw_range_value_type> values;
+        std::vector<key_type> keys;
+        for(const auto& v : t)
+        {
+            auto find_res = value_map.find(v);
+            if(find_res == value_map.end())
+            {
+                value_map.insert({v, key});
+                values.push_back(v);
+                keys.push_back(key);
+                ++key;
+            }
+            else
+            {
+                keys.push_back(find_res->second);
+            }
+            
+        }
+
+        //auto keys = t | std::views::transform([&](const auto& v){ return value_to_key.find(v)->second; });
+        auto keys_buffer = u8_buffer<key_type>(keys);
+
+        auto values_array = build_impl(values, OPTION_FLAGS{});
+        using values_array_type = std::decay_t<decltype(values_array)>;
+
+        static_assert(std::is_same_v<values_array_type, sparrow::string_array>);
+
+        auto values_array_detyped = array(std::move(values_array));
+
+        return type(
+            std::move(keys_buffer),
+            std::move(values_array_detyped)
+        );
+    }
+
+
 };
 
 

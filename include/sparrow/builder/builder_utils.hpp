@@ -30,20 +30,84 @@
 namespace sparrow
 {
 
+
+template<class T, class KEY_TYPE = std::uint64_t>
+class lazy_dict_encoded_vector : public std::vector<T>
+{
+    public:
+        using base_type = std::vector<T>;
+        using self_type = lazy_dict_encoded_vector<T, KEY_TYPE>;
+        using base_type::base_type;
+        using key_type = KEY_TYPE;
+};
+
+template<class T>
+struct dict_encoded_key_type
+{
+    using type = std::uint64_t;
+};
+
+template<class T, class KEY_TYPE>
+struct dict_encoded_key_type<lazy_dict_encoded_vector<T, KEY_TYPE>>
+{
+    using type = KEY_TYPE;
+};
+
+template<class T>
+using dict_dict_encoded_key_t = typename dict_encoded_key_type<T>::type;
+
+
 namespace detail
 {
+    template<class SOME_RANGE>
+    concept is_lazy_dict_encoded_vector = sparrow::mpl::is_type_instance_of_v<std::decay_t<SOME_RANGE>, sparrow::lazy_dict_encoded_vector>;
+
+
+
+    // only for side effects (ie lambda which is called for each index without
+    //  returning anything but can have side effects)
     template <class F, std::size_t... Is>
     void for_each_index_impl(F&& f, std::index_sequence<Is...>)
     {   
         // Apply f to each index individually
         (f(std::integral_constant<std::size_t, Is>{}), ...);
     }
-
-
     template <std::size_t SIZE, class F>
     void for_each_index(F&& f)
     {
         for_each_index_impl(std::forward<F>(f), std::make_index_sequence<SIZE>());
+    }
+
+
+    // similar to for_each_index but with cap
+    template<std::size_t INDEX, std::size_t SIZE>
+    struct exitable_for_each_index_impl
+    {   
+        template<class F>
+        static bool call(F&& f)
+        {
+            const bool contiunue_for_each = f(std::integral_constant<std::size_t, INDEX>{});
+            if(contiunue_for_each)
+            {
+                return exitable_for_each_index_impl<INDEX + 1, SIZE>::call(std::forward<F>(f));
+            }
+            return false;
+        }
+    };
+    template<std::size_t SIZE>
+    struct exitable_for_each_index_impl<SIZE, SIZE>
+    {   
+        template<class F>
+        static bool call(F&& )
+        {
+            return true;
+        }
+    };
+
+    template <std::size_t SIZE, class F>
+    bool exitable_for_each_index(F&& f)
+    {
+        return exitable_for_each_index_impl<0, SIZE>::call(std::forward<F>(f));
     }
 
 
@@ -54,19 +118,6 @@ namespace detail
         { get<N>(t) } -> std::convertible_to<const std::tuple_element_t<N, T>&>;
     };
 
-    #if 0
-    template<class T>
-    concept tuple_like = !std::is_reference_v<T> 
-    && requires(T t) { 
-        typename std::tuple_size<T>::type; 
-        requires std::derived_from<
-        std::tuple_size<T>, 
-        std::integral_constant<std::size_t, std::tuple_size_v<T>>
-        >;
-    };// && []<std::size_t... N>(std::index_sequence<N...>) { 
-    //    return (has_tuple_element<T, N> && ...); 
-    //}(std::make_index_sequence<std::tuple_size_v<T>>());
-    #endif
 
 
     template <typename T, std::size_t... N>
@@ -140,6 +191,12 @@ namespace detail
     // shorhand for mnv_t<std::ranges::range_value_t<T>>
     template<class T>
     using ensured_range_value_t = mnv_t<std::ranges::range_value_t<T>>;
+
+    // helper to get inner value type of smth like a vector of vector of T
+    // we also translate any nullable to the inner type
+    template<class T>
+    using nested_ensured_range_inner_value_t = ensured_range_value_t<ensured_range_value_t<T>>;
+
 
     // a save way to return .size from
     // a possibly nullable object

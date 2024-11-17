@@ -20,6 +20,7 @@
 #include <variant>
 #include <array>
 
+
 namespace sparrow
 {
 
@@ -35,6 +36,7 @@ namespace sparrow
 
     TEST_SUITE("builder")
     {
+        
         TEST_CASE("primitive-layout")
         {
             // arr[float]
@@ -66,6 +68,7 @@ namespace sparrow
 
             }
         }
+        
         TEST_CASE("list-layout")
         {
             // list[float]
@@ -113,6 +116,7 @@ namespace sparrow
 
             }
         }
+        
         TEST_CASE("struct-layout")
         {
             // struct<float, float>
@@ -143,6 +147,7 @@ namespace sparrow
                 sanity_check(sparrow::build(v));
             }
         }
+        
         TEST_CASE("fixed-sized-list-layout")
         {
             // fixed_sized_list<float, 3>
@@ -164,6 +169,7 @@ namespace sparrow
                 sanity_check(sparrow::build(v));
             }
         }
+        
         TEST_CASE("variable-sized-binary")
         {
             // variable_size_binary
@@ -202,28 +208,57 @@ namespace sparrow
                 
             }
         }
-    }
-    TEST_CASE("sparse-union")
-    {
-        SUBCASE("simple")
-        {   
-            using variant_type = std::variant<int, float, std::string>;
-            std::vector<variant_type> v{
-                1,
-                2.0f,
-                "hello"
-            };
+        
+        TEST_CASE("sparse-union")
+        {
+            SUBCASE("simple")
+            {   
+                using variant_type = std::variant<int, float, std::string>;
+                std::vector<variant_type> v{
+                    1,
+                    2.0f,
+                    "hello"
+                };
 
-            auto arr = sparrow::build(v);
-            using arr_type = std::decay_t<decltype(arr)>;
-            static_assert(std::is_same_v<arr_type, sparrow::sparse_union_array>);
-            sanity_check(arr);
+                auto arr = sparrow::build(v);
+                using arr_type = std::decay_t<decltype(arr)>;
+                static_assert(std::is_same_v<arr_type, sparrow::sparse_union_array>);
+                sanity_check(arr);
 
-            REQUIRE_EQ(arr.size(), 3);
-            CHECK_NULLABLE_VARIANT_EQ(arr[0], 1);
-            CHECK_NULLABLE_VARIANT_EQ(arr[1], 2.0f);
-            CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
+                REQUIRE_EQ(arr.size(), 3);
+                CHECK_NULLABLE_VARIANT_EQ(arr[0], 1);
+                CHECK_NULLABLE_VARIANT_EQ(arr[1], 2.0f);
+                CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
+            }
         }
+        TEST_CASE("dict-encoded")
+        {   
+            SUBCASE("simple")
+            {   
+                lazy_dict_encoded_vector<std::string,unsigned int> v{"he", "world","w","world","world!", " he","he"};
+                auto arr = sparrow::build(v);
+                using key_type = typename std::decay_t<decltype(v)>::key_type;
+                static_assert(std::is_same_v<decltype(arr), sparrow::dictionary_encoded_array<key_type>>);
+
+                REQUIRE_EQ(arr.size(), 7);
+                CHECK_NULLABLE_VARIANT_EQ(arr[0], std::string_view("he"));
+                CHECK_NULLABLE_VARIANT_EQ(arr[1], std::string_view("world"));
+                CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("w"));
+                CHECK_NULLABLE_VARIANT_EQ(arr[3], std::string_view("world"));
+                CHECK_NULLABLE_VARIANT_EQ(arr[4], std::string_view("world!"));
+                CHECK_NULLABLE_VARIANT_EQ(arr[5], std::string_view(" he"));
+                CHECK_NULLABLE_VARIANT_EQ(arr[6], std::string_view("he"));
+
+            }
+            // SUBCASE("simple-explicit-index")
+            // {   
+            //     lazy_dict_encoded_vector<std::string, std::uint32_t> v{"he", "world","w","world","world!", " he","he"};
+            //     auto arr = sparrow::build(v);
+            //     static_assert(std::is_same_v<decltype(arr), sparrow::dictionary_encoded_array<std::uint32_t>>);
+            // }
+        }
+
     }
+
 }
 
