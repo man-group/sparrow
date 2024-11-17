@@ -275,7 +275,7 @@ namespace sparrow
         const auto index = m_keys_layout[i];
         if (index.has_value())
         {
-            return array_element(*p_values_layout, index.value());
+            return array_element(*p_values_layout, static_cast<std::size_t>(index.value()));
         }
         else
         {
