@@ -75,8 +75,8 @@ namespace detail
         using value_type = T;
 
         template<class U>
-        lazy_dict_tagged_type(U&& value)
-            : value(std::forward<U>(value))
+        lazy_dict_tagged_type(U&& v)
+            : value(std::forward<U>(v))
         {
         }
         T value;
