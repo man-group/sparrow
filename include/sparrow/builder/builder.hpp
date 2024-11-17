@@ -82,7 +82,8 @@ auto build_impl(T&& t, [[maybe_unused]] sparrow::mpl::typelist<OPTION_FLAGS...> 
 
 template <class T>
 concept translates_to_dict_encoded = 
-    is_lazy_dict_encoded_vector<T>
+    is_lazy_dict_encoded_vector<T> ||
+    is_lazy_dict_tagged_type<T>
 ;
 
 template<class T>
@@ -170,14 +171,21 @@ struct builder<T, OPTION_FLAGS>
     template<class U>
     static type create(U && t)
     {
-        auto flat_list_view = std::ranges::views::join(ensure_value_range(t));
+        using raw_value_type = std::ranges::range_value_t<T>;
+
+        auto flat_list_view = tag<raw_value_type>(
+            std::ranges::views::join(ensure_value_range(t))
+        );
 
         auto sizes = t | std::views::transform([](const auto& l){ 
             return get_size_save(l);
         });
+
+        auto typed_array = build_impl(flat_list_view, OPTION_FLAGS{});
+        auto detyped_array = array(std::move(typed_array));
  
         return type(
-            array(build_impl(flat_list_view, OPTION_FLAGS{})), 
+            std::move(detyped_array),
             type::offset_from_sizes(sizes),
             where_null(t)
         );
@@ -189,11 +197,14 @@ struct builder<T, OPTION_FLAGS>
 {
     using type = sparrow::fixed_sized_list_array;
     constexpr static std::size_t list_size = std::tuple_size_v<mnv_t<std::ranges::range_value_t<T>>>;
+    using raw_value_type = std::ranges::range_value_t<T>;
 
     template<class U>
     static type create(U && t)
     {
-        auto flat_list_view = std::ranges::views::join(ensure_value_range(t));
+        auto flat_list_view = tag<raw_value_type>(
+            std::ranges::views::join(ensure_value_range(t))
+        );
 
         return type(
             static_cast<std::uint64_t>(list_size), 
@@ -208,18 +219,23 @@ struct builder<T, OPTION_FLAGS>
 {
     using type = sparrow::struct_array;
     static constexpr std::size_t n_children = std::tuple_size_v<mnv_t<std::ranges::range_value_t<T>>>;
+    using tuple_type = ensured_range_value_t<T>;
 
     template<class U>
     static type create(U&& t) 
     {
         std::vector<array> detyped_children(n_children);
         for_each_index<n_children>([&](auto i)
-        {
-            auto tuple_i_col = t | std::views::transform([](const auto& maybe_nullable_tuple)
+        {   
+            auto tuple_i_col_raw = t | std::views::transform([](const auto& maybe_nullable_tuple)
             {
                 const auto & tuple_val = ensure_value(maybe_nullable_tuple);
                 return std::get<decltype(i)::value>(tuple_val);
             }); 
+
+
+            using tuple_element_type= std::tuple_element_t<decltype(i)::value, tuple_type>;
+            auto tuple_i_col = tag<tuple_element_type>(std::move(tuple_i_col_raw));
             detyped_children[decltype(i)::value] = array(build_impl(tuple_i_col, OPTION_FLAGS{}));
         });
 
@@ -269,11 +285,12 @@ struct builder<T, OPTION_FLAGS>
         for_each_index<variant_size>([&](auto i)
         {
             using type_at_index = std::variant_alternative_t<decltype(i)::value, variant_type>;
-            auto type_i_col = t | std::views::transform([](const auto& variant)
+            auto type_i_col_raw= t | std::views::transform([](const auto& variant)
             {   
                 return variant.index() == decltype(i)::value ? 
                     std::get<type_at_index>(variant) : type_at_index{};
             });
+            auto type_i_col = tag<type_at_index>(std::move(type_i_col_raw));
             detyped_children[decltype(i)::value] = array(build_impl(type_i_col,  OPTION_FLAGS{}));
         });
 
@@ -295,16 +312,17 @@ struct builder<T, OPTION_FLAGS>
 template< translates_to_dict_encoded T, class OPTION_FLAGS>
 struct builder<T, OPTION_FLAGS>
 {
-    using key_type = dict_dict_encoded_key_t<std::decay_t<T>>;
+    using untagged_type = untagged_type_t<std::decay_t<T>>;
+    using key_type = dict_dict_encoded_key_t<untagged_type>;
     using type = sparrow::dictionary_encoded_array<key_type>;
-
     // keep the nulls
-    using raw_range_value_type = std::ranges::range_value_t<T>;
+    using raw_range_value_type = std::ranges::range_value_t<untagged_type>;
 
     template<class U>
-    static type create(U && t)
+    static type create(U && tagged)
     {   
-
+        auto t = untag(std::forward<U>(tagged));
+        std::cout<<"dict encoded!"<<std::endl;
         key_type key = 0;
         std::map<raw_range_value_type, key_type, nested_less<raw_range_value_type>> value_map;
         std::vector<raw_range_value_type> values;
@@ -325,8 +343,6 @@ struct builder<T, OPTION_FLAGS>
             }
             
         }
-
-        //auto keys = t | std::views::transform([&](const auto& v){ return value_to_key.find(v)->second; });
         auto keys_buffer = u8_buffer<key_type>(keys);
 
         auto values_array = build_impl(values, OPTION_FLAGS{});

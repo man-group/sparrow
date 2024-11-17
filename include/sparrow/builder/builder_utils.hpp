@@ -31,6 +31,10 @@ namespace sparrow
 {
 
 
+
+
+
+
 template<class T, class KEY_TYPE = std::uint64_t>
 class lazy_dict_encoded_vector : public std::vector<T>
 {
@@ -62,6 +66,96 @@ namespace detail
     template<class SOME_RANGE>
     concept is_lazy_dict_encoded_vector = sparrow::mpl::is_type_instance_of_v<std::decay_t<SOME_RANGE>, sparrow::lazy_dict_encoded_vector>;
 
+
+
+    template<class T, class INDEX_TYPE>
+    struct lazy_dict_tagged_type
+    {
+        using index_type = INDEX_TYPE;
+        using value_type = T;
+
+        template<class U>
+        lazy_dict_tagged_type(U&& value)
+            : value(std::forward<U>(value))
+        {
+        }
+        T value;
+    };
+
+    template<class T>
+    concept is_lazy_dict_tagged_type = 
+        sparrow::mpl::is_type_instance_of_v<std::decay_t<T>, lazy_dict_tagged_type>;
+
+
+
+    template<class PRED>
+    struct tag_type;
+
+    template<class PRED>
+    requires(!is_lazy_dict_encoded_vector<PRED>)
+    struct tag_type<PRED>
+    {
+        template<class U>
+        static decltype(auto) tag(U&& value) 
+        {
+            return std::forward<U>(value);
+        }
+    };
+
+    template<class PRED>
+    requires(is_lazy_dict_encoded_vector<PRED>)
+    struct tag_type<PRED>
+    {
+        template<class U>
+        static decltype(auto) tag(U&& value) 
+        {
+            using key_type = typename dict_encoded_key_type<std::decay_t<U>>::type;
+            return lazy_dict_tagged_type<U, key_type>(std::forward<U>(value));
+        }
+    };
+
+    template<class PRED, class T>
+    decltype(auto) tag(T&& value)
+    {
+        return tag_type<PRED>::tag(std::forward<T>(value));
+    }
+
+    
+    template<class T>
+    struct untagged_type;
+
+    template<class T>
+    requires(is_lazy_dict_tagged_type<T>)
+    struct untagged_type<T>
+    {
+        using type = typename std::decay_t<T>::value_type;
+        template<class U>
+        static decltype(auto) untag(U&& value)
+        {
+            return value.value;
+        }
+    };
+
+    template<class T>
+    requires(!is_lazy_dict_tagged_type<T>)
+    struct untagged_type<T>
+    {
+        using type = T;
+        template<class U>
+        static decltype(auto) untag(U&& value)
+        {
+            return std::forward<U>(value);
+        }
+    };
+
+    template<class T>
+    using untagged_type_t = typename untagged_type<T>::type;
+
+    template<class T>
+    auto untag(T&& value)
+    {
+        return untagged_type<T>::untag(std::forward<T>(value));
+    }
 
 
     // only for side effects (ie lambda which is called for each index without

@@ -235,7 +235,7 @@ namespace sparrow
         {   
             SUBCASE("simple")
             {   
-                lazy_dict_encoded_vector<std::string,unsigned int> v{"he", "world","w","world","world!", " he","he"};
+                lazy_dict_encoded_vector<std::string> v{"he", "world","w","world","world!", " he","he"};
                 auto arr = sparrow::build(v);
                 using key_type = typename std::decay_t<decltype(v)>::key_type;
                 static_assert(std::is_same_v<decltype(arr), sparrow::dictionary_encoded_array<key_type>>);
@@ -250,12 +250,29 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[6], std::string_view("he"));
 
             }
-            // SUBCASE("simple-explicit-index")
-            // {   
-            //     lazy_dict_encoded_vector<std::string, std::uint32_t> v{"he", "world","w","world","world!", " he","he"};
-            //     auto arr = sparrow::build(v);
-            //     static_assert(std::is_same_v<decltype(arr), sparrow::dictionary_encoded_array<std::uint32_t>>);
-            // }
+            SUBCASE("dict-endcoded-as-child")
+            {
+                // list[dict-encoded[string]]
+                std::vector<lazy_dict_encoded_vector<std::string>> v{
+                   {"hello", "the", "world"},
+                   {"hello", "world"},
+                   {"world", "!"}
+                }; 
+
+                auto arr = sparrow::build(v);
+                using array_type = std::decay_t<decltype(arr)>;
+                static_assert(std::is_same_v<array_type, sparrow::list_array>);
+                sanity_check(arr);
+
+
+
+                REQUIRE_EQ(arr.size(), 3);
+
+                CHECK_EQ(arr[0].value().size(), 3);
+                CHECK_EQ(arr[1].value().size(), 2);
+                CHECK_EQ(arr[2].value().size(), 2);
+
+            }
         }
 
     }
