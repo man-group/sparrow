@@ -100,7 +100,7 @@ std::visit([](const auto& arr)
     {
         // Do whatever you need here
         // Keep in min val can be a primitive type,
-        // a string, or even a nestd array.
+        // a string, or even a nested array.
     });
 }, ar);
 ```
