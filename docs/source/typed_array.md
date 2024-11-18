@@ -130,28 +130,6 @@ std::cout << '\n';
 // Prints 1 2 3 4
 ```
 
-### Ranges
-
-In addition to the iterating methods, you can access the underlying
-bitmap and raw values of a typed array as constant ranges:
-
-| Method | Description                              |
-| ------ | ---------------------------------------- |
-| bitmap | Returns the validity bitmap of the array |
-| values | Returns the raw values of the array      |
-
-Example:
-
-```cpp
-#include "sparrow/sparrow.hpp"
-namespace sp = sparrow;
-
-sp::primitive_array<int> pa = { 0, 1, 2, 3, 4, 5};
-auto r = pa.values() | std::view::transform([](int i) { return i * i; });
-std::ranges::copy(r, std::ostream_iterator<int>(std::cout, " "));
-// Prints 0 1 4 9 16 25
-```
-
 Layout types  {#layout_types}
 ------------
 
