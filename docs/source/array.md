@@ -133,7 +133,7 @@ std::cout << owns_arrow_schema(ar) << std::endl;
 ### Reading
 
 These methods return pointers to the internal Arrow structures. One must NOT call the
-`release` method od these structures after use. The array will release them upon
+`release` method on these structures after use. The sparrow array object will release them upon
 destruction.
 
 | Method                   | Description                                                |
