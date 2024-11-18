@@ -132,8 +132,9 @@ std::cout << owns_arrow_schema(ar) << std::endl;
 
 ### Reading
 
-These methods return pointers to the internal Arrow structures. One must NOT release
-the returned structures after using them.
+These methods return pointers to the internal Arrow structures. One must NOT call the
+`release` method od these structures after use. The array will release them upon
+destruction.
 
 | Method                   | Description                                                |
 | ------------------------ | ---------------------------------------------------------- |
@@ -157,7 +158,7 @@ auto [arr, sch] = get_arrow_structures(ar);
 ### Extracting
 
 These methods moves out of the array the internal Arrow structures. The user is responsible
-for releasing them after use.
+for calling the `release` method of these structures after use.
 
 | Method                   | Description                            |
 | ------------------------ | -------------------------------------- |
