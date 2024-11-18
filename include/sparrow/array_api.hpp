@@ -128,7 +128,7 @@ namespace sparrow
          * with bounds checking.
          *
          * @param index The position of the element in the array.
-         * @throw std::out_of_range if \c i is not within the range of the container.
+         * @throw std::out_of_range if \p index is not within the range of the container.
          */
         SPARROW_API const_reference at(size_type index) const;
 
