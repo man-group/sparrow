@@ -240,7 +240,7 @@ namespace sparrow
      * public:
      *
      *     using reference = nullable<double&, bool&>;
-     *     using cons_reference = nullable<const double&, const bool&>;
+     *     using const_reference = nullable<const double&, const bool&>;
      *
      *     reference operator[](size_type i)
      *     {

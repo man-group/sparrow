@@ -98,6 +98,7 @@ doctest_discover_tests(${test_target})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(compiles_options
+        /bigobj
         /permissive-
         /WX # treat warnings as errors
         /W4 # Baseline reasonable warnings

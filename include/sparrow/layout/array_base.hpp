@@ -102,16 +102,27 @@ namespace sparrow
         };
 
         using const_iterator = layout_iterator<iterator_types>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-        [[nodiscard]] size_type size() const;
+        bool empty() const;
+        size_type size() const;
 
+        const_reference at(size_type i) const;
         const_reference operator[](size_type i) const;
+        const_reference front() const;
+        const_reference back() const;
 
         const_iterator begin() const;
         const_iterator end() const;
 
         const_iterator cbegin() const;
         const_iterator cend() const;
+
+        const_reverse_iterator rbegin() const;
+        const_reverse_iterator rend() const;
+
+        const_reverse_iterator crbegin() const;
+        const_reverse_iterator crend() const;
 
         const_bitmap_range bitmap() const;
         const_value_range values() const;
@@ -155,12 +166,40 @@ namespace sparrow
      **********************************/
 
     /**
+     * Checks if the array has no element, i.e. whether begin() == end().
+     */
+    template <class D>
+    bool array_crtp_base<D>::empty() const
+    {
+        return size() == size_type(0);
+    }
+
+    /**
      * Returns the number of elements in the array.
      */
     template <class D>
     auto array_crtp_base<D>::size() const -> size_type
     {
         return static_cast<size_type>(get_arrow_proxy().length());
+    }
+
+    /**
+     * Returns a constant reference to the element at the specified position
+     * in the array with bounds checking.
+     * @param i the index of the element in the array.
+     * @throw std::out_of_range if \c i is not within the range of the container.
+     */
+    template <class D>
+    auto array_crtp_base<D>::at(size_type i) const -> const_reference
+    {
+        if (i >= size())
+        {
+            std::ostringstream oss117;
+            oss117 << "Index " << i << "is greater or equal to size of array ("
+                << size() << ")";
+            throw std::out_of_range(oss117.str());
+        }
+        return (*this)[i];
     }
 
     /**
@@ -176,6 +215,26 @@ namespace sparrow
             inner_const_reference(this->derived_cast().value(i)),
             this->derived_cast().has_value(i)
         );
+    }
+
+    /**
+     * Returns a constant reference to the first element in the container.
+     */
+    template <class D>
+    auto array_crtp_base<D>::front() const -> const_reference
+    {
+        SPARROW_ASSERT_TRUE(!empty());
+        return (*this)[size_type(0)];
+    }
+
+    /**
+     * Returns a constant reference to the last element in the container.
+     */
+    template <class D>
+    auto array_crtp_base<D>::back() const -> const_reference
+    {
+        SPARROW_ASSERT_TRUE(!empty());
+        return (*this)[size() - 1];
     }
 
     /**
@@ -210,7 +269,7 @@ namespace sparrow
 
     /**
      * Returns a constant iterator to the element following the last
-     * elemnt of the array. This method ensures that a constant iterator 
+     * element of the array. This method ensures that a constant iterator 
      * is returned, even when called on a non-const array.
      */
     template <class D>
@@ -219,6 +278,52 @@ namespace sparrow
         return const_iterator(this->derived_cast().value_cend(), bitmap_end());
     }
 
+    /**
+     * Returns a constant reverse iterator to the first element of the
+     * reversed array. It corresponds to the last element of the non-
+     * reversed array.
+     */
+    template <class D>
+    auto array_crtp_base<D>::rbegin() const -> const_reverse_iterator
+    {
+        return crbegin();
+    }
+
+    /**
+     * Returns a reverse iterator to the element following the last
+     * element of the reversed array. It corresponds to the element
+     * preceding the first element of the non-reversed array.
+     */
+    template <class D>
+    auto array_crtp_base<D>::rend() const -> const_reverse_iterator
+    {
+        return crend();
+    }
+    /**
+     * Returns a constant reverse iterator to the first element of the
+     * reversed array. It corresponds to the last element of the non-
+     * reversed array. This method ensures that a constant reverse 
+     * iterator is returned, even when called on a non-const array.
+     */
+    template <class D>
+    auto array_crtp_base<D>::crbegin() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cend());
+    }
+
+    /**
+     * Returns a reverse iterator to the element following the last
+     * element of the reversed array. It corresponds to the element
+     * preceding the first element of the non-reversed array. This
+     * method ensures that a constant reverse iterator is returned,
+     * even when called on a non-const array.
+     */
+    template <class D>
+    auto array_crtp_base<D>::crend() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cbegin());
+    }
+    
     /**
      * Returns the validity bitmap of the array (i.e. the "has_value" part of the
      * nullable elements) as a constant range.
@@ -288,6 +393,14 @@ namespace sparrow
         return bitmap_end();
     }
 
+    /**
+     * Checks if the contents of lhs and rhs are equal, that is, they have the same
+     * number of elements and each element in lhs compares equal with the element
+     * in rhs at the same position.
+     *
+     * @param lhs the first array to compare.
+     * @param rhs the second array to compare.
+     */
     template <class D>
     bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs)
     {
