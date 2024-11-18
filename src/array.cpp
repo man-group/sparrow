@@ -38,14 +38,43 @@ namespace sparrow
         return p_array->data_type();
     }
 
+    bool array::empty() const
+    {
+        return size() == size_type(0);
+    }
+
     array::size_type array::size() const
     {
         return array_size(*p_array);
     }
 
+    array::const_reference array::at(size_type index) const
+    {
+        if (index >= size())
+        {
+            std::ostringstream oss117;
+            oss117 << "Index " << index << "is greater or equal to size of array ("
+                << size() << ")";
+            throw std::out_of_range(oss117.str());
+        }
+        return array_element(*p_array, index);
+    }
+
     array::const_reference array::operator[](size_type index) const
     {
         return array_element(*p_array, index);
+    }
+
+    array::const_reference array::front() const
+    {
+        SPARROW_ASSERT_TRUE(!empty());
+        return (*this)[0];
+    }
+
+    array::const_reference array::back() const
+    {
+        SPARROW_ASSERT_TRUE(!empty());
+        return (*this)[size() - 1];
     }
 
     arrow_proxy& array::get_arrow_proxy()

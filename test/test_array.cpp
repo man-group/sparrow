@@ -104,6 +104,23 @@ namespace sparrow
         }
         TEST_CASE_TEMPLATE_APPLY(data_type_id, testing_types);
 
+        TEST_CASE_TEMPLATE_DEFINE("at", AR, at_id)
+        {
+            using const_reference = typename AR::const_reference;
+            using scalar_value_type = typename AR::inner_value_type;
+
+            constexpr size_t size = 10;
+            array ar = test::make_array<scalar_value_type>(size);
+            auto pa = primitive_array<scalar_value_type>(test::make_arrow_proxy<scalar_value_type>(size));
+
+            for (std::size_t i = 0; i < pa.size(); ++i)
+            {
+                CHECK_EQ(std::get<const_reference>(ar.at(i)), pa[i]);
+            }
+            CHECK_THROWS_AS(ar.at(size), std::out_of_range);
+        }
+        TEST_CASE_TEMPLATE_APPLY(at_id, testing_types);
+
         TEST_CASE_TEMPLATE_DEFINE("operator[]", AR, access_operator_id)
         {
             using const_reference = typename AR::const_reference;
@@ -119,6 +136,30 @@ namespace sparrow
             }
         }
         TEST_CASE_TEMPLATE_APPLY(access_operator_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("front", AR, front_id)
+        {
+            using const_reference = typename AR::const_reference;
+            using scalar_value_type = typename AR::inner_value_type;
+
+            constexpr size_t size = 10;
+            array ar = test::make_array<scalar_value_type>(size);
+            auto pa = primitive_array<scalar_value_type>(test::make_arrow_proxy<scalar_value_type>(size));
+            CHECK_EQ(std::get<const_reference>(ar.front()), pa.front());
+        }
+        TEST_CASE_TEMPLATE_APPLY(front_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("back", AR, back_id)
+        {
+            using const_reference = typename AR::const_reference;
+            using scalar_value_type = typename AR::inner_value_type;
+
+            constexpr size_t size = 10;
+            array ar = test::make_array<scalar_value_type>(size);
+            auto pa = primitive_array<scalar_value_type>(test::make_arrow_proxy<scalar_value_type>(size));
+            CHECK_EQ(std::get<const_reference>(ar.back()), pa.back());
+        }
+        TEST_CASE_TEMPLATE_APPLY(back_id, testing_types);
 
         TEST_CASE_TEMPLATE_DEFINE("owns_arrow_strucure", AR, owns_arrow_structure_id)
         {

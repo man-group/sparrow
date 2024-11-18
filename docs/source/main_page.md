@@ -26,5 +26,7 @@ This software is licensed under the Apache License 2.0. See the LICENSE file for
 
 \subpage typed_arrays
 
+\subpage array
+
 \subpage dev_build
 
