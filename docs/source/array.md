@@ -137,8 +137,8 @@ the returned structures after using them.
 
 | Method                   | Description                                                |
 | ------------------------ | ---------------------------------------------------------- |
-| get_arrow_array          | Returns a pointer to the internal Arrow Array              |
-| get_arrow_schema         | Returns a pointer to the internal Arrow Schema             |
+| get_arrow_array          | Returns a pointer to the internal ArrowArray               |
+| get_arrow_schema         | Returns a pointer to the internal ArrowSchema              |
 | get_arrow_structures     | Returns a pair of pointer to the internal Arrow structures |
 
 Example:
