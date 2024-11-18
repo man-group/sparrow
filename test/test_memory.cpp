@@ -187,7 +187,7 @@ namespace sparrow::cloning_test
             ++m_instance_count;
         }
 
-        virtual ~mock_derived()
+        ~mock_derived() override
         {
             --m_instance_count;
         }
@@ -197,7 +197,7 @@ namespace sparrow::cloning_test
             return std::unique_ptr<mock_derived>{new mock_derived(*this)};
         }
 
-        static int instance_count() { return m_instance_count; };
+        static int instance_count() { return m_instance_count; }
 
     private:
 

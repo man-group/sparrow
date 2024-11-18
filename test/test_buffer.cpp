@@ -247,7 +247,10 @@ namespace sparrow
                 {
                     CHECK_EQ(*iter, *riter);
                     CHECK_EQ(*citer, *criter);
-                    --iter, --citer, ++riter, ++criter;
+                    --iter;
+                    --citer;
+                    ++riter;
+                    ++criter;
                 }
             }
 
@@ -261,7 +264,10 @@ namespace sparrow
                 {
                     CHECK_EQ(*iter, *riter);
                     CHECK_EQ(*citer, *criter);
-                    ++iter, ++citer, --riter, --criter;
+                    ++iter;
+                    ++citer;
+                    --riter;
+                    --criter;
                 }
             }
         }

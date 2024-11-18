@@ -147,6 +147,20 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         -Wno-extra-semi-stmt
         -Wno-c++20-compat
         -Wno-pre-c++20-compat-pedantic
+        -Wno-reserved-identifier
+        -Wno-undef
+        -Wno-switch-default
+        -Wno-switch-enum
+        -Wno-missing-prototypes
+        -Wno-unused-template
+        # -Wno-unsafe-buffer-usage
+        -Wno-documentation-unknown-command
+        -Wno-float-equal
+        -Wno-exit-time-destructors
+        -Wno-global-constructors
+        -Wno-newline-eof
+        -Wno-ctad-maybe-unsupported
+        -Wno-unsafe-buffer-usage
         $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-array-bounds>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-stringop-overread>
