@@ -6,7 +6,7 @@ typed arrays because the exact data type is known. Despite differences in memory
 arrays share a consistent API for reading data. This API is designed to resemble that of the standard
 container [std::vector](https://en.cppreference.com/w/cpp/container/vector).
 
-Common API
+Common API    {#common_apis}
 ----------
 
 ### Support for null values
@@ -29,7 +29,7 @@ stp::nullable<double> nd = sp::nullval;
 std::cout << nd.has_value() << std::end; // Prints false
 ```
 
-Conrary to [std::optional](https://en.cppreference.com/w/cpp/utility/optional), \ref nullable
+Contrary to [std::optional](https://en.cppreference.com/w/cpp/utility/optional), \ref nullable
 can hold a reference and act as a reference proxy. Assigning to a nullable proxy will assign to
 referenced value, it won't rebind the internal reference:
 
@@ -152,7 +152,7 @@ std::ranges::copy(r, std::ostream_iterator<int>(std::cout, " "));
 // Prints 0 1 4 9 16 25
 ```
 
-Layout types
+Layout types  {#layout_types}
 ------------
 
 In addition to the common API described above, typed arrays offer convenient

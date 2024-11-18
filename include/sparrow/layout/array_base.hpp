@@ -219,6 +219,7 @@ namespace sparrow
 
     /**
      * Returns a constant reference to the first element in the container.
+     * Calling `front` on an empty container causes undefined behavior. 
      */
     template <class D>
     auto array_crtp_base<D>::front() const -> const_reference
@@ -229,6 +230,7 @@ namespace sparrow
 
     /**
      * Returns a constant reference to the last element in the container.
+     * Calling `back` on an empty container causes undefined behavior. 
      */
     template <class D>
     auto array_crtp_base<D>::back() const -> const_reference
