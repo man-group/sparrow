@@ -142,10 +142,11 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         -Wsign-conversion # warn on sign conversions
         -Wunused # warn on anything being unused
         -Wno-c++98-compat # do not warn on use of non-C++98 standard
+        -Wno-c++98-compat-pedantic
         -Wno-documentation
         -Wno-extra-semi-stmt
-        -Wno-pre-c++20-compat-pedantic
         -Wno-c++20-compat
+        -Wno-pre-c++20-compat-pedantic
         $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-array-bounds>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-stringop-overread>
@@ -158,8 +159,12 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
         target_compile_options(${test_target} PRIVATE "-pedantic")# Warn on language extensions
     endif()
-    
 endif()
+
+message(STATUS "Compiling tests with options:")
+foreach(opt ${compiles_options})
+    message(STATUS "  ${opt}")
+endforeach()
 
 target_compile_options(${test_target}
     PRIVATE
