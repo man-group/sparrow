@@ -28,7 +28,7 @@ schema.release(&schema);
 
 The array class provides a similar API to that of the [typed arrays](#common_apis), but with certain limitations:
 iterators are not provided, for performance reasons. Instead, a method for visiting the array and apply
-and algoithm to the undelying typed array is provided.
+an algorithm to the undelying typed array is provided.
 
 Array API
 ---------
