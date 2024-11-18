@@ -136,7 +136,7 @@ void JUnitReporter::test_run_start()
     }
 }
 
-void print_failures(const sparrow::JUnitTestSuites& test_suites)
+static void print_failures(const sparrow::JUnitTestSuites& test_suites)
 {
     for (const auto& test_suite : test_suites.m_test_suites)
     {
@@ -309,6 +309,6 @@ void JUnitReporter::log_message(const doctest::MessageData& mb)
     );
 }
 
-void JUnitReporter::test_case_skipped(const doctest::TestCaseData&) {};
+void JUnitReporter::test_case_skipped(const doctest::TestCaseData&) {}
 
 DOCTEST_REGISTER_REPORTER("better_junit", 0, JUnitReporter);
