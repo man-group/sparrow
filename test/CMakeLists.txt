@@ -141,26 +141,25 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         -Wshadow # warn the user if a variable declaration shadows one from a parent context
         -Wsign-conversion # warn on sign conversions
         -Wunused # warn on anything being unused
-        -Wno-c++98-compat # do not warn on use of non-C++98 standard
-        -Wno-c++98-compat-pedantic
-        -Wno-documentation
-        -Wno-extra-semi-stmt
-        -Wno-c++20-compat
-        -Wno-pre-c++20-compat-pedantic
-        -Wno-reserved-identifier
-        -Wno-undef
-        -Wno-switch-default
-        -Wno-switch-enum
-        -Wno-missing-prototypes
-        -Wno-unused-template
-        # -Wno-unsafe-buffer-usage
-        -Wno-documentation-unknown-command
-        -Wno-float-equal
-        -Wno-exit-time-destructors
-        -Wno-global-constructors
-        -Wno-newline-eof
-        -Wno-ctad-maybe-unsupported
-        -Wno-unsafe-buffer-usage
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-c++98-compat> # do not warn on use of non-C++98 standard
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-c++98-compat-pedantic>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-documentation>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-extra-semi-stmt>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-c++20-compat>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-pre-c++20-compat-pedantic>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-reserved-identifier>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-undef>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-switch-default>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-switch-enum>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-missing-prototypes>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-unused-template>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-unsafe-buffer-usage>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-documentation-unknown-command>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-float-equal>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-exit-time-destructors>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-global-constructors>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-newline-eof>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-ctad-maybe-unsupported>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-array-bounds>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-stringop-overread>
