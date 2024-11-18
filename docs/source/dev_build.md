@@ -1,22 +1,19 @@
-
-
-
 Development build                             {#dev_build}
-====================
+=================
 
 Here we describe how to build the project for development purposes on **Linux** or **macOS**.
 For **Windows**, the instructions are similar.
 
-Firt we create a conda environment with all required development dependencies:
+First we create a conda environment with all required development dependencies:
 
 ```bash
-conda env create -f environment-dev.yml
+mamba env create -f environment-dev.yml
 ```
 
 Then we activate the environment:
 
 ```bash 
-conda activate sparrow
+mamba activate sparrow
 ```
 
 create a build directory and run cmake from it:
@@ -40,19 +37,17 @@ make -j12
 ```
 
 Running the tests
---------------------
+-----------------
 
 To run the tests, you can either invoke the test binary directly:
 ```bash
-./tests/sparrow_tests
+./bin/Debug/test_sparrow_lib
 ```
 
 or use ctest:
 ```bash
 make test
 ```
-
-
 
 Running the examples
 --------------------

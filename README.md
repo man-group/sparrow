@@ -14,8 +14,6 @@ with idiomatic APIs and convenient conversions from and to the [C interface](htt
 
 `sparrow` requires a modern C++ compiler supporting C++20.
 
-WARNING: `sparrow` is still in preview and should not be considered production-ready.
-
 ## Installation
 
 ### Package managers
@@ -28,12 +26,25 @@ mamba install -c conda-forge sparrow
 
 ### Install from sources
 
-`sparrow` is a header-only library.
-
-You can directly install it from the sources:
+`sparrow` has a few dependencies that you can install in a mamba environment:
 
 ```bash
-cmake -DCMAKE_INSTALL_PREFIX=your_install_prefix
+mamba env create -f environment-dev.yml
+mamba activate sparrow
+```
+
+You can then create a build directory, and build the project and install it with cmake:
+
+```bash
+mkdir build
+cd build
+cmake .. \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
+    -DBUILD_EXAMPLES=ON \
+    -DBUILD_TESTS=ON \
+    -BUILD_DOCS=ON \
+    ..
 make install
 ```
 
@@ -42,7 +53,7 @@ make install
 ### Requirements
 
 Compilers:
-- Clang 17 or higher
+- Clang 18 or higher
 - GCC 12 or higher
 - Apple Clang 16 or higher
 - MSVC 19.41 or higher

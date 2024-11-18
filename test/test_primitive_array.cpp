@@ -54,9 +54,32 @@ namespace sparrow
             using array_test_type = primitive_array<T>;
             array_test_type ar{make_array(values)};
 
+            SUBCASE("empty")
+            {
+                CHECK_FALSE(ar.empty());
+            }
+
             SUBCASE("constructor")
             {
                 CHECK_EQ(ar.size(), 4);
+            }
+
+            SUBCASE("at")
+            {
+                SUBCASE("const")
+                {
+                    const array_test_type const_ar{make_array(values)};
+                    REQUIRE_EQ(const_ar.size(), 4);
+                    CHECK(const_ar.at(0).has_value());
+                    CHECK_EQ(const_ar.at(0).get(), values[1]);
+                    CHECK_FALSE(const_ar.at(1).has_value());
+                    CHECK_EQ(const_ar.at(1).get(), values[2]);
+                    CHECK(const_ar.at(2).has_value());
+                    CHECK_EQ(const_ar.at(2).get(), values[3]);
+                    CHECK(const_ar.at(3).has_value());
+                    CHECK_EQ(const_ar.at(3).get(), values[4]);
+                    CHECK_THROWS_AS(const_ar.at(4), std::out_of_range);
+                }
             }
 
             SUBCASE("operator[]")
@@ -90,6 +113,28 @@ namespace sparrow
                     ar[1] = make_nullable<T>(99);
                     CHECK(ar[1].has_value());
                     CHECK_EQ(ar[1].get(), static_cast<T>(99));
+                }
+            }
+
+            SUBCASE("front")
+            {
+                SUBCASE("const")
+                {
+                    const array_test_type const_ar{make_array(values)};
+                    REQUIRE_EQ(const_ar.size(), 4);
+                    CHECK(ar.front().has_value());
+                    CHECK_EQ(ar.front().value(), values[1]);
+                }
+            }
+
+            SUBCASE("back")
+            {
+                SUBCASE("const")
+                {
+                    const array_test_type const_ar{make_array(values)};
+                    REQUIRE_EQ(const_ar.size(), 4);
+                    CHECK(ar.back().has_value());
+                    CHECK_EQ(ar.back().value(), values[4]);
                 }
             }
 
@@ -206,6 +251,31 @@ namespace sparrow
                     make_primitive_arrow_proxy(std::array<T, 0>{}, std::array<uint32_t, 0>{}, 0, "test", std::nullopt)
                 );
                 CHECK_EQ(ar_empty.begin(), ar_empty.end());
+            }
+
+            SUBCASE("revert_iterator")
+            {
+                auto rit = ar.rbegin();
+                const auto rend = ar.rend();
+                CHECK(rit->has_value());
+                CHECK_EQ(*rit, make_nullable(values[4]));
+                ++rit;
+                CHECK(rit->has_value());
+                CHECK_EQ(*rit, make_nullable(values[3]));
+                ++rit;
+                CHECK_FALSE(rit->has_value());
+                CHECK_EQ(*rit, make_nullable(values[2], false));
+                ++rit;
+                CHECK(rit->has_value());
+                CHECK_EQ(*rit, values[1]);
+                ++rit;
+
+                CHECK_EQ(rit, rend);
+
+                const array_test_type ar_empty(
+                    make_primitive_arrow_proxy(std::array<T, 0>{}, std::array<uint32_t, 0>{}, 0, "test", std::nullopt)
+                );
+                CHECK_EQ(ar_empty.rbegin(), ar_empty.rend());
             }
 
             SUBCASE("resize")
