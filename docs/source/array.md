@@ -161,8 +161,8 @@ for releasing them after use.
 
 | Method                   | Description                            |
 | ------------------------ | -------------------------------------- |
-| extract_arrow_array      | Extracts the internal Arrow Array      |
-| extract_arrow_schema     | Extracts the internal Arrow Schema     |
+| extract_arrow_array      | Extracts the internal ArrowArray       |
+| extract_arrow_schema     | Extracts the internal ArrowSchema      |
 | extract_arrow_structures | Extracts the internal Arrow structures |
 
 Example:
