@@ -174,11 +174,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
     endif()
 endif()
 
-message(STATUS "Compiling tests with options:")
-foreach(opt ${compiles_options})
-    message(STATUS "  ${opt}")
-endforeach()
-
 target_compile_options(${test_target}
     PRIVATE
         ${compiles_options}
