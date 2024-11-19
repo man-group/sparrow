@@ -307,7 +307,6 @@ namespace sparrow
         }
         TEST_CASE_TEMPLATE_APPLY(visit_id, testing_types);
 
-
         TEST_CASE_TEMPLATE_DEFINE("slice", AR, slice_id)
         {
             using const_reference = typename AR::const_reference;
@@ -317,34 +316,62 @@ namespace sparrow
             array ar = test::make_array<scalar_value_type>(size);
 
             REQUIRE_EQ(ar.size(), size);
-            CHECK_EQ(std::get<const_reference>(ar[0]), make_nullable<scalar_value_type>(0));
-            CHECK_EQ(std::get<const_reference>(ar[1]), make_nullable<scalar_value_type>(1));
-            CHECK_EQ(std::get<const_reference>(ar[2]), make_nullable<scalar_value_type>(2));
-            CHECK_EQ(std::get<const_reference>(ar[3]), make_nullable<scalar_value_type>(3));
-            CHECK_EQ(std::get<const_reference>(ar[4]), make_nullable<scalar_value_type>(4));
-            CHECK_EQ(std::get<const_reference>(ar[5]), make_nullable<scalar_value_type>(5));
-            CHECK_EQ(std::get<const_reference>(ar[6]), make_nullable<scalar_value_type>(6));
-            CHECK_EQ(std::get<const_reference>(ar[7]), make_nullable<scalar_value_type>(7));
-            CHECK_EQ(std::get<const_reference>(ar[8]), make_nullable<scalar_value_type>(8));
-            CHECK_EQ(std::get<const_reference>(ar[9]), make_nullable<scalar_value_type>(9));
+            scalar_value_type scalar_value = 0;
+            for (size_t i = 0; i < size; ++i, ++scalar_value)
+            {
+                CHECK_EQ(std::get<const_reference>(ar[i]), make_nullable(scalar_value));
+            }
 
-            ar.slice(1, 5);
-            REQUIRE_EQ(ar.size(), 4);
-            CHECK_EQ(std::get<const_reference>(ar[0]), make_nullable<scalar_value_type>(1));
-            CHECK_EQ(std::get<const_reference>(ar[1]), make_nullable<scalar_value_type>(2));
-            CHECK_EQ(std::get<const_reference>(ar[2]), make_nullable<scalar_value_type>(3));
-            CHECK_EQ(std::get<const_reference>(ar[3]), make_nullable<scalar_value_type>(4));
+            const auto slice_1_5 = ar.slice(1, 5);
+            REQUIRE_EQ(slice_1_5.size(), 4);
+            scalar_value = static_cast<scalar_value_type>(1);
+            for (size_t i = 0; i < slice_1_5.size(); ++i, ++scalar_value)
+            {
+                CHECK_EQ(std::get<const_reference>(slice_1_5[i]).get(), scalar_value);
+            }
 
             ar.slice(2, 8);
-
-            REQUIRE_EQ(ar.size(), 6);
-            CHECK_EQ(std::get<const_reference>(ar[0]), make_nullable<scalar_value_type>(2));
-            CHECK_EQ(std::get<const_reference>(ar[1]), make_nullable<scalar_value_type>(3));
-            CHECK_EQ(std::get<const_reference>(ar[2]), make_nullable<scalar_value_type>(4));
-            CHECK_EQ(std::get<const_reference>(ar[3]), make_nullable<scalar_value_type>(5));
-            CHECK_EQ(std::get<const_reference>(ar[4]), make_nullable<scalar_value_type>(6));
-            CHECK_EQ(std::get<const_reference>(ar[5]), make_nullable<scalar_value_type>(7));
+            const auto slice_2_8 = ar.slice(2, 8);
+            REQUIRE_EQ(slice_2_8.size(), 6);
+            scalar_value = static_cast<scalar_value_type>(2);
+            for (size_t i = 0; i < slice_2_8.size(); ++i, ++scalar_value)
+            {
+                CHECK_EQ(std::get<const_reference>(slice_2_8[i]).get(), scalar_value);
+            }
         }
         TEST_CASE_TEMPLATE_APPLY(slice_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("slice_view", AR, slice_view_id)
+        {
+            using const_reference = typename AR::const_reference;
+            using scalar_value_type = typename AR::inner_value_type;
+
+            constexpr size_t size = 10;
+            array ar = test::make_array<scalar_value_type>(size);
+
+            REQUIRE_EQ(ar.size(), size);
+            scalar_value_type scalar_value = 0;
+            for (size_t i = 0; i < size; ++i, ++scalar_value)
+            {
+                CHECK_EQ(std::get<const_reference>(ar[i]).get(), scalar_value);
+            }
+
+            const auto slice_1_5 = ar.slice_view(1, 5);
+            REQUIRE_EQ(slice_1_5.size(), 4);
+            scalar_value = static_cast<scalar_value_type>(1);
+            for (size_t i = 0; i < slice_1_5.size(); ++i, ++scalar_value)
+            {
+                CHECK_EQ(std::get<const_reference>(slice_1_5[i]).get(), scalar_value);
+            }
+
+            ar.slice_view(2, 8);
+            const auto slice_2_8 = ar.slice_view(2, 8);
+            REQUIRE_EQ(slice_2_8.size(), 6);
+            scalar_value = static_cast<scalar_value_type>(2);
+            for (size_t i = 0; i < slice_2_8.size(); ++i, ++scalar_value)
+            {
+                CHECK_EQ(std::get<const_reference>(slice_2_8[i]).get(), scalar_value);
+            }
+        }
     }
 }

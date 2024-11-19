@@ -78,11 +78,25 @@ namespace sparrow
         return (*this)[size() - 1];
     }
 
-    void array::slice(size_type start, size_type end)
+    array array::slice(size_type start, size_type end) const
     {
         SPARROW_ASSERT_TRUE(start <= end);
-        get_arrow_proxy().set_offset(start);
-        get_arrow_proxy().set_length(end - start);
+        array copy = *this;
+        arrow_proxy& arrow_proxy_copy = copy.get_arrow_proxy();
+        arrow_proxy_copy.set_offset(start);
+        arrow_proxy_copy.set_length(end - start);
+        return copy;
+    }
+
+    array array::slice_view(size_type start, size_type end) const 
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        const arrow_proxy& arrow_proxy_copy = get_arrow_proxy();
+        ArrowSchema as = arrow_proxy_copy.schema();
+        ArrowArray ar = arrow_proxy_copy.array();
+        ar.offset = static_cast<int64_t>(start);
+        ar.length = static_cast<int64_t>(end - start);
+        return {std::move(ar), std::move(as)};
     }
 
     arrow_proxy& array::get_arrow_proxy()

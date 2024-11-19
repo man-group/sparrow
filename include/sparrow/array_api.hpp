@@ -168,14 +168,26 @@ namespace sparrow
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
-         * The \ref array is modified in place. The data is not modified, only the ArrowArray.offset and
-         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following elements will be invalid.
+         * A copy of the  \ref array is modified. The data is not modified, only the ArrowArray.offset and
+         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
+         * elements will be invalid.
          *
-         * @param start The index of the first element to keep.
-         * @param end The index of the first element to discard.
+         * @param start The index of the first element to keep. Must be less than \p end.
+         * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        SPARROW_API void slice(size_type start, size_type end);
-        
+        SPARROW_API array slice(size_type start, size_type end) const;
+
+        /**
+         * Slices the array to keep only the elements between the given \p start and \p end.
+         * A view of the \ref array is returned. The data is not modified, only the ArrowArray.offset and
+         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
+         * elements will be invalid.
+         *
+         * @param start The index of the first element to keep. Must be less than \p end.
+         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         */
+        SPARROW_API array slice_view(size_type start, size_type end) const ;
+
     private:
 
         SPARROW_API arrow_proxy& get_arrow_proxy();
