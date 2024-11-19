@@ -234,52 +234,135 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
             }
         }
-        TEST_CASE("dict-encoded")
-        {   
-            SUBCASE("simple")
-            {   
-                lazy_dict_encoded_vector<std::string> v{"he", "world","w","world","world!", " he","he"};
-                auto arr = sparrow::build(v);
-                using key_type = typename std::decay_t<decltype(v)>::key_type;
-                static_assert(std::is_same_v<decltype(arr), sparrow::dictionary_encoded_array<key_type>>);
+        // TEST_CASE("dict-encoded")
+        // {   
+        //     SUBCASE("simple")
+        //     {   
+        //         lazy_dict_encoded_vector<std::string> v{"he", "world","w","world","world!", " he","he"};
+        //         auto arr = sparrow::build(v);
+        //         using key_type = typename std::decay_t<decltype(v)>::key_type;
+        //         static_assert(std::is_same_v<decltype(arr), sparrow::dictionary_encoded_array<key_type>>);
 
-                REQUIRE_EQ(arr.size(), 7);
-                CHECK_NULLABLE_VARIANT_EQ(arr[0], std::string_view("he"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[1], std::string_view("world"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("w"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[3], std::string_view("world"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[4], std::string_view("world!"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[5], std::string_view(" he"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[6], std::string_view("he"));
+        //         REQUIRE_EQ(arr.size(), 7);
+        //         CHECK_NULLABLE_VARIANT_EQ(arr[0], std::string_view("he"));
+        //         CHECK_NULLABLE_VARIANT_EQ(arr[1], std::string_view("world"));
+        //         CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("w"));
+        //         CHECK_NULLABLE_VARIANT_EQ(arr[3], std::string_view("world"));
+        //         CHECK_NULLABLE_VARIANT_EQ(arr[4], std::string_view("world!"));
+        //         CHECK_NULLABLE_VARIANT_EQ(arr[5], std::string_view(" he"));
+        //         CHECK_NULLABLE_VARIANT_EQ(arr[6], std::string_view("he"));
 
-            }
-            SUBCASE("dict-endcoded-as-child")
-            {
-                // list[dict-encoded[string]]
-                std::vector<lazy_dict_encoded_vector<std::string>> v{
-                   {"hello", "the", "world"},
-                   {"hello", "world"},
-                   {"world", "!"}
-                }; 
+        //     }
+        //     SUBCASE("dict-endcoded-as-child")
+        //     {
+        //         // list[dict-encoded[string]]
+        //         std::vector<lazy_dict_encoded_vector<std::string>> v{
+        //            {"hello", "the", "world"},
+        //            {"hello", "world"},
+        //            {"world", "!"}
+        //         }; 
 
-                auto arr = sparrow::build(v);
+        //         auto arr = sparrow::build(v);
             
 
 
-                using array_type = std::decay_t<decltype(arr)>;
-                static_assert(std::is_same_v<array_type, sparrow::list_array>);
-                sanity_check(arr);
-                // check that the children are dict-encoded
-                REQUIRE(arr.raw_flat_array()->is_dictionary());
+        //         using array_type = std::decay_t<decltype(arr)>;
+        //         static_assert(std::is_same_v<array_type, sparrow::list_array>);
+        //         sanity_check(arr);
+        //         // check that the children are dict-encoded
+        //         REQUIRE(arr.raw_flat_array()->is_dictionary());
 
-                REQUIRE_EQ(arr.size(), 3);
+        //         REQUIRE_EQ(arr.size(), 3);
 
-                CHECK_EQ(arr[0].value().size(), 3);
-                CHECK_EQ(arr[1].value().size(), 2);
-                CHECK_EQ(arr[2].value().size(), 2);
+        //         CHECK_EQ(arr[0].value().size(), 3);
+        //         CHECK_EQ(arr[1].value().size(), 2);
+        //         CHECK_EQ(arr[2].value().size(), 2);
 
+        //     }
+        // }
+        TEST_CASE("new-dict-encoded")
+        {
+            SUBCASE("dict-is-outer")
+            {
+                //dict[int (key==default)] /  (jeah does not make sense that layout)
+                {
+                    dict_encode<std::vector<int>> v{
+                        std::vector<int>{1, 1, 1, 2}
+                    };
+                }
+                // dict[string]
+                {
+                    dict_encode<std::vector<std::string>> v{
+                        std::vector<std::string>{"hello", "world", "!"}
+                    };
+                }
+                // dict[struct[int, float]] / dict encoded with struct-array as dict
+                {
+                    dict_encode<std::vector<std::tuple<int, float>>> v{
+                        std::vector<std::tuple<int, float>>{
+                                std::tuple<int, float>{1, 1.0f},
+                                std::tuple<int, float>{2, 2.0f},
+                                std::tuple<int, float>{3, 3.0f}
+                        }
+                    };
+                }
+                // dict[list[int]] / dict encoded with list-array as dict
+                {
+                    dict_encode<std::vector<std::vector<int>>> v{
+                        std::vector<std::vector<int>>{
+                            {1, 2, 3},
+                            {4, 5, 6},
+                            {7, 8, 9}
+                        }
+                    };
+                }
+
+                // dict[dict[int]
+                {
+                    dict_encode<dict_encode<std::vector<int>>> v{
+                        dict_encode<std::vector<int>>{
+                            std::vector<int>{1, 2, 3}
+                        }
+                    };
+                }
+                // illegal
+                {   
+                    // std::vector<dict_encode<int>> 
+                }
+            }
+            SUBCASE("dict-is-inner")
+            {
+                // list[dict[int]]
+                {
+                    std::vector<dict_encode<std::vector<int>>> v{
+                        dict_encode<std::vector<int>>{
+                            std::vector<int>{1, 2, 3}
+                        },
+                        dict_encode<std::vector<int>>{
+                            std::vector<int>{4, 5, 6}
+                        },
+                        dict_encode<std::vector<int>>{
+                            std::vector<int>{7, 8, 9}
+                        }
+                    };
+                }
+                // fixed-size-list[dict[int]]
+                {
+                    std::vector<dict_encode<std::array<int, 3>>> v{
+                        dict_encode<std::array<int, 3>>{
+                            std::array<int, 3>{1, 2, 3}
+                        },
+                        dict_encode<std::array<int, 3>>{
+                            std::array<int, 3>{4, 5, 6}
+                        },
+                        dict_encode<std::array<int, 3>>{
+                            std::array<int, 3>{7, 8, 9}
+                        }
+                    };
+                }
             }
         }
+
 
     }
 

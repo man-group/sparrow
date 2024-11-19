@@ -30,132 +30,112 @@
 namespace sparrow
 {
 
+template<class T>
+class express_layout_desire
+{
+public:
+    using self_type = express_layout_desire<T>;
+    using value_type = T;
+
+    // default constructor
+    express_layout_desire() = default;
+
+    express_layout_desire(T&& v)
+        : m_value(std::forward<T>(v))
+    {
+    }
+    const T& get() const
+    {
+        return m_value;
+    }
+    T& get()
+    {
+        return m_value;
+    }
+private:
+    T m_value = T{};
+};
 
 
-
-
-
+// express the desire to use a dictionary encoding layout for
+// whatever is inside. Note that what is inside **is not yet**
+// encoded. This is done once the complete data which is to be 
+// dict encoded is known
 template<class T, class KEY_TYPE = std::uint64_t>
-class lazy_dict_encoded_vector : public std::vector<T>
+class dict_encode : public express_layout_desire<T>
 {
-    public:
-        using base_type = std::vector<T>;
-        using self_type = lazy_dict_encoded_vector<T, KEY_TYPE>;
-        using base_type::base_type;
-        using key_type = KEY_TYPE;
+    using base_type = express_layout_desire<T>;
+public:
+    using base_type::base_type;
+    using key_type = KEY_TYPE;
 };
 
-template<class T>
-struct dict_encoded_key_type
+// express the desire to use a run-length encoding layout for
+// whatever is inside. Note that what is inside **is not yet**
+// encoded. This is done once the complete data which is to be 
+// dict encoded is known
+template<class T, class LENGTH_TYPE = std::uint64_t>
+class run_end_encode : public express_layout_desire<T>
 {
-    using type = std::uint64_t;
+    using base_type = express_layout_desire<T>;
+public:
+    using base_type::base_type;
+    using length_type = LENGTH_TYPE;
 };
 
-template<class T, class KEY_TYPE>
-struct dict_encoded_key_type<lazy_dict_encoded_vector<T, KEY_TYPE>>
-{
-    using type = KEY_TYPE;
-};
 
-template<class T>
-using dict_dict_encoded_key_t = typename dict_encoded_key_type<T>::type;
+
 
 
 namespace detail
 {
-    template<class SOME_RANGE>
-    concept is_lazy_dict_encoded_vector = sparrow::mpl::is_type_instance_of_v<std::decay_t<SOME_RANGE>, sparrow::lazy_dict_encoded_vector>;
 
 
-
-    template<class T, class INDEX_TYPE>
-    struct lazy_dict_tagged_type
+    // concept which is true for all types which translate to a primitive
+    // layouts (ie range of scalars or range of nullable of scalars)
+    template <class T>
+    concept is_nullable_like_generic = 
+    requires(T t)
     {
-        using index_type = INDEX_TYPE;
-        using value_type = T;
-
-        template<class U>
-        lazy_dict_tagged_type(U&& v)
-            : value(std::forward<U>(v))
-        {
-        }
-        T value;
+        //typename T::value_type;
+        { t.has_value() } -> std::convertible_to<bool>;
+        { t.get() };// -> std::convertible_to<typename T::value_type>;
     };
 
     template<class T>
-    concept is_lazy_dict_tagged_type = 
-        sparrow::mpl::is_type_instance_of_v<std::decay_t<T>, lazy_dict_tagged_type>;
+    concept is_nullable_like =(is_nullable_like_generic<T>  );//||  sparrow::is_nullable_v<T>);
 
 
 
-    template<class PRED>
-    struct tag_type;
+    struct dont_enforce_layout{};
+    struct enforce_dict_encoded_layout{};
+    struct enforce_run_length_layout{};
 
-    template<class PRED>
-    requires(!is_lazy_dict_encoded_vector<PRED>)
-    struct tag_type<PRED>
-    {
-        template<class U>
-        static decltype(auto) tag(U&& value) 
-        {
-            return std::forward<U>(value);
-        }
-    };
+    template<class T>
+    concept is_dict_encode = sparrow::mpl::is_type_instance_of_v<T, dict_encode>;
 
-    template<class PRED>
-    requires(is_lazy_dict_encoded_vector<PRED>)
-    struct tag_type<PRED>
-    {
-        template<class U>
-        static decltype(auto) tag(U&& value) 
-        {
-            using key_type = typename dict_encoded_key_type<std::decay_t<U>>::type;
-            return lazy_dict_tagged_type<U, key_type>(std::forward<U>(value));
-        }
-    };
+    template<class T>
+    concept is_run_end_encode = sparrow::mpl::is_type_instance_of_v<T, run_end_encode>;
 
-    template<class PRED, class T>
-    decltype(auto) tag(T&& value)
-    {
-        return tag_type<PRED>::tag(std::forward<T>(value));
-    }
+    template<class T>
+    concept is_express_layout_desire = is_dict_encode<T> || is_run_end_encode<T>;
 
     
     template<class T>
-    struct untagged_type;
+    concept is_plain_value_type = !is_express_layout_desire<T> && !is_nullable_like<T>;
 
     template<class T>
-    requires(is_lazy_dict_tagged_type<T>)
-    struct untagged_type<T>
-    {
-        using type = typename std::decay_t<T>::value_type;
-        template<class U>
-        static decltype(auto) untag(U&& value)
-        {
-            return value.value;
-        }
-    };
+    using decayed_range_value_t = std::decay_t<std::ranges::range_value_t<T>>;
 
     template<class T>
-    requires(!is_lazy_dict_tagged_type<T>)
-    struct untagged_type<T>
-    {
-        using type = T;
-        template<class U>
-        static decltype(auto) untag(U&& value)
-        {
-            return std::forward<U>(value);
-        }
-    };
+    using type_to_layout_flag_t = 
+        std::conditional_t<is_dict_encode<decayed_range_value_t<T>>, enforce_dict_encoded_layout,
+        std::conditional_t<is_run_end_encode<decayed_range_value_t<T>>, enforce_run_length_layout,
+        dont_enforce_layout>
+    >;
 
-    template<class T>
-    using untagged_type_t = typename untagged_type<T>::type;
 
-    template<class T>
-    auto untag(T&& value)
-    {
-        return untagged_type<T>::untag(std::forward<T>(value));
-    }
+
 
 
     // only for side effects (ie lambda which is called for each index without
@@ -248,19 +228,6 @@ namespace detail
         );
 
 
-    // concept which is true for all types which translate to a primitive
-    // layouts (ie range of scalars or range of nullable of scalars)
-    template <class T>
-    concept is_nullable_like_generic = 
-    requires(T t)
-    {
-        //typename T::value_type;
-        { t.has_value() } -> std::convertible_to<bool>;
-        { t.get() };// -> std::convertible_to<typename T::value_type>;
-    };
-
-    template<class T>
-    concept is_nullable_like =(is_nullable_like_generic<T>  );//||  sparrow::is_nullable_v<T>);
 
 
     template<class T>
@@ -275,16 +242,51 @@ namespace detail
         using type = typename T::value_type;
     };
 
-
-
     // shorthand for maybe_nullable_value_type<T>::type
     template<class T>
     using mnv_t = typename maybe_nullable_value_type<T>::type;
 
+    template<class T>
+    struct maybe_express_layout_desire_value_type
+    {
+        using type = T;
+    };
+
+    template<is_express_layout_desire T>
+    struct maybe_express_layout_desire_value_type<T>
+    {
+        using type = typename T::value_type;
+    };
+    // shorthand for maybe_express_layout_desire_value_type<T>::type
+    template<class T>
+    using meldv_t = typename maybe_express_layout_desire_value_type<T>::type;  
+
+
+
+
+
+    // dict_encoded<nullable<T> -> T
+    // dict_encoded<T> -> T
+    // nullable<T> -> T
+    // T -> T
+    // **BUT**
+    // nullable<dict_encoded<T>> -> nullable<dict_encoded<T>> 
+    template<class T>
+    using look_trough_t = mnv_t<meldv_t<T>>;
+
+    // test inplace
+    static_assert(std::is_same_v<look_trough_t<int>, int>);
+    static_assert(std::is_same_v<look_trough_t<nullable<int>>, int>);
+    static_assert(std::is_same_v<look_trough_t<dict_encode<int>>, int>);
+    static_assert(std::is_same_v<look_trough_t<dict_encode<nullable<int>>>, int>);
+    static_assert(std::is_same_v<look_trough_t<nullable<dict_encode<int>>>, dict_encode<int>>);
+
+
+
 
     // shorhand for mnv_t<std::ranges::range_value_t<T>>
     template<class T>
-    using ensured_range_value_t = mnv_t<std::ranges::range_value_t<T>>;
+    using ensured_range_value_t = look_trough_t<std::ranges::range_value_t<T>>;
 
     // helper to get inner value type of smth like a vector of vector of T
     // we also translate any nullable to the inner type
@@ -307,19 +309,49 @@ namespace detail
         return t.has_value() ? t.get().size() : 0;
     }
 
-    
+
+
+
+
     template<class T>
-    requires (!is_nullable_like<T>)
-    auto ensure_value(T && t)
+    decltype(auto) ensure_value(T && t)
     {
-        return std::forward<T>(t);
+        using decayed = std::decay_t<T>;
+        if constexpr(is_nullable_like<decayed>)
+        {
+            using inner_value_type = typename decayed::value_type;
+            if constexpr( is_express_layout_desire<inner_value_type>)
+            {
+                //static_assert(sparrow::mpl::dependent_false<T>::value, "cannot ensure value of nullable<express_layout_desire<T>>");
+                return std::forward<T>(t).get().get();
+            }
+            else
+            {
+                return std::forward<T>(t).get();
+            }
+        }
+        else if constexpr(is_express_layout_desire<decayed>)
+        {
+            using inner_value_type = typename decayed::value_type;
+            if constexpr(is_nullable_like<inner_value_type>)
+            {
+                return std::forward<T>(t).get().get();
+            }
+            else
+            {
+                return std::forward<T>(t).get();
+            }
+        }
+        else{
+            return std::forward<T>(t);
+        }
     }
 
-    template<is_nullable_like T>
-    auto ensure_value(T && t)
-    {
-       return std::forward<T>(t).get();
-    }
+
+
+
+
+
 
     template<std::ranges::range T>
     requires(is_nullable_like< std::ranges::range_value_t<T>>)
@@ -343,18 +375,22 @@ namespace detail
         return {};
     }
 
+
+
     template<class T>
-    requires(!is_nullable_like<std::decay_t<std::ranges::range_value_t<T>>>)
-    T ensure_value_range(T && t)
+    requires(is_plain_value_type<std::ranges::range_value_t<T>>)
+    decltype(auto) ensure_value_range(T && t)
     {
         return std::forward<T>(t);
     }
 
     template<class T>
-    requires(is_nullable_like<std::decay_t<std::ranges::range_value_t<T>>>)
-    auto ensure_value_range(T && t)
+    requires(!is_plain_value_type<std::ranges::range_value_t<T>>)
+    decltype(auto) ensure_value_range(T && t)
     {
-        return t | std::views::transform([](auto && v) { return v.get(); });
+        return t | std::views::transform([](auto && v) { 
+            return ensure_value(std::forward<decltype(v)>(v));
+        });
     }
 
     template <typename T>
