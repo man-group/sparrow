@@ -54,8 +54,7 @@ namespace sparrow
         if (index >= size())
         {
             std::ostringstream oss117;
-            oss117 << "Index " << index << "is greater or equal to size of array ("
-                << size() << ")";
+            oss117 << "Index " << index << "is greater or equal to size of array (" << size() << ")";
             throw std::out_of_range(oss117.str());
         }
         return array_element(*p_array, index);
@@ -65,7 +64,7 @@ namespace sparrow
     {
         return array_element(*p_array, index);
     }
-    
+
     array::const_reference array::front() const
     {
         SPARROW_ASSERT_TRUE(!empty());
@@ -88,15 +87,17 @@ namespace sparrow
         return copy;
     }
 
-    array array::slice_view(size_type start, size_type end) const 
+    array array::slice_view(size_type start, size_type end) const
     {
         SPARROW_ASSERT_TRUE(start <= end);
         const arrow_proxy& arrow_proxy_copy = get_arrow_proxy();
-        ArrowSchema as = arrow_proxy_copy.schema();
-        ArrowArray ar = arrow_proxy_copy.array();
-        ar.offset = static_cast<int64_t>(start);
-        ar.length = static_cast<int64_t>(end - start);
-        return {std::move(ar), std::move(as)};
+        ArrowSchema* as = new ArrowSchema;
+        *as = arrow_proxy_copy.schema();
+        ArrowArray* ar = new ArrowArray;
+        *ar = arrow_proxy_copy.array();
+        ar->offset = static_cast<int64_t>(start);
+        ar->length = static_cast<int64_t>(end - start);
+        return {ar, as};
     }
 
     arrow_proxy& array::get_arrow_proxy()
