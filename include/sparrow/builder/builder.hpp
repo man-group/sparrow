@@ -70,30 +70,38 @@ template<class T, class ... OPTION_FLAGS>
 auto build(T&& t, OPTION_FLAGS&& ... )
 {
     // for toplevel build calls, the layout policy is determined by the type itself
-    // later on, the layout policy is determined by the **parents** range_value_t
-    using layout_policy = detail::type_to_layout_flag_t<T>;
+    using decayed_t = std::decay_t<T>;
+    using layout_policy = detail::layout_flag_t<decayed_t>;
     using option_flags_type = sparrow::mpl::typelist<std::decay_t<OPTION_FLAGS>...>;
-    return detail::builder<T, layout_policy, option_flags_type>::create(std::forward<T>(t));
+    
+    if constexpr(detail::is_express_layout_desire<decayed_t>)
+    {   
+        // directely unpack
+        using value_type = typename decayed_t::value_type;
+        return detail::builder<value_type, layout_policy, option_flags_type>::create(
+            std::forward<T>(t).get()
+        );
+    }
+    else if constexpr(detail::is_nullable_like<T>)
+    {
+        static_assert(mpl::dependent_false<T>::value, "toplevel type must not be nullable");
+    }
+    else
+    {
+        return detail::builder<T, layout_policy, option_flags_type>::create(std::forward<T>(t)); 
+    }
 }
 
 namespace detail
 {
 
 // this is called by the nested recursive calls
-template<class PARENT_T, class T, class ... OPTION_FLAGS>
+template<class LAYOUT_POLICY, class T, class ... OPTION_FLAGS>
 auto build_impl(T&& t, [[maybe_unused]] sparrow::mpl::typelist<OPTION_FLAGS...> typelist)
 {
-    using layout_policy = detail::type_to_layout_flag_t<PARENT_T>;
     using option_flags_type = sparrow::mpl::typelist<OPTION_FLAGS...>;
-    return builder<T, layout_policy, option_flags_type>::create(std::forward<T>(t));
+    return builder<T, LAYOUT_POLICY, option_flags_type>::create(std::forward<T>(t));
 }
-
-
-
-template <class T>
-concept translates_to_dict_encoded = 
-    sparrow::mpl::is_type_instance_of_v<T, dict_encode>
-;
 
 
 template <class T>
@@ -168,6 +176,7 @@ struct builder<T, dont_enforce_layout, OPTION_FLAGS>
 template< translate_to_variable_sized_list_layout T, class OPTION_FLAGS>
 struct builder<T, dont_enforce_layout, OPTION_FLAGS>
 {
+    using raw_value_type = std::ranges::range_value_t<T>;
 
     using type = std::conditional_t<
         mpl::contains<large_list_flag_t>(OPTION_FLAGS{}),
@@ -187,7 +196,10 @@ struct builder<T, dont_enforce_layout, OPTION_FLAGS>
             return get_size_save(l);
         });
 
-        auto typed_array = build_impl<T>(flat_list_view, OPTION_FLAGS{});
+        // when the raw_value_type is a "express layout desire" we need to
+        // propagate this information to the builder, so it can handle the
+        using layout_policy_type = layout_flag_t<raw_value_type>;
+        auto typed_array = build_impl<layout_policy_type>(flat_list_view, OPTION_FLAGS{});
         auto detyped_array = array(std::move(typed_array));
  
         return type(
@@ -202,17 +214,23 @@ template< translate_to_fixed_sized_list_layout T, class OPTION_FLAGS>
 struct builder<T, dont_enforce_layout, OPTION_FLAGS>
 {
     using type = sparrow::fixed_sized_list_array;
-    constexpr static std::size_t list_size = std::tuple_size_v<mnv_t<std::ranges::range_value_t<T>>>;
+    constexpr static std::size_t list_size = std::tuple_size_v<look_trough_t<std::ranges::range_value_t<T>>>;
     using raw_value_type = std::ranges::range_value_t<T>;
 
     template<class U>
     static type create(U && t)
     {
         auto flat_list_view = std::ranges::views::join(ensure_value_range(t));
+        
+
+        // when the raw_value_type is a "express layout desire" we need to
+        // propagate this information to the builder, so it can handle the
+        using layout_policy_type = layout_flag_t<raw_value_type>;
+
 
         return type(
             static_cast<std::uint64_t>(list_size), 
-            array(build_impl<T>(flat_list_view, OPTION_FLAGS{})),
+            array(build_impl<layout_policy_type>(flat_list_view, OPTION_FLAGS{})),
             where_null(t)
         );
     }
@@ -237,8 +255,9 @@ struct builder<T, dont_enforce_layout, OPTION_FLAGS>{
             }); 
 
 
-            //using tuple_element_type= std::tuple_element_t<decltype(i)::value, tuple_type>;
-            detyped_children[decltype(i)::value] = array(build_impl<T>(tuple_i_col, OPTION_FLAGS{}));
+            using tuple_element_type = std::tuple_element_t<decltype(i)::value, tuple_type>;
+            using layout_policy_type = layout_flag_t<tuple_element_type>;
+            detyped_children[decltype(i)::value] = array(build_impl<layout_policy_type>(tuple_i_col, OPTION_FLAGS{}));
         });
 
         return type(
@@ -292,7 +311,9 @@ struct builder<T, dont_enforce_layout, OPTION_FLAGS>
                 return variant.index() == decltype(i)::value ? 
                     std::get<type_at_index>(variant) : type_at_index{};
             });
-            detyped_children[decltype(i)::value] = array(build_impl<T>(type_i_col,  OPTION_FLAGS{}));
+
+            using layout_policy_type = layout_flag_t<type_at_index>;
+            detyped_children[decltype(i)::value] = array(build_impl<layout_policy_type>(type_i_col,  OPTION_FLAGS{}));
         });
 
         // type-ids
@@ -310,54 +331,50 @@ struct builder<T, dont_enforce_layout, OPTION_FLAGS>
 
 
 
-template< translates_to_dict_encoded T, class OPTION_FLAGS>
-struct builder<T, OPTION_FLAGS, enforce_dict_encoded_layout>
+template< class T, class OPTION_FLAGS>
+struct builder<T, enforce_dict_encoded_layout,OPTION_FLAGS>
 {
-    // using key_type = dict_dict_encoded_key_t<std::decay_t<T>>;
-    // using type = sparrow::dictionary_encoded_array<key_type>;
-    // // keep the nulls
-    // using raw_range_value_type = std::ranges::range_value_t<untagged_type>;
+    using key_type = std::uint64_t;
+    using type = sparrow::dictionary_encoded_array<key_type>;
+    // keep the nulls
+    using raw_range_value_type = std::ranges::range_value_t<T>;
 
-    // template<class U>
-    // static type create(U && tagged)
-    // {   
-    //     auto t = untag(std::forward<U>(tagged));
-    //     key_type key = 0;
-    //     std::map<raw_range_value_type, key_type, nested_less<raw_range_value_type>> value_map;
-    //     std::vector<raw_range_value_type> values;
-    //     std::vector<key_type> keys;
-    //     for(const auto& v : t)
-    //     {
-    //         auto find_res = value_map.find(v);
-    //         if(find_res == value_map.end())
-    //         {
-    //             value_map.insert({v, key});
-    //             values.push_back(v);
-    //             keys.push_back(key);
-    //             ++key;
-    //         }
-    //         else
-    //         {
-    //             keys.push_back(find_res->second);
-    //         }
+    template<class U>
+    static type create(U && t)
+    {   
+        key_type key = 0;
+        std::map<raw_range_value_type, key_type, nested_less<raw_range_value_type>> value_map;
+        std::vector<raw_range_value_type> values;
+        std::vector<key_type> keys;
+        for(const auto& v : t)
+        {
+            auto find_res = value_map.find(v);
+            if(find_res == value_map.end())
+            {
+                value_map.insert({v, key});
+                values.push_back(v);
+                keys.push_back(key);
+                ++key;
+            }
+            else
+            {
+                keys.push_back(find_res->second);
+            }
             
-    //     }
-    //     auto keys_buffer = u8_buffer<key_type>(keys);
+        }
+        auto keys_buffer = u8_buffer<key_type>(keys);
 
-    //     auto values_array = build_impl(values, OPTION_FLAGS{});
-    //     using values_array_type = std::decay_t<decltype(values_array)>;
+        // since we do not support dict[dict or dict[run_end 
+        // we can hard code the layout policy here
+        using layout_policy_type = dont_enforce_layout;
 
-    //     static_assert(std::is_same_v<values_array_type, sparrow::string_array>);
+        auto values_array = build_impl<layout_policy_type>(values, OPTION_FLAGS{});
 
-    //     auto values_array_detyped = array(std::move(values_array));
-
-    //     return type(
-    //         std::move(keys_buffer),
-    //         std::move(values_array_detyped)
-    //     );
-    // }
-
-
+        return type(
+            std::move(keys_buffer),
+            array(std::move(values_array))
+        );
+    }
 };
 
 

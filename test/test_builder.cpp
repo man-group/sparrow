@@ -23,12 +23,6 @@
 
 namespace sparrow
 {
-
-    template<class T>
-    void sanity_check(T && /*t*/)
-    {
-    }
-
     // to keep everything very short for very deep nested types
     template<class T>
     using nt = nullable<T>;
@@ -44,7 +38,6 @@ namespace sparrow
             {   
                 std::vector<float> v{1.0, 2.0, 3.0};
                 auto arr = sparrow::build(v);
-                sanity_check(arr);
                 REQUIRE_EQ(arr.size(), 3);
                 CHECK_EQ(arr[0].value(), 1.0);
                 CHECK_EQ(arr[1].value(), 2.0);
@@ -55,7 +48,6 @@ namespace sparrow
             {   
                 std::vector<nt<double>> v{1.0, 2.0, sparrow::nullval, 3.0};
                 auto arr = sparrow::build(v);
-                sanity_check(arr);
                 REQUIRE_EQ(arr.size(), 4);
                 REQUIRE(arr[0].has_value());
                 REQUIRE(arr[1].has_value());
@@ -76,7 +68,6 @@ namespace sparrow
             {   
                 std::vector<std::vector<float>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
                 auto arr = sparrow::build(v);
-                sanity_check(arr);
 
                 REQUIRE_EQ(arr.size(), 2);
                 REQUIRE_EQ(arr[0].value().size(), 3);
@@ -98,7 +89,8 @@ namespace sparrow
                     {{1.2f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f}},
                     {{7.0f, 8.0f, 9.0f}, {10.0f, 11.0f, 12.0f}}
                 };
-                sanity_check(sparrow::build(v));
+                auto arr = sparrow::build(v);
+                REQUIRE_EQ(arr.size(), 2);
             }
             SUBCASE("options")
             {   
@@ -129,7 +121,8 @@ namespace sparrow
                     {3.5f, 4},
                     {5.5f, 6}
                 };
-                sanity_check(sparrow::build(v));
+                auto arr = sparrow::build(v);
+                REQUIRE_EQ(arr.size(), 3);
             }
             // struct<float, float> (with nulls)
             {   
@@ -138,7 +131,8 @@ namespace sparrow
                     sparrow::nullval,
                     std::tuple<float, int>{5.5f, 6}
                 };
-                sanity_check(sparrow::build(v));
+                auto arr = sparrow::build(v);
+                REQUIRE_EQ(arr.size(), 3);
             }
             // struct<list[float], uint16>
             {   
@@ -147,7 +141,8 @@ namespace sparrow
                     {{4.0f, 5.0f, 6.0f}, 2},
                     {{7.0f, 8.0f, 9.0f}, 3}
                 };
-                sanity_check(sparrow::build(v));
+                auto arr = sparrow::build(v);
+                REQUIRE_EQ(arr.size(), 3);
             }
         }
         
@@ -160,7 +155,8 @@ namespace sparrow
                     {4.0f, 5.0f, 6.0f},
                     {7.0f, 8.0f, 9.0f}
                 };
-                sanity_check(sparrow::build(v));
+                auto arr = sparrow::build(v);
+                REQUIRE_EQ(arr.size(), 3);
             }
             // fixed_sized_list<float, 3>  with nulls
             {   
@@ -169,7 +165,8 @@ namespace sparrow
                     sparrow::nullval,
                     std::array<nt<float>, 3>{7.0f, 8.0f, sparrow::nullval}
                 };
-                sanity_check(sparrow::build(v));
+                auto arr = sparrow::build(v);
+                
             }
         }
         
@@ -184,7 +181,6 @@ namespace sparrow
                     "!",
                 };
                 auto arr = sparrow::build(v);
-                sanity_check(arr);
                 REQUIRE_EQ(arr.size(), 4);
                 CHECK_EQ(arr[0].value(), "hello");
                 CHECK_EQ(arr[1].value(), " ");
@@ -200,7 +196,6 @@ namespace sparrow
                     "world!"
                 };
                 auto arr = sparrow::build(v);
-                sanity_check(arr);
                 REQUIRE_EQ(arr.size(), 3);
                 REQUIRE(arr[0].has_value());
                 REQUIRE_FALSE(arr[1].has_value());
@@ -226,7 +221,6 @@ namespace sparrow
                 auto arr = sparrow::build(v);
                 using arr_type = std::decay_t<decltype(arr)>;
                 static_assert(std::is_same_v<arr_type, sparrow::sparse_union_array>);
-                sanity_check(arr);
 
                 REQUIRE_EQ(arr.size(), 3);
                 CHECK_NULLABLE_VARIANT_EQ(arr[0], 1);
@@ -234,136 +228,7 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
             }
         }
-        // TEST_CASE("dict-encoded")
-        // {   
-        //     SUBCASE("simple")
-        //     {   
-        //         lazy_dict_encoded_vector<std::string> v{"he", "world","w","world","world!", " he","he"};
-        //         auto arr = sparrow::build(v);
-        //         using key_type = typename std::decay_t<decltype(v)>::key_type;
-        //         static_assert(std::is_same_v<decltype(arr), sparrow::dictionary_encoded_array<key_type>>);
-
-        //         REQUIRE_EQ(arr.size(), 7);
-        //         CHECK_NULLABLE_VARIANT_EQ(arr[0], std::string_view("he"));
-        //         CHECK_NULLABLE_VARIANT_EQ(arr[1], std::string_view("world"));
-        //         CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("w"));
-        //         CHECK_NULLABLE_VARIANT_EQ(arr[3], std::string_view("world"));
-        //         CHECK_NULLABLE_VARIANT_EQ(arr[4], std::string_view("world!"));
-        //         CHECK_NULLABLE_VARIANT_EQ(arr[5], std::string_view(" he"));
-        //         CHECK_NULLABLE_VARIANT_EQ(arr[6], std::string_view("he"));
-
-        //     }
-        //     SUBCASE("dict-endcoded-as-child")
-        //     {
-        //         // list[dict-encoded[string]]
-        //         std::vector<lazy_dict_encoded_vector<std::string>> v{
-        //            {"hello", "the", "world"},
-        //            {"hello", "world"},
-        //            {"world", "!"}
-        //         }; 
-
-        //         auto arr = sparrow::build(v);
-            
-
-
-        //         using array_type = std::decay_t<decltype(arr)>;
-        //         static_assert(std::is_same_v<array_type, sparrow::list_array>);
-        //         sanity_check(arr);
-        //         // check that the children are dict-encoded
-        //         REQUIRE(arr.raw_flat_array()->is_dictionary());
-
-        //         REQUIRE_EQ(arr.size(), 3);
-
-        //         CHECK_EQ(arr[0].value().size(), 3);
-        //         CHECK_EQ(arr[1].value().size(), 2);
-        //         CHECK_EQ(arr[2].value().size(), 2);
-
-        //     }
-        // }
-        TEST_CASE("new-dict-encoded")
-        {
-            SUBCASE("dict-is-outer")
-            {
-                //dict[int (key==default)] /  (jeah does not make sense that layout)
-                {
-                    dict_encode<std::vector<int>> v{
-                        std::vector<int>{1, 1, 1, 2}
-                    };
-                }
-                // dict[string]
-                {
-                    dict_encode<std::vector<std::string>> v{
-                        std::vector<std::string>{"hello", "world", "!"}
-                    };
-                }
-                // dict[struct[int, float]] / dict encoded with struct-array as dict
-                {
-                    dict_encode<std::vector<std::tuple<int, float>>> v{
-                        std::vector<std::tuple<int, float>>{
-                                std::tuple<int, float>{1, 1.0f},
-                                std::tuple<int, float>{2, 2.0f},
-                                std::tuple<int, float>{3, 3.0f}
-                        }
-                    };
-                }
-                // dict[list[int]] / dict encoded with list-array as dict
-                {
-                    dict_encode<std::vector<std::vector<int>>> v{
-                        std::vector<std::vector<int>>{
-                            {1, 2, 3},
-                            {4, 5, 6},
-                            {7, 8, 9}
-                        }
-                    };
-                }
-
-                // dict[dict[int]
-                {
-                    dict_encode<dict_encode<std::vector<int>>> v{
-                        dict_encode<std::vector<int>>{
-                            std::vector<int>{1, 2, 3}
-                        }
-                    };
-                }
-                // illegal
-                {   
-                    // std::vector<dict_encode<int>> 
-                }
-            }
-            SUBCASE("dict-is-inner")
-            {
-                // list[dict[int]]
-                {
-                    std::vector<dict_encode<std::vector<int>>> v{
-                        dict_encode<std::vector<int>>{
-                            std::vector<int>{1, 2, 3}
-                        },
-                        dict_encode<std::vector<int>>{
-                            std::vector<int>{4, 5, 6}
-                        },
-                        dict_encode<std::vector<int>>{
-                            std::vector<int>{7, 8, 9}
-                        }
-                    };
-                }
-                // fixed-size-list[dict[int]]
-                {
-                    std::vector<dict_encode<std::array<int, 3>>> v{
-                        dict_encode<std::array<int, 3>>{
-                            std::array<int, 3>{1, 2, 3}
-                        },
-                        dict_encode<std::array<int, 3>>{
-                            std::array<int, 3>{4, 5, 6}
-                        },
-                        dict_encode<std::array<int, 3>>{
-                            std::array<int, 3>{7, 8, 9}
-                        }
-                    };
-                }
-            }
-        }
-
-
+    
     }
 
 }

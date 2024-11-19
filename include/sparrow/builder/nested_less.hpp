@@ -39,6 +39,15 @@ namespace sparrow
             {
                 return a < b;
             }
+        };  
+
+        template<is_express_layout_desire T>
+        struct nested_less<T>
+        {
+            bool operator()(const T& a, const T& b) const
+            {
+                return nested_less<typename T::value_type>{}(a.get(), b.get());
+            }
         };
 
         // nullables
@@ -80,7 +89,7 @@ namespace sparrow
             {
                 constexpr std::size_t N = std::tuple_size_v<T>;
                 bool is_less = false;
-                return exitable_for_each_index<N>([&](auto i)
+                exitable_for_each_index<N>([&](auto i)
                 {
                     constexpr std::size_t index = decltype(i)::value;
                     using tuple_element_type = std::decay_t<std::tuple_element_t<decltype(i)::value, T>>;
@@ -94,7 +103,7 @@ namespace sparrow
                         is_less = true; 
                         return false;   // break
                     }
-                    // a > b
+                    // a >= b
                     else if(nested_less<tuple_element_type>{}(b_val, a_val))
                     {
                         is_less = false;
@@ -103,6 +112,7 @@ namespace sparrow
                     // a == b
                     else
                     {
+                        is_less = false;
                         return true;    // continue
                     }
                 });

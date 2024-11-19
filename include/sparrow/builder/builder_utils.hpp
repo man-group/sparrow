@@ -40,10 +40,13 @@ public:
     // default constructor
     express_layout_desire() = default;
 
-    express_layout_desire(T&& v)
-        : m_value(std::forward<T>(v))
+    // variadic perfect forwarding constructor
+    template<class... Args>
+    express_layout_desire(Args&& ... args)
+        : m_value(std::forward<Args>(args)...)
     {
     }
+
     const T& get() const
     {
         return m_value;
@@ -127,12 +130,8 @@ namespace detail
     template<class T>
     using decayed_range_value_t = std::decay_t<std::ranges::range_value_t<T>>;
 
-    template<class T>
-    using type_to_layout_flag_t = 
-        std::conditional_t<is_dict_encode<decayed_range_value_t<T>>, enforce_dict_encoded_layout,
-        std::conditional_t<is_run_end_encode<decayed_range_value_t<T>>, enforce_run_length_layout,
-        dont_enforce_layout>
-    >;
+
+
 
 
 
@@ -160,8 +159,8 @@ namespace detail
         template<class F>
         static bool call(F&& f)
         {
-            const bool contiunue_for_each = f(std::integral_constant<std::size_t, INDEX>{});
-            if(contiunue_for_each)
+            const bool continue_ = f(std::integral_constant<std::size_t, INDEX>{});
+            if(continue_)
             {
                 return exitable_for_each_index_impl<INDEX + 1, SIZE>::call(std::forward<F>(f));
             }
@@ -263,6 +262,17 @@ namespace detail
 
 
 
+    template<class T>
+     using layout_flag_t = std::conditional_t<
+        is_dict_encode<mnv_t<T>>, 
+        enforce_dict_encoded_layout,
+        std::conditional_t<
+            is_run_end_encode<mnv_t<T>>,
+            enforce_run_length_layout,
+            dont_enforce_layout
+        >
+    >;
+
 
 
     // dict_encoded<nullable<T> -> T
@@ -272,14 +282,14 @@ namespace detail
     // **BUT**
     // nullable<dict_encoded<T>> -> nullable<dict_encoded<T>> 
     template<class T>
-    using look_trough_t = mnv_t<meldv_t<T>>;
+    using look_trough_t = meldv_t<mnv_t<meldv_t<T>>>;
 
     // test inplace
     static_assert(std::is_same_v<look_trough_t<int>, int>);
     static_assert(std::is_same_v<look_trough_t<nullable<int>>, int>);
     static_assert(std::is_same_v<look_trough_t<dict_encode<int>>, int>);
     static_assert(std::is_same_v<look_trough_t<dict_encode<nullable<int>>>, int>);
-    static_assert(std::is_same_v<look_trough_t<nullable<dict_encode<int>>>, dict_encode<int>>);
+    static_assert(std::is_same_v<look_trough_t<nullable<dict_encode<int>>>, int>);
 
 
 
@@ -295,20 +305,31 @@ namespace detail
 
 
     // a save way to return .size from
-    // a possibly nullable object
+    // a possibly nullable object or "express layout desire object"
     template<class T>
-    requires(!is_nullable_like<T>)
-    auto get_size_save(const T& t)
+    std::size_t get_size_save(T&& t)
     {
-        return t.size();
+        using decayed = std::decay_t<T>;
+        if constexpr(is_nullable_like<decayed>)
+        {
+            if (t.has_value())
+            {
+                return get_size_save(t.get());
+            }
+            else
+            {
+                return 0;
+            }
+        }
+        else if constexpr(is_express_layout_desire<decayed>)
+        {
+            return get_size_save(t.get());
+        }
+        else
+        {
+            return static_cast<std::size_t>(t.size());
+        }
     }
-
-    template<is_nullable_like T>
-    auto get_size_save(const T& t)
-    {
-        return t.has_value() ? t.get().size() : 0;
-    }
-
 
 
 
@@ -347,12 +368,6 @@ namespace detail
         }
     }
 
-
-
-
-
-
-
     template<std::ranges::range T>
     requires(is_nullable_like< std::ranges::range_value_t<T>>)
     std::vector<std::size_t> where_null(T && t)
@@ -374,8 +389,6 @@ namespace detail
     {
         return {};
     }
-
-
 
     template<class T>
     requires(is_plain_value_type<std::ranges::range_value_t<T>>)
