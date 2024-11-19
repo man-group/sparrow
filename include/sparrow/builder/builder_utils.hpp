@@ -383,12 +383,36 @@ namespace detail
         return result;
     }
     
+
+
     template<class T>
-    requires(!is_nullable_like< std::ranges::range_value_t<T>>)
+    requires(
+        is_express_layout_desire< std::ranges::range_value_t<T>> &&
+        is_nullable_like< typename std::ranges::range_value_t<T>::value_type >
+    )
+    std::vector<std::size_t>  where_null(T && t)
+    {
+        std::vector<std::size_t> result;
+        for (std::size_t i = 0; i < t.size(); ++i)
+        {
+            if (!(t[i].get().has_value()))
+            {
+                result.push_back(i);
+            }
+        }
+        return result;
+    }
+    
+    template<class T>
     std::array<std::size_t,0> where_null(T && )
     {
         return {};
     }
+
+
+
+
+
 
     template<class T>
     requires(is_plain_value_type<std::ranges::range_value_t<T>>)

@@ -295,38 +295,45 @@ namespace sparrow
             }
             SUBCASE("struct[dict[string], int]")
             {   
-                SUBCASE("without-nulls")
+                SUBCASE("with-nulls")
                 {
-                    std::vector<std::tuple<
-                        dict_encode<std::string>, int
-                    >> v {
-                        std::tuple<dict_encode<std::string>, int>{
-                            dict_encode<std::string>{"hello"}, 1
+                    std::vector<nullable<std::tuple<dict_encode<nullable<std::string>>,int>>> v 
+                    {
+                        std::tuple<dict_encode<nullable<std::string>>, int>{
+                            dict_encode<nullable<std::string>>{"hello"}, 1
                         },
-                        std::tuple<dict_encode<std::string>, int>{
-                            dict_encode<std::string>{"hello"}, 2
+                        nullable<std::tuple<dict_encode<nullable<std::string>>, int>>{},
+                        std::tuple<dict_encode<nullable<std::string>>, int>{
+                            dict_encode<nullable<std::string>>{"!"}, 3
                         },
-                        std::tuple<dict_encode<std::string>, int>{
-                            dict_encode<std::string>{"!"}, 3
+                        std::tuple<dict_encode<nullable<std::string>>, int>{
+                            dict_encode<nullable<std::string>>{
+                                nullable<std::string>{}
+                            }, 4
                         }
                     };
                     auto arr = sparrow::build(v);
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::struct_array>);
-                    REQUIRE_EQ(arr.size(), 3);
+                    REQUIRE_EQ(arr.size(), 4);
 
-                    for(std::size_t i = 0; i < 3; ++i)
-                    {
-                        auto arr_val = arr[i];
-                        REQUIRE(arr_val.has_value());
-                        REQUIRE_EQ(arr_val.value().size(), 2);
-                        CHECK_NULLABLE_VARIANT_EQ(arr_val.value()[0], std::string_view(std::get<0>(v[i]).get()));
-                        CHECK_NULLABLE_VARIANT_EQ(arr_val.value()[1], std::get<1>(v[i]));
-                    }
-                }
-                SUBCASE("with-nulls")
-                {
+                    // has values
+                    REQUIRE(arr[0].has_value());
+                    REQUIRE_FALSE(arr[1].has_value());
+                    REQUIRE(arr[2].has_value());
 
+
+                    // check the values
+                    CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::string_view("hello"));
+                    CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], int(1));
+
+                    CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::string_view("!"));
+                    CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[1], int(3));
+
+                    REQUIRE(arr[3].has_value());
+                    CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[1], int(4));
+                    REQUIRE_FALSE(arr[3].value()[0].has_value());
+                    
                 }
             }
         
