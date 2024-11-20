@@ -112,7 +112,7 @@ namespace detail
 
     struct dont_enforce_layout{};
     struct enforce_dict_encoded_layout{};
-    struct enforce_run_length_layout{};
+    struct enforce_run_end_encoded_layout{};
 
     template<class T>
     concept is_dict_encode = sparrow::mpl::is_type_instance_of_v<T, dict_encode>;
@@ -268,7 +268,7 @@ namespace detail
         enforce_dict_encoded_layout,
         std::conditional_t<
             is_run_end_encode<mnv_t<T>>,
-            enforce_run_length_layout,
+            enforce_run_end_encoded_layout,
             dont_enforce_layout
         >
     >;
@@ -338,30 +338,9 @@ namespace detail
     decltype(auto) ensure_value(T && t)
     {
         using decayed = std::decay_t<T>;
-        if constexpr(is_nullable_like<decayed>)
+        if constexpr(is_nullable_like<decayed> || is_express_layout_desire<decayed>)
         {
-            using inner_value_type = typename decayed::value_type;
-            if constexpr( is_express_layout_desire<inner_value_type>)
-            {
-                //static_assert(sparrow::mpl::dependent_false<T>::value, "cannot ensure value of nullable<express_layout_desire<T>>");
-                return std::forward<T>(t).get().get();
-            }
-            else
-            {
-                return std::forward<T>(t).get();
-            }
-        }
-        else if constexpr(is_express_layout_desire<decayed>)
-        {
-            using inner_value_type = typename decayed::value_type;
-            if constexpr(is_nullable_like<inner_value_type>)
-            {
-                return std::forward<T>(t).get().get();
-            }
-            else
-            {
-                return std::forward<T>(t).get();
-            }
+            return ensure_value(std::forward<T>(t).get());
         }
         else{
             return std::forward<T>(t);
@@ -408,8 +387,6 @@ namespace detail
     {
         return {};
     }
-
-
 
 
 

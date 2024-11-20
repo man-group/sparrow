@@ -33,6 +33,7 @@
 #include <sparrow/array.hpp>
 #include <sparrow/builder/builder_utils.hpp>
 #include <sparrow/builder/nested_less.hpp>
+#include <sparrow/builder/nested_eq.hpp>
 #include <sparrow/utils/ranges.hpp>
 #include <tuple>
 #include <utility> 
@@ -150,7 +151,9 @@ concept translate_to_union_layout =
     // value type must be a variant-like type
     // *NOTE* we don't check for nullable here, as we want to handle nullable variants
     // as in the arrow spec, the nulls are handled by the elements **in** the variant
-    variant_like<std::ranges::range_value_t<T>>
+    variant_like<
+        std::ranges::range_value_t<T>
+    >
 ;
 
 // there are two layouts which need to be enforced / forbidden
@@ -187,11 +190,8 @@ struct builder<T, dont_enforce_layout, OPTION_FLAGS>
     template<class U>
     static type create(U && t)
     {
-        //using raw_value_type = std::ranges::range_value_t<T>;
-
         auto flat_list_view = std::ranges::views::join(ensure_value_range(t));
         
-
         auto sizes = t | std::views::transform([](const auto& l){ 
             return get_size_save(l);
         });
@@ -320,7 +320,7 @@ struct builder<T, dont_enforce_layout, OPTION_FLAGS>
         auto type_id_range = t | std::views::transform([](const auto& v){
             return static_cast<std::uint8_t>(v.index());
         });
-        u8_buffer<std::uint8_t> type_id_buffer(type_id_range);
+        sparrow::u8_buffer<std::uint8_t> type_id_buffer(type_id_range);
 
         return type(
             std::move(detyped_children),
@@ -362,7 +362,7 @@ struct builder<T, enforce_dict_encoded_layout,OPTION_FLAGS>
             }
             
         }
-        auto keys_buffer = u8_buffer<key_type>(keys);
+        auto keys_buffer = sparrow::u8_buffer<key_type>(keys);
 
         // since we do not support dict[dict or dict[run_end 
         // we can hard code the layout policy here
@@ -377,6 +377,60 @@ struct builder<T, enforce_dict_encoded_layout,OPTION_FLAGS>
     }
 };
 
+
+
+template< class T, class OPTION_FLAGS>
+struct builder<T, enforce_run_end_encoded_layout, OPTION_FLAGS>
+{
+    using type = sparrow::run_end_encoded_array;
+    using raw_range_value_type = std::ranges::range_value_t<T>;
+
+    template<class U>
+    static type create(U && t)
+    {   
+        using value_type = std::decay_t<raw_range_value_type>;
+
+        std::vector<value_type> values{};
+        std::vector<std::size_t> acc_run_lengths{};
+
+        const auto eq = nested_eq<value_type>{};
+
+        // accumulate the run lengths
+        std::size_t i = 0;
+        for(const auto& v : t)
+        {   
+            // first value
+            if(i == 0)
+            {
+                values.push_back(v);
+            }
+            // rest
+            else
+            {
+                if(!eq(values.back(), v))
+                {
+                    acc_run_lengths.push_back(i);
+                    values.push_back(v);
+                }
+            }
+            ++i;
+        }
+        acc_run_lengths.push_back(i);
+       
+
+        auto run_length_typed_array = primitive_array<std::size_t>(acc_run_lengths);
+
+        // since we do not support dict[dict or dict[run_end
+        // we can hard code the layout policy here
+        using layout_policy_type = dont_enforce_layout;
+        auto values_array = build_impl<layout_policy_type>(values, OPTION_FLAGS{});
+
+        return type(
+            array(std::move(run_length_typed_array)),
+            array(std::move(values_array))
+        );
+    }
+};
 
 
 } // namespace detail

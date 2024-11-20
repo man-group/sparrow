@@ -32,19 +32,19 @@ namespace sparrow
     TEST_SUITE("builder")
     {
 
-        TEST_CASE("dict-encoded")
+        TEST_CASE("run-end-encoded")
         {
     
-            SUBCASE("dict[int]") 
+            SUBCASE("run_end_encode[int]") 
             {
                 SUBCASE("no-nulls")
                 {
-                    dict_encode<std::vector<int>> v{
+                    run_end_encode<std::vector<int>> v{
                         std::vector<int>{1, 1, 1, 2}
                     };
                     auto arr = sparrow::build(v);
                     using array_type = std::decay_t<decltype(arr)>;
-                    static_assert(std::is_same_v<array_type, sparrow::dictionary_encoded_array<std::uint64_t>>);
+                    static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
                     REQUIRE_EQ(arr.size(), 4);
                     CHECK_NULLABLE_VARIANT_EQ(arr[0], 1);
@@ -55,7 +55,7 @@ namespace sparrow
 
                 SUBCASE("with-nulls")
                 {
-                    dict_encode<std::vector<nullable<int>>> v{
+                    run_end_encode<std::vector<nullable<int>>> v{
                         std::vector<nullable<int>>{
                             1, 1, sparrow::nullval, 2
                         }
@@ -63,7 +63,7 @@ namespace sparrow
                     auto arr = sparrow::build(v);
 
                     using array_type = std::decay_t<decltype(arr)>;
-                    static_assert(std::is_same_v<array_type, sparrow::dictionary_encoded_array<std::uint64_t>>);
+                    static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
                     REQUIRE_EQ(arr.size(), 4);
                     CHECK_NULLABLE_VARIANT_EQ(arr[0], 1);
                     CHECK_NULLABLE_VARIANT_EQ(arr[1], 1);
@@ -71,15 +71,17 @@ namespace sparrow
                     CHECK_NULLABLE_VARIANT_EQ(arr[3], 2);
                 }
             }
-            SUBCASE("dict[string]")
+            
+            
+            SUBCASE("run_end_encode[string]")
             {
 
-                dict_encode<std::vector<nullable<std::string>>> v{
+                run_end_encode<std::vector<nullable<std::string>>> v{
                     std::vector<nullable<std::string>>{"hello", "world", "hello", "world", nullable<std::string>{}}
                 };
                 auto arr = sparrow::build(v);
                 using array_type = std::decay_t<decltype(arr)>;
-                static_assert(std::is_same_v<array_type, sparrow::dictionary_encoded_array<std::uint64_t>>);
+                static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
                 REQUIRE_EQ(arr.size(), 5);
                 CHECK_NULLABLE_VARIANT_EQ(arr[0], std::string_view("hello"));
@@ -89,14 +91,15 @@ namespace sparrow
                 CHECK(!arr[4].has_value());
                 
             }
-            SUBCASE("dict[struct[int,float]]")
+            
+            SUBCASE("run_end_encode[struct[int,float]]")
             {   
                 using tuple_type = std::tuple<nullable<int>, std::uint16_t>;
                 using nullable_tuple_type = nullable<tuple_type>;
                 using vector_type = std::vector<nullable_tuple_type>;
 
 
-                dict_encode<vector_type> v{
+                run_end_encode<vector_type> v{
                     vector_type{
                         nullable_tuple_type{tuple_type{nullable<int>{1}, 1}},
                         nullable_tuple_type{},
@@ -108,7 +111,7 @@ namespace sparrow
 
                 auto arr = sparrow::build(v);
                 using array_type = std::decay_t<decltype(arr)>;
-                static_assert(std::is_same_v<array_type, sparrow::dictionary_encoded_array<std::uint64_t>>);
+                static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
 
                 REQUIRE_EQ(arr.size(), 4);
@@ -136,9 +139,9 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr3.value()[1], std::uint16_t(42));
 
             }
-            SUBCASE("dict[list[int]]")
+            SUBCASE("run_end_encode[list[int]]")
                 {
-                    dict_encode<std::vector<std::vector<int>>> v{
+                    run_end_encode<std::vector<std::vector<int>>> v{
                         std::vector<std::vector<int>>{
                             {1, 2, 3},
                             {4, 5, 6}
@@ -146,7 +149,7 @@ namespace sparrow
                     };
                     auto arr = sparrow::build(v);
                     using array_type = std::decay_t<decltype(arr)>;
-                    static_assert(std::is_same_v<array_type, sparrow::dictionary_encoded_array<std::uint64_t>>);
+                    static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
 
                     REQUIRE_EQ(arr.size(), 2);
@@ -158,9 +161,9 @@ namespace sparrow
                 }
             
 
-            SUBCASE("dict[union[int, string]]")
+            SUBCASE("run_end_encode[union[int, string]]")
             {
-                dict_encode<std::vector<std::variant<int, std::string>>> v{
+                run_end_encode<std::vector<std::variant<int, std::string>>> v{
                     std::vector<std::variant<int, std::string>>{
                         int(1),
                         std::string("hello"),
@@ -170,7 +173,7 @@ namespace sparrow
                 };
                 auto arr = sparrow::build(v);
                 using array_type = std::decay_t<decltype(arr)>;
-                static_assert(std::is_same_v<array_type, sparrow::dictionary_encoded_array<std::uint64_t>>);
+                static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
                 REQUIRE_EQ(arr.size(), 4);
                 CHECK_NULLABLE_VARIANT_EQ(arr[0], 1);
@@ -180,18 +183,18 @@ namespace sparrow
             }
 
 
-            SUBCASE("list[dict[int]]")
+            SUBCASE("list[run_end_encode[int]]")
             {
                 SUBCASE("without-nulls")
                 {
-                    std::vector<dict_encode<std::vector<int>>> v{
-                        dict_encode<std::vector<int>>{
+                    std::vector<run_end_encode<std::vector<int>>> v{
+                        run_end_encode<std::vector<int>>{
                             std::vector<int>{1, 2, 3}
                         },
-                        dict_encode<std::vector<int>>{
+                        run_end_encode<std::vector<int>>{
                             std::vector<int>{4, 5}
                         },
-                        dict_encode<std::vector<int>>{
+                        run_end_encode<std::vector<int>>{
                             std::vector<int>{6}
                         }
                     };
@@ -202,7 +205,7 @@ namespace sparrow
 
 
                     // ensure that the child is dict-encoded
-                    REQUIRE(arr.raw_flat_array()->is_dictionary());
+                    REQUIRE(arr.raw_flat_array()->data_type() == data_type::RUN_ENCODED);
 
                     for(std::size_t i = 0; i < 3; ++i)
                     {
@@ -218,15 +221,15 @@ namespace sparrow
                 SUBCASE("with-nulls")
                 {
         
-                    std::vector<nullable<dict_encode<std::vector<nullable<int>>>>> v{
-                        dict_encode<std::vector<nullable<int>>>{
+                    std::vector<nullable<run_end_encode<std::vector<nullable<int>>>>> v{
+                        run_end_encode<std::vector<nullable<int>>>{
                             std::vector<nullable<int>>{1, 2, 3}
                         },
                         sparrow::nullval,
-                        dict_encode<std::vector<nullable<int>>>{
+                        run_end_encode<std::vector<nullable<int>>>{
                             std::vector<nullable<int>>{6}
                         },
-                        dict_encode<std::vector<nullable<int>>>{
+                        run_end_encode<std::vector<nullable<int>>>{
                             std::vector<nullable<int>>{nullable<int>{}}
                         },
                     };
@@ -237,7 +240,7 @@ namespace sparrow
 
 
                     // ensure that the child is dict-encoded
-                    REQUIRE(arr.raw_flat_array()->is_dictionary());
+                    REQUIRE(arr.raw_flat_array()->data_type() == data_type::RUN_ENCODED);
 
                     REQUIRE(arr[0].has_value());
                     REQUIRE_FALSE(arr[1].has_value());
@@ -256,19 +259,19 @@ namespace sparrow
 
                 }
             }
-            SUBCASE("fixed-size-list[dict[string]]")
+            SUBCASE("fixed-size-list[run_end_encode[string]]")
             {
 
                 SUBCASE("without-nulls")
                 {
-                    std::vector<dict_encode<std::array<std::string, 3>>> v{
-                        dict_encode<std::array<std::string, 3>>{
+                    std::vector<run_end_encode<std::array<std::string, 3>>> v{
+                        run_end_encode<std::array<std::string, 3>>{
                             std::array<std::string, 3>{"one", "two", "three"}
                         },
-                        dict_encode<std::array<std::string, 3>>{
+                        run_end_encode<std::array<std::string, 3>>{
                             std::array<std::string, 3>{"one", "two", "three"}
                         },
-                        dict_encode<std::array<std::string, 3>>{
+                        run_end_encode<std::array<std::string, 3>>{
                             std::array<std::string, 3>{"one", "two", "four"}
                         }
                     };
@@ -278,7 +281,7 @@ namespace sparrow
 
 
                     // ensure that the child is dict-encoded
-                    REQUIRE(arr.raw_flat_array()->is_dictionary());
+                    REQUIRE(arr.raw_flat_array()->data_type() == data_type::RUN_ENCODED);
 
                     for(std::size_t i = 0; i < 3; ++i)
                     {
@@ -294,12 +297,12 @@ namespace sparrow
                 SUBCASE("with-nulls")
                 {
         
-                    std::vector<nullable<dict_encode<std::array<std::string, 3>>>> v{
-                        dict_encode<std::array<std::string, 3>>{
+                    std::vector<nullable<run_end_encode<std::array<std::string, 3>>>> v{
+                        run_end_encode<std::array<std::string, 3>>{
                             std::array<std::string, 3>{"one", "two", "three"}
                         },
                         sparrow::nullval,
-                        dict_encode<std::array<std::string, 3>>{
+                        run_end_encode<std::array<std::string, 3>>{
                             std::array<std::string, 3>{"one", "two", "three"}
                         }
                     };
@@ -309,28 +312,28 @@ namespace sparrow
 
 
                     // ensure that the child is dict-encoded
-                    REQUIRE(arr.raw_flat_array()->is_dictionary());
+                    REQUIRE(arr.raw_flat_array()->data_type() == data_type::RUN_ENCODED);
 
                     REQUIRE(arr[0].has_value());
                     REQUIRE_FALSE(arr[1].has_value());
                     REQUIRE(arr[2].has_value());
                 }   
             }           
-            SUBCASE("struct[dict[string], int]")
+            SUBCASE("struct[run_end_encode[string], int]")
             {   
                 SUBCASE("with-nulls")
                 {
-                    std::vector<nullable<std::tuple<dict_encode<nullable<std::string>>,int>>> v 
+                    std::vector<nullable<std::tuple<run_end_encode<nullable<std::string>>,int>>> v 
                     {
-                        std::tuple<dict_encode<nullable<std::string>>, int>{
-                            dict_encode<nullable<std::string>>{"hello"}, 1
+                        std::tuple<run_end_encode<nullable<std::string>>, int>{
+                            run_end_encode<nullable<std::string>>{"hello"}, 1
                         },
-                        nullable<std::tuple<dict_encode<nullable<std::string>>, int>>{},
-                        std::tuple<dict_encode<nullable<std::string>>, int>{
-                            dict_encode<nullable<std::string>>{"!"}, 3
+                        nullable<std::tuple<run_end_encode<nullable<std::string>>, int>>{},
+                        std::tuple<run_end_encode<nullable<std::string>>, int>{
+                            run_end_encode<nullable<std::string>>{"!"}, 3
                         },
-                        std::tuple<dict_encode<nullable<std::string>>, int>{
-                            dict_encode<nullable<std::string>>{
+                        std::tuple<run_end_encode<nullable<std::string>>, int>{
+                            run_end_encode<nullable<std::string>>{
                                 nullable<std::string>{}
                             }, 4
                         }
@@ -359,16 +362,16 @@ namespace sparrow
                     
                 }
             }
-            SUBCASE("union[[dict[string], int]]")
+            SUBCASE("union[[run_end_encode[string], int]]")
             {
                 SUBCASE("without-nulls")
                 {   
-                    using variant_type = std::variant<dict_encode<std::string>, int>;
+                    using variant_type = std::variant<run_end_encode<std::string>, int>;
 
 
                     std::vector<variant_type> v{
                         variant_type{
-                            dict_encode<std::string>{"hello"}
+                            run_end_encode<std::string>{"hello"}
                         },
                         variant_type{
                             int(42)
@@ -385,7 +388,7 @@ namespace sparrow
                 SUBCASE("with-nulls")
                 {   
                     using variant_type = std::variant<
-                        dict_encode<nullable<std::string>>, 
+                        run_end_encode<nullable<std::string>>, 
                         nullable<int>
                     >;
 

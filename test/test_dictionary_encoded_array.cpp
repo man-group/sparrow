@@ -162,7 +162,7 @@ namespace sparrow
         }
 
         TEST_CASE("const_iterator")
-        {
+        { 
             const layout_type dict(make_arrow_proxy());
             auto iter = dict.cbegin();
             CHECK_EQ(*iter, dict[0]);

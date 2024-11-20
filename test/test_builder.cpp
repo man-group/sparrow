@@ -228,7 +228,6 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
             }
         }
-    
     }
 
 }
