@@ -14,7 +14,7 @@
 
 #include "sparrow/builder/builder_utils.hpp"
 #include "sparrow/builder/nested_less.hpp"
-
+#include "sparrow/builder/nested_eq.hpp"
 #include "test_utils.hpp"
 
 #include <vector>
@@ -85,7 +85,7 @@ namespace sparrow
         TEST_CASE("nullable-eq")
         {
             using type = nullable<int>;
-            using eq_type = detail::nested_less<type>;
+            using eq_type = detail::nested_eq<type>;
 
             CHECK(eq_type{}(type{}, type{}));
             CHECK_FALSE(eq_type{}(type{}, type{0}));
@@ -100,7 +100,7 @@ namespace sparrow
 
             {
                 using tuple_type = std::tuple<int>;
-                using eq_type = detail::nested_less<tuple_type>;
+                using eq_type = detail::nested_eq<tuple_type>;
                 CHECK(eq_type{}(tuple_type{0}, tuple_type{0}));
                 CHECK(eq_type{}(tuple_type{1}, tuple_type{1}));
                 CHECK_FALSE(eq_type{}(tuple_type{1}, tuple_type{0}));
@@ -108,10 +108,10 @@ namespace sparrow
             }
             {
                 using tuple_type = std::tuple<int,int>;
-                using eq_type = detail::nested_less<tuple_type>;
+                using eq_type = detail::nested_eq<tuple_type>;
                 CHECK(eq_type{}(tuple_type{0, 0}, tuple_type{0, 0}));
-                CHECK_FALSE(eq_type{}(tuple_type{0, 1}, tuple_type{0, 1}));
-                CHECK_FALSE(eq_type{}(tuple_type{1, 0}, tuple_type{1, 0}));
+                CHECK_FALSE(eq_type{}(tuple_type{0, 1}, tuple_type{1, 0}));
+                CHECK_FALSE(eq_type{}(tuple_type{1, 0}, tuple_type{1, 1}));
                 CHECK(eq_type{}(tuple_type{1, 1}, tuple_type{1, 1}));
             }
             
@@ -121,7 +121,7 @@ namespace sparrow
         {
             using tuple_type = std::tuple<nullable<int>, float>;
             using nullable_tuple_type = nullable<tuple_type>;
-            using eq_type = detail::nested_less<nullable_tuple_type>;
+            using eq_type = detail::nested_eq<nullable_tuple_type>;
 
             nullable_tuple_type a{};
             nullable_tuple_type b{tuple_type{nullable<int>{}, 0.0f}};
