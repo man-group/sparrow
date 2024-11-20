@@ -23,18 +23,10 @@
 
 namespace sparrow
 {
-
-    // to keep everything very short for very deep nested types
-    template<class T>
-    using nt = nullable<T>;
-
-
     TEST_SUITE("builder")
     {
-
         TEST_CASE("run-end-encoded")
         {
-    
             SUBCASE("run_end_encode[int]") 
             {
                 SUBCASE("no-nulls")
@@ -203,8 +195,7 @@ namespace sparrow
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::list_array>);
 
-
-                    // ensure that the child is dict-encoded
+                    // ensure that the child is run_end_encoded
                     REQUIRE(arr.raw_flat_array()->data_type() == data_type::RUN_ENCODED);
 
                     for(std::size_t i = 0; i < 3; ++i)
@@ -239,7 +230,7 @@ namespace sparrow
                     static_assert(std::is_same_v<array_type, sparrow::list_array>);
 
 
-                    // ensure that the child is dict-encoded
+                    // ensure that the child is run_end_encoded
                     REQUIRE(arr.raw_flat_array()->data_type() == data_type::RUN_ENCODED);
 
                     REQUIRE(arr[0].has_value());
@@ -280,7 +271,7 @@ namespace sparrow
                     static_assert(std::is_same_v<array_type, sparrow::fixed_sized_list_array>);
 
 
-                    // ensure that the child is dict-encoded
+                    // ensure that the child is run_end_encoded
                     REQUIRE(arr.raw_flat_array()->data_type() == data_type::RUN_ENCODED);
 
                     for(std::size_t i = 0; i < 3; ++i)
@@ -311,7 +302,7 @@ namespace sparrow
                     static_assert(std::is_same_v<array_type, sparrow::fixed_sized_list_array>);
 
 
-                    // ensure that the child is dict-encoded
+                    // ensure that the child is run_end_encoded
                     REQUIRE(arr.raw_flat_array()->data_type() == data_type::RUN_ENCODED);
 
                     REQUIRE(arr[0].has_value());
