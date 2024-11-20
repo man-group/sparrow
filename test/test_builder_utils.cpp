@@ -29,8 +29,6 @@ namespace sparrow
     };
 }
 
-
-// specialize std::variant_alternative_t for my_variant
 template<std::size_t I>
 struct std::variant_alternative<I, sparrow::my_variant>
 {
@@ -131,10 +129,8 @@ namespace sparrow{
             static_assert(detail::is_express_layout_desire<run_end_encode<int>>);
             static_assert(!detail::is_express_layout_desire<nullable<run_end_encode<int>>>);
 
-
             // decayed_range_value_t
             static_assert(std::is_same_v<detail::decayed_range_value_t<std::vector<int>>, int>);
-
 
             // is tuple_like
             static_assert(detail::tuple_like<std::tuple<int>>);
@@ -145,13 +141,11 @@ namespace sparrow{
             static_assert(!detail::tuple_like<std::vector<int>>);
             static_assert(!detail::tuple_like<int>);
 
-
             // all elements the same
             static_assert(detail::all_elements_same<std::tuple<int, int, int>>);
             static_assert(detail::all_elements_same<std::tuple<int, int>>);
             static_assert(detail::all_elements_same<std::tuple<int>>);
             static_assert(!detail::all_elements_same<std::tuple<int, double>>);
-    
 
             // variant like
             static_assert(detail::variant_like<std::variant<int>>);
@@ -161,12 +155,10 @@ namespace sparrow{
             static_assert(!detail::variant_like<std::tuple<int>>);
             static_assert(detail::variant_like<my_variant>);
 
-
             // maybe_nullable_value_type
             static_assert(std::is_same_v<detail::mnv_t<nullable<int>>, int>);
             static_assert(std::is_same_v<detail::mnv_t<int>, int>);
             static_assert(std::is_same_v<detail::mnv_t<nullable<nullable<int>>>, nullable<int>>);
-
 
             // maybe_express_layout_desire_value_type
             static_assert(std::is_same_v<detail::meldv_t<run_end_encode<int>>, int>);
@@ -180,8 +172,7 @@ namespace sparrow{
             static_assert(std::is_same_v<detail::layout_flag_t<nullable<run_end_encode<int>>>, detail::enforce_run_end_encoded_layout>);
             static_assert(std::is_same_v<detail::layout_flag_t<dict_encode<int>>, detail::enforce_dict_encoded_layout>);
             static_assert(std::is_same_v<detail::layout_flag_t<nullable<dict_encode<int>>>, detail::enforce_dict_encoded_layout>);
-
-
+ 
             // look trough
             static_assert(std::is_same_v<detail::look_trough_t<std::vector<nullable<int>>>, std::vector<nullable<int>>>);
             static_assert(std::is_same_v<detail::look_trough_t<nullable<std::vector<int>>>, std::vector<int>>);
@@ -209,7 +200,6 @@ namespace sparrow{
         }       
         TEST_CASE("where-null")
         {
-
             SUBCASE("vector-of-nullables")
             {
                 std::vector<nullable<int>> v{1, 2, sparrow::nullval, 4};
@@ -247,7 +237,6 @@ namespace sparrow{
                 CHECK_EQ(res.size(), 1);
                 CHECK_EQ(res[0], 1);
             }
-            
         }
     }
 }

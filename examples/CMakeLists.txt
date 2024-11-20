@@ -3,7 +3,7 @@ SET(EXAMPLES
     typed_array_low_level.cpp
     typed_array_high_level.cpp
     record_batch_example.cpp
-    ultimate_builder.cpp
+    array_builder.cpp
 )
 
 # custom target to run all examples

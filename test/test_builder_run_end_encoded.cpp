@@ -64,7 +64,6 @@ namespace sparrow
                 }
             }
             
-            
             SUBCASE("run_end_encode[string]")
             {
 
@@ -131,27 +130,26 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr3.value()[1], std::uint16_t(42));
 
             }
-            SUBCASE("run_end_encode[list[int]]")
-                {
-                    run_end_encode<std::vector<std::vector<int>>> v{
-                        std::vector<std::vector<int>>{
-                            {1, 2, 3},
-                            {4, 5, 6}
-                        }
-                    };
-                    auto arr = sparrow::build(v);
-                    using array_type = std::decay_t<decltype(arr)>;
-                    static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
+        SUBCASE("run_end_encode[list[int]]")
+            {
+                run_end_encode<std::vector<std::vector<int>>> v{
+                    std::vector<std::vector<int>>{
+                        {1, 2, 3},
+                        {4, 5, 6}
+                    }
+                };
+                auto arr = sparrow::build(v);
+                using array_type = std::decay_t<decltype(arr)>;
+                static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
 
-                    REQUIRE_EQ(arr.size(), 2);
+                REQUIRE_EQ(arr.size(), 2);
 
-                    CHECK_EQ(std::get<nullable<list_value>>(arr[0]).value().size(), 3);
-                    CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[0], 1);
-                    CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[1], 2);
-                    CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[2], 3);
-                }
-            
+                CHECK_EQ(std::get<nullable<list_value>>(arr[0]).value().size(), 3);
+                CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[0], 1);
+                CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[1], 2);
+                CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[2], 3);
+            }
 
             SUBCASE("run_end_encode[union[int, string]]")
             {
@@ -173,7 +171,6 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[2], 2);
                 CHECK_NULLABLE_VARIANT_EQ(arr[3], std::string_view("world"));
             }
-
 
             SUBCASE("list[run_end_encode[int]]")
             {
@@ -229,7 +226,6 @@ namespace sparrow
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::list_array>);
 
-
                     // ensure that the child is run_end_encoded
                     REQUIRE(arr.raw_flat_array()->data_type() == data_type::RUN_ENCODED);
 
@@ -241,18 +237,14 @@ namespace sparrow
                     CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], int(1));
                     CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], int(2));
                     CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[2], int(3));
-
                     CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], int(6));
-
                     REQUIRE(arr[3].has_value());
                     REQUIRE_EQ(arr[3].value().size(), 1);
                     CHECK(!arr[3].value()[0].has_value());
-
                 }
             }
             SUBCASE("fixed-size-list[run_end_encode[string]]")
             {
-
                 SUBCASE("without-nulls")
                 {
                     std::vector<run_end_encode<std::array<std::string, 3>>> v{
@@ -287,7 +279,6 @@ namespace sparrow
                 }
                 SUBCASE("with-nulls")
                 {
-        
                     std::vector<nullable<run_end_encode<std::array<std::string, 3>>>> v{
                         run_end_encode<std::array<std::string, 3>>{
                             std::array<std::string, 3>{"one", "two", "three"}
@@ -339,7 +330,6 @@ namespace sparrow
                     REQUIRE_FALSE(arr[1].has_value());
                     REQUIRE(arr[2].has_value());
 
-
                     // check the values
                     CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::string_view("hello"));
                     CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], int(1));
@@ -358,8 +348,6 @@ namespace sparrow
                 SUBCASE("without-nulls")
                 {   
                     using variant_type = std::variant<run_end_encode<std::string>, int>;
-
-
                     std::vector<variant_type> v{
                         variant_type{
                             run_end_encode<std::string>{"hello"}
@@ -383,7 +371,6 @@ namespace sparrow
                         nullable<int>
                     >;
 
-
                     std::vector<variant_type> v{
                         variant_type{nullable<std::string>{"hello"}},
                         variant_type{nullable<int>{}},
@@ -398,8 +385,7 @@ namespace sparrow
                     CHECK_NULLABLE_VARIANT_EQ(arr[0], std::string_view("hello"));
 
                     CHECK(!arr[1].has_value());
-                    CHECK(!arr[2].has_value());
-                    
+                    CHECK(!arr[2].has_value()); 
                 }
             }
         }

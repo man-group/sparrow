@@ -24,10 +24,6 @@
 namespace sparrow
 {
 
-    // to keep everything very short for very deep nested types
-    template<class T>
-    using nt = nullable<T>;
-
     TEST_SUITE("builder")
     {
         TEST_CASE("dict-encoded")
