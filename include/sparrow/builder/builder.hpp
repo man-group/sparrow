@@ -416,8 +416,7 @@ struct builder<T, enforce_run_end_encoded_layout, OPTION_FLAGS>
             ++i;
         }
         acc_run_lengths.push_back(i);
-       
-
+    
         auto run_length_typed_array = primitive_array<std::size_t>(acc_run_lengths);
 
         // since we do not support dict[dict or dict[run_end

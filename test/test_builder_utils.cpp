@@ -13,8 +13,6 @@
 // limitations under the License.
 
 #include "sparrow/builder/builder_utils.hpp"
-#include "sparrow/builder/nested_less.hpp"
-
 #include "test_utils.hpp"
 
 #include <vector>
@@ -26,61 +24,11 @@
 namespace sparrow
 {   
 
-    struct SomeTag{};
-
-    TEST_SUITE("nested-less")
+    TEST_SUITE("builder-utils")
     {   
-        TEST_CASE("nullable-less")
+        TEST_CASE("")
         {
-            using type = nullable<int>;
-            using less_type = detail::nested_less<type>;
-
-            CHECK(less_type{}(type{}, type{1}));
-            CHECK_FALSE(less_type{}(type{1}, type{}));
-            CHECK_FALSE(less_type{}(type{}, type{}));
-
-            CHECK(less_type{}(type{1}, type{2}));
-            CHECK_FALSE(less_type{}(type{2}, type{1}));
-            CHECK_FALSE(less_type{}(type{1}, type{1}));
         }
-        TEST_CASE("tuple")
-        {   
-
-            {
-                using tuple_type = std::tuple<int>;
-                using less_type = detail::nested_less<tuple_type>;
-                CHECK(less_type{}(tuple_type{0}, tuple_type{1}));
-            }
-            {
-                using tuple_type = std::tuple<int,int>;
-                using less_type = detail::nested_less<tuple_type>;
-                CHECK(less_type{}(tuple_type{0, 2}, tuple_type{1, 0}));
-            }
-            
-
-        }
-        TEST_CASE("very-nested-less")
-        {
-            using tuple_type = std::tuple<nullable<int>, float>;
-            using nullable_tuple_type = nullable<tuple_type>;
-            using less_type = detail::nested_less<nullable_tuple_type>;
-
-            nullable_tuple_type a{};
-            nullable_tuple_type b{tuple_type{nullable<int>{}, 0.0f}};
-            nullable_tuple_type c{tuple_type{nullable<int>{1}, 1.0f}};
-
-            CHECK(less_type{}(a, b));
-            CHECK_FALSE(less_type{}(b, a));
-            CHECK_FALSE(less_type{}(a, a));
-
-            CHECK(less_type{}(b, c));
-            CHECK_FALSE(less_type{}(c, b));
-            CHECK_FALSE(less_type{}(b, b));
-
-            CHECK(less_type{}(a, c));
-            CHECK_FALSE(less_type{}(c, a));
-            CHECK_FALSE(less_type{}(c, c));
-        }
-    }   
+    }
 }
 

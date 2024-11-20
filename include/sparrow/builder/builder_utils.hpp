@@ -203,6 +203,35 @@ namespace detail
         return check_tuple_elements<T>(std::make_index_sequence<std::tuple_size_v<T>>());
     }
 
+
+    template <typename T>
+    concept variant_like = 
+        // Must not be a reference
+        !std::is_reference_v<T> && 
+
+        // Must have an index() member function returning a size_t
+        requires(const T& v) {
+            { v.index() } -> std::convertible_to<std::size_t>;
+        } &&
+
+        // Must work with std::visit
+        requires(T v) {
+            std::visit([](auto&&) {}, v); // Use a generic lambda to test visitation
+        } &&
+
+        // Must allow std::get with an index
+        requires(T v) {
+            { std::get<0>(v) }; // Access by index
+        } &&
+
+        // Must allow std::get with a type
+        requires(T v) {
+            { std::get<typename std::variant_alternative<0, T>::type>(v) }; // Access by type
+        }
+    ;
+
+
+
     template <typename T>
     concept tuple_like = !std::is_reference_v<T>
         && requires(T t) {
@@ -225,8 +254,6 @@ namespace detail
         all_elements_same_impl<T>(
             std::make_index_sequence<std::tuple_size_v<T>>{}
         );
-
-
 
 
     template<class T>
@@ -315,9 +342,6 @@ namespace detail
         }
     }
 
-
-
-
     template<class T>
     decltype(auto) ensure_value(T && t)
     {
@@ -346,7 +370,6 @@ namespace detail
         return result;
     }
     
-
 
     template<class T>
     requires(
@@ -388,31 +411,6 @@ namespace detail
         });
     }
 
-    template <typename T>
-    concept variant_like = 
-        // Must not be a reference
-        !std::is_reference_v<T> && 
-
-        // Must have an index() member function returning a size_t
-        requires(const T& v) {
-            { v.index() } -> std::convertible_to<std::size_t>;
-        } &&
-
-        // Must work with std::visit
-        requires(T v) {
-            std::visit([](auto&&) {}, v); // Use a generic lambda to test visitation
-        } &&
-
-        // Must allow std::get with an index
-        requires(T v) {
-            { std::get<0>(v) }; // Access by index
-        } &&
-
-        // Must allow std::get with a type
-        requires(T v) {
-            { std::get<typename std::variant_alternative<0, T>::type>(v) }; // Access by type
-        }
-    ;
 
 
 } // namespace detail
