@@ -41,7 +41,7 @@ namespace sparrow
         };
     }
 
-    class run_end_encoded_array 
+    class run_end_encoded_array
     {
     public:
 
@@ -50,7 +50,7 @@ namespace sparrow
         using inner_value_type = array_traits::inner_value_type;
         using iterator = run_encoded_array_iterator<false>;
         using const_iterator = run_encoded_array_iterator<true>;
-        
+
         SPARROW_API explicit run_end_encoded_array(arrow_proxy proxy);
 
         template <class ... Args>
@@ -98,7 +98,7 @@ namespace sparrow
 
         arrow_proxy m_proxy;
         std::uint64_t m_encoded_length;
-        
+
         cloning_ptr<array_wrapper> p_acc_lengths_array;
         cloning_ptr<array_wrapper> p_encoded_values_array;
         acc_length_ptr_variant_type m_acc_lengths;
@@ -116,7 +116,7 @@ namespace sparrow
      * run_end_encoded_array implementation *
      ****************************************/
 
-    inline run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy) 
+    inline run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
         , m_encoded_length(m_proxy.children()[0].length())
         , p_acc_lengths_array(array_factory(m_proxy.children()[0].view()))
@@ -157,7 +157,7 @@ namespace sparrow
             [run_index](auto&& acc_lengths_ptr) -> std::uint64_t
             {
                 if(run_index == 0)
-                {   
+                {
                     return static_cast<std::uint64_t>(acc_lengths_ptr[run_index]);
                 }
                 else
@@ -169,7 +169,7 @@ namespace sparrow
         );
         return ret;
     }
-    
+
     inline arrow_proxy& run_end_encoded_array::get_arrow_proxy()
     {
         return m_proxy;
