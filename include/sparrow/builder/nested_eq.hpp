@@ -63,13 +63,8 @@ namespace sparrow
                 {
                     return true;
                 }
-                // a is null, b is not
-                else if (!a.has_value())
-                {
-                    return false;
-                }
-                // a is not null, b is
-                else if (!b.has_value())
+                // a or b is null
+                else if (!a.has_value() || !b.has_value())
                 {
                     return false;
                 }
