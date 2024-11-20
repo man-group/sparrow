@@ -39,7 +39,7 @@ namespace sparrow
     }
     void print_value(const array_traits::const_reference & v)
     {
-        std::visit([](const auto& v){ print_value(v); }, v);
+        std::visit([]( auto&& v){ print_value(v); }, v);
     }
     void print_value(const array_traits::value_type & v)
     {
