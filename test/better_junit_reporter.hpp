@@ -136,7 +136,7 @@ void JUnitReporter::test_run_start()
     }
 }
 
-static void print_failures(const sparrow::JUnitTestSuites& test_suites)
+inline void print_failures(const sparrow::JUnitTestSuites& test_suites)
 {
     for (const auto& test_suite : test_suites.m_test_suites)
     {
