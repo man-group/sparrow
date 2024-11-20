@@ -1,3 +1,8 @@
+/** @example array_builder.cpp
+ * Example of usage of the generic builder
+ */
+
+
 #include <vector>
 #include <string>
 #include <array>
@@ -9,13 +14,11 @@
 // namespace alias
 namespace sp = sparrow;
 
-template<class T>
-using nt = sp::nullable<T>;
 
 int main()
 {   
 
-
+    
     // arr[float]
     {   
         std::vector<float> v{1.0, 2.0, 3.0, 4.0, 5.0};
@@ -23,7 +26,7 @@ int main()
     }
     // arr[double] (with nulls)
     {   
-        std::vector<nt<double>> v{1.0, 2.0, 3.0, sp::nullval, 5.0};
+        std::vector<sp::nullable<double>> v{1.0, 2.0, 3.0, sp::nullval, 5.0};
         [[maybe_unused]] auto arr = sp::build(v);
     }
     // list[float]
@@ -50,7 +53,7 @@ int main()
     }
     // struct<float, float> (with nulls)
     {   
-        std::vector<nt<std::tuple<float, int>>> v{
+        std::vector<sp::nullable<std::tuple<float, int>>> v{
             std::tuple<float, int>{1.5f, 2},
             sp::nullval,
             std::tuple<float, int>{5.5f, 6}
@@ -77,10 +80,10 @@ int main()
     }
     // fixed_sized_list<float, 3>  with nulls
     {   
-        std::vector<nt<std::array<nt<float>, 3>>> v{
-            std::array<nt<float>, 3>{1.0f, sp::nullval, 3.0f},
+        std::vector<sp::nullable<std::array<sp::nullable<float>, 3>>> v{
+            std::array<sp::nullable<float>, 3>{1.0f, sp::nullval, 3.0f},
             sp::nullval,
-            std::array<nt<float>, 3>{7.0f, 8.0f, sp::nullval}
+            std::array<sp::nullable<float>, 3>{7.0f, 8.0f, sp::nullval}
         };
         [[maybe_unused]] auto arr = sp::build(v);
     }

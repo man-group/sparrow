@@ -56,7 +56,12 @@ struct large_binary_flag_t{};
 // option flag to indicate the desire for large lists
 inline constexpr large_list_flag_t large_list_flag;
 
-// the toplevel build
+/**
+ * @brief  function to create a sparrow array from arbitrary  nested
+ * combinations of ranges, tuples, and nullable types, variants. 
+ * 
+ * 
+ */
 template<class T, class ... OPTION_FLAGS>
 auto build(T&& t, OPTION_FLAGS&& ... )
 {
@@ -314,10 +319,15 @@ struct builder<T, enforce_dict_encoded_layout,OPTION_FLAGS>
     template<class U>
     static type create(U && t)
     {   
+        const auto input_size = range_size(t);
         key_type key = 0;
         std::map<raw_range_value_type, key_type, nested_less<raw_range_value_type>> value_map;
         std::vector<raw_range_value_type> values;
         std::vector<key_type> keys;
+
+        values.reserve(input_size);
+        keys.reserve(input_size);
+
         for(const auto& v : t)
         {
             auto find_res = value_map.find(v);
@@ -360,8 +370,13 @@ struct builder<T, enforce_run_end_encoded_layout, OPTION_FLAGS>
     {   
         using value_type = std::decay_t<raw_range_value_type>;
 
+        const auto input_size = range_size(t);
+
         std::vector<value_type> values{};
         std::vector<std::size_t> acc_run_lengths{};
+
+        values.reserve(input_size);
+        acc_run_lengths.reserve(input_size);
 
         const auto eq = nested_eq<value_type>{};
 

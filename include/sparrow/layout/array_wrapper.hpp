@@ -34,8 +34,6 @@ namespace sparrow
         t.end();
         t.cbegin();
         t.cend();
-        //t.bitmap(); // NOPE 
-        //t.values(); // NOPE
     };
 
     namespace detail
