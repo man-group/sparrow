@@ -1,7 +1,7 @@
 # sparrow
 
 [![GHA Linux](https://github.com/man-group/sparrow/actions/workflows/linux.yml/badge.svg)](https://github.com/man-group/sparrow/actions/workflows/linux.yml)
-[![GHA OSX](https://github.com/man-group/sparrow/actions/workflows/osx.yml/badge.svg)](https://github.com/man-group/sparrowr/actions/workflows/osx.yml)
+[![GHA OSX](https://github.com/man-group/sparrow/actions/workflows/osx.yml/badge.svg)](https://github.com/man-group/sparrow/actions/workflows/osx.yml)
 [![GHA Windows](https://github.com/man-group/sparrow/actions/workflows/windows.yml/badge.svg)](https://github.com/man-group/sparrow/actions/workflows/windows.yml)
 [![GHA Docs](https://github.com/man-group/sparrow/actions/workflows/docs.yaml/badge.svg)](https://github.com/man-group/sparrow/actions/workflows/docs.yaml)
 
