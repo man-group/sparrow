@@ -45,3 +45,26 @@ namespace sparrow
     bool operator==(const list_value& lhs, const list_value& rhs);
 }
 
+#if defined(__cpp_lib_format)
+
+template <>
+struct std::formatter<sparrow::list_value>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const sparrow::list_value& list_value, std::format_context& ctx) const
+    {
+
+        return std::format_to(ctx.out(), "[size={}] TODO", list_value.size());
+        // for (std::size_t i = 0; i < list_value.size(); ++i)
+        // {
+        //     std::format_to(ctx.out(), "{}:{}", i, list_value[i]);
+        // }
+        // return ctx.out();
+    }
+};
+
+#endif

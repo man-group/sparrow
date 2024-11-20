@@ -17,11 +17,12 @@
 #include <cstddef>
 #include <ranges>
 
+#include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/layout/array_access.hpp"
+
 
 namespace sparrow
 {
@@ -102,6 +103,12 @@ namespace sparrow
 
         const_iterator cbegin() const;
         const_iterator cend() const;
+
+        [[nodiscard]] reference front();
+        [[nodiscard]] const_reference front() const;
+
+        [[nodiscard]] reference back();
+        [[nodiscard]] const_reference back() const;
 
         const_value_range values() const;
         const_bitmap_range bitmap() const;
@@ -229,6 +236,26 @@ namespace sparrow
         return const_iterator(ssize());
     }
 
+    inline auto null_array::front() -> reference
+    {
+        return *begin();
+    }
+
+    inline auto null_array::front() const -> const_reference
+    {
+        return *cbegin();
+    }
+
+    inline auto null_array::back() -> reference
+    {
+        return *(end() - 1);
+    }
+
+    inline auto null_array::back() const -> const_reference
+    {
+        return *(cend() - 1);
+    }
+
     inline auto null_array::values() const -> const_value_range
     {
         return std::ranges::subrange(const_value_iterator(0), const_value_iterator(ssize()));
@@ -259,3 +286,21 @@ namespace sparrow
         return lhs.size() == rhs.size();
     }
 }
+
+#if defined(__cpp_lib_format)
+
+template <>
+struct std::formatter<sparrow::null_array>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const sparrow::null_array& ar, std::format_context& ctx) const
+    {
+        return std::format_to(ctx.out(), "Null array [{}]", ar.size());
+    }
+};
+
+#endif

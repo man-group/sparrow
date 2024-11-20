@@ -926,6 +926,17 @@ namespace sparrow
                     }
                 }
             }
-        };
+        }
+        
+#if defined(__cpp_lib_format)
+        TEST_CASE_FIXTURE(variable_size_binary_fixture, "formatting")
+        {
+            const layout_type array(std::move(m_arrow_proxy));
+            const std::string formatted = std::format("{}", array);
+            constexpr std::string_view
+                expected = "String [name=test | size=9] <upon, null, time, I, null, writing, clean, code, now>";
+            CHECK_EQ(formatted, expected);
+        }
+#endif
     }
 }

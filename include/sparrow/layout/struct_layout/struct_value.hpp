@@ -14,6 +14,10 @@
 
 #pragma once
 
+#if defined(__cpp_lib_format)
+#    include <format>
+#endif
+
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/types/data_traits.hpp"
@@ -37,7 +41,7 @@ namespace sparrow
         const_reference operator[](size_type i) const;
 
     private:
-    
+
         const std::vector<child_ptr>* p_children = nullptr;
         size_type m_index = 0u;
     };
@@ -46,3 +50,29 @@ namespace sparrow
     bool operator==(const struct_value& lhs, const struct_value& rhs);
 }
 
+#if defined(__cpp_lib_format)
+
+template <>
+struct std::formatter<sparrow::struct_value>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const sparrow::struct_value& ar, std::format_context& ctx) const
+    {
+        std::format_to(ctx.out(), "<");
+        if (ar.size() == 0)
+        {
+            for (std::size_t i = 0; i < ar.size() - 1; ++i)
+            {
+                std::format_to(ctx.out(), "{}, ", ar[i]);
+            }
+        }
+        std::format_to(ctx.out(), "{}>", ar[ar.size() - 1]);
+        return ctx.out();
+    }
+};
+
+#endif

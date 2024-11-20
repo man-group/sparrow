@@ -38,15 +38,7 @@ TEST_SUITE("C Data Interface")
             children[0] = new ArrowArray();
             children[1] = new ArrowArray();
             ArrowArray* dictionary = new ArrowArray();
-            auto array = sparrow::make_arrow_array(
-                1,
-                0,
-                0,
-                buffers_dummy,
-                2,
-                children,
-                dictionary
-            );
+            auto array = sparrow::make_arrow_array(1, 0, 0, buffers_dummy, 2, children, dictionary);
 
             array.release(&array);
             CHECK_EQ(array.buffers, nullptr);
@@ -98,6 +90,16 @@ TEST_SUITE("C Data Interface")
             // CHECK_FALSE(sparrow::validate_format_with_arrow_array(sparrow::data_type::FIXED_SIZED_LIST,
             // array));
         }
+
+#if defined(__cpp_lib_format)
+        SUBCASE("formatting")
+        {
+            auto [array, schema] = make_sparrow_arrow_schema_and_array();
+            [[maybe_unused]] const auto format = std::format("{}", array);
+            // We don't check the result has it show the address of the object, which is not the same at each
+            // run of the test
+        }
+#endif
     }
 }
 

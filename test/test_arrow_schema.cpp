@@ -134,7 +134,6 @@ TEST_SUITE("C Data Interface")
             CHECK_NE(schema.private_data, nullptr);
         }
 
-
         SUBCASE("ArrowSchema release")
         {
             ArrowSchema** children = new ArrowSchema*[2];
@@ -237,5 +236,23 @@ TEST_SUITE("C Data Interface")
 
             compare_arrow_schema(schema, schema_copy);
         }
+
+#if defined(__cpp_lib_format)
+        SUBCASE("formatting")
+        {
+            const auto schema = sparrow::make_arrow_schema(
+                "format"s,
+                std::nullopt,
+                std::nullopt,
+                sparrow::ArrowFlag::DICTIONARY_ORDERED,
+                0,
+                nullptr,
+                nullptr
+            );
+            [[maybe_unused]] const auto format = std::format("{}", schema);
+            // We don't check the result has it show the address of the object, which is not the same at each
+            // run of the test
+        }
+#endif
     }
 }
