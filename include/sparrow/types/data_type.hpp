@@ -16,10 +16,31 @@
 
 #include <chrono>
 #include <version>
-
-
 #if defined(SPARROW_USE_DATE_POLYFILL)
+
 #    include <date/tz.h>
+
+#    if defined(__cpp_lib_format)
+#        include <format>
+
+template <>
+struct std::formatter<date::zoned_time<std::chrono::nanoseconds>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const date::zoned_time<std::chrono::nanoseconds>& date, std::format_context& ctx) const
+    {
+        std::ostringstream oss;
+        oss << date;
+        std::string date_str = oss.str();
+        return std::format_to(ctx.out(), "{}", date_str);
+    }
+};
+#    endif
+
 #else
 namespace date = std::chrono;
 #endif
@@ -470,7 +491,6 @@ namespace sparrow
         }
     }
 
-
     class list_value;
     class struct_value;
 
@@ -672,3 +692,108 @@ namespace sparrow
     template <class T>
     concept layout_offset = std::same_as<T, std::int32_t> || std::same_as<T, std::int64_t>;
 }
+
+#if defined(__cpp_lib_format)
+
+namespace std
+{
+    template <>
+    struct formatter<sparrow::data_type>
+    {
+        constexpr auto parse(std::format_parse_context& ctx)
+        {
+            return ctx.begin();  // Simple implementation
+        }
+
+        auto format(const sparrow::data_type& data_type, std::format_context& ctx) const
+        {
+            static const auto get_enum_name = [](sparrow::data_type dt) -> std::string_view
+            {
+                using enum sparrow::data_type;
+                switch (dt)
+                {
+                    case NA:
+                        return "N/A";
+                    case BOOL:
+                        return "bool";
+                    case UINT8:
+                        return "uint8";
+                    case INT8:
+                        return "int8";
+                    case UINT16:
+                        return "uint16";
+                    case INT16:
+                        return "int16";
+                    case UINT32:
+                        return "uint32";
+                    case INT32:
+                        return "int32";
+                    case UINT64:
+                        return "uint64";
+                    case INT64:
+                        return "int64";
+                    case HALF_FLOAT:
+                        return "float16";
+                    case FLOAT:
+                        return "float32";
+                    case DOUBLE:
+                        return "double";
+                    case STRING:
+                        return "String";
+                    case BINARY:
+                        return "Binary";
+                    case TIMESTAMP:
+                        return "Timestamp";
+                    case LIST:
+                        return "List";
+                    case LARGE_LIST:
+                        return "Large list";
+                    case LIST_VIEW:
+                        return "List view";
+                    case LARGE_LIST_VIEW:
+                        return "Large list view";
+                    case FIXED_SIZED_LIST:
+                        return "Fixed sized list";
+                    case STRUCT:
+                        return "Struct";
+                    case MAP:
+                        return "Map";
+                    case DENSE_UNION:
+                        return "Dense union";
+                    case SPARSE_UNION:
+                        return "Sparse union";
+                    case RUN_ENCODED:
+                        return "Run encoded";
+                    case DECIMAL:
+                        return "Decimal";
+                    case FIXED_WIDTH_BINARY:
+                        return "Fixed width binary";
+                    case STRING_VIEW:
+                        return "String view";
+                    case BINARY_VIEW:
+                        return "Binary view";
+                };
+                return "UNKNOWN";
+            };
+
+            return std::format_to(ctx.out(), "{}", get_enum_name(data_type));
+        }
+    };
+
+    template <>
+    struct formatter<sparrow::null_type>
+    {
+        constexpr auto parse(std::format_parse_context& ctx)
+        {
+            return ctx.begin();  // Simple implementation
+        }
+
+        auto format(const sparrow::null_type&, std::format_context& ctx) const
+        {
+            return std::format_to(ctx.out(), "null_type");
+        }
+    };
+
+}
+
+#endif

@@ -735,3 +735,16 @@ namespace sparrow
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 }
+
+// #if defined(__cpp_lib_format)
+
+// template <typename U>
+// struct std::formatter<sparrow::list_array, U> : std::formatter<sparrow::array, U>
+// {
+//     auto format(const sparrow::list_array& arr, U& ctx) -> decltype(ctx.out())
+//     {
+//         return std::formatter<sparrow::array, U>::format(arr, ctx);
+//     }
+// };
+
+// #endif

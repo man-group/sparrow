@@ -16,6 +16,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#if defined(__cpp_lib_format)
+#    include <format>
+#endif
 
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/c_interface.hpp"
@@ -150,4 +153,47 @@ namespace sparrow
         copy_array(source_array, source_schema, target);
         return target;
     }
-}
+
+};
+
+#if defined(__cpp_lib_format)
+
+template <>
+struct std::formatter<ArrowArray>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const ArrowArray& obj, std::format_context& ctx) const
+    {
+        std::string children_str = std::format("{}", static_cast<void*>(obj.children));
+        for (int i = 0; i < obj.n_children; ++i)
+        {
+            children_str += std::format("\n-{}", static_cast<void*>(obj.children[i]));
+        }
+
+        std::string buffer_str = std::format("{}", static_cast<void*>(obj.buffers));
+        for (int i = 0; i < obj.n_buffers; ++i)
+        {
+            buffer_str += std::format("\n\t- {}", obj.buffers[i]);
+        }
+
+        return std::format_to(
+            ctx.out(),
+            "ArrowArray - ptr address: {}\n- length: {}\n- null_count: {}\n- offset: {}\n- n_buffers: {}\n- buffers: {}\n- n_children: {}\n- children: {}\n- dictionary: {}\n",
+            static_cast<const void*>(&obj),
+            obj.length,
+            obj.null_count,
+            obj.offset,
+            obj.n_buffers,
+            buffer_str,
+            obj.n_children,
+            children_str,
+            static_cast<const void*>(obj.dictionary)
+        );
+    }
+};
+
+#endif

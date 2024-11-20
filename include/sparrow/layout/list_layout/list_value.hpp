@@ -32,7 +32,12 @@ namespace sparrow
         list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end);
 
         size_type size() const;
+        bool empty() const;
+
         const_reference operator[](size_type i) const;
+
+        const_reference front() const;
+        const_reference back() const;
 
     private:
 
@@ -45,3 +50,17 @@ namespace sparrow
     bool operator==(const list_value& lhs, const list_value& rhs);
 }
 
+#if defined(__cpp_lib_format)
+
+template <>
+struct std::formatter<sparrow::list_value>
+{
+    constexpr auto parse(std::format_parse_context& ctx) -> decltype(ctx.begin())
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    SPARROW_API auto format(const sparrow::list_value& list_value, std::format_context& ctx) const -> decltype(ctx.out());
+};
+
+#endif

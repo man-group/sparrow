@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if defined(__cpp_lib_format)
+#    include <format>
+#endif
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include "sparrow/utils/nullable.hpp"
@@ -93,13 +95,17 @@ namespace sparrow
             return *this;
         }
 
-        const int& get_value() const { return m_value; }
+        const int& get_value() const
+        {
+            return m_value;
+        }
 
     private:
 
         int m_value;
         bool m_moved = false;
     };
+
     int Custom::counter = 0;
 
     bool operator==(const Custom& lhs, const Custom& rhs)
@@ -121,11 +127,28 @@ namespace sparrow
     {
         return lhs.get_value() <=> rhs;
     }
+}
 
-    using testing_types = std::tuple<
-        double,
-        std::string,
-        Custom>;
+#if defined(__cpp_lib_format)
+template <>
+struct std::formatter<sparrow::Custom>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();
+    }
+
+    auto format(const sparrow::Custom& custom, std::format_context& ctx) const
+    {
+        return std::format_to(ctx.out(), "Custom({})", custom.get_value());
+    }
+};
+#endif
+
+namespace sparrow
+{
+
+    using testing_types = std::tuple<double, std::string, Custom>;
 
     namespace
     {
@@ -135,37 +158,79 @@ namespace sparrow
         template <>
         struct fixture<double>
         {
-            static double init() { return 1.2; }
-            static double other() { return 2.5; }
-            static int convert_init() { return 3; }
+            static double init()
+            {
+                return 1.2;
+            }
+
+            static double other()
+            {
+                return 2.5;
+            }
+
+            static int convert_init()
+            {
+                return 3;
+            }
 
             using convert_type = int;
 
-            static bool check_move_count(int) { return true; }
+            static bool check_move_count(int)
+            {
+                return true;
+            }
         };
 
         template <>
         struct fixture<std::string>
         {
-            static std::string init() { return "And now young codebase ..."; }
-            static std::string other() { return "Darth Codius"; }
-            static const char* convert_init() { return "Noooooo that's impossible!"; }
+            static std::string init()
+            {
+                return "And now young codebase ...";
+            }
+
+            static std::string other()
+            {
+                return "Darth Codius";
+            }
+
+            static const char* convert_init()
+            {
+                return "Noooooo that's impossible!";
+            }
 
             using convert_type = const char*;
 
-            static bool check_move_count(int) { return true; }
+            static bool check_move_count(int)
+            {
+                return true;
+            }
         };
 
         template <>
         struct fixture<Custom>
         {
-            static Custom init() { return Custom(1); }
-            static Custom other() { return Custom(2); }
-            static int convert_init() { return 3; }
+            static Custom init()
+            {
+                return Custom(1);
+            }
+
+            static Custom other()
+            {
+                return Custom(2);
+            }
+
+            static int convert_init()
+            {
+                return 3;
+            }
 
             using convert_type = int;
 
-            static bool check_move_count(int ref) { return Custom::counter == ref; }
+            static bool check_move_count(int ref)
+            {
+                return Custom::counter == ref;
+            }
         };
     }
 
@@ -583,14 +648,12 @@ namespace sparrow
     TEST_SUITE("nullable proxy")
     {
         static_assert(std::is_convertible_v<
-            sparrow::nullable<const bool &> &&,
-            sparrow::nullable<const bool &, const bool&>>
-        );
+                      sparrow::nullable<const bool&>&&,
+                      sparrow::nullable<const bool&, const bool&>>);
 
         static_assert(std::is_convertible_v<
-            const sparrow::nullable<const bool &>&,
-            sparrow::nullable<const bool &, const bool&>>
-        );
+                      const sparrow::nullable<const bool&>&,
+                      sparrow::nullable<const bool&, const bool&>>);
 
         TEST_CASE_TEMPLATE_DEFINE("constructors", T, constructors_id)
         {
@@ -903,6 +966,38 @@ namespace sparrow
             CHECK_FALSE(empty > d1);
         }
         TEST_CASE_TEMPLATE_APPLY(inequality_comparison_id, testing_types);
+#if defined(__cpp_lib_format)
+        TEST_CASE_TEMPLATE_DEFINE("formatter", T, formatter_id)
+        {
+            T initial = fixture<T>::init();
+            T other = fixture<T>::other();
+            T empty_val = T(fixture<T>::convert_init());
+
+            nullable<T&> d1{initial};
+            nullable<T&> d2{other};
+            nullable<T&> empty{empty_val};
+            empty = nullval;
+
+            if constexpr (std::is_same_v<T, Custom>)
+            {
+                CHECK_EQ(std::format("{}", d1), "Custom(1)");
+                CHECK_EQ(std::format("{}", d2), "Custom(2)");
+            }
+            else if constexpr (std::is_same_v<T, std::string>)
+            {
+                CHECK_EQ(std::format("{}", d1), "And now young codebase ...");
+                CHECK_EQ(std::format("{}", d2), "Darth Codius");
+            }
+            else if (std::is_floating_point_v<T>)
+            {
+                CHECK_EQ(std::format("{}", d1), "1.2");
+                CHECK_EQ(std::format("{}", d2), "2.5");
+            }
+
+            CHECK_EQ(std::format("{}", empty), "null");
+        }
+        TEST_CASE_TEMPLATE_APPLY(formatter_id, testing_types);
+#endif
     }
 
     TEST_SUITE("nullable_variant")
@@ -935,7 +1030,13 @@ namespace sparrow
             nullable<double> d = vd;
             nullable_variant_type v = d;
 
-            bool res = std::visit([vd](const auto& val) { return val.has_value() && val.value() == vd; }, v);
+            bool res = std::visit(
+                [vd](const auto& val)
+                {
+                    return val.has_value() && val.value() == vd;
+                },
+                v
+            );
             CHECK(res);
         }
 
@@ -965,4 +1066,3 @@ namespace sparrow
         }
     }
 }
-

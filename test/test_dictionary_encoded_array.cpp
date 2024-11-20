@@ -234,5 +234,15 @@ namespace sparrow
             ++iter;
             CHECK_EQ(iter, brange.end());
         }*/
+
+#if defined(__cpp_lib_format)
+        TEST_CASE("formatter")
+        {
+            const layout_type dict(make_arrow_proxy());
+            const std::string formatted = std::format("{}", dict);
+            constexpr std::string_view expected = "Dictionary [size=10] <null, null, not, prepared, null, not, ?, you, null, not>";
+            CHECK_EQ(formatted, expected);
+        }
+#endif
     }
 }
