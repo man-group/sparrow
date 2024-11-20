@@ -110,7 +110,7 @@ namespace sparrow
         array_wrapper_impl(T* ar);
         array_wrapper_impl(std::shared_ptr<T> ar);
 
-        virtual ~array_wrapper_impl() = default;
+        ~array_wrapper_impl() override = default;
 
         T& get_wrapped();
         const T& get_wrapped() const;

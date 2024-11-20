@@ -114,9 +114,23 @@ namespace sparrow
         SPARROW_API enum data_type data_type() const;
 
         /**
+         * Checks if the array has no element, i.e. whether size() == 0.
+         */
+        SPARROW_API bool empty() const;
+
+        /**
          * @returns the number of elements in the array.
          */
         SPARROW_API size_type size() const;
+
+        /**
+         * @returns a constant reference to the element at specified \c index,
+         * with bounds checking.
+         *
+         * @param index The position of the element in the array.
+         * @throw std::out_of_range if \p index is not within the range of the container.
+         */
+        SPARROW_API const_reference at(size_type index) const;
 
         /**
          * @returns a constant reference to the element at specified \c index.
@@ -124,6 +138,18 @@ namespace sparrow
          * @param index The position of the element in the array.
          */
         SPARROW_API const_reference operator[](size_type index) const;
+
+        /**
+         * Returns a constant reference to the first element in the container.
+         * Calling `front` on an empty array causes undefined behavior.
+         */
+        SPARROW_API const_reference front() const;
+
+        /**
+         * Returns a constant reference to the last element in the container.
+         * Calling `back` on an empty array causes undefined behavior.
+         */
+        SPARROW_API const_reference back() const;
 
         template <class F>
         using visit_result_t = std::invoke_result_t<F, null_array>;

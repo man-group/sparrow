@@ -115,7 +115,7 @@ namespace sparrow
         bad_nullable_access(const bad_nullable_access&) noexcept = default;
         bad_nullable_access& operator=(const bad_nullable_access&) noexcept = default;
 
-        virtual const char* what() const noexcept
+        const char* what() const noexcept override
         {
             return message;
         }
@@ -240,7 +240,7 @@ namespace sparrow
      * public:
      *
      *     using reference = nullable<double&, bool&>;
-     *     using cons_reference = nullable<const double&, const bool&>;
+     *     using const_reference = nullable<const double&, const bool&>;
      *
      *     reference operator[](size_type i)
      *     {

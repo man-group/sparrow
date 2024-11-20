@@ -103,6 +103,7 @@ doctest_discover_tests(${test_target})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(compiles_options
+        /bigobj
         /permissive-
         /WX # treat warnings as errors
         /W4 # Baseline reasonable warnings
@@ -130,7 +131,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /Zc:__cplusplus)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(compiles_options
-        -pedantic # Warn on language extensions
         -Wall # reasonable and standard
         -Wcast-align # warn for potential performance problem casts
         -Wconversion # warn on type conversions that may lose data
@@ -144,10 +144,28 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         -Wnull-dereference # warn if a null dereference is detected
         -Wold-style-cast # warn for c-style casts
         -Woverloaded-virtual # warn if you overload (not override) a virtual function
-        -Wpedantic # warn if non-standard C++ is used
         -Wshadow # warn the user if a variable declaration shadows one from a parent context
         -Wsign-conversion # warn on sign conversions
         -Wunused # warn on anything being unused
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-c++98-compat> # do not warn on use of non-C++98 standard
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-c++98-compat-pedantic>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-documentation>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-extra-semi-stmt>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-c++20-compat>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-pre-c++20-compat-pedantic>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-reserved-identifier>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-undef>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-switch-default>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-switch-enum>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-missing-prototypes>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-unused-template>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-unsafe-buffer-usage>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-documentation-unknown-command>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-float-equal>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-exit-time-destructors>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-global-constructors>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-newline-eof>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-ctad-maybe-unsupported>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-array-bounds>
         $<$<CXX_COMPILER_ID:GNU>:-Wno-stringop-overread>
@@ -156,7 +174,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         $<$<CXX_COMPILER_ID:GNU>:-Wlogical-op> # warn about logical operations being used where bitwise were probably wanted
         $<$<CXX_COMPILER_ID:GNU>:-Wno-subobject-linkage> # suppress warnings about subobject linkage
     )
-    target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
+    if (NOT "${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC")
+        target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
+        target_compile_options(${test_target} PRIVATE "-pedantic")# Warn on language extensions
+    endif()
 endif()
 
 target_compile_options(${test_target}
