@@ -31,11 +31,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Get current date
+        id: date
+        uses: Kaven-Universe/github-action-current-date-time@v1
+        with:
+          format: "YYYY-MM-DD_HH-mm-ss-SSS"
+
       - name: Cache builds
         uses: actions/cache@v4
         with:
-          key: ${{matrix.target.arch}}_${{matrix.target.distro}}_${{matrix.config.name}}_${{matrix.target.date-polyfill}}_ccache
+          key: ${{matrix.target.arch}}_${{matrix.target.distro}}_${{matrix.config.name}}_${{matrix.target.date-polyfill}}_ccache-${{ steps.date.outputs.time }}
           path: ccache_cache
+          restore-keys: |
+            ${{matrix.target.arch}}_${{matrix.target.distro}}_${{matrix.config.name}}_${{matrix.target.date-polyfill}}_ccache-
 
       - uses: uraimo/run-on-arch-action@v2
         name: Build artifact
