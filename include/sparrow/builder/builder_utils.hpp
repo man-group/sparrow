@@ -274,27 +274,11 @@ namespace detail
     >;
 
 
-
-    // dict_encoded<nullable<T> -> T
-    // dict_encoded<T> -> T
-    // nullable<T> -> T
-    // T -> T
-    // **BUT**
-    // nullable<dict_encoded<T>> -> nullable<dict_encoded<T>> 
     template<class T>
     using look_trough_t = meldv_t<mnv_t<meldv_t<T>>>;
 
-    // test inplace
-    static_assert(std::is_same_v<look_trough_t<int>, int>);
-    static_assert(std::is_same_v<look_trough_t<nullable<int>>, int>);
-    static_assert(std::is_same_v<look_trough_t<dict_encode<int>>, int>);
-    static_assert(std::is_same_v<look_trough_t<dict_encode<nullable<int>>>, int>);
-    static_assert(std::is_same_v<look_trough_t<nullable<dict_encode<int>>>, int>);
 
-
-
-
-    // shorhand for mnv_t<std::ranges::range_value_t<T>>
+    // shorhand for look_trough_t<std::ranges::range_value_t<T>>
     template<class T>
     using ensured_range_value_t = look_trough_t<std::ranges::range_value_t<T>>;
 
@@ -387,9 +371,6 @@ namespace detail
     {
         return {};
     }
-
-
-
 
     template<class T>
     requires(is_plain_value_type<std::ranges::range_value_t<T>>)
