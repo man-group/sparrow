@@ -44,27 +44,17 @@ namespace sparrow
 // forward declaration
 namespace detail
 {   
-
-
     template<class T, class LAYOUT_POLICY, class OPTIONS_TYPE>
     struct builder;
-
-
-
 }
-
 
 struct dense_union_flag_t{};
 struct sparse_union_flag_t{};
 struct large_list_flag_t{};
 struct large_binary_flag_t{};
 
-inline constexpr dense_union_flag_t dense_union_flag;
-inline constexpr sparse_union_flag_t sparse_union_flag;
+// option flag to indicate the desire for large lists
 inline constexpr large_list_flag_t large_list_flag;
-inline constexpr large_binary_flag_t large_binary_flag;
-
-
 
 // the toplevel build
 template<class T, class ... OPTION_FLAGS>
@@ -104,14 +94,11 @@ auto build_impl(T&& t, [[maybe_unused]] sparrow::mpl::typelist<OPTION_FLAGS...> 
     return builder<T, LAYOUT_POLICY, option_flags_type>::create(std::forward<T>(t));
 }
 
-
 template <class T>
 concept translates_to_primitive_layout = 
     std::ranges::input_range<T> &&
     std::is_scalar_v<ensured_range_value_t<T>> 
 ;
-
-
 
 template<class T> 
 concept translate_to_variable_sized_list_layout = 
@@ -155,15 +142,6 @@ concept translate_to_union_layout =
         std::ranges::range_value_t<T>
     >
 ;
-
-// there are two layouts which need to be enforced / forbidden
-// since they are could fit any of the other layouts data.
-// * dict-encoded
-// * run-length-encoded
-// ie std::vector<std::vector<int>> could in principal be a list[int] or list[dict[int]]
-// or list[run_length_encoded[int]].
-// therefore we need to handle them explicitly
-
 
 template< translates_to_primitive_layout T, class OPTION_FLAGS>
 struct builder<T, dont_enforce_layout, OPTION_FLAGS>
@@ -221,12 +199,10 @@ struct builder<T, dont_enforce_layout, OPTION_FLAGS>
     static type create(U && t)
     {
         auto flat_list_view = std::ranges::views::join(ensure_value_range(t));
-        
 
         // when the raw_value_type is a "express layout desire" we need to
-        // propagate this information to the builder, so it can handle the
+        // propagate this information to the builder.
         using layout_policy_type = layout_flag_t<raw_value_type>;
-
 
         return type(
             static_cast<std::uint64_t>(list_size), 
@@ -254,7 +230,6 @@ struct builder<T, dont_enforce_layout, OPTION_FLAGS>{
                 return std::get<decltype(i)::value>(tuple_val);
             }); 
 
-
             using tuple_element_type = std::tuple_element_t<decltype(i)::value, tuple_type>;
             using layout_policy_type = layout_flag_t<tuple_element_type>;
             detyped_children[decltype(i)::value] = array(build_impl<layout_policy_type>(tuple_i_col, OPTION_FLAGS{}));
@@ -266,7 +241,6 @@ struct builder<T, dont_enforce_layout, OPTION_FLAGS>{
        );
     }
 };
-
 
 template< translate_to_variable_sized_binary_layout T, class OPTION_FLAGS>
 struct builder<T, dont_enforce_layout, OPTION_FLAGS>
@@ -329,8 +303,6 @@ struct builder<T, dont_enforce_layout, OPTION_FLAGS>
     }
 };
 
-
-
 template< class T, class OPTION_FLAGS>
 struct builder<T, enforce_dict_encoded_layout,OPTION_FLAGS>
 {
@@ -376,8 +348,6 @@ struct builder<T, enforce_dict_encoded_layout,OPTION_FLAGS>
         );
     }
 };
-
-
 
 template< class T, class OPTION_FLAGS>
 struct builder<T, enforce_run_end_encoded_layout, OPTION_FLAGS>

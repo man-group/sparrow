@@ -30,34 +30,37 @@
 namespace sparrow
 {
 
-template<class T>
-class express_layout_desire
+namespace detail
 {
-public:
-    using self_type = express_layout_desire<T>;
-    using value_type = T;
-
-    // default constructor
-    express_layout_desire() = default;
-
-    // variadic perfect forwarding constructor
-    template<class... Args>
-    express_layout_desire(Args&& ... args)
-        : m_value(std::forward<Args>(args)...)
+    template<class T>
+    class express_layout_desire
     {
-    }
+    public:
+        using self_type = express_layout_desire<T>;
+        using value_type = T;
 
-    const T& get() const
-    {
-        return m_value;
-    }
-    T& get()
-    {
-        return m_value;
-    }
-private:
-    T m_value = T{};
-};
+        // default constructor
+        express_layout_desire() = default;
+
+        // variadic perfect forwarding constructor
+        template<class... Args>
+        express_layout_desire(Args&& ... args)
+            : m_value(std::forward<Args>(args)...)
+        {
+        }
+
+        const T& get() const
+        {
+            return m_value;
+        }
+        T& get()
+        {
+            return m_value;
+        }
+    private:
+        T m_value = T{};
+    };
+}
 
 
 // express the desire to use a dictionary encoding layout for
@@ -65,9 +68,9 @@ private:
 // encoded. This is done once the complete data which is to be 
 // dict encoded is known
 template<class T, class KEY_TYPE = std::uint64_t>
-class dict_encode : public express_layout_desire<T>
+class dict_encode : public detail::express_layout_desire<T>
 {
-    using base_type = express_layout_desire<T>;
+    using base_type = detail::express_layout_desire<T>;
 public:
     using base_type::base_type;
     using key_type = KEY_TYPE;
@@ -78,24 +81,17 @@ public:
 // encoded. This is done once the complete data which is to be 
 // dict encoded is known
 template<class T, class LENGTH_TYPE = std::uint64_t>
-class run_end_encode : public express_layout_desire<T>
+class run_end_encode : public detail::express_layout_desire<T>
 {
-    using base_type = express_layout_desire<T>;
+    using base_type = detail::express_layout_desire<T>;
 public:
     using base_type::base_type;
     using length_type = LENGTH_TYPE;
 };
 
-
-
-
-
 namespace detail
 {
 
-
-    // concept which is true for all types which translate to a primitive
-    // layouts (ie range of scalars or range of nullable of scalars)
     template <class T>
     concept is_nullable_like_generic = 
     requires(T t)
@@ -107,8 +103,6 @@ namespace detail
 
     template<class T>
     concept is_nullable_like =(is_nullable_like_generic<T>  );//||  sparrow::is_nullable_v<T>);
-
-
 
     struct dont_enforce_layout{};
     struct enforce_dict_encoded_layout{};
@@ -130,15 +124,6 @@ namespace detail
     template<class T>
     using decayed_range_value_t = std::decay_t<std::ranges::range_value_t<T>>;
 
-
-
-
-
-
-
-
-    // only for side effects (ie lambda which is called for each index without
-    //  returning anything but can have side effects)
     template <class F, std::size_t... Is>
     void for_each_index_impl(F&& f, std::index_sequence<Is...>)
     {   
@@ -152,7 +137,7 @@ namespace detail
     }
 
 
-    // similar to for_each_index but with cap
+    // similar to for_each_index but with the possibility to exit early
     template<std::size_t INDEX, std::size_t SIZE>
     struct exitable_for_each_index_impl
     {   
@@ -230,8 +215,6 @@ namespace detail
         }
     ;
 
-
-
     template <typename T>
     concept tuple_like = !std::is_reference_v<T>
         && requires(T t) {
@@ -288,9 +271,8 @@ namespace detail
     using meldv_t = typename maybe_express_layout_desire_value_type<T>::type;  
 
 
-
     template<class T>
-     using layout_flag_t = std::conditional_t<
+    using layout_flag_t = std::conditional_t<
         is_dict_encode<mnv_t<T>>, 
         enforce_dict_encoded_layout,
         std::conditional_t<
@@ -300,10 +282,8 @@ namespace detail
         >
     >;
 
-
     template<class T>
     using look_trough_t = meldv_t<mnv_t<meldv_t<T>>>;
-
 
     // shorhand for look_trough_t<std::ranges::range_value_t<T>>
     template<class T>
@@ -313,7 +293,6 @@ namespace detail
     // we also translate any nullable to the inner type
     template<class T>
     using nested_ensured_range_inner_value_t = ensured_range_value_t<ensured_range_value_t<T>>;
-
 
     // a save way to return .size from
     // a possibly nullable object or "express layout desire object"
@@ -369,7 +348,6 @@ namespace detail
         }
         return result;
     }
-    
 
     template<class T>
     requires(
@@ -410,8 +388,6 @@ namespace detail
             return ensure_value(std::forward<decltype(v)>(v));
         });
     }
-
-
 
 } // namespace detail
 
