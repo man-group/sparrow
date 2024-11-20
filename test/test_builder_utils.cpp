@@ -52,7 +52,7 @@ namespace sparrow{
                     return true; // should not be called
                 });
             }
-            SUBCASE("non-empt")
+            SUBCASE("non-empty")
             {
                 int c = 0;
                 detail::for_each_index<3>([&](auto i)
