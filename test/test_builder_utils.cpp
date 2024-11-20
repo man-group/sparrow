@@ -155,8 +155,8 @@ namespace sparrow{
 
             // variant like
             static_assert(detail::variant_like<std::variant<int>>);
-            static_assert(detail::variant_like<std::variant<int, int>>);
-            static_assert(detail::variant_like<std::variant<int, int, int>>);
+            static_assert(detail::variant_like<std::variant<int, float>>);
+            static_assert(detail::variant_like<std::variant<int, bool>>);
             static_assert(!detail::variant_like<int>);
             static_assert(!detail::variant_like<std::tuple<int>>);
             static_assert(detail::variant_like<my_variant>);
@@ -209,6 +209,45 @@ namespace sparrow{
         }       
         TEST_CASE("where-null")
         {
+
+            SUBCASE("vector-of-nullables")
+            {
+                std::vector<nullable<int>> v{1, 2, sparrow::nullval, 4};
+                std::vector<std::size_t> res = detail::where_null(v);
+                CHECK_EQ(res.size(), 1);
+                CHECK_EQ(res[0], 2);
+            }
+            SUBCASE("vector-of-scalar")
+            {
+                std::vector<int> v{1, 2, 3, 4};
+                std::array<std::size_t,0> res = detail::where_null(v);
+                CHECK_EQ(res.size(), 0); // pointless but uses the return value
+            }
+            SUBCASE("vector-of-nullabels-dict-encode")
+            {
+                std::vector<nullable<dict_encode<int>>> v{
+                    dict_encode<int>{1},
+                    sparrow::nullval,
+                    dict_encode<int>{3},
+                    dict_encode<int>{4}
+                };
+                std::vector<std::size_t> res = detail::where_null(v);
+                CHECK_EQ(res.size(), 1);
+                CHECK_EQ(res[0], 1);
+            }
+            SUBCASE("vector-of-nullabels-dict-encode")
+            {
+                std::vector<dict_encode<nullable<int>>> v{
+                    dict_encode<nullable<int>>{nullable<int>{int(1)}},   
+                    dict_encode<nullable<int>>{nullable<int>{}},   
+                    dict_encode<nullable<int>>{nullable<int>{int(2)}},   
+                    dict_encode<nullable<int>>{nullable<int>{int(3)}}
+                };
+                std::vector<std::size_t> res = detail::where_null(v);
+                CHECK_EQ(res.size(), 1);
+                CHECK_EQ(res[0], 1);
+            }
+            
         }
     }
 }
