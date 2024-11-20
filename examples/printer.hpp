@@ -19,8 +19,8 @@ namespace sparrow
     }
 
     template<class T>
-    requires(std::is_scalar_v<T>)
-    void print_value(const T& v)
+    requires(std::is_scalar_v<std::decay_t<T>>)
+    void print_value(std::decay_t<T> v)
     {
         std::cout << v;
     }
