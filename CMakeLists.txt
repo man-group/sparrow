@@ -35,6 +35,9 @@ cmake_policy(SET CMP0141 NEW)
 
 project(sparrow CXX)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 include(CMakeDependentOption)
 
 set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)

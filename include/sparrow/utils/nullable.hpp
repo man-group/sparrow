@@ -115,7 +115,7 @@ namespace sparrow
         bad_nullable_access(const bad_nullable_access&) noexcept = default;
         bad_nullable_access& operator=(const bad_nullable_access&) noexcept = default;
 
-        virtual const char* what() const noexcept
+        const char* what() const noexcept override
         {
             return message;
         }
