@@ -34,6 +34,12 @@ namespace sparrow
         *schema = {};
     }
 
+    void empty_release_arrow_schema(ArrowSchema* schema)
+    {
+        SPARROW_ASSERT_FALSE(schema == nullptr);
+        SPARROW_ASSERT_TRUE(schema->release == std::addressof(empty_release_arrow_schema));
+    }
+
     void copy_schema(const ArrowSchema& source, ArrowSchema& target)
     {
         SPARROW_ASSERT_TRUE(&source != &target);

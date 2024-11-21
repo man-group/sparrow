@@ -15,6 +15,8 @@
 #include "sparrow/array.hpp"
 
 #include "sparrow/array_factory.hpp"
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/layout/array_helper.hpp"
 
 namespace sparrow
@@ -91,13 +93,13 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(start <= end);
         const arrow_proxy& arrow_proxy_copy = get_arrow_proxy();
-        ArrowSchema* as = new ArrowSchema;
-        *as = arrow_proxy_copy.schema();
-        ArrowArray* ar = new ArrowArray;
-        *ar = arrow_proxy_copy.array();
-        ar->offset = static_cast<int64_t>(start);
-        ar->length = static_cast<int64_t>(end - start);
-        return {ar, as};
+        ArrowSchema as = arrow_proxy_copy.schema();
+        as.release = empty_release_arrow_schema;
+        ArrowArray ar = arrow_proxy_copy.array();
+        ar.offset = static_cast<int64_t>(start);
+        ar.length = static_cast<int64_t>(end - start);
+        ar.release = empty_release_arrow_array;
+        return {std::move(ar), std::move(as)};
     }
 
     arrow_proxy& array::get_arrow_proxy()

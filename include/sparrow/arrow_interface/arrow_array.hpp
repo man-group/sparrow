@@ -56,6 +56,11 @@ namespace sparrow
     SPARROW_API void release_arrow_array(ArrowArray* array);
 
     /**
+     * Empty release function to use for the `ArrowArray.release` member. Should be used for view of ArrowArray.
+     */
+    SPARROW_API void empty_release_arrow_array(ArrowArray* array);
+
+    /**
      * Fill an `ArrowArray` object.
      *
      * @tparam B Value, reference or rvalue of `std::vector<sparrow::buffer<uint8_t>>`

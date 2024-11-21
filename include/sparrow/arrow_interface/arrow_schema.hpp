@@ -59,11 +59,15 @@ namespace sparrow
         ArrowSchema* dictionary
     );
 
-
     /**
      * Release function to use for the `ArrowSchema.release` member.
      */
     SPARROW_API void release_arrow_schema(ArrowSchema* schema);
+
+    /**
+     * Empty release function to use for the `ArrowSchema.release` member.  Should be used for view of ArrowSchema.
+     */
+    SPARROW_API void empty_release_arrow_schema(ArrowSchema* schema);
 
     template <class F, class N, class M>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
