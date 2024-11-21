@@ -162,10 +162,8 @@ void fixed_sized_list_of_union()
 	//! [builder_fixed_sized_list_of_union]
 }
 
-
 int main()
 {
-    
     primitve_array();
     primitve_array_with_nulls();
     list_of_strings();

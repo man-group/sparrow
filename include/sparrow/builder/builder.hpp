@@ -59,12 +59,7 @@ inline constexpr large_list_flag_t large_list_flag;
 /**
  * @brief  function to create a sparrow array from arbitrary  nested
  * combinations of ranges, tuples, and nullable types, variants. 
- * 
- * sparrow::primitive_array:
- * @snippet{trimleft} examples/builder_example.cpp builder_primitive_array
- * 
- * sparrow::primitive_array with nulls via sparrow::nullable:
- * @snippet{trimleft} examples/builder_example.cpp builder_primitive_array_with_nulls
+ * Have a look at the  \ref builder "buider documentation" for more information.
  */
 template<class T, class ... OPTION_FLAGS>
 auto build(T&& t, OPTION_FLAGS&& ... )
