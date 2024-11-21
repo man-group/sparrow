@@ -8,6 +8,7 @@
 #include <tuple>
 #include <list>
 #include <string>
+#include <cassert>
 
 #include <sparrow/builder/builder.hpp>
 
