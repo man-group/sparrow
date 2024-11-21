@@ -373,5 +373,6 @@ namespace sparrow
                 CHECK_EQ(std::get<const_reference>(slice_2_8[i]).get(), scalar_value);
             }
         }
+        TEST_CASE_TEMPLATE_APPLY(slice_view_id, testing_types);
     }
 }
