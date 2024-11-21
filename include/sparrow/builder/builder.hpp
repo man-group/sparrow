@@ -60,7 +60,11 @@ inline constexpr large_list_flag_t large_list_flag;
  * @brief  function to create a sparrow array from arbitrary  nested
  * combinations of ranges, tuples, and nullable types, variants. 
  * 
+ * sparrow::primitive_array:
+ * @snippet{trimleft} examples/builder_example.cpp builder_primitive_array
  * 
+ * sparrow::primitive_array with nulls via sparrow::nullable:
+ * @snippet{trimleft} examples/builder_example.cpp builder_primitive_array_with_nulls
  */
 template<class T, class ... OPTION_FLAGS>
 auto build(T&& t, OPTION_FLAGS&& ... )
@@ -87,6 +91,14 @@ auto build(T&& t, OPTION_FLAGS&& ... )
         return detail::builder<T, layout_policy, option_flags_type>::create(std::forward<T>(t)); 
     }
 }
+
+template<class T, class ... OPTION_FLAGS>
+auto build(std::initializer_list<T> t, OPTION_FLAGS&& ... flags)
+{
+    auto subranges = std::views::all(t);
+    return build(std::forward<decltype(subranges)>(subranges), std::forward<OPTION_FLAGS>(flags)...);
+}
+
 
 namespace detail
 {

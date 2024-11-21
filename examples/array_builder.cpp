@@ -7,7 +7,7 @@
 #include <string>
 #include <array>
 #include <tuple>
-#include <set>
+#include <list>
 
 #include <sparrow/builder/builder.hpp>
 
@@ -21,8 +21,8 @@ int main()
     
     // arr[float]
     {   
-        std::vector<float> v{1.0, 2.0, 3.0, 4.0, 5.0};
-        [[maybe_unused]] auto arr = sp::build(v);
+        // using initializer_list
+        [[maybe_unused]] auto arr = sp::build({1, 2, 3, 4, 5});
     }
     // arr[double] (with nulls)
     {   
