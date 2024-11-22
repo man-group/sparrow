@@ -127,14 +127,8 @@ namespace sparrow
         {
             bool operator()(const T& a, const T& b) const
             {
-                return std::lexicographical_compare(
-                    std::begin(a), std::end(a),
-                    std::begin(b), std::end(b),
-                    [&](const auto& a_val, const auto& b_val)
-                    {
-                        return nested_less<std::decay_t<decltype(a_val)>>{}(a_val, b_val);
-                    }
-                );
+                using value_type = std::decay_t<std::ranges::range_value_t<T>>;
+                return std::ranges::lexicographical_compare(a, b, nested_less<value_type>{});
             }
         };
 

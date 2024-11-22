@@ -83,8 +83,7 @@ namespace sparrow
             bool operator()(const T& a, const T& b) const
             {
                 constexpr std::size_t N = std::tuple_size_v<T>;
-                bool is_eq = true;
-                exitable_for_each_index<N>([&](auto i)
+                return exitable_for_each_index<N>([&](auto i)
                 {
                     constexpr std::size_t index = decltype(i)::value;
                     using tuple_element_type = std::decay_t<std::tuple_element_t<decltype(i)::value, T>>;
@@ -92,15 +91,8 @@ namespace sparrow
                     const auto& a_val = std::get<index>(a);
                     const auto& b_val = std::get<index>(b);
 
-                    // a < b
-                    if(!nested_eq<tuple_element_type>{}(a_val, b_val))
-                    {
-                        is_eq = false;
-                        return false;    // continue
-                    }
-                    return true; // continue
+                    return nested_eq<tuple_element_type>{}(a_val, b_val);
                 });
-                return is_eq;
             }
         };
 
@@ -111,23 +103,7 @@ namespace sparrow
         {
             bool operator()(const T& a, const T& b) const
             {
-                const auto size = range_size(a);
-                if(size != range_size(b))
-                {
-                    return false;
-                }
-                auto a_it = std::ranges::begin(a);
-                auto b_it = std::ranges::begin(b);
-                for(std::size_t i = 0; i < size; ++i)
-                {
-                    if(!nested_eq<std::ranges::range_value_t<T>>{}(*a_it, *b_it))
-                    {
-                        return false;
-                    }
-                    ++a_it;
-                    ++b_it;
-                }
-                return true;
+                return std::ranges::equal(a, b, nested_eq<std::ranges::range_value_t<T>>{});
             }
         };
 

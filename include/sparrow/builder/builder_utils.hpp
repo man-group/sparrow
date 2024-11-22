@@ -91,18 +91,9 @@ public:
 
 namespace detail
 {
-
-    template <class T>
-    concept is_nullable_like_generic = 
-    requires(T t)
-    {
-        //typename T::value_type;
-        { t.has_value() } -> std::convertible_to<bool>;
-        { t.get() };// -> std::convertible_to<typename T::value_type>;
-    };
-
+    // might be changed later to also allowm for std::optional
     template<class T>
-    concept is_nullable_like =(is_nullable_like_generic<T>  );//||  sparrow::is_nullable_v<T>);
+    concept is_nullable_like = sparrow::is_nullable_v<T>;
 
     struct dont_enforce_layout{};
     struct enforce_dict_encoded_layout{};
@@ -136,36 +127,16 @@ namespace detail
         for_each_index_impl(std::forward<F>(f), std::make_index_sequence<SIZE>());
     }
 
-
-    // similar to for_each_index but with the possibility to exit early
-    template<std::size_t INDEX, std::size_t SIZE>
-    struct exitable_for_each_index_impl
-    {   
-        template<class F>
-        static bool call(F&& f)
-        {
-            const bool continue_ = f(std::integral_constant<std::size_t, INDEX>{});
-            if(continue_)
-            {
-                return exitable_for_each_index_impl<INDEX + 1, SIZE>::call(std::forward<F>(f));
-            }
-            return false;
-        }
-    };
-    template<std::size_t SIZE>
-    struct exitable_for_each_index_impl<SIZE, SIZE>
-    {   
-        template<class F>
-        static bool call(F&& )
-        {
-            return true;
-        }
-    };
+    template <class F, std::size_t... Is>
+    bool exitable_for_each_index_impl(F&& f, std::index_sequence<Is...>)
+    {
+        return (f(std::integral_constant<std::size_t, Is>{}) && ...);
+    }
 
     template <std::size_t SIZE, class F>
     bool exitable_for_each_index(F&& f)
-    {
-        return exitable_for_each_index_impl<0, SIZE>::call(std::forward<F>(f));
+    {   
+        return exitable_for_each_index_impl(std::forward<F>(f), std::make_index_sequence<SIZE>());
     }
 
 
