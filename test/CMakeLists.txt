@@ -84,6 +84,11 @@ else()
         test_utils_offsets.cpp
         test_utils.hpp
         test_variable_size_binary_array.cpp
+        test_nested_comperators.cpp
+        test_builder_utils.cpp
+        test_builder.cpp
+        test_builder_dict_encoded.cpp
+        test_builder_run_end_encoded.cpp
     )
 endif()
 

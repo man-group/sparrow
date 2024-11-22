@@ -3,6 +3,7 @@ SET(EXAMPLES
     typed_array_low_level.cpp
     typed_array_high_level.cpp
     record_batch_example.cpp
+    builder_example.cpp
 )
 
 # custom target to run all examples
@@ -31,7 +32,7 @@ if(NOT SPARROW_TARGET_32BIT) # TODO: To be removed when 32-bit support is ok
         add_custom_target(run_${EXAMPLE_NAME}
             COMMAND ${EXAMPLE_NAME}
             DEPENDS ${EXAMPLE_NAME}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} 
             COMMENT "Running ${EXAMPLE_NAME}"
         )
         set_target_properties(run_${EXAMPLE_NAME} PROPERTIES

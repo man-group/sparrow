@@ -27,6 +27,7 @@
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/buffer/u8_buffer.hpp"
+#include "sparrow/utils/ranges.hpp"
 
 namespace sparrow
 {
@@ -308,8 +309,8 @@ namespace sparrow
     template <std::ranges::input_range R>
     requires std::convertible_to<std::ranges::range_value_t<R>, T>
     arrow_proxy primitive_array<T>::create_proxy(R&& range)
-    {
-        const std::size_t n = std::ranges::size(range);
+    {   
+        const std::size_t n = range_size(range);
         auto iota = std::ranges::iota_view{std::size_t(0), n};
         std::ranges::transform_view iota_to_is_non_missing(iota, [](std::size_t) { return true; });
         return self_type::create_proxy(std::forward<R>(range), std::move(iota_to_is_non_missing));

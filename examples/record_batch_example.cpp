@@ -1,6 +1,7 @@
-/**
+/** @example record_batch_example.cpp
  * Example of usage of the record_batch class.
  */
+
 
 #include <cassert>
 

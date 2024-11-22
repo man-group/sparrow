@@ -28,14 +28,15 @@ namespace sparrow
     template <class T>
     concept layout = requires(T& t)
     {
+        // inner_value_type
+        typename T::inner_value_type;
+        
         t[std::size_t()];
         t.size();
         t.begin();
         t.end();
         t.cbegin();
         t.cend();
-        t.bitmap();
-        t.values();
     };
 
     namespace detail

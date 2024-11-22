@@ -15,7 +15,7 @@
 #pragma once
 
 #include <string>  // for std::stoull
-
+#include <type_traits> 
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
@@ -53,6 +53,59 @@ namespace sparrow
     using big_list_view_array = list_view_array_impl<true>;
 
     class fixed_sized_list_array;
+
+
+
+    namespace detail
+    {
+        template<class T>
+        struct get_data_type_from_array;
+
+        template<>
+        struct get_data_type_from_array<sparrow::list_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::LIST;
+            }
+        };
+
+        template<>
+        struct get_data_type_from_array<sparrow::big_list_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::LARGE_LIST;
+            }
+        };
+
+        template<>
+        struct get_data_type_from_array<sparrow::list_view_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::LIST_VIEW;
+            }
+        };
+
+        template<>
+        struct get_data_type_from_array<sparrow::big_list_view_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::LARGE_LIST_VIEW;
+            }
+        };
+
+        template<>
+        struct get_data_type_from_array<sparrow::fixed_sized_list_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::FIXED_SIZED_LIST;
+            }
+        };
+    }
 
     template <bool BIG>
     struct array_inner_types<list_array_impl<BIG>> : array_inner_types_base
@@ -104,7 +157,7 @@ namespace sparrow
     // - big-list-array
     // - list-view-array
     // - big-list-view-array
-    // - fixed-size-list-array
+    // - fixed-size-list-array 
     template <class DERIVED>
     class list_array_crtp_base : public array_bitmap_base<DERIVED>
     {
@@ -194,7 +247,7 @@ namespace sparrow
 
         template<class ... ARGS>
         requires(mpl::excludes_copy_and_move_ctor_v<list_array_impl<BIG>, ARGS...>)
-        list_array_impl(ARGS && ... args): self_type(create_proxy(std::forward<ARGS>(args)...))
+        explicit list_array_impl(ARGS && ... args): self_type(create_proxy(std::forward<ARGS>(args)...))
         {}
 
         template<std::ranges::range SIZES_RANGE>
@@ -227,7 +280,7 @@ namespace sparrow
         using base_type = list_array_crtp_base<list_view_array_impl<BIG>>;
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type;
-        using offset_type = std::conditional_t<BIG, const std::uint64_t, const std::uint32_t>;
+        using offset_type = std::conditional_t<BIG, const std::int64_t, const std::int32_t>;
         using offset_buffer_type  = u8_buffer<std::remove_const_t<offset_type>>;
         using size_buffer_type = u8_buffer<std::remove_const_t<list_size_type>>;
 
@@ -510,6 +563,7 @@ namespace sparrow
     )
     {
         SPARROW_ASSERT(list_offsets.size() == list_sizes.size() , "sizes and offset must have the same size");
+        
         const auto size = list_sizes.size();
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
 

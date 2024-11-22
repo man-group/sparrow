@@ -238,7 +238,7 @@ namespace sparrow::mpl
     ///          `false` otherwise or if the list is empty.
     template <class Predicate, template <class...> class L, class... T>
         requires any_typelist<L<T...>> and (callable_type_predicate<Predicate, T> && ...)
-    consteval bool any_of(L<T...>, Predicate predicate = {})
+    consteval bool any_of(L<T...>, [[maybe_unused]] Predicate predicate = {})
     {
         return (evaluate<T>(predicate) || ... || false);
     }
@@ -512,6 +512,12 @@ namespace sparrow::mpl
      */
     template <typename I, typename T>
     concept iterator_of_type = std::input_iterator<I>
+    
                                && std::same_as<typename std::iterator_traits<I>::value_type, T>;
+
+
+    // todo...make smth better based on sizeof and is pod 
+    template<class T>
+    concept char_like = std::same_as<T, char> || std::same_as<T, std::byte> || std::same_as<T, std::uint8_t>;
 
 }

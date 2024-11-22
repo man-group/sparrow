@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <memory>
-
 #include "sparrow/array_factory.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
 #include "sparrow/layout/struct_layout/struct_array.hpp"
@@ -95,10 +94,12 @@ namespace sparrow
                 return detail::make_wrapper_ptr<primitive_array<float>>(std::move(proxy));
             case data_type::DOUBLE:
                 return detail::make_wrapper_ptr<primitive_array<double>>(std::move(proxy));
-            case data_type::LIST:
+            case data_type::LIST:{
                 return detail::make_wrapper_ptr<list_array>(std::move(proxy));
-            case data_type::LARGE_LIST:
+            }
+            case data_type::LARGE_LIST:{
                 return detail::make_wrapper_ptr<big_list_array>(std::move(proxy));
+            }
             case data_type::LIST_VIEW:
                 return detail::make_wrapper_ptr<list_view_array>(std::move(proxy));
             case data_type::LARGE_LIST_VIEW:
