@@ -13,7 +13,10 @@
 // limitations under the License.
 
 #include "sparrow/array.hpp"
+
 #include "sparrow/array_factory.hpp"
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/layout/array_helper.hpp"
 
 namespace sparrow
@@ -53,8 +56,7 @@ namespace sparrow
         if (index >= size())
         {
             std::ostringstream oss117;
-            oss117 << "Index " << index << "is greater or equal to size of array ("
-                << size() << ")";
+            oss117 << "Index " << index << "is greater or equal to size of array (" << size() << ")";
             throw std::out_of_range(oss117.str());
         }
         return array_element(*p_array, index);
@@ -77,6 +79,29 @@ namespace sparrow
         return (*this)[size() - 1];
     }
 
+    array array::slice(size_type start, size_type end) const
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        array copy = *this;
+        arrow_proxy& arrow_proxy_copy = copy.get_arrow_proxy();
+        arrow_proxy_copy.set_offset(start);
+        arrow_proxy_copy.set_length(end - start);
+        return copy;
+    }
+
+    array array::slice_view(size_type start, size_type end) const
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        const arrow_proxy& arrow_proxy_copy = get_arrow_proxy();
+        ArrowSchema as = arrow_proxy_copy.schema();
+        as.release = empty_release_arrow_schema;
+        ArrowArray ar = arrow_proxy_copy.array();
+        ar.offset = static_cast<int64_t>(start);
+        ar.length = static_cast<int64_t>(end - start);
+        ar.release = empty_release_arrow_array;
+        return {std::move(ar), std::move(as)};
+    }
+
     arrow_proxy& array::get_arrow_proxy()
     {
         return p_array->get_arrow_proxy();
@@ -89,20 +114,23 @@ namespace sparrow
 
     bool operator==(const array& lhs, const array& rhs)
     {
-        return lhs.visit([&rhs](const auto& typed_lhs) -> bool
-        {
-            return rhs.visit([&typed_lhs](const auto& typed_rhs) -> bool
+        return lhs.visit(
+            [&rhs](const auto& typed_lhs) -> bool
             {
-                if constexpr (!std::same_as<decltype(typed_lhs), decltype(typed_rhs)>)
-                {
-                    return false;
-                }
-                else
-                {
-                    return typed_lhs == typed_rhs;
-                }
-            });
-        });
+                return rhs.visit(
+                    [&typed_lhs](const auto& typed_rhs) -> bool
+                    {
+                        if constexpr (!std::same_as<decltype(typed_lhs), decltype(typed_rhs)>)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            return typed_lhs == typed_rhs;
+                        }
+                    }
+                );
+            }
+        );
     }
 }
-

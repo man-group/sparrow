@@ -34,6 +34,12 @@ namespace sparrow
         array->buffers = nullptr;  // The buffers were deleted with the private data
     }
 
+    void empty_release_arrow_array(ArrowArray* array)
+    {
+        SPARROW_ASSERT_FALSE(array == nullptr);
+        SPARROW_ASSERT_TRUE(array->release == std::addressof(empty_release_arrow_array));
+    }
+
     std::vector<sparrow::buffer_view<uint8_t>>
     get_arrow_array_buffers(const ArrowArray& array, const ArrowSchema& schema)
     {
