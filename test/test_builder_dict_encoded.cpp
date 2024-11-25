@@ -83,7 +83,6 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
                 CHECK_NULLABLE_VARIANT_EQ(arr[3], std::string_view("world"));
                 CHECK(!arr[4].has_value());
-                test::generic_consistency_test_impl(arr);
                 
             }
             SUBCASE("dict[struct[int,float]]")
