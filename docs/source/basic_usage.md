@@ -120,18 +120,24 @@ ArrowSchema schema;
 tpl::read_arrow_structures(&array, &schema);
 
 sp::array ar(std::move(array), std::move(schema));
-ar.visit([](const auto& typed_ar) {
-    std::for_each(typed_ar.cbegin(), typed_ar.cend(), [](const auto& val) {
-        if (val.has_value())
+ar.visit([]<class T>(const T& typed_ar)
+{
+    if constexpr (sp::is_primitive_array_v<T>)
+    {
+        std::for_each(typed_ar.cbegin(), typed_ar.cend(), [](const auto& val)
         {
-            std::cout << val.value();
-        }
-        else
-        {
-            std::cout << "null";
-        }
-        std::cout << ", ";
-    });
+            if (val.has_value())
+            {
+                std::cout << val.value();
+            }
+            else
+            {
+                std::cout << "null";
+            }
+            std::cout << ", ";
+        });
+    }
+    // else if constexpr ...
 });
 
 ```

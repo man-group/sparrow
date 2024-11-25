@@ -78,6 +78,18 @@ namespace sparrow
     using string_array =     variable_size_binary_array_impl<std::string, std::string_view, std::int32_t>;
     using big_string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int64_t>;
  
+    /**
+     * Checks whether T is a string_array type.
+     */
+    template <class T>
+    constexpr bool is_string_array_v = std::same_as<T, string_array>;
+
+    /**
+     * Checks whether T is a big_string_array type.
+     */
+    template <class T>
+    constexpr bool is_big_string_array_v = std::same_as<T, big_string_array>;
+
     template <class L>
     class variable_size_binary_reference;
 

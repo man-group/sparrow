@@ -54,6 +54,22 @@ namespace sparrow
         using iterator_tag = std::random_access_iterator_tag;
     };
 
+    template <class T>
+    struct is_primitive_array : std::false_type
+    {
+    };
+
+    template <class T>
+    struct is_primitive_array<primitive_array<T>> : std::true_type
+    {
+    };
+
+    /**
+     * Checkes whether T is a primitive_array type.
+     */
+    template <class T>
+    constexpr bool is_primitive_array_v = is_primitive_array<T>::value;
+
     /**
      * Array of values of whose type has fixed binary size.
      *

@@ -68,6 +68,8 @@ namespace sparrow
 
     TEST_SUITE("dictionary_encoded_array")
     {
+        static_assert(is_dictionary_encoded_array_v<dictionary_encoded_array<std::uint32_t>>);
+
         TEST_CASE("constructors")
         {
             CHECK_NOTHROW(layout_type{make_arrow_proxy()});

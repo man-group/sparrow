@@ -44,6 +44,7 @@ namespace sparrow
 
     private:
 
+        static_assert(is_string_array_v<layout_type>);
         static_assert(std::same_as<layout_type::inner_value_type, std::string>);
         // static_assert(std::same_as<layout_type::inner_reference,
         // sparrow::variable_size_binary_reference<layout_type>>);

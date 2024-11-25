@@ -26,6 +26,7 @@ namespace sparrow
 
     TEST_SUITE("null array")
     {
+        static_assert(is_null_array_v<null_array>);
 
         TEST_CASE("constructor")
         {

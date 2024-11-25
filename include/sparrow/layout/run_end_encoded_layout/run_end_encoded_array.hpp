@@ -26,6 +26,12 @@ namespace sparrow
 {
     class run_end_encoded_array;
 
+    /**
+     * Checks whether T is a run_end_encoded_array type.
+     */
+    template <class T>
+    constexpr bool is_run_end_encoded_array_v = std::same_as<T, run_end_encoded_array>;
+
     namespace detail
     {
         template<class T>

@@ -86,6 +86,9 @@ namespace sparrow
 
     TEST_SUITE("sparse_union")
     {   
+        static_assert(is_sparse_union_array_v<sparse_union_array>);
+        static_assert(!is_dense_union_array_v<sparse_union_array>);
+
         TEST_CASE("constructor")
         {   
             // the child arrays
@@ -245,7 +248,9 @@ namespace sparrow
         }
     }
     TEST_SUITE("dense_union")
-    {   
+    {
+        static_assert(is_dense_union_array_v<dense_union_array>);
+        static_assert(!is_sparse_union_array_v<dense_union_array>);
         TEST_CASE("constructor")
         {   
             // the child arrays
