@@ -2,26 +2,45 @@
 #include "doctest/doctest.h"
 
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/array.hpp"
 #include <algorithm>
 
 namespace sparrow::test
 {
 
     template<class ARRAY_TYPE>
-    void generic_consistency_test_impl(ARRAY_TYPE && array){
-        
-        const auto size = array.size();
+    void generic_consistency_test_impl(ARRAY_TYPE && typed_arr){
+        using array_type = std::decay_t<ARRAY_TYPE>;
+        const auto size = typed_arr.size();
 
         // check that iterators sizes are consistent
         SUBCASE("iterators"){
-            auto it = array.begin();
-            auto it_end = array.end();
+            auto it = typed_arr.begin();
+            auto it_end = typed_arr.end();
             CHECK(std::distance(it, it_end) == size);
         }
         SUBCASE("const iterators"){
-            auto it = array.cbegin();
-            auto it_end = array.cend();
+            auto it = typed_arr.cbegin();
+            auto it_end = typed_arr.cend();
             CHECK(std::distance(it, it_end) == size);
+        }
+
+        SUBCASE("detype-visit-roundtrip")
+        {
+            // detyped copy
+            array_type arr_copy(typed_arr);
+            sparrow::array arr(std::move(arr_copy));
+
+            // detyped visit
+            arr.visit([&](auto && v) {
+                using typed_array_type = std::decay_t<decltype(v)>;
+                CHECK(std::is_same_v<typed_array_type, array_type>);
+                if constexpr(std::is_same_v<typed_array_type, ARRAY_TYPE>)
+                {
+                    CHECK(v == typed_arr);
+                }
+            });
+
         }
     }
 
