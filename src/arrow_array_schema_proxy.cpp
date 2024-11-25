@@ -819,4 +819,25 @@ namespace sparrow
         erase_bitmap(length() - 1);
         update_buffers();
     }
+
+    arrow_proxy arrow_proxy::slice(size_t start, size_t end) const
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        arrow_proxy copy = *this;
+        copy.set_offset(start);
+        copy.set_length(end - start);
+        return copy;
+    }
+
+    arrow_proxy arrow_proxy::slice_view(size_t start, size_t end) const
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        ArrowSchema as = schema();
+        as.release = empty_release_arrow_schema;
+        ArrowArray ar = array();
+        ar.offset = static_cast<int64_t>(start);
+        ar.length = static_cast<int64_t>(end - start);
+        ar.release = empty_release_arrow_array;
+        return arrow_proxy{std::move(ar), std::move(as)};
+    }
 }
