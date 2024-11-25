@@ -43,6 +43,12 @@ namespace sparrow
         using iterator_tag = std::random_access_iterator_tag;
     };
 
+    /**
+     * Checks whether T is a struct_array type.
+     */
+    template <class T>
+    constexpr bool is_struc_array_v = std::same_as<T, struct_array>;
+
     class struct_array final : public array_bitmap_base<struct_array>
     {
     public:

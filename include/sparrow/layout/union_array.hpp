@@ -54,6 +54,18 @@ namespace sparrow
         };
     }
 
+    /**
+     * Checks whether T is a dense_union_array type.
+     */
+    template <class T>
+    constexpr bool is_dense_union_array_v = std::same_as<T, dense_union_array>;
+
+    /**
+     * Checks whether T is a sparse_union_array type.
+     */
+    template <class T>
+    constexpr bool is_sparse_union_array_v = std::same_as<T, sparse_union_array>;
+
     // helper crtp-base to have sparse and dense and dense union share most of their code
     template<class DERIVED>
     class union_array_crtp_base : public crtp_base<DERIVED>

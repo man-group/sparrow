@@ -24,7 +24,6 @@
 
 namespace sparrow
 {
-
     namespace test
     {
         template <class T0, class T1>
@@ -40,7 +39,6 @@ namespace sparrow
             test::fill_schema_and_array<T1>(children_schemas[1], children_arrays[1], n, 0/*offset*/, {});
             children_schemas[1].name = "item 1";
 
-
             ArrowArray arr{};
             ArrowSchema schema{};
             test::fill_schema_and_array_for_struct_layout(schema, arr, std::move(children_schemas), std::move(children_arrays), {});
@@ -50,6 +48,8 @@ namespace sparrow
 
     TEST_SUITE("struct_array")
     {   
+        static_assert(is_struc_array_v<struct_array>);
+
         TEST_CASE("constructors")
         {
             primitive_array<std::int16_t> flat_arr({{std::int16_t(0), std::int16_t(1), std::int16_t(2), std::int16_t(3)}});

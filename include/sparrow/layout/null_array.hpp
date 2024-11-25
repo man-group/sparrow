@@ -59,6 +59,14 @@ namespace sparrow
         friend class iterator_access;
     };
 
+    class null_array;
+
+    /**
+     * Checks whether T is a null_array type.
+     */
+    template <class T>
+    constexpr bool is_null_array_v = std::same_as<T, null_array>;
+
     class null_array
     {
     public:

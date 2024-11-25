@@ -83,6 +83,12 @@ namespace sparrow
         };
     }
 
+    /**
+     * Checks whether T is a dictionary_encoded_array type.
+     */
+    template <class T>
+    constexpr bool is_dictionary_encoded_array_v = detail::is_dictionary_encoded_array<T>::get();
+
     template <std::integral IT>
     class dictionary_encoded_array
     {

@@ -40,6 +40,8 @@ namespace sparrow
     {
         TEST_CASE_TEMPLATE_DEFINE("", T, primitive_array_id)
         {
+            static_assert(is_primitive_array_v<primitive_array<T>>);
+
             const std::array<T, 5> values{1, 2, 3, 4, 5};
             constexpr std::array<uint8_t, 1> nulls{2};
             constexpr int64_t offset = 1;

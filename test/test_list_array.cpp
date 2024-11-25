@@ -41,7 +41,13 @@ namespace sparrow
     }
 
     TEST_SUITE("list_array")
-    {   
+    {
+        static_assert(is_list_array_v<list_array>);
+        static_assert(!is_big_list_array_v<list_array>);
+        static_assert(!is_list_view_array_v<list_array>);
+        static_assert(!is_big_list_view_array_v<list_array>);
+        static_assert(!is_fixed_sized_list_array_v<list_array>);
+
         TEST_CASE("constructors")
         {
             // from sizes
@@ -202,6 +208,12 @@ namespace sparrow
 
     TEST_SUITE("list_view_array")
     {
+        static_assert(!is_list_array_v<list_view_array>);
+        static_assert(!is_big_list_array_v<list_view_array>);
+        static_assert(is_list_view_array_v<list_view_array>);
+        static_assert(!is_big_list_view_array_v<list_view_array>);
+        static_assert(!is_fixed_sized_list_array_v<list_view_array>);
+
         TEST_CASE("constructors")
         {
            // flat data is [0,1,2,3,4]
@@ -377,6 +389,12 @@ namespace sparrow
 
     TEST_SUITE("fixed_sized_list_array")
     {
+        static_assert(!is_list_array_v<fixed_sized_list_array>);
+        static_assert(!is_big_list_array_v<fixed_sized_list_array>);
+        static_assert(!is_list_view_array_v<fixed_sized_list_array>);
+        static_assert(!is_big_list_view_array_v<fixed_sized_list_array>);
+        static_assert(is_fixed_sized_list_array_v<fixed_sized_list_array>);
+
         TEST_CASE_TEMPLATE("fixed_sized_array_list[T]", T, std::uint8_t, std::int32_t, float, double)
         {
             using inner_scalar_type = T;

@@ -44,17 +44,43 @@ namespace sparrow
     template <bool BIG>
     class list_view_array_impl;
 
-
     using list_array = list_array_impl<false>;
     using big_list_array = list_array_impl<true>;
-
 
     using list_view_array = list_view_array_impl<false>;
     using big_list_view_array = list_view_array_impl<true>;
 
     class fixed_sized_list_array;
 
+    /**
+     * Checks whether T is a list_array type.
+     */
+    template <class T>
+    constexpr bool is_list_array_v = std::same_as<T, list_array>;
 
+    /**
+     * Checks whether T is a big_list_array type.
+     */
+    template <class T>
+    constexpr bool is_big_list_array_v = std::same_as<T, big_list_array>;
+
+    /**
+     * Checks whether T is a list_view_array type.
+     */
+    template <class T>
+    constexpr bool is_list_view_array_v = std::same_as<T, list_view_array>;
+
+    /**
+     * Checks whether T is a big_list_view_array type.
+     */
+    template <class T>
+    constexpr bool is_big_list_view_array_v = std::same_as<T, big_list_view_array>;
+
+    /**
+     * Checks whether T is a fixed_sized_list_array type.
+     */
+    template <class T>
+    constexpr bool is_fixed_sized_list_array_v = std::same_as<T, fixed_sized_list_array>;
 
     namespace detail
     {

@@ -24,7 +24,8 @@
 
 namespace sparrow
 {
-    namespace test{
+    namespace test
+    {
         run_end_encoded_array make_test_run_encoded_array(bool alterate = false)
         {
             using acc_type = std::uint32_t;
@@ -62,13 +63,14 @@ namespace sparrow
             array encoded_values_array(std::move(encoded_values));
             
             return run_end_encoded_array(std::move(acc_lengths_array), std::move(encoded_values_array));
-
         }
     }
     
 
     TEST_SUITE("run_length_encoded")
-    {   
+    {
+        static_assert(is_run_end_encoded_array_v<run_end_encoded_array>);
+
         TEST_CASE("run_length_encoded")
         {
             using inner_value_type = std::uint64_t;
