@@ -27,7 +27,6 @@ namespace sparrow
     template<class T>
     using nt = nullable<T>;
 
-
     TEST_SUITE("builder")
     {
         
