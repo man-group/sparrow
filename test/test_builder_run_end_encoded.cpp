@@ -35,6 +35,7 @@ namespace sparrow
                         std::vector<int>{1, 1, 1, 2}
                     };
                     auto arr = sparrow::build(v);
+                    test::generic_consistency_test(arr);
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
@@ -53,6 +54,7 @@ namespace sparrow
                         }
                     }; 
                     auto arr = sparrow::build(v);
+                    test::generic_consistency_test(arr);
 
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
@@ -71,6 +73,7 @@ namespace sparrow
                     std::vector<nullable<std::string>>{"hello", "world", "hello", "world", nullable<std::string>{}}
                 };
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 using array_type = std::decay_t<decltype(arr)>;
                 static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
@@ -101,6 +104,7 @@ namespace sparrow
                 };
 
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 using array_type = std::decay_t<decltype(arr)>;
                 static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
@@ -139,6 +143,7 @@ namespace sparrow
                     }
                 };
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 using array_type = std::decay_t<decltype(arr)>;
                 static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
@@ -162,6 +167,7 @@ namespace sparrow
                     }
                 };
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 using array_type = std::decay_t<decltype(arr)>;
                 static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
@@ -189,6 +195,7 @@ namespace sparrow
                     };
 
                     auto arr = sparrow::build(v);
+                    test::generic_consistency_test(arr);
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::list_array>);
 
@@ -223,6 +230,7 @@ namespace sparrow
                     };
 
                     auto arr = sparrow::build(v);
+                    test::generic_consistency_test(arr);
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::list_array>);
 
@@ -259,6 +267,7 @@ namespace sparrow
                         }
                     };
                     auto arr = sparrow::build(v);
+                    test::generic_consistency_test(arr);
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::fixed_sized_list_array>);
 
@@ -289,6 +298,7 @@ namespace sparrow
                         }
                     };
                     auto arr = sparrow::build(v);
+                    test::generic_consistency_test(arr);
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::fixed_sized_list_array>);
 
@@ -321,6 +331,7 @@ namespace sparrow
                         }
                     };
                     auto arr = sparrow::build(v);
+                    test::generic_consistency_test(arr);
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::struct_array>);
                     REQUIRE_EQ(arr.size(), 4);
@@ -357,6 +368,7 @@ namespace sparrow
                         },
                     };
                     auto arr = sparrow::build(v);
+                    test::generic_consistency_test(arr);
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::sparse_union_array>);
                     REQUIRE_EQ(arr.size(), 2);
@@ -377,6 +389,7 @@ namespace sparrow
                         variant_type{}
                     };
                     auto arr = sparrow::build(v);
+                    test::generic_consistency_test(arr);
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::sparse_union_array>);
                     REQUIRE_EQ(arr.size(), 3);

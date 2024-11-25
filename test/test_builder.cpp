@@ -27,7 +27,6 @@ namespace sparrow
     template<class T>
     using nt = nullable<T>;
 
-
     TEST_SUITE("builder")
     {
         
@@ -38,6 +37,7 @@ namespace sparrow
             {   
                 std::vector<float> v{1.0, 2.0, 3.0};
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 3);
                 CHECK_EQ(arr[0].value(), 1.0);
                 CHECK_EQ(arr[1].value(), 2.0);
@@ -48,6 +48,7 @@ namespace sparrow
             {   
                 std::vector<nt<double>> v{1.0, 2.0, sparrow::nullval, 3.0};
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 4);
                 REQUIRE(arr[0].has_value());
                 REQUIRE(arr[1].has_value());
@@ -68,6 +69,7 @@ namespace sparrow
             {   
                 std::vector<std::vector<float>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
 
                 REQUIRE_EQ(arr.size(), 2);
                 REQUIRE_EQ(arr[0].value().size(), 3);
@@ -90,6 +92,7 @@ namespace sparrow
                     {{7.0f, 8.0f, 9.0f}, {10.0f, 11.0f, 12.0f}}
                 };
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 2);
             }
             SUBCASE("options")
@@ -105,6 +108,7 @@ namespace sparrow
                 {
                     std::vector<std::vector<float>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
                     auto arr = sparrow::build(v);
+                    test::generic_consistency_test(arr);
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::list_array>);
                 }
@@ -122,6 +126,7 @@ namespace sparrow
                     {5.5f, 6}
                 };
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 3);
             }
             // struct<float, float> (with nulls)
@@ -132,6 +137,7 @@ namespace sparrow
                     std::tuple<float, int>{5.5f, 6}
                 };
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 3);
             }
             // struct<list[float], uint16>
@@ -142,6 +148,7 @@ namespace sparrow
                     {{7.0f, 8.0f, 9.0f}, 3}
                 };
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 3);
             }
         }
@@ -156,6 +163,7 @@ namespace sparrow
                     {7.0f, 8.0f, 9.0f}
                 };
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 3);
             }
             // fixed_sized_list<float, 3>  with nulls
@@ -166,6 +174,7 @@ namespace sparrow
                     std::array<nt<float>, 3>{7.0f, 8.0f, sparrow::nullval}
                 };
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 
             }
         }
@@ -181,6 +190,7 @@ namespace sparrow
                     "!",
                 };
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 4);
                 CHECK_EQ(arr[0].value(), "hello");
                 CHECK_EQ(arr[1].value(), " ");
@@ -196,6 +206,7 @@ namespace sparrow
                     "world!"
                 };
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 3);
                 REQUIRE(arr[0].has_value());
                 REQUIRE_FALSE(arr[1].has_value());
@@ -219,6 +230,7 @@ namespace sparrow
                 };
 
                 auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
                 using arr_type = std::decay_t<decltype(arr)>;
                 static_assert(std::is_same_v<arr_type, sparrow::sparse_union_array>);
 
