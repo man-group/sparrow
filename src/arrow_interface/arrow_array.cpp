@@ -40,6 +40,149 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(array->release == std::addressof(empty_release_arrow_array));
     }
 
+
+    template<class T>
+    auto static_const_ptr_cast(const void *ptr)
+    {
+        return const_cast<T*>(static_cast<const T*>(ptr));
+    }
+
+    std::vector<sparrow::buffer_view<uint8_t>>
+    get_arrow_array_buffers_new(const ArrowArray& array, const ArrowSchema& schema)
+    {   
+        using buffer_view_type = sparrow::buffer_view<uint8_t>;
+
+        auto make_valid_buffer = [](auto buffer_ptr, const auto array_length)
+        {   
+            // const cast 
+            const auto buffer_size = static_cast<size_t>(array_length + 7) / 8;
+            auto typed_buffer_ptr = static_const_ptr_cast<uint8_t>(buffer_ptr);
+            return typed_buffer_ptr != nullptr ? buffer_view_type(typed_buffer_ptr, buffer_size) : buffer_view_type(nullptr, 0);
+        };
+
+
+
+        std::vector<buffer_view_type> buffers;
+        const auto buffer_count = static_cast<size_t>(array.n_buffers);
+        buffers.reserve(buffer_count);
+        const enum data_type data_type = format_to_data_type(schema.format);
+        const auto length = static_cast<size_t>(array.length);
+        switch(data_type)
+        {   
+            // no buffers
+            case data_type::NA:
+            case data_type::RUN_ENCODED:
+                return buffers;
+
+            // primitive types
+            case data_type::BOOL:   
+                const auto compact_size = (length + 7) / 8;
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), compact_size);
+            case data_type::UINT8:
+            case data_type::INT8:
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), length);
+                break;
+            case data_type::UINT16:
+            case data_type::INT16:
+            case data_type::HALF_FLOAT:
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), length * 2);
+                break;
+            case data_type::UINT32:
+            case data_type::INT32:
+            case data_type::FLOAT:
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), length * 4);
+                break;
+            case data_type::UINT64:
+            case data_type::INT64:
+            case data_type::DOUBLE:
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), length * 8);
+                break;
+
+            // strings and binary
+            case data_type::STRING:
+            case data_type::BINARY:
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), (length + 1) * 4);
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[2]), length);
+                break;
+            // large strings and binary
+            case data_type::LARGE_STRING:
+            case data_type::LARGE_BINARY:
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), length * 8);
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[2]), length);
+                break;
+            
+            // list
+            case data_type::LIST:
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), (length + 1) * 4);
+                break;
+            // large list
+            case data_type::LARGE_LIST:
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), (length + 1) * 8);
+                break;
+            
+            // list view
+            case data_type::LIST_VIEW:
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), length * 4);
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[2]), length * 4);
+                break;
+            // large list view
+            case data_type::LARGE_LIST_VIEW:
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), length * 8);
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[2]), length * 8);
+                break;
+            
+
+            // layouts with only validity buffer
+            // fixed size list
+            // struct
+            case data_type::FIXED_SIZE_LIST:
+            case data_type::STRUCT:
+                buffers.emplace_back(make_valid_buffer(array.buffers[0], length));
+                break;
+
+            // sparse union
+            case data_type::SPARSE_UNION:
+                // type ids
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[0]), length);
+                break;
+            // dense union
+            case data_type::DENSE_UNION:
+                // type ids
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[0]), length);
+                // offsets
+                buffers.emplace_back(static_const_ptr_cast<uint8_t>(array.buffers[1]), length * 4);
+                break;
+            
+
+
+
+
+
+            
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
     std::vector<sparrow::buffer_view<uint8_t>>
     get_arrow_array_buffers(const ArrowArray& array, const ArrowSchema& schema)
     {

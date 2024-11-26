@@ -275,46 +275,46 @@ namespace sparrow
 
     /// @returns The number of buffers expected for the provided data_type.
     ///         The returned value is guaranteed to be in the range [0, 3].
-    constexpr std::size_t get_expected_buffer_count(data_type type)
-    {
-        switch (type)
-        {
-            case data_type::NA:
-            case data_type::RUN_ENCODED:
-                return 0;
-            case data_type::STRUCT:
-            case data_type::SPARSE_UNION:
-                return 1;
-            case data_type::BOOL:
-            case data_type::UINT8:
-            case data_type::INT8:
-            case data_type::UINT16:
-            case data_type::INT16:
-            case data_type::UINT32:
-            case data_type::INT32:
-            case data_type::FLOAT:
-            case data_type::UINT64:
-            case data_type::INT64:
-            case data_type::DOUBLE:
-            case data_type::HALF_FLOAT:
-            case data_type::FIXED_WIDTH_BINARY:
-            case data_type::DECIMAL:
-            case data_type::LIST:
-            case data_type::LARGE_LIST:
-            case data_type::MAP:
-            case data_type::FIXED_SIZED_LIST:
-            case data_type::DENSE_UNION:
-                return 2;
-            case data_type::STRING:
-            case data_type::BINARY:
-            case data_type::FIXED_SIZE_BINARY:
-            case data_type::TIMESTAMP:
-            case data_type::LIST_VIEW:
-            case data_type::LARGE_LIST_VIEW:
-                return 3;
-        }
-        mpl::unreachable();
-    }
+    // constexpr std::size_t get_expected_buffer_count(data_type type)
+    // {
+    //     switch (type)
+    //     {
+    //         case data_type::NA:
+    //         case data_type::RUN_ENCODED:
+    //             return 0;
+    //         case data_type::STRUCT:
+    //         case data_type::SPARSE_UNION:
+    //             return 1;
+    //         case data_type::BOOL:
+    //         case data_type::UINT8:
+    //         case data_type::INT8:
+    //         case data_type::UINT16:
+    //         case data_type::INT16:
+    //         case data_type::UINT32:
+    //         case data_type::INT32:
+    //         case data_type::FLOAT:
+    //         case data_type::UINT64:
+    //         case data_type::INT64:
+    //         case data_type::DOUBLE:
+    //         case data_type::HALF_FLOAT:
+    //         case data_type::FIXED_WIDTH_BINARY:
+    //         case data_type::DECIMAL:
+    //         case data_type::LIST:
+    //         case data_type::LARGE_LIST:
+    //         case data_type::MAP:
+    //         case data_type::FIXED_SIZED_LIST:
+    //         case data_type::DENSE_UNION:
+    //             return 2;
+    //         case data_type::STRING:
+    //         case data_type::BINARY:
+    //         case data_type::FIXED_SIZE_BINARY:
+    //         case data_type::TIMESTAMP:
+    //         case data_type::LIST_VIEW:
+    //         case data_type::LARGE_LIST_VIEW:
+    //             return 3;
+    //     }
+    //     mpl::unreachable();
+    // }
     
     /// @returns The default floating-point `data_type`  that should be associated with the provided type.
     ///          The deduction will be based on the size of the type. Calling this function with unsupported sizes
