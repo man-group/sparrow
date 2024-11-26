@@ -26,11 +26,11 @@ namespace sparrow
 {
     /// @returns `true` if the number of buffers in an `ArrowArray` for a given data type is valid, `false`
     /// otherwise.
-    constexpr bool validate_buffers_count(data_type data_type, int64_t n_buffers)
-    {
-        const std::size_t expected_buffer_count = get_expected_buffer_count(data_type);
-        return static_cast<std::size_t>(n_buffers) == expected_buffer_count;
-    }
+    // constexpr bool validate_buffers_count(data_type data_type, int64_t n_buffers)
+    // {
+    //     const std::size_t expected_buffer_count = get_expected_buffer_count(data_type);
+    //     return static_cast<std::size_t>(n_buffers) == expected_buffer_count;
+    // }
 
     /// @returns The the expected number of children for a given data type.
     constexpr std::size_t get_expected_children_count(data_type data_type)
@@ -57,6 +57,8 @@ namespace sparrow
             case data_type::FIXED_WIDTH_BINARY:
             case data_type::STRING:
             case data_type::BINARY:
+            case data_type::STRING_VIEW:
+            case data_type::BINARY_VIEW:
                 return 0;
             case data_type::LIST:
             case data_type::LARGE_LIST:

@@ -152,6 +152,8 @@ namespace sparrow
         FIXED_SIZED_LIST = 23,
         STRUCT = 24,
         MAP = 25,
+        STRING_VIEW = 26,
+        BINARY_VIEW = 27,
         DENSE_UNION,
         SPARSE_UNION,
         RUN_ENCODED,
@@ -208,11 +210,11 @@ namespace sparrow
         }
         else if (format == "vu")  // string view
         {
-            return data_type::STRING;
+            return data_type::STRING_VIEW;
         }
         else if (format == "vz")  // binary view
         {
-            return data_type::FIXED_SIZE_BINARY;
+            return data_type::BINARY_VIEW;
         }
         // TODO: add propper timestamp support below
         else if (format.starts_with("t"))
