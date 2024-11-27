@@ -52,7 +52,6 @@ else()
         junit.hpp
         junit_xml_writer.hpp
         main.cpp
-        test_algorithm.cpp
         test_allocator.cpp
         test_array_wrapper.cpp
         test_array.cpp
@@ -114,7 +113,7 @@ set(test_target_catch2 "test_sparrow_lib_catch2")
 add_executable(${test_target_catch2} "test_algorithm.cpp")
 target_link_libraries(${test_target_catch2}
     PRIVATE
-        sparrow Catch2::Catch2 $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
+        sparrow Catch2::Catch2WithMain $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
 include(Catch)
 catch_discover_tests(${test_target_catch2})
@@ -230,7 +229,8 @@ set_target_properties(${test_target_catch2} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(${test_target_catch2} PRIVATE cxx_std_20)
 
 add_custom_target(run_tests
-    COMMAND ${test_target} && ${test_target_catch2}
+    COMMAND ${test_target}
+    COMMAND ${test_target_catch2} -v high
     DEPENDS ${test_target} ${test_target_catch2}
     COMMENT "Running tests for Doctest and Catch2"
     USES_TERMINAL
@@ -238,11 +238,12 @@ add_custom_target(run_tests
 
 set_target_properties(run_tests PROPERTIES FOLDER "Tests utilities")
 
-set(JUNIT_REPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report.xml)
+set(JUNIT_REPORT_FILE_DOCTEST ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report_doctest.xml)
+set(JUNIT_REPORT_FILE_CATCH2 ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report_catch2.xml)
 
 add_custom_target(run_tests_with_junit_report
     COMMAND ${test_target} --reporters=better_junit --out=${JUNIT_REPORT_FILE_DOCTEST} --no-path-filenames=true
-    COMMAND ${test_target_catch2} --reporter junit --out ${JUNIT_REPORT_FILE_CATCH2} --no-path-filenames
+    COMMAND ${test_target_catch2} --reporter JUnit -o ${JUNIT_REPORT_FILE_CATCH2}
     DEPENDS ${test_target} ${test_target_catch2}
     COMMENT "Running tests with JUnit reports saved to: ${JUNIT_REPORT_FILE_DOCTEST} and ${JUNIT_REPORT_FILE_CATCH2}"
     USES_TERMINAL
