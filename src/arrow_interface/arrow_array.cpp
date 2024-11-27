@@ -47,12 +47,32 @@ namespace sparrow
         return const_cast<T*>(static_cast<const T*>(ptr));
     }
 
+    bool all_digits(const std::string_view s)
+    {
+        return !s.empty() && std::find_if(s.begin(), 
+            s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+    }
+
+
     // get the bit width for fixed width binary from format
     std::size_t num_bytes_for_fixed_sized_binary(const char* format)
     {
         //    w:42   -> 42 bytes
         //    w:1    -> 1 bytes
+
+        // check if format+2 is a number
+
+
+
+        if(!all_digits(std::string_view(format + 2)))
+        {
+            throw std::runtime_error("Invalid format for fixed width binary");
+        }
         const auto width = std::atoi(format + 2);
+        if(width <= 0)
+        {
+            throw std::runtime_error("Invalid format for fixed width binary");
+        }
         return static_cast<std::size_t>(width);
     }
 
@@ -76,10 +96,18 @@ namespace sparrow
         else
         {
             // get the position of second comma
-            const auto second_comma = std::strchr(format, ',') + 1;
-            const auto num_bits = std::atoi(second_comma);
+            const auto second_comma_ptr = std::strchr(format, ',');
+            if(!all_digits(std::string_view(second_comma_ptr + 1)))
+            {
+                throw std::runtime_error("Invalid format for decimal");
+            }
+            // get substring after second comma to end
+            const auto num_bits = std::atoi(second_comma_ptr + 1);
             
-            SPARROW_ASSERT_TRUE(num_bits == 32 || num_bits == 64 || num_bits == 128 || num_bits == 256);
+            if(!(num_bits == 32 || num_bits == 64 || num_bits == 128 || num_bits == 256))
+            {
+                throw std::runtime_error("Invalid format for decimal");
+            }
             return num_bits / 8;
         }       
     }

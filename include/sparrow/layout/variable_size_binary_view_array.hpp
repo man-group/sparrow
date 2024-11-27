@@ -153,6 +153,15 @@ namespace sparrow
         const_value_iterator value_cend() const;
 
         static constexpr size_type LENGTH_BUFFER_INDEX = 1;
+        static constexpr std::size_t DATA_BUFFER_SIZE = 16;
+        static constexpr std::size_t SHORT_STRING_SIZE = 12;
+        static constexpr std::size_t PREFIX_SIZE = 4;
+        static constexpr std::ptrdiff_t PREFIX_OFFSET = 4;
+        static constexpr std::ptrdiff_t SHORT_STRING_OFFSET = 4;
+        static constexpr std::ptrdiff_t BUFFER_INDEX_OFFSET = 8;
+        static constexpr std::ptrdiff_t BUFFER_OFFSET_OFFSET = 12;
+        static constexpr std::size_t FIRST_VAR_DATA_BUFFER_INDEX = 2;
+        
 
         friend base_type;
         friend base_type::base_type;
@@ -183,7 +192,7 @@ namespace sparrow
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
         const auto null_count = vbitmap.null_count();
 
-        buffer<uint8_t> length_buffer(size * 16);
+        buffer<uint8_t> length_buffer(size * DATA_BUFFER_SIZE);
           
         std::size_t long_string_storage_size = 0;
         std::size_t i = 0;
@@ -194,28 +203,28 @@ namespace sparrow
             });
 
             const auto length = val.size();
-            auto length_ptr = length_buffer.data() + (i * 16);
+            auto length_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
 
             // write length
             *reinterpret_cast<std::int32_t*>(length_ptr) = static_cast<std::int32_t>(length);
 
-            if(length <= 12)
+            if(length <= SHORT_STRING_SIZE)
             {
                 // write data itself
-                std::ranges::copy(val_casted, length_ptr + 4);
+                std::ranges::copy(val_casted, length_ptr + SHORT_STRING_OFFSET);
             }
             else
             {
                 // write the prefix of the data
-                auto prefix_sub_range = val_casted | std::ranges::views::take(4);
-                std::ranges::copy(prefix_sub_range, length_ptr + 4);
+                auto prefix_sub_range = val_casted | std::ranges::views::take(PREFIX_SIZE);
+                std::ranges::copy(prefix_sub_range, length_ptr + PREFIX_OFFSET);
 
                 // write the buffer index
-                *reinterpret_cast<std::int32_t*>(length_ptr + 8) = static_cast<std::int32_t>(2);
+                *reinterpret_cast<std::int32_t*>(length_ptr +  BUFFER_INDEX_OFFSET) = static_cast<std::int32_t>(FIRST_VAR_DATA_BUFFER_INDEX);
 
                 // write the buffer offset
-                *reinterpret_cast<std::int32_t*>(length_ptr + 12) = static_cast<std::int32_t>(long_string_storage_size);
-
+                *reinterpret_cast<std::int32_t*>(length_ptr + BUFFER_OFFSET_OFFSET) = static_cast<std::int32_t>(long_string_storage_size);
+ 
                 // count the size of the long string storage
                 long_string_storage_size += length;
             }
@@ -228,7 +237,7 @@ namespace sparrow
         for(auto && val : range)
         {
             const auto length = val.size();
-            if(length > 12)
+            if(length > SHORT_STRING_SIZE)
             {
                 auto val_casted = val | std::ranges::views::transform([](const auto& v) { 
                     return static_cast<std::uint8_t>(v);
@@ -247,7 +256,7 @@ namespace sparrow
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
-            std::is_same<T, std::string_view>::value ? std::string("vu") : std::string("vz"),
+            std::is_same<T, std::string_view>::value ? std::string_view("vu") : std::string_view("vz"),
             std::nullopt, // name
             std::nullopt, // metadata
             std::nullopt, // flags
@@ -296,21 +305,27 @@ namespace sparrow
         #    pragma GCC diagnostic ignored "-Wcast-align"
         #endif
 
-        auto data_ptr = this->get_arrow_proxy().buffers()[LENGTH_BUFFER_INDEX].template data<uint8_t>() + (i * 16);
+        SPARROW_ASSERT_TRUE(i < this->size());
+
+        constexpr std::size_t element_size = 16;
+        auto data_ptr = this->get_arrow_proxy().buffers()[LENGTH_BUFFER_INDEX].template data<uint8_t>() + (i * element_size);
 
         auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr));
         using char_or_byte = typename inner_const_reference::value_type;
 
         if(length <= 12)
         {
+            constexpr std::ptrdiff_t data_offset = 4;
             auto ptr = reinterpret_cast<const char_or_byte*>(data_ptr);
-            const auto ret =  inner_const_reference(ptr + 4, length);
+            const auto ret =  inner_const_reference(ptr + data_offset, length);
             return ret;
         }
         else
         {
-            auto buffer_index = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr + 8));
-            auto buffer_offset = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr + 12));
+            constexpr std::ptrdiff_t buffer_index_offset = 8;
+            constexpr std::ptrdiff_t buffer_offset_offset = 12;
+            auto buffer_index = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr + buffer_index_offset));
+            auto buffer_offset = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr + buffer_offset_offset));
             auto buffer = this->get_arrow_proxy().buffers()[buffer_index].template data<const char_or_byte>();
             return inner_const_reference(buffer + buffer_offset,  length);
         }
