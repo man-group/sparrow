@@ -172,7 +172,13 @@ namespace sparrow
         R && range,
         VB && validity_input
     )
-    {   
+    {    
+   
+        #ifdef __GNUC__
+        #    pragma GCC diagnostic push
+        #    pragma GCC diagnostic ignored "-Wcast-align"
+        #endif
+
         const auto size = range_size(range);
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
         const auto null_count = vbitmap.null_count();
@@ -270,6 +276,10 @@ namespace sparrow
         
         return arrow_proxy{std::move(arr), std::move(schema)};
 
+        #ifdef __GNUC__
+        #    pragma GCC diagnostic pop
+        #endif
+
     }
 
     template <class T>
@@ -281,6 +291,11 @@ namespace sparrow
     template <class T>
     auto variable_size_binary_view_array_impl<T>::value(size_type i) const -> inner_const_reference
     {
+        #ifdef __GNUC__
+        #    pragma GCC diagnostic push
+        #    pragma GCC diagnostic ignored "-Wcast-align"
+        #endif
+
         auto data_ptr = this->get_arrow_proxy().buffers()[LENGTH_BUFFER_INDEX].template data<uint8_t>() + (i * 16);
 
         auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr));
@@ -299,6 +314,10 @@ namespace sparrow
             auto buffer = this->get_arrow_proxy().buffers()[buffer_index].template data<const char_or_byte>();
             return inner_const_reference(buffer + buffer_offset,  length);
         }
+
+        #ifdef __GNUC__
+        #    pragma GCC diagnostic pop
+        #endif
     }
 
     template <class T>
