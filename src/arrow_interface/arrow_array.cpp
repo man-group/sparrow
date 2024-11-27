@@ -160,8 +160,7 @@ namespace sparrow
                 buffers.emplace_back(make_buffer(1, size * 16));
                 for(size_t i = 0; i<num_extra_data_buffers; ++i)
                 {
-                    const auto buffer_size = var_buffer_sizes[i];
-                    buffers.emplace_back(make_buffer(2+i, buffer_size));
+                    buffers.emplace_back(make_buffer(2+i, var_buffer_sizes[i]));
                 }
                 buffers.emplace_back(make_buffer(buffer_count-1, size * 4));
                 return buffers;
