@@ -23,7 +23,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 endif()
 
 find_package(doctest REQUIRED)
-find_package(Catch2 3 REQUIRED)
+find_package(Catch2 REQUIRED)
 
 # find_package(Threads)
 if(NOT CMAKE_BUILD_TYPE)
