@@ -62,8 +62,6 @@ namespace sparrow
 
         // check if format+2 is a number
 
-
-
         if(!all_digits(std::string_view(format + 2)))
         {
             throw std::runtime_error("Invalid format for fixed width binary");
