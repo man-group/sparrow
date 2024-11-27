@@ -15,6 +15,7 @@
 #pragma once
 
 #include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {

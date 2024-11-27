@@ -270,49 +270,6 @@ namespace sparrow
 
         return data_type::NA;
     }
-
-    /// @returns The number of buffers expected for the provided data_type.
-    ///         The returned value is guaranteed to be in the range [0, 3].
-    // constexpr std::size_t get_expected_buffer_count(data_type type)
-    // {
-    //     switch (type)
-    //     {
-    //         case data_type::NA:
-    //         case data_type::RUN_ENCODED:
-    //             return 0;
-    //         case data_type::STRUCT:
-    //         case data_type::SPARSE_UNION:
-    //             return 1;
-    //         case data_type::BOOL:
-    //         case data_type::UINT8:
-    //         case data_type::INT8:
-    //         case data_type::UINT16:
-    //         case data_type::INT16:
-    //         case data_type::UINT32:
-    //         case data_type::INT32:
-    //         case data_type::FLOAT:
-    //         case data_type::UINT64:
-    //         case data_type::INT64:
-    //         case data_type::DOUBLE:
-    //         case data_type::HALF_FLOAT:
-    //         case data_type::FIXED_WIDTH_BINARY:
-    //         case data_type::DECIMAL:
-    //         case data_type::LIST:
-    //         case data_type::LARGE_LIST:
-    //         case data_type::MAP:
-    //         case data_type::FIXED_SIZED_LIST:
-    //         case data_type::DENSE_UNION:
-    //             return 2;
-    //         case data_type::STRING:
-    //         case data_type::BINARY:
-    //         case data_type::FIXED_SIZE_BINARY:
-    //         case data_type::TIMESTAMP:
-    //         case data_type::LIST_VIEW:
-    //         case data_type::LARGE_LIST_VIEW:
-    //             return 3;
-    //     }
-    //     mpl::unreachable();
-    // }
     
     /// @returns The default floating-point `data_type`  that should be associated with the provided type.
     ///          The deduction will be based on the size of the type. Calling this function with unsupported sizes
@@ -462,42 +419,6 @@ namespace sparrow
         }
     }
 
-    /// @returns The number of bytes required to store the provided primitive data type.
-    template<std::integral T>
-    constexpr size_t primitive_bytes_count(data_type data_type, T size)
-    {
-        SPARROW_ASSERT_TRUE(data_type_is_primitive(data_type));
-        constexpr double bit_per_byte = 8.;
-        switch (data_type)
-        {
-            case data_type::BOOL:
-                return static_cast<std::size_t>(std::ceil(static_cast<double>(size) / bit_per_byte));
-            case data_type::UINT8:
-            // TODO: Replace static_cast<std::size_t> by the 32 bit fix check function
-            case data_type::INT8:
-                return static_cast<std::size_t>(size);
-            case data_type::UINT16:
-                return (sizeof(std::uint16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::INT16:
-                return (sizeof(std::int16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::UINT32:
-                return (sizeof(std::uint32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::INT32:
-                return (sizeof(std::int32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::UINT64:
-                return (sizeof(std::uint64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::INT64:
-                return (sizeof(std::int64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::HALF_FLOAT:
-                return (sizeof(float16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::FLOAT:
-                return (sizeof(float32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::DOUBLE:
-                return (sizeof(float64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            default:
-                throw std::runtime_error("Unsupported data type");
-        }
-    }
 
     class list_value;
     class struct_value;
