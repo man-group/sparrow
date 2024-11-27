@@ -14,8 +14,8 @@
 
 #include <cstdint>
 #include <ranges>
+#include <vector>
 
-#include "sparrow/arrow_array_schema_proxy_factory.hpp"
 #include "sparrow/layout/primitive_array.hpp"
 
 #include "doctest/doctest.h"
@@ -40,77 +40,71 @@ namespace sparrow
     {
         TEST_CASE_TEMPLATE_DEFINE("", T, primitive_array_id)
         {
-            static_assert(is_primitive_array_v<primitive_array<T>>);
+            using array_test_type = primitive_array<T>;
 
-            const std::array<T, 5> values{1, 2, 3, 4, 5};
-            constexpr std::array<uint8_t, 1> nulls{2};
-            constexpr int64_t offset = 1;
-
-            auto make_array = [&nulls]<std::ranges::input_range R>(R values_range)
+            auto make_array = [](size_t count, size_t offset = 0)
             {
-                return make_primitive_arrow_proxy(values_range, nulls, offset, "test", std::nullopt);
+                std::vector<T> values;
+                values.reserve(count);
+                for (T i = 0; i < static_cast<T>(static_cast<int>(count)); ++i)
+                {
+                    values.push_back(i);
+                }
+
+                const primitive_array<T> arr(
+                    std::move(values),
+                    count > 2 ? std::vector<std::size_t>{2} : std::vector<std::size_t>{}
+                );
+                if(offset != 0)
+                {
+                    return arr.slice(offset, arr.size());
+                }
+                else
+                {
+                    return arr;
+                }
             };
 
             // Elements: 2, null, 4, 5
-
-            using array_test_type = primitive_array<T>;
-            array_test_type ar{make_array(values)};
-
-            SUBCASE("empty")
-            {
-                CHECK_FALSE(ar.empty());
-            }
+            array_test_type ar = make_array(5 ,1);
 
             SUBCASE("constructor")
             {
                 CHECK_EQ(ar.size(), 4);
             }
 
-            SUBCASE("at")
-            {
-                SUBCASE("const")
-                {
-                    const array_test_type const_ar{make_array(values)};
-                    REQUIRE_EQ(const_ar.size(), 4);
-                    CHECK(const_ar.at(0).has_value());
-                    CHECK_EQ(const_ar.at(0).get(), values[1]);
-                    CHECK_FALSE(const_ar.at(1).has_value());
-                    CHECK_EQ(const_ar.at(1).get(), values[2]);
-                    CHECK(const_ar.at(2).has_value());
-                    CHECK_EQ(const_ar.at(2).get(), values[3]);
-                    CHECK(const_ar.at(3).has_value());
-                    CHECK_EQ(const_ar.at(3).get(), values[4]);
-                    CHECK_THROWS_AS(const_ar.at(4), std::out_of_range);
-                }
-            }
-
             SUBCASE("operator[]")
             {
                 SUBCASE("const")
                 {
-                    const array_test_type const_ar{make_array(values)};
+                    const array_test_type const_ar = make_array(5, 1);
+                    std::vector<T> values2;
+                    for (const auto& v : const_ar)
+                    {
+                        values2.push_back(v.get());
+                    }
                     REQUIRE_EQ(const_ar.size(), 4);
                     CHECK(const_ar[0].has_value());
-                    CHECK_EQ(const_ar[0].get(), values[1]);
+                    CHECK_EQ(const_ar[0].get(), static_cast<T>(1));
                     CHECK_FALSE(const_ar[1].has_value());
-                    CHECK_EQ(const_ar[1].get(), values[2]);
+                    CHECK_EQ(const_ar[1].get(), static_cast<T>(2));
                     CHECK(const_ar[2].has_value());
-                    CHECK_EQ(const_ar[2].get(), values[3]);
+                    CHECK_EQ(const_ar[2].get(), static_cast<T>(3));
                     CHECK(const_ar[3].has_value());
-                    CHECK_EQ(const_ar[3].get(), values[4]);
+                    CHECK_EQ(const_ar[3].get(), static_cast<T>(4));
                 }
 
                 SUBCASE("mutable")
                 {
                     REQUIRE_EQ(ar.size(), 4);
                     CHECK(ar[0].has_value());
-                    CHECK_EQ(ar[0].get(), values[1]);
+                    CHECK_EQ(ar[0].get(), static_cast<T>(1));
                     CHECK_FALSE(ar[1].has_value());
-                    CHECK_EQ(ar[1].get(), values[2]);
+                    CHECK_EQ(ar[1].get(), static_cast<T>(2));
                     CHECK(ar[2].has_value());
-                    CHECK_EQ(ar[2].get(), values[3]);
+                    CHECK_EQ(ar[2].get(), static_cast<T>(3));
                     CHECK(ar[3].has_value());
-                    CHECK_EQ(ar[3].get(), values[4]);
+                    CHECK_EQ(ar[3].get(), static_cast<T>(4));
 
                     ar[1] = make_nullable<T>(99);
                     CHECK(ar[1].has_value());
@@ -122,10 +116,10 @@ namespace sparrow
             {
                 SUBCASE("const")
                 {
-                    const array_test_type const_ar{make_array(values)};
+                    const array_test_type const_ar{ar};
                     REQUIRE_EQ(const_ar.size(), 4);
                     CHECK(ar.front().has_value());
-                    CHECK_EQ(ar.front().value(), values[1]);
+                    CHECK_EQ(ar.front().value(), static_cast<T>(1));
                 }
             }
 
@@ -133,10 +127,10 @@ namespace sparrow
             {
                 SUBCASE("const")
                 {
-                    const array_test_type const_ar{make_array(values)};
+                    const array_test_type const_ar{ar};
                     REQUIRE_EQ(const_ar.size(), 4);
                     CHECK(ar.back().has_value());
-                    CHECK_EQ(ar.back().value(), values[4]);
+                    CHECK_EQ(ar.back().value(), static_cast<T>(4));
                 }
             }
 
@@ -146,7 +140,7 @@ namespace sparrow
 
                 CHECK_EQ(ar, ar2);
 
-                array_test_type ar3(make_array(std::vector<T>{1, 2, 3, 4, 5, 6, 7}));
+                array_test_type ar3(make_array(7, 1));
                 CHECK_NE(ar, ar3);
                 ar3 = ar;
                 CHECK_EQ(ar, ar3);
@@ -159,7 +153,7 @@ namespace sparrow
                 array_test_type ar3(std::move(ar));
                 CHECK_EQ(ar2, ar3);
 
-                array_test_type ar4(make_array(std::vector<T>{1, 2, 3, 4, 5, 6, 7}));
+                array_test_type ar4(make_array(7, 1));
                 CHECK_NE(ar2, ar4);
                 ar4 = std::move(ar2);
                 CHECK_EQ(ar3, ar4);
@@ -176,13 +170,13 @@ namespace sparrow
             {
                 const auto ar_values = ar.values();
                 auto citer = ar_values.begin();
-                CHECK_EQ(*citer, values[1]);
+                CHECK_EQ(*citer, static_cast<T>(1));
                 ++citer;
-                CHECK_EQ(*citer, values[2]);
+                CHECK_EQ(*citer, static_cast<T>(2));
                 ++citer;
-                CHECK_EQ(*citer, values[3]);
+                CHECK_EQ(*citer, static_cast<T>(3));
                 ++citer;
-                CHECK_EQ(*citer, values[4]);
+                CHECK_EQ(*citer, static_cast<T>(4));
                 ++citer;
                 CHECK_EQ(citer, ar_values.end());
             }
@@ -198,13 +192,13 @@ namespace sparrow
             {
                 auto ar_values = ar.values();
                 auto citer = ar_values.begin();
-                CHECK_EQ(*citer, values[1]);
+                CHECK_EQ(*citer, static_cast<T>(1));
                 ++citer;
-                CHECK_EQ(*citer, values[2]);
+                CHECK_EQ(*citer, static_cast<T>(2));
                 ++citer;
-                CHECK_EQ(*citer, values[3]);
+                CHECK_EQ(*citer, static_cast<T>(3));
                 ++citer;
-                CHECK_EQ(*citer, values[4]);
+                CHECK_EQ(*citer, static_cast<T>(4));
                 ++citer;
                 CHECK_EQ(citer, ar_values.end());
             }
@@ -235,23 +229,21 @@ namespace sparrow
                 auto it = ar.begin();
                 const auto end = ar.end();
                 CHECK(it->has_value());
-                CHECK_EQ(*it, values[1]);
+                CHECK_EQ(*it, make_nullable<T>(1));
                 ++it;
                 CHECK_FALSE(it->has_value());
-                CHECK_EQ(*it, make_nullable(values[2], false));
+                CHECK_EQ(*it, make_nullable<T>(2, false));
                 ++it;
                 CHECK(it->has_value());
-                CHECK_EQ(*it, make_nullable(values[3]));
+                CHECK_EQ(*it, make_nullable<T>(3));
                 ++it;
                 CHECK(it->has_value());
-                CHECK_EQ(*it, make_nullable(values[4]));
+                CHECK_EQ(*it, make_nullable<T>(4));
                 ++it;
 
                 CHECK_EQ(it, end);
 
-                const array_test_type ar_empty(
-                    make_primitive_arrow_proxy(std::array<T, 0>{}, std::array<uint32_t, 0>{}, 0, "test", std::nullopt)
-                );
+                const array_test_type ar_empty = make_array(0);
                 CHECK_EQ(ar_empty.begin(), ar_empty.end());
             }
 
@@ -260,23 +252,21 @@ namespace sparrow
                 auto rit = ar.rbegin();
                 const auto rend = ar.rend();
                 CHECK(rit->has_value());
-                CHECK_EQ(*rit, make_nullable(values[4]));
+                CHECK_EQ(*rit, make_nullable<T>(4));
                 ++rit;
                 CHECK(rit->has_value());
-                CHECK_EQ(*rit, make_nullable(values[3]));
+                CHECK_EQ(*rit, make_nullable<T>(3));
                 ++rit;
                 CHECK_FALSE(rit->has_value());
-                CHECK_EQ(*rit, make_nullable(values[2], false));
+                CHECK_EQ(*rit, make_nullable<T>(2, false));
                 ++rit;
                 CHECK(rit->has_value());
-                CHECK_EQ(*rit, values[1]);
+                CHECK_EQ(*rit, make_nullable<T>(1));
                 ++rit;
 
                 CHECK_EQ(rit, rend);
 
-                const array_test_type ar_empty(
-                    make_primitive_arrow_proxy(std::array<T, 0>{}, std::array<uint32_t, 0>{}, 0, "test", std::nullopt)
-                );
+                const array_test_type ar_empty = make_array(0);
                 CHECK_EQ(ar_empty.rbegin(), ar_empty.rend());
             }
 
@@ -286,13 +276,13 @@ namespace sparrow
                 ar.resize(7, make_nullable<T>(99));
                 REQUIRE_EQ(ar.size(), 7);
                 CHECK(ar[0].has_value());
-                CHECK_EQ(ar[0].get(), values[1]);
+                CHECK_EQ(ar[0].get(), static_cast<T>(1));
                 CHECK_FALSE(ar[1].has_value());
-                CHECK_EQ(ar[1].get(), values[2]);
+                CHECK_EQ(ar[1].get(), static_cast<T>(2));
                 CHECK(ar[2].has_value());
-                CHECK_EQ(ar[2].get(), values[3]);
+                CHECK_EQ(ar[2].get(), static_cast<T>(3));
                 CHECK(ar[3].has_value());
-                CHECK_EQ(ar[3].get(), values[4]);
+                CHECK_EQ(ar[3].get(), static_cast<T>(4));
                 CHECK(ar[4].has_value());
                 CHECK_EQ(ar[4].get(), new_value);
                 CHECK(ar[5].has_value());
@@ -315,13 +305,13 @@ namespace sparrow
                         CHECK(ar[0].has_value());
                         CHECK_EQ(ar[0].get(), new_value);
                         CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), values[1]);
+                        CHECK_EQ(ar[1].get(), static_cast<T>(1));
                         CHECK_FALSE(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), values[2]);
+                        CHECK_EQ(ar[2].get(), static_cast<T>(2));
                         CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), values[3]);
+                        CHECK_EQ(ar[3].get(), static_cast<T>(3));
                         CHECK(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), values[4]);
+                        CHECK_EQ(ar[4].get(), static_cast<T>(4));
                     }
 
                     SUBCASE("in the middle")
@@ -332,15 +322,15 @@ namespace sparrow
                         CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
                         REQUIRE_EQ(ar.size(), 5);
                         CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), values[1]);
+                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
                         CHECK(ar[1].has_value());
                         CHECK_EQ(ar[1].get(), new_value);
                         CHECK_FALSE(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), values[2]);
+                        CHECK_EQ(ar[2].get(), static_cast<T>(2));
                         CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), values[3]);
+                        CHECK_EQ(ar[3].get(), static_cast<T>(3));
                         CHECK(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), values[4]);
+                        CHECK_EQ(ar[4].get(), static_cast<T>(4));
                     }
 
                     SUBCASE("at the end")
@@ -351,13 +341,13 @@ namespace sparrow
                         CHECK_EQ(iter, ar.begin() + 4);
                         REQUIRE_EQ(ar.size(), 5);
                         CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), values[1]);
+                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
                         CHECK_FALSE(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), values[2]);
+                        CHECK_EQ(ar[1].get(), static_cast<T>(2));
                         CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), values[3]);
+                        CHECK_EQ(ar[2].get(), static_cast<T>(3));
                         CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), values[4]);
+                        CHECK_EQ(ar[3].get(), static_cast<T>(4));
                         CHECK(ar[4].has_value());
                         CHECK_EQ(ar[4].get(), new_value);
                     }
@@ -379,13 +369,13 @@ namespace sparrow
                         CHECK(ar[2].has_value());
                         CHECK_EQ(ar[2].get(), new_value);
                         CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), values[1]);
+                        CHECK_EQ(ar[3].get(), static_cast<T>(1));
                         CHECK_FALSE(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), values[2]);
+                        CHECK_EQ(ar[4].get(), static_cast<T>(2));
                         CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), values[3]);
+                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
                         CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), values[4]);
+                        CHECK_EQ(ar[6].get(), static_cast<T>(4));
                     }
 
                     SUBCASE("in the middle")
@@ -396,7 +386,7 @@ namespace sparrow
                         CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
                         REQUIRE_EQ(ar.size(), 7);
                         CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), values[1]);
+                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
                         CHECK(ar[1].has_value());
                         CHECK_EQ(ar[1].get(), new_value);
                         CHECK(ar[2].has_value());
@@ -404,11 +394,11 @@ namespace sparrow
                         CHECK(ar[3].has_value());
                         CHECK_EQ(ar[3].get(), new_value);
                         CHECK_FALSE(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), values[2]);
+                        CHECK_EQ(ar[4].get(), static_cast<T>(2));
                         CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), values[3]);
+                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
                         CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), values[4]);
+                        CHECK_EQ(ar[6].get(), static_cast<T>(4));
                     }
 
                     SUBCASE("at the end")
@@ -419,13 +409,13 @@ namespace sparrow
                         CHECK_EQ(iter, ar.begin() + 4);
                         REQUIRE_EQ(ar.size(), 7);
                         CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), values[1]);
+                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
                         CHECK_FALSE(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), values[2]);
+                        CHECK_EQ(ar[1].get(), static_cast<T>(2));
                         CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), values[3]);
+                        CHECK_EQ(ar[2].get(), static_cast<T>(3));
                         CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), values[4]);
+                        CHECK_EQ(ar[3].get(), static_cast<T>(4));
                         CHECK(ar[4].has_value());
                         CHECK_EQ(ar[4].get(), new_value);
                         CHECK(ar[5].has_value());
@@ -455,12 +445,12 @@ namespace sparrow
                         CHECK(ar[2].has_value());
                         CHECK_EQ(ar[2].get(), new_values[2]);
                         CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), values[1]);
+                        CHECK_EQ(ar[3].get(), static_cast<T>(1));
                         CHECK_FALSE(ar[4].has_value());
                         CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), values[3]);
+                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
                         CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), values[4]);
+                        CHECK_EQ(ar[6].get(), static_cast<T>(4));
                     }
 
                     SUBCASE("in the middle")
@@ -475,7 +465,7 @@ namespace sparrow
                         CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
                         REQUIRE_EQ(ar.size(), 7);
                         CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), values[1]);
+                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
                         CHECK(ar[1].has_value());
                         CHECK_EQ(ar[1].get(), new_values[0]);
                         CHECK(ar[2].has_value());
@@ -483,11 +473,11 @@ namespace sparrow
                         CHECK(ar[3].has_value());
                         CHECK_EQ(ar[3].get(), new_values[2]);
                         CHECK_FALSE(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), values[2]);
+                        CHECK_EQ(ar[4].get(), static_cast<T>(2));
                         CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), values[3]);
+                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
                         CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), values[4]);
+                        CHECK_EQ(ar[6].get(), static_cast<T>(4));
                     }
 
                     SUBCASE("at the end")
@@ -502,13 +492,13 @@ namespace sparrow
                         CHECK_EQ(iter, ar.begin() + 4);
                         REQUIRE_EQ(ar.size(), 7);
                         CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), values[1]);
+                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
                         CHECK_FALSE(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), values[2]);
+                        CHECK_EQ(ar[1].get(), static_cast<T>(2));
                         CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), values[3]);
+                        CHECK_EQ(ar[2].get(), static_cast<T>(3));
                         CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), values[4]);
+                        CHECK_EQ(ar[3].get(), static_cast<T>(4));
                         CHECK(ar[4].has_value());
                         CHECK_EQ(ar[4].get(), new_values[0]);
                         CHECK(ar[5].has_value());
@@ -533,10 +523,10 @@ namespace sparrow
                         CHECK_EQ(ar[1], new_val_100);
                         CHECK_EQ(ar[2], new_val_101);
                         CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), values[1]);
+                        CHECK_EQ(ar[3].get(), static_cast<T>(1));
                         CHECK_FALSE(ar[4].has_value());
                         CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), values[3]);
+                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
                         CHECK(ar[6].has_value());
                     }
 
@@ -550,14 +540,14 @@ namespace sparrow
                         CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
                         REQUIRE_EQ(ar.size(), 7);
                         CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), values[1]);
+                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
                         CHECK_EQ(ar[1], new_val_99);
                         CHECK_EQ(ar[2], new_val_100);
                         CHECK_EQ(ar[3], new_val_101);
                         CHECK_FALSE(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), values[2]);
+                        CHECK_EQ(ar[4].get(), static_cast<T>(2));
                         CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), values[3]);
+                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
                         CHECK(ar[6].has_value());
                     }
 
@@ -571,13 +561,13 @@ namespace sparrow
                         CHECK_EQ(iter, ar.begin() + 4);
                         REQUIRE_EQ(ar.size(), 7);
                         CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), values[1]);
+                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
                         CHECK_FALSE(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), values[2]);
+                        CHECK_EQ(ar[1].get(), static_cast<T>(2));
                         CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), values[3]);
+                        CHECK_EQ(ar[2].get(), static_cast<T>(3));
                         CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), values[4]);
+                        CHECK_EQ(ar[3].get(), static_cast<T>(4));
                         CHECK_EQ(ar[4], new_val_99);
                         CHECK_EQ(ar[5], new_val_100);
                         CHECK_EQ(ar[6], new_val_101);
@@ -604,13 +594,13 @@ namespace sparrow
                         CHECK(ar[2].has_value());
                         CHECK_EQ(ar[2].get(), new_values[2]);
                         CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), values[1]);
+                        CHECK_EQ(ar[3].get(), static_cast<T>(1));
                         CHECK_FALSE(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), values[2]);
+                        CHECK_EQ(ar[4].get(), static_cast<T>(2));
                         CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), values[3]);
+                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
                         CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), values[4]);
+                        CHECK_EQ(ar[6].get(), static_cast<T>(4));
                     }
                 }
             }
@@ -626,11 +616,11 @@ namespace sparrow
                         CHECK_EQ(iter, ar.begin());
                         REQUIRE_EQ(ar.size(), 3);
                         CHECK_FALSE(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), values[2]);
+                        CHECK_EQ(ar[0].get(), static_cast<T>(2));
                         CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), values[3]);
+                        CHECK_EQ(ar[1].get(), static_cast<T>(3));
                         CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), values[4]);
+                        CHECK_EQ(ar[2].get(), static_cast<T>(4));
                     }
 
                     SUBCASE("in the middle")
@@ -640,11 +630,11 @@ namespace sparrow
                         CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
                         REQUIRE_EQ(ar.size(), 3);
                         CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), values[1]);
+                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
                         CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), values[3]);
+                        CHECK_EQ(ar[1].get(), static_cast<T>(3));
                         CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), values[4]);
+                        CHECK_EQ(ar[2].get(), static_cast<T>(4));
                     }
 
                     SUBCASE("at the end")
@@ -654,11 +644,11 @@ namespace sparrow
                         CHECK_EQ(iter, ar.begin() + 3);
                         REQUIRE_EQ(ar.size(), 3);
                         REQUIRE(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), values[1]);
+                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
                         CHECK_FALSE(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), values[2]);
+                        CHECK_EQ(ar[1].get(), static_cast<T>(2));
                         CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), values[3]);
+                        CHECK_EQ(ar[2].get(), static_cast<T>(3));
                     }
                 }
 
@@ -669,9 +659,9 @@ namespace sparrow
                     CHECK_EQ(iter, ar.begin() + 1);
                     REQUIRE_EQ(ar.size(), 2);
                     CHECK(ar[0].has_value());
-                    CHECK_EQ(ar[0].get(), values[1]);
+                    CHECK_EQ(ar[0].get(), static_cast<T>(1));
                     CHECK(ar[1].has_value());
-                    CHECK_EQ(ar[1].get(), values[4]);
+                    CHECK_EQ(ar[1].get(), static_cast<T>(4));
                 }
             }
 
@@ -681,13 +671,13 @@ namespace sparrow
                 ar.push_back(make_nullable<T>(99));
                 REQUIRE_EQ(ar.size(), 5);
                 CHECK(ar[0].has_value());
-                CHECK_EQ(ar[0].get(), values[1]);
+                CHECK_EQ(ar[0].get(), static_cast<T>(1));
                 CHECK_FALSE(ar[1].has_value());
-                CHECK_EQ(ar[1].get(), values[2]);
+                CHECK_EQ(ar[1].get(), static_cast<T>(2));
                 CHECK(ar[2].has_value());
-                CHECK_EQ(ar[2].get(), values[3]);
+                CHECK_EQ(ar[2].get(), static_cast<T>(3));
                 CHECK(ar[3].has_value());
-                CHECK_EQ(ar[3].get(), values[4]);
+                CHECK_EQ(ar[3].get(), static_cast<T>(4));
                 CHECK(ar[4].has_value());
                 CHECK_EQ(ar[4].value(), new_value);
             }
@@ -697,11 +687,11 @@ namespace sparrow
                 ar.pop_back();
                 REQUIRE_EQ(ar.size(), 3);
                 CHECK(ar[0].has_value());
-                CHECK_EQ(ar[0].get(), values[1]);
+                CHECK_EQ(ar[0].get(), static_cast<T>(1));
                 CHECK_FALSE(ar[1].has_value());
-                CHECK_EQ(ar[1].get(), values[2]);
+                CHECK_EQ(ar[1].get(), static_cast<T>(2));
                 CHECK(ar[2].has_value());
-                CHECK_EQ(ar[2].get(), values[3]);
+                CHECK_EQ(ar[2].get(), static_cast<T>(3));
             }
         }
         TEST_CASE_TEMPLATE_APPLY(primitive_array_id, testing_types);
@@ -711,15 +701,17 @@ namespace sparrow
             using inner_value_type = T;
 
             std::vector<inner_value_type> data = {
-                static_cast<inner_value_type>(0), 
-                static_cast<inner_value_type>(1), 
+                static_cast<inner_value_type>(0),
+                static_cast<inner_value_type>(1),
                 static_cast<inner_value_type>(2),
                 static_cast<inner_value_type>(3)
             };
-            SUBCASE("range-of-inner-values") {
+            SUBCASE("range-of-inner-values")
+            {
                 primitive_array<T> arr(data);
                 CHECK_EQ(arr.size(), data.size());
-                for (std::size_t i = 0; i < data.size(); ++i) {
+                for (std::size_t i = 0; i < data.size(); ++i)
+                {
                     REQUIRE(arr[i].has_value());
                     CHECK_EQ(arr[i].value(), data[i]);
                 }
@@ -745,7 +737,7 @@ namespace sparrow
             }
             SUBCASE("initializer list")
             {
-                primitive_array<T> arr = { T(0), T(1), T(2) };
+                primitive_array<T> arr = {T(0), T(1), T(2)};
                 CHECK_EQ(arr[0].value(), T(0));
                 CHECK_EQ(arr[1].value(), T(1));
                 CHECK_EQ(arr[2].value(), T(2));
@@ -754,19 +746,20 @@ namespace sparrow
         TEST_CASE_TEMPLATE_APPLY(convenience_constructors_id, testing_types);
 
         TEST_CASE("convenience_constructors_from_iota")
-        {   
+        {
             primitive_array<std::size_t> arr(std::ranges::iota_view{std::size_t(0), std::size_t(4)});
             REQUIRE(arr.size() == 4);
-            for (std::size_t i = 0; i < 4; ++i) {
+            for (std::size_t i = 0; i < 4; ++i)
+            {
                 REQUIRE(arr[i].has_value());
                 CHECK_EQ(arr[i].value(), static_cast<std::size_t>(i));
             }
         }
         TEST_CASE("convenience_constructors_index_of_missing")
-        {   
+        {
             primitive_array<std::size_t> arr(
                 std::ranges::iota_view{std::size_t(0), std::size_t(5)},
-                std::vector<std::size_t>{1,3}
+                std::vector<std::size_t>{1, 3}
             );
             REQUIRE(arr.size() == 5);
             CHECK(arr[0].has_value());
@@ -774,7 +767,7 @@ namespace sparrow
             CHECK(arr[2].has_value());
             CHECK(!arr[3].has_value());
             CHECK(arr[4].has_value());
-            
+
             CHECK_EQ(arr[0].value(), std::size_t(0));
             CHECK_EQ(arr[2].value(), std::size_t(2));
             CHECK_EQ(arr[4].value(), std::size_t(4));

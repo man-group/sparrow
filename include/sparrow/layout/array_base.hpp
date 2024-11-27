@@ -127,6 +127,28 @@ namespace sparrow
         const_bitmap_range bitmap() const;
         const_value_range values() const;
 
+        /**
+         * Slices the array to keep only the elements between the given \p start and \p end.
+         * A copy of the \ref array is modified. The data is not modified, only the ArrowArray.offset and
+         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
+         * elements will be invalid.
+         *
+         * @param start The index of the first element to keep. Must be less than \p end.
+         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         */
+        D slice(size_type start, size_type end) const;
+
+        /**
+         * Slices the array to keep only the elements between the given \p start and \p end.
+         * A view of the \ref array is returned. The data is not modified, only the ArrowArray.offset and
+         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
+         * elements will be invalid.
+         *
+         * @param start The index of the first element to keep. Must be less than \p end.
+         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         */
+        D slice_view(size_type start, size_type end) const;
+
     protected:
 
         explicit array_crtp_base(arrow_proxy);
@@ -395,6 +417,20 @@ namespace sparrow
         return bitmap_end();
     }
 
+    template <class D>
+    D array_crtp_base<D>::slice(size_type start, size_type end) const
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        return D{get_arrow_proxy().slice(start, end)};
+    }
+
+    template <class D>
+    D array_crtp_base<D>::slice_view(size_type start, size_type end) const
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        return D{get_arrow_proxy().slice_view(start, end)};
+    }
+
     /**
      * Checks if the contents of lhs and rhs are equal, that is, they have the same
      * number of elements and each element in lhs compares equal with the element
@@ -408,4 +444,7 @@ namespace sparrow
     {
         return std::ranges::equal(lhs, rhs);
     }
+
+    
+
 }
