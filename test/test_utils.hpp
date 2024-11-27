@@ -91,9 +91,5 @@ namespace sparrow::test
         }, variant);
     }
 
-
-
-    
-
     
 };
