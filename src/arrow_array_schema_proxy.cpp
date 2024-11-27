@@ -676,22 +676,6 @@ namespace sparrow
         return res;
     }
 
-    // void arrow_proxy::update_null_count()
-    // {
-    //     const auto buffer_types = get_buffer_types_from_data_type(data_type());
-    //     const auto validity_it = std::ranges::find(buffer_types, buffer_type::VALIDITY);
-    //     if (validity_it == buffer_types.end())
-    //     {
-    //         return;
-    //     }
-    //     const auto validity_index = std::distance(buffer_types.begin(), validity_it);
-    //     const auto& validity_buffer = buffers()[static_cast<size_t>(validity_index)];
-    //     const dynamic_bitset_view<const std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
-    //     const auto null_count = bitmap.null_count();
-    //     set_null_count(static_cast<int64_t>(null_count));
-    // }
-
-
     void arrow_proxy::update_null_count()
     {
         if(has_bitmap(data_type()))

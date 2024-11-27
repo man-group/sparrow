@@ -179,43 +179,6 @@ namespace sparrow
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-    // std::vector<sparrow::buffer_view<uint8_t>>
-    // get_arrow_array_buffers(const ArrowArray& array, const ArrowSchema& schema)
-    // {
-    //     std::vector<sparrow::buffer_view<uint8_t>> buffers;
-    //     const auto buffer_count = static_cast<size_t>(array.n_buffers);
-    //     buffers.reserve(buffer_count);
-    //     const enum data_type data_type = format_to_data_type(schema.format);
-    //     const auto buffers_type = get_buffer_types_from_data_type(data_type);
-    //     SPARROW_ASSERT_TRUE(buffers_type.size() == buffer_count);
-    //     for (std::size_t i = 0; i < buffer_count; ++i)
-    //     {
-    //         const auto buffer_type = buffers_type[i];
-    //         auto buffer = array.buffers[i];
-    //         const std::size_t buffer_size = compute_buffer_size(
-    //             buffer_type,
-    //             static_cast<size_t>(array.length),
-    //             static_cast<size_t>(array.offset),
-    //             data_type,
-    //             buffers,
-    //             i == 0 ? buffer_type : buffers_type[i - 1]
-    //         );
-    //         auto* ptr = static_cast<uint8_t*>(const_cast<void*>(buffer));
-    //         buffers.emplace_back(ptr, buffer_size);
-    //     }
-    //     return buffers;
-    // }
-
     void copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema, ArrowArray& target)
     {
         SPARROW_ASSERT_TRUE(&source_array != &target);
