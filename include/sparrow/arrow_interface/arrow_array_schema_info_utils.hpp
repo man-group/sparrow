@@ -77,16 +77,17 @@ namespace sparrow
             case data_type::DECIMAL:
             case data_type::LIST:
             case data_type::STRUCT:
-            case data_type::MAP:
             case data_type::STRING:
             case data_type::BINARY:
-            case data_type::FIXED_SIZE_BINARY:
             case data_type::FIXED_WIDTH_BINARY:
             case data_type::LARGE_LIST:
             case data_type::LIST_VIEW:
             case data_type::LARGE_LIST_VIEW:
             case data_type::FIXED_SIZED_LIST:
+            case data_type::STRING_VIEW:
+            case data_type::BINARY_VIEW:
                 return true;
+            case data_type::MAP:
             case data_type::NA:
             case data_type::SPARSE_UNION:
             case data_type::DENSE_UNION:

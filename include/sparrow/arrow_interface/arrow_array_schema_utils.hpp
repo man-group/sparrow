@@ -170,7 +170,7 @@ namespace sparrow
 
     constexpr void children_ownership::resize_children(std::size_t size)
     {
-        m_children.resize(size);
+        m_children.resize(size); 
     }
 
     template <class T>

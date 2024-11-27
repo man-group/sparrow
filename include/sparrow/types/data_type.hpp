@@ -140,8 +140,6 @@ namespace sparrow
         STRING = 13,
         // Variable-length bytes (no guarantee of UTF8-ness)
         BINARY = 14,
-        // Fixed-size binary. Each value occupies the same number of bytes
-        FIXED_SIZE_BINARY = 15,
         // Number of nanoseconds since the UNIX epoch with an optional timezone.
         // See: https://arrow.apache.org/docs/python/timestamps.html#timestamps
         TIMESTAMP = 18,

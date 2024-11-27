@@ -78,7 +78,8 @@ namespace sparrow
             // get the position of second comma
             const auto second_comma = std::strchr(format, ',') + 1;
             const auto num_bits = std::atoi(second_comma);
-            SPARROW_ASSERT(num_bits == 32 || num_bits == 64 || num_bits == 128 || num_bits == 256);
+            
+            SPARROW_ASSERT_TRUE(num_bits == 32 || num_bits == 64 || num_bits == 128 || num_bits == 256);
             return num_bits / 8;
         }       
     }
@@ -95,18 +96,20 @@ namespace sparrow
             auto typed_buffer_ptr = static_const_ptr_cast<uint8_t>(array.buffers[0]);
             return typed_buffer_ptr != nullptr ? buffer_view_type(typed_buffer_ptr, buffer_size) : buffer_view_type(nullptr, 0);
         };
-        auto make_buffer =  [](auto index, auto size)
+        auto make_buffer =  [&](auto index, auto size)
         {
             auto buffer_ptr = static_const_ptr_cast<uint8_t>(array.buffers[index]);
+            return buffer_view_type(buffer_ptr, size);
         };
 
         switch(format_to_data_type(schema.format))
         {   
             case data_type::NA:
             case data_type::RUN_ENCODED:
+            case data_type::MAP:
                 return {};
             case data_type::BOOL:   
-                return {maske_valid_buffer(), make_buffer(1, (size + 7) / 8)};
+                return {make_valid_buffer(), make_buffer(1, (size + 7) / 8)};
             case data_type::UINT8:
             case data_type::INT8:
                 return {make_valid_buffer(), make_buffer(1, size)};
@@ -125,9 +128,9 @@ namespace sparrow
             case data_type::STRING:
             case data_type::BINARY:
                 return {make_valid_buffer(), make_buffer(1, (size + 1) * 4), make_buffer(2, size)};
-            case data_type::LARGE_STRING:
-            case data_type::LARGE_BINARY:
-                return {make_valid_buffer(), make_buffer(1, (size + 1) * 4), make_buffer(2, size)};
+            // case data_type::LARGE_STRING:
+            // case data_type::LARGE_BINARY:
+            //     return {make_valid_buffer(), make_buffer(1, (size + 1) * 4), make_buffer(2, size)};
             case data_type::LIST:
                 return {make_valid_buffer(), make_buffer(1, (size + 1) * 4)};
             case data_type::LARGE_LIST:
@@ -136,7 +139,7 @@ namespace sparrow
                 return {make_valid_buffer(), make_buffer(1, size * 4), make_buffer(2, size * 4)};
             case data_type::LARGE_LIST_VIEW:
                 return {make_valid_buffer(), make_buffer(1, size * 8), make_buffer(2, size * 8)};
-            case data_type::FIXED_SIZE_LIST:
+            case data_type::FIXED_SIZED_LIST:
             case data_type::STRUCT:
                 return  {make_valid_buffer()};
             case data_type::SPARSE_UNION:
@@ -149,27 +152,28 @@ namespace sparrow
                 return {make_valid_buffer(), make_buffer(1, size * 16)}; // stored as 128 bit integer
             case data_type::FIXED_WIDTH_BINARY:
                 return {make_valid_buffer(), make_buffer(1, size *  num_bytes_for_fixed_sized_binary(schema.format))};
-            // string view and binary view
             case data_type::STRING_VIEW:
             case data_type::BINARY_VIEW:
                 // tricky since they have an arbitary number of buffers
                 const auto buffer_count = static_cast<size_t>(array.n_buffers);
-                const auto num_extra_data_buffers = buffer_count - 3; // {valid, length,...,buffer-length}
-                std::vector<buffer_view_type> buffers(buffer_count);
+                const auto num_extra_data_buffers = buffer_count - 3;
+                std::vector<buffer_view_type> buffers;
+                buffers.reserve(buffer_count);
+                int64_t * var_buffer_sizes = static_const_ptr_cast<int64_t>(array.buffers[buffer_count-1]);
+
+
                 // the valid buffer is always the first one
-                buffer[0] = make_valid_buffer();
-                // the second buffer holds the length and
-                // * data itself for short-strings
-                // * offsets for long strings
-                buffer[1] = make_buffer(1, size * 16); 
-                // the last buffer is a buffer with the sizes    
-                buffer[buffer_count - 1] = make_buffer(buffer_count - 1, size);
+                buffers.emplace_back(make_valid_buffer());
+                // the second buffer holds the length and  data itself for short-strings and offsets for long strings
+                buffers.emplace_back(make_buffer(1, size * 16));
 
                 for(size_t i = 0; i<num_extra_data_buffers; ++i)
                 {
-                    const auto buffer_size = buffer[buffer_count - 1][i];
-                    buffer[i+2] = make_buffer(i+2, buffer_size);
+                    const auto buffer_size = var_buffer_sizes[i];
+                    buffers.emplace_back(make_buffer(2+i, buffer_size));
                 }
+                buffers.emplace_back(make_buffer(buffer_count-1, size * 4));
+
                 return buffers;
 
         }
