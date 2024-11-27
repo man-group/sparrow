@@ -93,22 +93,6 @@ namespace sparrow
     template <class T>
     constexpr bool is_variable_size_binary_view_array_impl_v = is_variable_size_binary_view_array_impl<T>::value;
 
-    /**
-     * Array of values of whose type has fixed binary size.
-     *
-     * The type of the values in the array can be a primitive type, whose size is known at compile
-     * time, or an arbitrary binary type whose fixed size is known at runtime only.
-     * The current implementation supports types whose size is known at compile time only.
-     *
-     * As the other arrays in sparrow, \c variable_size_binary_view_array_impl<T> provides an API as if it was holding
-     * \c nullable<T> values instead of \c T values.
-     *
-     * Internally, the array contains a validity bitmap and a contiguous memory buffer
-     * holding the values.
-     *
-     * @tparam T the type of the values in the array.
-     * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
-     */
     template <class T>
     class variable_size_binary_view_array_impl final : public mutable_array_bitmap_base<variable_size_binary_view_array_impl<T>>
     {
@@ -146,9 +130,6 @@ namespace sparrow
 
         explicit variable_size_binary_view_array_impl(arrow_proxy);
 
-        /**
-         * Constructs a primitive array from an \c initializer_list of raw values.
-         */
         template <class ... Args>
         requires(mpl::excludes_copy_and_move_ctor_v<variable_size_binary_view_array_impl<T>, Args...>)
         explicit variable_size_binary_view_array_impl(Args&& ... args)
@@ -171,20 +152,12 @@ namespace sparrow
         const_value_iterator value_cbegin() const;
         const_value_iterator value_cend() const;
 
-
         static constexpr size_type LENGTH_BUFFER_INDEX = 1;
 
         friend base_type;
         friend base_type::base_type;
 
-   
     };
-
-    /**********************************
-     * variable_size_binary_view_array_impl implementation *
-     **********************************/
-
- 
 
     template <class T>
     variable_size_binary_view_array_impl<T>::variable_size_binary_view_array_impl(arrow_proxy proxy)
@@ -298,7 +271,6 @@ namespace sparrow
         return arrow_proxy{std::move(arr), std::move(schema)};
 
     }
-
 
     template <class T>
     auto variable_size_binary_view_array_impl<T>::value(size_type i) -> inner_reference
