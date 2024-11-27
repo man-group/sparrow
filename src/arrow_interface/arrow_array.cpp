@@ -127,10 +127,11 @@ namespace sparrow
                 return {make_valid_buffer(), make_buffer(1, size * 8)};
             case data_type::STRING:
             case data_type::BINARY:
-                return {make_valid_buffer(), make_buffer(1, (size + 1) * 4), make_buffer(2, size)};
-            // case data_type::LARGE_STRING:
-            // case data_type::LARGE_BINARY:
-            //     return {make_valid_buffer(), make_buffer(1, (size + 1) * 4), make_buffer(2, size)};
+                return {
+                    make_valid_buffer(), 
+                    make_buffer(1, (size + 1) * 4), 
+                    make_buffer(2, static_const_ptr_cast<int32_t>(array.buffers[1])[size])
+                };
             case data_type::LIST:
                 return {make_valid_buffer(), make_buffer(1, (size + 1) * 4)};
             case data_type::LARGE_LIST:
@@ -160,7 +161,6 @@ namespace sparrow
                 std::vector<buffer_view_type> buffers;
                 buffers.reserve(buffer_count);
                 int64_t * var_buffer_sizes = static_const_ptr_cast<int64_t>(array.buffers[buffer_count-1]);
-
 
                 // the valid buffer is always the first one
                 buffers.emplace_back(make_valid_buffer());
