@@ -118,6 +118,7 @@ target_link_libraries(${test_target_catch2}
 include(Catch)
 catch_discover_tests(${test_target_catch2})
 
+target_compile_definitions(test_sparrow_lib_catch2 PRIVATE _ITERATOR_DEBUG_LEVEL=2)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(compiles_options
