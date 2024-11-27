@@ -127,11 +127,7 @@ namespace sparrow
                 return {make_valid_buffer(), make_buffer(1, size * 8)};
             case data_type::STRING:
             case data_type::BINARY:
-                return {
-                    make_valid_buffer(), 
-                    make_buffer(1, (size + 1) * 4), 
-                    make_buffer(2, static_const_ptr_cast<int32_t>(array.buffers[1])[size])
-                };
+                return {make_valid_buffer(),make_buffer(1, (size + 1) * 4), make_buffer(2, static_const_ptr_cast<int32_t>(array.buffers[1])[size])};
             case data_type::LIST:
                 return {make_valid_buffer(), make_buffer(1, (size + 1) * 4)};
             case data_type::LARGE_LIST:
@@ -148,34 +144,27 @@ namespace sparrow
             case data_type::DENSE_UNION:
                 return {make_buffer(0, size), make_buffer(1, size*4)};
             case data_type::TIMESTAMP:
-                return {make_valid_buffer(), make_buffer(1, size * 8)}; // CHECK
+                return {make_valid_buffer(), make_buffer(1, size * 8)};
             case data_type::DECIMAL:
-                return {make_valid_buffer(), make_buffer(1, size * 16)}; // stored as 128 bit integer
+                return {make_valid_buffer(), make_buffer(1, size * 16)}; 
             case data_type::FIXED_WIDTH_BINARY:
                 return {make_valid_buffer(), make_buffer(1, size *  num_bytes_for_fixed_sized_binary(schema.format))};
             case data_type::STRING_VIEW:
             case data_type::BINARY_VIEW:
-                // tricky since they have an arbitary number of buffers
                 const auto buffer_count = static_cast<size_t>(array.n_buffers);
                 const auto num_extra_data_buffers = buffer_count - 3;
                 std::vector<buffer_view_type> buffers;
                 buffers.reserve(buffer_count);
                 int64_t * var_buffer_sizes = static_const_ptr_cast<int64_t>(array.buffers[buffer_count-1]);
-
-                // the valid buffer is always the first one
                 buffers.emplace_back(make_valid_buffer());
-                // the second buffer holds the length and  data itself for short-strings and offsets for long strings
                 buffers.emplace_back(make_buffer(1, size * 16));
-
                 for(size_t i = 0; i<num_extra_data_buffers; ++i)
                 {
                     const auto buffer_size = var_buffer_sizes[i];
                     buffers.emplace_back(make_buffer(2+i, buffer_size));
                 }
                 buffers.emplace_back(make_buffer(buffer_count-1, size * 4));
-
                 return buffers;
-
         }
     }
 
