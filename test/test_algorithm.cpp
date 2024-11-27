@@ -17,7 +17,7 @@
 
 #include "sparrow/utils/algorithm.hpp"
 
-#include <catch2/catch.hpp>  // Include Catch2 header
+#include <catch2/catch_all.hpp>  // Include Catch2 header
 
 TEST_CASE("lexicographical_compare_three_way", "[algorithm]") {
     const std::vector<int> v1 = {1, 2, 3};
