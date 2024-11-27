@@ -88,7 +88,7 @@ namespace sparrow
     };
 
     /**
-     * Checkes whether T is a variable_size_binary_view_array_impl type.
+     * Checks whether T is a variable_size_binary_view_array_impl type.
      */
     template <class T>
     constexpr bool is_variable_size_binary_view_array_impl_v = is_variable_size_binary_view_array_impl<T>::value;
