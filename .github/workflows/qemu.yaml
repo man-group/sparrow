@@ -83,16 +83,16 @@ jobs:
             case "${{matrix.target.distro}}" in
               ubuntu*|bookworm)
                 apt-get update -q -y
-                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-dev tzdata g++ ninja-build build-essential ccache
+                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-dev tzdata g++ ninja-build build-essential ccache catch2
                 ;;
               fedora*)
                 dnf -y update
                 dnf -y groupinstall "Development Tools"
-                dnf -y install git which cmake make doctest-devel date date-devel tzdata gcc-c++ ninja-build ccache
+                dnf -y install git which cmake make doctest-devel date date-devel tzdata gcc-c++ ninja-build ccache catch2
                 ;;
               alpine*)
                 apk update
-                apk add git cmake make doctest-dev date-dev tzdata g++ samurai ccache
+                apk add git cmake make doctest-dev date-dev tzdata g++ samurai catch2 ccache
                 ;;
             esac
 
@@ -143,4 +143,6 @@ jobs:
         if: success() || failure()
         with:
             name: test_sparrow_lib_report_Linux_${{matrix.target.distro}}_${{matrix.target.arch}}_${{matrix.config.name}}_date-polyfill_${{matrix.target.date-polyfill}}
-            path: '**/test_sparrow_lib_report.xml'
+            path: |
+              '**/test_sparrow_lib_report.xml'  # Doctest report
+              '**/test_sparrow_lib_report_catch2.xml'  # Catch2 report
