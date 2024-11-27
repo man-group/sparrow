@@ -24,7 +24,7 @@ endif()
 
 find_package(doctest REQUIRED)
 find_package(nanoarrow REQUIRED)
-find_package(Catch2 REQUIRED)
+find_package(Catch2 3 REQUIRED)
 
 # find_package(Threads)
 if(NOT CMAKE_BUILD_TYPE)
@@ -111,7 +111,7 @@ doctest_discover_tests(${test_target})
 
 set(test_target_catch2 "test_sparrow_lib_catch2")
 
-add_executable(${test_target_catch2} ${SPARROW_TESTS_SOURCES})
+add_executable(${test_target_catch2} "test_algorithm.cpp")
 target_link_libraries(${test_target_catch2}
     PRIVATE
         sparrow Catch2::Catch2 $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
@@ -242,7 +242,7 @@ set(JUNIT_REPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report.xml)
 
 add_custom_target(run_tests_with_junit_report
     COMMAND ${test_target} --reporters=better_junit --out=${JUNIT_REPORT_FILE_DOCTEST} --no-path-filenames=true
-    COMMAND ${test_target_catch2} --reporters=better_junit --out=${JUNIT_REPORT_FILE_CATCH2} --no-path-filenames=true
+    COMMAND ${test_target_catch2} --reporter junit --out ${JUNIT_REPORT_FILE_CATCH2} --no-path-filenames
     DEPENDS ${test_target} ${test_target_catch2}
     COMMENT "Running tests with JUnit reports saved to: ${JUNIT_REPORT_FILE_DOCTEST} and ${JUNIT_REPORT_FILE_CATCH2}"
     USES_TERMINAL

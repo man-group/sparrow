@@ -3,10 +3,7 @@
 	"dependencies": [
 		"doctest",
 		"date",
-		{
-			"name": "catch2",
-			"version>=": "3.7.0"
-		},
+		"catch2",
 		{
 			"name": "vcpkg-tool-ninja",
 			"host": true
