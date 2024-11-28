@@ -49,8 +49,6 @@ if(CMAKE_CXX_COMPILER_LAUNCHER)
     message(STATUS "Using C++ compiler launcher: ${CMAKE_CXX_COMPILER_LAUNCHER}")
 endif()
 
-message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-
 # Versionning
 # ===========
 
