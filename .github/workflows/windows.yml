@@ -133,6 +133,7 @@ jobs:
         echo "SPARROW_DEPS_PREFIX=$VCPKG_INSTALLED_DIR" >> $GITHUB_ENV
         echo "SPARROW_INSTALL_PREFIX=${{ github.workspace }}/install" >> $GITHUB_ENV
         echo "VCPKG_TARGET_TRIPLET='x86-windows'" >> $GITHUB_ENV
+        echo "VCPKG_BUILD_TYPE='Release'" >> $GITHUB_ENV
         echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
         echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=ON" >> $GITHUB_ENV
         choco install ninja
