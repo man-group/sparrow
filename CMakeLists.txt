@@ -133,8 +133,7 @@ if (USE_DATE_POLYFILL)
     find_package(date REQUIRED 
         NAMES 
             date
-            libhowardhinnant-date
-            libhowardhinnant-date-dev)
+            howardhinnant-date)
     list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
     add_compile_definitions(SPARROW_USE_DATE_POLYFILL)
 endif()
