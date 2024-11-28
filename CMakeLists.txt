@@ -134,6 +134,7 @@ if (USE_DATE_POLYFILL)
             howardhinnant-date)
     # check if target howardhinnant-date::howardhinnant-date exist
     if (NOT TARGET date::date)
+        find_package(Threads)
         list(APPEND SPARROW_INTERFACE_DEPENDENCIES howardhinnant-date::howardhinnant-date howardhinnant-date::howardhinnant-date-tz)
     else()
         list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)

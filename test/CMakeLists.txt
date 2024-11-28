@@ -24,7 +24,6 @@ endif()
 
 find_package(doctest REQUIRED)
 
-# find_package(Threads)
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting tests build type to Release")
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
