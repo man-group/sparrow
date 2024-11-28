@@ -91,14 +91,6 @@ jobs:
 
           run: |
             dpkg-query -L libhowardhinnant-date-dev
-            echo "/usr/lib/riscv64-linux-gnu/cmake/howardhinnant-date/howardhinnant-dateConfig.cmake"
-            cat /usr/lib/riscv64-linux-gnu/cmake/howardhinnant-date/howardhinnant-dateConfig.cmake
-            echo "/usr/lib/riscv64-linux-gnu/cmake/howardhinnant-date/howardhinnant-dateConfigVersion.cmake"
-            cat /usr/lib/riscv64-linux-gnu/cmake/howardhinnant-date/howardhinnant-dateConfigVersion.cmake
-            echo "/usr/lib/riscv64-linux-gnu/cmake/howardhinnant-date/howardhinnant-dateTargets-none.cmake"
-            cat /usr/lib/riscv64-linux-gnu/cmake/howardhinnant-date/howardhinnant-dateTargets-none.cmake
-            echo "/usr/lib/riscv64-linux-gnu/cmake/howardhinnant-date/howardhinnant-dateTargets.cmake"
-            cat /usr/lib/riscv64-linux-gnu/cmake/howardhinnant-date/howardhinnant-dateTargets.cmake
             CCACHE_DIR=/ccache_cache
             export CCACHE_DIR
             export CCACHE_MAXSIZE=1G

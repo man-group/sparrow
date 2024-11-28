@@ -132,7 +132,12 @@ if (USE_DATE_POLYFILL)
         NAMES 
             date
             howardhinnant-date)
-    list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
+    # check if target howardhinnant-date::howardhinnant-date exist
+    if (NOT TARGET date::date)
+        list(APPEND SPARROW_INTERFACE_DEPENDENCIES howardhinnant-date::howardhinnant-date howardhinnant-date::howardhinnant-date-tz)
+    else()
+        list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
+    endif()
     add_compile_definitions(SPARROW_USE_DATE_POLYFILL)
 endif()
 
