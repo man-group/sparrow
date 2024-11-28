@@ -76,7 +76,7 @@ jobs:
             case "${{matrix.target.distro}}" in
               ubuntu*|bookworm)
                 apt-get update -q -y
-                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-dev tzdata g++ ninja-build build-essential ccache
+                apt-get install -q -y git cmake make doctest-dev howardhinnant-date libhowardhinnant-date-dev tzdata g++ ninja-build build-essential ccache
                 ;;
               fedora*)
                 dnf -y update
