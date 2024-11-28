@@ -13,15 +13,14 @@ jobs:
     strategy:
       matrix:
         target:
-          - { arch: armv6, distro: alpine_latest, date-polyfill: 'ON' }
-          - { arch: armv7, distro: alpine_latest, date-polyfill: 'ON' }
-          - { arch: aarch64, distro: alpine_latest, date-polyfill: 'ON' }
-          - { arch: aarch64, distro: alpine_latest, date-polyfill: 'OFF' }
-          - { arch: riscv64, distro: alpine_latest, date-polyfill: 'ON' }
-          - { arch: s390x, distro: alpine_latest, date-polyfill: 'ON' }
-          - { arch: s390x, distro: alpine_latest, date-polyfill: 'OFF' }
-          - { arch: ppc64le, distro: alpine_latest, date-polyfill: 'ON' }
-          - { arch: ppc64le, distro: alpine_latest, date-polyfill: 'OFF' }
+          - { arch: armv7, distro: ubuntu22.04, date-polyfill: 'ON' }
+          - { arch: aarch64, distro: ubuntu22.04, date-polyfill: 'ON' }
+          - { arch: aarch64, distro: ubuntu22.04, date-polyfill: 'OFF' }
+          - { arch: riscv64, distro: ubuntu22.04, date-polyfill: 'ON' }
+          - { arch: s390x, distro: ubuntu22.04, date-polyfill: 'ON' }
+          - { arch: s390x, distro: ubuntu22.04, date-polyfill: 'OFF' }
+          - { arch: ppc64le, distro: ubuntu22.04, date-polyfill: 'ON' }
+          - { arch: ppc64le, distro: ubuntu22.04, date-polyfill: 'OFF' }
 
         config:
           - { name: Debug }
