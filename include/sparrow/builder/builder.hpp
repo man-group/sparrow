@@ -27,7 +27,7 @@
 #include <sparrow/layout/primitive_array.hpp>
 #include <sparrow/layout/list_layout/list_array.hpp>
 #include <sparrow/layout/struct_layout/struct_array.hpp>
-#include <sparrow/layout/variable_size_binary_array.hpp>
+#include <sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp>
 #include <sparrow/layout/union_array.hpp>
 #include <sparrow/layout/dictionary_encoded_array.hpp>
 #include <sparrow/array.hpp>

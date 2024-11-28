@@ -14,7 +14,7 @@
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/c_interface.hpp"
-#include "sparrow/layout/variable_size_binary_array.hpp"
+#include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 #include "../test/external_array_data_creation.hpp"
