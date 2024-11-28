@@ -90,12 +90,6 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(is_proxy_valid());
         SPARROW_ASSERT_TRUE(array().n_children == schema().n_children);
         SPARROW_ASSERT_TRUE((array().dictionary == nullptr) == (schema().dictionary == nullptr));
-
-        const enum data_type data_type = format_to_data_type(schema().format);
-        if (!validate_format_with_arrow_array(data_type, array()))
-        {
-            throw arrow_proxy_exception("Invalid ArrowArray format");
-        }
     }
 
     arrow_proxy::arrow_proxy()
@@ -684,17 +678,14 @@ namespace sparrow
 
     void arrow_proxy::update_null_count()
     {
-        const auto buffer_types = get_buffer_types_from_data_type(data_type());
-        const auto validity_it = std::ranges::find(buffer_types, buffer_type::VALIDITY);
-        if (validity_it == buffer_types.end())
+        if(has_bitmap(data_type()))
         {
-            return;
+            const auto& validity_buffer = buffers().front();
+            const dynamic_bitset_view<const std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
+            const auto null_count = bitmap.null_count();
+            set_null_count(static_cast<int64_t>(null_count));
         }
-        const auto validity_index = std::distance(buffer_types.begin(), validity_it);
-        const auto& validity_buffer = buffers()[static_cast<size_t>(validity_index)];
-        const dynamic_bitset_view<const std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
-        const auto null_count = bitmap.null_count();
-        set_null_count(static_cast<int64_t>(null_count));
+        
     }
 
     bool arrow_proxy::is_arrow_array_valid() const

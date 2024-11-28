@@ -84,6 +84,7 @@ else()
         test_utils_offsets.cpp
         test_utils.hpp
         test_variable_size_binary_array.cpp
+        test_variable_size_binary_view_array.cpp
         test_nested_comperators.cpp
         test_builder_utils.cpp
         test_builder.cpp

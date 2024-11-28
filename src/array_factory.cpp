@@ -116,7 +116,6 @@ namespace sparrow
                 return detail::make_wrapper_ptr<dense_union_array>(std::move(proxy));
             case data_type::SPARSE_UNION:
                 return detail::make_wrapper_ptr<sparse_union_array>(std::move(proxy));
-            case data_type::FIXED_SIZE_BINARY:
             case data_type::TIMESTAMP:
             case data_type::MAP:
             case data_type::DECIMAL:

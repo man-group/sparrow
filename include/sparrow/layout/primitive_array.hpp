@@ -244,7 +244,7 @@ namespace sparrow
                 data_type::HALF_FLOAT,
                 data_type::FLOAT,
                 data_type::DOUBLE,
-                data_type::FIXED_SIZE_BINARY,
+                data_type::FIXED_WIDTH_BINARY,
                 data_type::TIMESTAMP
             };
             return std::find(dtypes.cbegin(), dtypes.cend(), dt) != dtypes.cend();

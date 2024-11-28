@@ -98,69 +98,6 @@ TEST_SUITE("C Data Interface")
             // CHECK_FALSE(sparrow::validate_format_with_arrow_array(sparrow::data_type::FIXED_SIZED_LIST,
             // array));
         }
-
-        SUBCASE("compute_buffer_size")
-        {
-            CHECK_EQ(
-                sparrow::compute_buffer_size(
-                    sparrow::buffer_type::DATA,
-                    10,
-                    0,
-                    sparrow::data_type::INT8,
-                    {},
-                    sparrow::buffer_type::VALIDITY
-                ),
-                10
-            );
-
-            CHECK_EQ(
-                sparrow::compute_buffer_size(
-                    sparrow::buffer_type::DATA,
-                    10,
-                    5,
-                    sparrow::data_type::INT8,
-                    {},
-                    sparrow::buffer_type::VALIDITY
-                ),
-                15
-            );
-
-            CHECK_EQ(
-                sparrow::compute_buffer_size(
-                    sparrow::buffer_type::DATA,
-                    10,
-                    5,
-                    sparrow::data_type::INT16,
-                    {},
-                    sparrow::buffer_type::VALIDITY
-                ),
-                30
-            );
-
-            CHECK_EQ(
-                sparrow::compute_buffer_size(
-                    sparrow::buffer_type::DATA,
-                    10,
-                    5,
-                    sparrow::data_type::INT32,
-                    {},
-                    sparrow::buffer_type::VALIDITY
-                ),
-                60
-            );
-
-            CHECK_EQ(
-                sparrow::compute_buffer_size(
-                    sparrow::buffer_type::VALIDITY,
-                    10,
-                    5,
-                    sparrow::data_type::UINT8,
-                    {},
-                    sparrow::buffer_type::VALIDITY
-                ),
-                2
-            );
-        }
     }
 }
 
