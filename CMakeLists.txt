@@ -128,7 +128,7 @@ include(cmake/sanitizers.cmake)
 set(SPARROW_INTERFACE_DEPENDENCIES "" CACHE STRING "List of dependencies to be linked to the sparrow target")
 
 if (USE_DATE_POLYFILL)
-    find_package(date CONFIG REQUIRED NAMES date libhowardhinnant-date)
+    find_package(date REQUIRED NAMES date libhowardhinnant-date)
     list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
     add_compile_definitions(SPARROW_USE_DATE_POLYFILL)
 endif()
