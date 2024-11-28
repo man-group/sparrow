@@ -91,7 +91,7 @@ namespace sparrow
      * Checks whether T is a variable_size_binary_view_array_impl type.
      */
     template <class T>
-    constexpr bool is_variable_size_binary_view_array_impl_v = is_variable_size_binary_view_array_impl<T>::value;
+    constexpr bool is_variable_size_binary_view_array = is_variable_size_binary_view_array_impl<T>::value;
 
     template <class T>
     class variable_size_binary_view_array_impl final : public mutable_array_bitmap_base<variable_size_binary_view_array_impl<T>>
