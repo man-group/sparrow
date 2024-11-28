@@ -31,7 +31,9 @@ cmake_policy(SET CMP0091 NEW)
 # avoiding “fatal error C1041: cannot open program database; if
 # multiple CL.EXE write to the same .PDB file, please use /FS"
 set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded)
-cmake_policy(SET CMP0141 NEW)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.25)
+    cmake_policy(SET CMP0141 NEW)
+endif()
 
 project(sparrow CXX)
 
