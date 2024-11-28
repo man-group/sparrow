@@ -45,7 +45,11 @@ namespace sparrow
         using reverse_iterator = std::reverse_iterator<iterator>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-        explicit buffer_view(buffer<T>& buffer);
+        buffer_view() = default;
+        explicit buffer_view(buffer<T>& buffer) requires (!std::is_const_v<T>);
+        template <class U>
+            requires std::same_as<std::remove_const_t<T>, U>
+        explicit buffer_view(const buffer<U>& buffer);
         buffer_view(pointer p, size_type n);
 
         template <class It, class End>
@@ -94,6 +98,8 @@ namespace sparrow
         buffer_view subrange(size_type pos) const;
         buffer_view subrange(const_iterator first, const_iterator last) const;
 
+        explicit operator buffer<std::remove_const_t<T>>() const;
+
     private:
 
         pointer p_data = nullptr;
@@ -108,7 +114,16 @@ namespace sparrow
      ******************************/
 
     template <class T>
-    buffer_view<T>::buffer_view(buffer<T>& buffer)
+    buffer_view<T>::buffer_view(buffer<T>& buffer) requires (!std::is_const_v<T>)
+        : p_data(buffer.data())
+        , m_size(buffer.size())
+    {
+    }
+
+    template <class T>
+    template <class U>
+        requires std::same_as<std::remove_const_t<T>, U>
+    buffer_view<T>::buffer_view(const buffer<U>& buffer)
         : p_data(buffer.data())
         , m_size(buffer.size())
     {
@@ -319,6 +334,12 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(first >= begin() && last <= end());
         return buffer_view<T>(first, last);
+    }
+
+    template <class T>
+    buffer_view<T>::operator buffer<std::remove_const_t<T>>() const
+    {
+        return { p_data, p_data + m_size };
     }
 
     template <class T>

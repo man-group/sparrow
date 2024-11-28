@@ -941,6 +941,13 @@ namespace sparrow
     {
         TEST_CASE("constructors")
         {
+            SUBCASE("default")
+            {
+                view_test_type v;
+                CHECK_EQ(v.size(), 0u);
+                CHECK_EQ(v.data(), nullptr);
+            }
+
             SUBCASE("with ptr and size")
             {
                 constexpr std::size_t size = 8u;
@@ -972,6 +979,18 @@ namespace sparrow
                 {
                     CHECK_EQ(v[i], values[i]);
                 }
+            }
+
+            SUBCASE("const view from const buffer")
+            {
+                constexpr std::size_t size = 8u;
+                buffer_test_type b(make_test_buffer(size), size);
+                const buffer_test_type& cb = b;
+                const_view_test_type v(cb);
+
+                CHECK_EQ(v.data(), cb.data());
+                CHECK_EQ(v.size(), b.size());
+                CHECK_EQ(v.data()[2], 2);
             }
         }
 
@@ -1287,6 +1306,34 @@ namespace sparrow
                 {
                     CHECK_EQ(sv[i], i + pos);
                 }
+            }
+        }
+
+        TEST_CASE("conversion to buffer")
+        {
+            SUBCASE("from view")
+            {
+                const std::size_t size = 8u;
+                buffer_test_type b(make_test_buffer(size), size);
+                view_test_type v(b);
+
+                buffer_test_type b2 = v;
+
+                CHECK_EQ(b2, b);
+                CHECK_NE(b2.data(), b.data());
+            }
+
+            SUBCASE("from const_view")
+            {
+                const std::size_t size = 8u;
+                buffer_test_type b(make_test_buffer(size), size);
+                const buffer_test_type& cb(b);
+                const_view_test_type v(cb);
+
+                buffer_test_type b2 = v;
+
+                CHECK_EQ(b2, b);
+                CHECK_NE(b2.data(), b.data());
             }
         }
     }
