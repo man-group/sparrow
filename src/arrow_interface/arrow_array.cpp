@@ -179,18 +179,19 @@ namespace sparrow
             case data_type::BINARY_VIEW:
                 const auto buffer_count = static_cast<size_t>(array.n_buffers);
                 const auto num_extra_data_buffers = buffer_count - 3;
-                std::vector<buffer_view_type> buffers;
-                buffers.reserve(buffer_count);
-                int64_t * var_buffer_sizes = static_const_ptr_cast<int64_t>(array.buffers[buffer_count-1]);
-                buffers.emplace_back(make_valid_buffer());
-                buffers.emplace_back(make_buffer(1, size * 16));
-                for(size_t i = 0; i<num_extra_data_buffers; ++i)
+                std::vector<buffer_view_type> buffers(buffer_count);
+                int64_t * var_buffer_sizes = static_const_ptr_cast<int64_t>(array.buffers[buffer_count - 1]);
+                buffers[0] = make_valid_buffer();
+                buffers[1] = make_buffer(1, size * 16);
+                for (size_t i = 0; i < num_extra_data_buffers; ++i)
                 {
-                    buffers.emplace_back(make_buffer(2+i, var_buffer_sizes[i]));
+                    buffers[i + 2] = make_buffer(i + 2, var_buffer_sizes[i]);
                 }
-                buffers.emplace_back(make_buffer(buffer_count-1, size * 4));
+                buffers.back() = make_buffer(buffer_count -1 , size * 4);
                 return buffers;
         }
+        // To avoid stupid warning "control reaches end of non-void function"
+        return {};
     }
 
     void copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema, ArrowArray& target)
