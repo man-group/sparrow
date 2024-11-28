@@ -93,6 +93,12 @@ namespace sparrow
                 return func(unwrap_array<primitive_array<float64_t>>(ar));
             case data_type::STRING:
                 return func(unwrap_array<string_array>(ar));
+            case data_type::LARGE_STRING:
+                return func(unwrap_array<big_string_array>(ar));
+            case data_type::BINARY:
+                return func(unwrap_array<binary_array>(ar));
+            case data_type::LARGE_BINARY:
+                return func(unwrap_array<big_binary_array>(ar));
             case data_type::RUN_ENCODED:
                 return func(unwrap_array<run_end_encoded_array>(ar));
             case data_type::LIST:

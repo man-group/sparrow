@@ -163,8 +163,10 @@ namespace sparrow
         DOUBLE = 12,
         // UTF8 variable-length string
         STRING = 13,
+        LARGE_STRING = 14,
         // Variable-length bytes (no guarantee of UTF8-ness)
-        BINARY = 14,
+        BINARY = 15,
+        LARGE_BINARY = 16,
         // Number of nanoseconds since the UNIX epoch with an optional timezone.
         // See: https://arrow.apache.org/docs/python/timestamps.html#timestamps
         TIMESTAMP = 18,
@@ -242,11 +244,13 @@ namespace sparrow
                 case 'g':
                     return data_type::DOUBLE;
                 case 'u':
-                case 'U':  // large string
                     return data_type::STRING;
-                case 'z':  // binary
-                case 'Z':  // large binary
+                case 'U':
+                    return data_type::LARGE_STRING;
+                case 'z':
                     return data_type::BINARY;
+                case 'Z':
+                    return data_type::LARGE_BINARY;
                 default:
                     return data_type::NA;
             }
@@ -435,8 +439,12 @@ namespace sparrow
                 return "g";
             case data_type::STRING:
                 return "u";
+            case data_type::LARGE_STRING:
+                return "U";
             case data_type::BINARY:
                 return "z";
+            case data_type::LARGE_BINARY:
+                return "Z";
             case data_type::TIMESTAMP:
                 return "tDm";
             case data_type::LIST:
@@ -491,6 +499,43 @@ namespace sparrow
         }
     }
 
+    /// @returns The number of bytes required to store the provided primitive data type.
+    template<std::integral T>
+    constexpr size_t primitive_bytes_count(data_type data_type, T size)
+    {
+        SPARROW_ASSERT_TRUE(data_type_is_primitive(data_type));
+        constexpr double bit_per_byte = 8.;
+        switch (data_type)
+        {
+            case data_type::BOOL:
+                return static_cast<std::size_t>(std::ceil(static_cast<double>(size) / bit_per_byte));
+            case data_type::UINT8:
+            // TODO: Replace static_cast<std::size_t> by the 32 bit fix check function
+            case data_type::INT8:
+                return static_cast<std::size_t>(size);
+            case data_type::UINT16:
+                return (sizeof(std::uint16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
+            case data_type::INT16:
+                return (sizeof(std::int16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
+            case data_type::UINT32:
+                return (sizeof(std::uint32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
+            case data_type::INT32:
+                return (sizeof(std::int32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
+            case data_type::UINT64:
+                return (sizeof(std::uint64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
+            case data_type::INT64:
+                return (sizeof(std::int64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
+            case data_type::HALF_FLOAT:
+                return (sizeof(float16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
+            case data_type::FLOAT:
+                return (sizeof(float32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
+            case data_type::DOUBLE:
+                return (sizeof(float64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
+            default:
+                throw std::runtime_error("Unsupported data type");
+        }
+    }
+
     class list_value;
     class struct_value;
 
@@ -511,7 +556,7 @@ namespace sparrow
         float32_t,
         float64_t,
         std::string,
-        // std::vector<byte_t>,
+        std::vector<byte_t>,
         sparrow::timestamp,
         // TODO: add missing fundamental types here
         list_value,

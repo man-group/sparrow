@@ -110,6 +110,12 @@ namespace sparrow
                 return detail::make_wrapper_ptr<struct_array>(std::move(proxy));
             case data_type::STRING:
                 return detail::make_wrapper_ptr<string_array>(std::move(proxy)); 
+            case data_type::LARGE_STRING:
+                return detail::make_wrapper_ptr<big_string_array>(std::move(proxy)); 
+            case data_type::BINARY:
+                return detail::make_wrapper_ptr<binary_array>(std::move(proxy)); 
+            case data_type::LARGE_BINARY:
+                return detail::make_wrapper_ptr<big_binary_array>(std::move(proxy)); 
             case data_type::RUN_ENCODED:
                 return detail::make_wrapper_ptr<run_end_encoded_array>(std::move(proxy));
             case data_type::DENSE_UNION:

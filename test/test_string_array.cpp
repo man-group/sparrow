@@ -25,16 +25,15 @@
 #include "nanoarrow_utils.hpp"
 #include "test_utils.hpp"
 
-
 using namespace std::literals;
 
 namespace sparrow
 {
-    struct variable_size_binary_fixture
+    struct string_array_fixture
     {
         using layout_type = string_array;
 
-        variable_size_binary_fixture()
+        string_array_fixture()
             : m_arrow_proxy(create_arrow_proxy())
         {
         }
@@ -66,7 +65,7 @@ namespace sparrow
         }
     };
 
-    TEST_SUITE("variable_size_binary_array")
+    TEST_SUITE("string_array")
     {
         TEST_CASE("convenience")
         {
@@ -92,7 +91,7 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "constructor")
+        TEST_CASE_FIXTURE(string_array_fixture, "constructor")
         {
             SUBCASE("copy arrow_proxy")
             {
@@ -105,7 +104,7 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "copy")
+        TEST_CASE_FIXTURE(string_array_fixture, "copy")
         {
             layout_type ar(m_arrow_proxy);
             layout_type ar2(ar);
@@ -116,7 +115,7 @@ namespace sparrow
             CHECK_EQ(ar2, ar3);
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "move")
+        TEST_CASE_FIXTURE(string_array_fixture, "move")
         {
             layout_type ar(m_arrow_proxy);
             layout_type ar2(ar);
@@ -128,13 +127,13 @@ namespace sparrow
             CHECK_EQ(ar2, ar4);
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "size")
+        TEST_CASE_FIXTURE(string_array_fixture, "size")
         {
             const layout_type array(std::move(m_arrow_proxy));
             CHECK_EQ(array.size(), m_length - m_offset);
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "operator[]")
+        TEST_CASE_FIXTURE(string_array_fixture, "operator[]")
         {
             SUBCASE("const")
             {
@@ -209,7 +208,7 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "value")
+        TEST_CASE_FIXTURE(string_array_fixture, "value")
         {
             SUBCASE("const")
             {
@@ -247,7 +246,7 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "const_bitmap_iterator")
+        TEST_CASE_FIXTURE(string_array_fixture, "const_bitmap_iterator")
         {
             SUBCASE("ordering")
             {
@@ -274,7 +273,7 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "iterator")
+        TEST_CASE_FIXTURE(string_array_fixture, "iterator")
         {
             SUBCASE("const")
             {
@@ -376,7 +375,7 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "value_iterator")
+        TEST_CASE_FIXTURE(string_array_fixture, "value_iterator")
         {
             SUBCASE("const")
             {
@@ -433,7 +432,7 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "resize")
+        TEST_CASE_FIXTURE(string_array_fixture, "resize")
         {
             SUBCASE("smaller")
             {
@@ -467,7 +466,7 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "insert")
+        TEST_CASE_FIXTURE(string_array_fixture, "insert")
         {
             const std::string to_insert = "insert";
 
@@ -740,7 +739,7 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "erase")
+        TEST_CASE_FIXTURE(string_array_fixture, "erase")
         {
             SUBCASE("with pos")
             {
@@ -853,7 +852,7 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "push_back")
+        TEST_CASE_FIXTURE(string_array_fixture, "push_back")
         {
             layout_type array(std::move(m_arrow_proxy));
             CHECK_EQ(array.size(), 9);
@@ -871,7 +870,7 @@ namespace sparrow
             CHECK_EQ(array.value(9), "!");
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "pop_back")
+        TEST_CASE_FIXTURE(string_array_fixture, "pop_back")
         {
             layout_type array(std::move(m_arrow_proxy));
             CHECK_EQ(array.size(), 9);
@@ -887,7 +886,7 @@ namespace sparrow
             CHECK_EQ(array.value(7), "code");
         }
 
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "nanoarrow compatibility")
+        TEST_CASE_FIXTURE(string_array_fixture, "nanoarrow compatibility")
         {
             std::vector<std::string>
                 vector{"once", "upon", "a", "time", "I", "was", "writing", "clean", "code", "now"};
