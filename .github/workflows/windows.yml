@@ -124,7 +124,7 @@ jobs:
       run: |
         echo "SPARROW_DEPS_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
         echo "SPARROW_INSTALL_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
-        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=OFF" >> $GITHUB_ENV
+        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=ON -DMSVC_RUNTIME_LIBRARY=MultiThreadedDLL" >> $GITHUB_ENV
 
     - name: Set dependencies install prefix dir for 32bit
       if: matrix.target-arch.name == 'Win32'
