@@ -146,7 +146,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /we4906 # string literal cast to 'LPWSTR'
         /we4928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /we5038 # data member 'member1' will be initialized after data member 'member2'
-        /Zc:__cplusplus)
+        /Zc:__cplusplus
+        /MD)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(compiles_options
         -Wall # reasonable and standard
@@ -224,6 +225,10 @@ target_compile_options(${test_target_catch2}
 target_link_options(${test_target_catch2}
     PRIVATE
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
+target_compile_definitions(${test_target_catch2}
+    PRIVATE
+        _ITERATOR_DEBUG_LEVEL=0
+)
 # We do not use non-standard C++
 set_target_properties(${test_target_catch2} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(${test_target_catch2} PRIVATE cxx_std_20)
