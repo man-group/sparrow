@@ -75,8 +75,9 @@ jobs:
           install: |
             case "${{matrix.target.distro}}" in
               ubuntu*|bookworm)
+                sudo add-apt-repository universe
                 apt-get update -q -y
-                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-tz3 libhowardhinnant-date-dev tzdata g++ ninja-build build-essential ccache
+                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-tz3 libhowardhinnant-date-dev tzdata g++-12 ninja-build build-essential ccache
                 ;;
               fedora*)
                 dnf -y update
