@@ -79,7 +79,7 @@ jobs:
                 apt-get install software-properties-common -q -y
                 add-apt-repository universe
                 apt-get update -q -y
-                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-tz3 libhowardhinnant-date-dev tzdata g++-12 ninja-build build-essential ccache
+                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-tz3 libhowardhinnant-date-dev tzdata g++-13 ninja-build build-essential ccache
                 ;;
               fedora*)
                 dnf -y update
@@ -93,13 +93,12 @@ jobs:
             esac
 
           run: |
-            dpkg-query -L libhowardhinnant-date-dev
             CCACHE_DIR=/ccache_cache
             export CCACHE_DIR
             export CCACHE_MAXSIZE=1G
-            CC=gcc-12
+            CC=gcc-13
             export CC
-            CXX=g++-12
+            CXX=g++-13
             export CXX
             echo "Configuring"
             cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
