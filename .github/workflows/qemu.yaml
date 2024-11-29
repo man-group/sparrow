@@ -78,9 +78,10 @@ jobs:
                 apt-get update -q -y
                 apt-get install software-properties-common -q -y
                 add-apt-repository universe
+                add-apt-repository jammy-backports 
                 apt-get update -q -y
-                apt-get install -q -y git cmake make libhowardhinnant-date-tz3 libhowardhinnant-date-dev tzdata g++-12 ninja-build build-essential ccache
                 apt-get install -q -y doctest-dev=2.4.11-1
+                apt-get install -q -y git cmake make libhowardhinnant-date-tz3 libhowardhinnant-date-dev tzdata g++-12 ninja-build build-essential ccache
                 ;;
               fedora*)
                 dnf -y update
