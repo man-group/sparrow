@@ -22,7 +22,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(SPARROW_INCLUDE_DIR ${sparrow_INCLUDE_DIRS})
 endif()
 
-find_package(doctest REQUIRED)
+find_package(doctest 2.4.11 REQUIRED)
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting tests build type to Release")

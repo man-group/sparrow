@@ -78,6 +78,7 @@ jobs:
                 apt-get update -q -y
                 apt-get install software-properties-common -q -y
                 add-apt-repository universe
+                cat /etc/apt/sources.list
                 add-apt-repository jammy-backports 
                 apt-get update -q -y
                 apt-get install -q -y doctest-dev=2.4.11-1
