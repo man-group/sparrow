@@ -79,7 +79,7 @@ jobs:
                 apt-get install software-properties-common -q -y
                 add-apt-repository universe
                 apt-get update -q -y
-                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-tz3 libhowardhinnant-date-dev tzdata g++-12 ninja-build build-essential ccache
+                apt-get install -q -y git cmake make doctest-dev-2.4.11-1 libhowardhinnant-date-tz3 libhowardhinnant-date-dev tzdata g++-12 ninja-build build-essential ccache
                 ;;
               fedora*)
                 dnf -y update
