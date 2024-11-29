@@ -97,9 +97,9 @@ jobs:
             CCACHE_DIR=/ccache_cache
             export CCACHE_DIR
             export CCACHE_MAXSIZE=1G
-            CC=gcc
+            CC=gcc-12
             export CC
-            CXX=g++
+            CXX=g++-12
             export CXX
             echo "Configuring"
             cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
