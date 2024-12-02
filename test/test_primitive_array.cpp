@@ -15,10 +15,16 @@
 #include <cstdint>
 #include <ranges>
 #include <vector>
+#include <nanoarrow/common/inline_types.h>
 
 #include "sparrow/layout/primitive_array.hpp"
 
 #include "doctest/doctest.h"
+#include "nanoarrow/nanoarrow.h"
+
+// #include "nanoarrow/nanoarrow.hpp"
+
+#include "sparrow/array.hpp"
 
 namespace sparrow
 {
@@ -55,7 +61,7 @@ namespace sparrow
                     std::move(values),
                     count > 2 ? std::vector<std::size_t>{2} : std::vector<std::size_t>{}
                 );
-                if(offset != 0)
+                if (offset != 0)
                 {
                     return arr.slice(offset, arr.size());
                 }
@@ -66,7 +72,7 @@ namespace sparrow
             };
 
             // Elements: 2, null, 4, 5
-            array_test_type ar = make_array(5 ,1);
+            array_test_type ar = make_array(5, 1);
 
             SUBCASE("constructor")
             {
@@ -771,6 +777,62 @@ namespace sparrow
             CHECK_EQ(arr[0].value(), std::size_t(0));
             CHECK_EQ(arr[2].value(), std::size_t(2));
             CHECK_EQ(arr[4].value(), std::size_t(4));
+        }
+
+        TEST_CASE("nanoarrow compatibility")
+        {
+            SUBCASE("Read array from sparrow to nanoarrow")
+            {
+                const std::vector<int> vec = {1, 2, 3};
+                primitive_array<int> sparrow_array(vec);
+                const auto [arrow_array, arrow_schema] = sparrow::get_arrow_structures(sparrow_array);
+                ArrowError error;
+                ArrowArrayView input_view;
+                ArrowArrayViewInitFromType(&input_view, NANOARROW_TYPE_INT32);
+                ArrowErrorCode error_code = ArrowArrayViewSetArray(&input_view, arrow_array, &error);
+                REQUIRE_EQ(error_code, NANOARROW_OK);
+                REQUIRE_EQ(
+                    ArrowArrayViewValidate(&input_view, ArrowValidationLevel::NANOARROW_VALIDATION_LEVEL_FULL, &error),
+                    NANOARROW_OK
+                );
+                for (std::size_t i = 0; i < vec.size(); ++i)
+                {
+                    const int64_t value = ArrowArrayViewGetIntUnsafe(&input_view, static_cast<int64_t>(i));
+                    CHECK_EQ(value, static_cast<int64_t>(vec[i]));
+                }
+            }
+
+            SUBCASE("Read array from nanoarrow to sparrow")
+            {
+                
+                const std::vector<int> vec = {1, 2, 3};
+
+                ArrowSchema arrow_schema;
+                ArrowErrorCode error_code = ArrowSchemaInitFromType(&arrow_schema, NANOARROW_TYPE_INT32);
+                REQUIRE_EQ(error_code, NANOARROW_OK);
+
+                ArrowError error;
+                ArrowArray arrow_array;
+                error_code = ArrowArrayInitFromSchema(&arrow_array, &arrow_schema, &error);
+                REQUIRE_EQ(error_code, NANOARROW_OK);
+                error_code = ArrowArrayStartAppending(&arrow_array);
+                REQUIRE_EQ(error_code, NANOARROW_OK);
+                for(int value : vec)
+                {
+                    error_code = ArrowArrayAppendInt(&arrow_array, static_cast<int64_t>(value));
+                    REQUIRE_EQ(error_code, NANOARROW_OK);
+                }
+                error_code = ArrowArrayFinishBuildingDefault(&arrow_array, &error);
+                REQUIRE_EQ(error_code, NANOARROW_OK);
+
+                const primitive_array<int> sparrow_array(arrow_proxy(&arrow_array, &arrow_schema));
+                REQUIRE_EQ(sparrow_array.size(), vec.size());
+                for (std::size_t i = 0; i < vec.size(); ++i)
+                {
+                    REQUIRE(sparrow_array[i].has_value());
+                    CHECK_EQ(sparrow_array[i].value(), vec[i]);
+                }
+            }
         }
     }
 }

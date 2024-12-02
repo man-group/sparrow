@@ -101,6 +101,10 @@ namespace sparrow
     template <class B>
     constexpr bitset_reference<B>::operator bool() const noexcept
     {
+        if(m_bitset.data() == nullptr)
+        {
+            return true;
+        }
         return (m_block & m_mask) != 0;
     }
 

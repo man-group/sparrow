@@ -43,7 +43,7 @@ jobs:
         - {name: Release}
         build-system:
         - {name: "Visual Studio 17 2022"}
-        - {name: "Ninja",}
+        - {name: "Ninja"}
 
     steps:
     - name: Setup MSVC (only for non-VS buildsystems)
@@ -92,6 +92,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Checkout nanoarrow
+      uses: actions/checkout@v4
+      with:
+        repository: apache/arrow-nanoarrow
+        path: dependencies/tests/nanoarrow
+
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -124,10 +130,11 @@ jobs:
       if: matrix.target-arch.name == 'Win32'
       run: |
         echo "SPARROW_DEPS_PREFIX=$VCPKG_INSTALLED_DIR" >> $GITHUB_ENV
-        echo "SPARROW_INSTALL_PREFIX=$VCPKG_INSTALLED_DIR" >> $GITHUB_ENV
+        echo "SPARROW_INSTALL_PREFIX=${{ github.workspace }}/install" >> $GITHUB_ENV
         echo "VCPKG_TARGET_TRIPLET='x86-windows'" >> $GITHUB_ENV
         echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
         echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=ON" >> $GITHUB_ENV
+        choco install ninja
 
     - name: Enable runtime size/length/offset validity checks
       if: matrix.config.name == 'Debug'
@@ -136,11 +143,44 @@ jobs:
 
     - name: Enable runtime 32bit size/length/offset limit
       if: matrix.target-arch.name == 'Win32' # Note: this is not a mandatory limitation in any context, we add this just to have at least one configuration testing that feature
+      run: echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPARROW_ENABLE_32BIT_SIZE_LIMIT=ON'" >> $GITHUB_ENV
+
+    - name: Set CMake generator environment variable
       run: |
-        echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPARROW_ENABLE_32BIT_SIZE_LIMIT=ON'" >> $GITHUB_ENV
+        echo "CMAKE_GENERATOR=${{ matrix.build-system.name }}" >> $GITHUB_ENV
+
+    - name: Configure nanoarrow
+      working-directory: dependencies/tests/nanoarrow
+      run: |
+        cmake -S ./  \
+          -B ./build \
+          $GENERATOR_EXTRA_FLAGS \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_BUILD_TYPE:STRING=Release \
+          -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX \
+          -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX \
+          -DCMAKE_COMPILE_WARNING_AS_ERROR=FALSE
+
+    - name: Build nanoarrow
+      working-directory: dependencies/tests/nanoarrow/build
+      run: cmake --build . --config Release --target install
 
     - name: Configure using CMake
-      run: cmake -S ./ -B ./build -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} -G "${{matrix.build-system.name}}" $GENERATOR_EXTRA_FLAGS $SPARROW_CHECKS $SPARROW_ADDITIONAL_OPTIONS -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: |
+        cmake -S ./ -B ./build \
+        -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
+        -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX \
+        -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX \
+        -DBUILD_TESTS=ON \
+        -DBUILD_EXAMPLES=ON \
+        -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} \
+        $GENERATOR_EXTRA_FLAGS \
+        $SPARROW_CHECKS \
+        $SPARROW_ADDITIONAL_OPTIONS \
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
 
     - name: Build library
       working-directory: build
