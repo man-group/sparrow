@@ -23,7 +23,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 endif()
 
 find_package(doctest REQUIRED)
-find_package(Catch2 REQUIRED)
+find_package(Catch2 3 REQUIRED)
 
 # find_package(Threads)
 if(NOT CMAKE_BUILD_TYPE)
@@ -200,6 +200,11 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         target_compile_options(${test_target_catch2} PRIVATE "-pedantic")# Warn on language extensions
     endif()
 endif()
+
+if (CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "MultiThreadedDLL")
+    list(APPEND compiles_options /D_ITERATOR_DEBUG_LEVEL=0)
+endif()
+
 
 target_compile_options(${test_target}
     PRIVATE
