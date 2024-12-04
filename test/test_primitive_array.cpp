@@ -15,16 +15,15 @@
 #include <cstdint>
 #include <ranges>
 #include <vector>
+
 #include <nanoarrow/common/inline_types.h>
 
+#include "sparrow/array.hpp"
 #include "sparrow/layout/primitive_array.hpp"
 
 #include "doctest/doctest.h"
 #include "nanoarrow/nanoarrow.h"
 
-// #include "nanoarrow/nanoarrow.hpp"
-
-#include "sparrow/array.hpp"
 
 namespace sparrow
 {
@@ -781,7 +780,7 @@ namespace sparrow
 
         TEST_CASE("nanoarrow compatibility")
         {
-            SUBCASE("Read array from sparrow to nanoarrow")
+            SUBCASE("Produce array from sparrow and read it thanks nanoarrow")
             {
                 const std::vector<int> vec = {1, 2, 3};
                 primitive_array<int> sparrow_array(vec);
@@ -802,9 +801,8 @@ namespace sparrow
                 }
             }
 
-            SUBCASE("Read array from nanoarrow to sparrow")
+            SUBCASE("Produce array from nanoarrow and read it thanks sparrow")
             {
-                
                 const std::vector<int> vec = {1, 2, 3};
 
                 ArrowSchema arrow_schema;
@@ -817,7 +815,7 @@ namespace sparrow
                 REQUIRE_EQ(error_code, NANOARROW_OK);
                 error_code = ArrowArrayStartAppending(&arrow_array);
                 REQUIRE_EQ(error_code, NANOARROW_OK);
-                for(int value : vec)
+                for (int value : vec)
                 {
                     error_code = ArrowArrayAppendInt(&arrow_array, static_cast<int64_t>(value));
                     REQUIRE_EQ(error_code, NANOARROW_OK);
