@@ -46,6 +46,7 @@ else()
         better_junit_reporter.hpp
         external_array_data_creation.cpp
         external_array_data_creation.hpp
+        nanoarrow_utils.hpp
         junit.cpp
         junit.hpp
         junit_xml_writer.hpp
