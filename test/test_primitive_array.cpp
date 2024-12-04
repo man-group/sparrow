@@ -708,14 +708,18 @@ namespace sparrow
                     ArrowError error;
                     ArrowArrayView input_view;
                     ArrowArrayViewInitFromType(&input_view, nanoarrow_type_from<T>());
-                    ArrowErrorCode error_code = ArrowArrayViewSetArray(&input_view, arrow_array, &error);
-                    REQUIRE_EQ(error_code, NANOARROW_OK);
+                    REQUIRE_EQ(ArrowArrayViewSetArray(&input_view, arrow_array, &error), NANOARROW_OK);
                     REQUIRE_EQ(
-                        ArrowArrayViewValidate(&input_view, ArrowValidationLevel::NANOARROW_VALIDATION_LEVEL_FULL, &error),
+                        ArrowArrayViewValidate(
+                            &input_view,
+                            ArrowValidationLevel::NANOARROW_VALIDATION_LEVEL_FULL,
+                            &error
+                        ),
                         NANOARROW_OK
                     );
                     for (std::size_t i = 0; i < vec.size(); ++i)
                     {
+                        CHECK_FALSE(ArrowArrayViewIsNull(&input_view, static_cast<int64_t>(i)));
                         const T value = nanoarrow_get<T>(&input_view, static_cast<int64_t>(i));
                         CHECK_EQ(value, vec[i]);
                     }
@@ -726,22 +730,16 @@ namespace sparrow
                     const std::vector<T> vec = {1, 2, 3};
 
                     ArrowSchema arrow_schema;
-                    ArrowErrorCode error_code = ArrowSchemaInitFromType(&arrow_schema, nanoarrow_type_from<T>());
-                    REQUIRE_EQ(error_code, NANOARROW_OK);
-
+                    REQUIRE_EQ(ArrowSchemaInitFromType(&arrow_schema, nanoarrow_type_from<T>()), NANOARROW_OK);
                     ArrowError error;
                     ArrowArray arrow_array;
-                    error_code = ArrowArrayInitFromSchema(&arrow_array, &arrow_schema, &error);
-                    REQUIRE_EQ(error_code, NANOARROW_OK);
-                    error_code = ArrowArrayStartAppending(&arrow_array);
-                    REQUIRE_EQ(error_code, NANOARROW_OK);
+                    REQUIRE_EQ(ArrowArrayInitFromSchema(&arrow_array, &arrow_schema, &error), NANOARROW_OK);
+                    REQUIRE_EQ(ArrowArrayStartAppending(&arrow_array), NANOARROW_OK);
                     for (auto value : vec)
                     {
-                        error_code = nanoarrow_append(&arrow_array, value);
-                        REQUIRE_EQ(error_code, NANOARROW_OK);
+                        REQUIRE_EQ(nanoarrow_append(&arrow_array, value), NANOARROW_OK);
                     }
-                    error_code = ArrowArrayFinishBuildingDefault(&arrow_array, &error);
-                    REQUIRE_EQ(error_code, NANOARROW_OK);
+                    REQUIRE_EQ(ArrowArrayFinishBuildingDefault(&arrow_array, &error), NANOARROW_OK);
 
                     const primitive_array<T> sparrow_array(arrow_proxy(&arrow_array, &arrow_schema));
                     REQUIRE_EQ(sparrow_array.size(), vec.size());
