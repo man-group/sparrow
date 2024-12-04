@@ -23,6 +23,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 endif()
 
 find_package(doctest REQUIRED)
+find_package(Catch2 3 REQUIRED)
 
 # find_package(Threads)
 if(NOT CMAKE_BUILD_TYPE)
@@ -49,7 +50,6 @@ else()
         junit.hpp
         junit_xml_writer.hpp
         main.cpp
-        test_algorithm.cpp
         test_allocator.cpp
         test_array_wrapper.cpp
         test_array.cpp
@@ -102,6 +102,17 @@ target_link_libraries(${test_target}
 include(doctest)
 doctest_discover_tests(${test_target})
 
+set(test_target_catch2 "test_sparrow_lib_catch2")
+
+add_executable(${test_target_catch2} "test_algorithm.cpp")
+target_link_libraries(${test_target_catch2}
+    PRIVATE
+        sparrow Catch2::Catch2WithMain $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
+
+include(Catch)
+catch_discover_tests(${test_target_catch2})
+
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(compiles_options
         /bigobj
@@ -130,6 +141,14 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /we4928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /we5038 # data member 'member1' will be initialized after data member 'member2'
         /Zc:__cplusplus)
+        target_compile_options(${test_target}
+            PRIVATE
+                $<$<CXX_COMPILER_ID:MSVC>:/DMSVC_RUNTIME_LIBRARY=MultiThreadedDLL>
+        )
+        target_compile_options(${test_target_catch2}
+            PRIVATE
+                $<$<CXX_COMPILER_ID:MSVC>:/DMSVC_RUNTIME_LIBRARY=MultiThreadedDLL>
+        )
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(compiles_options
         -Wall # reasonable and standard
@@ -178,8 +197,15 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
     if (NOT "${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC")
         target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
         target_compile_options(${test_target} PRIVATE "-pedantic")# Warn on language extensions
+        target_compile_options(${test_target_catch2} PRIVATE "-ftemplate-backtrace-limit=0")
+        target_compile_options(${test_target_catch2} PRIVATE "-pedantic")# Warn on language extensions
     endif()
 endif()
+
+if (CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "MultiThreadedDLL")
+    list(APPEND compiles_options /D_ITERATOR_DEBUG_LEVEL=0)
+endif()
+
 
 target_compile_options(${test_target}
     PRIVATE
@@ -193,21 +219,36 @@ target_link_options(${test_target}
 set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(${test_target} PRIVATE cxx_std_20)
 
+target_compile_options(${test_target_catch2}
+    PRIVATE
+        ${compiles_options}
+        $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>
+        )
+target_link_options(${test_target_catch2}
+    PRIVATE
+        $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
+# We do not use non-standard C++
+set_target_properties(${test_target_catch2} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
+target_compile_features(${test_target_catch2} PRIVATE cxx_std_20)
+
 add_custom_target(run_tests
     COMMAND ${test_target}
-    DEPENDS ${test_target}
-    COMMENT "Running tests"
+    COMMAND ${test_target_catch2} -v high
+    DEPENDS ${test_target} ${test_target_catch2}
+    COMMENT "Running tests for Doctest and Catch2"
     USES_TERMINAL
 )
 
 set_target_properties(run_tests PROPERTIES FOLDER "Tests utilities")
 
-set(JUNIT_REPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report.xml)
+set(JUNIT_REPORT_FILE_DOCTEST ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report_doctest.xml)
+set(JUNIT_REPORT_FILE_CATCH2 ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report_catch2.xml)
 
 add_custom_target(run_tests_with_junit_report
-    COMMAND ${test_target} --reporters=better_junit --out=${JUNIT_REPORT_FILE} --no-path-filenames=true
-    DEPENDS ${test_target}
-    COMMENT "Running tests with JUnit report saved to: ${JUNIT_REPORT_FILE}"
+    COMMAND ${test_target} --reporters=better_junit --out=${JUNIT_REPORT_FILE_DOCTEST} --no-path-filenames=true
+    COMMAND ${test_target_catch2} --reporter JUnit -o ${JUNIT_REPORT_FILE_CATCH2}
+    DEPENDS ${test_target} ${test_target_catch2}
+    COMMENT "Running tests with JUnit reports saved to: ${JUNIT_REPORT_FILE_DOCTEST} and ${JUNIT_REPORT_FILE_CATCH2}"
     USES_TERMINAL
 )
 

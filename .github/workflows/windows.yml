@@ -118,7 +118,7 @@ jobs:
       run: |
         echo "SPARROW_DEPS_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
         echo "SPARROW_INSTALL_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
-        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=OFF" >> $GITHUB_ENV
+        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=ON -DMSVC_RUNTIME_LIBRARY=MultiThreadedDLL" >> $GITHUB_ENV
 
     - name: Set dependencies install prefix dir for 32bit
       if: matrix.target-arch.name == 'Win32'
@@ -126,6 +126,7 @@ jobs:
         echo "SPARROW_DEPS_PREFIX=$VCPKG_INSTALLED_DIR" >> $GITHUB_ENV
         echo "SPARROW_INSTALL_PREFIX=$VCPKG_INSTALLED_DIR" >> $GITHUB_ENV
         echo "VCPKG_TARGET_TRIPLET='x86-windows'" >> $GITHUB_ENV
+        echo "VCPKG_BUILD_TYPE='Release'" >> $GITHUB_ENV
         echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
         echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=ON" >> $GITHUB_ENV
 
@@ -163,7 +164,9 @@ jobs:
       if: success() || failure()
       with:
         name: test_sparrow_lib_report_Windows_${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}
-        path: '**/test_sparrow_lib_report.xml'
+        path: |
+          '**/test_sparrow_lib_report.xml'  # Doctest report
+          '**/test_sparrow_lib_report_catch2.xml'  # Catch2 report
 
     - name: Run all examples
       working-directory: build
