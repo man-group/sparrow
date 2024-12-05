@@ -116,7 +116,8 @@ namespace sparrow
         }
         else
         {
-            static_assert(false, "Unsupported type");
+            static_assert(mpl::dependent_false<T>::value, "nanoarrow_get: Unsupported type.");
+            mpl::unreachable();
         }
     }
 }
