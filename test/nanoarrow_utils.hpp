@@ -15,11 +15,13 @@
 #pragma once
 
 #include <type_traits>
+#include <utility>
 
 #include "sparrow/types/data_type.hpp"
+#include "sparrow/utils/nullable.hpp"
 
+#include "doctest/doctest.h"
 #include "nanoarrow/common/inline_types.h"
-
 
 namespace sparrow
 {
@@ -118,6 +120,52 @@ namespace sparrow
         {
             static_assert(mpl::dependent_false<T>::value, "nanoarrow_get: Unsupported type.");
             mpl::unreachable();
+        }
+    }
+
+    template <typename T>
+    std::pair<ArrowArray, ArrowSchema> nanoarrow_create(const std::vector<nullable<T>>& values)
+    {
+        ArrowSchema arrow_schema{};
+        REQUIRE_EQ(ArrowSchemaInitFromType(&arrow_schema, nanoarrow_type_from<T>()), NANOARROW_OK);
+        ArrowError error{};
+        ArrowArray arrow_array{};
+        REQUIRE_EQ(ArrowArrayInitFromSchema(&arrow_array, &arrow_schema, &error), NANOARROW_OK);
+        REQUIRE_EQ(ArrowArrayStartAppending(&arrow_array), NANOARROW_OK);
+        for (auto value : values)
+        {
+            if (value.has_value())
+            {
+                REQUIRE_EQ(nanoarrow_append(&arrow_array, value.value()), NANOARROW_OK);
+            }
+            else
+            {
+                REQUIRE_EQ(ArrowArrayAppendNull(&arrow_array, 1), NANOARROW_OK);
+            }
+        }
+        REQUIRE_EQ(ArrowArrayFinishBuildingDefault(&arrow_array, &error), NANOARROW_OK);
+        return {std::move(arrow_array), std::move(arrow_schema)};
+    }
+
+    template <typename T>
+    void nanoarrow_validation(const ArrowArray* arrow_array, const std::vector<nullable<T>>& values)
+    {
+        ArrowError error;
+        ArrowArrayView input_view;
+        ArrowArrayViewInitFromType(&input_view, nanoarrow_type_from<T>());
+        REQUIRE_EQ(ArrowArrayViewSetArray(&input_view, arrow_array, &error), NANOARROW_OK);
+        REQUIRE_EQ(
+            ArrowArrayViewValidate(&input_view, ArrowValidationLevel::NANOARROW_VALIDATION_LEVEL_FULL, &error),
+            NANOARROW_OK
+        );
+        for (std::size_t i = 0; i < values.size(); ++i)
+        {
+            CHECK_EQ(ArrowArrayViewIsNull(&input_view, static_cast<int64_t>(i)) == 0, values[i].has_value());
+            const T value = nanoarrow_get<T>(&input_view, static_cast<int64_t>(i));
+            if(values[i].has_value())
+            {
+                CHECK_EQ(value, values[i].value());
+            }
         }
     }
 }

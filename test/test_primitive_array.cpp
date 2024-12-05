@@ -721,53 +721,15 @@ namespace sparrow
 
                 SUBCASE("Produce array from sparrow and read it thanks nanoarrow")
                 {
-                    primitive_array<T> sparrow_array(nullable_vector);
+                    primitive_array<T> sparrow_array{nullable_vector};
                     const auto [arrow_array, arrow_schema] = sparrow::get_arrow_structures(sparrow_array);
-                    ArrowError error;
-                    ArrowArrayView input_view;
-                    ArrowArrayViewInitFromType(&input_view, nanoarrow_type_from<T>());
-                    REQUIRE_EQ(ArrowArrayViewSetArray(&input_view, arrow_array, &error), NANOARROW_OK);
-                    REQUIRE_EQ(
-                        ArrowArrayViewValidate(
-                            &input_view,
-                            ArrowValidationLevel::NANOARROW_VALIDATION_LEVEL_FULL,
-                            &error
-                        ),
-                        NANOARROW_OK
-                    );
-                    for (std::size_t i = 0; i < data.size(); ++i)
-                    {
-                        CHECK_EQ(
-                            ArrowArrayViewIsNull(&input_view, static_cast<int64_t>(i)) == 0,
-                            nullable_vector[i].has_value()
-                        );
-                        const T value = nanoarrow_get<T>(&input_view, static_cast<int64_t>(i));
-                        CHECK_EQ(value, data[i]);
-                    }
+                    nanoarrow_validation(arrow_array, nullable_vector);
                 }
 
                 SUBCASE("Produce array from nanoarrow and read it thanks sparrow")
                 {
-                    ArrowSchema arrow_schema;
-                    REQUIRE_EQ(ArrowSchemaInitFromType(&arrow_schema, nanoarrow_type_from<T>()), NANOARROW_OK);
-                    ArrowError error;
-                    ArrowArray arrow_array;
-                    REQUIRE_EQ(ArrowArrayInitFromSchema(&arrow_array, &arrow_schema, &error), NANOARROW_OK);
-                    REQUIRE_EQ(ArrowArrayStartAppending(&arrow_array), NANOARROW_OK);
-                    for (auto value : nullable_vector)
-                    {
-                        if (value.has_value())
-                        {
-                            REQUIRE_EQ(nanoarrow_append(&arrow_array, value.value()), NANOARROW_OK);
-                        }
-                        else
-                        {
-                            REQUIRE_EQ(ArrowArrayAppendNull(&arrow_array, 1), NANOARROW_OK);
-                        }
-                    }
-                    REQUIRE_EQ(ArrowArrayFinishBuildingDefault(&arrow_array, &error), NANOARROW_OK);
-
-                    const primitive_array<T> sparrow_array(arrow_proxy(&arrow_array, &arrow_schema));
+                    auto [arrow_array, arrow_schema] = nanoarrow_create<T>(nullable_vector);
+                    const primitive_array<T> sparrow_array{arrow_proxy{&arrow_array, &arrow_schema}};
                     REQUIRE_EQ(sparrow_array.size(), data.size());
                     for (std::size_t i = 0; i < data.size(); ++i)
                     {
