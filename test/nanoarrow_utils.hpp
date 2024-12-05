@@ -21,12 +21,12 @@
 #include "sparrow/utils/nullable.hpp"
 
 #include "doctest/doctest.h"
-#include "nanoarrow/common/inline_types.h"
+#include "nanoarrow/nanoarrow.h"
 
 namespace sparrow
 {
     template <typename T>
-    ArrowType nanoarrow_type_from()
+    constexpr ArrowType nanoarrow_type_from()
     {
         if constexpr (std::is_same_v<T, int8_t>)
         {
@@ -72,10 +72,19 @@ namespace sparrow
         {
             return ArrowType::NANOARROW_TYPE_DOUBLE;
         }
+        else if constexpr (std::is_same_v<T, std::string>)
+        {
+            return ArrowType::NANOARROW_TYPE_STRING;
+        }
+        else
+        {
+            static_assert(mpl::dependent_false<T>::value, "nanoarrow_type_from: Unsupported type.");
+            mpl::unreachable();
+        }
     }
 
     template <typename T>
-    ArrowErrorCode nanoarrow_append(ArrowArray* array, T value)
+    inline ArrowErrorCode nanoarrow_append(ArrowArray* array, T value)
     {
         if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, int16_t> || std::is_same_v<T, int32_t>
                       || std::is_same_v<T, int64_t>)
@@ -92,14 +101,20 @@ namespace sparrow
         {
             return ArrowArrayAppendDouble(array, static_cast<double>(value));
         }
+        else if constexpr (std::is_same_v<T, std::string>)
+        {
+            ArrowStringView value_view = ArrowCharView(value.c_str());
+            return ArrowArrayAppendString(array, value_view);
+        }
         else
         {
-            return -1;
+            static_assert(mpl::dependent_false<T>::value, "nanoarrow_type_from: Unsupported type.");
+            mpl::unreachable();
         }
     }
 
     template <typename T>
-    T nanoarrow_get(ArrowArrayView* array, int64_t index)
+    inline T nanoarrow_get(ArrowArrayView* array, int64_t index)
     {
         if constexpr (std::is_same<T, int8_t>::value || std::is_same<T, int16_t>::value
                       || std::is_same<T, int32_t>::value || std::is_same<T, int64_t>::value)
@@ -116,6 +131,11 @@ namespace sparrow
         {
             return static_cast<T>(ArrowArrayViewGetDoubleUnsafe(array, index));
         }
+        else if constexpr (std::is_same_v<T, std::string>)
+        {
+            const ArrowStringView string_view = ArrowArrayViewGetStringUnsafe(array, index);
+            return std::string{string_view.data, static_cast<size_t>(string_view.size_bytes)};
+        }
         else
         {
             static_assert(mpl::dependent_false<T>::value, "nanoarrow_get: Unsupported type.");
@@ -124,7 +144,7 @@ namespace sparrow
     }
 
     template <typename T>
-    std::pair<ArrowArray, ArrowSchema> nanoarrow_create(const std::vector<nullable<T>>& values)
+    inline std::pair<ArrowArray, ArrowSchema> nanoarrow_create(const std::vector<nullable<T>>& values)
     {
         ArrowSchema arrow_schema{};
         REQUIRE_EQ(ArrowSchemaInitFromType(&arrow_schema, nanoarrow_type_from<T>()), NANOARROW_OK);
@@ -148,11 +168,12 @@ namespace sparrow
     }
 
     template <typename T>
-    void nanoarrow_validation(const ArrowArray* arrow_array, const std::vector<nullable<T>>& values)
+    inline void nanoarrow_validation(const ArrowArray* arrow_array, const std::vector<nullable<T>>& values)
     {
         ArrowError error;
         ArrowArrayView input_view;
-        ArrowArrayViewInitFromType(&input_view, nanoarrow_type_from<T>());
+        const ArrowType type = nanoarrow_type_from<T>();
+        ArrowArrayViewInitFromType(&input_view, type);
         REQUIRE_EQ(ArrowArrayViewSetArray(&input_view, arrow_array, &error), NANOARROW_OK);
         REQUIRE_EQ(
             ArrowArrayViewValidate(&input_view, ArrowValidationLevel::NANOARROW_VALIDATION_LEVEL_FULL, &error),
@@ -162,7 +183,7 @@ namespace sparrow
         {
             CHECK_EQ(ArrowArrayViewIsNull(&input_view, static_cast<int64_t>(i)) == 0, values[i].has_value());
             const T value = nanoarrow_get<T>(&input_view, static_cast<int64_t>(i));
-            if(values[i].has_value())
+            if (values[i].has_value())
             {
                 CHECK_EQ(value, values[i].value());
             }
