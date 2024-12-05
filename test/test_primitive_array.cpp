@@ -700,10 +700,28 @@ namespace sparrow
 
             SUBCASE("nanoarrow compatibility")
             {
+                using inner_value_type = T;
+
+                std::vector<inner_value_type> data = {
+                    static_cast<inner_value_type>(0),
+                    static_cast<inner_value_type>(1),
+                    static_cast<inner_value_type>(2),
+                    static_cast<inner_value_type>(3)
+                };
+                using nullable_type = nullable<inner_value_type>;
+
+                bool b1 = false;
+
+                std::vector<nullable_type> nullable_vector{
+                    nullable_type(data[0]),
+                    nullable_type(data[1]),
+                    nullable_type{data[2], b1},
+                    nullable_type(data[3])
+                };
+
                 SUBCASE("Produce array from sparrow and read it thanks nanoarrow")
                 {
-                    const std::vector<T> vec = {1, 2, 3};
-                    primitive_array<T> sparrow_array(vec);
+                    primitive_array<T> sparrow_array(nullable_vector);
                     const auto [arrow_array, arrow_schema] = sparrow::get_arrow_structures(sparrow_array);
                     ArrowError error;
                     ArrowArrayView input_view;
@@ -717,36 +735,47 @@ namespace sparrow
                         ),
                         NANOARROW_OK
                     );
-                    for (std::size_t i = 0; i < vec.size(); ++i)
+                    for (std::size_t i = 0; i < data.size(); ++i)
                     {
-                        CHECK_FALSE(ArrowArrayViewIsNull(&input_view, static_cast<int64_t>(i)));
+                        CHECK_EQ(
+                            ArrowArrayViewIsNull(&input_view, static_cast<int64_t>(i)) == 0,
+                            nullable_vector[i].has_value()
+                        );
                         const T value = nanoarrow_get<T>(&input_view, static_cast<int64_t>(i));
-                        CHECK_EQ(value, vec[i]);
+                        CHECK_EQ(value, data[i]);
                     }
                 }
 
                 SUBCASE("Produce array from nanoarrow and read it thanks sparrow")
                 {
-                    const std::vector<T> vec = {1, 2, 3};
-
                     ArrowSchema arrow_schema;
                     REQUIRE_EQ(ArrowSchemaInitFromType(&arrow_schema, nanoarrow_type_from<T>()), NANOARROW_OK);
                     ArrowError error;
                     ArrowArray arrow_array;
                     REQUIRE_EQ(ArrowArrayInitFromSchema(&arrow_array, &arrow_schema, &error), NANOARROW_OK);
                     REQUIRE_EQ(ArrowArrayStartAppending(&arrow_array), NANOARROW_OK);
-                    for (auto value : vec)
+                    for (auto value : nullable_vector)
                     {
-                        REQUIRE_EQ(nanoarrow_append(&arrow_array, value), NANOARROW_OK);
+                        if (value.has_value())
+                        {
+                            REQUIRE_EQ(nanoarrow_append(&arrow_array, value.value()), NANOARROW_OK);
+                        }
+                        else
+                        {
+                            REQUIRE_EQ(ArrowArrayAppendNull(&arrow_array, 1), NANOARROW_OK);
+                        }
                     }
                     REQUIRE_EQ(ArrowArrayFinishBuildingDefault(&arrow_array, &error), NANOARROW_OK);
 
                     const primitive_array<T> sparrow_array(arrow_proxy(&arrow_array, &arrow_schema));
-                    REQUIRE_EQ(sparrow_array.size(), vec.size());
-                    for (std::size_t i = 0; i < vec.size(); ++i)
+                    REQUIRE_EQ(sparrow_array.size(), data.size());
+                    for (std::size_t i = 0; i < data.size(); ++i)
                     {
-                        REQUIRE(sparrow_array[i].has_value());
-                        CHECK_EQ(sparrow_array[i].value(), vec[i]);
+                        CHECK_EQ(sparrow_array[i].has_value(), nullable_vector[i].has_value());
+                        if (nullable_vector[i].has_value())
+                        {
+                            CHECK_EQ(sparrow_array[i].value(), data[i]);
+                        }
                     }
                 }
             }
