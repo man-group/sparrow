@@ -676,8 +676,8 @@ struct std::formatter<U>
         }
         else
         {
-            static_assert(mpl::dependent_false<U>::value, "Unknown union array type");
-            mpl::unreachable();
+            static_assert(sparrow::mpl::dependent_false<U>::value, "Unknown union array type");
+            sparrow::mpl::unreachable();
         }
         const auto& proxy = ar.get_arrow_proxy();
         std::format_to(ctx.out(), " [name={} | size={}] <", proxy.name().value_or("nullptr"), proxy.length());

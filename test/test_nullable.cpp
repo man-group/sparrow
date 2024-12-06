@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <format>
+#if defined(__cpp_lib_format)
+#    include <format>
+#endif
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include "sparrow/utils/nullable.hpp"
