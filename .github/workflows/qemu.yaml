@@ -31,6 +31,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Checkout nanoarrow
+        uses: actions/checkout@v4
+        with:
+          repository: apache/arrow-nanoarrow
+          path: dependencies/tests/nanoarrow
+
       - name: Get current date
         id: date
         uses: Kaven-Universe/github-action-current-date-time@v1
@@ -98,16 +104,35 @@ jobs:
             export CC
             CXX=g++
             export CXX
-            echo "Configuring"
-            cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+            ROOT_DIR="${PWD}"
+            export ROOT_DIR
+            echo "Configure nanoarrow"
+            cd dependencies/tests/nanoarrow
+            cmake -G Ninja -B ./build \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+              -DCMAKE_BUILD_TYPE:STRING=Release \
+              -DCMAKE_COMPILE_WARNING_AS_ERROR=FALSE \
+              -DCMAKE_C_STANDARD=17
+            echo "Build nanoarrow"
+            cmake --build ./build --target install
+            echo "Configuring sparrow"
+            cd $ROOT_DIR
+            cmake -G Ninja -Bbuild \
+              -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
+              -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} \
+              -DBUILD_TESTS=ON \
+              -DBUILD_EXAMPLES=ON \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+              -DCMAKE_C_COMPILER_LAUNCHER=ccache
             cd build
-            echo "Building library"
+            echo "Building sparrow library"
             cmake --build . --config ${{matrix.config.name}} --target sparrow
-            echo "Building tests"
+            echo "Building sparrow tests"
             cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib
-            echo "Running examples"
+            echo "Running sparrow examples"
             cmake --build . --config ${{matrix.config.name}} --target run_examples
-            echo "Running tests"
+            echo "Running sparrow tests"
             cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
             ccache --show-stats
             

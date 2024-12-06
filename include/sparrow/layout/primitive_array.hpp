@@ -319,7 +319,7 @@ namespace sparrow
     arrow_proxy primitive_array<T>::create_proxy(R&& range)
     {
         const std::size_t n = range_size(range);
-        auto iota = std::ranges::iota_view{std::size_t(0), n};
+        const auto iota = std::ranges::iota_view{std::size_t(0), n};
         std::ranges::transform_view iota_to_is_non_missing(
             iota,
             [](std::size_t)

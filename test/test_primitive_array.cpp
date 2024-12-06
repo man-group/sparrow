@@ -16,9 +16,12 @@
 #include <ranges>
 #include <vector>
 
+#include "sparrow/array.hpp"
 #include "sparrow/layout/primitive_array.hpp"
 
 #include "doctest/doctest.h"
+#include "nanoarrow/nanoarrow.h"
+#include "nanoarrow_utils.hpp"
 
 namespace sparrow
 {
@@ -40,6 +43,7 @@ namespace sparrow
     {
         TEST_CASE_TEMPLATE_DEFINE("", T, primitive_array_id)
         {
+            // using nanoarrow_corresponding__type = nanoarrow_type<T>::type;
             using array_test_type = primitive_array<T>;
 
             auto make_array = [](size_t count, size_t offset = 0)
@@ -55,7 +59,7 @@ namespace sparrow
                     std::move(values),
                     count > 2 ? std::vector<std::size_t>{2} : std::vector<std::size_t>{}
                 );
-                if(offset != 0)
+                if (offset != 0)
                 {
                     return arr.slice(offset, arr.size());
                 }
@@ -66,7 +70,7 @@ namespace sparrow
             };
 
             // Elements: 2, null, 4, 5
-            array_test_type ar = make_array(5 ,1);
+            array_test_type ar = make_array(5, 1);
 
             SUBCASE("constructor")
             {
@@ -692,6 +696,50 @@ namespace sparrow
                 CHECK_EQ(ar[1].get(), static_cast<T>(2));
                 CHECK(ar[2].has_value());
                 CHECK_EQ(ar[2].get(), static_cast<T>(3));
+            }
+
+            SUBCASE("nanoarrow compatibility")
+            {
+                using inner_value_type = T;
+
+                std::vector<inner_value_type> data = {
+                    static_cast<inner_value_type>(0),
+                    static_cast<inner_value_type>(1),
+                    static_cast<inner_value_type>(2),
+                    static_cast<inner_value_type>(3)
+                };
+                using nullable_type = nullable<inner_value_type>;
+
+                bool b1 = false;
+
+                std::vector<nullable_type> nullable_vector{
+                    nullable_type(data[0]),
+                    nullable_type(data[1]),
+                    nullable_type{data[2], b1},
+                    nullable_type(data[3])
+                };
+
+                SUBCASE("Produce array from sparrow and read it thanks nanoarrow")
+                {
+                    primitive_array<T> sparrow_array{nullable_vector};
+                    const auto [arrow_array, arrow_schema] = sparrow::get_arrow_structures(sparrow_array);
+                    nanoarrow_validation(arrow_array, nullable_vector);
+                }
+
+                SUBCASE("Produce array from nanoarrow and read it thanks sparrow")
+                {
+                    auto [arrow_array, arrow_schema] = nanoarrow_create<T>(nullable_vector);
+                    const primitive_array<T> sparrow_array{arrow_proxy{&arrow_array, &arrow_schema}};
+                    REQUIRE_EQ(sparrow_array.size(), data.size());
+                    for (std::size_t i = 0; i < data.size(); ++i)
+                    {
+                        CHECK_EQ(sparrow_array[i].has_value(), nullable_vector[i].has_value());
+                        if (nullable_vector[i].has_value())
+                        {
+                            CHECK_EQ(sparrow_array[i].value(), data[i]);
+                        }
+                    }
+                }
             }
         }
         TEST_CASE_TEMPLATE_APPLY(primitive_array_id, testing_types);

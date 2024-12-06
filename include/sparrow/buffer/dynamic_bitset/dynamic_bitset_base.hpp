@@ -192,6 +192,7 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
     {
         SPARROW_ASSERT_TRUE(pos < size());
+        SPARROW_ASSERT_TRUE(data() != nullptr);
         return reference(*this, buffer().data()[block_index(pos)], bit_mask(pos));
     }
 
@@ -207,6 +208,10 @@ namespace sparrow
     constexpr bool dynamic_bitset_base<B>::test(size_type pos) const
     {
         SPARROW_ASSERT_TRUE(pos < size());
+        if(data() == nullptr)
+        {
+            return true;
+        }
         return !m_null_count || buffer().data()[block_index(pos)] & bit_mask(pos);
     }
 
@@ -215,6 +220,7 @@ namespace sparrow
     constexpr void dynamic_bitset_base<B>::set(size_type pos, value_type value)
     {
         SPARROW_ASSERT_TRUE(pos < size());
+        SPARROW_ASSERT_TRUE(data() != nullptr);
         block_type& block = buffer().data()[block_index(pos)];
         const bool old_value = block & bit_mask(pos);
         if (value)
@@ -344,6 +350,10 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B>::front() const -> const_reference
     {
         SPARROW_ASSERT_TRUE(size() >= 1);
+        if(data() == nullptr)
+        {
+            return true;
+        }
         return (*this)[0];
     }
 
@@ -360,6 +370,10 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B>::back() const -> const_reference
     {
         SPARROW_ASSERT_TRUE(size() >= 1);
+        if(data() == nullptr)
+        {
+            return true;
+        }
         return (*this)[size() - 1];
     }
 
@@ -423,6 +437,10 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     auto dynamic_bitset_base<B>::count_non_null() const noexcept -> size_type
     {
+        if(data() == nullptr)
+        {
+            return m_size;
+        }
         if (buffer().empty())
         {
             return 0u;
@@ -456,6 +474,10 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr void dynamic_bitset_base<B>::zero_unused_bits()
     {
+        if(data() == nullptr)
+        {
+            return;
+        }
         const size_type extra_bits = count_extra_bits();
         if (extra_bits != 0)
         {
@@ -526,6 +548,7 @@ namespace sparrow
     constexpr dynamic_bitset_base<B>::iterator
     dynamic_bitset_base<B>::insert(const_iterator pos, size_type count, value_type value)
     {
+        SPARROW_ASSERT_TRUE(data() != nullptr);
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
@@ -556,6 +579,7 @@ namespace sparrow
     constexpr dynamic_bitset_base<B>::iterator
     dynamic_bitset_base<B>::insert(const_iterator pos, InputIt first, InputIt last)
     {
+        SPARROW_ASSERT_TRUE(data() != nullptr);
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
@@ -604,6 +628,7 @@ namespace sparrow
     constexpr dynamic_bitset_base<B>::iterator
     dynamic_bitset_base<B>::erase(const_iterator first, const_iterator last)
     {
+        SPARROW_ASSERT_TRUE(data() != nullptr);
         SPARROW_ASSERT_TRUE(cbegin() <= first);
         SPARROW_ASSERT_TRUE(first <= last);
         SPARROW_ASSERT_TRUE(last <= cend());
