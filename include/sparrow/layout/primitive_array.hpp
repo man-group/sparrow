@@ -16,17 +16,17 @@
 
 #include <cstddef>
 #include <ranges>
+
+#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
+#include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
+#include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/layout/primitive_array.hpp"
-#include "sparrow/layout/array_access.hpp"
-#include "sparrow/buffer/dynamic_bitset.hpp"
-#include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/utils/ranges.hpp"
 
 namespace sparrow
@@ -149,10 +149,10 @@ namespace sparrow
          * primitive_array<int> pr((std::ranges::iota_view{0, 10});
          * ```
          */
-        template <class ... Args>
-        requires(mpl::excludes_copy_and_move_ctor_v<primitive_array<T>, Args...>)
-        explicit primitive_array(Args&& ... args)
-            : base_type(create_proxy(std::forward<Args>(args) ...))
+        template <class... Args>
+            requires(mpl::excludes_copy_and_move_ctor_v<primitive_array<T>, Args...>)
+        explicit primitive_array(Args&&... args)
+            : base_type(create_proxy(std::forward<Args>(args)...))
         {
         }
 
@@ -165,7 +165,6 @@ namespace sparrow
         }
 
     private:
-
 
         pointer data();
         const_pointer data() const;
@@ -182,29 +181,25 @@ namespace sparrow
         static arrow_proxy create_proxy(size_type n);
 
         template <validity_bitmap_input R = validity_bitmap>
-        static auto create_proxy(
-            u8_buffer<T>&& data_buffer,    
-            R && bitmaps = validity_bitmap{}
-        ) -> arrow_proxy;
+        static auto create_proxy(u8_buffer<T>&& data_buffer, R&& bitmaps = validity_bitmap{}) -> arrow_proxy;
 
         // range of values (no missing values)
         template <std::ranges::input_range R>
-        requires std::convertible_to<std::ranges::range_value_t<R>, T>
+            requires std::convertible_to<std::ranges::range_value_t<R>, T>
         static auto create_proxy(R&& range) -> arrow_proxy;
 
-        template<class U>
-        requires std::convertible_to<U, T>
+        template <class U>
+            requires std::convertible_to<U, T>
         static arrow_proxy create_proxy(size_type n, const U& value = U{});
 
         // range of values, validity_bitmap_input
         template <std::ranges::input_range R, validity_bitmap_input R2>
-        requires(std::convertible_to<std::ranges::range_value_t<R>, T>)
+            requires(std::convertible_to<std::ranges::range_value_t<R>, T>)
         static arrow_proxy create_proxy(R&&, R2&&);
 
         // range of nullable values
         template <std::ranges::input_range R>
-        requires std::is_same_v<
-            std::ranges::range_value_t<R>, nullable<T>>
+            requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
         static arrow_proxy create_proxy(R&&);
 
         // Modifiers
@@ -249,7 +244,7 @@ namespace sparrow
                 data_type::HALF_FLOAT,
                 data_type::FLOAT,
                 data_type::DOUBLE,
-                data_type::FIXED_SIZE_BINARY,
+                data_type::FIXED_WIDTH_BINARY,
                 data_type::TIMESTAMP
             };
             return std::find(dtypes.cbegin(), dtypes.cend(), dt) != dtypes.cend();
@@ -262,27 +257,24 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(this->get_arrow_proxy().data_type() == arrow_traits<T>::type_id);
     }
-    
+
     template <class T>
-    template <validity_bitmap_input R >
-    auto primitive_array<T>::create_proxy(
-            u8_buffer<T>&& data_buffer,    
-            R && bitmap_input
-    ) -> arrow_proxy
+    template <validity_bitmap_input R>
+    auto primitive_array<T>::create_proxy(u8_buffer<T>&& data_buffer, R&& bitmap_input) -> arrow_proxy
     {
         const auto size = data_buffer.size();
         validity_bitmap bitmap = ensure_validity_bitmap(size, std::forward<R>(bitmap_input));
-        const auto null_count =  bitmap.null_count();
+        const auto null_count = bitmap.null_count();
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             sparrow::data_type_format_of<T>(),
-            std::nullopt, // name
-            std::nullopt, // metadata
-            std::nullopt, // flags
-            0, // n_children
-            nullptr, // children
-            nullptr // dictionary
+            std::nullopt,  // name
+            std::nullopt,  // metadata
+            std::nullopt,  // flags
+            0,             // n_children
+            nullptr,       // children
+            nullptr        // dictionary
         );
 
         std::vector<buffer<uint8_t>> buffers(2);
@@ -291,31 +283,31 @@ namespace sparrow
 
         // create arrow array
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size), // length
+            static_cast<std::int64_t>(size),  // length
             static_cast<int64_t>(null_count),
-            0, // offset
+            0,  // offset
             std::move(buffers),
-            0, // n_children
-            nullptr, // children
-            nullptr // dictionary
+            0,        // n_children
+            nullptr,  // children
+            nullptr   // dictionary
         );
         return arrow_proxy(std::move(arr), std::move(schema));
     }
 
     template <class T>
     template <std::ranges::input_range VALUE_RANGE, validity_bitmap_input R>
-    requires(std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, T>)
-    arrow_proxy primitive_array<T>::create_proxy(VALUE_RANGE && values, R && validity_input)
+        requires(std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, T>)
+    arrow_proxy primitive_array<T>::create_proxy(VALUE_RANGE&& values, R&& validity_input)
     {
         u8_buffer<T> data_buffer(std::forward<VALUE_RANGE>(values));
         return create_proxy(std::move(data_buffer), std::forward<R>(validity_input));
     }
 
     template <class T>
-    template<class U>
-    requires std::convertible_to<U, T>
+    template <class U>
+        requires std::convertible_to<U, T>
     arrow_proxy primitive_array<T>::create_proxy(size_type n, const U& value)
-    {   
+    {
         // create data_buffer
         u8_buffer<T> data_buffer(n, value);
         return create_proxy(std::move(data_buffer));
@@ -323,24 +315,42 @@ namespace sparrow
 
     template <class T>
     template <std::ranges::input_range R>
-    requires std::convertible_to<std::ranges::range_value_t<R>, T>
+        requires std::convertible_to<std::ranges::range_value_t<R>, T>
     arrow_proxy primitive_array<T>::create_proxy(R&& range)
-    {   
+    {
         const std::size_t n = range_size(range);
-        auto iota = std::ranges::iota_view{std::size_t(0), n};
-        std::ranges::transform_view iota_to_is_non_missing(iota, [](std::size_t) { return true; });
+        const auto iota = std::ranges::iota_view{std::size_t(0), n};
+        std::ranges::transform_view iota_to_is_non_missing(
+            iota,
+            [](std::size_t)
+            {
+                return true;
+            }
+        );
         return self_type::create_proxy(std::forward<R>(range), std::move(iota_to_is_non_missing));
     }
 
     // range of nullable values
     template <class T>
     template <std::ranges::input_range R>
-    requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
+        requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
     arrow_proxy primitive_array<T>::create_proxy(R&& range)
     {
         // split into values and is_non_null ranges
-        auto values = range | std::views::transform([](const auto& v) { return v.get(); });
-        auto is_non_null = range | std::views::transform([](const auto& v) { return v.has_value(); });
+        auto values = range
+                      | std::views::transform(
+                          [](const auto& v)
+                          {
+                              return v.get();
+                          }
+                      );
+        auto is_non_null = range
+                           | std::views::transform(
+                               [](const auto& v)
+                               {
+                                   return v.has_value();
+                               }
+                           );
         return self_type::create_proxy(values, is_non_null);
     }
 

@@ -14,70 +14,73 @@
 
 #pragma once
 
-#include <concepts>
 #include <cstdint>
 #include <iterator>
 #include <numeric>
 #include <ranges>
 #include <string>
 #include <vector>
-#include <cstddef>
 
+#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/arrow_array_schema_proxy.hpp"
-#include "sparrow/buffer/buffer_adaptor.hpp"
-#include "sparrow/buffer/u8_buffer.hpp"
-#include "sparrow/layout/array_bitmap_base.hpp"
-#include "sparrow/layout/layout_iterator.hpp"
-#include "sparrow/types/data_type.hpp"
-#include "sparrow/utils/contracts.hpp"
-#include "sparrow/utils/iterator.hpp"
-#include "sparrow/utils/repeat_container.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/layout_utils.hpp"
+#include "sparrow/layout/variable_size_binary_layout/variable_size_binary_iterator.hpp"
+#include "sparrow/layout/variable_size_binary_layout/variable_size_binary_reference.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
-
     namespace detail
-    {   
-        template<class T, class OT>
+    {
+        template <class T, class OT>
         struct variable_size_binary_format;
 
-        template<> 
-        struct variable_size_binary_format<std::string, std::int32_t> 
+        template <>
+        struct variable_size_binary_format<std::string, std::int32_t>
         {
-            static std::string format(){return "u";}
+            static std::string format()
+            {
+                return "u";
+            }
         };
 
-        template<>
+        template <>
         struct variable_size_binary_format<std::string, std::int64_t>
         {
-            static std::string format(){return "U";}
+            static std::string format()
+            {
+                return "U";
+            }
         };
 
-        template<> 
-        struct variable_size_binary_format<std::vector<std::byte>, std::int32_t> 
-        {   
-            static std::string format(){return "z";}
+        template <>
+        struct variable_size_binary_format<std::vector<std::byte>, std::int32_t>
+        {
+            static std::string format()
+            {
+                return "z";
+            }
         };
 
-        template<>
+        template <>
         struct variable_size_binary_format<std::vector<std::byte>, std::int64_t>
         {
-            static std::string format(){return "Z";}
+            static std::string format()
+            {
+                return "Z";
+            }
         };
-    }    
-
-
+    }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     class variable_size_binary_array_impl;
 
-    using string_array =     variable_size_binary_array_impl<std::string, std::string_view, std::int32_t>;
+    using string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int32_t>;
     using big_string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int64_t>;
- 
+
     /**
      * Checks whether T is a string_array type.
      */
@@ -89,12 +92,6 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_big_string_array_v = std::same_as<T, big_string_array>;
-
-    template <class L>
-    class variable_size_binary_reference;
-
-    template <class Layout, iterator_types Iterator_types>
-    class variable_size_binary_value_iterator;
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     struct array_inner_types<variable_size_binary_array_impl<T, CR, OT>> : array_inner_types_base
@@ -144,143 +141,6 @@ namespace sparrow
         // using const_iterator = layout_iterator<array_type, true, CR>;
     };
 
-    /**
-     * Iterator over the data values of a variable size binary layout.
-     *
-     * @tparam L the layout type
-     * @tparam is_const a boolean flag specifying whether this iterator is const.
-     */
-    template <class Layout, iterator_types Iterator_types>
-    class variable_size_binary_value_iterator
-        : public iterator_base<
-              variable_size_binary_value_iterator<Layout, Iterator_types>,
-              typename Iterator_types::value_type,
-              typename Iterator_types::iterator_tag,
-              typename Iterator_types::reference>
-    {
-    public:
-
-        using self_type = variable_size_binary_value_iterator<Layout, Iterator_types>;
-        using base_type = iterator_base<
-            self_type,
-            typename Iterator_types::value_type,
-            typename Iterator_types::iterator_tag,
-            typename Iterator_types::reference>;
-        using reference = typename base_type::reference;
-        using difference_type = typename base_type::difference_type;
-        using layout_type = mpl::constify_t<Layout, true>;
-        using size_type = size_t;
-        using value_type = base_type::value_type;
-
-        variable_size_binary_value_iterator() noexcept = default;
-        variable_size_binary_value_iterator(layout_type* layout, size_type index);
-
-    private:
-
-        reference dereference() const;
-
-        void increment();
-        void decrement();
-        void advance(difference_type n);
-        difference_type distance_to(const self_type& rhs) const;
-        bool equal(const self_type& rhs) const;
-        bool less_than(const self_type& rhs) const;
-
-        layout_type* p_layout = nullptr;
-        difference_type m_index;
-
-        friend class iterator_access;
-    };
-
-    /**
-     * Implementation of reference to inner type used for layout L
-     *
-     * @tparam L the layout type
-     */
-    template <class L>
-    class variable_size_binary_reference
-    {
-    public:
-
-        using self_type = variable_size_binary_reference<L>;
-        using value_type = typename L::inner_value_type;
-        using reference = typename L::inner_reference;
-        using const_reference = typename L::inner_const_reference;
-        using size_type = typename L::size_type;
-        using difference_type = std::ptrdiff_t;
-        using iterator = typename L::data_iterator;
-        using const_iterator = typename L::const_data_iterator;
-        using offset_type = typename L::offset_type;
-
-        variable_size_binary_reference(L* layout, size_type index);
-        variable_size_binary_reference(const variable_size_binary_reference&) = default;
-        variable_size_binary_reference(variable_size_binary_reference&&) = default;
-
-        template <std::ranges::sized_range T>
-            requires mpl::convertible_ranges<T, typename L::inner_value_type>
-        self_type& operator=(T&& rhs);
-
-        // This is to avoid const char* from begin caught by the previous
-        // operator= overload. It would convert const char* to const char[N],
-        // including the null-terminating char.
-        template <class U = typename L::inner_value_type>
-            requires std::assignable_from<U&, const char*>
-        self_type& operator=(const char* rhs);
-
-        size_type size() const;
-
-        iterator begin();
-        iterator end();
-
-        const_iterator begin() const;
-        const_iterator end() const;
-        const_iterator cbegin() const;
-        const_iterator cend() const;
-
-        template <std::ranges::input_range T>
-            requires mpl::convertible_ranges<T, typename L::inner_value_type>
-        bool operator==(const T& rhs) const;
-
-        template <class U = typename L::inner_value_type>
-            requires std::assignable_from<U&, const char*>
-        bool operator==(const char* rhs) const;
-
-        template <std::ranges::input_range T>
-            requires mpl::convertible_ranges<T, typename L::inner_value_type>
-        auto operator<=>(const T& rhs) const;
-
-        template <class U = typename L::inner_value_type>
-            requires std::assignable_from<U&, const char*>
-        auto operator<=>(const char* rhs) const;
-
-    private:
-
-        offset_type offset(size_type index) const;
-        size_type uoffset(size_type index) const;
-
-        L* p_layout = nullptr;
-        size_type m_index = size_type(0);
-    };
-}
-
-namespace std
-{
-    template <typename Layout, template <typename> typename TQual, template <typename> typename UQual>
-    struct basic_common_reference<sparrow::variable_size_binary_reference<Layout>, std::string, TQual, UQual>
-    {
-        using type = std::string;
-    };
-
-    template <typename Layout, template <typename> typename TQual, template <class> class UQual>
-    struct basic_common_reference<std::string, sparrow::variable_size_binary_reference<Layout>, TQual, UQual>
-    {
-        using type = std::string;
-    };
-}
-
-namespace sparrow
-{
-
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     class variable_size_binary_array_impl final
         : public mutable_array_bitmap_base<variable_size_binary_array_impl<T, CR, OT>>
@@ -296,7 +156,7 @@ namespace sparrow
         using inner_const_reference = typename inner_types::inner_const_reference;
 
         using offset_type = typename inner_types::offset_type;
-        using offset_buffer_type  = u8_buffer<std::remove_const_t<offset_type>>;
+        using offset_buffer_type = u8_buffer<std::remove_const_t<offset_type>>;
         using char_buffer_type = u8_buffer<char>;
         using byte_buffer_type = u8_buffer<std::byte>;
         using uint8_buffer_type = u8_buffer<std::uint8_t>;
@@ -326,10 +186,12 @@ namespace sparrow
 
         explicit variable_size_binary_array_impl(arrow_proxy);
 
-        template<class ... ARGS>
-        requires(mpl::excludes_copy_and_move_ctor_v<variable_size_binary_array_impl<T, CR, OT>, ARGS...>)
-        variable_size_binary_array_impl(ARGS && ... args): self_type(create_proxy(std::forward<ARGS>(args)...))
-        {}
+        template <class... ARGS>
+            requires(mpl::excludes_copy_and_move_ctor_v<variable_size_binary_array_impl<T, CR, OT>, ARGS...>)
+        variable_size_binary_array_impl(ARGS&&... args)
+            : self_type(create_proxy(std::forward<ARGS>(args)...))
+        {
+        }
 
         using base_type::get_arrow_proxy;
         using base_type::size;
@@ -337,27 +199,31 @@ namespace sparrow
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
 
-        template<std::ranges::range SIZES_RANGE>
-        static auto offset_from_sizes(SIZES_RANGE && sizes) -> offset_buffer_type;
+        template <std::ranges::range SIZES_RANGE>
+        static auto offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type;
 
     private:
 
-        template<mpl::char_like C,  validity_bitmap_input VB = validity_bitmap >
+        template <mpl::char_like C, validity_bitmap_input VB = validity_bitmap>
         static arrow_proxy create_proxy(
             u8_buffer<C>&& data_buffer,
-            offset_buffer_type && list_offsets,
-            VB && validity_input = validity_bitmap{}
+            offset_buffer_type&& list_offsets,
+            VB&& validity_input = validity_bitmap{}
         );
 
-        template<std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap >
-        requires(
-            std::ranges::input_range<std::ranges::range_value_t<R>> && // a range of ranges
-            mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>> // inner range is a range of char-like
-        )
-        static arrow_proxy create_proxy(
-            R&& values,
-            VB && validity_input = validity_bitmap{}
-        );
+        template <std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap>
+            requires(
+                std::ranges::input_range<std::ranges::range_value_t<R>> &&  // a range of ranges
+                mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>  // inner range is a
+                                                                                           // range of
+                                                                                           // char-like
+            )
+        static arrow_proxy create_proxy(R&& values, VB&& validity_input = validity_bitmap{});
+
+        // range of nullable values
+        template <std::ranges::input_range R>
+            requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
+        static arrow_proxy create_proxy(R&&);
 
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
@@ -414,185 +280,6 @@ namespace sparrow
         friend base_type::base_type::base_type;
     };
 
-    /******************************************************
-     * variable_size_binary_value_iterator implementation *
-     ******************************************************/
-
-    template <class Layout, iterator_types Iterator_types>
-    variable_size_binary_value_iterator<Layout, Iterator_types>::variable_size_binary_value_iterator(
-        layout_type* layout,
-        size_type index
-    )
-        : p_layout(layout)
-        , m_index(static_cast<difference_type>(index))
-    {
-    }
-
-    template <class Layout, iterator_types Iterator_types>
-    auto variable_size_binary_value_iterator<Layout, Iterator_types>::dereference() const -> reference
-    {
-        if constexpr (std::same_as<reference, typename Layout::inner_const_reference>)
-        {
-            return p_layout->value(static_cast<size_type>(m_index));
-        }
-        else
-        {
-            return reference(const_cast<Layout*>(p_layout), static_cast<size_type>(m_index));
-        }
-    }
-
-    template <class Layout, iterator_types Iterator_types>
-    void variable_size_binary_value_iterator<Layout, Iterator_types>::increment()
-    {
-        ++m_index;
-    }
-
-    template <class Layout, iterator_types Iterator_types>
-    void variable_size_binary_value_iterator<Layout, Iterator_types>::decrement()
-    {
-        --m_index;
-    }
-
-    template <class Layout, iterator_types Iterator_types>
-    void variable_size_binary_value_iterator<Layout, Iterator_types>::advance(difference_type n)
-    {
-        m_index += n;
-    }
-
-    template <class Layout, iterator_types Iterator_types>
-    auto variable_size_binary_value_iterator<Layout, Iterator_types>::distance_to(const self_type& rhs
-    ) const -> difference_type
-    {
-        return rhs.m_index - m_index;
-    }
-
-    template <class Layout, iterator_types Iterator_types>
-    bool variable_size_binary_value_iterator<Layout, Iterator_types>::equal(const self_type& rhs) const
-    {
-        return (p_layout == rhs.p_layout) && (m_index == rhs.m_index);
-    }
-
-    template <class Layout, iterator_types Iterator_types>
-    bool variable_size_binary_value_iterator<Layout, Iterator_types>::less_than(const self_type& rhs) const
-    {
-        return (p_layout == rhs.p_layout) && (m_index < rhs.m_index);
-    }
-
-    /*************************************************
-     * variable_size_binary_reference implementation *
-     *************************************************/
-
-    template <class L>
-    variable_size_binary_reference<L>::variable_size_binary_reference(L* layout, size_type index)
-        : p_layout(layout)
-        , m_index(index)
-    {
-    }
-
-    template <class L>
-    template <std::ranges::sized_range T>
-        requires mpl::convertible_ranges<T, typename L::inner_value_type>
-    auto variable_size_binary_reference<L>::operator=(T&& rhs) -> self_type&
-    {
-        p_layout->assign(std::forward<T>(rhs), m_index);
-        p_layout->get_arrow_proxy().update_buffers();
-        return *this;
-    }
-
-    template <class L>
-    template <class U>
-        requires std::assignable_from<U&, const char*>
-    auto variable_size_binary_reference<L>::operator=(const char* rhs) -> self_type&
-    {
-        return *this = std::string_view(rhs);
-    }
-
-    template <class L>
-    auto variable_size_binary_reference<L>::size() const -> size_type
-    {
-        return static_cast<size_type>(offset(m_index + 1) - offset(m_index));
-    }
-
-    template <class L>
-    auto variable_size_binary_reference<L>::begin() -> iterator
-    {
-        return iterator(p_layout->data(uoffset(m_index)));
-    }
-
-    template <class L>
-    auto variable_size_binary_reference<L>::end() -> iterator
-    {
-        return iterator(p_layout->data(uoffset(m_index + 1)));
-    }
-
-    template <class L>
-    auto variable_size_binary_reference<L>::begin() const -> const_iterator
-    {
-        return cbegin();
-    }
-
-    template <class L>
-    auto variable_size_binary_reference<L>::end() const -> const_iterator
-    {
-        return cend();
-    }
-
-    template <class L>
-    auto variable_size_binary_reference<L>::cbegin() const -> const_iterator
-    {
-        return const_iterator(p_layout->data(uoffset(m_index)));
-    }
-
-    template <class L>
-    auto variable_size_binary_reference<L>::cend() const -> const_iterator
-    {
-        return const_iterator(p_layout->data(uoffset(m_index + 1)));
-    }
-
-    template <class L>
-    template <std::ranges::input_range T>
-        requires mpl::convertible_ranges<T, typename L::inner_value_type>
-    bool variable_size_binary_reference<L>::operator==(const T& rhs) const
-    {
-        return std::equal(cbegin(), cend(), std::cbegin(rhs), std::cend(rhs));
-    }
-
-    template <class L>
-    template <class U>
-        requires std::assignable_from<U&, const char*>
-    bool variable_size_binary_reference<L>::operator==(const char* rhs) const
-    {
-        return operator==(std::string_view(rhs));
-    }
-
-    template <class L>
-    template <std::ranges::input_range T>
-        requires mpl::convertible_ranges<T, typename L::inner_value_type>
-    auto variable_size_binary_reference<L>::operator<=>(const T& rhs) const
-    {
-        return lexicographical_compare_three_way(*this, rhs);
-    }
-
-    template <class L>
-    template <class U>
-        requires std::assignable_from<U&, const char*>
-    auto variable_size_binary_reference<L>::operator<=>(const char* rhs) const
-    {
-        return operator<=>(std::string_view(rhs));
-    }
-
-    template <class L>
-    auto variable_size_binary_reference<L>::offset(size_type index) const -> offset_type
-    {
-        return *(p_layout->offset(index));
-    }
-
-    template <class L>
-    auto variable_size_binary_reference<L>::uoffset(size_type index) const -> size_type
-    {
-        return static_cast<size_type>(offset(index));
-    }
-
     /*********************************************
      * variable_size_binary_array_impl implementation *
      *********************************************/
@@ -612,19 +299,19 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    template<std::ranges::range SIZES_RANGE>
-    auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE && sizes) -> offset_buffer_type
+    template <std::ranges::range SIZES_RANGE>
+    auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes));
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
+        ));
     }
 
-
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    template<mpl::char_like C, validity_bitmap_input VB>
+    template <mpl::char_like C, validity_bitmap_input VB>
     arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy(
         u8_buffer<C>&& data_buffer,
-        offset_buffer_type && offsets,
-        VB && validity_input
+        offset_buffer_type&& offsets,
+        VB&& validity_input
     )
     {
         const auto size = offsets.size() - 1;
@@ -633,12 +320,12 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             detail::variable_size_binary_format<T, OT>::format(),
-            std::nullopt, // name
-            std::nullopt, // metadata
-            std::nullopt, // flags,
-            0, // n_children
-            nullptr, // children
-            nullptr // dictionary
+            std::nullopt,  // name
+            std::nullopt,  // metadata
+            std::nullopt,  // flags,
+            0,             // n_children
+            nullptr,       // children
+            nullptr        // dictionary
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
@@ -648,36 +335,61 @@ namespace sparrow
         };
 
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size), // length
+            static_cast<std::int64_t>(size),  // length
             static_cast<int64_t>(null_count),
-            0, // offset
+            0,  // offset
             std::move(arr_buffs),
-            0, // n_children
-            nullptr, // children
-            nullptr // dictionary
+            0,        // n_children
+            nullptr,  // children
+            nullptr   // dictionary
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    template<std::ranges::input_range R, validity_bitmap_input VB  >
-    requires(
-        std::ranges::input_range<std::ranges::range_value_t<R>> && // a range of ranges
-        mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>> // inner range is a range of char-like
-    )
-    arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy(
-        R&& values,
-        VB && validity_input
-    )
+    template <std::ranges::input_range R, validity_bitmap_input VB>
+        requires(
+            std::ranges::input_range<std::ranges::range_value_t<R>> &&                 // a range of ranges
+            mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>  // inner range is a
+                                                                                       // range of char-like
+        )
+    arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy(R&& values, VB&& validity_input)
     {
         using values_inner_value_type = std::ranges::range_value_t<std::ranges::range_value_t<R>>;
-        
-        auto size_range = values | std::views::transform([](const auto& v) { return std::ranges::size(v); });
+
+        auto size_range = values
+                          | std::views::transform(
+                              [](const auto& v)
+                              {
+                                  return std::ranges::size(v);
+                              }
+                          );
         auto offset_buffer = offset_from_sizes(size_range);
-        auto data_buffer = u8_buffer<values_inner_value_type>(
-            std::ranges::views::join(values)
-        );
+        auto data_buffer = u8_buffer<values_inner_value_type>(std::ranges::views::join(values));
         return create_proxy(std::move(data_buffer), std::move(offset_buffer), std::forward<VB>(validity_input));
+    }
+
+    template <std::ranges::sized_range T, class CR, layout_offset OT>
+    template <std::ranges::input_range R>
+        requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
+    arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy(R&& range)
+    {
+        // split into values and is_non_null ranges
+        const auto values = range
+                      | std::views::transform(
+                          [](const auto& v)
+                          {
+                              return v.get();
+                          }
+                      );
+        const auto is_non_null = range
+                           | std::views::transform(
+                               [](const auto& v)
+                               {
+                                   return v.has_value();
+                               }
+                           );
+        return self_type::create_proxy(values, is_non_null);
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -842,7 +554,8 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     template <std::ranges::sized_range U>
         requires mpl::convertible_ranges<U, T>
-    auto variable_size_binary_array_impl<T, CR, OT>::insert_value(const_value_iterator pos, U value, size_type count)
+    auto
+    variable_size_binary_array_impl<T, CR, OT>::insert_value(const_value_iterator pos, U value, size_type count)
         -> value_iterator
     {
         const auto idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
@@ -976,8 +689,8 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto
-    variable_size_binary_array_impl<T, CR, OT>::erase_values(const_value_iterator pos, size_type count) -> value_iterator
+    auto variable_size_binary_array_impl<T, CR, OT>::erase_values(const_value_iterator pos, size_type count)
+        -> value_iterator
     {
         SPARROW_ASSERT_TRUE(pos >= value_cbegin());
         SPARROW_ASSERT_TRUE(pos <= value_cend());
@@ -999,8 +712,8 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto
-    variable_size_binary_array_impl<T, CR, OT>::erase_offsets(const_offset_iterator pos, size_type count) -> offset_iterator
+    auto variable_size_binary_array_impl<T, CR, OT>::erase_offsets(const_offset_iterator pos, size_type count)
+        -> offset_iterator
     {
         SPARROW_ASSERT_TRUE(pos >= offsets_cbegin());
         SPARROW_ASSERT_TRUE(pos <= offsets_cend());

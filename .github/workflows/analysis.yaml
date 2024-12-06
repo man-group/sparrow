@@ -19,6 +19,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Checkout nanoarrow
+      uses: actions/checkout@v4
+      with:
+        repository: apache/arrow-nanoarrow
+        path: dependencies/tests/nanoarrow
+
     - name: Set conda environment
       uses: mamba-org/setup-micromamba@main
       with:
@@ -27,8 +33,21 @@ jobs:
         init-shell: bash
         cache-downloads: true
 
+    - name: Configure nanoarrow
+      working-directory: dependencies/tests/nanoarrow
+      run: | 
+        cmake -G Ninja \
+          -Bbuild \
+          ${{matrix.sys.config-flags}} \
+          -DCMAKE_BUILD_TYPE:STRING=Release \
+          -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
+
+    - name: Build nanoarrow
+      working-directory: dependencies/tests/nanoarrow/build
+      run: cmake --build . --config Release --target install
+
     - name: Configure using CMake
-      run: cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      run: cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DBUILD_TESTS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
     - name: Run C++ analysis
       uses: cpp-linter/cpp-linter-action@v2

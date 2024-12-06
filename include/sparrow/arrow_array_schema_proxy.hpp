@@ -302,7 +302,7 @@ namespace sparrow
         /**
          * Set the child at the given index. It takes the ownership on the `ArrowArray` and`ArrowSchema`
          * passed by rvalue referencess.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` wrapped 
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` wrapped
          * in this proxy were not created with
          * sparrow.
          * @param index The index of the child to set.
@@ -348,6 +348,28 @@ namespace sparrow
 
         [[nodiscard]] SPARROW_API arrow_schema_private_data* get_schema_private_data();
         [[nodiscard]] SPARROW_API arrow_array_private_data* get_array_private_data();
+
+        /**
+         * Slices the array to keep only the elements between the given \p start and \p end.
+         * A copy of the \ref array is modified. The data is not modified, only the ArrowArray.offset and
+         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
+         * elements will be invalid.
+         *
+         * @param start The index of the first element to keep. Must be less than \p end.
+         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         */
+        [[nodiscard]] SPARROW_API arrow_proxy slice(size_t start, size_t end) const;
+
+        /**
+         * Slices the array to keep only the elements between the given \p start and \p end.
+         * A view of the \ref array is returned. The data is not modified, only the ArrowArray.offset and
+         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
+         * elements will be invalid.
+         *
+         * @param start The index of the first element to keep. Must be less than \p end.
+         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         */
+        [[nodiscard]] SPARROW_API arrow_proxy slice_view(size_t start, size_t end) const;
 
         /**
          * Refresh the buffers views. This method should be called after modifying the buffers of the array.
@@ -410,7 +432,7 @@ namespace sparrow
         const size_t add_children_count = std::ranges::size(arrow_array_and_schema_pointers);
         const size_t original_children_count = n_children();
         const size_t new_children_count = original_children_count + add_children_count;
-        
+
         resize_children(new_children_count);
         for (size_t i = 0; i < add_children_count; ++i)
         {
@@ -434,7 +456,7 @@ namespace sparrow
         const size_t add_children_count = std::ranges::size(arrow_arrays_and_schemas);
         const size_t original_children_count = n_children();
         const size_t new_children_count = original_children_count + add_children_count;
-        
+
         resize_children(new_children_count);
         for (size_t i = 0; i < add_children_count; ++i)
         {

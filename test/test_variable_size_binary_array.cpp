@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+#include <vector>
+
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/c_interface.hpp"
-#include "sparrow/layout/variable_size_binary_array.hpp"
+#include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
+#include "nanoarrow_utils.hpp"
 #include "test_utils.hpp"
 
-#include <vector>
-#include <string>
 
 using namespace std::literals;
 
@@ -70,10 +72,10 @@ namespace sparrow
         {
             SUBCASE("high-level")
             {
-                std::vector<std::string> words{"hello", " ","ugly","", "world"};
-                std::vector<std::size_t> where_nulls{2,3};
+                std::vector<std::string> words{"hello", " ", "ugly", "", "world"};
+                std::vector<std::size_t> where_nulls{2, 3};
                 string_array array(words, std::move(where_nulls));
-                
+
                 REQUIRE_EQ(array.size(), words.size());
 
                 // check nulls
@@ -84,11 +86,12 @@ namespace sparrow
                 CHECK_EQ(array[4].has_value(), true);
 
                 // check values
-                CHECK_EQ(array[0].value(),  "hello");
-                CHECK_EQ(array[1].value(),  " ");
-                CHECK_EQ(array[4].value(),  "world");
+                CHECK_EQ(array[0].value(), "hello");
+                CHECK_EQ(array[1].value(), " ");
+                CHECK_EQ(array[4].value(), "world");
             }
-        }   
+        }
+
         TEST_CASE_FIXTURE(variable_size_binary_fixture, "constructor")
         {
             SUBCASE("copy arrow_proxy")
@@ -883,5 +886,46 @@ namespace sparrow
             CHECK_EQ(array.value(6), "clean");
             CHECK_EQ(array.value(7), "code");
         }
+
+        TEST_CASE_FIXTURE(variable_size_binary_fixture, "nanoarrow compatibility")
+        {
+            std::vector<std::string>
+                vector{"once", "upon", "a", "time", "I", "was", "writing", "clean", "code", "now"};
+
+            std::vector<nullable<std::string>> nullable_vector{
+                make_nullable<std::string>("once"),
+                make_nullable<std::string>("upon"),
+                make_nullable<std::string>("a"),
+                make_nullable<std::string>("time"),
+                make_nullable<std::string>("I"),
+                make_nullable<std::string>("was"),
+                make_nullable<std::string>("writing"),
+                make_nullable<std::string>("clean", false),
+                make_nullable<std::string>("code"),
+                make_nullable<std::string>("now", false)
+            };
+
+            SUBCASE("Produce array from sparrow and read it thanks nanoarrow")
+            {
+                layout_type array{nullable_vector};
+                const auto [arrow_array, arrow_schema] = sparrow::get_arrow_structures(array);
+                nanoarrow_validation(arrow_array, nullable_vector);
+            }
+
+            SUBCASE("Produce array from nanoarrow and read it thanks sparrow")
+            {
+                auto [arrow_array, arrow_schema] = nanoarrow_create(nullable_vector);
+                layout_type sparrow_array{arrow_proxy{&arrow_array, &arrow_schema}};
+                REQUIRE_EQ(sparrow_array.size(), nullable_vector.size());
+                for (size_t i = 0; i < sparrow_array.size(); ++i)
+                {
+                    CHECK_EQ(sparrow_array[i].has_value(), nullable_vector[i].has_value());
+                    if (nullable_vector[i].has_value())
+                    {
+                        CHECK_EQ(sparrow_array[i].value(), vector[i]);
+                    }
+                }
+            }
+        };
     }
 }

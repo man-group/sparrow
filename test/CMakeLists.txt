@@ -23,6 +23,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 endif()
 
 find_package(doctest REQUIRED)
+find_package(nanoarrow REQUIRED)
 
 # find_package(Threads)
 if(NOT CMAKE_BUILD_TYPE)
@@ -45,6 +46,7 @@ else()
         better_junit_reporter.hpp
         external_array_data_creation.cpp
         external_array_data_creation.hpp
+        nanoarrow_utils.hpp
         junit.cpp
         junit.hpp
         junit_xml_writer.hpp
@@ -84,6 +86,7 @@ else()
         test_utils_offsets.cpp
         test_utils.hpp
         test_variable_size_binary_array.cpp
+        test_variable_size_binary_view_array.cpp
         test_nested_comperators.cpp
         test_builder_utils.cpp
         test_builder.cpp
@@ -97,7 +100,10 @@ set(test_target "test_sparrow_lib")
 add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
 target_link_libraries(${test_target}
     PRIVATE
-        sparrow doctest::doctest $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
+        sparrow
+        doctest::doctest
+        nanoarrow::nanoarrow
+        $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
 include(doctest)
 doctest_discover_tests(${test_target})
@@ -179,6 +185,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
         target_compile_options(${test_target} PRIVATE "-pedantic")# Warn on language extensions
     endif()
+endif()
+
+if (MSVC_RUNTIME_LIBRARY MATCHES "MultiThreadedDLL")
+    list(APPEND compiles_options /D_ITERATOR_DEBUG_LEVEL=0)
 endif()
 
 target_compile_options(${test_target}

@@ -186,9 +186,11 @@ namespace sparrow
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        SPARROW_API array slice_view(size_type start, size_type end) const ;
+        SPARROW_API array slice_view(size_type start, size_type end) const;
 
     private:
+
+        SPARROW_API array(arrow_proxy&& proxy);
 
         SPARROW_API arrow_proxy& get_arrow_proxy();
         SPARROW_API const arrow_proxy& get_arrow_proxy() const;

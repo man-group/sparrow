@@ -94,6 +94,10 @@ namespace sparrow
     {
         if constexpr (is_const)
         {
+            if(p_bitset->data() == nullptr)
+            {
+                return true;
+            }
             return (*p_block) & bitset_type::bit_mask(m_index);
         }
         else

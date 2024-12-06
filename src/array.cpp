@@ -15,6 +15,7 @@
 #include "sparrow/array.hpp"
 
 #include "sparrow/array_factory.hpp"
+#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/layout/array_helper.hpp"
@@ -33,6 +34,11 @@ namespace sparrow
 
     array::array(ArrowArray* array, ArrowSchema* schema)
         : p_array(array_factory(arrow_proxy(array, schema)))
+    {
+    }
+
+    array::array(arrow_proxy&& ap)
+        : p_array(array_factory(std::move(ap)))
     {
     }
 
@@ -82,24 +88,13 @@ namespace sparrow
     array array::slice(size_type start, size_type end) const
     {
         SPARROW_ASSERT_TRUE(start <= end);
-        array copy = *this;
-        arrow_proxy& arrow_proxy_copy = copy.get_arrow_proxy();
-        arrow_proxy_copy.set_offset(start);
-        arrow_proxy_copy.set_length(end - start);
-        return copy;
+        return {get_arrow_proxy().slice(start, end)};
     }
 
     array array::slice_view(size_type start, size_type end) const
     {
         SPARROW_ASSERT_TRUE(start <= end);
-        const arrow_proxy& arrow_proxy_copy = get_arrow_proxy();
-        ArrowSchema as = arrow_proxy_copy.schema();
-        as.release = empty_release_arrow_schema;
-        ArrowArray ar = arrow_proxy_copy.array();
-        ar.offset = static_cast<int64_t>(start);
-        ar.length = static_cast<int64_t>(end - start);
-        ar.release = empty_release_arrow_array;
-        return {std::move(ar), std::move(as)};
+        return {get_arrow_proxy().slice_view(start, end)};
     }
 
     arrow_proxy& array::get_arrow_proxy()
