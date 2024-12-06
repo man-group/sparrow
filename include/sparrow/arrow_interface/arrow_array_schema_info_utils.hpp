@@ -50,7 +50,10 @@ namespace sparrow
             case data_type::FLOAT:
             case data_type::DOUBLE:
             case data_type::TIMESTAMP:
-            case data_type::DECIMAL:
+            case data_type::DECIMAL32:
+            case data_type::DECIMAL64:
+            case data_type::DECIMAL128:
+            case data_type::DECIMAL256:
             case data_type::LIST:
             case data_type::STRUCT:
             case data_type::STRING:

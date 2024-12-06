@@ -155,13 +155,58 @@ namespace sparrow
         DENSE_UNION,
         SPARSE_UNION,
         RUN_ENCODED,
-        DECIMAL,
         DECIMAL32,
         DECIMAL64,
         DECIMAL128,
         DECIMAL256,
         FIXED_WIDTH_BINARY
     };
+
+
+
+
+    inline bool all_digits(const std::string_view s)
+    {
+        return !s.empty() && std::find_if(s.begin(), 
+            s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+    }
+
+    // get the bit width for decimal value type from format
+    inline std::size_t num_bytes_for_decimal(const char* format)
+    {
+        //    d:19,10     -> 16 bytes / 128 bits
+        //    d:38,10,32  -> 4 bytes / 32 bits
+        //    d:38,10,64  -> 8 bytes / 64 bits
+        //    d:38,10,128 -> 16 bytes / 128 bits
+        //    d:38,10,256 -> 32 bytes / 256 bits
+
+        // count the number of commas
+        //const auto len = std::strlen(format);
+        const auto num_commas = std::count(format, format + std::strlen(format), ',');
+
+        if(num_commas <= 1)
+        {
+            return 16;
+        }
+        else
+        {
+            // get the position of second comma
+            const auto second_comma_ptr = std::strchr(format, ',');
+            if(!all_digits(std::string_view(second_comma_ptr + 1)))
+            {
+                throw std::runtime_error("Invalid format for decimal");
+            }
+            // get substring after second comma to end
+            const auto num_bits = static_cast<std::size_t>(std::atoi(second_comma_ptr + 1));
+            
+            if(!(num_bits == 32 || num_bits == 64 || num_bits == 128 || num_bits == 256))
+            {
+                throw std::runtime_error("Invalid format for decimal");
+            }
+            return num_bits / 8;
+        }       
+    }
+
 
     /// @returns The data_type value matching the provided format string or `data_type::NA`
     ///          if we couldnt find a matching data_type.
@@ -265,7 +310,21 @@ namespace sparrow
         }
         else if (format.starts_with("d:"))
         {
-            return data_type::DECIMAL;
+            const auto num_bytes = num_bytes_for_decimal(format.data());
+            switch(num_bytes)
+            {
+                case 4:
+                    return data_type::DECIMAL32;
+                case 8:
+                    return data_type::DECIMAL64;
+                case 16:
+                    return data_type::DECIMAL128;
+                case 32:
+                    return data_type::DECIMAL256;
+                default:
+                    throw std::runtime_error("Invalid format for decimal");
+            }
+
         }
         else if (format.starts_with("w:"))
         {

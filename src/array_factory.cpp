@@ -118,7 +118,10 @@ namespace sparrow
                 return detail::make_wrapper_ptr<sparse_union_array>(std::move(proxy));
             case data_type::TIMESTAMP:
             case data_type::MAP:
-            case data_type::DECIMAL:
+            case data_type::DECIMAL32:
+            case data_type::DECIMAL64:
+            case data_type::DECIMAL128:
+            case data_type::DECIMAL256:
             case data_type::FIXED_WIDTH_BINARY:
                 throw std::runtime_error("not yet supported data type");
             default:
