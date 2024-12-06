@@ -129,6 +129,7 @@ namespace sparrow
     }
 }
 
+#if defined(__cpp_lib_format)
 template <>
 struct std::formatter<sparrow::Custom>
 {
@@ -142,6 +143,7 @@ struct std::formatter<sparrow::Custom>
         return std::format_to(ctx.out(), "Custom({})", custom.get_value());
     }
 };
+#endif
 
 namespace sparrow
 {
