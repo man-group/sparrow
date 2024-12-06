@@ -89,6 +89,7 @@ else()
         test_builder.cpp
         test_builder_dict_encoded.cpp
         test_builder_run_end_encoded.cpp
+        test_decimal.cpp
     )
 endif()
 

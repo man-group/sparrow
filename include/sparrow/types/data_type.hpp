@@ -156,6 +156,10 @@ namespace sparrow
         SPARSE_UNION,
         RUN_ENCODED,
         DECIMAL,
+        DECIMAL32,
+        DECIMAL64,
+        DECIMAL128,
+        DECIMAL256,
         FIXED_WIDTH_BINARY
     };
 
