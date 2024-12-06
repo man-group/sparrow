@@ -519,6 +519,6 @@ namespace sparrow::mpl
 
     // todo...make smth better based on sizeof and is pod 
     template<class T>
-    concept char_like = std::same_as<T, char> || std::same_as<T, std::byte> || std::same_as<T, std::uint8_t>;
+    concept char_like = std::same_as<T, char> || std::same_as<T, std::byte> || std::same_as<T, uint8_t>;
 
 }

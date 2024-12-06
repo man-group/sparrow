@@ -16,18 +16,39 @@
 
 #include <chrono>
 #include <version>
-
-
 #if defined(SPARROW_USE_DATE_POLYFILL)
+
 #    include <date/tz.h>
+
+#    if defined(__cpp_lib_format)
+#        include <format>
+
+template <>
+struct std::formatter<date::zoned_time<std::chrono::nanoseconds>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const date::zoned_time<std::chrono::nanoseconds>& date, std::format_context& ctx) const
+    {
+        std::ostringstream oss;
+        oss << date;
+        std::string date_str = oss.str();
+        return std::format_to(ctx.out(), "{}", date_str);
+    }
+};
+#    endif
+
 #else
 namespace date = std::chrono;
 #endif
 
 #include <climits>
+#include <concepts>
 #include <cstdint>
 #include <cstring>
-#include <concepts>
 #include <string>
 
 #include "sparrow/utils/contracts.hpp"
@@ -270,20 +291,23 @@ namespace sparrow
 
         return data_type::NA;
     }
-    
+
     /// @returns The default floating-point `data_type`  that should be associated with the provided type.
-    ///          The deduction will be based on the size of the type. Calling this function with unsupported sizes
-    ///          will not compile.
-    template<std::floating_point T>
-        requires (sizeof(T) >= 2 && sizeof(T) <= 8)
+    ///          The deduction will be based on the size of the type. Calling this function with unsupported
+    ///          sizes will not compile.
+    template <std::floating_point T>
+        requires(sizeof(T) >= 2 && sizeof(T) <= 8)
     constexpr data_type data_type_from_size(T = {})
     {
         // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
-        switch(sizeof(T))
+        switch (sizeof(T))
         {
-            case 2: return data_type::HALF_FLOAT;
-            case 4: return data_type::FLOAT;
-            case 8: return data_type::DOUBLE;
+            case 2:
+                return data_type::HALF_FLOAT;
+            case 4:
+                return data_type::FLOAT;
+            case 8:
+                return data_type::DOUBLE;
         }
 
         mpl::unreachable();
@@ -305,10 +329,14 @@ namespace sparrow
             // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
             switch (sizeof(T))
             {
-                case 1: return data_type::INT8;
-                case 2: return data_type::INT16;
-                case 4: return data_type::INT32;
-                case 8: return data_type::INT64;
+                case 1:
+                    return data_type::INT8;
+                case 2:
+                    return data_type::INT16;
+                case 4:
+                    return data_type::INT32;
+                case 8:
+                    return data_type::INT64;
             }
         }
         else
@@ -318,10 +346,14 @@ namespace sparrow
             // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
             switch (sizeof(T))
             {
-                case 1: return data_type::UINT8;
-                case 2: return data_type::UINT16;
-                case 4: return data_type::UINT32;
-                case 8: return data_type::UINT64;
+                case 1:
+                    return data_type::UINT8;
+                case 2:
+                    return data_type::UINT16;
+                case 4:
+                    return data_type::UINT32;
+                case 8:
+                    return data_type::UINT64;
             }
         }
 
@@ -419,7 +451,6 @@ namespace sparrow
         }
     }
 
-
     class list_value;
     class struct_value;
 
@@ -444,8 +475,7 @@ namespace sparrow
         sparrow::timestamp,
         // TODO: add missing fundamental types here
         list_value,
-        struct_value
-        >;
+        struct_value>;
 
     /// Type list of every C++ representation types supported by default, in order matching `data_type`
     /// related values.
@@ -457,8 +487,8 @@ namespace sparrow
 
 
     /// is arrow base type or arrow compound type (list<T>, struct<T> etc.)
-    //template <class T>
-    //concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
+    // template <class T>
+    // concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
 
 
     using all_base_types_extended_t = mpl::append_t<all_base_types_t, char, std::string_view>;
@@ -526,7 +556,7 @@ namespace sparrow
         typename T::value_type;
 
         /// The arrow (binary) layout to use by default for representing a set of data for that type.
-        //typename detail::accepts_template<T::template default_layout>;
+        // typename detail::accepts_template<T::template default_layout>;
 
         // TODO: add more interface requirements on the traits here
         // TODO: add conversion operations between bytes and the value type
@@ -618,3 +648,108 @@ namespace sparrow
     template <class T>
     concept layout_offset = std::same_as<T, std::int32_t> || std::same_as<T, std::int64_t>;
 }
+
+#if defined(__cpp_lib_format)
+
+namespace std
+{
+    template <>
+    struct formatter<sparrow::data_type>
+    {
+        constexpr auto parse(std::format_parse_context& ctx)
+        {
+            return ctx.begin();  // Simple implementation
+        }
+
+        auto format(const sparrow::data_type& data_type, std::format_context& ctx) const
+        {
+            static const auto get_enum_name = [](sparrow::data_type dt) -> std::string_view
+            {
+                using enum sparrow::data_type;
+                switch (dt)
+                {
+                    case NA:
+                        return "N/A";
+                    case BOOL:
+                        return "bool";
+                    case UINT8:
+                        return "uint8";
+                    case INT8:
+                        return "int8";
+                    case UINT16:
+                        return "uint16";
+                    case INT16:
+                        return "int16";
+                    case UINT32:
+                        return "uint32";
+                    case INT32:
+                        return "int32";
+                    case UINT64:
+                        return "uint64";
+                    case INT64:
+                        return "int64";
+                    case HALF_FLOAT:
+                        return "float16";
+                    case FLOAT:
+                        return "float32";
+                    case DOUBLE:
+                        return "double";
+                    case STRING:
+                        return "String";
+                    case BINARY:
+                        return "Binary";
+                    case TIMESTAMP:
+                        return "Timestamp";
+                    case LIST:
+                        return "List";
+                    case LARGE_LIST:
+                        return "Large list";
+                    case LIST_VIEW:
+                        return "List view";
+                    case LARGE_LIST_VIEW:
+                        return "Large list view";
+                    case FIXED_SIZED_LIST:
+                        return "Fixed sized list";
+                    case STRUCT:
+                        return "Struct";
+                    case MAP:
+                        return "Map";
+                    case DENSE_UNION:
+                        return "Dense union";
+                    case SPARSE_UNION:
+                        return "Sparse union";
+                    case RUN_ENCODED:
+                        return "Run encoded";
+                    case DECIMAL:
+                        return "Decimal";
+                    case FIXED_WIDTH_BINARY:
+                        return "Fixed width binary";
+                    case STRING_VIEW:
+                        return "String view";
+                    case BINARY_VIEW:
+                        return "Binary view";
+                };
+                return "UNKNOWN";
+            };
+
+            return std::format_to(ctx.out(), "{}", get_enum_name(data_type));
+        }
+    };
+
+    template <>
+    struct formatter<sparrow::null_type>
+    {
+        constexpr auto parse(std::format_parse_context& ctx)
+        {
+            return ctx.begin();  // Simple implementation
+        }
+
+        auto format(const sparrow::null_type&, std::format_context& ctx) const
+        {
+            return std::format_to(ctx.out(), "null_type");
+        }
+    };
+
+}
+
+#endif

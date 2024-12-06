@@ -14,8 +14,16 @@
 
 #pragma once
 
+#include <string_view>
+#if defined(__cpp_lib_format)
+#    include "sparrow/utils/format.hpp"
+#endif
+#include <ranges>
+
+#include "sparrow/array_api.hpp"
 #include "sparrow/array_factory.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
+#include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
@@ -24,7 +32,6 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/array_api.hpp"
 
 namespace sparrow
 {
@@ -75,12 +82,12 @@ namespace sparrow
 
         explicit struct_array(arrow_proxy proxy);
 
-
-        template <class ... Args>
-        requires(mpl::excludes_copy_and_move_ctor_v<struct_array, Args...>)
-        explicit struct_array(Args&& ... args)
-            : struct_array(create_proxy(std::forward<Args>(args) ...))
-        {}
+        template <class... Args>
+            requires(mpl::excludes_copy_and_move_ctor_v<struct_array, Args...>)
+        explicit struct_array(Args&&... args)
+            : struct_array(create_proxy(std::forward<Args>(args)...))
+        {
+        }
 
         struct_array(const struct_array&);
         struct_array& operator=(const struct_array&);
@@ -88,16 +95,16 @@ namespace sparrow
         struct_array(struct_array&&) = default;
         struct_array& operator=(struct_array&&) = default;
 
+        [[nodiscard]] size_type children_count() const;
+
         const array_wrapper* raw_child(std::size_t i) const;
         array_wrapper* raw_child(std::size_t i);
 
     private:
 
         template <validity_bitmap_input VB = validity_bitmap>
-        static auto create_proxy(
-            std::vector<array> && children,
-            VB && bitmaps = validity_bitmap{}
-        ) -> arrow_proxy;
+        static auto
+        create_proxy(std::vector<array>&& children, VB&& bitmaps = validity_bitmap{}) -> arrow_proxy;
 
         using children_type = std::vector<cloning_ptr<array_wrapper>>;
 
@@ -144,20 +151,17 @@ namespace sparrow
     }
 
     template <validity_bitmap_input VB>
-    auto struct_array::create_proxy(
-        std::vector<array> && children,
-        VB && validity_input
-    ) -> arrow_proxy
+    auto struct_array::create_proxy(std::vector<array>&& children, VB&& validity_input) -> arrow_proxy
     {
         const auto n_children = children.size();
         ArrowSchema** child_schemas = new ArrowSchema*[n_children];
         ArrowArray** child_arrays = new ArrowArray*[n_children];
 
         const auto size = children[0].size();
-        
-        for(std::size_t i=0; i<n_children; ++i)
+
+        for (std::size_t i = 0; i < n_children; ++i)
         {
-            auto & child = children[i];
+            auto& child = children[i];
             SPARROW_ASSERT_TRUE(child.size() == size);
             auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(child));
             child_arrays[i] = new ArrowArray(std::move(flat_arr));
@@ -166,40 +170,45 @@ namespace sparrow
 
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
         const auto null_count = vbitmap.null_count();
-        
+
         ArrowSchema schema = make_arrow_schema(
-            std::string("+s"), // format
-            std::nullopt, // name
-            std::nullopt, // metadata
-            std::nullopt, // flags,
+            std::string("+s"),  // format
+            std::nullopt,       // name
+            std::nullopt,       // metadata
+            std::nullopt,       // flags,
             static_cast<int64_t>(n_children),
-            child_schemas, // children
-            nullptr // dictionary
+            child_schemas,  // children
+            nullptr         // dictionary
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(vbitmap).extract_storage()
-        };
+        std::vector<buffer<std::uint8_t>> arr_buffs = {std::move(vbitmap).extract_storage()};
 
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size), // length
+            static_cast<std::int64_t>(size),  // length
             static_cast<std::int64_t>(null_count),
-            0, // offset
+            0,  // offset
             std::move(arr_buffs),
-            static_cast<std::size_t>(n_children), // n_children
-            child_arrays, // children
-            nullptr // dictionary
+            static_cast<std::size_t>(n_children),  // n_children
+            child_arrays,                          // children
+            nullptr                                // dictionary
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
+    inline auto struct_array::children_count() const -> size_type
+    {
+        return m_children.size();
+    }
+
     inline auto struct_array::raw_child(std::size_t i) const -> const array_wrapper*
     {
+        SPARROW_ASSERT_TRUE(i < m_children.size());
         return m_children[i].get();
     }
 
     inline auto struct_array::raw_child(std::size_t i) -> array_wrapper*
     {
+        SPARROW_ASSERT_TRUE(i < m_children.size());
         return m_children[i].get();
     }
 
@@ -247,3 +256,52 @@ namespace sparrow
         return children;
     }
 }
+
+#if defined(__cpp_lib_format)
+
+template <>
+struct std::formatter<sparrow::struct_array>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();
+    }
+
+    auto format(const sparrow::struct_array& struct_array, std::format_context& ctx) const
+    {
+        const auto get_names = [](const sparrow::struct_array& sa) -> std::vector<std::string>
+        {
+            std::vector<std::string> names;
+            names.reserve(sa.children_count());
+            for (std::size_t i = 0; i < sa.children_count(); ++i)
+            {
+                names.emplace_back(sa.raw_child(i)->get_arrow_proxy().name().value_or("N/A"));
+            }
+            return names;
+        };
+
+        const size_t member_count = struct_array.at(0).get().size();
+        const auto result = std::views::iota(0u, member_count)
+                            | std::ranges::views::transform(
+                                [&struct_array](const auto index)
+                                {
+                                    return std::ranges::views::transform(
+                                        struct_array,
+                                        [index](const auto& ref) -> sparrow::array_traits::const_reference
+                                        {
+                                            if (ref.has_value())
+                                            {
+                                                return ref.value()[index];
+                                            }
+                                            return {};
+                                        }
+                                    );
+                                }
+                            );
+
+        sparrow::to_table_with_columns(ctx.out(), get_names(struct_array), result);
+        return ctx.out();
+    }
+};
+
+#endif

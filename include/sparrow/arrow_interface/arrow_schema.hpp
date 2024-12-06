@@ -15,11 +15,14 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
+#if defined(__cpp_lib_format)
+#    include <format>
+#endif
 
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
-
 
 namespace sparrow
 {
@@ -163,3 +166,44 @@ namespace sparrow
         return target;
     }
 }
+
+#if defined(__cpp_lib_format)
+
+template <>
+struct std::formatter<ArrowSchema>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const ArrowSchema& obj, std::format_context& ctx) const
+    {
+        std::string children_str = std::format("{}", static_cast<void*>(obj.children));
+        for (int i = 0; i < obj.n_children; ++i)
+        {
+            children_str += std::format("\n-{}", static_cast<void*>(obj.children[i]));
+        }
+
+        const std::string format = obj.format ? obj.format : "nullptr";
+        const std::string name = obj.name ? obj.name : "nullptr";
+        const std::string metadata = obj.metadata ? obj.metadata : "nullptr";
+
+        return std::format_to(
+            ctx.out(),
+            "ArrowArray - ptr address: {}\n- format: {}\n- name: {}\n- metadata: {}\n- flags: {}\n- n_children: {}\n- children: {}\n- dictionary: {}\n- release: {}\n- private_data: {}\n",
+            static_cast<const void*>(&obj),
+            format,
+            name,
+            metadata,
+            obj.flags,
+            obj.n_children,
+            children_str,
+            static_cast<const void*>(obj.dictionary),
+            static_cast<const void*>(std::addressof(obj.release)),
+            obj.private_data
+        );
+    }
+};
+
+#endif

@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string_view>
+
+#include "sparrow/array.hpp"
 #include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/struct_layout/struct_array.hpp"
 #include "sparrow/utils/nullable.hpp"
 
-#include "doctest/doctest.h"
-
-#include "test_utils.hpp"
 #include "../test/external_array_data_creation.hpp"
-#include "sparrow/array.hpp"
+#include "doctest/doctest.h"
+#include "test_utils.hpp"
 
 namespace sparrow
 {
@@ -33,15 +34,21 @@ namespace sparrow
             std::vector<ArrowArray> children_arrays(2);
             std::vector<ArrowSchema> children_schemas(2);
 
-            test::fill_schema_and_array<T0>(children_schemas[0], children_arrays[0], n, 0/*offset*/, {});
+            test::fill_schema_and_array<T0>(children_schemas[0], children_arrays[0], n, 0 /*offset*/, {});
             children_schemas[0].name = "item 0";
 
-            test::fill_schema_and_array<T1>(children_schemas[1], children_arrays[1], n, 0/*offset*/, {});
+            test::fill_schema_and_array<T1>(children_schemas[1], children_arrays[1], n, 0 /*offset*/, {});
             children_schemas[1].name = "item 1";
 
             ArrowArray arr{};
             ArrowSchema schema{};
-            test::fill_schema_and_array_for_struct_layout(schema, arr, std::move(children_schemas), std::move(children_arrays), {});
+            test::fill_schema_and_array_for_struct_layout(
+                schema,
+                arr,
+                std::move(children_schemas),
+                std::move(children_arrays),
+                {}
+            );
             return arrow_proxy(std::move(arr), std::move(schema));
         }
     }
@@ -52,18 +59,26 @@ namespace sparrow
 
         TEST_CASE("constructors")
         {
-            primitive_array<std::int16_t> flat_arr({{std::int16_t(0), std::int16_t(1), std::int16_t(2), std::int16_t(3)}});
+            primitive_array<std::int16_t> flat_arr(
+                {{std::int16_t(0), std::int16_t(1), std::int16_t(2), std::int16_t(3)}}
+            );
             primitive_array<float> flat_arr2({{4.0f, 5.0f, 6.0f, 7.0f}});
-            primitive_array<std::int32_t> flat_arr3({{std::int32_t(8), std::int32_t(9), std::int32_t(10), std::int32_t(11)}});
+            primitive_array<std::int32_t> flat_arr3(
+                {{std::int32_t(8), std::int32_t(9), std::int32_t(10), std::int32_t(11)}}
+            );
 
             // detyped arrays
-            std::vector<array> children = {array(std::move(flat_arr)), array(std::move(flat_arr2)), array(std::move(flat_arr3))};
+            std::vector<array> children = {
+                array(std::move(flat_arr)),
+                array(std::move(flat_arr2)),
+                array(std::move(flat_arr3))
+            };
 
             struct_array arr(std::move(children));
 
             // check the size
             REQUIRE_EQ(arr.size(), 4);
-            
+
             // check the children
             REQUIRE_EQ(arr[0].value().size(), 3);
             REQUIRE_EQ(arr[1].value().size(), 3);
@@ -78,19 +93,16 @@ namespace sparrow
             CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(1));
             CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1], float(5.0f));
             CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[2], std::int32_t(9));
-            
+
             CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(2));
             CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[1], float(6.0f));
             CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[2], std::int32_t(10));
-
-
         };
 
-
-        TEST_CASE_TEMPLATE("struct[T, uint8]",T,  std::uint8_t, std::int32_t, float, double)
+        TEST_CASE_TEMPLATE("struct[T, uint8]", T, std::uint8_t, std::int32_t, float, double)
         {
             using inner_scalar_type = T;
-            //using inner_nullable_type = nullable<inner_scalar_type>;
+            // using inner_nullable_type = nullable<inner_scalar_type>;
 
             // number of elements in the struct array
             const std::size_t n = 4;
@@ -140,9 +152,9 @@ namespace sparrow
                     REQUIRE(val1_variant.has_value());
 
 
-                    //using const_scalar_ref = const inner_scalar_type&;
-                    using nullable_inner_scalar_type = nullable<const inner_scalar_type &, bool >;
-                    using nullable_uint8_t = nullable<const  std::uint8_t & , bool >;
+                    // using const_scalar_ref = const inner_scalar_type&;
+                    using nullable_inner_scalar_type = nullable<const inner_scalar_type&, bool>;
+                    using nullable_uint8_t = nullable<const std::uint8_t&, bool>;
 
                     // visit the variant
                     std::visit(
@@ -174,7 +186,6 @@ namespace sparrow
                         },
                         val1_variant
                     );
-
                 }
             }
 
@@ -185,12 +196,23 @@ namespace sparrow
             }
 
             SUBCASE("consistency")
-            {   
+            {
                 test::generic_consistency_test(struct_arr);
-            }  
+            }
+#if defined(__cpp_lib_format)
+            SUBCASE("formatting")
+            {
+                const std::string formatted = std::format("{}", struct_arr);
+                constexpr std::string_view expected = "|item 0|item 1|\n"
+                                                      "---------------\n"
+                                                      "|     0|     0|\n"
+                                                      "|     1|     1|\n"
+                                                      "|     2|     2|\n"
+                                                      "|     3|     3|\n"
+                                                      "---------------";
+                CHECK_EQ(formatted, expected);
+            }
+#endif
         }
     }
-
-
 }
-

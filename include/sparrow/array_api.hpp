@@ -14,6 +14,9 @@
 
 #pragma once
 
+#include <cctype>
+#include <limits>
+
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_access.hpp"
