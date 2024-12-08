@@ -118,7 +118,7 @@ jobs:
       run: |
         echo "SPARROW_DEPS_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
         echo "SPARROW_INSTALL_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
-        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL" >> $GITHUB_ENV
+        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=OFF " >> $GITHUB_ENV
  
 
     - name: Set dependencies install prefix dir for 32bit
@@ -141,6 +141,12 @@ jobs:
       if: matrix.target-arch.name == 'Win32' # Note: this is not a mandatory limitation in any context, we add this just to have at least one configuration testing that feature
       run: echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPARROW_ENABLE_32BIT_SIZE_LIMIT=ON'" >> $GITHUB_ENV
 
+    - name: Enable tests coverage
+      if: matrix.config.name == 'Debug'
+      run: |
+        choco install opencppcoverage
+        echo "TEST_COVERAGE_ACTIVATION=' -DENABLE_COVERAGE=ON'" >> $GITHUB_ENV
+      
     - name: Set CMake generator environment variable
       run: |
         echo "CMAKE_GENERATOR=${{ matrix.build-system.name }}" >> $GITHUB_ENV
@@ -160,7 +166,9 @@ jobs:
         $SPARROW_ADDITIONAL_OPTIONS \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-        -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
+        -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
+        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL \
+        $TEST_COVERAGE_ACTIVATION
 
     - name: Build library
       working-directory: build
@@ -188,7 +196,21 @@ jobs:
           build/test/test_sparrow_lib_report_catch2.xml
         if-no-files-found: error
 
+    - name: Tests coverage
+      if: matrix.config.name == 'Debug'
+      working-directory: build
+      run: |
+        cmake --build . --config Debug --target generate_cobertura
+
+    - name: Produce the coverage report
+      if: matrix.config.name == 'Debug'
+      uses: dennisjensen95/coverage-scope@v0.5.0
+      with:
+        coverage-filepath: 'build/coverage_reports/cobertura.xml'
+        branch: main
+        threshold-total: 50
+        threshold-change: 50
+
     - name: Run all examples
       working-directory: build
       run: cmake --build . --config ${{matrix.config.name}} --target run_examples
-
