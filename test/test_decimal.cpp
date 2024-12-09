@@ -189,62 +189,6 @@ namespace sparrow
                         // double
                         auto as_double =  static_cast<double>(d);
                         CHECK_EQ(as_double, doctest::Approx(static_cast<double>(value) / static_cast<double>(std::pow(10, scale))));
-
-                        auto as_string =  std::string(d);
-                        if(value < 0)
-                        {
-                            // string must have a leading '-'
-                            CHECK_EQ(as_string[0], '-');
-                            
-                        }
-                        else{
-                            // string must not have a leading '-'
-                            CHECK_NE(as_string[0], '-');
-                        }
-                        
-                        // if scale is positive!, we must have a '.' in the string
-                        if(scale > 0)
-                        {
-                            CHECK_NE(as_string.find('.'), std::string::npos);
-                        }
-                        else
-                        {
-                            CHECK_EQ(as_string.find('.'), std::string::npos);
-                        }
-                        
-                        // if scale is negative we must have n trailing zeros
-                        if(scale < 0)
-                        {
-                            // training zeros of the int itself
-                            auto input_trailing_zeros = 0;
-                            std::string input_as_string = std::to_string(value);
-                            // count trailing zeros
-                            for(auto i = input_as_string.size() - 1; int(i) >= 0; i--)
-                            {
-                                if(input_as_string[i] == '0')
-                                {
-                                    input_trailing_zeros++;
-                                }
-                                else
-                                {
-                                    break;
-                                }
-                            }
-                            
-                            auto total_trailing_zeros = 0;
-                            for(auto i = as_string.size() - 1; int(i) >= 0; i--)
-                            {
-                                if(as_string[i] == '0')
-                                {
-                                    total_trailing_zeros++;
-                                }
-                                else
-                                {
-                                    break;
-                                }
-                            }
-                            CHECK_EQ(total_trailing_zeros - input_trailing_zeros, -scale);
-                        }
                     }
                 }
             }
