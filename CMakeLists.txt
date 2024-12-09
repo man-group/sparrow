@@ -86,6 +86,8 @@ OPTION(BUILD_TESTS "Build sparrow test suite" OFF)
 OPTION(BUILD_DOCS  "Build sparrow documentation" OFF)
 OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
+OPTION(USE_BOOST_MULTIPRECISION "Use boost multiprecision" OFF)
+OPTION(DISABLE_LARGE_INTEGER_DECIMALS "Disable big integer decimals" OFF)
 
 OPTION(SPARROW_TARGET_32BIT "Test 32bit support" OFF)
 
@@ -129,6 +131,16 @@ if (USE_DATE_POLYFILL)
     find_package(date CONFIG REQUIRED)
     list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
     add_compile_definitions(SPARROW_USE_DATE_POLYFILL)
+endif()
+
+if(USE_BOOST_MULTIPRECISION)
+    find_package(Boost 1.70 REQUIRED)
+    list(APPEND SPARROW_INTERFACE_DEPENDENCIES Boost::boost)
+    add_compile_definitions(SPARROW_USE_BOOST_MULTIPRECISION)
+endif()
+
+if (DISABLE_LARGE_INTEGER_DECIMALS)
+    add_compile_definitions(SPARROW_DISABLE_LARGE_INTEGER_DECIMALS)
 endif()
 
 # Build

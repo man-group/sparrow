@@ -85,6 +85,39 @@ namespace sparrow
         using value_type = struct_value;
         using const_reference = struct_value;
     };
+
+    template <>
+    struct arrow_traits<decimal<std::int32_t>>
+    {
+        static constexpr data_type type_id = data_type::DECIMAL32;
+        using value_type = decimal<std::int32_t>;
+        using const_reference = decimal<std::int32_t>;
+    };
+
+    template <>
+    struct arrow_traits<decimal<std::int64_t>>
+    {
+        static constexpr data_type type_id = data_type::DECIMAL64;
+        using value_type = decimal<std::int64_t>;
+        using const_reference = decimal<std::int64_t>;
+    };
+
+    template <>
+    struct arrow_traits<decimal<int128_t>>
+    {
+        static constexpr data_type type_id = data_type::DECIMAL128;
+        using value_type = decimal<int128_t>;
+        using const_reference = decimal<int128_t>;
+    };
+
+    template <>
+    struct arrow_traits<decimal<int256_t>>
+    {
+        static constexpr data_type type_id = data_type::DECIMAL256;
+        using value_type = decimal<int256_t>;
+        using const_reference = decimal<int256_t>;
+    };
+    
     
     namespace detail
     {

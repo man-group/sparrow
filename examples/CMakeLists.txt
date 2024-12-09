@@ -4,6 +4,7 @@ SET(EXAMPLES
     typed_array_high_level.cpp
     record_batch_example.cpp
     builder_example.cpp
+    # decimal.cpp
 )
 
 # custom target to run all examples

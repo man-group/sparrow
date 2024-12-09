@@ -107,6 +107,8 @@ jobs:
       if: matrix.target-arch.name == 'Win32'
       run: |
         vcpkg install --triplet=x86-windows
+        # boost
+        vcpkg install boost:x86-windows
 
     - name: Set conda environment
       if: matrix.target-arch.name == 'Win64'
@@ -135,6 +137,8 @@ jobs:
         echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
         echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=ON" >> $GITHUB_ENV
         choco install ninja
+        # not sure ..
+        choco install boost-msvc-14.2
 
     - name: Enable runtime size/length/offset validity checks
       if: matrix.config.name == 'Debug'
@@ -174,6 +178,7 @@ jobs:
         -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX \
         -DBUILD_TESTS=ON \
         -DBUILD_EXAMPLES=ON \
+        -DUSE_BOOST_MULTIPRECISION=ON \
         -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} \
         $GENERATOR_EXTRA_FLAGS \
         $SPARROW_CHECKS \
