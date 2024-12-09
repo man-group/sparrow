@@ -205,6 +205,23 @@ jobs:
         name: test_sparrow_lib_report_Windows_${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}
         path: '**/test_sparrow_lib_report.xml'
 
+    - name: Tests coverage
+      if: matrix.config.name == 'Debug'
+      run: |
+        cmake --build . --config Debug --target generate_cobertura
+
+     - name: Produce the coverage report
+        uses: insightsengineering/coverage-action@v2
+        with:
+          path: '**/cobertura.xml'
+          # threshold: 80
+          # fail: true
+          publish: true
+          diff: true
+          diff-branch: main
+          diff-storage: _xml_coverage_reports
+          coverage-summary-title: "Code Coverage Summary"
+
     - name: Run all examples
       working-directory: build
       run: cmake --build . --config ${{matrix.config.name}} --target run_examples
