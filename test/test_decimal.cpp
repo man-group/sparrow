@@ -219,7 +219,7 @@ namespace sparrow
                             auto input_trailing_zeros = 0;
                             std::string input_as_string = std::to_string(value);
                             // count trailing zeros
-                            for(auto i = input_as_string.size() - 1; i >= 0; i--)
+                            for(auto i = input_as_string.size() - 1; int(i) >= 0; i--)
                             {
                                 if(input_as_string[i] == '0')
                                 {
@@ -232,7 +232,7 @@ namespace sparrow
                             }
                             
                             auto total_trailing_zeros = 0;
-                            for(auto i = as_string.size() - 1; i >= 0; i--)
+                            for(auto i = as_string.size() - 1; int(i) >= 0; i--)
                             {
                                 if(as_string[i] == '0')
                                 {
