@@ -22,6 +22,12 @@
 #include <sparrow/utils/large_int.hpp>
 #include <sparrow/utils/decimal.hpp>
 
+// ignore -Wdouble-promotion
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
+#endif
 
 
 namespace sparrow
@@ -320,3 +326,7 @@ namespace sparrow
         TEST_CASE_TEMPLATE_APPLY(decimal_test_id, testing_types);
     }
 }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
