@@ -8,17 +8,17 @@
 
 // disabe warnings -Wold-style-cast sign-conversion for clang and gcc
 #ifdef __GNUC__
-#pragma gcc diagnostic push
-#pragma gcc diagnostic ignored "-Wold-style-cast"
-#pragma gcc diagnostic ignored "-Wsign-conversion"
-#pragma gcc diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wshadow"
 #endif
 #include <sparrow/details/3rdparty/large_integers/int128_t.hpp>
 #include <sparrow/details/3rdparty/large_integers/int256_t.hpp>
 
 
 #ifdef __GNUC__
-#pragma gcc diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 
 
