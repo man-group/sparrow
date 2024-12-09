@@ -145,6 +145,11 @@ jobs:
       if: matrix.target-arch.name == 'Win32' # Note: this is not a mandatory limitation in any context, we add this just to have at least one configuration testing that feature
       run: echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPARROW_ENABLE_32BIT_SIZE_LIMIT=ON'" >> $GITHUB_ENV
 
+    - name: Enable tests coverage
+      if: matrix.config.name == 'Debug'
+      run: |
+        echo "TEST_COVERAGE_ACTIVATION='-DSPARROW_ENABLE_COVERAGE=ON'" >> $GITHUB_ENV
+
     - name: Set CMake generator environment variable
       run: |
         echo "CMAKE_GENERATOR=${{ matrix.build-system.name }}" >> $GITHUB_ENV
@@ -180,7 +185,8 @@ jobs:
         $SPARROW_ADDITIONAL_OPTIONS \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
+        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL \
+        $TEST_COVERAGE_ACTIVATION
 
     - name: Build library
       working-directory: build
