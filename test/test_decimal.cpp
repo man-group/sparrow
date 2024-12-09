@@ -14,6 +14,11 @@
 
 #include "doctest/doctest.h"
 
+#include <vector>
+#include <string>
+#include <cmath>
+#include <utility>
+
 #include <sparrow/utils/large_int.hpp>
 #include <sparrow/utils/decimal.hpp>
 
