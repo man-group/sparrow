@@ -8,6 +8,9 @@
 #include <sstream>
 #include <iostream>
 
+// pow
+#include <cmath>
+
 
 namespace sparrow 
 {
