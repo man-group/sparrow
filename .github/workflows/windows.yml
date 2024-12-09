@@ -148,7 +148,7 @@ jobs:
     - name: Enable tests coverage
       if: matrix.config.name == 'Debug'
       run: |
-        echo "TEST_COVERAGE_ACTIVATION='-DSPARROW_ENABLE_COVERAGE=ON'" >> $GITHUB_ENV
+        echo "TEST_COVERAGE_ACTIVATION=' -DSPARROW_ENABLE_COVERAGE=ON'" >> $GITHUB_ENV
 
     - name: Set CMake generator environment variable
       run: |
