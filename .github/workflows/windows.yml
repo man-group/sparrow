@@ -145,6 +145,12 @@ jobs:
       if: matrix.target-arch.name == 'Win32' # Note: this is not a mandatory limitation in any context, we add this just to have at least one configuration testing that feature
       run: echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPARROW_ENABLE_32BIT_SIZE_LIMIT=ON'" >> $GITHUB_ENV
 
+    - name: Enable tests coverage
+      if: matrix.config.name == 'Debug'
+      run: |
+        choco install opencppcoverage
+        echo "TEST_COVERAGE_ACTIVATION=' -DENABLE_COVERAGE=ON -DOpenCPPCoverage:FILEPATH=C:/Program Files/OpenCppCoverage/OpenCppCoverage.exe'" >> $GITHUB_ENV
+
     - name: Set CMake generator environment variable
       run: |
         echo "CMAKE_GENERATOR=${{ matrix.build-system.name }}" >> $GITHUB_ENV
@@ -180,7 +186,8 @@ jobs:
         $SPARROW_ADDITIONAL_OPTIONS \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
+        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL \
+        $TEST_COVERAGE_ACTIVATION
 
     - name: Build library
       working-directory: build
@@ -204,6 +211,23 @@ jobs:
       with:
         name: test_sparrow_lib_report_Windows_${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}
         path: '**/test_sparrow_lib_report.xml'
+
+    - name: Tests coverage
+      if: matrix.config.name == 'Debug'
+      run: |
+        cmake --build . --config Debug --target generate_cobertura
+
+    - name: Produce the coverage report
+      uses: insightsengineering/coverage-action@v2
+      with:
+        path: '**/cobertura.xml'
+        # threshold: 80
+        # fail: true
+        publish: true
+        diff: true
+        diff-branch: main
+        diff-storage: _xml_coverage_reports
+        coverage-summary-title: "Code Coverage Summary"
 
     - name: Run all examples
       working-directory: build
