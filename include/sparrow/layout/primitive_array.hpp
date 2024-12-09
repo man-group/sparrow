@@ -34,6 +34,7 @@ namespace sparrow
     template <class T>
     class primitive_array;
 
+
     template <class T>
     struct array_inner_types<primitive_array<T>> : array_inner_types_base
     {
@@ -48,9 +49,7 @@ namespace sparrow
         using value_iterator = pointer_iterator<pointer>;
         using const_value_iterator = pointer_iterator<const_pointer>;
         using bitmap_const_reference = bitmap_type::const_reference;
-
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
-
         using iterator_tag = std::random_access_iterator_tag;
     };
 

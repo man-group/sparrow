@@ -29,9 +29,13 @@ namespace date = std::chrono;
 #include <cstring>
 #include <concepts>
 #include <string>
+#include <sstream>
 
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/mp_utils.hpp"
+#include "sparrow/utils/decimal.hpp"
+#include "sparrow/utils/large_int.hpp"
+
 
 
 #if __cplusplus > 202002L and defined(__STDCPP_FLOAT16_T__) and defined(__STDCPP_FLOAT32_T__) \
@@ -191,17 +195,21 @@ namespace sparrow
         else
         {
             // get the position of second comma
-            const auto second_comma_ptr = std::strchr(format, ',');
+            const auto second_comma_ptr = std::strrchr(format, ',');
             if(!all_digits(std::string_view(second_comma_ptr + 1)))
             {
-                throw std::runtime_error("Invalid format for decimal");
+                std::stringstream ss;
+                ss << "Invalid format for decimal in `" << format << "` not all digits in "<<std::string_view(second_comma_ptr + 1);
+                throw std::runtime_error(ss.str());
             }
             // get substring after second comma to end
             const auto num_bits = static_cast<std::size_t>(std::atoi(second_comma_ptr + 1));
             
             if(!(num_bits == 32 || num_bits == 64 || num_bits == 128 || num_bits == 256))
             {
-                throw std::runtime_error("Invalid format for decimal");
+                std::stringstream ss;
+                ss << "Invalid number of bits for decimal: " << num_bits << " in `" << format << "`";
+                throw std::runtime_error(ss.str());
             }
             return num_bits / 8;
         }       
@@ -391,6 +399,9 @@ namespace sparrow
         mpl::unreachable();
     }
 
+    // REMARK: this functions is non-applicable for the following types
+    // - all decimal types because further information is needed (precision, scale)
+    // - fixed-sized binary because further information is needed (element size)
     /// @returns Format string matching the provided data_type.
     ///          The returned string is guaranteed to be null-terminated and to have static storage
     ///          lifetime. (this means you can do data_type_to_format(mytype).data() to get a C pointer.
@@ -507,7 +518,11 @@ namespace sparrow
         sparrow::timestamp,
         // TODO: add missing fundamental types here
         list_value,
-        struct_value
+        struct_value,
+        decimal<std::int32_t>,
+        decimal<std::int64_t>,
+        decimal<int128_t>,
+        decimal<int256_t>
         >;
 
     /// Type list of every C++ representation types supported by default, in order matching `data_type`

@@ -22,7 +22,7 @@
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 #include "sparrow/layout/union_array.hpp"
-
+#include "sparrow/layout/decimal_array.hpp"
 
 
 namespace sparrow
@@ -119,9 +119,13 @@ namespace sparrow
             case data_type::TIMESTAMP:
             case data_type::MAP:
             case data_type::DECIMAL32:
+                return detail::make_wrapper_ptr<decimal_32_array>(std::move(proxy));
             case data_type::DECIMAL64:
+                return detail::make_wrapper_ptr<decimal_64_array>(std::move(proxy));
             case data_type::DECIMAL128:
+                return detail::make_wrapper_ptr<decimal_128_array>(std::move(proxy));
             case data_type::DECIMAL256:
+                return detail::make_wrapper_ptr<decimal_256_array>(std::move(proxy));
             case data_type::FIXED_WIDTH_BINARY:
                 throw std::runtime_error("not yet supported data type");
             default:

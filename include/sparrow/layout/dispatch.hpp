@@ -26,6 +26,7 @@
 #include "sparrow/layout/struct_layout/struct_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/layout/union_array.hpp"
+#include "sparrow/layout/decimal_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 
 namespace sparrow
@@ -110,6 +111,14 @@ namespace sparrow
                 return func(unwrap_array<dense_union_array>(ar));
             case data_type::SPARSE_UNION:
                 return func(unwrap_array<sparse_union_array>(ar));
+            case data_type::DECIMAL32:
+                return func(unwrap_array<decimal_32_array>(ar));
+            case data_type::DECIMAL64:
+                return func(unwrap_array<decimal_64_array>(ar));
+            case data_type::DECIMAL128:
+                return func(unwrap_array<decimal_128_array>(ar));
+            case data_type::DECIMAL256:
+                return func(unwrap_array<decimal_256_array>(ar));
             default:
                 throw std::invalid_argument("array type not supported");
             }
