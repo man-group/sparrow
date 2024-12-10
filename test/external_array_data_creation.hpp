@@ -16,35 +16,35 @@
 
 #include <numeric>
 #include <string>
+
+#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/arrow_interface/arrow_array_schema_factory.hpp"
-#include "sparrow/arrow_array_schema_proxy.hpp"
-#include "sparrow/types/data_type.hpp"
-#include "sparrow/types/data_traits.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/types/data_traits.hpp"
+#include "sparrow/types/data_type.hpp"
+
 
 namespace sparrow::test
 {
     void release_external_arrow_schema(ArrowSchema* schema);
     void release_external_arrow_array(ArrowArray* arr);
 
-    inline std::uint8_t* make_bitmap_buffer(size_t n, const std::vector<size_t>& false_bitmap)
+    template <std::ranges::range R>
+        requires(std::integral<std::ranges::range_value_t<R>> && !std::same_as<std::ranges::range_value_t<R>, bool>)
+    buffer<uint8_t> make_bitmap_buffer(size_t count, R&& nulls)
     {
-        auto tmp_bitmap = sparrow::dynamic_bitset<uint8_t>(n, true);
-        for (const auto i : false_bitmap)
+        if (!std::ranges::empty(nulls))
         {
-            if (i >= n)
-            {
-                throw std::invalid_argument("Index out of range");
-            }
-            tmp_bitmap.set(i, false);
+            SPARROW_ASSERT_TRUE(*std::ranges::max_element(nulls) < count);
         }
-
-        auto buf = new std::uint8_t[tmp_bitmap.block_count()];
-        std::memcpy(buf, tmp_bitmap.data(), tmp_bitmap.block_count());
-        return buf;
-    }
+        dynamic_bitset<uint8_t> bitmap(count, true);
+        for (const auto i : nulls)
+        {
+            bitmap.set(i, false);
+        }
+        return bitmap.buffer();
+    };
 
     namespace detail
     {
@@ -92,7 +92,10 @@ namespace sparrow::test
         std::uint8_t** buf = new std::uint8_t*[2];
         arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buf));
 
-        buf[0] = make_bitmap_buffer(size, false_bitmap);
+        const auto bitmap_buf = make_bitmap_buffer(size, false_bitmap);
+
+        buf[0] = new std::uint8_t[bitmap_buf.size()];
+        std::copy(bitmap_buf.begin(), bitmap_buf.end(), buf[0]);
 
         T* data_buf = new T[size];
         detail::fill_primitive_data_buffer(data_buf, size);
@@ -127,9 +130,8 @@ namespace sparrow::test
         buffer_type data_buf(size * sizeof(T));
         detail::fill_primitive_data_buffer(data_buf.data<T>(), size);
 
-        std::vector<buffer_type> arr_buffs =
-        {
-            sparrow::make_bitmap_buffer(size, false_bitmap),
+        std::vector<buffer_type> arr_buffs = {
+            sparrow::test::make_bitmap_buffer(size, false_bitmap),
             std::move(data_buf)
         };
 
@@ -225,13 +227,12 @@ namespace sparrow::test
             }
         }
 
-        std::vector<buffer_type> arr_buffs = 
-        {
-            sparrow::make_bitmap_buffer(size, false_bitmap),
+        std::vector<buffer_type> arr_buffs = {
+            sparrow::test::make_bitmap_buffer(size, false_bitmap),
             std::move(offset_buf),
             std::move(value_buf)
         };
-        
+
         sparrow::fill_arrow_array(
             arr,
             static_cast<std::int64_t>(size - offset),
@@ -298,8 +299,8 @@ namespace sparrow::test
         ArrowArray& arr,
         ArrowSchema&& flat_value_schema,
         ArrowArray&& flat_value_arr,
-        const std::vector<std::size_t> & list_lengths,
-        const std::vector<std::size_t> & false_postions,
+        const std::vector<std::size_t>& list_lengths,
+        const std::vector<std::size_t>& false_postions,
         bool big_list
     );
 
@@ -308,7 +309,7 @@ namespace sparrow::test
         ArrowArray& arr,
         ArrowSchema&& flat_value_schema,
         ArrowArray&& flat_value_arr,
-        const std::vector<std::size_t> & false_postions,
+        const std::vector<std::size_t>& false_postions,
         std::size_t list_size
     );
 
@@ -326,8 +327,8 @@ namespace sparrow::test
         ArrowArray& arr,
         std::vector<ArrowSchema>&& children_schemas,
         std::vector<ArrowArray>&& children_arrays,
-        const std::vector<std::uint8_t> & type_ids,
-        const std::string & format
+        const std::vector<std::uint8_t>& type_ids,
+        const std::string& format
     );
 
     void fill_schema_and_array_for_dense_union(
@@ -335,9 +336,9 @@ namespace sparrow::test
         ArrowArray& arr,
         std::vector<ArrowSchema>&& children_schemas,
         std::vector<ArrowArray>&& children_arrays,
-        const std::vector<std::uint8_t> & type_ids,
-        const std::vector<std::int32_t> & offsets,
-        const std::string & format
+        const std::vector<std::uint8_t>& type_ids,
+        const std::vector<std::int32_t>& offsets,
+        const std::string& format
     );
-    
+
 }

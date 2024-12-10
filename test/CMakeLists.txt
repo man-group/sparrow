@@ -55,7 +55,6 @@ else()
         test_allocator.cpp
         test_array_wrapper.cpp
         test_array.cpp
-        test_arrow_array_schema_factory.cpp
         test_arrow_array_schema_proxy.cpp
         test_arrow_array_schema_utils.cpp
         test_arrow_array.cpp
