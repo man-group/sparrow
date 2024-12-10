@@ -59,7 +59,8 @@ namespace sparrow
                 
                 // float
                 auto as_float =  static_cast<float>(d);
-                CHECK_EQ(as_float, doctest::Approx(0.0f));
+                // cast to double:
+                CHECK_EQ(as_float, doctest::Approx(0.0));
 
                 // double
                 auto as_double =  static_cast<double>(d);
@@ -78,7 +79,7 @@ namespace sparrow
                 
                 // float
                 auto as_float =  static_cast<float>(d);
-                CHECK_EQ(as_float, doctest::Approx(42.0f));
+                CHECK_EQ(as_float, doctest::Approx(42.0));
 
                 // double
                 auto as_double =  static_cast<double>(d);
@@ -99,7 +100,7 @@ namespace sparrow
                     
                     // float
                     auto as_float =  static_cast<float>(d);
-                    CHECK_EQ(as_float, doctest::Approx(4.2f));
+                    CHECK_EQ(as_float, doctest::Approx(4.2));
 
                     // double
                     auto as_double =  static_cast<double>(d);
@@ -117,7 +118,7 @@ namespace sparrow
                     
                     // float
                     auto as_float =  static_cast<float>(d);
-                    CHECK_EQ(as_float, doctest::Approx(-4.2f));
+                    CHECK_EQ(as_float, doctest::Approx(-4.2));
 
                     // double
                     auto as_double =  static_cast<double>(d);
@@ -138,7 +139,7 @@ namespace sparrow
                     
                     // float
                     auto as_float =  static_cast<float>(d);
-                    CHECK_EQ(as_float, doctest::Approx(420.0f));
+                    CHECK_EQ(as_float, doctest::Approx(420.0));
 
                     // double
                     auto as_double =  static_cast<double>(d);
@@ -156,11 +157,11 @@ namespace sparrow
                     
                     // float
                     auto as_float =  static_cast<float>(d);
-                    CHECK_EQ(as_float, doctest::Approx(-420.0f));
+                    CHECK_EQ(as_float, doctest::Approx(-420.0));
 
                     // double
                     auto as_double =  static_cast<double>(d);
-                    CHECK_EQ(as_double, doctest::Approx(-420.0f));
+                    CHECK_EQ(as_double, doctest::Approx(-420.0));
 
                     // string
                     auto as_string =  std::string(d);
