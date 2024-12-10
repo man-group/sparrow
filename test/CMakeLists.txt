@@ -113,7 +113,8 @@ set(test_target_catch2 "test_sparrow_lib_catch2")
 add_executable(${test_target_catch2} test_algorithm.cpp)
 target_link_libraries(${test_target_catch2}
     PRIVATE
-        sparrow Catch2::Catch2WithMain
+        sparrow
+        Catch2::Catch2WithMain
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
 include(Catch)
@@ -147,14 +148,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /we4928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /we5038 # data member 'member1' will be initialized after data member 'member2'
         /Zc:__cplusplus)
-        target_compile_definitions(${test_target}
-            MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
-            _ITERATOR_DEBUG_LEVEL=0
-        )
-        target_compile_definitions(${test_target_catch2}
-            MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
-            _ITERATOR_DEBUG_LEVEL=0
-        )
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(compiles_options
         -Wall # reasonable and standard
