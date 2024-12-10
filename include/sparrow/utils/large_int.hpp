@@ -1,10 +1,6 @@
 #pragma once
 
-#ifndef SPARROW_DISABLE_LARGE_INTEGER_DECIMALS
-
-#if SPARROW_USE_BOOST_MULTIPRECISION
-#include <boost/multiprecision/cpp_int.hpp>
-#else
+#ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
 
 // disabe warnings -Wold-style-cast sign-conversion for clang and gcc
 #if defined(__clang__) || defined(__GNUC__)
@@ -17,8 +13,7 @@
 #include <sparrow/details/3rdparty/large_integers/int128_t.hpp>
 #include <sparrow/details/3rdparty/large_integers/int256_t.hpp>
 
-
-#ifdef __GNUC__
+#if defined(__clang__) || defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
 
@@ -29,10 +24,44 @@
 
 namespace sparrow
 {
-    #if SPARROW_USE_BOOST_MULTIPRECISION
-    using int128_t = boost::multiprecision::int128_t;
-    using int256_t = boost::multiprecision::int256_t;
+    
+
+    #ifdef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+    constexpr bool large_int_placeholders = true;
+
+    template<class T>
+    constexpr bool is_int_placeholder_v = std::is_same_v<T, int128_t> || std::is_same_v<T, int256_t>;
+
+    struct int128_t
+    {
+        uint64_t words[2];
+        bool operator == (const int128_t& other) const
+        {
+            return words[0] == other.words[0] && words[1] == other.words[1];
+        }
+        bool operator != (const int128_t& other) const
+        {
+            return !(*this == other);
+        }
+    };
+    struct int256_t
+    {
+        uint64_t words[4];
+        bool operator == (const int256_t& other) const
+        {
+            return words[0] == other.words[0] && words[1] == other.words[1] && words[2] == other.words[2] && words[3] == other.words[3];
+        }
+        bool operator != (const int256_t& other) const
+        {
+            return !(*this == other);
+        }
+    };
     #else 
+    
+    template<class T>
+    constexpr bool is_int_placeholder_v = false;
+
+    constexpr bool large_int_placeholders = false;
     using int128_t = primesum::int128_t;
     using int256_t = primesum::int256_t;
 
@@ -62,5 +91,3 @@ namespace sparrow
     }
     #endif
 } // namespace sparrow
-
-#endif // SPARROW_DISABLE_LARGE_INTEGER_DECIMALS

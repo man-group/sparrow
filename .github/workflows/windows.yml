@@ -19,10 +19,10 @@ jobs:
       matrix:
         runs-on: [windows-latest]
         toolchain:
-        - {compiler: msvc, date-polyfill: 'ON', boost-multiprecision: 'ON'}
-        - {compiler: msvc, date-polyfill: 'OFF', boost-multiprecision: 'ON'}
-        - {compiler: clang, date-polyfill: 'ON', version: 18, boost-multiprecision: 'OFF'}
-        - {compiler: clang, date-polyfill: 'OFF', version: 18, boost-multiprecision: 'OFF'}
+        - {compiler: msvc, date-polyfill: 'ON', use-large-int-placeholders: 'ON'}
+        - {compiler: msvc, date-polyfill: 'OFF', use-large-int-placeholders: 'ON'}
+        - {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'OFF'}
+        - {compiler: clang, date-polyfill: 'OFF', version: 18, use-large-int-placeholders: 'OFF'}
         target-arch:
         - {
             name: "Win64",
@@ -107,7 +107,7 @@ jobs:
       if: matrix.target-arch.name == 'Win32'
       run: |
         vcpkg install --triplet=x86-windows
-        
+
     - name: Set conda environment
       if: matrix.target-arch.name == 'Win64'
       uses: mamba-org/setup-micromamba@main
@@ -175,7 +175,7 @@ jobs:
         -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX \
         -DBUILD_TESTS=ON \
         -DBUILD_EXAMPLES=ON \
-        -DUSE_BOOST_MULTIPRECISION=${{matrix.toolchain.boost-multiprecision}} \
+        -DUSE_LARGE_INT_PLACEHOLDERS=${{matrix.toolchain.use-large-int-placeholders}} \
         -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} \
         $GENERATOR_EXTRA_FLAGS \
         $SPARROW_CHECKS \

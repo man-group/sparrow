@@ -23,6 +23,7 @@ namespace sparrow
     {
     public:
         using integer_type = T;
+    
         decimal()
             : m_value(0)
             , m_scale(0)
@@ -35,8 +36,8 @@ namespace sparrow
         {
         }
 
-        // operator == 
-        bool operator==(const decimal& other) const
+
+        bool operator==(const decimal& other) const 
         {
             return m_value == other.m_value && m_scale == other.m_scale;
         }
@@ -47,21 +48,21 @@ namespace sparrow
             return !(*this == other);
         }
 
-        explicit operator float() const
+        explicit operator float() const requires(!is_int_placeholder_v<T>)
         {
             return convert_to_floating_point<float>();
         }
-        explicit operator double() const
+        explicit operator double() const requires(!is_int_placeholder_v<T>)
         {
             return convert_to_floating_point<double>();
         }
-        explicit operator long double() const
+        explicit operator long double() const requires(!is_int_placeholder_v<T>)
         {
             return convert_to_floating_point<long double>();
         }
 
         // convert to string
-        explicit operator std::string() const
+        explicit operator std::string() const requires(!is_int_placeholder_v<T>)
         {  
             std::stringstream ss;
             ss << m_value;
@@ -115,7 +116,7 @@ namespace sparrow
             
     private:
         template<class FLOAT_TYPE>
-        FLOAT_TYPE convert_to_floating_point() const
+        FLOAT_TYPE convert_to_floating_point() const requires(!is_int_placeholder_v<T>)
         {
             using to_type = FLOAT_TYPE;
             if constexpr( std::is_same_v<T, int256_t> )

@@ -105,6 +105,8 @@ namespace sparrow
 
         // the integral value type used to store the bits
         using storage_type = typename T::integer_type;
+        static_assert(sizeof(storage_type) == 4 || sizeof(storage_type) == 8 || sizeof(storage_type) == 16 || sizeof(storage_type) == 32,
+                      "The storage type must be an integral type of size  4, 8, 16 or 32 bytes");
 
         using bitmap_type = typename base_type::bitmap_type;
         using bitmap_const_reference = typename base_type::bitmap_const_reference;

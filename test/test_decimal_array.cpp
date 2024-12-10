@@ -24,10 +24,12 @@ namespace sparrow
 {
 
     using integer_types = std::tuple<
-        std::int32_t,
-        std::int64_t,
-        int128_t,
-        int256_t
+        std::int32_t
+        ,std::int64_t
+        #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+        ,int128_t
+        ,int256_t
+        #endif
     >;
 
 

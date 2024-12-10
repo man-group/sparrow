@@ -36,7 +36,7 @@ namespace sparrow
     using testing_types = std::tuple<
         int32_t
         ,int64_t
-        #ifndef SPARROW_DISABLE_LARGE_INTEGER_DECIMALS
+        #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
         ,int128_t
         ,int256_t
         #endif
