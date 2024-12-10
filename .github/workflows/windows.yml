@@ -113,7 +113,6 @@ jobs:
     - name: Setup vcpkg environment
       if: matrix.target-arch.name == 'Win64'
       run: |
-        vcpkg install --triplet=x64-windows
         # boost
         vcpkg install boost:x64-windows
 
