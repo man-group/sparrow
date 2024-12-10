@@ -1,12 +1,9 @@
 {
 	"$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
 	"dependencies": [
+		"catch2",
 		"doctest",
 		"date",
-		{
-			"name": "catch2",
-			"version>=": "3.2.0"
-		},
 		{
 			"name": "vcpkg-tool-ninja",
 			"host": true
