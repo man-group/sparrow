@@ -107,15 +107,7 @@ jobs:
       if: matrix.target-arch.name == 'Win32'
       run: |
         vcpkg install --triplet=x86-windows
-        # boost
-        vcpkg install boost:x86-windows
-    
-    - name: Setup vcpkg environment
-      if: matrix.target-arch.name == 'Win64'
-      run: |
-        # boost
-        vcpkg install boost:x64-windows
-
+        
     - name: Set conda environment
       if: matrix.target-arch.name == 'Win64'
       uses: mamba-org/setup-micromamba@main
