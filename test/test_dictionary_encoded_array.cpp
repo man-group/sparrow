@@ -24,11 +24,9 @@
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
-#include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 
 #include "doctest/doctest.h"
 #include "test_utils.hpp"
-
 
 namespace sparrow
 {
@@ -52,7 +50,7 @@ namespace sparrow
         //// Values: you, are(null), not, prepared, !, ?
 
         // null, null, not, prepared, null, not, ?, you, are(null), not
-        const layout_type dict {std::move(keys), std::move(ar), std::move(keys_nulls)};
+        const layout_type dict{std::move(keys), std::move(ar), std::move(keys_nulls)};
         return dict.slice(1, dict.size());
     }
 
