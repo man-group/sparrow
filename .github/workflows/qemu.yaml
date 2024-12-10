@@ -37,6 +37,12 @@ jobs:
           repository: apache/arrow-nanoarrow
           path: dependencies/tests/nanoarrow
 
+      - name: Checkout Catch2
+        uses: actions/checkout@v4
+        with:
+          repository: catchorg/Catch2
+          path: dependencies/tests/Catch2
+
       - name: Get current date
         id: date
         uses: Kaven-Universe/github-action-current-date-time@v1
@@ -83,16 +89,16 @@ jobs:
             case "${{matrix.target.distro}}" in
               ubuntu*|bookworm)
                 apt-get update -q -y
-                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-dev tzdata g++ ninja-build build-essential ccache catch2
+                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-dev tzdata g++ ninja-build build-essential ccache
                 ;;
               fedora*)
                 dnf -y update
                 dnf -y groupinstall "Development Tools"
-                dnf -y install git which cmake make doctest-devel date date-devel tzdata gcc-c++ ninja-build ccache catch2
+                dnf -y install git which cmake make doctest-devel date date-devel tzdata gcc-c++ ninja-build ccache
                 ;;
               alpine*)
                 apk update
-                apk add git cmake make doctest-dev date-dev tzdata g++ samurai catch2 ccache
+                apk add git cmake make doctest-dev date-dev tzdata g++ samurai ccache
                 ;;
             esac
 
@@ -116,6 +122,16 @@ jobs:
               -DCMAKE_C_STANDARD=17
             echo "Build nanoarrow"
             cmake --build ./build --target install
+            cd $ROOT_DIR
+            echo "Configure Catch2"
+            cd dependencies/tests/Catch2
+            cmake -G Ninja -B ./build \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+              -DCMAKE_BUILD_TYPE:STRING=Release \
+              -DCMAKE_COMPILE_WARNING_AS_ERROR=FALSE \
+            echo "Build Catch2"
+            cmake --build ./build --target install
             echo "Configuring sparrow"
             cd $ROOT_DIR
             cmake -G Ninja -Bbuild \
@@ -136,7 +152,6 @@ jobs:
             echo "Running sparrow tests"
             cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
             ccache --show-stats
-            
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
