@@ -13,16 +13,13 @@
 #include <sparrow/details/3rdparty/large_integers/int128_t.hpp>
 #include <sparrow/details/3rdparty/large_integers/int256_t.hpp>
 
-#include <cstdint>
-
 #if defined(__clang__) || defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
 
-
 #endif
 
-
+#include <cstdint>
 
 namespace sparrow
 {
