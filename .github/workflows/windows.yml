@@ -214,6 +214,7 @@ jobs:
 
     - name: Tests coverage
       if: matrix.config.name == 'Debug'
+      working-directory: build
       run: |
         cmake --build . --config Debug --target generate_cobertura
 
