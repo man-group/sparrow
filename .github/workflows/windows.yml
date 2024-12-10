@@ -150,6 +150,7 @@ jobs:
       run: |
         choco install opencppcoverage
         echo "TEST_COVERAGE_ACTIVATION=' -DENABLE_COVERAGE=ON'" >> $GITHUB_ENV
+        echo "OpenCppCoverage_ROOT='C:/Program Files/OpenCppCoverage'" >> $GITHUB_ENV
 
     - name: Set CMake generator environment variable
       run: |
