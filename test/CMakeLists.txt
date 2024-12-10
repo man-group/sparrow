@@ -110,14 +110,14 @@ doctest_discover_tests(${test_target})
 
 set(test_target_catch2 "test_sparrow_lib_catch2")
 
-add_executable(${test_target_catch2} "test_algorithm.cpp")
+add_executable(${test_target_catch2} test_algorithm.cpp)
 target_link_libraries(${test_target_catch2}
     PRIVATE
-        sparrow Catch2::Catch2WithMain $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
+        sparrow Catch2::Catch2WithMain
+        $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
 include(Catch)
 catch_discover_tests(${test_target_catch2})
-
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(compiles_options
@@ -147,13 +147,13 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /we4928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /we5038 # data member 'member1' will be initialized after data member 'member2'
         /Zc:__cplusplus)
-        target_compile_options(${test_target}
-            PRIVATE
-                $<$<CXX_COMPILER_ID:MSVC>:/DMSVC_RUNTIME_LIBRARY=MultiThreadedDLL>
+        target_compile_definitions(${test_target}
+            MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
+            _ITERATOR_DEBUG_LEVEL=0
         )
-        target_compile_options(${test_target_catch2}
-            PRIVATE
-                $<$<CXX_COMPILER_ID:MSVC>:/DMSVC_RUNTIME_LIBRARY=MultiThreadedDLL>
+        target_compile_definitions(${test_target_catch2}
+            MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
+            _ITERATOR_DEBUG_LEVEL=0
         )
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(compiles_options
@@ -200,16 +200,24 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         $<$<CXX_COMPILER_ID:GNU>:-Wlogical-op> # warn about logical operations being used where bitwise were probably wanted
         $<$<CXX_COMPILER_ID:GNU>:-Wno-subobject-linkage> # suppress warnings about subobject linkage
     )
+
     if (NOT "${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC")
         target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
         target_compile_options(${test_target} PRIVATE "-pedantic")# Warn on language extensions
         target_compile_options(${test_target_catch2} PRIVATE "-ftemplate-backtrace-limit=0")
         target_compile_options(${test_target_catch2} PRIVATE "-pedantic")# Warn on language extensions
+    else()
+        set_target_properties(${test_target} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+        target_compile_definitions(${test_target}
+            PRIVATE
+                _ITERATOR_DEBUG_LEVEL=0
+        )
+        set_target_properties(${test_target_catch2} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+        target_compile_definitions(${test_target_catch2}
+            PRIVATE
+                _ITERATOR_DEBUG_LEVEL=0
+        )
     endif()
-endif()
-
-if (MSVC_RUNTIME_LIBRARY MATCHES "MultiThreadedDLL")
-    list(APPEND compiles_options /D_ITERATOR_DEBUG_LEVEL=0)
 endif()
 
 target_compile_options(${test_target}
