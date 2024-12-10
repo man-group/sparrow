@@ -222,7 +222,7 @@ jobs:
       if: matrix.config.name == 'Debug'
       uses: insightsengineering/coverage-action@v2
       with:
-        path: '**/cobertura.xml'
+        path: 'build/coverage_reports/cobertura.xml'
         # threshold: 80
         # fail: true
         publish: true
