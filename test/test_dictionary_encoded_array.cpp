@@ -16,16 +16,19 @@
 #include <cstdint>
 #include <string_view>
 
+#include "sparrow/array.hpp"
+#include "sparrow/array_api.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_factory.hpp"
 #include "sparrow/layout/dictionary_encoded_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
-#include "sparrow/array.hpp"
+#include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 
-#include "test_utils.hpp"
 #include "doctest/doctest.h"
+#include "test_utils.hpp"
+
 
 namespace sparrow
 {
@@ -33,32 +36,24 @@ namespace sparrow
     using layout_type = dictionary_encoded_array<keys_type>;
     using layout_type_cref = layout_type::const_reference;
 
-    static const std::array<std::string, 7> words{{"hello", "you", "are", "not", "prepared", "!", "?"}};
+    static const std::array<nullable<std::string>, 7>
+        words{"hello", "you", {"are", false}, "not", "prepared", "!", "?"};
 
-    inline arrow_proxy make_arrow_proxy()
+    inline layout_type make_dictionary()
     {
+        layout_type::keys_buffer_type keys{0, 0, 1, 2, 3, 4, 2, 5, 0, 1, 2};
+
+        string_array words_arr{words};
+        array ar(words_arr.slice(1, words_arr.size()));
+
         constexpr std::array<size_t, 2> keys_nulls{1ULL, 5ULL};
-        const std::vector<keys_type> keys{0, 0, 1, 2, 3, 4, 2, 5, 0, 1, 2};
-        constexpr int64_t keys_offset = 1;
-
-        constexpr std::array<size_t, 1> value_nulls{2ULL};
-        constexpr int64_t values_offset = 1;
-
         // Indexes: 0(null), 1, 2, 3, 4(null), 2, 5, 0, 1, 2
 
         //// Values: you, are(null), not, prepared, !, ?
 
         // null, null, not, prepared, null, not, ?, you, are(null), not
-
-        constexpr data_type keys_data_type = sparrow::arrow_traits<keys_type>::type_id;
-        constexpr data_type values_data_type = sparrow::arrow_traits<std::string>::type_id;
-
-        arrow_proxy ar{
-            make_dictionary_encoded_arrow_array(keys, keys_nulls, keys_offset, words, value_nulls, values_offset),
-            make_dictionary_encoded_arrow_schema(values_data_type, keys_data_type)
-        };
-
-        return ar;
+        const layout_type dict {std::move(keys), std::move(ar), std::move(keys_nulls)};
+        return dict.slice(1, dict.size());
     }
 
     nullable<std::string_view> get_dict_value(layout_type_cref r)
@@ -70,11 +65,11 @@ namespace sparrow
     {
         TEST_CASE("constructors")
         {
-            CHECK_NOTHROW(layout_type{make_arrow_proxy()});
+            CHECK_NOTHROW(make_dictionary());
         }
 
         TEST_CASE("convenience_constructors")
-        {   
+        {
             using key_type = std::uint32_t;
             using array_type = dictionary_encoded_array<key_type>;
             using keys_buffer_type = typename array_type::keys_buffer_type;
@@ -86,9 +81,9 @@ namespace sparrow
             array values_arr(std::move(values));
 
             // the keys **data**
-            keys_buffer_type keys{3,3,2,1,0};
+            keys_buffer_type keys{3, 3, 2, 1, 0};
 
-            // where nulls are 
+            // where nulls are
             std::vector<std::size_t> where_null{2};
 
             // create the array
@@ -113,36 +108,36 @@ namespace sparrow
 
         TEST_CASE("copy")
         {
-            layout_type ar(make_arrow_proxy());
+            layout_type ar = make_dictionary();
             layout_type ar2(ar);
             CHECK_EQ(ar, ar2);
 
-            layout_type ar3(make_arrow_proxy());
+            layout_type ar3 = make_dictionary();
             ar3 = ar;
             CHECK_EQ(ar, ar3);
         }
 
         TEST_CASE("move")
         {
-            layout_type ar(make_arrow_proxy());
+            layout_type ar = make_dictionary();
             layout_type ar2(ar);
             layout_type ar3(std::move(ar));
             CHECK_EQ(ar2, ar3);
 
-            layout_type ar4(make_arrow_proxy());
+            layout_type ar4 = make_dictionary();
             ar4 = std::move(ar3);
             CHECK_EQ(ar2, ar4);
         }
 
         TEST_CASE("size")
         {
-            const layout_type dict(make_arrow_proxy());
+            const layout_type dict = make_dictionary();
             CHECK_EQ(dict.size(), 10);
         }
 
         TEST_CASE("operator[]")
         {
-            const layout_type dict(make_arrow_proxy());
+            const layout_type dict = make_dictionary();
             CHECK_FALSE(dict[0].has_value());
             CHECK_FALSE(dict[1].has_value());
             REQUIRE(dict[2].has_value());
@@ -162,8 +157,8 @@ namespace sparrow
         }
 
         TEST_CASE("const_iterator")
-        { 
-            const layout_type dict(make_arrow_proxy());
+        {
+            const layout_type dict = make_dictionary();
             auto iter = dict.cbegin();
             CHECK_EQ(*iter, dict[0]);
             ++iter;
