@@ -83,16 +83,16 @@ jobs:
             case "${{matrix.target.distro}}" in
               ubuntu*|bookworm)
                 apt-get update -q -y
-                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-dev tzdata g++ ninja-build build-essential libboost-all-dev ccache
+                apt-get install -q -y git cmake make doctest-dev libhowardhinnant-date-dev tzdata g++ ninja-build build-essential ccache
                 ;;
               fedora*)
                 dnf -y update
                 dnf -y groupinstall "Development Tools"
-                dnf -y install git which cmake make doctest-devel date date-devel tzdata gcc-c++ ninja-build boost-devel ccache
+                dnf -y install git which cmake make doctest-devel date date-devel tzdata gcc-c++ ninja-build ccache
                 ;;
               alpine*)
                 apk update
-                apk add git cmake make doctest-dev date-dev tzdata g++ samurai boost-dev ccache
+                apk add git cmake make doctest-dev date-dev tzdata g++ samurai ccache
                 ;;
             esac
 
