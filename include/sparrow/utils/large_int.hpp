@@ -7,7 +7,7 @@
 #else
 
 // disabe warnings -Wold-style-cast sign-conversion for clang and gcc
-#ifdef __GNUC__
+#if defined(__clang__) || defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
