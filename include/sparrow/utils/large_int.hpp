@@ -29,8 +29,6 @@ namespace sparrow
     #ifdef SPARROW_USE_LARGE_INT_PLACEHOLDERS
     constexpr bool large_int_placeholders = true;
 
-    template<class T>
-    constexpr bool is_int_placeholder_v = std::is_same_v<T, int128_t> || std::is_same_v<T, int256_t>;
 
     struct int128_t
     {
@@ -56,11 +54,13 @@ namespace sparrow
             return !(*this == other);
         }
     };
+    template<class T>
+    constexpr bool is_int_placeholder_v = std::is_same_v<T, int128_t> || std::is_same_v<T, int256_t>;
+
     #else 
     
     template<class T>
     constexpr bool is_int_placeholder_v = false;
-
     constexpr bool large_int_placeholders = false;
     using int128_t = primesum::int128_t;
     using int256_t = primesum::int256_t;
