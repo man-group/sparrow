@@ -19,10 +19,10 @@ jobs:
       matrix:
         runs-on: [windows-latest]
         toolchain:
-        - {compiler: msvc, date-polyfill: 'ON'}
-        - {compiler: msvc, date-polyfill: 'OFF'}
-        - {compiler: clang, date-polyfill: 'ON', version: 18}
-        - {compiler: clang, date-polyfill: 'OFF', version: 18}
+        - {compiler: msvc, date-polyfill: 'ON', boost-multiprecision: 'ON'}
+        - {compiler: msvc, date-polyfill: 'OFF', boost-multiprecision: 'ON'}
+        - {compiler: clang, date-polyfill: 'ON', version: 18, boost-multiprecision: 'OFF'}
+        - {compiler: clang, date-polyfill: 'OFF', version: 18, boost-multiprecision: 'OFF'}
         target-arch:
         - {
             name: "Win64",
@@ -109,6 +109,13 @@ jobs:
         vcpkg install --triplet=x86-windows
         # boost
         vcpkg install boost:x86-windows
+    
+    - name: Setup vcpkg environment
+      if: matrix.target-arch.name == 'Win64'
+      run: |
+        vcpkg install --triplet=x64-windows
+        # boost
+        vcpkg install boost:x64-windows
 
     - name: Set conda environment
       if: matrix.target-arch.name == 'Win64'
@@ -127,6 +134,7 @@ jobs:
         echo "SPARROW_DEPS_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
         echo "SPARROW_INSTALL_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
         echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=OFF" >> $GITHUB_ENV
+ 
 
     - name: Set dependencies install prefix dir for 32bit
       if: matrix.target-arch.name == 'Win32'
@@ -137,8 +145,6 @@ jobs:
         echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
         echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=ON" >> $GITHUB_ENV
         choco install ninja
-        # not sure ..
-        choco install boost-msvc-14.2
 
     - name: Enable runtime size/length/offset validity checks
       if: matrix.config.name == 'Debug'
@@ -178,7 +184,7 @@ jobs:
         -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX \
         -DBUILD_TESTS=ON \
         -DBUILD_EXAMPLES=ON \
-        -DUSE_BOOST_MULTIPRECISION=ON \
+        -DUSE_BOOST_MULTIPRECISION=${{matrix.toolchain.boost-multiprecision}} \
         -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} \
         $GENERATOR_EXTRA_FLAGS \
         $SPARROW_CHECKS \

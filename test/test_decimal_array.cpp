@@ -22,21 +22,47 @@
 
 namespace sparrow
 {
+
+    using integer_types = std::tuple<
+        std::int32_t,
+        std::int64_t,
+        int128_t,
+        int256_t
+    >;
+
+
     TEST_SUITE("decimal_array")
     {
-        TEST_CASE("basics")
-        {
-            u8_buffer<std::int32_t> buffer{10,20,33,111};
+        TEST_CASE_TEMPLATE_DEFINE("generic", INTEGER_TYPE, decimal_array_test_generic_id)
+        {   
+            using integer_type = INTEGER_TYPE;
+            u8_buffer<integer_type> buffer{
+                integer_type(10),
+                integer_type(20),
+                integer_type(33),
+                integer_type(111)
+            };
             std::size_t precision = 2;
             int scale = 4;
-            decimal_32_array array{std::move(buffer), precision, scale};
+            decimal_array<decimal<integer_type>> array{std::move(buffer), precision, scale};
             CHECK_EQ(array.size(), 4);
 
             auto val = array[0].value();
             CHECK_EQ(val.scale(), scale);
-            CHECK_EQ(val.storage(), 10);
+            CHECK_EQ(static_cast<std::int64_t>(val.storage()), 10);
+            CHECK_EQ(static_cast<double>(val), doctest::Approx(0.001));
+            
+            val = array[1].value();
+            CHECK_EQ(val.scale(), scale);
+            CHECK_EQ(static_cast<std::int64_t>(val.storage()), 20);
+            CHECK_EQ(static_cast<double>(val), doctest::Approx(0.002));
 
+            val = array[2].value();
+            CHECK_EQ(val.scale(), scale);
+            CHECK_EQ(static_cast<std::int64_t>(val.storage()), 33);
+            CHECK_EQ(static_cast<double>(val), doctest::Approx(0.0033));
 
         }
+        TEST_CASE_TEMPLATE_APPLY(decimal_array_test_generic_id, integer_types);
     }
 } // namespace sparrow
