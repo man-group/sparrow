@@ -125,7 +125,9 @@ jobs:
       if: success() || failure()
       with:
         name: test_sparrow_lib_report_Linux_${{ matrix.sys.compiler }}_${{ matrix.sys.version }}_${{ matrix.sys.stdlib }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.sys.date-polyfill}}
-        path: '**/test_sparrow_lib_report.xml'
+        path: |
+          '**/test_sparrow_lib_report.xml'  # Doctest report
+          '**/test_sparrow_lib_report_catch2.xml'  # Catch2 report
 
     - name: Run all examples
       working-directory: build

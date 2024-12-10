@@ -7,6 +7,7 @@ dependencies:
   - ninja
   # Tests
   - doctest
+  - catch2
   # P0355R7 (Extending chrono to Calendars and Time Zones) has not been entirely implemented in libc++ yet.
   # See: https://libcxx.llvm.org/Status/Cxx20.html#note-p0355
   # For now, we use HowardHinnant/date as a replacement if we are compiling with libc++.
