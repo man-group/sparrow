@@ -13,6 +13,8 @@
 #include <sparrow/details/3rdparty/large_integers/int128_t.hpp>
 #include <sparrow/details/3rdparty/large_integers/int256_t.hpp>
 
+#include <cstdint>
+
 #if defined(__clang__) || defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
@@ -34,7 +36,7 @@ namespace sparrow
     {
         int128_t() = default;
 
-        uint64_t words[2];
+        std::uint64_t words[2];
         bool operator == (const int128_t& other) const
         {
             return words[0] == other.words[0] && words[1] == other.words[1];
@@ -47,7 +49,7 @@ namespace sparrow
     struct int256_t
     {
         int256_t() = default;
-        uint64_t words[4];
+        std::uint64_t words[4];
         bool operator == (const int256_t& other) const
         {
             return words[0] == other.words[0] && words[1] == other.words[1] && words[2] == other.words[2] && words[3] == other.words[3];
