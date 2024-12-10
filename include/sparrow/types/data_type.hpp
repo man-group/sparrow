@@ -29,9 +29,13 @@ namespace date = std::chrono;
 #include <cstring>
 #include <concepts>
 #include <string>
+#include <sstream>
 
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/mp_utils.hpp"
+#include "sparrow/utils/decimal.hpp"
+#include "sparrow/utils/large_int.hpp"
+
 
 
 #if __cplusplus > 202002L and defined(__STDCPP_FLOAT16_T__) and defined(__STDCPP_FLOAT32_T__) \
@@ -155,9 +159,62 @@ namespace sparrow
         DENSE_UNION,
         SPARSE_UNION,
         RUN_ENCODED,
-        DECIMAL,
+        DECIMAL32,
+        DECIMAL64,
+        DECIMAL128,
+        DECIMAL256,
         FIXED_WIDTH_BINARY
     };
+
+
+
+
+    inline bool all_digits(const std::string_view s)
+    {
+        return !s.empty() && std::find_if(s.begin(), 
+            s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+    }
+
+    // get the bit width for decimal value type from format
+    inline std::size_t num_bytes_for_decimal(const char* format)
+    {
+        //    d:19,10     -> 16 bytes / 128 bits
+        //    d:38,10,32  -> 4 bytes / 32 bits
+        //    d:38,10,64  -> 8 bytes / 64 bits
+        //    d:38,10,128 -> 16 bytes / 128 bits
+        //    d:38,10,256 -> 32 bytes / 256 bits
+
+        // count the number of commas
+        //const auto len = std::strlen(format);
+        const auto num_commas = std::count(format, format + std::strlen(format), ',');
+
+        if(num_commas <= 1)
+        {
+            return 16;
+        }
+        else
+        {
+            // get the position of second comma
+            const auto second_comma_ptr = std::strrchr(format, ',');
+            if(!all_digits(std::string_view(second_comma_ptr + 1)))
+            {
+                std::stringstream ss;
+                ss << "Invalid format for decimal in `" << format << "` not all digits in "<<std::string_view(second_comma_ptr + 1);
+                throw std::runtime_error(ss.str());
+            }
+            // get substring after second comma to end
+            const auto num_bits = static_cast<std::size_t>(std::atoi(second_comma_ptr + 1));
+            
+            if(!(num_bits == 32 || num_bits == 64 || num_bits == 128 || num_bits == 256))
+            {
+                std::stringstream ss;
+                ss << "Invalid number of bits for decimal: " << num_bits << " in `" << format << "`";
+                throw std::runtime_error(ss.str());
+            }
+            return num_bits / 8;
+        }       
+    }
+
 
     /// @returns The data_type value matching the provided format string or `data_type::NA`
     ///          if we couldnt find a matching data_type.
@@ -261,7 +318,21 @@ namespace sparrow
         }
         else if (format.starts_with("d:"))
         {
-            return data_type::DECIMAL;
+            const auto num_bytes = num_bytes_for_decimal(format.data());
+            switch(num_bytes)
+            {
+                case 4:
+                    return data_type::DECIMAL32;
+                case 8:
+                    return data_type::DECIMAL64;
+                case 16:
+                    return data_type::DECIMAL128;
+                case 32:
+                    return data_type::DECIMAL256;
+                default:
+                    throw std::runtime_error("Invalid format for decimal");
+            }
+
         }
         else if (format.starts_with("w:"))
         {
@@ -328,6 +399,9 @@ namespace sparrow
         mpl::unreachable();
     }
 
+    // REMARK: this functions is non-applicable for the following types
+    // - all decimal types because further information is needed (precision, scale)
+    // - fixed-sized binary because further information is needed (element size)
     /// @returns Format string matching the provided data_type.
     ///          The returned string is guaranteed to be null-terminated and to have static storage
     ///          lifetime. (this means you can do data_type_to_format(mytype).data() to get a C pointer.
@@ -444,7 +518,11 @@ namespace sparrow
         sparrow::timestamp,
         // TODO: add missing fundamental types here
         list_value,
-        struct_value
+        struct_value,
+        decimal<std::int32_t>,
+        decimal<std::int64_t>,
+        decimal<int128_t>,
+        decimal<int256_t>
         >;
 
     /// Type list of every C++ representation types supported by default, in order matching `data_type`
