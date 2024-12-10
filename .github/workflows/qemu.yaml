@@ -123,7 +123,7 @@ jobs:
               -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} \
               -DBUILD_TESTS=ON \
               -DBUILD_EXAMPLES=ON \
-              -DUSE_BOOST_MULTIPRECISION=ON \
+              -DUSE_LARGE_INT_PLACEHOLDERS=ON \
               -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
               -DCMAKE_C_COMPILER_LAUNCHER=ccache
             cd build

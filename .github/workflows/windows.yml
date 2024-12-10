@@ -21,8 +21,8 @@ jobs:
         toolchain:
         - {compiler: msvc, date-polyfill: 'ON', use-large-int-placeholders: 'ON'}
         - {compiler: msvc, date-polyfill: 'OFF', use-large-int-placeholders: 'ON'}
-        - {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'OFF'}
-        - {compiler: clang, date-polyfill: 'OFF', version: 18, use-large-int-placeholders: 'OFF'}
+        - {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'ON'}
+        - {compiler: clang, date-polyfill: 'OFF', version: 18, use-large-int-placeholders: 'ON'}
         target-arch:
         - {
             name: "Win64",
