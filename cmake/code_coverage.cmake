@@ -7,7 +7,8 @@ set(COBERTURA_REPORT_PATH "${COVERAGE_REPORT_PATH}/cobertura.xml" CACHE PATH "Pa
 set(COVERAGE_TARGETS_FOLDER "Tests utilities/Code Coverage")
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    find_program(OpenCPPCoverage OpenCppCoverage.exe opencppcoverage.exe REQUIRED)
+    find_program(OpenCPPCoverage OpenCppCoverage.exe opencppcoverage.exe REQUIRED
+        PATHS "C:/Program Files/OpenCppCoverage" "C:/Program Files (x86)/OpenCppCoverage")
 
     cmake_path(CONVERT ${CMAKE_SOURCE_DIR} TO_NATIVE_PATH_LIST OPENCPPCOVERAGE_SOURCES)
     set(OPENCPPCOVERAGE_COMMON_ARGS --sources=${OPENCPPCOVERAGE_SOURCES} --modules=${OPENCPPCOVERAGE_SOURCES} --excluded_sources=test*)
