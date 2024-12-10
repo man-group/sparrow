@@ -220,16 +220,12 @@ jobs:
 
     - name: Produce the coverage report
       if: matrix.config.name == 'Debug'
-      uses: insightsengineering/coverage-action@v2
+      uses: dennisjensen95/coverage-scope@v0.5.0
       with:
-        path: 'build/coverage_reports/cobertura.xml'
-        # threshold: 80
-        # fail: true
-        publish: true
-        diff: false
-        # diff-branch: main
-        # diff-storage: _xml_coverage_reports
-        coverage-summary-title: "Code Coverage Summary"
+        coverage-filepath: 'build/coverage_reports/cobertura.xml'
+        branch: main
+        threshold-total: 50
+        threshold-change: 50
 
     - name: Run all examples
       working-directory: build
