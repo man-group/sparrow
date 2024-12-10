@@ -24,11 +24,17 @@ namespace sparrow
     public:
         using integer_type = T;
     
-        decimal()
+        decimal() requires(!is_int_placeholder_v<T>)
             : m_value(0)
-            , m_scale(0)
+            , m_scale()
         {
         }
+        decimal() requires(is_int_placeholder_v<T>)
+            : m_value()
+            , m_scale()
+        {
+        }
+        
 
         decimal(T value, int scale)
             : m_value(value)

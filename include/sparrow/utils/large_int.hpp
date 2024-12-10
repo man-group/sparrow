@@ -32,6 +32,8 @@ namespace sparrow
 
     struct int128_t
     {
+        int128_t() = default;
+
         uint64_t words[2];
         bool operator == (const int128_t& other) const
         {
@@ -44,6 +46,7 @@ namespace sparrow
     };
     struct int256_t
     {
+        int256_t() = default;
         uint64_t words[4];
         bool operator == (const int256_t& other) const
         {
