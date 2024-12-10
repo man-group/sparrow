@@ -149,7 +149,7 @@ jobs:
       if: matrix.config.name == 'Debug'
       run: |
         choco install opencppcoverage
-        echo "TEST_COVERAGE_ACTIVATION=' -DENABLE_COVERAGE=ON -DOpenCPPCoverage:FILEPATH=\"C:/Program Files/OpenCppCoverage/OpenCppCoverage.exe\"'" >> $GITHUB_ENV
+        echo "TEST_COVERAGE_ACTIVATION=' -DENABLE_COVERAGE=ON -DOpenCPPCoverage:FILEPATH=\"C:/Program\ Files/OpenCppCoverage/OpenCppCoverage.exe\"'" >> $GITHUB_ENV
 
     - name: Set CMake generator environment variable
       run: |
@@ -219,6 +219,7 @@ jobs:
         cmake --build . --config Debug --target generate_cobertura
 
     - name: Produce the coverage report
+      if: matrix.config.name == 'Debug'
       uses: insightsengineering/coverage-action@v2
       with:
         path: '**/cobertura.xml'
@@ -233,4 +234,3 @@ jobs:
     - name: Run all examples
       working-directory: build
       run: cmake --build . --config ${{matrix.config.name}} --target run_examples
-
