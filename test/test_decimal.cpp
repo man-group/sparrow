@@ -185,7 +185,7 @@ namespace sparrow
                         
                         // float
                         auto as_float =  static_cast<float>(d);
-                        CHECK_EQ(as_float, doctest::Approx(static_cast<float>(value) / static_cast<float>(std::pow(10, scale))));
+                        CHECK_EQ(as_float, doctest::Approx(static_cast<double>(value) / static_cast<double>(std::pow(10, scale))));
 
                         // double
                         auto as_double =  static_cast<double>(d);
