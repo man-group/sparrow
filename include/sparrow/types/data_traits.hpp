@@ -19,8 +19,6 @@
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/nullable.hpp"
 
-#include <span>
-
 namespace sparrow
 {
 
