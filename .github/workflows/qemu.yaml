@@ -98,9 +98,7 @@ jobs:
             export CC
             CXX=g++
             export CXX
-            ROOT_DIR="${PWD}"
             echo "Configuring sparrow"
-            cd $ROOT_DIR
             cmake -G Ninja -Bbuild \
               -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
               -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} \

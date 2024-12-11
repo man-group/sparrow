@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.28)
 
 # This is better specified per target, but cmake keeps ignoring these language version
 # specification when building this project by itself, in particular the gnu extensions,
