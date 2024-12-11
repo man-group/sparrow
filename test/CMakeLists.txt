@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.28)
 
 enable_testing()
 
@@ -41,9 +41,9 @@ if(FETCH_DEPENDENCIES_WITH_CMAKE)
             GIT_SHALLOW TRUE
             GIT_REPOSITORY https://github.com/doctest/doctest.git
             GIT_TAG v2.4.11
-            SYSTEM)
+            SYSTEM
+            EXCLUDE_FROM_ALL)
         FetchContent_MakeAvailable(doctest)
-        set_target_properties(doctest PROPERTIES FOLDER ${DEPENDENCIES_CMAKE_FOLDER})
     endif()
 
     if(NOT Catch2_FOUND)
@@ -52,10 +52,9 @@ if(FETCH_DEPENDENCIES_WITH_CMAKE)
             GIT_SHALLOW TRUE
             GIT_REPOSITORY https://github.com/catchorg/Catch2.git
             GIT_TAG v3.7.1
-            SYSTEM)
+            SYSTEM
+            EXCLUDE_FROM_ALL)
         FetchContent_MakeAvailable(Catch2)
-        set_target_properties(Catch2 PROPERTIES FOLDER ${DEPENDENCIES_CMAKE_FOLDER})
-        set_target_properties(Catch2WithMain PROPERTIES FOLDER ${DEPENDENCIES_CMAKE_FOLDER})
     endif()
 
     if(NOT nanoarrow_FOUND)
@@ -64,9 +63,9 @@ if(FETCH_DEPENDENCIES_WITH_CMAKE)
             GIT_SHALLOW TRUE
             GIT_REPOSITORY https://github.com/apache/arrow-nanoarrow.git
             GIT_TAG apache-arrow-nanoarrow-0.6.0
-            SYSTEM)
+            SYSTEM
+            EXCLUDE_FROM_ALL)
         FetchContent_MakeAvailable(nanoarrow)
-        set_target_properties(nanoarrow PROPERTIES FOLDER ${DEPENDENCIES_CMAKE_FOLDER})
     endif()
 endif()
 
