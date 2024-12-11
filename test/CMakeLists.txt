@@ -202,8 +202,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
     endif()
 endif()
 
-if(VCPKG_TARGET_TRIPLET)
-    message(STATUS "VCPKG is used")
+if(NOT VCPKG_TARGET_TRIPLET)
     set_target_properties(${test_target} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
     target_compile_definitions(${test_target}
         PRIVATE
