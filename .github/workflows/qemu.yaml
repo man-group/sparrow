@@ -161,4 +161,4 @@ jobs:
             path: |
               build/test/test_sparrow_lib_report_doctest.xml
               build/test/test_sparrow_lib_report_catch2.xml
-             if-no-files-found: error
+            if-no-files-found: error
