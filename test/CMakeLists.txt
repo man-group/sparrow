@@ -66,6 +66,7 @@ if(FETCH_DEPENDENCIES_WITH_CMAKE)
             SYSTEM
             EXCLUDE_FROM_ALL)
         FetchContent_MakeAvailable(nanoarrow)
+        target_compile_options(nanoarrow PRIVATE -w)
     endif()
 endif()
 
