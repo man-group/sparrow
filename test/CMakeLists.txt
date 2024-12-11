@@ -202,16 +202,18 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
     endif()
 endif()
 
-set_target_properties(${test_target} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
-target_compile_definitions(${test_target}
-    PRIVATE
-        _ITERATOR_DEBUG_LEVEL=0
-)
-set_target_properties(${test_target_catch2} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
-target_compile_definitions(${test_target_catch2}
-    PRIVATE
-        _ITERATOR_DEBUG_LEVEL=0
-)
+if(VCPKG_TARGET_TRIPLET)
+    set_target_properties(${test_target} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+    target_compile_definitions(${test_target}
+        PRIVATE
+            _ITERATOR_DEBUG_LEVEL=0
+    )
+    set_target_properties(${test_target_catch2} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+    target_compile_definitions(${test_target_catch2}
+        PRIVATE
+            _ITERATOR_DEBUG_LEVEL=0
+    )
+endif()
 
 target_compile_options(${test_target}
     PRIVATE
