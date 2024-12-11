@@ -31,18 +31,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Checkout nanoarrow
-        uses: actions/checkout@v4
-        with:
-          repository: apache/arrow-nanoarrow
-          path: dependencies/tests/nanoarrow
-
-      - name: Checkout Catch2
-        uses: actions/checkout@v4
-        with:
-          repository: catchorg/Catch2
-          path: dependencies/tests/Catch2
-
       - name: Get current date
         id: date
         uses: Kaven-Universe/github-action-current-date-time@v1
@@ -111,27 +99,6 @@ jobs:
             CXX=g++
             export CXX
             ROOT_DIR="${PWD}"
-            export ROOT_DIR
-            echo "Configure nanoarrow"
-            cd dependencies/tests/nanoarrow
-            cmake -G Ninja -B ./build \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-              -DCMAKE_BUILD_TYPE:STRING=Release \
-              -DCMAKE_COMPILE_WARNING_AS_ERROR=FALSE \
-              -DCMAKE_C_STANDARD=17
-            echo "Build nanoarrow"
-            cmake --build ./build --target install
-            cd $ROOT_DIR
-            echo "Configure Catch2"
-            cd dependencies/tests/Catch2
-            cmake -G Ninja -B ./build \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-              -DCMAKE_BUILD_TYPE:STRING=Release \
-              -DCMAKE_COMPILE_WARNING_AS_ERROR=FALSE \
-            echo "Build Catch2"
-            cmake --build ./build --target install
             echo "Configuring sparrow"
             cd $ROOT_DIR
             cmake -G Ninja -Bbuild \
@@ -141,7 +108,8 @@ jobs:
               -DBUILD_EXAMPLES=ON \
               -DUSE_LARGE_INT_PLACEHOLDERS=ON \
               -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-              -DCMAKE_C_COMPILER_LAUNCHER=ccache
+              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+              -DFETCH_DEPENDENCIES_WITH_CMAKE=ON
             cd build
             echo "Building sparrow library"
             cmake --build . --config ${{matrix.config.name}} --target sparrow

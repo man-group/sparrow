@@ -92,12 +92,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Checkout nanoarrow
-      uses: actions/checkout@v4
-      with:
-        repository: apache/arrow-nanoarrow
-        path: dependencies/tests/nanoarrow
-
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -151,23 +145,6 @@ jobs:
       run: |
         echo "CMAKE_GENERATOR=${{ matrix.build-system.name }}" >> $GITHUB_ENV
 
-    - name: Configure nanoarrow
-      working-directory: dependencies/tests/nanoarrow
-      run: |
-        cmake -S ./  \
-          -B ./build \
-          $GENERATOR_EXTRA_FLAGS \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_BUILD_TYPE:STRING=Release \
-          -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX \
-          -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX \
-          -DCMAKE_COMPILE_WARNING_AS_ERROR=FALSE
-
-    - name: Build nanoarrow
-      working-directory: dependencies/tests/nanoarrow/build
-      run: cmake --build . --config Release --target install
-
     - name: Configure using CMake
       run: |
         cmake -S ./ -B ./build \
@@ -182,7 +159,8 @@ jobs:
         $SPARROW_CHECKS \
         $SPARROW_ADDITIONAL_OPTIONS \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+        -DFETCH_DEPENDENCIES_WITH_CMAKE=ON
 
     - name: Build library
       working-directory: build

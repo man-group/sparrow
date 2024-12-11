@@ -87,6 +87,8 @@ OPTION(BUILD_DOCS  "Build sparrow documentation" OFF)
 OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
 OPTION(USE_LARGE_INT_PLACEHOLDERS "use types without api for big integers" OFF)
+set(DEPENDENCIES_CMAKE_FOLDER "External dependencies")
+OPTION(FETCH_DEPENDENCIES_WITH_CMAKE "Fetch dependencies with CMake: Can be OFF, ON, or MISSING, in this case CMake donwload only dependencies which are not previously found." OFF)
 
 OPTION(SPARROW_TARGET_32BIT "Test 32bit support" OFF)
 

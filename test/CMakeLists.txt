@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.22)
 
 enable_testing()
 
@@ -22,11 +22,54 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(SPARROW_INCLUDE_DIR ${sparrow_INCLUDE_DIRS})
 endif()
 
-find_package(doctest REQUIRED)
-find_package(nanoarrow REQUIRED)
-find_package(Catch2 3 REQUIRED)
+if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
+    set(FIND_PACKAGE_OPTIONS REQUIRED)
+else()
+    set(FIND_PACKAGE_OPTIONS QUIET)
+endif()
 
-# find_package(Threads)
+find_package(doctest ${FIND_PACKAGE_OPTIONS})
+find_package(Catch2 3 ${FIND_PACKAGE_OPTIONS})
+find_package(nanoarrow ${FIND_PACKAGE_OPTIONS})
+
+if(FETCH_DEPENDENCIES_WITH_CMAKE)
+    include(FetchContent)
+
+    if(NOT doctest_FOUND)
+        FetchContent_Declare(
+            doctest
+            GIT_SHALLOW TRUE
+            GIT_REPOSITORY https://github.com/doctest/doctest.git
+            GIT_TAG v2.4.11
+            SYSTEM)
+        FetchContent_MakeAvailable(doctest)
+        set_target_properties(doctest PROPERTIES FOLDER ${DEPENDENCIES_CMAKE_FOLDER})
+    endif()
+
+    if(NOT Catch2_FOUND)
+        FetchContent_Declare(
+            Catch2
+            GIT_SHALLOW TRUE
+            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+            GIT_TAG v3.7.1
+            SYSTEM)
+        FetchContent_MakeAvailable(Catch2)
+        set_target_properties(Catch2 PROPERTIES FOLDER ${DEPENDENCIES_CMAKE_FOLDER})
+        set_target_properties(Catch2WithMain PROPERTIES FOLDER ${DEPENDENCIES_CMAKE_FOLDER})
+    endif()
+
+    if(NOT nanoarrow_FOUND)
+        FetchContent_Declare(
+            nanoarrow
+            GIT_SHALLOW TRUE
+            GIT_REPOSITORY https://github.com/apache/arrow-nanoarrow.git
+            GIT_TAG apache-arrow-nanoarrow-0.6.0
+            SYSTEM)
+        FetchContent_MakeAvailable(nanoarrow)
+        set_target_properties(nanoarrow PROPERTIES FOLDER ${DEPENDENCIES_CMAKE_FOLDER})
+    endif()
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting tests build type to Release")
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
@@ -104,9 +147,6 @@ target_link_libraries(${test_target}
         doctest::doctest
         nanoarrow::nanoarrow
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
-
-include(doctest)
-doctest_discover_tests(${test_target})
 
 set(test_target_catch2 "test_sparrow_lib_catch2")
 
@@ -200,19 +240,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         target_compile_options(${test_target_catch2} PRIVATE "-ftemplate-backtrace-limit=0")
         target_compile_options(${test_target_catch2} PRIVATE "-pedantic")# Warn on language extensions
     endif()
-endif()
-
-if(NOT VCPKG_TARGET_TRIPLET)
-    set_target_properties(${test_target} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
-    target_compile_definitions(${test_target}
-        PRIVATE
-            _ITERATOR_DEBUG_LEVEL=0
-    )
-    set_target_properties(${test_target_catch2} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
-    target_compile_definitions(${test_target_catch2}
-        PRIVATE
-            _ITERATOR_DEBUG_LEVEL=0
-    )
 endif()
 
 target_compile_options(${test_target}
