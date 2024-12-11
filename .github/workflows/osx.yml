@@ -78,7 +78,7 @@ jobs:
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
         -Dnanoarrow_DIR=dependencies/tests/nanoarrow/build \
-        -DFETCH_DEPENDENCIES_WITH_CMAKE=ON
+        -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
 
     - name: Build
       working-directory: build

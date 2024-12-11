@@ -160,7 +160,7 @@ jobs:
         $SPARROW_ADDITIONAL_OPTIONS \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-        -DFETCH_DEPENDENCIES_WITH_CMAKE=ON
+        -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
 
     - name: Build library
       working-directory: build
