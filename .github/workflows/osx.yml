@@ -115,8 +115,8 @@ jobs:
       with:
         name: test_sparrow_lib_report_OSX_${{ matrix.os }}_${{ matrix.config.name }}_${{ matrix.compiler }}
         path: |
-          '**/test_sparrow_lib_report_doctest.xml'  # Doctest report
-          '**/test_sparrow_lib_report_catch2.xml'  # Catch2 report'**/
+          build/test/test_sparrow_lib_report_doctest.xml
+          build/test/test_sparrow_lib_report_catch2.xml
         if-no-files-found: error
 
     - name: Run all examples

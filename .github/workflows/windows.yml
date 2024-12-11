@@ -206,8 +206,8 @@ jobs:
       with:
         name: test_sparrow_lib_report_Windows_${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}
         path: |
-          '**/test_sparrow_lib_report_doctest.xml'  # Doctest report
-          '**/test_sparrow_lib_report_catch2.xml'  # Catch2 report
+          build/test/test_sparrow_lib_report_doctest.xml
+          build/test/test_sparrow_lib_report_catch2.xml
         if-no-files-found: error
 
     - name: Run all examples
