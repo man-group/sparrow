@@ -22,47 +22,57 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(SPARROW_INCLUDE_DIR ${sparrow_INCLUDE_DIRS})
 endif()
 
-if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
+if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "OFF")
     set(FIND_PACKAGE_OPTIONS REQUIRED)
 else()
     set(FIND_PACKAGE_OPTIONS QUIET)
 endif()
 
-find_package(doctest ${FIND_PACKAGE_OPTIONS})
-find_package(Catch2 3 ${FIND_PACKAGE_OPTIONS})
-find_package(nanoarrow ${FIND_PACKAGE_OPTIONS})
+if(NOT FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
+    find_package(doctest ${FIND_PACKAGE_OPTIONS})
+    find_package(Catch2 3 ${FIND_PACKAGE_OPTIONS})
+    find_package(nanoarrow ${FIND_PACKAGE_OPTIONS})
+endif()
 
-if(FETCH_DEPENDENCIES_WITH_CMAKE)
+Set(FETCHCONTENT_QUIET FALSE)
+
+if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "MISSING") 
     include(FetchContent)
 
     if(NOT doctest_FOUND)
+        message(STATUS "📦 Fetching doctest v2.4.11")
         FetchContent_Declare(
             doctest
             GIT_SHALLOW TRUE
             GIT_REPOSITORY https://github.com/doctest/doctest.git
             GIT_TAG v2.4.11
+            GIT_PROGRESS TRUE
             SYSTEM
             EXCLUDE_FROM_ALL)
         FetchContent_MakeAvailable(doctest)
     endif()
 
     if(NOT Catch2_FOUND)
+        message(STATUS "📦 Fetching Catch2 v3.7.1")
         FetchContent_Declare(
             Catch2
             GIT_SHALLOW TRUE
             GIT_REPOSITORY https://github.com/catchorg/Catch2.git
             GIT_TAG v3.7.1
+            GIT_PROGRESS TRUE
             SYSTEM
             EXCLUDE_FROM_ALL)
         FetchContent_MakeAvailable(Catch2)
     endif()
 
     if(NOT nanoarrow_FOUND)
+        message(STATUS "📦 Fetching nanoarrow 0.6")
         FetchContent_Declare(
             nanoarrow
             GIT_SHALLOW TRUE
             GIT_REPOSITORY https://github.com/apache/arrow-nanoarrow.git
             GIT_TAG apache-arrow-nanoarrow-0.6.0
+            GIT_PROGRESS TRUE
             SYSTEM
             EXCLUDE_FROM_ALL)
         FetchContent_MakeAvailable(nanoarrow)
