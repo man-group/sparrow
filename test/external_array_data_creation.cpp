@@ -135,7 +135,7 @@ namespace sparrow::test
         using buffer_type = sparrow::buffer<std::uint8_t>;
         std::vector<buffer_type> arr_buffs = 
         {
-            sparrow::make_bitmap_buffer(list_lengths.size(), false_positions),
+            sparrow::test::make_bitmap_buffer(list_lengths.size(), false_positions),
             make_offset_buffer_from_sizes(list_lengths, big_list)
         };
         
@@ -182,7 +182,7 @@ namespace sparrow::test
         using buffer_type = sparrow::buffer<std::uint8_t>;
         std::vector<buffer_type> arr_buffs = 
         {
-            sparrow::make_bitmap_buffer(arr_size, false_positions)
+            sparrow::test::make_bitmap_buffer(arr_size, false_positions)
         };
         
         ArrowArray** array_children = new ArrowArray*[1];
@@ -225,7 +225,7 @@ namespace sparrow::test
         using buffer_type = sparrow::buffer<std::uint8_t>;
         std::vector<buffer_type> arr_buffs = 
         {
-            sparrow::make_bitmap_buffer(list_lengths.size(), false_positions),
+            sparrow::test::make_bitmap_buffer(list_lengths.size(), false_positions),
             make_offset_buffer_from_sizes(list_lengths, big_list),
             make_size_buffer(list_lengths, big_list)
         };
@@ -273,7 +273,7 @@ namespace sparrow::test
         using buffer_type = sparrow::buffer<std::uint8_t>;
         std::vector<buffer_type> arr_buffs = 
         {
-            sparrow::make_bitmap_buffer(static_cast<std::size_t>(length), false_positions),
+            sparrow::test::make_bitmap_buffer(static_cast<std::size_t>(length), false_positions),
         };
 
         ArrowArray** array_children = new ArrowArray*[children_arrays.size()];

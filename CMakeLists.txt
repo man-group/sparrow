@@ -145,7 +145,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${BINARY_BUILD_DIR}")
 
 set(SPARROW_HEADERS
     # arrow_interface
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_info_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp

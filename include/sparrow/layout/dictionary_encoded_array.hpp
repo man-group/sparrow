@@ -14,8 +14,10 @@
 
 #pragma once
 
+#include "sparrow/array_api.hpp"
 #include "sparrow/array_factory.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
+#include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
@@ -25,8 +27,7 @@
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/memory.hpp"
-#include "sparrow/layout/array_access.hpp"
-#include "sparrow/array_api.hpp"
+
 
 namespace sparrow
 {
@@ -37,7 +38,8 @@ namespace sparrow
 
         using layout_type = Layout;
         using storage_type = std::conditional_t<is_const, const layout_type*, layout_type>;
-        using return_type = std::conditional_t<is_const, typename layout_type::const_reference, typename layout_type::reference>;
+        using return_type = std::
+            conditional_t<is_const, typename layout_type::const_reference, typename layout_type::reference>;
 
         constexpr layout_element_functor() = default;
 
@@ -61,13 +63,13 @@ namespace sparrow
 
     namespace detail
     {
-        template<class T>
+        template <class T>
         struct get_data_type_from_array;
 
-        template<std::integral IT>
+        template <std::integral IT>
         struct get_data_type_from_array<sparrow::dictionary_encoded_array<IT>>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return arrow_traits<typename primitive_array<IT>::inner_value_type>::type_id;
             }
@@ -76,7 +78,7 @@ namespace sparrow
         template <std::integral IT>
         struct is_dictionary_encoded_array<sparrow::dictionary_encoded_array<IT>>
         {
-            constexpr static bool get()
+            static constexpr bool get()
             {
                 return true;
             }
@@ -133,28 +135,47 @@ namespace sparrow
         const_iterator cbegin() const;
         const_iterator cend() const;
 
-        template <class ... Args>
-        requires(mpl::excludes_copy_and_move_ctor_v<dictionary_encoded_array<IT>, Args...>)
-        explicit dictionary_encoded_array(Args&& ... args)
-            : dictionary_encoded_array(create_proxy(std::forward<Args>(args) ...))
+        template <class... Args>
+            requires(mpl::excludes_copy_and_move_ctor_v<dictionary_encoded_array<IT>, Args...>)
+        explicit dictionary_encoded_array(Args&&... args)
+            : dictionary_encoded_array(create_proxy(std::forward<Args>(args)...))
         {
         }
+
+        /**
+         * Slices the array to keep only the elements between the given \p start and \p end.
+         * A copy of the \ref array is modified. The data is not modified, only the ArrowArray.offset and
+         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
+         * elements will be invalid.
+         *
+         * @param start The index of the first element to keep. Must be less than \p end.
+         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         */
+        self_type slice(size_type start, size_type end) const;
+
+        /**
+         * Slices the array to keep only the elements between the given \p start and \p end.
+         * A view of the \ref array is returned. The data is not modified, only the ArrowArray.offset and
+         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
+         * elements will be invalid.
+         *
+         * @param start The index of the first element to keep. Must be less than \p end.
+         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         */
+        self_type slice_view(size_type start, size_type end) const;
 
     private:
 
         template <validity_bitmap_input R = validity_bitmap>
-        static auto create_proxy(
-            keys_buffer_type && keys,    
-            array && values,
-            R && bitmaps = validity_bitmap{}
-        ) -> arrow_proxy;
+        static auto
+        create_proxy(keys_buffer_type&& keys, array&& values, R&& bitmaps = validity_bitmap{}) -> arrow_proxy;
 
         using keys_layout = primitive_array<IT>;
         using values_layout = cloning_ptr<array_wrapper>;
 
-        const inner_value_type& dummy_inner_value() const;
-        //inner_const_reference dummy_inner_const_reference() const;
-        const_reference dummy_const_reference() const;
+        [[nodiscard]] const inner_value_type& dummy_inner_value() const;
+        // inner_const_reference dummy_inner_const_reference() const;
+        [[nodiscard]] const_reference dummy_const_reference() const;
 
         static keys_layout create_keys_layout(arrow_proxy& proxy);
         static values_layout create_values_layout(arrow_proxy& proxy);
@@ -228,11 +249,9 @@ namespace sparrow
 
     template <std::integral IT>
     template <validity_bitmap_input VBI>
-    auto dictionary_encoded_array<IT>::create_proxy(
-        keys_buffer_type && keys,    
-        array && values,
-        VBI && validity_input
-    ) -> arrow_proxy
+    auto
+    dictionary_encoded_array<IT>::create_proxy(keys_buffer_type&& keys, array&& values, VBI&& validity_input)
+        -> arrow_proxy
     {
         const auto size = keys.size();
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VBI>(validity_input));
@@ -243,12 +262,12 @@ namespace sparrow
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             sparrow::data_type_format_of<IT>(),
-            std::nullopt, // name
-            std::nullopt, // metadata
-            std::nullopt, // flags
-            0, // n_children
-            nullptr, // children
-            new ArrowSchema(std::move(value_schema)) // dictionary
+            std::nullopt,                             // name
+            std::nullopt,                             // metadata
+            std::nullopt,                             // flags
+            0,                                        // n_children
+            nullptr,                                  // children
+            new ArrowSchema(std::move(value_schema))  // dictionary
         );
 
         std::vector<buffer<uint8_t>> buffers(2);
@@ -257,13 +276,13 @@ namespace sparrow
 
         // create arrow array
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size), // length
+            static_cast<std::int64_t>(size),  // length
             static_cast<int64_t>(null_count),
-            0, // offset
+            0,  // offset
             std::move(buffers),
-            0, // n_children
-            nullptr, // children
-            new ArrowArray(std::move(value_array)) // dictionary
+            0,                                      // n_children
+            nullptr,                                // children
+            new ArrowArray(std::move(value_array))  // dictionary
         );
         return arrow_proxy(std::move(arr), std::move(schema));
     }
@@ -332,6 +351,20 @@ namespace sparrow
         return instance;
     }
 
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::slice(size_type start, size_type end) const -> self_type
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        return self_type{get_arrow_proxy().slice(start, end)};
+    }
+
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::slice_view(size_type start, size_type end) const -> self_type
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        return self_type{get_arrow_proxy().slice_view(start, end)};
+    }
+
     /*template <std::integral IT>
     auto dictionary_encoded_array<IT>::dummy_inner_const_reference() const -> inner_const_reference
     {
@@ -343,12 +376,14 @@ namespace sparrow
     template <std::integral IT>
     auto dictionary_encoded_array<IT>::dummy_const_reference() const -> const_reference
     {
-        static const const_reference instance =
-            std::visit([](const auto& val) -> const_reference {
+        static const const_reference instance = std::visit(
+            [](const auto& val) -> const_reference
+            {
                 using inner_ref = typename arrow_traits<std::decay_t<decltype(val)>>::const_reference;
                 return nullable<inner_ref>(inner_ref(val), false);
             },
-            dummy_inner_value());
+            dummy_inner_value()
+        );
         return instance;
     }
 

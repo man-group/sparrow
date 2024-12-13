@@ -444,7 +444,4 @@ namespace sparrow
     {
         return std::ranges::equal(lhs, rhs);
     }
-
-    
-
 }
