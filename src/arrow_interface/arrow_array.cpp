@@ -47,7 +47,6 @@ namespace sparrow
         return const_cast<T*>(static_cast<const T*>(ptr));
     }
 
-    
 
 
     // get the bit width for fixed width binary from format

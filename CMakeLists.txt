@@ -137,10 +137,6 @@ if(USE_LARGE_INT_PLACEHOLDERS)
     add_compile_definitions(SPARROW_USE_LARGE_INT_PLACEHOLDERS)
 endif()
 
-if (DISABLE_LARGE_INTEGER_DECIMALS)
-    add_compile_definitions(SPARROW_DISABLE_LARGE_INTEGER_DECIMALS)
-endif()
-
 # Build
 # =====
 
