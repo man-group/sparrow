@@ -222,9 +222,7 @@ namespace sparrow
             nullptr        // dictionary
         );
 
-        std::vector<buffer<uint8_t>> buffers(2);
-        buffers[0] = std::move(bitmap).extract_storage();
-        buffers[1] = std::move(data_buffer).extract_storage();
+        std::vector<buffer<uint8_t>> buffers{std::move(bitmap).extract_storage(), std::move(data_buffer).extract_storage()};
 
         // create arrow array
         ArrowArray arr = make_arrow_array(
