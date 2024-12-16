@@ -44,7 +44,6 @@ namespace sparrow
     using decimal_128_array = decimal_array<decimal<int128_t>>;
     using decimal_256_array = decimal_array<decimal<int256_t>>;
 
-
     namespace detail
     {
         template<class T>
@@ -63,7 +62,6 @@ namespace sparrow
         struct get_data_type_from_array<decimal_256_array>{constexpr static sparrow::data_type get(){return sparrow::data_type::DECIMAL256;}};
 
     }
-
 
     template <class T>
     struct array_inner_types<decimal_array<T>> : array_inner_types_base
@@ -124,8 +122,6 @@ namespace sparrow
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
 
-        // using iterator = typename base_type::iterator;
-        // using const_iterator = typename base_type::const_iterator;
 
         explicit decimal_array(arrow_proxy);
 
@@ -156,8 +152,7 @@ namespace sparrow
 
 
         // Modifiers
-
-
+        
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend base_type;
         friend base_type::base_type;
