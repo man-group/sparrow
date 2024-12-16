@@ -236,6 +236,7 @@ else()
         ${SPARROW_SOURCE_DIR}/record_batch.cpp
         ${SPARROW_SOURCE_DIR}/run_encoded_array.cpp
         ${SPARROW_SOURCE_DIR}/struct_value.cpp
+        ${SPARROW_SOURCE_DIR}/types/data_type.cpp
     )
 endif()
 

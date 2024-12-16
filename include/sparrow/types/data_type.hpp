@@ -168,58 +168,13 @@ namespace sparrow
 
 
 
-
-    inline bool all_digits(const std::string_view s)
-    {
-        return !s.empty() && std::find_if(s.begin(), 
-            s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
-    }
-
     // get the bit width for decimal value type from format
-    inline std::size_t num_bytes_for_decimal(const char* format)
-    {
-        //    d:19,10     -> 16 bytes / 128 bits
-        //    d:38,10,32  -> 4 bytes / 32 bits
-        //    d:38,10,64  -> 8 bytes / 64 bits
-        //    d:38,10,128 -> 16 bytes / 128 bits
-        //    d:38,10,256 -> 32 bytes / 256 bits
-
-        // count the number of commas
-        //const auto len = std::strlen(format);
-        const auto num_commas = std::count(format, format + std::strlen(format), ',');
-
-        if(num_commas <= 1)
-        {
-            return 16;
-        }
-        else
-        {
-            // get the position of second comma
-            const auto second_comma_ptr = std::strrchr(format, ',');
-            if(!all_digits(std::string_view(second_comma_ptr + 1)))
-            {
-                std::stringstream ss;
-                ss << "Invalid format for decimal in `" << format << "` not all digits in "<<std::string_view(second_comma_ptr + 1);
-                throw std::runtime_error(ss.str());
-            }
-            // get substring after second comma to end
-            const auto num_bits = static_cast<std::size_t>(std::atoi(second_comma_ptr + 1));
-            
-            if(!(num_bits == 32 || num_bits == 64 || num_bits == 128 || num_bits == 256))
-            {
-                std::stringstream ss;
-                ss << "Invalid number of bits for decimal: " << num_bits << " in `" << format << "`";
-                throw std::runtime_error(ss.str());
-            }
-            return num_bits / 8;
-        }       
-    }
-
+    inline std::size_t num_bytes_for_decimal(const char* format);
 
     /// @returns The data_type value matching the provided format string or `data_type::NA`
     ///          if we couldnt find a matching data_type.
     // TODO: consider returning an optional instead
-    constexpr data_type format_to_data_type(std::string_view format)
+    inline data_type format_to_data_type(std::string_view format)
     {
         // TODO: add missing conversions from
         // https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
