@@ -218,6 +218,12 @@ namespace sparrow
         ss << format_str;
         char c;
         ss >> m_precision >> c >> m_scale;
+
+        // check for failure
+        if (ss.fail())
+        {
+            throw std::runtime_error("Invalid format string for decimal array");
+        }
     }
 
     template <class T>
