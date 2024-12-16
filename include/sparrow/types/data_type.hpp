@@ -25,17 +25,17 @@ namespace date = std::chrono;
 #endif
 
 #include <climits>
+#include <concepts>
 #include <cstdint>
 #include <cstring>
-#include <concepts>
-#include <string>
 #include <sstream>
+#include <string>
 
+#include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
-#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/decimal.hpp"
 #include "sparrow/utils/large_int.hpp"
-
+#include "sparrow/utils/mp_utils.hpp"
 
 
 #if __cplusplus > 202002L and defined(__STDCPP_FLOAT16_T__) and defined(__STDCPP_FLOAT32_T__) \
@@ -166,10 +166,22 @@ namespace sparrow
         FIXED_WIDTH_BINARY
     };
 
-
+    // helper function to check if a string is all digits
+    inline bool all_digits(const std::string_view s)
+    {
+        return !s.empty()
+               && std::find_if(
+                      s.begin(),
+                      s.end(),
+                      [](unsigned char c)
+                      {
+                          return !std::isdigit(c);
+                      }
+                  ) == s.end();
+    }
 
     // get the bit width for decimal value type from format
-    inline std::size_t num_bytes_for_decimal(const char* format);
+    SPARROW_API std::size_t num_bytes_for_decimal(const char* format);
 
     /// @returns The data_type value matching the provided format string or `data_type::NA`
     ///          if we couldnt find a matching data_type.
@@ -274,7 +286,7 @@ namespace sparrow
         else if (format.starts_with("d:"))
         {
             const auto num_bytes = num_bytes_for_decimal(format.data());
-            switch(num_bytes)
+            switch (num_bytes)
             {
                 case 4:
                     return data_type::DECIMAL32;
@@ -287,7 +299,6 @@ namespace sparrow
                 default:
                     throw std::runtime_error("Invalid format for decimal");
             }
-
         }
         else if (format.starts_with("w:"))
         {
@@ -296,20 +307,23 @@ namespace sparrow
 
         return data_type::NA;
     }
-    
+
     /// @returns The default floating-point `data_type`  that should be associated with the provided type.
-    ///          The deduction will be based on the size of the type. Calling this function with unsupported sizes
-    ///          will not compile.
-    template<std::floating_point T>
-        requires (sizeof(T) >= 2 && sizeof(T) <= 8)
+    ///          The deduction will be based on the size of the type. Calling this function with unsupported
+    ///          sizes will not compile.
+    template <std::floating_point T>
+        requires(sizeof(T) >= 2 && sizeof(T) <= 8)
     constexpr data_type data_type_from_size(T = {})
     {
         // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
-        switch(sizeof(T))
+        switch (sizeof(T))
         {
-            case 2: return data_type::HALF_FLOAT;
-            case 4: return data_type::FLOAT;
-            case 8: return data_type::DOUBLE;
+            case 2:
+                return data_type::HALF_FLOAT;
+            case 4:
+                return data_type::FLOAT;
+            case 8:
+                return data_type::DOUBLE;
         }
 
         mpl::unreachable();
@@ -331,10 +345,14 @@ namespace sparrow
             // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
             switch (sizeof(T))
             {
-                case 1: return data_type::INT8;
-                case 2: return data_type::INT16;
-                case 4: return data_type::INT32;
-                case 8: return data_type::INT64;
+                case 1:
+                    return data_type::INT8;
+                case 2:
+                    return data_type::INT16;
+                case 4:
+                    return data_type::INT32;
+                case 8:
+                    return data_type::INT64;
             }
         }
         else
@@ -344,10 +362,14 @@ namespace sparrow
             // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
             switch (sizeof(T))
             {
-                case 1: return data_type::UINT8;
-                case 2: return data_type::UINT16;
-                case 4: return data_type::UINT32;
-                case 8: return data_type::UINT64;
+                case 1:
+                    return data_type::UINT8;
+                case 2:
+                    return data_type::UINT16;
+                case 4:
+                    return data_type::UINT32;
+                case 8:
+                    return data_type::UINT64;
             }
         }
 
@@ -477,8 +499,7 @@ namespace sparrow
         decimal<std::int32_t>,
         decimal<std::int64_t>,
         decimal<int128_t>,
-        decimal<int256_t>
-        >;
+        decimal<int256_t>>;
 
     /// Type list of every C++ representation types supported by default, in order matching `data_type`
     /// related values.
@@ -490,8 +511,8 @@ namespace sparrow
 
 
     /// is arrow base type or arrow compound type (list<T>, struct<T> etc.)
-    //template <class T>
-    //concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
+    // template <class T>
+    // concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
 
 
     using all_base_types_extended_t = mpl::append_t<all_base_types_t, char, std::string_view>;
@@ -559,7 +580,7 @@ namespace sparrow
         typename T::value_type;
 
         /// The arrow (binary) layout to use by default for representing a set of data for that type.
-        //typename detail::accepts_template<T::template default_layout>;
+        // typename detail::accepts_template<T::template default_layout>;
 
         // TODO: add more interface requirements on the traits here
         // TODO: add conversion operations between bytes and the value type
