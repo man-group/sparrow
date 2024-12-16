@@ -104,6 +104,9 @@ namespace sparrow
         using const_iterator = layout_iterator<iterator_types>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
+        std::optional<std::string_view> name() const;
+        std::optional<std::string_view> metadata() const;
+
         bool empty() const;
         size_type size() const;
 
@@ -126,9 +129,6 @@ namespace sparrow
 
         const_bitmap_range bitmap() const;
         const_value_range values() const;
-
-        [[nodiscard]] std::optional<std::string_view> name() const;
-        [[nodiscard]] std::optional<std::string_view> metadata() const;
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
@@ -191,6 +191,18 @@ namespace sparrow
     /**********************************
      * array_crtp_base implementation *
      **********************************/
+
+    template <class D>
+    std::optional<std::string_view> array_crtp_base<D>::name() const
+    {
+        return get_arrow_proxy().name();
+    }
+
+    template <class D>
+    std::optional<std::string_view> array_crtp_base<D>::metadata() const
+    {
+        return get_arrow_proxy().metadata();
+    }
 
     /**
      * Checks if the array has no element, i.e. whether begin() == end().
@@ -371,18 +383,6 @@ namespace sparrow
     auto array_crtp_base<D>::values() const -> const_value_range
     {
         return const_value_range(this->derived_cast().value_cbegin(), this->derived_cast().value_cend());
-    }
-
-    template <class D>
-    std::optional<std::string_view> array_crtp_base<D>::name() const
-    {
-        return m_proxy.name();
-    }
-
-    template <class D>
-    std::optional<std::string_view> array_crtp_base<D>::metadata() const
-    {
-        return m_proxy.metadata();
     }
 
     template <class D>

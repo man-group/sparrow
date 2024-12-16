@@ -36,8 +36,9 @@ namespace sparrow
 
             std::vector<std::size_t> where_nulls{1};
 
-            string_view_array array(words, where_nulls);
-
+            string_view_array array(words, where_nulls, "name", "metadata");
+            CHECK_EQ(array.name(), "name");
+            CHECK_EQ(array.metadata(), "metadata");
 
             for(std::size_t i = 0; i < words.size(); ++i)
             {
