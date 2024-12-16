@@ -34,7 +34,6 @@ namespace sparrow
     template <class T>
     class primitive_array;
 
-
     template <class T>
     struct array_inner_types<primitive_array<T>> : array_inner_types_base
     {
@@ -213,7 +212,6 @@ namespace sparrow
         value_iterator erase_values(const_value_iterator pos, size_type count);
 
         buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
-
 
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
@@ -433,8 +431,8 @@ namespace sparrow
 
     template <class T>
     template <mpl::iterator_of_type<T> InputIt>
-    auto
-    primitive_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last) -> value_iterator
+    auto primitive_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        -> value_iterator
     {
         SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= value_cend());
