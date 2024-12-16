@@ -214,9 +214,6 @@ namespace sparrow
         // substring staring aftet d:
         const auto format_str = format.substr(2);
 
-        const auto num_commas = std::count(format_str, format_str + std::strlen(format_str), ',');
-
-
         std::stringstream ss;
         ss << format_str;
         char c;
