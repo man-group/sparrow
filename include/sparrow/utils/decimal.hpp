@@ -43,7 +43,6 @@ namespace sparrow
 
 
         T m_value;
-        //int m_precision;
         int m_scale;
     };
 
