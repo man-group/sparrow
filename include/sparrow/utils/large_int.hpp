@@ -85,7 +85,9 @@ namespace sparrow
         }
 
         if (str.empty())
+        {
             str = "0";
+        }
 
         stream << std::string(str.rbegin(), str.rend());
 
