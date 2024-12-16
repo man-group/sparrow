@@ -84,15 +84,23 @@ namespace sparrow
         SPARROW_API const_iterator cbegin() const;
         SPARROW_API const_iterator cend() const;
 
-        SPARROW_API bool empty() const;
-        SPARROW_API size_type size() const;
-
         SPARROW_API array_traits::const_reference front() const;
         SPARROW_API array_traits::const_reference back() const;
 
+        SPARROW_API bool empty() const;
+        SPARROW_API size_type size() const;
+
+        std::optional<std::string_view> name() const;
+        std::optional<std::string_view> metadata() const;
+
     private:
 
-        SPARROW_API static auto create_proxy(array&& acc_lengths, array&& encoded_values) -> arrow_proxy;
+        SPARROW_API static auto create_proxy(
+            array&& acc_lengths,
+            array&& encoded_values,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
+        ) -> arrow_proxy;
 
         using acc_length_ptr_variant_type = std::variant<const std::uint16_t*, const std::uint32_t*, const std::uint64_t*>;
 
@@ -159,6 +167,16 @@ namespace sparrow
     inline auto run_end_encoded_array::empty() const -> bool
     {
         return size() == 0;
+    }
+
+    inline std::optional<std::string_view> run_end_encoded_array::name() const
+    {
+        return m_proxy.name();
+    }
+
+    inline std::optional<std::string_view> run_end_encoded_array::metadata() const
+    {
+        return m_proxy.metadata();
     }
 
     inline auto run_end_encoded_array::get_run_length(std::uint64_t run_index) const -> std::uint64_t

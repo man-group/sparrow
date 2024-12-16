@@ -17,19 +17,19 @@
 #include <cstddef>
 #include <ranges>
 
+#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/utils/functor_index_iterator.hpp"
-#include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/arrow_array_schema_proxy.hpp"
-#include "sparrow/layout/array_bitmap_base.hpp"
-#include "sparrow/layout/layout_utils.hpp"
-#include "sparrow/utils/iterator.hpp"
-#include "sparrow/utils/nullable.hpp"
-#include "sparrow/layout/array_access.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/buffer/u8_buffer.hpp"
+#include "sparrow/layout/array_access.hpp"
+#include "sparrow/layout/array_bitmap_base.hpp"
+#include "sparrow/layout/layout_utils.hpp"
+#include "sparrow/utils/functor_index_iterator.hpp"
+#include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/ranges.hpp"
+
 
 namespace sparrow
 {
@@ -42,21 +42,22 @@ namespace sparrow
 
     namespace detail
     {
-        template<class T>
+        template <class T>
         struct get_data_type_from_array;
 
-        template<>
+        template <>
         struct get_data_type_from_array<sparrow::string_view_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::STRING_VIEW;
             }
         };
-        template<>
+
+        template <>
         struct get_data_type_from_array<sparrow::binary_view_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::BINARY_VIEW;
             }
@@ -70,7 +71,7 @@ namespace sparrow
         using inner_value_type = T;
         using inner_reference = T;
         using inner_const_reference = inner_reference;
-    
+
         using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
         using const_value_iterator = functor_index_iterator<
             detail::layout_value_functor<const array_type, inner_reference>>;
@@ -94,7 +95,8 @@ namespace sparrow
     constexpr bool is_variable_size_binary_view_array = is_variable_size_binary_view_array_impl<T>::value;
 
     template <class T>
-    class variable_size_binary_view_array_impl final : public mutable_array_bitmap_base<variable_size_binary_view_array_impl<T>>
+    class variable_size_binary_view_array_impl final
+        : public mutable_array_bitmap_base<variable_size_binary_view_array_impl<T>>
     {
     public:
 
@@ -130,18 +132,23 @@ namespace sparrow
 
         explicit variable_size_binary_view_array_impl(arrow_proxy);
 
-        template <class ... Args>
-        requires(mpl::excludes_copy_and_move_ctor_v<variable_size_binary_view_array_impl<T>, Args...>)
-        explicit variable_size_binary_view_array_impl(Args&& ... args)
-            : variable_size_binary_view_array_impl(create_proxy(std::forward<Args>(args) ...))
+        template <class... Args>
+            requires(mpl::excludes_copy_and_move_ctor_v<variable_size_binary_view_array_impl<T>, Args...>)
+        explicit variable_size_binary_view_array_impl(Args&&... args)
+            : variable_size_binary_view_array_impl(create_proxy(std::forward<Args>(args)...))
         {
         }
 
     private:
 
-        template<std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap >
-        requires std::convertible_to<std::ranges::range_value_t<R>, T>
-        static arrow_proxy create_proxy(R&& range, VB&& bitmap_input = validity_bitmap{});
+        template <std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap>
+            requires std::convertible_to<std::ranges::range_value_t<R>, T>
+        static arrow_proxy create_proxy(
+            R&& range,
+            VB&& bitmap_input = validity_bitmap{},
+            std::optional<std::string_view>&& name = std::nullopt,
+            std::optional<std::string_view>&& metadata = std::nullopt
+        );
 
         inner_reference value(size_type i);
         inner_const_reference value(size_type i) const;
@@ -161,11 +168,9 @@ namespace sparrow
         static constexpr std::ptrdiff_t BUFFER_INDEX_OFFSET = 8;
         static constexpr std::ptrdiff_t BUFFER_OFFSET_OFFSET = 12;
         static constexpr std::size_t FIRST_VAR_DATA_BUFFER_INDEX = 2;
-        
 
         friend base_type;
         friend base_type::base_type;
-
     };
 
     template <class T>
@@ -175,32 +180,34 @@ namespace sparrow
     }
 
     template <class T>
-    template<std::ranges::input_range R, validity_bitmap_input VB >
-    requires std::convertible_to<std::ranges::range_value_t<R>, T>
-    arrow_proxy variable_size_binary_view_array_impl<T>::create_proxy(
-        R && range,
-        VB && validity_input
-    )
-    {    
-   
-        #ifdef __GNUC__
-        #    pragma GCC diagnostic push
-        #    pragma GCC diagnostic ignored "-Wcast-align"
-        #endif
+    template <std::ranges::input_range R, validity_bitmap_input VB>
+        requires std::convertible_to<std::ranges::range_value_t<R>, T>
+    arrow_proxy variable_size_binary_view_array_impl<T>::create_proxy(R&& range, VB&& validity_input,
+            std::optional<std::string_view>&& name,
+            std::optional<std::string_view>&& metadata)
+    {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
 
         const auto size = range_size(range);
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
         const auto null_count = vbitmap.null_count();
 
         buffer<uint8_t> length_buffer(size * DATA_BUFFER_SIZE);
-          
+
         std::size_t long_string_storage_size = 0;
         std::size_t i = 0;
-        for(auto && val : range)
-        {   
-            auto val_casted = val | std::ranges::views::transform([](const auto& v) { 
-                return static_cast<std::uint8_t>(v);
-            });
+        for (auto&& val : range)
+        {
+            auto val_casted = val
+                              | std::ranges::views::transform(
+                                  [](const auto& v)
+                                  {
+                                      return static_cast<std::uint8_t>(v);
+                                  }
+                              );
 
             const auto length = val.size();
             auto length_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
@@ -208,7 +215,7 @@ namespace sparrow
             // write length
             *reinterpret_cast<std::int32_t*>(length_ptr) = static_cast<std::int32_t>(length);
 
-            if(length <= SHORT_STRING_SIZE)
+            if (length <= SHORT_STRING_SIZE)
             {
                 // write data itself
                 std::ranges::copy(val_casted, length_ptr + SHORT_STRING_OFFSET);
@@ -220,49 +227,60 @@ namespace sparrow
                 std::ranges::copy(prefix_sub_range, length_ptr + PREFIX_OFFSET);
 
                 // write the buffer index
-                *reinterpret_cast<std::int32_t*>(length_ptr +  BUFFER_INDEX_OFFSET) = static_cast<std::int32_t>(FIRST_VAR_DATA_BUFFER_INDEX);
+                *reinterpret_cast<std::int32_t*>(
+                    length_ptr + BUFFER_INDEX_OFFSET
+                ) = static_cast<std::int32_t>(FIRST_VAR_DATA_BUFFER_INDEX);
 
                 // write the buffer offset
-                *reinterpret_cast<std::int32_t*>(length_ptr + BUFFER_OFFSET_OFFSET) = static_cast<std::int32_t>(long_string_storage_size);
- 
+                *reinterpret_cast<std::int32_t*>(
+                    length_ptr + BUFFER_OFFSET_OFFSET
+                ) = static_cast<std::int32_t>(long_string_storage_size);
+
                 // count the size of the long string storage
                 long_string_storage_size += length;
             }
             ++i;
-        } 
+        }
 
         // write the long string storage
         buffer<uint8_t> long_string_storage(long_string_storage_size);
         std::size_t long_string_storage_offset = 0;
-        for(auto && val : range)
+        for (auto&& val : range)
         {
             const auto length = val.size();
-            if(length > SHORT_STRING_SIZE)
+            if (length > SHORT_STRING_SIZE)
             {
-                auto val_casted = val | std::ranges::views::transform([](const auto& v) { 
-                    return static_cast<std::uint8_t>(v);
-                });
+                auto val_casted = val
+                                  | std::ranges::views::transform(
+                                      [](const auto& v)
+                                      {
+                                          return static_cast<std::uint8_t>(v);
+                                      }
+                                  );
 
                 std::ranges::copy(val_casted, long_string_storage.data() + long_string_storage_offset);
                 long_string_storage_offset += length;
             }
         }
 
-        // For binary or utf-8 view arrays, an extra buffer is appended which stores 
-        // the lengths of each variadic data buffer as int64_t. 
+        // For binary or utf-8 view arrays, an extra buffer is appended which stores
+        // the lengths of each variadic data buffer as int64_t.
         // This buffer is necessary since these buffer lengths are not trivially
         // extractable from other data in an array of binary or utf-8 view type.
-        u8_buffer<int64_t> buffer_sizes(static_cast<std::size_t>(1), static_cast<int64_t>(long_string_storage_size));
+        u8_buffer<int64_t> buffer_sizes(
+            static_cast<std::size_t>(1),
+            static_cast<int64_t>(long_string_storage_size)
+        );
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             std::is_same<T, std::string_view>::value ? std::string_view("vu") : std::string_view("vz"),
-            std::nullopt, // name
-            std::nullopt, // metadata
-            std::nullopt, // flags
-            0, // n_children
-            nullptr, // children
-            nullptr // dictionary
+            name,  // name
+            metadata,  // metadata
+            std::nullopt,  // flags
+            0,             // n_children
+            nullptr,       // children
+            nullptr        // dictionary
         );
 
         std::vector<buffer<uint8_t>> buffers{
@@ -274,21 +292,20 @@ namespace sparrow
 
         // create arrow array
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size), // length
+            static_cast<std::int64_t>(size),  // length
             static_cast<int64_t>(null_count),
-            0, // offset
+            0,  // offset
             std::move(buffers),
-            0, // n_children
-            nullptr, // children
-            nullptr // dictionary
+            0,        // n_children
+            nullptr,  // children
+            nullptr   // dictionary
         );
-        
+
         return arrow_proxy{std::move(arr), std::move(schema)};
 
-        #ifdef __GNUC__
-        #    pragma GCC diagnostic pop
-        #endif
-
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
     }
 
     template <class T>
@@ -300,39 +317,44 @@ namespace sparrow
     template <class T>
     auto variable_size_binary_view_array_impl<T>::value(size_type i) const -> inner_const_reference
     {
-        #ifdef __GNUC__
-        #    pragma GCC diagnostic push
-        #    pragma GCC diagnostic ignored "-Wcast-align"
-        #endif
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
 
         SPARROW_ASSERT_TRUE(i < this->size());
 
         constexpr std::size_t element_size = 16;
-        auto data_ptr = this->get_arrow_proxy().buffers()[LENGTH_BUFFER_INDEX].template data<uint8_t>() + (i * element_size);
+        auto data_ptr = this->get_arrow_proxy().buffers()[LENGTH_BUFFER_INDEX].template data<uint8_t>()
+                        + (i * element_size);
 
         auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr));
         using char_or_byte = typename inner_const_reference::value_type;
 
-        if(length <= 12)
+        if (length <= 12)
         {
             constexpr std::ptrdiff_t data_offset = 4;
             auto ptr = reinterpret_cast<const char_or_byte*>(data_ptr);
-            const auto ret =  inner_const_reference(ptr + data_offset, length);
+            const auto ret = inner_const_reference(ptr + data_offset, length);
             return ret;
         }
         else
         {
             constexpr std::ptrdiff_t buffer_index_offset = 8;
             constexpr std::ptrdiff_t buffer_offset_offset = 12;
-            auto buffer_index = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr + buffer_index_offset));
-            auto buffer_offset = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr + buffer_offset_offset));
+            auto buffer_index = static_cast<std::size_t>(
+                *reinterpret_cast<const std::int32_t*>(data_ptr + buffer_index_offset)
+            );
+            auto buffer_offset = static_cast<std::size_t>(
+                *reinterpret_cast<const std::int32_t*>(data_ptr + buffer_offset_offset)
+            );
             auto buffer = this->get_arrow_proxy().buffers()[buffer_index].template data<const char_or_byte>();
-            return inner_const_reference(buffer + buffer_offset,  length);
+            return inner_const_reference(buffer + buffer_offset, length);
         }
 
-        #ifdef __GNUC__
-        #    pragma GCC diagnostic pop
-        #endif
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
     }
 
     template <class T>
@@ -344,18 +366,13 @@ namespace sparrow
     template <class T>
     auto variable_size_binary_view_array_impl<T>::value_end() -> value_iterator
     {
-        return value_iterator(
-            detail::layout_value_functor<self_type, inner_value_type>(this), this->size()
-        );
+        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), this->size());
     }
 
     template <class T>
     auto variable_size_binary_view_array_impl<T>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator(
-            detail::layout_value_functor<const self_type, inner_value_type>(this),
-            0
-        );
+        return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), 0);
     }
 
     template <class T>

@@ -795,22 +795,34 @@ namespace sparrow
 
         TEST_CASE("convenience_constructors_from_iota")
         {
-            primitive_array<std::size_t> arr(std::ranges::iota_view{std::size_t(0), std::size_t(4)});
-            REQUIRE(arr.size() == 4);
-            for (std::size_t i = 0; i < 4; ++i)
+            constexpr size_t count = 4;
+            const primitive_array<std::size_t> arr(
+                std::ranges::iota_view{std::size_t(0), count},
+                "name",
+                "metadata"
+            );
+            CHECK_EQ(arr.name(), "name");
+            CHECK_EQ(arr.metadata(), "metadata");
+            REQUIRE(arr.size() == count);
+            for (std::size_t i = 0; i < count; ++i)
             {
                 REQUIRE(arr[i].has_value());
-                CHECK_EQ(arr[i].value(), static_cast<std::size_t>(i));
+                CHECK_EQ(arr[i].value(), i);
             }
         }
 
         TEST_CASE("convenience_constructors_index_of_missing")
         {
-            primitive_array<std::size_t> arr(
-                std::ranges::iota_view{std::size_t(0), std::size_t(5)},
-                std::vector<std::size_t>{1, 3}
+            constexpr size_t count = 5;
+            const primitive_array<std::size_t> arr(
+                std::ranges::iota_view{std::size_t(0), count},
+                std::vector<std::size_t>{1, 3},
+                "name",
+                "metadata"
             );
-            REQUIRE(arr.size() == 5);
+            CHECK_EQ(arr.name(), "name");
+            CHECK_EQ(arr.metadata(), "metadata");
+            REQUIRE(arr.size() == count);
             CHECK(arr[0].has_value());
             CHECK(!arr[1].has_value());
             CHECK(arr[2].has_value());
