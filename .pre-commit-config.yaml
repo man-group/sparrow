@@ -3,3 +3,4 @@ repos:
   rev: v19.1.5
   hooks:
   - id: clang-format
+    exclude_types: [javascript, json]
