@@ -56,7 +56,8 @@ namespace sparrow
     SPARROW_API void release_arrow_array(ArrowArray* array);
 
     /**
-     * Empty release function to use for the `ArrowArray.release` member. Should be used for view of ArrowArray.
+     * Empty release function to use for the `ArrowArray.release` member. Should be used for view of
+     * ArrowArray.
      */
     SPARROW_API void empty_release_arrow_array(ArrowArray* array);
 

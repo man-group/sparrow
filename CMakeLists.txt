@@ -86,6 +86,7 @@ OPTION(BUILD_TESTS "Build sparrow test suite" OFF)
 OPTION(BUILD_DOCS  "Build sparrow documentation" OFF)
 OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
+OPTION(USE_LARGE_INT_PLACEHOLDERS "use types without api for big integers" OFF)
 
 OPTION(SPARROW_TARGET_32BIT "Test 32bit support" OFF)
 
@@ -129,6 +130,11 @@ if (USE_DATE_POLYFILL)
     find_package(date CONFIG REQUIRED)
     list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
     add_compile_definitions(SPARROW_USE_DATE_POLYFILL)
+endif()
+
+if(USE_LARGE_INT_PLACEHOLDERS)
+
+    add_compile_definitions(SPARROW_USE_LARGE_INT_PLACEHOLDERS)
 endif()
 
 # Build
@@ -229,6 +235,7 @@ else()
         ${SPARROW_SOURCE_DIR}/record_batch.cpp
         ${SPARROW_SOURCE_DIR}/run_encoded_array.cpp
         ${SPARROW_SOURCE_DIR}/struct_value.cpp
+        ${SPARROW_SOURCE_DIR}/types/data_type.cpp
     )
 endif()
 

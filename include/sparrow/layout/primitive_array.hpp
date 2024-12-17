@@ -48,9 +48,7 @@ namespace sparrow
         using value_iterator = pointer_iterator<pointer>;
         using const_value_iterator = pointer_iterator<const_pointer>;
         using bitmap_const_reference = bitmap_type::const_reference;
-
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
-
         using iterator_tag = std::random_access_iterator_tag;
     };
 
@@ -215,8 +213,8 @@ namespace sparrow
 
         buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
 
-        static constexpr size_type DATA_BUFFER_INDEX = 1;
 
+        static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend class run_end_encoded_array;
         friend base_type;
         friend base_type::base_type;
@@ -433,8 +431,8 @@ namespace sparrow
 
     template <class T>
     template <mpl::iterator_of_type<T> InputIt>
-    auto
-    primitive_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last) -> value_iterator
+    auto primitive_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        -> value_iterator
     {
         SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= value_cend());

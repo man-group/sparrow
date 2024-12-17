@@ -47,11 +47,6 @@ namespace sparrow
         return const_cast<T*>(static_cast<const T*>(ptr));
     }
 
-    bool all_digits(const std::string_view s)
-    {
-        return !s.empty() && std::find_if(s.begin(), 
-            s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
-    }
 
 
     // get the bit width for fixed width binary from format
@@ -72,42 +67,6 @@ namespace sparrow
             throw std::runtime_error("Invalid format for fixed width binary");
         }
         return static_cast<std::size_t>(width);
-    }
-
-    // get the bit width for decimal value type from format
-    std::size_t num_bytes_for_decimal(const char* format)
-    {
-        //    d:19,10     -> 16 bytes / 128 bits
-        //    d:38,10,32  -> 4 bytes / 32 bits
-        //    d:38,10,64  -> 8 bytes / 64 bits
-        //    d:38,10,128 -> 16 bytes / 128 bits
-        //    d:38,10,256 -> 32 bytes / 256 bits
-
-        // count the number of commas
-        const auto len = std::strlen(format);
-        const auto num_commas = std::count(format, format + std::strlen(format), ',');
-
-        if(num_commas <= 1)
-        {
-            return 16;
-        }
-        else
-        {
-            // get the position of second comma
-            const auto second_comma_ptr = std::strchr(format, ',');
-            if(!all_digits(std::string_view(second_comma_ptr + 1)))
-            {
-                throw std::runtime_error("Invalid format for decimal");
-            }
-            // get substring after second comma to end
-            const auto num_bits = std::atoi(second_comma_ptr + 1);
-            
-            if(!(num_bits == 32 || num_bits == 64 || num_bits == 128 || num_bits == 256))
-            {
-                throw std::runtime_error("Invalid format for decimal");
-            }
-            return num_bits / 8;
-        }       
     }
     
 
@@ -171,8 +130,14 @@ namespace sparrow
                 return {make_buffer(0, size), make_buffer(1, size*4)};
             case data_type::TIMESTAMP:
                 return {make_valid_buffer(), make_buffer(1, size * 8)};
-            case data_type::DECIMAL:
+            case data_type::DECIMAL32:
+                return {make_valid_buffer(), make_buffer(1, size * 4)};
+            case data_type::DECIMAL64:
+                return {make_valid_buffer(), make_buffer(1, size * 8)};
+            case data_type::DECIMAL128:
                 return {make_valid_buffer(), make_buffer(1, size * 16)}; 
+            case data_type::DECIMAL256:
+                return {make_valid_buffer(), make_buffer(1, size * 32)}; 
             case data_type::FIXED_WIDTH_BINARY:
                 return {make_valid_buffer(), make_buffer(1, size *  num_bytes_for_fixed_sized_binary(schema.format))};
             case data_type::STRING_VIEW:
