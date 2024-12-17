@@ -17,7 +17,6 @@
 #include "sparrow/buffer/buffer_view.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_base.hpp"
 
-
 namespace sparrow
 {
     /**

@@ -38,15 +38,7 @@ TEST_SUITE("C Data Interface")
             children[0] = new ArrowArray();
             children[1] = new ArrowArray();
             ArrowArray* dictionary = new ArrowArray();
-            auto array = sparrow::make_arrow_array(
-                1,
-                0,
-                0,
-                buffers_dummy,
-                2,
-                children,
-                dictionary
-            );
+            auto array = sparrow::make_arrow_array(1, 0, 0, buffers_dummy, 2, children, dictionary);
 
             array.release(&array);
             CHECK_EQ(array.buffers, nullptr);

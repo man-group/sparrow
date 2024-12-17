@@ -14,18 +14,18 @@
 
 #pragma once
 
-#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/iterator.hpp"
 
 namespace sparrow
 {
-    template<class FUNCTOR>
+    template <class FUNCTOR>
     class functor_index_iterator : public iterator_base<
-        functor_index_iterator<FUNCTOR>,   // Derived
-        std::invoke_result_t<FUNCTOR, std::size_t>,  // Element
-        std::random_access_iterator_tag,
-        std::invoke_result_t<FUNCTOR, std::size_t>  // Reference
-    >
+                                       functor_index_iterator<FUNCTOR>,             // Derived
+                                       std::invoke_result_t<FUNCTOR, std::size_t>,  // Element
+                                       std::random_access_iterator_tag,
+                                       std::invoke_result_t<FUNCTOR, std::size_t>  // Reference
+                                       >
     {
     public:
 
@@ -35,13 +35,13 @@ namespace sparrow
         using size_type = std::size_t;
 
         constexpr functor_index_iterator() = default;
-        
+
         constexpr functor_index_iterator(FUNCTOR functor, size_type index)
             : m_functor(std::move(functor))
             , m_index(index)
         {
         }
-     
+
     private:
 
         result_type dereference() const
@@ -71,7 +71,7 @@ namespace sparrow
                 m_index -= static_cast<size_type>(-n);
             }
         }
-        
+
         difference_type distance_to(const self_type& rhs) const
         {
             return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);
@@ -93,4 +93,3 @@ namespace sparrow
         friend class iterator_access;
     };
 }
-

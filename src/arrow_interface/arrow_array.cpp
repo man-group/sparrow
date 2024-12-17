@@ -40,14 +40,11 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(array->release == std::addressof(empty_release_arrow_array));
     }
 
-
-    template<class T>
-    auto static_const_ptr_cast(const void *ptr)
+    template <class T>
+    auto static_const_ptr_cast(const void* ptr)
     {
         return const_cast<T*>(static_cast<const T*>(ptr));
     }
-
-
 
     // get the bit width for fixed width binary from format
     std::size_t num_bytes_for_fixed_sized_binary(const char* format)
@@ -57,43 +54,43 @@ namespace sparrow
 
         // check if format+2 is a number
 
-        if(!all_digits(std::string_view(format + 2)))
+        if (!all_digits(std::string_view(format + 2)))
         {
             throw std::runtime_error("Invalid format for fixed width binary");
         }
         const auto width = std::atoi(format + 2);
-        if(width <= 0)
+        if (width <= 0)
         {
             throw std::runtime_error("Invalid format for fixed width binary");
         }
         return static_cast<std::size_t>(width);
     }
-    
 
     std::vector<sparrow::buffer_view<uint8_t>>
     get_arrow_array_buffers(const ArrowArray& array, const ArrowSchema& schema)
-    {   
+    {
         using buffer_view_type = sparrow::buffer_view<uint8_t>;
         const auto size = static_cast<size_t>(array.length + array.offset);
         auto make_valid_buffer = [&]()
         {
             const auto buffer_size = static_cast<size_t>(size + 7) / 8;
             auto typed_buffer_ptr = static_const_ptr_cast<uint8_t>(array.buffers[0]);
-            return typed_buffer_ptr != nullptr ? buffer_view_type(typed_buffer_ptr, buffer_size) : buffer_view_type(nullptr, 0);
+            return typed_buffer_ptr != nullptr ? buffer_view_type(typed_buffer_ptr, buffer_size)
+                                               : buffer_view_type(nullptr, 0);
         };
-        auto make_buffer =  [&](auto index, auto size)
+        auto make_buffer = [&](auto index, auto size)
         {
             auto buffer_ptr = static_const_ptr_cast<uint8_t>(array.buffers[index]);
             return buffer_view_type(buffer_ptr, size);
         };
 
-        switch(format_to_data_type(schema.format))
-        {   
+        switch (format_to_data_type(schema.format))
+        {
             case data_type::NA:
             case data_type::RUN_ENCODED:
             case data_type::MAP:
                 return {};
-            case data_type::BOOL:   
+            case data_type::BOOL:
                 return {make_valid_buffer(), make_buffer(1, (size + 7) / 8)};
             case data_type::UINT8:
             case data_type::INT8:
@@ -112,7 +109,11 @@ namespace sparrow
                 return {make_valid_buffer(), make_buffer(1, size * 8)};
             case data_type::STRING:
             case data_type::BINARY:
-                return {make_valid_buffer(),make_buffer(1, (size + 1) * 4), make_buffer(2, static_const_ptr_cast<int32_t>(array.buffers[1])[size])};
+                return {
+                    make_valid_buffer(),
+                    make_buffer(1, (size + 1) * 4),
+                    make_buffer(2, static_const_ptr_cast<int32_t>(array.buffers[1])[size])
+                };
             case data_type::LIST:
                 return {make_valid_buffer(), make_buffer(1, (size + 1) * 4)};
             case data_type::LARGE_LIST:
@@ -123,11 +124,11 @@ namespace sparrow
                 return {make_valid_buffer(), make_buffer(1, size * 8), make_buffer(2, size * 8)};
             case data_type::FIXED_SIZED_LIST:
             case data_type::STRUCT:
-                return  {make_valid_buffer()};
+                return {make_valid_buffer()};
             case data_type::SPARSE_UNION:
                 return {make_buffer(0, size)};
             case data_type::DENSE_UNION:
-                return {make_buffer(0, size), make_buffer(1, size*4)};
+                return {make_buffer(0, size), make_buffer(1, size * 4)};
             case data_type::TIMESTAMP:
                 return {make_valid_buffer(), make_buffer(1, size * 8)};
             case data_type::DECIMAL32:
@@ -135,24 +136,27 @@ namespace sparrow
             case data_type::DECIMAL64:
                 return {make_valid_buffer(), make_buffer(1, size * 8)};
             case data_type::DECIMAL128:
-                return {make_valid_buffer(), make_buffer(1, size * 16)}; 
+                return {make_valid_buffer(), make_buffer(1, size * 16)};
             case data_type::DECIMAL256:
-                return {make_valid_buffer(), make_buffer(1, size * 32)}; 
+                return {make_valid_buffer(), make_buffer(1, size * 32)};
             case data_type::FIXED_WIDTH_BINARY:
-                return {make_valid_buffer(), make_buffer(1, size *  num_bytes_for_fixed_sized_binary(schema.format))};
+                return {
+                    make_valid_buffer(),
+                    make_buffer(1, size * num_bytes_for_fixed_sized_binary(schema.format))
+                };
             case data_type::STRING_VIEW:
             case data_type::BINARY_VIEW:
                 const auto buffer_count = static_cast<size_t>(array.n_buffers);
                 const auto num_extra_data_buffers = buffer_count - 3;
                 std::vector<buffer_view_type> buffers(buffer_count);
-                int64_t * var_buffer_sizes = static_const_ptr_cast<int64_t>(array.buffers[buffer_count - 1]);
+                int64_t* var_buffer_sizes = static_const_ptr_cast<int64_t>(array.buffers[buffer_count - 1]);
                 buffers[0] = make_valid_buffer();
                 buffers[1] = make_buffer(1, size * 16);
                 for (size_t i = 0; i < num_extra_data_buffers; ++i)
                 {
                     buffers[i + 2] = make_buffer(i + 2, var_buffer_sizes[i]);
                 }
-                buffers.back() = make_buffer(buffer_count -1 , size * 4);
+                buffers.back() = make_buffer(buffer_count - 1, size * 4);
                 return buffers;
         }
         // To avoid stupid warning "control reaches end of non-void function"

@@ -110,10 +110,11 @@ namespace sparrow
             }
         }
 
-        static constexpr size_type compute_block_count(size_type bits_count) noexcept;        
+        static constexpr size_type compute_block_count(size_type bits_count) noexcept;
 
-        // storage_type is a value_type 
-        storage_type extract_storage() noexcept requires std::same_as<storage_type, storage_type_without_cvrefpointer>
+        // storage_type is a value_type
+        storage_type extract_storage() noexcept
+            requires std::same_as<storage_type, storage_type_without_cvrefpointer>
         {
             return std::move(m_buffer);
         }
@@ -208,7 +209,7 @@ namespace sparrow
     constexpr bool dynamic_bitset_base<B>::test(size_type pos) const
     {
         SPARROW_ASSERT_TRUE(pos < size());
-        if(data() == nullptr)
+        if (data() == nullptr)
         {
             return true;
         }
@@ -350,7 +351,7 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B>::front() const -> const_reference
     {
         SPARROW_ASSERT_TRUE(size() >= 1);
-        if(data() == nullptr)
+        if (data() == nullptr)
         {
             return true;
         }
@@ -370,7 +371,7 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B>::back() const -> const_reference
     {
         SPARROW_ASSERT_TRUE(size() >= 1);
-        if(data() == nullptr)
+        if (data() == nullptr)
         {
             return true;
         }
@@ -437,7 +438,7 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     auto dynamic_bitset_base<B>::count_non_null() const noexcept -> size_type
     {
-        if(data() == nullptr)
+        if (data() == nullptr)
         {
             return m_size;
         }
@@ -474,7 +475,7 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr void dynamic_bitset_base<B>::zero_unused_bits()
     {
-        if(data() == nullptr)
+        if (data() == nullptr)
         {
             return;
         }

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/record_batch.hpp"
 #include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/record_batch.hpp"
 
 #include "doctest/doctest.h"
 
@@ -21,14 +21,19 @@ namespace sparrow
 {
     std::vector<array> make_array_list(const std::size_t data_size)
     {
-        primitive_array<std::uint16_t> pr0(std::ranges::iota_view{std::size_t(0), std::size_t(data_size)}
-                | std::views::transform([](auto i){
-                return static_cast<std::uint16_t>(i);})
-            );
+        primitive_array<std::uint16_t> pr0(
+            std::ranges::iota_view{std::size_t(0), std::size_t(data_size)}
+            | std::views::transform(
+                [](auto i)
+                {
+                    return static_cast<std::uint16_t>(i);
+                }
+            )
+        );
         primitive_array<std::int32_t> pr1(std::ranges::iota_view{std::int32_t(4), 4 + std::int32_t(data_size)});
         primitive_array<std::int32_t> pr2(std::ranges::iota_view{std::int32_t(2), 2 + std::int32_t(data_size)});
 
-        std::vector<array> arr_list = { array(std::move(pr0)), array(std::move(pr1)), array(std::move(pr2)) };
+        std::vector<array> arr_list = {array(std::move(pr0)), array(std::move(pr1)), array(std::move(pr2))};
         return arr_list;
     }
 
@@ -40,7 +45,6 @@ namespace sparrow
 
     record_batch make_record_batch(const std::size_t data_size)
     {
-
         return record_batch(make_name_list(), make_array_list(data_size));
     }
 
@@ -61,10 +65,7 @@ namespace sparrow
             {
                 auto col_list = make_array_list(col_size);
 
-                record_batch record = {
-                    { "first", col_list[0]},
-                    { "second", col_list[1]},
-                    { "third", col_list[2]} };
+                record_batch record = {{"first", col_list[0]}, {"second", col_list[1]}, {"third", col_list[2]}};
                 CHECK_EQ(record.nb_columns(), 3u);
                 CHECK_EQ(record.nb_rows(), 10u);
             }
@@ -111,7 +112,7 @@ namespace sparrow
         {
             auto record = make_record_batch(col_size);
             auto name_list = make_name_list();
-            for (const auto& name: name_list)
+            for (const auto& name : name_list)
             {
                 CHECK(record.contains_column(name));
             }
@@ -162,4 +163,3 @@ namespace sparrow
         }
     }
 }
-

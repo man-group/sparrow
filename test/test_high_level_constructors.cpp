@@ -13,13 +13,14 @@
 // limitations under the License.
 
 
-#include "sparrow/layout/primitive_array.hpp"
-#include "sparrow/layout/list_layout/list_array.hpp"
+#include <ranges>
+
 #include "sparrow/array.hpp"
+#include "sparrow/layout/list_layout/list_array.hpp"
+#include "sparrow/layout/primitive_array.hpp"
+
 #include "doctest/doctest.h"
 #include "test_utils.hpp"
-
-#include <ranges>
 
 namespace sparrow
 {
@@ -27,11 +28,17 @@ namespace sparrow
     TEST_SUITE("high_level_constructors")
     {
         TEST_CASE("list")
-        {   
+        {
             // a primite array
             std::size_t flat_size = 10;
-            primitive_array<std::uint16_t> primitive_arr(std::ranges::iota_view{std::size_t(0), std::size_t(10)} | std::views::transform([](auto i){
-                return static_cast<std::uint16_t>(i);})
+            primitive_array<std::uint16_t> primitive_arr(
+                std::ranges::iota_view{std::size_t(0), std::size_t(10)}
+                | std::views::transform(
+                    [](auto i)
+                    {
+                        return static_cast<std::uint16_t>(i);
+                    }
+                )
             );
 
             // wrap into an detyped array
@@ -49,34 +56,36 @@ namespace sparrow
             REQUIRE_EQ(size, n);
 
             auto flat_i = 0;
-            for(std::size_t i = 0; i < size; ++i)
+            for (std::size_t i = 0; i < size; ++i)
             {
                 auto list = list_arr[i].value();
                 CHECK_EQ(list.size(), list_size);
 
-                for(std::size_t j = 0; j < list.size(); ++j)
+                for (std::size_t j = 0; j < list.size(); ++j)
                 {
                     auto opt_val_variant = list[j];
-                    std::visit([&](auto&& opt_val){
-                        using nullable_type = std::decay_t<decltype(opt_val)>;
-                        using inner_type = std::decay_t<typename nullable_type::value_type>;
-                        if constexpr(std::is_same_v<inner_type, std::uint16_t>)
+                    std::visit(
+                        [&](auto&& opt_val)
                         {
-                            REQUIRE(opt_val.has_value());
-                            CHECK_EQ(opt_val.value(), static_cast<std::uint16_t>(flat_i));
-                        }
-                        else
-                        {
-                           REQUIRE(false);
-                        }
-                    }, opt_val_variant);
+                            using nullable_type = std::decay_t<decltype(opt_val)>;
+                            using inner_type = std::decay_t<typename nullable_type::value_type>;
+                            if constexpr (std::is_same_v<inner_type, std::uint16_t>)
+                            {
+                                REQUIRE(opt_val.has_value());
+                                CHECK_EQ(opt_val.value(), static_cast<std::uint16_t>(flat_i));
+                            }
+                            else
+                            {
+                                REQUIRE(false);
+                            }
+                        },
+                        opt_val_variant
+                    );
                     ++flat_i;
                 }
-
             }
         }
     }
-   
+
 
 }
-

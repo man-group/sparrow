@@ -4,9 +4,10 @@
  * The typed_array is created from the array_data and the data is accessed.
  */
 
-//#include <sparrow/array/array_data.hpp>
+// #include <sparrow/array/array_data.hpp>
 
-int main() {
+int main()
+{
     /////////////////////////////////////////////////
     // create array_data with 5 float32 elements
     // where the value at index 2 is missing

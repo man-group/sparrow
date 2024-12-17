@@ -11,11 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "sparrow/layout/variable_size_binary_view_array.hpp"
-#include "test_utils.hpp"
-
-#include <vector>
 #include <string>
+#include <vector>
+
+#include "sparrow/layout/variable_size_binary_view_array.hpp"
+
+#include "test_utils.hpp"
 
 using namespace std::literals;
 
@@ -28,9 +29,9 @@ namespace sparrow
             std::vector<std::string> words{
                 "short",
                 "longer",
-                "abcdefghijk",   // exactly 11
-                "abcdefghijkl",   // exactly 12
-                "123456789101112", // longer than 12,
+                "abcdefghijk",      // exactly 11
+                "abcdefghijkl",     // exactly 12
+                "123456789101112",  // longer than 12,
                 "hello world this is a long string"
             };
 
@@ -39,9 +40,9 @@ namespace sparrow
             string_view_array array(words, where_nulls);
 
 
-            for(std::size_t i = 0; i < words.size(); ++i)
+            for (std::size_t i = 0; i < words.size(); ++i)
             {
-                if(i == 1)
+                if (i == 1)
                 {
                     CHECK_FALSE(array[i].has_value());
                 }

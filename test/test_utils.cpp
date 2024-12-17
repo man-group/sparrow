@@ -2,4 +2,4 @@
 
 namespace sparrow
 {
-} // namespace sparrow  
+}  // namespace sparrow

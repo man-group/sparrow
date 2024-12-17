@@ -96,7 +96,8 @@ namespace sparrow
 
         /**
          * @returns the name mapped to the column at the given index.
-         * @param index The index of the column in the \ref record_batch. The index must be less than the number of columns.
+         * @param index The index of the column in the \ref record_batch. The index must be less than the
+         * number of columns.
          */
         SPARROW_API const name_type& get_column_name(size_type index) const;
 

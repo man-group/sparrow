@@ -28,7 +28,6 @@
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 
-
 namespace sparrow
 {
     template <class Layout, bool is_const>
@@ -167,8 +166,8 @@ namespace sparrow
     private:
 
         template <validity_bitmap_input R = validity_bitmap>
-        static auto
-        create_proxy(keys_buffer_type&& keys, array&& values, R&& bitmaps = validity_bitmap{}) -> arrow_proxy;
+        static auto create_proxy(keys_buffer_type&& keys, array&& values, R&& bitmaps = validity_bitmap{})
+            -> arrow_proxy;
 
         using keys_layout = primitive_array<IT>;
         using values_layout = cloning_ptr<array_wrapper>;

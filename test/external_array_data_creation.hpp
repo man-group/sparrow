@@ -24,7 +24,6 @@
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
 
-
 namespace sparrow::test
 {
     void release_external_arrow_schema(ArrowSchema* schema);

@@ -15,22 +15,28 @@
 #include <numeric>
 #include <ranges>
 
-#include "sparrow/types/data_type.hpp"
 #include "sparrow/buffer/buffer.hpp"
+#include "sparrow/types/data_type.hpp"
 
 #pragma once
 
 namespace sparrow
 {
-    template<layout_offset OT, std::ranges::sized_range R>
-    requires std::ranges::sized_range<std::ranges::range_value_t<R>>
+    template <layout_offset OT, std::ranges::sized_range R>
+        requires std::ranges::sized_range<std::ranges::range_value_t<R>>
     buffer<OT> make_offset_buffer(const R& range)
     {
         const size_t range_size = std::ranges::size(range);
         buffer<OT> offsets(range_size + 1, 0);
-        std::transform(range.cbegin(), range.cend(), offsets.begin() + 1, [](const auto& elem) {
-            return static_cast<OT>(elem.size());
-        });
+        std::transform(
+            range.cbegin(),
+            range.cend(),
+            offsets.begin() + 1,
+            [](const auto& elem)
+            {
+                return static_cast<OT>(elem.size());
+            }
+        );
         std::partial_sum(offsets.begin(), offsets.end(), offsets.begin());
         return offsets;
     }

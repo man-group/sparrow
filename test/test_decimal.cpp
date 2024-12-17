@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "doctest/doctest.h"
-
-#include <vector>
-#include <string>
 #include <cmath>
+#include <string>
 #include <utility>
+#include <vector>
 
-#include <sparrow/utils/large_int.hpp>
 #include <sparrow/utils/decimal.hpp>
+#include <sparrow/utils/large_int.hpp>
+
+#include "doctest/doctest.h"
 
 // ignore -Wdouble-promotion
 
 #ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdouble-promotion"
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wdouble-promotion"
 #endif
 
 
@@ -34,13 +34,14 @@ namespace sparrow
 {
 
     using testing_types = std::tuple<
-        int32_t
-        ,int64_t
-        #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
-        ,int128_t
-        ,int256_t
-        #endif
-    >;
+        int32_t,
+        int64_t
+#ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+        ,
+        int128_t,
+        int256_t
+#endif
+        >;
 
 
     TEST_SUITE("decimals")
@@ -56,18 +57,18 @@ namespace sparrow
                 decimal_type d;
                 auto storage = d.storage();
                 CHECK_EQ(static_cast<int32_t>(storage), 0);
-                
+
                 // float
-                auto as_float =  static_cast<float>(d);
+                auto as_float = static_cast<float>(d);
                 // cast to double:
                 CHECK_EQ(as_float, doctest::Approx(0.0));
 
                 // double
-                auto as_double =  static_cast<double>(d);
+                auto as_double = static_cast<double>(d);
                 CHECK_EQ(as_double, doctest::Approx(0.0));
 
                 // string
-                auto as_string =  std::string(d);
+                auto as_string = std::string(d);
                 CHECK_EQ(as_string, "0");
             }
 
@@ -76,17 +77,17 @@ namespace sparrow
                 decimal_type d(42, 0);
                 auto storage = d.storage();
                 CHECK_EQ(static_cast<int32_t>(storage), 42);
-                
+
                 // float
-                auto as_float =  static_cast<float>(d);
+                auto as_float = static_cast<float>(d);
                 CHECK_EQ(as_float, doctest::Approx(42.0));
 
                 // double
-                auto as_double =  static_cast<double>(d);
+                auto as_double = static_cast<double>(d);
                 CHECK_EQ(as_double, doctest::Approx(42.0));
 
                 // string
-                auto as_string =  std::string(d);
+                auto as_string = std::string(d);
                 CHECK_EQ(as_string, "42");
             }
 
@@ -97,17 +98,17 @@ namespace sparrow
                     decimal_type d(42, 1);
                     auto storage = d.storage();
                     CHECK_EQ(static_cast<int32_t>(storage), 42);
-                    
+
                     // float
-                    auto as_float =  static_cast<float>(d);
+                    auto as_float = static_cast<float>(d);
                     CHECK_EQ(as_float, doctest::Approx(4.2));
 
                     // double
-                    auto as_double =  static_cast<double>(d);
+                    auto as_double = static_cast<double>(d);
                     CHECK_EQ(as_double, doctest::Approx(4.20));
 
                     // string
-                    auto as_string =  std::string(d);
+                    auto as_string = std::string(d);
                     CHECK_EQ(as_string, "4.2");
                 }
                 SUBCASE("neg")
@@ -115,17 +116,17 @@ namespace sparrow
                     decimal_type d(-42, 1);
                     auto storage = d.storage();
                     CHECK_EQ(static_cast<int32_t>(storage), -42);
-                    
+
                     // float
-                    auto as_float =  static_cast<float>(d);
+                    auto as_float = static_cast<float>(d);
                     CHECK_EQ(as_float, doctest::Approx(-4.2));
 
                     // double
-                    auto as_double =  static_cast<double>(d);
+                    auto as_double = static_cast<double>(d);
                     CHECK_EQ(as_double, doctest::Approx(-4.20));
 
                     // string
-                    auto as_string =  std::string(d);
+                    auto as_string = std::string(d);
                     CHECK_EQ(as_string, "-4.2");
                 }
             }
@@ -136,17 +137,17 @@ namespace sparrow
                     decimal_type d(42, -1);
                     auto storage = d.storage();
                     CHECK_EQ(static_cast<int32_t>(storage), 42);
-                    
+
                     // float
-                    auto as_float =  static_cast<float>(d);
+                    auto as_float = static_cast<float>(d);
                     CHECK_EQ(as_float, doctest::Approx(420.0));
 
                     // double
-                    auto as_double =  static_cast<double>(d);
+                    auto as_double = static_cast<double>(d);
                     CHECK_EQ(as_double, doctest::Approx(420.0));
 
                     // string
-                    auto as_string =  std::string(d);
+                    auto as_string = std::string(d);
                     CHECK_EQ(as_string, "420");
                 }
                 SUBCASE("neg")
@@ -154,42 +155,48 @@ namespace sparrow
                     decimal_type d(-42, -1);
                     auto storage = d.storage();
                     CHECK_EQ(static_cast<int32_t>(storage), -42);
-                    
+
                     // float
-                    auto as_float =  static_cast<float>(d);
+                    auto as_float = static_cast<float>(d);
                     CHECK_EQ(as_float, doctest::Approx(-420.0));
 
                     // double
-                    auto as_double =  static_cast<double>(d);
+                    auto as_double = static_cast<double>(d);
                     CHECK_EQ(as_double, doctest::Approx(-420.0));
 
                     // string
-                    auto as_string =  std::string(d);
+                    auto as_string = std::string(d);
                     CHECK_EQ(as_string, "-420");
                 }
             }
 
             SUBCASE("generic")
             {
-                std::vector<int> values = {-123,-122, -111, -100, -99, 10, 11, 100, 101, 110, 111, 122, 123};
-                std::vector<int > scales    = {-3, -2, -1, 0, 1, 2, -4};
+                std::vector<int> values = {-123, -122, -111, -100, -99, 10, 11, 100, 101, 110, 111, 122, 123};
+                std::vector<int> scales = {-3, -2, -1, 0, 1, 2, -4};
 
                 // cross product
-                for(auto value : values)
+                for (auto value : values)
                 {
-                    for(auto scale : scales)
+                    for (auto scale : scales)
                     {
                         decimal_type d(value, scale);
                         auto storage = d.storage();
                         CHECK_EQ(static_cast<int32_t>(storage), value);
-                        
+
                         // float
-                        auto as_float =  static_cast<float>(d);
-                        CHECK_EQ(as_float, doctest::Approx(static_cast<double>(value) / static_cast<double>(std::pow(10, scale))));
+                        auto as_float = static_cast<float>(d);
+                        CHECK_EQ(
+                            as_float,
+                            doctest::Approx(static_cast<double>(value) / static_cast<double>(std::pow(10, scale)))
+                        );
 
                         // double
-                        auto as_double =  static_cast<double>(d);
-                        CHECK_EQ(as_double, doctest::Approx(static_cast<double>(value) / static_cast<double>(std::pow(10, scale))));
+                        auto as_double = static_cast<double>(d);
+                        CHECK_EQ(
+                            as_double,
+                            doctest::Approx(static_cast<double>(value) / static_cast<double>(std::pow(10, scale)))
+                        );
                     }
                 }
             }
@@ -215,7 +222,7 @@ namespace sparrow
                     {decimal_type(-1, 3), "-0.001"},
                     {decimal_type(-1, -1), "-10"},
                     {decimal_type(-1, -2), "-100"},
-                    {decimal_type(-1, -3), "-1000"}, 
+                    {decimal_type(-1, -3), "-1000"},
                     {decimal_type(123456789, 0), "123456789"},
                     {decimal_type(123456789, 1), "12345678.9"},
                     {decimal_type(123456789, 2), "1234567.89"},
@@ -260,18 +267,17 @@ namespace sparrow
                     {decimal_type(-123456789, 20), "-0.00000000000123456789"},
                 };
 
-                for(auto [d, expected] : data)
+                for (auto [d, expected] : data)
                 {
-                    auto as_string =  std::string(d);
+                    auto as_string = std::string(d);
                     CHECK_EQ(as_string, expected);
                 }
             }
-
         }
         TEST_CASE_TEMPLATE_APPLY(decimal_test_id, testing_types);
     }
 }
 
 #ifdef __GNUC__
-#pragma GCC diagnostic pop
+#    pragma GCC diagnostic pop
 #endif

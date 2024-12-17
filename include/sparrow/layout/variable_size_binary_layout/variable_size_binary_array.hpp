@@ -300,7 +300,8 @@ namespace sparrow
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     template <std::ranges::range SIZES_RANGE>
-    auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type
+    auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes)
+        -> offset_buffer_type
     {
         return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
         ));
@@ -376,19 +377,19 @@ namespace sparrow
     {
         // split into values and is_non_null ranges
         const auto values = range
-                      | std::views::transform(
-                          [](const auto& v)
-                          {
-                              return v.get();
-                          }
-                      );
+                            | std::views::transform(
+                                [](const auto& v)
+                                {
+                                    return v.get();
+                                }
+                            );
         const auto is_non_null = range
-                           | std::views::transform(
-                               [](const auto& v)
-                               {
-                                   return v.has_value();
-                               }
-                           );
+                                 | std::views::transform(
+                                     [](const auto& v)
+                                     {
+                                         return v.has_value();
+                                     }
+                                 );
         return self_type::create_proxy(values, is_non_null);
     }
 

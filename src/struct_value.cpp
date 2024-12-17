@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/layout/array_helper.hpp"
+#include "sparrow/layout/nested_value_types.hpp"
 
 namespace sparrow
 {
-    struct_value::struct_value(  const std::vector<child_ptr>& children, size_type index)
+    struct_value::struct_value(const std::vector<child_ptr>& children, size_type index)
         : p_children(&children)
         , m_index(index)
     {
