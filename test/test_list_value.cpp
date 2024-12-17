@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/list_layout/list_value.hpp"
+#include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/struct_layout/struct_value.hpp"
 
-#include "doctest/doctest.h"
-
 #include "../test/external_array_data_creation.hpp"
+#include "doctest/doctest.h"
 
 namespace sparrow
 {
@@ -48,10 +47,13 @@ namespace sparrow
             list_value l(&w, begin, end);
             for (std::size_t i = begin; i < end; ++i)
             {
-                CHECK_EQ(l[i].has_value(), ar[begin+i].has_value());
-                if (ar[begin+i].has_value())
+                CHECK_EQ(l[i].has_value(), ar[begin + i].has_value());
+                if (ar[begin + i].has_value())
                 {
-                    CHECK_EQ(std::get<primitive_array<scalar_value_type>::const_reference>(l[i]).value(), ar[begin+i].value());
+                    CHECK_EQ(
+                        std::get<primitive_array<scalar_value_type>::const_reference>(l[i]).value(),
+                        ar[begin + i].value()
+                    );
                 }
             }
         }

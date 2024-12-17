@@ -22,9 +22,9 @@
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
+#include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/crtp_base.hpp"
-#include "sparrow/layout/array_access.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 
@@ -217,8 +217,7 @@ namespace sparrow
         if (i >= size())
         {
             std::ostringstream oss117;
-            oss117 << "Index " << i << "is greater or equal to size of array ("
-                << size() << ")";
+            oss117 << "Index " << i << "is greater or equal to size of array (" << size() << ")";
             throw std::out_of_range(oss117.str());
         }
         return (*this)[i];
@@ -241,7 +240,7 @@ namespace sparrow
 
     /**
      * Returns a constant reference to the first element in the container.
-     * Calling `front` on an empty container causes undefined behavior. 
+     * Calling `front` on an empty container causes undefined behavior.
      */
     template <class D>
     auto array_crtp_base<D>::front() const -> const_reference
@@ -252,7 +251,7 @@ namespace sparrow
 
     /**
      * Returns a constant reference to the last element in the container.
-     * Calling `back` on an empty container causes undefined behavior. 
+     * Calling `back` on an empty container causes undefined behavior.
      */
     template <class D>
     auto array_crtp_base<D>::back() const -> const_reference
@@ -293,7 +292,7 @@ namespace sparrow
 
     /**
      * Returns a constant iterator to the element following the last
-     * element of the array. This method ensures that a constant iterator 
+     * element of the array. This method ensures that a constant iterator
      * is returned, even when called on a non-const array.
      */
     template <class D>
@@ -323,10 +322,11 @@ namespace sparrow
     {
         return crend();
     }
+
     /**
      * Returns a constant reverse iterator to the first element of the
      * reversed array. It corresponds to the last element of the non-
-     * reversed array. This method ensures that a constant reverse 
+     * reversed array. This method ensures that a constant reverse
      * iterator is returned, even when called on a non-const array.
      */
     template <class D>
@@ -347,7 +347,7 @@ namespace sparrow
     {
         return const_reverse_iterator(cbegin());
     }
-    
+
     /**
      * Returns the validity bitmap of the array (i.e. the "has_value" part of the
      * nullable elements) as a constant range.

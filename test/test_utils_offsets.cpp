@@ -14,8 +14,9 @@
 
 #include <array>
 
-#include "doctest/doctest.h"
 #include "sparrow/utils/offsets.hpp"
+
+#include "doctest/doctest.h"
 
 namespace sparrow
 {

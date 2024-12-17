@@ -479,26 +479,27 @@ namespace sparrow::mpl
     template <typename T, typename Y, template <typename> typename Qualifier>
     concept T_matches_qualifier_if_Y_is = Qualifier<T>::value || !Qualifier<Y>::value;
 
-
     // helper class to exclude copy and move constructors beeing routed
     // to a constructor with variadic arguments / perfect forwarding
-    template<class CLS, class ... ARGS>
+    template <class CLS, class... ARGS>
     struct excludes_copy_and_move_ctor
-    {   
-       constexpr static bool value = true;
-    };
-    template<class CLS>
-    struct excludes_copy_and_move_ctor<CLS>
     {
-        constexpr static bool value = true;  
-    };
-    template<class CLS, class T>
-    struct excludes_copy_and_move_ctor<CLS, T>
-    {
-        constexpr static bool value = !std::is_same_v<CLS, std::remove_cvref_t<T>>;
+        static constexpr bool value = true;
     };
 
-    template<class CLS, class ... ARGS>
+    template <class CLS>
+    struct excludes_copy_and_move_ctor<CLS>
+    {
+        static constexpr bool value = true;
+    };
+
+    template <class CLS, class T>
+    struct excludes_copy_and_move_ctor<CLS, T>
+    {
+        static constexpr bool value = !std::is_same_v<CLS, std::remove_cvref_t<T>>;
+    };
+
+    template <class CLS, class... ARGS>
     constexpr bool excludes_copy_and_move_ctor_v = excludes_copy_and_move_ctor<CLS, ARGS...>::value;
 
     /**
@@ -513,12 +514,12 @@ namespace sparrow::mpl
      */
     template <typename I, typename T>
     concept iterator_of_type = std::input_iterator<I>
-    
+
                                && std::same_as<typename std::iterator_traits<I>::value_type, T>;
 
 
-    // todo...make smth better based on sizeof and is pod 
-    template<class T>
+    // todo...make smth better based on sizeof and is pod
+    template <class T>
     concept char_like = std::same_as<T, char> || std::same_as<T, std::byte> || std::same_as<T, std::uint8_t>;
 
 }

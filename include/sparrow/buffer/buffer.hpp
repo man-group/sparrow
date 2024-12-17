@@ -736,10 +736,10 @@ namespace sparrow
         }
     }
 
-    template<class T>
+    template <class T>
     constexpr void buffer<T>::reserve_with_growth_factor(size_type new_cap)
     {
-        if(new_cap > capacity())
+        if (new_cap > capacity())
         {
             reserve(new_cap * SPARROW_BUFFER_GROWTH_FACTOR);
         }
@@ -785,7 +785,7 @@ namespace sparrow
         const difference_type offset = std::distance(cbegin(), pos);
         if (count != 0)
         {
-            reserve_with_growth_factor( size() + count);
+            reserve_with_growth_factor(size() + count);
             const iterator it = std::next(begin(), offset);
             std::move_backward(it, end(), std::next(end(), static_cast<difference_type>(count)));
             std::fill_n(it, count, value);

@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "sparrow/utils/ranges.hpp"
-#include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/buffer/u8_buffer.hpp"
+#include "sparrow/utils/functor_index_iterator.hpp"
+#include "sparrow/utils/ranges.hpp"
 
 namespace sparrow::detail
 {
@@ -24,7 +24,7 @@ namespace sparrow::detail
     //
     // This is usefull to create a iterator over the values of a layout.
     // This functor will be passed to the functor_index_iterator.
-    template<class LAYOUT_TYPE, class VALUE_TYPE>
+    template <class LAYOUT_TYPE, class VALUE_TYPE>
     class layout_value_functor
     {
     public:
@@ -47,12 +47,11 @@ namespace sparrow::detail
         layout_type* p_layout;
     };
 
-
     // Functor to get the optional-value of the layout at index i.
     //
     // This is usefull to create a iterator over the nullable-values of a layout.
     // This functor will be passed to the functor_index_iterator.
-    template<class LAYOUT_TYPE, class VALUE_TYPE>
+    template <class LAYOUT_TYPE, class VALUE_TYPE>
     class layout_bracket_functor
     {
     public:
@@ -75,16 +74,15 @@ namespace sparrow::detail
         layout_type* p_layout;
     };
 
-
-    template<layout_offset OFFSET_TYPE, std::ranges::range SIZES_RANGE>
-    requires(std::unsigned_integral<std::ranges::range_value_t<SIZES_RANGE>>)
-    sparrow::u8_buffer<OFFSET_TYPE> offset_buffer_from_sizes(SIZES_RANGE && sizes)
+    template <layout_offset OFFSET_TYPE, std::ranges::range SIZES_RANGE>
+        requires(std::unsigned_integral<std::ranges::range_value_t<SIZES_RANGE>>)
+    sparrow::u8_buffer<OFFSET_TYPE> offset_buffer_from_sizes(SIZES_RANGE&& sizes)
     {
-        sparrow::u8_buffer<OFFSET_TYPE> buffer( range_size(sizes) + 1);
+        sparrow::u8_buffer<OFFSET_TYPE> buffer(range_size(sizes) + 1);
 
         OFFSET_TYPE offset = 0;
         auto it = buffer.begin();
-        for(auto size : sizes)
+        for (auto size : sizes)
         {
             *it = offset;
             offset += static_cast<OFFSET_TYPE>(size);
@@ -94,4 +92,4 @@ namespace sparrow::detail
         return buffer;
     }
 
-} // namespace sparrow
+}  // namespace sparrow

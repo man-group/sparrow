@@ -37,7 +37,7 @@ namespace sparrow
         const_reference operator[](size_type i) const;
 
     private:
-    
+
         const std::vector<child_ptr>* p_children = nullptr;
         size_type m_index = 0u;
     };
@@ -45,4 +45,3 @@ namespace sparrow
     SPARROW_API
     bool operator==(const struct_value& lhs, const struct_value& rhs);
 }
-

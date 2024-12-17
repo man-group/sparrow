@@ -55,7 +55,6 @@ namespace sparrow
 
         BufferType m_buffers;
         std::vector<std::uint8_t*> m_buffers_pointers;
-
     };
 
     constexpr arrow_array_private_data::arrow_array_private_data(BufferType buffers, std::size_t children_size)

@@ -17,11 +17,11 @@
 #include <cstddef>
 #include <ranges>
 
+#include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/layout/array_access.hpp"
 
 namespace sparrow
 {

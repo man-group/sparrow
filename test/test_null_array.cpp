@@ -16,9 +16,8 @@
 
 #include "sparrow/layout/null_array.hpp"
 
-#include "doctest/doctest.h"
-
 #include "../test/external_array_data_creation.hpp"
+#include "doctest/doctest.h"
 
 namespace sparrow
 {
@@ -118,4 +117,3 @@ namespace sparrow
         }
     }
 }
-

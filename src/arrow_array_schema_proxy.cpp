@@ -678,14 +678,13 @@ namespace sparrow
 
     void arrow_proxy::update_null_count()
     {
-        if(has_bitmap(data_type()))
+        if (has_bitmap(data_type()))
         {
             const auto& validity_buffer = buffers().front();
             const dynamic_bitset_view<const std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
             const auto null_count = bitmap.null_count();
             set_null_count(static_cast<int64_t>(null_count));
         }
-        
     }
 
     bool arrow_proxy::is_arrow_array_valid() const

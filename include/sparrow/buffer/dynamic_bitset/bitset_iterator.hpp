@@ -14,9 +14,9 @@
 
 #pragma once
 
+#include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
-#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
@@ -94,7 +94,7 @@ namespace sparrow
     {
         if constexpr (is_const)
         {
-            if(p_bitset->data() == nullptr)
+            if (p_bitset->data() == nullptr)
             {
                 return true;
             }
@@ -182,8 +182,8 @@ namespace sparrow
     }
 
     template <class B, bool is_const>
-    constexpr auto
-    bitset_iterator<B, is_const>::distance_to(const self_type& rhs) const noexcept -> difference_type
+    constexpr auto bitset_iterator<B, is_const>::distance_to(const self_type& rhs) const noexcept
+        -> difference_type
     {
         if (p_block == rhs.p_block)
         {

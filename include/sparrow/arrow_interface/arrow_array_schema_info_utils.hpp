@@ -31,7 +31,7 @@ namespace sparrow
         return true;
         /* THE CODE USED TO MAKES WRONG ASSUMPTIONS AND NEEDS TO BE REFACTORED IN A SEPERATE PR*/
     }
-    
+
     constexpr bool has_bitmap(data_type dt)
     {
         switch (dt)

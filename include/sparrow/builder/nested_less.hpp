@@ -19,29 +19,30 @@
 
 #include <sparrow/builder/builder_utils.hpp>
 #include <sparrow/utils/ranges.hpp>
+
 namespace sparrow
 {
 
-    namespace detail{
+    namespace detail
+    {
 
 
         // nested eq / nested hash
-        template<class T>
+        template <class T>
         struct nested_less;
 
-
         // scalars
-        template<class T>
-        requires std::is_scalar_v<T>
+        template <class T>
+            requires std::is_scalar_v<T>
         struct nested_less<T>
         {
             bool operator()(const T& a, const T& b) const
             {
                 return a < b;
             }
-        };  
+        };
 
-        template<is_express_layout_desire T>
+        template <is_express_layout_desire T>
         struct nested_less<T>
         {
             bool operator()(const T& a, const T& b) const
@@ -51,8 +52,8 @@ namespace sparrow
         };
 
         // nullables
-        template<class T>
-        requires is_nullable_like<T>
+        template <class T>
+            requires is_nullable_like<T>
         struct nested_less<T>
         {
             bool operator()(const T& a, const T& b) const
@@ -73,56 +74,59 @@ namespace sparrow
                 {
                     return false;
                 }
-                else{
-                // both are not null
+                else
+                {
+                    // both are not null
                     return nested_less<typename T::value_type>{}(a.value(), b.value());
                 }
             }
         };
 
-        // tuple like      
-        template<class T>
-        requires tuple_like<T>
+        // tuple like
+        template <class T>
+            requires tuple_like<T>
         struct nested_less<T>
         {
             bool operator()(const T& a, const T& b) const
             {
                 constexpr std::size_t N = std::tuple_size_v<T>;
                 bool is_less = false;
-                exitable_for_each_index<N>([&](auto i)
-                {
-                    constexpr std::size_t index = decltype(i)::value;
-                    using tuple_element_type = std::decay_t<std::tuple_element_t<decltype(i)::value, T>>;
-                
-                    const auto& a_val = std::get<index>(a);
-                    const auto& b_val = std::get<index>(b);
+                exitable_for_each_index<N>(
+                    [&](auto i)
+                    {
+                        constexpr std::size_t index = decltype(i)::value;
+                        using tuple_element_type = std::decay_t<std::tuple_element_t<decltype(i)::value, T>>;
 
-                    // a < b
-                    if(nested_less<tuple_element_type>{}(a_val, b_val))
-                    {
-                        is_less = true; 
-                        return false;   // break
+                        const auto& a_val = std::get<index>(a);
+                        const auto& b_val = std::get<index>(b);
+
+                        // a < b
+                        if (nested_less<tuple_element_type>{}(a_val, b_val))
+                        {
+                            is_less = true;
+                            return false;  // break
+                        }
+                        // a >= b
+                        else if (nested_less<tuple_element_type>{}(b_val, a_val))
+                        {
+                            is_less = false;
+                            return false;  // break
+                        }
+                        // a == b
+                        else
+                        {
+                            is_less = false;
+                            return true;  // continue
+                        }
                     }
-                    // a >= b
-                    else if(nested_less<tuple_element_type>{}(b_val, a_val))
-                    {
-                        is_less = false;
-                        return false;   // break
-                    }
-                    // a == b
-                    else
-                    {
-                        is_less = false;
-                        return true;    // continue
-                    }
-                });
+                );
                 return is_less;
             }
         };
 
         // ranges (and not tuple like)
-        template<class T>
-        requires(std::ranges::input_range<T> && !tuple_like<T>)
+        template <class T>
+            requires(std::ranges::input_range<T> && !tuple_like<T>)
         struct nested_less<T>
         {
             bool operator()(const T& a, const T& b) const
@@ -133,8 +137,8 @@ namespace sparrow
         };
 
         // variants
-        template<class T>
-        requires variant_like<T>
+        template <class T>
+            requires variant_like<T>
         struct nested_less<T>
         {
             bool operator()(const T& a, const T& b) const
@@ -143,19 +147,19 @@ namespace sparrow
                 {
                     return a.index() < b.index();
                 }
-                return std::visit([&](const auto& a_val)
-                {
-                    using value_type = std::decay_t<decltype(a_val)>; 
-                    const auto & b_val = std::get<value_type>(b);
-                    return nested_less<value_type>{}(a_val, b_val);
-                }, a);
+                return std::visit(
+                    [&](const auto& a_val)
+                    {
+                        using value_type = std::decay_t<decltype(a_val)>;
+                        const auto& b_val = std::get<value_type>(b);
+                        return nested_less<value_type>{}(a_val, b_val);
+                    },
+                    a
+                );
             }
         };
 
-    } // namespace detail
+    }  // namespace detail
 
 
-
-
-
-} // namespace sparrow
+}  // namespace sparrow

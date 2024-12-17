@@ -18,18 +18,18 @@
 
 namespace sparrow::detail
 {
-    
+
     class array_access
     {
     public:
 
-        template<class ARRAY>
-        static const sparrow::arrow_proxy& get_arrow_proxy(const ARRAY& array) 
+        template <class ARRAY>
+        static const sparrow::arrow_proxy& get_arrow_proxy(const ARRAY& array)
         {
             return array.get_arrow_proxy();
         }
 
-        template<class ARRAY>
+        template <class ARRAY>
         static sparrow::arrow_proxy& get_arrow_proxy(ARRAY& array)
         {
             return array.get_arrow_proxy();

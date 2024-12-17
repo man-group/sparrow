@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "sparrow/array_api.hpp"
 #include "sparrow/array_factory.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
@@ -24,7 +25,6 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/array_api.hpp"
 
 namespace sparrow
 {
@@ -75,12 +75,12 @@ namespace sparrow
 
         explicit struct_array(arrow_proxy proxy);
 
-
-        template <class ... Args>
-        requires(mpl::excludes_copy_and_move_ctor_v<struct_array, Args...>)
-        explicit struct_array(Args&& ... args)
-            : struct_array(create_proxy(std::forward<Args>(args) ...))
-        {}
+        template <class... Args>
+            requires(mpl::excludes_copy_and_move_ctor_v<struct_array, Args...>)
+        explicit struct_array(Args&&... args)
+            : struct_array(create_proxy(std::forward<Args>(args)...))
+        {
+        }
 
         struct_array(const struct_array&);
         struct_array& operator=(const struct_array&);
@@ -94,10 +94,8 @@ namespace sparrow
     private:
 
         template <validity_bitmap_input VB = validity_bitmap>
-        static auto create_proxy(
-            std::vector<array> && children,
-            VB && bitmaps = validity_bitmap{}
-        ) -> arrow_proxy;
+        static auto create_proxy(std::vector<array>&& children, VB&& bitmaps = validity_bitmap{})
+            -> arrow_proxy;
 
         using children_type = std::vector<cloning_ptr<array_wrapper>>;
 
@@ -144,20 +142,17 @@ namespace sparrow
     }
 
     template <validity_bitmap_input VB>
-    auto struct_array::create_proxy(
-        std::vector<array> && children,
-        VB && validity_input
-    ) -> arrow_proxy
+    auto struct_array::create_proxy(std::vector<array>&& children, VB&& validity_input) -> arrow_proxy
     {
         const auto n_children = children.size();
         ArrowSchema** child_schemas = new ArrowSchema*[n_children];
         ArrowArray** child_arrays = new ArrowArray*[n_children];
 
         const auto size = children[0].size();
-        
-        for(std::size_t i=0; i<n_children; ++i)
+
+        for (std::size_t i = 0; i < n_children; ++i)
         {
-            auto & child = children[i];
+            auto& child = children[i];
             SPARROW_ASSERT_TRUE(child.size() == size);
             auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(child));
             child_arrays[i] = new ArrowArray(std::move(flat_arr));
@@ -166,29 +161,27 @@ namespace sparrow
 
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
         const auto null_count = vbitmap.null_count();
-        
+
         ArrowSchema schema = make_arrow_schema(
-            std::string("+s"), // format
-            std::nullopt, // name
-            std::nullopt, // metadata
-            std::nullopt, // flags,
+            std::string("+s"),  // format
+            std::nullopt,       // name
+            std::nullopt,       // metadata
+            std::nullopt,       // flags,
             static_cast<int64_t>(n_children),
-            child_schemas, // children
-            nullptr // dictionary
+            child_schemas,  // children
+            nullptr         // dictionary
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(vbitmap).extract_storage()
-        };
+        std::vector<buffer<std::uint8_t>> arr_buffs = {std::move(vbitmap).extract_storage()};
 
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size), // length
+            static_cast<std::int64_t>(size),  // length
             static_cast<std::int64_t>(null_count),
-            0, // offset
+            0,  // offset
             std::move(arr_buffs),
-            static_cast<std::size_t>(n_children), // n_children
-            child_arrays, // children
-            nullptr // dictionary
+            static_cast<std::size_t>(n_children),  // n_children
+            child_arrays,                          // children
+            nullptr                                // dictionary
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }

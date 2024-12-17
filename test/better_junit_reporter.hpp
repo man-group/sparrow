@@ -309,6 +309,8 @@ void JUnitReporter::log_message(const doctest::MessageData& mb)
     );
 }
 
-void JUnitReporter::test_case_skipped(const doctest::TestCaseData&) {}
+void JUnitReporter::test_case_skipped(const doctest::TestCaseData&)
+{
+}
 
 DOCTEST_REGISTER_REPORTER("better_junit", 0, JUnitReporter);

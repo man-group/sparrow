@@ -114,8 +114,8 @@ namespace sparrow
     }
 
     template <class Layout, iterator_types Iterator_types>
-    auto variable_size_binary_value_iterator<Layout, Iterator_types>::distance_to(const self_type& rhs
-    ) const -> difference_type
+    auto variable_size_binary_value_iterator<Layout, Iterator_types>::distance_to(const self_type& rhs) const
+        -> difference_type
     {
         return rhs.m_index - m_index;
     }

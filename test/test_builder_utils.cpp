@@ -12,105 +12,120 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/builder/builder_utils.hpp"
-#include "test_utils.hpp"
-
-#include <vector>
+#include <array>
 #include <tuple>
 #include <variant>
-#include <array>
+#include <vector>
+
+#include "sparrow/builder/builder_utils.hpp"
+
+#include "test_utils.hpp"
 
 namespace sparrow
-{   
+{
     class my_variant : public std::variant<int, double>
     {
     public:
+
         using std::variant<int, double>::variant;
     };
 }
 
-template<std::size_t I>
+template <std::size_t I>
 struct std::variant_alternative<I, sparrow::my_variant>
 {
     using type = std::variant_alternative_t<I, std::variant<int, double>>;
 };
 
-namespace sparrow{
+namespace sparrow
+{
 
     TEST_SUITE("builder-utils")
-    {   
+    {
         TEST_CASE("for_each_index")
         {
             SUBCASE("empty")
             {
                 // the return type of for_each_index indicates if the loop was run to completion
-                detail::for_each_index<0>([](auto i) 
-                {
-                    // should not be called
-                    CHECK_FALSE(decltype(i)::value, 0);
-                    CHECK(false);
-                    return true; // should not be called
-                });
+                detail::for_each_index<0>(
+                    [](auto i)
+                    {
+                        // should not be called
+                        CHECK_FALSE(decltype(i)::value, 0);
+                        CHECK(false);
+                        return true;  // should not be called
+                    }
+                );
             }
             SUBCASE("non-empty")
             {
                 int c = 0;
-                detail::for_each_index<3>([&](auto i)
-                {
-                    CHECK_EQ(decltype(i)::value, c);
-                    ++c;
-                    return true;
-                });
+                detail::for_each_index<3>(
+                    [&](auto i)
+                    {
+                        CHECK_EQ(decltype(i)::value, c);
+                        ++c;
+                        return true;
+                    }
+                );
                 CHECK_EQ(c, 3);
             }
         }
 
         TEST_CASE("exitable_for_each_index")
-        {   
+        {
             SUBCASE("empty")
             {
                 // the return type of exitable_for_each_index indicates if the loop was run to completion
-                CHECK(detail::exitable_for_each_index<0>([](auto  i)
-                {
-                    // should not be called
-                    CHECK_FALSE(decltype(i)::value, 0);
-                    CHECK(false);
-                    return true; // should not be called
-                }));
+                CHECK(detail::exitable_for_each_index<0>(
+                    [](auto i)
+                    {
+                        // should not be called
+                        CHECK_FALSE(decltype(i)::value, 0);
+                        CHECK(false);
+                        return true;  // should not be called
+                    }
+                ));
             }
             SUBCASE("exit right away")
             {
                 // the return type of exitable_for_each_index indicates if the loop was run to completion
-                CHECK_FALSE(detail::exitable_for_each_index<3>([](auto i)
-                {
-                    // exit right away
-                    CHECK(decltype(i)::value == 0);
-                    return false;
-                }));
+                CHECK_FALSE(detail::exitable_for_each_index<3>(
+                    [](auto i)
+                    {
+                        // exit right away
+                        CHECK(decltype(i)::value == 0);
+                        return false;
+                    }
+                ));
             }
-            
+
             SUBCASE("full")
             {
-                int c=0;
-                CHECK(detail::exitable_for_each_index<3>([&](auto i)
-                {
-                    // run to completion
-                    CHECK_EQ(decltype(i)::value, c);
-                    ++c;
-                    return true;
-                }));
+                int c = 0;
+                CHECK(detail::exitable_for_each_index<3>(
+                    [&](auto i)
+                    {
+                        // run to completion
+                        CHECK_EQ(decltype(i)::value, c);
+                        ++c;
+                        return true;
+                    }
+                ));
                 CHECK_EQ(c, 3);
             }
 
             SUBCASE("half")
             {
                 int c = 0;
-                CHECK_FALSE(detail::exitable_for_each_index<4>([&](auto i)
-                {
-                    CHECK_EQ(decltype(i)::value, c);
-                    ++c;
-                    return decltype(i)::value < 2;
-                }));
+                CHECK_FALSE(detail::exitable_for_each_index<4>(
+                    [&](auto i)
+                    {
+                        CHECK_EQ(decltype(i)::value, c);
+                        ++c;
+                        return decltype(i)::value < 2;
+                    }
+                ));
                 CHECK_EQ(c, 3);
             }
         }
@@ -134,7 +149,7 @@ namespace sparrow{
 
             // is tuple_like
             static_assert(detail::tuple_like<std::tuple<int>>);
-            static_assert(detail::tuple_like<std::tuple<int,int>>);
+            static_assert(detail::tuple_like<std::tuple<int, int>>);
             static_assert(detail::tuple_like<std::tuple<>>);
             static_assert(detail::tuple_like<std::pair<int, int>>);
             static_assert(detail::tuple_like<std::array<int, 3>>);
@@ -164,15 +179,19 @@ namespace sparrow{
             static_assert(std::is_same_v<detail::meldv_t<run_end_encode<int>>, int>);
             static_assert(std::is_same_v<detail::meldv_t<int>, int>);
             static_assert(std::is_same_v<detail::meldv_t<nullable<int>>, nullable<int>>);
-            static_assert(std::is_same_v<detail::meldv_t<nullable<run_end_encode<int>>> , nullable<run_end_encode<int>>>);
+            static_assert(std::is_same_v<detail::meldv_t<nullable<run_end_encode<int>>>, nullable<run_end_encode<int>>>);
 
             // layout_flag_t
             static_assert(std::is_same_v<detail::layout_flag_t<int>, detail::dont_enforce_layout>);
             static_assert(std::is_same_v<detail::layout_flag_t<run_end_encode<int>>, detail::enforce_run_end_encoded_layout>);
-            static_assert(std::is_same_v<detail::layout_flag_t<nullable<run_end_encode<int>>>, detail::enforce_run_end_encoded_layout>);
+            static_assert(std::is_same_v<
+                          detail::layout_flag_t<nullable<run_end_encode<int>>>,
+                          detail::enforce_run_end_encoded_layout>);
             static_assert(std::is_same_v<detail::layout_flag_t<dict_encode<int>>, detail::enforce_dict_encoded_layout>);
-            static_assert(std::is_same_v<detail::layout_flag_t<nullable<dict_encode<int>>>, detail::enforce_dict_encoded_layout>);
- 
+            static_assert(std::is_same_v<
+                          detail::layout_flag_t<nullable<dict_encode<int>>>,
+                          detail::enforce_dict_encoded_layout>);
+
             // look trough
             static_assert(std::is_same_v<detail::look_trough_t<std::vector<nullable<int>>>, std::vector<nullable<int>>>);
             static_assert(std::is_same_v<detail::look_trough_t<nullable<std::vector<int>>>, std::vector<int>>);
@@ -180,8 +199,7 @@ namespace sparrow{
             static_assert(std::is_same_v<detail::look_trough_t<nullable<nullable<int>>>, nullable<int>>);
             static_assert(std::is_same_v<detail::look_trough_t<dict_encode<std::vector<int>>>, std::vector<int>>);
             static_assert(std::is_same_v<detail::look_trough_t<dict_encode<nullable<int>>>, int>);
-
-        } 
+        }
         TEST_CASE("get_size_save")
         {
             CHECK_EQ(detail::get_size_save(std::vector<int>{1, 2, 3}), 3);
@@ -197,7 +215,7 @@ namespace sparrow{
             CHECK_EQ(detail::ensure_value(dict_encode<int>{1}), 1);
             CHECK_EQ(detail::ensure_value(run_end_encode<int>{1}), 1);
             CHECK_EQ(detail::ensure_value(nullable<dict_encode<int>>{dict_encode<int>{1}}), 1);
-        }       
+        }
         TEST_CASE("where-null")
         {
             SUBCASE("vector-of-nullables")
@@ -210,8 +228,8 @@ namespace sparrow{
             SUBCASE("vector-of-scalar")
             {
                 std::vector<int> v{1, 2, 3, 4};
-                std::array<std::size_t,0> res = detail::where_null(v);
-                CHECK_EQ(res.size(), 0); // pointless but uses the return value
+                std::array<std::size_t, 0> res = detail::where_null(v);
+                CHECK_EQ(res.size(), 0);  // pointless but uses the return value
             }
             SUBCASE("vector-of-nullabels-dict-encode")
             {
@@ -228,9 +246,9 @@ namespace sparrow{
             SUBCASE("vector-of-nullabels-dict-encode")
             {
                 std::vector<dict_encode<nullable<int>>> v{
-                    dict_encode<nullable<int>>{nullable<int>{int(1)}},   
-                    dict_encode<nullable<int>>{nullable<int>{}},   
-                    dict_encode<nullable<int>>{nullable<int>{int(2)}},   
+                    dict_encode<nullable<int>>{nullable<int>{int(1)}},
+                    dict_encode<nullable<int>>{nullable<int>{}},
+                    dict_encode<nullable<int>>{nullable<int>{int(2)}},
                     dict_encode<nullable<int>>{nullable<int>{int(3)}}
                 };
                 std::vector<std::size_t> res = detail::where_null(v);
@@ -240,4 +258,3 @@ namespace sparrow{
         }
     }
 }
-

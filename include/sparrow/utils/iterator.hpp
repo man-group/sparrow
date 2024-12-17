@@ -21,7 +21,7 @@
 #include <utility>
 
 namespace sparrow
-{   
+{
 
     namespace detail
     {

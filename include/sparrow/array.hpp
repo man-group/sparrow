@@ -20,7 +20,7 @@
 namespace sparrow
 {
     template <layout A>
-    requires (not std::is_lvalue_reference_v<A>)
+        requires(not std::is_lvalue_reference_v<A>)
     array::array(A&& a)
         : p_array(new array_wrapper_impl<A>(std::move(a)))
     {

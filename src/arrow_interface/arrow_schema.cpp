@@ -16,7 +16,6 @@
 
 #include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
 
-
 namespace sparrow
 {
     void release_arrow_schema(ArrowSchema* schema)

@@ -46,7 +46,8 @@ namespace sparrow
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
         buffer_view() = default;
-        explicit buffer_view(buffer<T>& buffer) requires (!std::is_const_v<T>);
+        explicit buffer_view(buffer<T>& buffer)
+            requires(!std::is_const_v<T>);
         template <class U>
             requires std::same_as<std::remove_const_t<T>, U>
         explicit buffer_view(const buffer<U>& buffer);
@@ -114,7 +115,8 @@ namespace sparrow
      ******************************/
 
     template <class T>
-    buffer_view<T>::buffer_view(buffer<T>& buffer) requires (!std::is_const_v<T>)
+    buffer_view<T>::buffer_view(buffer<T>& buffer)
+        requires(!std::is_const_v<T>)
         : p_data(buffer.data())
         , m_size(buffer.size())
     {
@@ -339,7 +341,7 @@ namespace sparrow
     template <class T>
     buffer_view<T>::operator buffer<std::remove_const_t<T>>() const
     {
-        return { p_data, p_data + m_size };
+        return {p_data, p_data + m_size};
     }
 
     template <class T>
