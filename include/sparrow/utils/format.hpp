@@ -158,7 +158,7 @@ namespace sparrow
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wsign-conversion"
 #endif
-            widths[i] = std::max(widths[i], static_cast<decltype(std::ranges::size(headers[i]) std::ranges::size(headers[i]));
+            widths[i] = std::max(widths[i], std::ranges::size(headers[i]));
 #if defined(__GNUC__)
 #    pragma GCC diagnostic pop
 #endif

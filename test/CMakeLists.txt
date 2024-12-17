@@ -228,3 +228,4 @@ add_custom_target(run_tests_with_junit_report
 )
 
 set_target_properties(run_tests_with_junit_report PROPERTIES FOLDER "Tests utilities")
+    

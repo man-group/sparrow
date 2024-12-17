@@ -764,8 +764,14 @@ namespace std
                         return "Sparse union";
                     case RUN_ENCODED:
                         return "Run encoded";
-                    case DECIMAL:
-                        return "Decimal";
+                    case DECIMAL32:
+                        return "Decimal32";
+                    case DECIMAL64:
+                        return "Decimal64";
+                    case DECIMAL128:
+                        return "Decimal128";
+                    case DECIMAL256:
+                        return "Decimal256";
                     case FIXED_WIDTH_BINARY:
                         return "Fixed width binary";
                     case STRING_VIEW:
