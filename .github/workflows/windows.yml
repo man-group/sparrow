@@ -182,7 +182,10 @@ jobs:
         $SPARROW_ADDITIONAL_OPTIONS \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
+        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL \
+        ${{env.CMAKE_SANITIZER}}
+      env:
+        CMAKE_SANITIZER: ${{ (matrix.config.name == 'Debug' && matrix.sys.compiler == 'msvc') && '-DUSE_SANITIZER=address' || '' }}
 
     - name: Build library
       working-directory: build
