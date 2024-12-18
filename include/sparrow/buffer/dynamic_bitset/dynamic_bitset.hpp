@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_base.hpp"
 #include "sparrow/utils/ranges.hpp"
@@ -173,7 +175,8 @@ namespace sparrow
                                          && std::same_as<std::ranges::range_value_t<T>, bool>)
                                      || (std::ranges::input_range<T>
                                          && std::unsigned_integral<std::ranges::range_value_t<T>>) )
-                                    && (!std::same_as<T, std::string> && !std::same_as<T, std::string_view>
+                                    && (!std::same_as<std::remove_cvref_t<T>, std::string>
+                                        && !std::same_as<std::remove_cvref_t<T>, std::string_view>
                                         && !std::same_as<T, const char*>);
 
     template <validity_bitmap_input R>
