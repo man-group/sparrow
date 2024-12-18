@@ -168,7 +168,7 @@ target_link_libraries(${test_target}
 
 set(test_target_catch2 "test_sparrow_lib_catch2")
 
-add_executable(${test_target_catch2} test_algorithm.cpp)
+add_executable(${test_target_catch2})
 target_link_libraries(${test_target_catch2}
     PRIVATE
         sparrow
