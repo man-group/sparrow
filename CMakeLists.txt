@@ -47,6 +47,9 @@ if(CMAKE_CXX_COMPILER_LAUNCHER)
     message(STATUS "Using C++ compiler launcher: ${CMAKE_CXX_COMPILER_LAUNCHER}")
 endif()
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+message(DEBUG "CMake module path: ${CMAKE_MODULE_PATH}")
+
 # Versionning
 # ===========
 
@@ -89,6 +92,12 @@ OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
 OPTION(USE_LARGE_INT_PLACEHOLDERS "use types without api for big integers" OFF)
 OPTION(SPARROW_TARGET_32BIT "Test 32bit support" OFF)
 
+OPTION(ENABLE_COVERAGE "Enable test coverage" OFF)
+
+if(ENABLE_COVERAGE)
+    include(code_coverage)
+endif()
+
 include(CheckCXXSymbolExists)
 
 if(cxx_std_20 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
@@ -112,13 +121,13 @@ OPTION(ACTIVATE_LINTER "Create targets to run clang-format" OFF)
 cmake_dependent_option(ACTIVATE_LINTER_DURING_COMPILATION "Run linter during the compilation" ON "ACTIVATE_LINTER" OFF)
 
 if(ACTIVATE_LINTER)
-    include(cmake/clang-format.cmake)
-    include(cmake/clang-tidy.cmake)
+    include(clang-format)
+    include(clang-tidy)
 endif()
 
 # Sanitizers
 # ==========
-include(cmake/sanitizers.cmake)
+include(sanitizers)
 
 # Dependencies
 # ============
@@ -271,6 +280,9 @@ target_include_directories(sparrow PUBLIC
 set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(sparrow PUBLIC cxx_std_20)
 target_link_libraries(sparrow PUBLIC ${SPARROW_INTERFACE_DEPENDENCIES})
+if(ENABLE_COVERAGE)
+    enable_coverage(sparrow)
+endif()
 
 if (BUILD_TESTS)
     enable_testing()

@@ -1,0 +1,9 @@
+title: Sparrow
+description: 
+files:
+  - "include/*.hpp"
+  - "include/**/*.hpp"
+  - "include/*.h"
+  - "include/**/*.h"
+  - "src/*.cpp"
+  - "src/**/*.cpp"

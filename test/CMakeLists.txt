@@ -268,6 +268,11 @@ target_compile_options(${test_target}
 target_link_options(${test_target}
     PRIVATE
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
+
+if(ENABLE_COVERAGE)
+    enable_coverage(${test_target})
+endif()
+
 # We do not use non-standard C++
 set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(${test_target} PRIVATE cxx_std_20)
