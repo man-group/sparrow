@@ -44,6 +44,12 @@ jobs:
         build-system:
         - {name: "Visual Studio 17 2022"}
         - {name: "Ninja"}
+      env:
+        COMPILER: ${{ matrix.toolchain.compiler }}
+        BUILD_SYSTEM: ${{ matrix.build-system.name }}
+        CONFIG: ${{ matrix.config.name }}
+        TARGET_ARCH: ${{ matrix.target-arch.name }}
+        DATE_POLYFILL: ${{ matrix.toolchain.date-polyfill }}
 
     steps:
     - name: Setup MSVC (only for non-VS buildsystems)
@@ -202,14 +208,17 @@ jobs:
       run: |
         cmake --build . --config Debug --target generate_cobertura
 
-    - name: Produce the coverage report
+    - name: Upload coverage to Codecov
       if: matrix.config.name == 'Debug'
-      uses: dennisjensen95/coverage-scope@v0.5.0
+      uses: codecov/codecov-action@v5
       with:
-        coverage-filepath: 'build/coverage_reports/cobertura.xml'
-        branch: main
-        threshold-total: 50
-        threshold-change: 50
+        directory: ./build/coverage_reports/
+        fail_ci_if_error: true
+        files: ./cobertura.xml
+        env_vars: COMPILER,BUILD_SYSTEM,CONFIG,TARGET_ARCH,DATE_POLYFILL
+        flags: unittests
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
 
     - name: Run all examples
       working-directory: build
