@@ -118,9 +118,8 @@ jobs:
       run: |
         echo "SPARROW_DEPS_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
         echo "SPARROW_INSTALL_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
-        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=OFF " >> $GITHUB_ENV
+        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL" >> $GITHUB_ENV
  
-
     - name: Set dependencies install prefix dir for 32bit
       if: matrix.target-arch.name == 'Win32'
       run: |
@@ -167,7 +166,6 @@ jobs:
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
         -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
-        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL \
         $TEST_COVERAGE_ACTIVATION
 
     - name: Build library
