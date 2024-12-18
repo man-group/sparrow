@@ -31,12 +31,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Checkout nanoarrow
-        uses: actions/checkout@v4
-        with:
-          repository: apache/arrow-nanoarrow
-          path: dependencies/tests/nanoarrow
-
       - name: Get current date
         id: date
         uses: Kaven-Universe/github-action-current-date-time@v1
@@ -104,20 +98,7 @@ jobs:
             export CC
             CXX=g++
             export CXX
-            ROOT_DIR="${PWD}"
-            export ROOT_DIR
-            echo "Configure nanoarrow"
-            cd dependencies/tests/nanoarrow
-            cmake -G Ninja -B ./build \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-              -DCMAKE_BUILD_TYPE:STRING=Release \
-              -DCMAKE_COMPILE_WARNING_AS_ERROR=FALSE \
-              -DCMAKE_C_STANDARD=17
-            echo "Build nanoarrow"
-            cmake --build ./build --target install
             echo "Configuring sparrow"
-            cd $ROOT_DIR
             cmake -G Ninja -Bbuild \
               -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
               -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} \
@@ -125,7 +106,8 @@ jobs:
               -DBUILD_EXAMPLES=ON \
               -DUSE_LARGE_INT_PLACEHOLDERS=ON \
               -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-              -DCMAKE_C_COMPILER_LAUNCHER=ccache
+              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+              -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
             cd build
             echo "Building sparrow library"
             cmake --build . --config ${{matrix.config.name}} --target sparrow
@@ -136,11 +118,13 @@ jobs:
             echo "Running sparrow tests"
             cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
             ccache --show-stats
-            
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
             name: test_sparrow_lib_report_Linux_${{matrix.target.distro}}_${{matrix.target.arch}}_${{matrix.config.name}}_date-polyfill_${{matrix.target.date-polyfill}}
-            path: '**/test_sparrow_lib_report.xml'
+            path: |
+              build/test/test_sparrow_lib_report_doctest.xml
+              build/test/test_sparrow_lib_report_catch2.xml
+            if-no-files-found: error

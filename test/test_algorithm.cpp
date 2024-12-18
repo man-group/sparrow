@@ -17,31 +17,26 @@
 
 #include "sparrow/utils/algorithm.hpp"
 
-#include "doctest/doctest.h"
+#include <catch2/catch_all.hpp>  // Include Catch2 header
 
-TEST_SUITE("algorithm")
-{
-    TEST_CASE("lexicographical_compare_three_way")
-    {
-        const std::vector<int> v1 = {1, 2, 3};
-        std::vector<int> v2 = {1, 2, 3};
-        CHECK_EQ(sparrow::lexicographical_compare_three_way(v1, v2), std::strong_ordering::equal);
+TEST_CASE("lexicographical_compare_three_way", "[algorithm]") {
+    const std::vector<int> v1 = {1, 2, 3};
+    std::vector<int> v2 = {1, 2, 3};
+    CHECK(sparrow::lexicographical_compare_three_way(v1, v2) == std::strong_ordering::equal);
 
-        v2 = {1, 2, 4};
-        CHECK_EQ(sparrow::lexicographical_compare_three_way(v1, v2), std::strong_ordering::less);
+    v2 = {1, 2, 4};
+    CHECK(sparrow::lexicographical_compare_three_way(v1, v2) == std::strong_ordering::less);
 
-        v2 = {1, 2, 2};
-        CHECK_EQ(sparrow::lexicographical_compare_three_way(v1, v2), std::strong_ordering::greater);
-    }
+    v2 = {1, 2, 2};
+    CHECK(sparrow::lexicographical_compare_three_way(v1, v2) == std::strong_ordering::greater);
+}
 
-    TEST_CASE("lexicographical_compare_three_way with empty ranges")
-    {
-        const std::vector<int> v1 = {1, 2, 3};
-        const std::vector<int> v2 = {};
-        CHECK_EQ(sparrow::lexicographical_compare_three_way(v1, v2), std::strong_ordering::greater);
-        CHECK_EQ(sparrow::lexicographical_compare_three_way(v2, v1), std::strong_ordering::less);
+TEST_CASE("lexicographical_compare_three_way with empty ranges", "[algorithm]") {
+    const std::vector<int> v1 = {1, 2, 3};
+    const std::vector<int> v2 = {};
+    CHECK(sparrow::lexicographical_compare_three_way(v1, v2) == std::strong_ordering::greater);
+    CHECK(sparrow::lexicographical_compare_three_way(v2, v1) == std::strong_ordering::less);
 
-        const std::vector<int> v3 = {};
-        CHECK_EQ(sparrow::lexicographical_compare_three_way(v2, v3), std::strong_ordering::equal);
-    }
+    const std::vector<int> v3 = {};
+    CHECK(sparrow::lexicographical_compare_three_way(v2, v3) == std::strong_ordering::equal);
 }

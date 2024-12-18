@@ -38,12 +38,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Checkout nanoarrow
-      uses: actions/checkout@v4
-      with:
-        repository: apache/arrow-nanoarrow
-        path: dependencies/tests/nanoarrow
-
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -74,14 +68,6 @@ jobs:
         echo "CXX=/usr/bin/clang++" >> $GITHUB_ENV
         echo "CMAKE_CXX_COMPILER=/usr/bin/clang++" >> $GITHUB_ENV
 
-    - name: Configure nanoarrow
-      working-directory: dependencies/tests/nanoarrow
-      run: cmake -Bbuild -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
-
-    - name: Build nanoarrow
-      working-directory: dependencies/tests/nanoarrow/build
-      run: cmake --build . --config ${{matrix.config.name}}  --target install
-
     - name: Configure using CMake
       run: |
         cmake -Bbuild \
@@ -91,7 +77,7 @@ jobs:
         -DBUILD_EXAMPLES=ON \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-        -Dnanoarrow_DIR=dependencies/tests/nanoarrow/build
+        -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
 
     - name: Build
       working-directory: build
@@ -114,7 +100,10 @@ jobs:
       if: success() || failure()
       with:
         name: test_sparrow_lib_report_OSX_${{ matrix.os }}_${{ matrix.config.name }}_${{ matrix.compiler }}
-        path: '**/test_sparrow_lib_report.xml'
+        path: |
+          build/test/test_sparrow_lib_report_doctest.xml
+          build/test/test_sparrow_lib_report_catch2.xml
+        if-no-files-found: error
 
     - name: Run all examples
       working-directory: build

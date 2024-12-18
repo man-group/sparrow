@@ -92,12 +92,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Checkout nanoarrow
-      uses: actions/checkout@v4
-      with:
-        repository: apache/arrow-nanoarrow
-        path: dependencies/tests/nanoarrow
-
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -124,7 +118,7 @@ jobs:
       run: |
         echo "SPARROW_DEPS_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
         echo "SPARROW_INSTALL_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
-        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=OFF" >> $GITHUB_ENV
+        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL" >> $GITHUB_ENV
  
 
     - name: Set dependencies install prefix dir for 32bit
@@ -133,6 +127,7 @@ jobs:
         echo "SPARROW_DEPS_PREFIX=$VCPKG_INSTALLED_DIR" >> $GITHUB_ENV
         echo "SPARROW_INSTALL_PREFIX=${{ github.workspace }}/install" >> $GITHUB_ENV
         echo "VCPKG_TARGET_TRIPLET='x86-windows'" >> $GITHUB_ENV
+        echo "VCPKG_BUILD_TYPE='Release'" >> $GITHUB_ENV
         echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
         echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=ON" >> $GITHUB_ENV
         choco install ninja
@@ -150,23 +145,6 @@ jobs:
       run: |
         echo "CMAKE_GENERATOR=${{ matrix.build-system.name }}" >> $GITHUB_ENV
 
-    - name: Configure nanoarrow
-      working-directory: dependencies/tests/nanoarrow
-      run: |
-        cmake -S ./  \
-          -B ./build \
-          $GENERATOR_EXTRA_FLAGS \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_BUILD_TYPE:STRING=Release \
-          -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX \
-          -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX \
-          -DCMAKE_COMPILE_WARNING_AS_ERROR=FALSE
-
-    - name: Build nanoarrow
-      working-directory: dependencies/tests/nanoarrow/build
-      run: cmake --build . --config Release --target install
-
     - name: Configure using CMake
       run: |
         cmake -S ./ -B ./build \
@@ -182,7 +160,7 @@ jobs:
         $SPARROW_ADDITIONAL_OPTIONS \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-        -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
+        -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
 
     - name: Build library
       working-directory: build
@@ -205,7 +183,10 @@ jobs:
       if: success() || failure()
       with:
         name: test_sparrow_lib_report_Windows_${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}
-        path: '**/test_sparrow_lib_report.xml'
+        path: |
+          build/test/test_sparrow_lib_report_doctest.xml
+          build/test/test_sparrow_lib_report_catch2.xml
+        if-no-files-found: error
 
     - name: Run all examples
       working-directory: build
