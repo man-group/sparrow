@@ -129,7 +129,7 @@ struct std::formatter<sparrow::int128_t>
 
     auto format(const sparrow::int128_t& n, std::format_context& ctx) const
     {
-        return std::format_to(ctx.out(), "{}", n);
+        return std::format_to(ctx.out(), "Decimal int128_t TODO");
     }
 };
 
@@ -143,7 +143,7 @@ struct std::formatter<sparrow::int256_t>
 
     auto format(const sparrow::int256_t& n, std::format_context& ctx) const
     {
-        return std::format_to(ctx.out(), "{}", n);
+        return std::format_to(ctx.out(), "Decimal int256_t TODO");
     }
 };
 
