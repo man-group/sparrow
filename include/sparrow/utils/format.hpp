@@ -125,6 +125,14 @@ namespace sparrow
         std::format_to(out, "{}", std::string(count, separator[0]));
     }
 
+#if defined(__clang__)
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
     template <std::ranges::input_range Headers, RangeOfRanges Columns, typename OutputIt>
         requires(std::convertible_to<std::ranges::range_value_t<Headers>, std::string>)
     constexpr void to_table_with_columns(OutputIt out, const Headers& headers, const Columns& columns)
@@ -150,21 +158,7 @@ namespace sparrow
         // max with names
         for (size_t i = 0; i < std::ranges::size(headers); ++i)
         {
-#if defined(__clang__)
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Wsign-conversion"
-#endif
-#if defined(__GNUC__)
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wsign-conversion"
-#endif
             widths[i] = std::max(widths[i], std::ranges::size(headers[i]));
-#if defined(__GNUC__)
-#    pragma GCC diagnostic pop
-#endif
-#if defined(__clang__)
-#    pragma clang diagnostic pop
-#endif
         }
         to_row(out, widths, headers);
         std::format_to(out, "{}", '\n');
@@ -178,21 +172,7 @@ namespace sparrow
                 columns,
                 [i](const auto& column)
                 {
-#if defined(__clang__)
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Wsign-conversion"
-#endif
-#if defined(__GNUC__)
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wsign-conversion"
-#endif
                     return column[i];
-#if defined(__GNUC__)
-#    pragma GCC diagnostic pop
-#endif
-#if defined(__clang__)
-#    pragma clang diagnostic pop
-#endif
                 }
             );
             to_row(out, widths, row_range);
@@ -201,4 +181,10 @@ namespace sparrow
 
         horizontal_separator(out, widths);
     }
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
+#if defined(__clang__)
+#    pragma clang diagnostic pop
+#endif
 }
