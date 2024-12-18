@@ -173,8 +173,8 @@ namespace sparrow
                                          && std::same_as<std::ranges::range_value_t<T>, bool>)
                                      || (std::ranges::input_range<T>
                                          && std::unsigned_integral<std::ranges::range_value_t<T>>) )
-                                    && (not std::same_as<T, std::string> && not std::same_as<T, std::string_view>
-                                        && not std::same_as<T, const char*>);
+                                    && (!std::same_as<T, std::string> && !std::same_as<T, std::string_view>
+                                        && !std::same_as<T, const char*>);
 
     template <validity_bitmap_input R>
     validity_bitmap ensure_validity_bitmap(std::size_t size, R&& validity_input)
