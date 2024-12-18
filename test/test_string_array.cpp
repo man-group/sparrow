@@ -928,7 +928,7 @@ namespace sparrow
         }
         
 #if defined(__cpp_lib_format)
-        TEST_CASE_FIXTURE(variable_size_binary_fixture, "formatting")
+        TEST_CASE_FIXTURE(string_array_fixture, "formatting")
         {
             const layout_type array(std::move(m_arrow_proxy));
             const std::string formatted = std::format("{}", array);

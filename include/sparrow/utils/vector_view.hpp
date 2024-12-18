@@ -18,6 +18,10 @@
 #include <ranges>
 #include <vector>
 
+#if defined(__cpp_lib_format)
+#   include <format>
+#endif
+
 namespace sparrow
 {
     /**
@@ -68,3 +72,27 @@ namespace sparrow
         return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
     }
 }
+
+#if defined(__cpp_lib_format)
+template <class T>
+struct std::formatter<sparrow::vector_view<T>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const sparrow::vector_view<T>& vec, std::format_context& ctx) const
+    {
+        std::format_to(ctx.out(), "<");
+        if (!vec.empty())
+        {
+            for (std::size_t i = 0; i < vec.size() - 1; ++i)
+            {
+                std::format_to(ctx.out(), "{}, ", vec[i]);
+            }
+        }
+        return std::format_to(ctx.out(), "{}>", vec.back());
+    }
+};
+#endif

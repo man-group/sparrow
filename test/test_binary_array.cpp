@@ -92,16 +92,16 @@ namespace sparrow
                     word4
                 };
                 std::vector<std::size_t> where_nulls{2,3};
-                binary_array array(words, std::move(where_nulls));
+                const binary_array array(words, std::move(where_nulls));
                 
                 REQUIRE_EQ(array.size(), words.size());
 
                 // check nulls
-                CHECK_EQ(array[0].has_value(), true);
-                CHECK_EQ(array[1].has_value(), true);
-                CHECK_EQ(array[2].has_value(), false);
-                CHECK_EQ(array[3].has_value(), false);
-                CHECK_EQ(array[4].has_value(), true);
+                CHECK(array[0].has_value());
+                CHECK(array[1].has_value());
+                CHECK_FALSE(array[2].has_value());
+                CHECK_FALSE(array[3].has_value());
+                CHECK(array[4].has_value());
 
                 // check values
                 CHECK_EQ(array[0].value(), word0);
@@ -291,15 +291,15 @@ namespace sparrow
                 const auto array_bitmap = array.bitmap();
 
                 layout_type::const_bitmap_iterator citer = array_bitmap.begin();
-                CHECK_EQ(*citer, true);
-                CHECK_EQ(*(++citer), false);
-                CHECK_EQ(*(++citer), true);
-                CHECK_EQ(*(++citer), true);
-                CHECK_EQ(*(++citer), false);
-                CHECK_EQ(*(++citer), true);
-                CHECK_EQ(*(++citer), true);
-                CHECK_EQ(*(++citer), true);
-                CHECK_EQ(*(++citer), true);
+                CHECK(*citer);
+                CHECK_FALSE(*(++citer));
+                CHECK(*(++citer));
+                CHECK(*(++citer));
+                CHECK_FALSE(*(++citer));
+                CHECK(*(++citer));
+                CHECK(*(++citer));
+                CHECK(*(++citer));
+                CHECK(*(++citer));
             }
         }
 
@@ -408,6 +408,16 @@ namespace sparrow
                 CHECK_EQ(it->get(), words[m_offset + 8]);
             }
         }
+#if defined(__cpp_lib_format)
+        TEST_CASE_FIXTURE(binary_array_fixture, "formatting")
+        {
+            const layout_type array(std::move(m_arrow_proxy));
+            const std::string formatted = std::format("{}", array);
+            constexpr std::string_view
+                expected = "Binary [name=test | size=9] <<1, 1, 255, 0>, null, <2, 3>, <3, 5, 255>, null, <8, 13>, <13, 21, 251, 8>, <21, 34, 248>, <34, 55>>";
+            CHECK_EQ(formatted, expected);
+        }
+#endif
     }
 }
 

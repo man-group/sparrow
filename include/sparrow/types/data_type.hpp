@@ -499,43 +499,6 @@ namespace sparrow
         }
     }
 
-    /// @returns The number of bytes required to store the provided primitive data type.
-    template<std::integral T>
-    constexpr size_t primitive_bytes_count(data_type data_type, T size)
-    {
-        SPARROW_ASSERT_TRUE(data_type_is_primitive(data_type));
-        constexpr double bit_per_byte = 8.;
-        switch (data_type)
-        {
-            case data_type::BOOL:
-                return static_cast<std::size_t>(std::ceil(static_cast<double>(size) / bit_per_byte));
-            case data_type::UINT8:
-            // TODO: Replace static_cast<std::size_t> by the 32 bit fix check function
-            case data_type::INT8:
-                return static_cast<std::size_t>(size);
-            case data_type::UINT16:
-                return (sizeof(std::uint16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::INT16:
-                return (sizeof(std::int16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::UINT32:
-                return (sizeof(std::uint32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::INT32:
-                return (sizeof(std::int32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::UINT64:
-                return (sizeof(std::uint64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::INT64:
-                return (sizeof(std::int64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::HALF_FLOAT:
-                return (sizeof(float16_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::FLOAT:
-                return (sizeof(float32_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            case data_type::DOUBLE:
-                return (sizeof(float64_t) / sizeof(std::uint8_t)) * static_cast<std::size_t>(size);
-            default:
-                throw std::runtime_error("Unsupported data type");
-        }
-    }
-
     class list_value;
     class struct_value;
 
@@ -785,8 +748,12 @@ namespace std
                         return "double";
                     case STRING:
                         return "String";
+                    case LARGE_STRING:
+                        return "Large string";
                     case BINARY:
                         return "Binary";
+                    case LARGE_BINARY:
+                        return "Large binary";
                     case TIMESTAMP:
                         return "Timestamp";
                     case LIST:
@@ -845,6 +812,19 @@ namespace std
         }
     };
 
+    template <>
+    struct formatter<std::byte>
+    {
+        constexpr auto parse(std::format_parse_context& ctx)
+        {
+            return ctx.begin();  // Simple implementation
+        }
+
+        auto format(const std::byte& b, std::format_context& ctx) const
+        {
+            return std::format_to(ctx.out(), "{}", static_cast<int>(b));
+        }
+    };
 }
 
 #endif
