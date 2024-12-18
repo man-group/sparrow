@@ -94,3 +94,24 @@ namespace sparrow
         return std::make_pair(proxy.extract_array(), proxy.extract_schema());
     }
 }
+
+#if defined(__cpp_lib_format)
+
+template <>
+struct std::formatter<sparrow::array>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const sparrow::array& ar, std::format_context& ctx) const
+    {
+        return ar.visit([&ctx](const auto& layout)
+        {
+            return std::format_to(ctx.out(), "{}", layout);
+        });
+    }
+};
+
+#endif

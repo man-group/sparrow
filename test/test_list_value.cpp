@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/list_layout/list_value.hpp"
+#include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/struct_layout/struct_value.hpp"
 
+#include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
 
-#include "../test/external_array_data_creation.hpp"
 
 namespace sparrow
 {
@@ -48,10 +48,13 @@ namespace sparrow
             list_value l(&w, begin, end);
             for (std::size_t i = begin; i < end; ++i)
             {
-                CHECK_EQ(l[i].has_value(), ar[begin+i].has_value());
-                if (ar[begin+i].has_value())
+                CHECK_EQ(l[i].has_value(), ar[begin + i].has_value());
+                if (ar[begin + i].has_value())
                 {
-                    CHECK_EQ(std::get<primitive_array<scalar_value_type>::const_reference>(l[i]).value(), ar[begin+i].value());
+                    CHECK_EQ(
+                        std::get<primitive_array<scalar_value_type>::const_reference>(l[i]).value(),
+                        ar[begin + i].value()
+                    );
                 }
             }
         }
@@ -73,5 +76,19 @@ namespace sparrow
             CHECK(l != l3);
             CHECK(l == l2);
         }
+
+#if defined(__cpp_lib_format)
+        TEST_CASE("formatting")
+        {
+            std::size_t begin = 2u;
+            std::size_t end = 7u;
+            array_type ar(make_arrow_proxy<scalar_value_type>());
+            wrapper_type w(&ar);
+
+            const list_value l(&w, begin, end);
+            std::string expected = "<2, 3, 4, 5, 6>";
+            CHECK_EQ(std::format("{}", l), expected);
+        }
+#endif
     }
 }

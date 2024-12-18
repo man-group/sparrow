@@ -117,16 +117,22 @@ else()
         test_bit.cpp
         test_buffer_adaptor.cpp
         test_buffer.cpp
+        test_builder_dict_encoded.cpp
+        test_builder_run_end_encoded.cpp
+        test_builder_utils.cpp
+        test_builder.cpp
         test_dictionary_encoded_array.cpp
         test_dispatch.cpp
         test_dynamic_bitset_view.cpp
         test_dynamic_bitset.cpp
+        test_format.cpp
         test_high_level_constructors.cpp
         test_iterator.cpp
         test_list_array.cpp
         test_list_value.cpp
         test_memory.cpp
         test_mpl.cpp
+        test_nested_comperators.cpp
         test_null_array.cpp
         test_nullable.cpp
         test_primitive_array.cpp
@@ -300,3 +306,4 @@ add_custom_target(run_tests_with_junit_report
 )
 
 set_target_properties(run_tests_with_junit_report PROPERTIES FOLDER "Tests utilities")
+    

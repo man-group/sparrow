@@ -16,9 +16,9 @@
 
 #include "sparrow/layout/null_array.hpp"
 
+#include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
 
-#include "../test/external_array_data_creation.hpp"
 
 namespace sparrow
 {
@@ -116,6 +116,15 @@ namespace sparrow
             iter += 3;
             CHECK_EQ(iter, bitmap_range.end());
         }
+
+#if defined(__cpp_lib_format)
+        TEST_CASE("formatter")
+        {
+            constexpr std::size_t size = 3u;
+            null_array ar(make_arrow_proxy<null_type>(size));
+            const std::string expected = "Null array [3]";
+            CHECK_EQ(std::format("{}", ar), expected);
+        }
+#endif
     }
 }
-

@@ -20,6 +20,10 @@
 #include <cmath>
 #include <bitset>
 #include <type_traits>
+#if defined(__cpp_lib_format)
+#    include <format>
+#endif
+#include <sstream>
 
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -1024,6 +1028,26 @@ namespace std
     template<> inline constexpr bool is_floating_point_v<numeric::float16_t> = true;
     template<> inline constexpr bool is_arithmetic_v<numeric::float16_t> = true;
     template<> inline constexpr bool is_signed_v<numeric::float16_t> = true;
+
+#if defined(__cpp_lib_format)
+
+    template <>
+    struct formatter<numeric::float16_t>
+    {
+        constexpr auto parse(std::format_parse_context& ctx)
+        {
+            return ctx.begin();  // Simple implementation
+        }
+
+        auto format(const numeric::float16_t& value, std::format_context& ctx) const
+        {
+            std::ostringstream oss;
+            oss << value;
+            return  std::format_to(ctx.out(), "{}", oss.str());
+        }
+    };
+
+    #endif
 
 }
 

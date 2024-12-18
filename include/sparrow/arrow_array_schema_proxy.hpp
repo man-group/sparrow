@@ -14,7 +14,11 @@
 
 #pragma once
 
+#include <cstdint>
+#include <iterator>
 #include <optional>
+#include <ranges>
+#include <string>
 #include <string_view>
 
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
@@ -480,5 +484,113 @@ namespace sparrow
         const auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), range.begin(), range.end());
         return static_cast<size_t>(std::distance(bitmap.begin(), it));
     }
-
 }
+
+#if defined(__cpp_lib_format)
+
+template <>
+struct std::formatter<sparrow::buffer_view<uint8_t>>
+{
+private:
+
+    char delimiter = ' ';
+    static constexpr std::string_view opening = "[";
+    static constexpr std::string_view closing = "]";
+
+public:
+
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        auto it = ctx.begin();
+        auto end = ctx.end();
+
+        // Parse optional delimiter
+        if (it != end && *it != '}')
+        {
+            delimiter = *it++;
+        }
+
+        if (it != end && *it != '}')
+        {
+            throw std::format_error("Invalid format specifier for range");
+        }
+
+        return it;
+    }
+
+    auto format(const sparrow::buffer_view<uint8_t>& range, std::format_context& ctx) const
+    {
+        auto out = ctx.out();
+
+        // Write opening bracket
+        out = std::ranges::copy(opening, out).out;
+
+        // Write range elements
+        bool first = true;
+        for (const auto& elem : range)
+        {
+            if (!first)
+            {
+                *out++ = delimiter;
+            }
+            out = std::format_to(out, "{}", elem);
+            first = false;
+        }
+
+        // Write closing bracket
+        out = std::ranges::copy(closing, out).out;
+
+        return out;
+    }
+};
+
+template <>
+struct std::formatter<sparrow::arrow_proxy>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const sparrow::arrow_proxy& obj, std::format_context& ctx) const
+    {
+        std::string buffers_description_str;
+        for (size_t i = 0; i < obj.n_buffers(); ++i)
+        {
+            std::format_to(
+                std::back_inserter(buffers_description_str),
+                "<{}[{} b]{}",
+                "uint8_t",
+                obj.buffers()[i].size() * sizeof(uint8_t),
+                obj.buffers()[i]
+            );
+        }
+
+        std::string children_str;
+        for (const auto& child : obj.children())
+        {
+            std::format_to(std::back_inserter(children_str), "{}\n", child);
+        }
+
+        const std::string dictionary_str = obj.dictionary() ? std::format("{}", *obj.dictionary()) : "nullptr";
+
+        return std::format_to(
+            ctx.out(),
+            "arrow_proxy\n- format: {}\n- name; {}\n- metadata: {}\n- data_type: {}\n- null_count:{}\n- length: {}\n- offset: {}\n- n_buffers: {}\n- buffers:\n{}\n- n_children: {}\n-children: {}\n- dictionary: {}",
+            obj.format(),
+            obj.name().value_or(""),
+            obj.metadata().value_or(""),
+            obj.data_type(),
+            obj.null_count(),
+            obj.length(),
+            obj.offset(),
+            obj.n_buffers(),
+            buffers_description_str,
+            obj.n_children(),
+            children_str,
+            dictionary_str
+        );
+    }
+};
+
+#endif

@@ -13,9 +13,10 @@
 // limitations under the License.
 
 #include "sparrow/layout/list_layout/list_value.hpp"
-#include "sparrow/layout/dispatch.hpp"
 
 #include <iostream>
+
+#include "sparrow/layout/dispatch.hpp"
 
 namespace sparrow
 {
@@ -24,7 +25,7 @@ namespace sparrow
         , m_index_begin(index_begin)
         , m_index_end(index_end)
     {
-        SPARROW_ASSERT_TRUE(index_begin<=index_end);
+        SPARROW_ASSERT_TRUE(index_begin <= index_end);
     }
 
     auto list_value::size() const -> size_type
@@ -32,9 +33,24 @@ namespace sparrow
         return m_index_end - m_index_begin;
     }
 
+    bool list_value::empty() const
+    {
+        return size() == 0;
+    }
+
     auto list_value::operator[](size_type i) const -> const_reference
     {
         return array_element(*p_flat_array, m_index_begin + i);
+    }
+
+    auto list_value::front() const -> const_reference
+    {
+        return (*this)[0];
+    }
+
+    auto list_value::back() const -> const_reference
+    {
+        return (*this)[size() - 1];
     }
 
     bool operator==(const list_value& lhs, const list_value& rhs)
@@ -49,3 +65,21 @@ namespace sparrow
         // return std::ranges::equal(lhs, rhs);
     }
 }
+
+#if defined(__cpp_lib_format)
+
+auto std::formatter<sparrow::list_value>::format(const sparrow::list_value& list_value, std::format_context& ctx)
+    const -> decltype(ctx.out())
+{
+    std::format_to(ctx.out(), "<");
+    if (!list_value.empty())
+    {
+        for (std::size_t i = 0; i < list_value.size() - 1; ++i)
+        {
+            std::format_to(ctx.out(), "{}, ", list_value[i]);
+        }
+    }
+    return std::format_to(ctx.out(), "{}>", list_value.back());
+}
+
+#endif

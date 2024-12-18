@@ -803,6 +803,7 @@ namespace sparrow
                 CHECK_EQ(arr[i].value(), static_cast<std::size_t>(i));
             }
         }
+
         TEST_CASE("convenience_constructors_index_of_missing")
         {
             primitive_array<std::size_t> arr(
@@ -820,5 +821,18 @@ namespace sparrow
             CHECK_EQ(arr[2].value(), std::size_t(2));
             CHECK_EQ(arr[4].value(), std::size_t(4));
         }
+
+#if defined(__cpp_lib_format)
+        TEST_CASE("formatting")
+        {
+            primitive_array<uint32_t> arr(
+                std::ranges::iota_view{uint32_t(0), uint32_t(5)},
+                std::vector<std::size_t>{1, 3}
+            );
+            const std::string formatted = std::format("{}", arr);
+            constexpr std::string_view expected = "uint32 [name=nullptr | size=5] <0, null, 2, null, 4>";
+            CHECK_EQ(formatted, expected);
+        }
+#endif
     }
 }

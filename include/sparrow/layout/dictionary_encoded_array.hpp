@@ -122,7 +122,8 @@ namespace sparrow
         dictionary_encoded_array(self_type&&);
         self_type& operator=(self_type&&);
 
-        size_type size() const;
+        [[nodiscard]] size_type size() const;
+        [[nodiscard]] bool empty() const;
 
         const_reference operator[](size_type i) const;
 
@@ -134,6 +135,9 @@ namespace sparrow
 
         const_iterator cbegin() const;
         const_iterator cend() const;
+
+        [[nodiscard]] const_reference front() const;
+        [[nodiscard]] const_reference back() const;
 
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<dictionary_encoded_array<IT>, Args...>)
@@ -294,12 +298,20 @@ namespace sparrow
     }
 
     template <std::integral IT>
+    auto dictionary_encoded_array<IT>::empty() const -> bool
+    {
+        return size() == 0;
+    }
+
+    template <std::integral IT>
     auto dictionary_encoded_array<IT>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         const auto index = m_keys_layout[i];
+
         if (index.has_value())
         {
+            SPARROW_ASSERT_TRUE(index.value() >= 0);
             return array_element(*p_values_layout, static_cast<std::size_t>(index.value()));
         }
         else
@@ -345,6 +357,20 @@ namespace sparrow
     }
 
     template <std::integral IT>
+    auto dictionary_encoded_array<IT>::front() const -> const_reference
+    {
+        SPARROW_ASSERT_FALSE(empty());
+        return operator[](0);
+    }
+
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::back() const -> const_reference
+    {
+        SPARROW_ASSERT_FALSE(empty());
+        return operator[](size() - 1);
+    }
+
+    template <std::integral IT>
     auto dictionary_encoded_array<IT>::dummy_inner_value() const -> const inner_value_type&
     {
         static const inner_value_type instance = array_default_element_value(*p_values_layout);
@@ -380,7 +406,7 @@ namespace sparrow
             [](const auto& val) -> const_reference
             {
                 using inner_ref = typename arrow_traits<std::decay_t<decltype(val)>>::const_reference;
-                return nullable<inner_ref>(inner_ref(val), false);
+                return const_reference{nullable<inner_ref>(inner_ref(val), false)};
             },
             dummy_inner_value()
         );
@@ -421,3 +447,29 @@ namespace sparrow
         return std::ranges::equal(lhs, rhs);
     }
 }
+
+#if defined(__cpp_lib_format)
+template <std::integral IT>
+struct std::formatter<sparrow::dictionary_encoded_array<IT>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const sparrow::dictionary_encoded_array<IT>& ar, std::format_context& ctx) const
+    {
+        std::format_to(ctx.out(), "Dictionary [size={}] <", ar.size());
+        std::for_each(
+            ar.cbegin(),
+            std::prev(ar.cend()),
+            [&ctx](const auto& value)
+            {
+                std::format_to(ctx.out(), "{}, ", value);
+            }
+        );
+        std::format_to(ctx.out(), "{}>", ar.back());
+        return ctx.out();
+    }
+};
+#endif

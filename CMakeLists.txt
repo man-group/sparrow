@@ -132,7 +132,7 @@ if (USE_DATE_POLYFILL)
 endif()
 
 if(USE_LARGE_INT_PLACEHOLDERS)
-
+    message(STATUS "Using large int placeholders")
     add_compile_definitions(SPARROW_USE_LARGE_INT_PLACEHOLDERS)
 endif()
 

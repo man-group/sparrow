@@ -24,6 +24,10 @@
 #include "sparrow/array.hpp"
 #include "sparrow/utils/contracts.hpp"
 
+#if defined(__cpp_lib_format)
+#    include "sparrow/utils/format.hpp"
+#endif
+
 namespace sparrow
 {
     /**
@@ -96,7 +100,8 @@ namespace sparrow
 
         /**
          * @returns the name mapped to the column at the given index.
-         * @param index The index of the column in the \ref record_batch. The index must be less than the number of columns.
+         * @param index The index of the column in the \ref record_batch. The index must be less than the
+         * number of columns.
          */
         SPARROW_API const name_type& get_column_name(size_type index) const;
 
@@ -176,3 +181,34 @@ namespace sparrow
         return v;
     }
 }
+
+#if defined(__cpp_lib_format)
+template <>
+struct std::formatter<sparrow::record_batch>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const sparrow::record_batch& rb, std::format_context& ctx) const
+    {
+        const auto values_by_columns = rb.columns()
+                                                 | std::views::transform(
+                                                     [&rb](const auto& ar)
+                                                     {
+                                                         return std::views::iota(0u, rb.nb_rows())
+                                                                | std::views::transform(
+                                                                    [&ar](const auto i)
+                                                                    {
+                                                                        return ar[i];
+                                                                    }
+                                                                );
+                                                     }
+                                                 );
+
+        sparrow::to_table_with_columns(ctx.out(), rb.names(), values_by_columns);
+        return ctx.out();
+    }
+};
+#endif

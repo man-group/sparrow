@@ -22,9 +22,9 @@
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
+#include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/crtp_base.hpp"
-#include "sparrow/layout/array_access.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 
@@ -127,6 +127,9 @@ namespace sparrow
         const_bitmap_range bitmap() const;
         const_value_range values() const;
 
+        [[nodiscard]] std::optional<std::string_view> name() const;
+        [[nodiscard]] std::optional<std::string_view> metadata() const;
+
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
          * A copy of the \ref array is modified. The data is not modified, only the ArrowArray.offset and
@@ -162,7 +165,6 @@ namespace sparrow
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
 
-
         bitmap_const_reference has_value(size_type i) const;
 
         const_bitmap_iterator bitmap_begin() const;
@@ -178,6 +180,9 @@ namespace sparrow
         // friend classes
         friend class layout_iterator<iterator_types>;
         friend class detail::array_access;
+#if defined(__cpp_lib_format)
+        friend struct std::formatter<D>;
+#endif
     };
 
     template <class D>
@@ -217,8 +222,7 @@ namespace sparrow
         if (i >= size())
         {
             std::ostringstream oss117;
-            oss117 << "Index " << i << "is greater or equal to size of array ("
-                << size() << ")";
+            oss117 << "Index " << i << "is greater or equal to size of array (" << size() << ")";
             throw std::out_of_range(oss117.str());
         }
         return (*this)[i];
@@ -241,7 +245,7 @@ namespace sparrow
 
     /**
      * Returns a constant reference to the first element in the container.
-     * Calling `front` on an empty container causes undefined behavior. 
+     * Calling `front` on an empty container causes undefined behavior.
      */
     template <class D>
     auto array_crtp_base<D>::front() const -> const_reference
@@ -252,7 +256,7 @@ namespace sparrow
 
     /**
      * Returns a constant reference to the last element in the container.
-     * Calling `back` on an empty container causes undefined behavior. 
+     * Calling `back` on an empty container causes undefined behavior.
      */
     template <class D>
     auto array_crtp_base<D>::back() const -> const_reference
@@ -293,7 +297,7 @@ namespace sparrow
 
     /**
      * Returns a constant iterator to the element following the last
-     * element of the array. This method ensures that a constant iterator 
+     * element of the array. This method ensures that a constant iterator
      * is returned, even when called on a non-const array.
      */
     template <class D>
@@ -323,10 +327,11 @@ namespace sparrow
     {
         return crend();
     }
+
     /**
      * Returns a constant reverse iterator to the first element of the
      * reversed array. It corresponds to the last element of the non-
-     * reversed array. This method ensures that a constant reverse 
+     * reversed array. This method ensures that a constant reverse
      * iterator is returned, even when called on a non-const array.
      */
     template <class D>
@@ -347,7 +352,7 @@ namespace sparrow
     {
         return const_reverse_iterator(cbegin());
     }
-    
+
     /**
      * Returns the validity bitmap of the array (i.e. the "has_value" part of the
      * nullable elements) as a constant range.
@@ -366,6 +371,18 @@ namespace sparrow
     auto array_crtp_base<D>::values() const -> const_value_range
     {
         return const_value_range(this->derived_cast().value_cbegin(), this->derived_cast().value_cend());
+    }
+
+    template <class D>
+    std::optional<std::string_view> array_crtp_base<D>::name() const
+    {
+        return m_proxy.name();
+    }
+
+    template <class D>
+    std::optional<std::string_view> array_crtp_base<D>::metadata() const
+    {
+        return m_proxy.metadata();
     }
 
     template <class D>
@@ -445,3 +462,42 @@ namespace sparrow
         return std::ranges::equal(lhs, rhs);
     }
 }
+
+#if defined(__cpp_lib_format)
+
+template <typename D>
+    requires std::derived_from<D, sparrow::array_crtp_base<D>>
+struct std::formatter<D>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const D& ar, std::format_context& ctx) const
+    {
+        const auto& proxy = ar.get_arrow_proxy();
+        std::string type;
+        if (proxy.dictionary())
+        {
+            std::format_to(ctx.out(), "Dictionary<{}>", proxy.dictionary()->data_type());
+        }
+        else
+        {
+            std::format_to(ctx.out(), "{}", proxy.data_type());
+        }
+        std::format_to(ctx.out(), " [name={} | size={}] <", ar.name().value_or("nullptr"), proxy.length());
+
+        std::for_each(
+            ar.cbegin(),
+            std::prev(ar.cend()),
+            [&ctx](const auto& value)
+            {
+                std::format_to(ctx.out(), "{}, ", value);
+            }
+        );
+        return std::format_to(ctx.out(), "{}>", ar.back());
+    }
+};
+
+#endif

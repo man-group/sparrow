@@ -5,6 +5,10 @@
 #include <sstream>
 #include <string_view>
 
+#if defined(__cpp_lib_format)
+#    include <format>
+#endif
+
 #include "sparrow/utils/large_int.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -188,3 +192,21 @@ namespace sparrow
     }
 
 }  // namespace sparrow
+
+#if defined(__cpp_lib_format)
+
+template <typename T>
+struct std::formatter<sparrow::decimal<T>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();
+    }
+
+    auto format(const sparrow::decimal<T>& d, std::format_context& ctx) const
+    {
+        return std::format_to(ctx.out(), "Decimal({}, {})", d.storage(), d.scale());
+    }
+};
+
+#endif
