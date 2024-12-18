@@ -44,12 +44,6 @@ jobs:
         build-system:
         - {name: "Visual Studio 17 2022"}
         - {name: "Ninja"}
-      env:
-        COMPILER: ${{ matrix.toolchain.compiler }}
-        BUILD_SYSTEM: ${{ matrix.build-system.name }}
-        CONFIG: ${{ matrix.config.name }}
-        TARGET_ARCH: ${{ matrix.target-arch.name }}
-        DATE_POLYFILL: ${{ matrix.toolchain.date-polyfill }}
 
     steps:
     - name: Setup MSVC (only for non-VS buildsystems)
@@ -210,6 +204,12 @@ jobs:
 
     - name: Upload coverage to Codecov
       if: matrix.config.name == 'Debug'
+      env:
+        COMPILER: ${{ matrix.toolchain.compiler }}
+        BUILD_SYSTEM: ${{ matrix.build-system.name }}
+        CONFIG: ${{ matrix.config.name }}
+        TARGET_ARCH: ${{ matrix.target-arch.name }}
+        DATE_POLYFILL: ${{ matrix.toolchain.date-polyfill }}
       uses: codecov/codecov-action@v5
       with:
         directory: ./build/coverage_reports/
