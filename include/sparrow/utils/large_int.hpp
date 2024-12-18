@@ -117,7 +117,7 @@ namespace sparrow
 #endif
 }  // namespace sparrow
 
-#if defined(__cpp_lib_format) && defined(SPARROW_USE_LARGE_INT_PLACEHOLDERS)
+#if defined(__cpp_lib_format)
 
 template <>
 struct std::formatter<sparrow::int128_t>
