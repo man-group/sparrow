@@ -193,6 +193,8 @@ namespace sparrow
 
 }  // namespace sparrow
 
+#if defined(__cpp_lib_format)
+
 template <typename T>
 struct std::formatter<sparrow::decimal<T>>
 {
@@ -206,3 +208,5 @@ struct std::formatter<sparrow::decimal<T>>
         return std::format_to(ctx.out(), "Decimal({}, {})", d.storage(), d.scale());
     }
 };
+
+#endif
