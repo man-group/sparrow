@@ -141,7 +141,7 @@ jobs:
       run: echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPARROW_ENABLE_32BIT_SIZE_LIMIT=ON'" >> $GITHUB_ENV
 
     - name: Enable tests coverage
-      if: matrix.config.name == 'Debug'
+      if: matrix.config.name == 'Debug' && matrix.toolchain.compiler == 'msvc'
       run: |
         choco install opencppcoverage
         echo "TEST_COVERAGE_ACTIVATION=' -DENABLE_COVERAGE=ON'" >> $GITHUB_ENV
@@ -195,13 +195,13 @@ jobs:
         if-no-files-found: error
 
     - name: Tests coverage
-      if: matrix.config.name == 'Debug'
+      if: matrix.config.name == 'Debug' && matrix.toolchain.compiler == 'msvc'
       working-directory: build
       run: |
         cmake --build . --config Debug --target generate_cobertura
 
     - name: Upload coverage to Codecov
-      if: matrix.config.name == 'Debug'
+      if: matrix.config.name == 'Debug' && matrix.toolchain.compiler == 'msvc'
       env:
         COMPILER: ${{ matrix.toolchain.compiler }}
         BUILD_SYSTEM: ${{ matrix.build-system.name }}
