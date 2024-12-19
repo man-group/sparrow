@@ -78,13 +78,14 @@ jobs:
           format: "YYYY-MM-DD_HH-mm-ss-SSS"
 
       - name: Configuring sparrow
-        run: cmake -G Ninja -Bbuild \
-          -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
-          -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} \
-          -DBUILD_TESTS:BOOL=ON \
-          -DBUILD_EXAMPLES:BOOL=ON \
-          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
-          -B build \
+        run: cmake -G Ninja -Bbuild
+          -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}}
+          -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}}
+          -DBUILD_TESTS:BOOL=ON
+          -DBUILD_EXAMPLES:BOOL=ON
+          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
+          -B build
+          
         shell: alpine.sh {0}
 
       - name: Building sparrow library
