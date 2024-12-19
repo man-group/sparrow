@@ -59,6 +59,7 @@ jobs:
             date-dev
             doctest-dev
             g++
+            git
             linux-headers
             make
             musl-dev
@@ -85,7 +86,7 @@ jobs:
           -DBUILD_EXAMPLES:BOOL=ON
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
           -B build
-          
+
         shell: alpine.sh {0}
 
       - name: Building sparrow library
