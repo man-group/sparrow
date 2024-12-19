@@ -35,7 +35,7 @@ jobs:
         id: alpine-target
         with:
           branch: v3.20
-          arch: {{ matrix.target.arch }}
+          arch: ${{ matrix.target.arch }}
           packages: >
             ccache
             cmake
@@ -53,6 +53,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get current date
         id: date
