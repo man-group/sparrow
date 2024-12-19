@@ -81,10 +81,10 @@ jobs:
         run: cmake -G Ninja -Bbuild \
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
           -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} \
-          -DBUILD_TESTS=ON \
-          -DBUILD_EXAMPLES=ON \
+          -DBUILD_TESTS:BOOL=ON \
+          -DBUILD_EXAMPLES:BOOL=ON \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
-          -B build
+          -B build \
         shell: alpine.sh {0}
 
       - name: Building sparrow library
