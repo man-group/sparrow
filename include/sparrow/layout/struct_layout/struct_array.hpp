@@ -181,10 +181,10 @@ namespace sparrow
         const auto null_count = vbitmap.null_count();
 
         ArrowSchema schema = make_arrow_schema(
-            std::string("+s"),  // format
-            name,       // name
-            metadata,       // metadata
-            std::nullopt,       // flags,
+            std::string("+s"),    // format
+            std::move(name),      // name
+            std::move(metadata),  // metadata
+            std::nullopt,         // flags,
             static_cast<int64_t>(n_children),
             child_schemas,  // children
             nullptr         // dictionary

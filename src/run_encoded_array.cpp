@@ -4,7 +4,6 @@
 #include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 
-
 namespace sparrow
 {
     template <class T>
@@ -121,9 +120,9 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             std::string("+r"),
-            name,  // name
-            metadata,  // metadata
-            std::nullopt,  // flags,
+            std::move(name),      // name
+            std::move(metadata),  // metadata
+            std::nullopt,         // flags,
             n_children,
             child_schemas,  // children
             nullptr         // dictionary
