@@ -70,8 +70,6 @@ jobs:
       
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Get current date
         id: date
@@ -86,7 +84,8 @@ jobs:
           -DBUILD_TESTS=ON \
           -DBUILD_EXAMPLES=ON \
           -DUSE_LARGE_INT_PLACEHOLDERS=ON \
-          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
+          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
+          -B build
         shell: alpine.sh {0}
 
       - name: Building sparrow library
