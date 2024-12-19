@@ -285,6 +285,7 @@ if(ENABLE_COVERAGE)
 endif()
 
 if (BUILD_TESTS)
+    message(STATUS "🧪 Create tests targets")
     enable_testing()
     add_subdirectory(test)
 endif ()
