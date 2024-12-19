@@ -83,7 +83,6 @@ jobs:
           -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}} \
           -DBUILD_TESTS=ON \
           -DBUILD_EXAMPLES=ON \
-          -DUSE_LARGE_INT_PLACEHOLDERS=OFF \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
           -B build
         shell: alpine.sh {0}
