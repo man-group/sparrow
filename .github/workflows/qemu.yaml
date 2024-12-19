@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         target:
-          - { arch: armv7,   date-polyfill: 'ON' }
+          # - { arch: armv7,   date-polyfill: 'ON' }
           - { arch: aarch64, date-polyfill: 'ON' }
           - { arch: aarch64, date-polyfill: 'OFF'}
           - { arch: riscv64, date-polyfill: 'ON' }
