@@ -13,7 +13,6 @@ jobs:
     strategy:
       matrix:
         target:
-          - { arch: armv6,   date-polyfill: 'ON' }
           - { arch: armv7,   date-polyfill: 'ON' }
           - { arch: aarch64, date-polyfill: 'ON' }
           - { arch: aarch64, date-polyfill: 'OFF'}
@@ -30,6 +29,11 @@ jobs:
       CCACHE_CACHE: /mnt/ccache_cache
 
     steps:
+      - name: Install binfmt-support
+        run: |
+          sudo apt-get update
+          sudo apt-get install binfmt-support
+
       - name: Set up Alpine Linux for ${{ matrix.target.arch }}
         uses: jirutka/setup-alpine@v1
         id: alpine-target
