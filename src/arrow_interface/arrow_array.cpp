@@ -113,6 +113,9 @@ namespace sparrow
             case data_type::STRING:
             case data_type::BINARY:
                 return {make_valid_buffer(),make_buffer(1, (size + 1) * 4), make_buffer(2, static_const_ptr_cast<int32_t>(array.buffers[1])[size])};
+            case data_type::LARGE_STRING:
+            case data_type::LARGE_BINARY:
+                return {make_valid_buffer(),make_buffer(1, (size + 1) * 4), make_buffer(2, static_const_ptr_cast<int64_t>(array.buffers[1])[size])};
             case data_type::LIST:
                 return {make_valid_buffer(), make_buffer(1, (size + 1) * 4)};
             case data_type::LARGE_LIST:
