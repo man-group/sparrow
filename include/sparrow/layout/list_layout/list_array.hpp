@@ -750,8 +750,8 @@ namespace sparrow
         std::string format = "+w:" + std::to_string(list_size);
         ArrowSchema schema = make_arrow_schema(
             format,
-            name,                                                          // name
-            metadata,                                                      // metadata
+            std::move(name),                                               // name
+            std::move(metadata),                                           // metadata
             std::nullopt,                                                  // flags,
             1,                                                             // n_children
             new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))},  // children

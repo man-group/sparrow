@@ -30,7 +30,6 @@
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/ranges.hpp"
 
-
 namespace sparrow
 {
 
@@ -146,8 +145,8 @@ namespace sparrow
         static arrow_proxy create_proxy(
             R&& range,
             VB&& bitmap_input = validity_bitmap{},
-            std::optional<std::string_view>&& name = std::nullopt,
-            std::optional<std::string_view>&& metadata = std::nullopt
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
         );
 
         inner_reference value(size_type i);
@@ -182,9 +181,12 @@ namespace sparrow
     template <class T>
     template <std::ranges::input_range R, validity_bitmap_input VB>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
-    arrow_proxy variable_size_binary_view_array_impl<T>::create_proxy(R&& range, VB&& validity_input,
-            std::optional<std::string_view>&& name,
-            std::optional<std::string_view>&& metadata)
+    arrow_proxy variable_size_binary_view_array_impl<T>::create_proxy(
+        R&& range,
+        VB&& validity_input,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
+    )
     {
 #ifdef __GNUC__
 #    pragma GCC diagnostic push
@@ -275,12 +277,12 @@ namespace sparrow
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             std::is_same<T, std::string_view>::value ? std::string_view("vu") : std::string_view("vz"),
-            name,  // name
-            metadata,  // metadata
-            std::nullopt,  // flags
-            0,             // n_children
-            nullptr,       // children
-            nullptr        // dictionary
+            std::move(name),      // name
+            std::move(metadata),  // metadata
+            std::nullopt,         // flags
+            0,                    // n_children
+            nullptr,              // children
+            nullptr               // dictionary
         );
 
         std::vector<buffer<uint8_t>> buffers{

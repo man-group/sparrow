@@ -91,8 +91,8 @@ namespace sparrow
 
         null_array(
             size_t length,
-            std::optional<std::string_view>&& name = std::nullopt,
-            std::optional<std::string_view>&& metadata = std::nullopt
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
         );
 
         explicit null_array(arrow_proxy);
@@ -125,11 +125,8 @@ namespace sparrow
 
     private:
 
-        static arrow_proxy create_proxy(
-            size_t length,
-            std::optional<std::string_view>&& name,
-            std::optional<std::string_view>&& metadata
-        );
+        static arrow_proxy
+        create_proxy(size_t length, std::optional<std::string_view> name, std::optional<std::string_view> metadata);
 
         [[nodiscard]] difference_type ssize() const;
 
@@ -210,15 +207,15 @@ namespace sparrow
 
     inline arrow_proxy null_array::create_proxy(
         size_t length,
-        std::optional<std::string_view>&& name,
-        std::optional<std::string_view>&& metadata
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
     )
     {
         using namespace std::literals;
         ArrowSchema schema = make_arrow_schema(
             "n"sv,
-            std::forward<std::optional<std::string_view>>(name),
-            std::forward<std::optional<std::string_view>>(metadata),
+            std::move(name),
+            std::move(metadata),
             std::nullopt,
             0,
             nullptr,

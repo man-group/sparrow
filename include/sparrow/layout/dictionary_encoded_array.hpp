@@ -277,8 +277,8 @@ namespace sparrow
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             sparrow::data_type_format_of<IT>(),
-            name,                                     // name
-            metadata,                                 // metadata
+            std::move(name),                          // name
+            std::move(metadata),                      // metadata
             std::nullopt,                             // flags
             0,                                        // n_children
             nullptr,                                  // children

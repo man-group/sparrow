@@ -272,8 +272,8 @@ namespace sparrow
             u8_buffer<C>&& data_buffer,
             offset_buffer_type&& list_offsets,
             VB&& validity_input = validity_bitmap{},
-            std::optional<std::string_view>&& name = std::nullopt,
-            std::optional<std::string_view>&& metadata = std::nullopt
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
         );
 
         template <std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap>
@@ -286,8 +286,8 @@ namespace sparrow
         static arrow_proxy create_proxy(
             R&& values,
             VB&& validity_input = validity_bitmap{},
-            std::optional<std::string_view>&& name = std::nullopt,
-            std::optional<std::string_view>&& metadata = std::nullopt
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
         );
 
         // range of nullable values
@@ -295,8 +295,8 @@ namespace sparrow
             requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
         static arrow_proxy create_proxy(
             R&&,
-            std::optional<std::string_view>&& name = std::nullopt,
-            std::optional<std::string_view>&& metadata = std::nullopt
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
         );
 
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
@@ -385,8 +385,8 @@ namespace sparrow
         u8_buffer<C>&& data_buffer,
         offset_buffer_type&& offsets,
         VB&& validity_input,
-        std::optional<std::string_view>&& name,
-        std::optional<std::string_view>&& metadata
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
     )
     {
         const auto size = offsets.size() - 1;
@@ -395,12 +395,12 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             detail::variable_size_binary_format<T, OT>::format(),
-            name,          // name
-            metadata,      // metadata
-            std::nullopt,  // flags,
-            0,             // n_children
-            nullptr,       // children
-            nullptr        // dictionary
+            std::move(name),      // name
+            std::move(metadata),  // metadata
+            std::nullopt,         // flags,
+            0,                    // n_children
+            nullptr,              // children
+            nullptr               // dictionary
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
@@ -431,8 +431,8 @@ namespace sparrow
     arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy(
         R&& values,
         VB&& validity_input,
-        std::optional<std::string_view>&& name,
-        std::optional<std::string_view>&& metadata
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
     )
     {
         using values_inner_value_type = std::ranges::range_value_t<std::ranges::range_value_t<R>>;
@@ -460,8 +460,8 @@ namespace sparrow
         requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
     arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy(
         R&& range,
-        std::optional<std::string_view>&& name,
-        std::optional<std::string_view>&& metadata
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
     )
     {
         // split into values and is_non_null ranges
@@ -479,12 +479,7 @@ namespace sparrow
                                          return v.has_value();
                                      }
                                  );
-        return self_type::create_proxy(
-            values,
-            is_non_null,
-            std::forward<std::optional<std::string_view>>(name),
-            std::forward<std::optional<std::string_view>>(metadata)
-        );
+        return self_type::create_proxy(values, is_non_null, std::move(name), std::move(metadata));
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
