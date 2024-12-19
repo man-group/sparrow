@@ -103,8 +103,12 @@ namespace sparrow
     private:
 
         template <validity_bitmap_input VB = validity_bitmap>
-        static auto
-        create_proxy(std::vector<array>&& children, VB&& bitmaps = validity_bitmap{}) -> arrow_proxy;
+        static auto create_proxy(
+            std::vector<array>&& children,
+            VB&& bitmaps = validity_bitmap{},
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
+        ) -> arrow_proxy;
 
         using children_type = std::vector<cloning_ptr<array_wrapper>>;
 
@@ -151,7 +155,12 @@ namespace sparrow
     }
 
     template <validity_bitmap_input VB>
-    auto struct_array::create_proxy(std::vector<array>&& children, VB&& validity_input) -> arrow_proxy
+    auto struct_array::create_proxy(
+        std::vector<array>&& children,
+        VB&& validity_input,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
+    ) -> arrow_proxy
     {
         const auto n_children = children.size();
         ArrowSchema** child_schemas = new ArrowSchema*[n_children];
@@ -172,10 +181,10 @@ namespace sparrow
         const auto null_count = vbitmap.null_count();
 
         ArrowSchema schema = make_arrow_schema(
-            std::string("+s"),  // format
-            std::nullopt,       // name
-            std::nullopt,       // metadata
-            std::nullopt,       // flags,
+            std::string("+s"),    // format
+            std::move(name),      // name
+            std::move(metadata),  // metadata
+            std::nullopt,         // flags,
             static_cast<int64_t>(n_children),
             child_schemas,  // children
             nullptr         // dictionary

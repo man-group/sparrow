@@ -107,22 +107,22 @@ namespace sparrow
          * @param data_type The data type to set.
          */
         void SPARROW_API set_data_type(enum data_type data_type);
-        [[nodiscard]] SPARROW_API std::optional<const std::string_view> name() const;
+        [[nodiscard]] SPARROW_API std::optional<std::string_view> name() const;
 
         /**
          * Set the name of the `ArrowSchema`.
          * @exception `arrow_proxy_exception` If the `ArrowSchema` was not created with sparrow.
          * @param name The name to set.
          */
-        SPARROW_API void set_name(std::optional<const std::string_view> name);
-        [[nodiscard]] SPARROW_API std::optional<const std::string_view> metadata() const;
+        SPARROW_API void set_name(std::optional<std::string_view> name);
+        [[nodiscard]] SPARROW_API std::optional<std::string_view> metadata() const;
 
         /**
          * Set the metadata of the `ArrowSchema`.
          * @exception `arrow_proxy_exception` If the `ArrowSchema` was not created with sparrow.
          * @param metadata The metadata to set.
          */
-        SPARROW_API void set_metadata(std::optional<const std::string_view> metadata);
+        SPARROW_API void set_metadata(std::optional<std::string_view> metadata);
         [[nodiscard]] SPARROW_API std::vector<ArrowFlag> flags() const;
 
         /**

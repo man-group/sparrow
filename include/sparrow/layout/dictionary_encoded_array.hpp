@@ -28,7 +28,6 @@
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 
-
 namespace sparrow
 {
     template <class Layout, bool is_const>
@@ -122,8 +121,11 @@ namespace sparrow
         dictionary_encoded_array(self_type&&);
         self_type& operator=(self_type&&);
 
-        [[nodiscard]] size_type size() const;
-        [[nodiscard]] bool empty() const;
+        std::optional<std::string_view> name() const;
+        std::optional<std::string_view> metadata() const;
+
+        size_type size() const;
+        bool empty() const;
 
         const_reference operator[](size_type i) const;
 
@@ -171,8 +173,13 @@ namespace sparrow
     private:
 
         template <validity_bitmap_input R = validity_bitmap>
-        static auto
-        create_proxy(keys_buffer_type&& keys, array&& values, R&& bitmaps = validity_bitmap{}) -> arrow_proxy;
+        static auto create_proxy(
+            keys_buffer_type&& keys,
+            array&& values,
+            R&& bitmaps = validity_bitmap{},
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
+        ) -> arrow_proxy;
 
         using keys_layout = primitive_array<IT>;
         using values_layout = cloning_ptr<array_wrapper>;
@@ -253,9 +260,13 @@ namespace sparrow
 
     template <std::integral IT>
     template <validity_bitmap_input VBI>
-    auto
-    dictionary_encoded_array<IT>::create_proxy(keys_buffer_type&& keys, array&& values, VBI&& validity_input)
-        -> arrow_proxy
+    auto dictionary_encoded_array<IT>::create_proxy(
+        keys_buffer_type&& keys,
+        array&& values,
+        VBI&& validity_input,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
+    ) -> arrow_proxy
     {
         const auto size = keys.size();
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VBI>(validity_input));
@@ -266,8 +277,8 @@ namespace sparrow
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             sparrow::data_type_format_of<IT>(),
-            std::nullopt,                             // name
-            std::nullopt,                             // metadata
+            std::move(name),                          // name
+            std::move(metadata),                      // metadata
             std::nullopt,                             // flags
             0,                                        // n_children
             nullptr,                                  // children
@@ -289,6 +300,18 @@ namespace sparrow
             new ArrowArray(std::move(value_array))  // dictionary
         );
         return arrow_proxy(std::move(arr), std::move(schema));
+    }
+
+    template <std::integral IT>
+    std::optional<std::string_view> dictionary_encoded_array<IT>::name() const
+    {
+        return m_proxy.name();
+    }
+
+    template <std::integral IT>
+    std::optional<std::string_view> dictionary_encoded_array<IT>::metadata() const
+    {
+        return m_proxy.metadata();
     }
 
     template <std::integral IT>

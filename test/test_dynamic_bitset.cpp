@@ -23,6 +23,34 @@
 
 namespace sparrow
 {
+    static_assert(validity_bitmap_input<validity_bitmap> == true);
+    static_assert(validity_bitmap_input<const validity_bitmap&> == true);
+    static_assert(validity_bitmap_input<non_owning_dynamic_bitset<std::uint8_t>> == true);
+
+    static_assert(validity_bitmap_input<std::vector<bool>> == true);
+    static_assert(validity_bitmap_input<const std::vector<bool>&> == true);
+    static_assert(validity_bitmap_input<std::vector<bool>&&> == true);
+
+    static_assert(validity_bitmap_input<std::vector<std::uint8_t>> == true);
+    static_assert(validity_bitmap_input<const std::vector<std::uint8_t>&> == true);
+    static_assert(validity_bitmap_input<std::vector<std::uint8_t>&&> == true);
+
+    static_assert(validity_bitmap_input<std::vector<std::uint16_t>> == true);
+    static_assert(validity_bitmap_input<const std::vector<std::uint16_t>&> == true);
+    static_assert(validity_bitmap_input<std::vector<std::uint16_t>&&> == true);
+
+    static_assert(validity_bitmap_input<std::string> == false);
+    static_assert(validity_bitmap_input<const std::string&> == false);
+    static_assert(validity_bitmap_input<std::string&&> == false);
+
+    static_assert(validity_bitmap_input<std::string_view> == false);
+    static_assert(validity_bitmap_input<const std::string_view&> == false);
+    static_assert(validity_bitmap_input<std::string_view&&> == false);
+
+    static_assert(validity_bitmap_input<char*> == false);
+    static_assert(validity_bitmap_input<const char*> == false);
+    static_assert(validity_bitmap_input<char*&&> == false);
+
     static constexpr std::size_t s_bitmap_size = 29;
     static constexpr std::size_t s_bitmap_null_count = 15;
     static constexpr std::array<uint8_t, 4> s_bitmap_blocks_values{

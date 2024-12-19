@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <numeric>
-
 #include "sparrow/layout/null_array.hpp"
 
 #include "../test/external_array_data_creation.hpp"
@@ -31,18 +29,30 @@ namespace sparrow
         TEST_CASE("constructor")
         {
             constexpr std::size_t size = 10u;
-            null_array ar(make_arrow_proxy<null_type>(size));
+            const null_array ar{size, "name", "metadata"};
+            CHECK_EQ(ar.name(), "name");
+            CHECK_EQ(ar.metadata(), "metadata");
             CHECK_EQ(ar.size(), size);
+
+            const auto arrow_proxy = sparrow::detail::array_access::get_arrow_proxy(ar);
+            CHECK_EQ(arrow_proxy.format(), "n");
+            CHECK_EQ(arrow_proxy.n_children(), 0);
+            CHECK(arrow_proxy.flags().empty());
+            CHECK_EQ(arrow_proxy.metadata(), "metadata");
+            CHECK_EQ(arrow_proxy.name(), "name");
+            CHECK_EQ(arrow_proxy.dictionary(), nullptr);
+
+            CHECK_EQ(arrow_proxy.buffers().size(), 0);
         }
 
         TEST_CASE("copy")
         {
             constexpr std::size_t size = 10u;
-            null_array ar(make_arrow_proxy<null_type>(size));
-            null_array ar2(ar);
+            const null_array ar{size};
+            const null_array ar2(ar);
             CHECK_EQ(ar, ar2);
 
-            null_array ar3(make_arrow_proxy<null_type>(size + 2u));
+            null_array ar3{size + 2u};
             CHECK_NE(ar, ar3);
             ar3 = ar;
             CHECK_EQ(ar, ar3);
@@ -51,12 +61,12 @@ namespace sparrow
         TEST_CASE("move")
         {
             constexpr std::size_t size = 10u;
-            null_array ar(make_arrow_proxy<null_type>(size));
+            null_array ar{size};
             null_array ar2(ar);
             null_array ar3(std::move(ar));
             CHECK_EQ(ar3, ar2);
 
-            null_array ar4(make_arrow_proxy<null_type>(size + 3u));
+            null_array ar4{size + 3u};
             CHECK_NE(ar4, ar2);
             ar4 = std::move(ar3);
             CHECK_EQ(ar2, ar4);
@@ -65,8 +75,8 @@ namespace sparrow
         TEST_CASE("operator[]")
         {
             constexpr std::size_t size = 10u;
-            null_array ar(make_arrow_proxy<null_type>(size));
-            const null_array car(make_arrow_proxy<null_type>(size));
+            null_array ar{size};
+            const null_array car{size};
 
             CHECK_EQ(ar[2], nullval);
             CHECK_EQ(car[2], nullval);
@@ -75,7 +85,7 @@ namespace sparrow
         TEST_CASE("iterator")
         {
             constexpr std::size_t size = 3u;
-            null_array ar(make_arrow_proxy<null_type>(size));
+            null_array ar{size};
 
             auto iter = ar.begin();
             auto citer = ar.cbegin();
@@ -96,7 +106,7 @@ namespace sparrow
         TEST_CASE("const_value_iterator")
         {
             constexpr std::size_t size = 3u;
-            null_array ar(make_arrow_proxy<null_type>(size));
+            null_array ar{size};
 
             auto value_range = ar.values();
             auto iter = value_range.begin();
@@ -108,7 +118,7 @@ namespace sparrow
         TEST_CASE("const_bitmap_iterator")
         {
             constexpr std::size_t size = 3u;
-            null_array ar(make_arrow_proxy<null_type>(size));
+            null_array ar{size};
 
             auto bitmap_range = ar.bitmap();
             auto iter = bitmap_range.begin();

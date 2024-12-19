@@ -49,7 +49,7 @@ namespace sparrow
         //// Values: you, are(null), not, prepared, !, ?
 
         // null, null, not, prepared, null, not, ?, you, are(null), not
-        const layout_type dict{std::move(keys), std::move(ar), std::move(keys_nulls)};
+        const layout_type dict{std::move(keys), std::move(ar), std::move(keys_nulls), "name", "metadata"};
         return dict.slice(1, dict.size());
     }
 
@@ -72,7 +72,7 @@ namespace sparrow
             using keys_buffer_type = typename array_type::keys_buffer_type;
 
             // the value array
-            primitive_array<float> values{0.0f, 1.0f, 2.0f, 3.0f};
+            primitive_array<float> values{{0.0f, 1.0f, 2.0f, 3.0f}};
 
             // detyped array
             array values_arr(std::move(values));
@@ -84,10 +84,13 @@ namespace sparrow
             std::vector<std::size_t> where_null{2};
 
             // create the array
-            auto arr = array_type(std::move(keys), std::move(values_arr), std::move(where_null));
+            auto arr = array_type(std::move(keys), std::move(values_arr), std::move(where_null), "name", "metadata");
 
             // check the size
             REQUIRE_EQ(arr.size(), 5);
+
+            CHECK_EQ(arr.name(), "name");
+            CHECK_EQ(arr.metadata(), "metadata");
 
             // check bitmap
             REQUIRE_EQ(arr[0].has_value(), true);

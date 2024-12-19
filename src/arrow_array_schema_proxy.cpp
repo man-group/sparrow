@@ -281,7 +281,7 @@ namespace sparrow
         schema().format = get_schema_private_data()->format_ptr();
     }
 
-    [[nodiscard]] std::optional<const std::string_view> arrow_proxy::name() const
+    [[nodiscard]] std::optional<std::string_view> arrow_proxy::name() const
     {
         if (schema().name == nullptr)
         {
@@ -290,7 +290,7 @@ namespace sparrow
         return std::string_view(schema().name);
     }
 
-    void arrow_proxy::set_name(std::optional<const std::string_view> name)
+    void arrow_proxy::set_name(std::optional<std::string_view> name)
     {
         if (!schema_created_with_sparrow())
         {
@@ -301,7 +301,7 @@ namespace sparrow
         schema().name = private_data->name_ptr();
     }
 
-    [[nodiscard]] std::optional<const std::string_view> arrow_proxy::metadata() const
+    [[nodiscard]] std::optional<std::string_view> arrow_proxy::metadata() const
     {
         if (schema().metadata == nullptr)
         {
@@ -310,7 +310,7 @@ namespace sparrow
         return std::string_view(schema().metadata);
     }
 
-    void arrow_proxy::set_metadata(std::optional<const std::string_view> metadata)
+    void arrow_proxy::set_metadata(std::optional<std::string_view> metadata)
     {
         if (!schema_created_with_sparrow())
         {
@@ -678,14 +678,13 @@ namespace sparrow
 
     void arrow_proxy::update_null_count()
     {
-        if(has_bitmap(data_type()))
+        if (has_bitmap(data_type()))
         {
             const auto& validity_buffer = buffers().front();
             const dynamic_bitset_view<const std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
             const auto null_count = bitmap.null_count();
             set_null_count(static_cast<int64_t>(null_count));
         }
-        
     }
 
     bool arrow_proxy::is_arrow_array_valid() const

@@ -87,6 +87,9 @@ namespace sparrow
 
         using type_id_buffer_type = u8_buffer<std::uint8_t>;
 
+        std::optional<std::string_view> name() const;
+        std::optional<std::string_view> metadata() const;
+
         value_type at(size_type i) const;
         value_type operator[](size_type i) const;
         value_type operator[](size_type i);
@@ -183,7 +186,9 @@ namespace sparrow
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
             offset_buffer_type&& offsets,
-            TYPE_MAPPING&& type_mapping = TYPE_MAPPING{}
+            TYPE_MAPPING&& type_mapping = TYPE_MAPPING{},
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
         ) -> arrow_proxy;
 
         std::size_t element_offset(std::size_t i) const;
@@ -302,6 +307,18 @@ namespace sparrow
     /****************************************
      * union_array_crtp_base implementation *
      ****************************************/
+
+    template <class DERIVED>
+    std::optional<std::string_view> union_array_crtp_base<DERIVED>::name() const
+    {
+        return m_proxy.name();
+    }
+
+    template <class DERIVED>
+    std::optional<std::string_view> union_array_crtp_base<DERIVED>::metadata() const
+    {
+        return m_proxy.metadata();
+    }
 
     template <class DERIVED>
     arrow_proxy& union_array_crtp_base<DERIVED>::get_arrow_proxy()
@@ -494,7 +511,9 @@ namespace sparrow
         std::vector<array>&& children,
         type_id_buffer_type&& element_type,
         offset_buffer_type&& offsets,
-        TYPE_MAPPING&& child_index_to_type_id
+        TYPE_MAPPING&& child_index_to_type_id,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
     ) -> arrow_proxy
     {
         const auto n_children = children.size();
@@ -536,9 +555,9 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             format,
-            std::nullopt,  // name
-            std::nullopt,  // metadata
-            std::nullopt,  // flags,
+            std::move(name),      // name
+            std::move(metadata),  // metadata
+            std::nullopt,         // flags,
             static_cast<int64_t>(n_children),
             child_schemas,  // children
             nullptr         // dictionary
