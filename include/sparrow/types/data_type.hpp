@@ -163,8 +163,10 @@ namespace sparrow
         DOUBLE = 12,
         // UTF8 variable-length string
         STRING = 13,
+        LARGE_STRING = 14,
         // Variable-length bytes (no guarantee of UTF8-ness)
-        BINARY = 14,
+        BINARY = 15,
+        LARGE_BINARY = 16,
         // Number of nanoseconds since the UNIX epoch with an optional timezone.
         // See: https://arrow.apache.org/docs/python/timestamps.html#timestamps
         TIMESTAMP = 18,
@@ -242,11 +244,13 @@ namespace sparrow
                 case 'g':
                     return data_type::DOUBLE;
                 case 'u':
-                case 'U':  // large string
                     return data_type::STRING;
-                case 'z':  // binary
-                case 'Z':  // large binary
+                case 'U':
+                    return data_type::LARGE_STRING;
+                case 'z':
                     return data_type::BINARY;
+                case 'Z':
+                    return data_type::LARGE_BINARY;
                 default:
                     return data_type::NA;
             }
@@ -435,8 +439,12 @@ namespace sparrow
                 return "g";
             case data_type::STRING:
                 return "u";
+            case data_type::LARGE_STRING:
+                return "U";
             case data_type::BINARY:
                 return "z";
+            case data_type::LARGE_BINARY:
+                return "Z";
             case data_type::TIMESTAMP:
                 return "tDm";
             case data_type::LIST:
@@ -511,7 +519,7 @@ namespace sparrow
         float32_t,
         float64_t,
         std::string,
-        // std::vector<byte_t>,
+        std::vector<byte_t>,
         sparrow::timestamp,
         // TODO: add missing fundamental types here
         list_value,
@@ -740,8 +748,12 @@ namespace std
                         return "double";
                     case STRING:
                         return "String";
+                    case LARGE_STRING:
+                        return "Large string";
                     case BINARY:
                         return "Binary";
+                    case LARGE_BINARY:
+                        return "Large binary";
                     case TIMESTAMP:
                         return "Timestamp";
                     case LIST:
@@ -800,6 +812,19 @@ namespace std
         }
     };
 
+    template <>
+    struct formatter<std::byte>
+    {
+        constexpr auto parse(std::format_parse_context& ctx)
+        {
+            return ctx.begin();  // Simple implementation
+        }
+
+        auto format(const std::byte& b, std::format_context& ctx) const
+        {
+            return std::format_to(ctx.out(), "{}", static_cast<int>(b));
+        }
+    };
 }
 
 #endif

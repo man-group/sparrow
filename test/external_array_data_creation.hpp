@@ -245,6 +245,101 @@ namespace sparrow::test
         );
     }
 
+    inline std::vector<std::vector<byte_t>> make_testing_bytes(std::size_t n)
+    {
+        std::vector<std::vector<byte_t>> res(n);
+        res[0] = {byte_t(0), byte_t(1)};
+        for (size_t i = 1; i < n; ++i)
+        {
+            std::byte b0 = res[i-1][1]; 
+            auto b1 = static_cast<byte_t>(int(res[i-1][0]) + int(res[i-1][1]));
+            if (i % 3 == 0)
+            {
+                res[i] = {b0, b1};
+            }
+            else
+            {
+                auto b2 = static_cast<byte_t>(int(res[i-1][0]) - int(res[i-1][1]));
+                if (i % 2 == 0)
+                {
+                    res[i] = {b0, b1, b2};
+                }
+                else
+                {
+                    std::byte b3 = res[i-1][0];
+                    res[i] = {b0, b1, b2, b3};
+                }
+            }
+        }
+        return res;
+    }
+
+    template <>
+    inline void fill_schema_and_array<std::vector<std::byte>>(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        size_t size,
+        size_t offset,
+        const std::vector<size_t>& false_bitmap
+    )
+    {
+        sparrow::fill_arrow_schema(
+            schema,
+            std::string_view("z"),
+            "test",
+            "test metadata",
+            std::nullopt,
+            0,
+            nullptr,
+            nullptr
+        );
+
+        using buffer_type = sparrow::buffer<std::uint8_t>;
+
+        auto bytes = make_testing_bytes(size);
+        std::size_t value_size = std::accumulate(
+            bytes.cbegin(),
+            bytes.cbegin() + std::ptrdiff_t(size),
+            std::size_t(0),
+            [](std::size_t res, const auto& s)
+            {
+                return res + s.size();
+            }
+        );
+
+        buffer_type offset_buf(sizeof(std::int32_t) * (size + 1));
+        buffer_type value_buf(sizeof(char) * value_size);
+        {
+            std::int32_t* offset_data = offset_buf.data<std::int32_t>();
+            offset_data[0] = 0;
+            byte_t* ptr = value_buf.data<byte_t>();
+            for (std::size_t i = 0; i < size; ++i)
+            {
+                offset_data[i + 1] = offset_data[i] + static_cast<std::int32_t>(bytes[i].size());
+                std::ranges::copy(bytes[i], ptr);
+                ptr += bytes[i].size();
+            }
+        }
+
+        std::vector<buffer_type> arr_buffs = 
+        {
+            sparrow::test::make_bitmap_buffer(size, false_bitmap),
+            std::move(offset_buf),
+            std::move(value_buf)
+        };
+        
+        sparrow::fill_arrow_array(
+            arr,
+            static_cast<std::int64_t>(size - offset),
+            static_cast<std::int64_t>(false_bitmap.size()),
+            static_cast<std::int64_t>(offset),
+            std::move(arr_buffs),
+            0u,
+            nullptr,
+            nullptr
+        );
+    }
+
     template <>
     inline void fill_schema_and_array<
         sparrow::null_type>(ArrowSchema& schema, ArrowArray& arr, size_t size, size_t offset, const std::vector<size_t>&)

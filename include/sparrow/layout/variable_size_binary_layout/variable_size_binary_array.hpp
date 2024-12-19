@@ -29,6 +29,7 @@
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_iterator.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_reference.hpp"
+#include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
@@ -57,7 +58,7 @@ namespace sparrow
         };
 
         template <>
-        struct variable_size_binary_format<std::vector<std::byte>, std::int32_t>
+        struct variable_size_binary_format<std::vector<byte_t>, std::int32_t>
         {
             static std::string format()
             {
@@ -66,7 +67,7 @@ namespace sparrow
         };
 
         template <>
-        struct variable_size_binary_format<std::vector<std::byte>, std::int64_t>
+        struct variable_size_binary_format<std::vector<byte_t>, std::int64_t>
         {
             static std::string format()
             {
@@ -78,8 +79,54 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     class variable_size_binary_array_impl;
 
-    using string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int32_t>;
+    using binary_traits = arrow_traits<std::vector<byte_t>>;
+    
+    using string_array =     variable_size_binary_array_impl<std::string, std::string_view, std::int32_t>;
     using big_string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int64_t>;
+    using binary_array =     variable_size_binary_array_impl<binary_traits::value_type, binary_traits::const_reference, std::int32_t>;
+    using big_binary_array = variable_size_binary_array_impl<binary_traits::value_type, binary_traits::const_reference, std::int64_t>;
+
+    namespace detail
+    {
+        template<class T>
+        struct get_data_type_from_array;
+
+        template<>
+        struct get_data_type_from_array<sparrow::string_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::STRING;
+            }
+        };
+
+        template<>
+        struct get_data_type_from_array<sparrow::big_string_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::LARGE_STRING;
+            }
+        };
+
+        template<>
+        struct get_data_type_from_array<sparrow::binary_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::BINARY;
+            }
+        };
+
+        template<>
+        struct get_data_type_from_array<sparrow::big_binary_array>
+        {
+            constexpr static sparrow::data_type get()
+            {
+                return sparrow::data_type::LARGE_BINARY;
+            }
+        };
+    }
 
     /**
      * Checks whether T is a string_array type.
@@ -92,6 +139,18 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_big_string_array_v = std::same_as<T, big_string_array>;
+    
+    /**
+     * Checks whether T is a binary_array type.
+     */
+    template <class T>
+    constexpr bool is_binary_array_v = std::same_as<T, binary_array>;
+
+    /**
+     * Checks whether T is a big_binary_array type.
+     */
+    template <class T>
+    constexpr bool is_big_binary_array_v = std::same_as<T, big_binary_array>;
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     struct array_inner_types<variable_size_binary_array_impl<T, CR, OT>> : array_inner_types_base
@@ -145,6 +204,10 @@ namespace sparrow
     class variable_size_binary_array_impl final
         : public mutable_array_bitmap_base<variable_size_binary_array_impl<T, CR, OT>>
     {
+    private:
+
+        static_assert(sizeof(std::ranges::range_value_t<T>) == sizeof(std::uint8_t),
+            "Only sequences of types with the same size as uint8_t are supported");
     public:
 
         using self_type = variable_size_binary_array_impl<T, CR, OT>;
@@ -424,13 +487,26 @@ namespace sparrow
             const auto shift_val_abs = static_cast<size_type>(std::abs(shift_byte_count));
             const auto new_data_buffer_size = shift_byte_count < 0 ? data_buffer.size() - shift_val_abs
                                                                    : data_buffer.size() + shift_val_abs;
-            data_buffer.resize(new_data_buffer_size);
-            // Move elements to make space for the new value
-            std::move_backward(
-                data_buffer.begin() + offset_end,
-                data_buffer.end() - shift_byte_count,
-                data_buffer.end()
-            );
+
+            if (shift_byte_count > 0)
+            {
+                data_buffer.resize(new_data_buffer_size);
+                // Move elements to make space for the new value
+                std::move_backward(
+                    data_buffer.begin() + offset_end,
+                    data_buffer.end() - shift_byte_count,
+                    data_buffer.end()
+                );
+            }
+            else
+            {
+                std::move(
+                    data_buffer.begin() + offset_end,
+                    data_buffer.end(),
+                    data_buffer.begin() + offset_end + shift_byte_count
+                );
+                data_buffer.resize(new_data_buffer_size);
+            }
             // Adjust offsets for subsequent elements
             std::for_each(
                 offset(index + 1),
@@ -441,8 +517,9 @@ namespace sparrow
                 }
             );
         }
+        auto tmp = std::views::transform(rhs, [](const auto& val) { return static_cast<std::uint8_t>(val); });
         // Copy the new value into the buffer
-        std::copy(std::ranges::begin(rhs), std::ranges::end(rhs), data_buffer.begin() + offset_beg);
+        std::copy(std::ranges::begin(tmp), std::ranges::end(tmp), data_buffer.begin() + offset_beg);
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>

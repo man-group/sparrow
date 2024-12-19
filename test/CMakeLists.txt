@@ -114,6 +114,7 @@ else()
         test_arrow_array_schema_utils.cpp
         test_arrow_array.cpp
         test_arrow_schema.cpp
+        test_binary_array.cpp
         test_bit.cpp
         test_buffer_adaptor.cpp
         test_buffer.cpp
@@ -139,13 +140,13 @@ else()
         test_record_batch.cpp
         test_repeat_container.cpp
         test_run_end_encoded_array.cpp
+        test_string_array.cpp
         test_struct_array.cpp
         test_traits.cpp
         test_union_array.cpp
         test_utils_buffers.cpp
         test_utils_offsets.cpp
         test_utils.hpp
-        test_variable_size_binary_array.cpp
         test_variable_size_binary_view_array.cpp
         test_nested_comperators.cpp
         test_builder_utils.cpp

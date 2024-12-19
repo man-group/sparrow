@@ -52,7 +52,9 @@ namespace sparrow
             case data_type::LIST:
             case data_type::STRUCT:
             case data_type::STRING:
+            case data_type::LARGE_STRING:
             case data_type::BINARY:
+            case data_type::LARGE_BINARY:
             case data_type::FIXED_WIDTH_BINARY:
             case data_type::LARGE_LIST:
             case data_type::LIST_VIEW:

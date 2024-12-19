@@ -18,6 +18,7 @@
 
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/utils/vector_view.hpp"
 
 namespace sparrow
 {
@@ -57,8 +58,9 @@ namespace sparrow
     template <>
     struct arrow_traits<std::vector<byte_t>>
     {
-        static constexpr data_type type_id = data_type::STRING;
+        static constexpr data_type type_id = data_type::BINARY;
         using value_type = std::vector<byte_t>;
+        using const_reference = vector_view<const byte_t>;
     };
 
     template <>
