@@ -101,7 +101,7 @@ namespace sparrow
         }
         while (n > 0)
         {
-            str += '0' + char(n % 10);
+            str += '0' + static_cast<char>(n % 10);
             n /= 10;
         }
 
