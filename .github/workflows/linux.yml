@@ -105,9 +105,7 @@ jobs:
       if: success() || failure()
       with:
         name: test_sparrow_lib_report_Linux_${{ matrix.sys.compiler }}_${{ matrix.sys.version }}_${{ matrix.sys.stdlib }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.sys.date-polyfill}}
-        path: |
-          build/test/test_sparrow_lib_report_doctest.xml
-          build/test/test_sparrow_lib_report_catch2.xml
+        path: ./**/test*.xml
         if-no-files-found: error
 
     - name: Run all examples
