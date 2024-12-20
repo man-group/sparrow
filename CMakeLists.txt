@@ -204,7 +204,6 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/types/data_traits.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/types/data_type.hpp
     # Utils
-    ${SPARROW_INCLUDE_DIR}/sparrow/utils/algorithm.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/bit.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/buffers.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/contracts.hpp

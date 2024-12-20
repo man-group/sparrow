@@ -32,7 +32,7 @@ endif()
 
 if(NOT FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
     find_package(doctest ${FIND_PACKAGE_OPTIONS})
-    find_package(Catch2 3 ${FIND_PACKAGE_OPTIONS})
+    # find_package(Catch2 3 ${FIND_PACKAGE_OPTIONS})
     find_package(nanoarrow ${FIND_PACKAGE_OPTIONS})
 endif()
 
@@ -54,18 +54,18 @@ if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE 
         FetchContent_MakeAvailable(doctest)
     endif()
 
-    if(NOT Catch2_FOUND)
-        message(STATUS "📦 Fetching Catch2 v3.7.1")
-        FetchContent_Declare(
-            Catch2
-            GIT_SHALLOW TRUE
-            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-            GIT_TAG v3.7.1
-            GIT_PROGRESS TRUE
-            SYSTEM
-            EXCLUDE_FROM_ALL)
-        FetchContent_MakeAvailable(Catch2)
-    endif()
+    # if(NOT Catch2_FOUND)
+    #     message(STATUS "📦 Fetching Catch2 v3.7.1")
+    #     FetchContent_Declare(
+    #         Catch2
+    #         GIT_SHALLOW TRUE
+    #         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    #         GIT_TAG v3.7.1
+    #         GIT_PROGRESS TRUE
+    #         SYSTEM
+    #         EXCLUDE_FROM_ALL)
+    #     FetchContent_MakeAvailable(Catch2)
+    # endif()
 
     if(NOT nanoarrow_FOUND)
         message(STATUS "📦 Fetching nanoarrow 0.6")
@@ -167,17 +167,17 @@ target_link_libraries(${test_target}
         nanoarrow::nanoarrow
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
-set(test_target_catch2 "test_sparrow_lib_catch2")
+# set(test_target_catch2 "test_sparrow_lib_catch2")
 
-add_executable(${test_target_catch2} test_algorithm.cpp)
-target_link_libraries(${test_target_catch2}
-    PRIVATE
-        sparrow
-        Catch2::Catch2WithMain
-        $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
+# add_executable(${test_target_catch2})
+# target_link_libraries(${test_target_catch2}
+#     PRIVATE
+#         sparrow
+#         Catch2::Catch2WithMain
+#         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
-include(Catch)
-catch_discover_tests(${test_target_catch2})
+# include(Catch)
+# catch_discover_tests(${test_target_catch2})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(compiles_options
@@ -256,8 +256,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
     if (NOT "${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC")
         target_compile_options(${test_target} PRIVATE "-ftemplate-backtrace-limit=0")
         target_compile_options(${test_target} PRIVATE "-pedantic")# Warn on language extensions
-        target_compile_options(${test_target_catch2} PRIVATE "-ftemplate-backtrace-limit=0")
-        target_compile_options(${test_target_catch2} PRIVATE "-pedantic")# Warn on language extensions
+        # target_compile_options(${test_target_catch2} PRIVATE "-ftemplate-backtrace-limit=0")
+        # target_compile_options(${test_target_catch2} PRIVATE "-pedantic")# Warn on language extensions
     endif()
 endif()
 
@@ -278,22 +278,24 @@ endif()
 set_target_properties(${test_target} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(${test_target} PRIVATE cxx_std_20)
 
-target_compile_options(${test_target_catch2}
-    PRIVATE
-        ${compiles_options}
-        $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>
-        )
-target_link_options(${test_target_catch2}
-    PRIVATE
-        $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
+# target_compile_options(${test_target_catch2}
+#     PRIVATE
+#         ${compiles_options}
+#         $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>
+#         )
+# target_link_options(${test_target_catch2}
+#     PRIVATE
+#         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
 # We do not use non-standard C++
-set_target_properties(${test_target_catch2} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
-target_compile_features(${test_target_catch2} PRIVATE cxx_std_20)
+# set_target_properties(${test_target_catch2} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
+# target_compile_features(${test_target_catch2} PRIVATE cxx_std_20)
 
 add_custom_target(run_tests
     COMMAND ${test_target}
-    COMMAND ${test_target_catch2} -v high
-    DEPENDS ${test_target} ${test_target_catch2}
+    # COMMAND ${test_target_catch2} -v high
+    DEPENDS 
+        ${test_target}
+        # ${test_target_catch2}
     COMMENT "Running tests for Doctest and Catch2"
     USES_TERMINAL
 )
@@ -305,8 +307,10 @@ set(JUNIT_REPORT_FILE_CATCH2 ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report
 
 add_custom_target(run_tests_with_junit_report
     COMMAND ${test_target} --reporters=better_junit --out=${JUNIT_REPORT_FILE_DOCTEST} --no-path-filenames=true
-    COMMAND ${test_target_catch2} --reporter JUnit -o ${JUNIT_REPORT_FILE_CATCH2}
-    DEPENDS ${test_target} ${test_target_catch2}
+    # COMMAND ${test_target_catch2} --reporter JUnit -o ${JUNIT_REPORT_FILE_CATCH2}
+    DEPENDS
+        ${test_target} 
+        # ${test_target_catch2}
     COMMENT "Running tests with JUnit reports saved to: ${JUNIT_REPORT_FILE_DOCTEST} and ${JUNIT_REPORT_FILE_CATCH2}"
     USES_TERMINAL
 )
