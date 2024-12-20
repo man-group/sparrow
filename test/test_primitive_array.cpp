@@ -13,7 +13,14 @@
 // limitations under the License.
 
 #include <cstdint>
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wfree-nonheap-object"
+#endif
 #include <ranges>
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
 #include <vector>
 
 #include "sparrow/array.hpp"
