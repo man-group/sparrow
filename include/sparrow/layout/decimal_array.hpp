@@ -15,13 +15,11 @@
 #pragma once
 
 #include <cstddef>
-#include <ranges>
 #include <sstream>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
@@ -29,9 +27,7 @@
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/decimal.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
-#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/utils/ranges.hpp"
 
 namespace sparrow
 {
@@ -148,7 +144,6 @@ namespace sparrow
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
 
-
         explicit decimal_array(arrow_proxy);
 
         template <class... Args>
@@ -162,12 +157,22 @@ namespace sparrow
     private:
 
         template <validity_bitmap_input R>
-        static auto
-        create_proxy(u8_buffer<storage_type>&& data_buffer, R&& bitmaps, std::size_t precision, int scale)
-            -> arrow_proxy;
+        static auto create_proxy(
+            u8_buffer<storage_type>&& data_buffer,
+            R&& bitmaps,
+            std::size_t precision,
+            int scale,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
+        ) -> arrow_proxy;
 
-        static auto create_proxy(u8_buffer<storage_type>&& data_buffer, std::size_t precision, int scale)
-            -> arrow_proxy;
+        static auto create_proxy(
+            u8_buffer<storage_type>&& data_buffer,
+            std::size_t precision,
+            int scale,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
+        ) -> arrow_proxy;
 
 
         inner_reference value(size_type i);
@@ -227,10 +232,22 @@ namespace sparrow
     }
 
     template <class T>
-    auto decimal_array<T>::create_proxy(u8_buffer<storage_type>&& data_buffer, std::size_t precision, int scale)
-        -> arrow_proxy
+    auto decimal_array<T>::create_proxy(
+        u8_buffer<storage_type>&& data_buffer,
+        std::size_t precision,
+        int scale,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
+    ) -> arrow_proxy
     {
-        return decimal_array<T>::create_proxy(std::move(data_buffer), validity_bitmap{}, precision, scale);
+        return decimal_array<T>::create_proxy(
+            std::move(data_buffer),
+            validity_bitmap{},
+            precision,
+            scale,
+            name,
+            metadata
+        );
     }
 
     template <class T>
@@ -239,7 +256,9 @@ namespace sparrow
         u8_buffer<storage_type>&& data_buffer,
         R&& bitmap_input,
         std::size_t precision,
-        int scale
+        int scale,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
     ) -> arrow_proxy
     {
         const auto size = data_buffer.size();
@@ -250,12 +269,11 @@ namespace sparrow
         std::stringstream format_str;
         format_str << "d:" << precision << "," << scale << "," << sizeof_decimal * 8;
 
-
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             format_str.str(),
-            std::nullopt,  // name
-            std::nullopt,  // metadata
+            name,          // name
+            metadata,      // metadata
             std::nullopt,  // flags
             0,             // n_children
             nullptr,       // children

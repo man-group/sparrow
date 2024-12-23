@@ -17,12 +17,13 @@
 #include <cstddef>
 #include <ranges>
 
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
-
 
 namespace sparrow
 {
@@ -88,7 +89,16 @@ namespace sparrow
         using const_value_range = std::ranges::subrange<const_value_iterator>;
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
+        null_array(
+            size_t length,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
+        );
+
         explicit null_array(arrow_proxy);
+
+        std::optional<std::string_view> name() const;
+        std::optional<std::string_view> metadata() const;
 
         size_type size() const;
 
@@ -115,7 +125,10 @@ namespace sparrow
 
     private:
 
-        difference_type ssize() const;
+        static arrow_proxy
+        create_proxy(size_t length, std::optional<std::string_view> name, std::optional<std::string_view> metadata);
+
+        [[nodiscard]] difference_type ssize() const;
 
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
@@ -183,10 +196,61 @@ namespace sparrow
      * null_array implementation *
      *****************************/
 
+    inline null_array::null_array(
+        size_t length,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
+    )
+        : m_proxy(create_proxy(length, std::move(name), std::move(metadata)))
+    {
+    }
+
+    inline arrow_proxy null_array::create_proxy(
+        size_t length,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
+    )
+    {
+        using namespace std::literals;
+        ArrowSchema schema = make_arrow_schema(
+            "n"sv,
+            std::move(name),
+            std::move(metadata),
+            std::nullopt,
+            0,
+            nullptr,
+            nullptr
+        );
+
+        using buffer_type = sparrow::buffer<std::uint8_t>;
+        std::vector<buffer_type> arr_buffs = {};
+
+        ArrowArray arr = make_arrow_array(
+            static_cast<int64_t>(length),
+            static_cast<int64_t>(length),
+            0,
+            std::move(arr_buffs),
+            0,
+            nullptr,
+            nullptr
+        );
+        return arrow_proxy{std::move(arr), std::move(schema)};
+    }
+
     inline null_array::null_array(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
     {
         SPARROW_ASSERT_TRUE(m_proxy.data_type() == data_type::NA);
+    }
+
+    inline std::optional<std::string_view> null_array::name() const
+    {
+        return m_proxy.name();
+    }
+
+    inline std::optional<std::string_view> null_array::metadata() const
+    {
+        return m_proxy.metadata();
     }
 
     inline auto null_array::size() const -> size_type

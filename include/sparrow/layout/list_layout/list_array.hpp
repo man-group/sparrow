@@ -15,11 +15,13 @@
 #pragma once
 
 #include <string>  // for std::stoull
-#include <type_traits> 
+#include <type_traits>
 
+#include "sparrow/array_api.hpp"
+#include "sparrow/array_factory.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/array_factory.hpp"
+#include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
@@ -29,9 +31,6 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/array_api.hpp"
-#include "sparrow/buffer/dynamic_bitset.hpp"
-#include "sparrow/layout/layout_utils.hpp"
 
 namespace sparrow
 {
@@ -84,49 +83,49 @@ namespace sparrow
 
     namespace detail
     {
-        template<class T>
+        template <class T>
         struct get_data_type_from_array;
 
-        template<>
+        template <>
         struct get_data_type_from_array<sparrow::list_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LIST;
             }
         };
 
-        template<>
+        template <>
         struct get_data_type_from_array<sparrow::big_list_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LARGE_LIST;
             }
         };
 
-        template<>
+        template <>
         struct get_data_type_from_array<sparrow::list_view_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LIST_VIEW;
             }
         };
 
-        template<>
+        template <>
         struct get_data_type_from_array<sparrow::big_list_view_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LARGE_LIST_VIEW;
             }
         };
 
-        template<>
+        template <>
         struct get_data_type_from_array<sparrow::fixed_sized_list_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::FIXED_SIZED_LIST;
             }
@@ -183,7 +182,7 @@ namespace sparrow
     // - big-list-array
     // - list-view-array
     // - big-list-view-array
-    // - fixed-size-list-array 
+    // - fixed-size-list-array
     template <class DERIVED>
     class list_array_crtp_base : public array_bitmap_base<DERIVED>
     {
@@ -261,7 +260,7 @@ namespace sparrow
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type;
         using offset_type = std::conditional_t<BIG, const std::int64_t, const std::int32_t>;
-        using offset_buffer_type  = u8_buffer<std::remove_const_t<offset_type>>;
+        using offset_buffer_type = u8_buffer<std::remove_const_t<offset_type>>;
 
         explicit list_array_impl(arrow_proxy proxy);
 
@@ -271,18 +270,26 @@ namespace sparrow
         list_array_impl(self_type&&) = default;
         list_array_impl& operator=(self_type&&) = default;
 
-        template<class ... ARGS>
-        requires(mpl::excludes_copy_and_move_ctor_v<list_array_impl<BIG>, ARGS...>)
-        explicit list_array_impl(ARGS && ... args): self_type(create_proxy(std::forward<ARGS>(args)...))
-        {}
+        template <class... ARGS>
+            requires(mpl::excludes_copy_and_move_ctor_v<list_array_impl<BIG>, ARGS...>)
+        explicit list_array_impl(ARGS&&... args)
+            : self_type(create_proxy(std::forward<ARGS>(args)...))
+        {
+        }
 
-        template<std::ranges::range SIZES_RANGE>
-        static auto offset_from_sizes(SIZES_RANGE && sizes) -> offset_buffer_type;
+        template <std::ranges::range SIZES_RANGE>
+        static auto offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type;
 
     private:
 
-        template<validity_bitmap_input VB = validity_bitmap >
-        static arrow_proxy create_proxy(array && flat_values, offset_buffer_type && list_offsets,VB && validity_input = validity_bitmap{});
+        template <validity_bitmap_input VB = validity_bitmap>
+        static arrow_proxy create_proxy(
+            array&& flat_values,
+            offset_buffer_type&& list_offsets,
+            VB&& validity_input = validity_bitmap{},
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
+        );
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
         std::pair<offset_type, offset_type> offset_range(size_type i) const;
@@ -307,7 +314,7 @@ namespace sparrow
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type;
         using offset_type = std::conditional_t<BIG, const std::int64_t, const std::int32_t>;
-        using offset_buffer_type  = u8_buffer<std::remove_const_t<offset_type>>;
+        using offset_buffer_type = u8_buffer<std::remove_const_t<offset_type>>;
         using size_buffer_type = u8_buffer<std::remove_const_t<list_size_type>>;
 
         explicit list_view_array_impl(arrow_proxy proxy);
@@ -318,15 +325,24 @@ namespace sparrow
         list_view_array_impl(self_type&&) = default;
         list_view_array_impl& operator=(self_type&&) = default;
 
-        template<class ...ARGS>
-        requires(mpl::excludes_copy_and_move_ctor_v<list_view_array_impl<BIG>, ARGS...>)
-        list_view_array_impl(ARGS&& ...args): self_type(create_proxy(std::forward<ARGS>(args)...))
-        {}
+        template <class... ARGS>
+            requires(mpl::excludes_copy_and_move_ctor_v<list_view_array_impl<BIG>, ARGS...>)
+        list_view_array_impl(ARGS&&... args)
+            : self_type(create_proxy(std::forward<ARGS>(args)...))
+        {
+        }
 
     private:
 
-        template<validity_bitmap_input VB = validity_bitmap >
-        static arrow_proxy create_proxy(array && flat_values, offset_buffer_type && list_offsets,size_buffer_type && list_sizes,VB && validity_input = validity_bitmap{});
+        template <validity_bitmap_input VB = validity_bitmap>
+        static arrow_proxy create_proxy(
+            array&& flat_values,
+            offset_buffer_type&& list_offsets,
+            size_buffer_type&& list_sizes,
+            VB&& validity_input = validity_bitmap{},
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
+        );
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr std::size_t SIZES_BUFFER_INDEX = 2;
@@ -362,14 +378,23 @@ namespace sparrow
         fixed_sized_list_array(self_type&&) = default;
         fixed_sized_list_array& operator=(self_type&&) = default;
 
-        template<class ...ARGS>
-        requires(mpl::excludes_copy_and_move_ctor_v<fixed_sized_list_array, ARGS...>)
-        fixed_sized_list_array(ARGS&& ...args): self_type(create_proxy(std::forward<ARGS>(args)...))
-        {}
+        template <class... ARGS>
+            requires(mpl::excludes_copy_and_move_ctor_v<fixed_sized_list_array, ARGS...>)
+        fixed_sized_list_array(ARGS&&... args)
+            : self_type(create_proxy(std::forward<ARGS>(args)...))
+        {
+        }
 
     private:
-        template<validity_bitmap_input R = validity_bitmap>
-        static arrow_proxy create_proxy(std::uint64_t list_size, array && flat_values, R && validity_input = validity_bitmap{});
+
+        template <validity_bitmap_input R = validity_bitmap>
+        static arrow_proxy create_proxy(
+            std::uint64_t list_size,
+            array&& flat_values,
+            R&& validity_input = validity_bitmap{},
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
+        );
 
         static uint64_t list_size_from_format(const std::string_view format);
         std::pair<offset_type, offset_type> offset_range(size_type i) const;
@@ -491,15 +516,22 @@ namespace sparrow
     }
 
     template <bool BIG>
-    template<std::ranges::range SIZES_RANGE>
-    auto list_array_impl<BIG>::offset_from_sizes(SIZES_RANGE && sizes) -> offset_buffer_type
+    template <std::ranges::range SIZES_RANGE>
+    auto list_array_impl<BIG>::offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes));
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
+        ));
     }
 
     template <bool BIG>
-    template<validity_bitmap_input VB >
-    arrow_proxy list_array_impl<BIG>::create_proxy(array && flat_values, offset_buffer_type && list_offsets,VB && validity_input)
+    template <validity_bitmap_input VB>
+    arrow_proxy list_array_impl<BIG>::create_proxy(
+        array&& flat_values,
+        offset_buffer_type&& list_offsets,
+        VB&& validity_input,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
+    )
     {
         const auto size = list_offsets.size() - 1;
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
@@ -509,13 +541,13 @@ namespace sparrow
         const auto null_count = vbitmap.null_count();
 
         ArrowSchema schema = make_arrow_schema(
-            BIG ? std::string("+L") : std::string("+l"), // format
-            std::nullopt, // name
-            std::nullopt, // metadata
-            std::nullopt, // flags,
-            1, // n_children
-            new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))}, // children
-            nullptr // dictionary
+            BIG ? std::string("+L") : std::string("+l"),                   // format
+            name,                                                          // name
+            metadata,                                                      // metadata
+            std::nullopt,                                                  // flags,
+            1,                                                             // n_children
+            new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))},  // children
+            nullptr                                                        // dictionary
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
@@ -524,13 +556,13 @@ namespace sparrow
         };
 
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size), // length
+            static_cast<std::int64_t>(size),  // length
             static_cast<int64_t>(null_count),
-            0, // offset
+            0,  // offset
             std::move(arr_buffs),
-            1, // n_children
-            new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))}, // children
-            nullptr // dictionary
+            1,                                                        // n_children
+            new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))},  // children
+            nullptr                                                   // dictionary
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
@@ -563,7 +595,7 @@ namespace sparrow
     auto list_array_impl<BIG>::make_list_offsets() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
-              this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
+            this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
         );
     }
 
@@ -580,16 +612,18 @@ namespace sparrow
     }
 
     template <bool BIG>
-    template<validity_bitmap_input VB >
+    template <validity_bitmap_input VB>
     arrow_proxy list_view_array_impl<BIG>::create_proxy(
-        array && flat_values, 
-        offset_buffer_type && list_offsets,
-        size_buffer_type && list_sizes,
-        VB && validity_input
+        array&& flat_values,
+        offset_buffer_type&& list_offsets,
+        size_buffer_type&& list_sizes,
+        VB&& validity_input,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
     )
     {
-        SPARROW_ASSERT(list_offsets.size() == list_sizes.size() , "sizes and offset must have the same size");
-        
+        SPARROW_ASSERT(list_offsets.size() == list_sizes.size(), "sizes and offset must have the same size");
+
         const auto size = list_sizes.size();
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
 
@@ -598,13 +632,13 @@ namespace sparrow
         const auto null_count = vbitmap.null_count();
 
         ArrowSchema schema = make_arrow_schema(
-            BIG ? std::string("+vL") : std::string("+vl"), // format
-            std::nullopt, // name
-            std::nullopt, // metadata
-            std::nullopt, // flags,
-            1, // n_children
-            new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))}, // children
-            nullptr // dictionary
+            BIG ? std::string("+vL") : std::string("+vl"),                 // format
+            name,                                                          // name
+            metadata,                                                      // metadata
+            std::nullopt,                                                  // flags,
+            1,                                                             // n_children
+            new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))},  // children
+            nullptr                                                        // dictionary
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
@@ -614,13 +648,13 @@ namespace sparrow
         };
 
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size), // length
+            static_cast<std::int64_t>(size),  // length
             static_cast<int64_t>(null_count),
-            0, // offset
+            0,  // offset
             std::move(arr_buffs),
-            1, // n_children
-            new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))}, // children
-            nullptr // dictionary
+            1,                                                        // n_children
+            new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))},  // children
+            nullptr                                                   // dictionary
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
@@ -657,7 +691,7 @@ namespace sparrow
     auto list_view_array_impl<BIG>::make_list_offsets() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
-              this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
+            this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
         );
     }
 
@@ -665,7 +699,7 @@ namespace sparrow
     auto list_view_array_impl<BIG>::make_list_sizes() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
-              this->get_arrow_proxy().buffers()[SIZES_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
+            this->get_arrow_proxy().buffers()[SIZES_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
         );
     }
 
@@ -697,10 +731,13 @@ namespace sparrow
         return std::make_pair(offset, offset + m_list_size);
     }
 
-    template<validity_bitmap_input R>
+    template <validity_bitmap_input R>
     inline arrow_proxy fixed_sized_list_array::create_proxy(
-        std::uint64_t list_size, array && flat_values,
-        R && validity_input 
+        std::uint64_t list_size,
+        array&& flat_values,
+        R&& validity_input,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
     )
     {
         const auto size = flat_values.size() / static_cast<std::size_t>(list_size);
@@ -713,24 +750,24 @@ namespace sparrow
         std::string format = "+w:" + std::to_string(list_size);
         ArrowSchema schema = make_arrow_schema(
             format,
-            std::nullopt, // name
-            std::nullopt, // metadata
-            std::nullopt, // flags,
-            1, // n_children
-            new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))}, // children
-            nullptr // dictionary
+            std::move(name),                                               // name
+            std::move(metadata),                                           // metadata
+            std::nullopt,                                                  // flags,
+            1,                                                             // n_children
+            new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))},  // children
+            nullptr                                                        // dictionary
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {vbitmap.extract_storage()};
 
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size), // length
+            static_cast<std::int64_t>(size),  // length
             static_cast<int64_t>(null_count),
-            0, // offset
+            0,  // offset
             std::move(arr_buffs),
-            1, // n_children
-            new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))}, // children
-            nullptr // dictionary
+            1,                                                        // n_children
+            new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))},  // children
+            nullptr                                                   // dictionary
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }

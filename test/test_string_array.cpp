@@ -73,8 +73,11 @@ namespace sparrow
             {
                 std::vector<std::string> words{"hello", " ", "ugly", "", "world"};
                 std::vector<std::size_t> where_nulls{2, 3};
-                string_array array(words, std::move(where_nulls));
+                string_array array(words, std::move(where_nulls), "name", "metadata");
 
+                CHECK_EQ(array.name(), "name");
+                CHECK_EQ(array.metadata(), "metadata");
+                
                 REQUIRE_EQ(array.size(), words.size());
 
                 // check nulls
