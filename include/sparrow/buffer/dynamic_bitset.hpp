@@ -14,6 +14,6 @@
 
 #pragma once
 
+#include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
 #include "sparrow/buffer/dynamic_bitset/non_owning_dynamic_bitset.hpp"
-#include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"

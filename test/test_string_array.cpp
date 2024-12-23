@@ -77,7 +77,7 @@ namespace sparrow
 
                 CHECK_EQ(array.name(), "name");
                 CHECK_EQ(array.metadata(), "metadata");
-                
+
                 REQUIRE_EQ(array.size(), words.size());
 
                 // check nulls
@@ -929,7 +929,7 @@ namespace sparrow
                 }
             }
         }
-        
+
 #if defined(__cpp_lib_format)
         TEST_CASE_FIXTURE(string_array_fixture, "formatting")
         {

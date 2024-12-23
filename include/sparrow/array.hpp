@@ -20,7 +20,7 @@
 namespace sparrow
 {
     template <layout A>
-    requires (not std::is_lvalue_reference_v<A>)
+        requires(not std::is_lvalue_reference_v<A>)
     array::array(A&& a)
         : p_array(new array_wrapper_impl<A>(std::move(a)))
     {
@@ -107,10 +107,12 @@ struct std::formatter<sparrow::array>
 
     auto format(const sparrow::array& ar, std::format_context& ctx) const
     {
-        return ar.visit([&ctx](const auto& layout)
-        {
-            return std::format_to(ctx.out(), "{}", layout);
-        });
+        return ar.visit(
+            [&ctx](const auto& layout)
+            {
+                return std::format_to(ctx.out(), "{}", layout);
+            }
+        );
     }
 };
 

@@ -680,8 +680,8 @@ namespace sparrow
     }
 
     template <bool BIG>
-    inline auto
-    list_view_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type, offset_type>
+    inline auto list_view_array_impl<BIG>::offset_range(size_type i) const
+        -> std::pair<offset_type, offset_type>
     {
         const auto offset = p_list_offsets[i];
         return std::make_pair(offset, offset + p_list_sizes[i]);

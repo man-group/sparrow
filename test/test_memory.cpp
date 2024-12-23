@@ -197,7 +197,10 @@ namespace sparrow::cloning_test
             return std::unique_ptr<mock_derived>{new mock_derived(*this)};
         }
 
-        static int instance_count() { return m_instance_count; }
+        static int instance_count()
+        {
+            return m_instance_count;
+        }
 
     private:
 
@@ -416,7 +419,7 @@ namespace sparrow
             auto d2 = new mock_derived();
             cloning_ptr<mock_derived> p1(d1);
             cloning_ptr<mock_derived> p2(d2);
-            
+
             SUBCASE("method")
             {
                 p1.swap(p2);
@@ -474,7 +477,7 @@ namespace sparrow
                 CHECK(p1 != nullptr);
                 CHECK(p4 == nullptr);
             }
-            
+
             SUBCASE("ordering")
             {
                 CHECK(p1 <= p1);

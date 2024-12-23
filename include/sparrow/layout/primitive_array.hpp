@@ -495,8 +495,8 @@ namespace sparrow
 
     template <class T>
     template <mpl::iterator_of_type<T> InputIt>
-    auto
-    primitive_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last) -> value_iterator
+    auto primitive_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        -> value_iterator
     {
         SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= value_cend());

@@ -3,13 +3,13 @@
  * The range can be a range of values or a range of nullable values.
  */
 
-//#include <sparrow/array/array_data.hpp>
+// #include <sparrow/array/array_data.hpp>
 
 
 /*void example_typed_array_of_floats(){
     using value_type = float;
     std::vector<value_type> data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-    
+
     // construct the array
     auto array = sparrow::typed_array<value_type>(data);
 
@@ -34,7 +34,7 @@ void example_typed_array_of_strings(){
         "four",
         "five"
     };
-    
+
     // construct the array
     auto array = sparrow::typed_array<value_type>(data);
 
@@ -61,7 +61,7 @@ void example_typed_array_of_strings_from_nullables(){
         nullable_type("four"),
         nullable_type("five")
     };
-    
+
     // construct the array
     auto array = sparrow::typed_array<value_type>(data);
 
@@ -75,9 +75,10 @@ void example_typed_array_of_strings_from_nullables(){
         }
     }
 }*/
-int main() {
-    //example_typed_array_of_floats();
-    //example_typed_array_of_strings();
-    //example_typed_array_of_strings_from_nullables();
+int main()
+{
+    // example_typed_array_of_floats();
+    // example_typed_array_of_strings();
+    // example_typed_array_of_strings_from_nullables();
     return 0;
 }

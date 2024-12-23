@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/builder/builder_utils.hpp"
-#include "sparrow/builder/nested_less.hpp"
-#include "sparrow/builder/nested_eq.hpp"
-#include "test_utils.hpp"
-
-#include <vector>
+#include <array>
 #include <tuple>
 #include <variant>
-#include <array>
+#include <vector>
 
+#include "sparrow/builder/builder_utils.hpp"
+#include "sparrow/builder/nested_eq.hpp"
+#include "sparrow/builder/nested_less.hpp"
+
+#include "test_utils.hpp"
 
 namespace sparrow
-{   
+{
 
     TEST_SUITE("nested-less")
-    {   
+    {
         TEST_CASE("nullable-less")
         {
             using type = nullable<int>;
@@ -42,20 +42,17 @@ namespace sparrow
             CHECK_FALSE(less_type{}(type{1}, type{1}));
         }
         TEST_CASE("tuple")
-        {   
-
+        {
             {
                 using tuple_type = std::tuple<int>;
                 using less_type = detail::nested_less<tuple_type>;
                 CHECK(less_type{}(tuple_type{0}, tuple_type{1}));
             }
             {
-                using tuple_type = std::tuple<int,int>;
+                using tuple_type = std::tuple<int, int>;
                 using less_type = detail::nested_less<tuple_type>;
                 CHECK(less_type{}(tuple_type{0, 2}, tuple_type{1, 0}));
             }
-            
-
         }
         TEST_CASE("very-nested-less")
         {
@@ -79,9 +76,10 @@ namespace sparrow
             CHECK_FALSE(less_type{}(c, a));
             CHECK_FALSE(less_type{}(c, c));
         }
-    }   
+    }
+
     TEST_SUITE("nested-eq")
-    {   
+    {
         TEST_CASE("nullable-eq")
         {
             using type = nullable<int>;
@@ -96,8 +94,7 @@ namespace sparrow
             CHECK_FALSE(eq_type{}(type{1}, type{2}));
         }
         TEST_CASE("tuple")
-        {   
-
+        {
             {
                 using tuple_type = std::tuple<int>;
                 using eq_type = detail::nested_eq<tuple_type>;
@@ -107,15 +104,13 @@ namespace sparrow
                 CHECK_FALSE(eq_type{}(tuple_type{0}, tuple_type{1}));
             }
             {
-                using tuple_type = std::tuple<int,int>;
+                using tuple_type = std::tuple<int, int>;
                 using eq_type = detail::nested_eq<tuple_type>;
                 CHECK(eq_type{}(tuple_type{0, 0}, tuple_type{0, 0}));
                 CHECK_FALSE(eq_type{}(tuple_type{0, 1}, tuple_type{1, 0}));
                 CHECK_FALSE(eq_type{}(tuple_type{1, 0}, tuple_type{1, 1}));
                 CHECK(eq_type{}(tuple_type{1, 1}, tuple_type{1, 1}));
             }
-            
-
         }
         TEST_CASE("very-nested-eq")
         {
@@ -141,4 +136,3 @@ namespace sparrow
         }
     }
 }
-

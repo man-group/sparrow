@@ -185,12 +185,10 @@ namespace sparrow
     template <class D, bool is_mutable>
     template <std::input_iterator InputIt>
         requires std::same_as<typename std::iterator_traits<InputIt>::value_type, bool>
-                 auto array_bitmap_base_impl<D, is_mutable>::insert_bitmap(
-                     const_bitmap_iterator pos,
-                     InputIt first,
-                     InputIt last
-                 ) -> bitmap_iterator
-                     requires is_mutable
+    auto
+    array_bitmap_base_impl<D, is_mutable>::insert_bitmap(const_bitmap_iterator pos, InputIt first, InputIt last)
+        -> bitmap_iterator
+        requires is_mutable
     {
         SPARROW_ASSERT_TRUE(this->bitmap_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= this->bitmap_cend());
@@ -201,8 +199,8 @@ namespace sparrow
     }
 
     template <class D, bool is_mutable>
-    auto
-    array_bitmap_base_impl<D, is_mutable>::erase_bitmap(const_bitmap_iterator pos, size_type count) -> bitmap_iterator
+    auto array_bitmap_base_impl<D, is_mutable>::erase_bitmap(const_bitmap_iterator pos, size_type count)
+        -> bitmap_iterator
         requires is_mutable
     {
         SPARROW_ASSERT_TRUE(this->bitmap_cbegin() <= pos)

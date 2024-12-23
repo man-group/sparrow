@@ -89,12 +89,12 @@ namespace sparrow::test
 
     sparrow::buffer<std::uint8_t> make_size_buffer(const std::vector<size_t>& sizes, bool big)
     {
-        const auto buf_size = sizes.size()  * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t));
+        const auto buf_size = sizes.size() * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t));
         std::uint8_t* buf = new std::uint8_t[buf_size];
-        if(big)
+        if (big)
         {
             std::uint64_t* size_buf = reinterpret_cast<std::uint64_t*>(buf);
-            for(std::size_t i = 0; i < sizes.size(); ++i)
+            for (std::size_t i = 0; i < sizes.size(); ++i)
             {
                 size_buf[i] = sizes[i];
             }
@@ -102,7 +102,7 @@ namespace sparrow::test
         else
         {
             std::uint32_t* size_buf = reinterpret_cast<std::uint32_t*>(buf);
-            for(std::size_t i = 0; i < sizes.size(); ++i)
+            for (std::size_t i = 0; i < sizes.size(); ++i)
             {
                 size_buf[i] = static_cast<std::uint32_t>(sizes[i]);
             }
@@ -115,10 +115,11 @@ namespace sparrow::test
         ArrowArray& arr,
         ArrowSchema&& flat_value_schema,
         ArrowArray&& flat_value_arr,
-        const std::vector<std::size_t> & list_lengths,
-        const std::vector<std::size_t> & false_positions,
+        const std::vector<std::size_t>& list_lengths,
+        const std::vector<std::size_t>& false_positions,
         bool big_list
-    ){
+    )
+    {
         ArrowSchema** schema_children = new ArrowSchema*[1];
         schema_children[0] = new ArrowSchema(std::move(flat_value_schema));
         sparrow::fill_arrow_schema(
@@ -133,12 +134,11 @@ namespace sparrow::test
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = 
-        {
+        std::vector<buffer_type> arr_buffs = {
             sparrow::test::make_bitmap_buffer(list_lengths.size(), false_positions),
             make_offset_buffer_from_sizes(list_lengths, big_list)
         };
-        
+
         ArrowArray** array_children = new ArrowArray*[1];
         array_children[0] = new ArrowArray(std::move(flat_value_arr));
         sparrow::fill_arrow_array(
@@ -158,9 +158,10 @@ namespace sparrow::test
         ArrowArray& arr,
         ArrowSchema&& flat_value_schema,
         ArrowArray&& flat_value_arr,
-        const std::vector<std::size_t> & false_positions,
+        const std::vector<std::size_t>& false_positions,
         std::size_t list_size
-    ){
+    )
+    {
         SPARROW_ASSERT(list_size > 0, "list size must be greater than 0");
         SPARROW_ASSERT(list_size < 10, "just a test limitation st. format string can be on stack");
         // convert list size to string
@@ -180,11 +181,8 @@ namespace sparrow::test
 
         std::size_t arr_size = static_cast<std::size_t>(flat_value_arr.length) / list_size;
         using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = 
-        {
-            sparrow::test::make_bitmap_buffer(arr_size, false_positions)
-        };
-        
+        std::vector<buffer_type> arr_buffs = {sparrow::test::make_bitmap_buffer(arr_size, false_positions)};
+
         ArrowArray** array_children = new ArrowArray*[1];
         array_children[0] = new ArrowArray(std::move(flat_value_arr));
         sparrow::fill_arrow_array(
@@ -199,16 +197,16 @@ namespace sparrow::test
         );
     }
 
-
     void fill_schema_and_array_for_list_view_layout(
         ArrowSchema& schema,
         ArrowArray& arr,
         ArrowSchema&& flat_value_schema,
         ArrowArray&& flat_value_arr,
-        const std::vector<std::size_t> & list_lengths,
-        const std::vector<std::size_t> & false_positions,
+        const std::vector<std::size_t>& list_lengths,
+        const std::vector<std::size_t>& false_positions,
         bool big_list
-    ){
+    )
+    {
         ArrowSchema** schema_children = new ArrowSchema*[1];
         schema_children[0] = new ArrowSchema(std::move(flat_value_schema));
         sparrow::fill_arrow_schema(
@@ -223,13 +221,12 @@ namespace sparrow::test
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = 
-        {
+        std::vector<buffer_type> arr_buffs = {
             sparrow::test::make_bitmap_buffer(list_lengths.size(), false_positions),
             make_offset_buffer_from_sizes(list_lengths, big_list),
             make_size_buffer(list_lengths, big_list)
         };
-        
+
         ArrowArray** array_children = new ArrowArray*[1];
         array_children[0] = new ArrowArray(std::move(flat_value_arr));
         sparrow::fill_arrow_array(
@@ -249,14 +246,19 @@ namespace sparrow::test
         ArrowArray& arr,
         std::vector<ArrowSchema>&& children_schemas,
         std::vector<ArrowArray>&& children_arrays,
-        const std::vector<std::size_t> & false_positions
+        const std::vector<std::size_t>& false_positions
     )
     {
         ArrowSchema** schema_children = new ArrowSchema*[children_schemas.size()];
-        std::transform(std::make_move_iterator(children_schemas.begin()),
-                       std::make_move_iterator(children_schemas.end()),
-                       schema_children,
-                       [](auto&& child) { return new ArrowSchema(std::move(child)); });
+        std::transform(
+            std::make_move_iterator(children_schemas.begin()),
+            std::make_move_iterator(children_schemas.end()),
+            schema_children,
+            [](auto&& child)
+            {
+                return new ArrowSchema(std::move(child));
+            }
+        );
         sparrow::fill_arrow_schema(
             schema,
             std::string_view("+s"),
@@ -268,19 +270,23 @@ namespace sparrow::test
             nullptr
         );
 
-        
+
         int64_t length = children_arrays.front().length;
         using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = 
-        {
+        std::vector<buffer_type> arr_buffs = {
             sparrow::test::make_bitmap_buffer(static_cast<std::size_t>(length), false_positions),
         };
 
         ArrowArray** array_children = new ArrowArray*[children_arrays.size()];
-        std::transform(std::make_move_iterator(children_arrays.begin()),
-                       std::make_move_iterator(children_arrays.end()),
-                       array_children,
-                       [](auto&& child) { return new ArrowArray(std::move(child)); });
+        std::transform(
+            std::make_move_iterator(children_arrays.begin()),
+            std::make_move_iterator(children_arrays.end()),
+            array_children,
+            [](auto&& child)
+            {
+                return new ArrowArray(std::move(child));
+            }
+        );
         sparrow::fill_arrow_array(
             arr,
             length,
@@ -300,12 +306,18 @@ namespace sparrow::test
         std::vector<ArrowArray>&& children_arrays,
         const std::vector<std::uint8_t>& type_ids,
         const std::string& format
-    ){
+    )
+    {
         ArrowSchema** schema_children = new ArrowSchema*[children_schemas.size()];
-        std::transform(std::make_move_iterator(children_schemas.begin()),
-                       std::make_move_iterator(children_schemas.end()),
-                       schema_children,
-                       [](auto&& child) { return new ArrowSchema(std::move(child)); });
+        std::transform(
+            std::make_move_iterator(children_schemas.begin()),
+            std::make_move_iterator(children_schemas.end()),
+            schema_children,
+            [](auto&& child)
+            {
+                return new ArrowSchema(std::move(child));
+            }
+        );
         sparrow::fill_arrow_schema(
             schema,
             format,
@@ -320,13 +332,18 @@ namespace sparrow::test
         using buffer_type = sparrow::buffer<std::uint8_t>;
         buffer_type buf(type_ids.size());
         std::copy(type_ids.begin(), type_ids.end(), buf.begin());
-        std::vector<buffer_type> arr_buffs = { std::move(buf) };
-        
+        std::vector<buffer_type> arr_buffs = {std::move(buf)};
+
         ArrowArray** array_children = new ArrowArray*[children_arrays.size()];
-        std::transform(std::make_move_iterator(children_arrays.begin()),
-                       std::make_move_iterator(children_arrays.end()),
-                       array_children,
-                       [](auto&& child) { return new ArrowArray(std::move(child)); });
+        std::transform(
+            std::make_move_iterator(children_arrays.begin()),
+            std::make_move_iterator(children_arrays.end()),
+            array_children,
+            [](auto&& child)
+            {
+                return new ArrowArray(std::move(child));
+            }
+        );
 
         sparrow::fill_arrow_array(
             arr,
@@ -345,15 +362,21 @@ namespace sparrow::test
         ArrowArray& arr,
         std::vector<ArrowSchema>&& children_schemas,
         std::vector<ArrowArray>&& children_arrays,
-        const std::vector<std::uint8_t> & type_ids,
-        const std::vector<std::int32_t> & offsets,
-        const std::string & format
-    ){
+        const std::vector<std::uint8_t>& type_ids,
+        const std::vector<std::int32_t>& offsets,
+        const std::string& format
+    )
+    {
         ArrowSchema** schema_children = new ArrowSchema*[children_schemas.size()];
-        std::transform(std::make_move_iterator(children_schemas.begin()),
-                       std::make_move_iterator(children_schemas.end()),
-                       schema_children,
-                       [](auto&& child) { return new ArrowSchema(std::move(child)); });
+        std::transform(
+            std::make_move_iterator(children_schemas.begin()),
+            std::make_move_iterator(children_schemas.end()),
+            schema_children,
+            [](auto&& child)
+            {
+                return new ArrowSchema(std::move(child));
+            }
+        );
         sparrow::fill_arrow_schema(
             schema,
             format,
@@ -369,17 +392,22 @@ namespace sparrow::test
 
         buffer_type buf0(type_ids.size());
         std::copy(type_ids.begin(), type_ids.end(), buf0.begin());
-        
+
         buffer_type buf1(offsets.size() * sizeof(std::int32_t));
         std::copy(offsets.begin(), offsets.end(), buf1.data<std::int32_t>());
-        
-        std::vector<buffer_type> arr_buffs ={ std::move(buf0), std::move(buf1) };
-        
+
+        std::vector<buffer_type> arr_buffs = {std::move(buf0), std::move(buf1)};
+
         ArrowArray** array_children = new ArrowArray*[children_arrays.size()];
-        std::transform(std::make_move_iterator(children_arrays.begin()),
-                       std::make_move_iterator(children_arrays.end()),
-                       array_children,
-                       [](auto&& child) { return new ArrowArray(std::move(child)); });
+        std::transform(
+            std::make_move_iterator(children_arrays.begin()),
+            std::make_move_iterator(children_arrays.end()),
+            array_children,
+            [](auto&& child)
+            {
+                return new ArrowArray(std::move(child));
+            }
+        );
 
         sparrow::fill_arrow_array(
             arr,

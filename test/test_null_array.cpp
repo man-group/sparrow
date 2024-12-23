@@ -17,7 +17,6 @@
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
 
-
 namespace sparrow
 {
     using test::make_arrow_proxy;

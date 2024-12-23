@@ -68,8 +68,8 @@ namespace sparrow
 
 #if defined(__cpp_lib_format)
 
-auto std::formatter<sparrow::list_value>::format(const sparrow::list_value& list_value, std::format_context& ctx)
-    const -> decltype(ctx.out())
+auto std::formatter<sparrow::list_value>::format(const sparrow::list_value& list_value, std::format_context& ctx) const
+    -> decltype(ctx.out())
 {
     std::format_to(ctx.out(), "<");
     if (!list_value.empty())

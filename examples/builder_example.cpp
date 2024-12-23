@@ -3,17 +3,17 @@
  */
 
 
-#include <vector>
 #include <array>
-#include <tuple>
+#include <cassert>
 #include <list>
 #include <string>
-#include <cassert>
+#include <tuple>
+#include <vector>
 
 #include <sparrow/builder/builder.hpp>
 
 void primitve_array()
-{   
+{
     //! [builder_primitive_array]
     // using initializer_list
     auto arr = sparrow::build({1, 2, 3, 4, 5});
@@ -27,9 +27,13 @@ void primitve_array()
     auto arr3 = sparrow::build(l);
     /////////////////////
     // using any range
-    auto iota = std::views::iota(1, 6) | std::views::transform([](int i){ 
-        return static_cast<int>(i);
-    });
+    auto iota = std::views::iota(1, 6)
+                | std::views::transform(
+                    [](int i)
+                    {
+                        return static_cast<int>(i);
+                    }
+                );
     auto arr4 = sparrow::build(iota);
     /////////////////////
     // all of the arrays above are equivalent to the manually built array
@@ -42,8 +46,8 @@ void primitve_array()
 }
 
 void primitve_array_with_nulls()
-{   
-//! [builder_primitive_array_with_nulls]
+{
+    //! [builder_primitive_array_with_nulls]
     // using initializer_list (here we have to explicitly specify the type when using an
     // initializer list with nulls)
     auto arr = sparrow::build<sparrow::nullable<int>>({1, 2, sparrow::nullval, 4, 5});
@@ -57,9 +61,13 @@ void primitve_array_with_nulls()
     auto arr3 = sparrow::build(l);
     /////////////////////
     // using any range
-    auto iota = std::views::iota(1, 6) | std::views::transform([](int i) -> sparrow::nullable<int> { 
-        return i == 3 ? sparrow::nullable<int>{} : sparrow::nullable<int>{i};
-    });
+    auto iota = std::views::iota(1, 6)
+                | std::views::transform(
+                    [](int i) -> sparrow::nullable<int>
+                    {
+                        return i == 3 ? sparrow::nullable<int>{} : sparrow::nullable<int>{i};
+                    }
+                );
     auto arr4 = sparrow::build(iota);
     // all of the arrays above are equivalent to the manually built array
     std::vector<std::size_t> where_nulls{2};
@@ -68,29 +76,26 @@ void primitve_array_with_nulls()
     assert(arr == arr2);
     assert(arr == arr3);
     assert(arr == arr4);
-//! [builder_primitive_array_with_nulls]
+    //! [builder_primitive_array_with_nulls]
 }
 
 void list_of_strings()
-{   
+{
     //! [builder_list_of_strings]
     // [["hello", "world","!"], ["Another", "sentence"]]
-    std::vector<std::vector<std::string>> v{
-        {"hello", "world", "!"}, 
-        {"Another", "sentence"}
-    };
+    std::vector<std::vector<std::string>> v{{"hello", "world", "!"}, {"Another", "sentence"}};
     auto arr = sparrow::build(v);
     //! [builder_list_of_strings]
 }
 
-void list_of_strings_with_nulls()   
+void list_of_strings_with_nulls()
 {
     //! [builder_list_of_strings_with_nulls]
     // [["hello", "world","!"],NULL , ["Another", "sentence"]]
     using string_vector = std::vector<std::string>;
     using nullable_string_vector = sparrow::nullable<string_vector>;
     std::vector<nullable_string_vector> v{
-        nullable_string_vector{string_vector{"hello", "world", "!"}}, 
+        nullable_string_vector{string_vector{"hello", "world", "!"}},
         nullable_string_vector{},
         nullable_string_vector{string_vector{"Another", "sentence"}}
     };
@@ -98,19 +103,18 @@ void list_of_strings_with_nulls()
     //! [builder_list_of_strings_with_nulls]
 }
 
-
 void list_of_struct()
 {
     //! [builder_list_of_struct]
     /*
     [
         [
-            (1, 2.5), 
+            (1, 2.5),
             (2, 3.5)
         ],
         [
-            (3, 5.5), 
-            (5, 6.5), 
+            (3, 5.5),
+            (5, 6.5),
             (6, 7.5)
         ],
         [
@@ -119,45 +123,28 @@ void list_of_struct()
     ]
     */
     std::vector<std::vector<std::tuple<int, float>>> v{
-        {
-            std::tuple<int, float>{1, 2.5}, 
-            std::tuple<int, float>{2, 3.5}
-        },
-        {	
-            std::tuple<int, float>{3, 5.5}, 
-            std::tuple<int, float>{5, 6.5},
-            std::tuple<int, float>{6, 7.5}
-        },
-        {
-            std::tuple<int, float>{7, 8.5}
-        }
+        {std::tuple<int, float>{1, 2.5}, std::tuple<int, float>{2, 3.5}},
+        {std::tuple<int, float>{3, 5.5}, std::tuple<int, float>{5, 6.5}, std::tuple<int, float>{6, 7.5}},
+        {std::tuple<int, float>{7, 8.5}}
     };
     auto arr = sparrow::build(v);
     //! [builder_list_of_struct]
 }
 
 void fixed_sized_list_strings()
-{	
+{
     //! [builder_fixed_sized_list_strings]
-    std::vector<std::array<std::string, 2>> v{
-        {"hello", "world"},
-        {"Another", "sentence"},
-        {"This", "is"}
-    };
+    std::vector<std::array<std::string, 2>> v{{"hello", "world"}, {"Another", "sentence"}, {"This", "is"}};
     auto arr = sparrow::build(v);
     //! [builder_fixed_sized_list_strings]
 }
 
 void fixed_sized_list_of_union()
-{	
+{
     //! [builder_fixed_sized_list_of_union]
     using variant_type = std::variant<int, float>;
     using array_type = std::array<variant_type, 2>;
-    std::vector<array_type> v{
-        {1, 2.5f},
-        {2, 3.5f},
-        {3, 4.5f}
-    };
+    std::vector<array_type> v{{1, 2.5f}, {2, 3.5f}, {3, 4.5f}};
     auto arr = sparrow::build(v);
     //! [builder_fixed_sized_list_of_union]
 }
@@ -165,15 +152,13 @@ void fixed_sized_list_of_union()
 void dict_encoded_variable_sized_binary()
 {
     //! [builder_dict_encoded_variable_sized_binary]
-    sparrow::dict_encode<std::vector<std::string>> v{
-        std::vector<std::string>{
-            "hello", 
-            "world", 
-            "hello",
-            "world",
-            "hello",
-        }
-    };
+    sparrow::dict_encode<std::vector<std::string>> v{std::vector<std::string>{
+        "hello",
+        "world",
+        "hello",
+        "world",
+        "hello",
+    }};
     auto arr = sparrow::build(v);
     //! [builder_dict_encoded_variable_sized_binary]
 }
@@ -181,15 +166,13 @@ void dict_encoded_variable_sized_binary()
 void run_end_encoded_variable_sized_binary()
 {
     //! [builder_run_end_encoded_variable_sized_binary]
-    sparrow::run_end_encode<std::vector<std::string>> v{
-        std::vector<std::string>{
-            "hello", 
-            "hello", 
-            "hello",
-            "world",
-            "world",
-        }
-    };
+    sparrow::run_end_encode<std::vector<std::string>> v{std::vector<std::string>{
+        "hello",
+        "hello",
+        "hello",
+        "world",
+        "world",
+    }};
     auto arr = sparrow::build(v);
     //! [builder_run_end_encoded_variable_sized_binary]
 }
@@ -197,7 +180,7 @@ void run_end_encoded_variable_sized_binary()
 void struct_array()
 {
     //! [builder_struct_array]
-    using tuple_type = std::tuple<int,  std::array<std::string, 2>, sparrow::nullable<float>>;
+    using tuple_type = std::tuple<int, std::array<std::string, 2>, sparrow::nullable<float>>;
     std::vector<tuple_type> v{
         {1, {"hello", "world"}, 2.5f},
         {2, {"Another", "sentence"}, sparrow::nullval},
@@ -210,7 +193,7 @@ void struct_array()
 void sparse_union_array()
 {
     //! [builder_union_array]
-    using variant_type = std::variant<int,  std::array<std::string, 2>, sparrow::nullable<float>>;
+    using variant_type = std::variant<int, std::array<std::string, 2>, sparrow::nullable<float>>;
     std::vector<variant_type> v{
         int{1},
         std::array<std::string, 2>{{"A", "sentence"}},
@@ -220,7 +203,6 @@ void sparse_union_array()
     auto arr = sparrow::build(v);
     //! [builder_union_array]
 }
-
 
 int main()
 {

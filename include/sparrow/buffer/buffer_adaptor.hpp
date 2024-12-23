@@ -22,7 +22,6 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
-
 namespace sparrow
 {
     template <typename FromBufferRef, typename T>
@@ -184,16 +183,17 @@ namespace sparrow
         size_type m_max_size;
     };
 
-
-    template<class T>
+    template <class T>
     class holder
     {
     public:
-        template<class ...Args>
+
+        template <class... Args>
         holder(Args&&... args)
             : value(std::forward<Args>(args)...)
         {
         }
+
         T value;
     };
 
