@@ -101,7 +101,7 @@ namespace sparrow
         }
         while (n > 0)
         {
-            str += '0' + std::int8_t(n % 10);
+            str.push_back(static_cast<char>('0' + std::int8_t(n % 10)));
             n /= 10;
         }
 
