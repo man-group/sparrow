@@ -54,7 +54,7 @@ namespace sparrow
     }
 
     TEST_SUITE("struct_array")
-    {   
+    {
         static_assert(is_struc_array_v<struct_array>);
 
         TEST_CASE("constructors")

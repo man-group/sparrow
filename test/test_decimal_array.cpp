@@ -20,7 +20,6 @@
 
 #include "test_utils.hpp"
 
-
 namespace sparrow
 {
 

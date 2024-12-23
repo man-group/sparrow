@@ -46,7 +46,6 @@ namespace sparrow
         static constexpr data_type type_id = data_type_from_size<T>();
     };
 
-
     template <>
     struct arrow_traits<std::string>
     {
@@ -119,8 +118,7 @@ namespace sparrow
         using value_type = decimal<int256_t>;
         using const_reference = decimal<int256_t>;
     };
-    
-    
+
     namespace detail
     {
         template <class T>
@@ -142,24 +140,17 @@ namespace sparrow
             mpl::rename<all_base_types_t, std::variant>;
         // std::variant can not hold references, we need to write something based on variant and
         // reference_wrapper
-        //using inner_const_reference = /* std::variant<null_type, const bool&, const suint8_t&, ....> */
+        // using inner_const_reference = /* std::variant<null_type, const bool&, const suint8_t&, ....> */
         /*    mpl::rename<
                 mpl::transform<
                     detail::array_inner_const_reference_t,
                     all_base_types_t>,
                 std::variant>;*/
         using value_type = /* nullable_variant<nullable<null_type>, nullable<bool>, nullable<uint8_t>, ...> */
-            mpl::rename<
-                mpl::transform<
-                    detail::array_value_type_t,
-                    all_base_types_t>,
-                nullable_variant>;
-        using const_reference = /* nullable_variant<nullable<null_type>, nullable<const bool&>, nullable<const uint8_t&>, ...> */
-            mpl::rename<
-                mpl::transform<
-                    detail::array_const_reference_t,
-                    all_base_types_t>,
-                nullable_variant>; 
+            mpl::rename<mpl::transform<detail::array_value_type_t, all_base_types_t>, nullable_variant>;
+        using const_reference = /* nullable_variant<nullable<null_type>, nullable<const bool&>, nullable<const
+                                   uint8_t&>, ...> */
+            mpl::rename<mpl::transform<detail::array_const_reference_t, all_base_types_t>, nullable_variant>;
     };
 
     namespace predicate

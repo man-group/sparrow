@@ -194,18 +194,18 @@ struct std::formatter<sparrow::record_batch>
     auto format(const sparrow::record_batch& rb, std::format_context& ctx) const
     {
         const auto values_by_columns = rb.columns()
-                                                 | std::views::transform(
-                                                     [&rb](const auto& ar)
-                                                     {
-                                                         return std::views::iota(0u, rb.nb_rows())
-                                                                | std::views::transform(
-                                                                    [&ar](const auto i)
-                                                                    {
-                                                                        return ar[i];
-                                                                    }
-                                                                );
-                                                     }
-                                                 );
+                                       | std::views::transform(
+                                           [&rb](const auto& ar)
+                                           {
+                                               return std::views::iota(0u, rb.nb_rows())
+                                                      | std::views::transform(
+                                                          [&ar](const auto i)
+                                                          {
+                                                              return ar[i];
+                                                          }
+                                                      );
+                                           }
+                                       );
 
         sparrow::to_table_with_columns(ctx.out(), rb.names(), values_by_columns);
         return ctx.out();

@@ -19,7 +19,7 @@
 #include <vector>
 
 #if defined(__cpp_lib_format)
-#   include <format>
+#    include <format>
 #endif
 
 namespace sparrow
@@ -59,8 +59,7 @@ namespace sparrow
     }
 
     template <class T>
-    constexpr std::compare_three_way_result<T>
-    operator<=>(const vector_view<T>& lhs, const vector_view<T>& rhs)
+    constexpr std::compare_three_way_result<T> operator<=>(const vector_view<T>& lhs, const vector_view<T>& rhs)
     {
         return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
     }

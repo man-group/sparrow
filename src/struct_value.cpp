@@ -15,7 +15,6 @@
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 
-
 namespace sparrow
 {
     struct_value::struct_value(const std::vector<child_ptr>& children, size_type index)
@@ -64,8 +63,8 @@ namespace sparrow
 
 #if defined(__cpp_lib_format)
 
-auto std::formatter<sparrow::struct_value>::format(const sparrow::struct_value& ar, std::format_context& ctx)
-    const -> decltype(ctx.out())
+auto std::formatter<sparrow::struct_value>::format(const sparrow::struct_value& ar, std::format_context& ctx) const
+    -> decltype(ctx.out())
 {
     std::format_to(ctx.out(), "<");
     if (!ar.empty())

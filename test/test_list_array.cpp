@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sparrow/array.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
 #include "sparrow/layout/primitive_array.hpp"
 
 #include "doctest/doctest.h"
 #include "external_array_data_creation.hpp"
 #include "test_utils.hpp"
-#include "sparrow/array.hpp"
 
 namespace sparrow
 {
@@ -30,12 +30,20 @@ namespace sparrow
             // first we create a flat array of integers
             ArrowArray flat_arr{};
             ArrowSchema flat_schema{};
-            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
+            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0 /*offset*/, {});
             flat_schema.name = "the flat array";
 
             ArrowArray arr{};
             ArrowSchema schema{};
-            test::fill_schema_and_array_for_list_layout(schema, arr, std::move(flat_schema), std::move(flat_arr), sizes, {}, 0);
+            test::fill_schema_and_array_for_list_layout(
+                schema,
+                arr,
+                std::move(flat_schema),
+                std::move(flat_arr),
+                sizes,
+                {},
+                0
+            );
             return arrow_proxy(std::move(arr), std::move(schema));
         }
     }
@@ -57,8 +65,14 @@ namespace sparrow
             std::size_t n_flat = 11;  // 2+2+3+4
 
             // create flat array of integers
-            primitive_array<std::int16_t> flat_arr(std::ranges::iota_view{std::size_t(0), std::size_t(n_flat)} | std::views::transform([](auto i){
-                return static_cast<std::int16_t>(i);})
+            primitive_array<std::int16_t> flat_arr(
+                std::ranges::iota_view{std::size_t(0), std::size_t(n_flat)}
+                | std::views::transform(
+                    [](auto i)
+                    {
+                        return static_cast<std::int16_t>(i);
+                    }
+                )
             );
 
             // wrap into an detyped array
@@ -69,19 +83,19 @@ namespace sparrow
 
             // check the size
             REQUIRE_EQ(list_arr.size(), sizes.size());
-            
+
             // check the sizes
-            for(std::size_t i = 0; i < sizes.size(); ++i)
+            for (std::size_t i = 0; i < sizes.size(); ++i)
             {
                 CHECK_EQ(list_arr[i].value().size(), sizes[i]);
             }
 
             // check the values
             std::int16_t flat_index = 0;
-            for(std::size_t i = 0; i < sizes.size(); ++i)
+            for (std::size_t i = 0; i < sizes.size(); ++i)
             {
                 auto list = list_arr[i].value();
-                for(std::size_t j = 0; j < sizes[i]; ++j)
+                for (std::size_t j = 0; j < sizes[i]; ++j)
                 {
                     CHECK_NULLABLE_VARIANT_EQ(list[j], flat_index);
                     ++flat_index;
@@ -148,14 +162,14 @@ namespace sparrow
                     for (std::size_t j = 0; j < sizes[i]; ++j)
                     {
                         auto value_variant = list[j];
-                        CHECK_NULLABLE_VARIANT_EQ(value_variant,  static_cast<inner_scalar_type>(flat_index));
+                        CHECK_NULLABLE_VARIANT_EQ(value_variant, static_cast<inner_scalar_type>(flat_index));
                         ++flat_index;
                     }
                 }
             }
 
             SUBCASE("consistency")
-            {   
+            {
                 test::generic_consistency_test(list_arr);
             }
 
@@ -174,14 +188,19 @@ namespace sparrow
                 // check that flat values are "iota"
                 if constexpr (std::is_integral_v<inner_scalar_type>)
                 {
-                    for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
+                    for (inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i)
+                    {
                         CHECK(flat_values_casted[static_cast<primitive_size_type>(i)].value() == i);
                     }
                 }
                 else
                 {
-                    for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
-                        CHECK(flat_values_casted[static_cast<primitive_size_type>(i)].value() == doctest::Approx(static_cast<double>(i)));
+                    for (inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i)
+                    {
+                        CHECK(
+                            flat_values_casted[static_cast<primitive_size_type>(i)].value()
+                            == doctest::Approx(static_cast<double>(i))
+                        );
                     }
                 }
             }
@@ -196,12 +215,20 @@ namespace sparrow
             // first we create a flat array of integers
             ArrowArray flat_arr{};
             ArrowSchema flat_schema{};
-            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
+            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0 /*offset*/, {});
             flat_schema.name = "the flat array";
 
             ArrowArray arr{};
             ArrowSchema schema{};
-            test::fill_schema_and_array_for_list_view_layout(schema, arr, std::move(flat_schema), std::move(flat_arr), sizes, {}, 0);
+            test::fill_schema_and_array_for_list_view_layout(
+                schema,
+                arr,
+                std::move(flat_schema),
+                std::move(flat_arr),
+                sizes,
+                {},
+                0
+            );
             return arrow_proxy(std::move(arr), std::move(schema));
         }
     }
@@ -216,20 +243,26 @@ namespace sparrow
 
         TEST_CASE("constructors")
         {
-           // flat data is [0,1,2,3,4]
+            // flat data is [0,1,2,3,4]
             std::size_t n_flat = 5;
 
             // create flat array of integers
-            primitive_array<std::int16_t> flat_arr(std::ranges::iota_view{std::size_t(0), std::size_t(n_flat)} | std::views::transform([](auto i){
-                return static_cast<std::int16_t>(i);})
+            primitive_array<std::int16_t> flat_arr(
+                std::ranges::iota_view{std::size_t(0), std::size_t(n_flat)}
+                | std::views::transform(
+                    [](auto i)
+                    {
+                        return static_cast<std::int16_t>(i);
+                    }
+                )
             );
 
             // the desired goal array is
             // [[3,4],[2,3],NAN, [0,1,2]]
 
             // vector of sizes
-            std::vector<std::uint32_t> sizes = {2, 2,0, 3};
-            std::vector<std::uint32_t> offsets = {3, 2,0,0};
+            std::vector<std::uint32_t> sizes = {2, 2, 0, 3};
+            std::vector<std::uint32_t> offsets = {3, 2, 0, 0};
 
             std::vector<std::uint32_t> where_missing = {2};
 
@@ -253,7 +286,6 @@ namespace sparrow
             CHECK_EQ(list_view_arr[0].value().size(), sizes[0]);
             CHECK_EQ(list_view_arr[1].value().size(), sizes[1]);
             CHECK_EQ(list_view_arr[3].value().size(), sizes[3]);
-
 
 
             // check the values
@@ -281,7 +313,7 @@ namespace sparrow
 
             const std::size_t n_flat2 = 8;
             std::vector<std::size_t> sizes2 = {2, 4, 2};
-            
+
             arrow_proxy proxy = test::make_list_view_proxy<inner_scalar_type>(n_flat, sizes);
 
             // create a list array
@@ -336,7 +368,7 @@ namespace sparrow
             }
 
             SUBCASE("consistency")
-            {   
+            {
                 test::generic_consistency_test(list_arr);
             }
 
@@ -355,14 +387,19 @@ namespace sparrow
                 // check that flat values are "iota"
                 if constexpr (std::is_integral_v<inner_scalar_type>)
                 {
-                    for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
+                    for (inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i)
+                    {
                         CHECK(flat_values_casted[static_cast<primitive_size_type>(i)].value() == i);
                     }
                 }
                 else
                 {
-                    for(inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i){
-                        CHECK(flat_values_casted[static_cast<primitive_size_type>(i)].value() == doctest::Approx(static_cast<double>(i)));
+                    for (inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i)
+                    {
+                        CHECK(
+                            flat_values_casted[static_cast<primitive_size_type>(i)].value()
+                            == doctest::Approx(static_cast<double>(i))
+                        );
                     }
                 }
             }
@@ -377,12 +414,19 @@ namespace sparrow
             // first we create a flat array of integers
             ArrowArray flat_arr{};
             ArrowSchema flat_schema{};
-            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0/*offset*/, {});
+            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0 /*offset*/, {});
             flat_schema.name = "the flat array";
 
             ArrowArray arr{};
             ArrowSchema schema{};
-            test::fill_schema_and_array_for_fixed_size_list_layout(schema, arr, std::move(flat_schema), std::move(flat_arr), {}, list_size);
+            test::fill_schema_and_array_for_fixed_size_list_layout(
+                schema,
+                arr,
+                std::move(flat_schema),
+                std::move(flat_arr),
+                {},
+                list_size
+            );
             return arrow_proxy(std::move(arr), std::move(schema));
         }
     }
@@ -410,7 +454,7 @@ namespace sparrow
 
             const std::size_t n_flat2 = 10;
             const std::size_t list_size2 = 4;
-            
+
             arrow_proxy proxy = test::make_fixed_sized_list_proxy<inner_scalar_type>(n_flat, list_size);
             fixed_sized_list_array list_arr(std::move(proxy));
 
@@ -438,7 +482,7 @@ namespace sparrow
             }
 
             SUBCASE("consistency")
-            {   
+            {
                 test::generic_consistency_test(list_arr);
             }
             REQUIRE(list_arr.size() == n);

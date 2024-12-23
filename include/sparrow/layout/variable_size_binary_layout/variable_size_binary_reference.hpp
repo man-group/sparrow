@@ -225,4 +225,3 @@ namespace sparrow
         return static_cast<size_type>(offset(index));
     }
 }
-

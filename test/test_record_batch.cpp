@@ -19,7 +19,6 @@
 
 #include "doctest/doctest.h"
 
-
 namespace sparrow
 {
     std::vector<array> make_array_list(const std::size_t data_size)

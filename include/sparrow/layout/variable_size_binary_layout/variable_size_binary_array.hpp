@@ -80,48 +80,51 @@ namespace sparrow
     class variable_size_binary_array_impl;
 
     using binary_traits = arrow_traits<std::vector<byte_t>>;
-    
-    using string_array =     variable_size_binary_array_impl<std::string, std::string_view, std::int32_t>;
+
+    using string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int32_t>;
     using big_string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int64_t>;
-    using binary_array =     variable_size_binary_array_impl<binary_traits::value_type, binary_traits::const_reference, std::int32_t>;
-    using big_binary_array = variable_size_binary_array_impl<binary_traits::value_type, binary_traits::const_reference, std::int64_t>;
+    using binary_array = variable_size_binary_array_impl<binary_traits::value_type, binary_traits::const_reference, std::int32_t>;
+    using big_binary_array = variable_size_binary_array_impl<
+        binary_traits::value_type,
+        binary_traits::const_reference,
+        std::int64_t>;
 
     namespace detail
     {
-        template<class T>
+        template <class T>
         struct get_data_type_from_array;
 
-        template<>
+        template <>
         struct get_data_type_from_array<sparrow::string_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::STRING;
             }
         };
 
-        template<>
+        template <>
         struct get_data_type_from_array<sparrow::big_string_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LARGE_STRING;
             }
         };
 
-        template<>
+        template <>
         struct get_data_type_from_array<sparrow::binary_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::BINARY;
             }
         };
 
-        template<>
+        template <>
         struct get_data_type_from_array<sparrow::big_binary_array>
         {
-            constexpr static sparrow::data_type get()
+            static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LARGE_BINARY;
             }
@@ -139,7 +142,7 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_big_string_array_v = std::same_as<T, big_string_array>;
-    
+
     /**
      * Checks whether T is a binary_array type.
      */
@@ -206,8 +209,11 @@ namespace sparrow
     {
     private:
 
-        static_assert(sizeof(std::ranges::range_value_t<T>) == sizeof(std::uint8_t),
-            "Only sequences of types with the same size as uint8_t are supported");
+        static_assert(
+            sizeof(std::ranges::range_value_t<T>) == sizeof(std::uint8_t),
+            "Only sequences of types with the same size as uint8_t are supported"
+        );
+
     public:
 
         using self_type = variable_size_binary_array_impl<T, CR, OT>;
@@ -373,7 +379,8 @@ namespace sparrow
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     template <std::ranges::range SIZES_RANGE>
-    auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type
+    auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes)
+        -> offset_buffer_type
     {
         return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
         ));
@@ -544,7 +551,13 @@ namespace sparrow
                 }
             );
         }
-        auto tmp = std::views::transform(rhs, [](const auto& val) { return static_cast<std::uint8_t>(val); });
+        auto tmp = std::views::transform(
+            rhs,
+            [](const auto& val)
+            {
+                return static_cast<std::uint8_t>(val);
+            }
+        );
         // Copy the new value into the buffer
         std::copy(std::ranges::begin(tmp), std::ranges::end(tmp), data_buffer.begin() + offset_beg);
     }

@@ -60,7 +60,8 @@ struct std::formatter<sparrow::list_value>
         return ctx.begin();  // Simple implementation
     }
 
-    SPARROW_API auto format(const sparrow::list_value& list_value, std::format_context& ctx) const -> decltype(ctx.out());
+    SPARROW_API auto format(const sparrow::list_value& list_value, std::format_context& ctx) const
+        -> decltype(ctx.out());
 };
 
 #endif

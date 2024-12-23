@@ -24,7 +24,6 @@
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
 
-
 namespace sparrow::test
 {
     void release_external_arrow_schema(ArrowSchema* schema);
@@ -251,22 +250,22 @@ namespace sparrow::test
         res[0] = {byte_t(0), byte_t(1)};
         for (size_t i = 1; i < n; ++i)
         {
-            std::byte b0 = res[i-1][1]; 
-            auto b1 = static_cast<byte_t>(int(res[i-1][0]) + int(res[i-1][1]));
+            std::byte b0 = res[i - 1][1];
+            auto b1 = static_cast<byte_t>(int(res[i - 1][0]) + int(res[i - 1][1]));
             if (i % 3 == 0)
             {
                 res[i] = {b0, b1};
             }
             else
             {
-                auto b2 = static_cast<byte_t>(int(res[i-1][0]) - int(res[i-1][1]));
+                auto b2 = static_cast<byte_t>(int(res[i - 1][0]) - int(res[i - 1][1]));
                 if (i % 2 == 0)
                 {
                     res[i] = {b0, b1, b2};
                 }
                 else
                 {
-                    std::byte b3 = res[i-1][0];
+                    std::byte b3 = res[i - 1][0];
                     res[i] = {b0, b1, b2, b3};
                 }
             }
@@ -321,13 +320,12 @@ namespace sparrow::test
             }
         }
 
-        std::vector<buffer_type> arr_buffs = 
-        {
+        std::vector<buffer_type> arr_buffs = {
             sparrow::test::make_bitmap_buffer(size, false_bitmap),
             std::move(offset_buf),
             std::move(value_buf)
         };
-        
+
         sparrow::fill_arrow_array(
             arr,
             static_cast<std::int64_t>(size - offset),

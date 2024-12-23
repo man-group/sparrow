@@ -18,7 +18,6 @@
 #include <ranges>
 #include <type_traits>
 
-#include "sparrow/utils/ranges.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/utils/ranges.hpp"
 
@@ -27,30 +26,34 @@ namespace sparrow
 
     namespace detail
     {
-        template<class T>
+        template <class T>
         class holder
         {
         public:
-            template<class ...Args>
+
+            template <class... Args>
             holder(Args&&... args)
                 : value(std::forward<Args>(args)...)
             {
             }
+
             T value;
 
-            T extract_storage() && 
+            T extract_storage() &&
             {
                 return std::move(value);
             }
 
-            const T & storage() const
+            const T& storage() const
             {
                 return value;
             }
-            T & storage()
+
+            T& storage()
             {
                 return value;
             }
+
             void assign(T&& other)
             {
                 value = std::move(other);
@@ -59,14 +62,15 @@ namespace sparrow
     }
 
     // like buffer<T> but for any type T, nut always use buffer<std::uint8_t> as storage
-    // This internal storage can be extracted 
-    template<class T>
+    // This internal storage can be extracted
+    template <class T>
     class u8_buffer : private detail::holder<buffer<std::uint8_t>>,
-                           public buffer_adaptor<T, buffer<std::uint8_t>&>
+                      public buffer_adaptor<T, buffer<std::uint8_t>&>
     {
     public:
+
         using holder_type = detail::holder<buffer<std::uint8_t>>;
-        using buffer_adaptor_type  = buffer_adaptor<T, buffer<std::uint8_t>&>;
+        using buffer_adaptor_type = buffer_adaptor<T, buffer<std::uint8_t>&>;
         using holder_type::extract_storage;
 
         u8_buffer(u8_buffer&& other);
@@ -74,50 +78,49 @@ namespace sparrow
         u8_buffer& operator=(u8_buffer&& other) = delete;
         u8_buffer& operator=(u8_buffer& other) = delete;
 
-        u8_buffer(std::size_t n, const T & val = T{});
-        template<std::ranges::input_range R>
-        requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>)
+        u8_buffer(std::size_t n, const T& val = T{});
+        template <std::ranges::input_range R>
+            requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>)
         u8_buffer(R&& range);
         u8_buffer(std::initializer_list<T> ilist);
     };
 
-
-    template<class T>
+    template <class T>
     u8_buffer<T>::u8_buffer(u8_buffer&& other)
         : holder_type(std::move(other).extract_storage())
         , buffer_adaptor_type(holder_type::value)
     {
     }
 
-    template<class T>
+    template <class T>
     u8_buffer<T>::u8_buffer(const u8_buffer& other)
         : holder_type(other.storage())
         , buffer_adaptor_type(holder_type::value)
     {
     }
 
-    template<class T>
-    u8_buffer<T>::u8_buffer(std::size_t n, const T & val)
+    template <class T>
+    u8_buffer<T>::u8_buffer(std::size_t n, const T& val)
         : holder_type{n * sizeof(T)}
         , buffer_adaptor_type(holder_type::value)
     {
         std::fill(this->begin(), this->end(), val);
     }
-    
 
-    template<class T>
-    template<std::ranges::input_range R>
-    requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>)
+    template <class T>
+    template <std::ranges::input_range R>
+        requires(!std::same_as<u8_buffer<T>, std::decay_t<R>>
+                 && std::convertible_to<std::ranges::range_value_t<R>, T>)
     u8_buffer<T>::u8_buffer(R&& range)
-        : holder_type{range_size(range)* sizeof(T)}
-        ,buffer_adaptor_type(holder_type::value)
+        : holder_type{range_size(range) * sizeof(T)}
+        , buffer_adaptor_type(holder_type::value)
     {
         std::ranges::copy(range, this->begin());
     }
 
-    template<class T>
+    template <class T>
     u8_buffer<T>::u8_buffer(std::initializer_list<T> ilist)
-    : holder_type{ilist.size() * sizeof(T)}
+        : holder_type{ilist.size() * sizeof(T)}
         , buffer_adaptor_type(holder_type::value)
     {
         std::copy(ilist.begin(), ilist.end(), this->begin());

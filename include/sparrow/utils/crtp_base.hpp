@@ -24,7 +24,7 @@ namespace sparrow
      *
      * @tparam D The derived type.
      */
-    template<class D>
+    template <class D>
     class crtp_base
     {
     protected:
@@ -35,13 +35,13 @@ namespace sparrow
         const derived_type& derived_cast() const;
     };
 
-    template<class D>
+    template <class D>
     auto crtp_base<D>::derived_cast() -> derived_type&
     {
         return static_cast<derived_type&>(*this);
     }
 
-    template<class D>
+    template <class D>
     auto crtp_base<D>::derived_cast() const -> const derived_type&
     {
         return static_cast<const derived_type&>(*this);

@@ -250,8 +250,8 @@ namespace sparrow
 
     template <class DERIVED>
     template <std::ranges::input_range R>
-    auto
-    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(R&& child_index_to_type_id) -> type_id_map
+    auto union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(R&& child_index_to_type_id)
+        -> type_id_map
     {
         const std::size_t n = std::ranges::size(child_index_to_type_id);
         std::array<std::uint8_t, 256> ret;

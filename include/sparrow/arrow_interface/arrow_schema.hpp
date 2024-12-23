@@ -68,7 +68,8 @@ namespace sparrow
     SPARROW_API void release_arrow_schema(ArrowSchema* schema);
 
     /**
-     * Empty release function to use for the `ArrowSchema.release` member.  Should be used for view of ArrowSchema.
+     * Empty release function to use for the `ArrowSchema.release` member.  Should be used for view of
+     * ArrowSchema.
      */
     SPARROW_API void empty_release_arrow_schema(ArrowSchema* schema);
 

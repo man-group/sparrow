@@ -19,7 +19,6 @@
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
 
-
 namespace sparrow
 {
     using scalar_value_type = std::int32_t;

@@ -66,7 +66,7 @@ namespace sparrow
         {
             m_xml_writer.writeAttribute("type", message.m_type);
         }
-        if(message.m_line != 0)
+        if (message.m_line != 0)
         {
             m_xml_writer.writeAttribute("line", message.m_line);
         }
@@ -180,7 +180,7 @@ namespace sparrow
             .writeAttribute("assertions", test_suites.assertions_count())
             .writeAttribute("time", test_suites.total_time());
 
-        for (const auto& [_ , test_suite] : test_suites.m_test_suites)
+        for (const auto& [_, test_suite] : test_suites.m_test_suites)
         {
             write(test_suite);
         }
