@@ -13,6 +13,7 @@
 // limitations under the License.
 
 
+#include <array>
 #include <string_view>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"

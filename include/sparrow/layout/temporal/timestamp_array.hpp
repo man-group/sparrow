@@ -354,6 +354,10 @@ namespace sparrow
     const date::time_zone* timestamp_array<T>::get_timezone(const arrow_proxy& proxy)
     {
         const std::string_view timezone_string = proxy.format().substr(4);
+        if (timezone_string.empty())
+        {
+            return nullptr;
+        }
         return date::locate_zone(timezone_string);
     }
 
@@ -380,7 +384,10 @@ namespace sparrow
         const auto null_count = bitmap.null_count();
 
         std::string format(data_type_to_format(arrow_traits<T>::type_id));
-        format += timezone->name();
+        if (timezone != nullptr)
+        {
+            format += timezone->name();
+        }
 
         const repeat_view<bool> children_ownership{true, 0};
 

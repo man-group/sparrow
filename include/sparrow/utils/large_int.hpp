@@ -114,11 +114,49 @@ namespace sparrow
 
         return stream;
     }
+
+    template <typename T>
+        requires(std::is_same_v<T, int128_t> || std::is_same_v<T, int256_t>)
+    T stobigint(std::string_view in)
+    {
+        T res = 0;
+        size_t i = 0;
+        bool sign = false;
+
+        if (in[i] == '-')
+        {
+            ++i;
+            sign = true;
+        }
+
+        if (in[i] == '+')
+        {
+            ++i;
+        }
+
+        for (; i < in.size(); ++i)
+        {
+            const char c = in[i];
+            if (not std::isdigit(c))
+            {
+                throw std::runtime_error(std::string("Non-numeric character: ") + c);
+            }
+            res *= 10;
+            res += c - '0';
+        }
+
+        if (sign)
+        {
+            res *= -1;
+        }
+
+        return res;
+    }
+
 #endif
 }  // namespace sparrow
 
 #if defined(__cpp_lib_format)
-
 
 template <>
 struct std::formatter<sparrow::int128_t>

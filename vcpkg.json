@@ -3,6 +3,7 @@
 	"dependencies": [
 		"catch2",
 		"doctest",
+		"nlohmann-json",
 		"date",
 		{
 			"name": "vcpkg-tool-ninja",
