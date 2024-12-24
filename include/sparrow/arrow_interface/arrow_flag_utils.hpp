@@ -14,6 +14,8 @@
 
 #include "sparrow/c_interface.hpp"
 
+#include <array>
+
 namespace sparrow
 {
     /// @returns `true` if the given value is a valid `ArrowFlag` value, `false` otherwise.

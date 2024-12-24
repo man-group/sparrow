@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <array>
+
 #include "sparrow/array_api.hpp"
 #include "sparrow/array_factory.hpp"
 #include "sparrow/config/config.hpp"
@@ -238,7 +240,9 @@ namespace sparrow
         static auto create_proxy(
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
-            TYPE_MAPPING&& type_mapping = TYPE_MAPPING{}
+            TYPE_MAPPING&& type_mapping = TYPE_MAPPING{},
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
         ) -> arrow_proxy;
 
         SPARROW_API static auto create_proxy_impl(
@@ -615,7 +619,9 @@ namespace sparrow
     auto sparse_union_array::create_proxy(
         std::vector<array>&& children,
         type_id_buffer_type&& element_type,
-        TYPE_MAPPING&& child_index_to_type_id
+        TYPE_MAPPING&& child_index_to_type_id,
+        std::optional<std::string_view> name,
+        std::optional<std::string_view> metadata
     ) -> arrow_proxy
     {
         const auto n_children = children.size();

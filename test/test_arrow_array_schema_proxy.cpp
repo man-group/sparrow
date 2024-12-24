@@ -13,6 +13,7 @@
 // limitations under the License.
 
 
+#include <array>
 #include <string_view>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
@@ -23,6 +24,7 @@
 #include "arrow_array_schema_creation.hpp"
 #include "doctest/doctest.h"
 #include "metadata_sample.hpp"
+
 
 TEST_SUITE("ArrowArrowSchemaProxy")
 {
