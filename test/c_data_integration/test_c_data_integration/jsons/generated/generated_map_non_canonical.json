@@ -1,0 +1,168 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "map_other_names",
+        "type": {
+          "name": "map",
+          "keysSorted": false
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "some_entries",
+            "type": {
+              "name": "struct"
+            },
+            "nullable": false,
+            "children": [
+              {
+                "name": "some_key",
+                "type": {
+                  "name": "utf8"
+                },
+                "nullable": false,
+                "children": []
+              },
+              {
+                "name": "some_value",
+                "type": {
+                  "name": "int",
+                  "isSigned": true,
+                  "bitWidth": 32
+                },
+                "nullable": true,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "batches": [
+    {
+      "count": 7,
+      "columns": [
+        {
+          "name": "map_other_names",
+          "count": 7,
+          "VALIDITY": [
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            1
+          ],
+          "OFFSET": [
+            0,
+            0,
+            2,
+            6,
+            8,
+            11,
+            11,
+            11
+          ],
+          "children": [
+            {
+              "name": "some_entries",
+              "count": 11,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "children": [
+                {
+                  "name": "some_key",
+                  "count": 11,
+                  "VALIDITY": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                  ],
+                  "OFFSET": [
+                    0,
+                    9,
+                    17,
+                    25,
+                    36,
+                    43,
+                    50,
+                    60,
+                    68,
+                    76,
+                    83,
+                    91
+                  ],
+                  "DATA": [
+                    "m2d\u00a3o\u00b0d",
+                    "a2\u00f4ooim",
+                    "\u00a3rjwfh2",
+                    "\u00b0a1\u20achg\u00c2",
+                    "pl6n5or",
+                    "gkhllcb",
+                    "\u77e212jac\u00b5",
+                    "er66d1\u00c2",
+                    "1i3k\u00b5rj",
+                    "3w23m5j",
+                    "1wakma\u00b0"
+                  ]
+                },
+                {
+                  "name": "some_value",
+                  "count": 11,
+                  "VALIDITY": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    0,
+                    1,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0
+                  ],
+                  "DATA": [
+                    -2147483648,
+                    2147483647,
+                    750476060,
+                    -941246947,
+                    1803694526,
+                    -610508161,
+                    2034391607,
+                    -978518675,
+                    1503867183,
+                    771211590,
+                    1173175755
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

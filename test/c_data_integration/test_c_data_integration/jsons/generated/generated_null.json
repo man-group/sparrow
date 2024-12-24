@@ -1,0 +1,153 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "f0",
+        "type": {
+          "name": "null"
+        },
+        "nullable": true,
+        "children": []
+      },
+      {
+        "name": "f1",
+        "type": {
+          "name": "int",
+          "isSigned": true,
+          "bitWidth": 32
+        },
+        "nullable": true,
+        "children": []
+      },
+      {
+        "name": "f2",
+        "type": {
+          "name": "null"
+        },
+        "nullable": true,
+        "children": []
+      },
+      {
+        "name": "f3",
+        "type": {
+          "name": "floatingpoint",
+          "precision": "DOUBLE"
+        },
+        "nullable": true,
+        "children": []
+      },
+      {
+        "name": "f4",
+        "type": {
+          "name": "null"
+        },
+        "nullable": true,
+        "children": []
+      }
+    ]
+  },
+  "batches": [
+    {
+      "count": 10,
+      "columns": [
+        {
+          "name": "f0",
+          "count": 10
+        },
+        {
+          "name": "f1",
+          "count": 10,
+          "VALIDITY": [
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0
+          ],
+          "DATA": [
+            -2147483648,
+            2147483647,
+            141606798,
+            863490391,
+            -816295192,
+            959259167,
+            1613070492,
+            -1166045478,
+            1856530847,
+            -430076999
+          ]
+        },
+        {
+          "name": "f2",
+          "count": 10
+        },
+        {
+          "name": "f3",
+          "count": 10,
+          "VALIDITY": [
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          "DATA": [
+            -220.958,
+            800.798,
+            -587.995,
+            603.128,
+            1959.738,
+            956.992,
+            -438.465,
+            1197.744,
+            -695.198,
+            515.615
+          ]
+        },
+        {
+          "name": "f4",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "count": 0,
+      "columns": [
+        {
+          "name": "f0",
+          "count": 0
+        },
+        {
+          "name": "f1",
+          "count": 0,
+          "VALIDITY": [],
+          "DATA": []
+        },
+        {
+          "name": "f2",
+          "count": 0
+        },
+        {
+          "name": "f3",
+          "count": 0,
+          "VALIDITY": [],
+          "DATA": []
+        },
+        {
+          "name": "f4",
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,273 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "map_nullable",
+        "type": {
+          "name": "map",
+          "keysSorted": false
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "entries",
+            "type": {
+              "name": "struct"
+            },
+            "nullable": false,
+            "children": [
+              {
+                "name": "key",
+                "type": {
+                  "name": "utf8"
+                },
+                "nullable": false,
+                "children": []
+              },
+              {
+                "name": "value",
+                "type": {
+                  "name": "int",
+                  "isSigned": true,
+                  "bitWidth": 32
+                },
+                "nullable": true,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "batches": [
+    {
+      "count": 7,
+      "columns": [
+        {
+          "name": "map_nullable",
+          "count": 7,
+          "VALIDITY": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0
+          ],
+          "OFFSET": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            5,
+            5
+          ],
+          "children": [
+            {
+              "name": "entries",
+              "count": 5,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "children": [
+                {
+                  "name": "key",
+                  "count": 5,
+                  "VALIDITY": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                  ],
+                  "OFFSET": [
+                    0,
+                    9,
+                    18,
+                    27,
+                    35,
+                    42
+                  ],
+                  "DATA": [
+                    "ro\u00c2kwd\u00a3",
+                    "klr\u77e26gh",
+                    "dw2jnh\u77e2",
+                    "nn2\u00a3234",
+                    "rjphci4"
+                  ]
+                },
+                {
+                  "name": "value",
+                  "count": 5,
+                  "VALIDITY": [
+                    1,
+                    0,
+                    0,
+                    1,
+                    1
+                  ],
+                  "DATA": [
+                    -2147483648,
+                    2147483647,
+                    -1294518845,
+                    1401620169,
+                    -1101993059
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "count": 10,
+      "columns": [
+        {
+          "name": "map_nullable",
+          "count": 10,
+          "VALIDITY": [
+            0,
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0
+          ],
+          "OFFSET": [
+            0,
+            0,
+            4,
+            4,
+            4,
+            7,
+            7,
+            7,
+            11,
+            13,
+            13
+          ],
+          "children": [
+            {
+              "name": "entries",
+              "count": 13,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "children": [
+                {
+                  "name": "key",
+                  "count": 13,
+                  "VALIDITY": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                  ],
+                  "OFFSET": [
+                    0,
+                    11,
+                    21,
+                    32,
+                    42,
+                    49,
+                    56,
+                    64,
+                    74,
+                    84,
+                    93,
+                    102,
+                    114,
+                    124
+                  ],
+                  "DATA": [
+                    "\u00b56i6o\u20ac\u00b0",
+                    "f\u00a331m\u77e2a",
+                    "3\u77e2\u20aclh6r",
+                    "\u20ac\u00b551mbr",
+                    "odkrj24",
+                    "4b6hplg",
+                    "2\u00b5glrjr",
+                    "rajg\u77e2\u00b5k",
+                    "e\u77e23rp\u00b5o",
+                    "n\u77e2p1a2k",
+                    "ra\u00f4\u00b54pb",
+                    "f\u00b51\u00f4j\u20ac\u00b0",
+                    "g\u00b0\u00b0k6\u00c2l"
+                  ]
+                },
+                {
+                  "name": "value",
+                  "count": 13,
+                  "VALIDITY": [
+                    1,
+                    0,
+                    1,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    0,
+                    1,
+                    0
+                  ],
+                  "DATA": [
+                    -2147483648,
+                    2147483647,
+                    -788187563,
+                    1965011374,
+                    1658647500,
+                    -655983525,
+                    -1087191635,
+                    349447752,
+                    1140051244,
+                    -1215083249,
+                    -1177366914,
+                    1693960656,
+                    -690221073
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

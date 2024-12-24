@@ -1,0 +1,285 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "map_nullable",
+        "type": {
+          "name": "map",
+          "keysSorted": false
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "entries",
+            "type": {
+              "name": "struct"
+            },
+            "nullable": false,
+            "children": [
+              {
+                "name": "key",
+                "type": {
+                  "name": "utf8"
+                },
+                "nullable": false,
+                "children": []
+              },
+              {
+                "name": "value",
+                "type": {
+                  "name": "int",
+                  "isSigned": true,
+                  "bitWidth": 32
+                },
+                "nullable": true,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "batches": [
+    {
+      "count": 7,
+      "columns": [
+        {
+          "name": "map_nullable",
+          "count": 7,
+          "VALIDITY": [
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0
+          ],
+          "OFFSET": [
+            0,
+            3,
+            4,
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "children": [
+            {
+              "name": "entries",
+              "count": 6,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "children": [
+                {
+                  "name": "key",
+                  "count": 6,
+                  "VALIDITY": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                  ],
+                  "OFFSET": [
+                    0,
+                    8,
+                    19,
+                    28,
+                    39,
+                    49,
+                    56
+                  ],
+                  "DATA": [
+                    "\u00f4rjdm15",
+                    "\u00f4\u20aci\u00f4erj",
+                    "r4\u00c2w\u00b0ga",
+                    "\u00b0\u77e2kek\u00c2c",
+                    "e\u00c2rnf\u00a3\u00f4",
+                    "2b5iagw"
+                  ]
+                },
+                {
+                  "name": "value",
+                  "count": 6,
+                  "VALIDITY": [
+                    1,
+                    1,
+                    0,
+                    0,
+                    1,
+                    1
+                  ],
+                  "DATA": [
+                    -2147483648,
+                    2147483647,
+                    1792096296,
+                    1369244949,
+                    -182780852,
+                    336973162
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "count": 10,
+      "columns": [
+        {
+          "name": "map_nullable",
+          "count": 10,
+          "VALIDITY": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0
+          ],
+          "OFFSET": [
+            0,
+            1,
+            1,
+            5,
+            5,
+            9,
+            9,
+            9,
+            11,
+            14,
+            14
+          ],
+          "children": [
+            {
+              "name": "entries",
+              "count": 14,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "children": [
+                {
+                  "name": "key",
+                  "count": 14,
+                  "VALIDITY": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                  ],
+                  "OFFSET": [
+                    0,
+                    9,
+                    18,
+                    26,
+                    33,
+                    42,
+                    51,
+                    59,
+                    66,
+                    76,
+                    87,
+                    97,
+                    105,
+                    113,
+                    121
+                  ],
+                  "DATA": [
+                    "nciea\u77e2d",
+                    "d4brrd\u20ac",
+                    "ew\u00c2fbab",
+                    "jliol2l",
+                    "lh5\u20acomp",
+                    "4\u20ac6ljr4",
+                    "rn54\u00f4rl",
+                    "cr66io1",
+                    "d\u77e2\u00b56mwl",
+                    "o\u00b0\u00b03bm\u77e2",
+                    "\u00f4hf4hh\u20ac",
+                    "po3n\u00f413",
+                    "\u00c2hjdmjf",
+                    "nbnfr\u00b0a"
+                  ]
+                },
+                {
+                  "name": "value",
+                  "count": 14,
+                  "VALIDITY": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                  ],
+                  "DATA": [
+                    -2147483648,
+                    2147483647,
+                    -1127521510,
+                    771590740,
+                    -2047827388,
+                    -786057584,
+                    146566707,
+                    -1512736160,
+                    201783251,
+                    1866634404,
+                    1456079361,
+                    -1470158427,
+                    -930622117,
+                    1075198918
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
