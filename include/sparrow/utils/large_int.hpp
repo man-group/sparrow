@@ -119,6 +119,8 @@ namespace sparrow
 
 #if defined(__cpp_lib_format)
 
+#    if defined(SPARROW_USE_LARGE_INT_PLACEHOLDERS)
+
 template <>
 struct std::formatter<sparrow::int128_t>
 {
@@ -129,9 +131,11 @@ struct std::formatter<sparrow::int128_t>
 
     auto format(const sparrow::int128_t&, std::format_context& ctx) const
     {
-        return std::format_to(ctx.out(), "{}", "Decimal int128_t TODO");
+        return std::format_to(ctx.out(), "{}", "Integer int128_t TODO");
     }
 };
+
+#    endif
 
 template <>
 struct std::formatter<sparrow::int256_t>
@@ -143,7 +147,7 @@ struct std::formatter<sparrow::int256_t>
 
     auto format(const sparrow::int256_t&, std::format_context& ctx) const
     {
-        return std::format_to(ctx.out(), "{}", "Decimal int256_t TODO");
+        return std::format_to(ctx.out(), "{}", "Integer int256_t TODO");
     }
 };
 
