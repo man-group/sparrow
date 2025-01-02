@@ -27,12 +27,10 @@
 #include "sparrow/layout/primitive_array.hpp"
 
 #include "doctest/doctest.h"
-#include "nanoarrow/nanoarrow.h"
 #include "nanoarrow_utils.hpp"
 
 namespace sparrow
 {
-
     using testing_types = std::tuple<
         std::int8_t,
         std::uint8_t,
@@ -283,8 +281,8 @@ namespace sparrow
 
             SUBCASE("resize")
             {
-                const T new_value{99};
-                ar.resize(7, make_nullable<T>(99));
+                const auto new_nullable_value = make_nullable<T>(99);
+                ar.resize(7, new_nullable_value);
                 REQUIRE_EQ(ar.size(), 7);
                 CHECK(ar[0].has_value());
                 CHECK_EQ(ar[0].get(), static_cast<T>(1));
@@ -294,12 +292,9 @@ namespace sparrow
                 CHECK_EQ(ar[2].get(), static_cast<T>(3));
                 CHECK(ar[3].has_value());
                 CHECK_EQ(ar[3].get(), static_cast<T>(4));
-                CHECK(ar[4].has_value());
-                CHECK_EQ(ar[4].get(), new_value);
-                CHECK(ar[5].has_value());
-                CHECK_EQ(ar[5].get(), new_value);
-                CHECK(ar[6].has_value());
-                CHECK_EQ(ar[6].get(), new_value);
+                CHECK_EQ(ar[4], new_nullable_value);
+                CHECK_EQ(ar[5], new_nullable_value);
+                CHECK_EQ(ar[6], new_nullable_value);
             }
 
             SUBCASE("insert")
@@ -436,16 +431,16 @@ namespace sparrow
                     }
                 }
 
+                auto new_val_99 = make_nullable<T>(99);
+                auto new_val_100 = make_nullable<T>(100);
+                auto new_val_101 = make_nullable<T>(101);
+                const std::array<nullable<T>, 3> new_values{new_val_99, new_val_100, new_val_101};
+
                 SUBCASE("with pos, first and last iterators")
                 {
                     SUBCASE("at the beginning")
                     {
                         const auto pos = ar.cbegin();
-                        const std::array<nullable<T>, 3> new_values{
-                            make_nullable<T>(99),
-                            make_nullable<T>(100),
-                            make_nullable<T>(101)
-                        };
                         const auto iter = ar.insert(pos, new_values);
                         CHECK_EQ(iter, ar.begin());
                         REQUIRE_EQ(ar.size(), 7);
@@ -467,11 +462,6 @@ namespace sparrow
                     SUBCASE("in the middle")
                     {
                         const auto pos = sparrow::next(ar.cbegin(), 1);
-                        const std::array<nullable<T>, 3> new_values{
-                            make_nullable<T>(99),
-                            make_nullable<T>(100),
-                            make_nullable<T>(101)
-                        };
                         const auto iter = ar.insert(pos, new_values);
                         CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
                         REQUIRE_EQ(ar.size(), 7);
@@ -494,11 +484,6 @@ namespace sparrow
                     SUBCASE("at the end")
                     {
                         const auto pos = ar.cend();
-                        const std::array<nullable<T>, 3> new_values{
-                            make_nullable<T>(99),
-                            make_nullable<T>(100),
-                            make_nullable<T>(101)
-                        };
                         const auto iter = ar.insert(pos, new_values);
                         CHECK_EQ(iter, ar.begin() + 4);
                         REQUIRE_EQ(ar.size(), 7);
@@ -524,9 +509,6 @@ namespace sparrow
                     SUBCASE("at the beginning")
                     {
                         const auto pos = ar.cbegin();
-                        auto new_val_99 = make_nullable<T>(99);
-                        auto new_val_100 = make_nullable<T>(100);
-                        auto new_val_101 = make_nullable<T>(101);
                         const auto iter = ar.insert(pos, {new_val_99, new_val_100, new_val_101});
                         CHECK_EQ(iter, ar.begin());
                         REQUIRE_EQ(ar.size(), 7);
@@ -544,9 +526,6 @@ namespace sparrow
                     SUBCASE("in the middle")
                     {
                         const auto pos = sparrow::next(ar.cbegin(), 1);
-                        auto new_val_99 = make_nullable<T>(99);
-                        auto new_val_100 = make_nullable<T>(100);
-                        auto new_val_101 = make_nullable<T>(101);
                         const auto iter = ar.insert(pos, {new_val_99, new_val_100, new_val_101});
                         CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
                         REQUIRE_EQ(ar.size(), 7);
@@ -565,9 +544,6 @@ namespace sparrow
                     SUBCASE("at the end")
                     {
                         const auto pos = ar.cend();
-                        auto new_val_99 = make_nullable<T>(99);
-                        auto new_val_100 = make_nullable<T>(100);
-                        auto new_val_101 = make_nullable<T>(101);
                         const auto iter = ar.insert(pos, {new_val_99, new_val_100, new_val_101});
                         CHECK_EQ(iter, ar.begin() + 4);
                         REQUIRE_EQ(ar.size(), 7);
@@ -590,11 +566,6 @@ namespace sparrow
                     SUBCASE("at the beginning")
                     {
                         const auto pos = ar.cbegin();
-                        const std::array<nullable<T>, 3> new_values{
-                            make_nullable<T>(99),
-                            make_nullable<T>(100),
-                            make_nullable<T>(101)
-                        };
                         const auto iter = ar.insert(pos, new_values);
                         CHECK_EQ(iter, ar.begin());
                         REQUIRE_EQ(ar.size(), 7);
