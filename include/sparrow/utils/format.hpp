@@ -16,10 +16,13 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
 #include <format>
 #include <numeric>
 #include <ranges>
 #include <string>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
@@ -55,6 +58,83 @@ namespace std
 
         std::string m_format_string = "{:";
     };
+
+#if !defined(__cpp_lib_format_ranges)
+
+    template <typename T, std::size_t Extent>
+    struct std::formatter<std::array<T, Extent>>
+    {
+    private:
+
+        char delimiter = ',';
+        char opening = '[';
+        char closing = ']';
+        bool compact = false;
+
+    public:
+
+        constexpr auto parse(std::format_parse_context& ctx)
+        {
+            auto it = ctx.begin();
+            auto end = ctx.end();
+
+            // Parse format specifiers
+            while (it != end && *it != '}')
+            {
+                switch (*it)
+                {
+                    case 'c':  // compact mode
+                        compact = true;
+                        break;
+                    case '(':  // use parentheses
+                        opening = '(';
+                        closing = ')';
+                        break;
+                    case '{':  // use curly braces
+                        opening = '{';
+                        closing = '}';
+                        break;
+                    case ';':  // use semicolon as delimiter
+                        delimiter = ';';
+                        break;
+                    default:
+                        break;
+                }
+                ++it;
+            }
+            return it;
+        }
+
+        auto format(const std::array<T, Extent>& array, std::format_context& ctx) const
+        {
+            auto out = ctx.out();
+
+            // Output opening bracket
+            *out++ = opening;
+
+            bool first = true;
+            for (const auto& elem : array)
+            {
+                if (!first)
+                {
+                    *out++ = delimiter;
+                    if (!compact)
+                    {
+                        *out++ = ' ';
+                    }
+                }
+                first = false;
+
+                // Format each element using its own formatter
+                out = std::format_to(out, "{}", elem);
+            }
+
+            // Output closing bracket
+            *out++ = closing;
+            return out;
+        }
+    };
+#endif
 }
 
 namespace sparrow

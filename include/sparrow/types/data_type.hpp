@@ -15,6 +15,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
 #include <version>
 #if defined(SPARROW_USE_DATE_POLYFILL)
 
@@ -519,7 +520,7 @@ namespace sparrow
         float32_t,
         float64_t,
         std::string,
-        std::vector<byte_t>,
+        std::vector<std::byte>,
         sparrow::timestamp,
         // TODO: add missing fundamental types here
         list_value,
