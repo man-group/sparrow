@@ -75,8 +75,8 @@ namespace sparrow
         SPARROW_API record_batch(const record_batch&);
         SPARROW_API record_batch& operator=(const record_batch&);
 
-        SPARROW_API record_batch(record_batch&&) = default;
-        SPARROW_API record_batch& operator=(record_batch&&) = default;
+        record_batch(record_batch&&) = default;
+        record_batch& operator=(record_batch&&) = default;
 
         /**
          * @returns the number of columns (i.e. arrays) in the \ref record_batch.
