@@ -130,7 +130,7 @@ namespace sparrow
         explicit fixed_width_binary_array(arrow_proxy);
 
         /**
-         * Constructs a primitive array with the passed range of values and an optional bitmap.
+         * Constructs a fixed width binary array with the passed range of values and an optional bitmap.
          *
          * The first argument can be any range of values as long as its value type is convertible
          * to \c T.
@@ -160,7 +160,7 @@ namespace sparrow
         }
 
         /**
-         * Constructs a primitive array from an \c initializer_list of raw values.
+         * Constructs a fixed with binary array from an \c initializer_list of raw values.
          */
         fixed_width_binary_array(
             std::initializer_list<inner_value_type> init,
@@ -263,7 +263,7 @@ namespace sparrow
 
     namespace detail
     {
-        inline bool check_primitive_data_type(data_type dt)
+        inline bool check_fixed_width_binary_data_type(data_type dt)
         {
             constexpr std::array<data_type, 14> dtypes = {
                 data_type::BOOL,
