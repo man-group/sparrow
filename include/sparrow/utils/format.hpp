@@ -59,7 +59,7 @@ namespace std
         std::string m_format_string = "{:";
     };
 
-#if !defined(__cpp_lib_format_ranges) && !(defined(__GNUC__) && __GNUC__ >= 13)
+#if !defined(__cpp_lib_format_ranges)
     template <typename T, std::size_t Extent>
     struct formatter<std::array<T, Extent>>
     {
@@ -137,7 +137,6 @@ namespace std
 }
 
 namespace sparrow
-
 {
     template <typename R>
     concept RangeOfRanges = std::ranges::range<R> && std::ranges::range<std::ranges::range_value_t<R>>;
