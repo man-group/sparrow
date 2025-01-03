@@ -46,7 +46,7 @@ namespace sparrow
         /**
          * Constructs an empty array.
          */
-        SPARROW_API array() = default;
+        array() = default;
 
         /**
          * Constructs an \ref array from the given typed layout. The ownership
