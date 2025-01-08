@@ -510,6 +510,7 @@ namespace sparrow
         requires mpl::convertible_ranges<U, T>
     void variable_size_binary_array_impl<T, CR, OT>::assign(U&& rhs, size_type index)
     {
+        SPARROW_ASSERT_TRUE(index < size());
         const auto offset_beg = *offset(index);
         const auto offset_end = *offset(index + 1);
         const auto initial_value_length = offset_end - offset_beg;

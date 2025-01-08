@@ -281,7 +281,7 @@ namespace sparrow
 
             SUBCASE("resize")
             {
-                const auto new_nullable_value = make_nullable<T>(99);
+                const auto new_nullable_value = make_nullable<T>(99, false);
                 ar.resize(7, new_nullable_value);
                 REQUIRE_EQ(ar.size(), 7);
                 CHECK(ar[0].has_value());

@@ -14,10 +14,9 @@
 
 #include "sparrow/array_factory.hpp"
 
-#include <memory>
-
 #include "sparrow/layout/decimal_array.hpp"
 #include "sparrow/layout/dictionary_encoded_array.hpp"
+#include "sparrow/layout/fixed_width_binary_array.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
 #include "sparrow/layout/null_array.hpp"
 #include "sparrow/layout/primitive_array.hpp"
@@ -96,13 +95,9 @@ namespace sparrow
                 case data_type::DOUBLE:
                     return detail::make_wrapper_ptr<primitive_array<double>>(std::move(proxy));
                 case data_type::LIST:
-                {
                     return detail::make_wrapper_ptr<list_array>(std::move(proxy));
-                }
                 case data_type::LARGE_LIST:
-                {
                     return detail::make_wrapper_ptr<big_list_array>(std::move(proxy));
-                }
                 case data_type::LIST_VIEW:
                     return detail::make_wrapper_ptr<list_view_array>(std::move(proxy));
                 case data_type::LARGE_LIST_VIEW:
@@ -136,7 +131,7 @@ namespace sparrow
                 case data_type::DECIMAL256:
                     return detail::make_wrapper_ptr<decimal_256_array>(std::move(proxy));
                 case data_type::FIXED_WIDTH_BINARY:
-                    throw std::runtime_error("not yet supported data type");
+                    return detail::make_wrapper_ptr<fixed_width_binary_array>(std::move(proxy));
                 default:
                     throw std::runtime_error("not supported data type");
             }

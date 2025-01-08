@@ -19,6 +19,8 @@
 #include <iterator>
 #include <memory>
 #include <ranges>
+#include <span>
+#include <tuple>
 #include <type_traits>
 
 namespace sparrow::mpl
@@ -514,12 +516,30 @@ namespace sparrow::mpl
      */
     template <typename I, typename T>
     concept iterator_of_type = std::input_iterator<I>
-
                                && std::same_as<typename std::iterator_traits<I>::value_type, T>;
 
 
     // todo...make smth better based on sizeof and is pod
     template <class T>
     concept char_like = std::same_as<T, char> || std::same_as<T, std::byte> || std::same_as<T, uint8_t>;
+
+    // Concept for std::array
+    template <typename T>
+    concept std_array = requires {
+        typename std::remove_cvref_t<T>::value_type;
+        requires std::same_as<
+            std::array<typename std::remove_cvref_t<T>::value_type, std::tuple_size<std::remove_cvref_t<T>>::value>,
+            std::remove_cvref_t<T>>;
+    };
+
+    // Concept for fixed-size std::span
+    template <typename T>
+    concept fixed_size_span = requires {
+        typename std::remove_cvref_t<T>::element_type;
+        requires std::tuple_size_v<T> != std::dynamic_extent;
+        requires std::same_as<
+            std::span<typename std::remove_cvref_t<T>::element_type, std::remove_cvref_t<T>::extent>,
+            std::remove_cvref_t<T>>;
+    };
 
 }

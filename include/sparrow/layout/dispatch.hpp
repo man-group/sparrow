@@ -67,7 +67,6 @@ namespace sparrow
             {
                 case data_type::NA:
                     return func(unwrap_array<null_array>(ar));
-                    ;
                 case data_type::BOOL:
                     return func(unwrap_array<primitive_array<bool>>(ar));
                 case data_type::UINT8:

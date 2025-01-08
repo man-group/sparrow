@@ -63,7 +63,7 @@ namespace sparrow
             requires is_mutable;
         const bitmap_type& get_bitmap() const;
 
-        void resize_bitmap(size_type new_length)
+        void resize_bitmap(size_type new_length, bool value)
             requires is_mutable;
 
         bitmap_iterator insert_bitmap(const_bitmap_iterator pos, bool value, size_type count)
@@ -161,12 +161,12 @@ namespace sparrow
     }
 
     template <class D, bool is_mutable>
-    void array_bitmap_base_impl<D, is_mutable>::resize_bitmap(size_type new_length)
+    void array_bitmap_base_impl<D, is_mutable>::resize_bitmap(size_type new_length, bool value)
         requires is_mutable
     {
         arrow_proxy& arrow_proxy = this->get_arrow_proxy();
         const size_t new_size = new_length + arrow_proxy.offset();
-        arrow_proxy.resize_bitmap(new_size);
+        arrow_proxy.resize_bitmap(new_size, value);
     }
 
     template <class D, bool is_mutable>

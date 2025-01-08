@@ -499,7 +499,7 @@ namespace sparrow
                     layout_type array(std::move(m_arrow_proxy));
                     CHECK_EQ(array.size(), 9);
                     const auto pos = array.cbegin() + 3;
-                    const auto iter = array.insert(pos, to_insert);
+                    const auto iter = array.insert(pos, make_nullable(to_insert));
                     CHECK_EQ(iter, array.begin() + 3);
                     REQUIRE_EQ(array.size(), 10);
                     CHECK_EQ(array.value(0), "upon");
@@ -518,7 +518,7 @@ namespace sparrow
                     layout_type array(std::move(m_arrow_proxy));
                     CHECK_EQ(array.size(), 9);
                     const auto pos = array.cend();
-                    const auto iter = array.insert(pos, to_insert);
+                    const auto iter = array.insert(pos, make_nullable(to_insert));
                     CHECK_EQ(iter, array.end() - 1);
                     REQUIRE_EQ(array.size(), 10);
                     CHECK_EQ(array.value(0), "upon");
@@ -541,8 +541,7 @@ namespace sparrow
                     layout_type array(std::move(m_arrow_proxy));
                     CHECK_EQ(array.size(), 9);
                     const auto pos = array.cbegin();
-                    const auto lol = make_nullable(to_insert);
-                    const auto iter = array.insert(pos, lol, 3);
+                    const auto iter = array.insert(pos, make_nullable(to_insert), 3);
                     CHECK_EQ(iter, array.begin());
                     REQUIRE_EQ(array.size(), 12);
                     CHECK_EQ(array.value(0), to_insert);
@@ -681,7 +680,12 @@ namespace sparrow
                     layout_type array(std::move(m_arrow_proxy));
                     CHECK_EQ(array.size(), 9);
                     const auto pos = array.cbegin();
-                    const auto iter = array.insert(pos, {"!", "once", "!"});
+                    const auto iter = array.insert(
+                        pos,
+                        {make_nullable<std::string>("!"),
+                         make_nullable<std::string>("once"),
+                         make_nullable<std::string>("!")}
+                    );
                     CHECK_EQ(iter, array.begin());
                     REQUIRE_EQ(array.size(), 12);
                     CHECK_EQ(array.value(0), "!");
@@ -702,7 +706,12 @@ namespace sparrow
                     layout_type array(std::move(m_arrow_proxy));
                     CHECK_EQ(array.size(), 9);
                     const auto pos = array.cbegin() + 3;
-                    const auto iter = array.insert(pos, {"!", "once", "!"});
+                    const auto iter = array.insert(
+                        pos,
+                        {make_nullable<std::string>("!"),
+                         make_nullable<std::string>("once"),
+                         make_nullable<std::string>("!")}
+                    );
                     CHECK_EQ(iter, array.begin() + 3);
                     REQUIRE_EQ(array.size(), 12);
                     CHECK_EQ(array.value(0), "upon");
@@ -723,7 +732,12 @@ namespace sparrow
                     layout_type array(std::move(m_arrow_proxy));
                     CHECK_EQ(array.size(), 9);
                     const auto pos = array.cend();
-                    const auto iter = array.insert(pos, {"!", "once", "!"});
+                    const auto iter = array.insert(
+                        pos,
+                        {make_nullable<std::string>("!"),
+                         make_nullable<std::string>("once"),
+                         make_nullable<std::string>("!")}
+                    );
                     REQUIRE_EQ(array.size(), 12);
                     CHECK_EQ(iter, array.end() - 3);
                     CHECK_EQ(array.value(0), "upon");
@@ -859,7 +873,7 @@ namespace sparrow
         {
             layout_type array(std::move(m_arrow_proxy));
             CHECK_EQ(array.size(), 9);
-            array.push_back("!");
+            array.push_back(make_nullable<std::string>("!"));
             REQUIRE_EQ(array.size(), 10);
             CHECK_EQ(array.value(0), "upon");
             CHECK_EQ(array.value(1), "a");

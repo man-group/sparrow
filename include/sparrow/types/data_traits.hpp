@@ -119,14 +119,6 @@ namespace sparrow
         using const_reference = decimal<int256_t>;
     };
 
-    template <typename T, std::size_t N>
-    struct arrow_traits<std::array<T, N>>
-    {
-        static constexpr data_type type_id = data_type::FIXED_WIDTH_BINARY;
-        using value_type = std::array<T, N>;
-        using const_reference = sparrow::vector_view<const T, N>;
-    };
-
     namespace detail
     {
         template <class T>

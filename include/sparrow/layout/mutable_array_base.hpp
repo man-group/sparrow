@@ -21,6 +21,12 @@
 
 namespace sparrow
 {
+    template <typename T, typename U>
+    concept tralala = std::convertible_to<typename U::value_type, typename T::value_type>
+                      || (std::ranges::input_range<typename T::value_type>
+                          && std::ranges::input_range<typename U::value_type>
+                          && mpl::convertible_ranges<typename T::value_type, typename U::value_type>);
+
     /**
      * Base class definining common interface for arrays
      * with a bitmap.
@@ -86,11 +92,77 @@ namespace sparrow
         using base_type::begin;
         using base_type::end;
 
-        void resize(size_type new_size, const value_type& value);
+        /**
+         * Resizes the array to contain \c new_length elements, does nothing if <tt>new_length == size()</tt>.
+         * If the current size is greater than \c new_length, the array is reduced to its first \c new_length
+         * elements. If the current size is less than \c new_length, additional copies of \c values are
+         * appended.
+         *
+         * @param new_length The new size of the array.
+         * @param value The value to initialize the new elements with.
+         */
+        template <typename T>
+        void resize(size_type new_length, const nullable<T>& value)
+        {
+            auto& derived = this->derived_cast();
+            derived.resize_bitmap(new_length, value.has_value());
+            derived.resize_values(new_length, value.get());
+            this->get_arrow_proxy().set_length(new_length);  // Must be done after resizing the bitmap and
+                                                             // values
+            derived.update();
+        }
 
-        iterator insert(const_iterator pos, const value_type& value);
-        iterator insert(const_iterator pos, const value_type& value, size_type count);
-        iterator insert(const_iterator pos, std::initializer_list<value_type> values);
+        /**
+         * Inserts a copy of \c value before \c pos in the array.
+         *
+         * @param pos The iterator before which the element will be inserted (\c pos may be the end()
+         * iterator).
+         * @param value The element to insert.
+         * @return An iterator pointing to the inserted value.
+         */
+        template <typename T>
+        iterator insert(const_iterator pos, const nullable<T>& value)
+        {
+            return insert(pos, value, 1);
+        }
+
+        /**
+         * Inserts \c count copies of \c value before \c pos in the array.
+         *
+         * @param pos The iterator before which the elements will be inserted (\c pos may be the end()
+         * iterator).
+         * @param value The element to insert.
+         * @param count The number of elements to insert.
+         * @return An iterator pointing to the first element inserted, or \c pos if <tt>count == 0</tt>.
+         */
+        template <typename T>
+        iterator insert(const_iterator pos, const nullable<T>& value, size_type count)
+        {
+            SPARROW_ASSERT_TRUE(pos >= this->cbegin());
+            SPARROW_ASSERT_TRUE(pos <= this->cend());
+            const size_t distance = static_cast<size_t>(std::distance(this->cbegin(), pos));
+            auto& derived = this->derived_cast();
+            derived.insert_bitmap(sparrow::next(this->bitmap_cbegin(), distance), value.has_value(), count);
+            derived.insert_value(sparrow::next(derived.value_cbegin(), distance), value.get(), count);
+            this->get_arrow_proxy().set_length(this->size() + count);  // Must be done after resizing the
+                                                                       // bitmap and values
+            derived.update();
+            return sparrow::next(this->begin(), distance);
+        }
+
+        /**
+         * Inserts elements from initializer list \c values before \c pos in the array.
+         *
+         * @param pos The iterator before which the elements will be inserted (\c pos may be the end()
+         * iterator).
+         * @param values The <tt>std::initializer_list</tt> to insert the values from.
+         * @return An iterator pointing to the first element inserted, or \c pos if \c values is empty.
+         */
+        template <typename T>
+        iterator insert(const_iterator pos, std::initializer_list<nullable<T>> values)
+        {
+            return insert(pos, values.begin(), values.end());
+        }
 
         /**
          * Inserts elements from range [\c first , \c last ) before \c pos in the array.
@@ -101,7 +173,9 @@ namespace sparrow
          * @param last The iterator to the element following the last element to insert.
          * @return An iterator pointing to the first element inserted, or \c pos if <tt>first == last</tt>.
          */
-        template <mpl::iterator_of_type<value_type> InputIt>
+        template <typename InputIt>
+            requires std::input_iterator<InputIt>
+                     && mpl::is_type_instance_of_v<typename std::iterator_traits<InputIt>::value_type, nullable>
         iterator insert(const_iterator pos, InputIt first, InputIt last)
         {
             SPARROW_ASSERT_TRUE(pos >= this->cbegin())
@@ -110,7 +184,7 @@ namespace sparrow
             const difference_type distance = std::distance(this->cbegin(), pos);
             const auto validity_range = std::ranges::subrange(first, last)
                                         | std::views::transform(
-                                            [](const value_type& obj)
+                                            [](const auto& obj)
                                             {
                                                 return obj.has_value();
                                             }
@@ -124,7 +198,7 @@ namespace sparrow
 
             const auto value_range = std::ranges::subrange(first, last)
                                      | std::views::transform(
-                                         [](const value_type& obj)
+                                         [](const auto& obj)
                                          {
                                              return obj.get();
                                          }
@@ -152,7 +226,7 @@ namespace sparrow
          * @return An iterator pointing to the first element inserted, or \c pos if \c range is empty.
          */
         template <std::ranges::input_range R>
-            requires std::same_as<std::ranges::range_value_t<R>, value_type>
+            requires mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
         iterator insert(const_iterator pos, const R& range)
         {
             return insert(pos, std::ranges::begin(range), std::ranges::end(range));
@@ -161,7 +235,18 @@ namespace sparrow
         iterator erase(const_iterator pos);
         iterator erase(const_iterator first, const_iterator last);
 
-        void push_back(const value_type& value);
+        /**
+         * Appends a copy of \c value to the end of the array.
+         *
+         * @param value The value o the element to append.
+         */
+        template <typename T>
+        // requires mpl::is_type_instance_of_v<T, nullable>
+        void push_back(const nullable<T>& value)
+        {
+            insert(this->cend(), value);
+        }
+
         void pop_back();
 
     protected:
@@ -243,73 +328,6 @@ namespace sparrow
     }
 
     /**
-     * Resizes the array to contain \c new_length elements, does nothing if <tt>new_length == size()</tt>.
-     * If the current size is greater than \c new_length, the array is reduced to its first \c new_length
-     * elements. If the current size is less than \c new_length, additional copies of \c values are appended.
-     *
-     * @param new_length The new size of the array.
-     * @param value The value to initialize the new elements with.
-     */
-    template <class D>
-    void mutable_array_base<D>::resize(size_type new_length, const value_type& value)
-    {
-        auto& derived = this->derived_cast();
-        derived.resize_bitmap(new_length);
-        derived.resize_values(new_length, value.get());
-        this->get_arrow_proxy().set_length(new_length);  // Must be done after resizing the bitmap and values
-        derived.update();
-    }
-
-    /**
-     * Inserts a copy of \c value before \c pos in the array.
-     *
-     * @param pos The iterator before which the element will be inserted (\c pos may be the end() iterator).
-     * @param value The element to insert.
-     * @return An iterator pointing to the inserted value.
-     */
-    template <class D>
-    auto mutable_array_base<D>::insert(const_iterator pos, const value_type& value) -> iterator
-    {
-        return insert(pos, value, 1);
-    }
-
-    /**
-     * Inserts \c count copies of \c value before \c pos in the array.
-     *
-     * @param pos The iterator before which the elements will be inserted (\c pos may be the end() iterator).
-     * @param value The element to insert.
-     * @param count The number of elements to insert.
-     * @return An iterator pointing to the first element inserted, or \c pos if <tt>count == 0</tt>.
-     */
-    template <class D>
-    auto mutable_array_base<D>::insert(const_iterator pos, const value_type& value, size_type count) -> iterator
-    {
-        SPARROW_ASSERT_TRUE(pos >= this->cbegin());
-        SPARROW_ASSERT_TRUE(pos <= this->cend());
-        const size_t distance = static_cast<size_t>(std::distance(this->cbegin(), pos));
-        auto& derived = this->derived_cast();
-        derived.insert_bitmap(sparrow::next(this->bitmap_cbegin(), distance), value.has_value(), count);
-        derived.insert_value(sparrow::next(derived.value_cbegin(), distance), value.get(), count);
-        this->get_arrow_proxy().set_length(this->size() + count);  // Must be done after resizing the bitmap
-                                                                   // and values
-        derived.update();
-        return sparrow::next(this->begin(), distance);
-    }
-
-    /**
-     * Inserts elements from initializer list \c values before \c pos in the array.
-     *
-     * @param pos The iterator before which the elements will be inserted (\c pos may be the end() iterator).
-     * @param values The <tt>std::initializer_list</tt> to insert the values from.
-     * @return An iterator pointing to the first element inserted, or \c pos if \c values is empty.
-     */
-    template <class D>
-    auto mutable_array_base<D>::insert(const_iterator pos, std::initializer_list<value_type> values) -> iterator
-    {
-        return insert(pos, values.begin(), values.end());
-    }
-
-    /**
      * Removes the element at \c pos from the array.
      *
      * @param pos The iterator to the element to remove.
@@ -349,17 +367,6 @@ namespace sparrow
                                                                    // and values
         derived.update();
         return sparrow::next(begin(), first_index);
-    }
-
-    /**
-     * Appends a copy of \c value to the end of the array.
-     *
-     * @param value The value o the element to append.
-     */
-    template <class D>
-    void mutable_array_base<D>::push_back(const value_type& value)
-    {
-        insert(this->cend(), value);
     }
 
     /**

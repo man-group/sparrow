@@ -23,7 +23,7 @@ TEST_SUITE("C Data Interface")
 {
     TEST_CASE("Arrow Array and schema utils")
     {
-        SUBCASE("get_size")
+        SUBCASE("ssize")
         {
             SUBCASE("std::nullptr_t")
             {
@@ -44,6 +44,13 @@ TEST_SUITE("C Data Interface")
                 std::tuple<int, int, int> tuple{0, 1, 2};
                 constexpr auto size = sparrow::ssize(tuple);
                 CHECK_EQ(size, 3);
+            }
+
+            SUBCASE("std::array")
+            {
+                constexpr std::array<int, 5> arr{1, 2, 3, 4, 5};
+                static_assert(sparrow::ssize(arr) == 5);
+                CHECK_EQ(sparrow::ssize(arr), 5);
             }
         }
 
