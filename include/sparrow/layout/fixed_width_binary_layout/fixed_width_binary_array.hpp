@@ -18,6 +18,7 @@
 #include <iterator>
 #include <ranges>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
@@ -188,7 +189,9 @@ namespace sparrow
 
         // range of nullable values
         template <std::ranges::input_range R>
-            requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
+            requires mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
+                     && std::ranges::input_range<typename std::ranges::range_value_t<R>::value_type>
+                     && std::is_same_v<std::ranges::range_value_t<typename std::ranges::range_value_t<R>::value_type>, byte_t>
         static arrow_proxy create_proxy(
             R&&,
             std::optional<std::string_view> name = std::nullopt,
@@ -312,11 +315,12 @@ namespace sparrow
 
         SPARROW_ASSERT_TRUE(!std::ranges::empty(values));
         SPARROW_ASSERT_TRUE(all_same_size(values));
+        const size_t element_size = std::ranges::size(*values.begin());
 
         auto data_buffer = u8_buffer<values_inner_value_type>(std::ranges::views::join(values));
         return create_proxy(
             std::move(data_buffer),
-            values.begin()->size(),
+            element_size,
             std::forward<VB>(validity_input),
             std::forward<std::optional<std::string_view>>(name),
             std::forward<std::optional<std::string_view>>(metadata)
@@ -325,7 +329,9 @@ namespace sparrow
 
     template <std::ranges::sized_range T, class CR>
     template <std::ranges::input_range R>
-        requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
+        requires mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
+                 && std::ranges::input_range<typename std::ranges::range_value_t<R>::value_type>
+                 && std::is_same_v<std::ranges::range_value_t<typename std::ranges::range_value_t<R>::value_type>, byte_t>
     arrow_proxy fixed_width_binary_array_impl<T, CR>::create_proxy(
         R&& range,
         std::optional<std::string_view> name,
