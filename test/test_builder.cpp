@@ -199,6 +199,40 @@ namespace sparrow
             }
         }
 
+        TEST_CASE("fixed-width-binary")
+        {
+            // fixed_width_binary
+            {
+                std::vector<std::array<byte_t, 3>> v{
+                    {byte_t(1), byte_t(2), byte_t(3)},
+                    {byte_t(4), byte_t(5), byte_t(6)},
+                    {byte_t(7), byte_t(8), byte_t(9)}
+                };
+                auto arr = sparrow::build(v);
+                [[maybe_unused]] const auto lol = arr.get_arrow_proxy().format();
+                [[maybe_unused]] const auto lol2 = arr.get_arrow_proxy().data_type();
+                test::generic_consistency_test(arr);
+                REQUIRE_EQ(arr.size(), 3);
+                using arr_type = std::decay_t<decltype(arr)>;
+                static_assert(std::is_same_v<arr_type, sparrow::fixed_width_binary_array>);
+            }
+            // fixed_width_binary with nulls
+            {
+                std::vector<nt<std::array<byte_t, 3>>> v{
+                    std::array<byte_t, 3>{byte_t(1), byte_t(2), byte_t(3)},
+                    sparrow::nullval,
+                    std::array<byte_t, 3>{byte_t(7), byte_t(8), byte_t(9)}
+                };
+                auto arr = sparrow::build(v);
+                [[maybe_unused]] const auto lol = arr.get_arrow_proxy().format();
+                [[maybe_unused]] const auto lol2 = arr.get_arrow_proxy().data_type();
+                test::generic_consistency_test(arr);
+                REQUIRE_EQ(arr.size(), 3);
+                using arr_type = std::decay_t<decltype(arr)>;
+                static_assert(std::is_same_v<arr_type, sparrow::fixed_width_binary_array>);
+            }
+        }
+
         TEST_CASE("sparse-union")
         {
             SUBCASE("simple")

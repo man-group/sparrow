@@ -36,20 +36,14 @@
 
 namespace sparrow
 {
-    namespace detail
-    {
-        template <class T, class OT>
-        struct variable_size_binary_format;
-    }
-
     template <std::ranges::sized_range T, class CR>
     class fixed_width_binary_array_impl;
 
-    using fixed_binary_traits = arrow_traits<std::vector<byte_t>>;
+    using fixed_width_binary_traits = arrow_traits<std::vector<byte_t>>;
 
     using fixed_width_binary_array = fixed_width_binary_array_impl<
-        fixed_binary_traits::value_type,
-        fixed_binary_traits::const_reference>;
+        fixed_width_binary_traits::value_type,
+        fixed_width_binary_traits::const_reference>;
 
     template <std::ranges::sized_range T, class CR>
     struct array_inner_types<fixed_width_binary_array_impl<T, CR>> : array_inner_types_base
