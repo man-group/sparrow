@@ -15,7 +15,9 @@
 #include "sparrow/arrow_interface/arrow_array.hpp"
 
 #include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
+#include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.hpp"
 #include "sparrow/types/data_type.hpp"
+
 
 namespace sparrow
 {
@@ -44,26 +46,6 @@ namespace sparrow
     auto static_const_ptr_cast(const void* ptr)
     {
         return const_cast<T*>(static_cast<const T*>(ptr));
-    }
-
-    // get the bit width for fixed width binary from format
-    std::size_t num_bytes_for_fixed_sized_binary(const char* format)
-    {
-        //    w:42   -> 42 bytes
-        //    w:1    -> 1 bytes
-
-        // check if format+2 is a number
-
-        if (!all_digits(std::string_view(format + 2)))
-        {
-            throw std::runtime_error("Invalid format for fixed width binary");
-        }
-        const auto width = std::atoi(format + 2);
-        if (width <= 0)
-        {
-            throw std::runtime_error("Invalid format for fixed width binary");
-        }
-        return static_cast<std::size_t>(width);
     }
 
     std::vector<sparrow::buffer_view<uint8_t>>

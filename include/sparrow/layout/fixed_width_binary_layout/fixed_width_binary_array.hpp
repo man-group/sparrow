@@ -26,6 +26,7 @@
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
+#include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.hpp"
 #include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_iterator.hpp"
 #include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_reference.hpp"
 #include "sparrow/layout/layout_utils.hpp"
@@ -142,7 +143,7 @@ namespace sparrow
             requires(mpl::excludes_copy_and_move_ctor_v<fixed_width_binary_array_impl<T, CR>, ARGS...>)
         fixed_width_binary_array_impl(ARGS&&... args)
             : base_type(create_proxy(std::forward<ARGS>(args)...))
-            , m_element_size(get_element_size(this->get_arrow_proxy()))
+            , m_element_size(num_bytes_for_fixed_sized_binary(this->get_arrow_proxy().format()))
         {
         }
 
@@ -153,16 +154,6 @@ namespace sparrow
         inner_const_reference value(size_type i) const;
 
     private:
-
-        static size_t get_element_size(const arrow_proxy& proxy)
-        {
-            const auto format = proxy.format();
-            const auto pos = format.find(':');
-            SPARROW_ASSERT_TRUE(pos != std::string::npos);
-            const std::string number{format.substr(pos + 1)};
-            const size_t element_size = std::stoull(number);
-            return element_size;
-        }
 
         template <mpl::char_like C, validity_bitmap_input VB = validity_bitmap>
         static arrow_proxy create_proxy(
@@ -240,14 +231,14 @@ namespace sparrow
         friend base_type::base_type::base_type;
     };
 
-    /*********************************************
+    /************************************************
      * fixed_width_binary_array_impl implementation *
-     *********************************************/
+     ************************************************/
 
     template <std::ranges::sized_range T, class CR>
     fixed_width_binary_array_impl<T, CR>::fixed_width_binary_array_impl(arrow_proxy proxy)
         : base_type(std::move(proxy))
-        , m_element_size(get_element_size(this->get_arrow_proxy()))
+        , m_element_size(num_bytes_for_fixed_sized_binary(this->get_arrow_proxy().format()))
     {
         SPARROW_ASSERT_TRUE(this->get_arrow_proxy().data_type() == data_type::FIXED_WIDTH_BINARY);
     }
