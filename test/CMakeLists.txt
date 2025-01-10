@@ -145,6 +145,7 @@ else()
         test_null_array.cpp
         test_nullable.cpp
         test_primitive_array.cpp
+        test_ranges.cpp
         test_record_batch.cpp
         test_repeat_container.cpp
         test_run_end_encoded_array.cpp

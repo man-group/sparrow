@@ -23,23 +23,11 @@
 
 namespace sparrow
 {
-    template <typename T>
-    class my_class
-    {
-        std::array<T, 3> data;
-        T my_value;
-    };
-
-    template <typename T>
-    class my_incompatible_class
-    {
-        std::vector<T> data;
-    };
-
     TEST_SUITE("fixed_width_binary_array")
     {
-        auto make_array = [](size_t count, size_t offset = 0
-                          ) -> std::pair<fixed_width_binary_array, std::vector<std::array<byte_t, 3>>>
+        static const auto make_array =
+            [](size_t count,
+               size_t offset = 0) -> std::pair<fixed_width_binary_array, std::vector<std::array<byte_t, 3>>>
         {
             std::vector<std::array<byte_t, 3>> input_values;
             input_values.reserve(count);

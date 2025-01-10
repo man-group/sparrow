@@ -258,9 +258,9 @@ namespace sparrow
         friend base_type::base_type::base_type;
     };
 
-    /*******************************************
+    /**********************************
      * primitive_array implementation *
-     *******************************************/
+     **********************************/
 
     namespace detail
     {
