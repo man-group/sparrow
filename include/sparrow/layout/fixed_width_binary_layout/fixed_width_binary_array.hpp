@@ -133,6 +133,10 @@ namespace sparrow
 
         explicit fixed_width_binary_array_impl(arrow_proxy);
 
+        /**
+         * Constructs a fixed-width binary array.
+         * The arguments are forwarded to the compatibles \sa create_proxy() functions.
+         */
         template <class... ARGS>
             requires(mpl::excludes_copy_and_move_ctor_v<fixed_width_binary_array_impl<T, CR>, ARGS...>)
         fixed_width_binary_array_impl(ARGS&&... args)
@@ -149,6 +153,16 @@ namespace sparrow
 
     private:
 
+        /**
+         * Creates an arrow proxy from a data buffer.
+         *
+         * @param data_buffer The buffer containing the data.
+         * @param element_size The size of each element in the buffer.
+         * @param validity_input The validity bitmap.
+         * @param name The name of the array.
+         * @param metadata The metadata of the array.
+         * @return The arrow proxy.
+         */
         template <mpl::char_like C, validity_bitmap_input VB = validity_bitmap>
         static arrow_proxy create_proxy(
             u8_buffer<C>&& data_buffer,
@@ -158,6 +172,15 @@ namespace sparrow
             std::optional<std::string_view> metadata = std::nullopt
         );
 
+        /**
+         * Creates an arrow proxy from a range of ranges of byte_t/uint8_t/int8_t.
+         *
+         * @param values The range of ranges of byte_t/uint8_t/int8_t.
+         * @param validity_input The validity bitmap.
+         * @param name The name of the array.
+         * @param metadata The metadata of the array.
+         * @return The arrow proxy.
+         */
         template <std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap>
             requires(
                 std::ranges::input_range<std::ranges::range_value_t<R>> &&  // a range of ranges
@@ -172,7 +195,15 @@ namespace sparrow
             std::optional<std::string_view> metadata = std::nullopt
         );
 
-        // range of nullable values
+        /**
+         * Creates an arrow proxy from a range of nullable values. The inner range must be a range of
+         * byte_t/uint8_t/int8_t.
+         *
+         * @param range The range of nullable values.
+         * @param name The name of the array.
+         * @param metadata The metadata of the array.
+         * @return The arrow proxy.
+         */
         template <std::ranges::input_range R>
             requires mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
                      && std::ranges::input_range<typename std::ranges::range_value_t<R>::value_type>

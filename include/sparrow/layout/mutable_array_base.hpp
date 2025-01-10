@@ -14,19 +14,11 @@
 
 #pragma once
 
-#include <concepts>
-
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
-    template <typename T, typename U>
-    concept tralala = std::convertible_to<typename U::value_type, typename T::value_type>
-                      || (std::ranges::input_range<typename T::value_type>
-                          && std::ranges::input_range<typename U::value_type>
-                          && mpl::convertible_ranges<typename T::value_type, typename U::value_type>);
-
     /**
      * Base class definining common interface for arrays
      * with a bitmap.
