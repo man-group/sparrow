@@ -18,7 +18,6 @@
 #include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.hpp"
 #include "sparrow/types/data_type.hpp"
 
-
 namespace sparrow
 {
     void release_arrow_array(ArrowArray* array)
