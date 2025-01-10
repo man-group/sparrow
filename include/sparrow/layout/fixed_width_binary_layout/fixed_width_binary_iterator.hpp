@@ -21,7 +21,7 @@
 namespace sparrow
 {
     /**
-     * Iterator over the data values of a variable size binary layout.
+     * Iterator over the data values of a fixed width binary layout.
      *
      * @tparam L the layout type
      * @tparam is_const a boolean flag specifying whether this iterator is const.

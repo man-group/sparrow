@@ -258,7 +258,7 @@ namespace sparrow
         validity_bitmap vbitmap = ensure_validity_bitmap(element_count, std::forward<VB>(validity_input));
         const auto null_count = vbitmap.null_count();
 
-        std::string format_str = std::string("w:") + std::to_string(element_size);
+        std::string format_str = "w:" + std::to_string(element_size);
 
         ArrowSchema schema = make_arrow_schema(
             std::move(format_str),
@@ -492,9 +492,9 @@ namespace sparrow
             casted_values.end()
         );
 
-        for (const auto& value : values)
+        for (const auto& val : values)
         {
-            std::copy(value.begin(), value.end(), insert_pos);
+            std::copy(val.begin(), val.end(), insert_pos);
             std::advance(insert_pos, m_element_size);
         }
         return sparrow::next(value_begin(), idx);
