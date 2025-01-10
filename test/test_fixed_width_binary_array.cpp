@@ -65,13 +65,13 @@ namespace sparrow
             }
         };
 
-        const auto new_value_1 = std::array<byte_t, 3>{byte_t{99}, byte_t{100}, byte_t{101}};
-        const auto new_nullable_value_1 = nullable<const std::array<byte_t, 3>>(new_value_1, true);
-        const auto new_value_2 = std::array<byte_t, 3>{byte_t{102}, byte_t{103}, byte_t{104}};
-        const auto new_nullable_value_2 = nullable<const std::array<byte_t, 3>>(new_value_2, true);
-        const auto new_value_3 = std::array<byte_t, 3>{byte_t{105}, byte_t{106}, byte_t{107}};
-        const auto new_nullable_value_3 = nullable<const std::array<byte_t, 3>>(new_value_3, true);
-        const auto new_nullable_values = std::array<nullable<std::array<byte_t, 3>>, 3>{
+        static const auto new_value_1 = std::array<byte_t, 3>{byte_t{99}, byte_t{100}, byte_t{101}};
+        static const auto new_nullable_value_1 = nullable<const std::array<byte_t, 3>>(new_value_1, true);
+        static const auto new_value_2 = std::array<byte_t, 3>{byte_t{102}, byte_t{103}, byte_t{104}};
+        static const auto new_nullable_value_2 = nullable<const std::array<byte_t, 3>>(new_value_2, true);
+        static const auto new_value_3 = std::array<byte_t, 3>{byte_t{105}, byte_t{106}, byte_t{107}};
+        static const auto new_nullable_value_3 = nullable<const std::array<byte_t, 3>>(new_value_3, true);
+        static const auto new_nullable_values = std::array<nullable<std::array<byte_t, 3>>, 3>{
             new_nullable_value_1,
             new_nullable_value_2,
             new_nullable_value_3
