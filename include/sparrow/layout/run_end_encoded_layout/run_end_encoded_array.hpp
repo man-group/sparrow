@@ -15,7 +15,6 @@
 #pragma once
 
 #include "sparrow/array_api.hpp"
-#include "sparrow/array_factory.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
@@ -69,8 +68,8 @@ namespace sparrow
         SPARROW_API run_end_encoded_array(const self_type&);
         SPARROW_API self_type& operator=(const self_type&);
 
-        SPARROW_API run_end_encoded_array(self_type&&) = default;
-        SPARROW_API self_type& operator=(self_type&&) = default;
+        run_end_encoded_array(self_type&&) = default;
+        self_type& operator=(self_type&&) = default;
 
         SPARROW_API array_traits::const_reference operator[](std::uint64_t i);
         SPARROW_API array_traits::const_reference operator[](std::uint64_t i) const;
@@ -109,8 +108,8 @@ namespace sparrow
         SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);
         SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
 
-        [[nodiscard]] arrow_proxy& get_arrow_proxy();
-        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
+        [[nodiscard]] SPARROW_API arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] SPARROW_API const arrow_proxy& get_arrow_proxy() const;
 
         arrow_proxy m_proxy;
         std::uint64_t m_encoded_length;
@@ -127,138 +126,6 @@ namespace sparrow
 
     SPARROW_API
     bool operator==(const run_end_encoded_array& lhs, const run_end_encoded_array& rhs);
-
-    /****************************************
-     * run_end_encoded_array implementation *
-     ****************************************/
-
-    inline run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy)
-        : m_proxy(std::move(proxy))
-        , m_encoded_length(m_proxy.children()[0].length())
-        , p_acc_lengths_array(array_factory(m_proxy.children()[0].view()))
-        , p_encoded_values_array(array_factory(m_proxy.children()[1].view()))
-        , m_acc_lengths(run_end_encoded_array::get_acc_lengths_ptr(*p_acc_lengths_array))
-    {
-    }
-
-    inline run_end_encoded_array::run_end_encoded_array(const self_type& rhs)
-        : run_end_encoded_array(rhs.m_proxy)
-    {
-    }
-
-    inline auto run_end_encoded_array::operator=(const self_type& rhs) -> self_type&
-    {
-        if (this != &rhs)
-        {
-            m_proxy = rhs.m_proxy;
-            m_encoded_length = rhs.m_encoded_length;
-            p_acc_lengths_array = array_factory(m_proxy.children()[0].view());
-            p_encoded_values_array = array_factory(m_proxy.children()[1].view());
-            m_acc_lengths = run_end_encoded_array::get_acc_lengths_ptr(*p_acc_lengths_array);
-        }
-        return *this;
-    }
-
-    inline auto run_end_encoded_array::size() const -> size_type
-    {
-        return m_proxy.length();
-    }
-
-    inline auto run_end_encoded_array::empty() const -> bool
-    {
-        return size() == 0;
-    }
-
-    inline std::optional<std::string_view> run_end_encoded_array::name() const
-    {
-        return m_proxy.name();
-    }
-
-    inline std::optional<std::string_view> run_end_encoded_array::metadata() const
-    {
-        return m_proxy.metadata();
-    }
-
-    inline auto run_end_encoded_array::get_run_length(std::uint64_t run_index) const -> std::uint64_t
-    {
-        auto ret = std::visit(
-            [run_index](auto&& acc_lengths_ptr) -> std::uint64_t
-            {
-                if (run_index == 0)
-                {
-                    return static_cast<std::uint64_t>(acc_lengths_ptr[run_index]);
-                }
-                else
-                {
-                    return static_cast<std::uint64_t>(
-                        acc_lengths_ptr[run_index] - acc_lengths_ptr[run_index - 1]
-                    );
-                }
-            },
-            m_acc_lengths
-        );
-        return ret;
-    }
-
-    inline arrow_proxy& run_end_encoded_array::get_arrow_proxy()
-    {
-        return m_proxy;
-    }
-
-    inline const arrow_proxy& run_end_encoded_array::get_arrow_proxy() const
-    {
-        return m_proxy;
-    }
-
-    inline auto run_end_encoded_array::operator[](std::uint64_t i) -> array_traits::const_reference
-    {
-        return static_cast<const run_end_encoded_array*>(this)->operator[](i);
-    }
-
-    inline auto run_end_encoded_array::begin() -> iterator
-    {
-        return iterator(this, 0, 0);
-    }
-
-    inline auto run_end_encoded_array::end() -> iterator
-    {
-        return iterator(this, size(), 0);
-    }
-
-    inline auto run_end_encoded_array::begin() const -> const_iterator
-    {
-        return this->cbegin();
-    }
-
-    inline auto run_end_encoded_array::end() const -> const_iterator
-    {
-        return this->cend();
-    }
-
-    inline auto run_end_encoded_array::cbegin() const -> const_iterator
-    {
-        return const_iterator(this, 0, 0);
-    }
-
-    inline auto run_end_encoded_array::cend() const -> const_iterator
-    {
-        return const_iterator(this, size(), 0);
-    }
-
-    inline auto run_end_encoded_array::front() const -> array_traits::const_reference
-    {
-        return operator[](0);
-    }
-
-    inline auto run_end_encoded_array::back() const -> array_traits::const_reference
-    {
-        return operator[](size() - 1);
-    }
-
-    inline bool operator==(const run_end_encoded_array& lhs, const run_end_encoded_array& rhs)
-    {
-        return std::ranges::equal(lhs, rhs);
-    }
 }  // namespace sparrow
 
 #if defined(__cpp_lib_format)
