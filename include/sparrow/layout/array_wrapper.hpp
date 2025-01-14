@@ -178,7 +178,7 @@ namespace sparrow
 
     template <class T>
     array_wrapper_impl<T>::array_wrapper_impl(T&& ar)
-        : array_wrapper(detail::array_access::get_arrow_proxy(ar).data_type())
+        : array_wrapper(get_data_type_from_array<T>())
         , m_storage(value_ptr<T>(std::move(ar)))
         , p_array(std::get<value_ptr<T>>(m_storage).get())
     {
@@ -186,7 +186,7 @@ namespace sparrow
 
     template <class T>
     array_wrapper_impl<T>::array_wrapper_impl(T* ar)
-        : array_wrapper(detail::array_access::get_arrow_proxy(*ar).data_type())
+        : array_wrapper(get_data_type_from_array<T>())
         , m_storage(ar)
         , p_array(ar)
     {
@@ -194,7 +194,7 @@ namespace sparrow
 
     template <class T>
     array_wrapper_impl<T>::array_wrapper_impl(std::shared_ptr<T> ar)
-        : array_wrapper(detail::array_access::get_arrow_proxy(*ar).data_type())
+        : array_wrapper(get_data_type_from_array<T>())
         , m_storage(std::move(ar))
         , p_array(std::get<std::shared_ptr<T>>(m_storage).get())
     {

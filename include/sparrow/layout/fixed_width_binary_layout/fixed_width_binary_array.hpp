@@ -107,10 +107,6 @@ namespace sparrow
         using inner_reference = typename inner_types::inner_reference;
         using inner_const_reference = typename inner_types::inner_const_reference;
 
-        using char_buffer_type = u8_buffer<char>;
-        using byte_buffer_type = u8_buffer<std::byte>;
-        using uint8_buffer_type = u8_buffer<std::uint8_t>;
-
         using bitmap_type = typename base_type::bitmap_type;
         using bitmap_reference = typename base_type::bitmap_reference;
         using bitmap_const_reference = typename base_type::bitmap_const_reference;

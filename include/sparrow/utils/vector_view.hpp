@@ -30,12 +30,12 @@ namespace sparrow
      * to string_view, but for arbitrary T. You can consider it as a span or range supporting
      * const operations only, and comparison operators.
      */
-    template <class T, std::size_t Extent = std::dynamic_extent>
-    class vector_view : public std::span<T, Extent>
+    template <class T>
+    class vector_view : public std::span<T>
     {
     public:
 
-        using base_type = std::span<T, Extent>;
+        using base_type = std::span<T>;
         using value_type = typename base_type::value_type;
 
         using base_type::base_type;
@@ -46,43 +46,42 @@ namespace sparrow
         }
     };
 
-    template <class T, std::size_t Extent>
-    constexpr bool operator==(const vector_view<T, Extent>& lhs, const vector_view<T, Extent>& rhs)
+    template <class T>
+    constexpr bool operator==(const vector_view<T>& lhs, const vector_view<T>& rhs)
     {
         return std::ranges::equal(lhs, rhs);
     }
 
-    template <class T, std::size_t Extent>
-    constexpr bool operator==(const vector_view<T, Extent>& lhs, const std::vector<std::decay_t<T>>& rhs)
+    template <class T>
+    constexpr bool operator==(const vector_view<T>& lhs, const std::vector<std::decay_t<T>>& rhs)
     {
         return std::ranges::equal(lhs, rhs);
     }
 
-    template <class T, std::size_t Extent>
-    constexpr std::compare_three_way_result<T>
-    operator<=>(const vector_view<T, Extent>& lhs, const vector_view<T, Extent>& rhs)
+    template <class T>
+    constexpr std::compare_three_way_result<T> operator<=>(const vector_view<T>& lhs, const vector_view<T>& rhs)
     {
         return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
     }
 
-    template <class T, std::size_t Extent>
+    template <class T>
     constexpr std::compare_three_way_result<T>
-    operator<=>(const vector_view<T, Extent>& lhs, const std::vector<std::decay_t<T>>& rhs)
+    operator<=>(const vector_view<T>& lhs, const std::vector<std::decay_t<T>>& rhs)
     {
         return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
     }
 }
 
 #if defined(__cpp_lib_format)
-template <class T, std::size_t Extent>
-struct std::formatter<sparrow::vector_view<T, Extent>>
+template <class T>
+struct std::formatter<sparrow::vector_view<T>>
 {
     constexpr auto parse(std::format_parse_context& ctx)
     {
         return ctx.begin();  // Simple implementation
     }
 
-    auto format(const sparrow::vector_view<T, Extent>& vec, std::format_context& ctx) const
+    auto format(const sparrow::vector_view<T>& vec, std::format_context& ctx) const
     {
         std::format_to(ctx.out(), "<");
         if (!vec.empty())
