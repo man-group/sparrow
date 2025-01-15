@@ -72,6 +72,21 @@ namespace sparrow
         using const_value_iterator = const_iterator;
     };
 
+    namespace detail
+    {
+        template <class T>
+        struct get_data_type_from_array;
+
+        template <>
+        struct get_data_type_from_array<sparrow::fixed_width_binary_array>
+        {
+            static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::FIXED_WIDTH_BINARY;
+            }
+        };
+    }
+
     template <std::ranges::sized_range T, class CR>
     class fixed_width_binary_array_impl final
         : public mutable_array_bitmap_base<fixed_width_binary_array_impl<T, CR>>
