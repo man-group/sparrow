@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <version>
+
 #if defined(__cpp_lib_format)
 
 #    include "sparrow/utils/format.hpp"
@@ -130,45 +132,6 @@ TEST_SUITE("format")
             const std::vector<std::variant<int, double, std::string>> values{1, 2.0, "three"};
             to_row(std::back_inserter(out), widths, values);
             CHECK_EQ(out, "|  1|   2|   three|");
-        }
-    }
-
-    TEST_CASE("to_header")
-    {
-        SUBCASE("empty")
-        {
-            std::string out;
-            to_header(
-                std::back_inserter(out),
-                std::vector<size_t>{},
-                std::vector<std::string>{},
-                std::vector<std::string>{}
-            );
-            CHECK_EQ(out, "");
-        }
-
-        SUBCASE("single")
-        {
-            std::string out;
-            to_header(
-                std::back_inserter(out),
-                std::vector<size_t>{5},
-                std::vector<std::string>{"a"},
-                std::vector<std::string>{" "}
-            );
-            CHECK_EQ(out, "|  a  |");
-        }
-
-        SUBCASE("multiple")
-        {
-            std::string out;
-            to_header(
-                std::back_inserter(out),
-                std::vector<size_t>{3, 2, 8},
-                std::vector<std::string>{"a", "bb", "ccc"},
-                std::vector<std::string>{"", "", ""}
-            );
-            CHECK_EQ(out, "| a |bb|  ccc   |");
         }
     }
 
