@@ -201,7 +201,6 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_reference.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_layout/fixed_width_binary_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_layout/fixed_width_binary_reference.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.hpp
     # array

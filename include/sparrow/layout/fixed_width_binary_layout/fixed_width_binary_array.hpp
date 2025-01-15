@@ -27,7 +27,6 @@
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.hpp"
-#include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_iterator.hpp"
 #include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_reference.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/types/data_traits.hpp"
@@ -63,27 +62,14 @@ namespace sparrow
 
         using const_bitmap_iterator = bitmap_type::const_iterator;
 
-        struct iterator_types
-        {
-            using value_type = inner_value_type;
-            using reference = inner_reference;
-            using value_iterator = data_iterator;
-            using bitmap_iterator = bitmap_type::iterator;
-            using iterator_tag = array_inner_types<fixed_width_binary_array_impl<T, CR>>::iterator_tag;
-        };
+        using functor_type = detail::layout_value_functor<array_type, inner_reference>;
+        using const_functor_type = detail::layout_value_functor<const array_type, inner_const_reference>;
+        using iterator = functor_index_iterator<functor_type>;
+        using const_iterator = functor_index_iterator<const_functor_type>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-        using value_iterator = fixed_width_binary_value_iterator<array_type, iterator_types>;
-
-        struct const_iterator_types
-        {
-            using value_type = inner_value_type;
-            using reference = inner_const_reference;
-            using value_iterator = const_data_iterator;
-            using bitmap_iterator = const_bitmap_iterator;
-            using iterator_tag = array_inner_types<fixed_width_binary_array_impl<T, CR>>::iterator_tag;
-        };
-
-        using const_value_iterator = fixed_width_binary_value_iterator<array_type, const_iterator_types>;
+        using value_iterator = iterator;
+        using const_value_iterator = const_iterator;
     };
 
     template <std::ranges::sized_range T, class CR>
@@ -126,6 +112,9 @@ namespace sparrow
 
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
+
+        using functor_type = typename inner_types::functor_type;
+        using const_functor_type = typename inner_types::const_functor_type;
 
         explicit fixed_width_binary_array_impl(arrow_proxy);
 
@@ -421,7 +410,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR>
     auto fixed_width_binary_array_impl<T, CR>::value_begin() -> value_iterator
     {
-        return value_iterator{this, 0};
+        return value_iterator{functor_type{&(this->derived_cast())}, 0};
     }
 
     template <std::ranges::sized_range T, class CR>
@@ -433,7 +422,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR>
     auto fixed_width_binary_array_impl<T, CR>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator{this, 0};
+        return const_value_iterator{const_functor_type{&(this->derived_cast())}, 0};
     }
 
     template <std::ranges::sized_range T, class CR>
