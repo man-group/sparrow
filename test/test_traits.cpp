@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <sparrow/layout/primitive_array.hpp>
+#include <sparrow/layout/fixed_width_binary_array.hpp>
 #include <sparrow/types/data_traits.hpp>
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -25,9 +25,9 @@ struct MyDataType
 template <>
 struct sparrow::arrow_traits<MyDataType>
 {
-    static constexpr data_type type_id = sparrow::data_type::INT32;
+    static constexpr data_type type_id = sparrow::data_type::FIXED_WIDTH_BINARY;
     using value_type = MyDataType;
-    using default_layout = sparrow::primitive_array<MyDataType>;
+    using default_layout = sparrow::fixed_width_binary_array;
 };
 
 static_assert(sparrow::is_arrow_traits<sparrow::arrow_traits<MyDataType>>);

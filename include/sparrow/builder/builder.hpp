@@ -29,6 +29,7 @@
 #include <sparrow/builder/nested_eq.hpp>
 #include <sparrow/builder/nested_less.hpp>
 #include <sparrow/layout/dictionary_encoded_array.hpp>
+#include <sparrow/layout/fixed_width_binary_array.hpp>
 #include <sparrow/layout/list_layout/list_array.hpp>
 #include <sparrow/layout/primitive_array.hpp>
 #include <sparrow/layout/struct_layout/struct_array.hpp>
@@ -133,18 +134,30 @@ namespace sparrow
                                              && !all_elements_same<ensured_range_value_t<T>>;
 
         template <class T>
+        concept fixed_width_binary_types = (mpl::fixed_size_span<T> || mpl::std_array<T>)
+                                           && std::is_same_v<std::ranges::range_value_t<T>, byte_t>;
+
+        template <class T>
         concept translate_to_fixed_sized_list_layout = std::ranges::input_range<T>
                                                        && tuple_like<ensured_range_value_t<T>>
+                                                       && !((mpl::fixed_size_span<ensured_range_value_t<T>> || mpl::std_array<ensured_range_value_t<T>>) && fixed_width_binary_types<ensured_range_value_t<T>>)
                                                        && all_elements_same<ensured_range_value_t<T>>;
 
         template <class T>
         concept translate_to_variable_sized_binary_layout = std::ranges::input_range<T>
                                                             && std::ranges::input_range<ensured_range_value_t<T>>
+                                                            && !((mpl::fixed_size_span<ensured_range_value_t<T>> || mpl::std_array<ensured_range_value_t<T>>) && fixed_width_binary_types<ensured_range_value_t<T>>)
                                                             && !tuple_like<ensured_range_value_t<T>>
                                                             &&  // tuples go to struct layout
                                                             // value type of inner must be char like ( char,
                                                             // byte, uint8)
                                                             mpl::char_like<nested_ensured_range_inner_value_t<T>>;
+
+        template <class T>
+        concept translate_to_fixed_width_binary_layout = std::ranges::input_range<T>
+                                                         && ((mpl::fixed_size_span<ensured_range_value_t<T>>
+                                                              || mpl::std_array<ensured_range_value_t<T>>)
+                                                             && fixed_width_binary_types<ensured_range_value_t<T>>);
 
         template <class T>
         concept translate_to_union_layout = std::ranges::input_range<T> &&
@@ -279,6 +292,18 @@ namespace sparrow
                              );
 
                 return type(std::move(data_buffer), type::offset_from_sizes(sizes), where_null(t));
+            }
+        };
+
+        template <translate_to_fixed_width_binary_layout T, class OPTION_FLAGS>
+        struct builder<T, dont_enforce_layout, OPTION_FLAGS>
+        {
+            using type = sparrow::fixed_width_binary_array;
+
+            template <class U>
+            static type create(U&& t)
+            {
+                return type(std::move(t));
             }
         };
 

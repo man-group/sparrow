@@ -19,6 +19,7 @@
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/decimal_array.hpp"
 #include "sparrow/layout/dictionary_encoded_array.hpp"
+#include "sparrow/layout/fixed_width_binary_array.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/layout/null_array.hpp"
@@ -67,7 +68,6 @@ namespace sparrow
             {
                 case data_type::NA:
                     return func(unwrap_array<null_array>(ar));
-                    ;
                 case data_type::BOOL:
                     return func(unwrap_array<primitive_array<bool>>(ar));
                 case data_type::UINT8:
@@ -126,6 +126,8 @@ namespace sparrow
                     return func(unwrap_array<decimal_128_array>(ar));
                 case data_type::DECIMAL256:
                     return func(unwrap_array<decimal_256_array>(ar));
+                case data_type::FIXED_WIDTH_BINARY:
+                    return func(unwrap_array<fixed_width_binary_array>(ar));
                 default:
                     throw std::invalid_argument("array type not supported");
             }

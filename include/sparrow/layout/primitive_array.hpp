@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <ranges>
 
@@ -26,12 +27,17 @@
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/ranges.hpp"
 
 namespace sparrow
 {
-    template <class T>
+    template <typename T>
+    concept primitive_type = std::is_arithmetic_v<T> || std::is_same_v<T, float16_t>
+                             || std::is_same_v<T, bool> || std::is_same_v<T, std::byte>;
+
+    template <primitive_type T>
     class primitive_array;
 
     template <class T>
@@ -84,7 +90,7 @@ namespace sparrow
      * @tparam T the type of the values in the array.
      * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
      */
-    template <class T>
+    template <primitive_type T>
     class primitive_array final : public mutable_array_bitmap_base<primitive_array<T>>
     {
     public:
@@ -260,7 +266,7 @@ namespace sparrow
     {
         inline bool check_primitive_data_type(data_type dt)
         {
-            constexpr std::array<data_type, 14> dtypes = {
+            constexpr std::array<data_type, 13> dtypes = {
                 data_type::BOOL,
                 data_type::UINT8,
                 data_type::INT8,
@@ -273,21 +279,20 @@ namespace sparrow
                 data_type::HALF_FLOAT,
                 data_type::FLOAT,
                 data_type::DOUBLE,
-                data_type::FIXED_WIDTH_BINARY,
                 data_type::TIMESTAMP
             };
             return std::find(dtypes.cbegin(), dtypes.cend(), dt) != dtypes.cend();
         }
     }
 
-    template <class T>
+    template <primitive_type T>
     primitive_array<T>::primitive_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
     {
         SPARROW_ASSERT_TRUE(this->get_arrow_proxy().data_type() == arrow_traits<T>::type_id);
     }
 
-    template <class T>
+    template <primitive_type T>
     template <validity_bitmap_input R>
     auto primitive_array<T>::create_proxy(
         u8_buffer<T>&& data_buffer,
@@ -302,13 +307,13 @@ namespace sparrow
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
-            sparrow::data_type_format_of<T>(),
-            std::move(name),      // name
-            std::move(metadata),  // metadata
-            std::nullopt,         // flags
-            0,                    // n_children
-            nullptr,              // children
-            nullptr               // dictionary
+            sparrow::data_type_format_of<T>(),  // format
+            std::move(name),                    // name
+            std::move(metadata),                // metadata
+            std::nullopt,                       // flags
+            0,                                  // n_children
+            nullptr,                            // children
+            nullptr                             // dictionary
         );
 
         std::vector<buffer<uint8_t>> buffers(2);
@@ -328,7 +333,7 @@ namespace sparrow
         return arrow_proxy(std::move(arr), std::move(schema));
     }
 
-    template <class T>
+    template <primitive_type T>
     template <std::ranges::input_range VALUE_RANGE, validity_bitmap_input R>
         requires(std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, T>)
     arrow_proxy primitive_array<T>::create_proxy(
@@ -347,7 +352,7 @@ namespace sparrow
         );
     }
 
-    template <class T>
+    template <primitive_type T>
     template <class U>
         requires std::convertible_to<U, T>
     arrow_proxy primitive_array<T>::create_proxy(
@@ -362,7 +367,7 @@ namespace sparrow
         return create_proxy(std::move(data_buffer), std::move(name), std::move(metadata));
     }
 
-    template <class T>
+    template <primitive_type T>
     template <std::ranges::input_range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
     arrow_proxy primitive_array<T>::create_proxy(
@@ -389,7 +394,7 @@ namespace sparrow
     }
 
     // range of nullable values
-    template <class T>
+    template <primitive_type T>
     template <std::ranges::input_range R>
         requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
     arrow_proxy primitive_array<T>::create_proxy(
@@ -416,73 +421,73 @@ namespace sparrow
         return self_type::create_proxy(values, is_non_null, std::move(name), std::move(metadata));
     }
 
-    template <class T>
+    template <primitive_type T>
     auto primitive_array<T>::data() -> pointer
     {
         return this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<inner_value_type>()
                + static_cast<size_type>(this->get_arrow_proxy().offset());
     }
 
-    template <class T>
+    template <primitive_type T>
     auto primitive_array<T>::data() const -> const_pointer
     {
         return this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<const inner_value_type>()
                + static_cast<size_type>(this->get_arrow_proxy().offset());
     }
 
-    template <class T>
+    template <primitive_type T>
     auto primitive_array<T>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
         return data()[i];
     }
 
-    template <class T>
+    template <primitive_type T>
     auto primitive_array<T>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
         return data()[i];
     }
 
-    template <class T>
+    template <primitive_type T>
     auto primitive_array<T>::value_begin() -> value_iterator
     {
         return value_iterator{data()};
     }
 
-    template <class T>
+    template <primitive_type T>
     auto primitive_array<T>::value_end() -> value_iterator
     {
         return sparrow::next(value_begin(), this->size());
     }
 
-    template <class T>
+    template <primitive_type T>
     auto primitive_array<T>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator{data()};
     }
 
-    template <class T>
+    template <primitive_type T>
     auto primitive_array<T>::value_cend() const -> const_value_iterator
     {
         return sparrow::next(value_cbegin(), this->size());
     }
 
-    template <class T>
+    template <primitive_type T>
     buffer_adaptor<T, buffer<uint8_t>&> primitive_array<T>::get_data_buffer()
     {
         auto& buffers = this->get_arrow_proxy().get_array_private_data()->buffers();
         return make_buffer_adaptor<T>(buffers[DATA_BUFFER_INDEX]);
     }
 
-    template <class T>
+    template <primitive_type T>
     void primitive_array<T>::resize_values(size_type new_length, inner_value_type value)
     {
         const size_t new_size = new_length + static_cast<size_t>(this->get_arrow_proxy().offset());
         get_data_buffer().resize(new_size, value);
     }
 
-    template <class T>
+    template <primitive_type T>
     auto primitive_array<T>::insert_value(const_value_iterator pos, inner_value_type value, size_type count)
         -> value_iterator
     {
@@ -493,7 +498,7 @@ namespace sparrow
         return sparrow::next(this->value_begin(), distance);
     }
 
-    template <class T>
+    template <primitive_type T>
     template <mpl::iterator_of_type<T> InputIt>
     auto primitive_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
         -> value_iterator
@@ -505,7 +510,7 @@ namespace sparrow
         return sparrow::next(this->value_begin(), distance);
     }
 
-    template <class T>
+    template <primitive_type T>
     auto primitive_array<T>::erase_values(const_value_iterator pos, size_type count) -> value_iterator
     {
         SPARROW_ASSERT_TRUE(this->value_cbegin() <= pos)

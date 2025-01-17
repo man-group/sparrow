@@ -119,13 +119,20 @@ else()
         test_buffer_adaptor.cpp
         test_buffer.cpp
         test_builder_dict_encoded.cpp
+        test_builder_dict_encoded.cpp
+        test_builder_run_end_encoded.cpp
         test_builder_run_end_encoded.cpp
         test_builder_utils.cpp
+        test_builder_utils.cpp
         test_builder.cpp
+        test_builder.cpp
+        test_decimal_array.cpp
+        test_decimal.cpp
         test_dictionary_encoded_array.cpp
         test_dispatch.cpp
         test_dynamic_bitset_view.cpp
         test_dynamic_bitset.cpp
+        test_fixed_width_binary_array.cpp
         test_format.cpp
         test_high_level_constructors.cpp
         test_iterator.cpp
@@ -134,9 +141,11 @@ else()
         test_memory.cpp
         test_mpl.cpp
         test_nested_comperators.cpp
+        test_nested_comperators.cpp
         test_null_array.cpp
         test_nullable.cpp
         test_primitive_array.cpp
+        test_ranges.cpp
         test_record_batch.cpp
         test_repeat_container.cpp
         test_run_end_encoded_array.cpp
@@ -148,13 +157,6 @@ else()
         test_utils_offsets.cpp
         test_utils.hpp
         test_variable_size_binary_view_array.cpp
-        test_nested_comperators.cpp
-        test_builder_utils.cpp
-        test_builder.cpp
-        test_builder_dict_encoded.cpp
-        test_builder_run_end_encoded.cpp
-        test_decimal.cpp
-        test_decimal_array.cpp
     )
 endif()
 

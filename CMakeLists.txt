@@ -200,6 +200,9 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_reference.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_layout/fixed_width_binary_reference.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.hpp
     # array
     ${SPARROW_INCLUDE_DIR}/sparrow/types/data_traits.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/types/data_type.hpp
@@ -238,6 +241,7 @@ else()
         ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
+        ${SPARROW_SOURCE_DIR}/layout/fixed_width_binary_array/fixed_width_binary_array_utils.cpp
         ${SPARROW_SOURCE_DIR}/layout/run_end_encoded_array.cpp
         ${SPARROW_SOURCE_DIR}/list_value.cpp
         ${SPARROW_SOURCE_DIR}/record_batch.cpp

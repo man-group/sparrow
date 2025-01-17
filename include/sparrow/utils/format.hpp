@@ -16,6 +16,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
 #include <format>
 #include <numeric>
 #include <ranges>

@@ -195,4 +195,12 @@ namespace sparrow
     static_assert(not mpl::T_matches_qualifier_if_Y_is<int, const int, std::is_const>);
     static_assert(mpl::T_matches_qualifier_if_Y_is<const int, const int, std::is_const>);
     static_assert(mpl::T_matches_qualifier_if_Y_is<const int, int, std::is_const>);
+
+    // is_type_instance_of
+    static_assert(mpl::is_type_instance_of_v<std::unique_ptr<int>, std::unique_ptr>);
+    static_assert(not mpl::is_type_instance_of_v<std::unique_ptr<int>, std::shared_ptr>);
+    static_assert(not mpl::is_type_instance_of_v<int, std::unique_ptr>);
+    static_assert(mpl::is_type_instance_of_v<std::vector<int>, std::vector>);
+    static_assert(not mpl::is_type_instance_of_v<std::vector<int>, std::list>);
+
 }

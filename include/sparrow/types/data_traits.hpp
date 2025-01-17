@@ -146,10 +146,10 @@ namespace sparrow
                     detail::array_inner_const_reference_t,
                     all_base_types_t>,
                 std::variant>;*/
-        using value_type = /* nullable_variant<nullable<null_type>, nullable<bool>, nullable<uint8_t>, ...> */
+        using value_type =  // nullable_variant<nullable<null_type>, nullable<bool>, nullable<uint8_t>, ...>
             mpl::rename<mpl::transform<detail::array_value_type_t, all_base_types_t>, nullable_variant>;
-        using const_reference = /* nullable_variant<nullable<null_type>, nullable<const bool&>, nullable<const
-                                   uint8_t&>, ...> */
+        using const_reference =  // nullable_variant<nullable<null_type>, nullable<const bool&>,
+                                 // nullable<const uint8_t&>, ...>
             mpl::rename<mpl::transform<detail::array_const_reference_t, all_base_types_t>, nullable_variant>;
     };
 

@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <concepts>
-
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -86,11 +84,15 @@ namespace sparrow
         using base_type::begin;
         using base_type::end;
 
-        void resize(size_type new_size, const value_type& value);
+        template <typename T>
+        void resize(size_type new_size, const nullable<T>& value);
 
-        iterator insert(const_iterator pos, const value_type& value);
-        iterator insert(const_iterator pos, const value_type& value, size_type count);
-        iterator insert(const_iterator pos, std::initializer_list<value_type> values);
+        template <typename T>
+        iterator insert(const_iterator pos, const nullable<T>& value);
+        template <typename T>
+        iterator insert(const_iterator pos, const nullable<T>& value, size_type count);
+        template <typename T>
+        iterator insert(const_iterator pos, std::initializer_list<nullable<T>> values);
 
         /**
          * Inserts elements from range [\c first , \c last ) before \c pos in the array.
@@ -101,7 +103,9 @@ namespace sparrow
          * @param last The iterator to the element following the last element to insert.
          * @return An iterator pointing to the first element inserted, or \c pos if <tt>first == last</tt>.
          */
-        template <mpl::iterator_of_type<value_type> InputIt>
+        template <typename InputIt>
+            requires std::input_iterator<InputIt>
+                     && mpl::is_type_instance_of_v<typename std::iterator_traits<InputIt>::value_type, nullable>
         iterator insert(const_iterator pos, InputIt first, InputIt last)
         {
             SPARROW_ASSERT_TRUE(pos >= this->cbegin())
@@ -110,7 +114,7 @@ namespace sparrow
             const difference_type distance = std::distance(this->cbegin(), pos);
             const auto validity_range = std::ranges::subrange(first, last)
                                         | std::views::transform(
-                                            [](const value_type& obj)
+                                            [](const auto& obj)
                                             {
                                                 return obj.has_value();
                                             }
@@ -124,7 +128,7 @@ namespace sparrow
 
             const auto value_range = std::ranges::subrange(first, last)
                                      | std::views::transform(
-                                         [](const value_type& obj)
+                                         [](const auto& obj)
                                          {
                                              return obj.get();
                                          }
@@ -152,7 +156,7 @@ namespace sparrow
          * @return An iterator pointing to the first element inserted, or \c pos if \c range is empty.
          */
         template <std::ranges::input_range R>
-            requires std::same_as<std::ranges::range_value_t<R>, value_type>
+            requires mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
         iterator insert(const_iterator pos, const R& range)
         {
             return insert(pos, std::ranges::begin(range), std::ranges::end(range));
@@ -161,7 +165,8 @@ namespace sparrow
         iterator erase(const_iterator pos);
         iterator erase(const_iterator first, const_iterator last);
 
-        void push_back(const value_type& value);
+        template <typename T>
+        void push_back(const nullable<T>& value);
         void pop_back();
 
     protected:
@@ -251,10 +256,11 @@ namespace sparrow
      * @param value The value to initialize the new elements with.
      */
     template <class D>
-    void mutable_array_base<D>::resize(size_type new_length, const value_type& value)
+    template <typename T>
+    void mutable_array_base<D>::resize(size_type new_length, const nullable<T>& value)
     {
         auto& derived = this->derived_cast();
-        derived.resize_bitmap(new_length);
+        derived.resize_bitmap(new_length, value.has_value());
         derived.resize_values(new_length, value.get());
         this->get_arrow_proxy().set_length(new_length);  // Must be done after resizing the bitmap and values
         derived.update();
@@ -268,7 +274,8 @@ namespace sparrow
      * @return An iterator pointing to the inserted value.
      */
     template <class D>
-    auto mutable_array_base<D>::insert(const_iterator pos, const value_type& value) -> iterator
+    template <typename T>
+    auto mutable_array_base<D>::insert(const_iterator pos, const nullable<T>& value) -> iterator
     {
         return insert(pos, value, 1);
     }
@@ -282,7 +289,9 @@ namespace sparrow
      * @return An iterator pointing to the first element inserted, or \c pos if <tt>count == 0</tt>.
      */
     template <class D>
-    auto mutable_array_base<D>::insert(const_iterator pos, const value_type& value, size_type count) -> iterator
+    template <typename T>
+    auto mutable_array_base<D>::insert(const_iterator pos, const nullable<T>& value, size_type count)
+        -> iterator
     {
         SPARROW_ASSERT_TRUE(pos >= this->cbegin());
         SPARROW_ASSERT_TRUE(pos <= this->cend());
@@ -304,7 +313,9 @@ namespace sparrow
      * @return An iterator pointing to the first element inserted, or \c pos if \c values is empty.
      */
     template <class D>
-    auto mutable_array_base<D>::insert(const_iterator pos, std::initializer_list<value_type> values) -> iterator
+    template <typename T>
+    auto mutable_array_base<D>::insert(const_iterator pos, std::initializer_list<nullable<T>> values)
+        -> iterator
     {
         return insert(pos, values.begin(), values.end());
     }
@@ -357,7 +368,8 @@ namespace sparrow
      * @param value The value o the element to append.
      */
     template <class D>
-    void mutable_array_base<D>::push_back(const value_type& value)
+    template <typename T>
+    void mutable_array_base<D>::push_back(const nullable<T>& value)
     {
         insert(this->cend(), value);
     }
