@@ -370,19 +370,13 @@ namespace sparrow
                     }
                 }
 
-                auto new_val_99 = make_nullable<T>(99);
-                auto new_val_100 = make_nullable<T>(100);
-                auto new_val_101 = make_nullable<T>(101);
+                const auto new_val_99 = make_nullable<T>(99);
+                const auto new_val_100 = make_nullable<T>(100);
+                const auto new_val_101 = make_nullable<T>(101);
                 const std::array<nullable<T>, 3> new_values{new_val_99, new_val_100, new_val_101};
 
                 SUBCASE("with pos, first and last iterators")
                 {
-                    const std::array<nullable<T>, 3> new_values{
-                        make_nullable<T>(99),
-                        make_nullable<T>(100),
-                        make_nullable<T>(101)
-                    };
-
                     SUBCASE("at the beginning")
                     {
                         const auto pos = ar.cbegin();
@@ -437,9 +431,6 @@ namespace sparrow
 
                 SUBCASE("with pos and initializer list")
                 {
-                    const auto new_val_99 = make_nullable<T>(99);
-                    const auto new_val_100 = make_nullable<T>(100);
-                    const auto new_val_101 = make_nullable<T>(101);
                     SUBCASE("at the beginning")
                     {
                         const auto pos = ar.cbegin();
@@ -491,12 +482,6 @@ namespace sparrow
 
                 SUBCASE("with pos and range")
                 {
-                    const std::array<nullable<T>, 3> new_values{
-                        make_nullable<T>(99),
-                        make_nullable<T>(100),
-                        make_nullable<T>(101)
-                    };
-
                     SUBCASE("at the beginning")
                     {
                         const auto pos = ar.cbegin();
