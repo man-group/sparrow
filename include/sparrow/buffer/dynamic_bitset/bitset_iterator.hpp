@@ -126,7 +126,7 @@ namespace sparrow
         if (is_first_bit_of_block(m_index))
         {
             --p_block;
-            m_index = sizeof(block_type);
+            m_index = bitset_type::s_bits_per_block - 1;
         }
         else
         {

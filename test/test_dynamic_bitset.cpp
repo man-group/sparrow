@@ -330,57 +330,86 @@ namespace sparrow
 
             SUBCASE("iterator")
             {
-                // Does not work because the reference is not bool&
-                // static_assert(std::random_access_iterator<typename bitmap::iterator>);
-                static_assert(std::random_access_iterator<typename bitmap::const_iterator>);
+                SUBCASE("increment")
+                {
+                    bitmap b(f.get_buffer(), s_bitmap_size);
+                    auto iter = b.begin();
+                    for (size_t i = 0; i < s_bitmap_size; ++i)
+                    {
+                        CHECK_EQ(*iter, b.test(i));
+                        ++iter;
+                    }
+                }
 
-                bitmap b(f.get_buffer(), s_bitmap_size);
-                auto iter = b.begin();
-                auto citer = b.cbegin();
+                SUBCASE("decrement")
+                {
+                    bitmap b(f.get_buffer(), s_bitmap_size);
+                    auto iter = b.end();
+                    for (size_t i = s_bitmap_size; i > 0; --i)
+                    {
+                        --iter;
+                        CHECK_EQ(*iter, b.test(i - 1));
+                    }
+                }
 
-                ++iter;
-                ++citer;
-                CHECK(*iter);
-                CHECK(*citer);
+                SUBCASE("random increment decrement")
+                {
+                    // Does not work because the reference is not bool&
+                    // static_assert(std::random_access_iterator<typename bitmap::iterator>);
+                    static_assert(std::random_access_iterator<typename bitmap::const_iterator>);
 
-                iter += 14;
-                citer += 14;
+                    bitmap b(f.get_buffer(), s_bitmap_size);
+                    auto iter = b.begin();
+                    auto citer = b.cbegin();
 
-                CHECK(!*iter);
-                CHECK(!*citer);
+                    ++iter;
+                    ++citer;
+                    CHECK(*iter);
+                    CHECK(*citer);
 
-                auto diff = iter - b.begin();
-                auto cdiff = citer - b.cbegin();
+                    iter += 14;
+                    citer += 14;
 
-                CHECK_EQ(diff, 15);
-                CHECK_EQ(cdiff, 15);
+                    CHECK(!*iter);
+                    CHECK(!*citer);
 
-                iter -= 12;
-                citer -= 12;
-                diff = iter - b.begin();
-                cdiff = citer - b.cbegin();
-                CHECK_EQ(diff, 3);
-                CHECK_EQ(cdiff, 3);
+                    auto diff = iter - b.begin();
+                    auto cdiff = citer - b.cbegin();
 
-                iter += 3;
-                citer += 3;
-                diff = iter - b.begin();
-                cdiff = citer - b.cbegin();
-                CHECK_EQ(diff, 6);
-                CHECK_EQ(cdiff, 6);
+                    CHECK_EQ(diff, 15);
+                    CHECK_EQ(cdiff, 15);
 
-                iter -= 4;
-                citer -= 4;
-                diff = iter - b.begin();
-                cdiff = citer - b.cbegin();
-                CHECK_EQ(diff, 2);
-                CHECK_EQ(cdiff, 2);
+                    iter -= 12;
+                    citer -= 12;
+                    diff = iter - b.begin();
+                    cdiff = citer - b.cbegin();
+                    CHECK_EQ(diff, 3);
+                    CHECK_EQ(cdiff, 3);
 
-                auto iter_end = std::next(b.begin(), static_cast<bitmap::iterator::difference_type>(b.size()));
-                auto citer_end = std::next(b.cbegin(), static_cast<bitmap::iterator::difference_type>(b.size()));
-                CHECK_EQ(iter_end, b.end());
-                CHECK_EQ(citer_end, b.cend());
-            };
+                    iter += 3;
+                    citer += 3;
+                    diff = iter - b.begin();
+                    cdiff = citer - b.cbegin();
+                    CHECK_EQ(diff, 6);
+                    CHECK_EQ(cdiff, 6);
+
+                    iter -= 4;
+                    citer -= 4;
+                    diff = iter - b.begin();
+                    cdiff = citer - b.cbegin();
+                    CHECK_EQ(diff, 2);
+                    CHECK_EQ(cdiff, 2);
+
+                    auto iter_end = std::next(b.begin(), static_cast<bitmap::iterator::difference_type>(b.size()));
+                    auto citer_end = std::next(
+                        b.cbegin(),
+                        static_cast<bitmap::iterator::difference_type>(b.size())
+                    );
+                    CHECK_EQ(iter_end, b.end());
+                    CHECK_EQ(citer_end, b.cend());
+                }
+            }
+
 
             SUBCASE("insert")
             {
