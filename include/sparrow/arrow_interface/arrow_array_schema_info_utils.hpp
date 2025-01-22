@@ -44,7 +44,10 @@ namespace sparrow
             case data_type::HALF_FLOAT:
             case data_type::FLOAT:
             case data_type::DOUBLE:
-            case data_type::TIMESTAMP:
+            case data_type::TIMESTAMP_SECONDS:
+            case data_type::TIMESTAMP_MILLISECONDS:
+            case data_type::TIMESTAMP_MICROSECONDS:
+            case data_type::TIMESTAMP_NANOSECONDS:
             case data_type::DECIMAL32:
             case data_type::DECIMAL64:
             case data_type::DECIMAL128:

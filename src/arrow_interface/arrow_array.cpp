@@ -117,7 +117,10 @@ namespace sparrow
                 return {make_buffer(0, size)};
             case data_type::DENSE_UNION:
                 return {make_buffer(0, size), make_buffer(1, size * 4)};
-            case data_type::TIMESTAMP:
+            case data_type::TIMESTAMP_SECONDS:
+            case data_type::TIMESTAMP_MILLISECONDS:
+            case data_type::TIMESTAMP_MICROSECONDS:
+            case data_type::TIMESTAMP_NANOSECONDS:
                 return {make_valid_buffer(), make_buffer(1, size * 8)};
             case data_type::DECIMAL32:
                 return {make_valid_buffer(), make_buffer(1, size * 4)};

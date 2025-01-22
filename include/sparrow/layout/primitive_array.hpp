@@ -250,9 +250,10 @@ namespace sparrow
 
         buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
 
-
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend class run_end_encoded_array;
+        template <typename>
+        friend class timestamp_array;
         friend base_type;
         friend base_type::base_type;
         friend base_type::base_type::base_type;
@@ -278,8 +279,7 @@ namespace sparrow
                 data_type::INT64,
                 data_type::HALF_FLOAT,
                 data_type::FLOAT,
-                data_type::DOUBLE,
-                data_type::TIMESTAMP
+                data_type::DOUBLE
             };
             return std::find(dtypes.cbegin(), dtypes.cend(), dt) != dtypes.cend();
         }
