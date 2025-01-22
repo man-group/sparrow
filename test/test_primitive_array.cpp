@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstddef>
 #include <cstdint>
 #include <type_traits>
 
@@ -89,7 +90,7 @@ namespace sparrow
                 }
             };
 
-            const size_t offset = 0;
+            const size_t offset = 9;
             array_test_type ar = make_array(nullable_values, offset);
 
             SUBCASE("constructor")
@@ -267,7 +268,7 @@ namespace sparrow
 
             SUBCASE("insert")
             {
-                const nullable<T> new_value_nullable = make_nullable<T>(99);
+                const nullable<T> new_value_nullable = make_nullable<T>(99, false);
 
                 SUBCASE("with pos and value")
                 {
@@ -370,9 +371,9 @@ namespace sparrow
                     }
                 }
 
-                const auto new_val_99 = make_nullable<T>(99);
-                const auto new_val_100 = make_nullable<T>(100);
-                const auto new_val_101 = make_nullable<T>(101);
+                const auto new_val_99 = make_nullable<T>(99, true);
+                const auto new_val_100 = make_nullable<T>(100, false);
+                const auto new_val_101 = make_nullable<T>(101, true);
                 const std::array<nullable<T>, 3> new_values{new_val_99, new_val_100, new_val_101};
 
                 SUBCASE("with pos, first and last iterators")
@@ -601,7 +602,7 @@ namespace sparrow
 
             SUBCASE("push_back")
             {
-                const nullable<T> new_value = make_nullable<T>(99);
+                const nullable<T> new_value = make_nullable<T>(99, true);
                 ar.push_back(new_value);
                 REQUIRE_EQ(ar.size(), nullable_values.size() - offset + 1);
                 for (size_t i = 0; i < ar.size() - 1; ++i)
