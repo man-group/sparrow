@@ -131,6 +131,10 @@ sp::array ar(std::move(array), std::move(schema));
 
 The documentation (currently being written) can be found at https://man-group.github.io/sparrow/index.html
 
+## Acknowledgements
+
+This development has been funded as part of a collaboration between [ArcticDB](https://github.com/man-group/ArcticDB), Bloomberg, and [QuantStack](https://quantstack.net/).
+
 ## License
 
 This software is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
