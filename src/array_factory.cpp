@@ -122,15 +122,21 @@ namespace sparrow
                 case data_type::SPARSE_UNION:
                     return detail::make_wrapper_ptr<sparse_union_array>(std::move(proxy));
                 case data_type::TIMESTAMP_SECONDS:
-                    return detail::make_wrapper_ptr<timestamp_array<std::chrono::seconds>>(std::move(proxy));
+                    return detail::make_wrapper_ptr<timestamp_array<timestamp<std::chrono::seconds>>>(
+                        std::move(proxy)
+                    );
                 case data_type::TIMESTAMP_MILLISECONDS:
-                    return detail::make_wrapper_ptr<timestamp_array<std::chrono::milliseconds>>(std::move(proxy)
+                    return detail::make_wrapper_ptr<timestamp_array<timestamp<std::chrono::milliseconds>>>(
+                        std::move(proxy)
                     );
                 case data_type::TIMESTAMP_MICROSECONDS:
-                    return detail::make_wrapper_ptr<timestamp_array<std::chrono::microseconds>>(std::move(proxy)
+                    return detail::make_wrapper_ptr<timestamp_array<timestamp<std::chrono::microseconds>>>(
+                        std::move(proxy)
                     );
                 case data_type::TIMESTAMP_NANOSECONDS:
-                    return detail::make_wrapper_ptr<timestamp_array<std::chrono::nanoseconds>>(std::move(proxy));
+                    return detail::make_wrapper_ptr<timestamp_array<timestamp<std::chrono::nanoseconds>>>(
+                        std::move(proxy)
+                    );
                 case data_type::MAP:
                 case data_type::DECIMAL32:
                     return detail::make_wrapper_ptr<decimal_32_array>(std::move(proxy));

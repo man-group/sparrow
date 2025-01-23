@@ -121,6 +121,10 @@ namespace sparrow
             case data_type::TIMESTAMP_MILLISECONDS:
             case data_type::TIMESTAMP_MICROSECONDS:
             case data_type::TIMESTAMP_NANOSECONDS:
+            case data_type::DURATION_SECONDS:
+            case data_type::DURATION_MILLISECONDS:
+            case data_type::DURATION_MICROSECONDS:
+            case data_type::DURATION_NANOSECONDS:
                 return {make_valid_buffer(), make_buffer(1, size * 8)};
             case data_type::DECIMAL32:
                 return {make_valid_buffer(), make_buffer(1, size * 4)};

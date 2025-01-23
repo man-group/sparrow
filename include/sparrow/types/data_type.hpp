@@ -189,6 +189,10 @@ namespace sparrow
         TIMESTAMP_MILLISECONDS,
         TIMESTAMP_MICROSECONDS,
         TIMESTAMP_NANOSECONDS,
+        DURATION_SECONDS,
+        DURATION_MILLISECONDS,
+        DURATION_MICROSECONDS,
+        DURATION_NANOSECONDS,
     };
 
     // helper function to check if a string is all digits
@@ -268,7 +272,7 @@ namespace sparrow
         // TODO: add propper timestamp support below
         else if (format.starts_with("t"))
         {
-            else if (format.starts_with("tss:"))
+            if (format.starts_with("tss:"))
             {
                 return data_type::TIMESTAMP_SECONDS;
             }
@@ -470,7 +474,6 @@ namespace sparrow
                 return "tsu:";
             case data_type::TIMESTAMP_NANOSECONDS:
                 return "tsn:";
-                return "tDm";
             case data_type::LIST:
                 return "+l";
             case data_type::LARGE_LIST:
@@ -544,7 +547,14 @@ namespace sparrow
         float64_t,
         std::string,
         std::vector<byte_t>,
-        sparrow::timestamp,
+        timestamp<std::chrono::seconds>,
+        timestamp<std::chrono::milliseconds>,
+        timestamp<std::chrono::microseconds>,
+        timestamp<std::chrono::nanoseconds>,
+        std::chrono::seconds,
+        std::chrono::milliseconds,
+        std::chrono::microseconds,
+        std::chrono::nanoseconds,
         // TODO: add missing fundamental types here
         list_value,
         struct_value,
@@ -783,6 +793,14 @@ namespace std
                         return "Timestamp microseconds";
                     case TIMESTAMP_NANOSECONDS:
                         return "Timestamp nanoseconds";
+                    case DURATION_SECONDS:
+                        return "Seconds";
+                    case DURATION_MILLISECONDS:
+                        return "Milliseconds";
+                    case DURATION_MICROSECONDS:
+                        return "Microseconds";
+                    case DURATION_NANOSECONDS:
+                        return "Nanoseconds";
                     case LIST:
                         return "List";
                     case LARGE_LIST:

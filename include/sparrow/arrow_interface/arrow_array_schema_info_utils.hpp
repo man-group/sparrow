@@ -48,6 +48,10 @@ namespace sparrow
             case data_type::TIMESTAMP_MILLISECONDS:
             case data_type::TIMESTAMP_MICROSECONDS:
             case data_type::TIMESTAMP_NANOSECONDS:
+            case data_type::DURATION_SECONDS:
+            case data_type::DURATION_MILLISECONDS:
+            case data_type::DURATION_MICROSECONDS:
+            case data_type::DURATION_NANOSECONDS:
             case data_type::DECIMAL32:
             case data_type::DECIMAL64:
             case data_type::DECIMAL128:

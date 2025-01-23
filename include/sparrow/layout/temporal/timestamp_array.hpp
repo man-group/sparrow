@@ -25,7 +25,6 @@
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/temporal/timestamp_reference.hpp"
-#include "sparrow/types/temporal_types.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
 // tts : timestamp<std::chrono::seconds>
@@ -248,6 +247,9 @@ namespace sparrow
 
         static values_layout create_values_layout(arrow_proxy& proxy);
 
+        static const date::time_zone* get_timezone(const arrow_proxy& proxy);
+
+
         values_layout m_values_layout;
         const date::time_zone* m_timezone;
 
@@ -267,7 +269,8 @@ namespace sparrow
         return values_layout{std::move(arr_proxy)};
     }
 
-    const date::time_zone* get_timezone(const arrow_proxy& proxy)
+    template <typename T>
+    const date::time_zone* timestamp_array<T>::get_timezone(const arrow_proxy& proxy)
     {
         const std::string_view timezone_string = proxy.format().substr(4);
         return date::locate_zone(timezone_string);
@@ -463,48 +466,9 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(i < this->size());
         const auto& val = m_values_layout.value(i);
-        if constexpr (std::is_same_v<T, std::chrono::year_month_day>)
-        {
-            return T{std::chrono::sys_days(std::chrono::days(val))};
-        }
-        else if constexpr (std::is_same_v<T, std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>>)
-        {
-            return T{std::chrono::milliseconds(val)};
-        }
-        else if constexpr (mpl::is_type_instance_of_v<T, std::chrono::hh_mm_ss>)
-        {
-            using duration = typename T::precision;
-            return T{duration(val)};
-        }
-        else if constexpr (mpl::is_type_instance_of_v<T, timestamp>)
-        {
-            using duration = T::duration;
-            const auto sys_time = std::chrono::sys_time<duration>{duration{val}};
-            return T{m_timezone, sys_time};
-        }
-        // else if constexpr (mpl::is_type_instance_of_v<T, std::chrono::zoned_time>)
-        // {
-        //     using duration = T::duration;
-        //     const auto sys_time = std::chrono::sys_time<duration>{duration{val}};
-        //     return T{m_timezone, sys_time};
-        // }
-        else if constexpr (mpl::is_type_instance_of_v<T, std::chrono::duration>)
-        {
-            return T{val};
-        }
-        else if constexpr (std::is_same_v<T, day_time_interval>)
-        {
-            return {};
-        }
-        else if constexpr (std::is_same_v<T, month_day_nanoseconds_interval>)
-        {
-            return {};
-        }
-        else
-        {
-            static_assert(mpl::dependent_false<T, T>::value, "Invalid type");
-            mpl::unreachable();
-        }
+        using time_duration = typename T::duration;
+        const auto sys_time = std::chrono::sys_time<time_duration>{time_duration{val}};
+        return T{m_timezone, sys_time};
     }
 
     template <typename T>

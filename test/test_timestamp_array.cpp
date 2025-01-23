@@ -28,63 +28,10 @@ namespace sparrow
     template <typename T>
     T make_value(size_t i)
     {
-        if constexpr (std::is_same_v<T, std::chrono::year_month_day>)
-        {
-            return std::chrono::year_month_day{
-                std::chrono::year{static_cast<int>(1980 + i)},
-                std::chrono::month{static_cast<unsigned int>(i + 1)},
-                std::chrono::day{static_cast<unsigned int>(i + 1)}
-            };
-        }
-        else if constexpr (std::is_same_v<T, std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>>)
-        {
-            return std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>{
-                std::chrono::milliseconds{static_cast<int>(i)}
-            };
-        }
-        else if constexpr (mpl::is_type_instance_of_v<T, std::chrono::hh_mm_ss>)
-        {
-            using duration = typename T::precision;
-            return T(duration(static_cast<int>(i)));
-        }
-        else if constexpr (mpl::is_type_instance_of_v<T, timestamp>)
-        {
-            using duration = T::duration;
-            const duration duration_v{static_cast<int>(i)};
-            const date::sys_time<duration> sys_time{duration_v};
-            return T(new_york, sys_time);
-        }
-        // else if constexpr (mpl::is_type_instance_of_v<T, date::zoned_time>)
-        // {
-        //     using duration = T::duration;
-        //     const duration duration_v{static_cast<int>(i)};
-        //     const date::sys_time<duration> sys_time{duration_v};
-        //     return T(new_york, sys_time);
-        // }
-        else if constexpr (mpl::is_type_instance_of_v<T, std::chrono::duration>)
-        {
-            return T(static_cast<int>(i));
-        }
-        else if constexpr (std::is_same_v<T, day_time_interval>)
-        {
-            return T(
-                std::chrono::days{static_cast<int>(i)},
-                std::chrono::duration<int32_t, std::milli>{static_cast<int>(i)}
-            );
-        }
-        else if constexpr (std::is_same_v<T, month_day_nanoseconds_interval>)
-        {
-            return T(
-                std::chrono::months{static_cast<int>(i)},
-                std::chrono::days{static_cast<int>(i)},
-                std::chrono::duration<int64_t, std::nano>{static_cast<int>(i)}
-            );
-        }
-        else
-        {
-            static_assert(mpl::dependent_false<T, T>::value, "Invalid type");
-            mpl::unreachable();
-        }
+        using duration = T::duration;
+        const duration duration_v{static_cast<int>(i)};
+        const date::sys_time<duration> sys_time{duration_v};
+        return T(new_york, sys_time);
     }
 
     template <typename T>

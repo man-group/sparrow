@@ -289,7 +289,6 @@ namespace sparrow
     primitive_array<T>::primitive_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
     {
-        SPARROW_ASSERT_TRUE(this->get_arrow_proxy().data_type() == arrow_traits<T>::type_id);
     }
 
     template <primitive_type T>
