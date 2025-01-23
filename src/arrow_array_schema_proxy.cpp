@@ -755,7 +755,7 @@ namespace sparrow
             );
         }
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
-        SPARROW_ASSERT_TRUE(std::cmp_less_equal(index, length()))
+        SPARROW_ASSERT_TRUE(std::cmp_less_equal(index, length() + offset()))
         if (count == 0)
         {
             return index;

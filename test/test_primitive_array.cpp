@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstddef>
 #include <cstdint>
+#include <type_traits>
+
+#include "sparrow/types/data_type.hpp"
+
 #if defined(__GNUC__)
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wfree-nonheap-object"
@@ -51,19 +56,30 @@ namespace sparrow
             // using nanoarrow_corresponding__type = nanoarrow_type<T>::type;
             using array_test_type = primitive_array<T>;
 
-            auto make_array = [](size_t count, size_t offset = 0)
+            const auto make_nullable_values = [](size_t count)
             {
-                std::vector<T> values;
+                std::vector<nullable<T>> values;
                 values.reserve(count);
-                for (T i = 0; i < static_cast<T>(static_cast<int>(count)); ++i)
+                for (size_t i = 0; i < count; ++i)
                 {
-                    values.push_back(i);
+                    if constexpr (std::is_same_v<T, float16_t>)
+                    {
+                        values.push_back(make_nullable<T>(static_cast<T>(static_cast<int>(i)), i % 2));
+                    }
+                    else
+                    {
+                        values.push_back(make_nullable<T>(static_cast<T>(i), i % 2));
+                    }
                 }
+                return values;
+            };
 
-                const primitive_array<T> arr(
-                    std::move(values),
-                    count > 2 ? std::vector<std::size_t>{2} : std::vector<std::size_t>{}
-                );
+            const size_t values_count = 100;
+            const auto nullable_values = make_nullable_values(values_count);
+
+            const auto make_array = [](const std::vector<nullable<T>>& values, size_t offset = 0)
+            {
+                auto arr = array_test_type(values);
                 if (offset != 0)
                 {
                     return arr.slice(offset, arr.size());
@@ -74,46 +90,38 @@ namespace sparrow
                 }
             };
 
-            // Elements: 2, null, 4, 5
-            array_test_type ar = make_array(5, 1);
+            const size_t offset = 9;
+            array_test_type ar = make_array(nullable_values, offset);
 
             SUBCASE("constructor")
             {
-                CHECK_EQ(ar.size(), 4);
+                CHECK_EQ(ar.size(), nullable_values.size() - offset);
             }
 
             SUBCASE("operator[]")
             {
                 SUBCASE("const")
                 {
-                    const array_test_type const_ar = make_array(5, 1);
+                    const array_test_type const_ar = make_array(nullable_values, offset);
                     std::vector<T> values2;
                     for (const auto& v : const_ar)
                     {
                         values2.push_back(v.get());
                     }
-                    REQUIRE_EQ(const_ar.size(), 4);
-                    CHECK(const_ar[0].has_value());
-                    CHECK_EQ(const_ar[0].get(), static_cast<T>(1));
-                    CHECK_FALSE(const_ar[1].has_value());
-                    CHECK_EQ(const_ar[1].get(), static_cast<T>(2));
-                    CHECK(const_ar[2].has_value());
-                    CHECK_EQ(const_ar[2].get(), static_cast<T>(3));
-                    CHECK(const_ar[3].has_value());
-                    CHECK_EQ(const_ar[3].get(), static_cast<T>(4));
+                    REQUIRE_EQ(const_ar.size(), nullable_values.size() - offset);
+                    for (size_t i = 0; i < const_ar.size(); ++i)
+                    {
+                        CHECK_EQ(const_ar[i], nullable_values[i + offset]);
+                    }
                 }
 
                 SUBCASE("mutable")
                 {
-                    REQUIRE_EQ(ar.size(), 4);
-                    CHECK(ar[0].has_value());
-                    CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                    CHECK_FALSE(ar[1].has_value());
-                    CHECK_EQ(ar[1].get(), static_cast<T>(2));
-                    CHECK(ar[2].has_value());
-                    CHECK_EQ(ar[2].get(), static_cast<T>(3));
-                    CHECK(ar[3].has_value());
-                    CHECK_EQ(ar[3].get(), static_cast<T>(4));
+                    REQUIRE_EQ(ar.size(), nullable_values.size() - offset);
+                    for (size_t i = 0; i < ar.size(); ++i)
+                    {
+                        CHECK_EQ(ar[i], nullable_values[i + offset]);
+                    }
 
                     ar[1] = make_nullable<T>(99);
                     CHECK(ar[1].has_value());
@@ -126,9 +134,7 @@ namespace sparrow
                 SUBCASE("const")
                 {
                     const array_test_type const_ar{ar};
-                    REQUIRE_EQ(const_ar.size(), 4);
-                    CHECK(ar.front().has_value());
-                    CHECK_EQ(ar.front().value(), static_cast<T>(1));
+                    CHECK_EQ(ar.front(), nullable_values[offset]);
                 }
             }
 
@@ -137,9 +143,7 @@ namespace sparrow
                 SUBCASE("const")
                 {
                     const array_test_type const_ar{ar};
-                    REQUIRE_EQ(const_ar.size(), 4);
-                    CHECK(ar.back().has_value());
-                    CHECK_EQ(ar.back().value(), static_cast<T>(4));
+                    CHECK_EQ(ar.back(), nullable_values.back());
                 }
             }
 
@@ -149,7 +153,7 @@ namespace sparrow
 
                 CHECK_EQ(ar, ar2);
 
-                array_test_type ar3(make_array(7, 1));
+                array_test_type ar3(make_array(make_nullable_values(7)));
                 CHECK_NE(ar, ar3);
                 ar3 = ar;
                 CHECK_EQ(ar, ar3);
@@ -162,7 +166,7 @@ namespace sparrow
                 array_test_type ar3(std::move(ar));
                 CHECK_EQ(ar2, ar3);
 
-                array_test_type ar4(make_array(7, 1));
+                array_test_type ar4(make_array(make_nullable_values(7)));
                 CHECK_NE(ar2, ar4);
                 ar4 = std::move(ar2);
                 CHECK_EQ(ar3, ar4);
@@ -179,14 +183,11 @@ namespace sparrow
             {
                 const auto ar_values = ar.values();
                 auto citer = ar_values.begin();
-                CHECK_EQ(*citer, static_cast<T>(1));
-                ++citer;
-                CHECK_EQ(*citer, static_cast<T>(2));
-                ++citer;
-                CHECK_EQ(*citer, static_cast<T>(3));
-                ++citer;
-                CHECK_EQ(*citer, static_cast<T>(4));
-                ++citer;
+                for (size_t i = 0; i < ar_values.size(); ++i)
+                {
+                    CHECK_EQ(*citer, nullable_values[i + offset].get());
+                    ++citer;
+                }
                 CHECK_EQ(citer, ar_values.end());
             }
 
@@ -201,14 +202,11 @@ namespace sparrow
             {
                 auto ar_values = ar.values();
                 auto citer = ar_values.begin();
-                CHECK_EQ(*citer, static_cast<T>(1));
-                ++citer;
-                CHECK_EQ(*citer, static_cast<T>(2));
-                ++citer;
-                CHECK_EQ(*citer, static_cast<T>(3));
-                ++citer;
-                CHECK_EQ(*citer, static_cast<T>(4));
-                ++citer;
+                for (size_t i = 0; i < ar_values.size(); ++i)
+                {
+                    CHECK_EQ(*citer, nullable_values[i + offset].get());
+                    ++citer;
+                }
                 CHECK_EQ(citer, ar_values.end());
             }
 
@@ -223,217 +221,159 @@ namespace sparrow
             {
                 const auto ar_bitmap = ar.bitmap();
                 auto citer = ar_bitmap.begin();
-                CHECK(*citer);
-                ++citer;
-                CHECK_FALSE(*citer);
-                ++citer;
-                CHECK(*citer);
-                ++citer;
-                CHECK(*citer);
-                ++citer;
+                for (size_t i = 0; i < ar_bitmap.size(); ++i)
+                {
+                    CHECK_EQ(*citer, nullable_values[i + offset].has_value());
+                    ++citer;
+                }
             }
 
             SUBCASE("iterator")
             {
                 auto it = ar.begin();
-                const auto end = ar.end();
-                CHECK(it->has_value());
-                CHECK_EQ(*it, make_nullable<T>(1));
-                ++it;
-                CHECK_FALSE(it->has_value());
-                CHECK_EQ(*it, make_nullable<T>(2, false));
-                ++it;
-                CHECK(it->has_value());
-                CHECK_EQ(*it, make_nullable<T>(3));
-                ++it;
-                CHECK(it->has_value());
-                CHECK_EQ(*it, make_nullable<T>(4));
-                ++it;
-
-                CHECK_EQ(it, end);
-
-                const array_test_type ar_empty = make_array(0);
-                CHECK_EQ(ar_empty.begin(), ar_empty.end());
+                for (size_t i = 0; i < ar.size(); ++i)
+                {
+                    CHECK_EQ(*it, nullable_values[i + offset]);
+                    ++it;
+                }
+                CHECK_EQ(it, ar.end());
             }
 
-            SUBCASE("revert_iterator")
+            SUBCASE("reverse_iterator")
             {
-                auto rit = ar.rbegin();
-                const auto rend = ar.rend();
-                CHECK(rit->has_value());
-                CHECK_EQ(*rit, make_nullable<T>(4));
-                ++rit;
-                CHECK(rit->has_value());
-                CHECK_EQ(*rit, make_nullable<T>(3));
-                ++rit;
-                CHECK_FALSE(rit->has_value());
-                CHECK_EQ(*rit, make_nullable<T>(2, false));
-                ++rit;
-                CHECK(rit->has_value());
-                CHECK_EQ(*rit, make_nullable<T>(1));
-                ++rit;
-
-                CHECK_EQ(rit, rend);
-
-                const array_test_type ar_empty = make_array(0);
-                CHECK_EQ(ar_empty.rbegin(), ar_empty.rend());
+                auto it = ar.rbegin();
+                for (size_t i = 0; i < ar.size(); ++i)
+                {
+                    const auto idx = ar.size() - 1 - i + offset;
+                    CHECK_EQ(*it, nullable_values[idx]);
+                    ++it;
+                }
+                CHECK_EQ(it, ar.rend());
             }
 
             SUBCASE("resize")
             {
-                const auto new_nullable_value = make_nullable<T>(99, false);
-                ar.resize(7, new_nullable_value);
-                REQUIRE_EQ(ar.size(), 7);
-                CHECK(ar[0].has_value());
-                CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                CHECK_FALSE(ar[1].has_value());
-                CHECK_EQ(ar[1].get(), static_cast<T>(2));
-                CHECK(ar[2].has_value());
-                CHECK_EQ(ar[2].get(), static_cast<T>(3));
-                CHECK(ar[3].has_value());
-                CHECK_EQ(ar[3].get(), static_cast<T>(4));
-                CHECK_EQ(ar[4], new_nullable_value);
-                CHECK_EQ(ar[5], new_nullable_value);
-                CHECK_EQ(ar[6], new_nullable_value);
+                const size_t new_size = nullable_values.size() - offset + 3;
+                const nullable<T> new_value_nullable = make_nullable<T>(99);
+                ar.resize(new_size, new_value_nullable);
+                REQUIRE_EQ(ar.size(), new_size);
+                for (size_t i = 0; i < ar.size() - 3; ++i)
+                {
+                    CHECK_EQ(ar[i], nullable_values[i + offset]);
+                }
+                CHECK_EQ(ar[ar.size() - 3], new_value_nullable);
+                CHECK_EQ(ar[ar.size() - 2], new_value_nullable);
+                CHECK_EQ(ar[ar.size() - 1], new_value_nullable);
             }
 
             SUBCASE("insert")
             {
+                const nullable<T> new_value_nullable = make_nullable<T>(99, false);
+
                 SUBCASE("with pos and value")
                 {
                     SUBCASE("at the beginning")
                     {
                         const auto pos = ar.cbegin();
-                        const T new_value{99};
-                        const auto iter = ar.insert(pos, make_nullable<T>(99));
+                        const auto iter = ar.insert(pos, new_value_nullable);
                         CHECK_EQ(iter, ar.begin());
-                        REQUIRE_EQ(ar.size(), 5);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), new_value);
-                        CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), static_cast<T>(1));
-                        CHECK_FALSE(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), static_cast<T>(2));
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), static_cast<T>(3));
-                        CHECK(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), static_cast<T>(4));
+                        CHECK_EQ(ar[0], new_value_nullable);
+                        for (size_t i = 1; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset - 1]);
+                        }
                     }
 
                     SUBCASE("in the middle")
                     {
-                        const auto pos = sparrow::next(ar.cbegin(), 1);
-                        const T new_value{99};
-                        const auto iter = ar.insert(pos, make_nullable<T>(99));
-                        CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
-                        REQUIRE_EQ(ar.size(), 5);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                        CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), new_value);
-                        CHECK_FALSE(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), static_cast<T>(2));
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), static_cast<T>(3));
-                        CHECK(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), static_cast<T>(4));
+                        const size_t idx = ar.size() / 2;
+                        const auto pos = sparrow::next(ar.cbegin(), idx);
+                        const auto iter = ar.insert(pos, new_value_nullable);
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), idx));
+                        for (size_t i = 0; i < idx; ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
+                        CHECK_EQ(ar[idx], new_value_nullable);
+                        for (size_t i = idx + 1; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset - 1]);
+                        }
                     }
 
                     SUBCASE("at the end")
                     {
                         const auto pos = ar.cend();
-                        const T new_value{99};
-                        const auto iter = ar.insert(pos, make_nullable<T>(99));
-                        CHECK_EQ(iter, ar.begin() + 4);
-                        REQUIRE_EQ(ar.size(), 5);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                        CHECK_FALSE(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), static_cast<T>(2));
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), static_cast<T>(3));
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), static_cast<T>(4));
-                        CHECK(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), new_value);
+                        const auto distance = std::distance(ar.cbegin(), ar.cend());
+                        const auto iter = ar.insert(pos, new_value_nullable);
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), distance));
+                        for (size_t i = 0; i < ar.size() - 1; ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
+                        CHECK_EQ(ar[ar.size() - 1], new_value_nullable);
                     }
                 }
 
                 SUBCASE("with pos, count and value")
                 {
+                    const size_t count = 3;
+
                     SUBCASE("at the beginning")
                     {
                         const auto pos = ar.cbegin();
-                        const T new_value{99};
-                        const auto iter = ar.insert(pos, make_nullable(new_value), 3);
+                        const auto iter = ar.insert(pos, new_value_nullable, count);
                         CHECK_EQ(iter, ar.begin());
-                        REQUIRE_EQ(ar.size(), 7);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), new_value);
-                        CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), new_value);
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), new_value);
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), static_cast<T>(1));
-                        CHECK_FALSE(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), static_cast<T>(2));
-                        CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
-                        CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), static_cast<T>(4));
+                        for (size_t i = 0; i < count; ++i)
+                        {
+                            CHECK_EQ(ar[i], new_value_nullable);
+                        }
+                        for (size_t i = count; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset - count]);
+                        }
                     }
 
                     SUBCASE("in the middle")
                     {
-                        const auto pos = sparrow::next(ar.cbegin(), 1);
-                        const T new_value{99};
-                        const auto iter = ar.insert(pos, make_nullable(new_value), 3);
-                        CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
-                        REQUIRE_EQ(ar.size(), 7);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                        CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), new_value);
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), new_value);
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), new_value);
-                        CHECK_FALSE(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), static_cast<T>(2));
-                        CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
-                        CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), static_cast<T>(4));
+                        const auto idx = ar.size() / 2;
+                        const auto pos = sparrow::next(ar.cbegin(), idx);
+                        const auto iter = ar.insert(pos, new_value_nullable, count);
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), idx));
+                        for (size_t i = 0; i < idx; ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
+                        for (size_t i = idx; i < idx + count; ++i)
+                        {
+                            CHECK_EQ(ar[i], new_value_nullable);
+                        }
+                        for (size_t i = idx + count; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset - count]);
+                        }
                     }
 
                     SUBCASE("at the end")
                     {
                         const auto pos = ar.cend();
-                        const T new_value{99};
-                        const auto iter = ar.insert(pos, make_nullable(new_value), 3);
-                        CHECK_EQ(iter, ar.begin() + 4);
-                        REQUIRE_EQ(ar.size(), 7);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                        CHECK_FALSE(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), static_cast<T>(2));
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), static_cast<T>(3));
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), static_cast<T>(4));
-                        CHECK(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), new_value);
-                        CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), new_value);
-                        CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), new_value);
+                        const auto distance = std::distance(ar.cbegin(), ar.cend());
+                        const auto iter = ar.insert(pos, new_value_nullable, 3);
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), distance));
+                        for (size_t i = 0; i < ar.size() - 3; ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
+                        for (size_t i = ar.size() - 3; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], new_value_nullable);
+                        }
                     }
                 }
 
-                auto new_val_99 = make_nullable<T>(99);
-                auto new_val_100 = make_nullable<T>(100);
-                auto new_val_101 = make_nullable<T>(101);
+                const auto new_val_99 = make_nullable<T>(99, true);
+                const auto new_val_100 = make_nullable<T>(100, false);
+                const auto new_val_101 = make_nullable<T>(101, true);
                 const std::array<nullable<T>, 3> new_values{new_val_99, new_val_100, new_val_101};
 
                 SUBCASE("with pos, first and last iterators")
@@ -443,64 +383,50 @@ namespace sparrow
                         const auto pos = ar.cbegin();
                         const auto iter = ar.insert(pos, new_values);
                         CHECK_EQ(iter, ar.begin());
-                        REQUIRE_EQ(ar.size(), 7);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), new_values[0]);
-                        CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), new_values[1]);
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), new_values[2]);
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), static_cast<T>(1));
-                        CHECK_FALSE(ar[4].has_value());
-                        CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
-                        CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), static_cast<T>(4));
+                        for (size_t i = 0; i < 3; ++i)
+                        {
+                            CHECK_EQ(ar[i], new_values[i]);
+                        }
+                        for (size_t i = 3; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
+                        }
                     }
 
                     SUBCASE("in the middle")
                     {
-                        const auto pos = sparrow::next(ar.cbegin(), 1);
+                        const size_t idx = ar.size() / 2;
+                        const auto pos = sparrow::next(ar.cbegin(), idx);
                         const auto iter = ar.insert(pos, new_values);
-                        CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
-                        REQUIRE_EQ(ar.size(), 7);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                        CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), new_values[0]);
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), new_values[1]);
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), new_values[2]);
-                        CHECK_FALSE(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), static_cast<T>(2));
-                        CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
-                        CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), static_cast<T>(4));
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), idx));
+                        for (size_t i = 0; i < idx; ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
+                        for (size_t i = idx; i < idx + 3; ++i)
+                        {
+                            CHECK_EQ(ar[i], new_values[i - idx]);
+                        }
+                        for (size_t i = idx + 3; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
+                        }
                     }
 
                     SUBCASE("at the end")
                     {
                         const auto pos = ar.cend();
+                        const auto distance = std::distance(ar.cbegin(), ar.cend());
                         const auto iter = ar.insert(pos, new_values);
-                        CHECK_EQ(iter, ar.begin() + 4);
-                        REQUIRE_EQ(ar.size(), 7);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                        CHECK_FALSE(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), static_cast<T>(2));
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), static_cast<T>(3));
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), static_cast<T>(4));
-                        CHECK(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), new_values[0]);
-                        CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), new_values[1]);
-                        CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), new_values[2]);
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), distance));
+                        for (size_t i = 0; i < ar.size() - 3; ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
+                        for (size_t i = ar.size() - 3; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], new_values[i - ar.size() + 3]);
+                        }
                     }
                 }
 
@@ -511,53 +437,47 @@ namespace sparrow
                         const auto pos = ar.cbegin();
                         const auto iter = ar.insert(pos, {new_val_99, new_val_100, new_val_101});
                         CHECK_EQ(iter, ar.begin());
-                        REQUIRE_EQ(ar.size(), 7);
                         CHECK_EQ(ar[0], new_val_99);
                         CHECK_EQ(ar[1], new_val_100);
                         CHECK_EQ(ar[2], new_val_101);
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), static_cast<T>(1));
-                        CHECK_FALSE(ar[4].has_value());
-                        CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
-                        CHECK(ar[6].has_value());
+                        for (size_t i = 3; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
+                        }
                     }
 
                     SUBCASE("in the middle")
                     {
-                        const auto pos = sparrow::next(ar.cbegin(), 1);
+                        const size_t idx = ar.size() / 2;
+                        const auto pos = sparrow::next(ar.cbegin(), idx);
                         const auto iter = ar.insert(pos, {new_val_99, new_val_100, new_val_101});
-                        CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
-                        REQUIRE_EQ(ar.size(), 7);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                        CHECK_EQ(ar[1], new_val_99);
-                        CHECK_EQ(ar[2], new_val_100);
-                        CHECK_EQ(ar[3], new_val_101);
-                        CHECK_FALSE(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), static_cast<T>(2));
-                        CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
-                        CHECK(ar[6].has_value());
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), idx));
+                        for (size_t i = 0; i < idx; ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
+                        CHECK_EQ(ar[idx], new_val_99);
+                        CHECK_EQ(ar[idx + 1], new_val_100);
+                        CHECK_EQ(ar[idx + 2], new_val_101);
+                        for (size_t i = idx + 3; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
+                        }
                     }
 
                     SUBCASE("at the end")
                     {
                         const auto pos = ar.cend();
+                        const auto distance = std::distance(ar.cbegin(), ar.cend());
                         const auto iter = ar.insert(pos, {new_val_99, new_val_100, new_val_101});
-                        CHECK_EQ(iter, ar.begin() + 4);
-                        REQUIRE_EQ(ar.size(), 7);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                        CHECK_FALSE(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), static_cast<T>(2));
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), static_cast<T>(3));
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), static_cast<T>(4));
-                        CHECK_EQ(ar[4], new_val_99);
-                        CHECK_EQ(ar[5], new_val_100);
-                        CHECK_EQ(ar[6], new_val_101);
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), distance));
+                        for (size_t i = 0; i < ar.size() - 3; ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
+                        CHECK_EQ(ar[ar.size() - 3], new_val_99);
+                        CHECK_EQ(ar[ar.size() - 2], new_val_100);
+                        CHECK_EQ(ar[ar.size() - 1], new_val_101);
                     }
                 }
 
@@ -568,21 +488,50 @@ namespace sparrow
                         const auto pos = ar.cbegin();
                         const auto iter = ar.insert(pos, new_values);
                         CHECK_EQ(iter, ar.begin());
-                        REQUIRE_EQ(ar.size(), 7);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), new_values[0]);
-                        CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), new_values[1]);
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), new_values[2]);
-                        CHECK(ar[3].has_value());
-                        CHECK_EQ(ar[3].get(), static_cast<T>(1));
-                        CHECK_FALSE(ar[4].has_value());
-                        CHECK_EQ(ar[4].get(), static_cast<T>(2));
-                        CHECK(ar[5].has_value());
-                        CHECK_EQ(ar[5].get(), static_cast<T>(3));
-                        CHECK(ar[6].has_value());
-                        CHECK_EQ(ar[6].get(), static_cast<T>(4));
+                        for (size_t i = 0; i < 3; ++i)
+                        {
+                            CHECK_EQ(ar[i], new_values[i]);
+                        }
+                        for (size_t i = 3; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
+                        }
+                    }
+
+                    SUBCASE("in the middle")
+                    {
+                        const size_t idx = ar.size() / 2;
+                        const auto pos = sparrow::next(ar.cbegin(), idx);
+                        const auto iter = ar.insert(pos, new_values);
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), idx));
+                        for (size_t i = 0; i < idx; ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
+                        for (size_t i = idx; i < idx + 3; ++i)
+                        {
+                            CHECK_EQ(ar[i], new_values[i - idx]);
+                        }
+                        for (size_t i = idx + 3; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
+                        }
+                    }
+
+                    SUBCASE("at the end")
+                    {
+                        const auto pos = ar.cend();
+                        const auto distance = std::distance(ar.cbegin(), ar.cend());
+                        const auto iter = ar.insert(pos, new_values);
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), distance));
+                        for (size_t i = 0; i < ar.size() - 3; ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
+                        for (size_t i = ar.size() - 3; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], new_values[i - ar.size() + 3]);
+                        }
                     }
                 }
             }
@@ -596,84 +545,80 @@ namespace sparrow
                         const auto pos = ar.cbegin();
                         const auto iter = ar.erase(pos);
                         CHECK_EQ(iter, ar.begin());
-                        REQUIRE_EQ(ar.size(), 3);
-                        CHECK_FALSE(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), static_cast<T>(2));
-                        CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), static_cast<T>(3));
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), static_cast<T>(4));
+                        REQUIRE_EQ(ar.size(), nullable_values.size() - offset - 1);
+                        for (size_t i = 0; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset + 1]);
+                        }
                     }
 
                     SUBCASE("in the middle")
                     {
-                        const auto pos = sparrow::next(ar.cbegin(), 1);
+                        const size_t idx = ar.size() / 2;
+                        const auto pos = sparrow::next(ar.cbegin(), idx);
                         const auto iter = ar.erase(pos);
-                        CHECK_EQ(iter, sparrow::next(ar.begin(), 1));
-                        REQUIRE_EQ(ar.size(), 3);
-                        CHECK(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                        CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), static_cast<T>(3));
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), static_cast<T>(4));
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), idx));
+                        REQUIRE_EQ(ar.size(), nullable_values.size() - offset - 1);
+                        for (size_t i = 0; i < idx; ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
+                        for (size_t i = idx; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset + 1]);
+                        }
                     }
 
                     SUBCASE("at the end")
                     {
                         const auto pos = std::prev(ar.cend());
                         const auto iter = ar.erase(pos);
-                        CHECK_EQ(iter, ar.begin() + 3);
-                        REQUIRE_EQ(ar.size(), 3);
-                        REQUIRE(ar[0].has_value());
-                        CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                        CHECK_FALSE(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), static_cast<T>(2));
-                        CHECK(ar[2].has_value());
-                        CHECK_EQ(ar[2].get(), static_cast<T>(3));
+                        CHECK_EQ(iter, sparrow::next(ar.begin(), ar.size()));
+                        REQUIRE_EQ(ar.size(), nullable_values.size() - offset - 1);
+                        for (size_t i = 0; i < ar.size(); ++i)
+                        {
+                            CHECK_EQ(ar[i], nullable_values[i + offset]);
+                        }
                     }
                 }
 
                 SUBCASE("with iterators")
                 {
                     const auto pos = ar.cbegin() + 1;
-                    const auto iter = ar.erase(pos, pos + 2);
+                    const size_t count = 2;
+                    const auto iter = ar.erase(pos, pos + count);
                     CHECK_EQ(iter, ar.begin() + 1);
-                    REQUIRE_EQ(ar.size(), 2);
-                    CHECK(ar[0].has_value());
-                    CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                    CHECK(ar[1].has_value());
-                    CHECK_EQ(ar[1].get(), static_cast<T>(4));
+                    REQUIRE_EQ(ar.size(), nullable_values.size() - offset - count);
+                    for (size_t i = 0; i < 1; ++i)
+                    {
+                        CHECK_EQ(ar[i], nullable_values[i + offset]);
+                    }
+                    for (size_t i = 1; i < ar.size(); ++i)
+                    {
+                        CHECK_EQ(ar[i], nullable_values[i + offset + count]);
+                    }
                 }
             }
 
             SUBCASE("push_back")
             {
-                const T new_value{99};
-                ar.push_back(make_nullable<T>(99));
-                REQUIRE_EQ(ar.size(), 5);
-                CHECK(ar[0].has_value());
-                CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                CHECK_FALSE(ar[1].has_value());
-                CHECK_EQ(ar[1].get(), static_cast<T>(2));
-                CHECK(ar[2].has_value());
-                CHECK_EQ(ar[2].get(), static_cast<T>(3));
-                CHECK(ar[3].has_value());
-                CHECK_EQ(ar[3].get(), static_cast<T>(4));
-                CHECK(ar[4].has_value());
-                CHECK_EQ(ar[4].value(), new_value);
+                const nullable<T> new_value = make_nullable<T>(99, true);
+                ar.push_back(new_value);
+                REQUIRE_EQ(ar.size(), nullable_values.size() - offset + 1);
+                for (size_t i = 0; i < ar.size() - 1; ++i)
+                {
+                    CHECK_EQ(ar[i], nullable_values[i + offset]);
+                }
             }
 
             SUBCASE("pop_back")
             {
                 ar.pop_back();
-                REQUIRE_EQ(ar.size(), 3);
-                CHECK(ar[0].has_value());
-                CHECK_EQ(ar[0].get(), static_cast<T>(1));
-                CHECK_FALSE(ar[1].has_value());
-                CHECK_EQ(ar[1].get(), static_cast<T>(2));
-                CHECK(ar[2].has_value());
-                CHECK_EQ(ar[2].get(), static_cast<T>(3));
+                REQUIRE_EQ(ar.size(), nullable_values.size() - offset - 1);
+                for (size_t i = 0; i < ar.size(); ++i)
+                {
+                    CHECK_EQ(ar[i], nullable_values[i + offset]);
+                }
             }
 
             SUBCASE("nanoarrow compatibility")
@@ -690,7 +635,7 @@ namespace sparrow
 
                 bool b1 = false;
 
-                std::vector<nullable_type> nullable_vector{
+                const std::vector<nullable_type> nullable_vector{
                     nullable_type(data[0]),
                     nullable_type(data[1]),
                     nullable_type{data[2], b1},
@@ -726,7 +671,7 @@ namespace sparrow
         {
             using inner_value_type = T;
 
-            std::vector<inner_value_type> data = {
+            const std::vector<inner_value_type> data = {
                 static_cast<inner_value_type>(0),
                 static_cast<inner_value_type>(1),
                 static_cast<inner_value_type>(2),
