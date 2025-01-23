@@ -109,6 +109,36 @@ namespace sparrow
         SPARROW_API array(ArrowArray* array, ArrowSchema* schema);
 
         /**
+         * Performs a deep copy of the given array, even if it does not have the ownership
+         * of its internal data.
+         *
+         * @param rhs The array to copy.
+         */
+        array(const array& rhs) = default;
+
+        /**
+         * Overwrites the content of the array with a deep copy of the given array,
+         * event if it does not have the ownership of its internal data.
+         *
+         * @param rhs The array to assign.
+         */
+        array& operator=(const array& rhs) = default;
+
+        /**
+         * The move constructor.
+         *
+         * @param rhs The array to move.
+         */
+        array(array&& rhs) = default;
+
+        /**
+         * The move assignment operator.
+         *
+         * @param rhs The array to move.
+         */
+        array& operator=(array&& rhs) = default;
+
+        /**
          * @returns the data type of the \ref array.
          */
         SPARROW_API enum data_type data_type() const;

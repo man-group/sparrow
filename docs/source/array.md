@@ -30,6 +30,11 @@ The array class provides a similar API to that of the [typed arrays](#common_api
 iterators are not provided, for performance reasons. Instead, a method for visiting the array and apply
 an algorithm to the undelying typed array is provided.
 
+### Deep copy
+
+Copying an array always perform a deep copy, regardless of whether the source array owns its internal data. This
+reduces the complexity of the memory model when mixing views and arrays within layouts that have children.
+
 Array API
 ---------
 
