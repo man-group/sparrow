@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <chrono>
-
 #include "sparrow/layout/temporal/timestamp_array.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -120,10 +118,6 @@ namespace sparrow
                     const timestamp_array<T> ar(new_york, input_values);
                     CHECK_EQ(ar.front(), input_values.front());
                 }
-
-                SUBCASE("mutable")
-                {
-                }
             }
 
             SUBCASE("back")
@@ -132,10 +126,6 @@ namespace sparrow
                 {
                     const timestamp_array<T> ar(new_york, input_values);
                     CHECK_EQ(ar.back(), input_values.back());
-                }
-
-                SUBCASE("mutable")
-                {
                 }
             }
 

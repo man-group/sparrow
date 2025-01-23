@@ -57,13 +57,13 @@ namespace std
     template <typename Layout, typename T, template <typename> typename TQual, template <typename> typename UQual>
     struct basic_common_reference<sparrow::temporal_reference<Layout>, sparrow::timestamp<T>, TQual, UQual>
     {
-        using type = std::string;
+        using type = T;
     };
 
     template <typename Layout, typename T, template <typename> typename TQual, template <class> class UQual>
     struct basic_common_reference<sparrow::timestamp<T>, sparrow::temporal_reference<Layout>, TQual, UQual>
     {
-        using type = std::string;
+        using type = T;
     };
 }
 
