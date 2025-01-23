@@ -122,7 +122,7 @@ namespace sparrow
                 wrapper_type w(&ar);
                 auto cl = w.clone();
                 CHECK_EQ(unwrap_array<AR>(*cl), ar);
-                CHECK_EQ(&(unwrap_array<AR>(*cl)), &ar);
+                CHECK_NE(&(unwrap_array<AR>(*cl)), &ar);
             }
 
             SUBCASE("from shared_ptr")
@@ -131,7 +131,7 @@ namespace sparrow
                 wrapper_type w(ptr);
                 auto cl = w.clone();
                 CHECK_EQ(unwrap_array<AR>(*cl), *ptr);
-                CHECK_EQ(&(unwrap_array<AR>(*cl)), ptr.get());
+                CHECK_NE(&(unwrap_array<AR>(*cl)), ptr.get());
             }
         }
         TEST_CASE_TEMPLATE_APPLY(array_wrapper_clone, testing_types);
