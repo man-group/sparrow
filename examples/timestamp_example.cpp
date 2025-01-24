@@ -5,8 +5,6 @@
 
 #include <cassert>
 
-#include <date/date.h>
-
 #include "sparrow/layout/temporal/timestamp_array.hpp"
 
 int main()
