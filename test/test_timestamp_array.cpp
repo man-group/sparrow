@@ -537,5 +537,22 @@ namespace sparrow
             }
         }
         TEST_CASE_TEMPLATE_APPLY(timestamp_array_id, testing_types);
+
+#if defined(SPARROW_USE_DATE_POLYFILL)
+#    if defined(__cpp_lib_format)
+        TEST_CASE("formatting")
+        {
+            std::vector<timestamp_second> values{
+                timestamp_second{new_york, date::sys_days{date::year{2022} / 2 / 1}},
+                timestamp_second{new_york, date::sys_days{date::year{2022} / 3 / 2}},
+                timestamp_second{new_york, date::sys_days{date::year{2022} / 4 / 3}}
+            };
+            timestamp_seconds_array ar(new_york, values);
+            const std::string
+                expected = R"(Timestamp seconds [name=nullptr | size=3] <2022-01-31 20:00:00 EDT, 2022-03-01 20:00:00 EDT, 2022-04-02 20:00:00 EDT>)";
+            CHECK_EQ(std::format("{}", ar), expected);
+        }
+#    endif
+#endif
     }
-}
+}  // namespace sparrow
