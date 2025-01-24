@@ -194,11 +194,7 @@ namespace sparrow
                 {
                     if (t.empty())
                     {
-                        {
-                            {
-                                return nullptr;
-                            }
-                        }
+                        return nullptr;
                     }
                     else
                     {
