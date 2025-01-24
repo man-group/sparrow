@@ -394,16 +394,7 @@ namespace sparrow
         std::optional<std::string_view> metadata
     )
     {
-        const auto converted_value_to_right_timezone = values
-                                                       | std::views::transform(
-                                                           [timezone](const auto& v)
-                                                           {
-                                                               return T(timezone, v.get_sys_time());
-                                                           }
-                                                       );
-
-
-        const auto range = converted_value_to_right_timezone
+        const auto range = values
                            | std::views::transform(
                                [](const auto& v)
                                {
