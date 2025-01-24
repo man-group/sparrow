@@ -26,6 +26,7 @@
 #include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/layout/temporal/timestamp_concepts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/nullable.hpp"
@@ -252,7 +253,7 @@ namespace sparrow
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend class run_end_encoded_array;
-        template <typename>
+        template <timestamp_type>
         friend class timestamp_array;
         friend base_type;
         friend base_type::base_type;
