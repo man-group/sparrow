@@ -221,7 +221,7 @@ namespace sparrow
     template <class T>
     array_wrapper_impl<T>::array_wrapper_impl(const array_wrapper_impl& rhs)
         : array_wrapper(rhs)
-        , m_storage(rhs.m_storage)
+        , m_storage(value_ptr<T>(T(rhs.get_wrapped())))  // Always deep copy
     {
         p_array = std::visit(
             [](auto&& arg)
