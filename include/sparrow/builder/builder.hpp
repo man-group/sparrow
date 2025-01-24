@@ -15,10 +15,8 @@
 
 #pragma once
 
-#include <array>
 #include <map>
 #include <ranges>
-#include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -119,6 +117,10 @@ namespace sparrow
         concept translates_to_primitive_layout = std::ranges::input_range<T>
                                                  && std::is_scalar_v<ensured_range_value_t<T>>;
 
+        template <typename T>
+        concept translates_to_timestamp_layout = std::ranges::input_range<T>
+                                                 && mpl::is_type_instance_of_v<ensured_range_value_t<T>, timestamp>;
+
         template <class T>
         concept translate_to_variable_sized_list_layout = std::ranges::input_range<T>
                                                           && std::ranges::input_range<ensured_range_value_t<T>>
@@ -176,6 +178,34 @@ namespace sparrow
             static type create(U&& t)
             {
                 return type(std::forward<U>(t));
+            }
+        };
+
+        template <translates_to_timestamp_layout T, class OPTION_FLAGS>
+        struct builder<T, dont_enforce_layout, OPTION_FLAGS>
+        {
+            using type = sparrow::timestamp_array<ensured_range_value_t<T>>;
+            using timezone_ptr = std::decay_t<decltype(std::declval<ensured_range_value_t<T>>().get_time_zone())>;
+
+            template <class U>
+            static type create(U&& t)
+            {
+                timezone_ptr tz = [&t]() -> timezone_ptr
+                {
+                    if (t.empty())
+                    {
+                        {
+                            {
+                                return nullptr;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return t.begin()->get_time_zone();
+                    }
+                }();
+                return type(tz, std::forward<U>(t));
             }
         };
 
@@ -454,7 +484,5 @@ namespace sparrow
                 return type(array(std::move(run_length_typed_array)), array(std::move(values_array)));
             }
         };
-
-
     }  // namespace detail
 }  // namespace sparrow

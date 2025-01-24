@@ -3,6 +3,7 @@ SET(EXAMPLES
     typed_array_low_level.cpp
     typed_array_high_level.cpp
     record_batch_example.cpp
+    timestamp_example.cpp
     builder_example.cpp
 )
 

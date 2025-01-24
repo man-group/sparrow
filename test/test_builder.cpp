@@ -60,6 +60,22 @@ namespace sparrow
             }
         }
 
+        TEST_CASE("timestamp-layout")
+        {
+            SUBCASE("timestamp_milliseconds_array")
+            {
+                const auto* timezone = date::locate_zone("UTC");
+                std::vector<timestamp_millisecond> v{
+                    timestamp_millisecond{timezone, date::sys_days{date::year{2022} / 1 / 1}},
+                    timestamp_millisecond{timezone, date::sys_days{date::year{2022} / 1 / 2}},
+                    timestamp_millisecond{timezone, date::sys_days{date::year{2022} / 1 / 3}}
+                };
+                auto arr = sparrow::build(v);
+                test::generic_consistency_test(arr);
+                REQUIRE_EQ(arr.size(), 3);
+            }
+        }
+
         TEST_CASE("list-layout")
         {
             // list[float]
@@ -252,5 +268,4 @@ namespace sparrow
             }
         }
     }
-
 }

@@ -15,6 +15,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
 #include <string_view>
 #include <type_traits>
 
@@ -77,11 +78,38 @@ namespace sparrow
     template <typename T>
     constexpr bool is_timestamp_array_v = is_timestamp_array<T>::value;
 
-    using timestamp_seconds_array = timestamp_array<timestamp<std::chrono::seconds>>;
-    using timestamp_milliseconds_array = timestamp_array<timestamp<std::chrono::milliseconds>>;
-    using timestamp_microseconds_array = timestamp_array<timestamp<std::chrono::microseconds>>;
-    using timestamp_nanoseconds_array = timestamp_array<timestamp<std::chrono::nanoseconds>>;
+    using timestamp_second = timestamp<std::chrono::seconds>;
+    using timestamp_millisecond = timestamp<std::chrono::milliseconds>;
+    using timestamp_microsecond = timestamp<std::chrono::microseconds>;
+    using timestamp_nanosecond = timestamp<std::chrono::nanoseconds>;
 
+    using timestamp_seconds_array = timestamp_array<timestamp_second>;
+    using timestamp_milliseconds_array = timestamp_array<timestamp_millisecond>;
+    using timestamp_microseconds_array = timestamp_array<timestamp_microsecond>;
+    using timestamp_nanoseconds_array = timestamp_array<timestamp_nanosecond>;
+
+    /**
+     * Array of timestamps.
+     *
+     * The type of the values in the array are \c timestamp, whose duration/representation is known at compile
+     * time.
+     * The current implementation supports types whose size is known at compile time only.
+     *
+     * As the other arrays in sparrow, \c timestamp_array<T> provides an API as if it was holding
+     * \c nullable<T> values instead of \c T values.
+     *
+     * Internally, the array contains a validity bitmap and a contiguous memory buffer
+     * holding the values.
+     *
+     * @tparam T the type of the values in the array.
+     * Must be one of these values:
+     * - \c timestamp<std::chrono::seconds>
+     * - \c timestamp<std::chrono::milliseconds>
+     * - \c timestamp<std::chrono::microseconds>
+     * - \c timestamp<std::chrono::nanoseconds>
+     *
+     * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
+     */
     template <typename T>
     class timestamp_array final : public mutable_array_bitmap_base<timestamp_array<T>>
     {
@@ -124,6 +152,33 @@ namespace sparrow
 
         explicit timestamp_array(arrow_proxy);
 
+        /**
+         * Construct a timestamp array with the passed range of values and an optional bitmap.
+         *
+         * The first argument is `const date::time_zone*`. It is the timezone of the timestamps.
+         * The second argument can be any range of values as long as its value type is convertible
+         * to \c T .
+         * The third argument can be:
+         * - a bitmap range, i.e. a range of boolean-like values indicating the non-missing values.
+         *   The bitmap range and the value range must have the same size.
+         * ```cpp
+         * std::vector<sparrow::timestamp<std::chrono::seconds>> input_values;
+         * *** fill input_values ***
+         * std::vector<bool> a_bitmap(input_values.size(), true);
+         * a_bitmap[3] = false;
+         * const date::time_zone* newyork_tz = date::locate_zone("America/New_York");
+         * primitive_array<int> pr(input_values, a_bitmap);
+         * ```
+         * - a range of indices indicating the missing values.
+         * ```cpp
+         * std::vector<std::size_t> false_pos  { 3, 8 };
+         * primitive_array<int> pr(input_values, a_bitmap);
+         * ```
+         * - omitted: this is equivalent as passing a bitmap range full of \c true.
+         * ```cpp
+         * primitive_array<int> pr(input_values);
+         * ```
+         */
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<timestamp_array, Args...>)
         explicit timestamp_array(Args&&... args)
@@ -245,10 +300,9 @@ namespace sparrow
         void assign(const T& rhs, size_type index);
         void assign(T&& rhs, size_type index);
 
-        static values_layout create_values_layout(arrow_proxy& proxy);
+        [[nodiscard]] static values_layout create_values_layout(arrow_proxy& proxy);
 
-        static const date::time_zone* get_timezone(const arrow_proxy& proxy);
-
+        [[nodiscard]] static const date::time_zone* get_timezone(const arrow_proxy& proxy);
 
         values_layout m_values_layout;
         const date::time_zone* m_timezone;
@@ -498,7 +552,8 @@ namespace sparrow
     template <typename T>
     void timestamp_array<T>::resize_values(size_type new_length, inner_value_type value)
     {
-        m_values_layout.resize_values(new_length, value.get_sys_time().time_since_epoch().count());
+        const int64_t value_to_insert = value.get_sys_time().time_since_epoch().count();
+        m_values_layout.resize_values(new_length, value_to_insert);
         detail::array_access::get_arrow_proxy(m_values_layout).update_buffers();
     }
 
@@ -508,11 +563,8 @@ namespace sparrow
     {
         const auto idx = std::distance(value_cbegin(), pos);
         const auto values_layout_pos = m_values_layout.value_cbegin() + idx;
-        const auto values_layout_ret = m_values_layout.insert_value(
-            values_layout_pos,
-            value.get_sys_time().time_since_epoch().count(),
-            count
-        );
+        const int64_t value_to_insert = value.get_sys_time().time_since_epoch().count();
+        const auto values_layout_ret = m_values_layout.insert_value(values_layout_pos, value_to_insert, count);
         detail::array_access::get_arrow_proxy(m_values_layout).update_buffers();
         return value_iterator(
             functor_type(this),
@@ -531,5 +583,4 @@ namespace sparrow
             static_cast<size_t>(std::distance(m_values_layout.value_begin(), values_layout_ret))
         );
     }
-
 }

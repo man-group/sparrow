@@ -51,7 +51,7 @@ namespace sparrow
             const auto input_values = make_nullable_values<T>(10);
             SUBCASE("constructors")
             {
-                SUBCASE("with n")
+                SUBCASE("with range")
                 {
                     timestamp_array<T> ar(new_york, input_values);
                     CHECK_EQ(ar.size(), input_values.size());
