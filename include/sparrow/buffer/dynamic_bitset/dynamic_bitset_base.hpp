@@ -15,6 +15,7 @@
 #pragma once
 
 
+#include <bit>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -22,6 +23,7 @@
 #include "sparrow/buffer/dynamic_bitset/bitset_iterator.hpp"
 #include "sparrow/buffer/dynamic_bitset/bitset_reference.hpp"
 #include "sparrow/utils/contracts.hpp"
+
 
 namespace sparrow
 {
