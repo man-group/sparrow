@@ -24,7 +24,6 @@
 #include "sparrow/buffer/dynamic_bitset/bitset_reference.hpp"
 #include "sparrow/utils/contracts.hpp"
 
-
 namespace sparrow
 {
     /**
