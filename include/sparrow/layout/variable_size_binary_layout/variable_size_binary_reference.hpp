@@ -16,7 +16,9 @@
 
 #include <concepts>
 #include <ranges>
+#include <string>
 #include <type_traits>
+#include <vector>
 
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -105,6 +107,18 @@ namespace std
     struct basic_common_reference<std::string, sparrow::variable_size_binary_reference<Layout>, TQual, UQual>
     {
         using type = std::string;
+    };
+
+    template <typename Layout, template <typename> typename TQual, template <typename> typename UQual>
+    struct basic_common_reference<sparrow::variable_size_binary_reference<Layout>, std::vector<std::byte>, TQual, UQual>
+    {
+        using type = std::vector<std::byte>;
+    };
+
+    template <typename Layout, template <typename> typename TQual, template <class> class UQual>
+    struct basic_common_reference<std::vector<std::byte>, sparrow::variable_size_binary_reference<Layout>, TQual, UQual>
+    {
+        using type = std::vector<std::byte>;
     };
 }
 
