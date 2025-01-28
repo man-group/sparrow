@@ -96,7 +96,17 @@ namespace sparrow
         value_iterator insert_value(const_value_iterator pos, inner_value_type value, size_type count);
 
         template <mpl::iterator_of_type<inner_value_type> InputIt>
-        value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
+        value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        {
+            SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
+            SPARROW_ASSERT_TRUE(pos <= value_cend());
+            const auto distance = std::distance(
+                value_cbegin(),
+                sparrow::next(pos, this->get_arrow_proxy().offset())
+            );
+            get_data_buffer().insert(pos, first, last);
+            return sparrow::next(this->value_begin(), distance);
+        }
 
         value_iterator erase_values(const_value_iterator pos, size_type count);
 
@@ -213,19 +223,6 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(pos <= value_cend());
         const auto distance = std::distance(value_cbegin(), sparrow::next(pos, this->get_arrow_proxy().offset()));
         get_data_buffer().insert(pos, count, value);
-        return sparrow::next(this->value_begin(), distance);
-    }
-
-    template <typename D>
-    template <mpl::iterator_of_type<typename array_inner_types<D>::inner_value_type> InputIt>
-    auto
-    array_trivial_copyable_type_base_impl<D>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
-        -> value_iterator
-    {
-        SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
-        SPARROW_ASSERT_TRUE(pos <= value_cend());
-        const auto distance = std::distance(value_cbegin(), sparrow::next(pos, this->get_arrow_proxy().offset()));
-        get_data_buffer().insert(pos, first, last);
         return sparrow::next(this->value_begin(), distance);
     }
 
