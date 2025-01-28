@@ -15,6 +15,7 @@
 #pragma once
 
 
+#include <bit>
 #include <stdexcept>
 #include <string>
 #include <type_traits>

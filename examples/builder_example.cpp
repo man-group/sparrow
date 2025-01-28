@@ -123,9 +123,9 @@ void list_of_struct()
     ]
     */
     std::vector<std::vector<std::tuple<int, float>>> v{
-        {std::tuple<int, float>{1, 2.5}, std::tuple<int, float>{2, 3.5}},
-        {std::tuple<int, float>{3, 5.5}, std::tuple<int, float>{5, 6.5}, std::tuple<int, float>{6, 7.5}},
-        {std::tuple<int, float>{7, 8.5}}
+        {std::tuple<int, float>{1, 2.5f}, std::tuple<int, float>{2, 3.5f}},
+        {std::tuple<int, float>{3, 5.5f}, std::tuple<int, float>{5, 6.5f}, std::tuple<int, float>{6, 7.5f}},
+        {std::tuple<int, float>{7, 8.5f}}
     };
     auto arr = sparrow::build(v);
     //! [builder_list_of_struct]

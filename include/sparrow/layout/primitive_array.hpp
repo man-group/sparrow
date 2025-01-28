@@ -26,6 +26,7 @@
 #include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/layout/temporal/timestamp_concepts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/nullable.hpp"
@@ -250,9 +251,10 @@ namespace sparrow
 
         buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
 
-
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend class run_end_encoded_array;
+        template <timestamp_type>
+        friend class timestamp_array;
         friend base_type;
         friend base_type::base_type;
         friend base_type::base_type::base_type;
@@ -278,8 +280,7 @@ namespace sparrow
                 data_type::INT64,
                 data_type::HALF_FLOAT,
                 data_type::FLOAT,
-                data_type::DOUBLE,
-                data_type::TIMESTAMP
+                data_type::DOUBLE
             };
             return std::find(dtypes.cbegin(), dtypes.cend(), dt) != dtypes.cend();
         }
@@ -289,7 +290,6 @@ namespace sparrow
     primitive_array<T>::primitive_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
     {
-        SPARROW_ASSERT_TRUE(this->get_arrow_proxy().data_type() == arrow_traits<T>::type_id);
     }
 
     template <primitive_type T>

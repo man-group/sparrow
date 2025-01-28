@@ -23,15 +23,15 @@
 #    if defined(__cpp_lib_format)
 #        include <format>
 
-template <>
-struct std::formatter<date::zoned_time<std::chrono::nanoseconds>>
+template <typename T>
+struct std::formatter<date::zoned_time<T>>
 {
     constexpr auto parse(std::format_parse_context& ctx)
     {
         return ctx.begin();  // Simple implementation
     }
 
-    auto format(const date::zoned_time<std::chrono::nanoseconds>& date, std::format_context& ctx) const
+    auto format(const date::zoned_time<T>& date, std::format_context& ctx) const
     {
         std::ostringstream oss;
         oss << date;
@@ -120,7 +120,8 @@ namespace sparrow
     // For now, we use HowardHinnant/date as a replacement if we are compiling with libc++.
     // TODO: use the following once libc++ has full support for P0355R7.
     // using timestamp = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
-    using timestamp = date::zoned_time<std::chrono::nanoseconds>;
+    template <typename Duration, typename TimeZonePtr = const date::time_zone*>
+    using timestamp = date::zoned_time<Duration, TimeZonePtr>;
 
     // We need to be sure the current target platform is setup to support correctly these types.
     static_assert(sizeof(float16_t) == 2);
@@ -167,9 +168,6 @@ namespace sparrow
         // Variable-length bytes (no guarantee of UTF8-ness)
         BINARY = 15,
         LARGE_BINARY = 16,
-        // Number of nanoseconds since the UNIX epoch with an optional timezone.
-        // See: https://arrow.apache.org/docs/python/timestamps.html#timestamps
-        TIMESTAMP = 18,
         LIST = 19,
         LARGE_LIST = 20,
         LIST_VIEW = 21,
@@ -186,7 +184,15 @@ namespace sparrow
         DECIMAL64,
         DECIMAL128,
         DECIMAL256,
-        FIXED_WIDTH_BINARY
+        FIXED_WIDTH_BINARY,
+        TIMESTAMP_SECONDS,
+        TIMESTAMP_MILLISECONDS,
+        TIMESTAMP_MICROSECONDS,
+        TIMESTAMP_NANOSECONDS,
+        DURATION_SECONDS,
+        DURATION_MILLISECONDS,
+        DURATION_MICROSECONDS,
+        DURATION_NANOSECONDS,
     };
 
     // helper function to check if a string is all digits
@@ -266,7 +272,22 @@ namespace sparrow
         // TODO: add propper timestamp support below
         else if (format.starts_with("t"))
         {
-            return data_type::TIMESTAMP;
+            if (format.starts_with("tss:"))
+            {
+                return data_type::TIMESTAMP_SECONDS;
+            }
+            else if (format.starts_with("tsm:"))
+            {
+                return data_type::TIMESTAMP_MILLISECONDS;
+            }
+            else if (format.starts_with("tsu:"))
+            {
+                return data_type::TIMESTAMP_MICROSECONDS;
+            }
+            else if (format.starts_with("tsn:"))
+            {
+                return data_type::TIMESTAMP_NANOSECONDS;
+            }
         }
         else if (format == "+l")
         {
@@ -445,8 +466,14 @@ namespace sparrow
                 return "z";
             case data_type::LARGE_BINARY:
                 return "Z";
-            case data_type::TIMESTAMP:
-                return "tDm";
+            case data_type::TIMESTAMP_SECONDS:
+                return "tss:";
+            case data_type::TIMESTAMP_MILLISECONDS:
+                return "tsm:";
+            case data_type::TIMESTAMP_MICROSECONDS:
+                return "tsu:";
+            case data_type::TIMESTAMP_NANOSECONDS:
+                return "tsn:";
             case data_type::LIST:
                 return "+l";
             case data_type::LARGE_LIST:
@@ -520,7 +547,14 @@ namespace sparrow
         float64_t,
         std::string,
         std::vector<byte_t>,
-        sparrow::timestamp,
+        timestamp<std::chrono::seconds>,
+        timestamp<std::chrono::milliseconds>,
+        timestamp<std::chrono::microseconds>,
+        timestamp<std::chrono::nanoseconds>,
+        std::chrono::seconds,
+        std::chrono::milliseconds,
+        std::chrono::microseconds,
+        std::chrono::nanoseconds,
         // TODO: add missing fundamental types here
         list_value,
         struct_value,
@@ -537,12 +571,9 @@ namespace sparrow
     template <class T>
     concept is_arrow_base_type = mpl::contains<T>(all_base_types);
 
-
     /// is arrow base type or arrow compound type (list<T>, struct<T> etc.)
     // template <class T>
     // concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
-
-
     using all_base_types_extended_t = mpl::append_t<all_base_types_t, char, std::string_view>;
 
     /// Type list of every C++ representation types supported by default, in order matching `data_type`
@@ -754,8 +785,22 @@ namespace std
                         return "Binary";
                     case LARGE_BINARY:
                         return "Large binary";
-                    case TIMESTAMP:
-                        return "Timestamp";
+                    case TIMESTAMP_SECONDS:
+                        return "Timestamp seconds";
+                    case TIMESTAMP_MILLISECONDS:
+                        return "Timestamp milliseconds";
+                    case TIMESTAMP_MICROSECONDS:
+                        return "Timestamp microseconds";
+                    case TIMESTAMP_NANOSECONDS:
+                        return "Timestamp nanoseconds";
+                    case DURATION_SECONDS:
+                        return "Seconds";
+                    case DURATION_MILLISECONDS:
+                        return "Milliseconds";
+                    case DURATION_MICROSECONDS:
+                        return "Microseconds";
+                    case DURATION_NANOSECONDS:
+                        return "Nanoseconds";
                     case LIST:
                         return "List";
                     case LARGE_LIST:

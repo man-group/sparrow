@@ -22,6 +22,7 @@
 #include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 #include "sparrow/layout/struct_layout/struct_array.hpp"
+#include "sparrow/layout/temporal/timestamp_array.hpp"
 #include "sparrow/layout/union_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 
@@ -120,7 +121,14 @@ namespace sparrow
                     return detail::make_wrapper_ptr<dense_union_array>(std::move(proxy));
                 case data_type::SPARSE_UNION:
                     return detail::make_wrapper_ptr<sparse_union_array>(std::move(proxy));
-                case data_type::TIMESTAMP:
+                case data_type::TIMESTAMP_SECONDS:
+                    return detail::make_wrapper_ptr<timestamp_seconds_array>(std::move(proxy));
+                case data_type::TIMESTAMP_MILLISECONDS:
+                    return detail::make_wrapper_ptr<timestamp_milliseconds_array>(std::move(proxy));
+                case data_type::TIMESTAMP_MICROSECONDS:
+                    return detail::make_wrapper_ptr<timestamp_microseconds_array>(std::move(proxy));
+                case data_type::TIMESTAMP_NANOSECONDS:
+                    return detail::make_wrapper_ptr<timestamp_nanoseconds_array>(std::move(proxy));
                 case data_type::MAP:
                 case data_type::DECIMAL32:
                     return detail::make_wrapper_ptr<decimal_32_array>(std::move(proxy));
