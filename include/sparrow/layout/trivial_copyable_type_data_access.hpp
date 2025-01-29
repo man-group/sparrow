@@ -129,7 +129,6 @@ namespace sparrow
             template <mpl::iterator_of_type<T> InputIt>
             constexpr value_iterator insert_values(size_t idx, InputIt first, InputIt last)
             {
-                SPARROW_ASSERT_TRUE(idx >= 0);
                 SPARROW_ASSERT_TRUE(idx <= get_arrow_proxy().length());
                 const const_value_iterator begin{data()};
                 const const_value_iterator it = sparrow::next(begin, idx);
@@ -155,7 +154,6 @@ namespace sparrow
 
             constexpr value_iterator erase_values(size_t idx, size_t count)
             {
-                SPARROW_ASSERT_TRUE(idx >= 0);
                 SPARROW_ASSERT_TRUE(idx <= get_arrow_proxy().length());
                 const const_value_iterator cbegin{data()};
                 const const_value_iterator it = sparrow::next(cbegin, idx);
