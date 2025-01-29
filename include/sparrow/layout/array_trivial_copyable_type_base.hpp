@@ -45,18 +45,19 @@ namespace sparrow
         using bitmap_const_reference = bitmap_type::const_reference;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
 
-        // using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
     template <trivial_copyable_type T>
     class array_trivial_copyable_type_base_impl
-        : public mutable_array_bitmap_base<array_trivial_copyable_type_base_impl<T>>
+        : public mutable_array_bitmap_base<array_trivial_copyable_type_base_impl<T>>,
+          public details::trivial_copyable_type_data_access<T, array_trivial_copyable_type_base_impl<T>>
     {
     public:
 
         using self_type = array_trivial_copyable_type_base_impl<T>;
         using base_type = mutable_array_bitmap_base<array_trivial_copyable_type_base_impl<T>>;
+        using access_class_type = details::trivial_copyable_type_data_access<T, self_type>;
         using size_type = std::size_t;
 
         using inner_types = array_inner_types<self_type>;
@@ -99,7 +100,7 @@ namespace sparrow
             requires(mpl::excludes_copy_and_move_ctor_v<array_trivial_copyable_type_base_impl<T>, Args...>)
         explicit array_trivial_copyable_type_base_impl(Args&&... args)
             : base_type(create_proxy(std::forward<Args>(args)...))
-            , m_data_access(this, DATA_BUFFER_INDEX)
+            , access_class_type(this, DATA_BUFFER_INDEX)
         {
         }
 
@@ -112,7 +113,7 @@ namespace sparrow
             std::optional<std::string_view> metadata = std::nullopt
         )
             : base_type(create_proxy(init, std::move(name), std::move(metadata)))
-            , m_data_access(this, DATA_BUFFER_INDEX)
+            , access_class_type(this, DATA_BUFFER_INDEX)
         {
         }
 
@@ -121,14 +122,13 @@ namespace sparrow
 
         array_trivial_copyable_type_base_impl(array_trivial_copyable_type_base_impl&& rhs) noexcept
             : base_type(std::move(rhs))
-            , m_data_access(this, DATA_BUFFER_INDEX)
+            , access_class_type(this, DATA_BUFFER_INDEX)
         {
         }
 
         array_trivial_copyable_type_base_impl& operator=(array_trivial_copyable_type_base_impl&& rhs) noexcept
         {
             base_type::operator=(std::move(rhs));
-            m_data_access = details::trivial_copyable_type_data_access<T, self_type>(this, DATA_BUFFER_INDEX);
             return *this;
         }
 
@@ -186,12 +186,8 @@ namespace sparrow
             std::optional<std::string_view> metadata = std::nullopt
         );
 
-
-        pointer data();
-        const_pointer data() const;
-
-        inner_reference value(size_type i);
-        inner_const_reference value(size_type i) const;
+        using access_class_type::data;
+        using access_class_type::value;
 
         value_iterator value_begin();
         value_iterator value_end();
@@ -201,19 +197,10 @@ namespace sparrow
 
         // Modifiers
 
-        void resize_values(size_type new_length, inner_value_type value);
-
-        value_iterator insert_value(const_value_iterator pos, inner_value_type value, size_type count);
-
-        template <mpl::iterator_of_type<inner_value_type> InputIt>
-        value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last)
-        {
-            return m_data_access.insert_values(pos, first, last);
-        }
-
-        value_iterator erase_values(const_value_iterator pos, size_type count);
-
-        details::trivial_copyable_type_data_access<T, self_type> m_data_access;
+        using access_class_type::erase_values;
+        using access_class_type::insert_value;
+        using access_class_type::insert_values;
+        using access_class_type::resize_values;
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
 
@@ -230,7 +217,7 @@ namespace sparrow
     template <trivial_copyable_type T>
     array_trivial_copyable_type_base_impl<T>::array_trivial_copyable_type_base_impl(arrow_proxy proxy_param)
         : base_type(std::move(proxy_param))
-        , m_data_access(this, DATA_BUFFER_INDEX)
+        , access_class_type(this, DATA_BUFFER_INDEX)
     {
     }
 
@@ -239,7 +226,7 @@ namespace sparrow
         const array_trivial_copyable_type_base_impl& rhs
     )
         : base_type(rhs)
-        , m_data_access(this, DATA_BUFFER_INDEX)
+        , access_class_type(this, DATA_BUFFER_INDEX)
     {
     }
 
@@ -248,38 +235,13 @@ namespace sparrow
     array_trivial_copyable_type_base_impl<T>::operator=(const array_trivial_copyable_type_base_impl& rhs)
     {
         base_type::operator=(rhs);
-        m_data_access = details::trivial_copyable_type_data_access<T, self_type>(this, DATA_BUFFER_INDEX);
         return *this;
-    }
-
-    template <trivial_copyable_type T>
-    auto array_trivial_copyable_type_base_impl<T>::data() -> pointer
-    {
-        return m_data_access.data();
-    }
-
-    template <trivial_copyable_type T>
-    auto array_trivial_copyable_type_base_impl<T>::data() const -> const_pointer
-    {
-        return m_data_access.data();
-    }
-
-    template <trivial_copyable_type T>
-    auto array_trivial_copyable_type_base_impl<T>::value(size_type i) -> inner_reference
-    {
-        return m_data_access.value(i);
-    }
-
-    template <trivial_copyable_type T>
-    auto array_trivial_copyable_type_base_impl<T>::value(size_type i) const -> inner_const_reference
-    {
-        return m_data_access.value(i);
     }
 
     template <trivial_copyable_type T>
     auto array_trivial_copyable_type_base_impl<T>::value_begin() -> value_iterator
     {
-        return value_iterator{m_data_access.data()};
+        return value_iterator{data()};
     }
 
     template <trivial_copyable_type T>
@@ -291,36 +253,13 @@ namespace sparrow
     template <trivial_copyable_type T>
     auto array_trivial_copyable_type_base_impl<T>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator{m_data_access.data()};
+        return const_value_iterator{data()};
     }
 
     template <trivial_copyable_type T>
     auto array_trivial_copyable_type_base_impl<T>::value_cend() const -> const_value_iterator
     {
         return sparrow::next(value_cbegin(), this->size());
-    }
-
-    template <trivial_copyable_type T>
-    void array_trivial_copyable_type_base_impl<T>::resize_values(size_type new_length, inner_value_type value)
-    {
-        return m_data_access.resize_values(new_length, value);
-    }
-
-    template <trivial_copyable_type T>
-    auto array_trivial_copyable_type_base_impl<T>::insert_value(
-        const_value_iterator pos,
-        inner_value_type value,
-        size_type count
-    ) -> value_iterator
-    {
-        return m_data_access.insert_value(pos, value, count);
-    }
-
-    template <trivial_copyable_type T>
-    auto array_trivial_copyable_type_base_impl<T>::erase_values(const_value_iterator pos, size_type count)
-        -> value_iterator
-    {
-        return m_data_access.erase_values(pos, count);
     }
 
     template <trivial_copyable_type T>
