@@ -290,7 +290,7 @@ namespace sparrow
         [[nodiscard]] static const date::time_zone* get_timezone(const arrow_proxy& proxy);
 
         const date::time_zone* m_timezone;
-        details::trivial_copyable_type_data_access<inner_value_type_duration, self_type> m_data_access;
+        details::trivial_copyable_data_access<inner_value_type_duration, self_type> m_data_access;
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend class temporal_reference<self_type>;

@@ -49,15 +49,14 @@ namespace sparrow
     };
 
     template <trivial_copyable_type T>
-    class array_trivial_copyable
-        : public mutable_array_bitmap_base<array_trivial_copyable<T>>,
-          public details::trivial_copyable_type_data_access<T, array_trivial_copyable<T>>
+    class array_trivial_copyable : public mutable_array_bitmap_base<array_trivial_copyable<T>>,
+                                   public details::trivial_copyable_data_access<T, array_trivial_copyable<T>>
     {
     public:
 
         using self_type = array_trivial_copyable<T>;
         using base_type = mutable_array_bitmap_base<array_trivial_copyable<T>>;
-        using access_class_type = details::trivial_copyable_type_data_access<T, self_type>;
+        using access_class_type = details::trivial_copyable_data_access<T, self_type>;
         using size_type = std::size_t;
 
         using inner_types = array_inner_types<self_type>;
