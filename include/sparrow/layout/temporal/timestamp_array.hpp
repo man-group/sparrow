@@ -14,14 +14,17 @@
 
 #pragma once
 
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/layout_utils.hpp"
-#include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/temporal/timestamp_concepts.hpp"
 #include "sparrow/layout/temporal/timestamp_reference.hpp"
+#include "sparrow/layout/trivial_copyable_data_access.hpp"
+#include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
 // tts : timestamp<std::chrono::seconds>
@@ -134,7 +137,10 @@ namespace sparrow
         using functor_type = typename inner_types::functor_type;
         using const_functor_type = typename inner_types::const_functor_type;
 
-        using buffer_inner_value_type = T::duration::rep;
+        using inner_value_type_duration = inner_value_type::duration;
+        using buffer_inner_value_type = inner_value_type_duration::rep;
+        using buffer_inner_value_iterator = pointer_iterator<buffer_inner_value_type*>;
+        using buffer_inner_const_value_iterator = pointer_iterator<const buffer_inner_value_type*>;
 
         explicit timestamp_array(arrow_proxy);
 
@@ -169,8 +175,8 @@ namespace sparrow
             requires(mpl::excludes_copy_and_move_ctor_v<timestamp_array, Args...>)
         explicit timestamp_array(Args&&... args)
             : base_type(create_proxy(std::forward<Args>(args)...))
-            , m_values_layout(create_values_layout(this->get_arrow_proxy()))
             , m_timezone(get_timezone(this->get_arrow_proxy()))
+            , m_data_access(this, DATA_BUFFER_INDEX)
         {
         }
 
@@ -181,14 +187,12 @@ namespace sparrow
             std::optional<std::string_view> metadata = std::nullopt
         )
             : base_type(create_proxy(timezone, init, std::move(name), std::move(metadata)))
-            , m_values_layout(create_values_layout(this->get_arrow_proxy()))
             , m_timezone(timezone)
+            , m_data_access(this, DATA_BUFFER_INDEX)
         {
         }
 
     private:
-
-        using values_layout = primitive_array<buffer_inner_value_type>;
 
         [[nodiscard]] inner_reference value(size_type i);
         [[nodiscard]] inner_const_reference value(size_type i) const;
@@ -270,15 +274,12 @@ namespace sparrow
                                 | std::views::transform(
                                     [](const auto& v)
                                     {
-                                        return v.get_sys_time().time_since_epoch().count();
+                                        return v.get_sys_time().time_since_epoch();
                                     }
                                 );
-            const auto idx = std::distance(value_cbegin(), pos);
-            const auto values_layout_pos = m_values_layout.value_cbegin() + idx;
-            const auto ret_pos = m_values_layout.insert_values(values_layout_pos, values.begin(), values.end());
-            const auto distance = std::distance(m_values_layout.value_begin(), ret_pos);
-            detail::array_access::get_arrow_proxy(m_values_layout).update_buffers();
-            return value_begin() + distance;
+            const size_t idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
+            m_data_access.insert_values(idx, values.begin(), values.end());
+            return sparrow::next(value_begin(), idx);
         }
 
         value_iterator erase_values(const_value_iterator pos, size_type count);
@@ -286,12 +287,10 @@ namespace sparrow
         void assign(const T& rhs, size_type index);
         void assign(T&& rhs, size_type index);
 
-        [[nodiscard]] static values_layout create_values_layout(arrow_proxy& proxy);
-
         [[nodiscard]] static const date::time_zone* get_timezone(const arrow_proxy& proxy);
 
-        values_layout m_values_layout;
         const date::time_zone* m_timezone;
+        details::trivial_copyable_data_access<inner_value_type_duration, self_type> m_data_access;
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend class temporal_reference<self_type>;
@@ -303,13 +302,6 @@ namespace sparrow
     };
 
     template <timestamp_type T>
-    auto timestamp_array<T>::create_values_layout(arrow_proxy& proxy) -> values_layout
-    {
-        arrow_proxy arr_proxy{&proxy.array(), &proxy.schema()};
-        return values_layout{std::move(arr_proxy)};
-    }
-
-    template <timestamp_type T>
     const date::time_zone* timestamp_array<T>::get_timezone(const arrow_proxy& proxy)
     {
         const std::string_view timezone_string = proxy.format().substr(4);
@@ -319,8 +311,8 @@ namespace sparrow
     template <timestamp_type T>
     timestamp_array<T>::timestamp_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
-        , m_values_layout(create_values_layout(proxy))
         , m_timezone(get_timezone(this->get_arrow_proxy()))
+        , m_data_access(this, DATA_BUFFER_INDEX)
     {
     }
 
@@ -475,14 +467,14 @@ namespace sparrow
     void timestamp_array<T>::assign(const T& rhs, size_type index)
     {
         SPARROW_ASSERT_TRUE(index < this->size());
-        m_values_layout[index] = rhs.get_sys_time().time_since_epoch().count();
+        m_data_access.value(index) = rhs.get_sys_time().time_since_epoch();
     }
 
     template <timestamp_type T>
     void timestamp_array<T>::assign(T&& rhs, size_type index)
     {
         SPARROW_ASSERT_TRUE(index < this->size());
-        m_values_layout[index] = rhs.get_sys_time().time_since_epoch().count();
+        m_data_access.value(index) = rhs.get_sys_time().time_since_epoch();
     }
 
     template <timestamp_type T>
@@ -496,9 +488,9 @@ namespace sparrow
     auto timestamp_array<T>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
-        const auto& val = m_values_layout.value(i);
+        const auto& val = m_data_access.value(i);
         using time_duration = typename T::duration;
-        const auto sys_time = std::chrono::sys_time<time_duration>{time_duration{val}};
+        const auto sys_time = std::chrono::sys_time<time_duration>{val};
         return T{m_timezone, sys_time};
     }
 
@@ -529,35 +521,25 @@ namespace sparrow
     template <timestamp_type T>
     void timestamp_array<T>::resize_values(size_type new_length, inner_value_type value)
     {
-        const int64_t value_to_insert = value.get_sys_time().time_since_epoch().count();
-        m_values_layout.resize_values(new_length, value_to_insert);
-        detail::array_access::get_arrow_proxy(m_values_layout).update_buffers();
+        m_data_access.resize_values(new_length, value.get_sys_time().time_since_epoch());
     }
 
     template <timestamp_type T>
     auto timestamp_array<T>::insert_value(const_value_iterator pos, inner_value_type value, size_type count)
         -> value_iterator
     {
-        const auto idx = std::distance(value_cbegin(), pos);
-        const auto values_layout_pos = m_values_layout.value_cbegin() + idx;
-        const int64_t value_to_insert = value.get_sys_time().time_since_epoch().count();
-        const auto values_layout_ret = m_values_layout.insert_value(values_layout_pos, value_to_insert, count);
-        detail::array_access::get_arrow_proxy(m_values_layout).update_buffers();
-        return value_iterator(
-            functor_type(this),
-            static_cast<size_t>(std::distance(m_values_layout.value_begin(), values_layout_ret))
-        );
+        SPARROW_ASSERT_TRUE(pos <= value_cend());
+        const size_t idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
+        m_data_access.insert_value(idx, value.get_sys_time().time_since_epoch(), count);
+        return value_iterator(functor_type(this), idx);
     }
 
     template <timestamp_type T>
     auto timestamp_array<T>::erase_values(const_value_iterator pos, size_type count) -> value_iterator
     {
-        const auto idx = std::distance(value_cbegin(), pos);
-        const auto values_layout_pos = m_values_layout.value_cbegin() + idx;
-        const auto values_layout_ret = m_values_layout.erase_values(values_layout_pos, count);
-        return value_iterator(
-            functor_type(this),
-            static_cast<size_t>(std::distance(m_values_layout.value_begin(), values_layout_ret))
-        );
+        SPARROW_ASSERT_TRUE(pos < value_cend());
+        const size_t idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
+        m_data_access.erase_values(idx, count);
+        return value_iterator(functor_type(this), idx);
     }
 }
