@@ -74,7 +74,8 @@ namespace sparrow
         explicit array_trivial_copyable_type_base_impl(arrow_proxy);
 
         /**
-         * Constructs a primitive array with the passed range of values and an optional bitmap.
+         * Constructs an array of trivial copyable type, with the passed range of values and an optional
+         * bitmap.
          *
          * The first argument can be any range of values as long as its value type is convertible
          * to \c T.
@@ -131,7 +132,6 @@ namespace sparrow
             base_type::operator=(std::move(rhs));
             return *this;
         }
-
 
     protected:
 
