@@ -185,7 +185,7 @@ set(SPARROW_HEADERS
     # layout
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_base.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_helper.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_trivial_copyable_type_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_trivial_copyable.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_wrapper.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dispatch.hpp
@@ -204,6 +204,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_concepts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_reference.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/trivial_copyable_data_access.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_reference.hpp

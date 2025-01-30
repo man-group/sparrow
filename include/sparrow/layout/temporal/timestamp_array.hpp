@@ -23,7 +23,7 @@
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/temporal/timestamp_concepts.hpp"
 #include "sparrow/layout/temporal/timestamp_reference.hpp"
-#include "sparrow/layout/trivial_copyable_type_data_access.hpp"
+#include "sparrow/layout/trivial_copyable_data_access.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
