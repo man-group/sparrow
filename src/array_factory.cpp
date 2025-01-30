@@ -27,7 +27,6 @@
 #include "sparrow/layout/union_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 
-
 namespace sparrow
 {
     namespace detail
