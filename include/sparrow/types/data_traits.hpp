@@ -116,7 +116,7 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::DURATION_SECONDS;
         using value_type = std::chrono::seconds;
-        using const_reference = std::chrono::seconds;
+        using const_reference = const std::chrono::seconds&;
     };
 
     template <>
@@ -124,7 +124,7 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::DURATION_MILLISECONDS;
         using value_type = std::chrono::milliseconds;
-        using const_reference = std::chrono::milliseconds;
+        using const_reference = const std::chrono::milliseconds&;
     };
 
     template <>
@@ -132,7 +132,7 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::DURATION_MICROSECONDS;
         using value_type = std::chrono::microseconds;
-        using const_reference = std::chrono::microseconds;
+        using const_reference = const std::chrono::microseconds&;
     };
 
     template <>
@@ -140,7 +140,7 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::DURATION_NANOSECONDS;
         using value_type = std::chrono::nanoseconds;
-        using const_reference = std::chrono::nanoseconds;
+        using const_reference = const std::chrono::nanoseconds&;
     };
 
     template <>

@@ -118,6 +118,12 @@ namespace sparrow
                                                  && std::is_scalar_v<ensured_range_value_t<T>>;
 
         template <typename T>
+        concept translates_to_duration_layout = std::ranges::input_range<T>
+                                                && mpl::any_of(
+                                                    duration_types_t{},
+                                                    mpl::predicate::same_as<ensured_range_value_t<T>>{}
+                                                );
+        template <typename T>
         concept translates_to_timestamp_layout = std::ranges::input_range<T>
                                                  && mpl::is_type_instance_of_v<ensured_range_value_t<T>, timestamp>;
 
@@ -173,6 +179,18 @@ namespace sparrow
         struct builder<T, dont_enforce_layout, OPTION_FLAGS>
         {
             using type = sparrow::primitive_array<ensured_range_value_t<T>>;
+
+            template <class U>
+            static type create(U&& t)
+            {
+                return type(std::forward<U>(t));
+            }
+        };
+
+        template <translates_to_duration_layout T, class OPTION_FLAGS>
+        struct builder<T, dont_enforce_layout, OPTION_FLAGS>
+        {
+            using type = sparrow::duration_array<ensured_range_value_t<T>>;
 
             template <class U>
             static type create(U&& t)

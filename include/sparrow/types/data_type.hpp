@@ -288,6 +288,22 @@ namespace sparrow
             {
                 return data_type::TIMESTAMP_NANOSECONDS;
             }
+            else if (format == "tDs")
+            {
+                return data_type::DURATION_SECONDS;
+            }
+            else if (format == "tDm")
+            {
+                return data_type::DURATION_MILLISECONDS;
+            }
+            else if (format == "tDu")
+            {
+                return data_type::DURATION_MICROSECONDS;
+            }
+            else if (format == "tDn")
+            {
+                return data_type::DURATION_NANOSECONDS;
+            }
         }
         else if (format == "+l")
         {
@@ -474,6 +490,14 @@ namespace sparrow
                 return "tsu:";
             case data_type::TIMESTAMP_NANOSECONDS:
                 return "tsn:";
+            case data_type::DURATION_SECONDS:
+                return "tDs";
+            case data_type::DURATION_MILLISECONDS:
+                return "tDm";
+            case data_type::DURATION_MICROSECONDS:
+                return "tDu";
+            case data_type::DURATION_NANOSECONDS:
+                return "tDn";
             case data_type::LIST:
                 return "+l";
             case data_type::LARGE_LIST:
@@ -794,13 +818,13 @@ namespace std
                     case TIMESTAMP_NANOSECONDS:
                         return "Timestamp nanoseconds";
                     case DURATION_SECONDS:
-                        return "Seconds";
+                        return "Duration seconds";
                     case DURATION_MILLISECONDS:
-                        return "Milliseconds";
+                        return "Duration milliseconds";
                     case DURATION_MICROSECONDS:
-                        return "Microseconds";
+                        return "Duration microseconds";
                     case DURATION_NANOSECONDS:
-                        return "Nanoseconds";
+                        return "Duration nanoseconds";
                     case LIST:
                         return "List";
                     case LARGE_LIST:

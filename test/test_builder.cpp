@@ -76,6 +76,21 @@ namespace sparrow
             }
         }
 
+        using duration_testing_types = mpl::rename<duration_types_t, std::tuple>;
+
+        TEST_CASE_TEMPLATE_DEFINE("duration-layout", T, duration_array_id)
+        {
+            const std::vector<nt<T>> input_values{T(1), T(2), sparrow::nullval, T(4), T(5)};
+            auto arr = sparrow::build(input_values);
+            test::generic_consistency_test(arr);
+            REQUIRE_EQ(arr.size(), input_values.size());
+            for (size_t i = 0; i < arr.size(); ++i)
+            {
+                CHECK_EQ(arr[i], input_values[i]);
+            }
+        }
+        TEST_CASE_TEMPLATE_APPLY(duration_array_id, duration_testing_types);
+
         TEST_CASE("list-layout")
         {
             // list[float]
