@@ -22,6 +22,83 @@
 
 #include "external_array_data_creation.hpp"
 
+namespace test
+{
+    using buffer_type = sparrow::buffer<uint8_t>;
+    using buffer_list = std::vector<buffer_type>;
+
+    namespace detail
+    {
+        static constexpr std::size_t number_children = 4;
+
+        inline buffer_list get_test_buffer_list0()
+        {
+            buffer_list res = {
+                buffer_type({0xF3, 0xFF}),
+                buffer_type({0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
+            };
+            return res;
+        }
+
+        inline buffer_list get_test_buffer_list1()
+        {
+            buffer_list res = {
+                buffer_type({0xF3}),
+                buffer_type({9, 8, 7, 6, 5})
+            };
+            return res;
+        }
+    }
+
+    inline ArrowArray make_arrow_array(bool with_children)
+    {
+        ArrowArray res;
+        if (with_children)
+        {
+            auto nb_children = detail::number_children;
+            auto children = new ArrowArray*[nb_children];
+            for (std::size_t i = 0; i < nb_children; ++i)
+            {
+                children[i] = new ArrowArray(make_arrow_array(false));
+            }
+            auto dict = new ArrowArray(make_arrow_array(false));
+            sparrow::fill_arrow_array(res, 5, 2, 0, detail::get_test_buffer_list1(), nb_children, children, dict);
+        }
+        else
+        {
+            sparrow::fill_arrow_array(res, 10, 2, 0, detail::get_test_buffer_list0(), 0, nullptr, nullptr);
+        }
+        return res;
+    }
+
+    inline ArrowSchema make_arrow_schema(bool with_children)
+    {
+        using namespace std::literals;
+        ArrowSchema res;
+        if (with_children)
+        {
+            ArrowSchema** children = new ArrowSchema*[detail::number_children];
+            auto nb_children = static_cast<int64_t>(detail::number_children);
+            for (size_t i = 0; i < detail::number_children; ++i)
+            {
+                children[i] = new ArrowSchema(make_arrow_schema(false));
+            }
+            auto dict = new ArrowSchema(make_arrow_schema(false));
+            sparrow::fill_arrow_schema(res, "c"sv, "with_children"sv, "meta1"sv, std::nullopt, nb_children, children, dict);
+        }
+        else
+        {
+            sparrow::fill_arrow_schema(res, "c"sv, "no_children"sv, "meta0"sv, std::nullopt, 0, nullptr, nullptr);
+        }
+        return res;
+    }
+
+    inline sparrow::arrow_array_and_schema make_arrow_schema_and_array(bool with_children)
+    {
+        return { make_arrow_array(with_children), make_arrow_schema(with_children) };
+    }
+}
+
 inline std::pair<ArrowArray, ArrowSchema> make_external_arrow_schema_and_array()
 {
     std::pair<ArrowArray, ArrowSchema> pair;
@@ -31,41 +108,3 @@ inline std::pair<ArrowArray, ArrowSchema> make_external_arrow_schema_and_array()
     return pair;
 }
 
-namespace detail
-{
-    inline void fill_sparrow_array_schema(ArrowArray& array, ArrowSchema& schema)
-    {
-        using namespace std::literals;
-        sparrow::fill_arrow_schema(
-            schema,
-            sparrow::data_type_to_format(sparrow::data_type::UINT8),
-            "test"sv,
-            "test metadata"sv,
-            std::nullopt,
-            0,
-            nullptr,
-            nullptr
-        );
-        std::vector<sparrow::buffer<std::uint8_t>> buffers_dummy = {
-            sparrow::buffer<std::uint8_t>({0xF3, 0xFF}),
-            sparrow::buffer<std::uint8_t>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
-        };
-        sparrow::fill_arrow_array(array, 10, 2, 0, buffers_dummy, 0, nullptr, nullptr);
-    }
-}
-
-inline sparrow::arrow_array_and_schema_pointers make_sparrow_arrow_schema_and_array_pointers()
-{
-    ArrowArray* array = new ArrowArray{};
-    ArrowSchema* schema = new ArrowSchema{};
-    detail::fill_sparrow_array_schema(*array, *schema);
-    return {array, schema};
-}
-
-inline sparrow::arrow_array_and_schema make_sparrow_arrow_schema_and_array()
-{
-    ArrowArray array;
-    ArrowSchema schema;
-    detail::fill_sparrow_array_schema(array, schema);
-    return {std::move(array), std::move(schema)};
-}

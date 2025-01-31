@@ -19,6 +19,7 @@
 
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 
+#include "arrow_array_schema_creation.hpp"
 #include "doctest/doctest.h"
 
 
@@ -57,6 +58,17 @@ void compare_arrow_schema(const ArrowSchema& schema, const ArrowSchema& schema_c
     {
         CHECK_EQ(schema_copy.dictionary, nullptr);
     }
+}
+
+void check_empty(ArrowSchema& sch)
+{
+    CHECK_EQ(std::strcmp(sch.format, "n"), 0);
+    CHECK_EQ(std::strcmp(sch.name, ""), 0);
+    CHECK_EQ(std::strcmp(sch.metadata, ""), 0);
+    CHECK_EQ(sch.flags, 0);
+    CHECK_EQ(sch.n_children, 0);
+    CHECK_EQ(sch.children, nullptr);
+    CHECK_EQ(sch.dictionary, nullptr);
 }
 
 TEST_SUITE("C Data Interface")
@@ -235,6 +247,33 @@ TEST_SUITE("C Data Interface")
             const auto schema_copy = sparrow::copy_schema(schema);
 
             compare_arrow_schema(schema, schema_copy);
+        }
+        
+        SUBCASE("swap_schema")
+        {
+            auto schema0 = test::make_arrow_schema(true);
+            auto schema0_bkup = sparrow::copy_schema(schema0);
+
+            auto schema1 = test::make_arrow_schema(false);
+            auto schema1_bkup = sparrow::copy_schema(schema1);
+            
+            sparrow::swap(schema0, schema1);
+            compare_arrow_schema(schema0, schema1_bkup);
+            compare_arrow_schema(schema1, schema0_bkup);
+        }
+
+        SUBCASE("move_schema")
+        {
+            auto src_schema = test::make_arrow_schema(true);
+            auto control = sparrow::copy_schema(src_schema);
+            
+            auto dst_schema = sparrow::move_schema(std::move(src_schema));
+            check_empty(src_schema);
+            compare_arrow_schema(dst_schema, control);
+
+            auto dst2_schema = sparrow::move_schema(dst_schema);
+            check_empty(dst_schema);
+            compare_arrow_schema(dst2_schema, control);
         }
 
 #if defined(__cpp_lib_format)

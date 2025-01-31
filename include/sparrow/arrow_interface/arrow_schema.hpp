@@ -148,6 +148,17 @@ namespace sparrow
         return schema;
     };
 
+    inline ArrowSchema make_empty_arrow_schema()
+    {
+        return make_arrow_schema(std::string_view("n"), "", "", std::nullopt, 0, nullptr, nullptr);
+    }
+
+    /**
+     * Swaps the contents of the two ArrowSchema objects.
+     */
+    SPARROW_API void
+    swap(ArrowSchema& lhs, ArrowSchema& rhs);
+
     /**
      * Fills the target `ArrowSchema` with a deep copy of the data from the source `ArrowSchema`.
      */
@@ -165,6 +176,26 @@ namespace sparrow
         ArrowSchema target{};
         copy_schema(source, target);
         return target;
+    }
+
+    /**
+     * Moves the content of source into a stack-allocated array, and
+     * reset the source to an empty ArrowSchema.
+     */
+    inline ArrowSchema move_schema(ArrowSchema&& source)
+    {
+        ArrowSchema target = make_empty_arrow_schema();
+        swap(source, target);
+        return target;
+    }
+
+    /**
+     * Moves the content of source into a stack-allocated array, and
+     * reset the source to an empty ArrowSchema.
+     */
+    inline ArrowSchema move_schema(ArrowSchema& source)
+    {
+        return move_schema(std::move(source));
     }
 }
 
@@ -192,7 +223,7 @@ struct std::formatter<ArrowSchema>
 
         return std::format_to(
             ctx.out(),
-            "ArrowArray - ptr address: {}\n- format: {}\n- name: {}\n- metadata: {}\n- flags: {}\n- n_children: {}\n- children: {}\n- dictionary: {}\n- release: {}\n- private_data: {}\n",
+            "ArrowSchema - ptr address: {}\n- format: {}\n- name: {}\n- metadata: {}\n- flags: {}\n- n_children: {}\n- children: {}\n- dictionary: {}\n- release: {}\n- private_data: {}\n",
             static_cast<const void*>(&obj),
             format,
             name,
