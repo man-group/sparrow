@@ -52,10 +52,9 @@ namespace sparrow
         return get_arrow_proxy().name();
     }
 
-    void array::set_name(std::string_view name)
+    void array::set_name(std::optional<std::string_view> name)
     {
-        arrow_proxy& proxy = detail::array_access::get_arrow_proxy(*this);
-        proxy.set_name(name);
+        get_arrow_proxy().set_name(name);
     }
 
     bool array::empty() const
