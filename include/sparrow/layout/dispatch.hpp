@@ -33,7 +33,6 @@
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 
-
 namespace sparrow
 {
     template <class F>
