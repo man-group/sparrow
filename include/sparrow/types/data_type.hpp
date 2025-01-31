@@ -16,6 +16,9 @@
 
 #include <chrono>
 #include <version>
+
+#include "sparrow/layout/temporal/interval_types.hpp"
+
 #if defined(SPARROW_USE_DATE_POLYFILL)
 
 #    include <date/tz.h>
@@ -193,6 +196,9 @@ namespace sparrow
         DURATION_MILLISECONDS,
         DURATION_MICROSECONDS,
         DURATION_NANOSECONDS,
+        INTERVAL_MONTHS,
+        INTERVAL_DAYS_TIME,
+        INTERVAL_MONTHS_DAYS_NANOSECONDS
     };
 
     // helper function to check if a string is all digits
@@ -303,6 +309,18 @@ namespace sparrow
             else if (format == "tDn")
             {
                 return data_type::DURATION_NANOSECONDS;
+            }
+            else if (format == "tiM")
+            {
+                return data_type::INTERVAL_MONTHS;
+            }
+            else if (format == "tiD")
+            {
+                return data_type::INTERVAL_DAYS_TIME;
+            }
+            else if (format == "tin")
+            {
+                return data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS;
             }
         }
         else if (format == "+l")
@@ -498,6 +516,12 @@ namespace sparrow
                 return "tDu";
             case data_type::DURATION_NANOSECONDS:
                 return "tDn";
+            case data_type::INTERVAL_MONTHS:
+                return "tiM";
+            case data_type::INTERVAL_DAYS_TIME:
+                return "tiD";
+            case data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS:
+                return "tin";
             case data_type::LIST:
                 return "+l";
             case data_type::LARGE_LIST:
@@ -579,6 +603,9 @@ namespace sparrow
         std::chrono::milliseconds,
         std::chrono::microseconds,
         std::chrono::nanoseconds,
+        std::chrono::months,
+        days_time_interval,
+        month_day_nanoseconds_interval,
         // TODO: add missing fundamental types here
         list_value,
         struct_value,
@@ -825,6 +852,12 @@ namespace std
                         return "Duration microseconds";
                     case DURATION_NANOSECONDS:
                         return "Duration nanoseconds";
+                    case INTERVAL_MONTHS:
+                        return "Interval months";
+                    case INTERVAL_DAYS_TIME:
+                        return "Interval days time";
+                    case INTERVAL_MONTHS_DAYS_NANOSECONDS:
+                        return "Interval months days nanoseconds";
                     case LIST:
                         return "List";
                     case LARGE_LIST:
