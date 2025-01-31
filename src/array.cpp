@@ -47,11 +47,9 @@ namespace sparrow
         return p_array->data_type();
     }
 
-    std::string_view array::name() const
+    std::optional<std::string_view> array::name() const
     {
-        ArrowSchema* schema = get_arrow_schema(const_cast<array&>(*this));
-        std::string_view res((schema->name != nullptr) ? schema->name : "");
-        return res;
+        return get_arrow_proxy().name();
     }
 
     void array::set_name(std::string_view name)
