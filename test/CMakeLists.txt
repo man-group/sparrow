@@ -136,6 +136,7 @@ else()
         test_fixed_width_binary_array.cpp
         test_format.cpp
         test_high_level_constructors.cpp
+        test_interval_array.cpp
         test_iterator.cpp
         test_list_array.cpp
         test_list_value.cpp
