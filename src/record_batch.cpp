@@ -47,7 +47,7 @@ namespace sparrow
         for (std::size_t i = 0; i < n_children; ++i)
         {
             array arr(move_array(*(struct_arr.children[i])), move_schema(*(struct_sch.children[i])));
-            m_name_list.push_back(std::string(arr.name()));
+            m_name_list.push_back(std::string(arr.name().value()));
             m_array_list.push_back(std::move(arr));
         }
         init_array_map();

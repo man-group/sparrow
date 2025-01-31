@@ -208,7 +208,7 @@ namespace sparrow
             m_name_list.begin(),
             [](const array& ar)
             {
-                return ar.name();
+                return ar.name().value();
             }
         );
         init_array_map();
