@@ -26,6 +26,7 @@
 #include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 #include "sparrow/layout/struct_layout/struct_array.hpp"
+#include "sparrow/layout/temporal/duration_array.hpp"
 #include "sparrow/layout/temporal/timestamp_array.hpp"
 #include "sparrow/layout/union_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
@@ -137,6 +138,14 @@ namespace sparrow
                     return func(unwrap_array<timestamp_array<timestamp<std::chrono::microseconds>>>(ar));
                 case data_type::TIMESTAMP_NANOSECONDS:
                     return func(unwrap_array<timestamp_array<timestamp<std::chrono::nanoseconds>>>(ar));
+                case data_type::DURATION_SECONDS:
+                    return func(unwrap_array<duration_seconds_array>(ar));
+                case data_type::DURATION_MILLISECONDS:
+                    return func(unwrap_array<duration_milliseconds_array>(ar));
+                case data_type::DURATION_MICROSECONDS:
+                    return func(unwrap_array<duration_microseconds_array>(ar));
+                case data_type::DURATION_NANOSECONDS:
+                    return func(unwrap_array<duration_nanoseconds_array>(ar));
                 default:
                     throw std::invalid_argument("array type not supported");
             }
