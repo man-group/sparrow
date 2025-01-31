@@ -196,21 +196,25 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(check_consistency());
     }
 
+    namespace detail
+    {
+        std::vector<record_batch::name_type> get_names(const std::vector<array>& array_list)
+        {
+            const auto names = array_list | std::views::transform(
+                [](const array& ar)
+                {
+                    return ar.name().value();
+                });
+            return {names.begin(), names.end()};
+        }
+    }
+
     template <std::ranges::input_range CR>
         requires std::same_as<std::ranges::range_value_t<CR>, array>
     record_batch::record_batch(CR&& columns)
-        : m_name_list(std::ranges::size(columns))
+        : m_name_list(detail::get_names(columns))
         , m_array_list(to_vector<array>(std::move(columns)))
     {
-        std::transform(
-            m_array_list.cbegin(),
-            m_array_list.cend(),
-            m_name_list.begin(),
-            [](const array& ar)
-            {
-                return ar.name().value();
-            }
-        );
         init_array_map();
         SPARROW_ASSERT_TRUE(check_consistency());
     }
