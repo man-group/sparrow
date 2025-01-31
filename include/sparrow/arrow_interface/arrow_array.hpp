@@ -141,8 +141,7 @@ namespace sparrow
 
     SPARROW_API void release_arrow_array(ArrowArray* array);
 
-    SPARROW_API sparrow::buffer_view<uint8_t>
-    get_bitmap_buffer(const ArrowArray& array);
+    SPARROW_API sparrow::buffer_view<uint8_t> get_bitmap_buffer(const ArrowArray& array);
 
     SPARROW_API std::vector<sparrow::buffer_view<uint8_t>>
     get_arrow_array_buffers(const ArrowArray& array, const ArrowSchema& schema);
@@ -150,9 +149,8 @@ namespace sparrow
     /**
      * Swaps the contents of the two ArrowArray objects.
      */
-    SPARROW_API void
-    swap(ArrowArray& lhs, ArrowArray& rhs);
-    
+    SPARROW_API void swap(ArrowArray& lhs, ArrowArray& rhs);
+
     /**
      * Fill the target ArrowArray with a deep copy of the data from the source ArrowArray.
      */

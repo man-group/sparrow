@@ -248,7 +248,7 @@ TEST_SUITE("C Data Interface")
 
             compare_arrow_schema(schema, schema_copy);
         }
-        
+
         SUBCASE("swap_schema")
         {
             auto schema0 = test::make_arrow_schema(true);
@@ -256,7 +256,7 @@ TEST_SUITE("C Data Interface")
 
             auto schema1 = test::make_arrow_schema(false);
             auto schema1_bkup = sparrow::copy_schema(schema1);
-            
+
             sparrow::swap(schema0, schema1);
             compare_arrow_schema(schema0, schema1_bkup);
             compare_arrow_schema(schema1, schema0_bkup);
@@ -266,7 +266,7 @@ TEST_SUITE("C Data Interface")
         {
             auto src_schema = test::make_arrow_schema(true);
             auto control = sparrow::copy_schema(src_schema);
-            
+
             auto dst_schema = sparrow::move_schema(std::move(src_schema));
             check_empty(src_schema);
             compare_arrow_schema(dst_schema, control);

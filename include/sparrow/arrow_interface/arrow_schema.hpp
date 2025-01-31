@@ -156,8 +156,7 @@ namespace sparrow
     /**
      * Swaps the contents of the two ArrowSchema objects.
      */
-    SPARROW_API void
-    swap(ArrowSchema& lhs, ArrowSchema& rhs);
+    SPARROW_API void swap(ArrowSchema& lhs, ArrowSchema& rhs);
 
     /**
      * Fills the target `ArrowSchema` with a deep copy of the data from the source `ArrowSchema`.

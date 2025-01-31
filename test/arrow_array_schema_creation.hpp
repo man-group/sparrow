@@ -33,19 +33,13 @@ namespace test
 
         inline buffer_list get_test_buffer_list0()
         {
-            buffer_list res = {
-                buffer_type({0xF3, 0xFF}),
-                buffer_type({0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
-            };
+            buffer_list res = {buffer_type({0xF3, 0xFF}), buffer_type({0, 1, 2, 3, 4, 5, 6, 7, 8, 9})};
             return res;
         }
 
         inline buffer_list get_test_buffer_list1()
         {
-            buffer_list res = {
-                buffer_type({0xF3}),
-                buffer_type({9, 8, 7, 6, 5})
-            };
+            buffer_list res = {buffer_type({0xF3}), buffer_type({9, 8, 7, 6, 5})};
             return res;
         }
     }
@@ -84,7 +78,16 @@ namespace test
                 children[i] = new ArrowSchema(make_arrow_schema(false));
             }
             auto dict = new ArrowSchema(make_arrow_schema(false));
-            sparrow::fill_arrow_schema(res, "c"sv, "with_children"sv, "meta1"sv, std::nullopt, nb_children, children, dict);
+            sparrow::fill_arrow_schema(
+                res,
+                "c"sv,
+                "with_children"sv,
+                "meta1"sv,
+                std::nullopt,
+                nb_children,
+                children,
+                dict
+            );
         }
         else
         {
@@ -95,7 +98,7 @@ namespace test
 
     inline sparrow::arrow_array_and_schema make_arrow_schema_and_array(bool with_children)
     {
-        return { make_arrow_array(with_children), make_arrow_schema(with_children) };
+        return {make_arrow_array(with_children), make_arrow_schema(with_children)};
     }
 }
 
@@ -107,4 +110,3 @@ inline std::pair<ArrowArray, ArrowSchema> make_external_arrow_schema_and_array()
     sparrow::test::fill_external_schema_and_array<uint32_t>(pair.second, pair.first, size, offset, {2, 3});
     return pair;
 }
-

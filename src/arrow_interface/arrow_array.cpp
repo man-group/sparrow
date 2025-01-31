@@ -47,15 +47,14 @@ namespace sparrow
         return const_cast<T*>(static_cast<const T*>(ptr));
     }
 
-    sparrow::buffer_view<uint8_t>
-    get_bitmap_buffer(const ArrowArray& array)
+    sparrow::buffer_view<uint8_t> get_bitmap_buffer(const ArrowArray& array)
     {
         using buffer_view_type = sparrow::buffer_view<uint8_t>;
         const auto size = static_cast<size_t>(array.length + array.offset);
         const auto buffer_size = static_cast<size_t>(size + 7) / 8;
         auto typed_buffer_ptr = static_const_ptr_cast<uint8_t>(array.buffers[0]);
         return typed_buffer_ptr != nullptr ? buffer_view_type(typed_buffer_ptr, buffer_size)
-                                               : buffer_view_type(nullptr, 0);
+                                           : buffer_view_type(nullptr, 0);
     }
 
     std::vector<sparrow::buffer_view<uint8_t>>

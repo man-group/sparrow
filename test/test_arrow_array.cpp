@@ -17,8 +17,8 @@
 #include <ranges>
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
-#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/c_interface.hpp"
 
 #include "arrow_array_schema_creation.hpp"
@@ -109,7 +109,7 @@ TEST_SUITE("C Data Interface")
         {
             auto [src_array, src_schema] = test::make_arrow_schema_and_array(true);
             auto control = sparrow::copy_array(src_array, src_schema);
-            
+
             auto dst_array = sparrow::move_array(std::move(src_array));
             check_empty(src_array);
             check_equal(dst_array, control);
