@@ -47,6 +47,16 @@ namespace sparrow
         return p_array->data_type();
     }
 
+    std::optional<std::string_view> array::name() const
+    {
+        return get_arrow_proxy().name();
+    }
+
+    void array::set_name(std::optional<std::string_view> name)
+    {
+        get_arrow_proxy().set_name(name);
+    }
+
     bool array::empty() const
     {
         return size() == size_type(0);
