@@ -16,6 +16,7 @@
 
 #include "sparrow/layout/array_trivial_copyable.hpp"
 #include "sparrow/layout/temporal/interval_types.hpp"
+#include "sparrow/types/data_traits.hpp"
 
 // tiM : std::chrono::months
 // tiD : sparrow::day_time_interval

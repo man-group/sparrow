@@ -30,7 +30,7 @@ namespace sparrow
     };
     SPARROW_PACKED_STRUCT_END;
 
-    bool operator==(const days_time_interval& lhs, const days_time_interval& rhs)
+    inline bool operator==(const days_time_interval& lhs, const days_time_interval& rhs)
     {
         return lhs.days == rhs.days && lhs.time == rhs.time;
     }
@@ -43,7 +43,7 @@ namespace sparrow
     };
     SPARROW_PACKED_STRUCT_END;
 
-    bool operator==(const month_day_nanoseconds_interval& lhs, const month_day_nanoseconds_interval& rhs)
+    inline bool operator==(const month_day_nanoseconds_interval& lhs, const month_day_nanoseconds_interval& rhs)
     {
         return lhs.months == rhs.months && lhs.days == rhs.days && lhs.nanoseconds == rhs.nanoseconds;
     }
