@@ -59,8 +59,9 @@ namespace sparrow
 
         L* p_layout = nullptr;
         size_type m_index = size_type(0);
-
+#if defined(__cpp_lib_format)
         friend std::formatter<timestamp_reference<L>>;
+#endif
     };
 }
 
