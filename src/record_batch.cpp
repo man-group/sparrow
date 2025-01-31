@@ -35,6 +35,25 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(check_consistency());
     }
 
+    record_batch::record_batch(struct_array&& arr)
+    {
+        SPARROW_ASSERT_TRUE(owns_arrow_array(arr));
+        SPARROW_ASSERT_TRUE(owns_arrow_schema(arr));
+
+        auto [struct_arr, struct_sch] = extract_arrow_structures(std::move(arr));
+        auto n_children = static_cast<std::size_t>(struct_arr.n_children);
+        m_name_list.reserve(n_children);
+        m_array_list.reserve(n_children);
+        for (std::size_t i = 0; i < n_children; ++i)
+        {
+            array arr(move_array(*(struct_arr.children[i])), move_schema(*(struct_sch.children[i])));
+            m_name_list.push_back(std::string(arr.name()));
+            m_array_list.push_back(std::move(arr));
+        }
+        init_array_map();
+        SPARROW_ASSERT_TRUE(check_consistency());
+    }
+
     record_batch::record_batch(const record_batch& rhs)
         : m_name_list(rhs.m_name_list)
         , m_array_list(rhs.m_array_list)
@@ -97,6 +116,16 @@ namespace sparrow
         return std::ranges::ref_view(m_array_list);
     }
 
+    struct_array record_batch::extract_struct_array()
+    {
+        for (std::size_t i = 0; i < m_name_list.size(); ++i)
+        {
+            m_array_list[i].set_name(m_name_list[i]);
+        }
+        m_array_map.clear();
+        return struct_array(std::move(m_array_list));
+    }
+
     void record_batch::init_array_map()
     {
         m_array_map.clear();
@@ -113,6 +142,9 @@ namespace sparrow
             m_name_list.size() == m_array_list.size(),
             "The size of the names and of the array list must be the same"
         );
+
+        auto iter = std::find(m_name_list.begin(), m_name_list.end(), "");
+        SPARROW_ASSERT(iter == m_name_list.end(), "A column can not have an empty name");
 
         const auto unique_names = std::unordered_set<name_type>(m_name_list.begin(), m_name_list.end());
         SPARROW_ASSERT(unique_names.size() == m_name_list.size(), "The names of the columns must be unique");

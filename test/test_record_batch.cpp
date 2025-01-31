@@ -30,10 +30,11 @@ namespace sparrow
                 {
                     return static_cast<std::uint16_t>(i);
                 }
-            )
+            ),
+            "column0"
         );
-        primitive_array<std::int32_t> pr1(std::ranges::iota_view{std::int32_t(4), 4 + std::int32_t(data_size)});
-        primitive_array<std::int32_t> pr2(std::ranges::iota_view{std::int32_t(2), 2 + std::int32_t(data_size)});
+        primitive_array<std::int32_t> pr1(std::ranges::iota_view{std::int32_t(4), 4 + std::int32_t(data_size)}, "column1");
+        primitive_array<std::int32_t> pr2(std::ranges::iota_view{std::int32_t(2), 2 + std::int32_t(data_size)}, "column2");
 
         std::vector<array> arr_list = {array(std::move(pr0)), array(std::move(pr1)), array(std::move(pr2))};
         return arr_list;
@@ -70,6 +71,21 @@ namespace sparrow
                 record_batch record = {{"first", col_list[0]}, {"second", col_list[1]}, {"third", col_list[2]}};
                 CHECK_EQ(record.nb_columns(), 3u);
                 CHECK_EQ(record.nb_rows(), 10u);
+            }
+
+            SUBCASE("from column list")
+            {
+                record_batch record(make_array_list(col_size));
+                CHECK_EQ(record.nb_columns(), 3u);
+                CHECK_EQ(record.nb_rows(), 10u);
+                CHECK_FALSE(std::ranges::equal(record.names(), make_name_list()));
+            }
+
+            SUBCASE("from struct array")
+            {
+                record_batch record0(struct_array(make_array_list(col_size)));
+                record_batch record1(make_array_list(col_size));
+                CHECK_EQ(record0, record1);
             }
         }
 
@@ -162,6 +178,16 @@ namespace sparrow
 
             bool res = std::ranges::equal(columns, col_list);
             CHECK(res);
+        }
+
+        TEST_CASE("extract_struct_array")
+        {
+            struct_array arr(make_array_list(col_size));
+            struct_array control(arr);
+
+            record_batch r(std::move(arr));
+            auto extr = r.extract_struct_array();
+            CHECK_EQ(extr, control);
         }
 
 #if defined(__cpp_lib_format)
