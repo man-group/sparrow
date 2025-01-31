@@ -25,16 +25,22 @@ namespace sparrow
     {
         primitive_array<std::uint16_t> pr0(
             std::ranges::iota_view{std::size_t(0), std::size_t(data_size)}
-            | std::views::transform(
-                [](auto i)
-                {
-                    return static_cast<std::uint16_t>(i);
-                }
-            ),
+                | std::views::transform(
+                    [](auto i)
+                    {
+                        return static_cast<std::uint16_t>(i);
+                    }
+                ),
             "column0"
         );
-        primitive_array<std::int32_t> pr1(std::ranges::iota_view{std::int32_t(4), 4 + std::int32_t(data_size)}, "column1");
-        primitive_array<std::int32_t> pr2(std::ranges::iota_view{std::int32_t(2), 2 + std::int32_t(data_size)}, "column2");
+        primitive_array<std::int32_t> pr1(
+            std::ranges::iota_view{std::int32_t(4), 4 + std::int32_t(data_size)},
+            "column1"
+        );
+        primitive_array<std::int32_t> pr2(
+            std::ranges::iota_view{std::int32_t(2), 2 + std::int32_t(data_size)},
+            "column2"
+        );
 
         std::vector<array> arr_list = {array(std::move(pr0)), array(std::move(pr1)), array(std::move(pr2))};
         return arr_list;

@@ -71,7 +71,7 @@ namespace sparrow
          * must have a name: if \c arr is an array, then \c arr.name(), must
          * not return an empty string.
          *
-         * @param comumns An input range of arrays  
+         * @param comumns An input range of arrays
          */
         template <std::ranges::input_range CR>
             requires std::same_as<std::ranges::range_value_t<CR>, array>
@@ -196,14 +196,21 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(check_consistency());
     }
 
-    template  <std::ranges::input_range CR>
+    template <std::ranges::input_range CR>
         requires std::same_as<std::ranges::range_value_t<CR>, array>
     record_batch::record_batch(CR&& columns)
         : m_name_list(std::ranges::size(columns))
         , m_array_list(to_vector<array>(std::move(columns)))
     {
-        std::transform(m_array_list.cbegin(), m_array_list.cend(), m_name_list.begin(),
-                [](const array& ar) { return ar.name(); });
+        std::transform(
+            m_array_list.cbegin(),
+            m_array_list.cend(),
+            m_name_list.begin(),
+            [](const array& ar)
+            {
+                return ar.name();
+            }
+        );
         init_array_map();
         SPARROW_ASSERT_TRUE(check_consistency());
     }
