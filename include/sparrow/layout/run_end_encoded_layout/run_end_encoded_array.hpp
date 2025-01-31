@@ -155,4 +155,10 @@ struct std::formatter<sparrow::run_end_encoded_array>
     }
 };
 
+inline std::ostream& operator<<(std::ostream& os, const sparrow::run_end_encoded_array& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
+
 #endif
