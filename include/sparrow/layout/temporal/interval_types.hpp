@@ -19,31 +19,33 @@
 #    include <format>
 #endif
 
-#include "sparrow/utils/packing.hpp"
-
 namespace sparrow
 {
-    SPARROW_PACKED_STRUCT struct days_time_interval
+#pragma pack(push, 1)
+
+    struct days_time_interval
     {
         std::chrono::days days;
         std::chrono::duration<int32_t, std::milli> time;
     };
 
-    SPARROW_PACKED_STRUCT_END;
+#pragma pack(pop)
 
     inline bool operator==(const days_time_interval& lhs, const days_time_interval& rhs)
     {
         return lhs.days == rhs.days && lhs.time == rhs.time;
     }
 
-    SPARROW_PACKED_STRUCT struct month_day_nanoseconds_interval
+#pragma pack(push, 1)
+
+    struct month_day_nanoseconds_interval
     {
         std::chrono::months months;
         std::chrono::days days;
         std::chrono::nanoseconds nanoseconds;
     };
 
-    SPARROW_PACKED_STRUCT_END;
+#pragma pack(pop)
 
     inline bool operator==(const month_day_nanoseconds_interval& lhs, const month_day_nanoseconds_interval& rhs)
     {
