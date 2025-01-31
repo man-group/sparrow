@@ -67,7 +67,7 @@ namespace std
         auto format(const sparrow::days_time_interval& interval, std::format_context& ctx) const
         {
             std::ostringstream oss;
-            oss << interval.days.count() << " days " << interval.time.count() << " ms";
+            oss << interval.days.count() << " days/" << interval.time.count() << " ms";
             const std::string interval_str = oss.str();
             return std::format_to(ctx.out(), "{}", interval_str);
         }
@@ -84,7 +84,7 @@ namespace std
         auto format(const sparrow::month_day_nanoseconds_interval& interval, std::format_context& ctx) const
         {
             std::ostringstream oss;
-            oss << interval.months.count() << " months " << interval.days.count() << " days "
+            oss << interval.months.count() << " months/" << interval.days.count() << " days/"
                 << interval.nanoseconds.count() << " ns";
             const std::string interval_str = oss.str();
             return std::format_to(ctx.out(), "{}", interval_str);

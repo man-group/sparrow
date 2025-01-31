@@ -33,12 +33,12 @@ namespace sparrow
             }
             else if constexpr (std::is_same_v<T, days_time_interval>)
             {
-                values.push_back(nullable<T>(T(std::chrono::days(i), std::chrono::milliseconds(i))));
+                values.push_back(nullable<T>(T{std::chrono::days(i), std::chrono::milliseconds(i)}));
             }
             else if constexpr (std::is_same_v<T, month_day_nanoseconds_interval>)
             {
                 values.push_back(
-                    nullable<T>(T(std::chrono::months(i), std::chrono::days(i), std::chrono::nanoseconds(i)))
+                    nullable<T>(T{std::chrono::months(i), std::chrono::days(i), std::chrono::nanoseconds(i)})
                 );
             }
         }
@@ -235,16 +235,16 @@ namespace sparrow
             {
                 if constexpr (std::is_same_v<T, std::chrono::months>)
                 {
-                    return make_nullable<T>(T(99));
+                    return make_nullable<T>(T{99});
                 }
                 else if constexpr (std::is_same_v<T, days_time_interval>)
                 {
-                    return make_nullable<T>(T(std::chrono::days(99), std::chrono::milliseconds(99)));
+                    return make_nullable<T>(T{std::chrono::days(99), std::chrono::milliseconds(99)});
                 }
                 else if constexpr (std::is_same_v<T, month_day_nanoseconds_interval>)
                 {
                     return make_nullable<T>(
-                        T(std::chrono::months(99), std::chrono::days(99), std::chrono::nanoseconds(99))
+                        T{std::chrono::months(99), std::chrono::days(99), std::chrono::nanoseconds(99)}
                     );
                 }
             }();
@@ -557,6 +557,30 @@ namespace sparrow
                     CHECK_EQ(ar[i], input_values[i]);
                 }
             }
+
+#if defined(__cpp_lib_format)
+            SUBCASE("format")
+            {
+                const interval_array<T> ar(input_values);
+                const std::string formatted = std::format("{}", ar);
+                const std::string expected = []()
+                {
+                    if constexpr (std::is_same_v<T, std::chrono::months>)
+                    {
+                        return "Interval months [name=nullptr | size=10] <0[2629746]s, 1[2629746]s, 2[2629746]s, 3[2629746]s, 4[2629746]s, 5[2629746]s, 6[2629746]s, 7[2629746]s, 8[2629746]s, 9[2629746]s>";
+                    }
+                    else if constexpr (std::is_same_v<T, days_time_interval>)
+                    {
+                        return "Interval days time [name=nullptr | size=10] <0 days/0 ms, 1 days/1 ms, 2 days/2 ms, 3 days/3 ms, 4 days/4 ms, 5 days/5 ms, 6 days/6 ms, 7 days/7 ms, 8 days/8 ms, 9 days/9 ms>";
+                    }
+                    else if constexpr (std::is_same_v<T, month_day_nanoseconds_interval>)
+                    {
+                        return "Interval months days nanoseconds [name=nullptr | size=10] <0 months/0 days/0 ns, 1 months/1 days/1 ns, 2 months/2 days/2 ns, 3 months/3 days/3 ns, 4 months/4 days/4 ns, 5 months/5 days/5 ns, 6 months/6 days/6 ns, 7 months/7 days/7 ns, 8 months/8 days/8 ns, 9 months/9 days/9 ns>";
+                    }
+                }();
+                CHECK_EQ(formatted, expected);
+            }
+#endif
         }
         TEST_CASE_TEMPLATE_APPLY(interval_array_id, testing_types);
     }
