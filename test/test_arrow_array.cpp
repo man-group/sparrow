@@ -18,15 +18,45 @@
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/c_interface.hpp"
 
 #include "arrow_array_schema_creation.hpp"
 #include "doctest/doctest.h"
 
-using buffer_type = sparrow::buffer<uint8_t>;
-const buffer_type buffer_dummy({0, 1, 2, 3, 4});
-using buffers_type = std::vector<buffer_type>;
-const buffers_type buffers_dummy{buffer_dummy, buffer_dummy, buffer_dummy};
+void check_equal(const ArrowArray& lhs, const ArrowArray& rhs)
+{
+    CHECK_EQ(lhs.length, rhs.length);
+    CHECK_EQ(lhs.null_count, rhs.null_count);
+    CHECK_EQ(lhs.offset, rhs.offset);
+    CHECK_EQ(lhs.n_buffers, rhs.n_buffers);
+    CHECK_EQ(lhs.n_children, rhs.n_children);
+    CHECK_NE(lhs.buffers, rhs.buffers);
+    CHECK_NE(lhs.private_data, rhs.private_data);
+    for (size_t i = 0; i < static_cast<size_t>(lhs.n_buffers); ++i)
+    {
+        CHECK_NE(lhs.buffers[i], rhs.buffers[i]);
+    }
+    auto lhs_buffers = reinterpret_cast<const int8_t**>(lhs.buffers);
+    auto rhs_buffers = reinterpret_cast<const int8_t**>(rhs.buffers);
+
+    for (size_t i = 0; i < static_cast<size_t>(lhs.length); ++i)
+    {
+        CHECK_EQ(lhs_buffers[1][i], rhs_buffers[1][i]);
+    }
+}
+
+void check_empty(const ArrowArray& arr)
+{
+    CHECK_EQ(arr.length, 0);
+    CHECK_EQ(arr.null_count, 0);
+    CHECK_EQ(arr.offset, 0);
+    CHECK_EQ(arr.n_buffers, 0);
+    CHECK_EQ(arr.buffers, nullptr);
+    CHECK_EQ(arr.n_children, 0);
+    CHECK_EQ(arr.children, nullptr);
+    CHECK_EQ(arr.dictionary, nullptr);
+}
 
 TEST_SUITE("C Data Interface")
 {
@@ -34,12 +64,7 @@ TEST_SUITE("C Data Interface")
     {
         SUBCASE("release")
         {
-            auto children = new ArrowArray*[2];
-            children[0] = new ArrowArray();
-            children[1] = new ArrowArray();
-            ArrowArray* dictionary = new ArrowArray();
-            auto array = sparrow::make_arrow_array(1, 0, 0, buffers_dummy, 2, children, dictionary);
-
+            auto array = test::make_arrow_array(true);
             array.release(&array);
             CHECK_EQ(array.buffers, nullptr);
             CHECK_EQ(array.children, nullptr);
@@ -50,7 +75,7 @@ TEST_SUITE("C Data Interface")
 
         SUBCASE("release wo/ children and dictionary")
         {
-            auto array = sparrow::make_arrow_array(1, 0, 0, buffers_dummy, 0, nullptr, nullptr);
+            auto array = test::make_arrow_array(false);
             array.release(&array);
             CHECK_EQ(array.buffers, nullptr);
             CHECK_EQ(array.children, nullptr);
@@ -61,31 +86,42 @@ TEST_SUITE("C Data Interface")
 
         SUBCASE("deep_copy")
         {
-            auto [array, schema] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = test::make_arrow_schema_and_array(true);
             auto array_copy = sparrow::copy_array(array, schema);
-            CHECK_EQ(array.length, array_copy.length);
-            CHECK_EQ(array.null_count, array_copy.null_count);
-            CHECK_EQ(array.offset, array_copy.offset);
-            CHECK_EQ(array.n_buffers, array_copy.n_buffers);
-            CHECK_EQ(array.n_children, array_copy.n_children);
-            CHECK_NE(array.buffers, array_copy.buffers);
-            CHECK_NE(array.private_data, array_copy.private_data);
-            for (size_t i = 0; i < static_cast<size_t>(array.n_buffers); ++i)
-            {
-                CHECK_NE(array.buffers[i], array_copy.buffers[i]);
-            }
-            auto array_buffers = reinterpret_cast<const int8_t**>(array.buffers);
-            auto array_copy_buffers = reinterpret_cast<const int8_t**>(array_copy.buffers);
 
-            for (size_t i = 0; i < static_cast<size_t>(array.length); ++i)
-            {
-                CHECK_EQ(array_buffers[1][i], array_copy_buffers[1][i]);
-            }
+            check_equal(array, array_copy);
+        }
+
+        SUBCASE("swap")
+        {
+            auto [array0, schema0] = test::make_arrow_schema_and_array(true);
+            auto array0_bkup = sparrow::copy_array(array0, schema0);
+
+            auto [array1, schema1] = test::make_arrow_schema_and_array(false);
+            auto array1_bkup = sparrow::copy_array(array1, schema1);
+
+            sparrow::swap(array0, array1);
+            check_equal(array0, array1_bkup);
+            check_equal(array1, array0_bkup);
+        }
+
+        SUBCASE("move_array")
+        {
+            auto [src_array, src_schema] = test::make_arrow_schema_and_array(true);
+            auto control = sparrow::copy_array(src_array, src_schema);
+
+            auto dst_array = sparrow::move_array(std::move(src_array));
+            check_empty(src_array);
+            check_equal(dst_array, control);
+
+            auto dst2_array = sparrow::move_array(dst_array);
+            check_empty(dst_array);
+            check_equal(dst2_array, control);
         }
 
         SUBCASE("validate_format_with_arrow_array")
         {
-            auto [array, schema] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = test::make_arrow_schema_and_array(false);
             CHECK(sparrow::validate_format_with_arrow_array(sparrow::data_type::INT8, array));
             // CHECK_FALSE(sparrow::validate_format_with_arrow_array(sparrow::data_type::FIXED_SIZED_LIST,
             // array));
@@ -94,7 +130,7 @@ TEST_SUITE("C Data Interface")
 #if defined(__cpp_lib_format)
         SUBCASE("formatting")
         {
-            auto [array, schema] = make_sparrow_arrow_schema_and_array();
+            auto [array, schema] = test::make_arrow_schema_and_array(false);
             [[maybe_unused]] const auto format = std::format("{}", array);
             // We don't check the result has it show the address of the object, which is not the same at each
             // run of the test
@@ -107,10 +143,10 @@ TEST_SUITE("arrow_array_private_data")
 {
     TEST_CASE("buffers")
     {
-        const auto buffers = buffers_dummy;
+        const auto buffers = test::detail::get_test_buffer_list0();
         sparrow::arrow_array_private_data private_data(buffers);
 
-        auto buffers_ptrs = private_data.buffers_ptrs<int8_t>();
+        auto buffers_ptrs = private_data.buffers_ptrs<uint8_t>();
         for (size_t i = 0; i < buffers.size(); ++i)
         {
             for (size_t j = 0; j < buffers[i].size(); ++j)

@@ -47,6 +47,16 @@ namespace sparrow
         return const_cast<T*>(static_cast<const T*>(ptr));
     }
 
+    sparrow::buffer_view<uint8_t> get_bitmap_buffer(const ArrowArray& array)
+    {
+        using buffer_view_type = sparrow::buffer_view<uint8_t>;
+        const auto size = static_cast<size_t>(array.length + array.offset);
+        const auto buffer_size = static_cast<size_t>(size + 7) / 8;
+        auto typed_buffer_ptr = static_const_ptr_cast<uint8_t>(array.buffers[0]);
+        return typed_buffer_ptr != nullptr ? buffer_view_type(typed_buffer_ptr, buffer_size)
+                                           : buffer_view_type(nullptr, 0);
+    }
+
     std::vector<sparrow::buffer_view<uint8_t>>
     get_arrow_array_buffers(const ArrowArray& array, const ArrowSchema& schema)
     {
@@ -54,10 +64,7 @@ namespace sparrow
         const auto size = static_cast<size_t>(array.length + array.offset);
         auto make_valid_buffer = [&]()
         {
-            const auto buffer_size = static_cast<size_t>(size + 7) / 8;
-            auto typed_buffer_ptr = static_const_ptr_cast<uint8_t>(array.buffers[0]);
-            return typed_buffer_ptr != nullptr ? buffer_view_type(typed_buffer_ptr, buffer_size)
-                                               : buffer_view_type(nullptr, 0);
+            return get_bitmap_buffer(array);
         };
         auto make_buffer = [&](auto index, auto size)
         {
@@ -158,6 +165,20 @@ namespace sparrow
         return {};
     }
 
+    void swap(ArrowArray& lhs, ArrowArray& rhs)
+    {
+        std::swap(lhs.length, rhs.length);
+        std::swap(lhs.null_count, rhs.null_count);
+        std::swap(lhs.offset, rhs.offset);
+        std::swap(lhs.n_buffers, rhs.n_buffers);
+        std::swap(lhs.n_children, rhs.n_children);
+        std::swap(lhs.buffers, rhs.buffers);
+        std::swap(lhs.children, rhs.children);
+        std::swap(lhs.dictionary, rhs.dictionary);
+        std::swap(lhs.release, rhs.release);
+        std::swap(lhs.private_data, rhs.private_data);
+    }
+
     void copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema, ArrowArray& target)
     {
         SPARROW_ASSERT_TRUE(&source_array != &target);
@@ -206,6 +227,4 @@ namespace sparrow
         target.buffers = private_data->buffers_ptrs<void>();
         target.release = release_arrow_array;
     }
-
-
 }

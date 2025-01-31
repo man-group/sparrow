@@ -133,10 +133,23 @@ namespace sparrow
         return array;
     }
 
+    inline ArrowArray make_empty_arrow_array()
+    {
+        using buffer_type = arrow_array_private_data::BufferType;
+        return make_arrow_array(0, 0, 0, buffer_type{}, 0u, nullptr, nullptr);
+    }
+
     SPARROW_API void release_arrow_array(ArrowArray* array);
+
+    SPARROW_API sparrow::buffer_view<uint8_t> get_bitmap_buffer(const ArrowArray& array);
 
     SPARROW_API std::vector<sparrow::buffer_view<uint8_t>>
     get_arrow_array_buffers(const ArrowArray& array, const ArrowSchema& schema);
+
+    /**
+     * Swaps the contents of the two ArrowArray objects.
+     */
+    SPARROW_API void swap(ArrowArray& lhs, ArrowArray& rhs);
 
     /**
      * Fill the target ArrowArray with a deep copy of the data from the source ArrowArray.
@@ -154,6 +167,25 @@ namespace sparrow
         return target;
     }
 
+    /**
+     * Moves the content of source into a stack-allocated array, and
+     * reset the source to an empty ArrowArray.
+     */
+    inline ArrowArray move_array(ArrowArray&& source)
+    {
+        ArrowArray target = make_empty_arrow_array();
+        swap(source, target);
+        return target;
+    }
+
+    /**
+     * Moves the content of source into a stack-allocated array, and
+     * reset the source to an empty ArrowArray.
+     */
+    inline ArrowArray move_array(ArrowArray& source)
+    {
+        return move_array(std::move(source));
+    }
 };
 
 #if defined(__cpp_lib_format)

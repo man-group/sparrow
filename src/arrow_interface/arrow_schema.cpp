@@ -39,6 +39,19 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(schema->release == std::addressof(empty_release_arrow_schema));
     }
 
+    void swap(ArrowSchema& lhs, ArrowSchema& rhs)
+    {
+        std::swap(lhs.format, rhs.format);
+        std::swap(lhs.name, rhs.name);
+        std::swap(lhs.metadata, rhs.metadata);
+        std::swap(lhs.flags, rhs.flags);
+        std::swap(lhs.n_children, rhs.n_children);
+        std::swap(lhs.children, rhs.children);
+        std::swap(lhs.dictionary, rhs.dictionary);
+        std::swap(lhs.release, rhs.release);
+        std::swap(lhs.private_data, rhs.private_data);
+    }
+
     void copy_schema(const ArrowSchema& source, ArrowSchema& target)
     {
         SPARROW_ASSERT_TRUE(&source != &target);
