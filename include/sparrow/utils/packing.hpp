@@ -13,12 +13,12 @@
 // limitations under the License.
 
 // Use standard C++ attributes for alignment
-#if defined(_MSC_VER)
-#    define SPARROW_PACKED_STRUCT __pragma(pack(push, 1)) struct __declspec(align(1))
+#if defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__)
+// #    define SPARROW_PACKED_STRUCT __pragma(pack(push, 1))
+// #    define SPARROW_PACKED_STRUCT_END __pragma(pack(pop))
+// #elif defined(__GNUC__) || defined(__clang__)
+#    define SPARROW_PACKED_STRUCT __pragma(pack(push, 1))
 #    define SPARROW_PACKED_STRUCT_END __pragma(pack(pop))
-#elif defined(__GNUC__) || defined(__clang__)
-#    define SPARROW_PACKED_STRUCT struct alignas(1)
-#    define SPARROW_PACKED_STRUCT_END
 #else
 #    error "Unsupported compiler"
 #endif

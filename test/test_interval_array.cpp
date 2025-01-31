@@ -103,15 +103,15 @@ namespace sparrow
                             else if constexpr (std::is_same_v<T, days_time_interval>)
                             {
                                 values.push_back(
-                                    nullable<T>(T(std::chrono::days(i + 5), std::chrono::milliseconds(i + 5)))
+                                    nullable<T>(T{std::chrono::days(i + 5), std::chrono::milliseconds(i + 5)})
                                 );
                             }
                             else if constexpr (std::is_same_v<T, month_day_nanoseconds_interval>)
                             {
                                 values.push_back(nullable<T>(
-                                    T(std::chrono::months(i + 5),
+                                    T{std::chrono::months(i + 5),
                                       std::chrono::days(i + 5),
-                                      std::chrono::nanoseconds(i + 5))
+                                      std::chrono::nanoseconds(i + 5)}
                                 ));
                             }
                         }
