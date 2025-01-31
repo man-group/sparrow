@@ -544,6 +544,12 @@ public:
     }
 };
 
+inline std::ostream& operator<<(std::ostream& os, const sparrow::buffer_view<uint8_t>& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
+
 template <>
 struct std::formatter<sparrow::arrow_proxy>
 {
@@ -592,5 +598,11 @@ struct std::formatter<sparrow::arrow_proxy>
         );
     }
 };
+
+inline std::ostream& operator<<(std::ostream& os, const sparrow::arrow_proxy& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
 
 #endif

@@ -500,4 +500,12 @@ struct std::formatter<D>
     }
 };
 
+template <typename D>
+    requires std::derived_from<D, sparrow::array_crtp_base<D>>
+std::ostream& operator<<(std::ostream& os, const D& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
+
 #endif

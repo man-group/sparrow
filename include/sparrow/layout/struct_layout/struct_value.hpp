@@ -69,4 +69,10 @@ struct std::formatter<sparrow::struct_value>
         -> decltype(ctx.out());
 };
 
+inline std::ostream& operator<<(std::ostream& os, const sparrow::struct_value& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
+
 #endif

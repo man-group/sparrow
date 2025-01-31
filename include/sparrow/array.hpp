@@ -116,4 +116,10 @@ struct std::formatter<sparrow::array>
     }
 };
 
+inline std::ostream& operator<<(std::ostream& os, const sparrow::array& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
+
 #endif
