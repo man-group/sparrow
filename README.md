@@ -83,7 +83,7 @@ namespace sp = sparrow;
 
 sp::primitive_array<int> ar = { 1, 3, 5, 7, 9 };
 // Caution: get_arrow_structures returns pointers, not values
-auto [arrow_array, arrow_schema] = sp::get_arrow_structures(std::move(ar));
+auto [arrow_array, arrow_schema] = sp::get_arrow_structures(ar);
 // Use arrow_array and arrow_schema as you need (serialization, passing it to
 // a third party library)
 // ...
