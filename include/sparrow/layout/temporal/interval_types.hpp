@@ -26,7 +26,7 @@ namespace sparrow
         using days = std::chrono::duration<int32_t, std::ratio<86400>>;
         using months = std::chrono::duration<int32_t, std::ratio<2629746>>;
     }
-    
+
 #pragma pack(push, 1)
 
     struct days_time_interval
