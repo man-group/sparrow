@@ -603,7 +603,7 @@ namespace sparrow
         std::chrono::milliseconds,
         std::chrono::microseconds,
         std::chrono::nanoseconds,
-        std::chrono::months,
+        chrono::months,
         days_time_interval,
         month_day_nanoseconds_interval,
         // TODO: add missing fundamental types here

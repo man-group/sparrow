@@ -24,7 +24,7 @@
 
 namespace sparrow
 {
-    using interval_types_t = mpl::typelist<std::chrono::months, days_time_interval, month_day_nanoseconds_interval>;
+    using interval_types_t = mpl::typelist<chrono::months, days_time_interval, month_day_nanoseconds_interval>;
 
     static constexpr interval_types_t interval_types;
     template <typename T>
@@ -45,7 +45,7 @@ namespace sparrow
     template <interval_type T>
     using interval_array = array_trivial_copyable<T>;
 
-    using months_interval_array = interval_array<std::chrono::months>;
+    using months_interval_array = interval_array<chrono::months>;
     using days_time_interval_array = interval_array<days_time_interval>;
     using month_day_nanoseconds_interval_array = interval_array<month_day_nanoseconds_interval>;
 

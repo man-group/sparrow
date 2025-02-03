@@ -21,11 +21,17 @@
 
 namespace sparrow
 {
+    namespace chrono
+    {
+        using days = std::chrono::duration<int32_t, std::ratio<86400>>;
+        using months = std::chrono::duration<int32_t, std::ratio<2629746>>;
+    }
+    
 #pragma pack(push, 1)
 
     struct days_time_interval
     {
-        std::chrono::days days;
+        chrono::days days;
         std::chrono::duration<int32_t, std::milli> time;
     };
 
@@ -40,9 +46,9 @@ namespace sparrow
 
     struct month_day_nanoseconds_interval
     {
-        std::chrono::months months;
-        std::chrono::days days;
-        std::chrono::nanoseconds nanoseconds;
+        chrono::months months;
+        chrono::days days;
+        std::chrono::duration<int64_t, std::nano> nanoseconds;
     };
 
 #pragma pack(pop)

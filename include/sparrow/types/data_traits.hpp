@@ -169,7 +169,7 @@ namespace sparrow
     };
 
     template <>
-    struct arrow_traits<std::chrono::months> : common_native_types_traits<std::chrono::months>
+    struct arrow_traits<chrono::months> : common_native_types_traits<chrono::months>
     {
         static constexpr data_type type_id = data_type::INTERVAL_MONTHS;
     };
