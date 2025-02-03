@@ -8,7 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or mplied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -33,7 +33,7 @@ namespace sparrow
     /**
      * Array of interval values.
      *
-     * As the other arrays in sparrow, \c duration_array<T> provides an API as if it was holding
+     * As the other arrays in sparrow, \c interval_array<T> provides an API as if it was holding
      * \c nullable<T> values instead of \c T values.
      *
      * Internally, the array contains a validity bitmap and a contiguous memory buffer
