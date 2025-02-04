@@ -177,7 +177,7 @@ namespace sparrow
                                          && std::unsigned_integral<std::ranges::range_value_t<T>>) )
                                     && (!std::same_as<std::remove_cvref_t<T>, std::string>
                                         && !std::same_as<std::remove_cvref_t<T>, std::string_view>
-                                        && !std::same_as<T, const char*>);
+                                        && !std::same_as<std::decay_t<T>, const char*>);
 
     template <validity_bitmap_input R>
     validity_bitmap ensure_validity_bitmap(std::size_t size, R&& validity_input)

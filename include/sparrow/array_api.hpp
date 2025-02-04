@@ -144,6 +144,18 @@ namespace sparrow
         SPARROW_API enum data_type data_type() const;
 
         /**
+         * @returns the name of the \ref array or an empty
+         * string if the array does not have a name.
+         */
+        SPARROW_API std::optional<std::string_view> name() const;
+
+        /**
+         * Sets the name of the array to \ref name.
+         * @param name The new name of the array.
+         */
+        SPARROW_API void set_name(std::optional<std::string_view> name);
+
+        /**
          * Checks if the array has no element, i.e. whether size() == 0.
          */
         SPARROW_API bool empty() const;
