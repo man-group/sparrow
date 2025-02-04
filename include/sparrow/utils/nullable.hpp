@@ -19,6 +19,7 @@
 #include <exception>
 #if defined(__cpp_lib_format)
 #    include <format>
+#    include <ostream>
 #endif
 #include <type_traits>
 #include <variant>
@@ -822,6 +823,13 @@ struct std::formatter<sparrow::nullable<T, B>>
     std::string m_format_string = "{:";
 };
 
+template <typename T, sparrow::mpl::boolean_like B>
+std::ostream& operator<<(std::ostream& os, const sparrow::nullable<T, B>& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
+
 template <class... T>
 struct std::formatter<sparrow::nullable_variant<T...>>
 {
@@ -857,6 +865,14 @@ struct std::formatter<sparrow::nullable_variant<T...>>
 
     std::string m_format_string = "{:";
 };
+
+template <class... T>
+std::ostream& operator<<(std::ostream& os, const sparrow::nullable_variant<T...>& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
+
 
 #endif
 

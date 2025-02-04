@@ -211,4 +211,11 @@ struct std::formatter<sparrow::record_batch>
         return ctx.out();
     }
 };
+
+std::ostream& operator<<(std::ostream& os, const sparrow::record_batch& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
+
 #endif

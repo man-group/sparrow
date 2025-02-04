@@ -14,12 +14,19 @@
 
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <ranges>
 #include <string>
 #include <type_traits>
 #include <vector>
 
+#if defined(__cpp_lib_format)
+#    include <format>
+#    include <ostream>
+#endif
+
+#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
@@ -239,3 +246,36 @@ namespace sparrow
         return static_cast<size_type>(offset(index));
     }
 }
+
+#if defined(__cpp_lib_format)
+template <typename Layout>
+struct std::formatter<sparrow::variable_size_binary_reference<Layout>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const sparrow::variable_size_binary_reference<Layout>& ref, std::format_context& ctx) const
+    {
+        std::for_each(
+            ref.cbegin(),
+            sparrow::next(ref.cbegin(), ref.size() - 1),
+            [&ctx](const auto& value)
+            {
+                std::format_to(ctx.out(), "{}, ", value);
+            }
+        );
+
+        return std::format_to(ctx.out(), "{}>", *std::prev(ref.cend()));
+    }
+};
+
+template <typename Layout>
+inline std::ostream& operator<<(std::ostream& os, const sparrow::variable_size_binary_reference<Layout>& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
+
+#endif

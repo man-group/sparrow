@@ -495,4 +495,11 @@ struct std::formatter<sparrow::dictionary_encoded_array<IT>>
         return ctx.out();
     }
 };
+
+template <std::integral IT>
+std::ostream& operator<<(std::ostream& os, const sparrow::dictionary_encoded_array<IT>& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
 #endif

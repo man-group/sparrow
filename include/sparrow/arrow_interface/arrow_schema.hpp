@@ -18,6 +18,7 @@
 #include <memory>
 #if defined(__cpp_lib_format)
 #    include <format>
+#    include <ostream>
 #endif
 
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
@@ -236,5 +237,11 @@ struct std::formatter<ArrowSchema>
         );
     }
 };
+
+inline std::ostream& operator<<(std::ostream& os, const ArrowSchema& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
 
 #endif

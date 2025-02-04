@@ -94,4 +94,12 @@ struct std::formatter<sparrow::vector_view<T>>
         return std::format_to(ctx.out(), "{}>", vec.back());
     }
 };
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const sparrow::vector_view<T>& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
+
 #endif

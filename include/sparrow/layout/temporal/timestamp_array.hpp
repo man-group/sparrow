@@ -43,7 +43,7 @@ namespace sparrow
         using self_type = timestamp_array<T>;
 
         using inner_value_type = T;
-        using inner_reference = temporal_reference<self_type>;
+        using inner_reference = timestamp_reference<self_type>;
         using inner_const_reference = T;
 
         using functor_type = detail::layout_value_functor<self_type, inner_reference>;
@@ -293,7 +293,7 @@ namespace sparrow
         details::trivial_copyable_data_access<inner_value_type_duration, self_type> m_data_access;
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
-        friend class temporal_reference<self_type>;
+        friend class timestamp_reference<self_type>;
         friend base_type;
         friend base_type::base_type;
         friend base_type::base_type::base_type;

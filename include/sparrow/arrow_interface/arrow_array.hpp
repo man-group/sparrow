@@ -228,4 +228,10 @@ struct std::formatter<ArrowArray>
     }
 };
 
+inline std::ostream& operator<<(std::ostream& os, const ArrowArray& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
+
 #endif
