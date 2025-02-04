@@ -200,11 +200,13 @@ namespace sparrow
     {
         std::vector<record_batch::name_type> get_names(const std::vector<array>& array_list)
         {
-            const auto names = array_list | std::views::transform(
-                [](const array& ar)
-                {
-                    return ar.name().value();
-                });
+            const auto names = array_list
+                               | std::views::transform(
+                                   [](const array& ar)
+                                   {
+                                       return ar.name().value();
+                                   }
+                               );
             return {names.begin(), names.end()};
         }
     }
