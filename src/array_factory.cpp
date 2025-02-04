@@ -22,6 +22,7 @@
 #include "sparrow/layout/primitive_array.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 #include "sparrow/layout/struct_layout/struct_array.hpp"
+#include "sparrow/layout/temporal/date_array.hpp"
 #include "sparrow/layout/temporal/duration_array.hpp"
 #include "sparrow/layout/temporal/interval_array.hpp"
 #include "sparrow/layout/temporal/timestamp_array.hpp"
@@ -123,6 +124,10 @@ namespace sparrow
                     return detail::make_wrapper_ptr<dense_union_array>(std::move(proxy));
                 case data_type::SPARSE_UNION:
                     return detail::make_wrapper_ptr<sparse_union_array>(std::move(proxy));
+                case data_type::DATE_DAYS:
+                    return detail::make_wrapper_ptr<date_days_array>(std::move(proxy));
+                case data_type::DATE_MILLISECONDS:
+                    return detail::make_wrapper_ptr<date_milliseconds_array>(std::move(proxy));
                 case data_type::TIMESTAMP_SECONDS:
                     return detail::make_wrapper_ptr<timestamp_seconds_array>(std::move(proxy));
                 case data_type::TIMESTAMP_MILLISECONDS:

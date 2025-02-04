@@ -18,6 +18,7 @@
 #include <concepts>
 
 #include "sparrow/layout/temporal/interval_types.hpp"
+#include "sparrow/layout/temporal/date_array.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/vector_view.hpp"
@@ -110,6 +111,18 @@ namespace sparrow
         static constexpr data_type type_id = data_type::DECIMAL256;
         using value_type = decimal<int256_t>;
         using const_reference = decimal<int256_t>;
+    };
+
+    template <>
+    struct arrow_traits<date_days> : common_native_types_traits<date_days>
+    {
+        static constexpr data_type type_id = data_type::DATE_DAYS;
+    };
+
+    template <>
+    struct arrow_traits<date_milliseconds> : common_native_types_traits<date_milliseconds>
+    {
+        static constexpr data_type type_id = data_type::DATE_MILLISECONDS;
     };
 
     template <>

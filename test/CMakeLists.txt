@@ -131,6 +131,7 @@ else()
         test_dictionary_encoded_array.cpp
         test_dispatch.cpp
         test_duration_array.cpp
+        test_date_array.cpp
         test_dynamic_bitset_view.cpp
         test_dynamic_bitset.cpp
         test_fixed_width_binary_array.cpp
