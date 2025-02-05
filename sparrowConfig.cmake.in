@@ -1,18 +1,22 @@
 ############################################################################
-# Copyright (c) Johan Mabille, Sylvain Corlay and Wolf Vollprecht          #
-# Copyright (c) QuantStack
-#                                                                          #
-# Distributed under the terms of the BSD 3-Clause License.                 #
-#                                                                          #
-# The full license is in the file LICENSE, distributed with this software. #
+# Copyright 2024 Man Group Operations Limited                              #
+# Licensed under the Apache License, Version 2.0 (the "License");          #
+# you may not use this file except in compliance with the License.         #
+# You may obtain a copy of the License at                                  #
+#     http://www.apache.org/licenses/LICENSE-2.0                           #
+# Unless required by applicable law or agreed to in writing, software      #
+# distributed under the License is distributed on an "AS IS" BASIS,        #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
+# See the License for the specific language governing permissions and      #
+# limitations under the License.                                           #
 ############################################################################
 
-# xparrow cmake module
+# sparrow cmake module
 # This module sets the following variables in your project::
 #
-#   xparrow_FOUND - true if xparrow found on the system
-#   xparrow_INCLUDE_DIRS - the directory containing xparrow headers
-#   xparrow_LIBRARY - empty
+#   sparrow_FOUND - true if sparrow found on the system
+#   sparrow_INCLUDE_DIRS - the directory containing sparrow headers
+#   sparrow_LIBRARY - empty
 
 @PACKAGE_INIT@
 
@@ -23,4 +27,3 @@ if(NOT TARGET sparrow::sparrow)
     get_target_property(@PROJECT_NAME@_INCLUDE_DIRS sparrow::sparrow INTERFACE_INCLUDE_DIRECTORIES)
     get_target_property(@PROJECT_NAME@_LIBRARY sparrow::sparrow LOCATION)
 endif()
-

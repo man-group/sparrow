@@ -1,11 +1,13 @@
 from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
-from conan.tools.files import copy
 from conan.tools.build.cppstd import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
+from conan.tools.files import copy
+from conan.tools.microsoft import is_msvc
 from conan.tools.scm import Version
 import os
 
+required_conan_version = ">=2.0"
 
 class SparrowRecipe(ConanFile):
     name = "sparrow"
@@ -14,24 +16,27 @@ class SparrowRecipe(ConanFile):
     author = "Man Group"
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/man-group/sparrow"
-    topics = ("arrow", "header-only")
+    topics = ("arrow", "apache arrow", "columnar format", "dataframe")
+    package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
-    package_type = "header-library"
-    no_copy_source = True
-    exports_sources = "include/*", "LICENSE"
     generators = "CMakeDeps"
+    exports_sources = "include/*", "LICENSE", "src/*", "cmake/*", "docs/*", "CMakeLists.txt", "sparrowConfig.cmake.in"
     options = {
+        "shared": [True, False],
+        "fPIC": [True, False],
         "use_date_polyfill": [True, False],
         "generate_documentation": [True, False],
     }
     default_options = {
+        "shared": False,
+        "fPIC": True,
         "use_date_polyfill": True,
         "generate_documentation": False,
     }
 
     def requirements(self):
         if self.options.get_safe("use_date_polyfill"):
-            self.requires("date/3.0.1#032e24ad8bd1fd136dd33c932563d3d1")
+            self.requires("date/3.0.3")
         self.test_requires("doctest/2.4.11")
         self.test_requires("catch2/3.7.0")
 
@@ -46,10 +51,10 @@ class SparrowRecipe(ConanFile):
     @property
     def _compilers_minimum_version(self):
         return {
-            "apple-clang": "13",
-            "clang": "16",
+            "apple-clang": "16",
+            "clang": "18",
             "gcc": "12",
-            "msvc": "193"
+            "msvc": "194"
         }
 
     def validate(self):
@@ -63,8 +68,21 @@ class SparrowRecipe(ConanFile):
                 f"{self.ref} requires C++{self._min_cppstd}, which your compiler does not support."
             )
 
+    def config_options(self):
+        if self.settings.os == "Windows":
+            del self.options.fPIC
+
+    # def source(self):
+    #     self.copy("LICENSE", dst="src", src=".")
+    #     self.copy("CMakeLists.txt", dst="src", src=".")
+    #     self.copy("*.cpp", dst="src", src="src/src")
+
+    def configure(self):
+        if self.options.shared:
+            self.options.rm_safe("fPIC")
+
     def layout(self):
-        cmake_layout(self)
+        cmake_layout(self, src_folder=".")
 
     def generate(self):
         tc = CMakeToolchain(self)
@@ -72,17 +90,21 @@ class SparrowRecipe(ConanFile):
             "use_date_polyfill", False)
         tc.variables["BUILD_DOCS"] = self.options.get_safe(
             "generate_documentation", False)
+        if is_msvc(self):
+            tc.variables["USE_LARGE_INT_PLACEHOLDERS"] = True
         tc.generate()
+
+    def build(self):
+        cmake = CMake(self)
+        cmake.configure()
+        cmake.build()
         
     def package(self):
         copy(self, "LICENSE",
              dst=os.path.join(self.package_folder, "licenses"),
              src=self.source_folder)
-        copy(self, "*.hpp", self.source_folder, self.package_folder)
+        cmake = CMake(self)
+        cmake.install()
 
     def package_info(self):
-        self.cpp_info.bindirs = []
-        self.cpp_info.libdirs = []
-
-    def package_id(self):
-        self.info.clear()
+        self.cpp_info.libs = ["sparrow"]
