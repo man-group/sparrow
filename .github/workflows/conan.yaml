@@ -22,7 +22,7 @@ jobs:
       - name: Install conan dependencies
         run: |
           conan profile detect --force
-          conan install . --output-folder=build --build=missing -s:a compiler.cppstd=20 -o:a use_date_polyfill=True
+          conan install . --output-folder=build --build=missing -s:a compiler.cppstd=20 -o:a use_date_polyfill=True  -o:a build_tests=True
           
       - name: CMake configuration
         run: cmake --preset conan-release -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
