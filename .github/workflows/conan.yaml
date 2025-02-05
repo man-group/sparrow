@@ -22,7 +22,7 @@ jobs:
       - name: Install conan dependencies
         run: |
           conan profile detect --force
-          conan install . --output-folder=build --build=missing -s:a compiler.cppstd=20 -o:a generate_documentation=True
+          conan install . --output-folder=build --build=missing -s:a compiler.cppstd=20 -o:a use_date_polyfill=True
           
       - name: CMake configuration
         run: cmake --preset conan-release -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
@@ -49,4 +49,7 @@ jobs:
           echo "version=$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH" >> $GITHUB_OUTPUT
 
       - name: Conan create package
-        run: conan create . --version=${{ steps.extract-version.outputs.version }} -s:a build_type=Release --build=missing -s:a compiler.cppstd=20 -o:a generate_documentation=True 
+        run: conan create . --version=${{ steps.extract-version.outputs.version }} -s:a build_type=Release --build=missing -s:a compiler.cppstd=20 -o:a use_date_polyfill=True
+
+      - name: Conan test package
+        run: conan test ./conan_test_package sparrow/${{ steps.extract-version.outputs.version }} -s:a build_type=Release --build=missing -s:a compiler.cppstd=20 -o:a use_date_polyfill=True
