@@ -156,18 +156,36 @@ namespace sparrow
          */
         SPARROW_API struct_array extract_struct_array();
 
+        /**
+         * Appends the array \ref column to the record batch, and maps it with
+         * \ref name.
+         *
+         * @param name The name of the column to append.
+         * @param column The array to append.
+         */
+        SPARROW_API void add_column(name_type name, array column);
+
+        /**
+         * Appends the array \ref column to the record batch, and maps it to
+         * its internal name. \ref column must have a name.
+         *
+         * @param column The array to append.
+         */
+        SPARROW_API void add_column(array column);
+
     private:
 
         template <class U, class R>
         [[nodiscard]] std::vector<U> to_vector(R&& range) const;
 
-        SPARROW_API void init_array_map();
+        SPARROW_API void update_array_map_cache() const;
 
         [[nodiscard]] SPARROW_API bool check_consistency() const;
 
         std::vector<name_type> m_name_list;
         std::vector<array> m_array_list;
-        std::unordered_map<name_type, array*> m_array_map;
+        mutable std::unordered_map<name_type, const array*> m_array_map;
+        mutable bool m_dirty_map = true;
     };
 
     /**
@@ -192,8 +210,7 @@ namespace sparrow
         : m_name_list(to_vector<name_type>(std::move(names)))
         , m_array_list(to_vector<array>(std::move(columns)))
     {
-        init_array_map();
-        SPARROW_ASSERT_TRUE(check_consistency());
+        update_array_map_cache();
     }
 
     namespace detail
@@ -217,8 +234,7 @@ namespace sparrow
         : m_name_list(detail::get_names(columns))
         , m_array_list(to_vector<array>(std::move(columns)))
     {
-        init_array_map();
-        SPARROW_ASSERT_TRUE(check_consistency());
+        update_array_map_cache();
     }
 
     template <class U, class R>
