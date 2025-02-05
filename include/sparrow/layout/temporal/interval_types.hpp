@@ -27,16 +27,22 @@ namespace sparrow
         using months = std::chrono::duration<int32_t, std::ratio<2629746>>;
     }
 
+#pragma pack(push, 1)
+
     struct days_time_interval
     {
         chrono::days days;
         std::chrono::duration<int32_t, std::milli> time;
     };
 
+#pragma pack(pop)
+
     inline bool operator==(const days_time_interval& lhs, const days_time_interval& rhs)
     {
         return lhs.days == rhs.days && lhs.time == rhs.time;
     }
+
+#pragma pack(push, 1)
 
     struct month_day_nanoseconds_interval
     {
@@ -44,6 +50,8 @@ namespace sparrow
         chrono::days days;
         std::chrono::duration<int64_t, std::nano> nanoseconds;
     };
+
+#pragma pack(pop)
 
     inline bool operator==(const month_day_nanoseconds_interval& lhs, const month_day_nanoseconds_interval& rhs)
     {
