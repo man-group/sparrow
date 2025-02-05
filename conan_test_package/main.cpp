@@ -32,4 +32,5 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     assert(arr == arr3);
     assert(arr == arr4);
     assert(arr == arr5);
+    return EXIT_SUCCESS;
 }

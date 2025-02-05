@@ -25,20 +25,23 @@ class SparrowRecipe(ConanFile):
         "shared": [True, False],
         "fPIC": [True, False],
         "use_date_polyfill": [True, False],
+        "build_tests": [True, False],
         "generate_documentation": [True, False],
     }
     default_options = {
         "shared": False,
         "fPIC": True,
         "use_date_polyfill": True,
+        "build_tests": False,
         "generate_documentation": False,
     }
 
     def requirements(self):
         if self.options.get_safe("use_date_polyfill"):
             self.requires("date/3.0.3")
-        self.test_requires("doctest/2.4.11")
-        self.test_requires("catch2/3.7.0")
+        if self.options.get_safe("build_tests"):
+            self.test_requires("doctest/2.4.11")
+            self.test_requires("catch2/3.7.0")
 
     def build_requirements(self):
         if self.options.get_safe("generate_documentation"):
@@ -88,8 +91,7 @@ class SparrowRecipe(ConanFile):
         tc = CMakeToolchain(self)
         tc.variables["USE_DATE_POLYFILL"] = self.options.get_safe(
             "use_date_polyfill", False)
-        tc.variables["BUILD_DOCS"] = self.options.get_safe(
-            "generate_documentation", False)
+        tc.variables["BUILD_TESTS"] = self.options.get_safe("build_tests", False)
         if is_msvc(self):
             tc.variables["USE_LARGE_INT_PLACEHOLDERS"] = True
         tc.generate()
@@ -107,4 +109,13 @@ class SparrowRecipe(ConanFile):
         cmake.install()
 
     def package_info(self):
+        defines = []
+        if self.options.get_safe("use_date_polyfill"):
+            defines.append("SPARROW_USE_DATE_POLYFILL")
+        if is_msvc(self):
+            defines.append("SPARROW_USE_LARGE_INT_PLACEHOLDERS")
+
         self.cpp_info.libs = ["sparrow"]
+        self.cpp_info.components["sparrow"].defines = defines
+        self.cpp_info.set_property("cmake_file_name", "sparrow")
+        self.cpp_info.set_property("cmake_target_name", "sparrow::sparrow")
