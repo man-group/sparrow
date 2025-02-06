@@ -153,9 +153,9 @@ namespace sparrow
         // already contained in it.
         for (std::size_t i = m_name_list.size(); i != 0; --i)
         {
-            if (m_array_map.find(m_name_list[i - 1]) == m_array_map.end())
+            if (!m_array_map.try_emplace(m_name_list[i - 1], &(m_array_list[i - 1])).second)
             {
-                m_array_map.try_emplace(m_name_list[i - 1], &(m_array_list[i - 1]));
+                break;
             }
         }
         m_dirty_map = false;
