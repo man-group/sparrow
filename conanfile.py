@@ -75,11 +75,6 @@ class SparrowRecipe(ConanFile):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
-    # def source(self):
-    #     self.copy("LICENSE", dst="src", src=".")
-    #     self.copy("CMakeLists.txt", dst="src", src=".")
-    #     self.copy("*.cpp", dst="src", src="src/src")
-
     def configure(self):
         if self.options.shared:
             self.options.rm_safe("fPIC")
