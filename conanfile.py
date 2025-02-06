@@ -110,7 +110,7 @@ class SparrowRecipe(ConanFile):
 
     def package_info(self):
         defines = []
-        if self.options.get_safe("use_date_polyfill"):
+        if self.options.get_safe("use_date_polyfill", False):
             defines.append("SPARROW_USE_DATE_POLYFILL")
         if is_msvc(self):
             defines.append("SPARROW_USE_LARGE_INT_PLACEHOLDERS")
