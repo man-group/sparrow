@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.6
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -25,7 +28,13 @@ jobs:
           conan install . --output-folder=build --build=missing -s:a compiler.cppstd=20 -o:a use_date_polyfill=True -o:a build_tests=True
           
       - name: CMake configuration
-        run: cmake --preset conan-release -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
+        run: |
+          cmake --preset conan-release \
+          -DBUILD_TESTS=ON \
+          -DBUILD_EXAMPLES=ON \
+          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
       
       - name: Build
         working-directory: build/build/Release
@@ -53,3 +62,7 @@ jobs:
 
       - name: Conan test package
         run: conan test ./conan_test_package sparrow/${{ steps.extract-version.outputs.version }} -s:a build_type=Release --build=missing -s:a compiler.cppstd=20 -o:a use_date_polyfill=True
+
+      - name: Run sccache stat for check
+        shell: bash
+        run: ${SCCACHE_PATH} --show-stats
