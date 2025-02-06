@@ -196,6 +196,39 @@ namespace sparrow
             CHECK_EQ(extr, control);
         }
 
+        TEST_CASE("add_column")
+        {
+            auto record = make_record_batch(col_size);
+            primitive_array<std::int32_t> pr3(
+                std::ranges::iota_view{std::int32_t(3), 3 + std::int32_t(col_size)},
+                "column3"
+            );
+
+            auto ctrl = pr3;
+
+            record.add_column(array(std::move(pr3)));
+            std::vector<std::string> ctrl_name_list = make_name_list();
+            ctrl_name_list.push_back("column3");
+            std::vector<std::string> name_list(record.names().begin(), record.names().end());
+            CHECK_EQ(name_list, ctrl_name_list);
+
+            const auto& col3 = record.get_column(3);
+            bool res = col3.visit(
+                [&ctrl]<typename T>(const T& arg)
+                {
+                    if constexpr (std::same_as<primitive_array<std::int32_t>, T>)
+                    {
+                        return arg == ctrl;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            );
+            CHECK(res);
+        }
+
 #if defined(__cpp_lib_format)
         TEST_CASE("formatter")
         {
