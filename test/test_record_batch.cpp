@@ -213,7 +213,8 @@ namespace sparrow
             CHECK_EQ(name_list, ctrl_name_list);
 
             const auto& col3 = record.get_column(3);
-            bool res = col3.visit([&ctrl]<typename T>(const T& arg)
+            bool res = col3.visit(
+                [&ctrl]<typename T>(const T& arg)
                 {
                     if constexpr (std::same_as<primitive_array<std::int32_t>, T>)
                     {
