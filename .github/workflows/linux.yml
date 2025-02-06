@@ -56,6 +56,10 @@ jobs:
       if: matrix.sys.compiler == 'clang'
       run: sudo apt install ${{matrix.sys.stdlib}}-dev -y
 
+    - name: Install specific version of tzdata
+      if: matrix.sys.date-polyfill == 'OFF'
+      run: sudo apt-get install tzdata=2024a-2ubuntu1 -y --allow-downgrades
+
     - name: Checkout code
       uses: actions/checkout@v4
 
