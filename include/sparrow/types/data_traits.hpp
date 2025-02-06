@@ -17,8 +17,8 @@
 #include <chrono>
 #include <concepts>
 
-#include "sparrow/layout/temporal/interval_types.hpp"
 #include "sparrow/layout/temporal/date_array.hpp"
+#include "sparrow/layout/temporal/interval_types.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/vector_view.hpp"
