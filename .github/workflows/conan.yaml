@@ -19,8 +19,8 @@ jobs:
       - name: Setup Conan Environment
         uses: hankhsu1996/setup-conan@v1.0.0
         with:
-          cache-dependencies: true
-          cache-tool: true
+          cache-dependencies: false
+          cache-tool: false
   
       - name: Install conan dependencies
         run: |
