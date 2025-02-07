@@ -8,7 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or mplied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -16,10 +16,8 @@
 
 #include <chrono>
 
-#include "sparrow/layout/temporal/temporal_types.hpp"
-
-namespace sparrow
+namespace sparrow::chrono
 {
-    using date_days = std::chrono::time_point<std::chrono::system_clock, chrono::days>;
-    using date_milliseconds = std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>;
+    using days = std::chrono::duration<int32_t, std::ratio<86400>>;      // 1 day = 86400 seconds
+    using months = std::chrono::duration<int32_t, std::ratio<2629746>>;  // 1 month = 2629746 seconds
 }
