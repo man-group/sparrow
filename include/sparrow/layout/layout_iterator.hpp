@@ -64,14 +64,14 @@ namespace sparrow
 
     private:
 
-        reference dereference() const;
-        reference dereference();
+        [[nodiscard]] reference dereference() const;
+        [[nodiscard]] reference dereference();
         void increment();
         void decrement();
         void advance(difference_type n);
-        difference_type distance_to(const self_type& rhs) const;
-        bool equal(const self_type& rhs) const;
-        bool less_than(const self_type& rhs) const;
+        [[nodiscard]] difference_type distance_to(const self_type& rhs) const;
+        [[nodiscard]] bool equal(const self_type& rhs) const;
+        [[nodiscard]] bool less_than(const self_type& rhs) const;
 
         value_iterator m_value_iter;
         bitmap_iterator m_bitmap_iter;

@@ -80,7 +80,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::fixed_width_binary_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::FIXED_WIDTH_BINARY;
             }
@@ -148,8 +148,8 @@ namespace sparrow
         using base_type::get_arrow_proxy;
         using base_type::size;
 
-        inner_reference value(size_type i);
-        inner_const_reference value(size_type i) const;
+        [[nodiscard]] inner_reference value(size_type i);
+        [[nodiscard]] inner_const_reference value(size_type i) const;
 
     private:
 
@@ -164,7 +164,7 @@ namespace sparrow
          * @return The arrow proxy.
          */
         template <mpl::char_like C, validity_bitmap_input VB = validity_bitmap>
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             u8_buffer<C>&& data_buffer,
             size_t element_size,
             VB&& validity_input = validity_bitmap{},
@@ -188,7 +188,7 @@ namespace sparrow
                                                                                            // range of
                                                                                            // char-like
             )
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             R&& values,
             VB&& validity_input = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
@@ -208,7 +208,7 @@ namespace sparrow
             requires mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
                      && std::ranges::input_range<typename std::ranges::range_value_t<R>::value_type>
                      && std::is_same_v<std::ranges::range_value_t<typename std::ranges::range_value_t<R>::value_type>, byte_t>
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             R&&,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<std::string_view> metadata = std::nullopt
@@ -216,15 +216,15 @@ namespace sparrow
 
         static constexpr size_t DATA_BUFFER_INDEX = 1;
 
-        data_iterator data(size_type i);
+        [[nodiscard]] data_iterator data(size_type i);
 
-        value_iterator value_begin();
-        value_iterator value_end();
+        [[nodiscard]] value_iterator value_begin();
+        [[nodiscard]] value_iterator value_end();
 
-        const_value_iterator value_cbegin() const;
-        const_value_iterator value_cend() const;
+        [[nodiscard]] const_value_iterator value_cbegin() const;
+        [[nodiscard]] const_value_iterator value_cend() const;
 
-        const_data_iterator data(size_type i) const;
+        [[nodiscard]] const_data_iterator data(size_type i) const;
 
         // Modifiers
 

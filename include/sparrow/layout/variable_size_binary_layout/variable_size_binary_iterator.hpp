@@ -53,14 +53,14 @@ namespace sparrow
 
     private:
 
-        reference dereference() const;
+        [[nodiscard]] reference dereference() const;
 
         void increment();
         void decrement();
         void advance(difference_type n);
-        difference_type distance_to(const self_type& rhs) const;
-        bool equal(const self_type& rhs) const;
-        bool less_than(const self_type& rhs) const;
+        [[nodiscard]] difference_type distance_to(const self_type& rhs) const;
+        [[nodiscard]] bool equal(const self_type& rhs) const;
+        [[nodiscard]] bool less_than(const self_type& rhs) const;
 
         layout_type* p_layout = nullptr;
         difference_type m_index;

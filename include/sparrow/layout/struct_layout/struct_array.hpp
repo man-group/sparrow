@@ -97,13 +97,13 @@ namespace sparrow
 
         [[nodiscard]] size_type children_count() const;
 
-        const array_wrapper* raw_child(std::size_t i) const;
-        array_wrapper* raw_child(std::size_t i);
+        [[nodiscard]] const array_wrapper* raw_child(std::size_t i) const;
+        [[nodiscard]] array_wrapper* raw_child(std::size_t i);
 
     private:
 
         template <validity_bitmap_input VB = validity_bitmap>
-        static auto create_proxy(
+        [[nodiscard]] static auto create_proxy(
             std::vector<array>&& children,
             VB&& bitmaps = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
@@ -112,14 +112,14 @@ namespace sparrow
 
         using children_type = std::vector<cloning_ptr<array_wrapper>>;
 
-        value_iterator value_begin();
-        value_iterator value_end();
-        const_value_iterator value_cbegin() const;
-        const_value_iterator value_cend() const;
-        inner_reference value(size_type i);
-        inner_const_reference value(size_type i) const;
+        [[nodiscard]] value_iterator value_begin();
+        [[nodiscard]] value_iterator value_end();
+        [[nodiscard]] const_value_iterator value_cbegin() const;
+        [[nodiscard]] const_value_iterator value_cend() const;
+        [[nodiscard]] inner_reference value(size_type i);
+        [[nodiscard]] inner_const_reference value(size_type i) const;
 
-        children_type make_children();
+        [[nodiscard]] children_type make_children();
 
         // data members
         children_type m_children;

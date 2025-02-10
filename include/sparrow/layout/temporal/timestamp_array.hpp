@@ -203,7 +203,7 @@ namespace sparrow
         [[nodiscard]] const_value_iterator value_cbegin() const;
         [[nodiscard]] const_value_iterator value_cend() const;
 
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             const date::time_zone* timezone,
             size_type n,
             std::optional<std::string_view> name = std::nullopt,
@@ -211,7 +211,7 @@ namespace sparrow
         );
 
         template <validity_bitmap_input R = validity_bitmap>
-        static auto create_proxy(
+        [[nodiscard]] static auto create_proxy(
             const date::time_zone* timezone,
             u8_buffer<buffer_inner_value_type>&& data_buffer,
             R&& bitmaps = validity_bitmap{},
@@ -222,7 +222,7 @@ namespace sparrow
         // range of values (no missing values)
         template <std::ranges::input_range R>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
-        static auto create_proxy(
+        [[nodiscard]] static auto create_proxy(
             const date::time_zone* timezone,
             R&& range,
             std::optional<std::string_view> name = std::nullopt,
@@ -231,7 +231,7 @@ namespace sparrow
 
         template <typename U>
             requires std::convertible_to<U, T>
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             const date::time_zone* timezone,
             size_type n,
             const U& value = U{},
@@ -242,7 +242,7 @@ namespace sparrow
         // range of values, validity_bitmap_input
         template <std::ranges::input_range VALUE_RANGE, validity_bitmap_input VALIDITY_RANGE>
             requires(std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, T>)
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             const date::time_zone* timezone,
             VALUE_RANGE&&,
             VALIDITY_RANGE&&,
@@ -253,7 +253,7 @@ namespace sparrow
         // range of nullable values
         template <std::ranges::input_range R>
             requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             const date::time_zone* timezone,
             R&&,
             std::optional<std::string_view> name = std::nullopt,

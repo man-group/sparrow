@@ -66,47 +66,47 @@ namespace sparrow
             requires(not is_const);
         explicit buffer_adaptor(const FromBufferRef buf);
 
-        constexpr pointer data() noexcept
+        [[nodiscard]] constexpr pointer data() noexcept
             requires(not is_const);
-        constexpr const_pointer data() const noexcept;
+        [[nodiscard]] constexpr const_pointer data() const noexcept;
 
         // Element access
 
-        constexpr reference operator[](size_type idx)
+        [[nodiscard]] constexpr reference operator[](size_type idx)
             requires(not is_const);
-        constexpr const_reference operator[](size_type idx) const;
+        [[nodiscard]] constexpr const_reference operator[](size_type idx) const;
 
-        constexpr reference front()
+        [[nodiscard]] constexpr reference front()
             requires(not is_const);
-        constexpr const_reference front() const;
+        [[nodiscard]] constexpr const_reference front() const;
 
-        constexpr reference back()
+        [[nodiscard]] constexpr reference back()
             requires(not is_const);
-        constexpr const_reference back() const;
+        [[nodiscard]] constexpr const_reference back() const;
 
         // Iterators
 
-        constexpr iterator begin() noexcept
+        [[nodiscard]] constexpr iterator begin() noexcept
             requires(not is_const);
-        constexpr iterator end() noexcept
-            requires(not is_const);
-
-        constexpr const_iterator begin() const noexcept;
-        constexpr const_iterator end() const noexcept;
-
-        constexpr const_iterator cbegin() const noexcept;
-        constexpr const_iterator cend() const noexcept;
-
-        constexpr reverse_iterator rbegin() noexcept
-            requires(not is_const);
-        constexpr reverse_iterator rend() noexcept
+        [[nodiscard]] constexpr iterator end() noexcept
             requires(not is_const);
 
-        constexpr const_reverse_iterator rbegin() const noexcept;
-        constexpr const_reverse_iterator rend() const noexcept;
+        [[nodiscard]] constexpr const_iterator begin() const noexcept;
+        [[nodiscard]] constexpr const_iterator end() const noexcept;
 
-        constexpr const_reverse_iterator crbegin() const noexcept;
-        constexpr const_reverse_iterator crend() const noexcept;
+        [[nodiscard]] constexpr const_iterator cbegin() const noexcept;
+        [[nodiscard]] constexpr const_iterator cend() const noexcept;
+
+        [[nodiscard]] constexpr reverse_iterator rbegin() noexcept
+            requires(not is_const);
+        [[nodiscard]] constexpr reverse_iterator rend() noexcept
+            requires(not is_const);
+
+        [[nodiscard]] constexpr const_reverse_iterator rbegin() const noexcept;
+        [[nodiscard]] constexpr const_reverse_iterator rend() const noexcept;
+
+        [[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept;
+        [[nodiscard]] constexpr const_reverse_iterator crend() const noexcept;
 
         // Capacity
 

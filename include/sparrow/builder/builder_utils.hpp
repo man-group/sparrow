@@ -49,12 +49,12 @@ namespace sparrow
             {
             }
 
-            const T& get() const
+            [[nodiscard]] const T& get() const
             {
                 return m_value;
             }
 
-            T& get()
+            [[nodiscard]] T& get()
             {
                 return m_value;
             }
@@ -154,7 +154,6 @@ namespace sparrow
             return exitable_for_each_index_impl(std::forward<F>(f), std::make_index_sequence<SIZE>());
         }
 
-
         template <class T, std::size_t N>
         concept has_tuple_element = requires(T t) {
             typename std::tuple_element_t<N, std::remove_const_t<T>>;
@@ -205,7 +204,7 @@ namespace sparrow
         } && is_tuple_like<T>();
 
         template <typename Tuple, size_t... Is>
-        constexpr bool all_elements_same_impl(std::index_sequence<Is...>)
+        [[nodiscard]] constexpr bool all_elements_same_impl(std::index_sequence<Is...>)
         {
             return sizeof...(Is) == 0
                    || ((std::is_same_v<std::tuple_element_t<0, Tuple>, std::tuple_element_t<Is, Tuple>>) && ...);
@@ -269,7 +268,7 @@ namespace sparrow
         // a save way to return .size from
         // a possibly nullable object or "express layout desire object"
         template <class T>
-        std::size_t get_size_save(T&& t)
+        [[nodiscard]] std::size_t get_size_save(T&& t)
         {
             using decayed = std::decay_t<T>;
             if constexpr (is_nullable_like<decayed>)
@@ -294,7 +293,7 @@ namespace sparrow
         }
 
         template <class T>
-        decltype(auto) ensure_value(T&& t)
+        [[nodiscard]] decltype(auto) ensure_value(T&& t)
         {
             using decayed = std::decay_t<T>;
             if constexpr (is_nullable_like<decayed> || is_express_layout_desire<decayed>)
@@ -309,7 +308,7 @@ namespace sparrow
 
         template <std::ranges::range T>
             requires(is_nullable_like<std::ranges::range_value_t<T>>)
-        std::vector<std::size_t> where_null(T&& t)
+        [[nodiscard]] std::vector<std::size_t> where_null(T&& t)
         {
             std::vector<std::size_t> result;
             for (std::size_t i = 0; i < t.size(); ++i)
@@ -324,7 +323,7 @@ namespace sparrow
 
         template <class T>
             requires(is_express_layout_desire<std::ranges::range_value_t<T>> && is_nullable_like<typename std::ranges::range_value_t<T>::value_type>)
-        std::vector<std::size_t> where_null(T&& t)
+        [[nodiscard]] std::vector<std::size_t> where_null(T&& t)
         {
             std::vector<std::size_t> result;
             for (std::size_t i = 0; i < t.size(); ++i)
@@ -338,21 +337,21 @@ namespace sparrow
         }
 
         template <class T>
-        std::array<std::size_t, 0> where_null(T&&)
+        [[nodiscard]] std::array<std::size_t, 0> where_null(T&&)
         {
             return {};
         }
 
         template <class T>
             requires(is_plain_value_type<std::ranges::range_value_t<T>>)
-        decltype(auto) ensure_value_range(T&& t)
+        [[nodiscard]] decltype(auto) ensure_value_range(T&& t)
         {
             return std::forward<T>(t);
         }
 
         template <class T>
             requires(!is_plain_value_type<std::ranges::range_value_t<T>>)
-        decltype(auto) ensure_value_range(T&& t)
+        [[nodiscard]] decltype(auto) ensure_value_range(T&& t)
         {
             return t
                    | std::views::transform(
@@ -362,8 +361,5 @@ namespace sparrow
                        }
                    );
         }
-
     }  // namespace detail
-
-
 }  // namespace sparrow

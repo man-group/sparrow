@@ -274,6 +274,9 @@ target_compile_options(${test_target}
 target_link_options(${test_target}
     PRIVATE
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
+target_compile_definitions(${test_target}
+    PRIVATE
+        DOCTEST_CONFIG_VOID_CAST_EXPRESSIONS)
 
 if(ENABLE_COVERAGE)
     enable_coverage(${test_target})

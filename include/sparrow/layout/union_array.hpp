@@ -40,7 +40,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::dense_union_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::DENSE_UNION;
             }
@@ -49,7 +49,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::sparse_union_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::SPARSE_UNION;
             }
@@ -87,30 +87,30 @@ namespace sparrow
 
         using type_id_buffer_type = u8_buffer<std::uint8_t>;
 
-        std::optional<std::string_view> name() const;
-        std::optional<std::string_view> metadata() const;
+        [[nodiscard]] std::optional<std::string_view> name() const;
+        [[nodiscard]] std::optional<std::string_view> metadata() const;
 
-        value_type at(size_type i) const;
-        value_type operator[](size_type i) const;
-        value_type operator[](size_type i);
-        value_type front() const;
-        value_type back() const;
+        [[nodiscard]] value_type at(size_type i) const;
+        [[nodiscard]] value_type operator[](size_type i) const;
+        [[nodiscard]] value_type operator[](size_type i);
+        [[nodiscard]] value_type front() const;
+        [[nodiscard]] value_type back() const;
 
-        bool empty() const;
-        size_type size() const;
+        [[nodiscard]] bool empty() const;
+        [[nodiscard]] size_type size() const;
 
-        iterator begin();
-        iterator end();
-        const_iterator begin() const;
-        const_iterator end() const;
-        const_iterator cbegin() const;
-        const_iterator cend() const;
+        [[nodiscard]] iterator begin();
+        [[nodiscard]] iterator end();
+        [[nodiscard]] const_iterator begin() const;
+        [[nodiscard]] const_iterator end() const;
+        [[nodiscard]] const_iterator cbegin() const;
+        [[nodiscard]] const_iterator cend() const;
 
-        const_reverse_iterator rbegin() const;
-        const_reverse_iterator rend() const;
+        [[nodiscard]] const_reverse_iterator rbegin() const;
+        [[nodiscard]] const_reverse_iterator rend() const;
 
-        const_reverse_iterator crbegin() const;
-        const_reverse_iterator crend() const;
+        [[nodiscard]] const_reverse_iterator crbegin() const;
+        [[nodiscard]] const_reverse_iterator crend() const;
 
     protected:
 

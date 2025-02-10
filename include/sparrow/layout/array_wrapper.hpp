@@ -48,7 +48,7 @@ namespace sparrow
         template <class ARRAY>
         struct get_data_type_from_array
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return arrow_traits<typename ARRAY::inner_value_type>::type_id;
             }
@@ -57,7 +57,7 @@ namespace sparrow
         template <class ARRAY>
         struct is_dictionary_encoded_array
         {
-            static constexpr bool get()
+            [[nodiscard]] static constexpr bool get()
             {
                 return false;
             }
@@ -79,10 +79,10 @@ namespace sparrow
         array_wrapper& operator=(const array_wrapper&) = delete;
         array_wrapper& operator=(array_wrapper&&) = delete;
 
-        wrapper_ptr clone() const;
+        [[nodiscard]] wrapper_ptr clone() const;
 
-        enum data_type data_type() const;
-        bool is_dictionary() const;
+        [[nodiscard]] enum data_type data_type() const;
+        [[nodiscard]] bool is_dictionary() const;
 
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
@@ -95,10 +95,10 @@ namespace sparrow
     private:
 
         enum data_type m_data_type;
-        virtual bool is_dictionary_impl() const = 0;
-        virtual arrow_proxy& get_arrow_proxy_impl() = 0;
-        virtual const arrow_proxy& get_arrow_proxy_impl() const = 0;
-        virtual wrapper_ptr clone_impl() const = 0;
+        [[nodiscard]] virtual bool is_dictionary_impl() const = 0;
+        [[nodiscard]] virtual arrow_proxy& get_arrow_proxy_impl() = 0;
+        [[nodiscard]] virtual const arrow_proxy& get_arrow_proxy_impl() const = 0;
+        [[nodiscard]] virtual wrapper_ptr clone_impl() const = 0;
     };
 
     template <class T>
@@ -119,13 +119,13 @@ namespace sparrow
 
         using wrapper_ptr = array_wrapper::wrapper_ptr;
 
-        constexpr enum data_type get_data_type() const;
+        [[nodiscard]] constexpr enum data_type get_data_type() const;
 
         array_wrapper_impl(const array_wrapper_impl&);
-        bool is_dictionary_impl() const override;
-        arrow_proxy& get_arrow_proxy_impl() override;
-        const arrow_proxy& get_arrow_proxy_impl() const override;
-        wrapper_ptr clone_impl() const override;
+        [[nodiscard]] bool is_dictionary_impl() const override;
+        [[nodiscard]] arrow_proxy& get_arrow_proxy_impl() override;
+        [[nodiscard]] const arrow_proxy& get_arrow_proxy_impl() const override;
+        [[nodiscard]] wrapper_ptr clone_impl() const override;
 
         using storage_type = std::variant<value_ptr<T>, std::shared_ptr<T>, T*>;
         storage_type m_storage;

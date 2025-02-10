@@ -44,7 +44,7 @@ namespace sparrow
 
     private:
 
-        result_type dereference() const
+        [[nodiscard]] result_type dereference() const
         {
             return m_functor(m_index);
         }
@@ -77,12 +77,12 @@ namespace sparrow
             return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);
         }
 
-        bool equal(const self_type& rhs) const
+        [[nodiscard]] bool equal(const self_type& rhs) const
         {
             return m_index == rhs.m_index;
         }
 
-        bool less_than(const self_type& rhs) const
+        [[nodiscard]] bool less_than(const self_type& rhs) const
         {
             return m_index < rhs.m_index;
         }

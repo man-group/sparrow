@@ -39,7 +39,7 @@ namespace sparrow
     using visit_result_t = std::invoke_result_t<F, null_array>;
 
     template <class F>
-    visit_result_t<F> visit(F&& func, const array_wrapper& ar)
+    [[nodiscard]] visit_result_t<F> visit(F&& func, const array_wrapper& ar)
     {
         if (ar.is_dictionary())
         {

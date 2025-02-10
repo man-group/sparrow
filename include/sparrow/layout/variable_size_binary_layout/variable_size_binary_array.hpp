@@ -42,7 +42,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::string, std::int32_t>
         {
-            static std::string format()
+            [[nodiscard]] static std::string format()
             {
                 return "u";
             }
@@ -51,7 +51,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::string, std::int64_t>
         {
-            static std::string format()
+            [[nodiscard]] static std::string format()
             {
                 return "U";
             }
@@ -60,7 +60,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::vector<byte_t>, std::int32_t>
         {
-            static std::string format()
+            [[nodiscard]] static std::string format()
             {
                 return "z";
             }
@@ -69,7 +69,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::vector<byte_t>, std::int64_t>
         {
-            static std::string format()
+            [[nodiscard]] static std::string format()
             {
                 return "Z";
             }
@@ -97,7 +97,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::string_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::STRING;
             }
@@ -106,7 +106,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::big_string_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LARGE_STRING;
             }
@@ -115,7 +115,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::binary_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::BINARY;
             }
@@ -124,7 +124,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::big_binary_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LARGE_BINARY;
             }
@@ -265,16 +265,16 @@ namespace sparrow
         using base_type::get_arrow_proxy;
         using base_type::size;
 
-        inner_reference value(size_type i);
-        inner_const_reference value(size_type i) const;
+        [[nodiscard]] inner_reference value(size_type i);
+        [[nodiscard]] inner_const_reference value(size_type i) const;
 
         template <std::ranges::range SIZES_RANGE>
-        static auto offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type;
+        [[nodiscard]] static auto offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type;
 
     private:
 
         template <mpl::char_like C, validity_bitmap_input VB = validity_bitmap>
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             u8_buffer<C>&& data_buffer,
             offset_buffer_type&& list_offsets,
             VB&& validity_input = validity_bitmap{},
@@ -289,7 +289,7 @@ namespace sparrow
                                                                                            // range of
                                                                                            // char-like
             )
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             R&& values,
             VB&& validity_input = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
@@ -299,7 +299,7 @@ namespace sparrow
         // range of nullable values
         template <std::ranges::input_range R>
             requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             R&&,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<std::string_view> metadata = std::nullopt
@@ -308,21 +308,21 @@ namespace sparrow
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
 
-        offset_iterator offset(size_type i);
-        offset_iterator offsets_begin();
-        offset_iterator offsets_end();
-        data_iterator data(size_type i);
+        [[nodiscard]] offset_iterator offset(size_type i);
+        [[nodiscard]] offset_iterator offsets_begin();
+        [[nodiscard]] offset_iterator offsets_end();
+        [[nodiscard]] data_iterator data(size_type i);
 
-        value_iterator value_begin();
-        value_iterator value_end();
+        [[nodiscard]] value_iterator value_begin();
+        [[nodiscard]] value_iterator value_end();
 
-        const_value_iterator value_cbegin() const;
-        const_value_iterator value_cend() const;
+        [[nodiscard]] const_value_iterator value_cbegin() const;
+        [[nodiscard]] const_value_iterator value_cend() const;
 
-        const_offset_iterator offset(size_type i) const;
-        const_offset_iterator offsets_cbegin() const;
-        const_offset_iterator offsets_cend() const;
-        const_data_iterator data(size_type i) const;
+        [[nodiscard]] const_offset_iterator offset(size_type i) const;
+        [[nodiscard]] const_offset_iterator offsets_cbegin() const;
+        [[nodiscard]] const_offset_iterator offsets_cend() const;
+        [[nodiscard]] const_data_iterator data(size_type i) const;
 
         // Modifiers
 

@@ -66,17 +66,17 @@ namespace sparrow
 
         // Observers
 
-        T* get() noexcept;
-        const T* get() const noexcept;
+        [[nodiscard]] T* get() noexcept;
+        [[nodiscard]] const T* get() const noexcept;
 
         explicit operator bool() const noexcept;
-        bool has_value() const noexcept;
+        [[nodiscard]] bool has_value() const noexcept;
 
-        T& operator*();
-        const T& operator*() const;
+        [[nodiscard]] T& operator*();
+        [[nodiscard]] const T& operator*() const;
 
-        T* operator->();
-        const T* operator->() const;
+        [[nodiscard]] T* operator->();
+        [[nodiscard]] const T* operator->() const;
 
     private:
 
@@ -173,18 +173,19 @@ namespace sparrow
 
         // Observers
 
-        constexpr pointer get() const noexcept;
+        [[nodiscard]] constexpr pointer get() const noexcept;
 
         constexpr explicit operator bool() const noexcept;
 
-        constexpr std::add_lvalue_reference_t<T> operator*() const noexcept(noexcept(*std::declval<pointer>()));
+        [[nodiscard]] constexpr std::add_lvalue_reference_t<T> operator*() const
+            noexcept(noexcept(*std::declval<pointer>()));
 
-        constexpr pointer operator->() const noexcept;
+        [[nodiscard]] constexpr pointer operator->() const noexcept;
 
     private:
 
-        constexpr internal_pointer& ptr_impl() noexcept;
-        constexpr const internal_pointer& ptr_impl() const noexcept;
+        [[nodiscard]] constexpr internal_pointer& ptr_impl() noexcept;
+        [[nodiscard]] constexpr const internal_pointer& ptr_impl() const noexcept;
 
         internal_pointer m_data;
     };

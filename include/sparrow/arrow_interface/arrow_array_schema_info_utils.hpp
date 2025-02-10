@@ -21,13 +21,13 @@ namespace sparrow
 {
 
     /// @returns `true` if  the format of an `ArrowArray` for a given data type is valid, `false` otherwise.
-    inline bool validate_format_with_arrow_array(data_type, const ArrowArray&)
+    [[nodiscard]] inline bool validate_format_with_arrow_array(data_type, const ArrowArray&)
     {
         return true;
         /* THE CODE USED TO MAKES WRONG ASSUMPTIONS AND NEEDS TO BE REFACTORED IN A SEPERATE PR*/
     }
 
-    constexpr bool has_bitmap(data_type dt)
+    [[nodiscard]] constexpr bool has_bitmap(data_type dt)
     {
         switch (dt)
         {

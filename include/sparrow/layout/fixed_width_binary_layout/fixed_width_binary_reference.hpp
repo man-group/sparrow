@@ -56,15 +56,15 @@ namespace sparrow
             requires mpl::convertible_ranges<T, typename L::inner_value_type>
         self_type& operator=(T&& rhs);
 
-        size_type size() const;
+        [[nodiscard]] size_type size() const;
 
-        iterator begin();
-        iterator end();
+        [[nodiscard]] iterator begin();
+        [[nodiscard]] iterator end();
 
-        const_iterator begin() const;
-        const_iterator end() const;
-        const_iterator cbegin() const;
-        const_iterator cend() const;
+        [[nodiscard]] const_iterator begin() const;
+        [[nodiscard]] const_iterator end() const;
+        [[nodiscard]] const_iterator cbegin() const;
+        [[nodiscard]] const_iterator cend() const;
 
         template <std::ranges::input_range T>
             requires mpl::convertible_ranges<T, typename L::inner_value_type>
@@ -76,7 +76,7 @@ namespace sparrow
 
     private:
 
-        size_type offset(size_type index) const;
+        [[nodiscard]] size_type offset(size_type index) const;
 
         L* p_layout = nullptr;
         size_type m_index = size_type(0);

@@ -31,5 +31,5 @@ namespace sparrow
      * @throws std::out_of_range if the converted value would fall out of the range of the result type or if
      * the underlying function (std::strtoul or std::strtoull) sets errno to ERANGE.
      */
-    SPARROW_API std::size_t num_bytes_for_fixed_sized_binary(std::string_view format);
+    [[nodiscard]] SPARROW_API std::size_t num_bytes_for_fixed_sized_binary(std::string_view format);
 }

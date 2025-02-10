@@ -48,13 +48,13 @@ namespace sparrow
 
     private:
 
-        reference dereference() const;
+        [[nodiscard]] reference dereference() const;
         void increment();
         void decrement();
         void advance(difference_type n);
-        difference_type distance_to(const self_type& rhs) const;
-        bool equal(const self_type& rhs) const;
-        bool less_than(const self_type& rhs) const;
+        [[nodiscard]] difference_type distance_to(const self_type& rhs) const;
+        [[nodiscard]] bool equal(const self_type& rhs) const;
+        [[nodiscard]] bool less_than(const self_type& rhs) const;
 
         difference_type m_index;
 
@@ -97,22 +97,22 @@ namespace sparrow
 
         explicit null_array(arrow_proxy);
 
-        std::optional<std::string_view> name() const;
-        std::optional<std::string_view> metadata() const;
+        [[nodiscard]] std::optional<std::string_view> name() const;
+        [[nodiscard]] std::optional<std::string_view> metadata() const;
 
-        size_type size() const;
+        [[nodiscard]] size_type size() const;
 
-        reference operator[](size_type i);
-        const_reference operator[](size_type i) const;
+        [[nodiscard]] reference operator[](size_type i);
+        [[nodiscard]] const_reference operator[](size_type i) const;
 
-        iterator begin();
-        iterator end();
+        [[nodiscard]] iterator begin();
+        [[nodiscard]] iterator end();
 
-        const_iterator begin() const;
-        const_iterator end() const;
+        [[nodiscard]] const_iterator begin() const;
+        [[nodiscard]] const_iterator end() const;
 
-        const_iterator cbegin() const;
-        const_iterator cend() const;
+        [[nodiscard]] const_iterator cbegin() const;
+        [[nodiscard]] const_iterator cend() const;
 
         [[nodiscard]] reference front();
         [[nodiscard]] const_reference front() const;
@@ -120,12 +120,12 @@ namespace sparrow
         [[nodiscard]] reference back();
         [[nodiscard]] const_reference back() const;
 
-        const_value_range values() const;
-        const_bitmap_range bitmap() const;
+        [[nodiscard]] const_value_range values() const;
+        [[nodiscard]] const_bitmap_range bitmap() const;
 
     private:
 
-        static arrow_proxy
+        [[nodiscard]] static arrow_proxy
         create_proxy(size_t length, std::optional<std::string_view> name, std::optional<std::string_view> metadata);
 
         [[nodiscard]] difference_type ssize() const;

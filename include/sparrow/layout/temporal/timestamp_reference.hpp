@@ -52,7 +52,7 @@ namespace sparrow
 
     private:
 
-        L::inner_value_type value() const
+        [[nodiscard]] L::inner_value_type value() const
         {
             return static_cast<const L*>(p_layout)->value(m_index);
         }

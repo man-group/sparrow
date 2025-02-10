@@ -8,7 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or mplied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -89,7 +89,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::list_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LIST;
             }
@@ -98,7 +98,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::big_list_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LARGE_LIST;
             }
@@ -107,7 +107,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::list_view_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LIST_VIEW;
             }
@@ -116,7 +116,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::big_list_view_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::LARGE_LIST_VIEW;
             }
@@ -125,7 +125,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::fixed_sized_list_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::FIXED_SIZED_LIST;
             }
@@ -211,8 +211,8 @@ namespace sparrow
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using iterator_tag = typename base_type::iterator_tag;
 
-        const array_wrapper* raw_flat_array() const;
-        array_wrapper* raw_flat_array();
+        [[nodiscard]] const array_wrapper* raw_flat_array() const;
+        [[nodiscard]] array_wrapper* raw_flat_array();
 
     protected:
 
@@ -228,15 +228,15 @@ namespace sparrow
 
         using list_size_type = inner_types::list_size_type;
 
-        value_iterator value_begin();
-        value_iterator value_end();
-        const_value_iterator value_cbegin() const;
-        const_value_iterator value_cend() const;
+        [[nodiscard]] value_iterator value_begin();
+        [[nodiscard]] value_iterator value_end();
+        [[nodiscard]] const_value_iterator value_cbegin() const;
+        [[nodiscard]] const_value_iterator value_cend() const;
 
-        inner_reference value(size_type i);
-        inner_const_reference value(size_type i) const;
+        [[nodiscard]] inner_reference value(size_type i);
+        [[nodiscard]] inner_const_reference value(size_type i) const;
 
-        cloning_ptr<array_wrapper> make_flat_array();
+        [[nodiscard]] cloning_ptr<array_wrapper> make_flat_array();
 
         // data members
         cloning_ptr<array_wrapper> p_flat_array;
@@ -278,12 +278,12 @@ namespace sparrow
         }
 
         template <std::ranges::range SIZES_RANGE>
-        static auto offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type;
+        [[nodiscard]] static auto offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type;
 
     private:
 
         template <validity_bitmap_input VB = validity_bitmap>
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             offset_buffer_type&& list_offsets,
             VB&& validity_input = validity_bitmap{},
@@ -292,9 +292,9 @@ namespace sparrow
         );
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
-        std::pair<offset_type, offset_type> offset_range(size_type i) const;
+        [[nodiscard]] std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
-        offset_type* make_list_offsets();
+        [[nodiscard]] offset_type* make_list_offsets();
 
         offset_type* p_list_offsets;
 
@@ -335,7 +335,7 @@ namespace sparrow
     private:
 
         template <validity_bitmap_input VB = validity_bitmap>
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             offset_buffer_type&& list_offsets,
             size_buffer_type&& list_sizes,
@@ -346,10 +346,10 @@ namespace sparrow
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr std::size_t SIZES_BUFFER_INDEX = 2;
-        std::pair<offset_type, offset_type> offset_range(size_type i) const;
+        [[nodiscard]] std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
-        offset_type* make_list_offsets();
-        offset_type* make_list_sizes();
+        [[nodiscard]] offset_type* make_list_offsets();
+        [[nodiscard]] offset_type* make_list_sizes();
 
         offset_type* p_list_offsets;
         offset_type* p_list_sizes;
@@ -388,7 +388,7 @@ namespace sparrow
     private:
 
         template <validity_bitmap_input R = validity_bitmap>
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             std::uint64_t list_size,
             array&& flat_values,
             R&& validity_input = validity_bitmap{},
@@ -396,8 +396,8 @@ namespace sparrow
             std::optional<std::string_view> metadata = std::nullopt
         );
 
-        static uint64_t list_size_from_format(const std::string_view format);
-        std::pair<offset_type, offset_type> offset_range(size_type i) const;
+        [[nodiscard]] static uint64_t list_size_from_format(const std::string_view format);
+        [[nodiscard]] std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
         uint64_t m_list_size;
 

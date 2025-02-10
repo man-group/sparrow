@@ -25,7 +25,7 @@ namespace sparrow
 {
     template <std::ranges::range R>
         requires std::ranges::sized_range<std::ranges::range_value_t<R>>
-    size_t number_of_bytes(const R& ranges)
+    [[nodiscard]] size_t number_of_bytes(const R& ranges)
     {
         using value_type = std::ranges::range_value_t<std::ranges::range_value_t<R>>;
         return std::transform_reduce(
@@ -42,7 +42,7 @@ namespace sparrow
 
     template <std::ranges::range R>
         requires(std::ranges::sized_range<std::ranges::range_value_t<R>>)
-    buffer<uint8_t> strings_to_buffer(R&& strings)
+    [[nodiscard]] buffer<uint8_t> strings_to_buffer(R&& strings)
     {
         using range_value_type = std::ranges::range_value_t<R>;
         using atomic_element_type = std::ranges::range_value_t<range_value_type>;
@@ -70,7 +70,7 @@ namespace sparrow
 
     template <std::ranges::range R>
         requires(std::is_arithmetic_v<std::ranges::range_value_t<R>>)
-    buffer<uint8_t> range_to_buffer(R&& range)
+    [[nodiscard]] buffer<uint8_t> range_to_buffer(R&& range)
     {
         const size_t values_byte_count = std::ranges::size(range) * sizeof(std::ranges::range_value_t<R>);
         buffer<uint8_t> values_buffer(values_byte_count);

@@ -56,31 +56,31 @@ namespace sparrow
             {
             }
 
-            constexpr T* data()
+            [[nodiscard]] constexpr T* data()
             {
                 return get_proxy().buffers()[m_data_buffer_index].template data<T>()
                        + static_cast<size_t>(get_proxy().offset());
             }
 
-            constexpr const T* data() const
+            [[nodiscard]] constexpr const T* data() const
             {
                 return get_proxy().buffers()[m_data_buffer_index].template data<T>()
                        + static_cast<size_t>(get_proxy().offset());
             }
 
-            constexpr T& value(size_t i)
+            [[nodiscard]] constexpr T& value(size_t i)
             {
                 SPARROW_ASSERT_TRUE(i < get_proxy().length());
                 return data()[i];
             }
 
-            constexpr const T& value(size_t i) const
+            [[nodiscard]] constexpr const T& value(size_t i) const
             {
                 SPARROW_ASSERT_TRUE(i < get_proxy().length());
                 return data()[i];
             }
 
-            constexpr buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer()
+            [[nodiscard]] constexpr buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer()
             {
                 auto& buffers = get_proxy().get_array_private_data()->buffers();
                 return make_buffer_adaptor<T>(buffers[m_data_buffer_index]);
@@ -163,12 +163,12 @@ namespace sparrow
 
         private:
 
-            arrow_proxy& get_proxy()
+            [[nodiscard]] arrow_proxy& get_proxy()
             {
                 return detail::array_access::get_arrow_proxy(*p_layout);
             }
 
-            const arrow_proxy& get_proxy() const
+            [[nodiscard]] const arrow_proxy& get_proxy() const
             {
                 return detail::array_access::get_arrow_proxy(*p_layout);
             }

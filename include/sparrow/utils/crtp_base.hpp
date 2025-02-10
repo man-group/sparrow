@@ -31,8 +31,8 @@ namespace sparrow
 
         using derived_type = D;
 
-        derived_type& derived_cast();
-        const derived_type& derived_cast() const;
+        [[nodiscard]] derived_type& derived_cast();
+        [[nodiscard]] const derived_type& derived_cast() const;
     };
 
     template <class D>

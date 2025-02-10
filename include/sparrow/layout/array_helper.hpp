@@ -22,15 +22,13 @@
 
 namespace sparrow
 {
-    SPARROW_API
-    std::size_t array_size(const array_wrapper& ar);
+    [[nodiscard]] SPARROW_API std::size_t array_size(const array_wrapper& ar);
 
-    SPARROW_API
-    bool array_has_value(const array_wrapper& ar, std::size_t index);
+    [[nodiscard]] SPARROW_API bool array_has_value(const array_wrapper& ar, std::size_t index);
 
-    SPARROW_API
-    array_traits::const_reference array_element(const array_wrapper& ar, std::size_t index);
+    [[nodiscard]] SPARROW_API array_traits::const_reference
+    array_element(const array_wrapper& ar, std::size_t index);
 
-    SPARROW_API
-    array_traits::inner_value_type array_default_element_value(const array_wrapper& ar);
+    [[nodiscard]] SPARROW_API array_traits::inner_value_type
+    array_default_element_value(const array_wrapper& ar);
 }
