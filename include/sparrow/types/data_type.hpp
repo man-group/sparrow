@@ -17,6 +17,7 @@
 #include <chrono>
 #include <version>
 
+#include "sparrow/layout/temporal/date_types.hpp"
 #include "sparrow/layout/temporal/interval_types.hpp"
 
 #if defined(SPARROW_USE_DATE_POLYFILL)
@@ -188,6 +189,8 @@ namespace sparrow
         DECIMAL128,
         DECIMAL256,
         FIXED_WIDTH_BINARY,
+        DATE_DAYS,
+        DATE_MILLISECONDS,
         TIMESTAMP_SECONDS,
         TIMESTAMP_MILLISECONDS,
         TIMESTAMP_MICROSECONDS,
@@ -278,7 +281,15 @@ namespace sparrow
         // TODO: add propper timestamp support below
         else if (format.starts_with("t"))
         {
-            if (format.starts_with("tss:"))
+            if (format == "tdD")
+            {
+                return data_type::DATE_DAYS;
+            }
+            else if (format == "tdm")
+            {
+                return data_type::DATE_MILLISECONDS;
+            }
+            else if (format.starts_with("tss:"))
             {
                 return data_type::TIMESTAMP_SECONDS;
             }
@@ -500,6 +511,10 @@ namespace sparrow
                 return "z";
             case data_type::LARGE_BINARY:
                 return "Z";
+            case data_type::DATE_DAYS:
+                return "tdD";
+            case data_type::DATE_MILLISECONDS:
+                return "tdm";
             case data_type::TIMESTAMP_SECONDS:
                 return "tss:";
             case data_type::TIMESTAMP_MILLISECONDS:
@@ -595,6 +610,8 @@ namespace sparrow
         float64_t,
         std::string,
         std::vector<byte_t>,
+        date_days,
+        date_milliseconds,
         timestamp<std::chrono::seconds>,
         timestamp<std::chrono::milliseconds>,
         timestamp<std::chrono::microseconds>,
@@ -836,6 +853,10 @@ namespace std
                         return "Binary";
                     case LARGE_BINARY:
                         return "Large binary";
+                    case DATE_DAYS:
+                        return "Date days";
+                    case DATE_MILLISECONDS:
+                        return "Date milliseconds";
                     case TIMESTAMP_SECONDS:
                         return "Timestamp seconds";
                     case TIMESTAMP_MILLISECONDS:

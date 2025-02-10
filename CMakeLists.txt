@@ -201,6 +201,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/primitive_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_layout/struct_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_layout/struct_value.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/date_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/duration_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_concepts.hpp

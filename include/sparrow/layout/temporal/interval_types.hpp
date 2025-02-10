@@ -19,13 +19,10 @@
 #    include <format>
 #endif
 
+#include "sparrow/layout/temporal/temporal_types.hpp"
+
 namespace sparrow
 {
-    namespace chrono
-    {
-        using days = std::chrono::duration<int32_t, std::ratio<86400>>;
-        using months = std::chrono::duration<int32_t, std::ratio<2629746>>;
-    }
 
 // We pack the structures to ensure that they are the same size on all platforms
 #pragma pack(push, 1)

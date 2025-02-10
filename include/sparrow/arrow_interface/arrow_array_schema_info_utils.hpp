@@ -44,6 +44,8 @@ namespace sparrow
             case data_type::HALF_FLOAT:
             case data_type::FLOAT:
             case data_type::DOUBLE:
+            case data_type::DATE_DAYS:
+            case data_type::DATE_MILLISECONDS:
             case data_type::TIMESTAMP_SECONDS:
             case data_type::TIMESTAMP_MILLISECONDS:
             case data_type::TIMESTAMP_MICROSECONDS:
