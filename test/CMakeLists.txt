@@ -154,6 +154,7 @@ else()
         test_run_end_encoded_array.cpp
         test_string_array.cpp
         test_struct_array.cpp
+        test_time_array.cpp
         test_timestamp_array.cpp
         test_traits.cpp
         test_union_array.cpp

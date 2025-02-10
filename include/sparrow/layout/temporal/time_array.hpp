@@ -21,7 +21,8 @@
 
 namespace sparrow
 {
-    using time_types_t = mpl::typelist<time_seconds, time_milliseconds, time_microseconds, time_nanoseconds>;
+    using time_types_t = mpl::
+        typelist<chrono::time_seconds, chrono::time_milliseconds, chrono::time_microseconds, chrono::time_nanoseconds>;
 
     static constexpr time_types_t time_types;
     template <typename T>
@@ -42,10 +43,10 @@ namespace sparrow
     template <time_type T>
     using time_array = array_trivial_copyable<T>;
 
-    using time_seconds_array = time_array<time_seconds>;
-    using time_milliseconds_array = time_array<time_milliseconds>;
-    using time_microseconds_array = time_array<time_microseconds>;
-    using time_nanoseconds_array = time_array<time_nanoseconds>;
+    using time_seconds_array = time_array<chrono::time_seconds>;
+    using time_milliseconds_array = time_array<chrono::time_milliseconds>;
+    using time_microseconds_array = time_array<chrono::time_microseconds>;
+    using time_nanoseconds_array = time_array<chrono::time_nanoseconds>;
 
     template <class T>
     struct is_time_array : std::false_type

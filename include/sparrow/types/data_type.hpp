@@ -19,6 +19,7 @@
 
 #include "sparrow/layout/temporal/date_types.hpp"
 #include "sparrow/layout/temporal/interval_types.hpp"
+#include "sparrow/layout/temporal/time_types.hpp"
 
 #if defined(SPARROW_USE_DATE_POLYFILL)
 
@@ -195,6 +196,10 @@ namespace sparrow
         TIMESTAMP_MILLISECONDS,
         TIMESTAMP_MICROSECONDS,
         TIMESTAMP_NANOSECONDS,
+        TIME_SECONDS,
+        TIME_MILLISECONDS,
+        TIME_MICROSECONDS,
+        TIME_NANOSECONDS,
         DURATION_SECONDS,
         DURATION_MILLISECONDS,
         DURATION_MICROSECONDS,
@@ -332,6 +337,22 @@ namespace sparrow
             else if (format == "tin")
             {
                 return data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS;
+            }
+            else if (format == "tts")
+            {
+                return data_type::TIME_SECONDS;
+            }
+            else if (format == "ttm")
+            {
+                return data_type::TIME_MILLISECONDS;
+            }
+            else if (format == "ttu")
+            {
+                return data_type::TIME_MICROSECONDS;
+            }
+            else if (format == "ttn")
+            {
+                return data_type::TIME_NANOSECONDS;
             }
         }
         else if (format == "+l")
@@ -537,6 +558,14 @@ namespace sparrow
                 return "tiD";
             case data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS:
                 return "tin";
+            case data_type::TIME_SECONDS:
+                return "tts";
+            case data_type::TIME_MILLISECONDS:
+                return "ttm";
+            case data_type::TIME_MICROSECONDS:
+                return "ttu";
+            case data_type::TIME_NANOSECONDS:
+                return "ttn";
             case data_type::LIST:
                 return "+l";
             case data_type::LARGE_LIST:
@@ -623,6 +652,10 @@ namespace sparrow
         chrono::months,
         days_time_interval,
         month_day_nanoseconds_interval,
+        chrono::time_seconds,
+        chrono::time_milliseconds,
+        chrono::time_microseconds,
+        chrono::time_nanoseconds,
         // TODO: add missing fundamental types here
         list_value,
         struct_value,
@@ -879,6 +912,14 @@ namespace std
                         return "Interval days time";
                     case INTERVAL_MONTHS_DAYS_NANOSECONDS:
                         return "Interval months days nanoseconds";
+                    case TIME_SECONDS:
+                        return "Time seconds";
+                    case TIME_MILLISECONDS:
+                        return "Time milliseconds";
+                    case TIME_MICROSECONDS:
+                        return "Time microseconds";
+                    case TIME_NANOSECONDS:
+                        return "Time nanoseconds";
                     case LIST:
                         return "List";
                     case LARGE_LIST:

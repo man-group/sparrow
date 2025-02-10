@@ -19,6 +19,7 @@
 
 #include "sparrow/layout/temporal/date_array.hpp"
 #include "sparrow/layout/temporal/interval_types.hpp"
+#include "sparrow/layout/temporal/time_types.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/vector_view.hpp"
@@ -179,6 +180,30 @@ namespace sparrow
         static constexpr data_type type_id = data_type::TIMESTAMP_NANOSECONDS;
         using value_type = timestamp<std::chrono::nanoseconds>;
         using const_reference = timestamp<std::chrono::nanoseconds>;
+    };
+
+    template <>
+    struct arrow_traits<chrono::time_seconds> : common_native_types_traits<chrono::time_seconds>
+    {
+        static constexpr data_type type_id = data_type::TIME_SECONDS;
+    };
+
+    template <>
+    struct arrow_traits<chrono::time_milliseconds> : common_native_types_traits<chrono::time_milliseconds>
+    {
+        static constexpr data_type type_id = data_type::TIME_MILLISECONDS;
+    };
+
+    template <>
+    struct arrow_traits<chrono::time_microseconds> : common_native_types_traits<chrono::time_microseconds>
+    {
+        static constexpr data_type type_id = data_type::TIME_MICROSECONDS;
+    };
+
+    template <>
+    struct arrow_traits<chrono::time_nanoseconds> : common_native_types_traits<chrono::time_nanoseconds>
+    {
+        static constexpr data_type type_id = data_type::TIME_NANOSECONDS;
     };
 
     template <>
