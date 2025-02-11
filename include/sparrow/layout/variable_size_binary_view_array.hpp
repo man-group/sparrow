@@ -47,7 +47,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::string_view_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::STRING_VIEW;
             }
@@ -56,7 +56,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::binary_view_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::BINARY_VIEW;
             }
@@ -142,21 +142,21 @@ namespace sparrow
 
         template <std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
-        static arrow_proxy create_proxy(
+        [[nodiscard]] static arrow_proxy create_proxy(
             R&& range,
             VB&& bitmap_input = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
             std::optional<std::string_view> metadata = std::nullopt
         );
 
-        inner_reference value(size_type i);
-        inner_const_reference value(size_type i) const;
+        [[nodiscard]] inner_reference value(size_type i);
+        [[nodiscard]] inner_const_reference value(size_type i) const;
 
-        value_iterator value_begin();
-        value_iterator value_end();
+        [[nodiscard]] value_iterator value_begin();
+        [[nodiscard]] value_iterator value_end();
 
-        const_value_iterator value_cbegin() const;
-        const_value_iterator value_cend() const;
+        [[nodiscard]] const_value_iterator value_cbegin() const;
+        [[nodiscard]] const_value_iterator value_cend() const;
 
         static constexpr size_type LENGTH_BUFFER_INDEX = 1;
         static constexpr std::size_t DATA_BUFFER_SIZE = 16;

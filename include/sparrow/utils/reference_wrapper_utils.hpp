@@ -28,7 +28,7 @@ namespace sparrow
     struct reference_wrapper_hasher
     {
         template <typename T>
-        std::size_t operator()(const std::reference_wrapper<T>& ref) const
+        [[nodiscard]] std::size_t operator()(const std::reference_wrapper<T>& ref) const
         {
             return std::hash<std::remove_cvref_t<T>>{}(ref.get());
         }
@@ -63,7 +63,7 @@ namespace sparrow
         /// @param  The instance of the type to check.
         /// @return `true` if the type is a reference wrapper, `false` otherwise.
         template <typename T>
-        constexpr bool is_reference_wrapper(const T&)
+        [[nodiscard]] constexpr bool is_reference_wrapper(const T&)
         {
             return is_reference_wrapper_v<std::remove_cvref_t<T>>;
         }

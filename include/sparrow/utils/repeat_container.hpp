@@ -46,7 +46,7 @@ namespace sparrow
 
     private:
 
-        constexpr reference dereference() const noexcept;
+        [[nodiscard]] constexpr reference dereference() const noexcept;
         constexpr void increment() noexcept;
         constexpr void decrement() noexcept;
         constexpr void advance(difference_type n) noexcept;

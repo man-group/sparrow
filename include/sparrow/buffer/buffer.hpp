@@ -33,7 +33,6 @@
 
 namespace sparrow
 {
-
     /**
      * Base class for buffer.
      *
@@ -80,10 +79,10 @@ namespace sparrow
         template <allocator A>
         constexpr buffer_base(buffer_base&& rhs, const A& a);
 
-        constexpr allocator_type& get_allocator() noexcept;
-        constexpr const allocator_type& get_allocator() const noexcept;
-        constexpr buffer_data& get_data() noexcept;
-        constexpr const buffer_data& get_data() const noexcept;
+        [[nodiscard]] constexpr allocator_type& get_allocator() noexcept;
+        [[nodiscard]] constexpr const allocator_type& get_allocator() const noexcept;
+        [[nodiscard]] constexpr buffer_data& get_data() noexcept;
+        [[nodiscard]] constexpr const buffer_data& get_data() const noexcept;
 
         constexpr pointer allocate(size_type n);
         constexpr void deallocate(pointer p, size_type n);
@@ -177,49 +176,50 @@ namespace sparrow
 
         // Element access
 
-        constexpr reference operator[](size_type i);
-        constexpr const_reference operator[](size_type i) const;
+        [[nodiscard]] constexpr reference operator[](size_type i);
+        [[nodiscard]] constexpr const_reference operator[](size_type i) const;
 
-        constexpr reference front();
-        constexpr const_reference front() const;
+        [[nodiscard]] constexpr reference front();
+        [[nodiscard]] constexpr const_reference front() const;
 
-        constexpr reference back();
-        constexpr const_reference back() const;
-
-        // TODO: make this non template and make a buffer_caster class
-        template <class U = T>
-        constexpr U* data() noexcept;
+        [[nodiscard]] constexpr reference back();
+        [[nodiscard]] constexpr const_reference back() const;
 
         // TODO: make this non template and make a buffer_caster class
         template <class U = T>
-        constexpr const U* data() const noexcept;
+        [[nodiscard]] constexpr U* data() noexcept;
+
+        // TODO: make this non template and make a buffer_caster class
+        template <class U = T>
+        [[nodiscard]] constexpr const U* data() const noexcept;
 
         // Iterators
 
-        constexpr iterator begin() noexcept;
-        constexpr iterator end() noexcept;
+        [[nodiscard]] constexpr iterator begin() noexcept;
+        [[nodiscard]] constexpr iterator end() noexcept;
 
-        constexpr const_iterator begin() const noexcept;
-        constexpr const_iterator end() const noexcept;
+        [[nodiscard]] constexpr const_iterator begin() const noexcept;
+        [[nodiscard]] constexpr const_iterator end() const noexcept;
 
-        constexpr const_iterator cbegin() const noexcept;
-        constexpr const_iterator cend() const noexcept;
+        [[nodiscard]] constexpr const_iterator cbegin() const noexcept;
+        [[nodiscard]] constexpr const_iterator cend() const noexcept;
 
-        constexpr reverse_iterator rbegin() noexcept;
-        constexpr reverse_iterator rend() noexcept;
+        [[nodiscard]] constexpr reverse_iterator rbegin() noexcept;
+        [[nodiscard]] constexpr reverse_iterator rend() noexcept;
 
-        constexpr const_reverse_iterator rbegin() const noexcept;
-        constexpr const_reverse_iterator rend() const noexcept;
+        [[nodiscard]] constexpr const_reverse_iterator rbegin() const noexcept;
+        [[nodiscard]] constexpr const_reverse_iterator rend() const noexcept;
 
-        constexpr const_reverse_iterator crbegin() const noexcept;
-        constexpr const_reverse_iterator crend() const noexcept;
-
+        [[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept;
+        [[nodiscard]] constexpr const_reverse_iterator crend() const noexcept;
+        [[nodiscard]]
         // Capacity
 
-        constexpr bool empty() const noexcept;
-        constexpr size_type capacity() const noexcept;
-        constexpr size_type size() const noexcept;
-        constexpr size_type max_size() const noexcept;
+        [[nodiscard]] constexpr bool
+        empty() const noexcept;
+        [[nodiscard]] constexpr size_type capacity() const noexcept;
+        [[nodiscard]] constexpr size_type size() const noexcept;
+        [[nodiscard]] constexpr size_type max_size() const noexcept;
         constexpr void reserve(size_type new_cap);
         constexpr void shrink_to_fit();
 
@@ -280,9 +280,10 @@ namespace sparrow
 
         static constexpr size_type check_init_length(size_type n, const allocator_type& a);
 
-        static constexpr size_type max_size_impl(const allocator_type& a) noexcept;
+        [[nodiscard]] static constexpr size_type max_size_impl(const allocator_type& a) noexcept;
 
-        static constexpr pointer default_initialize(pointer begin, size_type n, allocator_type& a);
+        [[nodiscard]] static constexpr pointer
+        default_initialize(pointer begin, size_type n, allocator_type& a);
 
         static constexpr pointer
         fill_initialize(pointer begin, size_type n, const value_type& v, allocator_type& a);

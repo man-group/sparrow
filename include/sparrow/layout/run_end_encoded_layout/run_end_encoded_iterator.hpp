@@ -49,9 +49,9 @@ namespace sparrow
 
     private:
 
-        bool equal(const run_encoded_array_iterator& rhs) const;
+        [[nodiscard]] bool equal(const run_encoded_array_iterator& rhs) const;
         void increment();
-        array_traits::const_reference dereference() const;
+        [[nodiscard]] array_traits::const_reference dereference() const;
         array_ptr_type p_array = nullptr;
         array_wrapper* p_encoded_values_array = nullptr;
         std::uint64_t m_index = 0;          // the current index / the index the user sees

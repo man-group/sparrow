@@ -37,13 +37,13 @@ namespace sparrow
         struct_value() = default;
         struct_value(const std::vector<child_ptr>& children, size_type index);
 
-        size_type size() const;
-        bool empty() const;
+        [[nodiscard]] size_type size() const;
+        [[nodiscard]] bool empty() const;
 
-        const_reference operator[](size_type i) const;
+        [[nodiscard]] const_reference operator[](size_type i) const;
 
-        const_reference front() const;
-        const_reference back() const;
+        [[nodiscard]] const_reference front() const;
+        [[nodiscard]] const_reference back() const;
 
     private:
 

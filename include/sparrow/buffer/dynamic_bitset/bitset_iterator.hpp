@@ -64,12 +64,12 @@ namespace sparrow
         constexpr void increment();
         constexpr void decrement();
         constexpr void advance(difference_type n);
-        constexpr difference_type distance_to(const self_type& rhs) const noexcept;
-        constexpr bool equal(const self_type& rhs) const noexcept;
-        constexpr bool less_than(const self_type& rhs) const noexcept;
+        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const noexcept;
+        [[nodiscard]] constexpr bool equal(const self_type& rhs) const noexcept;
+        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const noexcept;
 
-        constexpr bool is_first_bit_of_block(size_type index) const noexcept;
-        constexpr difference_type distance_to_begin() const;
+        [[nodiscard]] constexpr bool is_first_bit_of_block(size_type index) const noexcept;
+        [[nodiscard]] constexpr difference_type distance_to_begin() const;
 
         bitset_type* p_bitset = nullptr;
         block_type* p_block = nullptr;

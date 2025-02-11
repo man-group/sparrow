@@ -39,17 +39,17 @@ namespace sparrow
 
             T value;
 
-            T extract_storage() &&
+            [[nodiscard]] T extract_storage() &&
             {
                 return std::move(value);
             }
 
-            const T& storage() const
+            [[nodiscard]] const T& storage() const
             {
                 return value;
             }
 
-            T& storage()
+            [[nodiscard]] T& storage()
             {
                 return value;
             }

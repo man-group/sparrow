@@ -75,11 +75,11 @@ namespace sparrow
         using iterator = layout_iterator<iterator_types>;
         using const_iterator = base_type::const_iterator;
 
-        reference operator[](size_type i);
+        [[nodiscard]] reference operator[](size_type i);
         using base_type::operator[];
 
-        iterator begin();
-        iterator end();
+        [[nodiscard]] iterator begin();
+        [[nodiscard]] iterator end();
 
         using base_type::begin;
         using base_type::end;
@@ -178,11 +178,11 @@ namespace sparrow
         mutable_array_base(mutable_array_base&&) = default;
         mutable_array_base& operator=(mutable_array_base&&) = default;
 
-        bitmap_reference has_value(size_type i);
+        [[nodiscard]] bitmap_reference has_value(size_type i);
         using base_type::has_value;
 
-        bitmap_iterator bitmap_begin();
-        bitmap_iterator bitmap_end();
+        [[nodiscard]] bitmap_iterator bitmap_begin();
+        [[nodiscard]] bitmap_iterator bitmap_end();
 
         friend class layout_iterator<iterator_types>;
     };

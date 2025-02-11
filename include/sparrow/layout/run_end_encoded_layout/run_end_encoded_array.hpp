@@ -39,7 +39,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::run_end_encoded_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::RUN_ENCODED;
             }
@@ -71,30 +71,30 @@ namespace sparrow
         run_end_encoded_array(self_type&&) = default;
         self_type& operator=(self_type&&) = default;
 
-        SPARROW_API array_traits::const_reference operator[](std::uint64_t i);
-        SPARROW_API array_traits::const_reference operator[](std::uint64_t i) const;
+        [[nodiscard]] SPARROW_API array_traits::const_reference operator[](std::uint64_t i);
+        [[nodiscard]] SPARROW_API array_traits::const_reference operator[](std::uint64_t i) const;
 
-        SPARROW_API iterator begin();
-        SPARROW_API iterator end();
+        [[nodiscard]] SPARROW_API iterator begin();
+        [[nodiscard]] SPARROW_API iterator end();
 
-        SPARROW_API const_iterator begin() const;
-        SPARROW_API const_iterator end() const;
+        [[nodiscard]] SPARROW_API const_iterator begin() const;
+        [[nodiscard]] SPARROW_API const_iterator end() const;
 
-        SPARROW_API const_iterator cbegin() const;
-        SPARROW_API const_iterator cend() const;
+        [[nodiscard]] SPARROW_API const_iterator cbegin() const;
+        [[nodiscard]] SPARROW_API const_iterator cend() const;
 
-        SPARROW_API array_traits::const_reference front() const;
-        SPARROW_API array_traits::const_reference back() const;
+        [[nodiscard]] SPARROW_API array_traits::const_reference front() const;
+        [[nodiscard]] SPARROW_API array_traits::const_reference back() const;
 
-        SPARROW_API bool empty() const;
-        SPARROW_API size_type size() const;
+        [[nodiscard]] SPARROW_API bool empty() const;
+        [[nodiscard]] SPARROW_API size_type size() const;
 
-        std::optional<std::string_view> name() const;
-        std::optional<std::string_view> metadata() const;
+        [[nodiscard]] std::optional<std::string_view> name() const;
+        [[nodiscard]] std::optional<std::string_view> metadata() const;
 
     private:
 
-        SPARROW_API static auto create_proxy(
+        [[nodiscard]] SPARROW_API static auto create_proxy(
             array&& acc_lengths,
             array&& encoded_values,
             std::optional<std::string_view> name = std::nullopt,
@@ -103,10 +103,11 @@ namespace sparrow
 
         using acc_length_ptr_variant_type = std::variant<const std::uint16_t*, const std::uint32_t*, const std::uint64_t*>;
 
-        SPARROW_API static std::pair<std::int64_t, std::int64_t>
+        [[nodiscard]] SPARROW_API static std::pair<std::int64_t, std::int64_t>
         extract_length_and_null_count(const array&, const array&);
-        SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array_wrapper& ar);
-        SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
+        [[nodiscard]] SPARROW_API static acc_length_ptr_variant_type
+        get_acc_lengths_ptr(const array_wrapper& ar);
+        [[nodiscard]] SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
 
         [[nodiscard]] SPARROW_API arrow_proxy& get_arrow_proxy();
         [[nodiscard]] SPARROW_API const arrow_proxy& get_arrow_proxy() const;

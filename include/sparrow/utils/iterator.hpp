@@ -22,7 +22,6 @@
 
 namespace sparrow
 {
-
     namespace detail
     {
         // Since C++20, iterators do not require dereference to return an
@@ -61,12 +60,12 @@ namespace sparrow
 
             using result_type = proxy;
 
-            static result_type apply(const Reference& x)
+            [[nodiscard]] static result_type apply(const Reference& x)
             {
                 return result_type(x);
             }
 
-            static result_type apply(Reference&& x)
+            [[nodiscard]] static result_type apply(Reference&& x)
             {
                 return result_type(std::move(x));
             }
@@ -129,19 +128,19 @@ namespace sparrow
 
 #endif
         template <class It>
-        static typename It::difference_type distance_to(const It& lhs, const It& rhs)
+        [[nodiscard]] static typename It::difference_type distance_to(const It& lhs, const It& rhs)
         {
             return lhs.distance_to(rhs);
         }
 
         template <class It>
-        static bool equal(const It& lhs, const It& rhs)
+        [[nodiscard]] static bool equal(const It& lhs, const It& rhs)
         {
             return lhs.equal(rhs);
         }
 
         template <class It>
-        static bool less_than(const It& lhs, const It& rhs)
+        [[nodiscard]] static bool less_than(const It& lhs, const It& rhs)
         {
             return lhs.less_than(rhs);
         }
@@ -214,12 +213,12 @@ namespace sparrow
 
     protected:
 
-        derived_type& derived()
+        [[nodiscard]] derived_type& derived()
         {
             return *static_cast<derived_type*>(this);
         }
 
-        const derived_type& derived() const
+        [[nodiscard]] const derived_type& derived() const
         {
             return *static_cast<const derived_type*>(this);
         }
@@ -412,7 +411,7 @@ namespace sparrow
         {
         }
 
-        const iterator_type& base() const
+        [[nodiscard]] const iterator_type& base() const
         {
             return p_iter;
         }
@@ -439,17 +438,17 @@ namespace sparrow
             p_iter += n;
         }
 
-        difference_type distance_to(const self_type& rhs) const
+        [[nodiscard]] difference_type distance_to(const self_type& rhs) const
         {
             return rhs.p_iter - p_iter;
         }
 
-        bool equal(const self_type& rhs) const
+        [[nodiscard]] bool equal(const self_type& rhs) const
         {
             return p_iter == rhs.p_iter;
         }
 
-        bool less_than(const self_type& rhs) const
+        [[nodiscard]] bool less_than(const self_type& rhs) const
         {
             return p_iter < rhs.p_iter;
         }
@@ -495,13 +494,13 @@ namespace sparrow
     };
 
     template <class T>
-    pointer_iterator<T*> make_pointer_iterator(T* t)
+    [[nodiscard]] pointer_iterator<T*> make_pointer_iterator(T* t)
     {
         return pointer_iterator<T*>(t);
     }
 
     template <class InputIt, std::integral Distance>
-    constexpr InputIt next(InputIt it, Distance n)
+    [[nodiscard]] constexpr InputIt next(InputIt it, Distance n)
     {
         std::advance(it, n);
         return it;

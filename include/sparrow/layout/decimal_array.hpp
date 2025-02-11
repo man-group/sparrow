@@ -34,7 +34,6 @@ namespace sparrow
     template <class T>
     class decimal_array;
 
-
     using decimal_32_array = decimal_array<decimal<int32_t>>;
     using decimal_64_array = decimal_array<decimal<int64_t>>;
     using decimal_128_array = decimal_array<decimal<int128_t>>;
@@ -48,7 +47,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<decimal_32_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::DECIMAL32;
             }
@@ -57,7 +56,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<decimal_64_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::DECIMAL64;
             }
@@ -66,7 +65,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<decimal_128_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::DECIMAL128;
             }
@@ -75,7 +74,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<decimal_256_array>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::DECIMAL256;
             }
@@ -91,7 +90,6 @@ namespace sparrow
         using inner_value_type = T;
         using inner_reference = T;
         using inner_const_reference = T;
-
 
         using bitmap_const_reference = bitmap_type::const_reference;
 
@@ -136,7 +134,6 @@ namespace sparrow
         using value_type = nullable<inner_value_type>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
 
-
         using size_type = typename base_type::size_type;
         using difference_type = typename base_type::difference_type;
         using iterator_tag = typename base_type::iterator_tag;
@@ -157,7 +154,7 @@ namespace sparrow
     private:
 
         template <validity_bitmap_input R>
-        static auto create_proxy(
+        [[nodiscard]] static auto create_proxy(
             u8_buffer<storage_type>&& data_buffer,
             R&& bitmaps,
             std::size_t precision,
@@ -166,7 +163,7 @@ namespace sparrow
             std::optional<std::string_view> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        static auto create_proxy(
+        [[nodiscard]] static auto create_proxy(
             u8_buffer<storage_type>&& data_buffer,
             std::size_t precision,
             int scale,
@@ -175,15 +172,14 @@ namespace sparrow
         ) -> arrow_proxy;
 
 
-        inner_reference value(size_type i);
-        inner_const_reference value(size_type i) const;
+        [[nodiscard]] inner_reference value(size_type i);
+        [[nodiscard]] inner_const_reference value(size_type i) const;
 
-        value_iterator value_begin();
-        value_iterator value_end();
+        [[nodiscard]] value_iterator value_begin();
+        [[nodiscard]] value_iterator value_end();
 
-        const_value_iterator value_cbegin() const;
-        const_value_iterator value_cend() const;
-
+        [[nodiscard]] const_value_iterator value_cbegin() const;
+        [[nodiscard]] const_value_iterator value_cend() const;
 
         // Modifiers
 

@@ -37,7 +37,7 @@ namespace sparrow::detail
         {
         }
 
-        value_type operator()(std::size_t i) const
+        [[nodiscard]] value_type operator()(std::size_t i) const
         {
             return this->p_layout->value(i);
         }
@@ -76,7 +76,7 @@ namespace sparrow::detail
 
     template <layout_offset OFFSET_TYPE, std::ranges::range SIZES_RANGE>
         requires(std::unsigned_integral<std::ranges::range_value_t<SIZES_RANGE>>)
-    sparrow::u8_buffer<OFFSET_TYPE> offset_buffer_from_sizes(SIZES_RANGE&& sizes)
+    [[nodiscard]] sparrow::u8_buffer<OFFSET_TYPE> offset_buffer_from_sizes(SIZES_RANGE&& sizes)
     {
         sparrow::u8_buffer<OFFSET_TYPE> buffer(range_size(sizes) + 1);
 

@@ -59,9 +59,9 @@ namespace sparrow
         array_bitmap_base_impl(array_bitmap_base_impl&&) noexcept = default;
         array_bitmap_base_impl& operator=(array_bitmap_base_impl&&) noexcept = default;
 
-        bitmap_type& get_bitmap()
+        [[nodiscard]] bitmap_type& get_bitmap()
             requires is_mutable;
-        const bitmap_type& get_bitmap() const;
+        [[nodiscard]] const bitmap_type& get_bitmap() const;
 
         void resize_bitmap(size_type new_length, bool value)
             requires is_mutable;
@@ -80,9 +80,9 @@ namespace sparrow
         void update()
             requires is_mutable;
 
-        non_owning_dynamic_bitset<uint8_t> get_non_owning_dynamic_bitset();
+        [[nodiscard]] non_owning_dynamic_bitset<uint8_t> get_non_owning_dynamic_bitset();
 
-        bitmap_type make_bitmap();
+        [[nodiscard]] bitmap_type make_bitmap();
 
     private:
 

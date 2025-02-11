@@ -37,17 +37,17 @@ namespace sparrow
             requires(!is_int_placeholder_v<T>);
 
         // convert to string
-        explicit operator std::string() const
+        [[nodiscard]] explicit operator std::string() const
             requires(!is_int_placeholder_v<T>);
 
-        const T& storage() const;
+        [[nodiscard]] const T& storage() const;
 
-        int scale() const;
+        [[nodiscard]] int scale() const;
 
     private:
 
         template <class FLOAT_TYPE>
-        FLOAT_TYPE convert_to_floating_point() const
+        [[nodiscard]] FLOAT_TYPE convert_to_floating_point() const
             requires(!is_int_placeholder_v<T>);
 
 

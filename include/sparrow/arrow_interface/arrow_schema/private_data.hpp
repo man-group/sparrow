@@ -54,11 +54,11 @@ namespace sparrow
         arrow_schema_private_data(F format, N name, M metadata, std::size_t children_size = 0);
 
         [[nodiscard]] const char* format_ptr() const noexcept;
-        FormatType& format() noexcept;
+        [[nodiscard]] FormatType& format() noexcept;
         [[nodiscard]] const char* name_ptr() const noexcept;
-        NameType& name() noexcept;
+        [[nodiscard]] NameType& name() noexcept;
         [[nodiscard]] const char* metadata_ptr() const noexcept;
-        MetadataType& metadata() noexcept;
+        [[nodiscard]] MetadataType& metadata() noexcept;
 
     private:
 

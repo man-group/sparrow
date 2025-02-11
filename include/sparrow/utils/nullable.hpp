@@ -124,7 +124,7 @@ namespace sparrow
         bad_nullable_access(const bad_nullable_access&) noexcept = default;
         bad_nullable_access& operator=(const bad_nullable_access&) noexcept = default;
 
-        const char* what() const noexcept override
+        [[nodiscard]] const char* what() const noexcept override
         {
             return message;
         }
@@ -436,28 +436,28 @@ namespace sparrow
         }
 
         constexpr explicit operator bool() const noexcept;
-        constexpr bool has_value() const noexcept;
+        [[nodiscard]] constexpr bool has_value() const noexcept;
 
-        constexpr flag_reference null_flag() & noexcept;
-        constexpr flag_const_reference null_flag() const& noexcept;
-        constexpr flag_rvalue_reference null_flag() && noexcept;
-        constexpr flag_const_rvalue_reference null_flag() const&& noexcept;
+        [[nodiscard]] constexpr flag_reference null_flag() & noexcept;
+        [[nodiscard]] constexpr flag_const_reference null_flag() const& noexcept;
+        [[nodiscard]] constexpr flag_rvalue_reference null_flag() && noexcept;
+        [[nodiscard]] constexpr flag_const_rvalue_reference null_flag() const&& noexcept;
 
-        constexpr reference get() & noexcept;
-        constexpr const_reference get() const& noexcept;
-        constexpr rvalue_reference get() && noexcept;
-        constexpr const_rvalue_reference get() const&& noexcept;
+        [[nodiscard]] constexpr reference get() & noexcept;
+        [[nodiscard]] constexpr const_reference get() const& noexcept;
+        [[nodiscard]] constexpr rvalue_reference get() && noexcept;
+        [[nodiscard]] constexpr const_rvalue_reference get() const&& noexcept;
 
-        constexpr reference value() &;
-        constexpr const_reference value() const&;
-        constexpr rvalue_reference value() &&;
-        constexpr const_rvalue_reference value() const&&;
-
-        template <class U>
-        constexpr value_type value_or(U&& default_value) const&;
+        [[nodiscard]] constexpr reference value() &;
+        [[nodiscard]] constexpr const_reference value() const&;
+        [[nodiscard]] constexpr rvalue_reference value() &&;
+        [[nodiscard]] constexpr const_rvalue_reference value() const&&;
 
         template <class U>
-        constexpr value_type value_or(U&& default_value) &&;
+        [[nodiscard]] constexpr value_type value_or(U&& default_value) const&;
+
+        template <class U>
+        [[nodiscard]] constexpr value_type value_or(U&& default_value) &&;
 
         void swap(self_type& other) noexcept;
         void reset() noexcept;

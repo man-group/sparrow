@@ -43,7 +43,7 @@ namespace sparrow
      */
     template <class B>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
-    ArrowArray make_arrow_array(
+    [[nodiscard]] ArrowArray make_arrow_array(
         int64_t length,
         int64_t null_count,
         int64_t offset,
@@ -112,7 +112,7 @@ namespace sparrow
 
     template <class B>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
-    ArrowArray make_arrow_array(
+    [[nodiscard]] ArrowArray make_arrow_array(
         int64_t length,
         int64_t null_count,
         int64_t offset,
@@ -133,7 +133,7 @@ namespace sparrow
         return array;
     }
 
-    inline ArrowArray make_empty_arrow_array()
+    [[nodiscard]] inline ArrowArray make_empty_arrow_array()
     {
         using buffer_type = arrow_array_private_data::BufferType;
         return make_arrow_array(0, 0, 0, buffer_type{}, 0u, nullptr, nullptr);
@@ -141,9 +141,9 @@ namespace sparrow
 
     SPARROW_API void release_arrow_array(ArrowArray* array);
 
-    SPARROW_API sparrow::buffer_view<uint8_t> get_bitmap_buffer(const ArrowArray& array);
+    [[nodiscard]] SPARROW_API sparrow::buffer_view<uint8_t> get_bitmap_buffer(const ArrowArray& array);
 
-    SPARROW_API std::vector<sparrow::buffer_view<uint8_t>>
+    [[nodiscard]] SPARROW_API std::vector<sparrow::buffer_view<uint8_t>>
     get_arrow_array_buffers(const ArrowArray& array, const ArrowSchema& schema);
 
     /**
@@ -160,7 +160,7 @@ namespace sparrow
     /**
      * Create a deep copy of the source ArrowArray. The buffers, children and dictionary are deep copied.
      */
-    inline ArrowArray copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema)
+    [[nodiscard]] inline ArrowArray copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema)
     {
         ArrowArray target{};
         copy_array(source_array, source_schema, target);
@@ -171,7 +171,7 @@ namespace sparrow
      * Moves the content of source into a stack-allocated array, and
      * reset the source to an empty ArrowArray.
      */
-    inline ArrowArray move_array(ArrowArray&& source)
+    [[nodiscard]] inline ArrowArray move_array(ArrowArray&& source)
     {
         ArrowArray target = make_empty_arrow_array();
         swap(source, target);
@@ -182,7 +182,7 @@ namespace sparrow
      * Moves the content of source into a stack-allocated array, and
      * reset the source to an empty ArrowArray.
      */
-    inline ArrowArray move_array(ArrowArray& source)
+    [[nodiscard]] inline ArrowArray move_array(ArrowArray& source)
     {
         return move_array(std::move(source));
     }

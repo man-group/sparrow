@@ -55,39 +55,39 @@ namespace sparrow
         using iterator = bitset_iterator<self_type, false>;
         using const_iterator = bitset_iterator<self_type, true>;
 
-        constexpr size_type size() const noexcept;
+        [[nodiscard]] constexpr size_type size() const noexcept;
         [[nodiscard]] constexpr bool empty() const noexcept;
-        constexpr size_type null_count() const noexcept;
+        [[nodiscard]] constexpr size_type null_count() const noexcept;
 
-        constexpr bool test(size_type pos) const;
+        [[nodiscard]] constexpr bool test(size_type pos) const;
         constexpr void set(size_type pos, value_type value);
 
-        constexpr const_reference at(size_type pos) const;
-        constexpr reference at(size_type pos);
+        [[nodiscard]] constexpr const_reference at(size_type pos) const;
+        [[nodiscard]] constexpr reference at(size_type pos);
 
-        constexpr reference operator[](size_type i);
-        constexpr const_reference operator[](size_type i) const;
+        [[nodiscard]] constexpr reference operator[](size_type i);
+        [[nodiscard]] constexpr const_reference operator[](size_type i) const;
 
-        constexpr block_type* data() noexcept;
-        constexpr const block_type* data() const noexcept;
-        constexpr size_type block_count() const noexcept;
+        [[nodiscard]] constexpr block_type* data() noexcept;
+        [[nodiscard]] constexpr const block_type* data() const noexcept;
+        [[nodiscard]] constexpr size_type block_count() const noexcept;
 
         constexpr void swap(self_type&) noexcept;
 
-        constexpr iterator begin();
-        constexpr iterator end();
+        [[nodiscard]] constexpr iterator begin();
+        [[nodiscard]] constexpr iterator end();
 
-        constexpr const_iterator begin() const;
-        constexpr const_iterator end() const;
-        constexpr const_iterator cbegin() const;
-        constexpr const_iterator cend() const;
+        [[nodiscard]] constexpr const_iterator begin() const;
+        [[nodiscard]] constexpr const_iterator end() const;
+        [[nodiscard]] constexpr const_iterator cbegin() const;
+        [[nodiscard]] constexpr const_iterator cend() const;
 
-        constexpr reference front();
-        constexpr const_reference front() const;
-        constexpr reference back();
-        constexpr const_reference back() const;
+        [[nodiscard]] constexpr reference front();
+        [[nodiscard]] constexpr const_reference front() const;
+        [[nodiscard]] constexpr reference back();
+        [[nodiscard]] constexpr const_reference back() const;
 
-        constexpr const storage_type_without_cvrefpointer& buffer() const noexcept
+        [[nodiscard]] constexpr const storage_type_without_cvrefpointer& buffer() const noexcept
         {
             if constexpr (std::is_pointer_v<storage_type>)
             {
@@ -99,7 +99,7 @@ namespace sparrow
             }
         }
 
-        constexpr storage_type_without_cvrefpointer& buffer() noexcept
+        [[nodiscard]] constexpr storage_type_without_cvrefpointer& buffer() noexcept
         {
             if constexpr (std::is_pointer_v<storage_type>)
             {
@@ -111,10 +111,10 @@ namespace sparrow
             }
         }
 
-        static constexpr size_type compute_block_count(size_type bits_count) noexcept;
+        [[nodiscard]] static constexpr size_type compute_block_count(size_type bits_count) noexcept;
 
         // storage_type is a value_type
-        storage_type extract_storage() noexcept
+        [[nodiscard]] storage_type extract_storage() noexcept
             requires std::same_as<storage_type, storage_type_without_cvrefpointer>
         {
             return std::move(m_buffer);
@@ -150,12 +150,12 @@ namespace sparrow
     private:
 
         static constexpr std::size_t s_bits_per_block = sizeof(block_type) * CHAR_BIT;
-        static constexpr size_type block_index(size_type pos) noexcept;
-        static constexpr size_type bit_index(size_type pos) noexcept;
-        static constexpr block_type bit_mask(size_type pos) noexcept;
+        [[nodiscard]] static constexpr size_type block_index(size_type pos) noexcept;
+        [[nodiscard]] static constexpr size_type bit_index(size_type pos) noexcept;
+        [[nodiscard]] static constexpr block_type bit_mask(size_type pos) noexcept;
 
-        size_type count_non_null() const noexcept;
-        constexpr size_type count_extra_bits() const noexcept;
+        [[nodiscard]] size_type count_non_null() const noexcept;
+        [[nodiscard]] constexpr size_type count_extra_bits() const noexcept;
         constexpr void zero_unused_bits();
         constexpr void update_null_count(bool old_value, bool new_value);
 

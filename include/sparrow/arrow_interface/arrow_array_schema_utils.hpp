@@ -72,7 +72,7 @@ namespace sparrow
      * @return The number of elements in `value`.
      */
     template <class T>
-    constexpr int64_t ssize(const T& value);
+    [[nodiscard]] constexpr int64_t ssize(const T& value);
 
     /**
      * Get a raw pointer from a smart pointer, a range, an object or a pointer.
@@ -87,7 +87,7 @@ namespace sparrow
      *          If the variable is an object, the pointer is returned by calling the address-of operator.
      */
     template <typename T, typename U>
-    constexpr T* get_raw_ptr(U& var);
+    [[nodiscard]] constexpr T* get_raw_ptr(U& var);
 
     /**
      * Create a vector of pointers to elements from a range.
@@ -101,7 +101,7 @@ namespace sparrow
      */
     template <class T, std::ranges::input_range Range, class Allocator = std::allocator<T*>>
         requires(!std::ranges::view<Range>)
-    constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Range& range);
+    [[nodiscard]] constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Range& range);
 
     /**
      * Create a vector of pointers to elements from a std::optional<range>.
@@ -115,7 +115,7 @@ namespace sparrow
      */
     template <class T, class Optional, class Allocator = std::allocator<T*>>
         requires(mpl::is_type_instance_of_v<Optional, std::optional>)
-    constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Optional& optional);
+    [[nodiscard]] constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Optional& optional);
 
     /**
      * Create a vector of pointers to elements of a tuple.
@@ -131,7 +131,7 @@ namespace sparrow
      */
     template <class T, class Tuple, class Allocator = std::allocator<T*>>
         requires mpl::is_type_instance_of_v<Tuple, std::tuple>
-    constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Tuple& tuple);
+    [[nodiscard]] constexpr std::vector<T*, Allocator> to_raw_ptr_vec(Tuple& tuple);
 
     /**
      * Check if all elements of a range or std::optional<range> are valid by caling their bool operator. If
@@ -142,7 +142,7 @@ namespace sparrow
                  || (mpl::is_type_instance_of_v<T, std::optional>
                      && mpl::testable<std::ranges::range_value_t<typename T::value_type>>)
                  || (std::ranges::range<T> && mpl::testable<std::ranges::range_value_t<T>>)
-    constexpr bool all_element_are_true(const T& elements);
+    [[nodiscard]] constexpr bool all_element_are_true(const T& elements);
 
     /******************
      * Implementation *

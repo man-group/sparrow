@@ -22,11 +22,8 @@
 
 namespace sparrow
 {
-
     namespace detail
     {
-
-
         // nested eq / nested hash
         template <class T>
         struct nested_less;
@@ -36,7 +33,7 @@ namespace sparrow
             requires std::is_scalar_v<T>
         struct nested_less<T>
         {
-            bool operator()(const T& a, const T& b) const
+            [[nodiscard]] bool operator()(const T& a, const T& b) const
             {
                 return a < b;
             }
@@ -45,7 +42,7 @@ namespace sparrow
         template <is_express_layout_desire T>
         struct nested_less<T>
         {
-            bool operator()(const T& a, const T& b) const
+            [[nodiscard]] bool operator()(const T& a, const T& b) const
             {
                 return nested_less<typename T::value_type>{}(a.get(), b.get());
             }
@@ -56,7 +53,7 @@ namespace sparrow
             requires is_nullable_like<T>
         struct nested_less<T>
         {
-            bool operator()(const T& a, const T& b) const
+            [[nodiscard]] bool operator()(const T& a, const T& b) const
             {
                 // if one is null and the other is not then the null is less
                 // both are null:
@@ -87,7 +84,7 @@ namespace sparrow
             requires tuple_like<T>
         struct nested_less<T>
         {
-            bool operator()(const T& a, const T& b) const
+            [[nodiscard]] bool operator()(const T& a, const T& b) const
             {
                 constexpr std::size_t N = std::tuple_size_v<T>;
                 bool is_less = false;
@@ -129,7 +126,7 @@ namespace sparrow
             requires(std::ranges::input_range<T> && !tuple_like<T>)
         struct nested_less<T>
         {
-            bool operator()(const T& a, const T& b) const
+            [[nodiscard]] bool operator()(const T& a, const T& b) const
             {
                 using value_type = std::decay_t<std::ranges::range_value_t<T>>;
                 return std::ranges::lexicographical_compare(a, b, nested_less<value_type>{});
@@ -141,7 +138,7 @@ namespace sparrow
             requires variant_like<T>
         struct nested_less<T>
         {
-            bool operator()(const T& a, const T& b) const
+            [[nodiscard]] bool operator()(const T& a, const T& b) const
             {
                 if (a.index() != b.index())
                 {
@@ -160,6 +157,4 @@ namespace sparrow
         };
 
     }  // namespace detail
-
-
 }  // namespace sparrow

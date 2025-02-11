@@ -84,9 +84,9 @@ namespace sparrow
         [[nodiscard]] T* allocate(std::size_t n);
         void deallocate(T* p, std::size_t n);
 
-        any_allocator select_on_container_copy_construction() const;
+        [[nodiscard]] any_allocator select_on_container_copy_construction() const;
 
-        bool equal(const any_allocator& rhs) const;
+        [[nodiscard]] bool equal(const any_allocator& rhs) const;
 
     private:
 
@@ -94,8 +94,8 @@ namespace sparrow
         {
             [[nodiscard]] virtual T* allocate(std::size_t) = 0;
             virtual void deallocate(T*, std::size_t) = 0;
-            virtual std::unique_ptr<interface> clone() const = 0;
-            virtual bool equal(const interface&) const = 0;
+            [[nodiscard]] virtual std::unique_ptr<interface> clone() const = 0;
+            [[nodiscard]] virtual bool equal(const interface&) const = 0;
             virtual ~interface() = default;
         };
 
@@ -119,12 +119,12 @@ namespace sparrow
                 m_alloc.deallocate(p, n);
             }
 
-            std::unique_ptr<interface> clone() const override
+            [[nodiscard]] std::unique_ptr<interface> clone() const override
             {
                 return std::make_unique<impl<A>>(m_alloc);
             }
 
-            bool equal(const interface& rhs) const override
+            [[nodiscard]] bool equal(const interface& rhs) const override
             {
                 if (std::type_index(typeid(*this)) == std::type_index(typeid(rhs)))
                 {
@@ -138,19 +138,19 @@ namespace sparrow
             variant<std::allocator<T>, std::pmr::polymorphic_allocator<T>, std::unique_ptr<interface>>;
 
         template <class A>
-        std::unique_ptr<interface> make_storage(A&& alloc) const
+        [[nodiscard]] std::unique_ptr<interface> make_storage(A&& alloc) const
         {
             return std::make_unique<impl<std::decay_t<A>>>(std::forward<A>(alloc));
         }
 
         template <class A>
             requires can_any_allocator_sbo<A, T>
-        A&& make_storage(A&& alloc) const
+        [[nodiscard]] A&& make_storage(A&& alloc) const
         {
             return std::forward<A>(alloc);
         }
 
-        storage_type copy_storage(const storage_type& rhs) const
+        [[nodiscard]] storage_type copy_storage(const storage_type& rhs) const
         {
             return std::visit(
                 overloaded{
@@ -168,7 +168,7 @@ namespace sparrow
         }
 
         template <class F>
-        decltype(auto) visit_storage(F&& f)
+        [[nodiscard]] decltype(auto) visit_storage(F&& f)
         {
             return std::visit(
                 [&f](auto&& arg)

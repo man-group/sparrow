@@ -47,7 +47,7 @@ namespace sparrow
         {
         }
 
-        return_type operator()(std::size_t i) const
+        [[nodiscard]] return_type operator()(std::size_t i) const
         {
             return p_layout->operator[](i);
         }
@@ -68,7 +68,7 @@ namespace sparrow
         template <std::integral IT>
         struct get_data_type_from_array<sparrow::dictionary_encoded_array<IT>>
         {
-            static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return arrow_traits<typename primitive_array<IT>::inner_value_type>::type_id;
             }
@@ -77,7 +77,7 @@ namespace sparrow
         template <std::integral IT>
         struct is_dictionary_encoded_array<sparrow::dictionary_encoded_array<IT>>
         {
-            static constexpr bool get()
+            [[nodiscard]] static constexpr bool get()
             {
                 return true;
             }
@@ -121,22 +121,22 @@ namespace sparrow
         dictionary_encoded_array(self_type&&);
         self_type& operator=(self_type&&);
 
-        std::optional<std::string_view> name() const;
-        std::optional<std::string_view> metadata() const;
+        [[nodiscard]] std::optional<std::string_view> name() const;
+        [[nodiscard]] std::optional<std::string_view> metadata() const;
 
-        size_type size() const;
-        bool empty() const;
+        [[nodiscard]] size_type size() const;
+        [[nodiscard]] bool empty() const;
 
-        const_reference operator[](size_type i) const;
+        [[nodiscard]] const_reference operator[](size_type i) const;
 
-        iterator begin();
-        iterator end();
+        [[nodiscard]] iterator begin();
+        [[nodiscard]] iterator end();
 
-        const_iterator begin() const;
-        const_iterator end() const;
+        [[nodiscard]] const_iterator begin() const;
+        [[nodiscard]] const_iterator end() const;
 
-        const_iterator cbegin() const;
-        const_iterator cend() const;
+        [[nodiscard]] const_iterator cbegin() const;
+        [[nodiscard]] const_iterator cend() const;
 
         [[nodiscard]] const_reference front() const;
         [[nodiscard]] const_reference back() const;
@@ -157,7 +157,7 @@ namespace sparrow
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        self_type slice(size_type start, size_type end) const;
+        [[nodiscard]] self_type slice(size_type start, size_type end) const;
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
@@ -168,12 +168,12 @@ namespace sparrow
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        self_type slice_view(size_type start, size_type end) const;
+        [[nodiscard]] self_type slice_view(size_type start, size_type end) const;
 
     private:
 
         template <validity_bitmap_input R = validity_bitmap>
-        static auto create_proxy(
+        [[nodiscard]] static auto create_proxy(
             keys_buffer_type&& keys,
             array&& values,
             R&& bitmaps = validity_bitmap{},
@@ -188,8 +188,8 @@ namespace sparrow
         // inner_const_reference dummy_inner_const_reference() const;
         [[nodiscard]] const_reference dummy_const_reference() const;
 
-        static keys_layout create_keys_layout(arrow_proxy& proxy);
-        static values_layout create_values_layout(arrow_proxy& proxy);
+        [[nodiscard]] static keys_layout create_keys_layout(arrow_proxy& proxy);
+        [[nodiscard]] static values_layout create_values_layout(arrow_proxy& proxy);
 
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;

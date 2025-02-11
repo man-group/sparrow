@@ -38,7 +38,7 @@
 #    define SPARROW_API __attribute__((visibility("default")))
 #endif
 
-consteval bool is_apple_compiler()
+[[nodiscard]] consteval bool is_apple_compiler()
 {
     return static_cast<bool>(COMPILING_WITH_APPLE_CLANG);
 }

@@ -104,31 +104,31 @@ namespace sparrow
         using const_iterator = layout_iterator<iterator_types>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-        std::optional<std::string_view> name() const;
-        std::optional<std::string_view> metadata() const;
+        [[nodiscard]] std::optional<std::string_view> name() const;
+        [[nodiscard]] std::optional<std::string_view> metadata() const;
 
-        bool empty() const;
-        size_type size() const;
+        [[nodiscard]] bool empty() const;
+        [[nodiscard]] size_type size() const;
 
-        const_reference at(size_type i) const;
-        const_reference operator[](size_type i) const;
-        const_reference front() const;
-        const_reference back() const;
+        [[nodiscard]] const_reference at(size_type i) const;
+        [[nodiscard]] const_reference operator[](size_type i) const;
+        [[nodiscard]] const_reference front() const;
+        [[nodiscard]] const_reference back() const;
 
-        const_iterator begin() const;
-        const_iterator end() const;
+        [[nodiscard]] const_iterator begin() const;
+        [[nodiscard]] const_iterator end() const;
 
-        const_iterator cbegin() const;
-        const_iterator cend() const;
+        [[nodiscard]] const_iterator cbegin() const;
+        [[nodiscard]] const_iterator cend() const;
 
-        const_reverse_iterator rbegin() const;
-        const_reverse_iterator rend() const;
+        [[nodiscard]] const_reverse_iterator rbegin() const;
+        [[nodiscard]] const_reverse_iterator rend() const;
 
-        const_reverse_iterator crbegin() const;
-        const_reverse_iterator crend() const;
+        [[nodiscard]] const_reverse_iterator crbegin() const;
+        [[nodiscard]] const_reverse_iterator crend() const;
 
-        const_bitmap_range bitmap() const;
-        const_value_range values() const;
+        [[nodiscard]] const_bitmap_range bitmap() const;
+        [[nodiscard]] const_value_range values() const;
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
@@ -139,7 +139,7 @@ namespace sparrow
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        D slice(size_type start, size_type end) const;
+        [[nodiscard]] D slice(size_type start, size_type end) const;
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
@@ -150,7 +150,7 @@ namespace sparrow
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        D slice_view(size_type start, size_type end) const;
+        [[nodiscard]] D slice_view(size_type start, size_type end) const;
 
     protected:
 
