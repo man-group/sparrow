@@ -327,7 +327,8 @@ install(TARGETS sparrow
 
 # Makes the project importable from the build directory
 export(EXPORT ${PROJECT_NAME}-targets
-       FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
+       FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
+       NAMESPACE sparrow::)
 
 install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -355,5 +356,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
         DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
 install(EXPORT ${PROJECT_NAME}-targets
         FILE ${PROJECT_NAME}Targets.cmake
+        NAMESPACE sparrow::
         DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
 
