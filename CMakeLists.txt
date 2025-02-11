@@ -47,7 +47,7 @@ if(CMAKE_CXX_COMPILER_LAUNCHER)
     message(STATUS "Using C++ compiler launcher: ${CMAKE_CXX_COMPILER_LAUNCHER}")
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 message(DEBUG "CMake module path: ${CMAKE_MODULE_PATH}")
 
 # Versionning
@@ -133,16 +133,17 @@ include(sanitizers)
 # ============
 
 set(SPARROW_INTERFACE_DEPENDENCIES "" CACHE STRING "List of dependencies to be linked to the sparrow target")
+set(SPARROW_COMPILE_DEFINITIONS "" CACHE STRING "List of public compile definitions of the sparrow target")
 
 if (USE_DATE_POLYFILL)
     find_package(date CONFIG REQUIRED)
     list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
-    add_compile_definitions(SPARROW_USE_DATE_POLYFILL)
+    list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_USE_DATE_POLYFILL)
 endif()
 
 if(USE_LARGE_INT_PLACEHOLDERS)
     message(STATUS "Using large int placeholders")
-    add_compile_definitions(SPARROW_USE_LARGE_INT_PLACEHOLDERS)
+    list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_USE_LARGE_INT_PLACEHOLDERS)
 endif()
 
 # Build
@@ -261,6 +262,7 @@ else()
 endif()
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
+target_compile_definitions(sparrow PUBLIC ${SPARROW_COMPILE_DEFINITIONS})
 
 # TODO: handle static lib
 if (UNIX)
@@ -275,16 +277,16 @@ if (UNIX)
         PROPERTIES
         VERSION "${SPARROW_BINARY_COMPATIBLE}.${SPARROW_BINARY_REVISION}.${SPARROW_BINARY_AGE}"
         SOVERSION ${SPARROW_BINARY_COMPATIBLE}
-        COMPILE_OPTIONS "-fvisibility=hidden"
     )
+    target_compile_options(sparrow PRIVATE "-fvisibility=hidden")
 else ()
     set_target_properties(
         sparrow
         PROPERTIES
         VERSION ${SPARROW_BINARY_VERSION}
         SOVERSION ${SPARROW_BINARY_CURRENT}
-        COMPILE_DEFINITIONS "SPARROW_EXPORTS"
     )
+    target_compile_definitions(sparrow PRIVATE SPARROW_EXPORTS)
 endif ()
 target_include_directories(sparrow PUBLIC
     $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
@@ -328,7 +330,8 @@ install(TARGETS sparrow
 
 # Makes the project importable from the build directory
 export(EXPORT ${PROJECT_NAME}-targets
-       FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
+       FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
+       NAMESPACE sparrow::)
 
 install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -356,5 +359,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
         DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
 install(EXPORT ${PROJECT_NAME}-targets
         FILE ${PROJECT_NAME}Targets.cmake
+        NAMESPACE sparrow::
         DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
 
