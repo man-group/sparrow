@@ -86,13 +86,20 @@ message(STATUS "sparrow binary version: v${SPARROW_BINARY_VERSION}")
 # =============
 
 OPTION(BUILD_TESTS "Build sparrow test suite" OFF)
+MESSAGE(STATUS "🔧 Build tests: ${BUILD_TESTS}")
 OPTION(BUILD_DOCS  "Build sparrow documentation" OFF)
+MESSAGE(STATUS "🔧 Build docs: ${BUILD_DOCS}")
 OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
+MESSAGE(STATUS "🔧 Build examples: ${BUILD_EXAMPLES}")
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
+MESSAGE(STATUS "🔧 Use date polyfill: ${USE_DATE_POLYFILL}")
 OPTION(USE_LARGE_INT_PLACEHOLDERS "use types without api for big integers" OFF)
+MESSAGE(STATUS "🔧 Use large int placeholders: ${USE_LARGE_INT_PLACEHOLDERS}")
 OPTION(SPARROW_TARGET_32BIT "Test 32bit support" OFF)
+MESSAGE(STATUS "🔧 Test 32bit support: ${SPARROW_TARGET_32BIT}")
 
 OPTION(ENABLE_COVERAGE "Enable test coverage" OFF)
+MESSAGE(STATUS "🔧 Enable coverage: ${ENABLE_COVERAGE}")
 
 if(ENABLE_COVERAGE)
     include(code_coverage)
@@ -118,6 +125,7 @@ endif()
 # =============
 
 OPTION(ACTIVATE_LINTER "Create targets to run clang-format" OFF)
+MESSAGE(STATUS "🔧 Activate linter: ${ACTIVATE_LINTER}")
 cmake_dependent_option(ACTIVATE_LINTER_DURING_COMPILATION "Run linter during the compilation" ON "ACTIVATE_LINTER" OFF)
 
 if(ACTIVATE_LINTER)
