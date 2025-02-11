@@ -133,16 +133,17 @@ include(sanitizers)
 # ============
 
 set(SPARROW_INTERFACE_DEPENDENCIES "" CACHE STRING "List of dependencies to be linked to the sparrow target")
+set(SPARROW_COMPILE_DEFINITIONS "" CACHE STRING "List of public compile definitions of the sparrow target")
 
 if (USE_DATE_POLYFILL)
     find_package(date CONFIG REQUIRED)
     list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
-    add_compile_definitions(SPARROW_USE_DATE_POLYFILL)
+    list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_USE_DATE_POLYFILL)
 endif()
 
 if(USE_LARGE_INT_PLACEHOLDERS)
     message(STATUS "Using large int placeholders")
-    add_compile_definitions(SPARROW_USE_LARGE_INT_PLACEHOLDERS)
+    list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_USE_LARGE_INT_PLACEHOLDERS)
 endif()
 
 # Build
@@ -258,6 +259,7 @@ else()
 endif()
 
 add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
+target_compile_definitions(sparrow PUBLIC ${SPARROW_COMPILE_DEFINITIONS})
 
 # TODO: handle static lib
 if (UNIX)
