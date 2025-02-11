@@ -104,13 +104,6 @@ class SparrowRecipe(ConanFile):
         cmake.install()
 
     def package_info(self):
-        defines = []
-        if self.options.get_safe("use_date_polyfill", False):
-            defines.append("SPARROW_USE_DATE_POLYFILL")
-        if is_msvc(self):
-            defines.append("SPARROW_USE_LARGE_INT_PLACEHOLDERS")
-
         self.cpp_info.libs = ["sparrow"]
-        self.cpp_info.defines = defines
         self.cpp_info.set_property("cmake_file_name", "sparrow")
         self.cpp_info.set_property("cmake_target_name", "sparrow::sparrow")
