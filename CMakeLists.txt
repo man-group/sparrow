@@ -274,16 +274,16 @@ if (UNIX)
         PROPERTIES
         VERSION "${SPARROW_BINARY_COMPATIBLE}.${SPARROW_BINARY_REVISION}.${SPARROW_BINARY_AGE}"
         SOVERSION ${SPARROW_BINARY_COMPATIBLE}
-        COMPILE_OPTIONS "-fvisibility=hidden"
     )
+    target_compile_options(sparrow PRIVATE "-fvisibility=hidden")
 else ()
     set_target_properties(
         sparrow
         PROPERTIES
         VERSION ${SPARROW_BINARY_VERSION}
         SOVERSION ${SPARROW_BINARY_CURRENT}
-        COMPILE_DEFINITIONS "SPARROW_EXPORTS"
     )
+    target_compile_definitions(sparrow PRIVATE SPARROW_EXPORTS)
 endif ()
 target_include_directories(sparrow PUBLIC
     $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
