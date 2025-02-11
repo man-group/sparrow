@@ -30,7 +30,7 @@ namespace sparrow::chrono
     {
         time_seconds() = default;
 
-        time_seconds(int32_t seconds)
+        explicit time_seconds(int32_t seconds)
             : std::chrono::duration<int32_t>(seconds)
         {
         }
@@ -43,7 +43,7 @@ namespace sparrow::chrono
     {
         time_milliseconds() = default;
 
-        time_milliseconds(int32_t milliseconds)
+        explicit time_milliseconds(int32_t milliseconds)
             : std::chrono::duration<int32_t, std::milli>(milliseconds)
         {
         }
@@ -56,7 +56,7 @@ namespace sparrow::chrono
     {
         time_microseconds() = default;
 
-        time_microseconds(int64_t microseconds)
+        explicit time_microseconds(int64_t microseconds)
             : std::chrono::duration<int64_t, std::micro>(microseconds)
         {
         }
@@ -69,7 +69,7 @@ namespace sparrow::chrono
     {
         time_nanoseconds() = default;
 
-        time_nanoseconds(int64_t nanoseconds)
+        explicit time_nanoseconds(int64_t nanoseconds)
             : std::chrono::duration<int64_t, std::nano>(nanoseconds)
         {
         }
@@ -78,59 +78,22 @@ namespace sparrow::chrono
 
 #if defined(__cpp_lib_format)
 
-template <>
-struct std::formatter<sparrow::chrono::time_seconds>
+template <typename T>
+    requires std::same_as<T, sparrow::chrono::time_seconds>
+             || std::same_as<T, sparrow::chrono::time_milliseconds>
+             || std::same_as<T, sparrow::chrono::time_microseconds>
+             || std::same_as<T, sparrow::chrono::time_nanoseconds>
+struct std::formatter<T>
 {
     constexpr auto parse(std::format_parse_context& ctx)
     {
         return ctx.begin();  // Simple implementation
     }
 
-    auto format(const sparrow::chrono::time_seconds& time, std::format_context& ctx) const
+    auto format(const T& time, std::format_context& ctx) const
     {
         return std::format_to(ctx.out(), "{}", time.count());
     }
 };
 
-template <>
-struct std::formatter<sparrow::chrono::time_milliseconds>
-{
-    constexpr auto parse(std::format_parse_context& ctx)
-    {
-        return ctx.begin();  // Simple implementation
-    }
-
-    auto format(const sparrow::chrono::time_milliseconds& time, std::format_context& ctx) const
-    {
-        return std::format_to(ctx.out(), "{}", time.count());
-    }
-};
-
-template <>
-struct std::formatter<sparrow::chrono::time_microseconds>
-{
-    constexpr auto parse(std::format_parse_context& ctx)
-    {
-        return ctx.begin();  // Simple implementation
-    }
-
-    auto format(const sparrow::chrono::time_microseconds& time, std::format_context& ctx) const
-    {
-        return std::format_to(ctx.out(), "{}", time.count());
-    }
-};
-
-template <>
-struct std::formatter<sparrow::chrono::time_nanoseconds>
-{
-    constexpr auto parse(std::format_parse_context& ctx)
-    {
-        return ctx.begin();  // Simple implementation
-    }
-
-    auto format(const sparrow::chrono::time_nanoseconds& time, std::format_context& ctx) const
-    {
-        return std::format_to(ctx.out(), "{}", time.count());
-    }
-};
 #endif
