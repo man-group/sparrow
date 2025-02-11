@@ -29,6 +29,7 @@
 #include "sparrow/layout/temporal/date_array.hpp"
 #include "sparrow/layout/temporal/duration_array.hpp"
 #include "sparrow/layout/temporal/interval_array.hpp"
+#include "sparrow/layout/temporal/time_array.hpp"
 #include "sparrow/layout/temporal/timestamp_array.hpp"
 #include "sparrow/layout/union_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
@@ -145,6 +146,14 @@ namespace sparrow
                     return func(unwrap_array<timestamp_array<timestamp<std::chrono::microseconds>>>(ar));
                 case data_type::TIMESTAMP_NANOSECONDS:
                     return func(unwrap_array<timestamp_array<timestamp<std::chrono::nanoseconds>>>(ar));
+                case data_type::TIME_SECONDS:
+                    return func(unwrap_array<time_seconds_array>(ar));
+                case data_type::TIME_MILLISECONDS:
+                    return func(unwrap_array<time_milliseconds_array>(ar));
+                case data_type::TIME_MICROSECONDS:
+                    return func(unwrap_array<time_microseconds_array>(ar));
+                case data_type::TIME_NANOSECONDS:
+                    return func(unwrap_array<time_nanoseconds_array>(ar));
                 case data_type::DURATION_SECONDS:
                     return func(unwrap_array<duration_seconds_array>(ar));
                 case data_type::DURATION_MILLISECONDS:

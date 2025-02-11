@@ -22,21 +22,21 @@
 #include <utility>
 #include <vector>
 
-#include <sparrow/array.hpp>
-#include <sparrow/builder/builder_utils.hpp>
-#include <sparrow/builder/nested_eq.hpp>
-#include <sparrow/builder/nested_less.hpp>
-#include <sparrow/layout/dictionary_encoded_array.hpp>
-#include <sparrow/layout/fixed_width_binary_array.hpp>
-#include <sparrow/layout/list_layout/list_array.hpp>
-#include <sparrow/layout/primitive_array.hpp>
-#include <sparrow/layout/struct_layout/struct_array.hpp>
-#include <sparrow/layout/temporal/date_array.hpp>
-#include <sparrow/layout/union_array.hpp>
-#include <sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp>
-#include <sparrow/utils/ranges.hpp>
-
+#include "sparrow/array.hpp"
+#include "sparrow/builder/builder_utils.hpp"
+#include "sparrow/builder/nested_eq.hpp"
+#include "sparrow/builder/nested_less.hpp"
+#include "sparrow/layout/dictionary_encoded_array.hpp"
+#include "sparrow/layout/fixed_width_binary_array.hpp"
+#include "sparrow/layout/list_layout/list_array.hpp"
+#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/struct_layout/struct_array.hpp"
+#include "sparrow/layout/temporal/date_array.hpp"
 #include "sparrow/layout/temporal/interval_array.hpp"
+#include "sparrow/layout/temporal/time_array.hpp"
+#include "sparrow/layout/union_array.hpp"
+#include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
+#include "sparrow/utils/ranges.hpp"
 
 namespace sparrow
 {
@@ -143,6 +143,13 @@ namespace sparrow
                                                     interval_types_t{},
                                                     mpl::predicate::same_as<ensured_range_value_t<T>>{}
                                                 );
+
+        template <typename T>
+        concept translates_to_time_layout = std::ranges::input_range<T>
+                                            && mpl::any_of(
+                                                time_types_t{},
+                                                mpl::predicate::same_as<ensured_range_value_t<T>>{}
+                                            );
 
         template <class T>
         concept translate_to_variable_sized_list_layout = std::ranges::input_range<T>
@@ -256,6 +263,18 @@ namespace sparrow
         struct builder<T, dont_enforce_layout, OPTION_FLAGS>
         {
             using type = sparrow::interval_array<ensured_range_value_t<T>>;
+
+            template <class U>
+            static type create(U&& t)
+            {
+                return type(std::forward<U>(t));
+            }
+        };
+
+        template <translates_to_time_layout T, class OPTION_FLAGS>
+        struct builder<T, dont_enforce_layout, OPTION_FLAGS>
+        {
+            using type = sparrow::time_array<ensured_range_value_t<T>>;
 
             template <class U>
             static type create(U&& t)

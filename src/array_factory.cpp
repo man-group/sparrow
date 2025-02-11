@@ -25,6 +25,7 @@
 #include "sparrow/layout/temporal/date_array.hpp"
 #include "sparrow/layout/temporal/duration_array.hpp"
 #include "sparrow/layout/temporal/interval_array.hpp"
+#include "sparrow/layout/temporal/time_array.hpp"
 #include "sparrow/layout/temporal/timestamp_array.hpp"
 #include "sparrow/layout/union_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
@@ -150,6 +151,14 @@ namespace sparrow
                     return detail::make_wrapper_ptr<days_time_interval_array>(std::move(proxy));
                 case data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS:
                     return detail::make_wrapper_ptr<month_day_nanoseconds_interval_array>(std::move(proxy));
+                case data_type::TIME_SECONDS:
+                    return detail::make_wrapper_ptr<time_seconds_array>(std::move(proxy));
+                case data_type::TIME_MILLISECONDS:
+                    return detail::make_wrapper_ptr<time_milliseconds_array>(std::move(proxy));
+                case data_type::TIME_MICROSECONDS:
+                    return detail::make_wrapper_ptr<time_microseconds_array>(std::move(proxy));
+                case data_type::TIME_NANOSECONDS:
+                    return detail::make_wrapper_ptr<time_nanoseconds_array>(std::move(proxy));
                 case data_type::MAP:
                 case data_type::DECIMAL32:
                     return detail::make_wrapper_ptr<decimal_32_array>(std::move(proxy));

@@ -203,10 +203,12 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_layout/struct_value.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/date_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/duration_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/interval_types.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/time_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/time_types.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_concepts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_reference.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/interval_types.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/trivial_copyable_data_access.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_iterator.hpp

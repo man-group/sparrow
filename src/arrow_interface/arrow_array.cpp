@@ -142,6 +142,12 @@ namespace sparrow
                 return {make_valid_buffer(), make_buffer(1, size * 8)};
             case sparrow::data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS:
                 return {make_valid_buffer(), make_buffer(1, size * 16)};
+            case sparrow::data_type::TIME_SECONDS:
+            case sparrow::data_type::TIME_MILLISECONDS:
+                return {make_valid_buffer(), make_buffer(1, size * 4)};
+            case sparrow::data_type::TIME_MICROSECONDS:
+            case sparrow::data_type::TIME_NANOSECONDS:
+                return {make_valid_buffer(), make_buffer(1, size * 8)};
             case data_type::DECIMAL32:
                 return {make_valid_buffer(), make_buffer(1, size * 4)};
             case data_type::DECIMAL64:
