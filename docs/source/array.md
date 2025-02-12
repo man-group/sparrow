@@ -155,7 +155,7 @@ namespace sp = sparrow;
 sp::primitive_array<int> pa = { 1, 2, 3, 4};
 sp::array ar(std::move(pa));
 ArrowArray* arr = get_arrow_array(ar);
-ArrowSchema sch = get_arrow_schema(ar);
+ArrowSchema* sch = get_arrow_schema(ar);
 // OR
 auto [arr, sch] = get_arrow_structures(ar);
 ```
