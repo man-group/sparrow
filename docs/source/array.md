@@ -179,7 +179,7 @@ namespace sp = sparrow;
 sp::primitive_array<int> pa = { 1, 2, 3, 4};
 sp::array ar(std::move(pa));
 ArrowArray* arr = extract_arrow_array(std::move(ar));
-ArrowSchema sch = extract_arrow_schema(std::move(ar));
+ArrowSchema* sch = extract_arrow_schema(std::move(ar));
 // OR
 auto [arr, sch] = extract_arrow_structures(std::move(ar));
 // ...
