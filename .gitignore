@@ -47,3 +47,4 @@ CMakeUserPresets.json
 
 # MacOS
 .DS_Store
+conan_test_package/build
