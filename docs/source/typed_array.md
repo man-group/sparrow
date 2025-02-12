@@ -25,7 +25,7 @@ sp::nullable<int> n = 2;
 std::cout << n.has_value() << std::endl; // Prints true
 std::cout << n.value() << std::endl;     // Prints 2
 
-stp::nullable<double> nd = sp::nullval;
+sp::nullable<double> nd = sp::nullval;
 std::cout << nd.has_value() << std::end; // Prints false
 ```
 
