@@ -290,8 +290,10 @@ namespace sparrow
 
 #if defined(__cpp_lib_format)
 
-auto std::formatter<sparrow::run_end_encoded_array>::format(const sparrow::run_end_encoded_array& ar, std::format_context& ctx) const
-    -> decltype(ctx.out())
+auto std::formatter<sparrow::run_end_encoded_array>::format(
+    const sparrow::run_end_encoded_array& ar,
+    std::format_context& ctx
+) const -> decltype(ctx.out())
 {
     std::format_to(ctx.out(), "Run end encoded [size={}] <", ar.size());
 

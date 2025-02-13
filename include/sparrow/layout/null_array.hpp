@@ -138,7 +138,7 @@ namespace sparrow
         friend class detail::array_access;
     };
 
-    SPARROW_API 
+    SPARROW_API
     bool operator==(const null_array& lhs, const null_array& rhs);
 
     /*********************************

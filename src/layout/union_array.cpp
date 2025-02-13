@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/layout/union_array.hpp"
+
 #include "sparrow/array.hpp"
 
 namespace sparrow
@@ -60,7 +61,7 @@ namespace sparrow
         std::vector<array>&& children,
         type_id_buffer_type&& element_type,
         offset_buffer_type&& offsets,
-        std::string&& format, 
+        std::string&& format,
         type_id_map&& tim,
         std::optional<std::string_view> name,
         std::optional<std::string_view> metadata
@@ -121,7 +122,6 @@ namespace sparrow
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
- 
     /*************************************
      * sparse_union_array implementation *
      *************************************/
@@ -194,4 +194,3 @@ namespace sparrow
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 }
-

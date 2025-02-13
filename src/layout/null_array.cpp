@@ -16,11 +16,7 @@
 
 namespace sparrow
 {
-    null_array::null_array(
-        size_t length,
-        std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
-    )
+    null_array::null_array(size_t length, std::optional<std::string_view> name, std::optional<std::string_view> metadata)
         : m_proxy(create_proxy(length, std::move(name), std::move(metadata)))
     {
     }
@@ -170,4 +166,3 @@ namespace sparrow
         return lhs.size() == rhs.size();
     }
 }
-

@@ -197,7 +197,7 @@ namespace sparrow
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
             offset_buffer_type&& offsets,
-            std::string&& format, 
+            std::string&& format,
             type_id_map&& tim,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<std::string_view> metadata = std::nullopt
@@ -530,7 +530,8 @@ namespace sparrow
             std::move(format),
             std::move(type_id_to_child_index),
             std::move(name),
-            std::move(metadata));
+            std::move(metadata)
+        );
     }
 
     /*************************************

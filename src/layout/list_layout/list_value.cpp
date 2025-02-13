@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/layout/list_layout/list_value.hpp"
+
 #include "sparrow/layout/dispatch.hpp"
 
 namespace sparrow

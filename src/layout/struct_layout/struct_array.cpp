@@ -102,8 +102,10 @@ namespace sparrow
 
 #if defined(__cpp_lib_format)
 
-auto std::formatter<sparrow::struct_array>::format(const sparrow::struct_array& struct_array, std::format_context& ctx) const
-    -> decltype(ctx.out())
+auto std::formatter<sparrow::struct_array>::format(
+    const sparrow::struct_array& struct_array,
+    std::format_context& ctx
+) const -> decltype(ctx.out())
 {
     const auto get_names = [](const sparrow::struct_array& sa) -> std::vector<std::string>
     {
@@ -149,4 +151,3 @@ namespace sparrow
 }
 
 #endif
-
