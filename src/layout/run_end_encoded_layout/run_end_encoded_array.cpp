@@ -287,3 +287,35 @@ namespace sparrow
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 }
+
+#if defined(__cpp_lib_format)
+
+auto std::formatter<sparrow::run_end_encoded_array>::format(
+    const sparrow::run_end_encoded_array& ar,
+    std::format_context& ctx
+) const -> decltype(ctx.out())
+{
+    std::format_to(ctx.out(), "Run end encoded [size={}] <", ar.size());
+
+    std::for_each(
+        ar.cbegin(),
+        sparrow::next(ar.cbegin(), ar.size() - 1),
+        [&ctx](const auto& value)
+        {
+            std::format_to(ctx.out(), "{}, ", value);
+        }
+    );
+
+    return std::format_to(ctx.out(), "{}>", ar.back());
+}
+
+namespace sparrow
+{
+    std::ostream& operator<<(std::ostream& os, const sparrow::run_end_encoded_array& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
+}
+
+#endif

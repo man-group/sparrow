@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <ostream>
+
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/types/data_traits.hpp"
@@ -64,10 +66,9 @@ struct std::formatter<sparrow::list_value>
         -> decltype(ctx.out());
 };
 
-inline std::ostream& operator<<(std::ostream& os, const sparrow::list_value& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    SPARROW_API std::ostream& operator<<(std::ostream& os, const sparrow::list_value& value);
 }
 
 #endif

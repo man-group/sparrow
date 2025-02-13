@@ -139,27 +139,13 @@ struct std::formatter<sparrow::run_end_encoded_array>
         return ctx.begin();  // Simple implementation
     }
 
-    auto format(const sparrow::run_end_encoded_array& ar, std::format_context& ctx) const
-    {
-        std::format_to(ctx.out(), "Run end encoded [size={}] <", ar.size());
-
-        std::for_each(
-            ar.cbegin(),
-            sparrow::next(ar.cbegin(), ar.size() - 1),
-            [&ctx](const auto& value)
-            {
-                std::format_to(ctx.out(), "{}, ", value);
-            }
-        );
-
-        return std::format_to(ctx.out(), "{}>", ar.back());
-    }
+    SPARROW_API auto format(const sparrow::run_end_encoded_array& ar, std::format_context& ctx) const
+        -> decltype(ctx.out());
 };
 
-inline std::ostream& operator<<(std::ostream& os, const sparrow::run_end_encoded_array& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    SPARROW_API std::ostream& operator<<(std::ostream& os, const sparrow::run_end_encoded_array& value);
 }
 
 #endif

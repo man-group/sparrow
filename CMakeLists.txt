@@ -260,11 +260,14 @@ else()
         ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
-        ${SPARROW_SOURCE_DIR}/layout/fixed_width_binary_array/fixed_width_binary_array_utils.cpp
-        ${SPARROW_SOURCE_DIR}/layout/run_end_encoded_array.cpp
-        ${SPARROW_SOURCE_DIR}/list_value.cpp
+        ${SPARROW_SOURCE_DIR}/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.cpp
+        ${SPARROW_SOURCE_DIR}/layout/list_layout/list_value.cpp
+        ${SPARROW_SOURCE_DIR}/layout/null_array.cpp
+        ${SPARROW_SOURCE_DIR}/layout/run_end_encoded_layout/run_end_encoded_array.cpp
+        ${SPARROW_SOURCE_DIR}/layout/struct_layout/struct_array.cpp
+        ${SPARROW_SOURCE_DIR}/layout/struct_layout/struct_value.cpp
+        ${SPARROW_SOURCE_DIR}/layout/union_array.cpp
         ${SPARROW_SOURCE_DIR}/record_batch.cpp
-        ${SPARROW_SOURCE_DIR}/struct_value.cpp
         ${SPARROW_SOURCE_DIR}/types/data_type.cpp
     )
 endif()
