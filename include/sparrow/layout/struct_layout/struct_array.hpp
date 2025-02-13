@@ -15,6 +15,7 @@
 #pragma once
 
 #include <string_view>
+#include <version>
 #if defined(__cpp_lib_format)
 #    include "sparrow/utils/format.hpp"
 #endif
@@ -80,7 +81,7 @@ namespace sparrow
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using iterator_tag = base_type::iterator_tag;
 
-        explicit struct_array(arrow_proxy proxy);
+        SPARROW_API explicit struct_array(arrow_proxy proxy);
 
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<struct_array, Args...>)
@@ -89,16 +90,16 @@ namespace sparrow
         {
         }
 
-        struct_array(const struct_array&);
-        struct_array& operator=(const struct_array&);
+        SPARROW_API struct_array(const struct_array&);
+        SPARROW_API struct_array& operator=(const struct_array&);
 
         struct_array(struct_array&&) = default;
         struct_array& operator=(struct_array&&) = default;
 
-        [[nodiscard]] size_type children_count() const;
+        [[nodiscard]] SPARROW_API size_type children_count() const;
 
-        [[nodiscard]] const array_wrapper* raw_child(std::size_t i) const;
-        [[nodiscard]] array_wrapper* raw_child(std::size_t i);
+        [[nodiscard]] SPARROW_API const array_wrapper* raw_child(std::size_t i) const;
+        [[nodiscard]] SPARROW_API array_wrapper* raw_child(std::size_t i);
 
     private:
 
@@ -112,14 +113,14 @@ namespace sparrow
 
         using children_type = std::vector<cloning_ptr<array_wrapper>>;
 
-        [[nodiscard]] value_iterator value_begin();
-        [[nodiscard]] value_iterator value_end();
-        [[nodiscard]] const_value_iterator value_cbegin() const;
-        [[nodiscard]] const_value_iterator value_cend() const;
-        [[nodiscard]] inner_reference value(size_type i);
-        [[nodiscard]] inner_const_reference value(size_type i) const;
+        [[nodiscard]] SPARROW_API value_iterator value_begin();
+        [[nodiscard]] SPARROW_API value_iterator value_end();
+        [[nodiscard]] SPARROW_API const_value_iterator value_cbegin() const;
+        [[nodiscard]] SPARROW_API const_value_iterator value_cend() const;
+        [[nodiscard]] SPARROW_API inner_reference value(size_type i);
+        [[nodiscard]] SPARROW_API inner_const_reference value(size_type i) const;
 
-        [[nodiscard]] children_type make_children();
+        [[nodiscard]] SPARROW_API children_type make_children();
 
         // data members
         children_type m_children;
@@ -131,28 +132,6 @@ namespace sparrow
         friend class detail::layout_value_functor<self_type, inner_value_type>;
         friend class detail::layout_value_functor<const self_type, inner_value_type>;
     };
-
-    inline struct_array::struct_array(arrow_proxy proxy)
-        : base_type(std::move(proxy))
-        , m_children(make_children())
-    {
-    }
-
-    inline struct_array::struct_array(const struct_array& rhs)
-        : base_type(rhs)
-        , m_children(make_children())
-    {
-    }
-
-    inline struct_array& struct_array::operator=(const struct_array& rhs)
-    {
-        if (this != &rhs)
-        {
-            base_type::operator=(rhs);
-            m_children = make_children();
-        }
-        return *this;
-    }
 
     template <validity_bitmap_input VB>
     auto struct_array::create_proxy(
@@ -203,67 +182,6 @@ namespace sparrow
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
-
-    inline auto struct_array::children_count() const -> size_type
-    {
-        return m_children.size();
-    }
-
-    inline auto struct_array::raw_child(std::size_t i) const -> const array_wrapper*
-    {
-        SPARROW_ASSERT_TRUE(i < m_children.size());
-        return m_children[i].get();
-    }
-
-    inline auto struct_array::raw_child(std::size_t i) -> array_wrapper*
-    {
-        SPARROW_ASSERT_TRUE(i < m_children.size());
-        return m_children[i].get();
-    }
-
-    inline auto struct_array::value_begin() -> value_iterator
-    {
-        return value_iterator{detail::layout_value_functor<self_type, inner_value_type>{this}, 0};
-    }
-
-    inline auto struct_array::value_end() -> value_iterator
-    {
-        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), this->size());
-    }
-
-    inline auto struct_array::value_cbegin() const -> const_value_iterator
-    {
-        return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), 0);
-    }
-
-    inline auto struct_array::value_cend() const -> const_value_iterator
-    {
-        return const_value_iterator(
-            detail::layout_value_functor<const self_type, inner_value_type>(this),
-            this->size()
-        );
-    }
-
-    inline auto struct_array::value(size_type i) -> inner_reference
-    {
-        return struct_value{m_children, i};
-    }
-
-    inline auto struct_array::value(size_type i) const -> inner_const_reference
-    {
-        return struct_value{m_children, i};
-    }
-
-    inline auto struct_array::make_children() -> children_type
-    {
-        arrow_proxy& proxy = this->get_arrow_proxy();
-        children_type children(proxy.children().size(), nullptr);
-        for (std::size_t i = 0; i < children.size(); ++i)
-        {
-            children[i] = array_factory(proxy.children()[i].view());
-        }
-        return children;
-    }
 }
 
 #if defined(__cpp_lib_format)
@@ -276,47 +194,13 @@ struct std::formatter<sparrow::struct_array>
         return ctx.begin();
     }
 
-    auto format(const sparrow::struct_array& struct_array, std::format_context& ctx) const
-    {
-        const auto get_names = [](const sparrow::struct_array& sa) -> std::vector<std::string>
-        {
-            std::vector<std::string> names;
-            names.reserve(sa.children_count());
-            for (std::size_t i = 0; i < sa.children_count(); ++i)
-            {
-                names.emplace_back(sa.raw_child(i)->get_arrow_proxy().name().value_or("N/A"));
-            }
-            return names;
-        };
-
-        const size_t member_count = struct_array.at(0).get().size();
-        const auto result = std::views::iota(0u, member_count)
-                            | std::ranges::views::transform(
-                                [&struct_array](const auto index)
-                                {
-                                    return std::ranges::views::transform(
-                                        struct_array,
-                                        [index](const auto& ref) -> sparrow::array_traits::const_reference
-                                        {
-                                            if (ref.has_value())
-                                            {
-                                                return ref.value()[index];
-                                            }
-                                            return {};
-                                        }
-                                    );
-                                }
-                            );
-
-        sparrow::to_table_with_columns(ctx.out(), get_names(struct_array), result);
-        return ctx.out();
-    }
+    SPARROW_API auto format(const sparrow::struct_array& struct_array, std::format_context& ctx) const
+        -> decltype(ctx.out());
 };
 
-inline std::ostream& operator<<(std::ostream& os, const sparrow::struct_array& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    SPARROW_API std::ostream& operator<<(std::ostream& os, const sparrow::struct_array& value);
 }
 
 #endif

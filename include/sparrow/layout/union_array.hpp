@@ -170,15 +170,17 @@ namespace sparrow
         {
         }
 
-        explicit dense_union_array(arrow_proxy proxy);
+        SPARROW_API explicit dense_union_array(arrow_proxy proxy);
 
-        dense_union_array(const dense_union_array& rhs);
-        dense_union_array& operator=(const dense_union_array& rhs);
+        SPARROW_API dense_union_array(const dense_union_array& rhs);
+        SPARROW_API dense_union_array& operator=(const dense_union_array& rhs);
 
         dense_union_array(dense_union_array&& rhs) = default;
         dense_union_array& operator=(dense_union_array&& rhs) = default;
 
     private:
+
+        using type_id_map = typename base_type::type_id_map;
 
         template <std::ranges::input_range TYPE_MAPPING = std::vector<std::uint8_t>>
             requires(std::convertible_to<std::ranges::range_value_t<TYPE_MAPPING>, std::uint8_t>)
@@ -191,7 +193,18 @@ namespace sparrow
             std::optional<std::string_view> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        std::size_t element_offset(std::size_t i) const;
+        SPARROW_API static auto create_proxy_impl(
+            std::vector<array>&& children,
+            type_id_buffer_type&& element_type,
+            offset_buffer_type&& offsets,
+            std::string&& format, 
+            type_id_map&& tim,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::string_view> metadata = std::nullopt
+        ) -> arrow_proxy;
+
+        SPARROW_API std::size_t element_offset(std::size_t i) const;
+
         const std::int32_t* p_offsets;
         friend class union_array_crtp_base<dense_union_array>;
     };
@@ -210,7 +223,11 @@ namespace sparrow
         {
         }
 
-        explicit sparse_union_array(arrow_proxy proxy);
+        SPARROW_API explicit sparse_union_array(arrow_proxy proxy);
+
+    private:
+
+        using type_id_map = typename base_type::type_id_map;
 
         template <std::ranges::input_range TYPE_MAPPING = std::vector<std::uint8_t>>
             requires(std::convertible_to<std::ranges::range_value_t<TYPE_MAPPING>, std::uint8_t>)
@@ -220,12 +237,20 @@ namespace sparrow
             TYPE_MAPPING&& type_mapping = TYPE_MAPPING{}
         ) -> arrow_proxy;
 
+        SPARROW_API static auto create_proxy_impl(
+            std::vector<array>&& children,
+            type_id_buffer_type&& element_type,
+            std::string&& format,
+            type_id_map&& tim
+        ) -> arrow_proxy;
 
-    private:
-
-        std::size_t element_offset(std::size_t i) const;
+        SPARROW_API std::size_t element_offset(std::size_t i) const;
         friend class union_array_crtp_base<sparse_union_array>;
     };
+
+    /****************************************
+     * union_array_crtp_base implementation *
+     ****************************************/
 
     template <class DERIVED>
     auto union_array_crtp_base<DERIVED>::parse_type_id_map(std::string_view format_string) -> type_id_map
@@ -303,10 +328,6 @@ namespace sparrow
             throw std::invalid_argument("Invalid type-id map");
         }
     }
-
-    /****************************************
-     * union_array_crtp_base implementation *
-     ****************************************/
 
     template <class DERIVED>
     std::optional<std::string_view> union_array_crtp_base<DERIVED>::name() const
@@ -480,31 +501,6 @@ namespace sparrow
      * dense_union_array implementation *
      ************************************/
 
-#ifdef __GNUC__
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wcast-align"
-#endif
-    inline dense_union_array::dense_union_array(arrow_proxy proxy)
-        : base_type(std::move(proxy))
-        , p_offsets(reinterpret_cast<std::int32_t*>(m_proxy.buffers()[1 /*index of offsets*/].data()))
-    {
-    }
-
-    inline dense_union_array::dense_union_array(const dense_union_array& rhs)
-        : dense_union_array(rhs.m_proxy)
-    {
-    }
-
-    inline dense_union_array& dense_union_array::operator=(const dense_union_array& rhs)
-    {
-        if (this != &rhs)
-        {
-            base_type::operator=(rhs);
-            p_offsets = reinterpret_cast<std::int32_t*>(m_proxy.buffers()[1 /*index of offsets*/].data());
-        }
-        return *this;
-    }
-
     template <std::ranges::input_range TYPE_MAPPING>
         requires(std::convertible_to<std::ranges::range_value_t<TYPE_MAPPING>, std::uint8_t>)
     auto dense_union_array::create_proxy(
@@ -517,35 +513,9 @@ namespace sparrow
     ) -> arrow_proxy
     {
         const auto n_children = children.size();
-        ArrowSchema** child_schemas = new ArrowSchema*[n_children];
-        ArrowArray** child_arrays = new ArrowArray*[n_children];
-        const auto size = element_type.size();
 
         // inverse type mapping (type_id -> child_index)
         auto type_id_to_child_index = type_id_map_from_child_to_type_id(child_index_to_type_id);
-
-        // count nulls (expensive!)
-        int64_t null_count = 0;
-        for (std::size_t i = 0; i < size; ++i)
-        {
-            // child_id from type_id
-            const auto type_id = static_cast<std::uint8_t>(element_type[i]);
-            const auto child_index = type_id_to_child_index[type_id];
-            const auto offset = static_cast<std::size_t>(offsets[i]);
-            // check if child is null
-            if (!children[child_index][offset].has_value())
-            {
-                ++null_count;
-            }
-        }
-
-        for (std::size_t i = 0; i < n_children; ++i)
-        {
-            auto& child = children[i];
-            auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(child));
-            child_arrays[i] = new ArrowArray(std::move(flat_arr));
-            child_schemas[i] = new ArrowSchema(std::move(flat_schema));
-        }
 
         std::string format = make_format_string(
             true /*dense union*/,
@@ -553,50 +523,19 @@ namespace sparrow
             std::forward<TYPE_MAPPING>(child_index_to_type_id)
         );
 
-        ArrowSchema schema = make_arrow_schema(
-            format,
-            std::move(name),      // name
-            std::move(metadata),  // metadata
-            std::nullopt,         // flags,
-            static_cast<int64_t>(n_children),
-            child_schemas,  // children
-            nullptr         // dictionary
-        );
-
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(element_type).extract_storage(),
-            std::move(offsets).extract_storage()
-        };
-
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // length
-            static_cast<std::int64_t>(null_count),
-            0,  // offset
-            std::move(arr_buffs),
-            static_cast<std::size_t>(n_children),  // n_children
-            child_arrays,                          // children
-            nullptr                                // dictionary
-        );
-        return arrow_proxy{std::move(arr), std::move(schema)};
-    }
-
-#ifdef __GNUC__
-#    pragma GCC diagnostic pop
-#endif
-
-    inline std::size_t dense_union_array::element_offset(std::size_t i) const
-    {
-        return static_cast<std::size_t>(p_offsets[i]) + m_proxy.offset();
+        return create_proxy_impl(
+            std::move(children),
+            std::move(element_type),
+            std::move(offsets),
+            std::move(format),
+            std::move(type_id_to_child_index),
+            std::move(name),
+            std::move(metadata));
     }
 
     /*************************************
      * sparse_union_array implementation *
      *************************************/
-
-    inline sparse_union_array::sparse_union_array(arrow_proxy proxy)
-        : base_type(std::move(proxy))
-    {
-    }
 
     template <std::ranges::input_range TYPE_MAPPING>
         requires(std::convertible_to<std::ranges::range_value_t<TYPE_MAPPING>, std::uint8_t>)
@@ -607,34 +546,9 @@ namespace sparrow
     ) -> arrow_proxy
     {
         const auto n_children = children.size();
-        ArrowSchema** child_schemas = new ArrowSchema*[n_children];
-        ArrowArray** child_arrays = new ArrowArray*[n_children];
-        const auto size = element_type.size();
 
         // inverse type mapping (type_id -> child_index)
         auto type_id_to_child_index = type_id_map_from_child_to_type_id(child_index_to_type_id);
-
-        // count nulls (expensive!)
-        int64_t null_count = 0;
-        for (std::size_t i = 0; i < size; ++i)
-        {
-            // child_id from type_id
-            const auto type_id = static_cast<std::uint8_t>(element_type[i]);
-            const auto child_index = type_id_to_child_index[type_id];
-            // check if child is null
-            if (!children[child_index][i].has_value())
-            {
-                ++null_count;
-            }
-        }
-
-        for (std::size_t i = 0; i < n_children; ++i)
-        {
-            auto& child = children[i];
-            auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(child));
-            child_arrays[i] = new ArrowArray(std::move(flat_arr));
-            child_schemas[i] = new ArrowSchema(std::move(flat_schema));
-        }
 
         std::string format = make_format_string(
             false /*is dense union*/,
@@ -642,33 +556,12 @@ namespace sparrow
             std::forward<TYPE_MAPPING>(child_index_to_type_id)
         );
 
-        ArrowSchema schema = make_arrow_schema(
-            format,
-            std::nullopt,  // name
-            std::nullopt,  // metadata
-            std::nullopt,  // flags,
-            static_cast<int64_t>(n_children),
-            child_schemas,  // children
-            nullptr         // dictionary
+        return create_proxy_impl(
+            std::move(children),
+            std::move(element_type),
+            std::move(format),
+            std::move(type_id_to_child_index)
         );
-
-        std::vector<buffer<std::uint8_t>> arr_buffs = {std::move(element_type).extract_storage()};
-
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // length
-            static_cast<std::int64_t>(null_count),
-            0,  // offset
-            std::move(arr_buffs),
-            static_cast<std::size_t>(n_children),  // n_children
-            child_arrays,                          // children
-            nullptr                                // dictionary
-        );
-        return arrow_proxy{std::move(arr), std::move(schema)};
-    }
-
-    inline std::size_t sparse_union_array::element_offset(std::size_t i) const
-    {
-        return i + m_proxy.offset();
     }
 }
 
@@ -714,12 +607,15 @@ struct std::formatter<U>
     }
 };
 
-template <typename U>
-    requires std::derived_from<U, sparrow::union_array_crtp_base<U>>
-std::ostream& operator<<(std::ostream& os, const U& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    template <typename U>
+        requires std::derived_from<U, sparrow::union_array_crtp_base<U>>
+    std::ostream& operator<<(std::ostream& os, const U& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 #endif

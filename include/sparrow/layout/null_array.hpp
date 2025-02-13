@@ -89,55 +89,56 @@ namespace sparrow
         using const_value_range = std::ranges::subrange<const_value_iterator>;
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
-        null_array(
+        SPARROW_API null_array(
             size_t length,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<std::string_view> metadata = std::nullopt
         );
 
-        explicit null_array(arrow_proxy);
+        SPARROW_API explicit null_array(arrow_proxy);
 
-        [[nodiscard]] std::optional<std::string_view> name() const;
-        [[nodiscard]] std::optional<std::string_view> metadata() const;
+        [[nodiscard]] SPARROW_API std::optional<std::string_view> name() const;
+        [[nodiscard]] SPARROW_API std::optional<std::string_view> metadata() const;
 
-        [[nodiscard]] size_type size() const;
+        [[nodiscard]] SPARROW_API size_type size() const;
 
-        [[nodiscard]] reference operator[](size_type i);
-        [[nodiscard]] const_reference operator[](size_type i) const;
+        [[nodiscard]] SPARROW_API reference operator[](size_type i);
+        [[nodiscard]] SPARROW_API const_reference operator[](size_type i) const;
 
-        [[nodiscard]] iterator begin();
-        [[nodiscard]] iterator end();
+        [[nodiscard]] SPARROW_API iterator begin();
+        [[nodiscard]] SPARROW_API iterator end();
 
-        [[nodiscard]] const_iterator begin() const;
-        [[nodiscard]] const_iterator end() const;
+        [[nodiscard]] SPARROW_API const_iterator begin() const;
+        [[nodiscard]] SPARROW_API const_iterator end() const;
 
-        [[nodiscard]] const_iterator cbegin() const;
-        [[nodiscard]] const_iterator cend() const;
+        [[nodiscard]] SPARROW_API const_iterator cbegin() const;
+        [[nodiscard]] SPARROW_API const_iterator cend() const;
 
-        [[nodiscard]] reference front();
-        [[nodiscard]] const_reference front() const;
+        [[nodiscard]] SPARROW_API reference front();
+        [[nodiscard]] SPARROW_API const_reference front() const;
 
-        [[nodiscard]] reference back();
-        [[nodiscard]] const_reference back() const;
+        [[nodiscard]] SPARROW_API reference back();
+        [[nodiscard]] SPARROW_API const_reference back() const;
 
-        [[nodiscard]] const_value_range values() const;
-        [[nodiscard]] const_bitmap_range bitmap() const;
+        [[nodiscard]] SPARROW_API const_value_range values() const;
+        [[nodiscard]] SPARROW_API const_bitmap_range bitmap() const;
 
     private:
 
-        [[nodiscard]] static arrow_proxy
+        [[nodiscard]] SPARROW_API static arrow_proxy
         create_proxy(size_t length, std::optional<std::string_view> name, std::optional<std::string_view> metadata);
 
-        [[nodiscard]] difference_type ssize() const;
+        [[nodiscard]] SPARROW_API difference_type ssize() const;
 
-        [[nodiscard]] arrow_proxy& get_arrow_proxy();
-        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
+        [[nodiscard]] SPARROW_API arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] SPARROW_API const arrow_proxy& get_arrow_proxy() const;
 
         arrow_proxy m_proxy;
 
         friend class detail::array_access;
     };
 
+    SPARROW_API 
     bool operator==(const null_array& lhs, const null_array& rhs);
 
     /*********************************
@@ -190,164 +191,6 @@ namespace sparrow
     bool empty_iterator<T>::less_than(const self_type& rhs) const
     {
         return m_index < rhs.m_index;
-    }
-
-    /*****************************
-     * null_array implementation *
-     *****************************/
-
-    inline null_array::null_array(
-        size_t length,
-        std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
-    )
-        : m_proxy(create_proxy(length, std::move(name), std::move(metadata)))
-    {
-    }
-
-    inline arrow_proxy null_array::create_proxy(
-        size_t length,
-        std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
-    )
-    {
-        using namespace std::literals;
-        ArrowSchema schema = make_arrow_schema(
-            "n"sv,
-            std::move(name),
-            std::move(metadata),
-            std::nullopt,
-            0,
-            nullptr,
-            nullptr
-        );
-
-        using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = {};
-
-        ArrowArray arr = make_arrow_array(
-            static_cast<int64_t>(length),
-            static_cast<int64_t>(length),
-            0,
-            std::move(arr_buffs),
-            0,
-            nullptr,
-            nullptr
-        );
-        return arrow_proxy{std::move(arr), std::move(schema)};
-    }
-
-    inline null_array::null_array(arrow_proxy proxy)
-        : m_proxy(std::move(proxy))
-    {
-        SPARROW_ASSERT_TRUE(m_proxy.data_type() == data_type::NA);
-    }
-
-    inline std::optional<std::string_view> null_array::name() const
-    {
-        return m_proxy.name();
-    }
-
-    inline std::optional<std::string_view> null_array::metadata() const
-    {
-        return m_proxy.metadata();
-    }
-
-    inline auto null_array::size() const -> size_type
-    {
-        return m_proxy.length();
-    }
-
-    inline auto null_array::operator[](size_type i) -> reference
-    {
-        SPARROW_ASSERT_TRUE(i < size());
-        return *(begin());
-    }
-
-    inline auto null_array::operator[](size_type i) const -> const_reference
-    {
-        SPARROW_ASSERT_TRUE(i < size());
-        return *(cbegin());
-    }
-
-    inline auto null_array::begin() -> iterator
-    {
-        return iterator(0);
-    }
-
-    inline auto null_array::end() -> iterator
-    {
-        return iterator(ssize());
-    }
-
-    inline auto null_array::begin() const -> const_iterator
-    {
-        return cbegin();
-    }
-
-    inline auto null_array::end() const -> const_iterator
-    {
-        return cend();
-    }
-
-    inline auto null_array::cbegin() const -> const_iterator
-    {
-        return const_iterator(0);
-    }
-
-    inline auto null_array::cend() const -> const_iterator
-    {
-        return const_iterator(ssize());
-    }
-
-    inline auto null_array::front() -> reference
-    {
-        return *begin();
-    }
-
-    inline auto null_array::front() const -> const_reference
-    {
-        return *cbegin();
-    }
-
-    inline auto null_array::back() -> reference
-    {
-        return *(end() - 1);
-    }
-
-    inline auto null_array::back() const -> const_reference
-    {
-        return *(cend() - 1);
-    }
-
-    inline auto null_array::values() const -> const_value_range
-    {
-        return std::ranges::subrange(const_value_iterator(0), const_value_iterator(ssize()));
-    }
-
-    inline auto null_array::bitmap() const -> const_bitmap_range
-    {
-        return std::ranges::subrange(const_bitmap_iterator(0), const_bitmap_iterator(ssize()));
-    }
-
-    inline auto null_array::ssize() const -> difference_type
-    {
-        return static_cast<difference_type>(size());
-    }
-
-    inline arrow_proxy& null_array::get_arrow_proxy()
-    {
-        return m_proxy;
-    }
-
-    inline const arrow_proxy& null_array::get_arrow_proxy() const
-    {
-        return m_proxy;
-    }
-
-    inline bool operator==(const null_array& lhs, const null_array& rhs)
-    {
-        return lhs.size() == rhs.size();
     }
 }
 

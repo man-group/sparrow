@@ -13,9 +13,6 @@
 // limitations under the License.
 
 #include "sparrow/layout/list_layout/list_value.hpp"
-
-#include <iostream>
-
 #include "sparrow/layout/dispatch.hpp"
 
 namespace sparrow
@@ -80,6 +77,15 @@ auto std::formatter<sparrow::list_value>::format(const sparrow::list_value& list
         }
     }
     return std::format_to(ctx.out(), "{}>", list_value.back());
+}
+
+namespace sparrow
+{
+    std::ostream& operator<<(std::ostream& os, const sparrow::list_value& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 #endif
