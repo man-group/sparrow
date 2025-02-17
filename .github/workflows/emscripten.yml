@@ -48,7 +48,7 @@ jobs:
 
         export PREFIX=$MAMBA_ROOT_PREFIX/envs/sparrow-wasm-host
 
-        emcmake cmake \    
+        emcmake cmake \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_FIND_ROOT_PATH=$PREFIX \
           -DCMAKE_INSTALL_PREFIX=$PREFIX \
