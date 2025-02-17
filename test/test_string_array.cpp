@@ -22,8 +22,10 @@
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
+#include "metadata_sample.hpp"
 #include "nanoarrow_utils.hpp"
 #include "test_utils.hpp"
+
 
 using namespace std::literals;
 
@@ -76,7 +78,7 @@ namespace sparrow
                 string_array array(words, std::move(where_nulls), "name", "metadata");
 
                 CHECK_EQ(array.name(), "name");
-                CHECK_EQ(array.metadata(), "metadata");
+                test_metadata(metadata_sample, *(array.metadata()));
 
                 REQUIRE_EQ(array.size(), words.size());
 

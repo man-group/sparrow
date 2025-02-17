@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <ranges>
 #include <type_traits>
+#include <vector>
 
 #if defined(__cpp_lib_format)
 #    include <format>
@@ -74,7 +75,6 @@ namespace sparrow
 template <typename T, std::size_t N>
 struct std::formatter<std::array<T, N>>
 {
-    // Parsing format specifiers
     constexpr auto parse(std::format_parse_context& ctx)
     {
         return ctx.begin();  // Simple implementation
@@ -87,6 +87,36 @@ struct std::formatter<std::array<T, N>>
 
         bool first = true;
         for (const auto& elem : array)
+        {
+            if (!first)
+            {
+                *out++ = ',';
+                *out++ = ' ';
+            }
+            out = std::format_to(out, "{}", elem);
+            first = false;
+        }
+
+        *out++ = '>';
+        return out;
+    }
+};
+
+template <typename T>
+struct std::formatter<std::vector<T>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const std::vector<T>& vector, std::format_context& ctx) const
+    {
+        auto out = ctx.out();
+        *out++ = '<';
+
+        bool first = true;
+        for (const auto& elem : vector)
         {
             if (!first)
             {

@@ -29,6 +29,9 @@
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/types/data_type.hpp"
+#include "sparrow/utils/metadata.hpp"
+#include "sparrow/utils/pair.hpp"
+#include "sparrow/utils/ranges.hpp"
 
 namespace sparrow
 {
@@ -115,14 +118,26 @@ namespace sparrow
          * @param name The name to set.
          */
         SPARROW_API void set_name(std::optional<std::string_view> name);
-        [[nodiscard]] SPARROW_API std::optional<std::string_view> metadata() const;
+        [[nodiscard]] SPARROW_API std::optional<KeyValueView> metadata() const;
 
         /**
          * Set the metadata of the `ArrowSchema`.
          * @exception `arrow_proxy_exception` If the `ArrowSchema` was not created with sparrow.
          * @param metadata The metadata to set.
          */
-        SPARROW_API void set_metadata(std::optional<std::string_view> metadata);
+        template <input_metadata_container R>
+        void set_metadata(std::optional<R> metadata)
+        {
+            if (!schema_created_with_sparrow())
+            {
+                throw arrow_proxy_exception("Cannot set metadata on non-sparrow created ArrowArray");
+            }
+            std::string buffer = get_metadata_from_key_values(*metadata);
+            auto private_data = get_schema_private_data();
+            private_data->metadata() = std::move(buffer);
+            schema().metadata = private_data->metadata_ptr();
+        }
+
         [[nodiscard]] SPARROW_API std::vector<ArrowFlag> flags() const;
 
         /**
@@ -423,7 +438,7 @@ namespace sparrow
         void reset();
 
         [[nodiscard]] bool array_created_with_sparrow() const;
-        [[nodiscard]] bool schema_created_with_sparrow() const;
+        [[nodiscard]] SPARROW_API bool schema_created_with_sparrow() const;
 
         void validate_array_and_schema() const;
 

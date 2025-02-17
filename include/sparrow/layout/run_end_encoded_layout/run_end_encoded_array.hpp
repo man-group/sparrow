@@ -90,7 +90,7 @@ namespace sparrow
         [[nodiscard]] SPARROW_API size_type size() const;
 
         [[nodiscard]] std::optional<std::string_view> name() const;
-        [[nodiscard]] std::optional<std::string_view> metadata() const;
+        [[nodiscard]] std::optional<KeyValueView> metadata() const;
 
     private:
 

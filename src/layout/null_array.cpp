@@ -14,6 +14,9 @@
 
 #include "sparrow/layout/null_array.hpp"
 
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
+
 namespace sparrow
 {
     null_array::null_array(size_t length, std::optional<std::string_view> name, std::optional<std::string_view> metadata)
@@ -67,7 +70,7 @@ namespace sparrow
         return m_proxy.name();
     }
 
-    std::optional<std::string_view> null_array::metadata() const
+    std::optional<KeyValueView> null_array::metadata() const
     {
         return m_proxy.metadata();
     }
