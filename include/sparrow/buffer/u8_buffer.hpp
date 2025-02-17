@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include <cmath>
 #include <ranges>
 #include <type_traits>
 
+#include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/utils/ranges.hpp"
 
@@ -26,6 +26,7 @@ namespace sparrow
 
     namespace detail
     {
+
         template <class T>
         class holder
         {
@@ -61,8 +62,10 @@ namespace sparrow
         };
     }
 
-    // like buffer<T> but for any type T, nut always use buffer<std::uint8_t> as storage
-    // This internal storage can be extracted
+    /**
+     * This buffer class is use as storage buffer for all sparrow arrays.
+     * Its internal storage can be extracted.
+     */
     template <class T>
     class u8_buffer : private detail::holder<buffer<std::uint8_t>>,
                       public buffer_adaptor<T, buffer<std::uint8_t>&>
@@ -72,17 +75,42 @@ namespace sparrow
         using holder_type = detail::holder<buffer<std::uint8_t>>;
         using buffer_adaptor_type = buffer_adaptor<T, buffer<std::uint8_t>&>;
         using holder_type::extract_storage;
+        using buffer_adaptor_type::operator[];
 
         u8_buffer(u8_buffer&& other);
         u8_buffer(const u8_buffer& other);
         u8_buffer& operator=(u8_buffer&& other) = delete;
         u8_buffer& operator=(u8_buffer& other) = delete;
+        ~u8_buffer() = default;
 
+        /**
+         * Constructs a buffer with \c n elements, each initialized to \c val.
+         * @param n Number of elements.
+         * @param val Value to initialize the elements with.
+         */
         u8_buffer(std::size_t n, const T& val = T{});
+
+        /**
+         * Constructs a buffer with the elements of the range \c range.
+         * The range elements  must be convertible to \c T.
+         * @param range The range.
+         */
         template <std::ranges::input_range R>
             requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>)
         u8_buffer(R&& range);
+
+        /**
+         * Constructs a buffer with the elements of the initializer list \c ilist.
+         * @param ilist The initializer list.
+         */
         u8_buffer(std::initializer_list<T> ilist);
+
+        /**
+         * Constructs a buffer by taking ownership of the storage pointed to by \c data_ptr.
+         * @param data_ptr Pointer to the storage.
+         * @param count Number of elements in the storage.
+         */
+        u8_buffer(T* data_ptr, std::size_t count);
     };
 
     template <class T>
@@ -124,5 +152,12 @@ namespace sparrow
         , buffer_adaptor_type(holder_type::value)
     {
         std::copy(ilist.begin(), ilist.end(), this->begin());
+    }
+
+    template <class T>
+    u8_buffer<T>::u8_buffer(T* data_ptr, std::size_t count)
+        : holder_type{buffer<std::uint8_t>(reinterpret_cast<uint8_t*>(data_ptr), count * sizeof(T))}
+        , buffer_adaptor_type(holder_type::value)
+    {
     }
 }
