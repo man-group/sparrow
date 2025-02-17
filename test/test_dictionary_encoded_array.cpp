@@ -25,7 +25,9 @@
 #include "sparrow/types/data_type.hpp"
 
 #include "doctest/doctest.h"
+#include "metadata_sample.hpp"
 #include "test_utils.hpp"
+
 
 namespace sparrow
 {
@@ -90,7 +92,7 @@ namespace sparrow
             REQUIRE_EQ(arr.size(), 5);
 
             CHECK_EQ(arr.name(), "name");
-            CHECK_EQ(arr.metadata(), "metadata");
+            test_metadata(metadata_sample, *(arr.metadata()));
 
             // check bitmap
             REQUIRE_EQ(arr[0].has_value(), true);

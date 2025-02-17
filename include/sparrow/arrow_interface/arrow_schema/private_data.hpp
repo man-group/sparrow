@@ -20,6 +20,7 @@
 
 #include "sparrow/arrow_interface/private_data_ownership.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
@@ -60,6 +61,11 @@ namespace sparrow
             const CHILDREN_OWNERSHIP& children_ownership,
             bool dictionary_ownership
         );
+
+        template <class F, class N, input_metadata_container M = std::vector<metadata_pair>>
+            requires std::constructible_from<arrow_schema_private_data::FormatType, F>
+                     && std::constructible_from<arrow_schema_private_data::NameType, N>
+        arrow_schema_private_data(F format, N name, M metadata, std::size_t children_size = 0);
 
         [[nodiscard]] const char* format_ptr() const noexcept;
         [[nodiscard]] FormatType& format() noexcept;
@@ -136,6 +142,18 @@ namespace sparrow
         , m_format(std::move(format))
         , m_name(to_optional_string(std::forward<N>(name)))
         , m_metadata(to_optional_string(std::forward<M>(metadata)))
+    {
+        SPARROW_ASSERT_TRUE(!m_format.empty())
+    }
+
+    template <class F, class N, input_metadata_container M>
+        requires std::constructible_from<arrow_schema_private_data::FormatType, F>
+                     && std::constructible_from<arrow_schema_private_data::NameType, N>
+    arrow_schema_private_data::arrow_schema_private_data(F format, N name, M metadata, std::size_t children_size)
+        : children_ownership(children_size)
+        , m_format(std::move(format))
+        , m_name(to_optional_string(std::forward<N>(name)))
+        , m_metadata(get_metadata_from_key_values(metadata))
     {
         SPARROW_ASSERT_TRUE(!m_format.empty())
     }

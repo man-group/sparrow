@@ -141,13 +141,13 @@ namespace sparrow
 
     private:
 
-        template <std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap>
+        template <std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap, input_metadata_container METADATA_RANGE>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         [[nodiscard]] static arrow_proxy create_proxy(
             R&& range,
             VB&& bitmap_input = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
         [[nodiscard]] inner_reference value(size_type i);
@@ -180,13 +180,13 @@ namespace sparrow
     }
 
     template <class T>
-    template <std::ranges::input_range R, validity_bitmap_input VB>
+    template <std::ranges::input_range R, validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
     arrow_proxy variable_size_binary_view_array_impl<T>::create_proxy(
         R&& range,
         VB&& validity_input,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     )
     {
 #ifdef __GNUC__

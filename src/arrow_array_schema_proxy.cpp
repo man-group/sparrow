@@ -301,24 +301,13 @@ namespace sparrow
         schema().name = private_data->name_ptr();
     }
 
-    [[nodiscard]] std::optional<std::string_view> arrow_proxy::metadata() const
+    [[nodiscard]] std::optional<KeyValueView> arrow_proxy::metadata() const
     {
         if (schema().metadata == nullptr)
         {
             return std::nullopt;
         }
-        return std::string_view(schema().metadata);
-    }
-
-    void arrow_proxy::set_metadata(std::optional<std::string_view> metadata)
-    {
-        if (!schema_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set metadata on non-sparrow created ArrowArray");
-        }
-        auto private_data = get_schema_private_data();
-        private_data->metadata() = metadata;
-        schema().metadata = private_data->metadata_ptr();
+        return KeyValueView(schema().metadata);
     }
 
     [[nodiscard]] std::vector<ArrowFlag> arrow_proxy::flags() const

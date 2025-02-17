@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <concepts>
 #include <cstdint>
 #include <memory>
 #include <ranges>
@@ -30,6 +31,7 @@
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/metadata.hpp"
 
 namespace sparrow
 {
@@ -160,9 +162,9 @@ namespace sparrow
         ArrowSchema schema{};
         fill_arrow_schema(
             schema,
-            format,
-            name,
-            metadata,
+            std::move(format),
+            std::move(name),
+            std::move(metadata),
             flags,
             children,
             children_ownership,
@@ -172,12 +174,36 @@ namespace sparrow
         return schema;
     };
 
+    template <class F, class N, input_metadata_container M>
+        requires std::constructible_from<arrow_schema_private_data::FormatType, F>
+                 && std::constructible_from<arrow_schema_private_data::NameType, N>
+    [[nodiscard]] ArrowSchema make_arrow_schema(
+        F format,
+        N name,
+        std::optional<M> metadata,
+        std::optional<ArrowFlag> flags,
+        int64_t n_children,
+        ArrowSchema** children,
+        ArrowSchema* dictionary
+    )
+    {
+        return make_arrow_schema(
+            std::move(format),
+            std::move(name),
+            metadata.has_value() ? std::make_optional(get_metadata_from_key_values(*metadata)) : std::nullopt,
+            flags,
+            n_children,
+            children,
+            dictionary
+        );
+    }
+
     inline ArrowSchema make_empty_arrow_schema()
     {
         return make_arrow_schema(
             std::string_view("n"),
             "",
-            "",
+            std::nullopt,
             std::nullopt,
             nullptr,
             repeat_view<bool>(true, 0),

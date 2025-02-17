@@ -88,7 +88,7 @@ namespace sparrow
         using type_id_buffer_type = u8_buffer<std::uint8_t>;
 
         [[nodiscard]] std::optional<std::string_view> name() const;
-        [[nodiscard]] std::optional<std::string_view> metadata() const;
+        [[nodiscard]] std::optional<KeyValueView> metadata() const;
 
         [[nodiscard]] value_type at(size_type i) const;
         [[nodiscard]] value_type operator[](size_type i) const;
@@ -336,7 +336,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    std::optional<std::string_view> union_array_crtp_base<DERIVED>::metadata() const
+    std::optional<KeyValueView> union_array_crtp_base<DERIVED>::metadata() const
     {
         return m_proxy.metadata();
     }
