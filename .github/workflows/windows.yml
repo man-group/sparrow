@@ -13,7 +13,7 @@ defaults:
 jobs:
   build:
     runs-on: ${{ matrix.runs-on }}
-    name: ${{ matrix.toolchain.compiler }} / ${{ matrix.build-system.name }} / ${{ matrix.config.name }} / targets ${{ matrix.target-arch.name }} /  date-polyfill ${{ matrix.toolchain.date-polyfill}}
+    name: ${{ matrix.toolchain.compiler }} / ${{ matrix.build-system.name }} / ${{ matrix.config.name }} / targets ${{ matrix.target-arch.name }} / date-polyfill ${{ matrix.toolchain.date-polyfill}} /  shared ${{ matrix.toolchain.shared }}
     strategy:
       fail-fast: false
       matrix:

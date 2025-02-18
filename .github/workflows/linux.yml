@@ -13,7 +13,7 @@ defaults:
 jobs:
   build:
     runs-on: ${{ matrix.sys.image }}
-    name: ${{ matrix.sys.compiler }} / ${{ matrix.sys.version }} / ${{ matrix.sys.stdlib }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}}
+    name: ${{ matrix.sys.compiler }} / ${{ matrix.sys.version }} / ${{ matrix.sys.stdlib }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}} / shared ${{ matrix.sys.shared }}
     env:
       SCCACHE_GHA_ENABLED: "true"
     strategy:
