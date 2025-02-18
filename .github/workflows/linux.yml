@@ -20,14 +20,15 @@ jobs:
       fail-fast: false
       matrix:
         sys:
-        - {image: ubuntu-24.04, compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON'}
+        - {image: ubuntu-24.04, compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON', shared : 'ON'}
         # - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
-        - {image: ubuntu-24.04, compiler: clang, version: '18', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON'}
+        - {image: ubuntu-24.04, compiler: clang, version: '18', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON', shared : 'ON'}
         # - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
 
-        - {image: ubuntu-24.04, compiler: gcc, version: '12', config-flags: '', date-polyfill: 'ON'}
-        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON'}
-        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'OFF'}
+        - {image: ubuntu-24.04, compiler: gcc, version: '12', config-flags: '', date-polyfill: 'ON', shared : 'ON'}
+        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON', shared : 'ON'}
+        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON', shared : 'OFF'}
+        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'OFF', shared : 'ON'}
 
         config:
         - {name: Debug}
@@ -82,7 +83,8 @@ jobs:
           -DBUILD_EXAMPLES=ON \
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
-          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
+          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
+          -DSPARROW_BUILD_SHARED=${{matrix.sys.shared}}
 
     - name: Build library
       working-directory: build

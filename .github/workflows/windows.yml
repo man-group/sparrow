@@ -19,10 +19,12 @@ jobs:
       matrix:
         runs-on: [windows-latest]
         toolchain:
-        - {compiler: msvc, date-polyfill: 'ON', use-large-int-placeholders: 'ON'}
-        - {compiler: msvc, date-polyfill: 'OFF', use-large-int-placeholders: 'ON'}
-        - {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'ON'}
-        - {compiler: clang, date-polyfill: 'OFF', version: 18, use-large-int-placeholders: 'ON'}
+        - {compiler: msvc, date-polyfill: 'ON', use-large-int-placeholders: 'ON', shared: 'ON'}
+        - {compiler: msvc, date-polyfill: 'ON', use-large-int-placeholders: 'ON', shared: 'OFF'}
+        - {compiler: msvc, date-polyfill: 'OFF', use-large-int-placeholders: 'ON', shared: 'ON'}
+        - {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'ON', shared: 'ON'}
+        - {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'ON', shared: 'OFF'}
+        - {compiler: clang, date-polyfill: 'OFF', version: 18, use-large-int-placeholders: 'ON', shared: 'ON'}
         target-arch:
         - {
             name: "Win64",
@@ -166,6 +168,7 @@ jobs:
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
         -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
+        -DSPARROW_BUILD_SHARED=${{matrix.toolchain.shared}} \
         $TEST_COVERAGE_ACTIVATION
 
     - name: Build library
