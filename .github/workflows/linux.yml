@@ -110,7 +110,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: success() || failure()
       with:
-        name: test_sparrow_lib_report_Linux_${{ matrix.sys.compiler }}_${{ matrix.sys.version }}_${{ matrix.sys.stdlib }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.sys.date-polyfill}}
+        name: test_sparrow_lib_report_Linux_${{ matrix.sys.compiler }}_${{ matrix.sys.version }}_${{ matrix.sys.stdlib }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.sys.date-polyfill}}_shared_${{ matrix.sys.shared }}
         path: ./**/test*.xml
         if-no-files-found: error
 

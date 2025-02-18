@@ -191,7 +191,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: success() || failure()
       with:
-        name: test_sparrow_lib_report_Windows_${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}
+        name: test_sparrow_lib_report_Windows_${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}_shared_${{ matrix.toolchain.shared }}
         path: ./**/test*.xml
         if-no-files-found: error
 
