@@ -215,7 +215,7 @@ namespace sparrow
 
     namespace detail
     {
-        std::vector<record_batch::name_type> get_names(const std::vector<array>& array_list)
+        inline std::vector<record_batch::name_type> get_names(const std::vector<array>& array_list)
         {
             const auto names = array_list
                                | std::views::transform(
@@ -280,7 +280,7 @@ struct std::formatter<sparrow::record_batch>
     }
 };
 
-std::ostream& operator<<(std::ostream& os, const sparrow::record_batch& value)
+inline std::ostream& operator<<(std::ostream& os, const sparrow::record_batch& value)
 {
     os << std::format("{}", value);
     return os;

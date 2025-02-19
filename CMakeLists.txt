@@ -272,10 +272,20 @@ else()
     )
 endif()
 
-add_library(sparrow SHARED ${SPARROW_HEADERS} ${SPARROW_SRC})
+OPTION(SPARROW_BUILD_SHARED "Build sparrow as a shared library" ON)
+if(SPARROW_BUILD_SHARED)
+    message(STATUS "🔧 Build shared library")
+    set(SPARROW_LIBRARY_TYPE SHARED)
+else()
+    message(STATUS "🔧 Build static library")
+    set(SPARROW_LIBRARY_TYPE STATIC)
+    list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_STATIC_LIB)
+endif()
+
+add_library(sparrow ${SPARROW_LIBRARY_TYPE} ${SPARROW_SRC} ${SPARROW_HEADERS})
+
 target_compile_definitions(sparrow PUBLIC ${SPARROW_COMPILE_DEFINITIONS})
 
-# TODO: handle static lib
 if (UNIX)
     # CMake does not compute the version number of so files as libtool
     # does on Linux. Strictly speaking, we should exclude FreeBSD and
@@ -310,11 +320,11 @@ if(ENABLE_COVERAGE)
     enable_coverage(sparrow)
 endif()
 
-if (BUILD_TESTS)
+if(BUILD_TESTS)
     message(STATUS "🧪 Create tests targets")
     enable_testing()
     add_subdirectory(test)
-endif ()
+endif()
 
 # Docs
 # ====
