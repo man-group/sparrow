@@ -111,12 +111,12 @@ namespace sparrow
 
             [[nodiscard]] T* allocate(std::size_t n) override
             {
-                return m_alloc.allocate(n);
+                return reinterpret_cast<T*>(m_alloc.allocate(n));
             }
 
             void deallocate(T* p, std::size_t n) override
             {
-                m_alloc.deallocate(p, n);
+                m_alloc.deallocate(reinterpret_cast<A::value_type*>(p), n);
             }
 
             [[nodiscard]] std::unique_ptr<interface> clone() const override

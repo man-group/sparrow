@@ -17,6 +17,7 @@
 #include <ranges>
 #include <type_traits>
 
+#include "sparrow/buffer/allocator.hpp"
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/utils/ranges.hpp"
@@ -31,6 +32,8 @@ namespace sparrow
         class holder
         {
         public:
+
+            using inner_type = T;
 
             template <class... Args>
             holder(Args&&... args)
@@ -110,7 +113,8 @@ namespace sparrow
          * @param data_ptr Pointer to the storage.
          * @param count Number of elements in the storage.
          */
-        u8_buffer(T* data_ptr, std::size_t count);
+        template <allocator A = any_allocator<T>>
+        u8_buffer(T* data_ptr, std::size_t count, const A& a = A());
     };
 
     template <class T>
@@ -155,8 +159,9 @@ namespace sparrow
     }
 
     template <class T>
-    u8_buffer<T>::u8_buffer(T* data_ptr, std::size_t count)
-        : holder_type{buffer<std::uint8_t>(reinterpret_cast<uint8_t*>(data_ptr), count * sizeof(T))}
+    template <allocator A>
+    u8_buffer<T>::u8_buffer(T* data_ptr, std::size_t count, const A& a)
+        : holder_type{reinterpret_cast<uint8_t*>(data_ptr), count * sizeof(T), a}
         , buffer_adaptor_type(holder_type::value)
     {
     }
