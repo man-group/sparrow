@@ -5,7 +5,7 @@
 
 #include <cassert>
 
-#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array.hpp"
 #include "sparrow/record_batch.hpp"
 
 std::vector<sparrow::array> make_array_list(const std::size_t data_size)

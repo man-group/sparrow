@@ -14,7 +14,7 @@
 
 #include "sparrow/array.hpp"
 #include "sparrow/array_factory.hpp"
-#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 #include "../test/external_array_data_creation.hpp"

@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "sparrow/layout/array_trivial_copyable.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array_impl.hpp"
 
 namespace sparrow
 {
@@ -39,7 +39,7 @@ namespace sparrow
      * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
      */
     template <primitive_type T>
-    using primitive_array = array_trivial_copyable<T>;
+    using primitive_array = primitive_array_impl<T>;
 
     template <class T>
     struct is_primitive_array : std::false_type

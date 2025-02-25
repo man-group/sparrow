@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "sparrow/array.hpp"
-#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array.hpp"
 
 #include "doctest/doctest.h"
 #include "nanoarrow_utils.hpp"

@@ -29,7 +29,7 @@
 #include "sparrow/layout/dictionary_encoded_array.hpp"
 #include "sparrow/layout/fixed_width_binary_array.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
-#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array.hpp"
 #include "sparrow/layout/struct_layout/struct_array.hpp"
 #include "sparrow/layout/temporal/date_array.hpp"
 #include "sparrow/layout/temporal/interval_array.hpp"

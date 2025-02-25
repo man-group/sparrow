@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "sparrow/layout/array_trivial_copyable.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array_impl.hpp"
 
 // tDs : std::chrono::seconds
 // tDm : std::chrono::milliseconds
@@ -43,7 +43,7 @@ namespace sparrow
      * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
      */
     template <duration_type T>
-    using duration_array = array_trivial_copyable<T>;
+    using duration_array = primitive_array_impl<T>;
 
     using duration_seconds_array = duration_array<std::chrono::seconds>;
     using duration_milliseconds_array = duration_array<std::chrono::milliseconds>;

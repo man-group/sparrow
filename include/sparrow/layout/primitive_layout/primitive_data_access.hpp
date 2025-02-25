@@ -32,7 +32,7 @@ namespace sparrow
          * @tparam L Type of the layout.
          */
         template <trivial_copyable_type T, typename L>
-        class trivial_copyable_data_access
+        class primitive_data_access
         {
         public:
 
@@ -46,11 +46,11 @@ namespace sparrow
             using const_value_iterator = pointer_iterator<const_pointer>;
 
             /**
-             * @brief Constructor for trivial_copyable_data_access.
+             * @brief Constructor for primitive_data_access.
              * @param layout Pointer to the layout object.
              * @param data_buffer_index Index of the data buffer.
              */
-            trivial_copyable_data_access(L* layout, size_t data_buffer_index)
+            primitive_data_access(L* layout, size_t data_buffer_index)
                 : p_layout(layout)
                 , m_data_buffer_index(data_buffer_index)
             {

@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "sparrow/layout/array_trivial_copyable.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array_impl.hpp"
 #include "sparrow/layout/temporal/interval_types.hpp"
 #include "sparrow/types/data_traits.hpp"
 
@@ -43,7 +43,7 @@ namespace sparrow
      * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
      */
     template <interval_type T>
-    using interval_array = array_trivial_copyable<T>;
+    using interval_array = primitive_array_impl<T>;
 
     using months_interval_array = interval_array<chrono::months>;
     using days_time_interval_array = interval_array<days_time_interval>;

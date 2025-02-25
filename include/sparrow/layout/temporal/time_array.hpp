@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "sparrow/layout/array_trivial_copyable.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array_impl.hpp"
 #include "sparrow/layout/temporal/time_types.hpp"
 
 // tts : std::chrono::seconds
@@ -41,7 +41,7 @@ namespace sparrow
      * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
      */
     template <time_type T>
-    using time_array = array_trivial_copyable<T>;
+    using time_array = primitive_array_impl<T>;
 
     using time_seconds_array = time_array<chrono::time_seconds>;
     using time_milliseconds_array = time_array<chrono::time_milliseconds>;
