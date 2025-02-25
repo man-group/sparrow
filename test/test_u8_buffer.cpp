@@ -108,9 +108,9 @@ TEST_SUITE("u8_buffer")
         }
     }
 
-    const std::vector<std::uint32_t> values{0, 1, 2, 3, 4, 5, 6, 7};
-    const sparrow::u8_buffer<std::uint32_t> const_sample_buffer(values);
-    sparrow::u8_buffer<std::uint32_t> sample_buffer(values);
+    static const std::vector<std::uint32_t> values{0, 1, 2, 3, 4, 5, 6, 7};
+    static const sparrow::u8_buffer<std::uint32_t> const_sample_buffer(values);
+    static sparrow::u8_buffer<std::uint32_t> sample_buffer(values);
 
     TEST_CASE("data")
     {
