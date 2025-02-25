@@ -320,7 +320,13 @@ if(ENABLE_COVERAGE)
     enable_coverage(sparrow)
 endif()
 
-if(BUILD_TESTS)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(sparrow
+        PUBLIC
+            -Wa,-mbig-obj)
+endif()
+
+if (BUILD_TESTS)
     message(STATUS "🧪 Create tests targets")
     enable_testing()
     add_subdirectory(test)
