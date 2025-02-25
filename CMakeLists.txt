@@ -320,7 +320,7 @@ if(ENABLE_COVERAGE)
     enable_coverage(sparrow)
 endif()
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND WIN32)
     target_compile_options(sparrow
         PUBLIC
             -Wa,-mbig-obj)
