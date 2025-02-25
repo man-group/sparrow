@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "sparrow/layout/array_trivial_copyable.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array_impl.hpp"
 #include "sparrow/layout/temporal/date_types.hpp"
 
 // tdD : std::chrono::seconds
@@ -41,7 +41,7 @@ namespace sparrow
      * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
      */
     template <date_type T>
-    using date_array = array_trivial_copyable<T>;
+    using date_array = primitive_array_impl<T>;
 
     using date_days_array = date_array<date_days>;
     using date_milliseconds_array = date_array<date_milliseconds>;

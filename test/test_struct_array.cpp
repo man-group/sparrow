@@ -15,7 +15,7 @@
 #include <string_view>
 
 #include "sparrow/array.hpp"
-#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array.hpp"
 #include "sparrow/layout/struct_layout/struct_array.hpp"
 #include "sparrow/utils/nullable.hpp"
 

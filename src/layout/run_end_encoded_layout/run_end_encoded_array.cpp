@@ -17,7 +17,7 @@
 #include "sparrow/array.hpp"
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/dispatch.hpp"
-#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 
 namespace sparrow

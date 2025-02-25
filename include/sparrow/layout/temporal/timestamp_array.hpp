@@ -21,9 +21,9 @@
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/layout_utils.hpp"
+#include "sparrow/layout/primitive_layout/primitive_data_access.hpp"
 #include "sparrow/layout/temporal/timestamp_concepts.hpp"
 #include "sparrow/layout/temporal/timestamp_reference.hpp"
-#include "sparrow/layout/trivial_copyable_data_access.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -290,7 +290,7 @@ namespace sparrow
         [[nodiscard]] static const date::time_zone* get_timezone(const arrow_proxy& proxy);
 
         const date::time_zone* m_timezone;
-        details::trivial_copyable_data_access<inner_value_type_duration, self_type> m_data_access;
+        details::primitive_data_access<inner_value_type_duration, self_type> m_data_access;
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend class timestamp_reference<self_type>;
