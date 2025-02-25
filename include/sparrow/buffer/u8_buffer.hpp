@@ -113,7 +113,7 @@ namespace sparrow
          * @param data_ptr Pointer to the storage.
          * @param count Number of elements in the storage.
          */
-        template <allocator A = any_allocator<T>>
+        template <allocator A = std::allocator<T>>
         u8_buffer(T* data_ptr, std::size_t count, const A& a = A());
     };
 
