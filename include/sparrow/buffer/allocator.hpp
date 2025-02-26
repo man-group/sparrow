@@ -116,7 +116,14 @@ namespace sparrow
 
             void deallocate(T* p, std::size_t n) override
             {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
                 m_alloc.deallocate(reinterpret_cast<A::value_type*>(p), n);
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
             }
 
             [[nodiscard]] std::unique_ptr<interface> clone() const override
