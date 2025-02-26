@@ -126,12 +126,12 @@ else()
         test_builder_utils.cpp
         test_builder.cpp
         test_builder.cpp
+        test_date_array.cpp
         test_decimal_array.cpp
         test_decimal.cpp
         test_dictionary_encoded_array.cpp
         test_dispatch.cpp
         test_duration_array.cpp
-        test_date_array.cpp
         test_dynamic_bitset_view.cpp
         test_dynamic_bitset.cpp
         test_fixed_width_binary_array.cpp
@@ -157,6 +157,7 @@ else()
         test_time_array.cpp
         test_timestamp_array.cpp
         test_traits.cpp
+        test_u8_buffer.cpp
         test_union_array.cpp
         test_utils_buffers.cpp
         test_utils_offsets.cpp

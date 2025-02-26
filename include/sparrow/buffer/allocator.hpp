@@ -111,12 +111,19 @@ namespace sparrow
 
             [[nodiscard]] T* allocate(std::size_t n) override
             {
-                return m_alloc.allocate(n);
+                return reinterpret_cast<T*>(m_alloc.allocate(n));
             }
 
             void deallocate(T* p, std::size_t n) override
             {
-                m_alloc.deallocate(p, n);
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+                m_alloc.deallocate(reinterpret_cast<A::value_type*>(p), n);
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
             }
 
             [[nodiscard]] std::unique_ptr<interface> clone() const override
@@ -237,6 +244,7 @@ namespace sparrow
 #if defined(__GNUC__)
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wmismatched-new-delete"
+#    pragma GCC diagnostic ignored "-Wnull-dereference"
 #endif
                 return allocator.deallocate(p, n);
 #if defined(__GNUC__)
