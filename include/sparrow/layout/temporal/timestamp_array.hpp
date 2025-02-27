@@ -26,6 +26,7 @@
 #include "sparrow/layout/temporal/timestamp_reference.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/mp_utils.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 // tts : timestamp<std::chrono::seconds>
 // tsm : timestamp<std::chrono::milliseconds>
@@ -373,15 +374,18 @@ namespace sparrow
         std::string format(data_type_to_format(arrow_traits<T>::type_id));
         format += timezone->name();
 
+        const repeat_view<bool> children_ownership{true, 0};
+
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             std::move(format),    // format
             std::move(name),      // name
             std::move(metadata),  // metadata
             std::nullopt,         // flags
-            0,                    // n_children
             nullptr,              // children
-            nullptr               // dictionary
+            children_ownership,   // children ownership
+            nullptr,              // dictionary,
+            true                  // dictionary ownership
         );
 
         std::vector<buffer<uint8_t>> buffers(2);
@@ -394,9 +398,10 @@ namespace sparrow
             static_cast<int64_t>(null_count),
             0,  // offset
             std::move(buffers),
-            0,        // n_children
-            nullptr,  // children
-            nullptr   // dictionary
+            nullptr,             // children
+            children_ownership,  // children ownership
+            nullptr,             // dictionary
+            true                 // dicitonary ownership
         );
         return arrow_proxy(std::move(arr), std::move(schema));
     }

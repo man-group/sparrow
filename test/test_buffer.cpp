@@ -957,6 +957,7 @@ namespace sparrow
                 CHECK_EQ(v.data(), mem);
                 CHECK_EQ(v.size(), size);
                 CHECK_EQ(v.data()[2], 2);
+                delete[] mem;
             }
 
             SUBCASE("with buffer")

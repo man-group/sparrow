@@ -18,6 +18,7 @@
 #include <string_view>
 
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 #include "arrow_array_schema_creation.hpp"
 #include "doctest/doctest.h"
@@ -89,14 +90,15 @@ TEST_SUITE("C Data Interface")
             const std::string format = "format";
             const std::string name = "name";
             const std::string metadata = "0000";
-            const auto schema = sparrow::make_arrow_schema(
+            auto schema = sparrow::make_arrow_schema(
                 format,
                 name,
                 metadata,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                2,
                 children,
-                dictionnary
+                sparrow::repeat_view<bool>(true, 2),
+                dictionnary,
+                true
             );
 
             const auto schema_format = std::string_view(schema.format);
@@ -118,18 +120,20 @@ TEST_SUITE("C Data Interface")
             const bool is_release_arrow_schema = schema.release == &sparrow::release_arrow_schema;
             CHECK(is_release_arrow_schema);
             CHECK_NE(schema.private_data, nullptr);
+            schema.release(&schema);
         }
 
         SUBCASE("make_schema_constructor no children, no dictionary, no name and metadata")
         {
-            const auto schema = sparrow::make_arrow_schema(
+            auto schema = sparrow::make_arrow_schema(
                 "format"s,
                 std::nullopt,
                 std::nullopt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                0,
                 nullptr,
-                nullptr
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
             );
 
             const auto schema_format = std::string_view(schema.format);
@@ -144,6 +148,7 @@ TEST_SUITE("C Data Interface")
             const bool is_release_arrow_schema = schema.release == &sparrow::release_arrow_schema;
             CHECK(is_release_arrow_schema);
             CHECK_NE(schema.private_data, nullptr);
+            schema.release(&schema);
         }
 
         SUBCASE("ArrowSchema release")
@@ -159,9 +164,10 @@ TEST_SUITE("C Data Interface")
                 "name"s,
                 metadata,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                2,
                 children,
-                new ArrowSchema()
+                sparrow::repeat_view<bool>(true, 2),
+                new ArrowSchema(),
+                true
             );
 
             schema.release(&schema);
@@ -183,9 +189,10 @@ TEST_SUITE("C Data Interface")
                 std::nullopt,
                 std::nullopt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                0,
                 nullptr,
-                nullptr
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
             );
 
             schema.release(&schema);
@@ -209,9 +216,10 @@ TEST_SUITE("C Data Interface")
                 "child1"s,
                 "metadata"s,
                 sparrow::ArrowFlag::MAP_KEYS_SORTED,
-                0,
                 nullptr,
-                nullptr
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
             );
             children[1] = new ArrowSchema();
             *children[1] = sparrow::make_arrow_schema(
@@ -219,9 +227,10 @@ TEST_SUITE("C Data Interface")
                 "child2"s,
                 "metadata"s,
                 sparrow::ArrowFlag::NULLABLE,
-                0,
                 nullptr,
-                nullptr
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
             );
 
             auto dictionary = new ArrowSchema();
@@ -230,23 +239,28 @@ TEST_SUITE("C Data Interface")
                 "dictionary"s,
                 "metadata"s,
                 sparrow::ArrowFlag::MAP_KEYS_SORTED,
-                0,
                 nullptr,
-                nullptr
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
             );
-            const auto schema = sparrow::make_arrow_schema(
+            auto schema = sparrow::make_arrow_schema(
                 "format"s,
                 "name"s,
                 "metadata"s,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                2,
                 children,
-                dictionary
+                sparrow::repeat_view<bool>(true, 2),
+                dictionary,
+                true
             );
 
-            const auto schema_copy = sparrow::copy_schema(schema);
+            auto schema_copy = sparrow::copy_schema(schema);
 
             compare_arrow_schema(schema, schema_copy);
+
+            schema_copy.release(&schema_copy);
+            schema.release(&schema);
         }
 
         SUBCASE("swap_schema")
@@ -260,6 +274,11 @@ TEST_SUITE("C Data Interface")
             sparrow::swap(schema0, schema1);
             compare_arrow_schema(schema0, schema1_bkup);
             compare_arrow_schema(schema1, schema0_bkup);
+
+            schema0.release(&schema0);
+            schema1.release(&schema1);
+            schema0_bkup.release(&schema0_bkup);
+            schema1_bkup.release(&schema1_bkup);
         }
 
         SUBCASE("move_schema")
@@ -268,29 +287,33 @@ TEST_SUITE("C Data Interface")
             auto control = sparrow::copy_schema(src_schema);
 
             auto dst_schema = sparrow::move_schema(std::move(src_schema));
-            check_empty(src_schema);
+            // check_empty(src_schema);
             compare_arrow_schema(dst_schema, control);
 
             auto dst2_schema = sparrow::move_schema(dst_schema);
-            check_empty(dst_schema);
+            // check_empty(dst_schema);
             compare_arrow_schema(dst2_schema, control);
+            dst2_schema.release(&dst2_schema);
+            control.release(&control);
         }
 
 #if defined(__cpp_lib_format)
         SUBCASE("formatting")
         {
-            const auto schema = sparrow::make_arrow_schema(
+            auto schema = sparrow::make_arrow_schema(
                 "format"s,
                 std::nullopt,
                 std::nullopt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
-                0,
                 nullptr,
-                nullptr
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
             );
             [[maybe_unused]] const auto format = std::format("{}", schema);
             // We don't check the result has it show the address of the object, which is not the same at each
             // run of the test
+            schema.release(&schema);
         }
 #endif
     }

@@ -27,15 +27,17 @@ namespace sparrow
         std::optional<std::string_view> metadata
     )
     {
+        const repeat_view<bool> children_ownership{true, 0};
         using namespace std::literals;
         ArrowSchema schema = make_arrow_schema(
             "n"sv,
             std::move(name),
             std::move(metadata),
             std::nullopt,
-            0,
             nullptr,
-            nullptr
+            children_ownership,
+            nullptr,
+            true
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
@@ -46,9 +48,10 @@ namespace sparrow
             static_cast<int64_t>(length),
             0,
             std::move(arr_buffs),
-            0,
             nullptr,
-            nullptr
+            children_ownership,
+            nullptr,
+            true
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }

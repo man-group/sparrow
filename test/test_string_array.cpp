@@ -941,6 +941,8 @@ namespace sparrow
                         CHECK_EQ(sparrow_array[i].value(), vector[i]);
                     }
                 }
+                arrow_array.release(&arrow_array);
+                arrow_schema.release(&arrow_schema);
             }
         }
 

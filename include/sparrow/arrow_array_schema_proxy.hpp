@@ -322,14 +322,26 @@ namespace sparrow
         [[nodiscard]] SPARROW_API std::unique_ptr<arrow_proxy>& dictionary();
 
         /**
-         * Set the dictionary. It takes the ownership on the `ArrowArray` and `ArrowSchema` passed by
-         * pointers.
+         * Set the dictionary.It does not take the ownership on the `ArrowArray` and
+         * `ArrowSchema` passed by pointers.
          * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
          * sparrow.
-         * @param array The `ArrowArray` to set.
-         * @param schema The `ArrowSchema` to set.
+         * @param array The `ArrowArray` to set as dictionary.
+         * @param schema The `ArrowSchema` to set as dictionary.
          */
         SPARROW_API void set_dictionary(ArrowArray* array, ArrowSchema* schema);
+
+        /**
+         * Set the dictionary. It takes the ownership on the `ArrowArray` and`ArrowSchema`
+         * passed by rvalue referencess.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` wrapped
+         * in this proxy were not created with
+         * sparrow.
+         * @param index The index of the child to set.
+         * @param array The `ArrowArray` to set as child.
+         * @param schema The `ArrowSchema` to set as child.
+         */
+        SPARROW_API void set_dictionary(ArrowArray&& array_dictionary, ArrowSchema&& schema_dictionary);
 
         [[nodiscard]] SPARROW_API bool is_created_with_sparrow() const;
 

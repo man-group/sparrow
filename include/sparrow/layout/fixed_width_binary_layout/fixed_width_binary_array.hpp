@@ -287,12 +287,13 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             std::move(format_str),
-            std::move(name),      // name
-            std::move(metadata),  // metadata
-            std::nullopt,         // flags,
-            0,                    // n_children
-            nullptr,              // children
-            nullptr               // dictionary
+            std::move(name),             // name
+            std::move(metadata),         // metadata
+            std::nullopt,                // flags,
+            nullptr,                     // children
+            repeat_view<bool>(true, 0),  // children_ownership
+            nullptr,                     // dictionary
+            true                         // dictionary ownership
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
@@ -305,9 +306,10 @@ namespace sparrow
             static_cast<int64_t>(null_count),
             0,  // offset
             std::move(arr_buffs),
-            0,        // n_children
-            nullptr,  // children
-            nullptr   // dictionary
+            nullptr,                     // children
+            repeat_view<bool>(true, 0),  // children_ownership
+            nullptr,                     // dictionary
+            true                         // dictionary ownership
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }

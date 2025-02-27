@@ -186,6 +186,8 @@ namespace sparrow
 
                 CHECK(!owns_arrow_array(a));
                 CHECK(!owns_arrow_schema(a));
+                sc.release(&sc);
+                ar.release(&ar);
             }
         }
         TEST_CASE_TEMPLATE_APPLY(owns_arrow_structure_id, testing_types);
