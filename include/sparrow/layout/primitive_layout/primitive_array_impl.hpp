@@ -33,14 +33,15 @@ namespace sparrow
     {
         using array_type = primitive_array_impl<T>;
 
-        using inner_value_type = T;
-        using inner_reference = T&;
-        using inner_const_reference = const T&;
-        using pointer = inner_value_type*;
-        using const_pointer = const inner_value_type*;
+        using data_access_type = details::primitive_data_access<T>;
+        using inner_value_type = typename data_access_type::inner_value_type;
+        using inner_reference = typename data_access_type::inner_reference;
+        using inner_const_reference = typename data_access_type::inner_const_reference;
+        using pointer = typename data_access_type::inner_pointer;
+        using const_pointer = typename data_access_type::inner_const_pointer;
 
-        using value_iterator = pointer_iterator<pointer>;
-        using const_value_iterator = pointer_iterator<const_pointer>;
+        using value_iterator = typename data_access_type::value_iterator;
+        using const_value_iterator = typename data_access_type::const_value_iterator;
 
         using bitmap_const_reference = bitmap_type::const_reference;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
@@ -49,14 +50,14 @@ namespace sparrow
     };
 
     template <trivial_copyable_type T>
-    class primitive_array_impl : public mutable_array_bitmap_base<primitive_array_impl<T>>,
-                                 public details::primitive_data_access<T, primitive_array_impl<T>>
+    class primitive_array_impl final : public mutable_array_bitmap_base<primitive_array_impl<T>>,
+                                       private details::primitive_data_access<T>
     {
     public:
 
         using self_type = primitive_array_impl<T>;
         using base_type = mutable_array_bitmap_base<primitive_array_impl<T>>;
-        using access_class_type = details::primitive_data_access<T, self_type>;
+        using access_class_type = details::primitive_data_access<T>;
         using size_type = std::size_t;
 
         using inner_types = array_inner_types<self_type>;
@@ -100,7 +101,7 @@ namespace sparrow
             requires(mpl::excludes_copy_and_move_ctor_v<primitive_array_impl<T>, Args...>)
         explicit primitive_array_impl(Args&&... args)
             : base_type(create_proxy(std::forward<Args>(args)...))
-            , access_class_type(this, DATA_BUFFER_INDEX)
+            , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
         {
         }
 
@@ -113,26 +114,17 @@ namespace sparrow
             std::optional<std::string_view> metadata = std::nullopt
         )
             : base_type(create_proxy(init, std::move(name), std::move(metadata)))
-            , access_class_type(this, DATA_BUFFER_INDEX)
+            , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
         {
         }
 
         primitive_array_impl(const primitive_array_impl&);
         primitive_array_impl& operator=(const primitive_array_impl&);
 
-        primitive_array_impl(primitive_array_impl&& rhs) noexcept
-            : base_type(std::move(rhs))
-            , access_class_type(this, DATA_BUFFER_INDEX)
-        {
-        }
+        primitive_array_impl(primitive_array_impl&&);
+        primitive_array_impl& operator=(primitive_array_impl&&);
 
-        primitive_array_impl& operator=(primitive_array_impl&& rhs) noexcept
-        {
-            base_type::operator=(std::move(rhs));
-            return *this;
-        }
-
-    protected:
+    private:
 
         static arrow_proxy create_proxy(
             size_type n,
@@ -185,14 +177,11 @@ namespace sparrow
             std::optional<std::string_view> metadata = std::nullopt
         );
 
-        using access_class_type::data;
         using access_class_type::value;
-
-        value_iterator value_begin();
-        value_iterator value_end();
-
-        const_value_iterator value_cbegin() const;
-        const_value_iterator value_cend() const;
+        using access_class_type::value_begin;
+        using access_class_type::value_cbegin;
+        using access_class_type::value_cend;
+        using access_class_type::value_end;
 
         // Modifiers
 
@@ -216,14 +205,14 @@ namespace sparrow
     template <trivial_copyable_type T>
     primitive_array_impl<T>::primitive_array_impl(arrow_proxy proxy_param)
         : base_type(std::move(proxy_param))
-        , access_class_type(this, DATA_BUFFER_INDEX)
+        , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
     }
 
     template <trivial_copyable_type T>
     primitive_array_impl<T>::primitive_array_impl(const primitive_array_impl& rhs)
         : base_type(rhs)
-        , access_class_type(this, DATA_BUFFER_INDEX)
+        , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
     }
 
@@ -231,31 +220,23 @@ namespace sparrow
     primitive_array_impl<T>& primitive_array_impl<T>::operator=(const primitive_array_impl& rhs)
     {
         base_type::operator=(rhs);
+        access_class_type::reset_proxy(this->get_arrow_proxy());
         return *this;
     }
 
     template <trivial_copyable_type T>
-    auto primitive_array_impl<T>::value_begin() -> value_iterator
+    primitive_array_impl<T>::primitive_array_impl(primitive_array_impl&& rhs)
+        : base_type(std::move(rhs))
+        , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
-        return value_iterator{data()};
     }
 
     template <trivial_copyable_type T>
-    auto primitive_array_impl<T>::value_end() -> value_iterator
+    primitive_array_impl<T>& primitive_array_impl<T>::operator=(primitive_array_impl&& rhs)
     {
-        return sparrow::next(value_begin(), this->size());
-    }
-
-    template <trivial_copyable_type T>
-    auto primitive_array_impl<T>::value_cbegin() const -> const_value_iterator
-    {
-        return const_value_iterator{data()};
-    }
-
-    template <trivial_copyable_type T>
-    auto primitive_array_impl<T>::value_cend() const -> const_value_iterator
-    {
-        return sparrow::next(value_cbegin(), this->size());
+        base_type::operator=(std::move(rhs));
+        access_class_type::reset_proxy(this->get_arrow_proxy());
+        return *this;
     }
 
     template <trivial_copyable_type T>

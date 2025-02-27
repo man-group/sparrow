@@ -176,7 +176,7 @@ namespace sparrow
         explicit timestamp_array(Args&&... args)
             : base_type(create_proxy(std::forward<Args>(args)...))
             , m_timezone(get_timezone(this->get_arrow_proxy()))
-            , m_data_access(this, DATA_BUFFER_INDEX)
+            , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
         {
         }
 
@@ -188,9 +188,15 @@ namespace sparrow
         )
             : base_type(create_proxy(timezone, init, std::move(name), std::move(metadata)))
             , m_timezone(timezone)
-            , m_data_access(this, DATA_BUFFER_INDEX)
+            , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
         {
         }
+
+        timestamp_array(const timestamp_array& rhs);
+        timestamp_array& operator=(const timestamp_array& rhs);
+
+        timestamp_array(timestamp_array&& rhs);
+        timestamp_array& operator=(timestamp_array&& rhs);
 
     private:
 
@@ -290,7 +296,7 @@ namespace sparrow
         [[nodiscard]] static const date::time_zone* get_timezone(const arrow_proxy& proxy);
 
         const date::time_zone* m_timezone;
-        details::primitive_data_access<inner_value_type_duration, self_type> m_data_access;
+        details::primitive_data_access<inner_value_type_duration> m_data_access;
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend class timestamp_reference<self_type>;
@@ -300,6 +306,40 @@ namespace sparrow
         friend functor_type;
         friend const_functor_type;
     };
+
+    template <timestamp_type T>
+    timestamp_array<T>::timestamp_array(const timestamp_array& rhs)
+        : base_type(rhs)
+        , m_timezone(rhs.m_timezone)
+        , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
+    {
+    }
+
+    template <timestamp_type T>
+    timestamp_array<T>& timestamp_array<T>::operator=(const timestamp_array& rhs)
+    {
+        base_type::operator=(rhs);
+        m_timezone = rhs.m_timezone;
+        m_data_access.reset_proxy(this->get_arrow_proxy());
+        return *this;
+    }
+
+    template <timestamp_type T>
+    timestamp_array<T>::timestamp_array(timestamp_array&& rhs)
+        : base_type(std::move(rhs))
+        , m_timezone(rhs.m_timezone)
+        , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
+    {
+    }
+
+    template <timestamp_type T>
+    timestamp_array<T>& timestamp_array<T>::operator=(timestamp_array&& rhs)
+    {
+        base_type::operator=(std::move(rhs));
+        m_timezone = rhs.m_timezone;
+        m_data_access.reset_proxy(this->get_arrow_proxy());
+        return *this;
+    }
 
     template <timestamp_type T>
     const date::time_zone* timestamp_array<T>::get_timezone(const arrow_proxy& proxy)
@@ -312,7 +352,7 @@ namespace sparrow
     timestamp_array<T>::timestamp_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
         , m_timezone(get_timezone(this->get_arrow_proxy()))
-        , m_data_access(this, DATA_BUFFER_INDEX)
+        , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
     }
 
