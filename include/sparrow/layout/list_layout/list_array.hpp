@@ -31,6 +31,7 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
@@ -539,15 +540,17 @@ namespace sparrow
         auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
 
         const auto null_count = vbitmap.null_count();
+        const repeat_view<bool> children_ownership{true, 1};
 
         ArrowSchema schema = make_arrow_schema(
             BIG ? std::string("+L") : std::string("+l"),                   // format
             name,                                                          // name
             metadata,                                                      // metadata
             std::nullopt,                                                  // flags,
-            1,                                                             // n_children
             new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))},  // children
-            nullptr                                                        // dictionary
+            children_ownership,                                            // children ownership
+            nullptr,                                                       // dictionary
+            true                                                           // dictionary ownership
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
@@ -560,9 +563,10 @@ namespace sparrow
             static_cast<int64_t>(null_count),
             0,  // offset
             std::move(arr_buffs),
-            1,                                                        // n_children
             new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))},  // children
-            nullptr                                                   // dictionary
+            children_ownership,                                       // children ownership
+            nullptr,                                                  // dictionary
+            true                                                      // dictionary ownership
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
@@ -631,15 +635,17 @@ namespace sparrow
 
         const auto null_count = vbitmap.null_count();
 
+        const repeat_view<bool> children_ownership{true, 1};
+
         ArrowSchema schema = make_arrow_schema(
             BIG ? std::string("+vL") : std::string("+vl"),                 // format
             name,                                                          // name
             metadata,                                                      // metadata
             std::nullopt,                                                  // flags,
-            1,                                                             // n_children
             new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))},  // children
-            nullptr                                                        // dictionary
-
+            children_ownership,
+            nullptr,  // dictionary
+            true
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
             std::move(vbitmap).extract_storage(),
@@ -652,9 +658,10 @@ namespace sparrow
             static_cast<int64_t>(null_count),
             0,  // offset
             std::move(arr_buffs),
-            1,                                                        // n_children
             new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))},  // children
-            nullptr                                                   // dictionary
+            children_ownership,
+            nullptr,  // dictionary
+            true
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
@@ -747,15 +754,18 @@ namespace sparrow
 
         const auto null_count = vbitmap.null_count();
 
+        const repeat_view<bool> children_ownership{true, 1};
+
         std::string format = "+w:" + std::to_string(list_size);
         ArrowSchema schema = make_arrow_schema(
             format,
             std::move(name),                                               // name
             std::move(metadata),                                           // metadata
             std::nullopt,                                                  // flags,
-            1,                                                             // n_children
             new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))},  // children
-            nullptr                                                        // dictionary
+            children_ownership,                                            // children ownership
+            nullptr,                                                       // dictionary
+            true                                                           // dictionary ownership
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {vbitmap.extract_storage()};
@@ -765,9 +775,10 @@ namespace sparrow
             static_cast<int64_t>(null_count),
             0,  // offset
             std::move(arr_buffs),
-            1,                                                        // n_children
             new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))},  // children
-            nullptr                                                   // dictionary
+            children_ownership,                                       // children ownership
+            nullptr,                                                  // dictionary
+            true                                                      // dictionary ownership
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }

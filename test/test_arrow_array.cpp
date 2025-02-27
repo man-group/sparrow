@@ -64,7 +64,7 @@ TEST_SUITE("C Data Interface")
     {
         SUBCASE("release")
         {
-            auto array = test::make_arrow_array(true);
+            ArrowArray array = test::make_arrow_array(true);
             array.release(&array);
             CHECK_EQ(array.buffers, nullptr);
             CHECK_EQ(array.children, nullptr);
@@ -88,8 +88,10 @@ TEST_SUITE("C Data Interface")
         {
             auto [array, schema] = test::make_arrow_schema_and_array(true);
             auto array_copy = sparrow::copy_array(array, schema);
-
             check_equal(array, array_copy);
+            array.release(&array);
+            array_copy.release(&array_copy);
+            schema.release(&schema);
         }
 
         SUBCASE("swap")
@@ -103,6 +105,13 @@ TEST_SUITE("C Data Interface")
             sparrow::swap(array0, array1);
             check_equal(array0, array1_bkup);
             check_equal(array1, array0_bkup);
+
+            array0.release(&array0);
+            schema0.release(&schema0);
+            array1.release(&array1);
+            schema1.release(&schema1);
+            array0_bkup.release(&array0_bkup);
+            array1_bkup.release(&array1_bkup);
         }
 
         SUBCASE("move_array")
@@ -117,12 +126,18 @@ TEST_SUITE("C Data Interface")
             auto dst2_array = sparrow::move_array(dst_array);
             check_empty(dst_array);
             check_equal(dst2_array, control);
+
+            dst2_array.release(&dst2_array);
+            src_schema.release(&src_schema);
+            control.release(&control);
         }
 
         SUBCASE("validate_format_with_arrow_array")
         {
             auto [array, schema] = test::make_arrow_schema_and_array(false);
             CHECK(sparrow::validate_format_with_arrow_array(sparrow::data_type::INT8, array));
+            array.release(&array);
+            schema.release(&schema);
             // CHECK_FALSE(sparrow::validate_format_with_arrow_array(sparrow::data_type::FIXED_SIZED_LIST,
             // array));
         }
@@ -132,6 +147,8 @@ TEST_SUITE("C Data Interface")
         {
             auto [array, schema] = test::make_arrow_schema_and_array(false);
             [[maybe_unused]] const auto format = std::format("{}", array);
+            array.release(&array);
+            schema.release(&schema);
             // We don't check the result has it show the address of the object, which is not the same at each
             // run of the test
         }
@@ -144,7 +161,7 @@ TEST_SUITE("arrow_array_private_data")
     TEST_CASE("buffers")
     {
         const auto buffers = test::detail::get_test_buffer_list0();
-        sparrow::arrow_array_private_data private_data(buffers);
+        sparrow::arrow_array_private_data private_data(buffers, sparrow::repeat_view<bool>(true, 0), true);
 
         auto buffers_ptrs = private_data.buffers_ptrs<uint8_t>();
         for (size_t i = 0; i < buffers.size(); ++i)

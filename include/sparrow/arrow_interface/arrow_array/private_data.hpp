@@ -17,6 +17,8 @@
 #include <vector>
 
 #include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
+#include "sparrow/arrow_interface/children_ownership.hpp"
+#include "sparrow/arrow_interface/dictionary_ownership.hpp"
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_view.hpp"
 #include "sparrow/utils/contracts.hpp"
@@ -31,13 +33,20 @@ namespace sparrow
      * It is used in the Sparrow library.
      */
 
-    class arrow_array_private_data : public children_ownership
+    class arrow_array_private_data : public children_ownership,
+                                     public dictionary_ownership
     {
     public:
 
         using BufferType = std::vector<buffer<std::uint8_t>>;
 
-        explicit constexpr arrow_array_private_data(BufferType buffers, std::size_t children_size = 0);
+        template <std::ranges::input_range CHILDREN_OWNERSHIP>
+            requires std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
+        explicit constexpr arrow_array_private_data(
+            BufferType buffers,
+            const CHILDREN_OWNERSHIP& children_ownership,
+            bool dictionary_ownership
+        );
 
         [[nodiscard]] constexpr BufferType& buffers() noexcept;
         [[nodiscard]] constexpr const BufferType& buffers() const noexcept;
@@ -57,8 +66,15 @@ namespace sparrow
         std::vector<std::uint8_t*> m_buffers_pointers;
     };
 
-    constexpr arrow_array_private_data::arrow_array_private_data(BufferType buffers, std::size_t children_size)
-        : children_ownership(children_size)
+    template <std::ranges::input_range CHILDREN_OWNERSHIP>
+        requires std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
+    constexpr arrow_array_private_data::arrow_array_private_data(
+        BufferType buffers,
+        const CHILDREN_OWNERSHIP& children_ownership_range,
+        bool dictionary_ownership_value
+    )
+        : children_ownership(children_ownership_range)
+        , dictionary_ownership(dictionary_ownership_value)
         , m_buffers(std::move(buffers))
         , m_buffers_pointers(to_raw_ptr_vec<std::uint8_t>(m_buffers))
     {

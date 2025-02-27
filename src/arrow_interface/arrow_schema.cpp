@@ -14,7 +14,8 @@
 
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 
-#include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_common_release.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
@@ -78,7 +79,8 @@ namespace sparrow
             source.format,
             source.name,
             source.metadata,
-            static_cast<std::size_t>(target.n_children)
+            repeat_view<bool>{true, static_cast<std::size_t>(target.n_children)},
+            true
         );
         auto* private_data = static_cast<arrow_schema_private_data*>(target.private_data);
         target.format = private_data->format_ptr();

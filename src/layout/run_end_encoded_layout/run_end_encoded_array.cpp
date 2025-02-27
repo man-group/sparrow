@@ -19,6 +19,7 @@
 #include "sparrow/layout/dispatch.hpp"
 #include "sparrow/layout/primitive_layout/primitive_array.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
@@ -262,14 +263,17 @@ namespace sparrow
         child_arrays[0] = new ArrowArray(std::move(acc_length_array));
         child_arrays[1] = new ArrowArray(std::move(encoded_values_array));
 
+        const repeat_view<bool> children_ownserhip{true, n_children};
+
         ArrowSchema schema = make_arrow_schema(
             std::string("+r"),
             std::move(name),      // name
             std::move(metadata),  // metadata
             std::nullopt,         // flags,
-            n_children,
-            child_schemas,  // children
-            nullptr         // dictionary
+            child_schemas,        // children
+            children_ownserhip,   // children ownership
+            nullptr,              // dictionary
+            true                  // dictionary ownership
         );
 
         std::vector<buffer<std::uint8_t>> arr_buffs = {};
@@ -279,9 +283,10 @@ namespace sparrow
             static_cast<int64_t>(null_count),
             0,  // offset
             std::move(arr_buffs),
-            n_children,    // n_children
-            child_arrays,  // children
-            nullptr        // dictionary
+            child_arrays,        // children
+            children_ownserhip,  // children ownership
+            nullptr,             // dictionary
+            true                 // dictionary ownership
         );
 
         return arrow_proxy{std::move(arr), std::move(schema)};

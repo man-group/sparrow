@@ -274,15 +274,18 @@ namespace sparrow
         auto [value_array, value_schema] = extract_arrow_structures(std::move(values));
         const auto null_count = vbitmap.null_count();
 
+        const repeat_view<bool> children_ownership{true, 0};
+
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             sparrow::data_type_format_of<IT>(),
-            std::move(name),                          // name
-            std::move(metadata),                      // metadata
-            std::nullopt,                             // flags
-            0,                                        // n_children
-            nullptr,                                  // children
-            new ArrowSchema(std::move(value_schema))  // dictionary
+            std::move(name),                           // name
+            std::move(metadata),                       // metadata
+            std::nullopt,                              // flags
+            nullptr,                                   // children
+            children_ownership,                        // children_ownership
+            new ArrowSchema(std::move(value_schema)),  // dictionary
+            true                                       // dictionary ownership
         );
 
         std::vector<buffer<uint8_t>> buffers(2);
@@ -295,9 +298,10 @@ namespace sparrow
             static_cast<int64_t>(null_count),
             0,  // offset
             std::move(buffers),
-            0,                                      // n_children
-            nullptr,                                // children
-            new ArrowArray(std::move(value_array))  // dictionary
+            nullptr,                                 // children
+            children_ownership,                      // children_ownership
+            new ArrowArray(std::move(value_array)),  // dictionary
+            true                                     // dictionary ownership
         );
         return arrow_proxy(std::move(arr), std::move(schema));
     }

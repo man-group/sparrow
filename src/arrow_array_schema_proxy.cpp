@@ -532,7 +532,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(child_array != nullptr);
         SPARROW_ASSERT_TRUE(child_schema != nullptr);
         SPARROW_ASSERT_TRUE(child_array->release != nullptr);
-        SPARROW_ASSERT_TRUE(child_array->release != nullptr);
+        SPARROW_ASSERT_TRUE(child_schema->release != nullptr);
         if (!is_created_with_sparrow())
         {
             throw arrow_proxy_exception("Cannot set child on non-sparrow created ArrowArray or ArrowSchema");
@@ -548,7 +548,7 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(index, n_children()));
         SPARROW_ASSERT_TRUE(child_array.release != nullptr);
-        SPARROW_ASSERT_TRUE(child_array.release != nullptr);
+        SPARROW_ASSERT_TRUE(child_schema.release != nullptr);
         if (!is_created_with_sparrow())
         {
             throw arrow_proxy_exception("Cannot set child on non-sparrow created ArrowArray or ArrowSchema");
@@ -584,6 +584,10 @@ namespace sparrow
 
     void arrow_proxy::set_dictionary(ArrowArray* array_dictionary, ArrowSchema* schema_dictionary)
     {
+        SPARROW_ASSERT_TRUE(array_dictionary != nullptr);
+        SPARROW_ASSERT_TRUE(schema_dictionary != nullptr);
+        SPARROW_ASSERT_TRUE(array_dictionary->release != nullptr);
+        SPARROW_ASSERT_TRUE(schema_dictionary->release != nullptr);
         if (!is_created_with_sparrow())
         {
             throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema"
@@ -601,6 +605,34 @@ namespace sparrow
 
         array().dictionary = array_dictionary;
         schema().dictionary = schema_dictionary;
+        get_array_private_data()->set_dictionary_ownership(false);
+        get_schema_private_data()->set_dictionary_ownership(false);
+        update_dictionary();
+    }
+
+    void arrow_proxy::set_dictionary(ArrowArray&& array_dictionary, ArrowSchema&& schema_dictionary)
+    {
+        SPARROW_ASSERT_TRUE(array_dictionary.release != nullptr);
+        SPARROW_ASSERT_TRUE(schema_dictionary.release != nullptr);
+        if (!is_created_with_sparrow())
+        {
+            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema"
+            );
+        }
+
+        if (array().dictionary != nullptr)
+        {
+            array().dictionary->release(array().dictionary);
+        }
+        if (schema().dictionary != nullptr)
+        {
+            schema().dictionary->release(schema().dictionary);
+        }
+
+        array().dictionary = new ArrowArray(std::move(array_dictionary));
+        schema().dictionary = new ArrowSchema(std::move(schema_dictionary));
+        get_array_private_data()->set_dictionary_ownership(true);
+        get_schema_private_data()->set_dictionary_ownership(true);
         update_dictionary();
     }
 

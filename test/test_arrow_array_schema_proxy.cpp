@@ -44,6 +44,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             const bool is_array_release_null = array.release == nullptr;
             CHECK_FALSE(is_schema_release_null);
             CHECK_FALSE(is_array_release_null);
+            array.release(&array);
+            schema.release(&schema);
         }
     }
 
@@ -65,6 +67,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             }
             const bool is_schema_release_null = schema.release == nullptr;
             CHECK_FALSE(is_schema_release_null);
+            schema.release(&schema);
         }
 
         SUBCASE("pointer")
@@ -77,6 +80,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             const bool is_array_release_null = array.release == nullptr;
             CHECK_FALSE(is_schema_release_null);
             CHECK_FALSE(is_array_release_null);
+            array.release(&array);
+            schema.release(&schema);
         }
     }
 
@@ -428,6 +433,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             const auto children = proxy.children();
             CHECK_EQ(children.size(), 1);
             CHECK_EQ(children[0].format(), "c");
+            array_schema_pair.array.release(&array_schema_pair.array);
+            array_schema_pair.schema.release(&array_schema_pair.schema);
         }
 
         SUBCASE("on external c structure")
@@ -440,6 +447,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.add_children(array_child_ptr), std::runtime_error);
+            array_schema_pair.first.release(&array_schema_pair.first);
+            array_schema_pair.second.release(&array_schema_pair.second);
         }
     }
 
@@ -459,6 +468,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             const auto& children = proxy.children();
             CHECK_EQ(children.size(), 0);
             CHECK_EQ(proxy.n_children(), 0);
+            array_schema_pair.array.release(&array_schema_pair.array);
+            array_schema_pair.schema.release(&array_schema_pair.schema);
         }
 
         SUBCASE("on external c structure")
@@ -480,11 +491,11 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto array_schema_pair = test::make_arrow_schema_and_array(false);
+            auto [array_dict, schema_dict] = test::make_arrow_schema_and_array(false);
 
             auto [array, schema] = test::make_arrow_schema_and_array(false);
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            proxy.set_dictionary(&array_schema_pair.array, &array_schema_pair.schema);
+            proxy.set_dictionary(std::move(array_dict), std::move(schema_dict));
 
             const auto& dictionary = proxy.dictionary();
             REQUIRE(dictionary);
@@ -497,6 +508,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_dictionary(&array_dict, &schema_dict), std::runtime_error);
+            array_dict.release(&array_dict);
+            schema_dict.release(&schema_dict);
         }
     }
 

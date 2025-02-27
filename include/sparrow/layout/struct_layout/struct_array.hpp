@@ -160,13 +160,14 @@ namespace sparrow
         const auto null_count = vbitmap.null_count();
 
         ArrowSchema schema = make_arrow_schema(
-            std::string("+s"),    // format
-            std::move(name),      // name
-            std::move(metadata),  // metadata
-            std::nullopt,         // flags,
-            static_cast<int64_t>(n_children),
-            child_schemas,  // children
-            nullptr         // dictionary
+            std::string("+s"),                    // format
+            std::move(name),                      // name
+            std::move(metadata),                  // metadata
+            std::nullopt,                         // flags,
+            child_schemas,                        // children
+            repeat_view<bool>(true, n_children),  // children_ownership
+            nullptr,                              // dictionary
+            true                                  // dictionary ownership
         );
 
         std::vector<buffer<std::uint8_t>> arr_buffs = {std::move(vbitmap).extract_storage()};
@@ -176,9 +177,10 @@ namespace sparrow
             static_cast<std::int64_t>(null_count),
             0,  // offset
             std::move(arr_buffs),
-            static_cast<std::size_t>(n_children),  // n_children
-            child_arrays,                          // children
-            nullptr                                // dictionary
+            child_arrays,                         // children
+            repeat_view<bool>(true, n_children),  // children_ownership
+            nullptr,                              // dictionary
+            true                                  // dictionary ownership
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <array>
 #include <cstddef>
 
 #include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
@@ -161,6 +162,10 @@ TEST_SUITE("C Data Interface")
                 for (size_t i = 0; i < vec.size(); ++i)
                 {
                     CHECK_EQ(*raw_ptr_vec[i], i);
+                }
+                for (auto& ptr : vec)
+                {
+                    delete ptr;
                 }
             }
         }

@@ -15,6 +15,7 @@
 #include "sparrow/layout/union_array.hpp"
 
 #include "sparrow/array.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
@@ -97,12 +98,13 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             std::move(format),
-            std::move(name),      // name
-            std::move(metadata),  // metadata
-            std::nullopt,         // flags,
-            static_cast<int64_t>(n_children),
-            child_schemas,  // children
-            nullptr         // dictionary
+            std::move(name),                      // name
+            std::move(metadata),                  // metadata
+            std::nullopt,                         // flags,
+            child_schemas,                        // children
+            repeat_view<bool>(true, n_children),  // children_ownership
+            nullptr,                              // dictionary,
+            true                                  // dictionary ownership
         );
 
         std::vector<buffer<std::uint8_t>> arr_buffs = {
@@ -115,9 +117,10 @@ namespace sparrow
             static_cast<std::int64_t>(null_count),
             0,  // offset
             std::move(arr_buffs),
-            static_cast<std::size_t>(n_children),  // n_children
-            child_arrays,                          // children
-            nullptr                                // dictionary
+            child_arrays,                         // children
+            repeat_view<bool>(true, n_children),  // children_ownership
+            nullptr,                              // dictionary,
+            true
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
@@ -172,12 +175,13 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             std::move(format),
-            std::nullopt,  // name
-            std::nullopt,  // metadata
-            std::nullopt,  // flags,
-            static_cast<int64_t>(n_children),
-            child_schemas,  // children
-            nullptr         // dictionary
+            std::nullopt,                         // name
+            std::nullopt,                         // metadata
+            std::nullopt,                         // flags,
+            child_schemas,                        // children
+            repeat_view<bool>(true, n_children),  // children_ownership
+            nullptr,                              // dictionary,
+            true                                  // dictionary ownership
         );
 
         std::vector<buffer<std::uint8_t>> arr_buffs = {std::move(element_type).extract_storage()};
@@ -187,9 +191,10 @@ namespace sparrow
             static_cast<std::int64_t>(null_count),
             0,  // offset
             std::move(arr_buffs),
-            static_cast<std::size_t>(n_children),  // n_children
-            child_arrays,                          // children
-            nullptr                                // dictionary
+            child_arrays,                         // children
+            repeat_view<bool>(true, n_children),  // children_ownership
+            nullptr,                              // dictionary
+            true
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
