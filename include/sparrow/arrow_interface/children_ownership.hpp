@@ -31,7 +31,7 @@ namespace sparrow
         [[nodiscard]] constexpr std::size_t children_size() const noexcept;
         constexpr void set_child_ownership(std::size_t child, bool ownership);
         template <std::ranges::input_range CHILDREN_OWNERSHIP>
-        constexpr void set_children_ownership(const CHILDREN_OWNERSHIP& children_ownership);
+        constexpr void set_children_ownership(const CHILDREN_OWNERSHIP& children_ownership_values);
         [[nodiscard]] constexpr bool has_child_ownership(std::size_t child) const;
 
         constexpr void resize_children(std::size_t size);
@@ -74,10 +74,11 @@ namespace sparrow
     }
 
     template <std::ranges::input_range CHILDREN_OWNERSHIP>
-    constexpr void children_ownership::set_children_ownership(const CHILDREN_OWNERSHIP& children_ownership)
+    constexpr void
+    children_ownership::set_children_ownership(const CHILDREN_OWNERSHIP& children_ownership_values)
     {
-        SPARROW_ASSERT_TRUE(children_ownership.size() == m_children.size());
-        std::ranges::copy(children_ownership, m_children.begin());
+        SPARROW_ASSERT_TRUE(children_ownership_values.size() == m_children.size());
+        std::ranges::copy(children_ownership_values, m_children.begin());
     }
 
     [[nodiscard]] constexpr bool children_ownership::has_child_ownership(std::size_t child) const
