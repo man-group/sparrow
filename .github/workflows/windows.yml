@@ -22,9 +22,11 @@ jobs:
         - {compiler: msvc, date-polyfill: 'ON', use-large-int-placeholders: 'ON', shared: 'ON'}
         - {compiler: msvc, date-polyfill: 'ON', use-large-int-placeholders: 'ON', shared: 'OFF'}
         - {compiler: msvc, date-polyfill: 'OFF', use-large-int-placeholders: 'ON', shared: 'ON'}
-        - {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'ON', shared: 'ON'}
-        - {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'ON', shared: 'OFF'}
-        - {compiler: clang, date-polyfill: 'OFF', version: 18, use-large-int-placeholders: 'ON', shared: 'ON'}
+          # Temporary disable of clang on Windows because of https://github.com/llvm/llvm-project/issues/115990 and current msvc
+          # build system on windows runners comes with this bugged version of clang)
+          #- {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'ON', shared: 'ON'}
+          #- {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'ON', shared: 'OFF'}
+          #- {compiler: clang, date-polyfill: 'OFF', version: 18, use-large-int-placeholders: 'ON', shared: 'ON'}
         target-arch:
         - {
             name: "Win64",
