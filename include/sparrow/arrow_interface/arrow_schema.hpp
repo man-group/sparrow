@@ -16,12 +16,18 @@
 
 #include <cstdint>
 #include <memory>
+#include <ranges>
+
+#include "sparrow/utils/repeat_container.hpp"
+
+
 #if defined(__cpp_lib_format)
 #    include <format>
 #    include <ostream>
 #endif
 
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
+#include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
 
@@ -49,18 +55,20 @@ namespace sparrow
      * dictionary-encoded type. Must be `nullptr` otherwise.
      * @return The created `ArrowSchema` unique pointer.
      */
-    template <class F, class N, class M>
+    template <class F, class N, class M, std::ranges::input_range CHILDREN_OWNERSHIP>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                  && std::constructible_from<arrow_schema_private_data::NameType, N>
                  && std::constructible_from<arrow_schema_private_data::MetadataType, M>
+                 && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
     [[nodiscard]] ArrowSchema make_arrow_schema(
         F format,
         N name,
         M metadata,
         std::optional<ArrowFlag> flags,
-        int64_t n_children,
         ArrowSchema** children,
-        ArrowSchema* dictionary
+        const CHILDREN_OWNERSHIP& children_ownership,
+        ArrowSchema* dictionary,
+        bool dictionary_ownership
     );
 
     /**
@@ -74,40 +82,43 @@ namespace sparrow
      */
     SPARROW_API void empty_release_arrow_schema(ArrowSchema* schema);
 
-    template <class F, class N, class M>
+    template <class F, class N, class M, std::ranges::input_range CHILDREN_OWNERSHIP>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                  && std::constructible_from<arrow_schema_private_data::NameType, N>
                  && std::constructible_from<arrow_schema_private_data::MetadataType, M>
+                 && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
     void fill_arrow_schema(
         ArrowSchema& schema,
         F format,
         N name,
         M metadata,
         std::optional<ArrowFlag> flags,
-        int64_t n_children,
         ArrowSchema** children,
-        ArrowSchema* dictionary
+        const CHILDREN_OWNERSHIP& children_ownership,
+        ArrowSchema* dictionary,
+        bool dictionary_ownership
     )
     {
-        SPARROW_ASSERT_TRUE(n_children >= 0);
-        SPARROW_ASSERT_TRUE(n_children > 0 ? children != nullptr : children == nullptr);
+        SPARROW_ASSERT_TRUE(children_ownership.size() >= 0);
+        SPARROW_ASSERT_TRUE(children_ownership.size() > 0 ? children != nullptr : children == nullptr);
         SPARROW_ASSERT_FALSE(format.empty());
         if (children)
         {
-            for (int64_t i = 0; i < n_children; ++i)
+            for (size_t i = 0; i < children_ownership.size(); ++i)
             {
                 SPARROW_ASSERT_FALSE(children[i] == nullptr);
             }
         }
 
         schema.flags = flags.has_value() ? static_cast<int64_t>(flags.value()) : 0;
-        schema.n_children = n_children;
+        schema.n_children = static_cast<int64_t>(children_ownership.size());
 
         schema.private_data = new arrow_schema_private_data(
             std::move(format),
             std::move(name),
             std::move(metadata),
-            static_cast<std::size_t>(n_children)
+            children_ownership,
+            dictionary_ownership
         );
 
         const auto private_data = static_cast<arrow_schema_private_data*>(schema.private_data);
@@ -119,39 +130,60 @@ namespace sparrow
         schema.release = release_arrow_schema;
     }
 
-    template <class F, class N, class M>
+    template <class F, class N, class M, std::ranges::input_range CHILDREN_OWNERSHIP>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                  && std::constructible_from<arrow_schema_private_data::NameType, N>
                  && std::constructible_from<arrow_schema_private_data::MetadataType, M>
+                 && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
     [[nodiscard]] ArrowSchema make_arrow_schema(
         F format,
         N name,
         M metadata,
         std::optional<ArrowFlag> flags,
-        int64_t n_children,
         ArrowSchema** children,
-        ArrowSchema* dictionary
+        const CHILDREN_OWNERSHIP& children_ownership,
+        ArrowSchema* dictionary,
+        bool dictionary_ownership
     )
     {
-        SPARROW_ASSERT_TRUE(n_children >= 0);
-        SPARROW_ASSERT_TRUE(n_children > 0 ? children != nullptr : children == nullptr);
+        SPARROW_ASSERT_TRUE(children_ownership.size() >= 0);
+        SPARROW_ASSERT_TRUE(children_ownership.size() > 0 ? children != nullptr : children == nullptr);
         SPARROW_ASSERT_FALSE(format.empty());
         if (children)
         {
-            for (int64_t i = 0; i < n_children; ++i)
+            for (size_t i = 0; i < children_ownership.size(); ++i)
             {
                 SPARROW_ASSERT_FALSE(children[i] == nullptr);
             }
         }
 
         ArrowSchema schema{};
-        fill_arrow_schema(schema, format, name, metadata, flags, n_children, children, dictionary);
+        fill_arrow_schema(
+            schema,
+            format,
+            name,
+            metadata,
+            flags,
+            children,
+            children_ownership,
+            dictionary,
+            dictionary_ownership
+        );
         return schema;
     };
 
     inline ArrowSchema make_empty_arrow_schema()
     {
-        return make_arrow_schema(std::string_view("n"), "", "", std::nullopt, 0, nullptr, nullptr);
+        return make_arrow_schema(
+            std::string_view("n"),
+            "",
+            "",
+            std::nullopt,
+            nullptr,
+            repeat_view<bool>(true, 0),
+            nullptr,
+            false
+        );
     }
 
     /**
@@ -186,6 +218,7 @@ namespace sparrow
     {
         ArrowSchema target = make_empty_arrow_schema();
         swap(source, target);
+        source.release(&source);
         return target;
     }
 

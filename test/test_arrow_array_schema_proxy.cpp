@@ -480,11 +480,11 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         SUBCASE("on sparrow c structure")
         {
-            auto array_schema_pair = test::make_arrow_schema_and_array(false);
+            auto [array_dict, schema_dict] = test::make_arrow_schema_and_array(false);
 
             auto [array, schema] = test::make_arrow_schema_and_array(false);
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            proxy.set_dictionary(&array_schema_pair.array, &array_schema_pair.schema);
+            proxy.set_dictionary(&array_dict, &schema_dict);
 
             const auto& dictionary = proxy.dictionary();
             REQUIRE(dictionary);

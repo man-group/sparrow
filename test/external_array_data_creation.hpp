@@ -120,9 +120,10 @@ namespace sparrow::test
             "test",
             "test metadata",
             std::nullopt,
-            0,
             nullptr,
-            nullptr
+            repeat_view<bool>{true, 0},
+            nullptr,
+            false
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
@@ -140,9 +141,10 @@ namespace sparrow::test
             static_cast<std::int64_t>(false_bitmap.size()),
             static_cast<std::int64_t>(offset),
             std::move(arr_buffs),
-            0u,
             nullptr,
-            nullptr
+            repeat_view<bool>{true, 0},
+            nullptr,
+            false
         );
     }
 
@@ -194,9 +196,10 @@ namespace sparrow::test
             "test",
             "test metadata",
             std::nullopt,
-            0,
             nullptr,
-            nullptr
+            repeat_view<bool>{true, 0},
+            nullptr,
+            true
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
@@ -238,9 +241,10 @@ namespace sparrow::test
             static_cast<std::int64_t>(false_bitmap.size()),
             static_cast<std::int64_t>(offset),
             std::move(arr_buffs),
-            0u,
             nullptr,
-            nullptr
+            repeat_view<bool>{true, 0},
+            nullptr,
+            true
         );
     }
 
@@ -282,15 +286,18 @@ namespace sparrow::test
         const std::vector<size_t>& false_bitmap
     )
     {
+        const repeat_view<bool> children_ownership(true, 0);
+
         sparrow::fill_arrow_schema(
             schema,
             std::string_view("z"),
             "test",
             "test metadata",
             std::nullopt,
-            0,
             nullptr,
-            nullptr
+            children_ownership,
+            nullptr,
+            true
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
@@ -332,9 +339,10 @@ namespace sparrow::test
             static_cast<std::int64_t>(false_bitmap.size()),
             static_cast<std::int64_t>(offset),
             std::move(arr_buffs),
-            0u,
             nullptr,
-            nullptr
+            children_ownership,
+            nullptr,
+            true
         );
     }
 
@@ -342,15 +350,17 @@ namespace sparrow::test
     inline void fill_schema_and_array<
         sparrow::null_type>(ArrowSchema& schema, ArrowArray& arr, size_t size, size_t offset, const std::vector<size_t>&)
     {
+        const repeat_view<bool> children_ownership(true, 0);
         sparrow::fill_arrow_schema(
             schema,
             std::string_view("n"),
             "test",
             "test metadata",
             std::nullopt,
-            0,
             nullptr,
-            nullptr
+            children_ownership,
+            nullptr,
+            true
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
@@ -362,9 +372,10 @@ namespace sparrow::test
             static_cast<std::int64_t>(size - offset),
             static_cast<std::int64_t>(offset),
             std::move(arr_buffs),
-            0u,
             nullptr,
-            nullptr
+            children_ownership,
+            nullptr,
+            true
         );
     }
 
