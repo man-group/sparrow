@@ -42,8 +42,10 @@ namespace sparrow
 
         template <std::ranges::input_range CHILDREN_OWNERSHIP>
             requires std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
-        constexpr explicit children_ownership(const CHILDREN_OWNERSHIP& children_ownership)
-            : m_children(children_ownership.begin(), children_ownership.end()){};
+        constexpr explicit children_ownership(const CHILDREN_OWNERSHIP& children_ownership_values)
+            : m_children(children_ownership_values.begin(), children_ownership_values.end())
+        {
+        }
 
     private:
 

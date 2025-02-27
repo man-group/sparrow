@@ -29,7 +29,9 @@ namespace sparrow
     protected:
 
         constexpr explicit dictionary_ownership(bool ownership)
-            : m_has_ownership(ownership) {};
+            : m_has_ownership(ownership)
+        {
+        }
 
     private:
 
