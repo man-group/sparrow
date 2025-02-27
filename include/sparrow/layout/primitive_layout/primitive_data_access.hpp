@@ -161,7 +161,7 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T>
-        [[nodiscard]] constexpr auto primitive_data_access<T>::value_cend() const -> const_value_iterator 
+        [[nodiscard]] constexpr auto primitive_data_access<T>::value_cend() const -> const_value_iterator
         {
             return sparrow::next(value_cbegin(), get_proxy().length());
         }
@@ -174,7 +174,8 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T>
-        constexpr auto primitive_data_access<T>::insert_value(const_value_iterator pos, T value, size_t count) -> value_iterator
+        constexpr auto primitive_data_access<T>::insert_value(const_value_iterator pos, T value, size_t count)
+            -> value_iterator
         {
             const const_value_iterator value_cbegin{data()};
             const const_value_iterator value_cend{sparrow::next(value_cbegin, get_proxy().length())};
@@ -187,7 +188,8 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T>
-        constexpr auto primitive_data_access<T>::insert_value(size_t idx, T value, size_t count) -> value_iterator
+        constexpr auto primitive_data_access<T>::insert_value(size_t idx, T value, size_t count)
+            -> value_iterator
         {
             SPARROW_ASSERT_TRUE(idx <= get_proxy().length());
             const const_value_iterator begin{data()};
@@ -198,7 +200,9 @@ namespace sparrow
         // Template parameter InputIt must be an value_iterator type that iterates over elements of type T
         template <trivial_copyable_type T>
         template <mpl::iterator_of_type<T> InputIt>
-        constexpr auto primitive_data_access<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last) -> value_iterator
+        constexpr auto
+        primitive_data_access<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+            -> value_iterator
         {
             const const_value_iterator value_cbegin{data()};
             const const_value_iterator value_cend{sparrow::next(value_cbegin, get_proxy().length())};
@@ -212,7 +216,8 @@ namespace sparrow
 
         template <trivial_copyable_type T>
         template <mpl::iterator_of_type<T> InputIt>
-        constexpr auto primitive_data_access<T>::insert_values(size_t idx, InputIt first, InputIt last) -> value_iterator
+        constexpr auto primitive_data_access<T>::insert_values(size_t idx, InputIt first, InputIt last)
+            -> value_iterator
         {
             SPARROW_ASSERT_TRUE(idx <= get_proxy().length());
             const const_value_iterator begin{data()};
@@ -221,7 +226,8 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T>
-        constexpr auto primitive_data_access<T>::erase_values(const_value_iterator pos, size_t count) -> value_iterator
+        constexpr auto primitive_data_access<T>::erase_values(const_value_iterator pos, size_t count)
+            -> value_iterator
         {
             const const_value_iterator value_cbegin{data()};
             const const_value_iterator value_cend{sparrow::next(value_cbegin, get_proxy().length())};

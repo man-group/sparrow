@@ -50,9 +50,8 @@ namespace sparrow
     };
 
     template <trivial_copyable_type T>
-    class primitive_array_impl final
-        : public mutable_array_bitmap_base<primitive_array_impl<T>>,
-          private details::primitive_data_access<T>
+    class primitive_array_impl final : public mutable_array_bitmap_base<primitive_array_impl<T>>,
+                                       private details::primitive_data_access<T>
     {
     public:
 
@@ -180,9 +179,9 @@ namespace sparrow
 
         using access_class_type::value;
         using access_class_type::value_begin;
-        using access_class_type::value_end;
         using access_class_type::value_cbegin;
         using access_class_type::value_cend;
+        using access_class_type::value_end;
 
         // Modifiers
 
