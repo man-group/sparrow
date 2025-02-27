@@ -540,8 +540,6 @@ namespace sparrow
         auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
 
         const auto null_count = vbitmap.null_count();
-
-
         const repeat_view<bool> children_ownership{true, 1};
 
         ArrowSchema schema = make_arrow_schema(

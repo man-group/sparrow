@@ -41,14 +41,14 @@ namespace sparrow
 
         if (t.dictionary)
         {
-            if (t.dictionary->release)
+            if (private_data->has_dictionary_ownership())
             {
-                if (private_data->has_dictionary_ownership())
+                if (t.dictionary->release)
                 {
                     t.dictionary->release(t.dictionary);
-                    delete t.dictionary;
-                    t.dictionary = nullptr;
                 }
+                delete t.dictionary;
+                t.dictionary = nullptr;
             }
         }
 
@@ -59,14 +59,14 @@ namespace sparrow
                 T* child = t.children[i];
                 if (child)
                 {
-                    if (child->release)
+                    if (private_data->has_child_ownership(static_cast<std::size_t>(i)))
                     {
-                        if (private_data->has_child_ownership(static_cast<std::size_t>(i)))
+                        if (child->release)
                         {
                             child->release(child);
-                            delete child;
-                            child = nullptr;
                         }
+                        delete child;
+                        child = nullptr;
                     }
                 }
             }

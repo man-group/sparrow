@@ -163,6 +163,10 @@ TEST_SUITE("C Data Interface")
                 {
                     CHECK_EQ(*raw_ptr_vec[i], i);
                 }
+                for (auto& ptr : vec)
+                {
+                    delete ptr;
+                }
             }
         }
     }

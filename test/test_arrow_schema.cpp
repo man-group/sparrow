@@ -90,7 +90,7 @@ TEST_SUITE("C Data Interface")
             const std::string format = "format";
             const std::string name = "name";
             const std::string metadata = "0000";
-            const auto schema = sparrow::make_arrow_schema(
+            auto schema = sparrow::make_arrow_schema(
                 format,
                 name,
                 metadata,
@@ -120,11 +120,12 @@ TEST_SUITE("C Data Interface")
             const bool is_release_arrow_schema = schema.release == &sparrow::release_arrow_schema;
             CHECK(is_release_arrow_schema);
             CHECK_NE(schema.private_data, nullptr);
+            schema.release(&schema);
         }
 
         SUBCASE("make_schema_constructor no children, no dictionary, no name and metadata")
         {
-            const auto schema = sparrow::make_arrow_schema(
+            auto schema = sparrow::make_arrow_schema(
                 "format"s,
                 std::nullopt,
                 std::nullopt,
@@ -147,6 +148,7 @@ TEST_SUITE("C Data Interface")
             const bool is_release_arrow_schema = schema.release == &sparrow::release_arrow_schema;
             CHECK(is_release_arrow_schema);
             CHECK_NE(schema.private_data, nullptr);
+            schema.release(&schema);
         }
 
         SUBCASE("ArrowSchema release")
@@ -242,7 +244,7 @@ TEST_SUITE("C Data Interface")
                 nullptr,
                 true
             );
-            const auto schema = sparrow::make_arrow_schema(
+            auto schema = sparrow::make_arrow_schema(
                 "format"s,
                 "name"s,
                 "metadata"s,
@@ -253,9 +255,12 @@ TEST_SUITE("C Data Interface")
                 true
             );
 
-            const auto schema_copy = sparrow::copy_schema(schema);
+            auto schema_copy = sparrow::copy_schema(schema);
 
             compare_arrow_schema(schema, schema_copy);
+
+            schema_copy.release(&schema_copy);
+            schema.release(&schema);
         }
 
         SUBCASE("swap_schema")
@@ -269,6 +274,11 @@ TEST_SUITE("C Data Interface")
             sparrow::swap(schema0, schema1);
             compare_arrow_schema(schema0, schema1_bkup);
             compare_arrow_schema(schema1, schema0_bkup);
+
+            schema0.release(&schema0);
+            schema1.release(&schema1);
+            schema0_bkup.release(&schema0_bkup);
+            schema1_bkup.release(&schema1_bkup);
         }
 
         SUBCASE("move_schema")
@@ -283,12 +293,14 @@ TEST_SUITE("C Data Interface")
             auto dst2_schema = sparrow::move_schema(dst_schema);
             // check_empty(dst_schema);
             compare_arrow_schema(dst2_schema, control);
+            dst2_schema.release(&dst2_schema);
+            control.release(&control);
         }
 
 #if defined(__cpp_lib_format)
         SUBCASE("formatting")
         {
-            const auto schema = sparrow::make_arrow_schema(
+            auto schema = sparrow::make_arrow_schema(
                 "format"s,
                 std::nullopt,
                 std::nullopt,
@@ -301,6 +313,7 @@ TEST_SUITE("C Data Interface")
             [[maybe_unused]] const auto format = std::format("{}", schema);
             // We don't check the result has it show the address of the object, which is not the same at each
             // run of the test
+            schema.release(&schema);
         }
 #endif
     }

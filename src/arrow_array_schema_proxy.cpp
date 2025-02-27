@@ -631,8 +631,8 @@ namespace sparrow
 
         array().dictionary = new ArrowArray(std::move(array_dictionary));
         schema().dictionary = new ArrowSchema(std::move(schema_dictionary));
-        get_array_private_data()->set_dictionary_ownership(false);
-        get_schema_private_data()->set_dictionary_ownership(false);
+        get_array_private_data()->set_dictionary_ownership(true);
+        get_schema_private_data()->set_dictionary_ownership(true);
         update_dictionary();
     }
 
