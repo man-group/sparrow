@@ -18,8 +18,7 @@
 #include <string>
 #include <type_traits>
 
-#include "sparrow/arrow_interface/children_ownership.hpp"
-#include "sparrow/arrow_interface/dictionary_ownership.hpp"
+#include "sparrow/arrow_interface/private_data_ownership.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 

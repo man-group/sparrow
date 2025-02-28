@@ -19,9 +19,6 @@
 #include <ranges>
 #include <type_traits>
 
-#include "sparrow/arrow_interface/children_ownership.hpp"
-#include "sparrow/utils/repeat_container.hpp"
-
 #if defined(__cpp_lib_format)
 #    include <format>
 #endif
@@ -29,6 +26,7 @@
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {

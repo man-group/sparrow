@@ -17,8 +17,7 @@
 #include <vector>
 
 #include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
-#include "sparrow/arrow_interface/children_ownership.hpp"
-#include "sparrow/arrow_interface/dictionary_ownership.hpp"
+#include "sparrow/arrow_interface/private_data_ownership.hpp"
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_view.hpp"
 #include "sparrow/utils/contracts.hpp"
