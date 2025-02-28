@@ -14,9 +14,10 @@
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
 
-#include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_common_release.hpp"
 #include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.hpp"
 #include "sparrow/types/data_type.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
@@ -201,6 +202,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(source_schema.release != nullptr);
         SPARROW_ASSERT_TRUE(source_array.n_children == source_schema.n_children);
         SPARROW_ASSERT_TRUE((source_array.dictionary == nullptr) == (source_schema.dictionary == nullptr));
+        const auto buffers = get_arrow_array_buffers(source_array, source_schema);
+        SPARROW_ASSERT_TRUE(buffers.size() == static_cast<std::size_t>(source_array.n_buffers));
 
         target.n_children = source_array.n_children;
         if (source_array.n_children > 0)
@@ -225,18 +228,17 @@ namespace sparrow
         target.offset = source_array.offset;
         target.n_buffers = source_array.n_buffers;
 
-
         std::vector<buffer<std::uint8_t>> buffers_copy;
         buffers_copy.reserve(static_cast<std::size_t>(source_array.n_buffers));
-        const auto buffers = get_arrow_array_buffers(source_array, source_schema);
-        SPARROW_ASSERT_TRUE(buffers.size() == static_cast<std::size_t>(source_array.n_buffers));
+
         for (const auto& buffer : buffers)
         {
             buffers_copy.emplace_back(buffer);
         }
         target.private_data = new arrow_array_private_data(
             std::move(buffers_copy),
-            static_cast<std::size_t>(target.n_children)
+            repeat_view<bool>{true, static_cast<std::size_t>(target.n_children)},
+            true
         );
         const auto private_data = static_cast<arrow_array_private_data*>(target.private_data);
         target.buffers = private_data->buffers_ptrs<void>();

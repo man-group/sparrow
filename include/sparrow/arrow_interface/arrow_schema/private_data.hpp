@@ -18,7 +18,7 @@
 #include <string>
 #include <type_traits>
 
-#include "sparrow/arrow_interface/arrow_array_schema_utils.hpp"
+#include "sparrow/arrow_interface/private_data_ownership.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -31,7 +31,8 @@ namespace sparrow
      * name and metadata strings, children, and dictionary. It is used in the
      * Sparrow library.
      */
-    class arrow_schema_private_data : public children_ownership
+    class arrow_schema_private_data : public children_ownership,
+                                      public dictionary_ownership
     {
     public:
 
@@ -47,11 +48,18 @@ namespace sparrow
 
         ~arrow_schema_private_data() = default;
 
-        template <class F, class N, class M>
+        template <class F, class N, class M, std::ranges::input_range CHILDREN_OWNERSHIP>
             requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                      && std::constructible_from<arrow_schema_private_data::NameType, N>
                      && std::constructible_from<arrow_schema_private_data::MetadataType, M>
-        arrow_schema_private_data(F format, N name, M metadata, std::size_t children_size = 0);
+                     && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
+        arrow_schema_private_data(
+            F format,
+            N name,
+            M metadata,
+            const CHILDREN_OWNERSHIP& children_ownership,
+            bool dictionary_ownership
+        );
 
         [[nodiscard]] const char* format_ptr() const noexcept;
         [[nodiscard]] FormatType& format() noexcept;
@@ -111,12 +119,20 @@ namespace sparrow
         }
     }
 
-    template <class F, class N, class M>
+    template <class F, class N, class M, std::ranges::input_range CHILDREN_OWNERSHIP>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                      && std::constructible_from<arrow_schema_private_data::NameType, N>
                      && std::constructible_from<arrow_schema_private_data::MetadataType, M>
-    arrow_schema_private_data::arrow_schema_private_data(F format, N name, M metadata, std::size_t children_size)
-        : children_ownership(children_size)
+                     && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
+    arrow_schema_private_data::arrow_schema_private_data(
+        F format,
+        N name,
+        M metadata,
+        const CHILDREN_OWNERSHIP& children_ownership_range,
+        bool dictionary_ownership_value
+    )
+        : children_ownership(children_ownership_range)
+        , dictionary_ownership(dictionary_ownership_value)
         , m_format(std::move(format))
         , m_name(to_optional_string(std::forward<N>(name)))
         , m_metadata(to_optional_string(std::forward<M>(metadata)))

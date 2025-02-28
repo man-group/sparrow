@@ -14,6 +14,9 @@
 
 #include "external_array_data_creation.hpp"
 
+#include "sparrow/utils/repeat_container.hpp"
+
+
 #ifdef __GNUC__
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wcast-align"
@@ -128,9 +131,10 @@ namespace sparrow::test
             "test",
             "test metadata",
             std::nullopt,
-            1,
             schema_children,
-            nullptr
+            repeat_view<bool>(true, 1),
+            nullptr,
+            true
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
@@ -147,9 +151,10 @@ namespace sparrow::test
             static_cast<std::int64_t>(false_positions.size()),
             0,
             std::move(arr_buffs),
-            1u,
             array_children,
-            nullptr
+            repeat_view<bool>(true, 1),
+            nullptr,
+            true
         );
     }
 
@@ -174,9 +179,10 @@ namespace sparrow::test
             "test",
             "test metadata",
             std::nullopt,
-            1,
             schema_children,
-            nullptr
+            repeat_view<bool>(true, 1),
+            nullptr,
+            true
         );
 
         std::size_t arr_size = static_cast<std::size_t>(flat_value_arr.length) / list_size;
@@ -191,9 +197,10 @@ namespace sparrow::test
             static_cast<std::int64_t>(false_positions.size()),
             0,
             std::move(arr_buffs),
-            1u,
             array_children,
-            nullptr
+            repeat_view<bool>(true, 1),
+            nullptr,
+            true
         );
     }
 
@@ -215,9 +222,10 @@ namespace sparrow::test
             "test",
             "test metadata",
             std::nullopt,
-            1,
             schema_children,
-            nullptr
+            repeat_view<bool>(true, 1),
+            nullptr,
+            true
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
@@ -235,9 +243,10 @@ namespace sparrow::test
             static_cast<std::int64_t>(false_positions.size()),
             0,
             std::move(arr_buffs),
-            1u,
             array_children,
-            nullptr
+            repeat_view<bool>(true, 1),
+            nullptr,
+            true
         );
     }
 
@@ -265,9 +274,10 @@ namespace sparrow::test
             "test",
             "test metadata",
             std::nullopt,
-            static_cast<std::int64_t>(children_schemas.size()),
             schema_children,
-            nullptr
+            repeat_view<bool>(true, children_schemas.size()),
+            nullptr,
+            true
         );
 
 
@@ -293,9 +303,10 @@ namespace sparrow::test
             static_cast<std::int64_t>(false_positions.size()),
             0,
             std::move(arr_buffs),
-            children_arrays.size(),
             array_children,
-            nullptr
+            repeat_view<bool>(true, children_arrays.size()),
+            nullptr,
+            true
         );
     }
 
@@ -324,9 +335,10 @@ namespace sparrow::test
             "test",
             "test metadata",
             std::nullopt,
-            static_cast<std::int64_t>(children_schemas.size()),
             schema_children,
-            nullptr
+            repeat_view<bool>(true, children_schemas.size()),
+            nullptr,
+            true
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
@@ -351,9 +363,10 @@ namespace sparrow::test
             0,
             0,
             std::move(arr_buffs),
-            2,
             array_children,
-            nullptr
+            repeat_view<bool>(true, children_arrays.size()),
+            nullptr,
+            true
         );
     }
 
@@ -383,9 +396,10 @@ namespace sparrow::test
             "test",
             "test metadata",
             std::nullopt,
-            static_cast<std::int64_t>(children_schemas.size()),
             schema_children,
-            nullptr
+            repeat_view<bool>(true, children_schemas.size()),
+            nullptr,
+            true
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
@@ -415,9 +429,10 @@ namespace sparrow::test
             0,
             0,
             std::move(arr_buffs),
-            2,
             array_children,
-            nullptr
+            repeat_view<bool>(true, children_arrays.size()),
+            nullptr,
+            true
         );
     }
 

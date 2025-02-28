@@ -16,6 +16,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <ranges>
+#include <type_traits>
+
 #if defined(__cpp_lib_format)
 #    include <format>
 #endif
@@ -23,6 +26,7 @@
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
@@ -41,16 +45,18 @@ namespace sparrow
      * @param dictionary `ArrowArray` pointer or `nullptr`.
      * @return The created `ArrowArray`.
      */
-    template <class B>
+    template <class B, std::ranges::input_range CHILDREN_OWNERSHIP>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
+                 && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
     [[nodiscard]] ArrowArray make_arrow_array(
         int64_t length,
         int64_t null_count,
         int64_t offset,
         B buffers,
-        size_t n_children,
         ArrowArray** children,
-        ArrowArray* dictionary
+        const CHILDREN_OWNERSHIP& children_ownership,
+        ArrowArray* dictionary,
+        bool dictionary_ownership
     );
 
     /**
@@ -79,64 +85,81 @@ namespace sparrow
      * `n_children` is `0`.
      * @param dictionary `ArrowArray` pointer or `nullptr`.
      */
-    template <class B>
-        requires std::constructible_from<arrow_array_private_data::BufferType, B>
+    template <class B, std::ranges::input_range CHILDREN_OWNERSHIP>
+        requires(std::constructible_from<arrow_array_private_data::BufferType, B> && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>)
     void fill_arrow_array(
         ArrowArray& array,
         int64_t length,
         int64_t null_count,
         int64_t offset,
         B buffers,
-        size_t n_children,
         ArrowArray** children,
-        ArrowArray* dictionary
+        const CHILDREN_OWNERSHIP& children_ownership,
+        ArrowArray* dictionary,
+        bool dictionary_ownership
     )
     {
         SPARROW_ASSERT_TRUE(length >= 0);
         SPARROW_ASSERT_TRUE(null_count >= -1);
         SPARROW_ASSERT_TRUE(offset >= 0);
-        SPARROW_ASSERT_TRUE((n_children == 0) == (children == nullptr));
+        SPARROW_ASSERT_TRUE((children_ownership.size() == 0) == (children == nullptr));
 
         array.length = length;
         array.null_count = null_count;
         array.offset = offset;
         array.n_buffers = sparrow::ssize(buffers);
-        array.private_data = new arrow_array_private_data(std::move(buffers), n_children);
+        array.private_data = new arrow_array_private_data(
+            std::move(buffers),
+            children_ownership,
+            dictionary_ownership
+        );
         const auto private_data = static_cast<arrow_array_private_data*>(array.private_data);
         array.buffers = private_data->buffers_ptrs<void>();
-        array.n_children = static_cast<int64_t>(n_children);
+        array.n_children = static_cast<int64_t>(children_ownership.size());
         array.children = children;
         array.dictionary = dictionary;
         array.release = release_arrow_array;
     }
 
-    template <class B>
+    template <class B, std::ranges::input_range CHILDREN_OWNERSHIP>
         requires std::constructible_from<arrow_array_private_data::BufferType, B>
+                 && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
     [[nodiscard]] ArrowArray make_arrow_array(
         int64_t length,
         int64_t null_count,
         int64_t offset,
         B buffers,
-        size_t n_children,
         ArrowArray** children,
-        ArrowArray* dictionary
+        const CHILDREN_OWNERSHIP& children_ownership,
+        ArrowArray* dictionary,
+        bool dictionary_ownership
     )
     {
         SPARROW_ASSERT_TRUE(length >= 0);
         SPARROW_ASSERT_TRUE(null_count >= -1);
         SPARROW_ASSERT_TRUE(offset >= 0);
         SPARROW_ASSERT_TRUE(buffers.size() >= 0);
-        SPARROW_ASSERT_TRUE((n_children == 0) == (children == nullptr));
+        SPARROW_ASSERT_TRUE((children_ownership.size() == 0) == (children == nullptr));
 
         ArrowArray array{};
-        fill_arrow_array(array, length, null_count, offset, std::move(buffers), n_children, children, dictionary);
+        fill_arrow_array(
+            array,
+            length,
+            null_count,
+            offset,
+            std::move(buffers),
+            children,
+            children_ownership,
+            dictionary,
+            dictionary_ownership
+        );
         return array;
     }
 
     [[nodiscard]] inline ArrowArray make_empty_arrow_array()
     {
         using buffer_type = arrow_array_private_data::BufferType;
-        return make_arrow_array(0, 0, 0, buffer_type{}, 0u, nullptr, nullptr);
+        return make_arrow_array(0, 0, 0, buffer_type{}, nullptr, repeat_view<bool>(true, 0), nullptr, false);
     }
 
     SPARROW_API void release_arrow_array(ArrowArray* array);
@@ -153,6 +176,9 @@ namespace sparrow
 
     /**
      * Fill the target ArrowArray with a deep copy of the data from the source ArrowArray.
+     * @param source_array The source ArrowArray to copy from.
+     * @param source_schema The schema of the source ArrowArray.
+     * @param target The target ArrowArray to copy to.
      */
     SPARROW_API void
     copy_array(const ArrowArray& source_array, const ArrowSchema& source_schema, ArrowArray& target);
@@ -175,6 +201,7 @@ namespace sparrow
     {
         ArrowArray target = make_empty_arrow_array();
         swap(source, target);
+        source.release(&source);
         return target;
     }
 

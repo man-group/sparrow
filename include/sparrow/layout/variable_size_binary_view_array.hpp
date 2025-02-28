@@ -29,6 +29,7 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/ranges.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
@@ -274,15 +275,18 @@ namespace sparrow
             static_cast<int64_t>(long_string_storage_size)
         );
 
+        const repeat_view<bool> children_ownership(true, 0);
+
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             std::is_same<T, std::string_view>::value ? std::string_view("vu") : std::string_view("vz"),
             std::move(name),      // name
             std::move(metadata),  // metadata
             std::nullopt,         // flags
-            0,                    // n_children
             nullptr,              // children
-            nullptr               // dictionary
+            children_ownership,
+            nullptr,  // dictionary
+            true
         );
 
         std::vector<buffer<uint8_t>> buffers{
@@ -298,9 +302,10 @@ namespace sparrow
             static_cast<int64_t>(null_count),
             0,  // offset
             std::move(buffers),
-            0,        // n_children
             nullptr,  // children
-            nullptr   // dictionary
+            children_ownership,
+            nullptr,  // dictionary
+            true
         );
 
         return arrow_proxy{std::move(arr), std::move(schema)};

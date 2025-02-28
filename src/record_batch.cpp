@@ -50,6 +50,8 @@ namespace sparrow
             m_array_list.push_back(std::move(arr));
         }
         update_array_map_cache();
+        struct_arr.release(&struct_arr);
+        struct_sch.release(&struct_sch);
     }
 
     record_batch::record_batch(const record_batch& rhs)

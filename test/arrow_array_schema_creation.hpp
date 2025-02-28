@@ -19,6 +19,7 @@
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 #include "external_array_data_creation.hpp"
 
@@ -56,11 +57,31 @@ namespace test
                 children[i] = new ArrowArray(make_arrow_array(false));
             }
             auto dict = new ArrowArray(make_arrow_array(false));
-            sparrow::fill_arrow_array(res, 5, 2, 0, detail::get_test_buffer_list1(), nb_children, children, dict);
+            sparrow::fill_arrow_array(
+                res,
+                5,
+                2,
+                0,
+                detail::get_test_buffer_list1(),
+                children,
+                sparrow::repeat_view<bool>(true, nb_children),
+                dict,
+                true
+            );
         }
         else
         {
-            sparrow::fill_arrow_array(res, 10, 2, 0, detail::get_test_buffer_list0(), 0, nullptr, nullptr);
+            sparrow::fill_arrow_array(
+                res,
+                10,
+                2,
+                0,
+                detail::get_test_buffer_list0(),
+                nullptr,
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
+            );
         }
         return res;
     }
@@ -72,7 +93,6 @@ namespace test
         if (with_children)
         {
             ArrowSchema** children = new ArrowSchema*[detail::number_children];
-            auto nb_children = static_cast<int64_t>(detail::number_children);
             for (size_t i = 0; i < detail::number_children; ++i)
             {
                 children[i] = new ArrowSchema(make_arrow_schema(false));
@@ -84,21 +104,32 @@ namespace test
                 "with_children"sv,
                 "meta1"sv,
                 std::nullopt,
-                nb_children,
                 children,
-                dict
+                sparrow::repeat_view<bool>(true, detail::number_children),
+                dict,
+                true
             );
         }
         else
         {
-            sparrow::fill_arrow_schema(res, "c"sv, "no_children"sv, "meta0"sv, std::nullopt, 0, nullptr, nullptr);
+            sparrow::fill_arrow_schema(
+                res,
+                "c"sv,
+                "no_children"sv,
+                "meta0"sv,
+                std::nullopt,
+                nullptr,
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
+            );
         }
         return res;
     }
 
     inline sparrow::arrow_array_and_schema make_arrow_schema_and_array(bool with_children)
     {
-        return {make_arrow_array(with_children), make_arrow_schema(with_children)};
+        return {.array = make_arrow_array(with_children), .schema = make_arrow_schema(with_children)};
     }
 }
 

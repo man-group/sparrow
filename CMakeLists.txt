@@ -168,6 +168,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${BINARY_BUILD_DIR}")
 
 set(SPARROW_HEADERS
     # arrow_interface
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_common_release.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_info_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
@@ -175,6 +176,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_flag_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/private_data_ownership.hpp
     # buffer
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/allocator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_adaptor.hpp
@@ -257,9 +259,9 @@ else()
         ${SPARROW_SOURCE_DIR}/array_helper.cpp
         ${SPARROW_SOURCE_DIR}/array.cpp
         ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
-        ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
+        ${SPARROW_SOURCE_DIR}/arrow_interface/private_data_ownership.cpp
         ${SPARROW_SOURCE_DIR}/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.cpp
         ${SPARROW_SOURCE_DIR}/layout/list_layout/list_value.cpp
         ${SPARROW_SOURCE_DIR}/layout/null_array.cpp

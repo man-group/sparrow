@@ -405,9 +405,10 @@ namespace sparrow
             std::move(name),      // name
             std::move(metadata),  // metadata
             std::nullopt,         // flags,
-            0,                    // n_children
             nullptr,              // children
-            nullptr               // dictionary
+            repeat_view<bool>(true, 0),
+            nullptr,  // dictionary
+            true
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
@@ -421,9 +422,10 @@ namespace sparrow
             static_cast<int64_t>(null_count),
             0,  // offset
             std::move(arr_buffs),
-            0,        // n_children
             nullptr,  // children
-            nullptr   // dictionary
+            repeat_view<bool>(true, 0),
+            nullptr,  // dictionary
+            true
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
