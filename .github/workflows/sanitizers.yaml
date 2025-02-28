@@ -105,8 +105,8 @@ jobs:
       with:
         name: asan-log-${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.config.name }}-${{ matrix.sys.date-polyfill }}
         path: '**/asan_log_*'
+        if-no-files-found: ignore
         
-
     - name: Return errors if ASAN log content is not empty
       if: always()
       run: |
