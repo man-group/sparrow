@@ -102,16 +102,20 @@ namespace sparrow
                                       std::chrono::nanoseconds(i + 5)}
                                 ));
                             }
-                            else if constexpr (std::is_same_v<T, chrono::time_seconds>) {
+                            else if constexpr (std::is_same_v<T, chrono::time_seconds>)
+                            {
                                 values.push_back(nullable<T>(T(int32_t(i) + 5)));
                             }
-                            else if constexpr (std::is_same_v<T, chrono::time_milliseconds>) {
+                            else if constexpr (std::is_same_v<T, chrono::time_milliseconds>)
+                            {
                                 values.push_back(nullable<T>(T(int32_t(i) + 5)));
                             }
-                            else if constexpr (std::is_same_v<T, chrono::time_microseconds>) {
+                            else if constexpr (std::is_same_v<T, chrono::time_microseconds>)
+                            {
                                 values.push_back(nullable<T>(T(int32_t(i) + 5)));
                             }
-                            else if constexpr (std::is_same_v<T, chrono::time_nanoseconds>) {
+                            else if constexpr (std::is_same_v<T, chrono::time_nanoseconds>)
+                            {
                                 values.push_back(nullable<T>(T(int32_t(i) + 5)));
                             }
                         }
