@@ -14,22 +14,24 @@ defaults:
 jobs:
   build:
     runs-on: ${{ matrix.sys.image }}
-    name: ${{ matrix.sys.compiler }} / ${{ matrix.sys.version }} / ${{ matrix.sys.stdlib }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}} / shared ${{ matrix.sys.shared }}
+    name: ${{ matrix.sys.compiler }} / ${{ matrix.sys.version }} / ${{ matrix.sys.stdlib }} / ${{ matrix.sys.arch }} / ${{ matrix.config.name }} / date-polyfill ${{ matrix.sys.date-polyfill}} / shared ${{ matrix.sys.shared }}
     env:
       SCCACHE_GHA_ENABLED: "true"
     strategy:
       fail-fast: false
       matrix:
         sys:
-        - {image: ubuntu-24.04, compiler: clang, version: '17', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON', shared : 'ON'}
+        - {image: ubuntu-24.04, compiler: clang, version: '17', config-flags: '', arch: '64', stdlib: 'libstdc++-12', date-polyfill: 'ON', shared : 'ON'}
         # - {compiler: clang, version: '17', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
-        - {image: ubuntu-24.04, compiler: clang, version: '18', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON', shared : 'ON'}
+        - {image: ubuntu-24.04, compiler: clang, version: '18', config-flags: '', arch: '64', stdlib: 'libstdc++-12', date-polyfill: 'ON', shared : 'ON'}
         # - {compiler: clang, version: '16', config-flags: '-DCMAKE_CXX_FLAGS=-stdlib=libc++', stdlib: 'libc++-17', date-polyfill: 'ON' }
 
-        - {image: ubuntu-24.04, compiler: gcc, version: '12', config-flags: '', date-polyfill: 'ON', shared : 'ON'}
-        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON', shared : 'ON'}
-        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'ON', shared : 'OFF'}
-        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', date-polyfill: 'OFF', shared : 'ON'}
+        - {image: ubuntu-24.04, compiler: gcc, version: '12', config-flags: '', arch: '64', date-polyfill: 'ON', shared : 'ON'}
+        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', arch: '64', date-polyfill: 'ON', shared : 'ON'}
+        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', arch: '64', date-polyfill: 'ON', shared : 'OFF'}
+        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', arch: '64', date-polyfill: 'OFF', shared : 'ON'}
+
+        - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', arch: '32', date-polyfill: 'OFF', shared : 'ON'}
 
         config:
         - {name: Debug}
@@ -54,6 +56,10 @@ jobs:
         version: ${{matrix.sys.version}}
         arch: x64
 
+    - name: Install 32bit support
+      if: matrix.sys.arch == '32'
+      run: sudo apt-get install gcc-multilib g++-multilib
+
     - name: Install the specified standard library for clang
       if: matrix.sys.compiler == 'clang'
       run: sudo apt install ${{matrix.sys.stdlib}}-dev -y
@@ -75,6 +81,7 @@ jobs:
 
     - name: Configure using CMake
       run: |
+        if [[ "${{matrix.sys.arch}}" = 32 ]]; then export CXXFLAGS=-m32 ; export CFLAGS=-m32; fi
         cmake -G Ninja \
           -Bbuild ${{matrix.sys.config-flags}} \
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
@@ -112,7 +119,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: success() || failure()
       with:
-        name: test_sparrow_lib_report_Linux_${{ matrix.sys.compiler }}_${{ matrix.sys.version }}_${{ matrix.sys.stdlib }}_${{ matrix.config.name }}_date-polyfill_${{ matrix.sys.date-polyfill}}_shared_${{ matrix.sys.shared }}
+        name: test_sparrow_lib_report_Linux_${{ matrix.sys.compiler }}_${{ matrix.sys.version }}_${{ matrix.sys.stdlib }}_${{ matrix.config.name }}_m${{ matrix.sys.arch}}_date-polyfill_${{ matrix.sys.date-polyfill}}_shared_${{ matrix.sys.shared }}
         path: ./**/test*.xml
         if-no-files-found: error
 
