@@ -93,13 +93,8 @@ OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
 MESSAGE(STATUS "🔧 Build examples: ${BUILD_EXAMPLES}")
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
 MESSAGE(STATUS "🔧 Use date polyfill: ${USE_DATE_POLYFILL}")
-OPTION(USE_LARGE_INT_PLACEHOLDERS "use types without api for big integers" OFF)
-# we need to USE_LARGE_INT_PLACEHOLDERS for:
-# * 32bit systems
-# * mscv compilers
-if(CMAKE_SIZEOF_VOID_P EQUAL 4 OR MSVC)
-    set(SPARROW_USE_LARGE_INT_PLACEHOLDERS ON)
-    set(USE_LARGE_INT_PLACEHOLDERS ON CACHE BOOL "use types without api for big integers" FORCE)
+set(DEFAULT_USE_LARGE_INT_PLACEHOLDERS (CMAKE_SIZEOF_VOID_P EQUAL 4 OR MSVC)) # Not correct
+OPTION(USE_LARGE_INT_PLACEHOLDERS "use types without api for big integers 'ON' by default on 32 bit systems and MSVC compilers" ${DEFAULT_USE_LARGE_INT_PLACEHOLDERS})
 endif()
 MESSAGE(STATUS "🔧 Use large int placeholders: ${USE_LARGE_INT_PLACEHOLDERS}")
 OPTION(SPARROW_TARGET_32BIT "Test 32bit support" OFF)
