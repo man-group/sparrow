@@ -19,14 +19,14 @@ jobs:
       matrix:
         runs-on: [windows-latest]
         toolchain:
-        - {compiler: msvc, date-polyfill: 'ON', use-large-int-placeholders: 'ON', shared: 'ON'}
-        - {compiler: msvc, date-polyfill: 'ON', use-large-int-placeholders: 'ON', shared: 'OFF'}
-        - {compiler: msvc, date-polyfill: 'OFF', use-large-int-placeholders: 'ON', shared: 'ON'}
+        - {compiler: msvc, date-polyfill: 'ON', shared: 'ON'}
+        - {compiler: msvc, date-polyfill: 'ON', shared: 'OFF'}
+        - {compiler: msvc, date-polyfill: 'OFF', shared: 'ON'}
           # Temporary disable of clang on Windows because of https://github.com/llvm/llvm-project/issues/115990 and current msvc
           # build system on windows runners comes with this bugged version of clang)
-          #- {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'ON', shared: 'ON'}
-          #- {compiler: clang, date-polyfill: 'ON', version: 18, use-large-int-placeholders: 'ON', shared: 'OFF'}
-          #- {compiler: clang, date-polyfill: 'OFF', version: 18, use-large-int-placeholders: 'ON', shared: 'ON'}
+          #- {compiler: clang, date-polyfill: 'ON', version: 18, shared: 'ON'}
+          #- {compiler: clang, date-polyfill: 'ON', version: 18, shared: 'OFF'}
+          #- {compiler: clang, date-polyfill: 'OFF', version: 18, shared: 'ON'}
         target-arch:
         - {
             name: "Win64",
@@ -162,7 +162,6 @@ jobs:
         -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX \
         -DBUILD_TESTS=ON \
         -DBUILD_EXAMPLES=ON \
-        -DUSE_LARGE_INT_PLACEHOLDERS=${{matrix.toolchain.use-large-int-placeholders}} \
         -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} \
         $GENERATOR_EXTRA_FLAGS \
         $SPARROW_CHECKS \
