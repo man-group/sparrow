@@ -128,6 +128,7 @@ else()
         test_builder.cpp
         test_date_array.cpp
         test_decimal_array.cpp
+        test_date_array.cpp
         test_decimal.cpp
         test_dictionary_encoded_array.cpp
         test_dispatch.cpp
@@ -142,6 +143,7 @@ else()
         test_list_array.cpp
         test_list_value.cpp
         test_memory.cpp
+        test_metadata.cpp
         test_mpl.cpp
         test_nested_comperators.cpp
         test_nested_comperators.cpp

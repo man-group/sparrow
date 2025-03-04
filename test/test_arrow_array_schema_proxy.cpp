@@ -18,9 +18,11 @@
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/utils/metadata.hpp"
 
 #include "arrow_array_schema_creation.hpp"
 #include "doctest/doctest.h"
+#include "metadata_sample.hpp"
 
 TEST_SUITE("ArrowArrowSchemaProxy")
 {
@@ -186,24 +188,37 @@ TEST_SUITE("ArrowArrowSchemaProxy")
     {
         auto [array, schema] = test::make_arrow_schema_and_array(false);
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-        CHECK_EQ(proxy.metadata(), "meta0");
+        const auto metadata = proxy.metadata();
+        REQUIRE_EQ(metadata.has_value(), true);
+        auto it = (*metadata).begin();
+        const auto kv1 = *it;
+        CHECK_EQ(kv1.first, "key1");
+        CHECK_EQ(kv1.second, "val1");
+        const auto kv2 = *(++it);
+        CHECK_EQ(kv2.first, "key2");
+        CHECK_EQ(kv2.second, "val2");
     }
 
     TEST_CASE("set_metadata")
     {
+        const std::optional<std::vector<sparrow::metadata_pair>> metadata = std::vector<sparrow::metadata_pair>{
+            {"key", "value"}
+        };
+
         SUBCASE("on sparrow c structure")
         {
             auto [array, schema] = test::make_arrow_schema_and_array(false);
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            proxy.set_metadata("new metadata");
-            CHECK_EQ(proxy.metadata(), "new metadata");
+            proxy.set_metadata(metadata);
+            REQUIRE(proxy.metadata().has_value());
+            test_metadata(*metadata, *(proxy.metadata()));
         }
 
         SUBCASE("on external c structure")
         {
             auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            CHECK_THROWS_AS(proxy.set_metadata("new metadata"), std::runtime_error);
+            CHECK_THROWS_AS(proxy.set_metadata(metadata), std::runtime_error);
         }
     }
 

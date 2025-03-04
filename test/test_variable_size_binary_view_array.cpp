@@ -16,7 +16,9 @@
 
 #include "sparrow/layout/variable_size_binary_view_array.hpp"
 
+#include "metadata_sample.hpp"
 #include "test_utils.hpp"
+
 
 using namespace std::literals;
 
@@ -37,9 +39,9 @@ namespace sparrow
 
             std::vector<std::size_t> where_nulls{1};
 
-            string_view_array array(words, where_nulls, "name", "metadata");
+            string_view_array array(words, where_nulls, "name", metadata_sample_opt);
             CHECK_EQ(array.name(), "name");
-            CHECK_EQ(array.metadata(), "metadata");
+            test_metadata(metadata_sample, array.metadata().value());
 
             for (std::size_t i = 0; i < words.size(); ++i)
             {

@@ -241,9 +241,11 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/functor_index_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/memory.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/metadata.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/mp_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/nullable.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/offsets.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/pair.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/reference_wrapper_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
     # ../

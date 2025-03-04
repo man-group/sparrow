@@ -961,34 +961,40 @@ namespace std
             return std::format_to(ctx.out(), "{}", get_enum_name(data_type));
         }
     };
-
-    template <>
-    struct formatter<sparrow::null_type>
-    {
-        constexpr auto parse(std::format_parse_context& ctx)
-        {
-            return ctx.begin();  // Simple implementation
-        }
-
-        auto format(const sparrow::null_type&, std::format_context& ctx) const
-        {
-            return std::format_to(ctx.out(), "null_type");
-        }
-    };
-
-    template <>
-    struct formatter<std::byte>
-    {
-        constexpr auto parse(std::format_parse_context& ctx)
-        {
-            return ctx.begin();  // Simple implementation
-        }
-
-        auto format(const std::byte& b, std::format_context& ctx) const
-        {
-            return std::format_to(ctx.out(), "{}", static_cast<int>(b));
-        }
-    };
 }
+
+template <>
+struct std::formatter<sparrow::null_type>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const sparrow::null_type&, std::format_context& ctx) const
+    {
+        return std::format_to(ctx.out(), "null_type");
+    }
+};
+
+inline std::ostream& operator<<(std::ostream& os, const sparrow::null_type&)
+{
+    os << std::format("{}", "null");
+    return os;
+}
+
+template <>
+struct std::formatter<std::byte>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const std::byte& b, std::format_context& ctx) const
+    {
+        return std::format_to(ctx.out(), "{}", static_cast<int>(b));
+    }
+};
 
 #endif

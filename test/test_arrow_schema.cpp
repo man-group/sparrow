@@ -18,10 +18,13 @@
 #include <string_view>
 
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+#include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 
 #include "arrow_array_schema_creation.hpp"
 #include "doctest/doctest.h"
+#include "external_array_data_creation.hpp"
+#include "metadata_sample.hpp"
 
 
 using namespace std::string_literals;
@@ -89,11 +92,10 @@ TEST_SUITE("C Data Interface")
             dictionnary->name = "dictionary";
             const std::string format = "format";
             const std::string name = "name";
-            const std::string metadata = "0000";
             auto schema = sparrow::make_arrow_schema(
                 format,
                 name,
-                metadata,
+                sparrow::metadata_sample_opt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
                 children,
                 sparrow::repeat_view<bool>(true, 2),
@@ -107,10 +109,7 @@ TEST_SUITE("C Data Interface")
             const auto schema_name = std::string_view(schema.name);
             const bool name_eq = schema_name == name;
             CHECK(name_eq);
-            CHECK_EQ(schema.metadata[0], metadata[0]);
-            CHECK_EQ(schema.metadata[1], metadata[1]);
-            CHECK_EQ(schema.metadata[2], metadata[2]);
-            CHECK_EQ(schema.metadata[3], metadata[3]);
+            sparrow::test_metadata(sparrow::metadata_sample, schema.metadata);
             CHECK_EQ(schema.flags, 1);
             CHECK_EQ(schema.n_children, 2);
             REQUIRE_NE(schema.children, nullptr);
@@ -128,7 +127,7 @@ TEST_SUITE("C Data Interface")
             auto schema = sparrow::make_arrow_schema(
                 "format"s,
                 std::nullopt,
-                std::nullopt,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
                 nullptr,
                 sparrow::repeat_view<bool>(true, 0),
@@ -157,12 +156,10 @@ TEST_SUITE("C Data Interface")
             children[0] = new ArrowSchema();
             children[1] = new ArrowSchema();
 
-            std::string metadata = "0000";
-
             auto schema = sparrow::make_arrow_schema(
                 "format"s,
                 "name"s,
-                metadata,
+                sparrow::metadata_sample_opt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
                 children,
                 sparrow::repeat_view<bool>(true, 2),
@@ -187,7 +184,7 @@ TEST_SUITE("C Data Interface")
             auto schema = sparrow::make_arrow_schema(
                 "format"s,
                 std::nullopt,
-                std::nullopt,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
                 nullptr,
                 sparrow::repeat_view<bool>(true, 0),
@@ -214,7 +211,7 @@ TEST_SUITE("C Data Interface")
             *children[0] = sparrow::make_arrow_schema(
                 "format"s,
                 "child1"s,
-                "metadata"s,
+                sparrow::metadata_sample_opt,
                 sparrow::ArrowFlag::MAP_KEYS_SORTED,
                 nullptr,
                 sparrow::repeat_view<bool>(true, 0),
@@ -225,7 +222,7 @@ TEST_SUITE("C Data Interface")
             *children[1] = sparrow::make_arrow_schema(
                 "format"s,
                 "child2"s,
-                "metadata"s,
+                sparrow::metadata_sample_opt,
                 sparrow::ArrowFlag::NULLABLE,
                 nullptr,
                 sparrow::repeat_view<bool>(true, 0),
@@ -237,7 +234,7 @@ TEST_SUITE("C Data Interface")
             *dictionary = sparrow::make_arrow_schema(
                 "format"s,
                 "dictionary"s,
-                "metadata"s,
+                sparrow::metadata_sample_opt,
                 sparrow::ArrowFlag::MAP_KEYS_SORTED,
                 nullptr,
                 sparrow::repeat_view<bool>(true, 0),
@@ -247,7 +244,7 @@ TEST_SUITE("C Data Interface")
             auto schema = sparrow::make_arrow_schema(
                 "format"s,
                 "name"s,
-                "metadata"s,
+                sparrow::metadata_sample_opt,
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
                 children,
                 sparrow::repeat_view<bool>(true, 2),
@@ -303,7 +300,7 @@ TEST_SUITE("C Data Interface")
             auto schema = sparrow::make_arrow_schema(
                 "format"s,
                 std::nullopt,
-                std::nullopt,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
                 sparrow::ArrowFlag::DICTIONARY_ORDERED,
                 nullptr,
                 sparrow::repeat_view<bool>(true, 0),

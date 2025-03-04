@@ -25,6 +25,7 @@
 #include "sparrow/layout/temporal/timestamp_concepts.hpp"
 #include "sparrow/layout/temporal/timestamp_reference.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 
@@ -181,11 +182,12 @@ namespace sparrow
         {
         }
 
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         timestamp_array(
             const date::time_zone* timezone,
             std::initializer_list<inner_value_type> init,
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         )
             : base_type(create_proxy(timezone, init, std::move(name), std::move(metadata)))
             , m_timezone(timezone)
@@ -210,61 +212,67 @@ namespace sparrow
         [[nodiscard]] const_value_iterator value_cbegin() const;
         [[nodiscard]] const_value_iterator value_cend() const;
 
+        template <input_metadata_container METADATA_RANGE>
         [[nodiscard]] static arrow_proxy create_proxy(
             const date::time_zone* timezone,
             size_type n,
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        template <validity_bitmap_input R = validity_bitmap>
+        template <
+            validity_bitmap_input R = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             const date::time_zone* timezone,
             u8_buffer<buffer_inner_value_type>&& data_buffer,
             R&& bitmaps = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
         // range of values (no missing values)
-        template <std::ranges::input_range R>
+        template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         [[nodiscard]] static auto create_proxy(
             const date::time_zone* timezone,
             R&& range,
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        template <typename U>
+        template <typename U, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<U, T>
         [[nodiscard]] static arrow_proxy create_proxy(
             const date::time_zone* timezone,
             size_type n,
             const U& value = U{},
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
         // range of values, validity_bitmap_input
-        template <std::ranges::input_range VALUE_RANGE, validity_bitmap_input VALIDITY_RANGE>
+        template <
+            std::ranges::input_range VALUE_RANGE,
+            validity_bitmap_input VALIDITY_RANGE,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, T>)
         [[nodiscard]] static arrow_proxy create_proxy(
             const date::time_zone* timezone,
             VALUE_RANGE&&,
             VALIDITY_RANGE&&,
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
         // range of nullable values
-        template <std::ranges::input_range R>
+        template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
         [[nodiscard]] static arrow_proxy create_proxy(
             const date::time_zone* timezone,
             R&&,
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
         // Modifiers
@@ -358,13 +366,13 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    template <validity_bitmap_input R>
+    template <validity_bitmap_input R, input_metadata_container METADATA_RANGE>
     auto timestamp_array<T>::create_proxy(
         const date::time_zone* timezone,
         u8_buffer<buffer_inner_value_type>&& data_buffer,
         R&& bitmap_input,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
         const auto size = data_buffer.size();
@@ -407,14 +415,14 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    template <std::ranges::input_range VALUE_RANGE, validity_bitmap_input VALIDITY_RANGE>
+    template <std::ranges::input_range VALUE_RANGE, validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
         requires(std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, T>)
     arrow_proxy timestamp_array<T>::create_proxy(
         const date::time_zone* timezone,
         VALUE_RANGE&& values,
         VALIDITY_RANGE&& validity_input,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     )
     {
         const auto range = values
@@ -437,14 +445,14 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    template <typename U>
+    template <typename U, input_metadata_container METADATA_RANGE>
         requires std::convertible_to<U, T>
     arrow_proxy timestamp_array<T>::create_proxy(
         const date::time_zone* timezone,
         size_type n,
         const U& value,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     )
     {
         // create data_buffer
@@ -453,13 +461,13 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    template <std::ranges::input_range R>
+    template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
     arrow_proxy timestamp_array<T>::create_proxy(
         const date::time_zone* timezone,
         R&& range,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     )
     {
         const std::size_t n = range_size(range);
@@ -482,13 +490,13 @@ namespace sparrow
 
     // range of nullable values
     template <timestamp_type T>
-    template <std::ranges::input_range R>
+    template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
         requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
     arrow_proxy timestamp_array<T>::create_proxy(
         const date::time_zone* timezone,
         R&& range,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     )
     {  // split into values and is_non_null ranges
         auto values = range
