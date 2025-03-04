@@ -111,7 +111,8 @@ namespace sparrow
 
             [[nodiscard]] T* allocate(std::size_t n) override
             {
-                return reinterpret_cast<T*>(m_alloc.allocate(n));
+                return reinterpret_cast<T*>(m_alloc.allocate(n));  // TODO: To refactor. The allocator should
+                                                                   // return the right type
             }
 
             void deallocate(T* p, std::size_t n) override
@@ -244,6 +245,7 @@ namespace sparrow
 #if defined(__GNUC__)
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wmismatched-new-delete"
+#    pragma GCC diagnostic ignored "-Wnull-dereference"
 #endif
                 return allocator.deallocate(p, n);
 #if defined(__GNUC__)

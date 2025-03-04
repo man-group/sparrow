@@ -78,7 +78,6 @@ namespace sparrow
         using holder_type = detail::holder<buffer<std::uint8_t>>;
         using buffer_adaptor_type = buffer_adaptor<T, buffer<std::uint8_t>&>;
         using holder_type::extract_storage;
-        using buffer_adaptor_type::operator[];
 
         u8_buffer(u8_buffer&& other);
         u8_buffer(const u8_buffer& other);
