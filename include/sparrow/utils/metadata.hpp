@@ -167,7 +167,7 @@ namespace sparrow
         const size_t metadata_size = std::accumulate(
             metadata.cbegin(),
             metadata.cend(),
-            0ull,
+            size_t(0),
             [](size_t acc, const auto& pair)
             {
                 return acc + sizeof(int32_t)  // byte length of key
