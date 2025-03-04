@@ -14,51 +14,8 @@
 
 #include "sparrow/layout/null_array.hpp"
 
-#include "sparrow/arrow_interface/arrow_array.hpp"
-#include "sparrow/arrow_interface/arrow_schema.hpp"
-
 namespace sparrow
 {
-    null_array::null_array(size_t length, std::optional<std::string_view> name, std::optional<std::string_view> metadata)
-        : m_proxy(create_proxy(length, std::move(name), std::move(metadata)))
-    {
-    }
-
-    arrow_proxy null_array::create_proxy(
-        size_t length,
-        std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
-    )
-    {
-        const repeat_view<bool> children_ownership{true, 0};
-        using namespace std::literals;
-        ArrowSchema schema = make_arrow_schema(
-            "n"sv,
-            std::move(name),
-            std::move(metadata),
-            std::nullopt,
-            nullptr,
-            children_ownership,
-            nullptr,
-            true
-        );
-
-        using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = {};
-
-        ArrowArray arr = make_arrow_array(
-            static_cast<int64_t>(length),
-            static_cast<int64_t>(length),
-            0,
-            std::move(arr_buffs),
-            nullptr,
-            children_ownership,
-            nullptr,
-            true
-        );
-        return arrow_proxy{std::move(arr), std::move(schema)};
-    }
-
     null_array::null_array(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
     {

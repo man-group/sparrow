@@ -15,6 +15,7 @@
 #include "sparrow/layout/union_array.hpp"
 
 #include "sparrow/array.hpp"
+#include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
@@ -58,6 +59,7 @@ namespace sparrow
         return static_cast<std::size_t>(p_offsets[i]) + m_proxy.offset();
     }
 
+    template <input_metadata_container METADATA_RANGE>
     auto dense_union_array::create_proxy_impl(
         std::vector<array>&& children,
         type_id_buffer_type&& element_type,
@@ -65,7 +67,7 @@ namespace sparrow
         std::string&& format,
         type_id_map&& tim,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
         const auto n_children = children.size();

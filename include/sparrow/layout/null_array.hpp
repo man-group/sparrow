@@ -23,6 +23,7 @@
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
@@ -208,8 +209,9 @@ namespace sparrow
             std::move(metadata),
             std::nullopt,
             0,
+            repeat_view<bool>(false, 0),
             nullptr,
-            nullptr
+            false
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
@@ -220,9 +222,10 @@ namespace sparrow
             static_cast<int64_t>(length),
             0,
             std::move(arr_buffs),
-            0,
             nullptr,
-            nullptr
+            repeat_view<bool>(false, 0),
+            nullptr,
+            false
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }

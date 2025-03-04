@@ -22,6 +22,7 @@
 #include "sparrow/utils/repeat_container.hpp"
 
 #include "external_array_data_creation.hpp"
+#include "metadata_sample.hpp"
 
 namespace test
 {
@@ -98,24 +99,12 @@ namespace test
                 children[i] = new ArrowSchema(make_arrow_schema(false));
             }
 
-            const std::string metadata_buffer = {
-                0x00, 0x00, 0x00, 0x02,  // Number of keys/values
-                0x04, 0x00, 0x00, 0x00,  // Length of key1
-                'k',  'e',  'y',  '1',   // Key 1
-                0x04, 0x00, 0x00, 0x00,  // Length of value1
-                'v',  'a',  'l',  '1',   // Value 1
-                0x04, 0x00, 0x00, 0x00,  // Length of key2
-                'k',  'e',  'y',  '2',   // Key 2
-                0x04, 0x00, 0x00, 0x00,  // Length of value2
-                'v',  'a',  'l',  '2'    // Value 2
-            };
-
             auto dict = new ArrowSchema(make_arrow_schema(false));
             sparrow::fill_arrow_schema(
                 res,
                 "c"sv,
                 "with_children"sv,
-                metadata_buffer,
+                sparrow::metadata_sample_opt,
                 std::nullopt,
                 children,
                 sparrow::repeat_view<bool>(true, detail::number_children),
@@ -129,7 +118,7 @@ namespace test
                 res,
                 "c"sv,
                 "no_children"sv,
-                "meta0"sv,
+                sparrow::metadata_sample_opt,
                 std::nullopt,
                 nullptr,
                 sparrow::repeat_view<bool>(true, 0),

@@ -241,11 +241,12 @@ namespace sparrow
         return {null_count, length};
     };
 
+    template <input_metadata_container METADATA_RANGE>
     auto run_end_encoded_array::create_proxy(
         array&& acc_lengths,
         array&& encoded_values,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
         auto [null_count, length] = extract_length_and_null_count(acc_lengths, encoded_values);
