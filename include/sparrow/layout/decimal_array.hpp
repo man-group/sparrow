@@ -27,6 +27,7 @@
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/decimal.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
+#include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
@@ -153,22 +154,23 @@ namespace sparrow
 
     private:
 
-        template <validity_bitmap_input R>
+        template <validity_bitmap_input R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<storage_type>&& data_buffer,
             R&& bitmaps,
             std::size_t precision,
             int scale,
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<storage_type>&& data_buffer,
             std::size_t precision,
             int scale,
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
 
@@ -228,12 +230,13 @@ namespace sparrow
     }
 
     template <class T>
+    template <input_metadata_container METADATA_RANGE>
     auto decimal_array<T>::create_proxy(
         u8_buffer<storage_type>&& data_buffer,
         std::size_t precision,
         int scale,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
         return decimal_array<T>::create_proxy(
@@ -247,14 +250,14 @@ namespace sparrow
     }
 
     template <class T>
-    template <validity_bitmap_input R>
+    template <validity_bitmap_input R, input_metadata_container METADATA_RANGE>
     auto decimal_array<T>::create_proxy(
         u8_buffer<storage_type>&& data_buffer,
         R&& bitmap_input,
         std::size_t precision,
         int scale,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
         const auto size = data_buffer.size();

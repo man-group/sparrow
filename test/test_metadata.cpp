@@ -31,7 +31,7 @@ TEST_SUITE("metadata")
         'v',  'a',  'l',  '2'    // Value 2
     };
 
-    TEST_CASE("get_key_values_from_metadata")
+    TEST_CASE("KeyValueView")
     {
         const sparrow::KeyValueView key_values(metadata_buffer.data());
         CHECK_EQ(key_values.size(), 2);
@@ -44,17 +44,4 @@ TEST_SUITE("metadata")
         CHECK_EQ(kv_2.first, "key2");
         CHECK_EQ(kv_2.second, "val2");
     }
-
-    // TEST_CASE("get_metadata_from_key_values")
-    // {
-    //     // const std::vector<sparrow::metadata_pair> metadata = {{"key1", "val1"}, {"key2", "val2"}};
-    //     // const std::vector<char> metadata_bytes = sparrow::get_metadata_from_key_values(metadata);
-
-    //     const auto key_values = sparrow::get_key_values_from_metadata(metadata_buffer);
-    //     CHECK_EQ(std::ranges::size(key_values), 2);
-    //     CHECK_EQ(key_values[0].first, "key1");
-    //     CHECK_EQ(key_values[0].second, "val1");
-    //     CHECK_EQ(key_values[1].first, "key2");
-    //     CHECK_EQ(key_values[1].second, "val2");
-    // }
 }

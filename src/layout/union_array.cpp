@@ -59,74 +59,6 @@ namespace sparrow
         return static_cast<std::size_t>(p_offsets[i]) + m_proxy.offset();
     }
 
-    template <input_metadata_container METADATA_RANGE>
-    auto dense_union_array::create_proxy_impl(
-        std::vector<array>&& children,
-        type_id_buffer_type&& element_type,
-        offset_buffer_type&& offsets,
-        std::string&& format,
-        type_id_map&& tim,
-        std::optional<std::string_view> name,
-        std::optional<METADATA_RANGE> metadata
-    ) -> arrow_proxy
-    {
-        const auto n_children = children.size();
-        ArrowSchema** child_schemas = new ArrowSchema*[n_children];
-        ArrowArray** child_arrays = new ArrowArray*[n_children];
-        const auto size = element_type.size();
-
-        // count nulls (expensive!)
-        int64_t null_count = 0;
-        for (std::size_t i = 0; i < size; ++i)
-        {
-            // child_id from type_id
-            const auto type_id = static_cast<std::uint8_t>(element_type[i]);
-            const auto child_index = tim[type_id];
-            const auto offset = static_cast<std::size_t>(offsets[i]);
-            // check if child is null
-            if (!children[child_index][offset].has_value())
-            {
-                ++null_count;
-            }
-        }
-
-        for (std::size_t i = 0; i < n_children; ++i)
-        {
-            auto& child = children[i];
-            auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(child));
-            child_arrays[i] = new ArrowArray(std::move(flat_arr));
-            child_schemas[i] = new ArrowSchema(std::move(flat_schema));
-        }
-
-        ArrowSchema schema = make_arrow_schema(
-            std::move(format),
-            std::move(name),                      // name
-            std::move(metadata),                  // metadata
-            std::nullopt,                         // flags,
-            child_schemas,                        // children
-            repeat_view<bool>(true, n_children),  // children_ownership
-            nullptr,                              // dictionary,
-            true                                  // dictionary ownership
-        );
-
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(element_type).extract_storage(),
-            std::move(offsets).extract_storage()
-        };
-
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // length
-            static_cast<std::int64_t>(null_count),
-            0,  // offset
-            std::move(arr_buffs),
-            child_arrays,                         // children
-            repeat_view<bool>(true, n_children),  // children_ownership
-            nullptr,                              // dictionary,
-            true
-        );
-        return arrow_proxy{std::move(arr), std::move(schema)};
-    }
-
     /*************************************
      * sparse_union_array implementation *
      *************************************/
@@ -177,13 +109,13 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             std::move(format),
-            std::nullopt,                         // name
-            std::nullopt,                         // metadata
-            std::nullopt,                         // flags,
-            child_schemas,                        // children
-            repeat_view<bool>(true, n_children),  // children_ownership
-            nullptr,                              // dictionary,
-            true                                  // dictionary ownership
+            std::nullopt,                                 // name
+            std::optional<std::vector<metadata_pair>>{},  // metadata
+            std::nullopt,                                 // flags,
+            child_schemas,                                // children
+            repeat_view<bool>(true, n_children),          // children_ownership
+            nullptr,                                      // dictionary,
+            true                                          // dictionary ownership
         );
 
         std::vector<buffer<std::uint8_t>> arr_buffs = {std::move(element_type).extract_storage()};

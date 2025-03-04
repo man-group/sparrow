@@ -129,7 +129,7 @@ namespace sparrow
 
     private:
 
-        template <input_metadata_container METADATA_RANGE>
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy
         create_proxy(size_t length, std::optional<std::string_view> name, std::optional<METADATA_RANGE> metadata);
 

@@ -163,13 +163,16 @@ namespace sparrow
          * @param metadata The metadata of the array.
          * @return The arrow proxy.
          */
-        template <mpl::char_like C, validity_bitmap_input VB = validity_bitmap>
+        template <
+            mpl::char_like C,
+            validity_bitmap_input VB = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
             u8_buffer<C>&& data_buffer,
             size_t element_size,
             VB&& validity_input = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
         /**
@@ -181,7 +184,10 @@ namespace sparrow
          * @param metadata The metadata of the array.
          * @return The arrow proxy.
          */
-        template <std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap>
+        template <
+            std::ranges::input_range R,
+            validity_bitmap_input VB = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(
                 std::ranges::input_range<std::ranges::range_value_t<R>> &&  // a range of ranges
                 mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>  // inner range is a
@@ -192,7 +198,7 @@ namespace sparrow
             R&& values,
             VB&& validity_input = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
         /**
@@ -204,14 +210,14 @@ namespace sparrow
          * @param metadata The metadata of the array.
          * @return The arrow proxy.
          */
-        template <std::ranges::input_range R>
+        template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
                      && std::ranges::input_range<typename std::ranges::range_value_t<R>::value_type>
                      && std::is_same_v<std::ranges::range_value_t<typename std::ranges::range_value_t<R>::value_type>, byte_t>
         [[nodiscard]] static arrow_proxy create_proxy(
             R&&,
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
         static constexpr size_t DATA_BUFFER_INDEX = 1;
@@ -269,13 +275,13 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR>
-    template <mpl::char_like C, validity_bitmap_input VB>
+    template <mpl::char_like C, validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
     arrow_proxy fixed_width_binary_array_impl<T, CR>::create_proxy(
         u8_buffer<C>&& data_buffer,
         size_t element_size,
         VB&& validity_input,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     )
     {
         SPARROW_ASSERT_TRUE((data_buffer.size() % element_size) == 0);
@@ -315,7 +321,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR>
-    template <std::ranges::input_range R, validity_bitmap_input VB>
+    template <std::ranges::input_range R, validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
         requires(
             std::ranges::input_range<std::ranges::range_value_t<R>> &&                 // a range of ranges
             mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>  // inner range is a
@@ -325,7 +331,7 @@ namespace sparrow
         R&& values,
         VB&& validity_input,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     )
     {
         using values_type = std::ranges::range_value_t<R>;
@@ -341,19 +347,19 @@ namespace sparrow
             element_size,
             std::forward<VB>(validity_input),
             std::forward<std::optional<std::string_view>>(name),
-            std::forward<std::optional<std::string_view>>(metadata)
+            std::forward<std::optional<METADATA_RANGE>>(metadata)
         );
     }
 
     template <std::ranges::sized_range T, class CR>
-    template <std::ranges::input_range R>
+    template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
         requires mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
                  && std::ranges::input_range<typename std::ranges::range_value_t<R>::value_type>
                  && std::is_same_v<std::ranges::range_value_t<typename std::ranges::range_value_t<R>::value_type>, byte_t>
     arrow_proxy fixed_width_binary_array_impl<T, CR>::create_proxy(
         R&& range,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     )
     {
         // split into values and is_non_null ranges

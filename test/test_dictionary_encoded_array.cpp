@@ -28,7 +28,6 @@
 #include "metadata_sample.hpp"
 #include "test_utils.hpp"
 
-
 namespace sparrow
 {
     using keys_type = uint32_t;
@@ -51,7 +50,7 @@ namespace sparrow
         //// Values: you, are(null), not, prepared, !, ?
 
         // null, null, not, prepared, null, not, ?, you, are(null), not
-        const layout_type dict{std::move(keys), std::move(ar), std::move(keys_nulls), "name", "metadata"};
+        const layout_type dict{std::move(keys), std::move(ar), std::move(keys_nulls), "name", metadata_sample_opt};
         return dict.slice(1, dict.size());
     }
 
@@ -86,7 +85,13 @@ namespace sparrow
             std::vector<std::size_t> where_null{2};
 
             // create the array
-            auto arr = array_type(std::move(keys), std::move(values_arr), std::move(where_null), "name", "metadata");
+            auto arr = array_type(
+                std::move(keys),
+                std::move(values_arr),
+                std::move(where_null),
+                "name",
+                metadata_sample_opt
+            );
 
             // check the size
             REQUIRE_EQ(arr.size(), 5);

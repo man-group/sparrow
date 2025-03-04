@@ -15,6 +15,7 @@
 #pragma once
 
 #include <concepts>
+#include <cstddef>
 #include <numeric>
 #include <ranges>
 #include <string_view>
@@ -38,7 +39,9 @@ namespace sparrow
     // Helper function to extract an int32 from a char buffer
     inline int32_t extract_int32(const char*& ptr)
     {
-        return *reinterpret_cast<const int32_t*>(ptr++);
+        const auto value = *reinterpret_cast<const int32_t*>(ptr);
+        ptr += sizeof(int32_t);
+        return value;
     }
 
     // Custom view to lazily extract key/value pairs from the buffer
@@ -72,9 +75,9 @@ namespace sparrow
             return cend();
         }
 
-        [[nodiscard]] int32_t size() const
+        [[nodiscard]] size_t size() const
         {
-            return m_num_pairs;
+            return static_cast<size_t>(m_num_pairs);
         }
 
     private:
@@ -98,7 +101,10 @@ namespace sparrow
                 if (m_index < m_parent.m_num_pairs)
                 {
                     m_current = m_parent.m_ptr;
-                    extract_key_value();
+                    for (int32_t i = 0; i <= m_index; ++i)
+                    {
+                        extract_key_value();
+                    }
                 }
             }
 
@@ -112,7 +118,6 @@ namespace sparrow
                 ++m_index;
                 if (m_index < m_parent.m_num_pairs)
                 {
-                    m_current = m_parent.m_ptr;
                     extract_key_value();
                 }
                 return *this;

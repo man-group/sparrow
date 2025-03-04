@@ -75,7 +75,7 @@ namespace sparrow
             {
                 std::vector<std::string> words{"hello", " ", "ugly", "", "world"};
                 std::vector<std::size_t> where_nulls{2, 3};
-                string_array array(words, std::move(where_nulls), "name", "metadata");
+                string_array array(words, std::move(where_nulls), "name", metadata_sample_opt);
 
                 CHECK_EQ(array.name(), "name");
                 test_metadata(metadata_sample, *(array.metadata()));

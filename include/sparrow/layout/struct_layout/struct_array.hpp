@@ -103,7 +103,9 @@ namespace sparrow
 
     private:
 
-        template <validity_bitmap_input VB = validity_bitmap, input_metadata_container METADATA_RANGE>
+        template <
+            validity_bitmap_input VB = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             std::vector<array>&& children,
             VB&& bitmaps = validity_bitmap{},
