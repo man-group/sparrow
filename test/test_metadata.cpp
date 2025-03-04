@@ -15,25 +15,13 @@
 #include "sparrow/utils/metadata.hpp"
 
 #include "doctest/doctest.h"
+#include "metadata_sample.hpp"
 
 TEST_SUITE("metadata")
 {
-    // NOLINT
-    const std::vector<char> metadata_buffer = {
-        0x02, 0x00, 0x00, 0x00,  // Number of keys/values
-        0x04, 0x00, 0x00, 0x00,  // Length of key1
-        'k',  'e',  'y',  '1',   // Key 1
-        0x04, 0x00, 0x00, 0x00,  // Length of value1
-        'v',  'a',  'l',  '1',   // Value 1
-        0x04, 0x00, 0x00, 0x00,  // Length of key2
-        'k',  'e',  'y',  '2',   // Key 2
-        0x04, 0x00, 0x00, 0x00,  // Length of value2
-        'v',  'a',  'l',  '2'    // Value 2
-    };
-
     TEST_CASE("KeyValueView")
     {
-        const sparrow::KeyValueView key_values(metadata_buffer.data());
+        const sparrow::KeyValueView key_values(sparrow::metadata_buffer.data());
         CHECK_EQ(key_values.size(), 2);
         auto kv_it = key_values.cbegin();
         auto kv_1 = *kv_it;

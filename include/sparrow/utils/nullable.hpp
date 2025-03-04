@@ -873,7 +873,26 @@ std::ostream& operator<<(std::ostream& os, const sparrow::nullable_variant<T...>
     return os;
 }
 
+template <>
+struct std::formatter<sparrow::nullval_t>
+{
+    constexpr auto parse(format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const sparrow::nullval_t&, std::format_context& ctx) const
+    {
+        return std::format_to(ctx.out(), "nullval");
+    }
+};
 
 #endif
+
+inline std::ostream& operator<<(std::ostream& os, const sparrow::nullval_t&)
+{
+    os << "nullval";
+    return os;
+}
 
 #undef SPARROW_CONSTEXPR

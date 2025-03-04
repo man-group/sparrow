@@ -15,9 +15,12 @@
 #include <doctest/doctest.h>
 
 #include <sparrow/layout/null_array.hpp>
+#include <sparrow/utils/nullable.hpp>
+#include <sparrow/utils/ranges.hpp>
 
 #include "external_array_data_creation.hpp"
 #include "metadata_sample.hpp"
+
 
 namespace sparrow
 {

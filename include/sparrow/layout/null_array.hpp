@@ -18,6 +18,7 @@
 #include <optional>
 #include <ranges>
 
+#include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/utils/iterator.hpp"
@@ -252,5 +253,4 @@ inline std::ostream& operator<<(std::ostream& os, const sparrow::null_array& val
     os << std::format("{}", value);
     return os;
 }
-
 #endif
