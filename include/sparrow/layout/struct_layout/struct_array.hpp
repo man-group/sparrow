@@ -103,12 +103,12 @@ namespace sparrow
 
     private:
 
-        template <validity_bitmap_input VB = validity_bitmap>
+        template <validity_bitmap_input VB = validity_bitmap, input_metadata_container METADATA_RANGE>
         [[nodiscard]] static auto create_proxy(
             std::vector<array>&& children,
             VB&& bitmaps = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
         using children_type = std::vector<cloning_ptr<array_wrapper>>;
@@ -133,12 +133,12 @@ namespace sparrow
         friend class detail::layout_value_functor<const self_type, inner_value_type>;
     };
 
-    template <validity_bitmap_input VB>
+    template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
     auto struct_array::create_proxy(
         std::vector<array>&& children,
         VB&& validity_input,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
         const auto n_children = children.size();

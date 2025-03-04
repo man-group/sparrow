@@ -110,7 +110,7 @@ namespace sparrow
          * Constructs a primitive array from an \c initializer_list of raw values.
          */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-        array_trivial_copyable(
+        primitive_array_impl(
             std::initializer_list<inner_value_type> init,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
@@ -249,7 +249,7 @@ namespace sparrow
 
     template <trivial_copyable_type T>
     template <validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
-    auto array_trivial_copyable<T>::create_proxy(
+    auto primitive_array_impl<T>::create_proxy(
         u8_buffer<T>&& data_buffer,
         VALIDITY_RANGE&& bitmap_input,
         std::optional<std::string_view> name,

@@ -283,13 +283,13 @@ namespace sparrow
 
     private:
 
-        template <validity_bitmap_input VB = validity_bitmap>
+        template <validity_bitmap_input VB = validity_bitmap, input_metadata_container METADATA_RANGE>
         [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             offset_buffer_type&& list_offsets,
             VB&& validity_input = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
@@ -335,14 +335,14 @@ namespace sparrow
 
     private:
 
-        template <validity_bitmap_input VB = validity_bitmap>
+        template <validity_bitmap_input VB = validity_bitmap, input_metadata_container METADATA_RANGE>
         [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             offset_buffer_type&& list_offsets,
             size_buffer_type&& list_sizes,
             VB&& validity_input = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
@@ -388,13 +388,13 @@ namespace sparrow
 
     private:
 
-        template <validity_bitmap_input R = validity_bitmap>
+        template <validity_bitmap_input R = validity_bitmap, input_metadata_container METADATA_RANGE>
         [[nodiscard]] static arrow_proxy create_proxy(
             std::uint64_t list_size,
             array&& flat_values,
             R&& validity_input = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
         [[nodiscard]] static uint64_t list_size_from_format(const std::string_view format);
@@ -525,13 +525,13 @@ namespace sparrow
     }
 
     template <bool BIG>
-    template <validity_bitmap_input VB>
+    template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
     arrow_proxy list_array_impl<BIG>::create_proxy(
         array&& flat_values,
         offset_buffer_type&& list_offsets,
         VB&& validity_input,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     )
     {
         const auto size = list_offsets.size() - 1;
@@ -616,14 +616,14 @@ namespace sparrow
     }
 
     template <bool BIG>
-    template <validity_bitmap_input VB>
+    template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
     arrow_proxy list_view_array_impl<BIG>::create_proxy(
         array&& flat_values,
         offset_buffer_type&& list_offsets,
         size_buffer_type&& list_sizes,
         VB&& validity_input,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     )
     {
         SPARROW_ASSERT(list_offsets.size() == list_sizes.size(), "sizes and offset must have the same size");
@@ -738,13 +738,13 @@ namespace sparrow
         return std::make_pair(offset, offset + m_list_size);
     }
 
-    template <validity_bitmap_input R>
+    template <validity_bitmap_input R, input_metadata_container METADATA_RANGE>
     inline arrow_proxy fixed_sized_list_array::create_proxy(
         std::uint64_t list_size,
         array&& flat_values,
         R&& validity_input,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     )
     {
         const auto size = flat_values.size() / static_cast<std::size_t>(list_size);
