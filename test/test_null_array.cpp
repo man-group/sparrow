@@ -30,17 +30,18 @@ namespace sparrow
         TEST_CASE("constructor")
         {
             constexpr std::size_t size = 10u;
-            const null_array ar{size, "name", metadata_sample_opt};
-            CHECK_EQ(ar.name(), "name");
+            constexpr std::string_view name = "name";
+            const null_array ar{size, name, metadata_sample_opt};
+            CHECK_EQ(ar.name(), name);
             test_metadata(metadata_sample, *(ar.metadata()));
             CHECK_EQ(ar.size(), size);
 
-            const auto arrow_proxy = sparrow::detail::array_access::get_arrow_proxy(ar);
+            const auto& arrow_proxy = sparrow::detail::array_access::get_arrow_proxy(ar);
             CHECK_EQ(arrow_proxy.format(), "n");
             CHECK_EQ(arrow_proxy.n_children(), 0);
             CHECK(arrow_proxy.flags().empty());
             test_metadata(metadata_sample, *(arrow_proxy.metadata()));
-            CHECK_EQ(arrow_proxy.name(), "name");
+            CHECK_EQ(arrow_proxy.name(), name);
             CHECK_EQ(arrow_proxy.dictionary(), nullptr);
 
             CHECK_EQ(arrow_proxy.buffers().size(), 0);
