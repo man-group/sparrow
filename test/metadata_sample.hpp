@@ -39,7 +39,7 @@ namespace sparrow
 
     inline void test_metadata(const std::vector<metadata_pair>& metadata_1, const KeyValueView& metadata_2)
     {
-        REQUIRE(metadata_1.size() == metadata_2.size());
+        REQUIRE_EQ(metadata_1.size(), metadata_2.size());
 
         auto it = metadata_2.cbegin();
         for (const auto& [key, value] : metadata_1)

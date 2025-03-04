@@ -16,6 +16,7 @@
 
 #include <string>  // for std::stoull
 #include <type_traits>
+#include <vector>
 
 #include "sparrow/array_api.hpp"
 #include "sparrow/array_factory.hpp"
@@ -283,7 +284,9 @@ namespace sparrow
 
     private:
 
-        template <validity_bitmap_input VB = validity_bitmap, input_metadata_container METADATA_RANGE>
+        template <
+            validity_bitmap_input VB = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             offset_buffer_type&& list_offsets,
@@ -335,7 +338,9 @@ namespace sparrow
 
     private:
 
-        template <validity_bitmap_input VB = validity_bitmap, input_metadata_container METADATA_RANGE>
+        template <
+            validity_bitmap_input VB = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             offset_buffer_type&& list_offsets,
@@ -388,7 +393,9 @@ namespace sparrow
 
     private:
 
-        template <validity_bitmap_input R = validity_bitmap, input_metadata_container METADATA_RANGE>
+        template <
+            validity_bitmap_input R = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
             std::uint64_t list_size,
             array&& flat_values,

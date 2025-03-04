@@ -94,11 +94,12 @@ namespace sparrow
 
     private:
 
-        [[nodiscard]] SPARROW_API static auto create_proxy(
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        [[nodiscard]] static auto create_proxy(
             array&& acc_lengths,
             array&& encoded_values,
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
         using acc_length_ptr_variant_type = std::variant<const std::uint16_t*, const std::uint32_t*, const std::uint64_t*>;
@@ -127,7 +128,60 @@ namespace sparrow
 
     SPARROW_API
     bool operator==(const run_end_encoded_array& lhs, const run_end_encoded_array& rhs);
+
+    template <input_metadata_container METADATA_RANGE>
+    auto run_end_encoded_array::create_proxy(
+        array&& acc_lengths,
+        array&& encoded_values,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    ) -> arrow_proxy
+    {
+        auto [null_count, length] = extract_length_and_null_count(acc_lengths, encoded_values);
+
+        auto [acc_length_array, acc_length_schema] = extract_arrow_structures(std::move(acc_lengths));
+        auto [encoded_values_array, encoded_values_schema] = extract_arrow_structures(std::move(encoded_values));
+
+        constexpr auto n_children = 2;
+        ArrowSchema** child_schemas = new ArrowSchema*[n_children];
+        ArrowArray** child_arrays = new ArrowArray*[n_children];
+
+        child_schemas[0] = new ArrowSchema(std::move(acc_length_schema));
+        child_schemas[1] = new ArrowSchema(std::move(encoded_values_schema));
+
+        child_arrays[0] = new ArrowArray(std::move(acc_length_array));
+        child_arrays[1] = new ArrowArray(std::move(encoded_values_array));
+
+        const repeat_view<bool> children_ownserhip{true, n_children};
+
+        ArrowSchema schema = make_arrow_schema(
+            std::string("+r"),
+            std::move(name),      // name
+            std::move(metadata),  // metadata
+            std::nullopt,         // flags,
+            child_schemas,        // children
+            children_ownserhip,   // children ownership
+            nullptr,              // dictionary
+            true                  // dictionary ownership
+        );
+
+        std::vector<buffer<std::uint8_t>> arr_buffs = {};
+
+        ArrowArray arr = make_arrow_array(
+            static_cast<std::int64_t>(length),  // length
+            static_cast<int64_t>(null_count),
+            0,  // offset
+            std::move(arr_buffs),
+            child_arrays,        // children
+            children_ownserhip,  // children ownership
+            nullptr,             // dictionary
+            true                 // dictionary ownership
+        );
+
+        return arrow_proxy{std::move(arr), std::move(schema)};
+    }
 }  // namespace sparrow
+
 
 #if defined(__cpp_lib_format)
 

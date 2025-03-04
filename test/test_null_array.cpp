@@ -39,7 +39,7 @@ namespace sparrow
             CHECK_EQ(arrow_proxy.format(), "n");
             CHECK_EQ(arrow_proxy.n_children(), 0);
             CHECK(arrow_proxy.flags().empty());
-            test_metadata(metadata_sample, *arrow_proxy.metadata());
+            test_metadata(metadata_sample, *(arrow_proxy.metadata()));
             CHECK_EQ(arrow_proxy.name(), "name");
             CHECK_EQ(arrow_proxy.dictionary(), nullptr);
 
