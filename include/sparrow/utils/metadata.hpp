@@ -95,16 +95,13 @@ namespace sparrow
             iterator(const KeyValueView& parent, int32_t index)
                 : m_parent(parent)
                 , m_index(index)
+                , m_current(parent.m_ptr)
             {
                 SPARROW_ASSERT_TRUE(m_index >= 0);
-                SPARROW_ASSERT_TRUE(m_index <= m_parent.m_num_pairs);
-                if (m_index < m_parent.m_num_pairs)
+                SPARROW_ASSERT_TRUE(m_index < m_parent.m_num_pairs);
+                for (int32_t i = 0; i <= m_index; ++i)
                 {
-                    m_current = m_parent.m_ptr;
-                    for (int32_t i = 0; i <= m_index; ++i)
-                    {
-                        extract_key_value();
-                    }
+                    extract_key_value();
                 }
             }
 
