@@ -37,13 +37,11 @@ struct std::formatter<std::pair<T, U>>
     }
 };
 
-namespace sparrow
+template <typename T, typename U>
+std::ostream& operator<<(std::ostream& os, const std::pair<T, U>& value)
 {
-    template <typename T, typename U>
-    std::ostream& operator<<(std::ostream& os, const std::pair<T, U>& value)
-    {
-        os << std::format("{}", value);
-        return os;
-    }
+    os << std::format("{}", value);
+    return os;
 }
+
 #endif

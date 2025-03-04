@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "sparrow/utils/contracts.hpp"
-
+#include "sparrow/utils/pair.hpp"
 
 #if defined(__cpp_lib_format)
 #    include <format>
@@ -177,8 +177,8 @@ namespace sparrow
             }
         );
         const size_t total_size = sizeof(int32_t) + metadata_size;
-        std::string metadata_buffer(total_size, '\0');
-        char* metadata_ptr = metadata_buffer.data();
+        std::string metadata_buf(total_size, '\0');
+        char* metadata_ptr = metadata_buf.data();
         reinterpret_cast<int32_t*>(metadata_ptr)[0] = number_of_key_values;
         metadata_ptr += sizeof(int32_t);
         for (const auto& [key, value] : metadata)
@@ -194,7 +194,7 @@ namespace sparrow
             std::ranges::copy(value, metadata_ptr);
             metadata_ptr += value.size();
         }
-        return metadata_buffer;
+        return metadata_buf;
     }
 }
 
@@ -229,5 +229,11 @@ struct std::formatter<sparrow::KeyValueView>
         return out;
     }
 };
+
+inline std::ostream& operator<<(std::ostream& os, const sparrow::KeyValueView& value)
+{
+    os << std::format("{}", value);
+    return os;
+}
 
 #endif

@@ -14,6 +14,7 @@
 #pragma once
 
 #include <algorithm>
+#include <bitset>
 #include <ranges>
 #include <type_traits>
 #include <vector>
@@ -111,6 +112,36 @@ struct std::formatter<std::vector<T>>
     }
 
     auto format(const std::vector<T>& vector, std::format_context& ctx) const
+    {
+        auto out = ctx.out();
+        *out++ = '<';
+
+        bool first = true;
+        for (const auto& elem : vector)
+        {
+            if (!first)
+            {
+                *out++ = ',';
+                *out++ = ' ';
+            }
+            out = std::format_to(out, "{}", elem);
+            first = false;
+        }
+
+        *out++ = '>';
+        return out;
+    }
+};
+
+template <std::size_t T>
+struct std::formatter<std::bitset<T>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const std::bitset<T>& vector, std::format_context& ctx) const
     {
         auto out = ctx.out();
         *out++ = '<';
