@@ -23,7 +23,7 @@
 namespace sparrow
 {
     static const std::string metadata_buffer = {
-        0x00, 0x00, 0x00, 0x02,  // Number of keys/values
+        0x02, 0x00, 0x00, 0x00,  // Number of keys/values
         0x04, 0x00, 0x00, 0x00,  // Length of key1
         'k',  'e',  'y',  '1',   // Key 1
         0x04, 0x00, 0x00, 0x00,  // Length of value1
