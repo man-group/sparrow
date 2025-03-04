@@ -21,7 +21,6 @@
 #include "external_array_data_creation.hpp"
 #include "metadata_sample.hpp"
 
-
 namespace sparrow
 {
     using test::make_arrow_proxy;
