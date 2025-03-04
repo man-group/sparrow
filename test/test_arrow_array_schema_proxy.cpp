@@ -22,6 +22,7 @@
 
 #include "arrow_array_schema_creation.hpp"
 #include "doctest/doctest.h"
+#include "metadata_sample.hpp"
 
 TEST_SUITE("ArrowArrowSchemaProxy")
 {
@@ -210,12 +211,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             proxy.set_metadata(metadata);
             REQUIRE(proxy.metadata().has_value());
-            size_t i = 0;
-            for (const auto key_value : *proxy.metadata())
-            {
-                CHECK_EQ(key_value.first, (*metadata)[i].first);
-                CHECK_EQ(key_value.second, (*metadata)[i].second);
-            }
+            test_metadata(*metadata, *(proxy.metadata()));
         }
 
         SUBCASE("on external c structure")
