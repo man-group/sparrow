@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <doctest/doctest.h>
 
 #include <sparrow/layout/null_array.hpp>
 #include <sparrow/utils/nullable.hpp>
@@ -20,6 +19,9 @@
 
 #include "external_array_data_creation.hpp"
 #include "metadata_sample.hpp"
+
+// NOLINT
+#include <doctest/doctest.h>
 
 namespace sparrow
 {

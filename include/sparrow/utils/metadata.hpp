@@ -16,6 +16,7 @@
 
 #include <concepts>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <numeric>
 #include <ranges>
