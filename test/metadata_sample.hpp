@@ -15,6 +15,8 @@
 #pragma once
 
 #include <optional>
+#include <string>
+#include <vector>
 
 #include <doctest/doctest.h>
 

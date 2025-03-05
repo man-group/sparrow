@@ -16,14 +16,15 @@
 
 #include <concepts>
 #include <cstddef>
+#include <cstring>
 #include <numeric>
 #include <ranges>
 #include <string_view>
 #include <utility>
-#include <vector>
 
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/pair.hpp"
+
 
 #if defined(__cpp_lib_format)
 #    include <format>
