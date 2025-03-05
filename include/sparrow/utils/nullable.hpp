@@ -891,7 +891,8 @@ struct std::formatter<sparrow::nullval_t>
 
 inline std::ostream& operator<<(std::ostream& os, const sparrow::nullval_t&)
 {
-    os << "nullval";
+    constexpr std::string_view nullval_str = "nullval";
+    os << nullval_str;
     return os;
 }
 
