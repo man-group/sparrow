@@ -175,34 +175,12 @@ namespace sparrow
         return schema;
     };
 
-    // template <class F, class N, input_metadata_container M, std::ranges::input_range CHILDREN_OWNERSHIP>
-    //     requires std::constructible_from<arrow_schema_private_data::FormatType, F>
-    //              && std::constructible_from<arrow_schema_private_data::NameType, N>
-    //              && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
-    // [[nodiscard]] ArrowSchema make_arrow_schema(
-    //     F format,
-    //     N name,
-    //     std::optional<M> metadata,
-    //     std::optional<ArrowFlag> flags,
-    //     ArrowSchema** children,
-    //     const CHILDREN_OWNERSHIP& children_ownership,
-    //     ArrowSchema* dictionary,
-    //     bool dictionary_ownership
-    // )
-    // {
-    //     return make_arrow_schema(
-    //         std::move(format),
-    //         std::move(name),
-    //         metadata.has_value() ? std::make_optional(get_metadata_from_key_values(*metadata)) :
-    //         std::nullopt, flags, n_children, children, dictionary
-    //     );
-    // }
-
     inline ArrowSchema make_empty_arrow_schema()
     {
-        return make_arrow_schema<std::string, std::string, std::vector<metadata_pair>>(
-            std::string("n"),
-            std::string(""),
+        using namespace std::literals;
+        return make_arrow_schema<std::string_view, std::string_view, std::vector<metadata_pair>>(
+            "n"sv,
+            ""sv,
             std::nullopt,
             std::nullopt,
             nullptr,

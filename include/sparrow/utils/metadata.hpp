@@ -23,6 +23,7 @@
 #include <string_view>
 #include <utility>
 
+#include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/pair.hpp"
 
@@ -39,125 +40,71 @@ namespace sparrow
     using metadata_pair = std::pair<metadata_key, metadata_value>;
 
     // Helper function to extract an int32 from a char buffer
-    inline int32_t extract_int32(const char*& ptr)
-    {
-        int32_t value;
-        std::memcpy(&value, ptr, sizeof(int32_t));
-        ptr += sizeof(int32_t);
-        return value;
-    }
+    SPARROW_API int32_t extract_int32(const char*& ptr);
 
-    // Custom view to lazily extract key/value pairs from the buffer
-    class KeyValueView : public std::ranges::view_interface<KeyValueView>
+    class key_value_view;
+
+    class key_value_view_iterator
     {
     public:
 
-        KeyValueView(const char* ptr)
-            : m_ptr(ptr)
-            , m_num_pairs(extract_int32(m_ptr))
+        using iterator_category = std::input_iterator_tag;
+        using value_type = metadata_pair;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
+
+        SPARROW_API key_value_view_iterator(const key_value_view& parent, int32_t index);
+
+        SPARROW_API value_type operator*() const;
+
+        SPARROW_API key_value_view_iterator& operator++();
+
+        friend bool operator==(const key_value_view_iterator& lhs, const key_value_view_iterator& rhs)
         {
+            return lhs.m_index == rhs.m_index;
         }
 
-        [[nodiscard]] auto cbegin() const
+        friend bool operator!=(const key_value_view_iterator& lhs, const key_value_view_iterator& rhs)
         {
-            return iterator(*this, 0);
-        }
-
-        [[nodiscard]] auto begin() const
-        {
-            return cbegin();
-        }
-
-        [[nodiscard]] auto cend() const
-        {
-            return iterator(*this, m_num_pairs);
-        }
-
-        [[nodiscard]] auto end() const
-        {
-            return cend();
-        }
-
-        [[nodiscard]] size_t size() const
-        {
-            return static_cast<size_t>(m_num_pairs);
+            return !(lhs == rhs);
         }
 
     private:
 
-        class iterator
-        {
-        public:
+        SPARROW_API std::string_view extract_string_view();
+        SPARROW_API void extract_key_value();
 
-            using iterator_category = std::input_iterator_tag;
-            using value_type = metadata_pair;
-            using difference_type = std::ptrdiff_t;
-            using pointer = value_type*;
-            using reference = value_type&;
+        const key_value_view& m_parent;
+        int32_t m_index;
+        const char* m_current;
+        std::string_view m_key;
+        std::string_view m_value;
+    };
 
-            iterator(const KeyValueView& parent, int32_t index)
-                : m_parent(parent)
-                , m_index(index)
-                , m_current(parent.m_ptr)
-            {
-                SPARROW_ASSERT_TRUE(m_index >= 0);
-                SPARROW_ASSERT_TRUE(m_index < m_parent.m_num_pairs);
-                for (int32_t i = 0; i <= m_index; ++i)
-                {
-                    extract_key_value();
-                }
-            }
+    // Custom view to lazily extract key/value pairs from the buffer
+    class key_value_view : public std::ranges::view_interface<key_value_view>
+    {
+    public:
 
-            value_type operator*() const
-            {
-                return {m_key, m_value};
-            }
+        SPARROW_API key_value_view(const char* ptr);
 
-            iterator& operator++()
-            {
-                ++m_index;
-                if (m_index < m_parent.m_num_pairs)
-                {
-                    extract_key_value();
-                }
-                return *this;
-            }
+        [[nodiscard]] SPARROW_API key_value_view_iterator cbegin() const;
 
-            friend bool operator==(const iterator& lhs, const iterator& rhs)
-            {
-                return lhs.m_index == rhs.m_index;
-            }
+        [[nodiscard]] SPARROW_API key_value_view_iterator begin() const;
 
-            friend bool operator!=(const iterator& lhs, const iterator& rhs)
-            {
-                return !(lhs == rhs);
-            }
+        [[nodiscard]] SPARROW_API key_value_view_iterator cend() const;
 
-        private:
+        [[nodiscard]] SPARROW_API key_value_view_iterator end() const;
 
-            std::string_view extract_string_view()
-            {
-                const int32_t length = extract_int32(m_current);
-                std::string_view str_view(m_current, static_cast<size_t>(length));
-                m_current += length;
-                return str_view;
-            }
+        [[nodiscard]] SPARROW_API size_t size() const;
 
-            void extract_key_value()
-            {
-                m_key = extract_string_view();
-                m_value = extract_string_view();
-            }
-
-            const KeyValueView& m_parent;
-            int32_t m_index;
-            const char* m_current;
-            std::string_view m_key;
-            std::string_view m_value;
-        };
+    private:
 
         const char* m_ptr;
         int32_t m_num_pairs = 0;
+
+        friend key_value_view_iterator;
     };
 
     template <typename T>
@@ -211,14 +158,14 @@ namespace sparrow
 #if defined(__cpp_lib_format) && !defined(__cpp_lib_format_ranges)
 
 template <>
-struct std::formatter<sparrow::KeyValueView>
+struct std::formatter<sparrow::key_value_view>
 {
     constexpr auto parse(std::format_parse_context& ctx)
     {
         return ctx.begin();  // Simple implementation
     }
 
-    auto format(const sparrow::KeyValueView& array, std::format_context& ctx) const
+    auto format(const sparrow::key_value_view& array, std::format_context& ctx) const
     {
         auto out = ctx.out();
         *out++ = '<';
@@ -240,7 +187,7 @@ struct std::formatter<sparrow::KeyValueView>
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const sparrow::KeyValueView& value)
+inline std::ostream& operator<<(std::ostream& os, const sparrow::key_value_view& value)
 {
     os << std::format("{}", value);
     return os;

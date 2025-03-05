@@ -27,7 +27,7 @@ namespace sparrow
         return m_proxy.name();
     }
 
-    std::optional<KeyValueView> null_array::metadata() const
+    std::optional<key_value_view> null_array::metadata() const
     {
         return m_proxy.metadata();
     }

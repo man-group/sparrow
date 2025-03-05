@@ -19,9 +19,9 @@
 
 TEST_SUITE("metadata")
 {
-    TEST_CASE("KeyValueView")
+    TEST_CASE("key_value_view")
     {
-        const sparrow::KeyValueView key_values(sparrow::metadata_buffer.data());
+        const sparrow::key_value_view key_values(sparrow::metadata_buffer.data());
         CHECK_EQ(key_values.size(), 2);
         auto kv_it = key_values.cbegin();
         auto kv_1 = *kv_it;

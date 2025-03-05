@@ -65,7 +65,7 @@ namespace sparrow
         return m_proxy.name();
     }
 
-    std::optional<KeyValueView> run_end_encoded_array::metadata() const
+    std::optional<key_value_view> run_end_encoded_array::metadata() const
     {
         return m_proxy.metadata();
     }

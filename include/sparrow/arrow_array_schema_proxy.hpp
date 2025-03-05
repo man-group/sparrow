@@ -118,7 +118,7 @@ namespace sparrow
          * @param name The name to set.
          */
         SPARROW_API void set_name(std::optional<std::string_view> name);
-        [[nodiscard]] SPARROW_API std::optional<KeyValueView> metadata() const;
+        [[nodiscard]] SPARROW_API std::optional<key_value_view> metadata() const;
 
         /**
          * Set the metadata of the `ArrowSchema`.

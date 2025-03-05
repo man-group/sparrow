@@ -280,6 +280,7 @@ else()
         ${SPARROW_SOURCE_DIR}/layout/union_array.cpp
         ${SPARROW_SOURCE_DIR}/record_batch.cpp
         ${SPARROW_SOURCE_DIR}/types/data_type.cpp
+        ${SPARROW_SOURCE_DIR}/utils/metadata.cpp
     )
 endif()
 

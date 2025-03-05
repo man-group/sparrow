@@ -39,7 +39,7 @@ namespace sparrow
     static const std::vector<metadata_pair> metadata_sample = {{"key1", "val1"}, {"key2", "val2"}};
     static const std::optional<std::vector<metadata_pair>> metadata_sample_opt = metadata_sample;
 
-    inline void test_metadata(const std::vector<metadata_pair>& metadata_1, const KeyValueView& metadata_2)
+    inline void test_metadata(const std::vector<metadata_pair>& metadata_1, const key_value_view& metadata_2)
     {
         REQUIRE_EQ(metadata_1.size(), metadata_2.size());
 

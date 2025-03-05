@@ -123,7 +123,7 @@ namespace sparrow
         self_type& operator=(self_type&&);
 
         [[nodiscard]] std::optional<std::string_view> name() const;
-        [[nodiscard]] std::optional<KeyValueView> metadata() const;
+        [[nodiscard]] std::optional<key_value_view> metadata() const;
 
         [[nodiscard]] size_type size() const;
         [[nodiscard]] bool empty() const;
@@ -316,7 +316,7 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    std::optional<KeyValueView> dictionary_encoded_array<IT>::metadata() const
+    std::optional<key_value_view> dictionary_encoded_array<IT>::metadata() const
     {
         return m_proxy.metadata();
     }
