@@ -39,7 +39,8 @@ namespace sparrow
     // Helper function to extract an int32 from a char buffer
     inline int32_t extract_int32(const char*& ptr)
     {
-        const auto value = *reinterpret_cast<const int32_t*>(ptr);
+        int32_t value;
+        std::memcpy(&value, ptr, sizeof(int32_t));
         ptr += sizeof(int32_t);
         return value;
     }
@@ -179,24 +180,31 @@ namespace sparrow
         const size_t total_size = sizeof(int32_t) + metadata_size;
         std::string metadata_buf(total_size, '\0');
         char* metadata_ptr = metadata_buf.data();
-        reinterpret_cast<int32_t*>(metadata_ptr)[0] = number_of_key_values;
+        std::memcpy(metadata_ptr, &number_of_key_values, sizeof(int32_t));
         metadata_ptr += sizeof(int32_t);
         for (const auto& [key, value] : metadata)
         {
             SPARROW_ASSERT_TRUE(std::cmp_less(key.size(), std::numeric_limits<int32_t>::max()));
             SPARROW_ASSERT_TRUE(std::cmp_less(value.size(), std::numeric_limits<int32_t>::max()));
-            reinterpret_cast<int32_t*>(metadata_ptr)[0] = static_cast<int32_t>(key.size());
+
+            const auto key_size = static_cast<int32_t>(key.size());
+            std::memcpy(metadata_ptr, &key_size, sizeof(int32_t));
             metadata_ptr += sizeof(int32_t);
+
             std::ranges::copy(key, metadata_ptr);
             metadata_ptr += key.size();
-            reinterpret_cast<int32_t*>(metadata_ptr)[0] = static_cast<int32_t>(value.size());
+
+            const auto value_size = static_cast<int32_t>(value.size());
+            std::memcpy(metadata_ptr, &value_size, sizeof(int32_t));
             metadata_ptr += sizeof(int32_t);
+
             std::ranges::copy(value, metadata_ptr);
             metadata_ptr += value.size();
         }
         return metadata_buf;
     }
 }
+
 
 #if defined(__cpp_lib_format) && !defined(__cpp_lib_format_ranges)
 

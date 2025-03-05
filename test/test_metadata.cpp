@@ -32,4 +32,10 @@ TEST_SUITE("metadata")
         CHECK_EQ(kv_2.first, "key2");
         CHECK_EQ(kv_2.second, "val2");
     }
+
+    TEST_CASE("get_metadata_from_key_values")
+    {
+        const auto metadata_result = sparrow::get_metadata_from_key_values(sparrow::metadata_sample);
+        CHECK_EQ(sparrow::metadata_buffer, metadata_result);
+    }
 }
