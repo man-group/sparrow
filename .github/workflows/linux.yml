@@ -32,8 +32,6 @@ jobs:
         - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', arch: '64', date-polyfill: 'OFF', shared : 'ON'}
         - {image: ubuntu-24.04, compiler: gcc, version: '14', config-flags: '', arch: '64', date-polyfill: 'ON', shared : 'OFF'}
         - {image: ubuntu-24.04, compiler: gcc, version: '14', config-flags: '', arch: '64', date-polyfill: 'OFF', shared : 'ON'}
-        - {image: ubuntu-24.04, compiler: gcc, version: '15', config-flags: '', arch: '64', date-polyfill: 'ON', shared : 'OFF'}
-        - {image: ubuntu-24.04, compiler: gcc, version: '15', config-flags: '', arch: '64', date-polyfill: 'OFF', shared : 'ON'}
 
         - {image: ubuntu-24.04, compiler: gcc, version: '13', config-flags: '', arch: '32', date-polyfill: 'OFF', shared : 'ON'}
 
