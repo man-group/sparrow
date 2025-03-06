@@ -75,7 +75,7 @@ namespace sparrow
         SPARROW_API std::string_view extract_string_view();
         SPARROW_API void extract_key_value();
 
-        const key_value_view& m_parent;
+        const key_value_view* m_parent;
         int32_t m_index;
         const char* m_current;
         std::string_view m_key;
@@ -111,7 +111,8 @@ namespace sparrow
     concept input_metadata_container = std::ranges::input_range<T>
                                        && std::same_as<std::ranges::range_value_t<T>, metadata_pair>;
 
-    std::string get_metadata_from_key_values(const input_metadata_container auto& metadata)
+    template <input_metadata_container T>
+    std::string get_metadata_from_key_values(const T& metadata)
     {
         const auto number_of_key_values = static_cast<int32_t>(metadata.size());
         const size_t metadata_size = std::accumulate(
