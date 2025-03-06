@@ -24,17 +24,38 @@
 
 namespace sparrow
 {
-    static const std::string metadata_buffer = {
-        0x02, 0x00, 0x00, 0x00,  // Number of keys/values
-        0x04, 0x00, 0x00, 0x00,  // Length of key1
-        'k',  'e',  'y',  '1',   // Key 1
-        0x04, 0x00, 0x00, 0x00,  // Length of value1
-        'v',  'a',  'l',  '1',   // Value 1
-        0x04, 0x00, 0x00, 0x00,  // Length of key2
-        'k',  'e',  'y',  '2',   // Key 2
-        0x04, 0x00, 0x00, 0x00,  // Length of value2
-        'v',  'a',  'l',  '2'    // Value 2
-    };
+
+    static const std::string metadata_buffer = []()
+    {
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            return std::string{
+                0x00, 0x00, 0x00, 0x02,  // Number of keys/values
+                0x00, 0x00, 0x00, 0x04,  // Length of key1
+                'k',  'e',  'y',  '1',   // Key 1
+                0x00, 0x00, 0x00, 0x04,  // Length of value1
+                'v',  'a',  'l',  '1',   // Value 1
+                0x00, 0x00, 0x00, 0x04,  // Length of key2
+                'k',  'e',  'y',  '2',   // Key 2
+                0x00, 0x00, 0x00, 0x04,  // Length of value2
+                'v',  'a',  'l',  '2'    // Value 2
+            };
+        }
+        else if constexpr (std::endian::native == std::endian::little)
+        {
+            return std::string{
+                0x02, 0x00, 0x00, 0x00,  // Number of keys/values
+                0x04, 0x00, 0x00, 0x00,  // Length of key1
+                'k',  'e',  'y',  '1',   // Key 1
+                0x04, 0x00, 0x00, 0x00,  // Length of value1
+                'v',  'a',  'l',  '1',   // Value 1
+                0x04, 0x00, 0x00, 0x00,  // Length of key2
+                'k',  'e',  'y',  '2',   // Key 2
+                0x04, 0x00, 0x00, 0x00,  // Length of value2
+                'v',  'a',  'l',  '2'    // Value 2
+            };
+        }
+    }();
 
     static const std::vector<metadata_pair> metadata_sample = {{"key1", "val1"}, {"key2", "val2"}};
     static const std::optional<std::vector<metadata_pair>> metadata_sample_opt = metadata_sample;
