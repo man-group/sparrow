@@ -188,3 +188,23 @@ namespace sparrow
         return bool(lhs) == rhs;
     }
 }
+
+#if defined(__cpp_lib_format)
+#    include <format>
+
+template <class B>
+struct std::formatter<sparrow::bitset_reference<B>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();
+    }
+
+    auto format(const sparrow::bitset_reference<B>& b, std::format_context& ctx) const
+    {
+        bool val = b;
+        return std::format_to(ctx.out(), "{}", val);
+    }
+};
+
+#endif
