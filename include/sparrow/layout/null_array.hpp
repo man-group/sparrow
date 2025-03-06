@@ -15,15 +15,16 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <ranges>
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/layout/array_access.hpp"
-#include "sparrow/layout/array_base.hpp"
-#include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
@@ -89,16 +90,20 @@ namespace sparrow
         using const_value_range = std::ranges::subrange<const_value_iterator>;
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
-        SPARROW_API null_array(
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        null_array(
             size_t length,
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
-        );
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        )
+            : m_proxy(create_proxy(length, std::move(name), std::move(metadata)))
+        {
+        }
 
         SPARROW_API explicit null_array(arrow_proxy);
 
         [[nodiscard]] SPARROW_API std::optional<std::string_view> name() const;
-        [[nodiscard]] SPARROW_API std::optional<std::string_view> metadata() const;
+        [[nodiscard]] SPARROW_API std::optional<key_value_view> metadata() const;
 
         [[nodiscard]] SPARROW_API size_type size() const;
 
@@ -125,8 +130,9 @@ namespace sparrow
 
     private:
 
-        [[nodiscard]] SPARROW_API static arrow_proxy
-        create_proxy(size_t length, std::optional<std::string_view> name, std::optional<std::string_view> metadata);
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        [[nodiscard]] static arrow_proxy
+        create_proxy(size_t length, std::optional<std::string_view> name, std::optional<METADATA_RANGE> metadata);
 
         [[nodiscard]] SPARROW_API difference_type ssize() const;
 
@@ -192,6 +198,38 @@ namespace sparrow
     {
         return m_index < rhs.m_index;
     }
+
+    template <input_metadata_container METADATA_RANGE>
+    arrow_proxy
+    null_array::create_proxy(size_t length, std::optional<std::string_view> name, std::optional<METADATA_RANGE> metadata)
+    {
+        using namespace std::literals;
+        ArrowSchema schema = make_arrow_schema(
+            "n"sv,
+            std::move(name),
+            std::move(metadata),
+            std::nullopt,
+            0,
+            repeat_view<bool>(false, 0),
+            nullptr,
+            false
+        );
+
+        using buffer_type = sparrow::buffer<std::uint8_t>;
+        std::vector<buffer_type> arr_buffs = {};
+
+        ArrowArray arr = make_arrow_array(
+            static_cast<int64_t>(length),
+            static_cast<int64_t>(length),
+            0,
+            std::move(arr_buffs),
+            nullptr,
+            repeat_view<bool>(false, 0),
+            nullptr,
+            false
+        );
+        return arrow_proxy{std::move(arr), std::move(schema)};
+    }
 }
 
 #if defined(__cpp_lib_format)
@@ -215,5 +253,4 @@ inline std::ostream& operator<<(std::ostream& os, const sparrow::null_array& val
     os << std::format("{}", value);
     return os;
 }
-
 #endif

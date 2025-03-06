@@ -25,6 +25,7 @@
 #include "sparrow/utils/crtp_base.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/memory.hpp"
+#include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
@@ -88,7 +89,7 @@ namespace sparrow
         using type_id_buffer_type = u8_buffer<std::uint8_t>;
 
         [[nodiscard]] std::optional<std::string_view> name() const;
-        [[nodiscard]] std::optional<std::string_view> metadata() const;
+        [[nodiscard]] std::optional<key_value_view> metadata() const;
 
         [[nodiscard]] value_type at(size_type i) const;
         [[nodiscard]] value_type operator[](size_type i) const;
@@ -182,7 +183,9 @@ namespace sparrow
 
         using type_id_map = typename base_type::type_id_map;
 
-        template <std::ranges::input_range TYPE_MAPPING = std::vector<std::uint8_t>>
+        template <
+            std::ranges::input_range TYPE_MAPPING = std::vector<std::uint8_t>,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(std::convertible_to<std::ranges::range_value_t<TYPE_MAPPING>, std::uint8_t>)
         static auto create_proxy(
             std::vector<array>&& children,
@@ -190,17 +193,18 @@ namespace sparrow
             offset_buffer_type&& offsets,
             TYPE_MAPPING&& type_mapping = TYPE_MAPPING{},
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        SPARROW_API static auto create_proxy_impl(
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        static auto create_proxy_impl(
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
             offset_buffer_type&& offsets,
             std::string&& format,
             type_id_map&& tim,
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
         SPARROW_API std::size_t element_offset(std::size_t i) const;
@@ -336,7 +340,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    std::optional<std::string_view> union_array_crtp_base<DERIVED>::metadata() const
+    std::optional<key_value_view> union_array_crtp_base<DERIVED>::metadata() const
     {
         return m_proxy.metadata();
     }
@@ -501,7 +505,7 @@ namespace sparrow
      * dense_union_array implementation *
      ************************************/
 
-    template <std::ranges::input_range TYPE_MAPPING>
+    template <std::ranges::input_range TYPE_MAPPING, input_metadata_container METADATA_RANGE>
         requires(std::convertible_to<std::ranges::range_value_t<TYPE_MAPPING>, std::uint8_t>)
     auto dense_union_array::create_proxy(
         std::vector<array>&& children,
@@ -509,7 +513,7 @@ namespace sparrow
         offset_buffer_type&& offsets,
         TYPE_MAPPING&& child_index_to_type_id,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
         const auto n_children = children.size();
@@ -532,6 +536,74 @@ namespace sparrow
             std::move(name),
             std::move(metadata)
         );
+    }
+
+    template <input_metadata_container METADATA_RANGE>
+    auto dense_union_array::create_proxy_impl(
+        std::vector<array>&& children,
+        type_id_buffer_type&& element_type,
+        offset_buffer_type&& offsets,
+        std::string&& format,
+        type_id_map&& tim,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    ) -> arrow_proxy
+    {
+        const auto n_children = children.size();
+        ArrowSchema** child_schemas = new ArrowSchema*[n_children];
+        ArrowArray** child_arrays = new ArrowArray*[n_children];
+        const auto size = element_type.size();
+
+        // count nulls (expensive!)
+        int64_t null_count = 0;
+        for (std::size_t i = 0; i < size; ++i)
+        {
+            // child_id from type_id
+            const auto type_id = static_cast<std::uint8_t>(element_type[i]);
+            const auto child_index = tim[type_id];
+            const auto offset = static_cast<std::size_t>(offsets[i]);
+            // check if child is null
+            if (!children[child_index][offset].has_value())
+            {
+                ++null_count;
+            }
+        }
+
+        for (std::size_t i = 0; i < n_children; ++i)
+        {
+            auto& child = children[i];
+            auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(child));
+            child_arrays[i] = new ArrowArray(std::move(flat_arr));
+            child_schemas[i] = new ArrowSchema(std::move(flat_schema));
+        }
+
+        ArrowSchema schema = make_arrow_schema(
+            std::move(format),
+            std::move(name),                      // name
+            std::move(metadata),                  // metadata
+            std::nullopt,                         // flags,
+            child_schemas,                        // children
+            repeat_view<bool>(true, n_children),  // children_ownership
+            nullptr,                              // dictionary,
+            true                                  // dictionary ownership
+        );
+
+        std::vector<buffer<std::uint8_t>> arr_buffs = {
+            std::move(element_type).extract_storage(),
+            std::move(offsets).extract_storage()
+        };
+
+        ArrowArray arr = make_arrow_array(
+            static_cast<std::int64_t>(size),  // length
+            static_cast<std::int64_t>(null_count),
+            0,  // offset
+            std::move(arr_buffs),
+            child_arrays,                         // children
+            repeat_view<bool>(true, n_children),  // children_ownership
+            nullptr,                              // dictionary,
+            true
+        );
+        return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
     /*************************************

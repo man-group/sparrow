@@ -24,6 +24,8 @@
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
 
+#include "metadata_sample.hpp"
+
 namespace sparrow::test
 {
     void release_external_arrow_schema(ArrowSchema* schema);
@@ -118,7 +120,7 @@ namespace sparrow::test
             schema,
             sparrow::data_type_format_of<T>(),
             "test",
-            "test metadata",
+            metadata_sample_opt,
             std::nullopt,
             nullptr,
             repeat_view<bool>{true, 0},
@@ -194,7 +196,7 @@ namespace sparrow::test
             schema,
             std::string_view("u"),
             "test",
-            "test metadata",
+            metadata_sample_opt,
             std::nullopt,
             nullptr,
             repeat_view<bool>{true, 0},
@@ -292,7 +294,7 @@ namespace sparrow::test
             schema,
             std::string_view("z"),
             "test",
-            "test metadata",
+            metadata_sample_opt,
             std::nullopt,
             nullptr,
             children_ownership,
@@ -355,7 +357,7 @@ namespace sparrow::test
             schema,
             std::string_view("n"),
             "test",
-            "test metadata",
+            metadata_sample_opt,
             std::nullopt,
             nullptr,
             children_ownership,

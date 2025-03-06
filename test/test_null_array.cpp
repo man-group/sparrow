@@ -12,10 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/null_array.hpp"
 
-#include "../test/external_array_data_creation.hpp"
-#include "doctest/doctest.h"
+#include <sparrow/layout/null_array.hpp>
+#include <sparrow/utils/nullable.hpp>
+#include <sparrow/utils/ranges.hpp>
+
+#include "external_array_data_creation.hpp"
+#include "metadata_sample.hpp"
+
+// NOLINT
+#include <doctest/doctest.h>
 
 namespace sparrow
 {
@@ -28,17 +34,18 @@ namespace sparrow
         TEST_CASE("constructor")
         {
             constexpr std::size_t size = 10u;
-            const null_array ar{size, "name", "metadata"};
-            CHECK_EQ(ar.name(), "name");
-            CHECK_EQ(ar.metadata(), "metadata");
+            constexpr std::string_view name = "name";
+            const null_array ar{size, name, metadata_sample_opt};
+            CHECK_EQ(ar.name(), name);
+            test_metadata(metadata_sample, *(ar.metadata()));
             CHECK_EQ(ar.size(), size);
 
-            const auto arrow_proxy = sparrow::detail::array_access::get_arrow_proxy(ar);
+            const auto& arrow_proxy = sparrow::detail::array_access::get_arrow_proxy(ar);
             CHECK_EQ(arrow_proxy.format(), "n");
             CHECK_EQ(arrow_proxy.n_children(), 0);
             CHECK(arrow_proxy.flags().empty());
-            CHECK_EQ(arrow_proxy.metadata(), "metadata");
-            CHECK_EQ(arrow_proxy.name(), "name");
+            test_metadata(metadata_sample, *(arrow_proxy.metadata()));
+            CHECK_EQ(arrow_proxy.name(), name);
             CHECK_EQ(arrow_proxy.dictionary(), nullptr);
 
             CHECK_EQ(arrow_proxy.buffers().size(), 0);

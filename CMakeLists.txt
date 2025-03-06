@@ -241,9 +241,11 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/functor_index_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/memory.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/metadata.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/mp_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/nullable.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/offsets.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/pair.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/reference_wrapper_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
     # ../
@@ -278,6 +280,7 @@ else()
         ${SPARROW_SOURCE_DIR}/layout/union_array.cpp
         ${SPARROW_SOURCE_DIR}/record_batch.cpp
         ${SPARROW_SOURCE_DIR}/types/data_type.cpp
+        ${SPARROW_SOURCE_DIR}/utils/metadata.cpp
     )
 endif()
 

@@ -14,8 +14,10 @@
 
 #pragma once
 
+#include <concepts>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <ranges>
 
 #include "sparrow/utils/repeat_container.hpp"
@@ -30,6 +32,7 @@
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/metadata.hpp"
 
 namespace sparrow
 {
@@ -44,9 +47,7 @@ namespace sparrow
      *               structures.
      * @param name An optional, null-terminated, UTF8-encoded string of the field or array name.
      *             This is mainly used to reconstruct child fields of nested types.
-     * @param metadata An optional, binary string describing the type’s metadata. If the data type
-     *                 is nested, the metadata for child types are not encoded here but in the
-     * `ArrowSchema.children` structures.
+     * @param metadata An optional, range of key-value pairs to attach to the schema.
      * @param flags A bitfield of flags enriching the type description. Its value is computed by OR’ing
      *              together the flag values.
      * @param children Pointer to a sequence of `ArrowSchema` pointers or `nullptr`. Must be `nullptr` if
@@ -55,15 +56,14 @@ namespace sparrow
      * dictionary-encoded type. Must be `nullptr` otherwise.
      * @return The created `ArrowSchema` unique pointer.
      */
-    template <class F, class N, class M, std::ranges::input_range CHILDREN_OWNERSHIP>
+    template <class F, class N, input_metadata_container M = std::vector<metadata_pair>, std::ranges::input_range CHILDREN_OWNERSHIP>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                  && std::constructible_from<arrow_schema_private_data::NameType, N>
-                 && std::constructible_from<arrow_schema_private_data::MetadataType, M>
                  && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
     [[nodiscard]] ArrowSchema make_arrow_schema(
         F format,
         N name,
-        M metadata,
+        std::optional<M> metadata,
         std::optional<ArrowFlag> flags,
         ArrowSchema** children,
         const CHILDREN_OWNERSHIP& children_ownership,
@@ -82,16 +82,15 @@ namespace sparrow
      */
     SPARROW_API void empty_release_arrow_schema(ArrowSchema* schema);
 
-    template <class F, class N, class M, std::ranges::input_range CHILDREN_OWNERSHIP>
+    template <class F, class N, input_metadata_container M = std::vector<metadata_pair>, std::ranges::input_range CHILDREN_OWNERSHIP>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                  && std::constructible_from<arrow_schema_private_data::NameType, N>
-                 && std::constructible_from<arrow_schema_private_data::MetadataType, M>
                  && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
     void fill_arrow_schema(
         ArrowSchema& schema,
         F format,
         N name,
-        M metadata,
+        std::optional<M> metadata,
         std::optional<ArrowFlag> flags,
         ArrowSchema** children,
         const CHILDREN_OWNERSHIP& children_ownership,
@@ -113,10 +112,15 @@ namespace sparrow
         schema.flags = flags.has_value() ? static_cast<int64_t>(flags.value()) : 0;
         schema.n_children = static_cast<int64_t>(children_ownership.size());
 
+        std::optional<std::string> metadata_str = metadata.has_value()
+                                                      ? std::make_optional(get_metadata_from_key_values(*metadata
+                                                        ))
+                                                      : std::nullopt;
+
         schema.private_data = new arrow_schema_private_data(
             std::move(format),
             std::move(name),
-            std::move(metadata),
+            std::move(metadata_str),
             children_ownership,
             dictionary_ownership
         );
@@ -130,15 +134,14 @@ namespace sparrow
         schema.release = release_arrow_schema;
     }
 
-    template <class F, class N, class M, std::ranges::input_range CHILDREN_OWNERSHIP>
+    template <class F, class N, input_metadata_container M, std::ranges::input_range CHILDREN_OWNERSHIP>
         requires std::constructible_from<arrow_schema_private_data::FormatType, F>
                  && std::constructible_from<arrow_schema_private_data::NameType, N>
-                 && std::constructible_from<arrow_schema_private_data::MetadataType, M>
                  && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
     [[nodiscard]] ArrowSchema make_arrow_schema(
         F format,
         N name,
-        M metadata,
+        std::optional<M> metadata,
         std::optional<ArrowFlag> flags,
         ArrowSchema** children,
         const CHILDREN_OWNERSHIP& children_ownership,
@@ -160,9 +163,9 @@ namespace sparrow
         ArrowSchema schema{};
         fill_arrow_schema(
             schema,
-            format,
-            name,
-            metadata,
+            std::move(format),
+            std::move(name),
+            std::move(metadata),
             flags,
             children,
             children_ownership,
@@ -174,13 +177,14 @@ namespace sparrow
 
     inline ArrowSchema make_empty_arrow_schema()
     {
-        return make_arrow_schema(
-            std::string_view("n"),
-            "",
-            "",
+        using namespace std::literals;
+        return make_arrow_schema<std::string_view, std::string_view, std::vector<metadata_pair>>(
+            "n"sv,
+            ""sv,
+            std::nullopt,
             std::nullopt,
             nullptr,
-            repeat_view<bool>(true, 0),
+            std::array<bool, 0>{},
             nullptr,
             false
         );
