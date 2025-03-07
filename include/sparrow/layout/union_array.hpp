@@ -235,21 +235,23 @@ namespace sparrow
 
         using type_id_map = typename base_type::type_id_map;
 
-        template <std::ranges::input_range TYPE_MAPPING = std::vector<std::uint8_t>>
+        template <
+            std::ranges::input_range TYPE_MAPPING = std::vector<std::uint8_t>,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(std::convertible_to<std::ranges::range_value_t<TYPE_MAPPING>, std::uint8_t>)
         static auto create_proxy(
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
             TYPE_MAPPING&& type_mapping = TYPE_MAPPING{},
             std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::string_view> metadata = std::nullopt
+            std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
         SPARROW_API static auto create_proxy_impl(
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
             std::string&& format,
-            type_id_map&& tim
+            type_id_map&& tim,
         ) -> arrow_proxy;
 
         SPARROW_API std::size_t element_offset(std::size_t i) const;
@@ -614,14 +616,14 @@ namespace sparrow
      * sparse_union_array implementation *
      *************************************/
 
-    template <std::ranges::input_range TYPE_MAPPING>
+    template <std::ranges::input_range TYPE_MAPPING, input_metadata_container METADATA_RANGE>
         requires(std::convertible_to<std::ranges::range_value_t<TYPE_MAPPING>, std::uint8_t>)
     auto sparse_union_array::create_proxy(
         std::vector<array>&& children,
         type_id_buffer_type&& element_type,
         TYPE_MAPPING&& child_index_to_type_id,
         std::optional<std::string_view> name,
-        std::optional<std::string_view> metadata
+        std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
         const auto n_children = children.size();

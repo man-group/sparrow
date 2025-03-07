@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <array>
 #include <concepts>
 #include <cstdint>
 #include <memory>
@@ -21,6 +22,7 @@
 #include <ranges>
 
 #include "sparrow/utils/repeat_container.hpp"
+
 
 
 #if defined(__cpp_lib_format)
