@@ -163,11 +163,12 @@ namespace sparrow::test
             schema,
             std::string_view("b"),
             "test",
-            "test metadata",
+            metadata_sample_opt,
             std::nullopt,
-            0,
             nullptr,
-            nullptr
+            repeat_view<bool>{true, 0},
+            nullptr,
+            false
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
@@ -192,9 +193,10 @@ namespace sparrow::test
             static_cast<std::int64_t>(false_bitmap.size()),
             static_cast<std::int64_t>(offset),
             std::move(arr_buffs),
-            0u,
             nullptr,
-            nullptr
+            repeat_view<bool>{true, 0},
+            nullptr,
+            false
         );
     }
 
