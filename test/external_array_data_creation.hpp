@@ -150,6 +150,58 @@ namespace sparrow::test
         );
     }
 
+    template <>
+    inline void fill_schema_and_array<bool>(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        size_t size,
+        size_t offset,
+        const std::vector<size_t>& false_bitmap
+    )
+    {
+        sparrow::fill_arrow_schema(
+            schema,
+            std::string_view("b"),
+            "test",
+            metadata_sample_opt,
+            std::nullopt,
+            nullptr,
+            repeat_view<bool>{true, 0},
+            nullptr,
+            false
+        );
+
+        using buffer_type = sparrow::buffer<std::uint8_t>;
+        std::size_t nb_blocks = size / 8;
+        if (nb_blocks * 8 < size)
+        {
+            ++nb_blocks;
+        }
+        buffer_type data_buf(nb_blocks);
+        dynamic_bitset_view<std::uint8_t> view(data_buf.data(), size);
+        for (std::size_t i = 0; i < size; ++i)
+        {
+            view[i] = i % 2 != 0;
+        }
+
+        std::vector<buffer_type> arr_buffs = {
+            sparrow::test::make_bitmap_buffer(size, false_bitmap),
+            std::move(data_buf)
+        };
+
+        sparrow::fill_arrow_array(
+            arr,
+            static_cast<std::int64_t>(size - offset),
+            static_cast<std::int64_t>(false_bitmap.size()),
+            static_cast<std::int64_t>(offset),
+            std::move(arr_buffs),
+            nullptr,
+            repeat_view<bool>{true, 0},
+            nullptr,
+            false
+        );
+    }
+
     inline std::vector<std::string> make_testing_words(std::size_t n)
     {
         static const std::vector<std::string> words = {

@@ -82,12 +82,14 @@ namespace sparrow
     constexpr dynamic_bitset<T>::dynamic_bitset()
         : base_type(storage_type(), 0u)
     {
+        base_type::zero_unused_bits();
     }
 
     template <std::integral T>
     constexpr dynamic_bitset<T>::dynamic_bitset(size_type n)
         : dynamic_bitset(n, false)
     {
+        base_type::zero_unused_bits();
     }
 
     template <std::integral T>
@@ -98,18 +100,22 @@ namespace sparrow
               value ? 0u : n
           )
     {
+        base_type::zero_unused_bits();
     }
 
     template <std::integral T>
     constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n)
         : base_type(storage_type(p, this->compute_block_count(n)), n)
     {
+        base_type::zero_unused_bits();
     }
 
     template <std::integral T>
     constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type null_count)
         : base_type(storage_type(p, this->compute_block_count(n)), n, null_count)
     {
+        base_type::zero_unused_bits();
+        SPARROW_ASSERT_TRUE(base_type::null_count() == base_type::size() - base_type::count_non_null());
     }
 
     using validity_bitmap = dynamic_bitset<std::uint8_t>;

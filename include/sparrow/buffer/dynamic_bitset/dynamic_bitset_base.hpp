@@ -147,6 +147,9 @@ namespace sparrow
         constexpr void push_back(value_type value);
         constexpr void pop_back();
 
+        constexpr void zero_unused_bits();
+        [[nodiscard]] size_type count_non_null() const noexcept;
+
     private:
 
         static constexpr std::size_t s_bits_per_block = sizeof(block_type) * CHAR_BIT;
@@ -154,9 +157,7 @@ namespace sparrow
         [[nodiscard]] static constexpr size_type bit_index(size_type pos) noexcept;
         [[nodiscard]] static constexpr block_type bit_mask(size_type pos) noexcept;
 
-        [[nodiscard]] size_type count_non_null() const noexcept;
         [[nodiscard]] constexpr size_type count_extra_bits() const noexcept;
-        constexpr void zero_unused_bits();
         constexpr void update_null_count(bool old_value, bool new_value);
 
         storage_type m_buffer;
@@ -386,10 +387,6 @@ namespace sparrow
         , m_size(size)
         , m_null_count(m_size - count_non_null())
     {
-        if constexpr (!std::is_const_v<block_type>)
-        {
-            zero_unused_bits();
-        }
     }
 
     template <typename B>
@@ -399,11 +396,6 @@ namespace sparrow
         , m_size(size)
         , m_null_count(null_count)
     {
-        if constexpr (!std::is_const_v<block_type>)
-        {
-            zero_unused_bits();
-            SPARROW_ASSERT_TRUE(m_null_count == m_size - count_non_null());
-        }
     }
 
     template <typename B>

@@ -23,6 +23,7 @@
 namespace sparrow
 {
     using testing_types = std::tuple<
+        primitive_array<bool>,
         primitive_array<std::int8_t>,
         primitive_array<std::uint8_t>,
         primitive_array<std::int16_t>,
@@ -309,6 +310,21 @@ namespace sparrow
         }
         TEST_CASE_TEMPLATE_APPLY(visit_id, testing_types);
 
+        namespace detail
+        {
+            template <class T>
+            T next_test_value(T val)
+            {
+                return ++val;
+            }
+
+            template <>
+            inline bool next_test_value(bool val)
+            {
+                return !val;
+            }
+        }
+
         TEST_CASE_TEMPLATE_DEFINE("slice", AR, slice_id)
         {
             using const_reference = typename AR::const_reference;
@@ -319,26 +335,36 @@ namespace sparrow
 
             REQUIRE_EQ(ar.size(), size);
             scalar_value_type scalar_value = 0;
-            for (size_t i = 0; i < size; ++i, ++scalar_value)
+            for (size_t i = 0; i < size; ++i)
             {
                 CHECK_EQ(std::get<const_reference>(ar[i]), make_nullable(scalar_value));
+                scalar_value = detail::next_test_value(scalar_value);
             }
 
             const auto slice_1_5 = ar.slice(1, 5);
             REQUIRE_EQ(slice_1_5.size(), 4);
             scalar_value = static_cast<scalar_value_type>(1);
-            for (size_t i = 0; i < slice_1_5.size(); ++i, ++scalar_value)
+            for (size_t i = 0; i < slice_1_5.size(); ++i)
             {
                 CHECK_EQ(std::get<const_reference>(slice_1_5[i]).get(), scalar_value);
+                scalar_value = detail::next_test_value(scalar_value);
             }
 
             ar.slice(2, 8);
             const auto slice_2_8 = ar.slice(2, 8);
             REQUIRE_EQ(slice_2_8.size(), 6);
-            scalar_value = static_cast<scalar_value_type>(2);
-            for (size_t i = 0; i < slice_2_8.size(); ++i, ++scalar_value)
+            if constexpr (std::same_as<scalar_value_type, bool>)
+            {
+                scalar_value = false;
+            }
+            else
+            {
+                scalar_value = static_cast<scalar_value_type>(2);
+            }
+            for (size_t i = 0; i < slice_2_8.size(); ++i)
             {
                 CHECK_EQ(std::get<const_reference>(slice_2_8[i]).get(), scalar_value);
+                scalar_value = detail::next_test_value(scalar_value);
             }
         }
         TEST_CASE_TEMPLATE_APPLY(slice_id, testing_types);
@@ -353,26 +379,35 @@ namespace sparrow
 
             REQUIRE_EQ(ar.size(), size);
             scalar_value_type scalar_value = 0;
-            for (size_t i = 0; i < size; ++i, ++scalar_value)
+            for (size_t i = 0; i < size; ++i)
             {
                 CHECK_EQ(std::get<const_reference>(ar[i]).get(), scalar_value);
+                scalar_value = detail::next_test_value(scalar_value);
             }
 
             const auto slice_1_5 = ar.slice_view(1, 5);
             REQUIRE_EQ(slice_1_5.size(), 4);
             scalar_value = static_cast<scalar_value_type>(1);
-            for (size_t i = 0; i < slice_1_5.size(); ++i, ++scalar_value)
+            for (size_t i = 0; i < slice_1_5.size(); ++i)
             {
                 CHECK_EQ(std::get<const_reference>(slice_1_5[i]).get(), scalar_value);
+                scalar_value = detail::next_test_value(scalar_value);
             }
 
-            ar.slice_view(2, 8);
             const auto slice_2_8 = ar.slice_view(2, 8);
             REQUIRE_EQ(slice_2_8.size(), 6);
-            scalar_value = static_cast<scalar_value_type>(2);
-            for (size_t i = 0; i < slice_2_8.size(); ++i, ++scalar_value)
+            if constexpr (std::same_as<scalar_value_type, bool>)
+            {
+                scalar_value = false;
+            }
+            else
+            {
+                scalar_value = static_cast<scalar_value_type>(2);
+            }
+            for (size_t i = 0; i < slice_2_8.size(); ++i)
             {
                 CHECK_EQ(std::get<const_reference>(slice_2_8[i]).get(), scalar_value);
+                scalar_value = detail::next_test_value(scalar_value);
             }
         }
         TEST_CASE_TEMPLATE_APPLY(slice_view_id, testing_types);
