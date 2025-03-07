@@ -17,13 +17,14 @@
 #include <cstdint>
 #include <fstream>
 #include <string>
+#include <utility>
 
 #include <nlohmann/json.hpp>
 
 #include "sparrow/array.hpp"
 #include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array.hpp"
 #include "sparrow/layout/null_array.hpp"
-#include "sparrow/layout/primitive_array.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
 #include "sparrow/layout/struct_layout/struct_array.hpp"
 #include "sparrow/layout/temporal/date_array.hpp"
@@ -35,6 +36,7 @@
 #include "sparrow/layout/variable_size_binary_view_array.hpp"
 #include "sparrow/record_batch.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/metadata.hpp"
 
 
 sparrow::array build_array_from_json(const nlohmann::json& array, const nlohmann::json& schema);
@@ -96,12 +98,28 @@ void check_type(const nlohmann::json& array, const nlohmann::json& schema, const
     }
 }
 
+std::optional<std::vector<sparrow::metadata_pair>> get_metadata(const nlohmann::json& schema)
+{
+    std::vector<sparrow::metadata_pair> metadata;
+    const auto metadata_json = schema.find("metadata");
+    if (metadata_json == schema.end())
+    {
+        return std::nullopt;
+    }
+    for (const auto& [key, value] : metadata_json->items())
+    {
+        metadata.emplace_back(key, value.get<std::string>());
+    }
+    return metadata;
+}
+
 sparrow::array null_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
 {
     check_type(array, schema, "null");
     const std::string name = schema.at("name").get<std::string>();
     const std::size_t count = array.at("count").get<std::size_t>();
-    sparrow::null_array ar{count, name};
+    auto metadata = get_metadata(schema);
+    sparrow::null_array ar{count, name, std::move(metadata)};
     return sparrow::array{std::move(ar)};
 }
 
@@ -110,11 +128,8 @@ sparrow::array struct_array_from_json(const nlohmann::json& array, const nlohman
     check_type(array, schema, "struct");
     const std::string name = schema.at("name").get<std::string>();
     auto validity = get_validity(array);
-    sparrow::struct_array ar{
-        get_children_arrays(array, schema),
-        std::move(validity),
-        name,
-    };
+    auto metadata = get_metadata(schema);
+    sparrow::struct_array ar{get_children_arrays(array, schema), std::move(validity), name, std::move(metadata)};
     return sparrow::array{std::move(ar)};
 }
 
@@ -124,7 +139,14 @@ sparrow::array list_array_from_json(const nlohmann::json& array, const nlohmann:
     const std::string name = schema.at("name").get<std::string>();
     auto validity = get_validity(array);
     auto offsets = array.at(OFFSET).get<std::vector<int32_t>>();
-    sparrow::list_array ar{std::move(get_children_arrays(array, schema)[0]), offsets, std::move(validity), name};
+    auto metadata = get_metadata(schema);
+    sparrow::list_array ar{
+        std::move(get_children_arrays(array, schema)[0]),
+        offsets,
+        std::move(validity),
+        name,
+        std::move(metadata)
+    };
     return sparrow::array{std::move(ar)};
 }
 
@@ -140,27 +162,48 @@ sparrow::array large_list_array_from_json(const nlohmann::json& array, const nlo
                            return std::stoull(std::string(offset));
                        }
                    );
-    sparrow::big_list_array ar{std::move(get_children_arrays(array, schema)[0]), offsets, std::move(validity), name};
+    auto metadata = get_metadata(schema);
+    sparrow::big_list_array ar{
+        std::move(get_children_arrays(array, schema)[0]),
+        offsets,
+        std::move(validity),
+        name,
+        std::move(metadata)
+    };
     return sparrow::array{std::move(ar)};
 }
 
 sparrow::array list_view_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
 {
-    check_type(array, schema, "listview");
-    const std::string name = schema.at("name").get<std::string>();
-    auto validity = get_validity(array);
-    sparrow::list_view_array ar{std::move(get_children_arrays(array, schema)[0]), std::move(validity), name};
-    return sparrow::array{std::move(ar)};
+    // check_type(array, schema, "listview");
+    // const std::string name = schema.at("name").get<std::string>();
+    // auto validity = get_validity(array);
+    // auto metadata = get_metadata(schema);
+    // sparrow::list_view_array ar{
+    //     std::move(get_children_arrays(array, schema)[0]),
+    //     std::move(validity),
+    //     name,
+    //     std::move(metadata)
+    // };
+    // return sparrow::array{std::move(ar)};
+    throw std::runtime_error("list_view_array_from_json not implemented");
 }
 
 sparrow::array large_list_view_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
 {
-    check_type(array, schema, "largelistview");
-    const std::string name = schema.at("name").get<std::string>();
-    const auto children_json = get_children(array, schema);
-    auto validity = get_validity(array);
-    sparrow::big_list_view_array ar{std::move(get_children_arrays(array, schema)[0]), std::move(validity), name};
-    return sparrow::array{std::move(ar)};
+    // check_type(array, schema, "largelistview");
+    // const std::string name = schema.at("name").get<std::string>();
+    // const auto children_json = get_children(array, schema);
+    // auto validity = get_validity(array);
+    // auto metadata = get_metadata(schema);
+    // sparrow::big_list_view_array ar{
+    //     std::move(get_children_arrays(array, schema)[0]),
+    //     std::move(validity),
+    //     name,
+    //     std::move(metadata)
+    // };
+    // return sparrow::array{std::move(ar)};
+    throw std::runtime_error("large_list_view_array_from_json not implemented");
 }
 
 sparrow::array primitive_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
@@ -170,7 +213,7 @@ sparrow::array primitive_array_from_json(const nlohmann::json& array, const nloh
     const bool is_signed = schema.at("type").at("isSigned").get<bool>();
     const std::string name = schema.at("name").get<std::string>();
     auto validity = get_validity(array);
-
+    auto metadata = get_metadata(schema);
     if (is_signed)
     {
         switch (bit_width)
@@ -180,7 +223,8 @@ sparrow::array primitive_array_from_json(const nlohmann::json& array, const nloh
                 sparrow::primitive_array<int8_t> ar{
                     array.at(DATA).get<std::vector<int8_t>>(),
                     std::move(validity),
-                    name
+                    name,
+                    std::move(metadata)
                 };
                 return sparrow::array{std::move(ar)};
             }
@@ -189,7 +233,8 @@ sparrow::array primitive_array_from_json(const nlohmann::json& array, const nloh
                 sparrow::primitive_array<int16_t> ar{
                     array.at(DATA).get<std::vector<int16_t>>(),
                     std::move(validity),
-                    name
+                    name,
+                    std::move(metadata)
                 };
                 return sparrow::array{std::move(ar)};
             }
@@ -198,7 +243,8 @@ sparrow::array primitive_array_from_json(const nlohmann::json& array, const nloh
                 sparrow::primitive_array<int32_t> ar{
                     array.at(DATA).get<std::vector<int32_t>>(),
                     std::move(validity),
-                    name
+                    name,
+                    std::move(metadata)
                 };
                 return sparrow::array{std::move(ar)};
             }
@@ -207,7 +253,8 @@ sparrow::array primitive_array_from_json(const nlohmann::json& array, const nloh
                 sparrow::primitive_array<int64_t> ar{
                     array.at(DATA).get<std::vector<int64_t>>(),
                     std::move(validity),
-                    name
+                    name,
+                    std::move(metadata)
                 };
                 return sparrow::array{std::move(ar)};
             }
@@ -224,7 +271,8 @@ sparrow::array primitive_array_from_json(const nlohmann::json& array, const nloh
                 sparrow::primitive_array<uint8_t> ar{
                     array.at(DATA).get<std::vector<uint8_t>>(),
                     std::move(validity),
-                    name
+                    name,
+                    std::move(metadata)
                 };
                 return sparrow::array{std::move(ar)};
             }
@@ -233,7 +281,8 @@ sparrow::array primitive_array_from_json(const nlohmann::json& array, const nloh
                 sparrow::primitive_array<uint16_t> ar{
                     array.at(DATA).get<std::vector<uint16_t>>(),
                     std::move(validity),
-                    name
+                    name,
+                    std::move(metadata)
                 };
                 return sparrow::array{std::move(ar)};
             }
@@ -242,7 +291,8 @@ sparrow::array primitive_array_from_json(const nlohmann::json& array, const nloh
                 sparrow::primitive_array<uint32_t> ar{
                     array.at(DATA).get<std::vector<uint32_t>>(),
                     std::move(validity),
-                    name
+                    name,
+                    std::move(metadata)
                 };
                 return sparrow::array{std::move(ar)};
             }
@@ -251,7 +301,8 @@ sparrow::array primitive_array_from_json(const nlohmann::json& array, const nloh
                 sparrow::primitive_array<uint64_t> ar{
                     array.at(DATA).get<std::vector<uint64_t>>(),
                     std::move(validity),
-                    name
+                    name,
+                    std::move(metadata)
                 };
                 return sparrow::array{};
             }
@@ -266,13 +317,14 @@ sparrow::array floating_point_from_json(const nlohmann::json& array, const nlohm
     const std::string precision = schema.at("type").at("precision").get<std::string>();
     const std::string name = schema.at("name").get<std::string>();
     auto validity = get_validity(array);
-
+    auto metadata = get_metadata(schema);
     if (precision == "HALF")
     {
         sparrow::primitive_array<sparrow::float16_t> ar{
             array.at(DATA).get<std::vector<float>>(),
             std::move(validity),
-            name
+            name,
+            std::move(metadata)
         };
         return sparrow::array{std::move(ar)};
     }
@@ -281,7 +333,8 @@ sparrow::array floating_point_from_json(const nlohmann::json& array, const nlohm
         sparrow::primitive_array<sparrow::float32_t> ar{
             array.at(DATA).get<std::vector<sparrow::float32_t>>(),
             std::move(validity),
-            name
+            name,
+            std::move(metadata)
         };
         return sparrow::array{std::move(ar)};
     }
@@ -290,7 +343,8 @@ sparrow::array floating_point_from_json(const nlohmann::json& array, const nlohm
         sparrow::primitive_array<sparrow::float64_t> ar{
             array.at(DATA).get<std::vector<sparrow::float64_t>>(),
             std::move(validity),
-            name
+            name,
+            std::move(metadata)
         };
         return sparrow::array{std::move(ar)};
     }
@@ -368,15 +422,18 @@ sparrow::array fixedsizebinary_from_json(const nlohmann::json& array, const nloh
     const std::string name = schema.at("name").get<std::string>();
     const std::size_t byte_width = schema.at("type").at("byteWidth").get<std::size_t>();
     auto data = array.at(DATA).get<std::vector<std::vector<uint8_t>>>();
+    auto metadata = get_metadata(schema);
     if (data.empty())
     {
-        sparrow::fixed_width_binary_array ar{byte_width, name};
+        sparrow::u8_buffer<std::byte> data_buffer(0);
+        sparrow::fixed_width_binary_array
+            ar{std::move(data_buffer), byte_width, std::array<bool, 0>{}, name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else
     {
         auto validity = get_validity(array);
-        sparrow::fixed_width_binary_array ar{std::move(data), std::move(validity), name};
+        sparrow::fixed_width_binary_array ar{std::move(data), std::move(validity), name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
 }
@@ -387,7 +444,9 @@ sparrow::array string_array_from_json(const nlohmann::json& array, const nlohman
     const std::string name = schema.at("name").get<std::string>();
     auto data = array.at(DATA).get<std::vector<std::string>>();
     auto validity = get_validity(array);
-    return sparrow::array{sparrow::string_array{std::move(data), std::move(validity), name}};
+    auto metadata = get_metadata(schema);
+    return sparrow::array{sparrow::string_array{std::move(data), std::move(validity), name, std::move(metadata)}
+    };
 }
 
 sparrow::array big_string_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
@@ -396,7 +455,10 @@ sparrow::array big_string_array_from_json(const nlohmann::json& array, const nlo
     const std::string name = schema.at("name").get<std::string>();
     auto data = array.at(DATA).get<std::vector<std::string>>();
     auto validity = get_validity(array);
-    return sparrow::array{sparrow::big_string_array{std::move(data), std::move(validity), name}};
+    auto metadata = get_metadata(schema);
+    return sparrow::array{
+        sparrow::big_string_array{std::move(data), std::move(validity), name, std::move(metadata)}
+    };
 }
 
 sparrow::array string_view_from_json(const nlohmann::json& array, const nlohmann::json& schema)
@@ -405,7 +467,10 @@ sparrow::array string_view_from_json(const nlohmann::json& array, const nlohmann
     const std::string name = schema.at("name").get<std::string>();
     auto data = array.at(DATA).get<std::vector<std::string>>();
     auto validity = get_validity(array);
-    return sparrow::array{sparrow::string_view_array{std::move(data), std::move(validity), name}};
+    auto metadata = get_metadata(schema);
+    return sparrow::array{
+        sparrow::string_view_array{std::move(data), std::move(validity), name, std::move(metadata)}
+    };
 }
 
 sparrow::array date_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
@@ -414,6 +479,7 @@ sparrow::array date_array_from_json(const nlohmann::json& array, const nlohmann:
     const std::string name = schema.at("name").get<std::string>();
     const std::string unit = schema.at("type").at("unit").get<std::string>();
     auto validity = get_validity(array);
+    auto metadata = get_metadata(schema);
     if (unit == "DAY")
     {
         auto date_days_values = array.at(DATA).get<std::vector<int32_t>>()
@@ -423,7 +489,7 @@ sparrow::array date_array_from_json(const nlohmann::json& array, const nlohmann:
                                         return sparrow::date_days{sparrow::date_days::duration{value}};
                                     }
                                 );
-        sparrow::date_days_array ar{date_days_values, std::move(validity), name};
+        sparrow::date_days_array ar{date_days_values, std::move(validity), name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else if (unit == "MILLISECOND")
@@ -435,7 +501,7 @@ sparrow::array date_array_from_json(const nlohmann::json& array, const nlohmann:
                             return sparrow::date_milliseconds{sparrow::date_milliseconds::duration{value}};
                         }
                     );
-        sparrow::date_milliseconds_array ar{data, std::move(validity), name};
+        sparrow::date_milliseconds_array ar{data, std::move(validity), name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else
@@ -451,7 +517,7 @@ sparrow::array time_array_from_json(const nlohmann::json& array, const nlohmann:
     const std::string unit = schema.at("type").at("unit").get<std::string>();
 
     auto validity = get_validity(array);
-
+    auto metadata = get_metadata(schema);
     if (unit == "SECOND")
     {
         auto values = array.at(DATA).get<std::vector<int32_t>>()
@@ -461,7 +527,7 @@ sparrow::array time_array_from_json(const nlohmann::json& array, const nlohmann:
                               return sparrow::chrono::time_seconds{value};
                           }
                       );
-        sparrow::time_seconds_array ar{values, std::move(validity), name};
+        sparrow::time_seconds_array ar{values, std::move(validity), name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
 
@@ -474,7 +540,7 @@ sparrow::array time_array_from_json(const nlohmann::json& array, const nlohmann:
                               return sparrow::chrono::time_milliseconds{value};
                           }
                       );
-        sparrow::time_milliseconds_array ar{values, std::move(validity), name};
+        sparrow::time_milliseconds_array ar{values, std::move(validity), name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else if (unit == "MICROSECOND")
@@ -486,7 +552,7 @@ sparrow::array time_array_from_json(const nlohmann::json& array, const nlohmann:
                               return sparrow::chrono::time_microseconds{value};
                           }
                       );
-        sparrow::time_microseconds_array ar{values, std::move(validity), name};
+        sparrow::time_microseconds_array ar{values, std::move(validity), name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else if (unit == "NANOSECOND")
@@ -498,7 +564,7 @@ sparrow::array time_array_from_json(const nlohmann::json& array, const nlohmann:
                               return sparrow::chrono::time_nanoseconds{value};
                           }
                       );
-        sparrow::time_nanoseconds_array ar{values, std::move(validity), name};
+        sparrow::time_nanoseconds_array ar{values, std::move(validity), name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else
@@ -520,6 +586,7 @@ sparrow::array timestamp_array_from_json(const nlohmann::json& array, const nloh
     const date::time_zone* tz = timezone ? date::locate_zone(*timezone) : nullptr;
     auto data = array.at(DATA).get<std::vector<int64_t>>();
     auto validity = get_validity(array);
+    auto metadata = get_metadata(schema);
     if (unit == "SECOND")
     {
         auto values = data
@@ -531,7 +598,7 @@ sparrow::array timestamp_array_from_json(const nlohmann::json& array, const nloh
                               return sparrow::timestamp_second{tz, sys_time};
                           }
                       );
-        sparrow::timestamp_seconds_array ar{tz, values, std::move(validity), name};
+        sparrow::timestamp_seconds_array ar{tz, values, std::move(validity), name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else if (unit == "MILLISECOND")
@@ -545,7 +612,7 @@ sparrow::array timestamp_array_from_json(const nlohmann::json& array, const nloh
                               return sparrow::timestamp_millisecond{tz, sys_time};
                           }
                       );
-        sparrow::timestamp_milliseconds_array ar{tz, values, std::move(validity), name};
+        sparrow::timestamp_milliseconds_array ar{tz, values, std::move(validity), name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else if (unit == "MICROSECOND")
@@ -559,7 +626,7 @@ sparrow::array timestamp_array_from_json(const nlohmann::json& array, const nloh
                               return sparrow::timestamp_microsecond{tz, sys_time};
                           }
                       );
-        sparrow::timestamp_microseconds_array ar{tz, values, std::move(validity), name};
+        sparrow::timestamp_microseconds_array ar{tz, values, std::move(validity), name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else if (unit == "NANOSECOND")
@@ -573,7 +640,7 @@ sparrow::array timestamp_array_from_json(const nlohmann::json& array, const nloh
                               return sparrow::timestamp_nanosecond{tz, sys_time};
                           }
                       );
-        sparrow::timestamp_nanoseconds_array ar{tz, values, std::move(validity), name};
+        sparrow::timestamp_nanoseconds_array ar{tz, values, std::move(validity), name, std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else
@@ -589,6 +656,7 @@ sparrow::array duration_array_from_json(const nlohmann::json& array, const nlohm
     const std::string unit = schema.at("type").at("unit").get<std::string>();
     auto data = array.at(DATA).get<std::vector<int64_t>>();
     auto validity = get_validity(array);
+    auto metadata = get_metadata(schema);
     if (unit == "SECOND")
     {
         auto values = data
@@ -598,7 +666,7 @@ sparrow::array duration_array_from_json(const nlohmann::json& array, const nlohm
                               return std::chrono::seconds{value};
                           }
                       );
-        sparrow::duration_seconds_array ar{values, std::move(validity), std::move(name)};
+        sparrow::duration_seconds_array ar{values, std::move(validity), std::move(name), std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else if (unit == "MILLISECOND")
@@ -610,7 +678,7 @@ sparrow::array duration_array_from_json(const nlohmann::json& array, const nlohm
                               return std::chrono::milliseconds{value};
                           }
                       );
-        sparrow::duration_milliseconds_array ar{values, std::move(validity), std::move(name)};
+        sparrow::duration_milliseconds_array ar{values, std::move(validity), std::move(name), std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else if (unit == "MICROSECOND")
@@ -622,7 +690,7 @@ sparrow::array duration_array_from_json(const nlohmann::json& array, const nlohm
                               return std::chrono::microseconds{value};
                           }
                       );
-        sparrow::duration_microseconds_array ar{values, std::move(validity), std::move(name)};
+        sparrow::duration_microseconds_array ar{values, std::move(validity), std::move(name), std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else if (unit == "NANOSECOND")
@@ -634,7 +702,7 @@ sparrow::array duration_array_from_json(const nlohmann::json& array, const nlohm
                               return std::chrono::nanoseconds{value};
                           }
                       );
-        sparrow::duration_nanoseconds_array ar{values, std::move(validity), std::move(name)};
+        sparrow::duration_nanoseconds_array ar{values, std::move(validity), std::move(name), std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else
@@ -650,6 +718,7 @@ sparrow::array interval_array_from_json(const nlohmann::json& array, const nlohm
     const std::string unit = schema.at("type").at("unit").get<std::string>();
 
     auto validity = get_validity(array);
+    auto metadata = get_metadata(schema);
     if (unit == "YEAR_MONTH")
     {
         auto values = array.at(DATA).get<std::vector<int32_t>>()
@@ -659,7 +728,7 @@ sparrow::array interval_array_from_json(const nlohmann::json& array, const nlohm
                               return std::chrono::months{value};
                           }
                       );
-        sparrow::months_interval_array ar{values, std::move(validity), std::move(name)};
+        sparrow::months_interval_array ar{values, std::move(validity), std::move(name), std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else if (unit == "DAY_TIME")
@@ -674,7 +743,7 @@ sparrow::array interval_array_from_json(const nlohmann::json& array, const nlohm
                               };
                           }
                       );
-        sparrow::days_time_interval_array ar{values, std::move(validity), std::move(name)};
+        sparrow::days_time_interval_array ar{values, std::move(validity), std::move(name), std::move(metadata)};
         return sparrow::array{std::move(ar)};
     }
     else
@@ -692,6 +761,7 @@ sparrow::array sparse_union_array_from_json(const nlohmann::json& array, const n
         throw std::runtime_error("Invalid mode");
     }
     const std::string name = schema.at("name").get<std::string>();
+    auto metadata = get_metadata(schema);
     auto type_ids_values = schema.at("type").at("typeIds").get<std::vector<uint8_t>>();
     const sparrow::sparse_union_array::type_id_buffer_type type_ids{std::move(type_ids_values)};
     const auto children = schema.at("children").get<std::vector<nlohmann::json>>();
