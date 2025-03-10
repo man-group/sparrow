@@ -23,7 +23,7 @@
 
 const std::filesystem::path json_files_path = JSON_FILES_PATH;
 
-std::vector<std::filesystem::path> json_to_test = {
+const std::vector<std::filesystem::path> json_to_test = {
     "generated/custom-metadata.json",
     "generated/datetime.json",
     "generated/decimal128.json",

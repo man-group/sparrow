@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -49,6 +50,9 @@ std::vector<std::pair<const nlohmann::json&, const nlohmann::json&>>
 get_children(const nlohmann::json& array, const nlohmann::json& schema)
 {
     std::vector<std::pair<const nlohmann::json&, const nlohmann::json&>> children;
+
+    [[maybe_unused]] std::string schema_dump = schema.dump(4);
+    std::cout << schema_dump << "\n";
     const auto names = schema.at("children")
                        | std::views::transform(
                            [](const nlohmann::json& child)
@@ -106,9 +110,11 @@ std::optional<std::vector<sparrow::metadata_pair>> get_metadata(const nlohmann::
     {
         return std::nullopt;
     }
-    for (const auto& [key, value] : metadata_json->items())
+    for (const auto& [_, pair] : metadata_json->items())
     {
-        metadata.emplace_back(key, value.get<std::string>());
+        auto key = pair.at("key").get<std::string>();
+        auto value = pair.at("value").get<std::string>();
+        metadata.emplace_back(std::move(key), std::move(value));
     }
     return metadata;
 }
