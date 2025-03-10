@@ -46,26 +46,38 @@ static constexpr std::string_view VALIDITY = "VALIDITY";
 static constexpr std::string_view DATA = "DATA";
 static constexpr std::string_view OFFSET = "OFFSET";
 
+const nlohmann::json& get_child(const nlohmann::json& schema_or_array, const std::string& name)
+{
+    auto it = std::find_if(
+        schema_or_array.at("children").begin(),
+        schema_or_array.at("children").end(),
+        [&name](const nlohmann::json& child)
+        {
+            return child.at("name").get<std::string>() == name;
+        }
+    );
+
+    if (it == schema_or_array.at("children").end())
+    {
+        throw std::runtime_error("Child not found: " + name);
+    }
+
+    return *it;
+}
+
 std::vector<std::pair<const nlohmann::json&, const nlohmann::json&>>
 get_children(const nlohmann::json& array, const nlohmann::json& schema)
 {
+    const auto& schema_children = schema.at("children");
     std::vector<std::pair<const nlohmann::json&, const nlohmann::json&>> children;
+    children.reserve(schema_children.size());
 
-    [[maybe_unused]] std::string schema_dump = schema.dump(4);
-    std::cout << schema_dump << "\n";
-    const auto names = schema.at("children")
-                       | std::views::transform(
-                           [](const nlohmann::json& child)
-                           {
-                               return child.at("name").get<std::string>();
-                           }
-                       );
-    for (const auto& name : names)
+    for (const auto& child_schema : schema_children)
     {
-        const auto child_array = array.at("children").at(name);
-        const auto child_schema = schema.at("children").at(name);
-        children.emplace_back(child_array, child_schema);
+        const std::string& name = child_schema.at("name").get<std::string>();
+        children.emplace_back(get_child(array, name), child_schema);
     }
+
     return children;
 }
 
@@ -500,7 +512,13 @@ sparrow::array date_array_from_json(const nlohmann::json& array, const nlohmann:
     }
     else if (unit == "MILLISECOND")
     {
-        auto data = array.at(DATA).get<std::vector<int64_t>>()
+        auto data = array.at(DATA).get<std::vector<std::string>>()
+                    | std::views::transform(
+                        [](const std::string& value)
+                        {
+                            return std::stoll(value);
+                        }
+                    )
                     | std::views::transform(
                         [](int64_t value)
                         {
@@ -551,7 +569,13 @@ sparrow::array time_array_from_json(const nlohmann::json& array, const nlohmann:
     }
     else if (unit == "MICROSECOND")
     {
-        auto values = array.at(DATA).get<std::vector<int64_t>>()
+        auto values = array.at(DATA).get<std::vector<std::string>>()
+                      | std::views::transform(
+                          [](const std::string& value)
+                          {
+                              return std::stoll(value);
+                          }
+                      )
                       | std::views::transform(
                           [](int64_t value)
                           {
@@ -563,7 +587,13 @@ sparrow::array time_array_from_json(const nlohmann::json& array, const nlohmann:
     }
     else if (unit == "NANOSECOND")
     {
-        auto values = array.at(DATA).get<std::vector<int64_t>>()
+        auto values = array.at(DATA).get<std::vector<std::string>>()
+                      | std::views::transform(
+                          [](const std::string& value)
+                          {
+                              return std::stoll(value);
+                          }
+                      )
                       | std::views::transform(
                           [](int64_t value)
                           {
@@ -590,12 +620,19 @@ sparrow::array timestamp_array_from_json(const nlohmann::json& array, const nloh
         timezone = schema.at("type").at("timezone").get<std::string>();
     }
     const date::time_zone* tz = timezone ? date::locate_zone(*timezone) : nullptr;
-    auto data = array.at(DATA).get<std::vector<int64_t>>();
+    auto data = array.at(DATA).get<std::vector<std::string>>();
+    auto data_int = data
+                    | std::views::transform(
+                        [](const std::string& value) -> int64_t
+                        {
+                            return std::stoll(value);
+                        }
+                    );
     auto validity = get_validity(array);
     auto metadata = get_metadata(schema);
     if (unit == "SECOND")
     {
-        auto values = data
+        auto values = data_int
                       | std::views::transform(
                           [tz](int64_t value)
                           {
@@ -609,7 +646,7 @@ sparrow::array timestamp_array_from_json(const nlohmann::json& array, const nloh
     }
     else if (unit == "MILLISECOND")
     {
-        auto values = data
+        auto values = data_int
                       | std::views::transform(
                           [tz](int64_t value)
                           {
@@ -623,7 +660,7 @@ sparrow::array timestamp_array_from_json(const nlohmann::json& array, const nloh
     }
     else if (unit == "MICROSECOND")
     {
-        auto values = data
+        auto values = data_int
                       | std::views::transform(
                           [tz](int64_t value)
                           {
@@ -637,7 +674,7 @@ sparrow::array timestamp_array_from_json(const nlohmann::json& array, const nloh
     }
     else if (unit == "NANOSECOND")
     {
-        auto values = data
+        auto values = data_int
                       | std::views::transform(
                           [tz](int64_t value)
                           {

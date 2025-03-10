@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <filesystem>
@@ -52,11 +53,18 @@ TEST_SUITE("c_data_integration")
             SUBCASE(json.string().c_str())
             {
                 ArrowSchema schema;
-                const auto result = nanoarrow_CDataIntegration_ExportSchemaFromJson(
+                const auto error = nanoarrow_CDataIntegration_ExportSchemaFromJson(
                     (json_files_path / json).string().c_str(),
                     &schema
                 );
-                CHECK_EQ(result, nullptr);
+                if (error != nullptr)
+                {
+                    CHECK_EQ(std::string_view(error), std::string_view());
+                }
+                else
+                {
+                    CHECK(true);
+                }
             }
         }
     }
