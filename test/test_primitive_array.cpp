@@ -76,30 +76,24 @@ namespace sparrow
                 return values;
             };
 
+            const auto make_test_nullable = [](auto value, bool flag = true)
+            {
+                if constexpr (std::same_as<T, bool>)
+                {
+                    return make_nullable<bool>(value != 0, std::move(flag));
+                }
+                else
+                {
+                    return make_nullable<T>(static_cast<T>(value), std::move(flag));
+                }
+            };
+
             const size_t values_count = 100;
             const auto nullable_values = make_nullable_values(values_count);
 
-            /*if constexpr (std::same_as<bool, T>)
-            {
-                std::cout << "NULLABLE VALUES" << std::endl;
-                for (size_t i = 0; i < 25; i+=4)
-                {
-                    std::cout << nullable_values[i].get() << " " << nullable_values[i+1].get() << " "
-                        << nullable_values[i+2].get() << " " << nullable_values[i+3].get() << std::endl;
-                }
-            }*/
             const auto make_array = [](const std::vector<nullable<T>>& values, size_t offset = 0)
             {
                 auto arr = array_test_type(values);
-                /*if constexpr (std::same_as<bool, T>)
-                {
-                    std::cout << "ARRAY FROM VALUES" << std::endl;
-                    for (size_t i = 0; i < 25; i+=4)
-                    {
-                        std::cout << arr[i].get() << " " << arr[i+1].get() << " "
-                            << arr[i+2].get() << " " << arr[i+3].get() << std::endl;
-                    }
-                }*/
                 if (offset != 0)
                 {
                     return arr.slice(offset, arr.size());
@@ -112,15 +106,6 @@ namespace sparrow
 
             const size_t offset = 9;
             array_test_type ar = make_array(nullable_values, offset);
-                /*if constexpr (std::same_as<bool, T>)
-                {
-                    std::cout << "FINAL ARRAY" << std::endl;
-                    for (size_t i = 0; i < 25; i+=4)
-                    {
-                        std::cout << ar[i].get() << " " << ar[i+1].get() << " "
-                            << ar[i+2].get() << " " << ar[i+3].get() << std::endl;
-                    }
-                }*/
 
             SUBCASE("constructor")
             {
@@ -147,18 +132,10 @@ namespace sparrow
                         CHECK_EQ(ar[i], nullable_values[i + offset]);
                     }
 
-                    if constexpr (std::same_as<T, bool>)
-                    {
-                        ar[1] = make_nullable<bool>(false);
-                        CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), static_cast<bool>(false));
-                    }
-                    else
-                    {
-                        ar[1] = make_nullable<T>(99);
-                        CHECK(ar[1].has_value());
-                        CHECK_EQ(ar[1].get(), static_cast<T>(99));
-                    }
+                    auto new_value = make_test_nullable(99);
+                    ar[1] = new_value;
+                    CHECK(ar[1].has_value());
+                    CHECK_EQ(ar[1].get(), new_value.get());
                 }
             }
 
@@ -287,7 +264,7 @@ namespace sparrow
             SUBCASE("resize")
             {
                 const size_t new_size = nullable_values.size() - offset + 3;
-                const nullable<T> new_value_nullable = make_nullable<T>(99);
+                const nullable<T> new_value_nullable = make_test_nullable(99);
                 ar.resize(new_size, new_value_nullable);
                 REQUIRE_EQ(ar.size(), new_size);
                 for (size_t i = 0; i < ar.size() - 3; ++i)
@@ -301,7 +278,7 @@ namespace sparrow
 
             SUBCASE("insert")
             {
-                const nullable<T> new_value_nullable = make_nullable<T>(99, false);
+                const nullable<T> new_value_nullable = make_test_nullable(99, false);
 
                 SUBCASE("with pos and value")
                 {
@@ -404,9 +381,9 @@ namespace sparrow
                     }
                 }
 
-                const auto new_val_99 = make_nullable<T>(99, true);
-                const auto new_val_100 = make_nullable<T>(100, false);
-                const auto new_val_101 = make_nullable<T>(101, true);
+                const auto new_val_99 = make_test_nullable(99, true);
+                const auto new_val_100 = make_test_nullable(100, false);
+                const auto new_val_101 = make_test_nullable(101, true);
                 const std::array<nullable<T>, 3> new_values{new_val_99, new_val_100, new_val_101};
 
                 SUBCASE("with pos, first and last iterators")
@@ -635,7 +612,7 @@ namespace sparrow
 
             SUBCASE("push_back")
             {
-                const nullable<T> new_value = make_nullable<T>(99, true);
+                const nullable<T> new_value = make_test_nullable(99, true);
                 ar.push_back(new_value);
                 REQUIRE_EQ(ar.size(), nullable_values.size() - offset + 1);
                 for (size_t i = 0; i < ar.size() - 1; ++i)
