@@ -161,7 +161,7 @@ namespace sparrow
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, typename T::integer_type>
         [[nodiscard]] static auto create_proxy(
-            VALUE_RANGE&& data_buffer,
+            VALUE_RANGE&& range,
             VALIDITY_RANGE&& bitmaps,
             std::size_t precision,
             int scale,
@@ -172,15 +172,14 @@ namespace sparrow
         template <
             std::ranges::input_range NULLABLE_VALUE_RANGE,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires std::is_same_v<std::ranges::range_value_t<NULLABLE_VALUE_RANGE>, nullable<storage_type>>
+            requires std::is_same_v<std::ranges::range_value_t<NULLABLE_VALUE_RANGE>, nullable<typename T::integer_type>>
         [[nodiscard]] static auto create_proxy(
-            NULLABLE_VALUE_RANGE&& data_buffer,
+            NULLABLE_VALUE_RANGE&& range,
             std::size_t precision,
             int scale,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
-
 
         template <validity_bitmap_input R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
@@ -260,20 +259,16 @@ namespace sparrow
     template <decimal_type T>
     template <std::ranges::input_range VALUE_RANGE, validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
         requires std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, typename T::integer_type>
-    auto decimal_array<T>::create_proxy(
-        VALUE_RANGE&& data_buffer,
+    arrow_proxy decimal_array<T>::create_proxy(
+        VALUE_RANGE&& range,
         VALIDITY_RANGE&& bitmaps,
         std::size_t precision,
         int scale,
-        std::optional<std::string_view> name = std::nullopt,
-        std::optional<METADATA_RANGE> metadata = std::nullopt
-    ) -> arrow_proxy
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
     {
-        using value_type = std::ranges::range_value_t<VALUE_RANGE>;
-        static_assert(std::is_same_v<value_type, typename T::integer_type>);
-
-        // create data_buffer
-        u8_buffer<storage_type> u8_data_buffer(std::forward<VALUE_RANGE>(data_buffer));
+        u8_buffer<storage_type> u8_data_buffer(std::forward<VALUE_RANGE>(range));
         return create_proxy(
             std::move(u8_data_buffer),
             std::forward<VALIDITY_RANGE>(bitmaps),
@@ -284,17 +279,33 @@ namespace sparrow
         );
     }
 
-    template <
-        std::ranges::input_range NULLABLE_VALUE_RANGE,
-        input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-        requires std::is_same_v<std::ranges::range_value_t<NULLABLE_VALUE_RANGE>, nullable<storage_type>>
-    [[nodiscard]] static auto create_proxy(
-        NULLABLE_VALUE_RANGE&& data_buffer,
+    template <decimal_type T>
+    template <std::ranges::input_range NULLABLE_VALUE_RANGE, input_metadata_container METADATA_RANGE>
+        requires std::is_same_v<std::ranges::range_value_t<NULLABLE_VALUE_RANGE>, nullable<typename T::integer_type>>
+    arrow_proxy decimal_array<T>::create_proxy(
+        NULLABLE_VALUE_RANGE&& range,
         std::size_t precision,
         int scale,
-        std::optional<std::string_view> name = std::nullopt,
-        std::optional<METADATA_RANGE> metadata = std::nullopt
-    ) -> arrow_proxy;
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
+    {
+        auto values = range
+                      | std::views::transform(
+                          [](const auto& v)
+                          {
+                              return v.get();
+                          }
+                      );
+        auto is_non_null = range
+                           | std::views::transform(
+                               [](const auto& v)
+                               {
+                                   return v.has_value();
+                               }
+                           );
+        return create_proxy(values, is_non_null, precision, scale, std::move(name), std::move(metadata));
+    }
 
     template <decimal_type T>
     template <input_metadata_container METADATA_RANGE>
