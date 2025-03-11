@@ -13,8 +13,6 @@
 // limitations under the License.
 
 #include <cstdint>
-#include <ranges>
-#include <vector>
 
 #include "sparrow/layout/decimal_array.hpp"
 
@@ -38,28 +36,71 @@ namespace sparrow
     {
         TEST_CASE_TEMPLATE_DEFINE("generic", INTEGER_TYPE, decimal_array_test_generic_id)
         {
-            using integer_type = INTEGER_TYPE;
-            u8_buffer<integer_type> buffer{integer_type(10), integer_type(20), integer_type(33), integer_type(111)};
-            std::size_t precision = 2;
-            int scale = 4;
-            decimal_array<decimal<integer_type>> array{std::move(buffer), precision, scale};
-            CHECK_EQ(array.size(), 4);
+            const std::vector<INTEGER_TYPE> values{
+                INTEGER_TYPE(10),
+                INTEGER_TYPE(20),
+                INTEGER_TYPE(33),
+                INTEGER_TYPE(111)
+            };
 
-            auto val = array[0].value();
-            CHECK_EQ(val.scale(), scale);
-            CHECK_EQ(static_cast<std::int64_t>(val.storage()), 10);
-            CHECK_EQ(static_cast<double>(val), doctest::Approx(0.001));
+            const std::vector<bool> bitmaps{true, true, false, true};
 
-            val = array[1].value();
-            CHECK_EQ(val.scale(), scale);
-            CHECK_EQ(static_cast<std::int64_t>(val.storage()), 20);
-            CHECK_EQ(static_cast<double>(val), doctest::Approx(0.002));
+            constexpr std::size_t precision = 2;
+            constexpr int scale = 4;
 
-            val = array[2].value();
-            CHECK_EQ(val.scale(), scale);
-            CHECK_EQ(static_cast<std::int64_t>(val.storage()), 33);
-            CHECK_EQ(static_cast<double>(val), doctest::Approx(0.0033));
+            SUBCASE("constructors")
+            {
+                SUBCASE("range, bitmaps, precision, scale")
+                {
+                    decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
+                    CHECK_EQ(array.size(), 4);
+                }
+
+                SUBCASE("range, precision, scale")
+                {
+                    decimal_array<decimal<INTEGER_TYPE>> array{values, precision, scale};
+                    CHECK_EQ(array.size(), 4);
+                }
+
+                SUBCASE("data_buffer, bitmaps, precision, scale")
+                {
+                    u8_buffer<INTEGER_TYPE> buffer{values};
+                    decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), bitmaps, precision, scale};
+                    CHECK_EQ(array.size(), 4);
+                }
+
+                SUBCASE("data_buffer,  precision, scale")
+                {
+                    u8_buffer<INTEGER_TYPE> buffer{values};
+                    decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), precision, scale};
+                    CHECK_EQ(array.size(), 4);
+                }
+            }
+
+            SUBCASE("full")
+            {
+                using integer_type = INTEGER_TYPE;
+                auto buffer = u8_buffer<integer_type>{values};
+                decimal_array<decimal<integer_type>> array{std::move(buffer), precision, scale};
+                CHECK_EQ(array.size(), 4);
+
+                auto val = array[0].value();
+                CHECK_EQ(val.scale(), scale);
+                CHECK_EQ(static_cast<std::int64_t>(val.storage()), 10);
+                CHECK_EQ(static_cast<double>(val), doctest::Approx(0.001));
+
+                val = array[1].value();
+                CHECK_EQ(val.scale(), scale);
+                CHECK_EQ(static_cast<std::int64_t>(val.storage()), 20);
+                CHECK_EQ(static_cast<double>(val), doctest::Approx(0.002));
+
+                val = array[2].value();
+                CHECK_EQ(val.scale(), scale);
+                CHECK_EQ(static_cast<std::int64_t>(val.storage()), 33);
+                CHECK_EQ(static_cast<double>(val), doctest::Approx(0.0033));
+            }
         }
+
         TEST_CASE_TEMPLATE_APPLY(decimal_array_test_generic_id, integer_types);
     }
 }  // namespace sparrow
