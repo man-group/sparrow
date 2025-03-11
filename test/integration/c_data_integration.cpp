@@ -19,6 +19,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -45,6 +46,47 @@ sparrow::array build_array_from_json(const nlohmann::json& array, const nlohmann
 static constexpr std::string_view VALIDITY = "VALIDITY";
 static constexpr std::string_view DATA = "DATA";
 static constexpr std::string_view OFFSET = "OFFSET";
+static constexpr std::string_view TYPE_ID = "TYPE_ID";
+
+std::vector<std::vector<std::byte>> hexStringsToBytes(const std::vector<std::string>& hexStrings)
+{
+    std::vector<std::vector<std::byte>> result;
+    result.reserve(hexStrings.size());
+
+    for (const auto& hexStr : hexStrings)
+    {
+        std::vector<std::byte> bytes;
+
+        // If the string is empty, add an empty vector
+        if (hexStr.empty())
+        {
+            result.push_back(std::move(bytes));
+            continue;
+        }
+
+        // Reserve memory for the expected number of bytes (half the hex string length)
+        bytes.reserve((hexStr.length() + 1) / 2);
+
+        // Process hex string two characters at a time
+        for (size_t i = 0; i < hexStr.length(); i += 2)
+        {
+            std::string_view byteStr = (i + 1 < hexStr.length()) ? std::string_view(hexStr).substr(i, 2)
+                                                                 : std::string_view(hexStr).substr(i, 1);
+
+            // Parse the hex byte
+            unsigned int byteValue;
+            auto [ptr, ec] = std::from_chars(byteStr.data(), byteStr.data() + byteStr.size(), byteValue, 16);
+            if (ec == std::errc{})
+            {
+                bytes.push_back(static_cast<std::byte>(byteValue));
+            }
+        }
+
+        result.push_back(std::move(bytes));
+    }
+
+    return result;
+}
 
 const nlohmann::json& get_child(const nlohmann::json& schema_or_array, const std::string& name)
 {
@@ -83,11 +125,11 @@ get_children(const nlohmann::json& array, const nlohmann::json& schema)
 
 std::vector<bool> get_validity(const nlohmann::json& array)
 {
-    auto validity_range = array.at(VALIDITY)
+    auto validity_range = array.at(VALIDITY).get<std::vector<int>>()
                           | std::views::transform(
-                              [](const nlohmann::json& valid)
+                              [](int value)
                               {
-                                  return valid.get<int>() != 1;
+                                  return value != 0;
                               }
                           );
     return std::vector<bool>(validity_range.begin(), validity_range.end());
@@ -416,22 +458,23 @@ sparrow::array decimal_from_json(const nlohmann::json& array, const nlohmann::js
 {
     check_type(array, schema, "decimal");
     throw std::runtime_error("Not implemented");
-    // const uint32_t precision = schema.at("type").at("precision").get<uint32_t>();
-    // const uint32_t scale = schema.at("type").at("scale").get<uint32_t>();
-    // const std::string name = schema.at("name").get<std::string>();
+    const uint32_t precision = schema.at("type").at("precision").get<uint32_t>();
+    const uint32_t scale = schema.at("type").at("scale").get<uint32_t>();
+    const uint32_t byte_width = schema.at("type").at("byteWidth").get<uint32_t>();
+    const std::string name = schema.at("name").get<std::string>();
 
     // const std::vector<sparrow::int256_t> data = array.at(DATA).get<std::vector<sparrow::int128_t>>();
 
-    // if (precision == 32)
-    // {
-    //     return sparrow::array
-    //     {
-    //         sparrow::decimal_32_array
-    //         {
-    //             array.at(DATA).get<std::vector<sparrow::decimal32>>(), precision, scale, name
-    //         }
-    //     }
-    // }
+    if (precision == 32)
+    {
+        return sparrow::array
+        {
+            sparrow::decimal_32_array
+            {
+                array.at(DATA).get<std::vector<sparrow::decimal32>>(), precision, scale, name
+            }
+        }
+    }
 };
 
 sparrow::array fixedsizebinary_from_json(const nlohmann::json& array, const nlohmann::json& schema)
@@ -795,11 +838,25 @@ sparrow::array interval_array_from_json(const nlohmann::json& array, const nlohm
     }
 }
 
+sparrow::array binary_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
+{
+    check_type(array, schema, "binary");
+    const std::string name = schema.at("name").get<std::string>();
+    auto data_str = array.at(DATA).get<std::vector<std::string>>();
+    // each element of data are strings which are hexadecimal representation of bytes
+    // convert them to bytes
+    auto data = hexStringsToBytes(data_str);
+    auto validity = get_validity(array);
+    auto metadata = get_metadata(schema);
+    return sparrow::array{sparrow::binary_array{std::move(data), std::move(validity), name, std::move(metadata)}
+    };
+}
+
 sparrow::array sparse_union_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
 {
     check_type(array, schema, "union");
     const std::string mode = schema.at("type").at("mode").get<std::string>();
-    if (mode != "sparse")
+    if (mode != "SPARSE")
     {
         throw std::runtime_error("Invalid mode");
     }
@@ -807,30 +864,44 @@ sparrow::array sparse_union_array_from_json(const nlohmann::json& array, const n
     auto metadata = get_metadata(schema);
     auto type_ids_values = schema.at("type").at("typeIds").get<std::vector<uint8_t>>();
     const sparrow::sparse_union_array::type_id_buffer_type type_ids{std::move(type_ids_values)};
-    const auto children = schema.at("children").get<std::vector<nlohmann::json>>();
-    std::vector<sparrow::array> arrays;
-    arrays.reserve(children.size());
-    for (const auto& child : children)
-    {
-        arrays.emplace_back(build_array_from_json(array, child));
-    }
-    return sparrow::array{sparrow::sparse_union_array{std::move(arrays), std::vector<std::uint8_t>{}}};
+    auto children = get_children_arrays(array, schema);
+    return sparrow::array{sparrow::sparse_union_array{std::move(children), std::vector<std::uint8_t>{}}};
 }
 
 sparrow::array dense_union_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
 {
-    throw std::runtime_error("Not implemented");
+    check_type(array, schema, "union");
+    const std::string mode = schema.at("type").at("mode").get<std::string>();
+    if (mode != "DENSE")
+    {
+        throw std::runtime_error("Invalid mode");
+    }
+    const std::string name = schema.at("name").get<std::string>();
+    auto metadata = get_metadata(schema);
+    sparrow::dense_union_array::offset_buffer_type offsets{array.at(OFFSET).get<std::vector<uint32_t>>()};
+    sparrow::u8_buffer<std::uint8_t> child_index_to_type_id{
+        schema.at("type").at("typeIds").get<std::vector<uint8_t>>()
+    };
+    std::vector<std::uint8_t> type_ids = array.at(TYPE_ID).get<std::vector<std::uint8_t>>();
+    auto children = get_children_arrays(array, schema);
+    return sparrow::array{sparrow::dense_union_array{
+        std::move(children),
+        std::move(type_ids),
+        std::move(offsets),
+        std::move(child_index_to_type_id)
+    }};
+    // throw std::runtime_error("Not implemented");
 }
 
 sparrow::array union_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
 {
     check_type(array, schema, "union");
     const std::string mode = schema.at("type").at("mode").get<std::string>();
-    if (mode == "dense")
+    if (mode == "DENSE")
     {
         return dense_union_array_from_json(array, schema);
     }
-    else if (mode == "sparse")
+    else if (mode == "SPARSE")
     {
         return sparse_union_array_from_json(array, schema);
     }
@@ -892,7 +963,7 @@ const std::unordered_map<std::string, array_builder_function> array_builders{
     {"floatingpoint", floating_point_from_json},
     {"utf8", string_array_from_json},
     {"largeutf8", big_string_array_from_json},
-    // {"binary", binary_array_from_json},
+    {"binary", binary_array_from_json},
     // {"largebinary", binary_array_from_json},
     {"utf8view", string_view_from_json},
     // {"binaryview", binary_array_from_json},
