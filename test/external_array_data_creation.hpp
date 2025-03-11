@@ -174,12 +174,14 @@ namespace sparrow::test
         using buffer_type = sparrow::buffer<std::uint8_t>;
         std::size_t nb_blocks = size / 8;
         if (nb_blocks * 8 < size)
+        {
             ++nb_blocks;
+        }
         buffer_type data_buf(nb_blocks);
         dynamic_bitset_view<std::uint8_t> view(data_buf.data(), size);
         for (std::size_t i = 0; i < size; ++i)
         {
-            view[i] = i%2 != 0;
+            view[i] = i % 2 != 0;
         }
 
         std::vector<buffer_type> arr_buffs = {

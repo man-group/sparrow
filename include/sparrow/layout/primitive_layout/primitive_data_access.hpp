@@ -432,7 +432,9 @@ namespace sparrow
             update_data_view();
         }
 
-        inline auto primitive_data_access<bool>::insert_value(const_value_iterator pos, bool value, size_t count) -> value_iterator
+        inline auto
+        primitive_data_access<bool>::insert_value(const_value_iterator pos, bool value, size_t count)
+            -> value_iterator
         {
             auto ins_iter = sparrow::next(adaptor_cbegin(), std::distance(value_cbegin(), pos));
             auto res = m_adaptor.insert(ins_iter, count, value);
@@ -440,7 +442,8 @@ namespace sparrow
             return sparrow::next(value_begin(), std::distance(adaptor_begin(), res));
         }
 
-        inline auto primitive_data_access<bool>::insert_value(size_t idx, bool value, size_t count) -> value_iterator
+        inline auto primitive_data_access<bool>::insert_value(size_t idx, bool value, size_t count)
+            -> value_iterator
         {
             auto iter = sparrow::next(adaptor_cbegin(), static_cast<difference_type>(idx));
             auto res = m_adaptor.insert(iter, count, value);
@@ -450,7 +453,9 @@ namespace sparrow
 
         // Template parameter InputIt must be an value_iterator type that iterates over elements of type T
         template <mpl::iterator_of_type<bool> InputIt>
-        constexpr auto primitive_data_access<bool>::insert_values(const_value_iterator pos, InputIt first, InputIt last) -> value_iterator
+        constexpr auto
+        primitive_data_access<bool>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+            -> value_iterator
         {
             auto ins_iter = sparrow::next(adaptor_cbegin(), std::distance(value_cbegin(), pos));
             auto res = m_adaptor.insert(ins_iter, first, last);
@@ -459,7 +464,8 @@ namespace sparrow
         }
 
         template <mpl::iterator_of_type<bool> InputIt>
-        constexpr auto primitive_data_access<bool>::insert_values(size_t idx, InputIt first, InputIt last) -> value_iterator
+        constexpr auto primitive_data_access<bool>::insert_values(size_t idx, InputIt first, InputIt last)
+            -> value_iterator
         {
             auto iter = sparrow::next(adaptor_cbegin(), static_cast<difference_type>(idx));
             auto res = m_adaptor.insert(iter, first, last);
@@ -467,7 +473,8 @@ namespace sparrow
             return sparrow::next(value_begin(), std::distance(adaptor_begin(), res));
         }
 
-        inline auto primitive_data_access<bool>::erase_values(const_value_iterator pos, size_t count) -> value_iterator
+        inline auto primitive_data_access<bool>::erase_values(const_value_iterator pos, size_t count)
+            -> value_iterator
         {
             auto iter = sparrow::next(adaptor_cbegin(), std::distance(value_cbegin(), pos));
             auto iter_end = sparrow::next(iter, count);
@@ -496,18 +503,26 @@ namespace sparrow
         [[nodiscard]] u8_buffer<bool> primitive_data_access<bool>::make_data_buffer(RANGE&& r)
         {
             auto size = static_cast<size_t>(std::ranges::distance(r));
-            auto init_func = [&r](bitset_view& v) { std::copy(r.begin(), r.end(), v.begin()); };
+            auto init_func = [&r](bitset_view& v)
+            {
+                std::copy(r.begin(), r.end(), v.begin());
+            };
             return make_data_buffer(size, init_func);
         }
 
-        [[nodiscard]] inline u8_buffer<bool> primitive_data_access<bool>::make_data_buffer(size_t size, bool value)
+        [[nodiscard]] inline u8_buffer<bool>
+        primitive_data_access<bool>::make_data_buffer(size_t size, bool value)
         {
-            auto init_func = [&value](bitset_view& v) { std::fill(v.begin(), v.end(), value); };
+            auto init_func = [&value](bitset_view& v)
+            {
+                std::fill(v.begin(), v.end(), value);
+            };
             return make_data_buffer(size, init_func);
         }
 
         template <class F>
-        [[nodiscard]] inline u8_buffer<bool> primitive_data_access<bool>::make_data_buffer(size_t size, F init_func)
+        [[nodiscard]] inline u8_buffer<bool>
+        primitive_data_access<bool>::make_data_buffer(size_t size, F init_func)
         {
             std::size_t block_nb = size / 8;
             if (block_nb * 8 < size)

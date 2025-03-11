@@ -66,7 +66,9 @@ namespace sparrow
                     }
                     else if constexpr (std::is_same_v<T, bool>)
                     {
-                        values.push_back(make_nullable<T>(static_cast<bool>(i%4 != 0), static_cast<bool>(i%2)));
+                        values.push_back(
+                            make_nullable<T>(static_cast<bool>(i % 4 != 0), static_cast<bool>(i % 2))
+                        );
                     }
                     else
                     {

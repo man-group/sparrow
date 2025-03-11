@@ -302,7 +302,9 @@ namespace sparrow
     )
     {
         auto size = static_cast<size_t>(std::ranges::distance(values));
-        u8_buffer<T> data_buffer = details::primitive_data_access<T>::make_data_buffer(std::forward<VALUE_RANGE>(values));
+        u8_buffer<T> data_buffer = details::primitive_data_access<T>::make_data_buffer(
+            std::forward<VALUE_RANGE>(values)
+        );
         return create_proxy(
             std::move(data_buffer),
             size,

@@ -90,8 +90,8 @@ namespace sparrow
     template <typename T>
     inline ArrowErrorCode nanoarrow_append(ArrowArray* array, T value)
     {
-        if constexpr (std::is_same_v<T, bool> || std::is_same_v<T, int8_t> || std::is_same_v<T, int16_t> || std::is_same_v<T, int32_t>
-                      || std::is_same_v<T, int64_t>)
+        if constexpr (std::is_same_v<T, bool> || std::is_same_v<T, int8_t> || std::is_same_v<T, int16_t>
+                      || std::is_same_v<T, int32_t> || std::is_same_v<T, int64_t>)
         {
             return ArrowArrayAppendInt(array, static_cast<int64_t>(value));
         }
@@ -125,8 +125,9 @@ namespace sparrow
         {
             return static_cast<T>(ArrowArrayViewGetIntUnsafe(array, index));
         }
-        else if constexpr (std::is_same<T, bool>::value || std::is_same<T, uint8_t>::value || std::is_same<T, uint16_t>::value
-                           || std::is_same<T, uint32_t>::value || std::is_same<T, uint64_t>::value)
+        else if constexpr (std::is_same<T, bool>::value || std::is_same<T, uint8_t>::value
+                           || std::is_same<T, uint16_t>::value || std::is_same<T, uint32_t>::value
+                           || std::is_same<T, uint64_t>::value)
         {
             return static_cast<T>(ArrowArrayViewGetUIntUnsafe(array, index));
         }
