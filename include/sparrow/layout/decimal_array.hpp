@@ -15,6 +15,7 @@
 #pragma once
 
 #include <cstddef>
+#include <ranges>
 #include <sstream>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
@@ -32,7 +33,7 @@
 
 namespace sparrow
 {
-    template <class T>
+    template <decimal_type T>
     class decimal_array;
 
     using decimal_32_array = decimal_array<decimal<int32_t>>;
@@ -83,7 +84,7 @@ namespace sparrow
 
     }
 
-    template <class T>
+    template <decimal_type T>
     struct array_inner_types<decimal_array<T>> : array_inner_types_base
     {
         using array_type = decimal_array<T>;
@@ -106,7 +107,7 @@ namespace sparrow
     template <class T>
     constexpr bool is_decimal_array_v = mpl::is_type_instance_of_v<T, decimal_array>;
 
-    template <class T>
+    template <decimal_type T>
     class decimal_array final : public array_bitmap_base<decimal_array<T>>
     {
     public:
@@ -154,6 +155,33 @@ namespace sparrow
 
     private:
 
+        template <
+            std::ranges::input_range VALUE_RANGE,
+            validity_bitmap_input VALIDITY_RANGE,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, typename T::integer_type>
+        [[nodiscard]] static auto create_proxy(
+            VALUE_RANGE&& data_buffer,
+            VALIDITY_RANGE&& bitmaps,
+            std::size_t precision,
+            int scale,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        ) -> arrow_proxy;
+
+        template <
+            std::ranges::input_range NULLABLE_VALUE_RANGE,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires std::is_same_v<std::ranges::range_value_t<NULLABLE_VALUE_RANGE>, nullable<storage_type>>
+        [[nodiscard]] static auto create_proxy(
+            NULLABLE_VALUE_RANGE&& data_buffer,
+            std::size_t precision,
+            int scale,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        ) -> arrow_proxy;
+
+
         template <validity_bitmap_input R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<storage_type>&& data_buffer,
@@ -199,7 +227,7 @@ namespace sparrow
      * decimal_array implementation *
      **********************************/
 
-    template <class T>
+    template <decimal_type T>
     decimal_array<T>::decimal_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
         , m_precision(0)
@@ -229,7 +257,46 @@ namespace sparrow
         }
     }
 
-    template <class T>
+    template <decimal_type T>
+    template <std::ranges::input_range VALUE_RANGE, validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
+        requires std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, typename T::integer_type>
+    auto decimal_array<T>::create_proxy(
+        VALUE_RANGE&& data_buffer,
+        VALIDITY_RANGE&& bitmaps,
+        std::size_t precision,
+        int scale,
+        std::optional<std::string_view> name = std::nullopt,
+        std::optional<METADATA_RANGE> metadata = std::nullopt
+    ) -> arrow_proxy
+    {
+        using value_type = std::ranges::range_value_t<VALUE_RANGE>;
+        static_assert(std::is_same_v<value_type, typename T::integer_type>);
+
+        // create data_buffer
+        u8_buffer<storage_type> u8_data_buffer(std::forward<VALUE_RANGE>(data_buffer));
+        return create_proxy(
+            std::move(u8_data_buffer),
+            std::forward<VALIDITY_RANGE>(bitmaps),
+            precision,
+            scale,
+            std::move(name),
+            std::move(metadata)
+        );
+    }
+
+    template <
+        std::ranges::input_range NULLABLE_VALUE_RANGE,
+        input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        requires std::is_same_v<std::ranges::range_value_t<NULLABLE_VALUE_RANGE>, nullable<storage_type>>
+    [[nodiscard]] static auto create_proxy(
+        NULLABLE_VALUE_RANGE&& data_buffer,
+        std::size_t precision,
+        int scale,
+        std::optional<std::string_view> name = std::nullopt,
+        std::optional<METADATA_RANGE> metadata = std::nullopt
+    ) -> arrow_proxy;
+
+    template <decimal_type T>
     template <input_metadata_container METADATA_RANGE>
     auto decimal_array<T>::create_proxy(
         u8_buffer<storage_type>&& data_buffer,
@@ -249,7 +316,7 @@ namespace sparrow
         );
     }
 
-    template <class T>
+    template <decimal_type T>
     template <validity_bitmap_input R, input_metadata_container METADATA_RANGE>
     auto decimal_array<T>::create_proxy(
         u8_buffer<storage_type>&& data_buffer,
@@ -299,7 +366,7 @@ namespace sparrow
         return arrow_proxy(std::move(arr), std::move(schema));
     }
 
-    template <class T>
+    template <decimal_type T>
     auto decimal_array<T>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
@@ -307,7 +374,7 @@ namespace sparrow
         return inner_reference(ptr[i], m_scale);
     }
 
-    template <class T>
+    template <decimal_type T>
     auto decimal_array<T>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
@@ -315,25 +382,25 @@ namespace sparrow
         return inner_const_reference(ptr[i], m_scale);
     }
 
-    template <class T>
+    template <decimal_type T>
     auto decimal_array<T>::value_begin() -> value_iterator
     {
         return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), 0);
     }
 
-    template <class T>
+    template <decimal_type T>
     auto decimal_array<T>::value_end() -> value_iterator
     {
         return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), this->size());
     }
 
-    template <class T>
+    template <decimal_type T>
     auto decimal_array<T>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), 0);
     }
 
-    template <class T>
+    template <decimal_type T>
     auto decimal_array<T>::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(

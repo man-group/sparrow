@@ -119,7 +119,6 @@ namespace sparrow
 
 #if defined(__cpp_lib_format)
 
-#    if defined(SPARROW_USE_LARGE_INT_PLACEHOLDERS)
 
 template <>
 struct std::formatter<sparrow::int128_t>
@@ -134,8 +133,6 @@ struct std::formatter<sparrow::int128_t>
         return std::format_to(ctx.out(), "{}", "Integer int128_t TODO");
     }
 };
-
-#    endif
 
 template <>
 struct std::formatter<sparrow::int256_t>

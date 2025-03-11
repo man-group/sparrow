@@ -13,8 +13,6 @@
 // limitations under the License.
 
 #include <cstdint>
-#include <ranges>
-#include <vector>
 
 #include "sparrow/layout/decimal_array.hpp"
 
