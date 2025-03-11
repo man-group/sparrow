@@ -140,6 +140,7 @@ namespace sparrow
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         static auto create_proxy(
             u8_buffer<T>&& data_buffer,
+            size_t size,
             VALIDITY_RANGE&& bitmaps = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
@@ -251,12 +252,12 @@ namespace sparrow
     template <validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
     auto primitive_array_impl<T>::create_proxy(
         u8_buffer<T>&& data_buffer,
+        size_t size,
         VALIDITY_RANGE&& bitmap_input,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
-        const auto size = data_buffer.size();
         validity_bitmap bitmap = ensure_validity_bitmap(size, std::forward<VALIDITY_RANGE>(bitmap_input));
         const auto null_count = bitmap.null_count();
 
@@ -300,9 +301,13 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        u8_buffer<T> data_buffer(std::forward<VALUE_RANGE>(values));
+        auto size = static_cast<size_t>(std::ranges::distance(values));
+        u8_buffer<T> data_buffer = details::primitive_data_access<T>::make_data_buffer(
+            std::forward<VALUE_RANGE>(values)
+        );
         return create_proxy(
             std::move(data_buffer),
+            size,
             std::forward<VALIDITY_RANGE>(validity_input),
             std::move(name),
             std::move(metadata)

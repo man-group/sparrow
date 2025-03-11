@@ -42,12 +42,20 @@ namespace sparrow
         using const_reference = null_type;
     };
 
-    // Define automatically all standard floating-point and integral types support, including `bool`.
+    // Define automatically all standard floating-point and integral types support, excluding `bool`.
     template <class T>
         requires std::integral<T> or std::floating_point<T>
     struct arrow_traits<T> : common_native_types_traits<T>
     {
         static constexpr data_type type_id = data_type_from_size<T>();
+    };
+
+    template <>
+    struct arrow_traits<bool>
+    {
+        static constexpr data_type type_id = data_type::BOOL;
+        using value_type = bool;
+        using const_reference = bool;
     };
 
     template <>
