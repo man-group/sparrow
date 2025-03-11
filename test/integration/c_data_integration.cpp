@@ -465,13 +465,12 @@ sparrow::array decimal_from_json(const nlohmann::json& array, const nlohmann::js
 
     // const std::vector<sparrow::int256_t> data = array.at(DATA).get<std::vector<sparrow::int128_t>>();
 
-    if (precision == 32)
+    if (byte_width == 32)
     {
         return sparrow::array
         {
             sparrow::decimal_32_array
             {
-                array.at(DATA).get<std::vector<sparrow::decimal32>>(), precision, scale, name
             }
         }
     }
