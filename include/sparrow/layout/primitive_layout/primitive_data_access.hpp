@@ -92,6 +92,11 @@ namespace sparrow
 
             void reset_proxy(arrow_proxy& proxy);
 
+            template <std::ranges::input_range RANGE>
+            [[nodiscard]] static u8_buffer<T> make_data_buffer(RANGE&& r);
+
+            [[nodiscard]] static u8_buffer<T> make_data_buffer(size_t n, const T& value);
+
         private:
 
             [[nodiscard]] constexpr buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
@@ -151,12 +156,20 @@ namespace sparrow
 
             void reset_proxy(arrow_proxy& proxy);
 
+            template <std::ranges::input_range RANGE>
+            [[nodiscard]] static u8_buffer<bool> make_data_buffer(RANGE&& r);
+
+            [[nodiscard]] static u8_buffer<bool> make_data_buffer(size_t size, bool value);
+
         private:
 
             using bitset_adaptor = non_owning_dynamic_bitset<std::uint8_t>;
             using difference_type = typename bitset_adaptor::difference_type;
             using adaptor_iterator = typename bitset_adaptor::iterator;
             using const_adaptor_iterator = typename bitset_adaptor::const_iterator;
+
+            template <class F>
+            [[nodiscard]] static u8_buffer<bool> make_data_buffer(size_t size, F init_func);
 
             [[nodiscard]] size_t get_offset(size_t i) const;
 
@@ -172,12 +185,13 @@ namespace sparrow
             [[nodiscard]] bitset_view get_data_view();
             [[nodiscard]] bitset_adaptor get_data_adaptor();
 
+            void update_data_view();
+
             arrow_proxy* p_proxy;
             size_t m_data_buffer_index;
             bitset_view m_view;
             buffer<std::uint8_t> m_dummy_buffer;
             bitset_adaptor m_adaptor;
-            bool m_empty_adaptor;
         };
 
         /****************************************
@@ -338,6 +352,19 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T>
+        template <std::ranges::input_range RANGE>
+        [[nodiscard]] u8_buffer<T> primitive_data_access<T>::make_data_buffer(RANGE&& r)
+        {
+            return u8_buffer<T>(std::forward<RANGE>(r));
+        }
+
+        template <trivial_copyable_type T>
+        [[nodiscard]] u8_buffer<T> primitive_data_access<T>::make_data_buffer(size_t size, const T& value)
+        {
+            return u8_buffer<T>(size, value);
+        }
+
+        template <trivial_copyable_type T>
         [[nodiscard]] constexpr buffer_adaptor<T, buffer<uint8_t>&> primitive_data_access<T>::get_data_buffer()
         {
             auto& buffers = get_proxy().get_array_private_data()->buffers();
@@ -365,14 +392,8 @@ namespace sparrow
             , m_data_buffer_index(data_buffer_index)
             , m_view(get_data_view())
             , m_dummy_buffer()
-            , m_adaptor(&m_dummy_buffer, 0u)
-            , m_empty_adaptor(true)
+            , m_adaptor(get_data_adaptor())
         {
-            if (p_proxy->is_created_with_sparrow())
-            {
-                m_adaptor = get_data_adaptor();
-                m_empty_adaptor = false;
-            }
         }
 
         [[nodiscard]] inline auto primitive_data_access<bool>::value(size_t i) -> inner_reference
@@ -408,19 +429,22 @@ namespace sparrow
         inline void primitive_data_access<bool>::resize_values(size_t new_length, bool value)
         {
             m_adaptor.resize(get_offset(new_length), value);
+            update_data_view();
         }
 
         inline auto primitive_data_access<bool>::insert_value(const_value_iterator pos, bool value, size_t count) -> value_iterator
         {
             auto ins_iter = sparrow::next(adaptor_cbegin(), std::distance(value_cbegin(), pos));
-            auto res = m_adaptor.insert(ins_iter, value, count);
+            auto res = m_adaptor.insert(ins_iter, count, value);
+            update_data_view();
             return sparrow::next(value_begin(), std::distance(adaptor_begin(), res));
         }
 
         inline auto primitive_data_access<bool>::insert_value(size_t idx, bool value, size_t count) -> value_iterator
         {
             auto iter = sparrow::next(adaptor_cbegin(), static_cast<difference_type>(idx));
-            auto res = m_adaptor.insert(iter, value, count);
+            auto res = m_adaptor.insert(iter, count, value);
+            update_data_view();
             return sparrow::next(value_begin(), std::distance(adaptor_begin(), res));
         }
 
@@ -429,14 +453,18 @@ namespace sparrow
         constexpr auto primitive_data_access<bool>::insert_values(const_value_iterator pos, InputIt first, InputIt last) -> value_iterator
         {
             auto ins_iter = sparrow::next(adaptor_cbegin(), std::distance(value_cbegin(), pos));
-            return m_adaptor.insert(ins_iter, first, last);
+            auto res = m_adaptor.insert(ins_iter, first, last);
+            update_data_view();
+            return sparrow::next(value_begin(), std::distance(adaptor_begin(), res));
         }
 
         template <mpl::iterator_of_type<bool> InputIt>
         constexpr auto primitive_data_access<bool>::insert_values(size_t idx, InputIt first, InputIt last) -> value_iterator
         {
             auto iter = sparrow::next(adaptor_cbegin(), static_cast<difference_type>(idx));
-            return m_adaptor.insert(iter, first, last);
+            auto res = m_adaptor.insert(iter, first, last);
+            update_data_view();
+            return sparrow::next(value_begin(), std::distance(adaptor_begin(), res));
         }
 
         inline auto primitive_data_access<bool>::erase_values(const_value_iterator pos, size_t count) -> value_iterator
@@ -444,6 +472,7 @@ namespace sparrow
             auto iter = sparrow::next(adaptor_cbegin(), std::distance(value_cbegin(), pos));
             auto iter_end = sparrow::next(iter, count);
             auto res = m_adaptor.erase(iter, iter_end);
+            update_data_view();
             return sparrow::next(value_begin(), std::distance(adaptor_begin(), res));
         }
 
@@ -452,6 +481,7 @@ namespace sparrow
             auto iter = sparrow::next(adaptor_cbegin(), idx);
             auto iter_end = sparrow::next(iter, count);
             auto res = m_adaptor.erase(iter, iter_end);
+            update_data_view();
             return sparrow::next(value_begin(), std::distance(adaptor_begin(), res));
         }
 
@@ -459,15 +489,36 @@ namespace sparrow
         {
             p_proxy = &proxy;
             m_view = get_data_view();
-            m_empty_adaptor = !p_proxy->is_created_with_sparrow();
-            if (m_empty_adaptor)
+            m_adaptor = get_data_adaptor();
+        }
+
+        template <std::ranges::input_range RANGE>
+        [[nodiscard]] u8_buffer<bool> primitive_data_access<bool>::make_data_buffer(RANGE&& r)
+        {
+            auto size = static_cast<size_t>(std::ranges::distance(r));
+            auto init_func = [&r](bitset_view& v) { std::copy(r.begin(), r.end(), v.begin()); };
+            return make_data_buffer(size, init_func);
+        }
+
+        [[nodiscard]] inline u8_buffer<bool> primitive_data_access<bool>::make_data_buffer(size_t size, bool value)
+        {
+            auto init_func = [&value](bitset_view& v) { std::fill(v.begin(), v.end(), value); };
+            return make_data_buffer(size, init_func);
+        }
+
+        template <class F>
+        [[nodiscard]] inline u8_buffer<bool> primitive_data_access<bool>::make_data_buffer(size_t size, F init_func)
+        {
+            std::size_t block_nb = size / 8;
+            if (block_nb * 8 < size)
             {
-                m_adaptor = bitset_adaptor(&m_dummy_buffer, 0u);
+                ++block_nb;
             }
-            else
-            {
-                m_adaptor = get_data_adaptor();
-            }
+            u8_buffer<bool> res(block_nb);
+            std::uint8_t* buffer = reinterpret_cast<std::uint8_t*>(res.data());
+            bitset_view v(buffer, size);
+            init_func(v);
+            return res;
         }
 
         [[nodiscard]] inline size_t primitive_data_access<bool>::get_offset(size_t i) const
@@ -515,8 +566,20 @@ namespace sparrow
         [[nodiscard]] inline auto primitive_data_access<bool>::get_data_adaptor() -> bitset_adaptor
         {
             auto& proxy = get_proxy();
-            size_t size = proxy.length() + proxy.offset();
-            return bitset_adaptor(&(proxy.get_array_private_data()->buffers()[m_data_buffer_index]), size);
+            if (proxy.is_created_with_sparrow())
+            {
+                size_t size = proxy.length() + proxy.offset();
+                return bitset_adaptor(&(proxy.get_array_private_data()->buffers()[m_data_buffer_index]), size);
+            }
+            else
+            {
+                return bitset_adaptor(&m_dummy_buffer, 0u);
+            }
+        }
+
+        inline void primitive_data_access<bool>::update_data_view()
+        {
+            m_view = bitset_view(get_proxy().buffers()[m_data_buffer_index].data(), m_adaptor.size());
         }
     }
 }

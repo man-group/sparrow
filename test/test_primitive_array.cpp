@@ -34,6 +34,7 @@
 namespace sparrow
 {
     using testing_types = std::tuple<
+        bool,
         std::int8_t,
         std::uint8_t,
         std::int16_t,
@@ -63,6 +64,10 @@ namespace sparrow
                     {
                         values.push_back(make_nullable<T>(static_cast<T>(static_cast<int>(i)), i % 2));
                     }
+                    else if constexpr (std::is_same_v<T, bool>)
+                    {
+                        values.push_back(make_nullable<T>(static_cast<bool>(i%4 != 0), static_cast<bool>(i%2)));
+                    }
                     else
                     {
                         values.push_back(make_nullable<T>(static_cast<T>(i), i % 2));
@@ -74,9 +79,27 @@ namespace sparrow
             const size_t values_count = 100;
             const auto nullable_values = make_nullable_values(values_count);
 
+            /*if constexpr (std::same_as<bool, T>)
+            {
+                std::cout << "NULLABLE VALUES" << std::endl;
+                for (size_t i = 0; i < 25; i+=4)
+                {
+                    std::cout << nullable_values[i].get() << " " << nullable_values[i+1].get() << " "
+                        << nullable_values[i+2].get() << " " << nullable_values[i+3].get() << std::endl;
+                }
+            }*/
             const auto make_array = [](const std::vector<nullable<T>>& values, size_t offset = 0)
             {
                 auto arr = array_test_type(values);
+                /*if constexpr (std::same_as<bool, T>)
+                {
+                    std::cout << "ARRAY FROM VALUES" << std::endl;
+                    for (size_t i = 0; i < 25; i+=4)
+                    {
+                        std::cout << arr[i].get() << " " << arr[i+1].get() << " "
+                            << arr[i+2].get() << " " << arr[i+3].get() << std::endl;
+                    }
+                }*/
                 if (offset != 0)
                 {
                     return arr.slice(offset, arr.size());
@@ -89,6 +112,15 @@ namespace sparrow
 
             const size_t offset = 9;
             array_test_type ar = make_array(nullable_values, offset);
+                /*if constexpr (std::same_as<bool, T>)
+                {
+                    std::cout << "FINAL ARRAY" << std::endl;
+                    for (size_t i = 0; i < 25; i+=4)
+                    {
+                        std::cout << ar[i].get() << " " << ar[i+1].get() << " "
+                            << ar[i+2].get() << " " << ar[i+3].get() << std::endl;
+                    }
+                }*/
 
             SUBCASE("constructor")
             {
@@ -100,11 +132,6 @@ namespace sparrow
                 SUBCASE("const")
                 {
                     const array_test_type const_ar = make_array(nullable_values, offset);
-                    std::vector<T> values2;
-                    for (const auto& v : const_ar)
-                    {
-                        values2.push_back(v.get());
-                    }
                     REQUIRE_EQ(const_ar.size(), nullable_values.size() - offset);
                     for (size_t i = 0; i < const_ar.size(); ++i)
                     {
@@ -120,9 +147,18 @@ namespace sparrow
                         CHECK_EQ(ar[i], nullable_values[i + offset]);
                     }
 
-                    ar[1] = make_nullable<T>(99);
-                    CHECK(ar[1].has_value());
-                    CHECK_EQ(ar[1].get(), static_cast<T>(99));
+                    if constexpr (std::same_as<T, bool>)
+                    {
+                        ar[1] = make_nullable<bool>(false);
+                        CHECK(ar[1].has_value());
+                        CHECK_EQ(ar[1].get(), static_cast<bool>(false));
+                    }
+                    else
+                    {
+                        ar[1] = make_nullable<T>(99);
+                        CHECK(ar[1].has_value());
+                        CHECK_EQ(ar[1].get(), static_cast<T>(99));
+                    }
                 }
             }
 
