@@ -462,19 +462,22 @@ sparrow::array decimal_from_json(const nlohmann::json& array, const nlohmann::js
     const uint32_t scale = schema.at("type").at("scale").get<uint32_t>();
     const uint32_t byte_width = schema.at("type").at("byteWidth").get<uint32_t>();
     const std::string name = schema.at("name").get<std::string>();
-
-    // const std::vector<sparrow::int256_t> data = array.at(DATA).get<std::vector<sparrow::int128_t>>();
+    auto data_str = array.at(DATA).get<std::vector<std::string>>();
 
     if (byte_width == 32)
     {
-        return sparrow::array
-        {
-            sparrow::decimal_32_array
-            {
-            }
-        }
-    }
-};
+        auto data = data_str
+                    | std::views::transform(
+                        [](const std::string& value)
+                        {
+                            return std::stoi(value);
+                        }
+                    );
+        return sparrow::array{
+            sparrow::decimal_32_array{data, precision, scale, get_validity(array), name, get_metadata(schema)}
+        };
+    };
+}
 
 sparrow::array fixedsizebinary_from_json(const nlohmann::json& array, const nlohmann::json& schema)
 {
