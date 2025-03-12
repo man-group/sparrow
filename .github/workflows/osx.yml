@@ -21,7 +21,6 @@ jobs:
         - 13
         - 14
         - 15
-        - 16
         config:
         - { name: Debug }
         - { name: Release }
