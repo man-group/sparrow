@@ -77,7 +77,8 @@ jobs:
         -DBUILD_EXAMPLES=ON \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-        -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
+        -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
+        -DUSE_DATE_POLYFILL=ON
 
     - name: Build
       working-directory: build
