@@ -8,7 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or mplied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -215,11 +215,11 @@ sparrow::array large_list_array_from_json(const nlohmann::json& array, const nlo
     check_type(array, schema, "largelist");
     const std::string name = schema.at("name").get<std::string>();
     auto validity = get_validity(array);
-    auto offsets = array.at(OFFSET).get<std::vector<std::string_view>>()
+    auto offsets = array.at(OFFSET).get<std::vector<std::string>>()
                    | std::views::transform(
-                       [](const std::string_view offset)
+                       [](const std::string& offset)
                        {
-                           return std::stoull(std::string(offset));
+                           return std::stoull(offset);
                        }
                    );
     auto metadata = get_metadata(schema);
@@ -310,12 +310,14 @@ sparrow::array primitive_array_from_json(const nlohmann::json& array, const nloh
             }
             case 64:
             {
-                sparrow::primitive_array<int64_t> ar{
-                    array.at(DATA).get<std::vector<int64_t>>(),
-                    std::move(validity),
-                    name,
-                    std::move(metadata)
-                };
+                auto data = array.at(DATA).get<std::vector<std::string>>()
+                            | std::views::transform(
+                                [](const std::string& str)
+                                {
+                                    return std::stoll(std::string(str));
+                                }
+                            );
+                sparrow::primitive_array<int64_t> ar{data, std::move(validity), name, std::move(metadata)};
                 return sparrow::array{std::move(ar)};
             }
             default:
@@ -358,17 +360,34 @@ sparrow::array primitive_array_from_json(const nlohmann::json& array, const nloh
             }
             case 64:
             {
-                sparrow::primitive_array<uint64_t> ar{
-                    array.at(DATA).get<std::vector<uint64_t>>(),
-                    std::move(validity),
-                    name,
-                    std::move(metadata)
-                };
-                return sparrow::array{};
+                auto data = array.at(DATA).get<std::vector<std::string>>()
+                            | std::views::transform(
+                                [](const std::string& str)
+                                {
+                                    return std::stoull(str);
+                                }
+                            );
+                sparrow::primitive_array<uint64_t> ar{data, std::move(validity), name, std::move(metadata)};
+                return sparrow::array{std::move(ar)};
             }
         }
     }
     throw std::runtime_error("Invalid bit width or signedness");
+}
+
+sparrow::array bool_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
+{
+    check_type(array, schema, "bool");
+    const std::string name = schema.at("name").get<std::string>();
+    auto validity = get_validity(array);
+    auto metadata = get_metadata(schema);
+    sparrow::primitive_array<bool> ar{
+        array.at(DATA).get<std::vector<bool>>(),
+        std::move(validity),
+        name,
+        std::move(metadata)
+    };
+    return sparrow::array{std::move(ar)};
 }
 
 sparrow::array floating_point_from_json(const nlohmann::json& array, const nlohmann::json& schema)
@@ -474,7 +493,7 @@ sparrow::array decimal_from_json(const nlohmann::json& array, const nlohmann::js
                         }
                     );
         return sparrow::array{
-            sparrow::decimal_32_array{data, precision, scale, get_validity(array), name, get_metadata(schema)}
+            sparrow::decimal_32_array{data, get_validity(array), precision, scale, name, get_metadata(schema)}
         };
     };
 }
@@ -484,7 +503,8 @@ sparrow::array fixedsizebinary_from_json(const nlohmann::json& array, const nloh
     check_type(array, schema, "fixedsizebinary");
     const std::string name = schema.at("name").get<std::string>();
     const std::size_t byte_width = schema.at("type").at("byteWidth").get<std::size_t>();
-    auto data = array.at(DATA).get<std::vector<std::vector<uint8_t>>>();
+    auto data_str = array.at(DATA).get<std::vector<std::string>>();
+    auto data = hexStringsToBytes(data_str);
     auto metadata = get_metadata(schema);
     if (data.empty())
     {
@@ -970,7 +990,7 @@ const std::unordered_map<std::string, array_builder_function> array_builders{
     {"utf8view", string_view_from_json},
     // {"binaryview", binary_array_from_json},
     {"fixedsizebinary", fixedsizebinary_from_json},
-    // {"bool", primitive_array_from_json},
+    {"bool", bool_array_from_json},
     {"decimal", decimal_from_json},
     {"date", date_array_from_json},
     {"time", time_array_from_json},
