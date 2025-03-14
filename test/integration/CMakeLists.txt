@@ -22,9 +22,11 @@ endif()
 
 find_package(doctest REQUIRED)
 
-add_library(c_data_integration SHARED
+add_library(c_data_integration STATIC
     c_data_integration.cpp
     c_data_integration.hpp)
+
+target_compile_definitions(c_data_integration PRIVATE SPARROW_EXPORTS)
 
 target_link_libraries(c_data_integration
     PUBLIC
@@ -37,6 +39,8 @@ target_link_libraries(test_c_data_integration
     PRIVATE
         c_data_integration
         doctest::doctest)
+
+     
 
 target_compile_definitions(test_c_data_integration
     PRIVATE
