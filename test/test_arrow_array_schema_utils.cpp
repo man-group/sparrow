@@ -20,7 +20,6 @@
 
 #include "doctest/doctest.h"
 
-
 TEST_SUITE("C Data Interface")
 {
     TEST_CASE("Arrow Array and schema utils")

@@ -25,7 +25,6 @@
 #include "doctest/doctest.h"
 #include "metadata_sample.hpp"
 
-
 TEST_SUITE("ArrowArrowSchemaProxy")
 {
     TEST_CASE("constructors")

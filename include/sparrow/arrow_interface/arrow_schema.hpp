@@ -24,7 +24,6 @@
 #include "sparrow/utils/repeat_container.hpp"
 
 
-
 #if defined(__cpp_lib_format)
 #    include <format>
 #    include <ostream>
