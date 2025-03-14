@@ -431,48 +431,6 @@ sparrow::array floating_point_from_json(const nlohmann::json& array, const nlohm
     throw std::runtime_error("Invalid precision");
 }
 
-// sparrow::int128_t string_to_int128(const std::string& str)
-// {
-//     if (str.empty())
-//     {
-//         throw std::invalid_argument("Empty string");
-//     }
-
-//     // Handle negative numbers
-//     bool negative = str[0] == '-';
-//     size_t start_idx = negative ? 1 : 0;
-
-//     if (start_idx >= str.length())
-//     {
-//         throw std::invalid_argument("Invalid number format");
-//     }
-
-//     sparrow::int128_t result = 0;
-//     for (size_t i = start_idx; i < str.length(); ++i)
-//     {
-//         if (!std::isdigit(str[i]))
-//         {
-//             throw std::invalid_argument("Invalid character in string");
-//         }
-
-//         // Check for overflow before multiplying
-//         if (result > (sparrow::int128_t)((std::numeric_limits<sparrow::int128_t>::max)() / 10))
-//         {
-//             throw std::overflow_error("Number too large for int128_t");
-//         }
-
-//         result = result * 10 + (str[i] - '0');
-
-//         // Check for overflow after adding
-//         if (result < 0)
-//         {
-//             throw std::overflow_error("Number too large for int128_t");
-//         }
-//     }
-
-//     return negative ? -result : result;
-// }
-
 sparrow::array decimal_from_json(const nlohmann::json& array, const nlohmann::json& schema)
 {
     check_type(array, schema, "decimal");
@@ -799,6 +757,23 @@ sparrow::array timestamp_array_from_json(const nlohmann::json& array, const nloh
     }
 }
 
+sparrow::array fixed_size_list_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
+{
+    check_type(array, schema, "fixedsizelist");
+    const std::string name = schema.at("name").get<std::string>();
+    const size_t list_size = schema.at("type").at("listSize").get<size_t>();
+    auto validity = get_validity(array);
+    auto metadata = get_metadata(schema);
+    sparrow::fixed_sized_list_array ar{
+        list_size,
+        std::move(get_children_arrays(array, schema)[0]),
+        std::move(validity),
+        name,
+        std::move(metadata)
+    };
+    return sparrow::array{std::move(ar)};
+}
+
 sparrow::array duration_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
 {
     check_type(array, schema, "duration");
@@ -1040,6 +1015,7 @@ const std::unordered_map<std::string, array_builder_function> array_builders{
     {"interval", interval_array_from_json},
     {"duration", duration_array_from_json},
     {"sparse_union", sparse_union_array_from_json},
+    {"fixedsizelist", fixed_size_list_array_from_json},
     // {"runendencoded", runendencoded_array_from_json},
 };
 
