@@ -154,7 +154,27 @@ if (USE_DATE_POLYFILL)
     list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_USE_DATE_POLYFILL)
 endif()
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if(WIN32)
+        cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH COMPILER_PATH)
+        cmake_path(GET COMPILER_PATH PARENT_PATH COMPILER_PATH)
+        set(WINDOWS_CLANG_RT_LIBRARIES_PATH "${COMPILER_PATH}/lib/clang/")
+        file(GLOB_RECURSE FOUND_FILES "${WINDOWS_CLANG_RT_LIBRARIES_PATH}/clang_rt.builtins*")
+        if(NOT FOUND_FILES)
+            message(FATAL_ERROR "clang_rt.builtins not found in ${WINDOWS_CLANG_RT_LIBRARIES_PATH}")
+        endif()
+        list(GET FOUND_FILES 0 CLANG_RT_BUILTINS_PATH)
+    
 
+        find_library(CLANG_RT_LIBRARIES
+            "clang_rt.builtins"
+            REQUIRED
+            PATH
+            CLANG_RT_BUILTINS_PATH)
+
+        list(APPEND SPARROW_INTERFACE_DEPENDENCIES ${CLANG_RT_LIBRARIES})
+    endif()
+endif()
 
 if(USE_LARGE_INT_PLACEHOLDERS)
     message(STATUS "Using large int placeholders")
@@ -331,6 +351,10 @@ target_link_libraries(sparrow PUBLIC ${SPARROW_INTERFACE_DEPENDENCIES})
 if(ENABLE_COVERAGE)
     enable_coverage(sparrow)
 endif()
+
+# target_link_options(sparrow PUBLIC
+#     --rtlib=compiler-rt
+# )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND WIN32)
     target_compile_options(sparrow

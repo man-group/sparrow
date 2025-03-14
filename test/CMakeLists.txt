@@ -42,43 +42,49 @@ if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE 
     include(FetchContent)
 
     if(NOT doctest_FOUND)
-        message(STATUS "📦 Fetching doctest v2.4.11")
+        set(DOCTEST_VERSION "v2.4.11")
+        message(STATUS "📦 Fetching doctest ${DOCTEST_VERSION}")
         FetchContent_Declare(
             doctest
             GIT_SHALLOW TRUE
             GIT_REPOSITORY https://github.com/doctest/doctest.git
-            GIT_TAG v2.4.11
+            GIT_TAG ${DOCTEST_VERSION}
             GIT_PROGRESS TRUE
             SYSTEM
             EXCLUDE_FROM_ALL)
         FetchContent_MakeAvailable(doctest)
+        message(STATUS "\t✅ Fetched doctest ${DOCTEST_VERSION}")
     endif()
 
-    # if(NOT Catch2_FOUND)
-    #     message(STATUS "📦 Fetching Catch2 v3.7.1")
-    #     FetchContent_Declare(
-    #         Catch2
-    #         GIT_SHALLOW TRUE
-    #         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    #         GIT_TAG v3.7.1
-    #         GIT_PROGRESS TRUE
-    #         SYSTEM
-    #         EXCLUDE_FROM_ALL)
-    #     FetchContent_MakeAvailable(Catch2)
-    # endif()
+    if(NOT Catch2_FOUND)
+        set(CATCH2_VERSION "v3.7.1")
+        message(STATUS "📦 Fetching Catch2 ${CATCH2_VERSION}")
+        FetchContent_Declare(
+            Catch2
+            GIT_SHALLOW TRUE
+            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+            GIT_TAG ${CATCH2_VERSION}
+            GIT_PROGRESS TRUE
+            SYSTEM
+            EXCLUDE_FROM_ALL)
+        FetchContent_MakeAvailable(Catch2)
+        message(STATUS "\t✅ Fetched Catch2 ${CATCH2_VERSION}")
+    endif()
 
     if(NOT nanoarrow_FOUND)
-        message(STATUS "📦 Fetching nanoarrow 0.6")
+        set(NANOARROW_VERSION "0.6.0")
+        message(STATUS "📦 Fetching nanoarrow ${NANOARROW_VERSION}")
         FetchContent_Declare(
             nanoarrow
             GIT_SHALLOW TRUE
             GIT_REPOSITORY https://github.com/apache/arrow-nanoarrow.git
-            GIT_TAG apache-arrow-nanoarrow-0.6.0
+            GIT_TAG apache-arrow-nanoarrow-${NANOARROW_VERSION}
             GIT_PROGRESS TRUE
             SYSTEM
             EXCLUDE_FROM_ALL)
         FetchContent_MakeAvailable(nanoarrow)
         target_compile_options(nanoarrow PRIVATE -w)
+        message(STATUS "\t✅ Fetched nanoarrow ${NANOARROW_VERSION}")
     endif()
 endif()
 
@@ -331,4 +337,9 @@ add_custom_target(run_tests_with_junit_report
 )
 
 set_target_properties(run_tests_with_junit_report PROPERTIES FOLDER "Tests utilities")
-    
+
+
+OPTION(ENABLE_INTEGRATION_TEST "Enable integration tests" ON)
+if(ENABLE_INTEGRATION_TEST)
+    add_subdirectory(integration)
+endif()

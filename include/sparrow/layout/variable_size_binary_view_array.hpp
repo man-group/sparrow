@@ -141,7 +141,10 @@ namespace sparrow
 
     private:
 
-        template <std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap, input_metadata_container METADATA_RANGE>
+        template <
+            std::ranges::input_range R,
+            validity_bitmap_input VB = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         [[nodiscard]] static arrow_proxy create_proxy(
             R&& range,
