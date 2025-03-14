@@ -164,15 +164,16 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
             message(FATAL_ERROR "clang_rt.builtins not found in ${WINDOWS_CLANG_RT_LIBRARIES_PATH}")
         endif()
         list(GET FOUND_FILES 0 CLANG_RT_BUILTINS_PATH)
+    
+
+        find_library(CLANG_RT_LIBRARIES
+            "clang_rt.builtins"
+            REQUIRED
+            PATH
+            CLANG_RT_BUILTINS_PATH)
+
+        list(APPEND SPARROW_INTERFACE_DEPENDENCIES ${CLANG_RT_LIBRARIES})
     endif()
-
-    find_library(CLANG_RT_LIBRARIES
-        "clang_rt.builtins"
-        REQUIRED
-        PATH
-        CLANG_RT_BUILTINS_PATH)
-
-    list(APPEND SPARROW_INTERFACE_DEPENDENCIES ${CLANG_RT_LIBRARIES})
 endif()
 
 if(USE_LARGE_INT_PLACEHOLDERS)
