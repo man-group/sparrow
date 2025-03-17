@@ -212,8 +212,9 @@ namespace sparrow
 
         template <typename T>
         concept all_elements_same = tuple_like<T>
-                                    && all_elements_same_impl<T>(std::make_index_sequence<std::tuple_size_v<T>>{
-                                    });
+                                    && all_elements_same_impl<T>(
+                                        std::make_index_sequence<std::tuple_size_v<T>>{}
+                                    );
 
         template <class T>
         struct maybe_nullable_value_type
@@ -322,7 +323,10 @@ namespace sparrow
         }
 
         template <class T>
-            requires(is_express_layout_desire<std::ranges::range_value_t<T>> && is_nullable_like<typename std::ranges::range_value_t<T>::value_type>)
+            requires(
+                is_express_layout_desire<std::ranges::range_value_t<T>>
+                && is_nullable_like<typename std::ranges::range_value_t<T>::value_type>
+            )
         [[nodiscard]] std::vector<std::size_t> where_null(T&& t)
         {
             std::vector<std::size_t> result;

@@ -47,7 +47,9 @@ namespace sparrow
 
         static_assert(is_binary_array_v<layout_type>);
         static_assert(std::same_as<layout_type::inner_value_type, value_type>);
-        static_assert(std::same_as<layout_type::inner_reference, sparrow::variable_size_binary_reference<layout_type>>);
+        static_assert(
+            std::same_as<layout_type::inner_reference, sparrow::variable_size_binary_reference<layout_type>>
+        );
         static_assert(std::same_as<layout_type::inner_const_reference, const_reference>);
         using const_value_iterator = layout_type::const_value_iterator;
         static_assert(std::same_as<const_value_iterator::value_type, value_type>);
