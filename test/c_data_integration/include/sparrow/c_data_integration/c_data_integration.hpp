@@ -18,8 +18,11 @@
 
 #include "sparrow/c_data_integration/config.hpp"
 
-namespace sparrow::c_data_integration
+#ifdef __cplusplus
+extern "C"
 {
+#endif
+
     SPARROW_C_DATA_INTEGRATION_API const char*
     nanoarrow_CDataIntegration_ExportSchemaFromJson(const char* json_path, ArrowSchema* out);
 
@@ -33,4 +36,7 @@ namespace sparrow::c_data_integration
     nanoarrow_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, int num_batch, ArrowArray* batch);
 
     SPARROW_C_DATA_INTEGRATION_API int64_t nanoarrow_BytesAllocated();
+
+#ifdef __cplusplus
 }
+#endif
