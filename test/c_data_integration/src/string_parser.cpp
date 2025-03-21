@@ -20,9 +20,9 @@
 namespace sparrow::c_data_integration
 {
     sparrow::array
-    string_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    string_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "utf8");
+        utils::check_type(schema, "utf8");
         const std::string name = schema.at("name").get<std::string>();
         auto data = array.at(DATA).get<std::vector<std::string>>();
         auto validity = utils::get_validity(array);
@@ -33,9 +33,9 @@ namespace sparrow::c_data_integration
     }
 
     sparrow::array
-    big_string_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    big_string_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "largeutf8");
+        utils::check_type(schema, "largeutf8");
         const std::string name = schema.at("name").get<std::string>();
         auto data = array.at(DATA).get<std::vector<std::string>>();
         auto validity = utils::get_validity(array);

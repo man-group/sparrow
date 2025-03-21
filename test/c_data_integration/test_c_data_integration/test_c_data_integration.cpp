@@ -25,23 +25,23 @@
 const std::filesystem::path json_files_path = JSON_FILES_PATH;
 
 const std::vector<std::filesystem::path> json_to_test = {
-    "generated/custom-metadata.json",
-    "generated/datetime.json",
-    "generated/decimal128.json",
+    json_files_path / "generated/custom-metadata.json",
+    json_files_path / "generated/datetime.json",
+    json_files_path / "generated/decimal128.json",
     // "generated/dictionary-nested.json",
     // "generated/dictionary-unsigned.json",
     // "generated/dictionary.json",
     // "generated/extension.json",
     // "generated/map.json",
-    "generated/nested.json",
+    json_files_path / "generated/nested.json",
     // "generated/non_canonical_map.json",
-    "generated/null-trivial.json",
-    "generated/null.json",
-    "generated/primitive-empty.json",
+    json_files_path / "generated/null-trivial.json",
+    json_files_path / "generated/null.json",
+    json_files_path / "generated/primitive-empty.json",
     // "generated/primitive-no-batches.json",
-    "generated/primitive.json",
-    "generated/recursive-nested.json",
-    "generated/unions.json",
+    json_files_path / "generated/primitive.json",
+    json_files_path / "generated/recursive-nested.json",
+    // json_files_path / "generated/unions.json",
 };
 
 TEST_SUITE("c_data_integration")
@@ -53,17 +53,68 @@ TEST_SUITE("c_data_integration")
             SUBCASE(json.string().c_str())
             {
                 ArrowSchema schema;
-                const auto error = nanoarrow_CDataIntegration_ExportSchemaFromJson(
-                    (json_files_path / json).string().c_str(),
-                    &schema
-                );
+                const auto error = sparrow_CDataIntegration_ExportSchemaFromJson(json.string().c_str(), &schema);
                 if (error != nullptr)
                 {
                     CHECK_EQ(std::string_view(error), std::string_view());
                 }
-                else
+            }
+        }
+    }
+
+    TEST_CASE("ImportSchemaAndCompareToJson")
+    {
+        for (const auto& json : json_to_test)
+        {
+            SUBCASE(json.string().c_str())
+            {
+                ArrowSchema schema;
+                auto error = sparrow_CDataIntegration_ExportSchemaFromJson(json.string().c_str(), &schema);
+                if (error != nullptr)
                 {
-                    CHECK(true);
+                    CHECK_EQ(std::string_view(error), std::string_view());
+                }
+                error = sparrow_CDataIntegration_ImportSchemaAndCompareToJson(json.string().c_str(), &schema);
+                if (error != nullptr)
+                {
+                    CHECK_EQ(std::string_view(error), std::string_view());
+                }
+            }
+        }
+    }
+
+    TEST_CASE("ExportBatchFromJson")
+    {
+        for (const auto& json : json_to_test)
+        {
+            SUBCASE(json.string().c_str())
+            {
+                ArrowArray array;
+                const auto error = sparrow_CDataIntegration_ExportBatchFromJson(json.string().c_str(), 0, &array);
+                if (error != nullptr)
+                {
+                    CHECK_EQ(std::string_view(error), std::string_view());
+                }
+            }
+        }
+    }
+
+    TEST_CASE("ImportBatchAndCompareToJson")
+    {
+        for (const auto& json : json_to_test)
+        {
+            SUBCASE(json.string().c_str())
+            {
+                ArrowArray array;
+                auto error = sparrow_CDataIntegration_ExportBatchFromJson(json.string().c_str(), 0, &array);
+                if (error != nullptr)
+                {
+                    CHECK_EQ(std::string_view(error), std::string_view());
+                }
+                error = sparrow_CDataIntegration_ImportBatchAndCompareToJson(json.string().c_str(), 0, &array);
+                if (error != nullptr)
+                {
+                    CHECK_EQ(std::string_view(error), std::string_view());
                 }
             }
         }

@@ -26,7 +26,7 @@ namespace sparrow::c_data_integration
         const nlohmann::json& root
     )
     {
-        utils::check_type(array, schema, "fixedsizelist");
+        utils::check_type(schema, "fixedsizelist");
         const std::string name = schema.at("name").get<std::string>();
         const size_t list_size = schema.at("type").at("listSize").get<size_t>();
         auto validity = utils::get_validity(array);

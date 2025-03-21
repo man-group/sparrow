@@ -17,7 +17,7 @@
 namespace sparrow::c_data_integration
 {
     sparrow::array
-    list_view_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    list_view_array_from_json(const nlohmann::json&, const nlohmann::json&, const nlohmann::json&)
     {
         // check_type(array, schema, "listview");
         // const std::string name = schema.at("name").get<std::string>();
@@ -33,11 +33,8 @@ namespace sparrow::c_data_integration
         throw std::runtime_error("list_view_array_from_json not implemented");
     }
 
-    sparrow::array large_list_view_array_from_json(
-        const nlohmann::json& array,
-        const nlohmann::json& schema,
-        const nlohmann::json& root
-    )
+    sparrow::array
+    large_list_view_array_from_json(const nlohmann::json&, const nlohmann::json&, const nlohmann::json&)
     {
         // check_type(array, schema, "largelistview");
         // const std::string name = schema.at("name").get<std::string>();

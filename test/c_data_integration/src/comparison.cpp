@@ -25,17 +25,24 @@ namespace sparrow::c_data_integration
         {
             return prefix + " is null";
         }
+
         if (std::strcmp(schema->format, schema_from_json->format) != 0)
         {
             return prefix + " format mismatch: " + schema->format + " vs " + schema_from_json->format;
         }
-        if (std::strcmp(schema->name, schema_from_json->name) != 0)
+        if (schema->name != nullptr && schema_from_json->name == nullptr)
         {
-            return prefix + " name mismatch: " + schema->name + " vs " + schema_from_json->name;
+            if (std::strcmp(schema->name, schema_from_json->name) != 0)
+            {
+                return prefix + " name mismatch: " + schema->name + " vs " + schema_from_json->name;
+            }
         }
-        if (std::strcmp(schema->metadata, schema_from_json->metadata) != 0)
+        if (schema->metadata != nullptr && schema_from_json->metadata == nullptr)
         {
-            return prefix + " metadata mismatch: " + schema->metadata + " vs " + schema_from_json->metadata;
+            if (std::strcmp(schema->metadata, schema_from_json->metadata) != 0)
+            {
+                return prefix + " metadata mismatch: " + schema->metadata + " vs " + schema_from_json->metadata;
+            }
         }
         if (schema->flags != schema_from_json->flags)
         {
@@ -47,7 +54,7 @@ namespace sparrow::c_data_integration
             return prefix + " children count mismatch: " + std::to_string(schema->n_children) + " vs "
                    + std::to_string(schema_from_json->n_children);
         }
-        for (size_t i = 0; i < schema->n_children; ++i)
+        for (int64_t i = 0; i < schema->n_children; ++i)
         {
             const auto child_schema = schema->children[i];
             const auto child_schema_from_json = schema_from_json->children[i];
@@ -106,7 +113,7 @@ namespace sparrow::c_data_integration
                    + std::to_string(array_from_json->n_children);
         }
 
-        for (size_t i = 0; i < array->n_children; ++i)
+        for (int64_t i = 0; i < array->n_children; ++i)
         {
             const auto child_array = array->children[i];
             const auto child_array_from_json = array_from_json->children[i];

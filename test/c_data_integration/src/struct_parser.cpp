@@ -22,7 +22,7 @@ namespace sparrow::c_data_integration
     sparrow::array
     struct_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
-        utils::check_type(array, schema, "struct");
+        utils::check_type(schema, "struct");
         const std::string name = schema.at("name").get<std::string>();
         auto validity = utils::get_validity(array);
         auto metadata = utils::get_metadata(schema);

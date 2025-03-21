@@ -20,12 +20,12 @@
 namespace sparrow::c_data_integration
 {
     sparrow::array
-    decimal_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    decimal_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "decimal");
+        utils::check_type(schema, "decimal");
         const std::string name = schema.at("name").get<std::string>();
         const uint32_t precision = schema.at("type").at("precision").get<uint32_t>();
-        const uint32_t scale = schema.at("type").at("scale").get<uint32_t>();
+        const int32_t scale = schema.at("type").at("scale").get<int32_t>();
         const uint32_t byte_width = schema.at("type").at("bitWidth").get<uint32_t>();
         auto data_str = array.at(DATA).get<std::vector<std::string>>();
         auto metadata = utils::get_metadata(schema);

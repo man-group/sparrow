@@ -20,9 +20,9 @@
 namespace sparrow::c_data_integration
 {
     sparrow::array
-    binary_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    binary_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "binary");
+        utils::check_type(schema, "binary");
         const std::string name = schema.at("name").get<std::string>();
         auto data_str = array.at(DATA).get<std::vector<std::string>>();
         auto data = utils::hexStringsToBytes(data_str);

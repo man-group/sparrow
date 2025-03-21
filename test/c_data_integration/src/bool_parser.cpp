@@ -20,9 +20,9 @@
 namespace sparrow::c_data_integration
 {
     sparrow::array
-    bool_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    bool_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "bool");
+        utils::check_type(schema, "bool");
         const std::string name = schema.at("name").get<std::string>();
         auto validity = utils::get_validity(array);
         auto metadata = utils::get_metadata(schema);

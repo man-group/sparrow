@@ -1,3 +1,5 @@
+include(compiles_options)
+
 if(NOT FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
     find_package(nlohmann_json ${FIND_PACKAGE_OPTIONS})
 endif()
@@ -64,6 +66,11 @@ add_library(c_data_integration SHARED
     include/sparrow/c_data_integration/union_parser.hpp
     include/sparrow/c_data_integration/utils.hpp
     )
+
+target_compile_options(c_data_integration
+    PRIVATE
+        ${compiles_options}
+)
 
 target_compile_definitions(c_data_integration
     PRIVATE

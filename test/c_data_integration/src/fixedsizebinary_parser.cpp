@@ -20,9 +20,9 @@
 namespace sparrow::c_data_integration
 {
     sparrow::array
-    fixedsizebinary_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    fixedsizebinary_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "fixedsizebinary");
+        utils::check_type(schema, "fixedsizebinary");
         const std::string name = schema.at("name").get<std::string>();
         const std::size_t byte_width = schema.at("type").at("byteWidth").get<std::size_t>();
         auto data_str = array.at(DATA).get<std::vector<std::string>>();

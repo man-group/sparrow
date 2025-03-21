@@ -21,9 +21,9 @@ namespace sparrow::c_data_integration
 {
 
     sparrow::array
-    date_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    date_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "date");
+        utils::check_type(schema, "date");
         const std::string name = schema.at("name").get<std::string>();
         const std::string unit = schema.at("type").at("unit").get<std::string>();
         auto validity = utils::get_validity(array);
@@ -60,14 +60,14 @@ namespace sparrow::c_data_integration
         }
         else
         {
-            throw std::runtime_error("Invalid unit");
+            throw std::runtime_error("Invalid unit: " + unit);
         }
     }
 
     sparrow::array
-    time_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    time_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "time");
+        utils::check_type(schema, "time");
         const std::string name = schema.at("name").get<std::string>();
         const std::string unit = schema.at("type").at("unit").get<std::string>();
 
@@ -100,13 +100,8 @@ namespace sparrow::c_data_integration
         }
         else if (unit == "MICROSECOND")
         {
-            auto values = array.at(DATA).get<std::vector<std::string>>()
-                          | std::views::transform(
-                              [](const std::string& value)
-                              {
-                                  return std::stoll(value);
-                              }
-                          )
+            auto values_str = array.at(DATA).get<std::vector<std::string>>();
+            auto values = utils::from_strings_to_Is<int64_t>(values_str)
                           | std::views::transform(
                               [](int64_t value)
                               {
@@ -118,13 +113,8 @@ namespace sparrow::c_data_integration
         }
         else if (unit == "NANOSECOND")
         {
-            auto values = array.at(DATA).get<std::vector<std::string>>()
-                          | std::views::transform(
-                              [](const std::string& value)
-                              {
-                                  return std::stoll(value);
-                              }
-                          )
+            auto values_str = array.at(DATA).get<std::vector<std::string>>();
+            auto values = utils::from_strings_to_Is<int64_t>(values_str)
                           | std::views::transform(
                               [](int64_t value)
                               {
@@ -136,14 +126,14 @@ namespace sparrow::c_data_integration
         }
         else
         {
-            throw std::runtime_error("Invalid unit");
+            throw std::runtime_error("Invalid unit: " + unit);
         }
     }
 
     sparrow::array
-    timestamp_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    timestamp_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "timestamp");
+        utils::check_type(schema, "timestamp");
         const std::string name = schema.at("name").get<std::string>();
         const std::string unit = schema.at("type").at("unit").get<std::string>();
         std::optional<std::string> timezone;
@@ -214,17 +204,18 @@ namespace sparrow::c_data_integration
         }
         else
         {
-            throw std::runtime_error("Invalid unit");
+            throw std::runtime_error("Invalid unit: " + unit);
         }
     }
 
     sparrow::array
-    duration_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    duration_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "duration");
+        utils::check_type(schema, "duration");
         const std::string name = schema.at("name").get<std::string>();
         const std::string unit = schema.at("type").at("unit").get<std::string>();
-        auto data = array.at(DATA).get<std::vector<int64_t>>();
+        auto data_str = array.at(DATA).get<std::vector<std::string>>();
+        auto data = utils::from_strings_to_Is<int64_t>(data_str);
         auto validity = utils::get_validity(array);
         auto metadata = utils::get_metadata(schema);
         if (unit == "SECOND")
@@ -292,22 +283,24 @@ namespace sparrow::c_data_integration
         }
         else
         {
-            throw std::runtime_error("Invalid unit");
+            throw std::runtime_error("Invalid unit: " + unit);
         }
     }
 
     sparrow::array
-    interval_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    interval_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "interval");
+        utils::check_type(schema, "interval");
         const std::string name = schema.at("name").get<std::string>();
         const std::string unit = schema.at("type").at("unit").get<std::string>();
 
         auto validity = utils::get_validity(array);
         auto metadata = utils::get_metadata(schema);
+
         if (unit == "YEAR_MONTH")
         {
-            auto values = array.at(DATA).get<std::vector<int32_t>>()
+            auto data = array.at(DATA).get<std::vector<int32_t>>();
+            auto values = data
                           | std::views::transform(
                               [](int64_t value)
                               {
@@ -334,7 +327,7 @@ namespace sparrow::c_data_integration
         }
         else
         {
-            throw std::runtime_error("Invalid unit");
+            throw std::runtime_error("Invalid unit: " + unit);
         }
     }
 }

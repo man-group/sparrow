@@ -24,18 +24,18 @@ extern "C"
 #endif
 
     SPARROW_C_DATA_INTEGRATION_API const char*
-    nanoarrow_CDataIntegration_ExportSchemaFromJson(const char* json_path, ArrowSchema* out);
+    sparrow_CDataIntegration_ExportSchemaFromJson(const char* json_path, ArrowSchema* out);
 
     SPARROW_C_DATA_INTEGRATION_API const char*
-    nanoarrow_CDataIntegration_ImportSchemaAndCompareToJson(const char* json_path, ArrowSchema* schema);
+    sparrow_CDataIntegration_ImportSchemaAndCompareToJson(const char* json_path, ArrowSchema* schema);
 
     SPARROW_C_DATA_INTEGRATION_API const char*
-    nanoarrow_CDataIntegration_ExportBatchFromJson(const char* json_path, int num_batch, ArrowArray* out);
+    sparrow_CDataIntegration_ExportBatchFromJson(const char* json_path, int num_batch, ArrowArray* out);
 
     SPARROW_C_DATA_INTEGRATION_API const char*
-    nanoarrow_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, int num_batch, ArrowArray* batch);
+    sparrow_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, int num_batch, ArrowArray* batch);
 
-    SPARROW_C_DATA_INTEGRATION_API int64_t nanoarrow_BytesAllocated();
+    SPARROW_C_DATA_INTEGRATION_API int64_t sparrow_BytesAllocated();
 
 #ifdef __cplusplus
 }

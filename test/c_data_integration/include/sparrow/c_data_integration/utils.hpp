@@ -32,7 +32,7 @@ namespace sparrow::c_data_integration::utils
 
     std::vector<bool> get_validity(const nlohmann::json& array);
 
-    void check_type(const nlohmann::json& array, const nlohmann::json& schema, const std::string& type);
+    void check_type(const nlohmann::json& schema, const std::string& type);
 
     std::optional<std::vector<sparrow::metadata_pair>> get_metadata(const nlohmann::json& schema);
 

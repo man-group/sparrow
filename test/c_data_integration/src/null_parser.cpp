@@ -19,9 +19,9 @@
 namespace sparrow::c_data_integration
 {
     sparrow::array
-    null_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    null_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "null");
+        utils::check_type(schema, "null");
         const std::string name = schema.at("name").get<std::string>();
         const std::size_t count = array.at("count").get<std::size_t>();
         auto metadata = utils::get_metadata(schema);

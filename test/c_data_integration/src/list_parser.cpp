@@ -23,7 +23,7 @@ namespace sparrow::c_data_integration
     sparrow::array
     list_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
-        utils::check_type(array, schema, "list");
+        utils::check_type(schema, "list");
         const std::string name = schema.at("name").get<std::string>();
         auto validity = utils::get_validity(array);
         auto offsets = array.at(OFFSET).get<std::vector<int32_t>>();
@@ -41,7 +41,7 @@ namespace sparrow::c_data_integration
     sparrow::array
     large_list_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
-        utils::check_type(array, schema, "largelist");
+        utils::check_type(schema, "largelist");
         const std::string name = schema.at("name").get<std::string>();
         auto validity = utils::get_validity(array);
         const auto& offsets_str = array.at(OFFSET).get<std::vector<std::string>>();

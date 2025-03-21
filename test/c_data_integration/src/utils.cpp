@@ -97,7 +97,6 @@ namespace sparrow::c_data_integration::utils
 
     std::vector<bool> get_validity(const nlohmann::json& array)
     {
-        std::cout << array << "\n";
         if (!array.contains(VALIDITY))
         {
             throw std::runtime_error("Validity not found in array");
@@ -113,12 +112,12 @@ namespace sparrow::c_data_integration::utils
         return std::vector<bool>(validity_range.begin(), validity_range.end());
     }
 
-    void check_type(const nlohmann::json& array, const nlohmann::json& schema, const std::string& type)
+    void check_type(const nlohmann::json& schema, const std::string& type)
     {
         const std::string schema_type = schema.at("type").at("name").get<std::string>();
         if (schema_type != type)
         {
-            throw std::runtime_error("Invalid type");
+            throw std::runtime_error("Not expected type: " + schema_type + ", expected: " + type);
         }
     }
 

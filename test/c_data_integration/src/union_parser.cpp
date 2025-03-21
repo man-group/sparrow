@@ -23,7 +23,7 @@ namespace sparrow::c_data_integration
     sparrow::array
     sparse_union_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
-        utils::check_type(array, schema, "union");
+        utils::check_type(schema, "union");
         const std::string mode = schema.at("type").at("mode").get<std::string>();
         if (mode != "SPARSE")
         {
@@ -32,15 +32,22 @@ namespace sparrow::c_data_integration
         const std::string name = schema.at("name").get<std::string>();
         auto metadata = utils::get_metadata(schema);
         auto type_ids_values = schema.at("type").at("typeIds").get<std::vector<uint8_t>>();
-        const sparrow::sparse_union_array::type_id_buffer_type type_ids{std::move(type_ids_values)};
+        sparrow::sparse_union_array::type_id_buffer_type type_ids{std::move(type_ids_values)};
         auto children = get_children_arrays(array, schema, root);
-        return sparrow::array{sparrow::sparse_union_array{std::move(children), std::vector<std::uint8_t>{}}};
+        std::vector<std::uint8_t> type_mapping{};
+        return sparrow::array{sparrow::sparse_union_array{
+            std::move(children),
+            std::move(type_ids),
+            std::move(type_mapping),
+            name,
+            std::move(metadata)
+        }};
     }
 
     sparrow::array
     dense_union_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
-        utils::check_type(array, schema, "union");
+        utils::check_type(schema, "union");
         const std::string mode = schema.at("type").at("mode").get<std::string>();
         if (mode != "DENSE")
         {
@@ -58,14 +65,16 @@ namespace sparrow::c_data_integration
             std::move(children),
             std::move(type_ids),
             std::move(offsets),
-            std::move(child_index_to_type_id)
+            std::move(child_index_to_type_id),
+            name,
+            std::move(metadata)
         }};
     }
 
     sparrow::array
     union_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
-        utils::check_type(array, schema, "union");
+        utils::check_type(schema, "union");
         const std::string mode = schema.at("type").at("mode").get<std::string>();
         if (mode == "DENSE")
         {

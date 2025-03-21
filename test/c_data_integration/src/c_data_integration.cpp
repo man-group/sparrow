@@ -32,7 +32,7 @@
 
 static std::string global_error;
 
-const char* nanoarrow_CDataIntegration_ExportSchemaFromJson(const char* json_path, ArrowSchema* out)
+const char* sparrow_CDataIntegration_ExportSchemaFromJson(const char* json_path, ArrowSchema* out)
 {
     try
     {
@@ -53,7 +53,7 @@ const char* nanoarrow_CDataIntegration_ExportSchemaFromJson(const char* json_pat
     return nullptr;
 }
 
-const char* nanoarrow_CDataIntegration_ImportSchemaAndCompareToJson(const char* json_path, ArrowSchema* schema)
+const char* sparrow_CDataIntegration_ImportSchemaAndCompareToJson(const char* json_path, ArrowSchema* schema)
 {
     if (schema == nullptr)
     {
@@ -88,8 +88,7 @@ const char* nanoarrow_CDataIntegration_ImportSchemaAndCompareToJson(const char* 
     return nullptr;
 }
 
-const char*
-nanoarrow_CDataIntegration_ExportBatchFromJson(const char* json_path, int num_batch, ArrowArray* out)
+const char* sparrow_CDataIntegration_ExportBatchFromJson(const char* json_path, int num_batch, ArrowArray* out)
 {
     try
     {
@@ -98,7 +97,7 @@ nanoarrow_CDataIntegration_ExportBatchFromJson(const char* json_path, int num_ba
         const nlohmann::json data = nlohmann::json::parse(json_stream);
         sparrow::record_batch record_batch = sparrow::c_data_integration::build_record_batch_from_json(
             data,
-            num_batch
+            static_cast<size_t>(num_batch)
         );
         sparrow::struct_array struct_array = record_batch.extract_struct_array();
         auto [array_from_json, schema_from_json] = sparrow::extract_arrow_structures(std::move(struct_array));
@@ -114,7 +113,7 @@ nanoarrow_CDataIntegration_ExportBatchFromJson(const char* json_path, int num_ba
 }
 
 const char*
-nanoarrow_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, int num_batch, ArrowArray* batch)
+sparrow_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, int num_batch, ArrowArray* batch)
 {
     if (batch == nullptr)
     {
@@ -127,7 +126,7 @@ nanoarrow_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, in
         const nlohmann::json data = nlohmann::json::parse(json_stream);
         sparrow::record_batch record_batch = sparrow::c_data_integration::build_record_batch_from_json(
             data,
-            num_batch
+            static_cast<size_t>(num_batch)
         );
         sparrow::struct_array struct_array = record_batch.extract_struct_array();
         auto [array_from_json, schema_from_json] = sparrow::extract_arrow_structures(std::move(struct_array));
@@ -153,7 +152,7 @@ nanoarrow_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, in
     return nullptr;
 }
 
-int64_t nanoarrow_BytesAllocated()
+int64_t sparrow_BytesAllocated()
 {
     return 0;
 }

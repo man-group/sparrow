@@ -1,0 +1,434 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "large_list_nullable",
+        "type": {
+          "name": "largelist"
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "item",
+            "type": {
+              "name": "int",
+              "isSigned": true,
+              "bitWidth": 32
+            },
+            "nullable": true,
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "large_list_nonnullable",
+        "type": {
+          "name": "largelist"
+        },
+        "nullable": false,
+        "children": [
+          {
+            "name": "item",
+            "type": {
+              "name": "int",
+              "isSigned": true,
+              "bitWidth": 32
+            },
+            "nullable": true,
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "large_list_nested",
+        "type": {
+          "name": "largelist"
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "inner_list",
+            "type": {
+              "name": "list"
+            },
+            "nullable": true,
+            "children": [
+              {
+                "name": "item",
+                "type": {
+                  "name": "int",
+                  "isSigned": true,
+                  "bitWidth": 16
+                },
+                "nullable": true,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "batches": [
+    {
+      "count": 0,
+      "columns": [
+        {
+          "name": "large_list_nullable",
+          "count": 0,
+          "VALIDITY": [],
+          "OFFSET": [
+            "0"
+          ],
+          "children": [
+            {
+              "name": "item",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            }
+          ]
+        },
+        {
+          "name": "large_list_nonnullable",
+          "count": 0,
+          "VALIDITY": [],
+          "OFFSET": [
+            "0"
+          ],
+          "children": [
+            {
+              "name": "item",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            }
+          ]
+        },
+        {
+          "name": "large_list_nested",
+          "count": 0,
+          "VALIDITY": [],
+          "OFFSET": [
+            "0"
+          ],
+          "children": [
+            {
+              "name": "inner_list",
+              "count": 0,
+              "VALIDITY": [],
+              "OFFSET": [
+                0
+              ],
+              "children": [
+                {
+                  "name": "item",
+                  "count": 0,
+                  "VALIDITY": [],
+                  "DATA": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "count": 13,
+      "columns": [
+        {
+          "name": "large_list_nullable",
+          "count": 13,
+          "VALIDITY": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0
+          ],
+          "OFFSET": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "7",
+            "10",
+            "10",
+            "14",
+            "14",
+            "15",
+            "16",
+            "18",
+            "18",
+            "18"
+          ],
+          "children": [
+            {
+              "name": "item",
+              "count": 18,
+              "VALIDITY": [
+                1,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                0,
+                1,
+                1,
+                1,
+                0,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0
+              ],
+              "DATA": [
+                -2147483648,
+                2147483647,
+                1343158076,
+                1591142474,
+                967939928,
+                -1257496710,
+                -897523907,
+                1921614131,
+                -388999703,
+                -2112669303,
+                1277409039,
+                1670614071,
+                2608278,
+                -1243306525,
+                1674624853,
+                -1368414464,
+                417374153,
+                -1137472932
+              ]
+            }
+          ]
+        },
+        {
+          "name": "large_list_nonnullable",
+          "count": 13,
+          "VALIDITY": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "OFFSET": [
+            "0",
+            "0",
+            "3",
+            "4",
+            "7",
+            "11",
+            "14",
+            "14",
+            "16",
+            "19",
+            "22",
+            "23",
+            "27",
+            "27"
+          ],
+          "children": [
+            {
+              "name": "item",
+              "count": 27,
+              "VALIDITY": [
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                0,
+                1,
+                0,
+                1,
+                0,
+                1,
+                0,
+                1,
+                1,
+                0,
+                1,
+                1,
+                0,
+                1,
+                0,
+                1,
+                1,
+                0,
+                1,
+                1
+              ],
+              "DATA": [
+                -2147483648,
+                2147483647,
+                1550312973,
+                1637691098,
+                1740243107,
+                -295698450,
+                751884310,
+                474154482,
+                1669292941,
+                2056015792,
+                70298989,
+                1193630060,
+                406584237,
+                1653037220,
+                935579831,
+                308505845,
+                -1124913754,
+                -1482798356,
+                -1633360049,
+                1695184029,
+                199816339,
+                -1892066777,
+                152753363,
+                -1035396625,
+                1538454664,
+                2117384147,
+                402955369
+              ]
+            }
+          ]
+        },
+        {
+          "name": "large_list_nested",
+          "count": 13,
+          "VALIDITY": [
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "OFFSET": [
+            "0",
+            "0",
+            "4",
+            "4",
+            "6",
+            "6",
+            "8",
+            "10",
+            "10",
+            "14",
+            "14",
+            "14",
+            "14",
+            "14"
+          ],
+          "children": [
+            {
+              "name": "inner_list",
+              "count": 14,
+              "VALIDITY": [
+                0,
+                1,
+                0,
+                0,
+                1,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                1,
+                1,
+                1
+              ],
+              "OFFSET": [
+                0,
+                0,
+                2,
+                2,
+                2,
+                5,
+                7,
+                7,
+                7,
+                7,
+                8,
+                8,
+                9,
+                13,
+                14
+              ],
+              "children": [
+                {
+                  "name": "item",
+                  "count": 14,
+                  "VALIDITY": [
+                    0,
+                    1,
+                    1,
+                    0,
+                    1,
+                    1,
+                    0,
+                    0,
+                    1,
+                    0,
+                    1,
+                    0,
+                    1,
+                    1
+                  ],
+                  "DATA": [
+                    -32768,
+                    32767,
+                    24021,
+                    23896,
+                    -28928,
+                    10579,
+                    -8159,
+                    -19454,
+                    -3373,
+                    -20203,
+                    21975,
+                    5180,
+                    -4494,
+                    -10681
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

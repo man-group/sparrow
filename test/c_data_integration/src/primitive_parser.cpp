@@ -22,9 +22,9 @@
 namespace sparrow::c_data_integration
 {
     sparrow::array
-    primitive_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    primitive_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "int");
+        utils::check_type(schema, "int");
         const uint8_t bit_width = schema.at("type").at("bitWidth").get<uint8_t>();
         const bool is_signed = schema.at("type").at("isSigned").get<bool>();
         const std::string name = schema.at("name").get<std::string>();
@@ -122,9 +122,9 @@ namespace sparrow::c_data_integration
     }
 
     sparrow::array
-    floating_point_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    floating_point_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "floatingpoint");
+        utils::check_type(schema, "floatingpoint");
         const std::string precision = schema.at("type").at("precision").get<std::string>();
         const std::string name = schema.at("name").get<std::string>();
         auto validity = utils::get_validity(array);

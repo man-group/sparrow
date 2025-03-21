@@ -22,9 +22,9 @@
 namespace sparrow::c_data_integration
 {
     sparrow::array
-    string_view_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
+    string_view_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
-        utils::check_type(array, schema, "utf8_view");
+        utils::check_type(schema, "utf8_view");
         const std::string name = schema.at("name").get<std::string>();
         auto data = array.at(DATA).get<std::vector<std::string>>();
         auto validity = utils::get_validity(array);

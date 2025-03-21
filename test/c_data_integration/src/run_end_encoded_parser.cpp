@@ -20,7 +20,7 @@
 // {
 //     sparrow::array runendencoded_array_from_json(const nlohmann::json& array, const nlohmann::json& schema)
 //     {
-//         utils::check_type(array, schema, "runendencoded");
+//         utils::check_type(schema,  "runendencoded");
 //         return sparrow::array{sparrow::run_end_encoded_array{}};
 //     }
 // }

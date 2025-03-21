@@ -14,6 +14,8 @@
 
 #include "sparrow/c_data_integration/json_parser.hpp"
 
+#include <sparrow/layout/array_access.hpp>
+
 #include "sparrow/c_data_integration/binary_parser.hpp"
 #include "sparrow/c_data_integration/bool_parser.hpp"
 #include "sparrow/c_data_integration/constant.hpp"
@@ -44,7 +46,7 @@ namespace sparrow::c_data_integration
         {"largelist", large_list_array_from_json},
         {"listview", list_view_array_from_json},
         {"largelistview", large_list_view_array_from_json},
-        {"union", union_array_from_json},
+        // {"union", union_array_from_json},
         {"int", primitive_array_from_json},
         {"floatingpoint", floating_point_from_json},
         {"utf8", string_array_from_json},
@@ -128,21 +130,13 @@ namespace sparrow::c_data_integration
             switch (index_bit_width)
             {
                 case 8:
-                {
-                    create_dictionary(array.at(DATA).get<std::vector<int8_t>>());
-                }
+                    return create_dictionary(array.at(DATA).get<std::vector<int8_t>>());
                 case 16:
-                {
-                    create_dictionary(array.at(DATA).get<std::vector<int16_t>>());
-                }
+                    return create_dictionary(array.at(DATA).get<std::vector<int16_t>>());
                 case 32:
-                {
-                    create_dictionary(array.at(DATA).get<std::vector<int32_t>>());
-                }
+                    return create_dictionary(array.at(DATA).get<std::vector<int32_t>>());
                 case 64:
-                {
-                    create_dictionary(array.at(DATA).get<std::vector<int64_t>>());
-                }
+                    return create_dictionary(array.at(DATA).get<std::vector<int64_t>>());
             }
         }
         else
@@ -150,21 +144,13 @@ namespace sparrow::c_data_integration
             switch (index_bit_width)
             {
                 case 8:
-                {
-                    create_dictionary(array.at(DATA).get<std::vector<uint8_t>>());
-                }
+                    return create_dictionary(array.at(DATA).get<std::vector<uint8_t>>());
                 case 16:
-                {
-                    create_dictionary(array.at(DATA).get<std::vector<uint16_t>>());
-                }
+                    return create_dictionary(array.at(DATA).get<std::vector<uint16_t>>());
                 case 32:
-                {
-                    create_dictionary(array.at(DATA).get<std::vector<uint32_t>>());
-                }
+                    return create_dictionary(array.at(DATA).get<std::vector<uint32_t>>());
                 case 64:
-                {
-                    create_dictionary(array.at(DATA).get<std::vector<uint64_t>>());
-                }
+                    return create_dictionary(array.at(DATA).get<std::vector<uint64_t>>());
             }
         }
         throw std::runtime_error("Invalid bit width or signedness");
@@ -182,15 +168,16 @@ namespace sparrow::c_data_integration
                 SPARROW_ASSERT_TRUE(field.is_object());
 
                 const std::string name = field.at("name").get<std::string>();
-                const bool nullable = field.at("nullable").get<bool>();
+                [[maybe_unused]] const bool nullable = field.at("nullable").get<bool>();
                 const auto type = field.at("type");
 
-                const auto dictionary_it = field.find("dictionary");
-                if (dictionary_it != field.end())
-                {
-                    SPARROW_ASSERT_TRUE(dictionary_it->is_object());
-                    const auto id_it = field.find("type");
-                }
+                // TODO: support dictionary
+                // const auto dictionary_it = field.find("dictionary");
+                // if (dictionary_it != field.end())
+                // {
+                //     SPARROW_ASSERT_TRUE(dictionary_it->is_object());
+                //     const auto id_it = field.find("type");
+                // }
 
                 const auto children_it = field.find("children");
                 if (children_it != field.end())
@@ -218,9 +205,12 @@ namespace sparrow::c_data_integration
         const auto builder_it = array_builders.find(type);
         if (builder_it == array_builders.end())
         {
-            throw std::runtime_error("Invalid type");
+            throw std::runtime_error("Unsupported type: " + type);
         }
-        return builder_it->second(array, schema, root);
+        sparrow::array ar = builder_it->second(array, schema, root);
+        // const auto arrow_proxy = sparrow::detail::array_access::get_arrow_proxy(ar);
+        // const ArrowSchema& schema_ref = arrow_proxy.schema();
+        return ar;
     }
 
     sparrow::record_batch build_record_batch_from_json(const nlohmann::json& root, size_t num_batches)
