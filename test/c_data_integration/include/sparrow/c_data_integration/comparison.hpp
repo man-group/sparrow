@@ -26,8 +26,8 @@ namespace sparrow::c_data_integration
 
     std::optional<std::string> compare_arrays(
         const std::string& prefix,
-        const ArrowArray* array,
-        const ArrowArray* array_from_json,
-        const ArrowSchema* schema_from_json
+        ArrowArray* array,
+        ArrowArray* array_from_json,
+        ArrowSchema* schema_from_json
     );
 }
