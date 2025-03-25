@@ -144,13 +144,8 @@ namespace sparrow
 
         constexpr auto n_children = 2;
         ArrowSchema** child_schemas = new ArrowSchema*[n_children];
-        ArrowArray** child_arrays = new ArrowArray*[n_children];
-
         child_schemas[0] = new ArrowSchema(std::move(acc_length_schema));
         child_schemas[1] = new ArrowSchema(std::move(encoded_values_schema));
-
-        child_arrays[0] = new ArrowArray(std::move(acc_length_array));
-        child_arrays[1] = new ArrowArray(std::move(encoded_values_array));
 
         const repeat_view<bool> children_ownserhip{true, n_children};
 
@@ -164,6 +159,10 @@ namespace sparrow
             nullptr,              // dictionary
             true                  // dictionary ownership
         );
+
+        ArrowArray** child_arrays = new ArrowArray*[n_children];
+        child_arrays[0] = new ArrowArray(std::move(acc_length_array));
+        child_arrays[1] = new ArrowArray(std::move(encoded_values_array));
 
         std::vector<buffer<std::uint8_t>> arr_buffs = {};
 

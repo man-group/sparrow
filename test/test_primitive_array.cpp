@@ -736,7 +736,7 @@ namespace sparrow
         {
             constexpr size_t count = 4;
             auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(count)};
-            const primitive_array<std::size_t> arr(iota, name, metadata_sample_opt);
+            const primitive_array<std::size_t> arr(iota, false, name, metadata_sample_opt);
             CHECK_EQ(arr.name(), name);
             test_metadata(metadata_sample, *(arr.metadata()));
             REQUIRE(arr.size() == count);

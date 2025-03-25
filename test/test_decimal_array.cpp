@@ -69,11 +69,27 @@ namespace sparrow
                     CHECK_EQ(array.size(), 4);
                 }
 
-                SUBCASE("data_buffer,  precision, scale")
+                SUBCASE("data_buffer, precision, scale")
                 {
                     u8_buffer<INTEGER_TYPE> buffer{values};
                     decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), precision, scale};
                     CHECK_EQ(array.size(), 4);
+                }
+
+                SUBCASE("data_buffer, precision, scale, nullable")
+                {
+                    SUBCASE("nullable")
+                    {
+                        u8_buffer<INTEGER_TYPE> buffer{values};
+                        decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), precision, scale, true};
+                        CHECK_EQ(array.size(), 4);
+                    }
+                    SUBCASE("not nullable")
+                    {
+                        u8_buffer<INTEGER_TYPE> buffer{values};
+                        decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), precision, scale, false};
+                        CHECK_EQ(array.size(), 4);
+                    }
                 }
             }
 
