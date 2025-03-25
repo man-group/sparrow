@@ -56,7 +56,7 @@ namespace sparrow
         using size_type = typename B::size_type;
 
         constexpr bitset_iterator() noexcept = default;
-        constexpr bitset_iterator(bitset_type* bitset, block_type* block, size_type index);
+        constexpr bitset_iterator(bitset_type* bitset, size_type index);
 
     private:
 
@@ -68,25 +68,20 @@ namespace sparrow
         [[nodiscard]] constexpr bool equal(const self_type& rhs) const noexcept;
         [[nodiscard]] constexpr bool less_than(const self_type& rhs) const noexcept;
 
-        [[nodiscard]] constexpr bool is_first_bit_of_block(size_type index) const noexcept;
-        [[nodiscard]] constexpr difference_type distance_to_begin() const;
+        [[nodiscard]] static constexpr difference_type as_signed(size_type i);
+        [[nodiscard]] static constexpr size_type as_unsigned(difference_type i);
 
         bitset_type* p_bitset = nullptr;
-        block_type* p_block = nullptr;
-        // m_index is block-local index.
-        // Invariant: m_index < bitset_type::s_bits_per_block
         size_type m_index;
 
         friend class iterator_access;
     };
 
     template <class B, bool is_const>
-    constexpr bitset_iterator<B, is_const>::bitset_iterator(bitset_type* bitset, block_type* block, size_type index)
+    constexpr bitset_iterator<B, is_const>::bitset_iterator(bitset_type* bitset, size_type index)
         : p_bitset(bitset)
-        , p_block(block)
         , m_index(index)
     {
-        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
     }
 
     template <class B, bool is_const>
@@ -98,11 +93,11 @@ namespace sparrow
             {
                 return true;
             }
-            return (*p_block) & bitset_type::bit_mask(m_index);
+            return p_bitset->test(m_index);
         }
         else
         {
-            return bitset_reference<B>(*p_bitset, *p_block, bitset_type::bit_mask(m_index));
+            return bitset_reference<B>(*p_bitset, m_index);
         }
     }
 
@@ -110,117 +105,51 @@ namespace sparrow
     constexpr void bitset_iterator<B, is_const>::increment()
     {
         ++m_index;
-        // If we have reached next block
-        if (is_first_bit_of_block(m_index))
-        {
-            ++p_block;
-            m_index = 0u;
-        }
-        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
     }
 
     template <class B, bool is_const>
     constexpr void bitset_iterator<B, is_const>::decrement()
     {
-        // decreasing moves to previous block
-        if (is_first_bit_of_block(m_index))
-        {
-            --p_block;
-            m_index = bitset_type::s_bits_per_block - 1;
-        }
-        else
-        {
-            --m_index;
-        }
-        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
+        --m_index;
     }
 
     template <class B, bool is_const>
     constexpr void bitset_iterator<B, is_const>::advance(difference_type n)
     {
-        if (n >= 0)
-        {
-            if (std::cmp_less(n, bitset_type::s_bits_per_block - m_index))
-            {
-                m_index += static_cast<size_type>(n);
-            }
-            else
-            {
-                const size_type to_next_block = bitset_type::s_bits_per_block - m_index;
-                n -= static_cast<difference_type>(to_next_block);
-                const size_type block_n = static_cast<size_type>(n) / bitset_type::s_bits_per_block;
-                p_block += block_n + 1;
-                n -= static_cast<difference_type>(block_n * bitset_type::s_bits_per_block);
-                m_index = static_cast<size_type>(n);
-            }
-        }
-        else
-        {
-            auto mn = static_cast<size_type>(-n);
-            if (m_index >= mn)
-            {
-                m_index -= mn;
-            }
-            else
-            {
-                const size_type block_n = mn / bitset_type::s_bits_per_block;
-                p_block -= block_n;
-                mn -= block_n * bitset_type::s_bits_per_block;
-                if (m_index >= mn)
-                {
-                    m_index -= mn;
-                }
-                else
-                {
-                    mn -= m_index;
-                    --p_block;
-                    m_index = bitset_type::s_bits_per_block - mn;
-                }
-            }
-        }
-        SPARROW_ASSERT_TRUE(m_index < bitset_type::s_bits_per_block);
+        m_index = as_unsigned(as_signed(m_index) + n);
     }
 
     template <class B, bool is_const>
     constexpr auto bitset_iterator<B, is_const>::distance_to(const self_type& rhs) const noexcept
         -> difference_type
     {
-        if (p_block == rhs.p_block)
-        {
-            return static_cast<difference_type>(rhs.m_index - m_index);
-        }
-        else
-        {
-            const auto dist1 = distance_to_begin();
-            const auto dist2 = rhs.distance_to_begin();
-            return dist2 - dist1;
-        }
+        SPARROW_ASSERT_TRUE(p_bitset == rhs.p_bitset);
+        return as_signed(rhs.m_index) - as_signed(m_index);
     }
 
     template <class B, bool is_const>
     constexpr bool bitset_iterator<B, is_const>::equal(const self_type& rhs) const noexcept
     {
-        return p_block == rhs.p_block && m_index == rhs.m_index;
+        SPARROW_ASSERT_TRUE(p_bitset == rhs.p_bitset);
+        return m_index == rhs.m_index;
     }
 
     template <class B, bool is_const>
     constexpr bool bitset_iterator<B, is_const>::less_than(const self_type& rhs) const noexcept
     {
-        return (p_block < rhs.p_block) || (p_block == rhs.p_block && m_index < rhs.m_index);
+        SPARROW_ASSERT_TRUE(p_bitset == rhs.p_bitset);
+        return m_index < rhs.m_index;
     }
 
     template <class B, bool is_const>
-    constexpr bool bitset_iterator<B, is_const>::is_first_bit_of_block(size_type index) const noexcept
+    constexpr auto bitset_iterator<B, is_const>::as_signed(size_type i) -> difference_type
     {
-        return index % bitset_type::s_bits_per_block == 0;
+        return static_cast<difference_type>(i);
     }
 
     template <class B, bool is_const>
-    constexpr auto bitset_iterator<B, is_const>::distance_to_begin() const -> difference_type
+    constexpr auto bitset_iterator<B, is_const>::as_unsigned(difference_type i) -> size_type
     {
-        const difference_type distance = p_block - p_bitset->begin().p_block;
-        SPARROW_ASSERT_TRUE(distance >= 0);
-        return static_cast<difference_type>(bitset_type::s_bits_per_block) * distance
-               + static_cast<difference_type>(m_index);
+        return static_cast<size_type>(i);
     }
 }

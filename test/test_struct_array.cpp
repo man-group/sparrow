@@ -68,11 +68,10 @@ namespace sparrow
             );
 
             // detyped arrays
-            std::vector<array> children = {
-                array(std::move(flat_arr)),
-                array(std::move(flat_arr2)),
-                array(std::move(flat_arr3))
-            };
+            array arr1(std::move(flat_arr));
+            array arr2(std::move(flat_arr2));
+            array arr3(std::move(flat_arr3));
+            std::vector<array> children{std::move(arr1), std::move(arr2), std::move(arr3)};
 
             struct_array arr(std::move(children));
 
@@ -85,18 +84,23 @@ namespace sparrow
             REQUIRE_EQ(arr[2].value().size(), 3);
             REQUIRE_EQ(arr[3].value().size(), 3);
 
+            [[maybe_unused]] auto llol = arr[0].value();
+
             // check the values
-            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
-            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], float(4.0f));
-            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[2], std::int32_t(8));
+            auto child0 = arr[0].value();
+            CHECK_NULLABLE_VARIANT_EQ(child0[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(child0[1], float(4.0f));
+            CHECK_NULLABLE_VARIANT_EQ(child0[2], std::int32_t(8));
 
-            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(1));
-            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1], float(5.0f));
-            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[2], std::int32_t(9));
+            auto child1 = arr[1].value();
+            CHECK_NULLABLE_VARIANT_EQ(child1[0], std::int16_t(1));
+            CHECK_NULLABLE_VARIANT_EQ(child1[1], float(5.0f));
+            CHECK_NULLABLE_VARIANT_EQ(child1[2], std::int32_t(9));
 
-            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(2));
-            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[1], float(6.0f));
-            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[2], std::int32_t(10));
+            auto child2 = arr[2].value();
+            CHECK_NULLABLE_VARIANT_EQ(child2[0], std::int16_t(2));
+            CHECK_NULLABLE_VARIANT_EQ(child2[1], float(6.0f));
+            CHECK_NULLABLE_VARIANT_EQ(child2[2], std::int32_t(10));
         };
 
         TEST_CASE_TEMPLATE("struct[T, uint8]", T, std::uint8_t, std::int32_t, float, double)

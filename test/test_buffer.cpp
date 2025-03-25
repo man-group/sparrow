@@ -59,55 +59,96 @@ namespace sparrow
     {
         TEST_CASE("constructors")
         {
+            constexpr std::size_t expected_size = 8u;
+            SUBCASE("default")
             {
-                [[maybe_unused]] buffer_test_type b(8u);
+                const buffer_test_type b;
+                CHECK_EQ(b.data(), nullptr);
+                CHECK_EQ(b.size(), 0u);
+                CHECK_EQ(b.capacity(), 0);
             }
 
+            SUBCASE("with size")
             {
-                const std::size_t size = 8u;
-                [[maybe_unused]] buffer_test_type b(make_test_buffer(size), size);
+                const buffer_test_type b(expected_size);
+                CHECK_NE(b.data(), nullptr);
+                CHECK_EQ(b.size(), expected_size);
+                CHECK_EQ(b.capacity(), expected_size);
+                for (std::size_t i = 0; i < expected_size; ++i)
+                {
+                    CHECK_EQ(b[i], 0);
+                }
             }
 
-            buffer_test_type b0;
-            CHECK_EQ(b0.data(), nullptr);
-            CHECK_EQ(b0.size(), 0u);
-            CHECK_EQ(b0.capacity(), 0);
-
-            const std::size_t expected_size = 4;
-            buffer_test_type b1(expected_size);
-            CHECK_NE(b1.data(), nullptr);
-            CHECK_EQ(b1.size(), expected_size);
-            CHECK_EQ(b1.capacity(), b1.size());
-
-            int32_t* mem = make_test_buffer(expected_size);
-            buffer_test_type b2(mem, expected_size);
-            CHECK_EQ(b2.data(), mem);
-            CHECK_EQ(b2.size(), expected_size);
-            CHECK_EQ(b2.capacity(), b2.size());
-            CHECK_EQ(b2.data()[2], 2);
-
-            const int32_t expected_value = 3;
-            buffer_test_type b3(expected_size, expected_value);
-            CHECK_NE(b3.data(), nullptr);
-            CHECK_EQ(b3.size(), expected_size);
-            CHECK_EQ(b3.capacity(), b3.size());
-            for (std::size_t i = 0; i < expected_size; ++i)
+            SUBCASE("with size and value")
             {
-                CHECK_EQ(b3[i], expected_value);
+                constexpr int value = 3;
+                const buffer_test_type b(expected_size, value);
+                CHECK_NE(b.data(), nullptr);
+                CHECK_EQ(b.size(), expected_size);
+                CHECK_EQ(b.capacity(), expected_size);
+                for (std::size_t i = 0; i < expected_size; ++i)
+                {
+                    CHECK_EQ(b[i], value);
+                }
             }
 
-            buffer_test_type b4 = {1u, 3u, 5u};
-            CHECK_EQ(b4.size(), 3u);
-            CHECK_EQ(b4[0], 1u);
-            CHECK_EQ(b4[1], 3u);
-            CHECK_EQ(b4[2], 5u);
-
-            std::vector<buffer_test_type::value_type> exp = {2u, 4u, 6u};
-            buffer_test_type b5(exp.cbegin(), exp.cend());
-            CHECK_EQ(b5.size(), exp.size());
-            for (size_t i = 0; i < 3u; ++i)
+            SUBCASE("size and allocator")
             {
-                CHECK_EQ(b5[i], exp[i]);
+                const buffer_test_type b(expected_size, std::allocator<int32_t>());
+                CHECK_NE(b.data(), nullptr);
+                CHECK_EQ(b.size(), expected_size);
+                CHECK_EQ(b.capacity(), expected_size);
+            }
+
+            SUBCASE("with pointer and size")
+            {
+                const buffer_test_type b(make_test_buffer(expected_size), expected_size);
+                CHECK_NE(b.data(), nullptr);
+                CHECK_EQ(b.size(), expected_size);
+                CHECK_EQ(b.capacity(), expected_size);
+            }
+
+            SUBCASE("with nullptr")
+            {
+                buffer_test_type b(nullptr, 0);
+                CHECK_EQ(b.data(), nullptr);
+                CHECK_EQ(b.size(), 0u);
+                CHECK_EQ(b.capacity(), 0u);
+            }
+
+            SUBCASE("with initilizer list")
+            {
+                const buffer_test_type b{1u, 3u, 5u};
+                CHECK_NE(b.data(), nullptr);
+                CHECK_EQ(b.size(), 3u);
+                CHECK_EQ(b.capacity(), 3u);
+            }
+
+            SUBCASE("with range")
+            {
+                const std::vector<int32_t> vec = {1u, 3u, 5u};
+                const buffer_test_type b(vec.cbegin(), vec.cend());
+                CHECK_NE(b.data(), nullptr);
+                CHECK_EQ(b.size(), 3u);
+                CHECK_EQ(b.capacity(), 3u);
+                for (std::size_t i = 0; i < vec.size(); ++i)
+                {
+                    CHECK_EQ(b[i], vec[i]);
+                }
+            }
+
+            SUBCASE("with iterators")
+            {
+                const std::vector<int32_t> vec = {1u, 3u, 5u};
+                const buffer_test_type b(vec.begin(), vec.end());
+                CHECK_NE(b.data(), nullptr);
+                CHECK_EQ(b.size(), 3u);
+                CHECK_EQ(b.capacity(), 3u);
+                for (std::size_t i = 0; i < vec.size(); ++i)
+                {
+                    CHECK_EQ(b[i], vec[i]);
+                }
             }
         }
 
@@ -125,6 +166,18 @@ namespace sparrow
             CHECK_EQ(b2, b3);
             CHECK_EQ(b2.capacity(), b2.size());
             CHECK_NE(b1, b2);
+
+            buffer_test_type bnullptr(nullptr, 0);
+            buffer_test_type b4(bnullptr);
+            CHECK_EQ(b4.data(), nullptr);
+            CHECK_EQ(b4.size(), 0u);
+            CHECK_EQ(b4.capacity(), 0u);
+            CHECK_EQ(b4, bnullptr);
+            b3 = bnullptr;
+            CHECK_EQ(b3.data(), nullptr);
+            CHECK_EQ(b3.size(), 0u);
+            CHECK_EQ(b3.capacity(), 0u);
+            CHECK_EQ(b3, b4);
         }
 
         TEST_CASE("move semantic")
@@ -145,6 +198,16 @@ namespace sparrow
             CHECK_EQ(b2, control2);
             CHECK_EQ(b2.capacity(), b2.size());
             CHECK_EQ(b4, control);
+
+            buffer_test_type bnullptr(nullptr, 0);
+            buffer_test_type b5(std::move(bnullptr));
+            CHECK_EQ(b5.data(), nullptr);
+            CHECK_EQ(b5.size(), 0u);
+            CHECK_EQ(b5.capacity(), 0u);
+            b2 = std::move(b5);
+            CHECK_EQ(b2.data(), nullptr);
+            CHECK_EQ(b2.size(), 0u);
+            CHECK_EQ(b2.capacity(), 0u);
         }
 
         // Element access
@@ -183,17 +246,26 @@ namespace sparrow
 
         TEST_CASE("data")
         {
-            const std::size_t size = 4u;
-            buffer_test_type b1(make_test_buffer(size), size);
+            SUBCASE("from nullptr")
+            {
+                buffer_test_type b1(nullptr, 0);
+                CHECK_EQ(b1.data(), nullptr);
+            }
 
-            const int32_t expected_value = 101;
-            const std::size_t idx = 3u;
-            b1.data()[idx] = expected_value;
-            buffer_test_type b2(b1);
-            CHECK_EQ(b2.data()[idx], expected_value);
+            SUBCASE("from non-nullptr")
+            {
+                const std::size_t size = 4u;
+                buffer_test_type b1(make_test_buffer(size), size);
 
-            buffer_test_type b3(std::move(b1));
-            CHECK_EQ(b3.data()[idx], expected_value);
+                const int32_t expected_value = 101;
+                const std::size_t idx = 3u;
+                b1.data()[idx] = expected_value;
+                buffer_test_type b2(b1);
+                CHECK_EQ(b2.data()[idx], expected_value);
+
+                buffer_test_type b3(std::move(b1));
+                CHECK_EQ(b3.data()[idx], expected_value);
+            }
         }
 
         // Iterators
@@ -204,39 +276,58 @@ namespace sparrow
 
         TEST_CASE("iterator")
         {
-            const std::size_t size = 8u;
-            buffer_test_type b(make_test_buffer(size), size);
-            auto iter = b.begin();
-            auto citer = b.cbegin();
-            for (std::size_t i = 0; i < b.size(); ++i)
+            SUBCASE("from nullptr")
             {
-                CHECK_EQ(*iter++, b[i]);
-                CHECK_EQ(*citer++, b[i]);
+                buffer_test_type b1(nullptr, 0);
+                CHECK_EQ(b1.begin(), b1.end());
+                CHECK_EQ(b1.cbegin(), b1.cend());
             }
-            CHECK_EQ(iter, b.end());
-            CHECK_EQ(citer, b.cend());
+
+            SUBCASE("from non-nullptr")
+            {
+                const std::size_t size = 8u;
+                buffer_test_type b(make_test_buffer(size), size);
+                auto iter = b.begin();
+                auto citer = b.cbegin();
+                for (std::size_t i = 0; i < b.size(); ++i)
+                {
+                    CHECK_EQ(*iter++, b[i]);
+                    CHECK_EQ(*citer++, b[i]);
+                }
+                CHECK_EQ(iter, b.end());
+                CHECK_EQ(citer, b.cend());
+            }
         }
 
         TEST_CASE("reverse_iterator")
         {
-            const std::size_t size = 8u;
-            buffer_test_type b(make_test_buffer(size), size);
-            auto iter = b.rbegin();
-            auto citer = b.crbegin();
-            for (std::size_t i = b.size(); i != 0u; --i)
+            SUBCASE("from nullptr")
             {
-                CHECK_EQ(*iter++, b[i - 1]);
-                CHECK_EQ(*citer++, b[i - 1]);
+                buffer_test_type b1(nullptr, 0);
+                CHECK_EQ(b1.rbegin(), b1.rend());
+                CHECK_EQ(b1.crbegin(), b1.crend());
             }
-            CHECK_EQ(iter, b.rend());
-            CHECK_EQ(citer, b.crend());
+
+            SUBCASE("from non-nullptr")
+            {
+                const std::size_t size = 8u;
+                buffer_test_type b(make_test_buffer(size), size);
+                auto iter = b.rbegin();
+                auto citer = b.crbegin();
+                for (std::size_t i = b.size(); i != 0u; --i)
+                {
+                    CHECK_EQ(*iter++, b[i - 1]);
+                    CHECK_EQ(*citer++, b[i - 1]);
+                }
+                CHECK_EQ(iter, b.rend());
+                CHECK_EQ(citer, b.crend());
+            }
         }
 
         TEST_CASE("iterator_consistency")
         {
             const std::size_t size = 8u;
             buffer_test_type b(make_test_buffer(size), size);
-
             {
                 auto iter = --b.end();
                 auto riter = b.rbegin();
@@ -276,103 +367,214 @@ namespace sparrow
 
         TEST_CASE("empty")
         {
-            buffer_test_type b1;
-            CHECK(b1.empty());
+            SUBCASE("from nullptr")
+            {
+                buffer_test_type b1(nullptr, 0);
+                CHECK(b1.empty());
+            }
 
-            const std::size_t size = 4u;
-            buffer_test_type b2(make_test_buffer(size), size);
-            CHECK(!b2.empty());
+            SUBCASE("from non-nullptr")
+            {
+                buffer_test_type b1;
+                CHECK(b1.empty());
+
+                const std::size_t size = 4u;
+                buffer_test_type b2(make_test_buffer(size), size);
+                CHECK(!b2.empty());
+            }
         }
 
         TEST_CASE("capacity")
         {
-            const std::size_t size = 4u;
-            buffer_test_type b(make_test_buffer(size), size);
-            CHECK_EQ(b.capacity(), size);
+            SUBCASE("from nullptr")
+            {
+                buffer_test_type b1(nullptr, 0);
+                CHECK_EQ(b1.capacity(), 0u);
+            }
+
+            SUBCASE("from non-nullptr")
+            {
+                const std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+                CHECK_EQ(b.capacity(), size);
+            }
         }
 
         TEST_CASE("size")
         {
-            const std::size_t size = 4u;
-            buffer_test_type b(make_test_buffer(size), size);
-            CHECK_EQ(b.size(), size);
+            SUBCASE("from nullptr")
+            {
+                buffer_test_type b1(nullptr, 0);
+                CHECK_EQ(b1.size(), 0u);
+            }
+
+            SUBCASE("from non-nullptr")
+            {
+                const std::size_t size = 4u;
+                buffer_test_type b(make_test_buffer(size), size);
+                CHECK_EQ(b.size(), size);
+            }
         }
 
         // modifiers
 
         TEST_CASE("clear")
         {
-            const std::size_t size1 = 4u;
-            buffer_test_type b(make_test_buffer(size1), size1);
-            b.clear();
-            CHECK_EQ(b.size(), 0u);
-            CHECK_EQ(b.capacity(), size1);
+            SUBCASE("from nullptr")
+            {
+                buffer_test_type b1(nullptr, 0);
+                b1.clear();
+                CHECK_EQ(b1.size(), 0u);
+                CHECK_EQ(b1.capacity(), 0u);
+                CHECK_EQ(b1.data(), nullptr);
+            }
+
+            SUBCASE("from non-nullptr")
+            {
+                const std::size_t size = 4u;
+                buffer_test_type b1(make_test_buffer(size), size);
+                b1.clear();
+                CHECK_EQ(b1.size(), 0u);
+                CHECK_EQ(b1.capacity(), size);
+            }
         }
 
         TEST_CASE("reserve")
         {
-            const std::size_t size1 = 4u;
-            buffer_test_type b1(make_test_buffer(size1), size1);
-            buffer_test_type b2(b1);
-            const std::size_t new_cap = 8u;
-            b1.reserve(new_cap);
-            CHECK_EQ(b1.capacity(), new_cap);
-            for (std::size_t i = 0; i < size1; ++i)
+            SUBCASE("from nullptr")
             {
-                CHECK_EQ(b1.data()[i], b2.data()[i]);
+                buffer_test_type b1(nullptr, 0);
+                const std::size_t new_cap = 8u;
+                b1.reserve(new_cap);
+                CHECK_EQ(b1.capacity(), new_cap);
+            }
+            SUBCASE("from empty buffer")
+            {
+                const std::size_t new_cap = 8u;
+                buffer_test_type b;
+                b.reserve(new_cap);
+                CHECK_EQ(b.capacity(), new_cap);
+            }
+            SUBCASE("from non-empty buffer")
+            {
+                const std::size_t size1 = 4u;
+                buffer_test_type b1(make_test_buffer(size1), size1);
+                buffer_test_type b2(b1);
+                const std::size_t new_cap = 8u;
+                b1.reserve(new_cap);
+                CHECK_EQ(b1.capacity(), new_cap);
+                for (std::size_t i = 0; i < size1; ++i)
+                {
+                    CHECK_EQ(b1.data()[i], b2.data()[i]);
+                }
             }
         }
 
         TEST_CASE("resize")
         {
-            const std::size_t size1 = 4u;
-            const std::size_t size2 = 8u;
-            buffer_test_type b(make_test_buffer(size1), size1);
-            b.resize(size2);
-            CHECK_EQ(b.size(), size2);
-            CHECK_EQ(b.capacity(), size2);
-            CHECK_EQ(b.data()[2], 2);
+            SUBCASE("from nullptr")
+            {
+                buffer_test_type b1(nullptr, 0);
+                const std::size_t size = 4u;
+                b1.resize(size);
+                CHECK_EQ(b1.size(), size);
+                CHECK_EQ(b1.capacity(), size);
+                for (std::size_t i = 0; i < size; ++i)
+                {
+                    CHECK_EQ(b1[i], 0);
+                }
+            }
 
-            b.resize(size1);
-            CHECK_EQ(b.size(), size1);
-            CHECK_EQ(b.capacity(), size2);
-            CHECK_EQ(b.data()[2], 2);
+            SUBCASE("from empty buffer")
+            {
+                const std::size_t size = 4u;
+                buffer_test_type b;
+                b.resize(size);
+                CHECK_EQ(b.size(), size);
+                CHECK_EQ(b.capacity(), size);
+                for (std::size_t i = 0; i < size; ++i)
+                {
+                    CHECK_EQ(b[i], 0);
+                }
+            }
 
-            const std::size_t size3 = 6u;
-            const buffer_test_type::value_type v = 7u;
-            b.resize(size3, v);
-            CHECK_EQ(b.size(), size3);
-            CHECK_EQ(b.capacity(), size2);
-            CHECK_EQ(b.data()[2], 2);
-            CHECK_EQ(b.data()[4], v);
-            CHECK_EQ(b.data()[5], v);
+            SUBCASE("from non-empty buffer")
+            {
+                const std::size_t size1 = 4u;
+                const std::size_t size2 = 8u;
+                buffer_test_type b(make_test_buffer(size1), size1);
+                b.resize(size2);
+                CHECK_EQ(b.size(), size2);
+                CHECK_EQ(b.capacity(), size2);
+                CHECK_EQ(b.data()[2], 2);
+
+                b.resize(size1);
+                CHECK_EQ(b.size(), size1);
+                CHECK_EQ(b.capacity(), size2);
+                CHECK_EQ(b.data()[2], 2);
+
+                const std::size_t size3 = 6u;
+                const buffer_test_type::value_type v = 7u;
+                b.resize(size3, v);
+                CHECK_EQ(b.size(), size3);
+                CHECK_EQ(b.capacity(), size2);
+                CHECK_EQ(b.data()[2], 2);
+                CHECK_EQ(b.data()[4], v);
+                CHECK_EQ(b.data()[5], v);
+            }
         }
 
         TEST_CASE("shrink_to_fit")
         {
-            const std::size_t size1 = 4u;
-            buffer_test_type b1(make_test_buffer(size1), size1);
-            const std::size_t new_cap = 8u;
-            b1.reserve(new_cap);
-            CHECK_EQ(b1.capacity(), new_cap);
-            b1.shrink_to_fit();
-            CHECK_EQ(b1.capacity(), size1);
+            SUBCASE("from non-empty buffer")
+            {
+                const std::size_t size1 = 4u;
+                buffer_test_type b1(make_test_buffer(size1), size1);
+                const std::size_t new_cap = 8u;
+                b1.reserve(new_cap);
+                CHECK_EQ(b1.capacity(), new_cap);
+                b1.shrink_to_fit();
+                CHECK_EQ(b1.capacity(), size1);
+            }
+
+            SUBCASE("from null buffer")
+            {
+                buffer_test_type b1(nullptr, 0);
+                b1.shrink_to_fit();
+                CHECK_EQ(b1.capacity(), 0u);
+            }
         }
 
         TEST_CASE("swap")
         {
-            const std::size_t size1 = 4u;
-            const std::size_t size2 = 8u;
+            SUBCASE("from non-null buffer")
+            {
+                const std::size_t size1 = 4u;
+                const std::size_t size2 = 8u;
 
-            buffer_test_type b1(make_test_buffer(size1), size1);
-            buffer_test_type b2(make_test_buffer(size2), size2);
-            auto* data1 = b1.data();
-            auto* data2 = b2.data();
-            b1.swap(b2);
-            CHECK_EQ(b1.size(), size2);
-            CHECK_EQ(b1.data(), data2);
-            CHECK_EQ(b2.size(), size1);
-            CHECK_EQ(b2.data(), data1);
+                buffer_test_type b1(make_test_buffer(size1), size1);
+                buffer_test_type b2(make_test_buffer(size2), size2);
+                auto* data1 = b1.data();
+                auto* data2 = b2.data();
+                b1.swap(b2);
+                CHECK_EQ(b1.size(), size2);
+                CHECK_EQ(b1.data(), data2);
+                CHECK_EQ(b2.size(), size1);
+                CHECK_EQ(b2.data(), data1);
+            }
+
+            SUBCASE("from null buffer")
+            {
+                buffer_test_type b1(nullptr, 0);
+                buffer_test_type b2(make_test_buffer(4u), 4u);
+                auto* data1 = b1.data();
+                auto* data2 = b2.data();
+                b1.swap(b2);
+                CHECK_EQ(b1.size(), 4u);
+                CHECK_EQ(b1.data(), data2);
+                CHECK_EQ(b2.size(), 0u);
+                CHECK_EQ(b2.data(), data1);
+            }
         }
 
         TEST_CASE("equality comparison")
@@ -446,6 +648,16 @@ namespace sparrow
                 CHECK_EQ(b[3], 3);
                 CHECK_EQ(b[4], expected_value);
             }
+
+            SUBCASE("with null buffer")
+            {
+                buffer_test_type b(nullptr, 0);
+                constexpr int32_t expected_value = 101;
+                b.emplace(b.cbegin(), expected_value);
+                REQUIRE_EQ(b.size(), 1);
+                CHECK_EQ(b.capacity(), 2);
+                CHECK_EQ(b[0], expected_value);
+            }
         }
 
         TEST_CASE("insert")
@@ -510,7 +722,6 @@ namespace sparrow
 
             SUBCASE("move value in the middle of the buffer")
             {
-                // CHECK(true);
                 constexpr std::size_t size = 4u;
                 non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
                 const std::string expected_value = "9999";

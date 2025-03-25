@@ -52,6 +52,7 @@ namespace sparrow
     constexpr non_owning_dynamic_bitset<T>::non_owning_dynamic_bitset(buffer<T>* buffer, size_type n)
         : base_type(buffer, n)
     {
+        SPARROW_ASSERT_TRUE(buffer != nullptr);
     }
 
 }
