@@ -8,7 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or mplied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -27,6 +27,7 @@
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/ranges.hpp"
 #include "sparrow/utils/repeat_container.hpp"
@@ -169,11 +170,11 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
+        template <std::ranges::input_range R, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE = bool>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         [[nodiscard]] static arrow_proxy create_proxy(
             R&& range,
-            bool nullable = true,
+            NULLABLE_TYPE = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -370,7 +371,7 @@ namespace sparrow
                       | std::views::transform(
                           [](const auto& v)
                           {
-                              return static_cast<std::string_view>(v);
+                              return static_cast<std::string_view>(v.value());
                           }
                       );
 
@@ -391,11 +392,11 @@ namespace sparrow
     }
 
     template <class T>
-    template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
+    template <std::ranges::input_range R, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
     [[nodiscard]] arrow_proxy variable_size_binary_view_array_impl<T>::create_proxy(
         R&& range,
-        bool nullable,
+        NULLABLE_TYPE nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
