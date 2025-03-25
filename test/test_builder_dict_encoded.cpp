@@ -85,12 +85,13 @@ namespace sparrow
                 using nullable_tuple_type = nullable<tuple_type>;
                 using vector_type = std::vector<nullable_tuple_type>;
 
-                dict_encode<vector_type> v{vector_type{
-                    nullable_tuple_type{tuple_type{nullable<int>{1}, std::uint16_t(1)}},
-                    nullable_tuple_type{},
-                    nullable_tuple_type{tuple_type{nullable<int>{}, std::uint16_t(42)}},
-                    nullable_tuple_type{tuple_type{nullable<int>{}, std::uint16_t(42)}}
-                }
+                dict_encode<vector_type> v{
+                    vector_type{
+                        nullable_tuple_type{tuple_type{nullable<int>{1}, std::uint16_t(1)}},
+                        nullable_tuple_type{},
+                        nullable_tuple_type{tuple_type{nullable<int>{}, std::uint16_t(42)}},
+                        nullable_tuple_type{tuple_type{nullable<int>{}, std::uint16_t(42)}}
+                    }
 
                 };
 
@@ -125,8 +126,7 @@ namespace sparrow
             }
             SUBCASE("dict[list[int]]")
             {
-                dict_encode<std::vector<std::vector<int>>> v{std::vector<std::vector<int>>{{1, 2, 3}, {4, 5, 6}}
-                };
+                dict_encode<std::vector<std::vector<int>>> v{std::vector<std::vector<int>>{{1, 2, 3}, {4, 5, 6}}};
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
                 using array_type = std::decay_t<decltype(arr)>;
@@ -227,10 +227,8 @@ namespace sparrow
                 SUBCASE("without-nulls")
                 {
                     std::vector<dict_encode<std::array<std::string, 3>>> v{
-                        dict_encode<std::array<std::string, 3>>{std::array<std::string, 3>{"one", "two", "three"}
-                        },
-                        dict_encode<std::array<std::string, 3>>{std::array<std::string, 3>{"one", "two", "three"}
-                        },
+                        dict_encode<std::array<std::string, 3>>{std::array<std::string, 3>{"one", "two", "three"}},
+                        dict_encode<std::array<std::string, 3>>{std::array<std::string, 3>{"one", "two", "three"}},
                         dict_encode<std::array<std::string, 3>>{std::array<std::string, 3>{"one", "two", "four"}}
                     };
                     auto arr = sparrow::build(v);
@@ -255,8 +253,7 @@ namespace sparrow
                 SUBCASE("with-nulls")
                 {
                     std::vector<nullable<dict_encode<std::array<std::string, 3>>>> v{
-                        dict_encode<std::array<std::string, 3>>{std::array<std::string, 3>{"one", "two", "three"}
-                        },
+                        dict_encode<std::array<std::string, 3>>{std::array<std::string, 3>{"one", "two", "three"}},
                         sparrow::nullval,
                         dict_encode<std::array<std::string, 3>>{std::array<std::string, 3>{"one", "two", "three"}}
                     };

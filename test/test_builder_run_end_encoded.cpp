@@ -87,12 +87,13 @@ namespace sparrow
                 using vector_type = std::vector<nullable_tuple_type>;
 
 
-                run_end_encode<vector_type> v{vector_type{
-                    nullable_tuple_type{tuple_type{nullable<int>{1}, std::uint16_t(1)}},
-                    nullable_tuple_type{},
-                    nullable_tuple_type{tuple_type{nullable<int>{}, std::uint16_t(42)}},
-                    nullable_tuple_type{tuple_type{nullable<int>{}, std::uint16_t(42)}}
-                }
+                run_end_encode<vector_type> v{
+                    vector_type{
+                        nullable_tuple_type{tuple_type{nullable<int>{1}, std::uint16_t(1)}},
+                        nullable_tuple_type{},
+                        nullable_tuple_type{tuple_type{nullable<int>{}, std::uint16_t(42)}},
+                        nullable_tuple_type{tuple_type{nullable<int>{}, std::uint16_t(42)}}
+                    }
 
                 };
 

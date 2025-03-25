@@ -647,13 +647,13 @@ namespace sparrow
 
     TEST_SUITE("nullable proxy")
     {
-        static_assert(std::is_convertible_v<
-                      sparrow::nullable<const bool&>&&,
-                      sparrow::nullable<const bool&, const bool&>>);
+        static_assert(
+            std::is_convertible_v<sparrow::nullable<const bool&>&&, sparrow::nullable<const bool&, const bool&>>
+        );
 
-        static_assert(std::is_convertible_v<
-                      const sparrow::nullable<const bool&>&,
-                      sparrow::nullable<const bool&, const bool&>>);
+        static_assert(
+            std::is_convertible_v<const sparrow::nullable<const bool&>&, sparrow::nullable<const bool&, const bool&>>
+        );
 
         TEST_CASE_TEMPLATE_DEFINE("constructors", T, constructors_id)
         {

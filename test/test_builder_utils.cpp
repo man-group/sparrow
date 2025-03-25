@@ -77,55 +77,63 @@ namespace sparrow
             SUBCASE("empty")
             {
                 // the return type of exitable_for_each_index indicates if the loop was run to completion
-                CHECK(detail::exitable_for_each_index<0>(
-                    [](auto i)
-                    {
-                        // should not be called
-                        CHECK_FALSE(decltype(i)::value, 0);
-                        CHECK(false);
-                        return true;  // should not be called
-                    }
-                ));
+                CHECK(
+                    detail::exitable_for_each_index<0>(
+                        [](auto i)
+                        {
+                            // should not be called
+                            CHECK_FALSE(decltype(i)::value, 0);
+                            CHECK(false);
+                            return true;  // should not be called
+                        }
+                    )
+                );
             }
             SUBCASE("exit right away")
             {
                 // the return type of exitable_for_each_index indicates if the loop was run to completion
-                CHECK_FALSE(detail::exitable_for_each_index<3>(
-                    [](auto i)
-                    {
-                        // exit right away
-                        CHECK(decltype(i)::value == 0);
-                        return false;
-                    }
-                ));
+                CHECK_FALSE(
+                    detail::exitable_for_each_index<3>(
+                        [](auto i)
+                        {
+                            // exit right away
+                            CHECK(decltype(i)::value == 0);
+                            return false;
+                        }
+                    )
+                );
             }
 
             SUBCASE("full")
             {
                 int c = 0;
-                CHECK(detail::exitable_for_each_index<3>(
-                    [&](auto i)
-                    {
-                        // run to completion
-                        CHECK_EQ(decltype(i)::value, c);
-                        ++c;
-                        return true;
-                    }
-                ));
+                CHECK(
+                    detail::exitable_for_each_index<3>(
+                        [&](auto i)
+                        {
+                            // run to completion
+                            CHECK_EQ(decltype(i)::value, c);
+                            ++c;
+                            return true;
+                        }
+                    )
+                );
                 CHECK_EQ(c, 3);
             }
 
             SUBCASE("half")
             {
                 int c = 0;
-                CHECK_FALSE(detail::exitable_for_each_index<4>(
-                    [&](auto i)
-                    {
-                        CHECK_EQ(decltype(i)::value, c);
-                        ++c;
-                        return decltype(i)::value < 2;
-                    }
-                ));
+                CHECK_FALSE(
+                    detail::exitable_for_each_index<4>(
+                        [&](auto i)
+                        {
+                            CHECK_EQ(decltype(i)::value, c);
+                            ++c;
+                            return decltype(i)::value < 2;
+                        }
+                    )
+                );
                 CHECK_EQ(c, 3);
             }
         }
@@ -179,25 +187,34 @@ namespace sparrow
             static_assert(std::is_same_v<detail::meldv_t<run_end_encode<int>>, int>);
             static_assert(std::is_same_v<detail::meldv_t<int>, int>);
             static_assert(std::is_same_v<detail::meldv_t<nullable<int>>, nullable<int>>);
-            static_assert(std::is_same_v<detail::meldv_t<nullable<run_end_encode<int>>>, nullable<run_end_encode<int>>>);
+            static_assert(
+                std::is_same_v<detail::meldv_t<nullable<run_end_encode<int>>>, nullable<run_end_encode<int>>>
+            );
 
             // layout_flag_t
             static_assert(std::is_same_v<detail::layout_flag_t<int>, detail::dont_enforce_layout>);
-            static_assert(std::is_same_v<detail::layout_flag_t<run_end_encode<int>>, detail::enforce_run_end_encoded_layout>);
-            static_assert(std::is_same_v<
-                          detail::layout_flag_t<nullable<run_end_encode<int>>>,
-                          detail::enforce_run_end_encoded_layout>);
-            static_assert(std::is_same_v<detail::layout_flag_t<dict_encode<int>>, detail::enforce_dict_encoded_layout>);
-            static_assert(std::is_same_v<
-                          detail::layout_flag_t<nullable<dict_encode<int>>>,
-                          detail::enforce_dict_encoded_layout>);
+            static_assert(
+                std::is_same_v<detail::layout_flag_t<run_end_encode<int>>, detail::enforce_run_end_encoded_layout>
+            );
+            static_assert(
+                std::is_same_v<detail::layout_flag_t<nullable<run_end_encode<int>>>, detail::enforce_run_end_encoded_layout>
+            );
+            static_assert(
+                std::is_same_v<detail::layout_flag_t<dict_encode<int>>, detail::enforce_dict_encoded_layout>
+            );
+            static_assert(
+                std::is_same_v<detail::layout_flag_t<nullable<dict_encode<int>>>, detail::enforce_dict_encoded_layout>
+            );
 
             // look trough
-            static_assert(std::is_same_v<detail::look_trough_t<std::vector<nullable<int>>>, std::vector<nullable<int>>>);
+            static_assert(
+                std::is_same_v<detail::look_trough_t<std::vector<nullable<int>>>, std::vector<nullable<int>>>
+            );
             static_assert(std::is_same_v<detail::look_trough_t<nullable<std::vector<int>>>, std::vector<int>>);
             static_assert(std::is_same_v<detail::look_trough_t<nullable<int>>, int>);
             static_assert(std::is_same_v<detail::look_trough_t<nullable<nullable<int>>>, nullable<int>>);
-            static_assert(std::is_same_v<detail::look_trough_t<dict_encode<std::vector<int>>>, std::vector<int>>);
+            static_assert(std::is_same_v<detail::look_trough_t<dict_encode<std::vector<int>>>, std::vector<int>>
+            );
             static_assert(std::is_same_v<detail::look_trough_t<dict_encode<nullable<int>>>, int>);
         }
         TEST_CASE("get_size_save")
