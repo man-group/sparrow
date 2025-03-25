@@ -64,7 +64,7 @@ namespace sparrow
         F format,
         N name,
         std::optional<M> metadata,
-        std::optional<ArrowFlag> flags,
+        std::optional<std::vector<ArrowFlag>> flags,
         ArrowSchema** children,
         const CHILDREN_OWNERSHIP& children_ownership,
         ArrowSchema* dictionary,
@@ -91,7 +91,7 @@ namespace sparrow
         F format,
         N name,
         std::optional<M> metadata,
-        std::optional<ArrowFlag> flags,
+        std::optional<std::vector<ArrowFlag>> flags,
         ArrowSchema** children,
         const CHILDREN_OWNERSHIP& children_ownership,
         ArrowSchema* dictionary,
@@ -109,7 +109,14 @@ namespace sparrow
             }
         }
 
-        schema.flags = flags.has_value() ? static_cast<int64_t>(flags.value()) : 0;
+        schema.flags = 0;
+        if (flags.has_value())
+        {
+            for (const auto& flag : *flags)
+            {
+                schema.flags |= static_cast<int64_t>(flag);
+            }
+        }
         schema.n_children = static_cast<int64_t>(children_ownership.size());
 
         std::optional<std::string> metadata_str = metadata.has_value()
@@ -142,7 +149,7 @@ namespace sparrow
         F format,
         N name,
         std::optional<M> metadata,
-        std::optional<ArrowFlag> flags,
+        std::optional<std::vector<ArrowFlag>> flags,
         ArrowSchema** children,
         const CHILDREN_OWNERSHIP& children_ownership,
         ArrowSchema* dictionary,

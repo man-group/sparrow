@@ -185,17 +185,18 @@ namespace sparrow
          * @return The arrow proxy.
          */
         template <
-            std::ranges::input_range R,
+            std::ranges::input_range VALUES,
             validity_bitmap_input VB = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(
-                std::ranges::input_range<std::ranges::range_value_t<R>> &&  // a range of ranges
-                mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>  // inner range is a
-                                                                                           // range of
-                                                                                           // char-like
+                std::ranges::input_range<std::ranges::range_value_t<VALUES>> &&  // a range of ranges
+                mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<VALUES>>>  // inner range
+                                                                                                // is a range
+                                                                                                // of
+                                                                                                // char-like
             )
         [[nodiscard]] static arrow_proxy create_proxy(
-            R&& values,
+            VALUES&& values,
             VB&& validity_input = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
@@ -210,12 +211,14 @@ namespace sparrow
          * @param metadata The metadata of the array.
          * @return The arrow proxy.
          */
-        template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
-                     && std::ranges::input_range<typename std::ranges::range_value_t<R>::value_type>
-                     && std::is_same_v<std::ranges::range_value_t<typename std::ranges::range_value_t<R>::value_type>, byte_t>
+        template <std::ranges::input_range NULLABLE_VALUES, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires mpl::is_type_instance_of_v<std::ranges::range_value_t<NULLABLE_VALUES>, nullable>
+                     && std::ranges::input_range<typename std::ranges::range_value_t<NULLABLE_VALUES>::value_type>
+                     && std::is_same_v<
+                         std::ranges::range_value_t<typename std::ranges::range_value_t<NULLABLE_VALUES>::value_type>,
+                         byte_t>
         [[nodiscard]] static arrow_proxy create_proxy(
-            R&&,
+            NULLABLE_VALUES&&,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
