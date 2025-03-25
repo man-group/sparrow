@@ -310,12 +310,12 @@ namespace sparrow
         return key_value_view(schema().metadata);
     }
 
-    [[nodiscard]] std::vector<ArrowFlag> arrow_proxy::flags() const
+    [[nodiscard]] std::unordered_set<ArrowFlag> arrow_proxy::flags() const
     {
-        return to_vector_of_ArrowFlags(schema().flags);
+        return to_set_of_ArrowFlags(schema().flags);
     }
 
-    void arrow_proxy::set_flags(const std::vector<ArrowFlag>& flags)
+    void arrow_proxy::set_flags(const std::unordered_set<ArrowFlag>& flags)
     {
         if (!schema_created_with_sparrow())
         {
@@ -697,7 +697,7 @@ namespace sparrow
 
     void arrow_proxy::update_null_count()
     {
-        if (has_bitmap(data_type()))
+        if (has_bitmap(data_type()) && flags().contains(ArrowFlag::NULLABLE))
         {
             const auto& validity_buffer = buffers().front();
             const dynamic_bitset_view<const std::uint8_t> bitmap(validity_buffer.data(), length() + offset());

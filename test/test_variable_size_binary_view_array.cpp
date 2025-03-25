@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/variable_size_binary_view_array.hpp"
 #include "sparrow/utils/nullable.hpp"
 
@@ -48,6 +49,7 @@ namespace sparrow
                     CHECK_EQ(array.name(), "name");
                     test_metadata(metadata_sample, array.metadata().value());
                     CHECK_EQ(array.size(), words.size());
+                    CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE));
                 }
 
                 SUBCASE("nullable range, name and metadata")
@@ -61,6 +63,7 @@ namespace sparrow
                     CHECK_EQ(array.name(), "name");
                     test_metadata(metadata_sample, array.metadata().value());
                     CHECK_EQ(array.size(), words.size());
+                    CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE));
                 }
 
                 SUBCASE("range, nullable, name and metadata")
@@ -69,6 +72,7 @@ namespace sparrow
                     CHECK_EQ(array.name(), "name");
                     test_metadata(metadata_sample, array.metadata().value());
                     CHECK_EQ(array.size(), words.size());
+                    CHECK(detail::array_access::get_arrow_proxy(array).flags().empty());
                 }
             }
 
