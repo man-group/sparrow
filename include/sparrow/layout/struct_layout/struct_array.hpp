@@ -16,6 +16,9 @@
 
 #include <string_view>
 #include <version>
+
+#include "sparrow/utils/mp_utils.hpp"
+
 #if defined(__cpp_lib_format)
 #    include "sparrow/utils/format.hpp"
 #endif
@@ -113,10 +116,10 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>, mpl::exactly_bool NULLABLE_TYPE = bool>
         [[nodiscard]] static auto create_proxy(
             std::vector<array>&& children,
-            bool nullable = true,
+            NULLABLE_TYPE nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -178,10 +181,10 @@ namespace sparrow
         );
     }
 
-    template <input_metadata_container METADATA_RANGE>
+    template <input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
     auto struct_array::create_proxy(
         std::vector<array>&& children,
-        bool nullable,
+        NULLABLE_TYPE nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy

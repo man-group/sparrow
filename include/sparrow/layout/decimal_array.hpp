@@ -29,6 +29,7 @@
 #include "sparrow/utils/decimal.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/metadata.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
@@ -191,12 +192,12 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>, mpl::exactly_bool NULLABLE_TYPE = bool>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<storage_type>&& data_buffer,
             std::size_t precision,
             int scale,
-            bool nullable = true,
+            NULLABLE_TYPE nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -308,12 +309,12 @@ namespace sparrow
     }
 
     template <decimal_type T>
-    template <input_metadata_container METADATA_RANGE>
+    template <input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
     auto decimal_array<T>::create_proxy(
         u8_buffer<storage_type>&& data_buffer,
         std::size_t precision,
         int scale,
-        bool nullable,
+        NULLABLE_TYPE nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
