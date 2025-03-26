@@ -57,6 +57,9 @@ namespace sparrow
             pointer p_storage_end = nullptr;
 
             buffer_data() = default;
+            ~buffer_data() = default;
+            constexpr buffer_data(const buffer_data&) = default;
+            constexpr buffer_data& operator=(const buffer_data&) = default;
             constexpr buffer_data(buffer_data&&) noexcept;
             constexpr buffer_data& operator=(buffer_data&&) noexcept;
         };
@@ -341,6 +344,7 @@ namespace sparrow
     constexpr buffer_base<T>::buffer_base(pointer p, size_type n, const A& a)
         : m_alloc(a)
     {
+        SPARROW_ASSERT_TRUE((p != nullptr) || (p == nullptr && n == 0));
         assign_storage(p, n, n);
     }
 
@@ -1035,7 +1039,7 @@ namespace sparrow
     {
         const size_type diff_max = static_cast<size_type>(std::numeric_limits<difference_type>::max());
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
-        return (std::min) (diff_max, alloc_max);
+        return (std::min)(diff_max, alloc_max);
     }
 
     template <class T>
