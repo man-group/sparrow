@@ -205,7 +205,7 @@ namespace sparrow
     null_array::create_proxy(size_t length, std::optional<std::string_view> name, std::optional<METADATA_RANGE> metadata)
     {
         using namespace std::literals;
-        static const std::optional<std::vector<sparrow::ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
+        static const std::optional<std::unordered_set<sparrow::ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
         ArrowSchema schema = make_arrow_schema(
             "n"sv,
             std::move(name),

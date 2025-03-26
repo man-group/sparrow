@@ -577,7 +577,7 @@ namespace sparrow
             child_schemas[i] = new ArrowSchema(std::move(flat_schema));
         }
 
-        static const std::optional<std::vector<sparrow::ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
+        static const std::optional<std::unordered_set<sparrow::ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
 
         ArrowSchema schema = make_arrow_schema(
             std::move(format),

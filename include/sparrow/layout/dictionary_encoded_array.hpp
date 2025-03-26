@@ -293,7 +293,7 @@ namespace sparrow
 
         const repeat_view<bool> children_ownership{true, 0};
 
-        static const std::vector<sparrow::ArrowFlag> flags{ArrowFlag::NULLABLE};
+        static const std::unordered_set<sparrow::ArrowFlag> flags{ArrowFlag::NULLABLE};
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(

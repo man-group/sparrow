@@ -589,7 +589,7 @@ namespace sparrow
         const auto null_count = vbitmap.null_count();
         const repeat_view<bool> children_ownership{true, 1};
 
-        static const std::optional<std::vector<ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
+        static const std::optional<std::unordered_set<ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
 
         ArrowSchema schema = make_arrow_schema(
             BIG ? std::string("+L") : std::string("+l"),                   // format
@@ -737,7 +737,7 @@ namespace sparrow
         auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
         const auto null_count = vbitmap.null_count();
         const repeat_view<bool> children_ownership{true, 1};
-        static const std::optional<std::vector<ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
+        static const std::optional<std::unordered_set<ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
 
         ArrowSchema schema = make_arrow_schema(
             BIG ? std::string("+vL") : std::string("+vl"),                 // format

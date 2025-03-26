@@ -325,7 +325,7 @@ namespace sparrow
 
         std::string format_str = "w:" + std::to_string(element_size);
 
-        static const std::vector<ArrowFlag> flags{ArrowFlag::NULLABLE};
+        static const std::unordered_set<ArrowFlag> flags{ArrowFlag::NULLABLE};
 
         ArrowSchema schema = make_arrow_schema(
             std::move(format_str),

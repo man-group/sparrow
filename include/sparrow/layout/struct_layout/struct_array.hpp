@@ -130,7 +130,7 @@ namespace sparrow
             std::vector<array>&& children,
             std::optional<buffer<std::uint8_t>> validity_buffer,
             std::int64_t null_count,
-            std::optional<std::vector<sparrow::ArrowFlag>> flags,
+            std::optional<std::unordered_set<sparrow::ArrowFlag>> flags,
             std::optional<std::string_view> name,
             std::optional<METADATA_RANGE> metadata
         ) -> arrow_proxy;
@@ -170,7 +170,7 @@ namespace sparrow
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
         const auto null_count = vbitmap.null_count();
 
-        static const std::vector<sparrow::ArrowFlag> flags{ArrowFlag::NULLABLE};
+        static const std::unordered_set<sparrow::ArrowFlag> flags{ArrowFlag::NULLABLE};
         return create_proxy_impl(
             std::move(children),
             vbitmap.extract_storage(),
@@ -211,7 +211,7 @@ namespace sparrow
         std::vector<array>&& children,
         std::optional<buffer<std::uint8_t>> validity_buffer,
         std::int64_t null_count,
-        std::optional<std::vector<sparrow::ArrowFlag>> flags,
+        std::optional<std::unordered_set<sparrow::ArrowFlag>> flags,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
