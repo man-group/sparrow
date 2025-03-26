@@ -37,6 +37,7 @@ project(sparrow CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_SCAN_FOR_MODULES  OFF) # We don't use modules
 
 include(CMakeDependentOption)
 
@@ -153,8 +154,6 @@ if (USE_DATE_POLYFILL)
     list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
     list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_USE_DATE_POLYFILL)
 endif()
-
-
 
 if(USE_LARGE_INT_PLACEHOLDERS)
     message(STATUS "Using large int placeholders")

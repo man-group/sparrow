@@ -105,7 +105,7 @@ namespace sparrow
 
     template <std::integral T>
     constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n)
-        : base_type(storage_type(p, this->compute_block_count(n)), n)
+        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n) : 0), n)
     {
         base_type::zero_unused_bits();
     }
@@ -128,7 +128,7 @@ namespace sparrow
         {
             if (bitmap.size() == 0)
             {
-                return validity_bitmap(size, true);
+                return {size, true};
             }
             return bitmap;  // copy
         }
@@ -163,11 +163,7 @@ namespace sparrow
 
         // range of indices / integers (but not booleans)
         template <std::ranges::input_range R>
-            requires(
-                std::unsigned_integral<std::ranges::range_value_t<R>>
-                && !std::same_as<std::ranges::range_value_t<R>, bool>
-                && !std::same_as<std::decay_t<R>, validity_bitmap>
-            )
+            requires(std::unsigned_integral<std::ranges::range_value_t<R>> && !std::same_as<std::ranges::range_value_t<R>, bool> && !std::same_as<std::decay_t<R>, validity_bitmap>)
         validity_bitmap ensure_validity_bitmap_impl(std::size_t size, R&& range_of_indices)
         {
             validity_bitmap bitmap(size, true);

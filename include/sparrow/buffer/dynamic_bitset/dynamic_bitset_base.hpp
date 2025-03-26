@@ -160,6 +160,8 @@ namespace sparrow
         [[nodiscard]] constexpr size_type count_extra_bits() const noexcept;
         constexpr void update_null_count(bool old_value, bool new_value);
 
+        constexpr void init_buffer();
+
         storage_type m_buffer;
         size_type m_size;
         size_type m_null_count;
@@ -195,7 +197,10 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
     {
         SPARROW_ASSERT_TRUE(pos < size());
-        SPARROW_ASSERT_TRUE(data() != nullptr);
+        if (data() == nullptr)
+        {
+            resize(m_size, true);
+        }
         return reference(*this, buffer().data()[block_index(pos)], bit_mask(pos));
     }
 
@@ -211,6 +216,13 @@ namespace sparrow
     constexpr bool dynamic_bitset_base<B>::test(size_type pos) const
     {
         SPARROW_ASSERT_TRUE(pos < size());
+        if constexpr (std::is_pointer_v<storage_type>)
+        {
+            if (m_buffer == nullptr)
+            {
+                return true;
+            }
+        }
         if (data() == nullptr)
         {
             return true;
@@ -223,7 +235,17 @@ namespace sparrow
     constexpr void dynamic_bitset_base<B>::set(size_type pos, value_type value)
     {
         SPARROW_ASSERT_TRUE(pos < size());
-        SPARROW_ASSERT_TRUE(data() != nullptr);
+        if (data() == nullptr)
+        {
+            if (value == true)  // In this case,  we don't need to set the bit
+            {
+                return;
+            }
+            else
+            {
+                resize(m_size, true);
+            }
+        }
         block_type& block = buffer().data()[block_index(pos)];
         const bool old_value = block & bit_mask(pos);
         if (value)
@@ -241,6 +263,13 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr auto dynamic_bitset_base<B>::data() noexcept -> block_type*
     {
+        if constexpr (std::is_pointer_v<storage_type>)
+        {
+            if (m_buffer == nullptr)
+            {
+                return nullptr;
+            }
+        }
         return buffer().data();
     }
 
@@ -323,6 +352,7 @@ namespace sparrow
                 + std::to_string(size()) + " at index " + std::to_string(pos)
             );
         }
+
         return (*this)[pos];
     }
 
@@ -431,13 +461,16 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     auto dynamic_bitset_base<B>::count_non_null() const noexcept -> size_type
     {
-        if (data() == nullptr)
+        if constexpr (std::is_pointer_v<storage_type>)
+        {
+            if (m_buffer == nullptr)
+            {
+                return m_size;
+            }
+        }
+        if (data() == nullptr || buffer().empty())
         {
             return m_size;
-        }
-        if (buffer().empty())
-        {
-            return 0u;
         }
 
         int res = 0;
@@ -542,7 +575,6 @@ namespace sparrow
     constexpr dynamic_bitset_base<B>::iterator
     dynamic_bitset_base<B>::insert(const_iterator pos, size_type count, value_type value)
     {
-        SPARROW_ASSERT_TRUE(data() != nullptr);
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
@@ -663,6 +695,10 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr void dynamic_bitset_base<B>::pop_back()
     {
+        if (empty())
+        {
+            return;
+        }
         resize(size() - 1);
     }
 }

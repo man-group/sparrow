@@ -575,7 +575,6 @@ namespace sparrow
 
             SUBCASE("move value in the middle of the buffer")
             {
-                // CHECK(true);
                 constexpr std::size_t size = 4u;
                 non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
                 const std::string expected_value = "9999";
