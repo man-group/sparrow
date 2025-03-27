@@ -160,8 +160,6 @@ namespace sparrow
         [[nodiscard]] constexpr size_type count_extra_bits() const noexcept;
         constexpr void update_null_count(bool old_value, bool new_value);
 
-        constexpr void init_buffer();
-
         storage_type m_buffer;
         size_type m_size;
         size_type m_null_count;
@@ -197,10 +195,14 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
     {
         SPARROW_ASSERT_TRUE(pos < size());
-        if (data() == nullptr)
+        if constexpr (requires(storage_type s) { s->resize(0); })
         {
-            resize(m_size, true);
+            if (data() == nullptr)
+            {
+                resize(m_size, true);
+            }
         }
+
         return reference(*this, buffer().data()[block_index(pos)], bit_mask(pos));
     }
 
