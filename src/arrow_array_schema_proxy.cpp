@@ -579,7 +579,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(schema_dictionary->release != nullptr);
         if (!is_created_with_sparrow())
         {
-            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema");
+            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema"
+            );
         }
 
         if (array().dictionary != nullptr)
@@ -604,7 +605,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(schema_dictionary.release != nullptr);
         if (!is_created_with_sparrow())
         {
-            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema");
+            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema"
+            );
         }
 
         if (array().dictionary != nullptr)
@@ -697,7 +699,7 @@ namespace sparrow
 
     void arrow_proxy::update_null_count()
     {
-        if (has_bitmap(data_type()) && flags().contains(ArrowFlag::NULLABLE))
+        if (has_bitmap(data_type()))
         {
             const auto& validity_buffer = buffers().front();
             const dynamic_bitset_view<const std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
@@ -756,12 +758,17 @@ namespace sparrow
     {
         if (!array_created_with_sparrow())
         {
-            throw arrow_proxy_exception(
-                "Cannot resize bitmap on a non-sparrow created ArrowArray or ArrowSchema"
+            throw arrow_proxy_exception("Cannot resize bitmap on a non-sparrow created ArrowArray or ArrowSchema"
             );
         }
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         auto bitmap = get_non_owning_dynamic_bitset();
+        if (!value)
+        {
+            auto new_flags = flags();
+            new_flags.emplace(ArrowFlag::NULLABLE);
+            set_flags(new_flags);
+        }
         bitmap.resize(new_size, value);
         update_buffers();
     }
@@ -781,6 +788,12 @@ namespace sparrow
             return index;
         }
         auto bitmap = get_non_owning_dynamic_bitset();
+        if (!value)
+        {
+            auto new_flags = flags();
+            new_flags.emplace(ArrowFlag::NULLABLE);
+            set_flags(new_flags);
+        }
         auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), count, value);
         update_buffers();
         return std::distance(bitmap.begin(), it);

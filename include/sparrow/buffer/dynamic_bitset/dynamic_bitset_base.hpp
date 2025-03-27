@@ -195,7 +195,8 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
     {
         SPARROW_ASSERT_TRUE(pos < size());
-        if constexpr (requires(storage_type s) { s->resize(0); })
+        if constexpr (requires(storage_type s) { s->resize(0); })  // In the other case, the data() can't be
+                                                                   // nullptr
         {
             if (data() == nullptr)
             {
@@ -354,7 +355,6 @@ namespace sparrow
                 + std::to_string(size()) + " at index " + std::to_string(pos)
             );
         }
-
         return (*this)[pos];
     }
 
