@@ -164,7 +164,7 @@ namespace sparrow
          * @param metadata The new metadata of the array.
          */
         template <input_metadata_container R>
-        SPARROW_API void set_metadata(std::optional<R> metadata);
+        void set_metadata(std::optional<R> metadata);
 
         /**
          * Checks if the array has no element, i.e. whether size() == 0.
