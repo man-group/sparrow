@@ -57,6 +57,11 @@ namespace sparrow
         get_arrow_proxy().set_name(name);
     }
 
+    std::optional<key_value_view> array::metadata() const
+    {
+        return get_arrow_proxy().metadata();
+    }
+
     bool array::empty() const
     {
         return size() == size_type(0);
