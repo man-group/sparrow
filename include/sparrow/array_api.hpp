@@ -365,7 +365,7 @@ namespace sparrow
     // Implementation
 
     template <input_metadata_container R>
-    SPARROW_API void array::set_metadata(std::optional<R> metadata)
+    void array::set_metadata(std::optional<R> metadata)
     {
         get_arrow_proxy().set_metadata(metadata);
     }
