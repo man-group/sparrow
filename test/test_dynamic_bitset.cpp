@@ -685,10 +685,21 @@ namespace sparrow
 
             SUBCASE("pop_back")
             {
-                bitmap b(f.get_buffer(), s_bitmap_size);
-                b.pop_back();
-                CHECK_EQ(b.size(), s_bitmap_size - 1);
-                CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
+                SUBCASE("on non empty bimap")
+                {
+                    bitmap b(f.get_buffer(), s_bitmap_size);
+                    b.pop_back();
+                    CHECK_EQ(b.size(), s_bitmap_size - 1);
+                    CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
+                }
+                if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
+                {
+                    SUBCASE("on empty bimap")
+                    {
+                        bitmap b;
+                        CHECK_NOTHROW(b.pop_back());
+                    }
+                }
             }
 
             SUBCASE("bitset_reference")
