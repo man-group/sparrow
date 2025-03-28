@@ -163,7 +163,7 @@ namespace sparrow
          * Sets the metadata of the array to \ref metadata.
          * @param metadata The new metadata of the array.
          */
-        template <input_metadata_container R>
+        template <input_metadata_container R = std::vector<metadata_pair>>
         void set_metadata(std::optional<R> metadata);
 
         /**
