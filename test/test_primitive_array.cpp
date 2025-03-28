@@ -735,11 +735,8 @@ namespace sparrow
         TEST_CASE("convenience_constructors_from_iota")
         {
             constexpr size_t count = 4;
-            const primitive_array<std::size_t> arr(
-                std::ranges::iota_view{std::size_t(0), count},
-                name,
-                metadata_sample_opt
-            );
+            const primitive_array<std::size_t>
+                arr(std::ranges::iota_view{std::size_t(0), count}, false, name, metadata_sample_opt);
             CHECK_EQ(arr.name(), name);
             test_metadata(metadata_sample, *(arr.metadata()));
             REQUIRE(arr.size() == count);

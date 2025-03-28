@@ -139,28 +139,44 @@ namespace sparrow
             {
                 if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
                 {
-                    const bitmap b1;
-                    CHECK_EQ(b1.size(), 0u);
-                    CHECK_EQ(b1.null_count(), 0u);
+                    SUBCASE("default")
+                    {
+                        const bitmap b;
+                        CHECK_EQ(b.size(), 0u);
+                        CHECK_EQ(b.null_count(), 0u);
+                    }
 
-                    const std::size_t expected_size = 13;
-                    const bitmap b2(expected_size);
-                    CHECK_EQ(b2.size(), expected_size);
-                    CHECK_EQ(b2.null_count(), expected_size);
+                    SUBCASE("with size")
+                    {
+                        const std::size_t expected_size = 13;
+                        const bitmap b(expected_size);
+                        CHECK_EQ(b.size(), expected_size);
+                        CHECK_EQ(b.null_count(), expected_size);
+                    }
 
-                    const bitmap b3(expected_size, true);
-                    CHECK_EQ(b3.size(), expected_size);
-                    CHECK_EQ(b3.null_count(), 0u);
+                    SUBCASE("with size and value")
+                    {
+                        const std::size_t expected_size = 13;
+                        const bitmap b(expected_size, true);
+                        CHECK_EQ(b.size(), expected_size);
+                        CHECK_EQ(b.null_count(), 0u);
+                    }
 
-                    dynamic_bitmap_fixture bf;
-                    const bitmap b4(bf.get_buffer(), s_bitmap_size);
-                    CHECK_EQ(b4.size(), s_bitmap_size);
-                    CHECK_EQ(b4.null_count(), s_bitmap_null_count);
+                    SUBCASE("with buffer and size")
+                    {
+                        dynamic_bitmap_fixture bf;
+                        const bitmap b(bf.get_buffer(), s_bitmap_size);
+                        CHECK_EQ(b.size(), s_bitmap_size);
+                        CHECK_EQ(b.null_count(), s_bitmap_null_count);
+                    }
 
-                    dynamic_bitmap_fixture bf2;
-                    const bitmap b5(bf2.get_buffer(), s_bitmap_size, s_bitmap_null_count);
-                    CHECK_EQ(b5.size(), s_bitmap_size);
-                    CHECK_EQ(b5.null_count(), s_bitmap_null_count);
+                    SUBCASE("with buffer, size and null count")
+                    {
+                        dynamic_bitmap_fixture bf2;
+                        const bitmap b5(bf2.get_buffer(), s_bitmap_size, s_bitmap_null_count);
+                        CHECK_EQ(b5.size(), s_bitmap_size);
+                        CHECK_EQ(b5.null_count(), s_bitmap_null_count);
+                    }
                 }
                 else if constexpr (std::is_same_v<bitmap, non_owning_dynamic_bitset<std::uint8_t>>)
                 {
@@ -179,7 +195,6 @@ namespace sparrow
                 const bitmap& b2 = b;
                 CHECK_EQ(b2.data(), f.p_expected_buffer);
             }
-
 
             SUBCASE("copy semantic")
             {
@@ -255,28 +270,57 @@ namespace sparrow
 
             SUBCASE("test/set")
             {
-                bitmap bm(f.get_buffer(), s_bitmap_size);
+                SUBCASE("from empty buffer")
+                {
+                    constexpr size_t size = 10u;
+                    bitmap bm(nullptr, size);
+                    CHECK_EQ(bm.size(), size);
+                    CHECK_EQ(bm.null_count(), 0);
+                    for (size_t i = 0; i < size; ++i)
+                    {
+                        CHECK(bm.test(i));
+                    }
+                    CHECK_EQ(bm.data(), nullptr);
+                    CHECK_EQ(bm.null_count(), 0);
+                    CHECK_EQ(bm.size(), size);
 
-                CHECK(bm.test(2));
-                CHECK_FALSE(bm.test(3));
-                CHECK(bm.test(24));
+                    bm.set(2, true);
+                    CHECK_EQ(bm.data(), nullptr);
+                    if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
+                    {
+                        bm.set(3, false);
+                        CHECK_NE(bm.data(), nullptr);
+                        CHECK_EQ(bm.null_count(), 1);
+                        CHECK_EQ(bm.size(), size);
+                        CHECK_FALSE(bm.test(3));
+                    }
+                }
 
-                bm.set(3, true);
-                CHECK_EQ(bm.data()[0], 46);
-                CHECK_EQ(bm.null_count(), s_bitmap_null_count - 1);
+                SUBCASE("from non-empty buffer")
+                {
+                    bitmap bm(f.get_buffer(), s_bitmap_size);
 
-                bm.set(24, 0);
-                CHECK_EQ(bm.data()[3], 6);
-                CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    CHECK(bm.test(2));
+                    CHECK_FALSE(bm.test(3));
+                    CHECK(bm.test(24));
 
-                // Ensures that setting false again does not alter the null count
-                bm.set(24, 0);
-                CHECK_EQ(bm.data()[3], 6);
-                CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    bm.set(3, true);
+                    CHECK_EQ(bm.data()[0], 46);
+                    CHECK_EQ(bm.null_count(), s_bitmap_null_count - 1);
 
-                bm.set(2, true);
-                CHECK(bm.test(2));
-                CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    bm.set(24, 0);
+                    CHECK_EQ(bm.data()[3], 6);
+                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+
+                    // Ensures that setting false again does not alter the null count
+                    bm.set(24, 0);
+                    CHECK_EQ(bm.data()[3], 6);
+                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+
+                    bm.set(2, true);
+                    CHECK(bm.test(2));
+                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                }
             }
 
             SUBCASE("operator[]")
@@ -641,10 +685,21 @@ namespace sparrow
 
             SUBCASE("pop_back")
             {
-                bitmap b(f.get_buffer(), s_bitmap_size);
-                b.pop_back();
-                CHECK_EQ(b.size(), s_bitmap_size - 1);
-                CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
+                SUBCASE("on non empty bimap")
+                {
+                    bitmap b(f.get_buffer(), s_bitmap_size);
+                    b.pop_back();
+                    CHECK_EQ(b.size(), s_bitmap_size - 1);
+                    CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
+                }
+                if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
+                {
+                    SUBCASE("on empty bimap")
+                    {
+                        bitmap b;
+                        CHECK_NOTHROW(b.pop_back());
+                    }
+                }
             }
 
             SUBCASE("bitset_reference")

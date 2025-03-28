@@ -31,14 +31,17 @@ namespace sparrow
                         return static_cast<std::uint16_t>(i);
                     }
                 ),
+            true,
             "column0"
         );
         primitive_array<std::int32_t> pr1(
             std::ranges::iota_view{std::int32_t(4), 4 + std::int32_t(data_size)},
+            true,
             "column1"
         );
         primitive_array<std::int32_t> pr2(
             std::ranges::iota_view{std::int32_t(2), 2 + std::int32_t(data_size)},
+            true,
             "column2"
         );
 
@@ -201,6 +204,7 @@ namespace sparrow
             auto record = make_record_batch(col_size);
             primitive_array<std::int32_t> pr3(
                 std::ranges::iota_view{std::int32_t(3), 3 + std::int32_t(col_size)},
+                true,
                 "column3"
             );
 

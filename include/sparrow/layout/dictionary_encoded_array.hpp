@@ -17,6 +17,7 @@
 #include "sparrow/array_api.hpp"
 #include "sparrow/array_factory.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
+#include "sparrow/c_interface.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/array_helper.hpp"
@@ -28,6 +29,7 @@
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/metadata.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -179,7 +181,19 @@ namespace sparrow
         [[nodiscard]] static auto create_proxy(
             keys_buffer_type&& keys,
             array&& values,
-            R&& bitmaps = validity_bitmap{},
+            R&& bitmaps,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        ) -> arrow_proxy;
+
+        template <
+            validity_bitmap_input R = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>,
+            mpl::exactly_bool NULLABLE_TYPE = bool>
+        [[nodiscard]] static auto create_proxy(
+            keys_buffer_type&& keys,
+            array&& values,
+            NULLABLE_TYPE nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -279,21 +293,24 @@ namespace sparrow
 
         const repeat_view<bool> children_ownership{true, 0};
 
+        static const std::unordered_set<sparrow::ArrowFlag> flags{ArrowFlag::NULLABLE};
+
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             sparrow::data_type_format_of<IT>(),
             std::move(name),                           // name
             std::move(metadata),                       // metadata
-            std::nullopt,                              // flags
+            flags,                                     // flags
             nullptr,                                   // children
             children_ownership,                        // children_ownership
             new ArrowSchema(std::move(value_schema)),  // dictionary
             true                                       // dictionary ownership
         );
 
-        std::vector<buffer<uint8_t>> buffers(2);
-        buffers[0] = std::move(vbitmap).extract_storage();
-        buffers[1] = std::move(keys).extract_storage();
+        std::vector<buffer<uint8_t>> buffers{
+            std::move(vbitmap).extract_storage(),
+            std::move(keys).extract_storage()
+        };
 
         // create arrow array
         ArrowArray arr = make_arrow_array(
@@ -307,6 +324,64 @@ namespace sparrow
             true                                     // dictionary ownership
         );
         return arrow_proxy(std::move(arr), std::move(schema));
+    }
+
+    template <std::integral IT>
+    template <validity_bitmap_input VBI, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    auto dictionary_encoded_array<IT>::create_proxy(
+        keys_buffer_type&& keys,
+        array&& values,
+        NULLABLE_TYPE nullable,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    ) -> arrow_proxy
+    {
+        if (nullable)
+        {
+            return create_proxy(
+                std::move(keys),
+                std::move(values),
+                validity_bitmap{},
+                std::move(name),
+                std::move(metadata)
+            );
+        }
+        else
+        {
+            const auto size = keys.size();
+            auto [value_array, value_schema] = extract_arrow_structures(std::move(values));
+            const repeat_view<bool> children_ownership{true, 0};
+
+            // create arrow schema and array
+            ArrowSchema schema = make_arrow_schema(
+                sparrow::data_type_format_of<IT>(),
+                std::move(name),                           // name
+                std::move(metadata),                       // metadata
+                std::nullopt,                              // flags
+                nullptr,                                   // children
+                children_ownership,                        // children_ownership
+                new ArrowSchema(std::move(value_schema)),  // dictionary
+                true                                       // dictionary ownership
+            );
+
+            std::vector<buffer<uint8_t>> buffers{
+                buffer<uint8_t>{nullptr, 0},  // no validity bitmap
+                std::move(keys).extract_storage()
+            };
+
+            // create arrow array
+            ArrowArray arr = make_arrow_array(
+                static_cast<std::int64_t>(size),  // length
+                0,                                // Null count
+                0,                                // offset
+                std::move(buffers),
+                nullptr,                                 // children
+                children_ownership,                      // children_ownership
+                new ArrowArray(std::move(value_array)),  // dictionary
+                true                                     // dictionary ownership
+            );
+            return arrow_proxy(std::move(arr), std::move(schema));
+        }
     }
 
     template <std::integral IT>

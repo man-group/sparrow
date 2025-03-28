@@ -29,6 +29,7 @@
 #include "sparrow/utils/decimal.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/metadata.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
@@ -191,15 +192,15 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>, mpl::exactly_bool NULLABLE_TYPE = bool>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<storage_type>&& data_buffer,
             std::size_t precision,
             int scale,
+            NULLABLE_TYPE nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
-
 
         [[nodiscard]] inner_reference value(size_type i);
         [[nodiscard]] inner_const_reference value(size_type i) const;
@@ -308,23 +309,59 @@ namespace sparrow
     }
 
     template <decimal_type T>
-    template <input_metadata_container METADATA_RANGE>
+    template <input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
     auto decimal_array<T>::create_proxy(
         u8_buffer<storage_type>&& data_buffer,
         std::size_t precision,
         int scale,
+        NULLABLE_TYPE nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
-        return decimal_array<T>::create_proxy(
-            std::move(data_buffer),
-            validity_bitmap{},
-            precision,
-            scale,
-            name,
-            metadata
-        );
+        if (nullable)
+        {
+            return decimal_array<T>::create_proxy(
+                std::move(data_buffer),
+                validity_bitmap{},
+                precision,
+                scale,
+                name,
+                metadata
+            );
+        }
+        else
+        {
+            // create arrow schema and array
+            ArrowSchema schema = make_arrow_schema(
+                sparrow::data_type_format_of<T>(),  // format
+                name,                               // name
+                metadata,                           // metadata
+                std::nullopt,                       // flags
+                nullptr,                            // children
+                repeat_view<bool>(true, 0),         // children_ownership
+                nullptr,                            // dictionary
+                true                                // dictionary ownership
+            );
+
+            std::vector<buffer<uint8_t>> buffers{
+                buffer<uint8_t>{nullptr, 0},  // no validity bitmap
+                std::move(data_buffer).extract_storage()
+            };
+
+            // create arrow array
+            ArrowArray arr = make_arrow_array(
+                static_cast<std::int64_t>(buffers[1].size() / sizeof(storage_type)),  // length
+                0,                                                                    // null_count
+                0,                                                                    // offset
+                std::move(buffers),
+                nullptr,                     // children
+                repeat_view<bool>(true, 0),  // children_ownership
+                nullptr,                     // dictionary,
+                true                         // dictionary ownership
+            );
+            return arrow_proxy(std::move(arr), std::move(schema));
+        }
     }
 
     template <decimal_type T>

@@ -310,12 +310,12 @@ namespace sparrow
         return key_value_view(schema().metadata);
     }
 
-    [[nodiscard]] std::vector<ArrowFlag> arrow_proxy::flags() const
+    [[nodiscard]] std::unordered_set<ArrowFlag> arrow_proxy::flags() const
     {
-        return to_vector_of_ArrowFlags(schema().flags);
+        return to_set_of_ArrowFlags(schema().flags);
     }
 
-    void arrow_proxy::set_flags(const std::vector<ArrowFlag>& flags)
+    void arrow_proxy::set_flags(const std::unordered_set<ArrowFlag>& flags)
     {
         if (!schema_created_with_sparrow())
         {
@@ -651,21 +651,25 @@ namespace sparrow
 
     [[nodiscard]] const ArrowArray& arrow_proxy::array() const
     {
+        const_cast<arrow_proxy&>(*this).sanitize_schema();
         return get_value_reference_of_variant<const ArrowArray>(m_array);
     }
 
     [[nodiscard]] const ArrowSchema& arrow_proxy::schema() const
     {
+        const_cast<arrow_proxy&>(*this).sanitize_schema();
         return get_value_reference_of_variant<const ArrowSchema>(m_schema);
     }
 
     [[nodiscard]] ArrowArray& arrow_proxy::array()
     {
+        const_cast<arrow_proxy&>(*this).sanitize_schema();
         return get_value_reference_of_variant<ArrowArray>(m_array);
     }
 
     [[nodiscard]] ArrowSchema& arrow_proxy::schema()
     {
+        const_cast<arrow_proxy&>(*this).sanitize_schema();
         return get_value_reference_of_variant<ArrowSchema>(m_schema);
     }
 
@@ -675,7 +679,7 @@ namespace sparrow
         {
             throw std::runtime_error("cannot extract an ArrowArray not owned by the structure");
         }
-
+        sanitize_schema();
         ArrowArray res = std::get<ArrowArray>(std::move(m_array));
         m_array = ArrowArray{};
         reset();
@@ -688,7 +692,7 @@ namespace sparrow
         {
             throw std::runtime_error("cannot extract an ArrowSchema not owned by the structure");
         }
-
+        sanitize_schema();
         ArrowSchema res = std::get<ArrowSchema>(std::move(m_schema));
         m_schema = ArrowSchema{};
         reset();
@@ -849,5 +853,26 @@ namespace sparrow
         ar.length = static_cast<int64_t>(end - start);
         ar.release = empty_release_arrow_array;
         return arrow_proxy{std::move(ar), std::move(as)};
+    }
+
+    void arrow_proxy::sanitize_schema()
+    {
+        bool has_nulls = null_count() != 0;
+        if (m_dictionary != nullptr)
+        {
+            if (m_dictionary->null_count() != 0)
+            {
+                auto new_dictionary_flags = m_dictionary->flags();
+                new_dictionary_flags.emplace(ArrowFlag::NULLABLE);
+                m_dictionary->set_flags(new_dictionary_flags);
+                has_nulls = true;
+            }
+        }
+        if (has_nulls)
+        {
+            auto new_flags = flags();
+            new_flags.emplace(ArrowFlag::NULLABLE);
+            set_flags(new_flags);
+        }
     }
 }

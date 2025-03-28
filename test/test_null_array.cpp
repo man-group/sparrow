@@ -43,7 +43,7 @@ namespace sparrow
             const auto& arrow_proxy = sparrow::detail::array_access::get_arrow_proxy(ar);
             CHECK_EQ(arrow_proxy.format(), "n");
             CHECK_EQ(arrow_proxy.n_children(), 0);
-            CHECK(arrow_proxy.flags().empty());
+            CHECK(arrow_proxy.flags().contains(ArrowFlag::NULLABLE));
             test_metadata(metadata_sample, *(arrow_proxy.metadata()));
             CHECK_EQ(arrow_proxy.name(), name);
             CHECK_EQ(arrow_proxy.dictionary(), nullptr);
