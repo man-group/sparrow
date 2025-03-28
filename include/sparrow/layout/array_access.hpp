@@ -18,7 +18,6 @@
 
 namespace sparrow::detail
 {
-
     class array_access
     {
     public:
