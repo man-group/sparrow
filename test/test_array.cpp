@@ -411,5 +411,43 @@ namespace sparrow
             }
         }
         TEST_CASE_TEMPLATE_APPLY(slice_view_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("name", AR, name_id)
+        {
+            constexpr size_t size = 10;
+            using T = typename AR::inner_value_type;
+
+            array spar = test::make_array<T>(size);
+            CHECK_EQ(spar.name(), "test");
+        }
+        TEST_CASE_TEMPLATE_APPLY(name_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("set_name", AR, set_name_id)
+        {
+            constexpr size_t size = 10;
+            using T = typename AR::inner_value_type;
+
+            array spar = test::make_array<T>(size);
+            CHECK_EQ(spar.name(), "test");
+            spar.set_name(std::nullopt);
+            CHECK_EQ(spar.name(), std::nullopt);
+            spar.set_name("new_name");
+            CHECK_EQ(spar.name(), "new_name");
+        }
+        TEST_CASE_TEMPLATE_APPLY(set_name_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("metadata", AR, metadata_id)
+        {
+            constexpr size_t size = 10;
+            using T = typename AR::inner_value_type;
+
+            array spar = test::make_array<T>(size);
+            test_metadata(metadata_sample, *(spar.metadata()));
+            spar.set_metadata<std::vector<metadata_pair>>(std::nullopt);
+            CHECK_FALSE(spar.metadata().has_value());
+            spar.set_metadata(metadata_sample_opt);
+            test_metadata(metadata_sample, *(spar.metadata()));
+        }
+        TEST_CASE_TEMPLATE_APPLY(metadata_id, testing_types);
     }
 }

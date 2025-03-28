@@ -144,8 +144,7 @@ namespace sparrow
         SPARROW_API enum data_type data_type() const;
 
         /**
-         * @returns the name of the \ref array or an empty
-         * string if the array does not have a name.
+         * @returns the name of the \ref array. If the name is not set, an empty optional is returned.
          */
         SPARROW_API std::optional<std::string_view> name() const;
 
@@ -154,6 +153,18 @@ namespace sparrow
          * @param name The new name of the array.
          */
         SPARROW_API void set_name(std::optional<std::string_view> name);
+
+        /**
+         * @returns the metadata of the \ref array. If the metadata is not set, an empty optional is returned.
+         */
+        SPARROW_API std::optional<key_value_view> metadata() const;
+
+        /**
+         * Sets the metadata of the array to \ref metadata.
+         * @param metadata The new metadata of the array.
+         */
+        template <input_metadata_container R = std::vector<metadata_pair>>
+        void set_metadata(std::optional<R> metadata);
 
         /**
          * Checks if the array has no element, i.e. whether size() == 0.
@@ -350,4 +361,12 @@ namespace sparrow
      */
     template <layout_or_array A>
     std::pair<ArrowArray, ArrowSchema> extract_arrow_structures(A&& a);
+
+    // Implementation
+
+    template <input_metadata_container R>
+    void array::set_metadata(std::optional<R> metadata)
+    {
+        get_arrow_proxy().set_metadata(metadata);
+    }
 }
