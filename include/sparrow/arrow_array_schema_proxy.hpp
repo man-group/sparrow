@@ -132,9 +132,15 @@ namespace sparrow
             {
                 throw arrow_proxy_exception("Cannot set metadata on non-sparrow created ArrowArray");
             }
-            std::string buffer = get_metadata_from_key_values(*metadata);
             auto private_data = get_schema_private_data();
-            private_data->metadata() = std::move(buffer);
+            if (!metadata.has_value())
+            {
+                private_data->metadata() = std::nullopt;
+            }
+            else
+            {
+                private_data->metadata() = get_metadata_from_key_values(*metadata);
+            }
             schema().metadata = private_data->metadata_ptr();
         }
 
