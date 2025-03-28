@@ -136,7 +136,7 @@ namespace sparrow
             std::string buffer = get_metadata_from_key_values(*metadata);
             auto private_data = get_schema_private_data();
             private_data->metadata() = std::move(buffer);
-            schema().metadata = private_data->metadata_ptr();
+            schema_without_sanitize().metadata = private_data->metadata_ptr();
         }
 
         [[nodiscard]] SPARROW_API std::unordered_set<ArrowFlag> flags() const;
@@ -505,6 +505,12 @@ namespace sparrow
         [[nodiscard]] bool is_proxy_valid() const;
 
         [[nodiscard]] size_t get_null_count() const;
+
+        [[nodiscard]] ArrowArray& array_without_sanitize();
+        [[nodiscard]] const ArrowArray& array_without_sanitize() const;
+
+        [[nodiscard]] ArrowSchema& schema_without_sanitize();
+        [[nodiscard]] const ArrowSchema& schema_without_sanitize() const;
 
         /**
          * If the null_count of the proxy or the one from the dictionary is greater than 0, the schema

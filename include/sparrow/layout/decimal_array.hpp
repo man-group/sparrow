@@ -202,6 +202,8 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        static std::string generate_format(std::size_t precision, int scale);
+
         [[nodiscard]] inner_reference value(size_type i);
         [[nodiscard]] inner_const_reference value(size_type i) const;
 
@@ -334,7 +336,7 @@ namespace sparrow
         {
             // create arrow schema and array
             ArrowSchema schema = make_arrow_schema(
-                sparrow::data_type_format_of<T>(),  // format
+                generate_format(precision, scale),  // format
                 name,                               // name
                 metadata,                           // metadata
                 std::nullopt,                       // flags
@@ -349,11 +351,13 @@ namespace sparrow
                 std::move(data_buffer).extract_storage()
             };
 
+            const size_t length = buffers[1].size() / sizeof(storage_type);
+
             // create arrow array
             ArrowArray arr = make_arrow_array(
-                static_cast<std::int64_t>(buffers[1].size() / sizeof(storage_type)),  // length
-                0,                                                                    // null_count
-                0,                                                                    // offset
+                static_cast<std::int64_t>(length),  // length
+                0,                                  // null_count
+                0,                                  // offset
                 std::move(buffers),
                 nullptr,                     // children
                 repeat_view<bool>(true, 0),  // children_ownership
@@ -378,14 +382,9 @@ namespace sparrow
         const auto size = data_buffer.size();
         validity_bitmap bitmap = ensure_validity_bitmap(size, std::forward<R>(bitmap_input));
         const auto null_count = bitmap.null_count();
-
-        constexpr std::size_t sizeof_decimal = sizeof(storage_type);
-        std::stringstream format_str;
-        format_str << "d:" << precision << "," << scale << "," << sizeof_decimal * 8;
-
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
-            format_str.str(),
+            generate_format(precision, scale),
             name,          // name
             metadata,      // metadata
             std::nullopt,  // flags
@@ -455,5 +454,14 @@ namespace sparrow
             detail::layout_value_functor<const self_type, inner_value_type>(this),
             this->size()
         );
+    }
+
+    template <decimal_type T>
+    std::string decimal_array<T>::generate_format(std::size_t precision, int scale)
+    {
+        constexpr std::size_t sizeof_decimal = sizeof(storage_type);
+        std::stringstream format_str;
+        format_str << "d:" << precision << "," << scale << "," << sizeof_decimal * 8;
+        return format_str.str();
     }
 }

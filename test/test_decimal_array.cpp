@@ -62,17 +62,17 @@ namespace sparrow
                     CHECK_EQ(array.size(), 4);
                 }
 
-                u8_buffer<INTEGER_TYPE> buffer{values};
-
                 SUBCASE("data_buffer, bitmaps, precision, scale")
                 {
-                    decimal_array<decimal<INTEGER_TYPE>> array{buffer, bitmaps, precision, scale};
+                    u8_buffer<INTEGER_TYPE> buffer{values};
+                    decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), bitmaps, precision, scale};
                     CHECK_EQ(array.size(), 4);
                 }
 
                 SUBCASE("data_buffer, precision, scale")
                 {
-                    decimal_array<decimal<INTEGER_TYPE>> array{buffer, precision, scale};
+                    u8_buffer<INTEGER_TYPE> buffer{values};
+                    decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), precision, scale};
                     CHECK_EQ(array.size(), 4);
                 }
 
@@ -80,12 +80,14 @@ namespace sparrow
                 {
                     SUBCASE("nullable")
                     {
-                        decimal_array<decimal<INTEGER_TYPE>> array{buffer, precision, scale, true};
+                        u8_buffer<INTEGER_TYPE> buffer{values};
+                        decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), precision, scale, true};
                         CHECK_EQ(array.size(), 4);
                     }
                     SUBCASE("not nullable")
                     {
-                        decimal_array<decimal<INTEGER_TYPE>> array{buffer, precision, scale, false};
+                        u8_buffer<INTEGER_TYPE> buffer{values};
+                        decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), precision, scale, false};
                         CHECK_EQ(array.size(), 4);
                     }
                 }
