@@ -52,7 +52,7 @@ namespace sp = sparrow;
 
 int i = 5;
 sp::nullable<int&> n = i;
-n = sp::null;
+n = sp::nullval;
 std::cout << i << std::endl; // Prints 5
 ```
 
