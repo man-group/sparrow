@@ -556,7 +556,7 @@ public:
         auto out = ctx.out();
 
         // Write opening bracket
-        out = std::ranges::copy(opening, out).out;
+        out = sparrow::ranges::copy(opening, out).out;
 
         // Write range elements
         bool first = true;
@@ -571,7 +571,7 @@ public:
         }
 
         // Write closing bracket
-        out = std::ranges::copy(closing, out).out;
+        out = sparrow::ranges::copy(closing, out).out;
 
         return out;
     }

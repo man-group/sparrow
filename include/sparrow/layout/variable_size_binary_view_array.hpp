@@ -221,13 +221,13 @@ namespace sparrow
             if (length <= SHORT_STRING_SIZE)
             {
                 // write data itself
-                std::ranges::copy(val_casted, length_ptr + SHORT_STRING_OFFSET);
+                sparrow::ranges::copy(val_casted, length_ptr + SHORT_STRING_OFFSET);
             }
             else
             {
                 // write the prefix of the data
                 auto prefix_sub_range = val_casted | std::ranges::views::take(PREFIX_SIZE);
-                std::ranges::copy(prefix_sub_range, length_ptr + PREFIX_OFFSET);
+                sparrow::ranges::copy(prefix_sub_range, length_ptr + PREFIX_OFFSET);
 
                 // write the buffer index
                 *reinterpret_cast<std::int32_t*>(
@@ -261,7 +261,7 @@ namespace sparrow
                                       }
                                   );
 
-                std::ranges::copy(val_casted, long_string_storage.data() + long_string_storage_offset);
+                sparrow::ranges::copy(val_casted, long_string_storage.data() + long_string_storage_offset);
                 long_string_storage_offset += length;
             }
         }

@@ -262,7 +262,7 @@ namespace sparrow
 
             // vector of sizes
             std::vector<std::uint32_t> sizes = {2, 2, 0, 3};
-            std::vector<std::uint32_t> offsets = {3, 2, 0, 0};
+            std::vector<std::int32_t> offsets = {3, 2, 0, 0};
 
             std::vector<std::uint32_t> where_missing = {2};
 

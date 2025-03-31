@@ -69,6 +69,37 @@ namespace sparrow
             );
         }
     }
+
+    namespace ranges
+    {
+        /**
+         * Copies the elements from the input range to the output iterator.
+         * @details: Implementation from https://en.cppreference.com/w/cpp/algorithm/ranges/copy
+         */
+        struct copy_fn
+        {
+            template <std::input_iterator I, std::sentinel_for<I> S, std::weakly_incrementable O>
+                requires std::indirectly_copyable<I, O>
+            constexpr std::ranges::copy_result<I, O> operator()(I first, S last, O result) const
+            {
+                for (; first != last; ++first, (void) ++result)
+                {
+                    *result = *first;
+                }
+                return {std::move(first), std::move(result)};
+            }
+
+            template <std::ranges::input_range R, std::weakly_incrementable O>
+                requires std::indirectly_copyable<std::ranges::iterator_t<R>, O>
+            constexpr std::ranges::copy_result<std::ranges::borrowed_iterator_t<R>, O>
+            operator()(R&& r, O result) const
+            {
+                return (*this)(std::ranges::begin(r), std::ranges::end(r), std::move(result));
+            }
+        };
+
+        inline constexpr copy_fn copy;
+    }
 };
 
 #if defined(__cpp_lib_format) && !defined(__cpp_lib_format_ranges)

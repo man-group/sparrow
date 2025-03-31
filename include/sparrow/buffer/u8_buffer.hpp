@@ -98,10 +98,7 @@ namespace sparrow
          * @param range The range.
          */
         template <std::ranges::input_range R>
-            requires(
-                !std::same_as<u8_buffer<T>, std::decay_t<R>>
-                && std::convertible_to<std::ranges::range_value_t<R>, T>
-            )
+            requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>)
         u8_buffer(R&& range);
 
         /**
@@ -149,7 +146,7 @@ namespace sparrow
         : holder_type{range_size(range) * sizeof(T)}
         , buffer_adaptor_type(holder_type::value)
     {
-        std::ranges::copy(range, this->begin());
+        sparrow::ranges::copy(range, this->begin());
     }
 
     template <class T>
