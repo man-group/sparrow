@@ -70,7 +70,7 @@ Here are some more examples:
 Arrow has support for null values. This means an array element at a certain index can be missing.
 The `sparrow::builder` function supports this by using `sparrow::nullable` (simmilar to `std::optional`).
 Nullables can be "injected" into all levels of the nested stl containers.
-For example, a `std::vector<sparrow::nullable<int>>{ 1, 2, sp::null, 4}` would be converted to a primitive layout with where the third element is missing. `std::vector<std::tuple<int, sp::nullable<double>>>{ {1, 2.0}, {3, sp::null}, {4, 5.0} }` would be converted to a struct layout with the second element of the second tuple missing.
+For example, a `std::vector<sparrow::nullable<int>>{ 1, 2, sp::nullval, 4}` would be converted to a primitive layout with where the third element is missing. `std::vector<std::tuple<int, sp::nullable<double>>>{ {1, 2.0}, {3, sp::nullval}, {4, 5.0} }` would be converted to a struct layout with the second element of the second tuple missing.
 
 The union layout in sparrow does not have its own bitmap. Instead the bitmap of the elements in the union is used. Therefore, for having nullable values with unions, the nullable must be injected into the union elements:
 ie `std::vector<std::variant<sp::nullable<int>, sp::nullable<double>>>` instead of `std::vector<sp::nullable<std::variant<int, double>>>`.
