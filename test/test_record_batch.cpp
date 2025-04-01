@@ -196,7 +196,7 @@ namespace sparrow
         TEST_CASE("add_column")
         {
             auto record = make_record_batch(col_size);
-            auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(col_size)};
+            auto iota = std::ranges::iota_view{std::int32_t(0), std::int32_t(col_size)};
             primitive_array<std::int32_t> pr3(iota, "column3");
             auto ctrl = pr3;
 
