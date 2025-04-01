@@ -20,6 +20,7 @@
 #include "sparrow/arrow_interface/private_data_ownership.hpp"
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_view.hpp"
+#include "sparrow/utils/constexpr.hpp"
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
@@ -50,11 +51,11 @@ namespace sparrow
         [[nodiscard]] constexpr BufferType& buffers() noexcept;
         [[nodiscard]] constexpr const BufferType& buffers() const noexcept;
 
-        constexpr void resize_buffers(std::size_t size);
+        SPARROW_CONSTEXPR_GCC_11 void resize_buffers(std::size_t size);
         void set_buffer(std::size_t index, buffer<std::uint8_t>&& buffer);
         void set_buffer(std::size_t index, const buffer_view<std::uint8_t>& buffer);
-        constexpr void resize_buffer(std::size_t index, std::size_t size, std::uint8_t value);
-        constexpr void update_buffers_ptrs();
+        SPARROW_CONSTEXPR_GCC_11 void resize_buffer(std::size_t index, std::size_t size, std::uint8_t value);
+        SPARROW_CONSTEXPR_GCC_11 void update_buffers_ptrs();
 
         template <class T>
         [[nodiscard]] constexpr const T** buffers_ptrs() noexcept;
@@ -90,7 +91,7 @@ namespace sparrow
         return m_buffers;
     }
 
-    constexpr void arrow_array_private_data::resize_buffers(std::size_t size)
+    SPARROW_CONSTEXPR_GCC_11 void arrow_array_private_data::resize_buffers(std::size_t size)
     {
         m_buffers.resize(size);
         update_buffers_ptrs();
@@ -110,7 +111,7 @@ namespace sparrow
         m_buffers_pointers[index] = m_buffers[index].data();
     }
 
-    constexpr void
+    SPARROW_CONSTEXPR_GCC_11 void
     arrow_array_private_data::resize_buffer(std::size_t index, std::size_t size, std::uint8_t value)
     {
         SPARROW_ASSERT_TRUE(index < m_buffers.size());
@@ -124,7 +125,7 @@ namespace sparrow
         return const_cast<const T**>(reinterpret_cast<T**>(m_buffers_pointers.data()));
     }
 
-    constexpr void arrow_array_private_data::update_buffers_ptrs()
+    SPARROW_CONSTEXPR_GCC_11 void arrow_array_private_data::update_buffers_ptrs()
     {
         m_buffers_pointers = to_raw_ptr_vec<std::uint8_t>(m_buffers);
     }

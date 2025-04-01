@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/c_interface.hpp"
+#include "sparrow/utils/constexpr.hpp"
 
 namespace sparrow
 {
@@ -34,7 +35,7 @@ namespace sparrow
     }
 
     /// Converts a bitfield of ArrowFlag values to a vector of ArrowFlag values.
-    constexpr std::vector<ArrowFlag> to_vector_of_ArrowFlags(int64_t flag_values)
+    SPARROW_CONSTEXPR_GCC_11 std::vector<ArrowFlag> to_vector_of_ArrowFlags(int64_t flag_values)
     {
         constexpr size_t n_bits = sizeof(flag_values) * 8;
         std::vector<ArrowFlag> flags;
@@ -55,7 +56,7 @@ namespace sparrow
     }
 
     /// Converts a vector of ArrowFlag values to a bitfield of ArrowFlag values.
-    constexpr int64_t to_ArrowFlag_value(const std::vector<ArrowFlag>& flags)
+    SPARROW_CONSTEXPR_GCC_11 int64_t to_ArrowFlag_value(const std::vector<ArrowFlag>& flags)
     {
         int64_t flag_values = 0;
         for (const ArrowFlag flag : flags)

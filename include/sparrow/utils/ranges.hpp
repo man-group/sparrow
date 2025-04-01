@@ -92,7 +92,14 @@ namespace sparrow
             {
                 for (; first != last; ++first, (void) ++result)
                 {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wnull-dereference"
+#endif
                     *result = *first;
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
                 }
                 return {std::move(first), std::move(result)};
             }
