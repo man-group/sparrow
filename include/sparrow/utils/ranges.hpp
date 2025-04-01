@@ -75,6 +75,7 @@ namespace sparrow
         /**
          * Copies the elements from the input range to the output iterator.
          * @details: Implementation from https://en.cppreference.com/w/cpp/algorithm/ranges/copy
+         * This function is used because the implementation of std::ranges::copy is missing in GCC 12.
          */
         struct copy_fn
         {
