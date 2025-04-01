@@ -43,6 +43,12 @@ jobs:
             version: 19
           - compiler: gcc
             version: 20
+          - compiler: gcc
+            version: 11
+            date-polyfill: OFF
+          - compiler: gcc
+            version: 12
+            date-polyfill: OFF
         include:
           - compiler: gcc
             version: 13

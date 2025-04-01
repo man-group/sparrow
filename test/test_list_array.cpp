@@ -64,9 +64,11 @@ namespace sparrow
             // number of elements in the flatted array
             std::size_t n_flat = 11;  // 2+2+3+4
 
+            auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(n_flat)};
+
             // create flat array of integers
             primitive_array<std::int16_t> flat_arr(
-                std::ranges::iota_view{std::size_t(0), std::size_t(n_flat)}
+                iota
                 | std::views::transform(
                     [](auto i)
                     {
@@ -247,8 +249,10 @@ namespace sparrow
             std::size_t n_flat = 5;
 
             // create flat array of integers
+
+            auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(n_flat)};
             primitive_array<std::int16_t> flat_arr(
-                std::ranges::iota_view{std::size_t(0), std::size_t(n_flat)}
+                iota
                 | std::views::transform(
                     [](auto i)
                     {

@@ -31,8 +31,9 @@ namespace sparrow
         {
             // a primite array
             std::size_t flat_size = 10;
+            auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(10)};
             primitive_array<std::uint16_t> primitive_arr(
-                std::ranges::iota_view{std::size_t(0), std::size_t(10)}
+                iota
                 | std::views::transform(
                     [](auto i)
                     {
