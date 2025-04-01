@@ -278,7 +278,7 @@ namespace sparrow::test
             for (std::size_t i = 0; i < size; ++i)
             {
                 offset_data[i + 1] = offset_data[i] + static_cast<std::int32_t>(words[i].size());
-                std::ranges::copy(words[i], ptr);
+                sparrow::ranges::copy(words[i], ptr);
                 ptr += words[i].size();
             }
         }
@@ -376,7 +376,7 @@ namespace sparrow::test
             for (std::size_t i = 0; i < size; ++i)
             {
                 offset_data[i + 1] = offset_data[i] + static_cast<std::int32_t>(bytes[i].size());
-                std::ranges::copy(bytes[i], ptr);
+                sparrow::ranges::copy(bytes[i], ptr);
                 ptr += bytes[i].size();
             }
         }

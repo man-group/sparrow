@@ -26,7 +26,7 @@
 #include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/pair.hpp"
-
+#include "sparrow/utils/ranges.hpp"
 
 #if defined(__cpp_lib_format)
 #    include <format>
@@ -141,14 +141,14 @@ namespace sparrow
             std::memcpy(metadata_ptr, &key_size, sizeof(int32_t));
             metadata_ptr += sizeof(int32_t);
 
-            std::ranges::copy(key, metadata_ptr);
+            sparrow::ranges::copy(key, metadata_ptr);
             metadata_ptr += key.size();
 
             const auto value_size = static_cast<int32_t>(value.size());
             std::memcpy(metadata_ptr, &value_size, sizeof(int32_t));
             metadata_ptr += sizeof(int32_t);
 
-            std::ranges::copy(value, metadata_ptr);
+            sparrow::ranges::copy(value, metadata_ptr);
             metadata_ptr += value.size();
         }
         return metadata_buf;

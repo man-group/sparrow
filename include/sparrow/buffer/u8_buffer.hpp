@@ -149,7 +149,7 @@ namespace sparrow
         : holder_type{range_size(range) * sizeof(T)}
         , buffer_adaptor_type(holder_type::value)
     {
-        std::ranges::copy(range, this->begin());
+        sparrow::ranges::copy(range, this->begin());
     }
 
     template <class T>

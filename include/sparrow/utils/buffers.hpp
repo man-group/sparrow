@@ -20,6 +20,7 @@
 
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
+#include "sparrow/utils/ranges.hpp"
 
 namespace sparrow
 {
@@ -60,7 +61,7 @@ namespace sparrow
                 }
                 else
                 {
-                    std::ranges::copy(string, iter);
+                    sparrow::ranges::copy(string, iter);
                 }
                 std::advance(iter, string.size());
             }
@@ -81,7 +82,7 @@ namespace sparrow
         }
         else
         {
-            std::ranges::copy(range, buffer_adaptor.begin());
+            sparrow::ranges::copy(range, buffer_adaptor.begin());
         }
 
         return values_buffer;
