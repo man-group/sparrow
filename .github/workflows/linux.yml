@@ -46,9 +46,6 @@ jobs:
             date-polyfill: OFF
         include:
           - compiler: gcc
-            version: 12
-            date-polyfill: OFF
-          - compiler: gcc
             version: 13
             arch: 32
             config: Release
