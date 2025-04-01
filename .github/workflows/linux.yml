@@ -21,14 +21,12 @@ jobs:
       fail-fast: false
       matrix:
         compiler: [clang, gcc]
-        version: [11, 12, 13, 14, 17, 18, 19, 20]
+        version: [12, 13, 14, 17, 18, 19, 20]
         arch: [64]
         config: [Debug, Release]
         date-polyfill: [ON, OFF]
         shared: [ON, OFF]
         exclude:
-          - compiler: clang
-            version: 11
           - compiler: clang
             version: 12
           - compiler: clang
@@ -47,6 +45,9 @@ jobs:
             version: 12
             date-polyfill: OFF
         include:
+          - compiler: gcc
+            version: 12
+            date-polyfill: OFF
           - compiler: gcc
             version: 13
             arch: 32
