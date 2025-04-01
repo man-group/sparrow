@@ -269,7 +269,8 @@ namespace sparrow
             format_string | std::views::split(delim),
             [&](const auto& s)
             {
-                const auto as_int = std::atoi(std::string(s.begin(), s.end()).c_str());
+                const std::string str(std::string_view(&*std::ranges::begin(s), std::ranges::distance(s)));
+                const auto as_int = std::atoi(str.c_str());
                 ret[static_cast<std::size_t>(as_int)] = static_cast<std::uint8_t>(child_index);
                 ++child_index;
             }
