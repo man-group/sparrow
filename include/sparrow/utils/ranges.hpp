@@ -72,6 +72,13 @@ namespace sparrow
 
     namespace ranges
     {
+        template <typename InputRange, typename OutputIterator>
+        concept has_ranges_copy = requires(InputRange input, OutputIterator output) {
+            {
+                std::ranges::copy(input, output)
+            } -> std::same_as<std::ranges::copy_result<std::ranges::iterator_t<InputRange>, OutputIterator>>;
+        };
+
         /**
          * Copies the elements from the input range to the output iterator.
          * @details: Implementation from https://en.cppreference.com/w/cpp/algorithm/ranges/copy
@@ -99,7 +106,19 @@ namespace sparrow
             }
         };
 
-        inline constexpr copy_fn copy;
+        template <std::ranges::input_range R, std::weakly_incrementable O>
+            requires std::indirectly_copyable<std::ranges::iterator_t<R>, O>
+        constexpr std::ranges::copy_result<std::ranges::borrowed_iterator_t<R>, O> copy(R&& r, O result)
+        {
+            if constexpr (has_ranges_copy<R, O>)
+            {
+                return std::ranges::copy(std::forward<R>(r), std::move(result));
+            }
+            else
+            {
+                return copy_fn{}(std::forward<R>(r), std::move(result));
+            }
+        }
     }
 };
 
