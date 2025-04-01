@@ -41,10 +41,10 @@ jobs:
             version: 19
           - compiler: gcc
             version: 20
-        include:
           - compiler: gcc
             version: 12
             date-polyfill: OFF
+        include:
           - compiler: gcc
             version: 13
             arch: 32
