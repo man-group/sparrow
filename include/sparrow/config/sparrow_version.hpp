@@ -17,10 +17,10 @@
 namespace sparrow
 {
     constexpr int SPARROW_VERSION_MAJOR = 0;
-    constexpr int SPARROW_VERSION_MINOR = 5;
+    constexpr int SPARROW_VERSION_MINOR = 6;
     constexpr int SPARROW_VERSION_PATCH = 0;
 
-    constexpr int SPARROW_BINARY_CURRENT = 4;
+    constexpr int SPARROW_BINARY_CURRENT = 5;
     constexpr int SPARROW_BINARY_REVISION = 0;
     constexpr int SPARROW_BINARY_AGE = 0;
 }
