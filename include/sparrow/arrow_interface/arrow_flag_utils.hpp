@@ -36,7 +36,7 @@ namespace sparrow
     }
 
     /// Converts a bitfield of ArrowFlag values to a set of ArrowFlag values.
-    SPARROW_CONSTEXPR_GCC_11 std::unordered_set<ArrowFlag> to_set_of_ArrowFlags(int64_t flag_values)
+    inline std::unordered_set<ArrowFlag> to_set_of_ArrowFlags(int64_t flag_values)
     {
         constexpr size_t n_bits = sizeof(flag_values) * 8;
         std::unordered_set<ArrowFlag> flags;
@@ -57,7 +57,7 @@ namespace sparrow
     }
 
     /// Converts a vector of ArrowFlag values to a bitfield of ArrowFlag values.
-    SPARROW_CONSTEXPR_GCC_11 int64_t to_ArrowFlag_value(const std::unordered_set<ArrowFlag>& flags)
+    inline int64_t to_ArrowFlag_value(const std::unordered_set<ArrowFlag>& flags)
     {
         int64_t flag_values = 0;
         for (const ArrowFlag flag : flags)

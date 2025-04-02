@@ -198,7 +198,7 @@ namespace sparrow
         {
             auto record = make_record_batch(col_size);
             auto iota = std::ranges::iota_view{std::int32_t(0), std::int32_t(col_size)};
-            primitive_array<std::int32_t> pr3(iota, "column3");
+            primitive_array<std::int32_t> pr3(iota, true, "column3");
             auto ctrl = pr3;
 
             record.add_column(array(std::move(pr3)));
