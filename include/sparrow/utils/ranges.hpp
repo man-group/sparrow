@@ -92,12 +92,12 @@ namespace sparrow
             {
                 for (; first != last; ++first, (void) ++result)
                 {
-#if defined(__GNUC__)
+#if defined(__GNUC__) && __GNUC__ < 12
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wnull-dereference"
 #endif
                     *result = *first;
-#if defined(__GNUC__)
+#if defined(__GNUC__) && __GNUC__ < 12
 #    pragma GCC diagnostic pop
 #endif
                 }

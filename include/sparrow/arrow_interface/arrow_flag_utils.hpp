@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "sparrow/c_interface.hpp"
-#include "sparrow/utils/constexpr.hpp"
 
 namespace sparrow
 {

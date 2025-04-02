@@ -20,7 +20,7 @@
 #include "sparrow/arrow_interface/private_data_ownership.hpp"
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_view.hpp"
-#include "sparrow/utils/constexpr.hpp"
+#include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
