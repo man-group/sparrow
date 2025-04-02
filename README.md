@@ -55,7 +55,7 @@ make install
 
 Compilers:
 - Clang 18 or higher
-- GCC 12 or higher
+- GCC 11 or higher
 - Apple Clang 16 or higher
 - MSVC 19.41 or higher
 
