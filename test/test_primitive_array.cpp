@@ -735,11 +735,8 @@ namespace sparrow
         TEST_CASE("convenience_constructors_from_iota")
         {
             constexpr size_t count = 4;
-            const primitive_array<std::size_t> arr(
-                std::ranges::iota_view{std::size_t(0), count},
-                name,
-                metadata_sample_opt
-            );
+            auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(count)};
+            const primitive_array<std::size_t> arr(iota, name, metadata_sample_opt);
             CHECK_EQ(arr.name(), name);
             test_metadata(metadata_sample, *(arr.metadata()));
             REQUIRE(arr.size() == count);
@@ -753,12 +750,8 @@ namespace sparrow
         TEST_CASE("convenience_constructors_index_of_missing")
         {
             constexpr size_t count = 5;
-            const primitive_array<std::size_t> arr(
-                std::ranges::iota_view{std::size_t(0), count},
-                std::vector<std::size_t>{1, 3},
-                name,
-                metadata_sample_opt
-            );
+            auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(count)};
+            const primitive_array<std::size_t> arr(iota, std::vector<std::size_t>{1, 3}, name, metadata_sample_opt);
             CHECK_EQ(arr.name(), name);
             test_metadata(metadata_sample, *(arr.metadata()));
             REQUIRE(arr.size() == count);
@@ -776,10 +769,8 @@ namespace sparrow
 #if defined(__cpp_lib_format)
         TEST_CASE("formatting")
         {
-            primitive_array<uint32_t> arr(
-                std::ranges::iota_view{uint32_t(0), uint32_t(5)},
-                std::vector<std::size_t>{1, 3}
-            );
+            auto iota = std::ranges::iota_view{std::uint32_t(0), std::uint32_t(5)};
+            primitive_array<uint32_t> arr(iota, std::vector<std::size_t>{1, 3});
             const std::string formatted = std::format("{}", arr);
             constexpr std::string_view expected = "uint32 [name=nullptr | size=5] <0, null, 2, null, 4>";
             CHECK_EQ(formatted, expected);
