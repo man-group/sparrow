@@ -1039,7 +1039,7 @@ namespace sparrow
     {
         const size_type diff_max = static_cast<size_type>(std::numeric_limits<difference_type>::max());
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
-        return (std::min) (diff_max, alloc_max);
+        return (std::min)(diff_max, alloc_max);
     }
 
     template <class T>
@@ -1072,7 +1072,14 @@ namespace sparrow
         pointer current = begin;
         for (; first != last; ++first, ++current)
         {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wnull-dereference"
+#endif
             alloc_traits::construct(a, current, *first);
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
         }
         return current;
     }
