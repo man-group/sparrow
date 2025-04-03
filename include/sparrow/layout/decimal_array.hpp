@@ -192,12 +192,23 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>, mpl::exactly_bool NULLABLE_TYPE = bool>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<storage_type>&& data_buffer,
             std::size_t precision,
             int scale,
             NULLABLE_TYPE nullable = true,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        ) -> arrow_proxy;
+
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        [[nodiscard]] static auto create_proxy_impl(
+            u8_buffer<storage_type>&& data_buffer,
+            std::size_t precision,
+            int scale,
+            std::optional<validity_bitmap>,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -272,11 +283,13 @@ namespace sparrow
     )
     {
         u8_buffer<storage_type> u8_data_buffer(std::forward<VALUE_RANGE>(range));
-        return create_proxy(
+        const auto size = u8_data_buffer.size();
+        validity_bitmap bitmap = ensure_validity_bitmap(size, std::forward<VALIDITY_RANGE>(bitmaps));
+        return create_proxy_impl(
             std::move(u8_data_buffer),
-            std::forward<VALIDITY_RANGE>(bitmaps),
             precision,
             scale,
+            std::move(bitmap),
             std::move(name),
             std::move(metadata)
         );
@@ -321,51 +334,14 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
-        if (nullable)
-        {
-            return decimal_array<T>::create_proxy(
-                std::move(data_buffer),
-                validity_bitmap{},
-                precision,
-                scale,
-                name,
-                metadata
-            );
-        }
-        else
-        {
-            // create arrow schema and array
-            ArrowSchema schema = make_arrow_schema(
-                generate_format(precision, scale),  // format
-                name,                               // name
-                metadata,                           // metadata
-                std::nullopt,                       // flags
-                nullptr,                            // children
-                repeat_view<bool>(true, 0),         // children_ownership
-                nullptr,                            // dictionary
-                true                                // dictionary ownership
-            );
-
-            std::vector<buffer<uint8_t>> buffers{
-                buffer<uint8_t>{nullptr, 0},  // no validity bitmap
-                std::move(data_buffer).extract_storage()
-            };
-
-            const size_t length = buffers[1].size() / sizeof(storage_type);
-
-            // create arrow array
-            ArrowArray arr = make_arrow_array(
-                static_cast<std::int64_t>(length),  // length
-                0,                                  // null_count
-                0,                                  // offset
-                std::move(buffers),
-                nullptr,                     // children
-                repeat_view<bool>(true, 0),  // children_ownership
-                nullptr,                     // dictionary,
-                true                         // dictionary ownership
-            );
-            return arrow_proxy(std::move(arr), std::move(schema));
-        }
+        return create_proxy_impl(
+            std::move(data_buffer),
+            precision,
+            scale,
+            nullable ? std::make_optional<validity_bitmap>() : std::nullopt,
+            name,
+            metadata
+        );
     }
 
     template <decimal_type T>
@@ -381,27 +357,55 @@ namespace sparrow
     {
         const auto size = data_buffer.size();
         validity_bitmap bitmap = ensure_validity_bitmap(size, std::forward<R>(bitmap_input));
-        const auto null_count = bitmap.null_count();
+        return create_proxy_impl(
+            std::move(data_buffer),
+            precision,
+            scale,
+            std::move(bitmap),
+            std::move(name),
+            std::move(metadata)
+        );
+    }
+
+    template <decimal_type T>
+    template <input_metadata_container METADATA_RANGE>
+    [[nodiscard]] auto decimal_array<T>::create_proxy_impl(
+        u8_buffer<storage_type>&& data_buffer,
+        std::size_t precision,
+        int scale,
+        std::optional<validity_bitmap> bitmap,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    ) -> arrow_proxy
+    {
+        std::optional<std::unordered_set<sparrow::ArrowFlag>>
+            flags = bitmap.has_value()
+                        ? std::nullopt
+                        : std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE});
+
+        const auto size = data_buffer.size();
+        const size_t null_count = bitmap.has_value() ? (*bitmap).null_count() : 0;
+
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
             generate_format(precision, scale),
-            name,          // name
-            metadata,      // metadata
-            std::nullopt,  // flags
-            nullptr,       // children
+            name,      // name
+            metadata,  // metadata
+            flags,     // flags
+            nullptr,   // children
             repeat_view<bool>(true, 0),
             nullptr,  // dictionary
             true      // dictionary ownership
         );
 
         std::vector<buffer<uint8_t>> buffers{
-            std::move(bitmap).extract_storage(),
+            bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<uint8_t>{nullptr, 0},
             std::move(data_buffer).extract_storage()
         };
 
         // create arrow array
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // length
+            static_cast<std::int64_t>(size),  // lengths
             static_cast<int64_t>(null_count),
             0,  // offset
             std::move(buffers),
