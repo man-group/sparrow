@@ -124,7 +124,6 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        // Helper function to handle common processing of children
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy_impl(
             std::vector<array>&& children,
@@ -134,7 +133,6 @@ namespace sparrow
             std::optional<std::string_view> name,
             std::optional<METADATA_RANGE> metadata
         ) -> arrow_proxy;
-
 
         using children_type = std::vector<cloning_ptr<array_wrapper>>;
 
@@ -242,9 +240,9 @@ namespace sparrow
             true                                  // dictionary ownership
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs;
-        arr_buffs.push_back(std::move(validity_buffer).value_or(buffer<std::uint8_t>{nullptr, 0}));
-
+        std::vector<buffer<std::uint8_t>> arr_buffs{
+            std::move(validity_buffer).value_or(buffer<std::uint8_t>{nullptr, 0})  // validity bitmap
+        };
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),  // length
             null_count,                       // null_count
