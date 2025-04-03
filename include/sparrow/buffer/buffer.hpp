@@ -57,6 +57,9 @@ namespace sparrow
             pointer p_storage_end = nullptr;
 
             buffer_data() = default;
+            ~buffer_data() = default;
+            constexpr buffer_data(const buffer_data&) = default;
+            constexpr buffer_data& operator=(const buffer_data&) = default;
             constexpr buffer_data(buffer_data&&) noexcept;
             constexpr buffer_data& operator=(buffer_data&&) noexcept;
         };
@@ -341,6 +344,7 @@ namespace sparrow
     constexpr buffer_base<T>::buffer_base(pointer p, size_type n, const A& a)
         : m_alloc(a)
     {
+        SPARROW_ASSERT_TRUE((p != nullptr) || (p == nullptr && n == 0));
         assign_storage(p, n, n);
     }
 
@@ -1068,7 +1072,14 @@ namespace sparrow
         pointer current = begin;
         for (; first != last; ++first, ++current)
         {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wnull-dereference"
+#endif
             alloc_traits::construct(a, current, *first);
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
         }
         return current;
     }
