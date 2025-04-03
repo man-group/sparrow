@@ -304,6 +304,23 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        template <
+            std::ranges::input_range R,
+            mpl::exactly_bool NULLABLE_TYPE = bool,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires(
+                std::ranges::input_range<std::ranges::range_value_t<R>> &&  // a range of ranges
+                mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>  // inner range is a
+                                                                                           // range of
+                                                                                           // char-like
+            )
+        [[nodiscard]] static arrow_proxy create_proxy(
+            R&& values,
+            NULLABLE_TYPE nullable,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        );
+
         // range of nullable values
         template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
@@ -389,9 +406,9 @@ namespace sparrow
                                                                                       // data_type::LARGE_STRING
                                                                                       // and
                                                                                       // data_type::LARGE_BINARY
-        SPARROW_ASSERT_TRUE((
-            (type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>
-        ) );
+        SPARROW_ASSERT_TRUE(
+            ((type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>)
+        );
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -509,13 +526,39 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
+    template <
+        std::ranges::input_range R,
+        mpl::exactly_bool NULLABLE_TYPE,
+        input_metadata_container METADATA_RANGE>
+        requires(
+            std::ranges::input_range<std::ranges::range_value_t<R>> &&                 // a range of ranges
+            mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>  // inner range is a
+                                                                                       // range of
+                                                                                       // char-like
+        )
+    [[nodiscard]] arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy(
+        R&& values,
+        NULLABLE_TYPE nullable,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
+    {
+        return create_proxy_impl(
+            std::forward<R>(values),
+            nullable ? std::make_optional<validity_bitmap>() : std::nullopt,
+            std::move(name),
+            std::move(metadata)
+        );
+    }
+
+    template <std::ranges::sized_range T, class CR, layout_offset OT>
     template <mpl::char_like C, input_metadata_container METADATA_RANGE>
     [[nodiscard]] arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy_impl(
         u8_buffer<C>&& data_buffer,
         offset_buffer_type&& list_offsets,
         std::optional<validity_bitmap>&& bitmap,
-        std::optional<std::string_view> name = std::nullopt,
-        std::optional<METADATA_RANGE> metadata = std::nullopt
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
     )
     {
         const auto size = list_offsets.size() - 1;
