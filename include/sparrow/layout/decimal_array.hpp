@@ -378,13 +378,13 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
-        std::optional<std::unordered_set<sparrow::ArrowFlag>>
+        const std::optional<std::unordered_set<sparrow::ArrowFlag>>
             flags = bitmap.has_value()
-                        ? std::nullopt
-                        : std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE});
+                        ? std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE})
+                        : std::nullopt;
 
         const auto size = data_buffer.size();
-        const size_t null_count = bitmap.has_value() ? (*bitmap).null_count() : 0;
+        const size_t null_count = bitmap.has_value() ? bitmap->null_count() : 0;
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(

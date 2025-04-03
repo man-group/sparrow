@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <iterator>
 #include <numeric>
+#include <optional>
 #include <ranges>
 #include <string>
 #include <vector>
@@ -25,6 +26,7 @@
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/c_interface.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_iterator.hpp"
@@ -311,6 +313,15 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        template <mpl::char_like C, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        [[nodiscard]] static arrow_proxy create_proxy_impl(
+            u8_buffer<C>&& data_buffer,
+            offset_buffer_type&& list_offsets,
+            std::optional<validity_bitmap>&&,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        );
+
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
 
@@ -378,9 +389,9 @@ namespace sparrow
                                                                                       // data_type::LARGE_STRING
                                                                                       // and
                                                                                       // data_type::LARGE_BINARY
-        SPARROW_ASSERT_TRUE((
-            (type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>
-        ) );
+        SPARROW_ASSERT_TRUE(
+            ((type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>)
+        );
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -495,6 +506,54 @@ namespace sparrow
                                      }
                                  );
         return self_type::create_proxy(values, is_non_null, std::move(name), std::move(metadata));
+    }
+
+    template <std::ranges::sized_range T, class CR, layout_offset OT>
+    template <mpl::char_like C, input_metadata_container METADATA_RANGE>
+    [[nodiscard]] arrow_proxy variable_size_binary_array_impl<T, CR, OT>::create_proxy_impl(
+        u8_buffer<C>&& data_buffer,
+        offset_buffer_type&& list_offsets,
+        std::optional<validity_bitmap>&& bitmap,
+        std::optional<std::string_view> name = std::nullopt,
+        std::optional<METADATA_RANGE> metadata = std::nullopt
+    )
+    {
+        const auto size = list_offsets.size() - 1;
+        const auto null_count = bitmap.has_value() ? bitmap->null_count() : 0;
+
+        const std::optional<std::unordered_set<sparrow::ArrowFlag>>
+            flags = bitmap.has_value()
+                        ? std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE})
+                        : std::nullopt;
+
+        ArrowSchema schema = make_arrow_schema(
+            detail::variable_size_binary_format<T, OT>::format(),
+            std::move(name),      // name
+            std::move(metadata),  // metadata
+            flags,                // flags,
+            nullptr,              // children
+            repeat_view<bool>(true, 0),
+            nullptr,  // dictionary
+            true
+
+        );
+        std::vector<buffer<std::uint8_t>> arr_buffs = {
+            bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<std::uint8_t>{nullptr, 0},
+            std::move(list_offsets).extract_storage(),
+            std::move(data_buffer).extract_storage()
+        };
+
+        ArrowArray arr = make_arrow_array(
+            static_cast<std::int64_t>(size),  // length
+            static_cast<int64_t>(null_count),
+            0,  // offset
+            std::move(arr_buffs),
+            nullptr,  // children
+            repeat_view<bool>(true, 0),
+            nullptr,  // dictionary
+            true
+        );
+        return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>

@@ -343,8 +343,8 @@ namespace sparrow
 
         const std::optional<std::unordered_set<sparrow::ArrowFlag>>
             flags = validity.has_value()
-                        ? std::nullopt
-                        : std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE});
+                        ? std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE})
+                        : std::nullopt;
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
@@ -358,7 +358,7 @@ namespace sparrow
             true                                       // dictionary ownership
         );
 
-        const int64_t null_count = validity.has_value() ? static_cast<int64_t>((*validity).null_count()) : 0;
+        const int64_t null_count = validity.has_value() ? static_cast<int64_t>(validity->null_count()) : 0;
 
         buffer<uint8_t> validity_buffer = [&validity]()
         {
