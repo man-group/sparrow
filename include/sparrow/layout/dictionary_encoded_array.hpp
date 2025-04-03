@@ -297,10 +297,12 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
+        const auto size = keys.size();
+        validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VBI>(validity_input));
         return create_proxy_impl(
             std::forward<keys_buffer_type>(keys),
             std::forward<array>(values),
-            std::make_optional<validity_bitmap>(std::forward<VBI>(validity_input)),
+            std::make_optional<validity_bitmap>(std::move(vbitmap)),
             std::move(name),
             std::move(metadata)
         );
@@ -317,8 +319,8 @@ namespace sparrow
     ) -> arrow_proxy
     {
         return create_proxy_impl(
-            std::move(keys),
-            std::move(values),
+            std::forward<keys_buffer_type>(keys),
+            std::forward<array>(values),
             nullable ? std::make_optional<validity_bitmap>() : std::nullopt,
             std::move(name),
             std::move(metadata)
@@ -337,7 +339,7 @@ namespace sparrow
     {
         const auto size = keys.size();
         auto [value_array, value_schema] = extract_arrow_structures(std::move(values));
-        const repeat_view<bool> children_ownership{true, 0};
+        static const repeat_view<bool> children_ownership{true, 0};
 
         const std::optional<std::unordered_set<sparrow::ArrowFlag>>
             flags = validity.has_value()
@@ -356,6 +358,8 @@ namespace sparrow
             true                                       // dictionary ownership
         );
 
+        const int64_t null_count = validity.has_value() ? static_cast<int64_t>((*validity).null_count()) : 0;
+
         buffer<uint8_t> validity_buffer = [&validity]()
         {
             if (validity.has_value())
@@ -368,7 +372,6 @@ namespace sparrow
             }
         }();
 
-        const int64_t null_count = validity.has_value() ? static_cast<int64_t>((*validity).null_count()) : 0;
         std::vector<buffer<uint8_t>> buffers{std::move(validity_buffer), std::move(keys).extract_storage()};
 
         // create arrow array
