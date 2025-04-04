@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <array>
+
 #include "sparrow/c_interface.hpp"
 
 namespace sparrow
