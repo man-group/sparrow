@@ -35,14 +35,14 @@ jobs:
       run: |
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
-        sudo ./llvm.sh ${{matrix.version}}
-        sudo apt-get install -y clang-tools-${{matrix.version}} 
-        sudo update-alternatives --install /usr/bin/clang++         clang++         /usr/bin/clang++-${{matrix.version}} 200
-        sudo update-alternatives --install /usr/bin/clang           clang           /usr/bin/clang-${{matrix.version}} 200
-        sudo update-alternatives --install /usr/bin/clang-scan-deps clang-scan-deps /usr/bin/clang-scan-deps-${{matrix.version}} 200 
-        sudo update-alternatives --set clang /usr/bin/clang-${{matrix.version}}
-        sudo update-alternatives --set clang++ /usr/bin/clang++-${{matrix.version}}
-        sudo update-alternatives --set clang-scan-deps /usr/bin/clang-scan-deps-${{matrix.version}}
+        sudo ./llvm.sh ${{matrix.sys.version}}
+        sudo apt-get install -y clang-tools-${{matrix.sys.version}} 
+        sudo update-alternatives --install /usr/bin/clang++         clang++         /usr/bin/clang++-${{matrix.sys.version}} 200
+        sudo update-alternatives --install /usr/bin/clang           clang           /usr/bin/clang-${{matrix.sys.version}} 200
+        sudo update-alternatives --install /usr/bin/clang-scan-deps clang-scan-deps /usr/bin/clang-scan-deps-${{matrix.sys.version}} 200 
+        sudo update-alternatives --set clang /usr/bin/clang-${{matrix.sys.version}}
+        sudo update-alternatives --set clang++ /usr/bin/clang++-${{matrix.sys.version}}
+        sudo update-alternatives --set clang-scan-deps /usr/bin/clang-scan-deps-${{matrix.sys.version}}
 
     - name: Install the specified standard library for clang
       if: matrix.sys.compiler == 'clang'
@@ -65,7 +65,7 @@ jobs:
 
     - name: Configure using CMake
       run: |
-        if [[ "${{matrix.compiler}}" = "gcc" ]]; then export CC=gcc-${{matrix.version}}; export CXX=g++-${{matrix.version}}; else export CC=clang; export CXX=clang++; fi
+        if [[ "${{matrix.compiler}}" = "gcc" ]]; then export CC=gcc-${{matrix.sys.version}}; export CXX=g++-${{matrix.sys.version}}; else export CC=clang; export CXX=clang++; fi
         cmake -G Ninja \
           -Bbuild ${{matrix.sys.config-flags}} \
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
