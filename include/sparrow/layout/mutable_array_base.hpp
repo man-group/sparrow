@@ -203,7 +203,8 @@ namespace sparrow
     template <class D>
     auto mutable_array_base<D>::begin() -> iterator
     {
-        return iterator(this->derived_cast().value_begin(), this->derived_cast().bitmap_begin());
+        auto& derived_cast = this->derived_cast();
+        return iterator(derived_cast.value_begin(), derived_cast.bitmap_begin());
     }
 
     /**
@@ -213,7 +214,8 @@ namespace sparrow
     template <class D>
     auto mutable_array_base<D>::end() -> iterator
     {
-        return iterator(this->derived_cast().value_end(), this->derived_cast().bitmap_end());
+        auto& derived_cast = this->derived_cast();
+        return iterator(derived_cast.value_end(), derived_cast.bitmap_end());
     }
 
     /**
@@ -225,7 +227,8 @@ namespace sparrow
     auto mutable_array_base<D>::operator[](size_type i) -> reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
-        return reference(inner_reference(this->derived_cast().value(i)), this->derived_cast().has_value(i));
+        auto& derived_cast = this->derived_cast();
+        return reference(inner_reference(derived_cast.value(i)), derived_cast.has_value(i));
     }
 
     template <class D>

@@ -20,6 +20,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
@@ -144,14 +145,14 @@ namespace sparrow
             schema().metadata = private_data->metadata_ptr();
         }
 
-        [[nodiscard]] SPARROW_API std::vector<ArrowFlag> flags() const;
+        [[nodiscard]] SPARROW_API std::unordered_set<ArrowFlag> flags() const;
 
         /**
          * Set the flags of the `ArrowSchema`.
          * @exception `arrow_proxy_exception` If the `ArrowSchema` was not created with sparrow.
          * @param flags The flags to set.
          */
-        SPARROW_API void set_flags(const std::vector<ArrowFlag>& flags);
+        SPARROW_API void set_flags(const std::unordered_set<ArrowFlag>& flags);
         [[nodiscard]] SPARROW_API size_t length() const;
 
         /**
@@ -364,6 +365,9 @@ namespace sparrow
          */
         SPARROW_API void set_dictionary(ArrowArray&& array_dictionary, ArrowSchema&& schema_dictionary);
 
+        /**
+         * Check if the `ArrowArray` and `ArrowSchema` were created with sparrow.
+         */
         [[nodiscard]] SPARROW_API bool is_created_with_sparrow() const;
 
         [[nodiscard]] SPARROW_API void* private_data() const;
@@ -373,14 +377,68 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API arrow_proxy view() const;
 
+        /**
+         * Check if the proxy owns the `ArrowArray` and not only a pointer to it.
+         */
         [[nodiscard]] SPARROW_API bool owns_array() const;
+
+        /**
+         * Extract the `ArrowArray` from the proxy. The `ArrowArray` is not released when the proxy is
+         * destroyed.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
+         * @details The schema flags can be updated by adding sparrow::ArrowFlag::NULLABLE, if null_count is
+         * greater than 0.
+         * @return The array.
+         */
         [[nodiscard]] SPARROW_API ArrowArray extract_array();
+
+        /**
+         * Get the reference to the `ArrowArray`. The `ArrowArray` is released when the proxy is destroyed.
+         * @details The schema flags can be updated by adding sparrow::ArrowFlag::NULLABLE, if null_count is
+         * greater than 0.
+         * @return The `ArrowArray`.
+         */
         [[nodiscard]] SPARROW_API ArrowArray& array();
+
+        /**
+         * Get a const reference to the `ArrowArray`. The `ArrowArray` is released when the proxy is
+         * destroyed.
+         * @details The schema flags can be updated by adding sparrow::ArrowFlag::NULLABLE, if null_count is
+         * greater than 0.
+         * @return The `ArrowArray` const reference.
+         */
         [[nodiscard]] SPARROW_API const ArrowArray& array() const;
 
+        /**
+         * Check if the proxy owns the `ArrowSchema` and not only a pointer to it.
+         */
         [[nodiscard]] SPARROW_API bool owns_schema() const;
+
+        /**
+         * Extract the `ArrowSchema` from the proxy. The `ArrowSchema` is not released when the proxy is
+         * destroyed.
+         * @exception `arrow_proxy_exception` If the `ArrowSchema` was not created with sparrow.
+         * @details The schema flags can be updated by adding sparrow::ArrowFlag::NULLABLE, if null_count is
+         * greater than 0.
+         * @return The `ArrowSchema`.
+         */
         [[nodiscard]] SPARROW_API ArrowSchema extract_schema();
+
+        /**
+         * Get the reference to the `ArrowSchema`. The `ArrowSchema` is released when the proxy is destroyed.
+         * @details The schema flags can be updated by adding sparrow::ArrowFlag::NULLABLE, if null_count is
+         * greater than 0.
+         * @return The `ArrowSchema` reference.
+         */
         [[nodiscard]] SPARROW_API ArrowSchema& schema();
+
+        /**
+         * Get a const reference to the `ArrowSchema`. The `ArrowSchema` is released when the proxy is
+         * destroyed.
+         * @details The schema flags can be updated by adding sparrow::ArrowFlag::NULLABLE, if null_count is
+         * greater than 0.
+         * @return The `ArrowSchema` const reference.
+         */
         [[nodiscard]] SPARROW_API const ArrowSchema& schema() const;
 
         [[nodiscard]] SPARROW_API arrow_schema_private_data* get_schema_private_data();
@@ -453,6 +511,18 @@ namespace sparrow
         [[nodiscard]] bool is_proxy_valid() const;
 
         [[nodiscard]] size_t get_null_count() const;
+
+        [[nodiscard]] ArrowArray& array_without_sanitize();
+        [[nodiscard]] const ArrowArray& array_without_sanitize() const;
+
+        [[nodiscard]] ArrowSchema& schema_without_sanitize();
+        [[nodiscard]] const ArrowSchema& schema_without_sanitize() const;
+
+        /**
+         * If the null_count of the proxy or the one from the dictionary is greater than 0, the schema
+         * is updated to add the ArrowFlag::NULLABLE flag.
+         */
+        void sanitize_schema();
 
         void swap(arrow_proxy& other) noexcept;
     };

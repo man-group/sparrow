@@ -127,8 +127,8 @@ else()
         test_builder.cpp
         test_builder.cpp
         test_date_array.cpp
-        test_decimal_array.cpp
         test_date_array.cpp
+        test_decimal_array.cpp
         test_decimal.cpp
         test_dictionary_encoded_array.cpp
         test_dispatch.cpp

@@ -107,12 +107,69 @@ namespace sparrow
             };
 
             const size_t offset = 9;
-            array_test_type ar = make_array(nullable_values, offset);
 
-            SUBCASE("constructor")
+            SUBCASE("constructors")
             {
-                CHECK_EQ(ar.size(), nullable_values.size() - offset);
+                SUBCASE("value count, value, nullable, name, metadata")
+                {
+                    using namespace std::literals;
+                    SUBCASE("nullable == true")
+                    {
+                        array_test_type ar{values_count, T(99), true, "test"sv, metadata_sample_opt};
+                        CHECK_EQ(ar.size(), values_count);
+                        for (size_t i = 0; i < ar.size(); ++i)
+                        {
+                            CHECK(ar[i].has_value());
+                        }
+                        CHECK_EQ(ar.name(), "test");
+                        test_metadata(metadata_sample, *(ar.metadata()));
+                    }
+
+                    SUBCASE("nullable == false")
+                    {
+                        array_test_type ar{values_count, T(99), false, "test"sv, metadata_sample_opt};
+                        CHECK_EQ(ar.size(), values_count);
+                        for (size_t i = 0; i < ar.size(); ++i)
+                        {
+                            CHECK(ar[i].has_value());
+                        }
+                        CHECK_EQ(ar.name(), "test");
+                        test_metadata(metadata_sample, *(ar.metadata()));
+                    }
+                }
+
+                SUBCASE("u8_buffer, size, bitmap, name, metadata")
+                {
+                    u8_buffer<T> buffer{
+                        nullable_values
+                        | std::views::transform(
+                            [](const auto& v)
+                            {
+                                return v.get();
+                            }
+                        )
+                    };
+                    array_test_type ar{
+                        std::move(buffer),
+                        values_count,
+                        nullable_values
+                            | std::views::transform(
+                                [](const auto& v)
+                                {
+                                    return v.has_value();
+                                }
+                            )
+                    };
+                    CHECK_EQ(ar.size(), values_count);
+                    for (size_t i = 0; i < ar.size(); ++i)
+                    {
+                        CHECK_EQ(nullable_values[i].has_value(), ar[i].has_value());
+                    }
+                }
             }
+
+            array_test_type ar = make_array(nullable_values, offset);
+            CHECK_EQ(ar.size(), nullable_values.size() - offset);
 
             SUBCASE("operator[]")
             {
@@ -736,7 +793,7 @@ namespace sparrow
         {
             constexpr size_t count = 4;
             auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(count)};
-            const primitive_array<std::size_t> arr(iota, name, metadata_sample_opt);
+            const primitive_array<std::size_t> arr(iota, false, name, metadata_sample_opt);
             CHECK_EQ(arr.name(), name);
             test_metadata(metadata_sample, *(arr.metadata()));
             REQUIRE(arr.size() == count);

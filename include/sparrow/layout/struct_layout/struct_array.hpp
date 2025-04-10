@@ -16,6 +16,9 @@
 
 #include <string_view>
 #include <version>
+
+#include "sparrow/utils/mp_utils.hpp"
+
 #if defined(__cpp_lib_format)
 #    include "sparrow/utils/format.hpp"
 #endif
@@ -108,7 +111,23 @@ namespace sparrow
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             std::vector<array>&& children,
-            VB&& bitmaps = validity_bitmap{},
+            VB&& bitmaps,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        ) -> arrow_proxy;
+
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>, mpl::exactly_bool NULLABLE_TYPE = bool>
+        [[nodiscard]] static auto create_proxy(
+            std::vector<array>&& children,
+            NULLABLE_TYPE nullable = true,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        ) -> arrow_proxy;
+
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        [[nodiscard]] static auto create_proxy_impl(
+            std::vector<array>&& children,
+            std::optional<validity_bitmap>&& bitmap,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -143,11 +162,46 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
+        const auto size = children.empty() ? 0 : children[0].size();
+        validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
+        return create_proxy_impl(
+            std::forward<std::vector<array>>(children),
+            std::move(vbitmap),
+            std::move(name),
+            std::move(metadata)
+        );
+    }
+
+    template <input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    auto struct_array::create_proxy(
+        std::vector<array>&& children,
+        NULLABLE_TYPE nullable,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    ) -> arrow_proxy
+    {
+        const size_t size = children.empty() ? 0 : children[0].size();
+        return create_proxy_impl(
+            std::forward<std::vector<array>>(children),
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
+            std::move(name),
+            std::move(metadata)
+        );
+    }
+
+    template <input_metadata_container METADATA_RANGE>
+    auto struct_array::create_proxy_impl(
+        std::vector<array>&& children,
+        std::optional<validity_bitmap>&& bitmap,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    ) -> arrow_proxy
+    {
         const auto n_children = children.size();
         ArrowSchema** child_schemas = new ArrowSchema*[n_children];
         ArrowArray** child_arrays = new ArrowArray*[n_children];
 
-        const auto size = children[0].size();
+        const auto size = children.empty() ? 0 : children[0].size();
 
         for (std::size_t i = 0; i < n_children; ++i)
         {
@@ -158,26 +212,33 @@ namespace sparrow
             child_schemas[i] = new ArrowSchema(std::move(flat_schema));
         }
 
-        validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
-        const auto null_count = vbitmap.null_count();
+        const bool bitmap_has_value = bitmap.has_value();
+        const auto null_count = bitmap_has_value ? bitmap->null_count() : 0;
+        const auto flags = bitmap_has_value
+                               ? std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE})
+                               : std::nullopt;
 
         ArrowSchema schema = make_arrow_schema(
             std::string("+s"),                    // format
             std::move(name),                      // name
             std::move(metadata),                  // metadata
-            std::nullopt,                         // flags,
+            flags,                                // flags,
             child_schemas,                        // children
             repeat_view<bool>(true, n_children),  // children_ownership
             nullptr,                              // dictionary
             true                                  // dictionary ownership
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {std::move(vbitmap).extract_storage()};
+        buffer<uint8_t> bitmap_buffer = bitmap_has_value ? std::move(*bitmap).extract_storage()
+                                                         : buffer<uint8_t>{nullptr, 0};
+
+        std::vector<buffer<std::uint8_t>> arr_buffs(1);
+        arr_buffs[0] = std::move(bitmap_buffer);
 
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // length
-            static_cast<std::int64_t>(null_count),
-            0,  // offset
+            static_cast<std::int64_t>(size),        // length
+            static_cast<std::int64_t>(null_count),  // null_count
+            0,                                      // offset
             std::move(arr_buffs),
             child_arrays,                         // children
             repeat_view<bool>(true, n_children),  // children_ownership

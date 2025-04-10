@@ -230,8 +230,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
         const auto flags = proxy.flags();
         REQUIRE_EQ(flags.size(), 2);
-        CHECK_EQ(flags[0], sparrow::ArrowFlag::NULLABLE);
-        CHECK_EQ(flags[1], sparrow::ArrowFlag::MAP_KEYS_SORTED);
+        CHECK(flags.contains(sparrow::ArrowFlag::NULLABLE));
+        CHECK(flags.contains(sparrow::ArrowFlag::MAP_KEYS_SORTED));
     }
 
     TEST_CASE("set_flags")
@@ -243,8 +243,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             proxy.set_flags({sparrow::ArrowFlag::DICTIONARY_ORDERED, sparrow::ArrowFlag::NULLABLE});
             const auto flags = proxy.flags();
             REQUIRE_EQ(flags.size(), 2);
-            CHECK_EQ(flags[0], sparrow::ArrowFlag::DICTIONARY_ORDERED);
-            CHECK_EQ(flags[1], sparrow::ArrowFlag::NULLABLE);
+            CHECK(flags.contains(sparrow::ArrowFlag::DICTIONARY_ORDERED));
+            CHECK(flags.contains(sparrow::ArrowFlag::NULLABLE));
         }
 
         SUBCASE("on external c structure")
@@ -642,7 +642,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             {
                 auto [array, schema] = test::make_arrow_schema_and_array(false);
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-                std::vector<uint8_t> values{false, true, false, true};
+                std::vector<bool> values{false, true, false, true};
                 proxy.insert_bitmap(1, values);
                 const auto buffers = proxy.buffers();
                 REQUIRE_EQ(buffers.size(), 2);

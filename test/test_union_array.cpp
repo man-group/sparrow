@@ -313,7 +313,6 @@ namespace sparrow
             // detyped arrays
             std::vector<array> children = {array(std::move(arr1)), array(std::move(arr2))};
 
-
             // offsets
             dense_union_array::offset_buffer_type offsets{
                 {std::size_t(1), std::size_t(1), std::size_t(0), std::size_t(0)}
