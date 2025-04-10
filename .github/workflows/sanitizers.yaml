@@ -31,7 +31,7 @@ jobs:
       uses: mozilla-actions/sccache-action@v0.0.6
 
     - name: Install LLVM and Clang
-      if: matrix.compiler == 'clang'
+      if: matrix.sys.compiler == 'clang'
       run: |
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
