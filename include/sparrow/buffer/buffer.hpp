@@ -1119,10 +1119,6 @@ namespace sparrow
     template <class T>
     constexpr void buffer<T>::destroy(pointer first, pointer last, allocator_type& a)
     {
-        if (first == nullptr)
-        {
-            return;
-        }
         SPARROW_ASSERT_TRUE(first <= last);
         for (; first != last; ++first)
         {
