@@ -11,10 +11,17 @@ jobs:
         
     steps:
     - name: Install LLVM and Clang
-      uses: egor-tensin/setup-clang@v1
-      with:
-        version: 18
-        platform: x64
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 20
+        sudo apt-get install -y clang-tools-20
+        sudo update-alternatives --install /usr/bin/clang++         clang++         /usr/bin/clang++-20 200
+        sudo update-alternatives --install /usr/bin/clang           clang           /usr/bin/clang-20 200
+        sudo update-alternatives --install /usr/bin/clang-scan-deps clang-scan-deps /usr/bin/clang-scan-deps-20 200 
+        sudo update-alternatives --set clang /usr/bin/clang-20
+        sudo update-alternatives --set clang++ /usr/bin/clang++-20
+        sudo update-alternatives --set clang-scan-deps /usr/bin/clang-scan-deps-20
     
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -28,7 +35,8 @@ jobs:
         cache-downloads: true
 
     - name: Configure using CMake
-      run: | 
+      run: |
+        export CC=clang; export CXX=clang++ fi
         cmake -G Ninja \
         -Bbuild \
         -DCMAKE_BUILD_TYPE:STRING=Release \
@@ -43,7 +51,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        version: 18
+        version: 20
         files-changed-only: false
         database: 'build'
         style: 'file'  # Use .clang-format config file
