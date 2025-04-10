@@ -136,6 +136,7 @@ namespace sparrow
         : p_data(p)
         , m_size(n)
     {
+        SPARROW_ASSERT_TRUE(p != nullptr || n == 0u);
     }
 
     template <class T>

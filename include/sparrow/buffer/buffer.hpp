@@ -33,6 +33,9 @@
 
 namespace sparrow
 {
+    template <class T>
+    class buffer_view;
+
     /**
      * Base class for buffer.
      *
@@ -157,6 +160,9 @@ namespace sparrow
         template <std::ranges::input_range Range, allocator A = allocator_type>
             requires std::same_as<std::ranges::range_value_t<Range>, T>
         constexpr buffer(const Range& range, const A& a = A());
+
+        template <allocator A = allocator_type>
+        constexpr buffer(const buffer_view<T>& view, const A& a = A());
 
         ~buffer();
 
@@ -341,6 +347,7 @@ namespace sparrow
     constexpr buffer_base<T>::buffer_base(pointer p, size_type n, const A& a)
         : m_alloc(a)
     {
+        SPARROW_ASSERT_TRUE((p != nullptr) || (p == nullptr && n == 0));
         assign_storage(p, n, n);
     }
 
@@ -399,7 +406,7 @@ namespace sparrow
     {
         m_data.p_begin = allocate(n);
         m_data.p_end = m_data.p_begin + n;
-        m_data.p_storage_end = m_data.p_begin + n;
+        m_data.p_storage_end = m_data.p_end;
     }
 
     template <class T>
@@ -469,24 +476,47 @@ namespace sparrow
     }
 
     template <class T>
+    template <allocator A>
+    constexpr buffer<T>::buffer(const buffer_view<T>& view, const A& a)
+        : base_type(a)
+    {
+        if (view.data() != nullptr)
+        {
+            this->create_storage(view.size());
+            get_data().p_end = copy_initialize(view.begin(), view.end(), get_data().p_begin, get_allocator());
+        }
+    }
+
+    template <class T>
     buffer<T>::~buffer()
     {
-        destroy(get_data().p_begin, get_data().p_end, get_allocator());
+        if (get_data().p_begin != nullptr)
+        {
+            destroy(get_data().p_begin, get_data().p_end, get_allocator());
+        }
     }
 
     template <class T>
     buffer<T>::buffer(const buffer& rhs)
-        : base_type(rhs.size(), rhs.get_allocator())
+        : base_type(rhs.get_allocator())
     {
-        get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
+        if (rhs.get_data().p_begin != nullptr)
+        {
+            this->create_storage(rhs.size());
+            get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
+        }
     }
 
     template <class T>
     template <allocator A>
     buffer<T>::buffer(const buffer& rhs, const A& a)
-        : base_type(rhs.size(), a)
+        : base_type(a)
     {
-        get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
+        if (rhs.get_data().p_begin != nullptr)
+        {
+            this->create_storage(rhs.size());
+            get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
+        }
     }
 
     template <class T>
@@ -500,8 +530,11 @@ namespace sparrow
         }
         else if (!rhs.empty())
         {
-            this->create_storage(rhs.size());
-            get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
+            if (rhs.get_data().p_begin != nullptr)
+            {
+                this->create_storage(rhs.size());
+                get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
+            }
             rhs.clear();
         }
     }
@@ -511,8 +544,20 @@ namespace sparrow
     {
         if (std::addressof(rhs) != this)
         {
-            // We assume that any_allocator never propagates on assign
-            assign_range_impl(rhs.get_data().p_begin, rhs.get_data().p_end, std::random_access_iterator_tag());
+            if (rhs.get_data().p_begin != nullptr)
+            {
+                // We assume that any_allocator never propagates on assign
+                assign_range_impl(rhs.get_data().p_begin, rhs.get_data().p_end, std::random_access_iterator_tag());
+            }
+            else
+            {
+                clear();
+                this->deallocate(
+                    get_data().p_begin,
+                    static_cast<size_type>(get_data().p_storage_end - get_data().p_begin)
+                );
+                this->assign_storage(nullptr, 0, 0);
+            }
         }
         return *this;
     }
@@ -526,11 +571,19 @@ namespace sparrow
         }
         else
         {
-            assign_range_impl(
-                std::make_move_iterator(rhs.begin()),
-                std::make_move_iterator(rhs.end()),
-                std::random_access_iterator_tag()
-            );
+            if (rhs.get_data().p_begin != nullptr)
+            {
+                assign_range_impl(
+                    std::make_move_iterator(rhs.begin()),
+                    std::make_move_iterator(rhs.end()),
+                    std::random_access_iterator_tag()
+                );
+            }
+            else
+            {
+                clear();
+            }
+
             rhs.clear();
         }
         return *this;
@@ -722,18 +775,26 @@ namespace sparrow
         }
         if (new_cap > capacity())
         {
-            const size_type old_size = size();
-            pointer tmp = allocate_and_copy(
-                new_cap,
-                std::make_move_iterator(get_data().p_begin),
-                std::make_move_iterator(get_data().p_end)
-            );
-            destroy(get_data().p_begin, get_data().p_end, get_allocator());
-            this->deallocate(
-                get_data().p_begin,
-                static_cast<size_type>(get_data().p_storage_end - get_data().p_begin)
-            );
-            this->assign_storage(tmp, old_size, new_cap);
+            if (data() == nullptr)
+            {
+                this->create_storage(new_cap);
+                get_data().p_end = get_data().p_begin;
+            }
+            else
+            {
+                const size_type old_size = size();
+                pointer tmp = allocate_and_copy(
+                    new_cap,
+                    std::make_move_iterator(get_data().p_begin),
+                    std::make_move_iterator(get_data().p_end)
+                );
+                destroy(get_data().p_begin, get_data().p_end, get_allocator());
+                this->deallocate(
+                    get_data().p_begin,
+                    static_cast<size_type>(get_data().p_storage_end - get_data().p_begin)
+                );
+                this->assign_storage(tmp, old_size, new_cap);
+            }
         }
     }
 
@@ -758,7 +819,10 @@ namespace sparrow
     template <class T>
     constexpr void buffer<T>::clear()
     {
-        erase_at_end(get_data().p_begin);
+        if (get_data().p_begin != nullptr)
+        {
+            erase_at_end(get_data().p_begin);
+        }
     }
 
     template <class T>
@@ -1068,7 +1132,14 @@ namespace sparrow
         pointer current = begin;
         for (; first != last; ++first, ++current)
         {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wnull-dereference"
+#endif
             alloc_traits::construct(a, current, *first);
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
         }
         return current;
     }
@@ -1076,6 +1147,9 @@ namespace sparrow
     template <class T>
     constexpr void buffer<T>::destroy(pointer first, pointer last, allocator_type& a)
     {
+        SPARROW_ASSERT_TRUE(first <= last);
+        SPARROW_ASSERT_TRUE(first != nullptr);
+        SPARROW_ASSERT_TRUE(last != nullptr);
         for (; first != last; ++first)
         {
             alloc_traits::destroy(a, first);
