@@ -33,9 +33,6 @@
 
 namespace sparrow
 {
-    template <class T>
-    class buffer_view;
-
     /**
      * Base class for buffer.
      *
@@ -160,9 +157,6 @@ namespace sparrow
         template <std::ranges::input_range Range, allocator A = allocator_type>
             requires std::same_as<std::ranges::range_value_t<Range>, T>
         constexpr buffer(const Range& range, const A& a = A());
-
-        template <allocator A = allocator_type>
-        constexpr buffer(const buffer_view<T>& view, const A& a = A());
 
         ~buffer();
 
@@ -476,24 +470,9 @@ namespace sparrow
     }
 
     template <class T>
-    template <allocator A>
-    constexpr buffer<T>::buffer(const buffer_view<T>& view, const A& a)
-        : base_type(a)
-    {
-        if (view.data() != nullptr)
-        {
-            this->create_storage(view.size());
-            get_data().p_end = copy_initialize(view.begin(), view.end(), get_data().p_begin, get_allocator());
-        }
-    }
-
-    template <class T>
     buffer<T>::~buffer()
     {
-        if (get_data().p_begin != nullptr)
-        {
-            destroy(get_data().p_begin, get_data().p_end, get_allocator());
-        }
+        destroy(get_data().p_begin, get_data().p_end, get_allocator());
     }
 
     template <class T>
@@ -1140,9 +1119,11 @@ namespace sparrow
     template <class T>
     constexpr void buffer<T>::destroy(pointer first, pointer last, allocator_type& a)
     {
+        if (first == nullptr)
+        {
+            return;
+        }
         SPARROW_ASSERT_TRUE(first <= last);
-        SPARROW_ASSERT_TRUE(first != nullptr);
-        SPARROW_ASSERT_TRUE(last != nullptr);
         for (; first != last; ++first)
         {
             alloc_traits::destroy(a, first);
