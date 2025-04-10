@@ -65,6 +65,7 @@ jobs:
 
     - name: Configure using CMake
       run: |
+        if [[ "${{matrix.compiler}}" = "gcc" ]]; then export CC=gcc-${{matrix.version}}; export CXX=g++-${{matrix.version}}; else export CC=clang; export CXX=clang++; fi
         cmake -G Ninja \
           -Bbuild ${{matrix.sys.config-flags}} \
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
