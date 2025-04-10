@@ -1132,14 +1132,7 @@ namespace sparrow
         pointer current = begin;
         for (; first != last; ++first, ++current)
         {
-#if defined(__GNUC__)
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wnull-dereference"
-#endif
             alloc_traits::construct(a, current, *first);
-#if defined(__GNUC__)
-#    pragma GCC diagnostic pop
-#endif
         }
         return current;
     }
