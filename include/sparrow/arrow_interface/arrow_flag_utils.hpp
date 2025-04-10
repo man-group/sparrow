@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <unordered_set>
+
 #include "sparrow/c_interface.hpp"
 
 namespace sparrow
@@ -33,11 +35,11 @@ namespace sparrow
         );
     }
 
-    /// Converts a bitfield of ArrowFlag values to a vector of ArrowFlag values.
-    SPARROW_CONSTEXPR_GCC_11 std::vector<ArrowFlag> to_vector_of_ArrowFlags(int64_t flag_values)
+    /// Converts a bitfield of ArrowFlag values to a set of ArrowFlag values.
+    inline std::unordered_set<ArrowFlag> to_set_of_ArrowFlags(int64_t flag_values)
     {
         constexpr size_t n_bits = sizeof(flag_values) * 8;
-        std::vector<ArrowFlag> flags;
+        std::unordered_set<ArrowFlag> flags;
         for (size_t i = 0; i < n_bits; ++i)
         {
             const int64_t flag_value = static_cast<int64_t>(1) << i;
@@ -48,14 +50,14 @@ namespace sparrow
                     // TODO: Replace with a more specific exception
                     throw std::runtime_error("Invalid ArrowFlag value");
                 }
-                flags.push_back(static_cast<ArrowFlag>(flag_value));
+                flags.insert(static_cast<ArrowFlag>(flag_value));
             }
         }
         return flags;
     }
 
     /// Converts a vector of ArrowFlag values to a bitfield of ArrowFlag values.
-    SPARROW_CONSTEXPR_GCC_11 int64_t to_ArrowFlag_value(const std::vector<ArrowFlag>& flags)
+    inline int64_t to_ArrowFlag_value(const std::unordered_set<ArrowFlag>& flags)
     {
         int64_t flag_values = 0;
         for (const ArrowFlag flag : flags)
