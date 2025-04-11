@@ -20,6 +20,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
@@ -144,14 +145,14 @@ namespace sparrow
             schema().metadata = private_data->metadata_ptr();
         }
 
-        [[nodiscard]] SPARROW_API std::vector<ArrowFlag> flags() const;
+        [[nodiscard]] SPARROW_API std::unordered_set<ArrowFlag> flags() const;
 
         /**
          * Set the flags of the `ArrowSchema`.
          * @exception `arrow_proxy_exception` If the `ArrowSchema` was not created with sparrow.
          * @param flags The flags to set.
          */
-        SPARROW_API void set_flags(const std::vector<ArrowFlag>& flags);
+        SPARROW_API void set_flags(const std::unordered_set<ArrowFlag>& flags);
         [[nodiscard]] SPARROW_API size_t length() const;
 
         /**
