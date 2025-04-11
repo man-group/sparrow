@@ -119,11 +119,8 @@ namespace sparrow
 
 // if __cpp_lib_format defined and Xcode version lower than 15.0.0
 #if defined(__cpp_lib_format)
-#    if defined(__apple_build_version__)
-constexpr size_t xcode_version = __apple_build_version__;
-
-static_assert(__apple_build_version__ <= 1, "Xcode version:");
-#    endif
+#    if defined(__apple_build_version__) && __apple_build_version__ < 15000000
+#    else
 template <>
 struct std::formatter<sparrow::int128_t>
 {
@@ -151,6 +148,6 @@ struct std::formatter<sparrow::int256_t>
         return std::format_to(ctx.out(), "{}", "Integer int256_t TODO");
     }
 };
-
+#    endif
 
 #endif
