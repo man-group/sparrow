@@ -14,10 +14,6 @@
 
 #pragma once
 
-#if defined(__cpp_lib_format)
-#    include <format>
-#endif
-
 #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
 
 // disabe warnings -Wold-style-cast sign-conversion for clang and gcc
@@ -119,8 +115,9 @@ namespace sparrow
 
 // if __cpp_lib_format defined and Xcode version lower than 15.0.0
 #if defined(__cpp_lib_format)
-#    if defined(__apple_build_version__) && (__apple_build_version__ > 15000000)
-#    else
+
+#    include <format>
+
 template <>
 struct std::formatter<sparrow::int128_t>
 {
@@ -148,6 +145,5 @@ struct std::formatter<sparrow::int256_t>
         return std::format_to(ctx.out(), "{}", "Integer int256_t TODO");
     }
 };
-#    endif
 
 #endif
