@@ -119,7 +119,7 @@ namespace sparrow
 
 // if __cpp_lib_format defined and Xcode version lower than 15.0.0
 #if defined(__cpp_lib_format)
-#    if defined(__apple_build_version__) && __apple_build_version__ < 15000000
+#    if defined(__apple_build_version__) && (__apple_build_version__ < 15000000)
 #    else
 template <>
 struct std::formatter<sparrow::int128_t>
