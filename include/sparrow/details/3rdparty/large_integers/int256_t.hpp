@@ -473,7 +473,7 @@ public:
         return static_cast<uint128_t>(low);
     }
 
-    //friend std::ostream& operator<<(std::ostream& out, int256_t n);
+    friend std::ostream& operator<<(std::ostream& out, int256_t n);
 
 private:
     uint128_t low;
@@ -623,29 +623,38 @@ private:
     }
 };
 
-// inline std::ostream& operator<<(std::ostream& stream, int256_t n)
-// {   
-//     std::string str;
+inline std::ostream& operator<<(std::ostream& stream, int256_t n)
+{   
+    std::string str;
 
-//     if (n < 0)
-//     {
-//         stream << "-";
-//         n = -n;
-//     }
+    if (n < 0)
+    {
+        stream << "-";
+        n = -n;
+    }
 
-//     while (n > 0)
-//     {
-//         str += '0' + std::int8_t(n % 10);
-//         n /= 10;
-//     }
+    while (n > 0)
+    {
+        str += '0' + std::int8_t(n % 10);
+        n /= 10;
+    }
 
-//     if (str.empty())
-//         str = "0";
+    if (str.empty())
+        str = "0";
 
-//     stream << std::string(str.rbegin(), str.rend());
+    stream << std::string(str.rbegin(), str.rend());
 
-//     return stream;
-// }
+    return stream;
+}
+
+inline std::string to_string(const int256_t& n)
+{
+  std::ostringstream oss;
+  oss << n;
+  return oss.str();
+
+}
+
 
 // template <typename T>
 // struct next_larger_type

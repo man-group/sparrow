@@ -154,4 +154,22 @@ struct std::formatter<sparrow::int256_t, charT>
     }
 };
 
+        auto format(const sparrow::int256_t& n, std::format_context& ctx) const
+        {
+#    ifdef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+            return std::format_to(
+                ctx.out(),
+                "int256_t({}, {}, {}, {})",
+                n.words[0],
+                n.words[1],
+                n.words[2],
+                n.words[3]
+            );
+#    else
+            const std::string str = primesum::to_string(n);
+            return std::format_to(ctx.out(), "{}", str);
+#    endif
+        }
+    };
+}
 #endif

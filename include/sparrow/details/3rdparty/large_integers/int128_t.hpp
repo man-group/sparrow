@@ -19,6 +19,7 @@
 #ifndef INT128_T_HPP
 #define INT128_T_HPP
 
+#include <sstream>
 #include <stdint.h>
 #include <limits>
 #include <type_traits>
@@ -40,38 +41,54 @@ namespace primesum {
 using int128_t = __int128_t;
 using uint128_t = __uint128_t;
 
-// inline std::ostream& operator<<(std::ostream& stream, uint128_t n)
-// {
-//   std::string str;
-
-//   while (n > 0)
-//   {
-//     str += '0' + n % 10;
-//     n /= 10;
-//   }
-//   if (str.empty())
-//     str = "0";
-
-//   stream << std::string(str.rbegin(), str.rend());
-//   return stream;
-// }
-
-// inline std::ostream& operator<<(std::ostream& stream, int128_t n)
-// {
-//   if (n < 0)
-//   {
-//     stream << "-";
-//     n = -n;
-//   }
-//   stream << (uint128_t) n;
-//   return stream;
-// }
-
 } // namespace
 
 #endif
 
+inline std::ostream& operator<<(std::ostream& stream, primesum::uint128_t n)
+{
+  std::string str;
+
+  while (n > 0)
+  {
+    str += '0' + n % 10;
+    n /= 10;
+  }
+  if (str.empty())
+  {
+    str = "0";
+  }
+
+  stream << std::string(str.rbegin(), str.rend());
+  return stream;
+}
+
+inline std::ostream& operator<<(std::ostream& stream, primesum::int128_t n)
+{
+  if (n < 0)
+  {
+    stream << "-";
+    n = -n;
+  }
+  stream << (primesum::uint128_t) n;
+  return stream;
+}
+
 namespace primesum {
+
+inline std::string to_string(const uint128_t& n)
+{
+  std::ostringstream oss;
+  oss << n;
+  return oss.str();
+}
+
+inline std::string to_string(const int128_t& n)
+{
+  std::ostringstream oss;
+  oss << n;
+  return oss.str();
+}
 
 /// Portable namespace, includes functions which (unlike the versions
 /// form the C++ standard library) work with the int128_t and
