@@ -14,10 +14,6 @@
 
 #pragma once
 
-#if defined(__cpp_lib_format)
-#    include <format>
-#endif
-
 #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
 
 // disabe warnings -Wold-style-cast sign-conversion for clang and gcc
@@ -117,8 +113,10 @@ namespace sparrow
 #endif
 }  // namespace sparrow
 
+// if __cpp_lib_format defined and Xcode version lower than 15.0.0
 #if defined(__cpp_lib_format)
 
+#    include <format>
 
 template <>
 struct std::formatter<sparrow::int128_t>
