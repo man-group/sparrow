@@ -119,30 +119,36 @@ namespace sparrow
 
 #if defined(__cpp_lib_format)
 
-
-template <>
-struct std::formatter<sparrow::int128_t>
+// Full specialization fails on OSX 15.4 because the
+// template is already instantiated in std::format
+// implementation
+template <class charT>
+struct std::formatter<sparrow::int128_t, charT>
 {
-    constexpr auto parse(std::format_parse_context& ctx)
+    template <class ParseContext>
+    constexpr ParseContext::iterator parse(ParseContext& ctx)
     {
         return ctx.begin();  // Simple implementation
     }
 
-    auto format(const sparrow::int128_t&, std::format_context& ctx) const
+    template <class FmtContext>
+    FmtContext::iterator format(const sparrow::int128_t&, FmtContext& ctx) const
     {
         return std::format_to(ctx.out(), "{}", "Integer int128_t TODO");
     }
 };
 
-template <>
-struct std::formatter<sparrow::int256_t>
+template <class charT>
+struct std::formatter<sparrow::int256_t, charT>
 {
-    constexpr auto parse(std::format_parse_context& ctx)
+    template <class ParseContext>
+    constexpr ParseContext::iterator parse(ParseContext& ctx)
     {
         return ctx.begin();  // Simple implementation
     }
 
-    auto format(const sparrow::int256_t&, std::format_context& ctx) const
+    template <class FmtContext>
+    FmtContext::iterator format(const sparrow::int256_t&, FmtContext& ctx) const
     {
         return std::format_to(ctx.out(), "{}", "Integer int256_t TODO");
     }
