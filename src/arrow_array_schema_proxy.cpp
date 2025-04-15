@@ -310,12 +310,12 @@ namespace sparrow
         return key_value_view(schema().metadata);
     }
 
-    [[nodiscard]] std::vector<ArrowFlag> arrow_proxy::flags() const
+    [[nodiscard]] std::unordered_set<ArrowFlag> arrow_proxy::flags() const
     {
-        return to_vector_of_ArrowFlags(schema().flags);
+        return to_set_of_ArrowFlags(schema().flags);
     }
 
-    void arrow_proxy::set_flags(const std::vector<ArrowFlag>& flags)
+    void arrow_proxy::set_flags(const std::unordered_set<ArrowFlag>& flags)
     {
         if (!schema_created_with_sparrow())
         {

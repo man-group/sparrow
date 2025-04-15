@@ -19,6 +19,7 @@
 #include <memory>
 #include <optional>
 #include <ranges>
+#include <unordered_set>
 
 #include "sparrow/utils/repeat_container.hpp"
 
@@ -48,8 +49,7 @@ namespace sparrow
      * @param name An optional, null-terminated, UTF8-encoded string of the field or array name.
      *             This is mainly used to reconstruct child fields of nested types.
      * @param metadata An optional, range of key-value pairs to attach to the schema.
-     * @param flags A bitfield of flags enriching the type description. Its value is computed by OR’ing
-     *              together the flag values.
+     * @param flags An optional set of flags to attach to the schema.
      * @param children Pointer to a sequence of `ArrowSchema` pointers or `nullptr`. Must be `nullptr` if
      * `n_children` is `0`.
      * @param dictionary Pointer to `an ArrowSchema`. Must be present if the `ArrowSchema` represents a
@@ -64,7 +64,7 @@ namespace sparrow
         F format,
         N name,
         std::optional<M> metadata,
-        std::optional<ArrowFlag> flags,
+        std::optional<std::unordered_set<ArrowFlag>> flags,
         ArrowSchema** children,
         const CHILDREN_OWNERSHIP& children_ownership,
         ArrowSchema* dictionary,
@@ -91,7 +91,7 @@ namespace sparrow
         F format,
         N name,
         std::optional<M> metadata,
-        std::optional<ArrowFlag> flags,
+        std::optional<std::unordered_set<ArrowFlag>> flags,
         ArrowSchema** children,
         const CHILDREN_OWNERSHIP& children_ownership,
         ArrowSchema* dictionary,
@@ -109,7 +109,14 @@ namespace sparrow
             }
         }
 
-        schema.flags = flags.has_value() ? static_cast<int64_t>(flags.value()) : 0;
+        schema.flags = 0;
+        if (flags.has_value())
+        {
+            for (const auto& flag : *flags)
+            {
+                schema.flags |= static_cast<int64_t>(flag);
+            }
+        }
         schema.n_children = static_cast<int64_t>(children_ownership.size());
 
         std::optional<std::string> metadata_str = metadata.has_value()
@@ -142,7 +149,7 @@ namespace sparrow
         F format,
         N name,
         std::optional<M> metadata,
-        std::optional<ArrowFlag> flags,
+        std::optional<std::unordered_set<ArrowFlag>> flags,
         ArrowSchema** children,
         const CHILDREN_OWNERSHIP& children_ownership,
         ArrowSchema* dictionary,
