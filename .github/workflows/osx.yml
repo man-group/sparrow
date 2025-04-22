@@ -18,15 +18,16 @@ jobs:
       fail-fast: false
       matrix:
         os:
-        - 13
-        - 14
-        - 15
+          - 13
+          - 14
+          - 15
+          - "15-large"
         config:
-        - { name: Debug }
-        - { name: Release }
+          - { name: Debug }
+          - { name: Release }
         compiler:
-        - clang
-        - apple-clang
+          - clang
+          - apple-clang
         exclude:
           - os: 13
             compiler: apple-clang
@@ -34,76 +35,68 @@ jobs:
             compiler: apple-clang
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}_${{ matrix.config.name }}_${{ matrix.compiler }}_ccache
 
-    - name: ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: ${{ matrix.os }}_${{ matrix.config.name }}_${{ matrix.compiler }}_ccache
+      - name: Add specification of clang++ in the conda environment specification
+        if: matrix.compiler == 'clang'
+        run: |
+          echo "  - clangxx==18.1.8" >> environment-dev.yml
 
-    - name: Add specification of clang++ in the conda environment specification
-      if: matrix.compiler == 'clang'
-      run: |
-        echo "  - clangxx==18.1.8" >> environment-dev.yml
+      - name: Set conda environment
+        uses: mamba-org/setup-micromamba@main
+        with:
+          environment-name: myenv
+          environment-file: environment-dev.yml
+          init-shell: bash
+          cache-downloads: true
 
-    - name: Set conda environment
-      uses: mamba-org/setup-micromamba@main
-      with:
-        environment-name: myenv
-        environment-file: environment-dev.yml
-        init-shell: bash
-        cache-downloads: true
+      - name: Use clang++ from conda-forge
+        if: matrix.compiler == 'clang'
+        run: |
+          echo "CXX=$CONDA_PREFIX/bin/clang++" >> $GITHUB_ENV
+          echo "CMAKE_CXX_COMPILER=$CONDA_PREFIX/bin/clang++" >> $GITHUB_ENV
 
-    - name: Use clang++ from conda-forge
-      if: matrix.compiler == 'clang'
-      run: |
-        echo "CXX=$CONDA_PREFIX/bin/clang++" >> $GITHUB_ENV
-        echo "CMAKE_CXX_COMPILER=$CONDA_PREFIX/bin/clang++" >> $GITHUB_ENV
+      - name: Configure using CMake
+        run: |
+          cmake -Bbuild \
+          -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
+          -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
+          -DBUILD_TESTS=ON \
+          -DBUILD_EXAMPLES=ON \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
 
-    - name: Use Apple Clang (i.e. clang++ from Xcode)
-      if: matrix.compiler == 'apple-clang'
-      run: |
-        echo "CXX=/usr/bin/clang++" >> $GITHUB_ENV
-        echo "CMAKE_CXX_COMPILER=/usr/bin/clang++" >> $GITHUB_ENV
+      - name: Build
+        working-directory: build
+        run: cmake --build . --config ${{matrix.config.name}} --target sparrow --parallel 8
 
-    - name: Configure using CMake
-      run: |
-        cmake -Bbuild \
-        -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
-        -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
-        -DBUILD_TESTS=ON \
-        -DBUILD_EXAMPLES=ON \
-        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-        -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
+      - name: Install
+        working-directory: build
+        run: cmake --install . --config ${{matrix.config.name}}
 
-    - name: Build
-      working-directory: build
-      run: cmake --build . --config ${{matrix.config.name}} --target sparrow --parallel 8
+      - name: Build tests
+        working-directory: build
+        run: cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib --parallel 8
 
-    - name: Install
-      working-directory: build
-      run: cmake --install . --config ${{matrix.config.name}}
+      - name: Run tests
+        working-directory: build
+        run: cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
 
-    - name: Build tests
-      working-directory: build
-      run: cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib --parallel 8
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: test_sparrow_lib_report_OSX_${{ matrix.os }}_${{ matrix.config.name }}_${{ matrix.compiler }}
+          path: ./**/test*.xml
+          if-no-files-found: error
 
-    - name: Run tests
-      working-directory: build
-      run: cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
-
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      if: success() || failure()
-      with:
-        name: test_sparrow_lib_report_OSX_${{ matrix.os }}_${{ matrix.config.name }}_${{ matrix.compiler }}
-        path: ./**/test*.xml
-        if-no-files-found: error
-
-    - name: Run all examples
-      working-directory: build
-      run: cmake --build . --config ${{matrix.config.name}} --target run_examples
-
+      - name: Run all examples
+        working-directory: build
+        run: cmake --build . --config ${{matrix.config.name}} --target run_examples
