@@ -1,0 +1,45 @@
+name: Outdated-compilers
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.job }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash -e -l {0}
+jobs:
+  linux-outdated:
+    runs-on: ubuntu-22.04
+    name: Outdated GCC / ${{ matrix.version }} / ${{ matrix.arch }} / ${{ matrix.config }} / date-polyfill ${{ matrix.date-polyfill}} / shared ${{ matrix.shared }}
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [11]
+        arch: [64]
+        config: [Debug, Release]
+        date-polyfill: [ON, OFF]
+        shared: [ON, OFF]
+
+    steps:
+
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.9
+
+    - name: Install mold and pthread
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev
+
+    - name: Install GCC
+      if: matrix.compiler == 'gcc'
+      uses: egor-tensin/setup-gcc@v1
+      with:
+        version: ${{matrix.version}}
+        platform: x64
+
+
