@@ -20,7 +20,9 @@ namespace sparrow
 {
     TEST_SUITE("large_int")
     {
-#ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+#if defined(__cpp_lib_format)
+
+#    ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
 
         TEST_CASE("int128 formatter")
         {
@@ -38,7 +40,7 @@ namespace sparrow
             std::string str = std::format("{}", n);
             CHECK_EQ(str, "123456789000000000000000000000000000000000000");
         }
-#else
+#    else
         TEST_CASE("int128 formatter")
         {
             int128_t n;
@@ -58,6 +60,7 @@ namespace sparrow
             std::string str = std::format("{}", n);
             CHECK_EQ(str, "int256_t(123456789, 100000000, 200000000, 300000000)");
         }
+#    endif
 #endif
     }
 }
