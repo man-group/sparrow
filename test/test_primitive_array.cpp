@@ -766,6 +766,20 @@ namespace sparrow
             CHECK_EQ(arr[4].value(), std::size_t(4));
         }
 
+        TEST_CASE("convenience_constructor_from_u8_buffer")
+        {
+            size_t size = 10;
+            auto* data = new int32_t[size];
+            for (auto i = 0u; i < size; ++i)
+            {
+                data[i] = static_cast<int32_t>(i);
+            }
+
+            sparrow::u8_buffer<int32_t> buffer(data, size);
+            sparrow::primitive_array<int32_t> primitive_array(std::move(buffer));
+            CHECK_EQ(primitive_array.size(), size);
+        }
+
 #if defined(__cpp_lib_format)
         TEST_CASE("formatting")
         {

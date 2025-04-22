@@ -69,7 +69,7 @@ namespace sparrow
 
         any_allocator();
         any_allocator(const any_allocator& rhs);
-        any_allocator(any_allocator&&) = default;
+        any_allocator(any_allocator&&);
 
         any_allocator& operator=(const any_allocator& rhs) = delete;
         any_allocator& operator=(any_allocator&& rhs) = delete;
@@ -212,6 +212,21 @@ namespace sparrow
     any_allocator<T>::any_allocator(const any_allocator& rhs)
         : m_storage(copy_storage(rhs.m_storage))
     {
+    }
+
+    template <class T>
+    any_allocator<T>::any_allocator(any_allocator&& rhs)
+        : m_storage(std::move(rhs.m_storage))
+    {
+        // The possible fix would be to not propagate the allocator,
+        // and copy it when the container using it is moved.
+        // However, this means potentially cloning a polymorphic
+        // allocator, hitting performance drastically. A moved
+        // allocator might be used for trying to deallocate an empty
+        // memory zone (the memory of the moved container), wich is
+        // a noop, but the object must exist so that alloc.deallocate
+        // is valid.
+        rhs.m_storage = std::allocator<T>();
     }
 
     template <class T>
