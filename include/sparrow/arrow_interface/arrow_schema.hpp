@@ -180,7 +180,7 @@ namespace sparrow
             dictionary_ownership
         );
         return schema;
-    };
+    }
 
     inline ArrowSchema make_empty_arrow_schema()
     {

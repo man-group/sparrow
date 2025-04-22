@@ -216,7 +216,7 @@ namespace sparrow
     {
         return move_array(std::move(source));
     }
-};
+}
 
 #if defined(__cpp_lib_format)
 

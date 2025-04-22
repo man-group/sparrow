@@ -231,7 +231,7 @@ namespace sparrow::mpl
     consteval auto as_predicate()
     {
         return ct_type_predicate_to_callable<P>{};
-    };
+    }
 
     //////////////////////////////////////////////////
     //// Algorithms //////////////////////////////////

@@ -45,7 +45,7 @@ namespace sparrow::test
             bitmap.set(i, false);
         }
         return bitmap.buffer();
-    };
+    }
 
     namespace detail
     {
