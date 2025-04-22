@@ -14,10 +14,6 @@
 
 #pragma once
 
-#if defined(__cpp_lib_format)
-#    include <format>
-#endif
-
 #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
 
 // disabe warnings -Wold-style-cast sign-conversion for clang and gcc
@@ -37,6 +33,7 @@
 #endif
 
 #include <cstdint>
+#include <type_traits>
 
 namespace sparrow
 {
@@ -87,36 +84,12 @@ namespace sparrow
     using int128_t = primesum::int128_t;
     using int256_t = primesum::int256_t;
 
-    template <class T>
-        requires(std::is_same_v<T, int128_t> || std::is_same_v<T, int256_t>)
-    inline std::ostream& operator<<(std::ostream& stream, T n)
-    {
-        std::string str;
-
-        if (n < 0)
-        {
-            stream << "-";
-            n = -n;
-        }
-        while (n > 0)
-        {
-            str.push_back(static_cast<char>('0' + std::int8_t(n % 10)));
-            n /= 10;
-        }
-
-        if (str.empty())
-        {
-            str = "0";
-        }
-
-        stream << std::string(str.rbegin(), str.rend());
-
-        return stream;
-    }
 #endif
 }  // namespace sparrow
 
 #if defined(__cpp_lib_format)
+
+#    include <format>
 
 // Full specialization fails on OSX 15.4 because the
 // template is already instantiated in std::format
