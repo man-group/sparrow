@@ -341,7 +341,19 @@ target_compile_features(sparrow PUBLIC cxx_std_20)
 target_link_libraries(sparrow PUBLIC ${SPARROW_INTERFACE_DEPENDENCIES})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32)
-    target_link_libraries(sparrow PRIVATE "C:/Program Files/LLVM_20/lib/clang/20/lib/windows/clang_rt.builtins-x86_64.lib")
+    cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CLANG_BIN_PATH)
+    cmake_path(GET CLANG_BIN_PATH PARENT_PATH CLANG_ROOT_PATH)
+    set(CLANG_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+    string(REGEX REPLACE "^([0-9]+)\\..*" "\\1" CLANG_MAJOR_VERSION ${CLANG_VERSION})
+    set(CLANG_LIB_PATH ${CLANG_ROOT_PATH}/lib/clang/${CLANG_MAJOR_VERSION}/lib/windows)
+    find_library(CLANGRT_BUILTINS REQUIRED 
+        NAMES
+            clang_rt.builtins
+            clang_rt.builtins-x86_64
+        PATHS
+            ${CLANG_LIB_PATH})
+    message(STATUS "Using clang builtins: ${CLANGRT_BUILTINS}")
+    target_link_libraries(sparrow PRIVATE ${CLANGRT_BUILTINS})
 endif()
 
 if(ENABLE_COVERAGE)
