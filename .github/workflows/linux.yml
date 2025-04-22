@@ -46,6 +46,9 @@ jobs:
           - compiler: gcc
             version: 20
           - compiler: gcc
+            version: 10
+            date-polyfill: OFF
+          - compiler: gcc
             version: 11
             date-polyfill: OFF
           - compiler: gcc

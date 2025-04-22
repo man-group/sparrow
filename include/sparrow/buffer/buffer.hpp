@@ -63,8 +63,12 @@ namespace sparrow
 
         buffer_base() = default;
 
-        template <allocator A>
-        constexpr buffer_base(const A& a) noexcept;
+        template <class A>
+            requires(not std::same_as<buffer_base, A> and allocator<A>)
+        constexpr buffer_base(const A& a) noexcept
+            : m_alloc(a)
+        {
+        }
 
         template <allocator A = allocator_type>
         constexpr buffer_base(size_type n, const A& a = A());
@@ -319,13 +323,6 @@ namespace sparrow
         std::swap(p_end, rhs.p_end);
         std::swap(p_storage_end, rhs.p_storage_end);
         return *this;
-    }
-
-    template <class T>
-    template <allocator A>
-    constexpr buffer_base<T>::buffer_base(const A& a) noexcept
-        : m_alloc(a)
-    {
     }
 
     template <class T>
