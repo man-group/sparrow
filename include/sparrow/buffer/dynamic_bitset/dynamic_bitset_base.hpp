@@ -16,6 +16,7 @@
 
 
 #include <bit>
+#include <climits>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
