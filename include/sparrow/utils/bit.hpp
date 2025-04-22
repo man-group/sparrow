@@ -19,6 +19,10 @@
 #include <bit>
 #include <concepts>
 
+#if (!defined(__clang__) && defined(__GNUC__) && __GNUC__ < 11)
+#include <cstring>
+#endif
+
 namespace sparrow
 {
     /**
@@ -32,9 +36,18 @@ namespace sparrow
     [[nodiscard]] constexpr T byteswap(T value) noexcept
     {
         static_assert(std::has_unique_object_representations_v<T>, "T may not have padding bits");
+#if (!defined(__clang__) && defined(__GNUC__) && __GNUC__ < 11)
+        std::array<std::byte, sizeof(T)> value_representation;
+        std::memcpy(&value_representation, &value, sizeof(T));
+        std::ranges::reverse(value_representation);
+        T res;
+        std::memcpy(&res, &value_representation, sizeof(T));
+        return res;
+#else
         auto value_representation = std::bit_cast<std::array<std::byte, sizeof(T)>>(value);
         std::ranges::reverse(value_representation);
         return std::bit_cast<T>(value_representation);
+#endif
     }
 
     template <std::endian input_value_endianess>
