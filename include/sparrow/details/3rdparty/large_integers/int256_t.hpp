@@ -635,7 +635,7 @@ inline std::ostream& operator<<(std::ostream& stream, int256_t n)
 
     while (n > 0)
     {
-        str += '0' + std::int8_t(n % 10);
+        str += '0' + char(n % 10);
         n /= 10;
     }
 
