@@ -51,7 +51,7 @@ inline std::ostream& operator<<(std::ostream& stream, primesum::uint128_t n)
 
   while (n > 0)
   {
-    str += '0' + n % 10;
+    str += '0' + char(n % 10);
     n /= 10;
   }
   if (str.empty())
