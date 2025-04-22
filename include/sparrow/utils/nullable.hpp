@@ -794,7 +794,11 @@ namespace sparrow
             {
                 return v.has_value();
             },
+#if (!defined(__clang__) && defined(__GNUC__) && __GNUC__ < 11)
+            static_cast<const base_type&>(*this)
+#else
             *this
+#endif
         );
     }
 }
