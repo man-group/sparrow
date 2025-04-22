@@ -7,6 +7,7 @@
 // - disabled next_larger_type
 // - disabled OpenMP support
 // - disabled io operators (abigiousty...)
+// - update operator<<
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// @file   int256_t.hpp
 /// @brief  256-bit signed integer type based on Andrew G. Crowell's
@@ -635,7 +636,14 @@ inline std::ostream& operator<<(std::ostream& stream, int256_t n)
 
     while (n > 0)
     {
-        str += '0' + char(n % 10);
+# if defined(__GNUC__)
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wsign-conversion"
+# endif
+        str += '0' + std::int8_t(n % 10);
+# if defined(__GNUC__)
+#   pragma GCC diagnostic pop
+# endif
         n /= 10;
     }
 

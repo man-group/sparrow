@@ -26,7 +26,6 @@
 #        pragma GCC diagnostic ignored "-Wold-style-cast"
 #        pragma GCC diagnostic ignored "-Wsign-conversion"
 #        pragma GCC diagnostic ignored "-Wshadow"
-#        pragma GCC diagnostic ignored "-Wsign-conversion"
 #    endif
 #    include <sparrow/details/3rdparty/large_integers/int128_t.hpp>
 #    include <sparrow/details/3rdparty/large_integers/int256_t.hpp>
