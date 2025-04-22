@@ -259,7 +259,9 @@ namespace sparrow
             {
 #if defined(__GNUC__)
 #    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wmismatched-new-delete"
+#    if (__GNUC__ > 10)
+#        pragma GCC diagnostic ignored "-Wmismatched-new-delete"
+#    endif
 #    pragma GCC diagnostic ignored "-Wnull-dereference"
 #endif
                 return allocator.deallocate(p, n);
