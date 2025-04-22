@@ -638,7 +638,7 @@ inline std::ostream& operator<<(std::ostream& stream, int256_t n)
     {
 # if defined(__GNUC__)
 #   pragma GCC diagnostic push
-#   pragma GCC diagnostic ignored "-Wsign-conversion"
+#   pragma GCC diagnostic ignored "-Wconversion"
 # endif
         str += '0' + std::int8_t(n % 10);
 # if defined(__GNUC__)
