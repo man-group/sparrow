@@ -54,16 +54,16 @@ namespace sparrow
 
         using block_type = typename B::block_type;
         using bitset_type = B;
+        using size_type = typename B::size_type;
 
-        bitset_reference(bitset_type& bitset, block_type& block, block_type mask);
+        bitset_reference(bitset_type& bitset, size_type index);
 
         constexpr void assign(bool) noexcept;
         constexpr void set() noexcept;
         constexpr void reset() noexcept;
 
-        bitset_type& m_bitset;
-        block_type& m_block;
-        block_type m_mask;
+        bitset_type* p_bitset;
+        size_type m_index;
 
         friend class bitset_iterator<B, false>;
         template <typename RAR>
@@ -101,17 +101,13 @@ namespace sparrow
     template <class B>
     constexpr bitset_reference<B>::operator bool() const noexcept
     {
-        if (m_bitset.data() == nullptr)
-        {
-            return true;
-        }
-        return (m_block & m_mask) != 0;
+        return p_bitset->test(m_index);
     }
 
     template <class B>
     constexpr bool bitset_reference<B>::operator~() const noexcept
     {
-        return (m_block & m_mask) == 0;
+        return !p_bitset->test(m_index);
     }
 
     template <class B>
@@ -139,18 +135,15 @@ namespace sparrow
     {
         if (rhs)
         {
-            bool old_value = m_block & m_mask;
-            m_block ^= m_mask;
-            m_bitset.update_null_count(old_value, !old_value);
+            p_bitset->set(m_index, !p_bitset->test(m_index));
         }
         return *this;
     }
 
     template <class B>
-    bitset_reference<B>::bitset_reference(bitset_type& bitset, block_type& block, block_type mask)
-        : m_bitset(bitset)
-        , m_block(block)
-        , m_mask(mask)
+    bitset_reference<B>::bitset_reference(bitset_type& bitset, size_type index)
+        : p_bitset(&bitset)
+        , m_index(index)
     {
     }
 
@@ -163,17 +156,13 @@ namespace sparrow
     template <class B>
     constexpr void bitset_reference<B>::set() noexcept
     {
-        bool old_value = m_block & m_mask;
-        m_block |= m_mask;
-        m_bitset.update_null_count(old_value, m_block & m_mask);
+        p_bitset->set(m_index, true);
     }
 
     template <class B>
     constexpr void bitset_reference<B>::reset() noexcept
     {
-        bool old_value = m_block & m_mask;
-        m_block &= ~m_mask;
-        m_bitset.update_null_count(old_value, m_block & m_mask);
+        p_bitset->set(m_index, false);
     }
 
     template <class B1, class B2>

@@ -49,13 +49,13 @@ namespace sparrow
 
     template <std::integral T>
     constexpr dynamic_bitset_view<T>::dynamic_bitset_view(block_type* p, size_type n)
-        : base_type(storage_type(p, this->compute_block_count(n)), n)
+        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n) : 0), n)
     {
     }
 
     template <std::integral T>
     constexpr dynamic_bitset_view<T>::dynamic_bitset_view(block_type* p, size_type n, size_type null_count)
-        : base_type(storage_type(p, this->compute_block_count(n)), n, null_count)
+        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n) : 0), n, null_count)
     {
     }
 }
