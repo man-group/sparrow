@@ -642,7 +642,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             {
                 auto [array, schema] = test::make_arrow_schema_and_array(false);
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-                std::vector<uint8_t> values{false, true, false, true};
+                std::vector<bool> values{false, true, false, true};
                 proxy.insert_bitmap(1, values);
                 const auto buffers = proxy.buffers();
                 REQUIRE_EQ(buffers.size(), 2);

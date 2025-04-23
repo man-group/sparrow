@@ -275,6 +275,15 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        [[nodiscard]] static arrow_proxy create_proxy_impl(
+            const date::time_zone* timezone,
+            u8_buffer<buffer_inner_value_type>&& data_buffer,
+            std::optional<validity_bitmap>&& bitmap_input,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        );
+
         // Modifiers
 
         void resize_values(size_type new_length, inner_value_type value);
@@ -377,41 +386,13 @@ namespace sparrow
     {
         const auto size = data_buffer.size();
         validity_bitmap bitmap = ensure_validity_bitmap(size, std::forward<R>(bitmap_input));
-        const auto null_count = bitmap.null_count();
-
-        std::string format(data_type_to_format(arrow_traits<T>::type_id));
-        format += timezone->name();
-
-        const repeat_view<bool> children_ownership{true, 0};
-
-        // create arrow schema and array
-        ArrowSchema schema = make_arrow_schema(
-            std::move(format),    // format
-            std::move(name),      // name
-            std::move(metadata),  // metadata
-            std::nullopt,         // flags
-            nullptr,              // children
-            children_ownership,   // children ownership
-            nullptr,              // dictionary,
-            true                  // dictionary ownership
+        return create_proxy_impl(
+            timezone,
+            std::forward<u8_buffer<buffer_inner_value_type>>(data_buffer),
+            std::move(bitmap),
+            std::move(name),
+            std::move(metadata)
         );
-
-        std::vector<buffer<uint8_t>> buffers(2);
-        buffers[0] = std::move(bitmap).extract_storage();
-        buffers[1] = std::move(data_buffer).extract_storage();
-
-        // create arrow array
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // length
-            static_cast<int64_t>(null_count),
-            0,  // offset
-            std::move(buffers),
-            nullptr,             // children
-            children_ownership,  // children ownership
-            nullptr,             // dictionary
-            true                 // dicitonary ownership
-        );
-        return arrow_proxy(std::move(arr), std::move(schema));
     }
 
     template <timestamp_type T>
@@ -514,6 +495,60 @@ namespace sparrow
                                }
                            );
         return self_type::create_proxy(timezone, values, is_non_null, std::move(name), std::move(metadata));
+    }
+
+    template <timestamp_type T>
+    template <input_metadata_container METADATA_RANGE>
+    arrow_proxy timestamp_array<T>::create_proxy_impl(
+        const date::time_zone* timezone,
+        u8_buffer<buffer_inner_value_type>&& data_buffer,
+        std::optional<validity_bitmap>&& bitmap,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
+    {
+        const auto size = data_buffer.size();
+        const auto null_count = bitmap.has_value() ? bitmap->null_count() : 0;
+
+        std::string format(data_type_to_format(arrow_traits<T>::type_id));
+        format += timezone->name();
+
+        const repeat_view<bool> children_ownership{true, 0};
+
+        const std::optional<std::unordered_set<sparrow::ArrowFlag>>
+            flags = bitmap.has_value()
+                        ? std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE})
+                        : std::nullopt;
+
+        // create arrow schema and array
+        ArrowSchema schema = make_arrow_schema(
+            std::move(format),    // format
+            std::move(name),      // name
+            std::move(metadata),  // metadata
+            flags,                // flags
+            nullptr,              // children
+            children_ownership,   // children ownership
+            nullptr,              // dictionary,
+            true                  // dictionary ownership
+        );
+
+        std::vector<buffer<uint8_t>> buffers{
+            bitmap.has_value() ? std::move(bitmap.value()).extract_storage() : buffer<uint8_t>{nullptr, 0},
+            std::move(data_buffer).extract_storage()
+        };
+
+        // create arrow array
+        ArrowArray arr = make_arrow_array(
+            static_cast<std::int64_t>(size),  // length
+            static_cast<int64_t>(null_count),
+            0,  // offset
+            std::move(buffers),
+            nullptr,             // children
+            children_ownership,  // children ownership
+            nullptr,             // dictionary
+            true                 // dicitonary ownership
+        );
+        return arrow_proxy(std::move(arr), std::move(schema));
     }
 
     template <timestamp_type T>

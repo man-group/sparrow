@@ -22,11 +22,18 @@
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
+#include "sparrow/c_interface.hpp"
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
     static constexpr size_t bitmap_buffer_index = 0;
+
+    template <typename T>
+    [[nodiscard]] constexpr T& get_value_reference_of_variant(auto& var)
+    {
+        return var.index() == 0 ? *std::get<0>(var) : std::get<1>(var);
+    }
 
     arrow_proxy arrow_proxy::view() const
     {
@@ -40,31 +47,37 @@ namespace sparrow
         if (is_created_with_sparrow())
         {
             get_array_private_data()->update_buffers_ptrs();
-            array().buffers = get_array_private_data()->buffers_ptrs<void>();
-            array().n_buffers = static_cast<int64_t>(n_buffers());
+            array_without_sanitize().buffers = get_array_private_data()->buffers_ptrs<void>();
+            array_without_sanitize().n_buffers = static_cast<int64_t>(n_buffers());
         }
-        m_buffers = get_arrow_array_buffers(array(), schema());
+        m_buffers = get_arrow_array_buffers(array_without_sanitize(), schema_without_sanitize());
     }
 
     void arrow_proxy::update_children()
     {
         m_children.clear();
         m_children.reserve(n_children());
+
+        ArrowArray** array_children = array_without_sanitize().children;
+        ArrowSchema** schema_children = schema_without_sanitize().children;
         for (size_t i = 0; i < n_children(); ++i)
         {
-            m_children.emplace_back(array().children[i], schema().children[i]);
+            m_children.emplace_back(array_children[i], schema_children[i]);
         }
     }
 
     void arrow_proxy::update_dictionary()
     {
-        if (array().dictionary == nullptr || schema().dictionary == nullptr)
+        if (array_without_sanitize().dictionary == nullptr || schema_without_sanitize().dictionary == nullptr)
         {
             m_dictionary = nullptr;
         }
         else
         {
-            m_dictionary = std::make_unique<arrow_proxy>(array().dictionary, schema().dictionary);
+            m_dictionary = std::make_unique<arrow_proxy>(
+                array_without_sanitize().dictionary,
+                schema_without_sanitize().dictionary
+            );
         }
     }
 
@@ -77,19 +90,21 @@ namespace sparrow
 
     bool arrow_proxy::array_created_with_sparrow() const
     {
-        return array().release == &sparrow::release_arrow_array;
+        return array_without_sanitize().release == &sparrow::release_arrow_array;
     }
 
     bool arrow_proxy::schema_created_with_sparrow() const
     {
-        return schema().release == &sparrow::release_arrow_schema;
+        return schema_without_sanitize().release == &sparrow::release_arrow_schema;
     }
 
     void arrow_proxy::validate_array_and_schema() const
     {
         SPARROW_ASSERT_TRUE(is_proxy_valid());
-        SPARROW_ASSERT_TRUE(array().n_children == schema().n_children);
-        SPARROW_ASSERT_TRUE((array().dictionary == nullptr) == (schema().dictionary == nullptr));
+        SPARROW_ASSERT_TRUE(array_without_sanitize().n_children == schema_without_sanitize().n_children);
+        SPARROW_ASSERT_TRUE(
+            (array_without_sanitize().dictionary == nullptr) == (schema_without_sanitize().dictionary == nullptr)
+        );
     }
 
     arrow_proxy::arrow_proxy()
@@ -195,11 +210,12 @@ namespace sparrow
     {
         if (m_array.index() == 1)  // We own the array
         {
-            if (array().release != nullptr)
+            ArrowArray& array_ref = array_without_sanitize();
+            if (array_ref.release != nullptr)
             {
                 try
                 {
-                    array().release(&array());
+                    array_ref.release(&array_ref);
                 }
                 catch (...)
                 {
@@ -215,11 +231,12 @@ namespace sparrow
 
         if (m_schema.index() == 1)  // We own the schema
         {
-            if (schema().release != nullptr)
+            ArrowSchema& schema_ref = schema_without_sanitize();
+            if (schema_ref.release != nullptr)
             {
                 try
                 {
-                    schema().release(&schema());
+                    schema_ref.release(&schema_ref);
                 }
                 catch (...)
                 {
@@ -241,7 +258,7 @@ namespace sparrow
 
     [[nodiscard]] const std::string_view arrow_proxy::format() const
     {
-        return schema().format;
+        return schema_without_sanitize().format;
     }
 
     void arrow_proxy::set_format(const std::string_view format)
@@ -263,12 +280,12 @@ namespace sparrow
 #        pragma GCC diagnostic pop
 #    endif
 #endif
-        schema().format = get_schema_private_data()->format_ptr();
+        schema_without_sanitize().format = get_schema_private_data()->format_ptr();
     }
 
     [[nodiscard]] enum data_type arrow_proxy::data_type() const
     {
-        return format_to_data_type(schema().format);
+        return format_to_data_type(schema_without_sanitize().format);
     }
 
     void arrow_proxy::set_data_type(enum data_type data_type)
@@ -278,16 +295,16 @@ namespace sparrow
             throw arrow_proxy_exception("Cannot set data_type on non-sparrow created ArrowArray");
         }
         set_format(data_type_to_format(data_type));
-        schema().format = get_schema_private_data()->format_ptr();
+        schema_without_sanitize().format = get_schema_private_data()->format_ptr();
     }
 
     [[nodiscard]] std::optional<std::string_view> arrow_proxy::name() const
     {
-        if (schema().name == nullptr)
+        if (schema_without_sanitize().name == nullptr)
         {
             return std::nullopt;
         }
-        return std::string_view(schema().name);
+        return std::string_view(schema_without_sanitize().name);
     }
 
     void arrow_proxy::set_name(std::optional<std::string_view> name)
@@ -298,21 +315,21 @@ namespace sparrow
         }
         auto private_data = get_schema_private_data();
         private_data->name() = name;
-        schema().name = private_data->name_ptr();
+        schema_without_sanitize().name = private_data->name_ptr();
     }
 
     [[nodiscard]] std::optional<key_value_view> arrow_proxy::metadata() const
     {
-        if (schema().metadata == nullptr)
+        if (schema_without_sanitize().metadata == nullptr)
         {
             return std::nullopt;
         }
-        return key_value_view(schema().metadata);
+        return key_value_view(schema_without_sanitize().metadata);
     }
 
     [[nodiscard]] std::unordered_set<ArrowFlag> arrow_proxy::flags() const
     {
-        return to_set_of_ArrowFlags(schema().flags);
+        return to_set_of_ArrowFlags(schema_without_sanitize().flags);
     }
 
     void arrow_proxy::set_flags(const std::unordered_set<ArrowFlag>& flags)
@@ -321,14 +338,15 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set flags on non-sparrow created ArrowArray");
         }
-        schema().flags = to_ArrowFlag_value(flags);
+        schema_without_sanitize().flags = to_ArrowFlag_value(flags);
     }
 
     [[nodiscard]] size_t arrow_proxy::length() const
     {
-        SPARROW_ASSERT_TRUE(array().length >= 0);
-        SPARROW_ASSERT_TRUE(std::cmp_less(array().length, std::numeric_limits<size_t>::max()));
-        return static_cast<size_t>(array().length);
+        const ArrowArray& array = array_without_sanitize();
+        SPARROW_ASSERT_TRUE(array.length >= 0);
+        SPARROW_ASSERT_TRUE(std::cmp_less(array.length, std::numeric_limits<size_t>::max()));
+        return static_cast<size_t>(array.length);
     }
 
     void arrow_proxy::set_length(size_t length)
@@ -338,14 +356,14 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set length on non-sparrow created ArrowArray");
         }
-        array().length = static_cast<int64_t>(length);
+        array_without_sanitize().length = static_cast<int64_t>(length);
         update_buffers();
         update_null_count();
     }
 
     [[nodiscard]] int64_t arrow_proxy::null_count() const
     {
-        return array().null_count;
+        return array_without_sanitize().null_count;
     }
 
     void arrow_proxy::set_null_count(int64_t null_count)
@@ -354,12 +372,12 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set null_count on non-sparrow created ArrowArray");
         }
-        array().null_count = null_count;
+        array_without_sanitize().null_count = null_count;
     }
 
     [[nodiscard]] size_t arrow_proxy::offset() const
     {
-        return static_cast<size_t>(array().offset);
+        return static_cast<size_t>(array_without_sanitize().offset);
     }
 
     void arrow_proxy::set_offset(size_t offset)
@@ -369,12 +387,12 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set offset on non-sparrow created ArrowArray");
         }
-        array().offset = static_cast<int64_t>(offset);
+        array_without_sanitize().offset = static_cast<int64_t>(offset);
     }
 
     [[nodiscard]] size_t arrow_proxy::n_buffers() const
     {
-        return static_cast<size_t>(array().n_buffers);
+        return static_cast<size_t>(array_without_sanitize().n_buffers);
     }
 
     void arrow_proxy::set_n_buffers(size_t n_buffers)
@@ -384,7 +402,7 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set n_buffers on non-sparrow created ArrowArray");
         }
-        array().n_buffers = static_cast<int64_t>(n_buffers);
+        array_without_sanitize().n_buffers = static_cast<int64_t>(n_buffers);
         arrow_array_private_data* private_data = get_array_private_data();
         private_data->resize_buffers(n_buffers);
         update_buffers();
@@ -392,7 +410,7 @@ namespace sparrow
 
     [[nodiscard]] size_t arrow_proxy::n_children() const
     {
-        return static_cast<size_t>(array().n_children);
+        return static_cast<size_t>(array_without_sanitize().n_children);
     }
 
     void arrow_proxy::pop_children(size_t n)
@@ -417,33 +435,37 @@ namespace sparrow
         arrow_array_private_data* array_private_data = get_array_private_data();
         arrow_schema_private_data* schema_private_data = get_schema_private_data();
         // Release the remaining children if the new size is smaller than the current size
-        for (size_t i = children_count; i < static_cast<size_t>(array().n_children); ++i)
+        ArrowArray& array_ref = array_without_sanitize();
+        ArrowSchema& schema_ref = schema_without_sanitize();
+        for (size_t i = children_count; i < static_cast<size_t>(array_ref.n_children); ++i)
         {
             if (schema_private_data->has_child_ownership(i))
             {
-                schema().children[i]->release(schema().children[i]);
+                ArrowSchema* child = schema_ref.children[i];
+                child->release(child);
             }
             if (array_private_data->has_child_ownership(i))
             {
-                array().children[i]->release(array().children[i]);
+                ArrowArray* child = array_ref.children[i];
+                child->release(child);
             }
         }
 
         auto new_array_children = std::make_unique<ArrowArray*[]>(children_count);
         auto new_schema_children = std::make_unique<ArrowSchema*[]>(children_count);
 
-        for (size_t i = 0; i < std::min(children_count, static_cast<size_t>(array().n_children)); ++i)
+        for (size_t i = 0; i < std::min(children_count, static_cast<size_t>(array_ref.n_children)); ++i)
         {
-            new_array_children[i] = array().children[i];
-            new_schema_children[i] = schema().children[i];
+            new_array_children[i] = array_ref.children[i];
+            new_schema_children[i] = schema_ref.children[i];
         }
-        auto* tmp_array_children = array().children;
-        auto* tmp_schema_children = schema().children;
+        auto* tmp_array_children = array_ref.children;
+        auto* tmp_schema_children = schema_ref.children;
 
-        array().children = new_array_children.release();
-        array().n_children = static_cast<int64_t>(children_count);
-        schema().children = new_schema_children.release();
-        schema().n_children = static_cast<int64_t>(children_count);
+        array_ref.children = new_array_children.release();
+        array_ref.n_children = static_cast<int64_t>(children_count);
+        schema_ref.children = new_schema_children.release();
+        schema_ref.n_children = static_cast<int64_t>(children_count);
 
         array_private_data->resize_children(children_count);
         schema_private_data->resize_children(children_count);
@@ -459,7 +481,7 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot get schema private data on non-sparrow created ArrowArray");
         }
-        return static_cast<arrow_schema_private_data*>(schema().private_data);
+        return static_cast<arrow_schema_private_data*>(schema_without_sanitize().private_data);
     }
 
     arrow_array_private_data* arrow_proxy::get_array_private_data()
@@ -468,7 +490,7 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot get array private data on non-sparrow created ArrowArray");
         }
-        return static_cast<arrow_array_private_data*>(array().private_data);
+        return static_cast<arrow_array_private_data*>(array_without_sanitize().private_data);
     }
 
     [[nodiscard]] const std::vector<sparrow::buffer_view<uint8_t>>& arrow_proxy::buffers() const
@@ -526,8 +548,8 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set child on non-sparrow created ArrowArray or ArrowSchema");
         }
-        array().children[index] = child_array;
-        schema().children[index] = child_schema;
+        array_without_sanitize().children[index] = child_array;
+        schema_without_sanitize().children[index] = child_schema;
         m_children[index] = arrow_proxy(child_array, child_schema);
         get_array_private_data()->set_child_ownership(index, false);
         get_schema_private_data()->set_child_ownership(index, false);
@@ -542,9 +564,9 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set child on non-sparrow created ArrowArray or ArrowSchema");
         }
-        array().children[index] = new ArrowArray(std::move(child_array));
-        schema().children[index] = new ArrowSchema(std::move(child_schema));
-        m_children[index] = arrow_proxy(array().children[index], schema().children[index]);
+        array_without_sanitize().children[index] = new ArrowArray(std::move(child_array));
+        schema_without_sanitize().children[index] = new ArrowSchema(std::move(child_schema));
+        m_children[index] = arrow_proxy(array().children[index], schema_without_sanitize().children[index]);
         get_array_private_data()->set_child_ownership(index, true);
         get_schema_private_data()->set_child_ownership(index, true);
     }
@@ -582,17 +604,19 @@ namespace sparrow
             throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema");
         }
 
-        if (array().dictionary != nullptr)
+        ArrowArray* current_array_dictionary = array_without_sanitize().dictionary;
+        if (current_array_dictionary != nullptr)
         {
-            array().dictionary->release(array().dictionary);
+            current_array_dictionary->release(current_array_dictionary);
         }
-        if (schema().dictionary != nullptr)
+        ArrowSchema* current_dictionary_schema = schema_without_sanitize().dictionary;
+        if (current_dictionary_schema != nullptr)
         {
-            schema().dictionary->release(schema().dictionary);
+            current_dictionary_schema->release(current_dictionary_schema);
         }
 
-        array().dictionary = array_dictionary;
-        schema().dictionary = schema_dictionary;
+        array_without_sanitize().dictionary = array_dictionary;
+        schema_without_sanitize().dictionary = schema_dictionary;
         get_array_private_data()->set_dictionary_ownership(false);
         get_schema_private_data()->set_dictionary_ownership(false);
         update_dictionary();
@@ -607,17 +631,19 @@ namespace sparrow
             throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema");
         }
 
-        if (array().dictionary != nullptr)
+        ArrowArray* current_array_dictionary = array_without_sanitize().dictionary;
+        if (current_array_dictionary != nullptr)
         {
-            array().dictionary->release(array().dictionary);
+            current_array_dictionary->release(current_array_dictionary);
         }
-        if (schema().dictionary != nullptr)
+        ArrowSchema* current_dictionary_schema = schema_without_sanitize().dictionary;
+        if (current_dictionary_schema != nullptr)
         {
-            schema().dictionary->release(schema().dictionary);
+            current_dictionary_schema->release(current_dictionary_schema);
         }
 
-        array().dictionary = new ArrowArray(std::move(array_dictionary));
-        schema().dictionary = new ArrowSchema(std::move(schema_dictionary));
+        array_without_sanitize().dictionary = new ArrowArray(std::move(array_dictionary));
+        schema_without_sanitize().dictionary = new ArrowSchema(std::move(schema_dictionary));
         get_array_private_data()->set_dictionary_ownership(true);
         get_schema_private_data()->set_dictionary_ownership(true);
         update_dictionary();
@@ -630,13 +656,7 @@ namespace sparrow
 
     [[nodiscard]] void* arrow_proxy::private_data() const
     {
-        return array().private_data;
-    }
-
-    template <typename T>
-    [[nodiscard]] T& get_value_reference_of_variant(auto& var)
-    {
-        return var.index() == 0 ? *std::get<0>(var) : std::get<1>(var);
+        return array_without_sanitize().private_data;
     }
 
     [[nodiscard]] bool arrow_proxy::owns_array() const
@@ -651,22 +671,26 @@ namespace sparrow
 
     [[nodiscard]] const ArrowArray& arrow_proxy::array() const
     {
-        return get_value_reference_of_variant<const ArrowArray>(m_array);
+        const_cast<arrow_proxy&>(*this).sanitize_schema();
+        return array_without_sanitize();
     }
 
     [[nodiscard]] const ArrowSchema& arrow_proxy::schema() const
     {
-        return get_value_reference_of_variant<const ArrowSchema>(m_schema);
+        const_cast<arrow_proxy&>(*this).sanitize_schema();
+        return schema_without_sanitize();
     }
 
     [[nodiscard]] ArrowArray& arrow_proxy::array()
     {
-        return get_value_reference_of_variant<ArrowArray>(m_array);
+        const_cast<arrow_proxy&>(*this).sanitize_schema();
+        return array_without_sanitize();
     }
 
     [[nodiscard]] ArrowSchema& arrow_proxy::schema()
     {
-        return get_value_reference_of_variant<ArrowSchema>(m_schema);
+        const_cast<arrow_proxy&>(*this).sanitize_schema();
+        return schema_without_sanitize();
     }
 
     [[nodiscard]] ArrowArray arrow_proxy::extract_array()
@@ -675,7 +699,7 @@ namespace sparrow
         {
             throw std::runtime_error("cannot extract an ArrowArray not owned by the structure");
         }
-
+        sanitize_schema();
         ArrowArray res = std::get<ArrowArray>(std::move(m_array));
         m_array = ArrowArray{};
         reset();
@@ -688,7 +712,7 @@ namespace sparrow
         {
             throw std::runtime_error("cannot extract an ArrowSchema not owned by the structure");
         }
-
+        sanitize_schema();
         ArrowSchema res = std::get<ArrowSchema>(std::move(m_schema));
         m_schema = ArrowSchema{};
         reset();
@@ -708,12 +732,12 @@ namespace sparrow
 
     bool arrow_proxy::is_arrow_array_valid() const
     {
-        return array().release != nullptr;
+        return array_without_sanitize().release != nullptr;
     }
 
     bool arrow_proxy::is_arrow_schema_valid() const
     {
-        return schema().release != nullptr;
+        return schema_without_sanitize().release != nullptr;
     }
 
     bool arrow_proxy::is_proxy_valid() const
@@ -745,7 +769,7 @@ namespace sparrow
 
         SPARROW_ASSERT_TRUE(is_created_with_sparrow())
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
-        auto private_data = static_cast<arrow_array_private_data*>(array().private_data);
+        auto private_data = static_cast<arrow_array_private_data*>(array_without_sanitize().private_data);
         auto& bitmap_buffer = private_data->buffers()[bitmap_buffer_index];
         const size_t current_size = length() + offset();
         non_owning_dynamic_bitset<uint8_t> bitmap{&bitmap_buffer, current_size};
@@ -849,5 +873,50 @@ namespace sparrow
         ar.length = static_cast<int64_t>(end - start);
         ar.release = empty_release_arrow_array;
         return arrow_proxy{std::move(ar), std::move(as)};
+    }
+
+    void arrow_proxy::sanitize_schema()
+    {
+        if (is_created_with_sparrow())
+        {
+            bool has_nulls = null_count() != 0;
+
+            if (m_dictionary != nullptr)
+            {
+                if (m_dictionary->null_count() != 0)
+                {
+                    auto new_dictionary_flags = m_dictionary->flags();
+                    new_dictionary_flags.emplace(ArrowFlag::NULLABLE);
+                    m_dictionary->set_flags(new_dictionary_flags);
+                    has_nulls = true;
+                }
+            }
+            if (has_nulls)
+            {
+                auto new_flags = flags();
+                new_flags.emplace(ArrowFlag::NULLABLE);
+                set_flags(new_flags);
+            }
+        }
+    }
+
+    ArrowArray& arrow_proxy::array_without_sanitize()
+    {
+        return get_value_reference_of_variant<ArrowArray>(m_array);
+    }
+
+    const ArrowArray& arrow_proxy::array_without_sanitize() const
+    {
+        return get_value_reference_of_variant<const ArrowArray>(m_array);
+    }
+
+    ArrowSchema& arrow_proxy::schema_without_sanitize()
+    {
+        return get_value_reference_of_variant<ArrowSchema>(m_schema);
+    }
+
+    const ArrowSchema& arrow_proxy::schema_without_sanitize() const
+    {
+        return get_value_reference_of_variant<const ArrowSchema>(m_schema);
     }
 }

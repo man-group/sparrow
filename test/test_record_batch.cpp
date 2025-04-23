@@ -32,12 +32,13 @@ namespace sparrow
                         return static_cast<std::uint16_t>(i);
                     }
                 ),
+            true,
             "column0"
         );
         auto iota2 = std::ranges::iota_view{std::int32_t(4), 4 + std::int32_t(data_size)};
-        primitive_array<std::int32_t> pr1(iota2, "column1");
+        primitive_array<std::int32_t> pr1(iota2, true, "column1");
         auto iota3 = std::ranges::iota_view{std::int32_t(2), 2 + std::int32_t(data_size)};
-        primitive_array<std::int32_t> pr2(iota3, "column2");
+        primitive_array<std::int32_t> pr2(iota3, true, "column2");
 
         std::vector<array> arr_list = {array(std::move(pr0)), array(std::move(pr1)), array(std::move(pr2))};
         return arr_list;
@@ -45,7 +46,7 @@ namespace sparrow
 
     std::vector<std::string> make_name_list()
     {
-        std::vector<std::string> name_list = {"first", "second", "third"};
+        static const std::vector<std::string> name_list = {"first", "second", "third"};
         return name_list;
     }
 
@@ -197,7 +198,7 @@ namespace sparrow
         {
             auto record = make_record_batch(col_size);
             auto iota = std::ranges::iota_view{std::int32_t(0), std::int32_t(col_size)};
-            primitive_array<std::int32_t> pr3(iota, "column3");
+            primitive_array<std::int32_t> pr3(iota, true, "column3");
             auto ctrl = pr3;
 
             record.add_column(array(std::move(pr3)));

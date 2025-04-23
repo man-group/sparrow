@@ -514,6 +514,18 @@ namespace sparrow
 
         [[nodiscard]] size_t get_null_count() const;
 
+        [[nodiscard]] ArrowArray& array_without_sanitize();
+        [[nodiscard]] const ArrowArray& array_without_sanitize() const;
+
+        [[nodiscard]] ArrowSchema& schema_without_sanitize();
+        [[nodiscard]] const ArrowSchema& schema_without_sanitize() const;
+
+        /**
+         * If the null_count of the proxy or the one from the dictionary is greater than 0, the schema
+         * is updated to add the ArrowFlag::NULLABLE flag.
+         */
+        void sanitize_schema();
+
         void swap(arrow_proxy& other) noexcept;
     };
 
