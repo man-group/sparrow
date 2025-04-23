@@ -18,10 +18,9 @@
 
 namespace sparrow
 {
+#if defined(__cpp_lib_format)
     TEST_SUITE("large_int")
     {
-#if defined(__cpp_lib_format)
-
 #    ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
 
         TEST_CASE("int128 formatter")
@@ -61,6 +60,6 @@ namespace sparrow
             CHECK_EQ(str, "int256_t(123456789, 100000000, 200000000, 300000000)");
         }
 #    endif
-#endif
     }
+#endif
 }
