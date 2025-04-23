@@ -794,7 +794,7 @@ namespace sparrow
             {
                 return v.has_value();
             },
-#if (!defined(__clang__) && defined(__GNUC__) && __GNUC__ < 11)
+#if SPARROW_BUILT_WITH_GCC_10
             static_cast<const base_type&>(*this)
 #else
             *this

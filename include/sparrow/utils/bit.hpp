@@ -19,7 +19,8 @@
 #include <bit>
 #include <concepts>
 
-#if (!defined(__clang__) && defined(__GNUC__) && __GNUC__ < 11)
+#include "sparrow/config/config.hpp"
+#if SPARROW_BUILD_WITH_GCC_10
 #include <cstring>
 #endif
 
@@ -36,7 +37,7 @@ namespace sparrow
     [[nodiscard]] constexpr T byteswap(T value) noexcept
     {
         static_assert(std::has_unique_object_representations_v<T>, "T may not have padding bits");
-#if (!defined(__clang__) && defined(__GNUC__) && __GNUC__ < 11)
+#if SPARROW_BUILT_WITH_GCC_10
         std::array<std::byte, sizeof(T)> value_representation;
         std::memcpy(&value_representation, &value, sizeof(T));
         std::ranges::reverse(value_representation);

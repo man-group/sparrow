@@ -167,7 +167,6 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[2], 2);
                 CHECK_NULLABLE_VARIANT_EQ(arr[3], std::string_view("world"));
             }
-
             SUBCASE("list[run_end_encode[int]]")
             {
                 SUBCASE("without-nulls")
