@@ -65,6 +65,10 @@ namespace sparrow
                 for (std::size_t j = 0; j < list.size(); ++j)
                 {
                     auto opt_val_variant = list[j];
+#if SPARROW_BUILT_WITH_GCC_10
+                    using variant_type = std::decay_t<decltype(opt_val_variant)>;
+                    using base_type = typename variant_type::base_type;
+#endif
                     std::visit(
                         [&](auto&& opt_val)
                         {
@@ -80,7 +84,11 @@ namespace sparrow
                                 REQUIRE(false);
                             }
                         },
+#if SPARROW_BUILT_WITH_GCC_10
+                        *static_cast<base_type*>(&opt_val_variant)
+#else
                         opt_val_variant
+#endif
                     );
                     ++flat_i;
                 }
