@@ -116,7 +116,12 @@ namespace sparrow
     template <class B, bool is_const>
     constexpr void bitset_iterator<B, is_const>::advance(difference_type n)
     {
-        m_index = as_unsigned(as_signed(m_index) + n);
+        if (n < 0 && static_cast<size_type>(-n) > m_index) {
+            // Prevent underflow by clamping m_index to 0
+            m_index = 0;
+        } else {
+            m_index = as_unsigned(as_signed(m_index) + n);
+        }
     }
 
     template <class B, bool is_const>
