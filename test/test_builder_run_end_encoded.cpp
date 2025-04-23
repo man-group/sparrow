@@ -21,6 +21,7 @@
 
 #include "test_utils.hpp"
 
+#if !SPARROW_BUILT_WITH_GCC_10
 namespace sparrow
 {
     TEST_SUITE("builder")
@@ -370,3 +371,4 @@ namespace sparrow
         }
     }
 }
+#endif

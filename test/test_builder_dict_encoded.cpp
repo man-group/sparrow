@@ -21,6 +21,7 @@
 
 #include "test_utils.hpp"
 
+#if !SPARROW_BUILT_WITH_GCC_10
 namespace sparrow
 {
 
@@ -356,3 +357,4 @@ namespace sparrow
         }
     }
 }
+#endif
