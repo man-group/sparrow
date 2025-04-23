@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,7 +37,7 @@ project(sparrow CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_SCAN_FOR_MODULES  OFF) # We don't use modules
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF) # We don't use modules
 
 include(CMakeDependentOption)
 
@@ -53,14 +53,15 @@ message(DEBUG "CMake module path: ${CMAKE_MODULE_PATH}")
 
 # Versionning
 # ===========
-
 file(STRINGS "${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp" sparrow_version_defines
-     REGEX "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH)")
+    REGEX "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH)")
+
 foreach(ver ${sparrow_version_defines})
     if(ver MATCHES "constexpr int SPARROW_VERSION_(MAJOR|MINOR|PATCH) = ([0-9]+);$")
         set(PROJECT_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
     endif()
 endforeach()
+
 set(CMAKE_PROJECT_VERSION
     ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
@@ -69,36 +70,37 @@ message(STATUS "Building sparrow v${CMAKE_PROJECT_VERSION}")
 # Binary version
 # See the following URL for explanations about the binary versionning
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html#Updating-version-info
-
 file(STRINGS "${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp" sparrow_version_defines
     REGEX "constexpr int SPARROW_BINARY_(CURRENT|REVISION|AGE)")
+
 foreach(ver ${sparrow_version_defines})
     if(ver MATCHES "constexpr int SPARROW_BINARY_(CURRENT|REVISION|AGE) = ([0-9]+);$")
         set(SPARROW_BINARY_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
     endif()
 endforeach()
+
 set(SPARROW_BINARY_VERSION
     ${SPARROW_BINARY_CURRENT}.${SPARROW_BINARY_REVISION}.${SPARROW_BINARY_AGE})
 
 message(STATUS "sparrow binary version: v${SPARROW_BINARY_VERSION}")
 
-
 # Build options
 # =============
-
 OPTION(BUILD_TESTS "Build sparrow test suite" OFF)
 MESSAGE(STATUS "🔧 Build tests: ${BUILD_TESTS}")
-OPTION(BUILD_DOCS  "Build sparrow documentation" OFF)
+OPTION(BUILD_DOCS "Build sparrow documentation" OFF)
 MESSAGE(STATUS "🔧 Build docs: ${BUILD_DOCS}")
 OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
 MESSAGE(STATUS "🔧 Build examples: ${BUILD_EXAMPLES}")
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
 MESSAGE(STATUS "🔧 Use date polyfill: ${USE_DATE_POLYFILL}")
+
 if(CMAKE_SIZEOF_VOID_P EQUAL 4 OR MSVC)
     set(DEFAULT_USE_LARGE_INT_PLACEHOLDERS ON)
 else()
     set(DEFAULT_USE_LARGE_INT_PLACEHOLDERS OFF)
 endif()
+
 OPTION(USE_LARGE_INT_PLACEHOLDERS "use types without api for big integers 'ON' by default on 32 bit systems and MSVC compilers" ${DEFAULT_USE_LARGE_INT_PLACEHOLDERS})
 MESSAGE(STATUS "🔧 Use large int placeholders: ${USE_LARGE_INT_PLACEHOLDERS}")
 OPTION(SPARROW_TARGET_32BIT "Test 32bit support" OFF)
@@ -114,22 +116,23 @@ endif()
 include(CheckCXXSymbolExists)
 
 if(cxx_std_20 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
-  set(header version)
+    set(header version)
 else()
-  set(header ciso646)
+    set(header ciso646)
 endif()
 
 check_cxx_symbol_exists(_LIBCPP_VERSION ${header} LIBCPP)
+
 if(LIBCPP)
-  message(STATUS "Using libc++")
-  # Allow the use of not visible yet availabile features, such
-  # as some formatter for new types.
-  add_compile_definitions(_LIBCPP_DISABLE_AVAILABILITY)
+    message(STATUS "Using libc++")
+
+    # Allow the use of not visible yet availabile features, such
+    # as some formatter for new types.
+    add_compile_definitions(_LIBCPP_DISABLE_AVAILABILITY)
 endif()
 
 # Linter options
 # =============
-
 OPTION(ACTIVATE_LINTER "Create targets to run clang-format" OFF)
 MESSAGE(STATUS "🔧 Activate linter: ${ACTIVATE_LINTER}")
 cmake_dependent_option(ACTIVATE_LINTER_DURING_COMPILATION "Run linter during the compilation" ON "ACTIVATE_LINTER" OFF)
@@ -145,11 +148,10 @@ include(sanitizers)
 
 # Dependencies
 # ============
-
 set(SPARROW_INTERFACE_DEPENDENCIES "" CACHE STRING "List of dependencies to be linked to the sparrow target")
 set(SPARROW_COMPILE_DEFINITIONS "" CACHE STRING "List of public compile definitions of the sparrow target")
 
-if (USE_DATE_POLYFILL)
+if(USE_DATE_POLYFILL)
     find_package(date CONFIG REQUIRED)
     list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
     list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_USE_DATE_POLYFILL)
@@ -162,7 +164,6 @@ endif()
 
 # Build
 # =====
-
 set(BINARY_BUILD_DIR "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${BINARY_BUILD_DIR}")
@@ -173,6 +174,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${BINARY_BUILD_DIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${BINARY_BUILD_DIR}")
 
 set(SPARROW_HEADERS
+
     # arrow_interface
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_common_release.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_info_utils.hpp
@@ -183,6 +185,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/private_data_ownership.hpp
+
     # buffer
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/allocator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_adaptor.hpp
@@ -194,11 +197,14 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/bitset_reference.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp
+
     # config
     ${SPARROW_INCLUDE_DIR}/sparrow/config/config.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp
+
     # detail
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
+
     # layout
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_base.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_helper.hpp
@@ -230,9 +236,11 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_reference.hpp
+
     # array
     ${SPARROW_INCLUDE_DIR}/sparrow/types/data_traits.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/types/data_type.hpp
+
     # Utils
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/bit.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/buffers.hpp
@@ -247,6 +255,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/pair.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/reference_wrapper_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
+
     # ../
     ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array_api.hpp
@@ -257,7 +266,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
 )
 
-if (SPARROW_TARGET_32BIT)
+if(SPARROW_TARGET_32BIT)
     set(SPARROW_SRC
         ${SPARROW_SOURCE_DIR}/dummy32bit.cpp
     )
@@ -284,6 +293,7 @@ else()
 endif()
 
 OPTION(SPARROW_BUILD_SHARED "Build sparrow as a shared library" ON)
+
 if(SPARROW_BUILD_SHARED)
     message(STATUS "🔧 Build shared library")
     set(SPARROW_LIBRARY_TYPE SHARED)
@@ -297,7 +307,7 @@ add_library(sparrow ${SPARROW_LIBRARY_TYPE} ${SPARROW_SRC} ${SPARROW_HEADERS})
 
 target_compile_definitions(sparrow PUBLIC ${SPARROW_COMPILE_DEFINITIONS})
 
-if (UNIX)
+if(UNIX)
     # CMake does not compute the version number of so files as libtool
     # does on Linux. Strictly speaking, we should exclude FreeBSD and
     # Apple from this, but that would require having different version
@@ -311,7 +321,7 @@ if (UNIX)
         SOVERSION ${SPARROW_BINARY_COMPATIBLE}
     )
     target_compile_options(sparrow PRIVATE "-fvisibility=hidden")
-else ()
+else()
     set_target_properties(
         sparrow
         PROPERTIES
@@ -319,14 +329,33 @@ else ()
         SOVERSION ${SPARROW_BINARY_CURRENT}
     )
     target_compile_definitions(sparrow PRIVATE SPARROW_EXPORTS)
-endif ()
+endif()
+
 target_include_directories(sparrow PUBLIC
     $<BUILD_INTERFACE:${SPARROW_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>)
+
 # We do not use non-standard C++
 set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(sparrow PUBLIC cxx_std_20)
 target_link_libraries(sparrow PUBLIC ${SPARROW_INTERFACE_DEPENDENCIES})
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32)
+    cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CLANG_BIN_PATH)
+    cmake_path(GET CLANG_BIN_PATH PARENT_PATH CLANG_ROOT_PATH)
+    set(CLANG_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+    string(REGEX REPLACE "^([0-9]+)\\..*" "\\1" CLANG_MAJOR_VERSION ${CLANG_VERSION})
+    set(CLANG_LIB_PATH ${CLANG_ROOT_PATH}/lib/clang/${CLANG_MAJOR_VERSION}/lib/windows)
+    find_library(CLANGRT_BUILTINS REQUIRED 
+        NAMES
+            clang_rt.builtins
+            clang_rt.builtins-x86_64
+        PATHS
+            ${CLANG_LIB_PATH})
+    message(STATUS "Using clang builtins: ${CLANGRT_BUILTINS}")
+    target_link_libraries(sparrow PRIVATE ${CLANGRT_BUILTINS})
+endif()
+
 if(ENABLE_COVERAGE)
     enable_coverage(sparrow)
 endif()
@@ -334,10 +363,16 @@ endif()
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND WIN32)
     target_compile_options(sparrow
         PUBLIC
-            -Wa,-mbig-obj)
+        -Wa,-mbig-obj)
 endif()
 
-if (BUILD_TESTS)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(sparrow
+        PUBLIC
+        -Wno-c99-extensions)
+endif()
+
+if(BUILD_TESTS)
     message(STATUS "🧪 Create tests targets")
     enable_testing()
     add_subdirectory(test)
@@ -345,43 +380,40 @@ endif()
 
 # Docs
 # ====
-
 if(BUILD_DOCS)
     add_subdirectory(docs)
 endif()
 
 # Examples
 # ========
-
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
 # Installation
 # ============
-
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 install(TARGETS sparrow
-        EXPORT ${PROJECT_NAME}-targets)
+    EXPORT ${PROJECT_NAME}-targets)
 
 # Makes the project importable from the build directory
 export(EXPORT ${PROJECT_NAME}-targets
-       FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
-       NAMESPACE sparrow::)
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
+    NAMESPACE sparrow::)
 
 install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        PATTERN ".clang-*" EXCLUDE
-        PATTERN "README.md" EXCLUDE)
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    PATTERN ".clang-*" EXCLUDE
+    PATTERN "README.md" EXCLUDE)
 
 set(SPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
     STRING "install path for sparrowConfig.cmake")
 
 configure_package_config_file(${PROJECT_NAME}Config.cmake.in
-                              "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-                              INSTALL_DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
 
 # sparrow is header-only and does not depend on the architecture.
 # Remove CMAKE_SIZEOF_VOID_P from sparrowConfigVersion.cmake so that an sparrowConfig.cmake
@@ -389,14 +421,13 @@ configure_package_config_file(${PROJECT_NAME}Config.cmake.in
 set(_SPARROW_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 unset(CMAKE_SIZEOF_VOID_P)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-                                 VERSION ${CMAKE_PROJECT_VERSION}
-                                 COMPATIBILITY AnyNewerVersion)
+    VERSION ${CMAKE_PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion)
 set(CMAKE_SIZEOF_VOID_P ${_SPARROW_CMAKE_SIZEOF_VOID_P})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-        DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
 install(EXPORT ${PROJECT_NAME}-targets
-        FILE ${PROJECT_NAME}Targets.cmake
-        NAMESPACE sparrow::
-        DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
-
+    FILE ${PROJECT_NAME}Targets.cmake
+    NAMESPACE sparrow::
+    DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})

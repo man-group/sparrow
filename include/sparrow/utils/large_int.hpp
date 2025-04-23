@@ -14,10 +14,6 @@
 
 #pragma once
 
-#if defined(__cpp_lib_format)
-#    include <format>
-#endif
-
 #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
 
 // disabe warnings -Wold-style-cast sign-conversion for clang and gcc
@@ -26,7 +22,6 @@
 #        pragma GCC diagnostic ignored "-Wold-style-cast"
 #        pragma GCC diagnostic ignored "-Wsign-conversion"
 #        pragma GCC diagnostic ignored "-Wshadow"
-#        pragma GCC diagnostic ignored "-Wsign-conversion"
 #    endif
 #    include <sparrow/details/3rdparty/large_integers/int128_t.hpp>
 #    include <sparrow/details/3rdparty/large_integers/int256_t.hpp>
@@ -38,6 +33,7 @@
 #endif
 
 #include <cstdint>
+#include <type_traits>
 
 namespace sparrow
 {
@@ -88,36 +84,12 @@ namespace sparrow
     using int128_t = primesum::int128_t;
     using int256_t = primesum::int256_t;
 
-    template <class T>
-        requires(std::is_same_v<T, int128_t> || std::is_same_v<T, int256_t>)
-    inline std::ostream& operator<<(std::ostream& stream, T n)
-    {
-        std::string str;
-
-        if (n < 0)
-        {
-            stream << "-";
-            n = -n;
-        }
-        while (n > 0)
-        {
-            str.push_back(static_cast<char>('0' + std::int8_t(n % 10)));
-            n /= 10;
-        }
-
-        if (str.empty())
-        {
-            str = "0";
-        }
-
-        stream << std::string(str.rbegin(), str.rend());
-
-        return stream;
-    }
 #endif
 }  // namespace sparrow
 
 #if defined(__cpp_lib_format)
+
+#    include <format>
 
 // Full specialization fails on OSX 15.4 because the
 // template is already instantiated in std::format
@@ -132,9 +104,14 @@ struct std::formatter<sparrow::int128_t, charT>
     }
 
     template <class FmtContext>
-    FmtContext::iterator format(const sparrow::int128_t&, FmtContext& ctx) const
+    FmtContext::iterator format(const sparrow::int128_t& n, FmtContext& ctx) const
     {
-        return std::format_to(ctx.out(), "{}", "Integer int128_t TODO");
+#    ifdef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+        return std::format_to(ctx.out(), "int128_t({}, {})", n.words[0], n.words[1]);
+#    else
+        const std::string str = primesum::to_string(n);
+        return std::format_to(ctx.out(), "{}", str);
+#    endif
     }
 };
 
@@ -148,9 +125,14 @@ struct std::formatter<sparrow::int256_t, charT>
     }
 
     template <class FmtContext>
-    FmtContext::iterator format(const sparrow::int256_t&, FmtContext& ctx) const
+    FmtContext::iterator format(const sparrow::int256_t& n, FmtContext& ctx) const
     {
-        return std::format_to(ctx.out(), "{}", "Integer int256_t TODO");
+#    ifdef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+        return std::format_to(ctx.out(), "int256_t({}, {}, {}, {})", n.words[0], n.words[1], n.words[2], n.words[3]);
+#    else
+        const std::string str = primesum::to_string(n);
+        return std::format_to(ctx.out(), "{}", str);
+#    endif
     }
 };
 

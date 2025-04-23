@@ -127,8 +127,8 @@ else()
         test_builder.cpp
         test_builder.cpp
         test_date_array.cpp
-        test_decimal_array.cpp
         test_date_array.cpp
+        test_decimal_array.cpp
         test_decimal.cpp
         test_dictionary_encoded_array.cpp
         test_dispatch.cpp
@@ -140,6 +140,7 @@ else()
         test_high_level_constructors.cpp
         test_interval_array.cpp
         test_iterator.cpp
+        test_large_int.cpp
         test_list_array.cpp
         test_list_value.cpp
         test_memory.cpp
