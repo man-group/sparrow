@@ -33,6 +33,9 @@
 
 namespace sparrow
 {
+    template <typename T>
+    concept is_buffer_view = requires(T t) { typename T::is_buffer_view; };
+
     /**
      * Base class for buffer.
      *
@@ -155,7 +158,7 @@ namespace sparrow
         constexpr buffer(It first, It last, const A& a = A());
 
         template <std::ranges::input_range Range, allocator A = allocator_type>
-            requires std::same_as<std::ranges::range_value_t<Range>, T>
+            requires(std::same_as<std::ranges::range_value_t<Range>, T> && !is_buffer_view<Range>)
         constexpr buffer(const Range& range, const A& a = A());
 
         ~buffer();
@@ -457,7 +460,7 @@ namespace sparrow
 
     template <class T>
     template <std::ranges::input_range Range, allocator A>
-        requires std::same_as<std::ranges::range_value_t<Range>, T>
+        requires(std::same_as<std::ranges::range_value_t<Range>, T> && !is_buffer_view<Range>)
     constexpr buffer<T>::buffer(const Range& range, const A& a)
         : base_type(check_init_length(static_cast<size_type>(std::ranges::size(range)), a), a)
     {
@@ -1078,7 +1081,7 @@ namespace sparrow
     {
         const size_type diff_max = static_cast<size_type>(std::numeric_limits<difference_type>::max());
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
-        return (std::min) (diff_max, alloc_max);
+        return (std::min)(diff_max, alloc_max);
     }
 
     template <class T>
