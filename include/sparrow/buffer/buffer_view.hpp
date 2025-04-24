@@ -40,6 +40,8 @@ namespace sparrow
         using size_type = std::size_t;
         using difference_type = std::ptrdiff_t;
 
+        using is_buffer_view = std::true_type;
+
         using iterator = pointer_iterator<pointer>;
         using const_iterator = pointer_iterator<const_pointer>;
         using reverse_iterator = std::reverse_iterator<iterator>;
@@ -99,7 +101,7 @@ namespace sparrow
         buffer_view subrange(size_type pos) const;
         buffer_view subrange(const_iterator first, const_iterator last) const;
 
-        explicit operator buffer<std::remove_const_t<T>>() const;
+        operator buffer<std::remove_const_t<T>>() const;
 
     private:
 
@@ -342,7 +344,14 @@ namespace sparrow
     template <class T>
     buffer_view<T>::operator buffer<std::remove_const_t<T>>() const
     {
-        return {p_data, p_data + m_size};
+        if (!p_data)
+        {
+            return buffer<std::remove_const_t<T>>();
+        }
+        else
+        {
+            return buffer<std::remove_const_t<T>>(cbegin(), cend());
+        }
     }
 
     template <class T>

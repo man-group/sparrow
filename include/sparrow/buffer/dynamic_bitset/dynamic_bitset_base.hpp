@@ -15,6 +15,7 @@
 #pragma once
 
 
+#include <algorithm>
 #include <bit>
 #include <stdexcept>
 #include <string>
@@ -195,8 +196,7 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
     {
         SPARROW_ASSERT_TRUE(pos < size());
-        SPARROW_ASSERT_TRUE(data() != nullptr);
-        return reference(*this, buffer().data()[block_index(pos)], bit_mask(pos));
+        return reference(*this, pos);
     }
 
     template <typename B>
@@ -211,6 +211,13 @@ namespace sparrow
     constexpr bool dynamic_bitset_base<B>::test(size_type pos) const
     {
         SPARROW_ASSERT_TRUE(pos < size());
+        if constexpr (std::is_pointer_v<storage_type>)
+        {
+            if (m_buffer == nullptr)
+            {
+                return true;
+            }
+        }
         if (data() == nullptr)
         {
             return true;
@@ -223,7 +230,27 @@ namespace sparrow
     constexpr void dynamic_bitset_base<B>::set(size_type pos, value_type value)
     {
         SPARROW_ASSERT_TRUE(pos < size());
-        SPARROW_ASSERT_TRUE(data() != nullptr);
+        if (data() == nullptr)
+        {
+            if (value == true)  // In this case,  we don't need to set the bit
+            {
+                return;
+            }
+            else
+            {
+                if constexpr (requires(storage_type_without_cvrefpointer s) { s.resize(0); })
+                {
+                    constexpr block_type true_value = block_type(~block_type(0));
+                    const auto block_count = compute_block_count(size());
+                    buffer().resize(block_count, true_value);
+                    zero_unused_bits();
+                }
+                else
+                {
+                    throw std::runtime_error("Cannot set a bit in a null buffer.");
+                }
+            }
+        }
         block_type& block = buffer().data()[block_index(pos)];
         const bool old_value = block & bit_mask(pos);
         if (value)
@@ -241,6 +268,13 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr auto dynamic_bitset_base<B>::data() noexcept -> block_type*
     {
+        if constexpr (std::is_pointer_v<storage_type>)
+        {
+            if (m_buffer == nullptr)
+            {
+                return nullptr;
+            }
+        }
         return buffer().data();
     }
 
@@ -272,15 +306,14 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr auto dynamic_bitset_base<B>::begin() -> iterator
     {
-        return iterator(this, data(), 0u);
+        return iterator(this, 0u);
     }
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr auto dynamic_bitset_base<B>::end() -> iterator
     {
-        block_type* block = buffer().size() ? data() + buffer().size() - 1 : data();
-        return iterator(this, block, size() % s_bits_per_block);
+        return iterator(this, size());
     }
 
     template <typename B>
@@ -301,15 +334,14 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr auto dynamic_bitset_base<B>::cbegin() const -> const_iterator
     {
-        return const_iterator(this, data(), 0u);
+        return const_iterator(this, 0);
     }
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr auto dynamic_bitset_base<B>::cend() const -> const_iterator
     {
-        const block_type* block = buffer().size() ? data() + buffer().size() - 1 : data();
-        return const_iterator(this, block, size() % s_bits_per_block);
+        return const_iterator(this, size());
     }
 
     template <typename B>
@@ -431,13 +463,16 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     auto dynamic_bitset_base<B>::count_non_null() const noexcept -> size_type
     {
-        if (data() == nullptr)
+        if constexpr (std::is_pointer_v<storage_type>)
+        {
+            if (m_buffer == nullptr)
+            {
+                return m_size;
+            }
+        }
+        if (data() == nullptr || buffer().empty())
         {
             return m_size;
-        }
-        if (buffer().empty())
-        {
-            return 0u;
         }
 
         int res = 0;
@@ -497,16 +532,28 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr void dynamic_bitset_base<B>::resize(size_type n, value_type b)
     {
-        const size_type old_block_count = buffer().size();
+        if ((data() == nullptr) && b)
+        {
+            m_size = n;
+            return;
+        }
+        size_type old_block_count = buffer().size();
         const size_type new_block_count = compute_block_count(n);
         const block_type value = b ? block_type(~block_type(0)) : block_type(0);
 
         if (new_block_count != old_block_count)
         {
+            if (data() == nullptr)
+            {
+                constexpr block_type true_value = block_type(~block_type(0));
+                old_block_count = compute_block_count(size());
+                buffer().resize(old_block_count, true_value);
+                zero_unused_bits();
+            }
             buffer().resize(new_block_count, value);
         }
 
-        if (b && n > m_size)
+        if (b && (n > m_size))
         {
             const size_type extra_bits = count_extra_bits();
             if (extra_bits > 0)
@@ -542,29 +589,34 @@ namespace sparrow
     constexpr dynamic_bitset_base<B>::iterator
     dynamic_bitset_base<B>::insert(const_iterator pos, size_type count, value_type value)
     {
-        SPARROW_ASSERT_TRUE(data() != nullptr);
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
-        const size_type old_size = size();
-        const size_type new_size = old_size + count;
-
-        // TODO: The current implementation is not efficient. It can be improved.
-
-        resize(new_size);
-
-        for (size_type i = old_size + count - 1; i >= index + count; --i)
+        if (data() == nullptr && value)
         {
-            set(i, test(i - count));
+            m_size += count;
+        }
+        else
+        {
+            const size_type old_size = size();
+            const size_type new_size = old_size + count;
+
+            // TODO: The current implementation is not efficient. It can be improved.
+
+            resize(new_size);
+
+            for (size_type i = old_size + count - 1; i >= index + count; --i)
+            {
+                set(i, test(i - count));
+            }
+
+            for (size_type i = 0; i < count; ++i)
+            {
+                set(index + i, value);
+            }
         }
 
-        for (size_type i = 0; i < count; ++i)
-        {
-            set(index + i, value);
-        }
-
-        auto block = data() + block_index(index);
-        return iterator(this, block, bit_index(index));
+        return iterator(this, index);
     }
 
     template <typename B>
@@ -573,12 +625,27 @@ namespace sparrow
     constexpr dynamic_bitset_base<B>::iterator
     dynamic_bitset_base<B>::insert(const_iterator pos, InputIt first, InputIt last)
     {
-        SPARROW_ASSERT_TRUE(data() != nullptr);
+        const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
+        const auto count = static_cast<size_type>(std::distance(first, last));
+        if (data() == nullptr)
+        {
+            if (std::all_of(
+                    first,
+                    last,
+                    [](auto v)
+                    {
+                        return bool(v);
+                    }
+                ))
+            {
+                m_size += count;
+            }
+            return iterator(this, index);
+        }
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
-        const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
+
         const size_type old_size = size();
-        const size_type count = static_cast<size_type>(std::distance(first, last));
         const size_type new_size = old_size + count;
 
         resize(new_size);
@@ -595,8 +662,7 @@ namespace sparrow
             set(index + i, *first++);
         }
 
-        auto block = data() + block_index(index);
-        return iterator(this, block, bit_index(index));
+        return iterator(this, index);
     }
 
     template <typename B>
@@ -622,34 +688,37 @@ namespace sparrow
     constexpr dynamic_bitset_base<B>::iterator
     dynamic_bitset_base<B>::erase(const_iterator first, const_iterator last)
     {
-        SPARROW_ASSERT_TRUE(data() != nullptr);
         SPARROW_ASSERT_TRUE(cbegin() <= first);
         SPARROW_ASSERT_TRUE(first <= last);
         SPARROW_ASSERT_TRUE(last <= cend());
 
         const auto first_index = static_cast<size_type>(std::distance(cbegin(), first));
-
-        if (last == cend())
-        {
-            resize(first_index);
-            return end();
-        }
-
-        // TODO: The current implementation is not efficient. It can be improved.
-
         const auto last_index = static_cast<size_type>(std::distance(cbegin(), last));
         const size_type count = last_index - first_index;
 
-        const size_type bit_to_move = size() - last_index;
-        for (size_type i = 0; i < bit_to_move; ++i)
+        if (data() == nullptr)
         {
-            set(first_index + i, test(last_index + i));
+            m_size -= count;
         }
+        else
+        {
+            if (last == cend())
+            {
+                resize(first_index);
+                return end();
+            }
 
-        resize(size() - count);
+            // TODO: The current implementation is not efficient. It can be improved.
 
-        auto block = data() + block_index(first_index);
-        return iterator(this, block, bit_index(first_index));
+            const size_type bit_to_move = size() - last_index;
+            for (size_type i = 0; i < bit_to_move; ++i)
+            {
+                set(first_index + i, test(last_index + i));
+            }
+
+            resize(size() - count);
+        }
+        return iterator(this, first_index);
     }
 
     template <typename B>
@@ -663,6 +732,10 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr void dynamic_bitset_base<B>::pop_back()
     {
+        if (empty())
+        {
+            return;
+        }
         resize(size() - 1);
     }
 }
