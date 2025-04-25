@@ -76,7 +76,7 @@ namespace sparrow
 
             SUBCASE("values range and nullable")
             {
-                SUBCASE("nullable true")
+                SUBCASE("nullable == true")
                 {
                     const fixed_width_binary_array ar(new_values, true);
                     CHECK_EQ(ar.size(), 3);
@@ -86,7 +86,7 @@ namespace sparrow
                     }
                 }
 
-                SUBCASE("nullable false")
+                SUBCASE("nullable == false")
                 {
                     const fixed_width_binary_array ar(new_values, false);
                     CHECK_EQ(ar.size(), 3);

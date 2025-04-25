@@ -68,11 +68,24 @@ namespace sparrow
 
                 SUBCASE("range, nullable, name and metadata")
                 {
-                    string_view_array array(words, false, "name", metadata_sample_opt);
-                    CHECK_EQ(array.name(), "name");
-                    test_metadata(metadata_sample, array.metadata().value());
-                    CHECK_EQ(array.size(), words.size());
-                    CHECK(detail::array_access::get_arrow_proxy(array).flags().empty());
+                    SUBCASE("nullable == false")
+                    {
+                        string_view_array array(words, false, "name", metadata_sample_opt);
+                        CHECK_EQ(array.name(), "name");
+                        test_metadata(metadata_sample, array.metadata().value());
+                        CHECK_EQ(array.size(), words.size());
+                        CHECK(detail::array_access::get_arrow_proxy(array).flags().empty());
+                    }
+
+                    SUBCASE("nullable == true")
+                    {
+                        string_view_array array(words, true, "name", metadata_sample_opt);
+                        CHECK_EQ(array.name(), "name");
+                        test_metadata(metadata_sample, array.metadata().value());
+                        CHECK_EQ(array.size(), words.size());
+                        CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE)
+                        );
+                    }
                 }
             }
 
