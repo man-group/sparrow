@@ -70,6 +70,10 @@ namespace sparrow
         }
     }
 
+    template <std::ranges::input_range R>
+        requires std::ranges::input_range<std::ranges::range_value_t<R>>
+    using ranges_of_ranges_value_t = std::ranges::range_value_t<std::ranges::range_value_t<R>>;
+
     namespace ranges
     {
         template <typename InputRange, typename OutputIterator>

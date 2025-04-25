@@ -450,8 +450,6 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        using values_inner_value_type = std::ranges::range_value_t<std::ranges::range_value_t<R>>;
-
         auto size_range = values
                           | std::views::transform(
                               [](const auto& v)
@@ -460,7 +458,11 @@ namespace sparrow
                               }
                           );
         auto offset_buffer = offset_from_sizes(size_range);
-        auto data_buffer = u8_buffer<values_inner_value_type>(std::ranges::views::join(values));
+#if SPARROW_BUILT_WITH_GCC_10
+        auto data_buffer = workaround::join_ranges(values);
+#else
+        auto data_buffer = u8_buffer<ranges_of_ranges_value_t<R>>(std::ranges::views::join(values));
+#endif
         return create_proxy(
             std::move(data_buffer),
             std::move(offset_buffer),

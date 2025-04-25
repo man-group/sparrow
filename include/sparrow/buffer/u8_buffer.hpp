@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <numeric>
 #include <ranges>
 #include <type_traits>
 
@@ -167,4 +168,36 @@ namespace sparrow
         , buffer_adaptor_type(holder_type::value)
     {
     }
+
+#if SPARROW_BUILT_WITH_GCC_10
+    namespace workaround
+    {
+        // GCC 10 does not implement https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2328r1.html,
+        // therefore building join views of some kind of ranges in layout constructors does not build.
+        // This function encapsulate the workaround.
+        template <std::ranges::input_range R>
+            requires std::ranges::input_range<std::ranges::range_value_t<R>>
+        u8_buffer<ranges_of_ranges_value_t<R>> join_ranges(R&& values)
+        {
+            using value_type = ranges_of_ranges_value_t<R>;
+            using return_type = u8_buffer<value_type>;
+            using size_type = return_type::size_type;
+
+            size_type size = std::accumulate(values.begin(), values.end(), size_type(0),
+                    [](size_type acc, const auto& r) { return range_size(r) + acc; });
+            std::allocator<value_type> a;
+            value_type* p = a.allocate(size);
+
+            value_type* iter = p;
+            std::ranges::for_each(values, [&iter](const auto& r)
+            {
+                auto copy_res = sparrow::ranges::copy(r, iter);
+                iter = copy_res.out;
+            });
+
+            return return_type{p, size, a};
+        }
+    }
+        
+#endif 
 }

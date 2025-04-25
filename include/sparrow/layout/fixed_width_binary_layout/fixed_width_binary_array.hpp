@@ -334,14 +334,15 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        using values_type = std::ranges::range_value_t<R>;
-        using values_inner_value_type = std::ranges::range_value_t<values_type>;
-
         SPARROW_ASSERT_TRUE(!std::ranges::empty(values));
         SPARROW_ASSERT_TRUE(all_same_size(values));
         const size_t element_size = std::ranges::size(*values.begin());
 
-        auto data_buffer = u8_buffer<values_inner_value_type>(std::ranges::views::join(values));
+#if SPARROW_BUILT_WITH_GCC_10
+        auto data_buffer = workaround::join_ranges(values);
+#else
+        auto data_buffer = u8_buffer<ranges_of_ranges_value_t<R>>(std::ranges::views::join(values));
+#endif
         return create_proxy(
             std::move(data_buffer),
             element_size,
