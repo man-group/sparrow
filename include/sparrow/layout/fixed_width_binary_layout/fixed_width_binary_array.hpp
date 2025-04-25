@@ -439,12 +439,11 @@ namespace sparrow
 
             );
             auto data_buffer = u8_buffer<values_inner_value_type>(std::ranges::views::join(values));
+            const size_t element_count = data_buffer.size() / element_size;
             std::vector<buffer<std::uint8_t>> arr_buffs = {
                 buffer<std::uint8_t>{nullptr, 0},  // validity bitmap
                 std::move(data_buffer).extract_storage()
             };
-            const size_t element_count = data_buffer.size() / element_size;
-
             ArrowArray arr = make_arrow_array(
                 static_cast<std::int64_t>(element_count),  // length
                 0,                                         // null_count
