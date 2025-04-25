@@ -183,21 +183,31 @@ namespace sparrow
             using return_type = u8_buffer<value_type>;
             using size_type = return_type::size_type;
 
-            size_type size = std::accumulate(values.begin(), values.end(), size_type(0),
-                    [](size_type acc, const auto& r) { return range_size(r) + acc; });
+            size_type size = std::accumulate(
+                values.begin(),
+                values.end(),
+                size_type(0),
+                [](size_type acc, const auto& r)
+                {
+                    return range_size(r) + acc;
+                }
+            );
             std::allocator<value_type> a;
             value_type* p = a.allocate(size);
 
             value_type* iter = p;
-            std::ranges::for_each(values, [&iter](const auto& r)
-            {
-                auto copy_res = sparrow::ranges::copy(r, iter);
-                iter = copy_res.out;
-            });
+            std::ranges::for_each(
+                values,
+                [&iter](const auto& r)
+                {
+                    auto copy_res = sparrow::ranges::copy(r, iter);
+                    iter = copy_res.out;
+                }
+            );
 
             return return_type{p, size, a};
         }
     }
-        
-#endif 
+
+#endif
 }

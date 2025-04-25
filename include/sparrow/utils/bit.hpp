@@ -21,7 +21,7 @@
 
 #include "sparrow/config/config.hpp"
 #if SPARROW_BUILT_WITH_GCC_10
-#include <cstring>
+#    include <cstring>
 #endif
 
 namespace sparrow

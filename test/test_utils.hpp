@@ -100,7 +100,7 @@ namespace sparrow::test
                     ADD_FAIL_AT(file, line, "type mismatch");
                 }
             },
-            
+
 #if (!defined(__clang__) && defined(__GNUC__) && __GNUC__ < 11)
             static_cast<const typename V::base_type&>(variant)
 #else

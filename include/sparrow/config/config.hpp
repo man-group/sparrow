@@ -50,8 +50,8 @@
 #    define SPARROW_CONSTEXPR_GCC_11 constexpr
 #endif
 
-// GCC10 is missing some C++20 features and requires some workarounds 
-#if (!defined(__clang__) && defined(__GNUC__) && __GNUC__==10)
+// GCC10 is missing some C++20 features and requires some workarounds
+#if (!defined(__clang__) && defined(__GNUC__) && __GNUC__ == 10)
 #    define SPARROW_BUILT_WITH_GCC_10 1
 #else
 #    define SPARROW_BUILT_WITH_GCC_10 0
