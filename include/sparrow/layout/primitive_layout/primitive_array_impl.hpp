@@ -134,7 +134,7 @@ namespace sparrow
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<T>&& data_buffer,
-            bool size,
+            size_t size,
             VALIDITY_RANGE&& bitmaps,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
@@ -145,7 +145,7 @@ namespace sparrow
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<T>&& data_buffer,
-            bool size,
+            size_t size,
             bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
@@ -196,7 +196,7 @@ namespace sparrow
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy_impl(
             u8_buffer<T>&& data_buffer,
-            bool size,
+            size_t size,
             std::optional<validity_bitmap>&& bitmap,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
@@ -268,7 +268,7 @@ namespace sparrow
     template <validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
     auto primitive_array_impl<T>::create_proxy(
         u8_buffer<T>&& data_buffer,
-        bool size,
+        size_t size,
         VALIDITY_RANGE&& bitmap_input,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
@@ -332,7 +332,7 @@ namespace sparrow
     template <validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
     arrow_proxy primitive_array_impl<T>::create_proxy(
         u8_buffer<T>&& data_buffer,
-        bool size,
+        size_t size,
         bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
@@ -404,7 +404,7 @@ namespace sparrow
     template <input_metadata_container METADATA_RANGE>
     [[nodiscard]] arrow_proxy primitive_array_impl<T>::create_proxy_impl(
         u8_buffer<T>&& data_buffer,
-        bool size,
+        size_t size,
         std::optional<validity_bitmap>&& bitmap,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
