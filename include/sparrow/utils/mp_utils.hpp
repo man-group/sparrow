@@ -543,8 +543,4 @@ namespace sparrow::mpl
             std::span<typename std::remove_cvref_t<T>::element_type, std::remove_cvref_t<T>::extent>,
             std::remove_cvref_t<T>>;
     };
-
-    // Define a concept that checks if a type is exactly bool
-    template <typename T>
-    concept exactly_bool = std::is_same_v<T, bool>;
 }

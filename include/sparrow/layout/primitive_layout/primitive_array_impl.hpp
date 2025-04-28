@@ -109,10 +109,10 @@ namespace sparrow
         /**
          * Constructs a primitive array from an \c initializer_list of raw values.
          */
-        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>, mpl::exactly_bool NULLABLE_TYPE = bool>
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         primitive_array_impl(
             std::initializer_list<inner_value_type> init,
-            NULLABLE_TYPE nullable = true,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         )
@@ -134,7 +134,7 @@ namespace sparrow
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<T>&& data_buffer,
-            size_t size,
+            bool size,
             VALIDITY_RANGE&& bitmaps,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
@@ -142,38 +142,31 @@ namespace sparrow
 
         template <
             validity_bitmap_input VALIDITY_RANGE = validity_bitmap,
-            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>,
-            mpl::exactly_bool NULLABLE_TYPE = bool>
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<T>&& data_buffer,
-            size_t size,
-            NULLABLE_TYPE nullable = true,
+            bool size,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
         // range of values (no missing values)
-        template <
-            std::ranges::input_range R,
-            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>,
-            mpl::exactly_bool NULLABLE_TYPE = bool>
+        template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(std::convertible_to<std::ranges::range_value_t<R>, T> && !mpl::is_type_instance_of_v<R, u8_buffer>)
         [[nodiscard]] static auto create_proxy(
             R&& range,
-            NULLABLE_TYPE nullable = true,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        template <
-            class U,
-            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>,
-            mpl::exactly_bool NULLABLE_TYPE = bool>
+        template <class U, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<U, T>
         [[nodiscard]] static arrow_proxy create_proxy(
             size_type n,
             const U& value = U{},
-            NULLABLE_TYPE nullable = true,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -203,7 +196,7 @@ namespace sparrow
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy_impl(
             u8_buffer<T>&& data_buffer,
-            size_t size,
+            bool size,
             std::optional<validity_bitmap>&& bitmap,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
@@ -275,7 +268,7 @@ namespace sparrow
     template <validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
     auto primitive_array_impl<T>::create_proxy(
         u8_buffer<T>&& data_buffer,
-        size_t size,
+        bool size,
         VALIDITY_RANGE&& bitmap_input,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
@@ -314,12 +307,12 @@ namespace sparrow
     }
 
     template <trivial_copyable_type T>
-    template <class U, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    template <class U, input_metadata_container METADATA_RANGE>
         requires std::convertible_to<U, T>
     arrow_proxy primitive_array_impl<T>::create_proxy(
         size_type n,
         const U& value,
-        NULLABLE_TYPE nullable,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
@@ -336,11 +329,11 @@ namespace sparrow
     }
 
     template <trivial_copyable_type T>
-    template <validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    template <validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
     arrow_proxy primitive_array_impl<T>::create_proxy(
         u8_buffer<T>&& data_buffer,
-        size_t size,
-        NULLABLE_TYPE nullable,
+        bool size,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
@@ -357,11 +350,11 @@ namespace sparrow
     }
 
     template <trivial_copyable_type T>
-    template <std::ranges::input_range R, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
         requires(std::convertible_to<std::ranges::range_value_t<R>, T> && !mpl::is_type_instance_of_v<R, u8_buffer>)
     arrow_proxy primitive_array_impl<T>::create_proxy(
         R&& range,
-        NULLABLE_TYPE nullable,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
@@ -411,7 +404,7 @@ namespace sparrow
     template <input_metadata_container METADATA_RANGE>
     [[nodiscard]] arrow_proxy primitive_array_impl<T>::create_proxy_impl(
         u8_buffer<T>&& data_buffer,
-        size_t size,
+        bool size,
         std::optional<validity_bitmap>&& bitmap,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata

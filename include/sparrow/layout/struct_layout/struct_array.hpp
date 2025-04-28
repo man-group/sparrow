@@ -116,10 +116,10 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>, mpl::exactly_bool NULLABLE_TYPE = bool>
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             std::vector<array>&& children,
-            NULLABLE_TYPE nullable = true,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -172,10 +172,10 @@ namespace sparrow
         );
     }
 
-    template <input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    template <input_metadata_container METADATA_RANGE>
     auto struct_array::create_proxy(
         std::vector<array>&& children,
-        NULLABLE_TYPE nullable,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy

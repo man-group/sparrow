@@ -298,12 +298,11 @@ namespace sparrow
 
         template <
             validity_bitmap_input VB = validity_bitmap,
-            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>,
-            mpl::exactly_bool NULLABLE_TYPE = bool>
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             offset_buffer_type&& list_offsets,
-            NULLABLE_TYPE nullable = true,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -366,13 +365,12 @@ namespace sparrow
 
         template <
             validity_bitmap_input VB = validity_bitmap,
-            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>,
-            mpl::exactly_bool NULLABLE_TYPE = bool>
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             offset_buffer_type&& list_offsets,
             size_buffer_type&& list_sizes,
-            NULLABLE_TYPE nullable = true,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -434,12 +432,11 @@ namespace sparrow
 
         template <
             validity_bitmap_input R = validity_bitmap,
-            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>,
-            mpl::exactly_bool NULLABLE_TYPE = bool>
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
             std::uint64_t list_size,
             array&& flat_values,
-            NULLABLE_TYPE nullable = true,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -621,11 +618,11 @@ namespace sparrow
     }
 
     template <bool BIG>
-    template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
     arrow_proxy list_array_impl<BIG>::create_proxy(
         array&& flat_values,
         offset_buffer_type&& list_offsets,
-        NULLABLE_TYPE nullable,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
@@ -769,12 +766,12 @@ namespace sparrow
     }
 
     template <bool BIG>
-    template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
     arrow_proxy list_view_array_impl<BIG>::create_proxy(
         array&& flat_values,
         offset_buffer_type&& list_offsets,
         size_buffer_type&& list_sizes,
-        NULLABLE_TYPE nullable,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
@@ -944,11 +941,11 @@ namespace sparrow
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
-    template <validity_bitmap_input R, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    template <validity_bitmap_input R, input_metadata_container METADATA_RANGE>
     inline arrow_proxy fixed_sized_list_array::create_proxy(
         std::uint64_t list_size,
         array&& flat_values,
-        NULLABLE_TYPE nullable,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )

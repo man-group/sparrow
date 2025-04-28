@@ -219,8 +219,7 @@ namespace sparrow
          */
         template <
             std::ranges::input_range VALUES,
-            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>,
-            mpl::exactly_bool NULLABLE_TYPE = bool>
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(
                 std::ranges::input_range<std::ranges::range_value_t<VALUES>> &&  // a range of ranges
                 mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<VALUES>>>  // inner range
@@ -230,7 +229,7 @@ namespace sparrow
             )
         [[nodiscard]] static arrow_proxy create_proxy(
             VALUES&& values,
-            NULLABLE_TYPE nullable = true,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -399,7 +398,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR>
-    template <std::ranges::input_range R, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
         requires(
             std::ranges::input_range<std::ranges::range_value_t<R>> &&                 // a range of ranges
             mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>  // inner range is a
@@ -407,7 +406,7 @@ namespace sparrow
         )
     arrow_proxy fixed_width_binary_array_impl<T, CR>::create_proxy(
         R&& values,
-        NULLABLE_TYPE nullable,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )

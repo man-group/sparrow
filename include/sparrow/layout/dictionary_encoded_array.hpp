@@ -191,12 +191,11 @@ namespace sparrow
 
         template <
             validity_bitmap_input R = validity_bitmap,
-            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>,
-            mpl::exactly_bool NULLABLE_TYPE = bool>
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             keys_buffer_type&& keys,
             array&& values,
-            NULLABLE_TYPE nullable = true,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -309,11 +308,11 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    template <validity_bitmap_input VBI, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    template <validity_bitmap_input VBI, input_metadata_container METADATA_RANGE>
     auto dictionary_encoded_array<IT>::create_proxy(
         keys_buffer_type&& keys,
         array&& values,
-        NULLABLE_TYPE nullable,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy

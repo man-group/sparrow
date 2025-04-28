@@ -170,11 +170,11 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        template <std::ranges::input_range R, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE = bool>
+        template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         [[nodiscard]] static arrow_proxy create_proxy(
             R&& range,
-            NULLABLE_TYPE = true,
+            bool = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -392,11 +392,11 @@ namespace sparrow
     }
 
     template <class T>
-    template <std::ranges::input_range R, input_metadata_container METADATA_RANGE, mpl::exactly_bool NULLABLE_TYPE>
+    template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
     [[nodiscard]] arrow_proxy variable_size_binary_view_array_impl<T>::create_proxy(
         R&& range,
-        NULLABLE_TYPE nullable,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
