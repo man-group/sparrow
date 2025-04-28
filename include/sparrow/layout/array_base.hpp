@@ -405,7 +405,7 @@ namespace sparrow
     auto array_crtp_base<D>::has_value(size_type i) const -> bitmap_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
-        return this->derived_cast().get_bitmap()[i + get_arrow_proxy().offset()];
+        return *sparrow::next(bitmap_begin(), i);
     }
 
     template <class D>
