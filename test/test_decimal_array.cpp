@@ -66,7 +66,6 @@ namespace sparrow
                     CHECK_EQ(array.size(), 4);
                     for (std::size_t i = 0; i < array.size(); ++i)
                     {
-                        [[maybe_unused]] auto lol = array[i];
                         CHECK(array[i].has_value());
                     }
                 }

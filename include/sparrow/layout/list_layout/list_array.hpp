@@ -351,6 +351,21 @@ namespace sparrow
     private:
 
         template <
+            std::ranges::input_range OFFSET_BUFFER_RANGE,
+            std::ranges::input_range SIZE_RANGE,
+            validity_bitmap_input VB = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires(std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, offset_type> && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, list_size_type>)
+        [[nodiscard]] static arrow_proxy create_proxy(
+            array&& flat_values,
+            OFFSET_BUFFER_RANGE&& list_offsets,
+            SIZE_RANGE&& list_sizes,
+            VB&& validity_input,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        );
+
+        template <
             validity_bitmap_input VB = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
@@ -362,10 +377,21 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-
         template <
-            validity_bitmap_input VB = validity_bitmap,
+            std::ranges::input_range OFFSET_BUFFER_RANGE,
+            std::ranges::input_range SIZE_RANGE,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires(std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, offset_type> && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, list_size_type>)
+        [[nodiscard]] static arrow_proxy create_proxy(
+            array&& flat_values,
+            OFFSET_BUFFER_RANGE&& list_offsets,
+            SIZE_RANGE&& list_sizes,
+            bool nullable = true,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        );
+
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             offset_buffer_type&& list_offsets,
@@ -374,7 +400,6 @@ namespace sparrow
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
-
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr std::size_t SIZES_BUFFER_INDEX = 2;
@@ -766,7 +791,33 @@ namespace sparrow
     }
 
     template <bool BIG>
-    template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
+    template <
+        std::ranges::input_range OFFSET_BUFFER_RANGE,
+        std::ranges::input_range SIZE_RANGE,
+        validity_bitmap_input VB,
+        input_metadata_container METADATA_RANGE>
+        requires(std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, typename list_view_array_impl<BIG>::offset_type> && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, typename list_view_array_impl<BIG>::list_size_type>)
+    arrow_proxy list_view_array_impl<BIG>::create_proxy(
+        array&& flat_values,
+        OFFSET_BUFFER_RANGE&& list_offsets,
+        SIZE_RANGE&& list_sizes,
+        VB&& validity_input,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
+    {
+        return list_view_array_impl<BIG>::create_proxy(
+            std::move(flat_values),
+            offset_buffer_type(std::move(list_offsets)),
+            size_buffer_type(std::move(list_sizes)),
+            std::forward<VB>(validity_input),
+            name,
+            metadata
+        );
+    }
+
+    template <bool BIG>
+    template <input_metadata_container METADATA_RANGE>
     arrow_proxy list_view_array_impl<BIG>::create_proxy(
         array&& flat_values,
         offset_buffer_type&& list_offsets,
@@ -822,6 +873,28 @@ namespace sparrow
             );
             return arrow_proxy{std::move(arr), std::move(schema)};
         }
+    }
+
+    template <bool BIG>
+    template <std::ranges::input_range OFFSET_BUFFER_RANGE, std::ranges::input_range SIZE_RANGE, input_metadata_container METADATA_RANGE>
+        requires(std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, typename list_view_array_impl<BIG>::offset_type> && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, typename list_view_array_impl<BIG>::list_size_type>)
+    arrow_proxy list_view_array_impl<BIG>::create_proxy(
+        array&& flat_values,
+        OFFSET_BUFFER_RANGE&& list_offsets,
+        SIZE_RANGE&& list_sizes,
+        bool nullable,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
+    {
+        return list_view_array_impl<BIG>::create_proxy(
+            std::move(flat_values),
+            offset_buffer_type(std::move(list_offsets)),
+            size_buffer_type(std::move(list_sizes)),
+            nullable,
+            name,
+            metadata
+        );
     }
 
     template <bool BIG>

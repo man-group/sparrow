@@ -79,7 +79,7 @@ namespace sparrow
         using buffer_adaptor_type = buffer_adaptor<T, buffer<std::uint8_t>&>;
         using holder_type::extract_storage;
 
-        explicit u8_buffer(u8_buffer&& other);
+        u8_buffer(u8_buffer&& other);
         u8_buffer(const u8_buffer& other);
         u8_buffer& operator=(u8_buffer&& other) = delete;
         u8_buffer& operator=(u8_buffer& other) = delete;
@@ -98,11 +98,8 @@ namespace sparrow
          * @param range The range.
          */
         template <std::ranges::input_range R>
-            requires(
-                !std::same_as<u8_buffer<T>, std::decay_t<R>>
-                && std::convertible_to<std::ranges::range_value_t<R>, T>
-            )
-        u8_buffer(R&& range);
+            requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>)
+        explicit u8_buffer(R&& range);
 
         /**
          * Constructs a buffer with the elements of the initializer list \c ilist.
