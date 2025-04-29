@@ -187,7 +187,7 @@ namespace sparrow
             std::ranges::input_range TYPE_MAPPING = std::vector<std::uint8_t>,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(std::convertible_to<std::ranges::range_value_t<TYPE_MAPPING>, std::uint8_t>)
-        static auto create_proxy(
+        [[nodiscard]] static auto create_proxy(
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
             offset_buffer_type&& offsets,
@@ -196,8 +196,35 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        template <
+            std::ranges::input_range TYPE_ID_BUFFER_RANGE,
+            std::ranges::input_range OFFSET_BUFFER_RANGE,
+            std::ranges::input_range TYPE_MAPPING = std::vector<std::uint8_t>,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires(std::convertible_to<std::ranges::range_value_t<TYPE_MAPPING>, std::uint8_t>)
+        [[nodiscard]] static arrow_proxy create_proxy(
+            std::vector<array>&& children,
+            TYPE_ID_BUFFER_RANGE&& element_type,
+            OFFSET_BUFFER_RANGE&& offsets,
+            TYPE_MAPPING&& type_mapping = TYPE_MAPPING{},
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        )
+        {
+            type_id_buffer_type element_type_buffer{std::move(element_type)};
+            offset_buffer_type offsets_buffer{std::move(offsets)};
+            return dense_union_array::create_proxy(
+                std::forward<std::vector<array>>(children),
+                std::move(element_type_buffer),
+                std::move(offsets_buffer),
+                std::forward<TYPE_MAPPING>(type_mapping),
+                std::forward<std::optional<std::string_view>>(name),
+                std::forward<std::optional<METADATA_RANGE>>(metadata)
+            );
+        }
+
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-        static auto create_proxy_impl(
+        [[nodiscard]] static arrow_proxy create_proxy_impl(
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
             offset_buffer_type&& offsets,
@@ -205,7 +232,34 @@ namespace sparrow
             type_id_map&& tim,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
-        ) -> arrow_proxy;
+        );
+
+        template <
+            std::ranges::input_range TYPE_ID_BUFFER_RANGE,
+            std::ranges::input_range OFFSET_BUFFER_RANGE,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        [[nodiscard]] static arrow_proxy create_proxy_impl(
+            std::vector<array>&& children,
+            TYPE_ID_BUFFER_RANGE&& element_type,
+            OFFSET_BUFFER_RANGE&& offsets,
+            std::string&& format,
+            type_id_map&& tim,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        )
+        {
+            type_id_buffer_type element_type_buffer{std::move(element_type)};
+            offset_buffer_type offsets_buffer{std::move(offsets)};
+            return dense_union_array::create_proxy_impl(
+                std::forward<std::vector<array>>(children),
+                std::move(element_type_buffer),
+                std::move(offsets_buffer),
+                std::forward<std::string>(format),
+                std::forward<type_id_map>(tim),
+                std::forward<std::optional<std::string_view>>(name),
+                std::forward<std::optional<METADATA_RANGE>>(metadata)
+            );
+        }
 
         SPARROW_API std::size_t element_offset(std::size_t i) const;
 
