@@ -315,7 +315,7 @@ namespace sparrow
                 std::forward<array>(flat_values),
                 std::move(list_offsets),
                 std::forward<VB>(validity_input),
-                std::forward<>(name),
+                std::forward<std::optional<std::string_view>>(name),
                 std::forward<std::optional<METADATA_RANGE>>(metadata)
             );
         }
