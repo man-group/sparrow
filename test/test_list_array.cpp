@@ -46,6 +46,30 @@ namespace sparrow
             );
             return arrow_proxy(std::move(arr), std::move(schema));
         }
+
+        void check_array(const list_array& list_arr, const std::vector<std::size_t>& sizes)
+        {
+            // check the size
+            REQUIRE_EQ(list_arr.size(), sizes.size());
+
+            // check the sizes
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                CHECK_EQ(list_arr[i].value().size(), sizes[i]);
+            }
+
+            // check the values
+            std::int16_t flat_index = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                auto list = list_arr[i].value();
+                for (std::size_t j = 0; j < sizes[i]; ++j)
+                {
+                    CHECK_NULLABLE_VARIANT_EQ(list[j], flat_index);
+                    ++flat_index;
+                }
+            }
+        }
     }
 
     TEST_SUITE("list_array")
@@ -80,30 +104,25 @@ namespace sparrow
             // wrap into an detyped array
             array arr(std::move(flat_arr));
 
-            // create a list array
-            list_array list_arr(std::move(arr), list_array::offset_from_sizes(sizes));
 
-            // check the size
-            REQUIRE_EQ(list_arr.size(), sizes.size());
-
-            // check the sizes
-            for (std::size_t i = 0; i < sizes.size(); ++i)
+            SUBCASE("from array, offset_buffer_type and nullable")
             {
-                CHECK_EQ(list_arr[i].value().size(), sizes[i]);
-            }
-
-            // check the values
-            std::int16_t flat_index = 0;
-            for (std::size_t i = 0; i < sizes.size(); ++i)
-            {
-                auto list = list_arr[i].value();
-                for (std::size_t j = 0; j < sizes[i]; ++j)
+                SUBCASE("nullable == true")
                 {
-                    CHECK_NULLABLE_VARIANT_EQ(list[j], flat_index);
-                    ++flat_index;
+                    // create a list array
+                    list_array list_arr(std::move(arr), list_array::offset_from_sizes(sizes), true);
+                    test::check_array(list_arr, sizes);
+                }
+
+                SUBCASE("nullable == false")
+                {
+                    // create a list array
+                    list_array list_arr(std::move(arr), list_array::offset_from_sizes(sizes), false);
+                    test::check_array(list_arr, sizes);
                 }
             }
         }
+
         TEST_CASE_TEMPLATE("list[T]", T, std::uint8_t, std::int32_t, float, double)
         {
             using inner_scalar_type = T;

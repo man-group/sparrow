@@ -54,12 +54,20 @@ namespace sparrow
                 {
                     decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
                     CHECK_EQ(array.size(), 4);
+                    for (std::size_t i = 0; i < array.size(); ++i)
+                    {
+                        CHECK_EQ(array[i].has_value(), bitmaps[i]);
+                    }
                 }
 
                 SUBCASE("range, precision, scale")
                 {
                     decimal_array<decimal<INTEGER_TYPE>> array{values, precision, scale};
                     CHECK_EQ(array.size(), 4);
+                    for (std::size_t i = 0; i < array.size(); ++i)
+                    {
+                        CHECK(array[i].has_value());
+                    }
                 }
 
                 SUBCASE("data_buffer, bitmaps, precision, scale")
@@ -67,13 +75,45 @@ namespace sparrow
                     u8_buffer<INTEGER_TYPE> buffer{values};
                     decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), bitmaps, precision, scale};
                     CHECK_EQ(array.size(), 4);
+                    for (std::size_t i = 0; i < array.size(); ++i)
+                    {
+                        CHECK_EQ(array[i].has_value(), bitmaps[i]);
+                    }
                 }
 
-                SUBCASE("data_buffer,  precision, scale")
+                SUBCASE("data_buffer, precision, scale")
                 {
                     u8_buffer<INTEGER_TYPE> buffer{values};
                     decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), precision, scale};
                     CHECK_EQ(array.size(), 4);
+                    for (std::size_t i = 0; i < array.size(); ++i)
+                    {
+                        CHECK(array[i].has_value());
+                    }
+                }
+
+                SUBCASE("data_buffer, precision, scale, nullable")
+                {
+                    SUBCASE("nullable")
+                    {
+                        u8_buffer<INTEGER_TYPE> buffer{values};
+                        decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), precision, scale, true};
+                        CHECK_EQ(array.size(), 4);
+                        for (std::size_t i = 0; i < array.size(); ++i)
+                        {
+                            CHECK(array[i].has_value());
+                        }
+                    }
+                    SUBCASE("not nullable")
+                    {
+                        u8_buffer<INTEGER_TYPE> buffer{values};
+                        decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), precision, scale, false};
+                        CHECK_EQ(array.size(), 4);
+                        for (std::size_t i = 0; i < array.size(); ++i)
+                        {
+                            CHECK(array[i].has_value());
+                        }
+                    }
                 }
             }
 

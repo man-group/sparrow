@@ -14,7 +14,9 @@
 #include <string>
 #include <vector>
 
+#include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/variable_size_binary_view_array.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 #include "metadata_sample.hpp"
 #include "test_utils.hpp"
@@ -26,33 +28,83 @@ namespace sparrow
 {
     TEST_SUITE("variable_size_binary_view_array")
     {
+        static const std::vector<std::string> words{
+            "short",
+            "longer",
+            "abcdefghijk",      // exactly 11
+            "abcdefghijkl",     // exactly 12
+            "123456789101112",  // longer than 12,
+            "hello world this is a long string"
+        };
+
+        static const std::vector<std::size_t> where_nulls{1};
+
         TEST_CASE("string_view_array")
         {
-            std::vector<std::string> words{
-                "short",
-                "longer",
-                "abcdefghijk",      // exactly 11
-                "abcdefghijkl",     // exactly 12
-                "123456789101112",  // longer than 12,
-                "hello world this is a long string"
-            };
-
-            std::vector<std::size_t> where_nulls{1};
-
-            string_view_array array(words, where_nulls, "name", metadata_sample_opt);
-            CHECK_EQ(array.name(), "name");
-            test_metadata(metadata_sample, array.metadata().value());
-
-            for (std::size_t i = 0; i < words.size(); ++i)
+            SUBCASE("constructors")
             {
-                if (i == 1)
+                SUBCASE("range, validity, name and metadata")
                 {
-                    CHECK_FALSE(array[i].has_value());
+                    string_view_array array(words, where_nulls, "name", metadata_sample_opt);
+                    CHECK_EQ(array.name(), "name");
+                    test_metadata(metadata_sample, array.metadata().value());
+                    CHECK_EQ(array.size(), words.size());
+                    CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE));
                 }
-                else
+
+                SUBCASE("nullable range, name and metadata")
                 {
-                    CHECK(array[i].has_value());
-                    CHECK(array[i].value() == words[i]);
+                    std::vector<sparrow::nullable<std::string_view>> nullable_words;
+                    for (const auto& word : words)
+                    {
+                        nullable_words.emplace_back(word);
+                    }
+                    string_view_array array(nullable_words, "name", metadata_sample_opt);
+                    CHECK_EQ(array.name(), "name");
+                    test_metadata(metadata_sample, array.metadata().value());
+                    CHECK_EQ(array.size(), words.size());
+                    CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE));
+                }
+
+                SUBCASE("range, nullable, name and metadata")
+                {
+                    SUBCASE("nullable == false")
+                    {
+                        string_view_array array(words, false, "name", metadata_sample_opt);
+                        CHECK_EQ(array.name(), "name");
+                        test_metadata(metadata_sample, array.metadata().value());
+                        CHECK_EQ(array.size(), words.size());
+                        CHECK(detail::array_access::get_arrow_proxy(array).flags().empty());
+                    }
+
+                    SUBCASE("nullable == true")
+                    {
+                        string_view_array array(words, true, "name", metadata_sample_opt);
+                        CHECK_EQ(array.name(), "name");
+                        test_metadata(metadata_sample, array.metadata().value());
+                        CHECK_EQ(array.size(), words.size());
+                        CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE));
+                    }
+                }
+            }
+
+            SUBCASE("general")
+            {
+                string_view_array array(words, where_nulls, "name", metadata_sample_opt);
+                CHECK_EQ(array.name(), "name");
+                test_metadata(metadata_sample, array.metadata().value());
+
+                for (std::size_t i = 0; i < words.size(); ++i)
+                {
+                    if (i == 1)
+                    {
+                        CHECK_FALSE(array[i].has_value());
+                    }
+                    else
+                    {
+                        CHECK(array[i].has_value());
+                        CHECK(array[i].value() == words[i]);
+                    }
                 }
             }
         }

@@ -59,6 +59,7 @@ namespace sparrow
         static const auto new_nullable_value_2 = nullable<const std::array<byte_t, 3>>(new_value_2, true);
         static const auto new_value_3 = std::array<byte_t, 3>{byte_t{105}, byte_t{106}, byte_t{107}};
         static const auto new_nullable_value_3 = nullable<const std::array<byte_t, 3>>(new_value_3, true);
+        static const auto new_values = std::array<std::array<byte_t, 3>, 3>{new_value_1, new_value_2, new_value_3};
         static const auto new_nullable_values = std::array<nullable<std::array<byte_t, 3>>, 3>{
             new_nullable_value_1,
             new_nullable_value_2,
@@ -67,8 +68,34 @@ namespace sparrow
 
         TEST_CASE("constructor")
         {
-            const auto [ar, input_values] = make_array(5, 1);
-            CHECK_EQ(ar.size(), 4);
+            SUBCASE("basic")
+            {
+                const auto [ar, input_values] = make_array(5, 1);
+                CHECK_EQ(ar.size(), 4);
+            }
+
+            SUBCASE("values range and nullable")
+            {
+                SUBCASE("nullable == true")
+                {
+                    const fixed_width_binary_array ar(new_values, true);
+                    CHECK_EQ(ar.size(), 3);
+                    for (size_t i = 0; i < ar.size(); ++i)
+                    {
+                        CHECK(std::ranges::equal(ar[i].get(), new_values[i]));
+                    }
+                }
+
+                SUBCASE("nullable == false")
+                {
+                    const fixed_width_binary_array ar(new_values, false);
+                    CHECK_EQ(ar.size(), 3);
+                    for (size_t i = 0; i < ar.size(); ++i)
+                    {
+                        CHECK(std::ranges::equal(ar[i].get(), new_values[i]));
+                    }
+                }
+            }
         }
 
         TEST_CASE("operator[]")

@@ -29,6 +29,7 @@
 #include "sparrow/utils/decimal.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/metadata.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
@@ -181,6 +182,17 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        template <std::ranges::input_range VALUE_RANGE, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires std::is_same_v<std::ranges::range_value_t<VALUE_RANGE>, typename T::integer_type>
+        [[nodiscard]] static auto create_proxy(
+            VALUE_RANGE&& range,
+            std::size_t precision,
+            int scale,
+            bool nullable = true,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        ) -> arrow_proxy;
+
         template <validity_bitmap_input R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<storage_type>&& data_buffer,
@@ -196,10 +208,22 @@ namespace sparrow
             u8_buffer<storage_type>&& data_buffer,
             std::size_t precision,
             int scale,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        [[nodiscard]] static auto create_proxy_impl(
+            u8_buffer<storage_type>&& data_buffer,
+            std::size_t precision,
+            int scale,
+            std::optional<validity_bitmap>,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        ) -> arrow_proxy;
+
+        static std::string generate_format(std::size_t precision, int scale);
 
         [[nodiscard]] inner_reference value(size_type i);
         [[nodiscard]] inner_const_reference value(size_type i) const;
@@ -269,11 +293,13 @@ namespace sparrow
     )
     {
         u8_buffer<storage_type> u8_data_buffer(std::forward<VALUE_RANGE>(range));
-        return create_proxy(
+        const auto size = u8_data_buffer.size();
+        validity_bitmap bitmap = ensure_validity_bitmap(size, std::forward<VALIDITY_RANGE>(bitmaps));
+        return create_proxy_impl(
             std::move(u8_data_buffer),
-            std::forward<VALIDITY_RANGE>(bitmaps),
             precision,
             scale,
+            std::move(bitmap),
             std::move(name),
             std::move(metadata)
         );
@@ -313,15 +339,41 @@ namespace sparrow
         u8_buffer<storage_type>&& data_buffer,
         std::size_t precision,
         int scale,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
-        return decimal_array<T>::create_proxy(
+        const size_t size = data_buffer.size();
+        return create_proxy_impl(
             std::move(data_buffer),
-            validity_bitmap{},
             precision,
             scale,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
+            name,
+            metadata
+        );
+    }
+
+    template <decimal_type T>
+    template <std::ranges::input_range VALUE_RANGE, input_metadata_container METADATA_RANGE>
+        requires std::is_same_v<std::ranges::range_value_t<VALUE_RANGE>, typename T::integer_type>
+    arrow_proxy decimal_array<T>::create_proxy(
+        VALUE_RANGE&& range,
+        std::size_t precision,
+        int scale,
+        bool nullable,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
+    {
+        u8_buffer<storage_type> u8_data_buffer(std::forward<VALUE_RANGE>(range));
+        const auto size = u8_data_buffer.size();
+        return create_proxy_impl(
+            std::move(u8_data_buffer),
+            precision,
+            scale,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
             name,
             metadata
         );
@@ -340,32 +392,54 @@ namespace sparrow
     {
         const auto size = data_buffer.size();
         validity_bitmap bitmap = ensure_validity_bitmap(size, std::forward<R>(bitmap_input));
-        const auto null_count = bitmap.null_count();
+        return create_proxy_impl(
+            std::move(data_buffer),
+            precision,
+            scale,
+            std::move(bitmap),
+            std::move(name),
+            std::move(metadata)
+        );
+    }
 
-        constexpr std::size_t sizeof_decimal = sizeof(storage_type);
-        std::stringstream format_str;
-        format_str << "d:" << precision << "," << scale << "," << sizeof_decimal * 8;
+    template <decimal_type T>
+    template <input_metadata_container METADATA_RANGE>
+    [[nodiscard]] auto decimal_array<T>::create_proxy_impl(
+        u8_buffer<storage_type>&& data_buffer,
+        std::size_t precision,
+        int scale,
+        std::optional<validity_bitmap> bitmap,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    ) -> arrow_proxy
+    {
+        const std::optional<std::unordered_set<sparrow::ArrowFlag>>
+            flags = bitmap.has_value()
+                        ? std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE})
+                        : std::nullopt;
+        static const repeat_view<bool> children_ownership{true, 0};
+        const auto size = data_buffer.size();
+        const size_t null_count = bitmap.has_value() ? bitmap->null_count() : 0;
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
-            format_str.str(),
-            name,          // name
-            metadata,      // metadata
-            std::nullopt,  // flags
-            nullptr,       // children
-            repeat_view<bool>(true, 0),
+            generate_format(precision, scale),
+            name,      // name
+            metadata,  // metadata
+            flags,     // flags
+            nullptr,   // children
+            children_ownership,
             nullptr,  // dictionary
             true      // dictionary ownership
         );
 
-        std::vector<buffer<uint8_t>> buffers{
-            std::move(bitmap).extract_storage(),
-            std::move(data_buffer).extract_storage()
-        };
+        std::vector<buffer<uint8_t>> buffers(2);
+        buffers[0] = bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<uint8_t>{nullptr, 0};
+        buffers[1] = std::move(data_buffer).extract_storage();
 
         // create arrow array
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // length
+            static_cast<std::int64_t>(size),  // lengths
             static_cast<int64_t>(null_count),
             0,  // offset
             std::move(buffers),
@@ -418,5 +492,14 @@ namespace sparrow
             detail::layout_value_functor<const self_type, inner_value_type>(this),
             this->size()
         );
+    }
+
+    template <decimal_type T>
+    std::string decimal_array<T>::generate_format(std::size_t precision, int scale)
+    {
+        constexpr std::size_t sizeof_decimal = sizeof(storage_type);
+        std::stringstream format_str;
+        format_str << "d:" << precision << "," << scale << "," << sizeof_decimal * 8;
+        return format_str.str();
     }
 }

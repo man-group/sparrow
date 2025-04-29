@@ -102,7 +102,7 @@ namespace sparrow
                 !std::same_as<u8_buffer<T>, std::decay_t<R>>
                 && std::convertible_to<std::ranges::range_value_t<R>, T>
             )
-        u8_buffer(R&& range);
+        explicit u8_buffer(R&& range);
 
         /**
          * Constructs a buffer with the elements of the initializer list \c ilist.

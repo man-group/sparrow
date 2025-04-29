@@ -20,6 +20,7 @@
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+#include "sparrow/c_interface.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/metadata.hpp"
@@ -204,11 +205,12 @@ namespace sparrow
     null_array::create_proxy(size_t length, std::optional<std::string_view> name, std::optional<METADATA_RANGE> metadata)
     {
         using namespace std::literals;
+        static const std::optional<std::unordered_set<sparrow::ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
         ArrowSchema schema = make_arrow_schema(
             "n"sv,
             std::move(name),
             std::move(metadata),
-            std::nullopt,
+            flags,
             0,
             repeat_view<bool>(false, 0),
             nullptr,
