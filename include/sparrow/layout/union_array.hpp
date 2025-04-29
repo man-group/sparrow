@@ -218,8 +218,8 @@ namespace sparrow
                 std::move(element_type_buffer),
                 std::move(offsets_buffer),
                 std::forward<TYPE_MAPPING>(type_mapping),
-                std::move(name),
-                std::move(metadata)
+                std::forward<std::optional<std::string_view>>(name),
+                std::forward<std::optional<METADATA_RANGE>>(metadata)
             );
         }
 
@@ -256,8 +256,8 @@ namespace sparrow
                 std::move(offsets_buffer),
                 std::forward<std::string>(format),
                 std::forward<type_id_map>(tim),
-                std::move(name),
-                std::move(metadata)
+                std::forward<std::optional<std::string_view>>(name),
+                std::forward<std::optional<METADATA_RANGE>>(metadata)
             );
         }
 

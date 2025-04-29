@@ -312,11 +312,11 @@ namespace sparrow
         {
             offset_buffer_type list_offsets{std::move(list_offsets_range)};
             return list_array_impl<BIG>::create_proxy(
-                std::move(flat_values),
+                std::forward<array>(flat_values),
                 std::move(list_offsets),
                 std::forward<VB>(validity_input),
-                std::move(name),
-                std::move(metadata)
+                std::forward<>(name),
+                std::forward<std::optional<METADATA_RANGE>>(metadata)
             );
         }
 
@@ -346,11 +346,11 @@ namespace sparrow
         {
             offset_buffer_type list_offsets{std::move(list_offsets_range)};
             return list_array_impl<BIG>::create_proxy(
-                std::move(flat_values),
+                std::forward<array>(flat_values),
                 std::move(list_offsets),
                 nullable,
-                std::move(name),
-                std::move(metadata)
+                std::forward<std::optional<std::string_view>>(name),
+                std::forward<std::optional<METADATA_RANGE>>(metadata)
             );
         }
 
