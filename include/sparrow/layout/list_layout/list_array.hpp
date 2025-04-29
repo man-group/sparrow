@@ -402,7 +402,10 @@ namespace sparrow
             std::ranges::input_range SIZE_RANGE,
             validity_bitmap_input VB = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, offset_type> && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, list_size_type>)
+            requires(
+                std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, offset_type>
+                && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, list_size_type>
+            )
         [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             OFFSET_BUFFER_RANGE&& list_offsets,
@@ -438,7 +441,10 @@ namespace sparrow
             std::ranges::input_range OFFSET_BUFFER_RANGE,
             std::ranges::input_range SIZE_RANGE,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, offset_type> && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, list_size_type>)
+            requires(
+                std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, offset_type>
+                && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, list_size_type>
+            )
         [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             OFFSET_BUFFER_RANGE&& list_offsets,
