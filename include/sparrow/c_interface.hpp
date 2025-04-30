@@ -14,12 +14,8 @@
 
 #pragma once
 
-#include <algorithm>
-#include <array>
 #include <concepts>
 #include <cstdint>
-#include <stdexcept>
-#include <vector>
 
 #ifndef ARROW_C_DATA_INTERFACE
 #    define ARROW_C_DATA_INTERFACE
