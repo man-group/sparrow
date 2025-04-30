@@ -23,6 +23,7 @@
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 #include "doctest/doctest.h"
 #include "metadata_sample.hpp"
@@ -64,6 +65,60 @@ namespace sparrow
         TEST_CASE("constructors")
         {
             CHECK_NOTHROW(make_dictionary());
+
+            SUBCASE("keys_buffer_type, array, validity_bitmap, name and metadata")
+            {
+                layout_type::keys_buffer_type keys{0, 0, 1, 2, 3, 4, 2, 5, 0, 1, 2};
+                string_array words_arr{words};
+                array ar(words_arr.slice(1, words_arr.size()));
+                constexpr std::array<size_t, 2> keys_nulls{1ULL, 5ULL};
+                const layout_type
+                    dict{std::move(keys), std::move(ar), std::move(keys_nulls), "name", metadata_sample_opt};
+                CHECK_EQ(dict.size(), 11);
+            }
+
+            SUBCASE("keys_buffer_type, array, nullable, name and metadata")
+            {
+                layout_type::keys_buffer_type keys{0, 0, 1, 2, 3, 4, 2, 5, 0, 1, 2};
+                string_array words_arr{words};
+                array ar(words_arr.slice(1, words_arr.size()));
+                constexpr std::array<size_t, 2> keys_nulls{1ULL, 5ULL};
+                const layout_type
+                    dict{std::move(keys), std::move(ar), std::move(keys_nulls), "name", metadata_sample_opt};
+                CHECK_EQ(dict.size(), 11);
+            }
+
+            SUBCASE("KEY_RANGE, array, bitmap, name and metadata")
+            {
+                std::vector<uint32_t> keys{0, 0, 1, 2, 3, 4, 2, 5, 0, 1, 2};
+                string_array words_arr{words};
+                array ar(words_arr.slice(1, words_arr.size()));
+                constexpr std::array<size_t, 2> keys_nulls{1ULL, 5ULL};
+                const layout_type
+                    dict{std::move(keys), std::move(ar), std::move(keys_nulls), "name", metadata_sample_opt};
+                CHECK_EQ(dict.size(), 11);
+            }
+
+            SUBCASE("nullable key range, name and metadata")
+            {
+                std::vector<nullable<keys_type>> keys{
+                    sparrow::make_nullable<keys_type>(0, true),
+                    sparrow::make_nullable<keys_type>(0, false),
+                    sparrow::make_nullable<keys_type>(1, true),
+                    sparrow::make_nullable<keys_type>(2, true),
+                    sparrow::make_nullable<keys_type>(3, true),
+                    sparrow::make_nullable<keys_type>(4, false),
+                    sparrow::make_nullable<keys_type>(2, true),
+                    sparrow::make_nullable<keys_type>(5, true),
+                    sparrow::make_nullable<keys_type>(0, true),
+                    sparrow::make_nullable<keys_type>(1, true),
+                    sparrow::make_nullable<keys_type>(2, true)
+                };
+                string_array words_arr{words};
+                array ar(words_arr.slice(1, words_arr.size()));
+                const layout_type dict{std::move(keys), std::move(ar), "name", metadata_sample_opt};
+                CHECK_EQ(dict.size(), 11);
+            }
         }
 
         TEST_CASE("convenience_constructors")
