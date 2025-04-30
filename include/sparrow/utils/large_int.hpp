@@ -84,6 +84,43 @@ namespace sparrow
     using int128_t = primesum::int128_t;
     using int256_t = primesum::int256_t;
 
+    template <typename T>
+    T stobigint(std::string_view str)
+    {
+        if (str.empty())
+        {
+            return 0;
+        }
+        T digits = 0;
+        bool negative = false;
+        for (auto it = str.begin(); it != str.end(); ++it)
+        {
+            if (*it == '-')
+            {
+                if (it == str.begin())
+                {
+                    negative = true;
+                    continue;
+                }
+                else
+                {
+                    throw std::invalid_argument("Invalid character in string for conversion to large integer");
+                }
+            }
+            else if (*it < '0' || *it > '9')
+            {
+                throw std::invalid_argument("Invalid character in string for conversion to large integer");
+            }
+            digits *= 10;
+            digits += T(*it - '0');
+        }
+        if (negative)
+        {
+            digits *= -1;
+        }
+        return digits;
+    }
+
 #endif
 }  // namespace sparrow
 
