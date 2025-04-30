@@ -60,6 +60,30 @@ namespace sparrow
             CHECK_EQ(str, "int256_t(123456789, 100000000, 200000000, 300000000)");
         }
 #    endif
-    }
+
+#    ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+        TEST_CASE("stobigint")
+        {
+            SUBCASE("int128_t")
+            {
+                int128_t expected = -123456789;
+                expected *= 10000000000000;
+                const auto converted = sparrow::stobigint<int128_t>("-1234567890000000000000");
+                CHECK_EQ(expected, converted);
+            }
+
+            SUBCASE("int256_t")
+            {
+                int256_t expected = -123456789;
+                expected *= 1000000000000000000;
+                expected *= 1000000000000000000;
+                const auto converted = sparrow::stobigint<int256_t>(
+                    "-123456789000000000000000000000000000000000000"
+                );
+                CHECK_EQ(expected, converted);
+            }
+#    endif
+        }
 #endif
+    }
 }
