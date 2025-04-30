@@ -39,8 +39,7 @@ namespace sparrow::c_data_integration
         }
         else
         {
-            return sparrow::array{sparrow::primitive_array<T>{std::move(data), false, name, std::move(metadata)}
-            };
+            return sparrow::array{sparrow::primitive_array<T>{std::move(data), false, name, std::move(metadata)}};
         }
     }
 
