@@ -1,0 +1,559 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "sparse_1",
+        "type": {
+          "name": "union",
+          "mode": "SPARSE",
+          "typeIds": [
+            5,
+            7
+          ]
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "f1",
+            "type": {
+              "name": "int",
+              "isSigned": true,
+              "bitWidth": 32
+            },
+            "nullable": true,
+            "children": []
+          },
+          {
+            "name": "f2",
+            "type": {
+              "name": "utf8"
+            },
+            "nullable": true,
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "dense_1",
+        "type": {
+          "name": "union",
+          "mode": "DENSE",
+          "typeIds": [
+            10,
+            20
+          ]
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "f1",
+            "type": {
+              "name": "int",
+              "isSigned": true,
+              "bitWidth": 16
+            },
+            "nullable": true,
+            "children": []
+          },
+          {
+            "name": "f2",
+            "type": {
+              "name": "binary"
+            },
+            "nullable": true,
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "sparse_2",
+        "type": {
+          "name": "union",
+          "mode": "SPARSE",
+          "typeIds": [
+            5,
+            7
+          ]
+        },
+        "nullable": false,
+        "children": [
+          {
+            "name": "f1",
+            "type": {
+              "name": "floatingpoint",
+              "precision": "SINGLE"
+            },
+            "nullable": false,
+            "children": []
+          },
+          {
+            "name": "f2",
+            "type": {
+              "name": "bool"
+            },
+            "nullable": true,
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "dense_2",
+        "type": {
+          "name": "union",
+          "mode": "DENSE",
+          "typeIds": [
+            42,
+            43,
+            44
+          ]
+        },
+        "nullable": false,
+        "children": [
+          {
+            "name": "f1",
+            "type": {
+              "name": "int",
+              "isSigned": false,
+              "bitWidth": 8
+            },
+            "nullable": false,
+            "children": []
+          },
+          {
+            "name": "f2",
+            "type": {
+              "name": "int",
+              "isSigned": false,
+              "bitWidth": 16
+            },
+            "nullable": true,
+            "children": []
+          },
+          {
+            "name": "f3",
+            "type": {
+              "name": "null"
+            },
+            "nullable": true,
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "batches": [
+    {
+      "count": 0,
+      "columns": [
+        {
+          "name": "sparse_1",
+          "count": 0,
+          "TYPE_ID": [],
+          "children": [
+            {
+              "name": "f1",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            },
+            {
+              "name": "f2",
+              "count": 0,
+              "VALIDITY": [],
+              "OFFSET": [
+                0
+              ],
+              "DATA": []
+            }
+          ]
+        },
+        {
+          "name": "dense_1",
+          "count": 0,
+          "TYPE_ID": [],
+          "OFFSET": [],
+          "children": [
+            {
+              "name": "f1",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            },
+            {
+              "name": "f2",
+              "count": 0,
+              "VALIDITY": [],
+              "OFFSET": [
+                0
+              ],
+              "DATA": []
+            }
+          ]
+        },
+        {
+          "name": "sparse_2",
+          "count": 0,
+          "TYPE_ID": [],
+          "children": [
+            {
+              "name": "f1",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            },
+            {
+              "name": "f2",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            }
+          ]
+        },
+        {
+          "name": "dense_2",
+          "count": 0,
+          "TYPE_ID": [],
+          "OFFSET": [],
+          "children": [
+            {
+              "name": "f1",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            },
+            {
+              "name": "f2",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            },
+            {
+              "name": "f3",
+              "count": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "count": 11,
+      "columns": [
+        {
+          "name": "sparse_1",
+          "count": 11,
+          "TYPE_ID": [
+            7,
+            7,
+            7,
+            5,
+            5,
+            5,
+            5,
+            7,
+            5,
+            7,
+            7
+          ],
+          "children": [
+            {
+              "name": "f1",
+              "count": 11,
+              "VALIDITY": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                0,
+                1
+              ],
+              "DATA": [
+                -2147483648,
+                2147483647,
+                2107121699,
+                -275033202,
+                -1918279347,
+                1761013925,
+                298353646,
+                2131131509,
+                1376609902,
+                -1229132584,
+                -1622360175
+              ]
+            },
+            {
+              "name": "f2",
+              "count": 11,
+              "VALIDITY": [
+                0,
+                0,
+                1,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "OFFSET": [
+                0,
+                0,
+                0,
+                7,
+                7,
+                7,
+                17,
+                17,
+                17,
+                17,
+                25,
+                25
+              ],
+              "DATA": [
+                "",
+                "",
+                "bljbko4",
+                "",
+                "",
+                "f5bc\u77e2o\u00c2",
+                "",
+                "",
+                "",
+                "422bp\u00b54",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "name": "dense_1",
+          "count": 11,
+          "TYPE_ID": [
+            20,
+            20,
+            20,
+            20,
+            10,
+            10,
+            20,
+            20,
+            10,
+            10,
+            10
+          ],
+          "OFFSET": [
+            0,
+            1,
+            2,
+            3,
+            0,
+            1,
+            4,
+            5,
+            2,
+            3,
+            4
+          ],
+          "children": [
+            {
+              "name": "f1",
+              "count": 5,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                0
+              ],
+              "DATA": [
+                -32768,
+                32767,
+                24355,
+                -27341,
+                32578
+              ]
+            },
+            {
+              "name": "f2",
+              "count": 6,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                0,
+                1,
+                0
+              ],
+              "OFFSET": [
+                0,
+                1,
+                6,
+                7,
+                7,
+                8,
+                8
+              ],
+              "DATA": [
+                "B5",
+                "C5F047C5B7",
+                "BF",
+                "",
+                "5D",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "name": "sparse_2",
+          "count": 11,
+          "TYPE_ID": [
+            5,
+            7,
+            7,
+            7,
+            5,
+            7,
+            5,
+            7,
+            5,
+            7,
+            7
+          ],
+          "children": [
+            {
+              "name": "f1",
+              "count": 11,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "DATA": [
+                1875.668,
+                -3309.894,
+                103.518,
+                1197.854,
+                517.397,
+                -1337.623,
+                867.075,
+                -388.777,
+                -1337.564,
+                702.365,
+                887.382
+              ]
+            },
+            {
+              "name": "f2",
+              "count": 11,
+              "VALIDITY": [
+                0,
+                1,
+                0,
+                1,
+                1,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1
+              ],
+              "DATA": [
+                false,
+                false,
+                false,
+                true,
+                true,
+                false,
+                false,
+                true,
+                false,
+                true,
+                true
+              ]
+            }
+          ]
+        },
+        {
+          "name": "dense_2",
+          "count": 11,
+          "TYPE_ID": [
+            42,
+            44,
+            42,
+            43,
+            43,
+            43,
+            44,
+            42,
+            44,
+            44,
+            44
+          ],
+          "OFFSET": [
+            0,
+            0,
+            1,
+            0,
+            1,
+            2,
+            1,
+            2,
+            2,
+            3,
+            4
+          ],
+          "children": [
+            {
+              "name": "f1",
+              "count": 3,
+              "VALIDITY": [
+                1,
+                1,
+                1
+              ],
+              "DATA": [
+                0,
+                255,
+                242
+              ]
+            },
+            {
+              "name": "f2",
+              "count": 3,
+              "VALIDITY": [
+                0,
+                1,
+                0
+              ],
+              "DATA": [
+                0,
+                65535,
+                53135
+              ]
+            },
+            {
+              "name": "f3",
+              "count": 5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

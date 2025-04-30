@@ -1,0 +1,120 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "map_other_names",
+        "type": {
+          "name": "map",
+          "keysSorted": false
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "some_entries",
+            "type": {
+              "name": "struct"
+            },
+            "nullable": false,
+            "children": [
+              {
+                "name": "some_key",
+                "type": {
+                  "name": "utf8"
+                },
+                "nullable": false,
+                "children": []
+              },
+              {
+                "name": "some_value",
+                "type": {
+                  "name": "int",
+                  "isSigned": true,
+                  "bitWidth": 32
+                },
+                "nullable": true,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "batches": [
+    {
+      "count": 7,
+      "columns": [
+        {
+          "name": "map_other_names",
+          "count": 7,
+          "VALIDITY": [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "OFFSET": [
+            0,
+            0,
+            2,
+            2,
+            2,
+            2,
+            2,
+            3
+          ],
+          "children": [
+            {
+              "name": "some_entries",
+              "count": 3,
+              "VALIDITY": [
+                1,
+                1,
+                1
+              ],
+              "children": [
+                {
+                  "name": "some_key",
+                  "count": 3,
+                  "VALIDITY": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "OFFSET": [
+                    0,
+                    7,
+                    18,
+                    25
+                  ],
+                  "DATA": [
+                    "efg5b61",
+                    "re3ca\u77e2\u20ac",
+                    "mriiwlg"
+                  ]
+                },
+                {
+                  "name": "some_value",
+                  "count": 3,
+                  "VALIDITY": [
+                    1,
+                    1,
+                    0
+                  ],
+                  "DATA": [
+                    -2147483648,
+                    2147483647,
+                    973160350
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -209,6 +209,43 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        template <
+            std::ranges::input_range KEY_RANGE,
+            validity_bitmap_input R = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires(
+                !std::same_as<KEY_RANGE, keys_buffer_type>
+                and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>
+            )
+        [[nodiscard]] static arrow_proxy create_proxy(
+            KEY_RANGE&& keys,
+            array&& values,
+            R&& bitmaps = validity_bitmap{},
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        )
+        {
+            keys_buffer_type keys_buffer(std::forward<KEY_RANGE>(keys));
+            return create_proxy(
+                std::move(keys_buffer),
+                std::forward<array>(values),
+                std::forward<R>(bitmaps),
+                std::move(name),
+                std::move(metadata)
+            );
+        }
+
+        // range of nullable values
+        template <
+            std::ranges::input_range NULLABLE_KEY_RANGE,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires std::is_same_v<std::ranges::range_value_t<NULLABLE_KEY_RANGE>, nullable<IT>>
+        static arrow_proxy create_proxy(
+            NULLABLE_KEY_RANGE&&,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        );
+
         using keys_layout = primitive_array<IT>;
         using values_layout = cloning_ptr<array_wrapper>;
 
@@ -378,6 +415,19 @@ namespace sparrow
             true                                     // dictionary ownership
         );
         return arrow_proxy(std::move(arr), std::move(schema));
+    }
+
+    template <std::integral IT>
+    template <std::ranges::input_range NULLABLE_KEY_RANGE, input_metadata_container METADATA_RANGE>
+        requires std::is_same_v<std::ranges::range_value_t<NULLABLE_KEY_RANGE>, nullable<IT>>
+    arrow_proxy dictionary_encoded_array<IT>::create_proxy(
+        NULLABLE_KEY_RANGE&& nullable_keys,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
+    {
+        auto [keys, is_non_null] = extract_keys_and_validity(std::forward<NULLABLE_KEY_RANGE>(nullable_keys));
+        return create_proxy(std::move(keys), std::move(is_non_null), std::move(name), std::move(metadata));
     }
 
     template <std::integral IT>

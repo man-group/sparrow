@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <array>
 #include <concepts>
 #include <cstdint>
 #include <memory>

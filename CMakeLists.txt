@@ -370,6 +370,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(sparrow
         PUBLIC
         -Wno-c99-extensions)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    target_compile_options(sparrow
+        PUBLIC
+            /bigobj
+    )
 endif()
 
 if(BUILD_TESTS)
