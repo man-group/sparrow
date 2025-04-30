@@ -213,10 +213,7 @@ namespace sparrow
             std::ranges::input_range KEY_RANGE,
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(
-                !std::same_as<KEY_RANGE, keys_buffer_type>
-                and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>
-            )
+            requires(!std::same_as<KEY_RANGE, keys_buffer_type> and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>)
         [[nodiscard]] static arrow_proxy create_proxy(
             KEY_RANGE&& keys,
             array&& values,
@@ -241,7 +238,8 @@ namespace sparrow
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::is_same_v<std::ranges::range_value_t<NULLABLE_KEY_RANGE>, nullable<IT>>
         static arrow_proxy create_proxy(
-            NULLABLE_KEY_RANGE&&,
+            NULLABLE_KEY_RANGE&& nullable_keys,
+            array&& values,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -401,8 +399,6 @@ namespace sparrow
         buffers[0] = validity.has_value() ? std::move(*validity).extract_storage()
                                           : buffer<uint8_t>{nullptr, 0};
         buffers[1] = std::move(keys).extract_storage();
-
-
         // create arrow array
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),        // length
@@ -422,12 +418,32 @@ namespace sparrow
         requires std::is_same_v<std::ranges::range_value_t<NULLABLE_KEY_RANGE>, nullable<IT>>
     arrow_proxy dictionary_encoded_array<IT>::create_proxy(
         NULLABLE_KEY_RANGE&& nullable_keys,
+        array&& values,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
     {
-        auto [keys, is_non_null] = extract_keys_and_validity(std::forward<NULLABLE_KEY_RANGE>(nullable_keys));
-        return create_proxy(std::move(keys), std::move(is_non_null), std::move(name), std::move(metadata));
+        auto keys = nullable_keys
+                    | std::views::transform(
+                        [](const auto& v)
+                        {
+                            return v.get();
+                        }
+                    );
+        auto is_non_null = nullable_keys
+                           | std::views::transform(
+                               [](const auto& v)
+                               {
+                                   return v.has_value();
+                               }
+                           );
+        return create_proxy(
+            std::move(keys),
+            std::forward<array>(values),
+            std::move(is_non_null),
+            std::move(name),
+            std::move(metadata)
+        );
     }
 
     template <std::integral IT>
