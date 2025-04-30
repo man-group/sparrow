@@ -60,8 +60,9 @@ namespace sparrow
             CHECK_EQ(str, "int256_t(123456789, 100000000, 200000000, 300000000)");
         }
 #    endif
+#endif
 
-#    ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+#ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
         TEST_CASE("stobigint")
         {
             SUBCASE("int128_t")
@@ -82,7 +83,6 @@ namespace sparrow
                 );
                 CHECK_EQ(expected, converted);
             }
-#    endif
         }
 #endif
     }
