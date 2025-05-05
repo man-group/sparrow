@@ -20,6 +20,7 @@
 #include "sparrow/layout/temporal/date_types.hpp"
 #include "sparrow/layout/temporal/interval_types.hpp"
 #include "sparrow/layout/temporal/time_types.hpp"
+#include "sparrow/layout/temporal/timestamp_without_timezone_types.hpp"
 
 #if defined(SPARROW_USE_DATE_POLYFILL)
 
@@ -645,6 +646,10 @@ namespace sparrow
         timestamp<std::chrono::milliseconds>,
         timestamp<std::chrono::microseconds>,
         timestamp<std::chrono::nanoseconds>,
+        zoned_time_without_timezone_seconds,
+        zoned_time_without_timezone_milliseconds,
+        zoned_time_without_timezone_microseconds,
+        zoned_time_without_timezone_nanoseconds,
         std::chrono::seconds,
         std::chrono::milliseconds,
         std::chrono::microseconds,
