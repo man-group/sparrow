@@ -28,6 +28,7 @@
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
+#include "sparrow/utils/temporal.hpp"
 
 // tts : timestamp<std::chrono::seconds>
 // tsm : timestamp<std::chrono::milliseconds>
