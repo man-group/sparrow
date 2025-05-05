@@ -233,6 +233,8 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_concepts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_reference.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_without_timezone_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_without_timezone_types.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_reference.hpp
@@ -254,6 +256,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/offsets.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/pair.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/reference_wrapper_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/temporal.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
 
     # ../
@@ -289,6 +292,7 @@ else()
         ${SPARROW_SOURCE_DIR}/record_batch.cpp
         ${SPARROW_SOURCE_DIR}/types/data_type.cpp
         ${SPARROW_SOURCE_DIR}/utils/metadata.cpp
+        ${SPARROW_SOURCE_DIR}/utils/temporal.cpp
     )
 endif()
 

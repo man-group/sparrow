@@ -20,6 +20,7 @@
 #include "sparrow/layout/temporal/date_array.hpp"
 #include "sparrow/layout/temporal/interval_types.hpp"
 #include "sparrow/layout/temporal/time_types.hpp"
+#include "sparrow/layout/temporal/timestamp_without_timezone_types.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/vector_view.hpp"
@@ -188,6 +189,34 @@ namespace sparrow
         static constexpr data_type type_id = data_type::TIMESTAMP_NANOSECONDS;
         using value_type = timestamp<std::chrono::nanoseconds>;
         using const_reference = timestamp<std::chrono::nanoseconds>;
+    };
+
+    template <>
+    struct arrow_traits<zoned_time_without_timezone_seconds>
+        : common_native_types_traits<zoned_time_without_timezone_seconds>
+    {
+        static constexpr data_type type_id = data_type::TIMESTAMP_SECONDS;
+    };
+
+    template <>
+    struct arrow_traits<zoned_time_without_timezone_milliseconds>
+        : common_native_types_traits<zoned_time_without_timezone_milliseconds>
+    {
+        static constexpr data_type type_id = data_type::TIMESTAMP_MILLISECONDS;
+    };
+
+    template <>
+    struct arrow_traits<zoned_time_without_timezone_microseconds>
+        : common_native_types_traits<zoned_time_without_timezone_microseconds>
+    {
+        static constexpr data_type type_id = data_type::TIMESTAMP_MICROSECONDS;
+    };
+
+    template <>
+    struct arrow_traits<zoned_time_without_timezone_nanoseconds>
+        : common_native_types_traits<zoned_time_without_timezone_nanoseconds>
+    {
+        static constexpr data_type type_id = data_type::TIMESTAMP_NANOSECONDS;
     };
 
     template <>

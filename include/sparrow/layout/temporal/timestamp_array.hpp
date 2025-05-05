@@ -311,7 +311,6 @@ namespace sparrow
         void assign(const T& rhs, size_type index);
         void assign(T&& rhs, size_type index);
 
-        [[nodiscard]] static const date::time_zone* get_timezone(const arrow_proxy& proxy);
 
         const date::time_zone* m_timezone;
         details::primitive_data_access<inner_value_type_duration> m_data_access;
@@ -357,13 +356,6 @@ namespace sparrow
         m_timezone = rhs.m_timezone;
         m_data_access.reset_proxy(this->get_arrow_proxy());
         return *this;
-    }
-
-    template <timestamp_type T>
-    const date::time_zone* timestamp_array<T>::get_timezone(const arrow_proxy& proxy)
-    {
-        const std::string_view timezone_string = proxy.format().substr(4);
-        return date::locate_zone(timezone_string);
     }
 
     template <timestamp_type T>
