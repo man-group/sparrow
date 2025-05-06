@@ -74,6 +74,21 @@ namespace sparrow
                 CHECK_EQ(ar.size(), 4);
             }
 
+            SUBCASE("empty range")
+            {
+                const fixed_width_binary_array ar(std::vector<std::array<byte_t, 3>>{});
+            }
+
+            SUBCASE("range with empty values")
+            {
+                constexpr std::array<byte_t, 0> empty_value;
+                const fixed_width_binary_array ar(
+                    std::vector<std::array<byte_t, 0>>{empty_value, empty_value, empty_value}
+                );
+                CHECK_EQ(ar.size(), 3);
+                CHECK(std::ranges::equal(ar[0].get(), empty_value));
+            }
+
             SUBCASE("values range and nullable")
             {
                 SUBCASE("nullable == true")

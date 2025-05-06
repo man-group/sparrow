@@ -328,8 +328,15 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        SPARROW_ASSERT_TRUE((data_buffer.size() % element_size) == 0);
-        const size_t element_count = data_buffer.size() / element_size;
+        if (element_size == 0)
+        {
+            SPARROW_ASSERT_TRUE(data_buffer.size() == 0);
+        }
+        else
+        {
+            SPARROW_ASSERT_TRUE(data_buffer.size() % element_size == 0);
+        }
+        const size_t element_count = element_size == 0 ? 0 : data_buffer.size() / element_size;
         validity_bitmap vbitmap = ensure_validity_bitmap(element_count, std::forward<VB>(validity_input));
         const auto null_count = vbitmap.null_count();
 
@@ -383,9 +390,8 @@ namespace sparrow
         using values_type = std::ranges::range_value_t<R>;
         using values_inner_value_type = std::ranges::range_value_t<values_type>;
 
-        SPARROW_ASSERT_TRUE(!std::ranges::empty(values));
         SPARROW_ASSERT_TRUE(all_same_size(values));
-        const size_t element_size = std::ranges::size(*values.begin());
+        const size_t element_size = std::ranges::empty(values) ? 0 : std::ranges::size(*values.begin());
 
         auto data_buffer = u8_buffer<values_inner_value_type>(std::ranges::views::join(values));
         return create_proxy(
@@ -420,10 +426,8 @@ namespace sparrow
             using values_type = std::ranges::range_value_t<R>;
             using values_inner_value_type = std::ranges::range_value_t<values_type>;
 
-            SPARROW_ASSERT_TRUE(!std::ranges::empty(values));
             SPARROW_ASSERT_TRUE(all_same_size(values));
-            const size_t element_size = std::ranges::size(*values.begin());
-
+            const size_t element_size = std::ranges::empty(values) ? 0 : std::ranges::size(*values.begin());
             std::string format_str = "w:" + std::to_string(element_size);
 
             ArrowSchema schema = make_arrow_schema(
@@ -438,7 +442,7 @@ namespace sparrow
 
             );
             auto data_buffer = u8_buffer<values_inner_value_type>(std::ranges::views::join(values));
-            const size_t element_count = data_buffer.size() / element_size;
+            const size_t element_count = data_buffer.empty() ? 0 : data_buffer.size() / element_size;
             std::vector<buffer<std::uint8_t>> arr_buffs = {
                 buffer<std::uint8_t>{nullptr, 0},  // validity bitmap
                 std::move(data_buffer).extract_storage()
@@ -498,8 +502,15 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        SPARROW_ASSERT_TRUE((data_buffer.size() % element_size) == 0);
-        const size_t element_count = data_buffer.size() / element_size;
+        if (element_size == 0)
+        {
+            SPARROW_ASSERT_TRUE(data_buffer.size() == 0);
+        }
+        else
+        {
+            SPARROW_ASSERT_TRUE(data_buffer.size() % element_size == 0);
+        }
+        const size_t element_count = element_size == 0 ? 0 : data_buffer.size() / element_size;
         const auto null_count = bitmap.has_value() ? bitmap->null_count() : 0;
         std::string format_str = "w:" + std::to_string(element_size);
         const std::optional<std::unordered_set<ArrowFlag>>
