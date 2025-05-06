@@ -29,11 +29,13 @@ add_library(c_data_integration SHARED
     src/comparison.cpp
     src/json_parser.cpp
     src/primitive_parser.cpp
+    src/utils.cpp
     include/sparrow/c_data_integration/c_data_integration.hpp
     include/sparrow/c_data_integration/comparison.hpp
     include/sparrow/c_data_integration/config.hpp
     include/sparrow/c_data_integration/constant.hpp
     include/sparrow/c_data_integration/primitive_parser.hpp
+    include/sparrow/c_data_integration/utils.hpp
     )
 
 target_compile_options(c_data_integration
