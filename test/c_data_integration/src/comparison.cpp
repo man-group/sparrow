@@ -53,165 +53,162 @@ namespace sparrow::c_data_integration
                     );
                 }
             }
-            if (schema->flags != schema_from_json->flags)
+        }
+        if (schema->flags != schema_from_json->flags)
+        {
+            differences.push_back(
+                prefix + " flags mismatch: " + std::to_string(schema->flags) + " vs "
+                + std::to_string(schema_from_json->flags)
+            );
+        }
+        if (schema->n_children != schema_from_json->n_children)
+        {
+            differences.push_back(
+                prefix + " children count mismatch: " + std::to_string(schema->n_children) + " vs "
+                + std::to_string(schema_from_json->n_children)
+            );
+        }
+        else
+        {
+            for (int64_t i = 0; i < schema->n_children; ++i)
             {
-                differences.push_back(
-                    prefix + " flags mismatch: " + std::to_string(schema->flags) + " vs "
-                    + std::to_string(schema_from_json->flags)
-                );
-            }
-            if (schema->n_children != schema_from_json->n_children)
-            {
-                differences.push_back(
-                    prefix + " children count mismatch: " + std::to_string(schema->n_children) + " vs "
-                    + std::to_string(schema_from_json->n_children)
-                );
-            }
-            else
-            {
-                for (int64_t i = 0; i < schema->n_children; ++i)
-                {
-                    const auto child_schema = schema->children[i];
-                    const auto child_schema_from_json = schema_from_json->children[i];
-                    const auto child_prefix = prefix + " child [" + std::to_string(i) + "]";
-                    const auto error = compare_schemas(child_prefix, child_schema, child_schema_from_json);
-                    if (error.has_value())
-                    {
-                        differences.push_back(*error);
-                    }
-                }
-            }
-            const bool schema_from_json_has_dict = schema_from_json->dictionary != nullptr;
-            const bool schema_has_dict = schema->dictionary != nullptr;
-            if (schema_from_json_has_dict != schema_has_dict)
-            {
-                differences.push_back(
-                    prefix + " dictionary mismatch: " + std::to_string(schema_from_json_has_dict) + " vs "
-                    + std::to_string(schema_has_dict)
-                );
-            }
-            if (schema_from_json_has_dict && schema_has_dict)
-            {
-                const auto dict_schema = schema->dictionary;
-                const auto dict_schema_from_json = schema_from_json->dictionary;
-                const auto error = compare_schemas(prefix + " dictionary", dict_schema, dict_schema_from_json);
+                const auto child_schema = schema->children[i];
+                const auto child_schema_from_json = schema_from_json->children[i];
+                const auto child_prefix = prefix + " child [" + std::to_string(i) + "]";
+                const auto error = compare_schemas(child_prefix, child_schema, child_schema_from_json);
                 if (error.has_value())
                 {
                     differences.push_back(*error);
                 }
             }
-
-            if (!differences.empty())
+        }
+        const bool schema_from_json_has_dict = schema_from_json->dictionary != nullptr;
+        const bool schema_has_dict = schema->dictionary != nullptr;
+        if (schema_from_json_has_dict != schema_has_dict)
+        {
+            differences.push_back(
+                prefix + " dictionary mismatch: " + std::to_string(schema_from_json_has_dict) + " vs "
+                + std::to_string(schema_has_dict)
+            );
+        }
+        if (schema_from_json_has_dict && schema_has_dict)
+        {
+            const auto dict_schema = schema->dictionary;
+            const auto dict_schema_from_json = schema_from_json->dictionary;
+            const auto error = compare_schemas(prefix + " dictionary", dict_schema, dict_schema_from_json);
+            if (error.has_value())
             {
-                std::string result = prefix + " differences:\n";
-                for (const auto& diff : differences)
-                {
-                    result += "- " + diff + "\n";
-                }
-                return result;
+                differences.push_back(*error);
             }
-            return std::nullopt;
         }
 
-        std::optional<std::string> compare_arrays(
-            const std::string& prefix,
-            ArrowArray* array,
-            ArrowArray* array_from_json,
-            ArrowSchema* schema_from_json
-        )
+        if (!differences.empty())
         {
-            if (array == nullptr || array_from_json == nullptr)
+            std::string result = prefix + " differences:\n";
+            for (const auto& diff : differences)
             {
-                return prefix + " is null";
+                result += "- " + diff + "\n";
             }
-            std::vector<std::string> differences;
-            if (array->length != array_from_json->length)
-            {
-                differences.push_back(
-                    prefix + " length mismatch: " + std::to_string(array->length) + " vs "
-                    + std::to_string(array_from_json->length)
-                );
-            }
-            if (array->null_count != array_from_json->null_count)
-            {
-                differences.push_back(
-                    prefix + " null count mismatch: " + std::to_string(array->null_count) + " vs "
-                    + std::to_string(array_from_json->null_count)
-                );
-            }
-            if (array->n_buffers != array_from_json->n_buffers)
-            {
-                differences.push_back(
-                    prefix + " buffers count mismatch: " + std::to_string(array->n_buffers) + " vs "
-                    + std::to_string(array_from_json->n_buffers)
-                );
-            }
-            else
-            {
-                sparrow::arrow_proxy from_json{array_from_json, schema_from_json};
-                sparrow::arrow_proxy from{array, schema_from_json};
-                for (size_t i = 0; i < static_cast<size_t>(from_json.n_buffers()); ++i)
-                {
-                    const size_t from_json_buffer_size = from_json.buffers()[i].size();
-                    const size_t from_buffer_size = from.buffers()[i].size();
+            return result;
+        }
+        return std::nullopt;
+    }
 
-                    if (from_json_buffer_size != from_buffer_size)
+    std::optional<std::string>
+    compare_arrays(const std::string& prefix, ArrowArray* array, ArrowArray* array_from_json, ArrowSchema* schema_from_json)
+    {
+        if (array == nullptr || array_from_json == nullptr)
+        {
+            return prefix + " is null";
+        }
+        std::vector<std::string> differences;
+        if (array->length != array_from_json->length)
+        {
+            differences.push_back(
+                prefix + " length mismatch: " + std::to_string(array->length) + " vs "
+                + std::to_string(array_from_json->length)
+            );
+        }
+        if (array->null_count != array_from_json->null_count)
+        {
+            differences.push_back(
+                prefix + " null count mismatch: " + std::to_string(array->null_count) + " vs "
+                + std::to_string(array_from_json->null_count)
+            );
+        }
+        if (array->n_buffers != array_from_json->n_buffers)
+        {
+            differences.push_back(
+                prefix + " buffers count mismatch: " + std::to_string(array->n_buffers) + " vs "
+                + std::to_string(array_from_json->n_buffers)
+            );
+        }
+        else
+        {
+            sparrow::arrow_proxy from_json{array_from_json, schema_from_json};
+            sparrow::arrow_proxy from{array, schema_from_json};
+            for (size_t i = 0; i < static_cast<size_t>(from_json.n_buffers()); ++i)
+            {
+                const size_t from_json_buffer_size = from_json.buffers()[i].size();
+                const size_t from_buffer_size = from.buffers()[i].size();
+
+                if (from_json_buffer_size != from_buffer_size)
+                {
+                    differences.push_back(
+                        prefix + " buffer [" + std::to_string(i) + "] size mismatch: "
+                        + std::to_string(from_json_buffer_size) + " vs " + std::to_string(from_buffer_size)
+                    );
+                    continue;
+                }
+                for (size_t y = 0; y < from_json_buffer_size; ++y)
+                {
+                    if (from_json.buffers()[i][y] != from.buffers()[i][y])
                     {
                         differences.push_back(
-                            prefix + " buffer [" + std::to_string(i) + "] size mismatch: "
-                            + std::to_string(from_json_buffer_size) + " vs " + std::to_string(from_buffer_size)
+                            prefix + " buffer [" + std::to_string(i) + "] mismatch [" + std::to_string(y)
+                            + "]:" + std::to_string(from_json.buffers()[i][y]) + " vs "
+                            + std::to_string(from.buffers()[i][y])
                         );
-                        continue;
-                    }
-                    for (size_t y = 0; y < from_json_buffer_size; ++y)
-                    {
-                        if (from_json.buffers()[i][y] != from.buffers()[i][y])
-                        {
-                            differences.push_back(
-                                prefix + " buffer [" + std::to_string(i) + "] mismatch [" + std::to_string(y)
-                                + "]:" + std::to_string(from_json.buffers()[i][y]) + " vs "
-                                + std::to_string(from.buffers()[i][y])
-                            );
-                        }
                     }
                 }
             }
-            if (array->n_children != array_from_json->n_children)
-            {
-                differences.push_back(
-                    prefix + " children count mismatch: " + std::to_string(array->n_children) + " vs "
-                    + std::to_string(array_from_json->n_children)
-                );
-            }
-            else
-            {
-                for (int64_t i = 0; i < array->n_children; ++i)
-                {
-                    const auto child_array = array->children[i];
-                    const auto child_array_from_json = array_from_json->children[i];
-                    const auto child_prefix = prefix + " child [" + std::to_string(i) + "]";
-                    const auto error = compare_arrays(
-                        child_prefix,
-                        child_array,
-                        child_array_from_json,
-                        schema_from_json->children[i]
-                    );
-                    if (error.has_value())
-                    {
-                        differences.push_back(*error);
-                    }
-                }
-            }
-
-            if (!differences.empty())
-            {
-                std::string result = prefix + " differences:\n";
-                for (const auto& diff : differences)
-                {
-                    result += "- " + diff + "\n";
-                }
-                return result;
-            }
-            return std::nullopt;
         }
+        if (array->n_children != array_from_json->n_children)
+        {
+            differences.push_back(
+                prefix + " children count mismatch: " + std::to_string(array->n_children) + " vs "
+                + std::to_string(array_from_json->n_children)
+            );
+        }
+        else
+        {
+            for (int64_t i = 0; i < array->n_children; ++i)
+            {
+                const auto child_array = array->children[i];
+                const auto child_array_from_json = array_from_json->children[i];
+                const auto child_prefix = prefix + " child [" + std::to_string(i) + "]";
+                const auto error = compare_arrays(
+                    child_prefix,
+                    child_array,
+                    child_array_from_json,
+                    schema_from_json->children[i]
+                );
+                if (error.has_value())
+                {
+                    differences.push_back(*error);
+                }
+            }
+        }
+
+        if (!differences.empty())
+        {
+            std::string result = prefix + " differences:\n";
+            for (const auto& diff : differences)
+            {
+                result += "- " + diff + "\n";
+            }
+            return result;
+        }
+        return std::nullopt;
     }
+}
