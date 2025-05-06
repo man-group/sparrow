@@ -717,7 +717,12 @@ namespace sparrow
                     byte_t{8},
                     byte_t{9}
                 };
-                const fixed_width_binary_array arr{std::move(buffer), size_t(3), std::vector<std::size_t>{1}};
+                const fixed_width_binary_array arr{
+                    std::move(buffer),
+                    size_t(3),
+                    size_t(3),
+                    std::vector<std::size_t>{1}
+                };
                 REQUIRE_EQ(arr.size(), 3);
                 CHECK(arr[0].has_value());
                 CHECK(std::ranges::equal(arr[0].get(), std::array{byte_t{1}, byte_t{2}, byte_t{3}}));
