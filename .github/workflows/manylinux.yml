@@ -1,0 +1,84 @@
+name: manylinux2014
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.job }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash -e -l {0}
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    container: quay.io/pypa/manylinux2014_x86_64
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+    name: manylinux2014 / GCC / 11.2 / ${{ matrix.config }}
+
+    steps:
+
+    - name: Upgrade compiler and git
+      run: yum -y install devtoolset-11-gcc devtoolset-11-gcc-c++ git
+
+    - name: Checkout sparrow
+      run: |
+        git clone ${{ github.event.pull_request.head.repo.clone_url }}
+        cd sparrow
+        git checkout ${{ github.head_ref }}
+
+    - name: Setup conda environment
+      run: |
+        "${SHELL}" <(curl -L micro.mamba.pm/install.sh)
+        sed -n '/# >>> mamba initialize >>>/,/# <<< mamba initialiaze <<</p' /github/home/.bashrc >> /github/home/.bash_profile
+
+    - name: Create environment
+      run: |
+        micromamba env create -f sparrow/environment-dev.yml -n sparrow
+
+    - name: Configure using CMake
+      working-directory: sparrow
+      run: |
+        micromamba activate sparrow
+        source /opt/rh/devtoolset-11/enable
+        cmake -G Ninja \
+          -Bbuild \
+          -DCMAKE_BUILD_TYPE:STRING=${{ matrix.config }} \
+          -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
+          -DUSE_DATE_POLYFILL=ON \
+          -DBUILD_TESTS=ON \
+          -DBUILD_EXAMPLES=ON \
+          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
+          -DSPARROW_BUILD_SHARED=ON
+
+    - name: Build library
+      working-directory: sparrow/build
+      run: |
+        micromamba activate sparrow
+        source /opt/rh/devtoolset-11/enable
+        cmake --build . --config ${{ matrix.config }} --target sparrow --parallel 8
+
+    - name: Install
+      working-directory: sparrow/build
+      run: |
+        micromamba activate sparrow
+        source /opt/rh/devtoolset-11/enable
+        cmake --install . --config ${{matrix.config}}
+
+    - name: Build tests
+      working-directory: sparrow/build
+      run: |
+        micromamba activate sparrow
+        source /opt/rh/devtoolset-11/enable
+        cmake --build . --config ${{matrix.config}} --target test_sparrow_lib --parallel 8
+
+    - name: Run tests
+      working-directory: sparrow/build
+      run: |
+        micromamba activate sparrow
+        source /opt/rh/devtoolset-11/enable
+        cmake --build . --config ${{matrix.config}} --target run_tests_with_junit_report
