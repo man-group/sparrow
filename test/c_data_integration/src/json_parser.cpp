@@ -18,6 +18,7 @@
 
 #include "sparrow/c_data_integration/constant.hpp"
 #include "sparrow/c_data_integration/primitive_parser.hpp"
+#include "sparrow/c_data_integration/utils.hpp"
 
 namespace sparrow::c_data_integration
 {
