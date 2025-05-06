@@ -405,9 +405,9 @@ namespace sparrow
                                                                                       // data_type::LARGE_STRING
                                                                                       // and
                                                                                       // data_type::LARGE_BINARY
-        SPARROW_ASSERT_TRUE(
-            ((type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>)
-        );
+        SPARROW_ASSERT_TRUE((
+            (type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>
+        ) );
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
