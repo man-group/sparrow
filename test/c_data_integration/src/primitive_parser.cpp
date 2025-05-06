@@ -14,6 +14,8 @@
 
 #include "sparrow/c_data_integration/primitive_parser.hpp"
 
+#include <cstdint>
+
 #include <sparrow/layout/primitive_layout/primitive_array.hpp>
 
 #include "sparrow/c_data_integration/constant.hpp"
@@ -29,7 +31,19 @@ namespace sparrow::c_data_integration
         std::optional<std::vector<sparrow::metadata_pair>>&& metadata
     )
     {
-        auto data = array.at(DATA).get<std::vector<JSON_T>>();
+        auto data = [&array]()
+        {
+            if constexpr (std::is_same_v<T, int64_t> || std::is_same_v<T, uint64_t>)
+            {
+                const auto& json_data_strings = array.at(DATA).get<std::vector<std::string>>();
+                const auto& range = utils::from_strings_to_Is<JSON_T>(json_data_strings);
+                return std::vector<JSON_T>(range.begin(), range.end());
+            }
+            else
+            {
+                return array.at(DATA).get<std::vector<JSON_T>>();
+            }
+        }();
         if (nullable)
         {
             auto validity = utils::get_validity(array);
@@ -39,7 +53,8 @@ namespace sparrow::c_data_integration
         }
         else
         {
-            return sparrow::array{sparrow::primitive_array<T>{std::move(data), false, name, std::move(metadata)}};
+            return sparrow::array{sparrow::primitive_array<T>{std::move(data), false, name, std::move(metadata)}
+            };
         }
     }
 

@@ -19,6 +19,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "sparrow/utils/large_int.hpp"
 #include "sparrow/utils/metadata.hpp"
 
 namespace sparrow::c_data_integration::utils
@@ -33,4 +34,37 @@ namespace sparrow::c_data_integration::utils
     void check_type(const nlohmann::json& schema, const std::string& type);
 
     std::optional<std::vector<sparrow::metadata_pair>> get_metadata(const nlohmann::json& schema);
+
+    template <std::integral I>
+    auto from_strings_to_Is(const std::vector<std::string>& data_str)
+    {
+        return data_str
+               | std::views::transform(
+                   [](const std::string& str)
+                   {
+                       if constexpr (std::is_same_v<I, int64_t>)
+                       {
+                           return static_cast<I>(std::stoll(str));
+                       }
+                       else if constexpr (std::is_same_v<I, uint64_t>)
+                       {
+                           return static_cast<I>(std::stoull(str));
+                       }
+#ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+                       else if constexpr (std::is_same_v<I, sparrow::int128_t>)
+                       {
+                           return sparrow::stobigint<sparrow::int128_t>(str);
+                       }
+                       else if constexpr (std::is_same_v<I, sparrow::int256_t>)
+                       {
+                           return sparrow::stobigint<sparrow::int256_t>(str);
+                       }
+#endif
+                       else
+                       {
+                           throw std::runtime_error("Unsupported type for conversion");
+                       }
+                   }
+               );
+    }
 }
