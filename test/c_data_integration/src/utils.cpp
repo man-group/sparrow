@@ -19,7 +19,6 @@
 
 #include "sparrow/c_data_integration/constant.hpp"
 
-
 namespace sparrow::c_data_integration::utils
 {
     std::vector<std::vector<std::byte>> hexStringsToBytes(const std::vector<std::string>& hexStrings)
