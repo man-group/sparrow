@@ -14,14 +14,12 @@
 
 #pragma once
 
-#include <ranges>
 #include <string>
 #include <vector>
 
 #include <nlohmann/json.hpp>
 
-#include "sparrow/array.hpp"
-#include "sparrow/utils/large_int.hpp"
+#include "sparrow/utils/metadata.hpp"
 
 namespace sparrow::c_data_integration::utils
 {
@@ -33,3 +31,4 @@ namespace sparrow::c_data_integration::utils
     void check_type(const nlohmann::json& schema, const std::string& type);
 
     std::optional<std::vector<sparrow::metadata_pair>> get_metadata(const nlohmann::json& schema);
+}
