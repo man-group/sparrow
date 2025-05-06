@@ -48,6 +48,8 @@ add_library(c_data_integration SHARED
     include/sparrow/c_data_integration/utils.hpp
     )
 
+set_property(TARGET c_data_integration PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 target_compile_options(c_data_integration
     PRIVATE
         ${compile_options}
