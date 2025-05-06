@@ -14,9 +14,11 @@
 
 #include "sparrow/c_data_integration/utils.hpp"
 
+#include <charconv>
 #include <string_view>
 
 #include "sparrow/c_data_integration/constant.hpp"
+
 
 namespace sparrow::c_data_integration::utils
 {

@@ -307,6 +307,10 @@ add_library(sparrow ${SPARROW_LIBRARY_TYPE} ${SPARROW_SRC} ${SPARROW_HEADERS})
 
 target_compile_definitions(sparrow PUBLIC ${SPARROW_COMPILE_DEFINITIONS})
 
+if(SPARROW_BUILD_SHARED)
+    set_property(TARGET sparrow PROPERTY POSITION_INDEPENDENT_CODE ON)
+endif()
+
 if(UNIX)
     # CMake does not compute the version number of so files as libtool
     # does on Linux. Strictly speaking, we should exclude FreeBSD and

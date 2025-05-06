@@ -66,11 +66,11 @@ namespace sparrow::c_data_integration
         const size_t dictionary_id = dictionary.at("id").get<size_t>();
         const auto get_dictionary_array = [&]()
         {
-            for (const auto& dictionary : root.at("dictionaries"))
+            for (const auto& dictionary_element : root.at("dictionaries"))
             {
-                if (dictionary.at("id").get<size_t>() == dictionary_id)
+                if (dictionary_element.at("id").get<size_t>() == dictionary_id)
                 {
-                    return build_array_from_json(dictionary.at("data").at("columns")[0], schema, root, false);
+                    return build_array_from_json(dictionary_element.at("data").at("columns")[0], schema, root, false);
                 }
             }
             throw std::runtime_error("Dictionary not found");
