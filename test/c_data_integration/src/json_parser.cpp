@@ -16,9 +16,13 @@
 
 #include <sparrow/layout/array_access.hpp>
 
+#include "sparrow/c_data_integration/binary_parser.hpp"
 #include "sparrow/c_data_integration/bool_parser.hpp"
 #include "sparrow/c_data_integration/constant.hpp"
+#include "sparrow/c_data_integration/fixedsizebinary_parser.hpp"
 #include "sparrow/c_data_integration/primitive_parser.hpp"
+#include "sparrow/c_data_integration/string_parser.hpp"
+#include "sparrow/c_data_integration/stringview_parser.hpp"
 #include "sparrow/c_data_integration/utils.hpp"
 
 namespace sparrow::c_data_integration
@@ -30,6 +34,11 @@ namespace sparrow::c_data_integration
     const std::unordered_map<std::string, array_builder_function> array_builders{
         {"int", primitive_array_from_json},
         {"floatingpoint", floating_point_from_json},
+        {"utf8", string_array_from_json},
+        {"largeutf8", big_string_array_from_json},
+        {"binary", binary_array_from_json},
+        {"utf8view", string_view_from_json},
+        {"fixedsizebinary", fixedsizebinary_from_json},
         {"bool", bool_array_from_json},
     };
 
