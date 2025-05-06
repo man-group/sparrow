@@ -250,7 +250,6 @@ add_custom_target(run_tests_with_junit_report
 
 set_target_properties(run_tests_with_junit_report PROPERTIES FOLDER "Tests utilities")
 
-
 OPTION(ENABLE_INTEGRATION_TEST "Enable integration tests" ON)
 if(ENABLE_INTEGRATION_TEST)
     add_subdirectory(c_data_integration)
