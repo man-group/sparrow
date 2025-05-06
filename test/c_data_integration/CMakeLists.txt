@@ -1,4 +1,4 @@
-include(compiles_options)
+include(compile_options)
 
 if(NOT FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
     find_package(nlohmann_json ${FIND_PACKAGE_OPTIONS})
@@ -38,7 +38,7 @@ add_library(c_data_integration SHARED
 
 target_compile_options(c_data_integration
     PRIVATE
-        ${compiles_options}
+        ${compile_options}
 )
 
 target_compile_definitions(c_data_integration
