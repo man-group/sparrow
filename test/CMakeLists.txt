@@ -190,11 +190,11 @@ target_link_libraries(${test_target}
 # include(Catch)
 # catch_discover_tests(${test_target_catch2})
 
-include(compiles_options)
+include(compile_options)
 
 target_compile_options(${test_target}
     PRIVATE
-        ${compiles_options}
+        ${compile_options}
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>
         )
 target_link_options(${test_target}
@@ -216,7 +216,7 @@ target_compile_features(${test_target} PRIVATE cxx_std_20)
 
 # target_compile_options(${test_target_catch2}
 #     PRIVATE
-#         ${compiles_options}
+#         ${compile_options}
 #         $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>
 #         )
 # target_link_options(${test_target_catch2}
