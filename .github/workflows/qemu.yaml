@@ -106,6 +106,12 @@ jobs:
         run: cmake --build build --config ${{matrix.config.name}} --target run_tests_with_junit_report
         shell: alpine.sh {0}
 
+      - name: Running sparrow tests
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
+        run: cmake --build build --config ${{matrix.config.name}} --target run_c_data_integration_with_junit_report
+        shell: alpine.sh {0}
+
       - name: CCache stat
         env:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
