@@ -16,6 +16,7 @@
 
 #include <sparrow/layout/array_access.hpp>
 
+#include "sparrow/c_data_integration/bool_parser.hpp"
 #include "sparrow/c_data_integration/constant.hpp"
 #include "sparrow/c_data_integration/primitive_parser.hpp"
 #include "sparrow/c_data_integration/utils.hpp"
@@ -28,6 +29,7 @@ namespace sparrow::c_data_integration
         sparrow::array(const nlohmann::json&, const nlohmann::json&, const nlohmann::json&)>;
     const std::unordered_map<std::string, array_builder_function> array_builders{
         {"int", primitive_array_from_json},
+        {"bool", bool_array_from_json},
     };
 
     std::vector<sparrow::array>
