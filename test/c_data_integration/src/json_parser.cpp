@@ -181,8 +181,6 @@ namespace sparrow::c_data_integration
             throw std::runtime_error("Unsupported type: " + type);
         }
         sparrow::array ar = builder_it->second(array, schema, root);
-        // const auto arrow_proxy = sparrow::detail::array_access::get_arrow_proxy(ar);
-        // const ArrowSchema& schema_ref = arrow_proxy.schema();
         return ar;
     }
 

@@ -146,9 +146,20 @@ namespace sparrow::c_data_integration
         {
             sparrow::arrow_proxy from_json{array_from_json, schema_from_json};
             sparrow::arrow_proxy from{array, schema_from_json};
-            for (size_t i = 0; i < static_cast<size_t>(array->n_buffers); ++i)
+            for (size_t i = 0; i < static_cast<size_t>(from_json.n_buffers()); ++i)
             {
-                for (size_t y = 0; y < from_json.n_buffers(); ++i)
+                const size_t from_json_buffer_size = from_json.buffers()[i].size();
+                const size_t from_buffer_size = from.buffers()[i].size();
+
+                if (from_json_buffer_size != from_buffer_size)
+                {
+                    differences.push_back(
+                        prefix + " buffer [" + std::to_string(i) + "] size mismatch: "
+                        + std::to_string(from_json_buffer_size) + " vs " + std::to_string(from_buffer_size)
+                    );
+                    continue;
+                }
+                for (size_t y = 0; y < from_json_buffer_size; ++y)
                 {
                     if (from_json.buffers()[i][y] != from.buffers()[i][y])
                     {
