@@ -173,6 +173,7 @@ namespace sparrow
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
             u8_buffer<C>&& data_buffer,
+            size_t element_count,
             size_t element_size,
             VB&& validity_input = validity_bitmap{},
             std::optional<std::string_view> name = std::nullopt,
@@ -258,6 +259,7 @@ namespace sparrow
         template <mpl::char_like C, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy_impl(
             u8_buffer<C>&& data_buffer,
+            size_t element_count,
             size_t element_size,
             std::optional<validity_bitmap>&& validity_input,
             std::optional<std::string_view> name = std::nullopt,
@@ -322,48 +324,22 @@ namespace sparrow
     template <mpl::char_like C, validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
     arrow_proxy fixed_width_binary_array_impl<T, CR>::create_proxy(
         u8_buffer<C>&& data_buffer,
+        size_t element_count,
         size_t element_size,
         VB&& validity_input,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
     {
-        SPARROW_ASSERT_TRUE((data_buffer.size() % element_size) == 0);
-        const size_t element_count = data_buffer.size() / element_size;
-        validity_bitmap vbitmap = ensure_validity_bitmap(element_count, std::forward<VB>(validity_input));
-        const auto null_count = vbitmap.null_count();
-
-        std::string format_str = "w:" + std::to_string(element_size);
-
-        static const std::unordered_set<ArrowFlag> flags{ArrowFlag::NULLABLE};
-
-        ArrowSchema schema = make_arrow_schema(
-            std::move(format_str),
-            std::move(name),             // name
-            std::move(metadata),         // metadata
-            flags,                       // flags,
-            nullptr,                     // children
-            repeat_view<bool>(true, 0),  // children_ownership
-            nullptr,                     // dictionary
-            true                         // dictionary ownership
-
+        validity_bitmap bitmap = ensure_validity_bitmap(element_count, std::forward<VB>(validity_input));
+        return create_proxy_impl(
+            std::move(data_buffer),
+            element_count,
+            element_size,
+            std::move(bitmap),
+            std::move(name),
+            std::move(metadata)
         );
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(vbitmap).extract_storage(),
-            std::move(data_buffer).extract_storage()
-        };
-
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(element_count),  // length
-            static_cast<int64_t>(null_count),
-            0,  // offset
-            std::move(arr_buffs),
-            nullptr,                     // children
-            repeat_view<bool>(true, 0),  // children_ownership
-            nullptr,                     // dictionary
-            true                         // dictionary ownership
-        );
-        return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
     template <std::ranges::sized_range T, class CR>
@@ -383,13 +359,13 @@ namespace sparrow
         using values_type = std::ranges::range_value_t<R>;
         using values_inner_value_type = std::ranges::range_value_t<values_type>;
 
-        SPARROW_ASSERT_TRUE(!std::ranges::empty(values));
         SPARROW_ASSERT_TRUE(all_same_size(values));
-        const size_t element_size = std::ranges::size(*values.begin());
+        const size_t element_size = std::ranges::empty(values) ? 0 : std::ranges::size(*values.begin());
 
         auto data_buffer = u8_buffer<values_inner_value_type>(std::ranges::views::join(values));
         return create_proxy(
             std::move(data_buffer),
+            values.size(),
             element_size,
             std::forward<VB>(validity_input),
             std::forward<std::optional<std::string_view>>(name),
@@ -420,40 +396,17 @@ namespace sparrow
             using values_type = std::ranges::range_value_t<R>;
             using values_inner_value_type = std::ranges::range_value_t<values_type>;
 
-            SPARROW_ASSERT_TRUE(!std::ranges::empty(values));
             SPARROW_ASSERT_TRUE(all_same_size(values));
-            const size_t element_size = std::ranges::size(*values.begin());
-
-            std::string format_str = "w:" + std::to_string(element_size);
-
-            ArrowSchema schema = make_arrow_schema(
-                std::move(format_str),
-                std::move(name),             // name
-                std::move(metadata),         // metadata
-                std::nullopt,                // flags,
-                nullptr,                     // children
-                repeat_view<bool>(true, 0),  // children_ownership
-                nullptr,                     // dictionary
-                true                         // dictionary ownership
-
-            );
+            const size_t element_size = std::ranges::empty(values) ? 0 : std::ranges::size(*values.begin());
             auto data_buffer = u8_buffer<values_inner_value_type>(std::ranges::views::join(values));
-            const size_t element_count = data_buffer.size() / element_size;
-            std::vector<buffer<std::uint8_t>> arr_buffs = {
-                buffer<std::uint8_t>{nullptr, 0},  // validity bitmap
-                std::move(data_buffer).extract_storage()
-            };
-            ArrowArray arr = make_arrow_array(
-                static_cast<std::int64_t>(element_count),  // length
-                0,                                         // null_count
-                0,                                         // offset
-                std::move(arr_buffs),
-                nullptr,                     // children
-                repeat_view<bool>(true, 0),  // children_ownership
-                nullptr,                     // dictionary
-                true                         // dictionary ownership
+            return create_proxy_impl(
+                std::move(data_buffer),
+                values.size(),  // element count
+                element_size,
+                std::nullopt,  // validity bitmap
+                std::move(name),
+                std::move(metadata)
             );
-            return arrow_proxy{std::move(arr), std::move(schema)};
         }
     }
 
@@ -492,14 +445,17 @@ namespace sparrow
     template <mpl::char_like C, input_metadata_container METADATA_RANGE>
     arrow_proxy fixed_width_binary_array_impl<T, CR>::create_proxy_impl(
         u8_buffer<C>&& data_buffer,
+        size_t element_count,
         size_t element_size,
         std::optional<validity_bitmap>&& bitmap,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
     {
-        SPARROW_ASSERT_TRUE((data_buffer.size() % element_size) == 0);
-        const size_t element_count = data_buffer.size() / element_size;
+        SPARROW_ASSERT_TRUE(
+            element_size == 0 ? (data_buffer.size() == 0) : (data_buffer.size() % element_size == 0)
+        );
+
         const auto null_count = bitmap.has_value() ? bitmap->null_count() : 0;
         std::string format_str = "w:" + std::to_string(element_size);
         const std::optional<std::unordered_set<ArrowFlag>>
