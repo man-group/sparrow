@@ -405,9 +405,9 @@ namespace sparrow
                                                                                       // data_type::LARGE_STRING
                                                                                       // and
                                                                                       // data_type::LARGE_BINARY
-        SPARROW_ASSERT_TRUE((
-            (type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>
-        ) );
+        SPARROW_ASSERT_TRUE(
+            ((type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>)
+        );
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -542,9 +542,20 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
+        using values_inner_value_type = std::ranges::range_value_t<std::ranges::range_value_t<R>>;
         const size_t size = std::ranges::size(values);
+        u8_buffer<values_inner_value_type> data_buffer(std::ranges::views::join(values));
+        auto size_range = values
+                          | std::views::transform(
+                              [](const auto& v)
+                              {
+                                  return std::ranges::size(v);
+                              }
+                          );
+        auto offset_buffer = offset_from_sizes(size_range);
         return create_proxy_impl(
-            std::forward<R>(values),
+            std::move(data_buffer),
+            std::move(offset_buffer),
             nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
             std::move(name),
             std::move(metadata)
