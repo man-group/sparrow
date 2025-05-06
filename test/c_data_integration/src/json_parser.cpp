@@ -15,6 +15,7 @@
 #include "sparrow/c_data_integration/json_parser.hpp"
 
 #include <sparrow/layout/array_access.hpp>
+
 #include "sparrow/c_data_integration/constant.hpp"
 #include "sparrow/c_data_integration/primitive_parser.hpp"
 
