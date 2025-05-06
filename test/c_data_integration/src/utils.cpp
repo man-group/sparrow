@@ -20,6 +20,45 @@
 
 namespace sparrow::c_data_integration::utils
 {
+    std::vector<std::vector<std::byte>> hexStringsToBytes(const std::vector<std::string>& hexStrings)
+    {
+        std::vector<std::vector<std::byte>> result;
+        result.reserve(hexStrings.size());
+
+        for (const auto& hexStr : hexStrings)
+        {
+            std::vector<std::byte> bytes;
+
+            // If the string is empty, add an empty vector
+            if (hexStr.empty())
+            {
+                result.push_back(std::move(bytes));
+                continue;
+            }
+
+            // Reserve memory for the expected number of bytes (half the hex string length)
+            bytes.reserve((hexStr.length() + 1) / 2);
+
+            // Process hex string two characters at a time
+            for (size_t i = 0; i < hexStr.length(); i += 2)
+            {
+                std::string_view byteStr = (i + 1 < hexStr.length()) ? std::string_view(hexStr).substr(i, 2)
+                                                                     : std::string_view(hexStr).substr(i, 1);
+
+                // Parse the hex byte
+                unsigned int byteValue;
+                auto [ptr, ec] = std::from_chars(byteStr.data(), byteStr.data() + byteStr.size(), byteValue, 16);
+                if (ec == std::errc{})
+                {
+                    bytes.push_back(static_cast<std::byte>(byteValue));
+                }
+            }
+
+            result.push_back(std::move(bytes));
+        }
+
+        return result;
+    }
 
     const nlohmann::json& get_child(const nlohmann::json& schema_or_array, const std::string& name)
     {

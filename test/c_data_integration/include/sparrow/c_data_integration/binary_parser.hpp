@@ -12,25 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
-
-#include <string>
-#include <vector>
-
 #include <nlohmann/json.hpp>
 
-#include "sparrow/utils/metadata.hpp"
+#include <sparrow/array.hpp>
 
-namespace sparrow::c_data_integration::utils
+namespace sparrow::c_data_integration
 {
-    std::vector<std::vector<std::byte>> hexStringsToBytes(const std::vector<std::string>& hexStrings);
-
-    std::vector<std::pair<const nlohmann::json&, const nlohmann::json&>>
-    get_children(const nlohmann::json& array, const nlohmann::json& schema);
-
-    std::vector<bool> get_validity(const nlohmann::json& array);
-
-    void check_type(const nlohmann::json& schema, const std::string& type);
-
-    std::optional<std::vector<sparrow::metadata_pair>> get_metadata(const nlohmann::json& schema);
+    sparrow::array
+    binary_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 }

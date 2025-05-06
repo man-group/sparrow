@@ -25,18 +25,26 @@ endif()
 find_package(doctest REQUIRED)
 
 add_library(c_data_integration SHARED
+    src/binary_parser.cpp
     src/bool_parser.cpp
     src/c_data_integration.cpp
     src/comparison.cpp
+    src/fixedsizebinary_parser.cpp
     src/json_parser.cpp
     src/primitive_parser.cpp
+    src/string_parser.cpp
+    src/stringview_parser.cpp
     src/utils.cpp
+    include/sparrow/c_data_integration/binary_parser.hpp
     include/sparrow/c_data_integration/bool_parser.hpp
     include/sparrow/c_data_integration/c_data_integration.hpp
     include/sparrow/c_data_integration/comparison.hpp
     include/sparrow/c_data_integration/config.hpp
     include/sparrow/c_data_integration/constant.hpp
+    include/sparrow/c_data_integration/fixedsizebinary_parser.hpp
     include/sparrow/c_data_integration/primitive_parser.hpp
+    include/sparrow/c_data_integration/string_parser.hpp
+    include/sparrow/c_data_integration/stringview_parser.hpp
     include/sparrow/c_data_integration/utils.hpp
     )
 
