@@ -59,18 +59,15 @@ target_compile_definitions(c_data_integration
     PRIVATE
         SPARROW_C_DATA_INTEGRATION_EXPORTS)
 
-set_target_properties(
-    c_data_integration
+set_target_properties(c_data_integration
     PROPERTIES
-    VERSION ${SPARROW_BINARY_VERSION}
-    SOVERSION ${SPARROW_BINARY_CURRENT}
+        VERSION ${SPARROW_BINARY_VERSION}
+        SOVERSION ${SPARROW_BINARY_CURRENT}
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED YES
+        CXX_EXTENSIONS NO
+        FOLDER c_data_integration
 )
-
-set_target_properties(c_data_integration PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-    FOLDER c_data_integration)
 
 target_link_libraries(c_data_integration
     PUBLIC
