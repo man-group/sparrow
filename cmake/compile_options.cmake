@@ -1,6 +1,6 @@
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(compiles_options
+    set(compile_options
         /bigobj
         /permissive-
         /WX # treat warnings as errors
@@ -29,7 +29,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /Zc:__cplusplus
         PARENT_SCOPE)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(compiles_options
+    set(compile_options
         -Wall # reasonable and standard
         -Wcast-align # warn for potential performance problem casts
         -Wconversion # warn on type conversions that may lose data
@@ -74,6 +74,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         $<$<CXX_COMPILER_ID:GNU>:-Wno-subobject-linkage> # suppress warnings about subobject linkage
     )
     if (NOT "${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC")
-        set(compiles_options ${compiles_options} -ftemplate-backtrace-limit=0 -pedantic)
+        set(compile_options ${compile_options} -ftemplate-backtrace-limit=0 -pedantic)
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11.3)
+        set(compile_options ${compile_optoins} PRIVATE "-Wno-error=shift-negative-value")
     endif()
 endif()
