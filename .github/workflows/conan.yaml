@@ -44,6 +44,10 @@ jobs:
         working-directory: build/build/Release
         run: cmake --build . --config Release --target run_tests_with_junit_report
 
+      - name: Run c_data_integration tests
+        working-directory: build/build/Release
+        run: cmake --build . --config Release --target run_c_data_integration_with_junit_report
+
       - name: Run examples
         working-directory: build/build/Release
         run: cmake --build . --config Release --target run_examples
