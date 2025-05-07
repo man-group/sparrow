@@ -160,6 +160,10 @@ namespace sparrow
                     using nullable_inner_scalar_type = nullable<const inner_scalar_type&, bool>;
                     using nullable_uint8_t = nullable<const std::uint8_t&, bool>;
 
+#if SPARROW_GCC_11_2_WORKAROUND 
+                    using variant_type = std::decay_t<decltype(val0_variant)>;
+                    using base_type = typename variant_type::base_type;
+#endif
                     // visit the variant
                     std::visit(
                         [&i](auto&& val0)
@@ -173,7 +177,11 @@ namespace sparrow
                                 FAIL("unexpected type");
                             }
                         },
+#if SPARROW_GCC_11_2_WORKAROUND 
+                        static_cast<const base_type&>(val0_variant)
+#else
                         val0_variant
+#endif
                     );
 
                     std::visit(
@@ -188,7 +196,11 @@ namespace sparrow
                                 FAIL("unexpected type");
                             }
                         },
+#if SPARROW_GCC_11_2_WORKAROUND 
+                        static_cast<const base_type&>(val1_variant)
+#else
                         val1_variant
+#endif
                     );
                 }
             }
