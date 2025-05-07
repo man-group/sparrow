@@ -16,7 +16,14 @@
 
 #include <vector>
 
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wnull-dereference"
+#endif
 #include <nlohmann/json.hpp>
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
 
 #include <sparrow/array.hpp>
 #include <sparrow/record_batch.hpp>
