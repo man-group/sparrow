@@ -7,7 +7,7 @@ endif()
 if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "MISSING") 
     include(FetchContent)
     if(NOT nlohmann_json_FOUND)
-        set(NLOHMANN_JSON_VERSION "v3.11.3")
+        set(NLOHMANN_JSON_VERSION "v3.12.0")
         message(STATUS "📦 Fetching nlohmann_json ${NLOHMANN_JSON_VERSION}")
         FetchContent_Declare(
             nlohmann_json
