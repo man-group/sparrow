@@ -89,23 +89,19 @@ else()
     message(STATUS "Tests build type is ${CMAKE_BUILD_TYPE}")
 endif()
 
+
+add_subdirectory(doctest_better_junit)
+
 if (SPARROW_TARGET_32BIT)
     set(SPARROW_TESTS_SOURCES
-        junit.cpp
-        junit.hpp
-        junit_xml_writer.hpp
         main.cpp
     )
 else()
     set(SPARROW_TESTS_SOURCES
         arrow_array_schema_creation.hpp
-        better_junit_reporter.hpp
         external_array_data_creation.cpp
         external_array_data_creation.hpp
         nanoarrow_utils.hpp
-        junit.cpp
-        junit.hpp
-        junit_xml_writer.hpp
         main.cpp
         test_allocator.cpp
         test_array_wrapper.cpp
@@ -175,6 +171,7 @@ target_link_libraries(${test_target}
     PRIVATE
         sparrow
         doctest::doctest
+        better_junit_reporter
         nanoarrow::nanoarrow
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
