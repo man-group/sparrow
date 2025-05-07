@@ -20,7 +20,9 @@
 #include "sparrow/c_data_integration/c_data_integration.hpp"
 #include "sparrow/c_interface.hpp"
 
+#include "better_junit_reporter.hpp"
 #include "doctest/doctest.h"
+
 
 const std::filesystem::path json_files_path = JSON_FILES_PATH;
 

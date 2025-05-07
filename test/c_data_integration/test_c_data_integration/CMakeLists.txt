@@ -2,6 +2,7 @@ add_executable(test_c_data_integration test_c_data_integration.cpp)
 target_link_libraries(test_c_data_integration
     PRIVATE
         c_data_integration
+        better_junit_reporter
         doctest::doctest)
 
 target_compile_definitions(test_c_data_integration
