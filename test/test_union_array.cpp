@@ -436,8 +436,8 @@ namespace sparrow
             }
 
 #if SPARROW_GCC_11_2_WORKAROUND
-                using variant_type = std::decay_t<decltype(uarr[0])>;
-                using base_type = typename variant_type::base_type;
+            using variant_type = std::decay_t<decltype(uarr[0])>;
+            using base_type = typename variant_type::base_type;
 #endif
 
             // 0

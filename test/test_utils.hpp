@@ -100,7 +100,7 @@ namespace sparrow::test
                     ADD_FAIL_AT(file, line, "type mismatch");
                 }
             },
-#if SPARROW_GCC_11_2_WORKAROUND 
+#if SPARROW_GCC_11_2_WORKAROUND
             static_cast<const typename V::base_type&>(variant)
 #else
             variant
