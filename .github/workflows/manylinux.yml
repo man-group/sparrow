@@ -44,6 +44,19 @@ jobs:
       run: |
         micromamba activate sparrow
         micromamba uninstall -y --no-prune-deps howardhinnant_date
+        git clone https://github.com/HowardHinnant/date.git
+        cd date
+        git checkout v3.0.3
+        source /opt/rh/devtoolset-11/enable
+        cmake -S . -B build \
+          -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
+          -DBUILD_SHARED_LIBS=ON \
+          -DUSE_SYSTEM_TZ_DB=ON \
+          -DBUILD_TZ_LIB=ON \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_CXX_STANDARD=17
+
+        cmake --build build --config Release --target install
 
     - name: Configure using CMake
       working-directory: sparrow
@@ -54,7 +67,7 @@ jobs:
           -Bbuild \
           -DCMAKE_BUILD_TYPE:STRING=${{ matrix.config }} \
           -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
-          -DUSE_DATE_POLYFILL=OFF \
+          -DUSE_DATE_POLYFILL=ON \
           -DBUILD_TESTS=ON \
           -DBUILD_EXAMPLES=ON \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
