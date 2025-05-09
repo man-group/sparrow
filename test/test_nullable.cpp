@@ -1035,7 +1035,11 @@ namespace sparrow
                 {
                     return val.has_value() && val.value() == vd;
                 },
+#if SPARROW_GCC_11_2_WORKAROUND
+                *static_cast<const nullable_variant_type::base_type*>(&v)
+#else
                 v
+#endif
             );
             CHECK(res);
         }

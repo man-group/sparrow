@@ -24,6 +24,7 @@
 #include <type_traits>
 #include <variant>
 
+#include "sparrow/config/config.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
 
@@ -794,7 +795,11 @@ namespace sparrow
             {
                 return v.has_value();
             },
+#if SPARROW_GCC_11_2_WORKAROUND
+            static_cast<const base_type&>(*this)
+#else
             *this
+#endif
         );
     }
 }

@@ -49,3 +49,9 @@
 #else
 #    define SPARROW_CONSTEXPR_GCC_11 constexpr
 #endif
+
+#if (!defined(__clang__) && defined(__GNUC__))
+#    if (__GNUC__ < 12 && __GNUC_MINOR__ < 3)
+#        define SPARROW_GCC_11_2_WORKAROUND 1
+#    endif
+#endif
