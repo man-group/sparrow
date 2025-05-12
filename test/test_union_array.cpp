@@ -211,6 +211,10 @@ namespace sparrow
                     REQUIRE(val.has_value());
                 }
 
+#if SPARROW_GCC_11_2_WORKAROUND
+                using variant_type = std::decay_t<decltype(uarr[0])>;
+                using base_type = typename variant_type::base_type;
+#endif
                 // 0
                 std::visit(
                     [](auto&& arg)
@@ -225,7 +229,12 @@ namespace sparrow
                             CHECK(false);
                         }
                     },
+
+#if SPARROW_GCC_11_2_WORKAROUND
+                    static_cast<const base_type&>(uarr[0])
+#else
                     uarr[0]
+#endif
                 );
 
                 // 1
@@ -242,7 +251,11 @@ namespace sparrow
                             CHECK(false);
                         }
                     },
+#if SPARROW_GCC_11_2_WORKAROUND
+                    static_cast<const base_type&>(uarr[1])
+#else
                     uarr[1]
+#endif
                 );
 
                 // 2
@@ -259,7 +272,11 @@ namespace sparrow
                             CHECK(false);
                         }
                     },
+#if SPARROW_GCC_11_2_WORKAROUND
+                    static_cast<const base_type&>(uarr[2])
+#else
                     uarr[2]
+#endif
                 );
 
                 // 3
@@ -276,7 +293,11 @@ namespace sparrow
                             CHECK(false);
                         }
                     },
+#if SPARROW_GCC_11_2_WORKAROUND
+                    static_cast<const base_type&>(uarr[3])
+#else
                     uarr[3]
+#endif
                 );
             }
         }
@@ -414,6 +435,11 @@ namespace sparrow
                 }
             }
 
+#if SPARROW_GCC_11_2_WORKAROUND
+            using variant_type = std::decay_t<decltype(uarr[0])>;
+            using base_type = typename variant_type::base_type;
+#endif
+
             // 0
             std::visit(
                 [](auto&& arg)
@@ -428,7 +454,11 @@ namespace sparrow
                         CHECK(false);
                     }
                 },
+#if SPARROW_GCC_11_2_WORKAROUND
+                static_cast<const base_type&>(uarr[0])
+#else
                 uarr[0]
+#endif
             );
 
             // 1
@@ -445,7 +475,11 @@ namespace sparrow
                         CHECK(false);
                     }
                 },
+#if SPARROW_GCC_11_2_WORKAROUND
+                static_cast<const base_type&>(uarr[1])
+#else
                 uarr[1]
+#endif
             );
 
             // 2
@@ -462,7 +496,11 @@ namespace sparrow
                         CHECK(false);
                     }
                 },
+#if SPARROW_GCC_11_2_WORKAROUND
+                static_cast<const base_type&>(uarr[2])
+#else
                 uarr[2]
+#endif
             );
 
             // 3
@@ -479,7 +517,11 @@ namespace sparrow
                         CHECK(false);
                     }
                 },
+#if SPARROW_GCC_11_2_WORKAROUND
+                static_cast<const base_type&>(uarr[3])
+#else
                 uarr[3]
+#endif
             );
         }
 
