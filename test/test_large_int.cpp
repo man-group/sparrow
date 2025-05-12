@@ -79,8 +79,7 @@ namespace sparrow
             int256_t expected = -123456789;
             expected *= 1000000000000000000;
             expected *= 1000000000000000000;
-            const auto converted = sparrow::stobigint<int256_t>("-123456789000000000000000000000000000000000000"
-            );
+            const auto converted = sparrow::stobigint<int256_t>("-123456789000000000000000000000000000000000000");
             CHECK_EQ(expected, converted);
         }
     }
