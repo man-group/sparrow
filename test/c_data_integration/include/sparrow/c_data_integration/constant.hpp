@@ -17,8 +17,8 @@
 
 namespace sparrow::c_data_integration
 {
-    static constexpr std::string_view VALIDITY = "VALIDITY";
-    static constexpr std::string_view DATA = "DATA";
-    static constexpr std::string_view OFFSET = "OFFSET";
-    static constexpr std::string_view TYPE_ID = "TYPE_ID";
+    inline constexpr std::string_view VALIDITY = "VALIDITY";
+    inline constexpr std::string_view DATA = "DATA";
+    inline constexpr std::string_view OFFSET = "OFFSET";
+    inline constexpr std::string_view TYPE_ID = "TYPE_ID";
 }
