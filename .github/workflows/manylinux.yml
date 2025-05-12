@@ -26,14 +26,14 @@ jobs:
       run: yum -y install devtoolset-11-gcc devtoolset-11-gcc-c++ git
 
     - name: Checkout sparrow
-      if: ${{ github.event.pull_request }}
+      if: github.event.pull_request
       run: |
         git clone ${{ github.event.pull_request.head.repo.clone_url }}
         cd sparrow
         git checkout ${{ github.head_ref }}
 
     - name: Checkout sparrow
-      if: ${{ github.event.push }}
+      if: github.event.pull_request.merged == true || github.event.workflow_dispatch
       run: |
         git clone https://github.com/man-group/sparrow.git
 
