@@ -26,7 +26,7 @@ namespace sparrow::c_data_integration
         std::string name = schema.at("name").get<std::string>();
         const std::size_t byte_width = schema.at("type").at("byteWidth").get<std::size_t>();
         auto data_str = array.at(DATA).get<std::vector<std::string>>();
-        std::vector<std::vector<std::byte>> data = utils::hexStringsToBytes(data_str);
+        std::vector<std::vector<std::byte>> data = utils::hex_strings_to_bytes(data_str);
         for (auto& d : data)
         {
             if (d.size() != byte_width)
