@@ -30,7 +30,6 @@ namespace sparrow
      * similar to `unique_ptr`. When copied, it copies the managed object.
      *
      * @tparam T The type of the object managed by the `value_ptr`.
-     * @todo Make it constexpr.
      */
     template <class T>
     class value_ptr
@@ -47,36 +46,36 @@ namespace sparrow
 
         constexpr value_ptr() noexcept = default;
         constexpr value_ptr(std::nullptr_t) noexcept;
-        explicit value_ptr(T value);
-        explicit value_ptr(T* value);
+        constexpr explicit value_ptr(T value);
+        constexpr explicit value_ptr(T* value);
 
         ~value_ptr() = default;
 
-        value_ptr(const value_ptr& other);
-        value_ptr(value_ptr&& other) noexcept = default;
+        constexpr value_ptr(const value_ptr& other);
+        constexpr value_ptr(value_ptr&& other) noexcept = default;
 
-        value_ptr& operator=(const value_ptr& other);
-        value_ptr& operator=(value_ptr&& other) noexcept = default;
+        constexpr value_ptr& operator=(const value_ptr& other);
+        constexpr value_ptr& operator=(value_ptr&& other) noexcept = default;
 
-        value_ptr& operator=(std::nullptr_t) noexcept;
+        constexpr value_ptr& operator=(std::nullptr_t) noexcept;
 
         // Modifiers
 
-        void reset() noexcept;
+        constexpr void reset() noexcept;
 
         // Observers
 
-        [[nodiscard]] T* get() noexcept;
-        [[nodiscard]] const T* get() const noexcept;
+        [[nodiscard]] constexpr T* get() noexcept;
+        [[nodiscard]] constexpr const T* get() const noexcept;
 
-        explicit operator bool() const noexcept;
-        [[nodiscard]] bool has_value() const noexcept;
+        constexpr explicit operator bool() const noexcept;
+        [[nodiscard]] constexpr bool has_value() const noexcept;
 
-        [[nodiscard]] T& operator*();
-        [[nodiscard]] const T& operator*() const;
+        [[nodiscard]] constexpr T& operator*();
+        [[nodiscard]] constexpr const T& operator*() const;
 
-        [[nodiscard]] T* operator->();
-        [[nodiscard]] const T* operator->() const;
+        [[nodiscard]] constexpr T* operator->();
+        [[nodiscard]] constexpr const T* operator->() const;
 
     private:
 
@@ -177,8 +176,8 @@ namespace sparrow
 
         constexpr explicit operator bool() const noexcept;
 
-        [[nodiscard]] constexpr std::add_lvalue_reference_t<T>
-        operator*() const noexcept(noexcept(*std::declval<pointer>()));
+        [[nodiscard]] constexpr std::add_lvalue_reference_t<T> operator*() const
+            noexcept(noexcept(*std::declval<pointer>()));
 
         [[nodiscard]] constexpr pointer operator->() const noexcept;
 
@@ -223,25 +222,25 @@ namespace sparrow
     }
 
     template <class T>
-    value_ptr<T>::value_ptr(T value)
+    constexpr value_ptr<T>::value_ptr(T value)
         : value_(std::make_unique<T>(std::move(value)))
     {
     }
 
     template <class T>
-    value_ptr<T>::value_ptr(T* value)
+    constexpr value_ptr<T>::value_ptr(T* value)
         : value_(value != nullptr ? std::make_unique<T>(*value) : std::unique_ptr<T>())
     {
     }
 
     template <class T>
-    value_ptr<T>::value_ptr(const value_ptr& other)
+    constexpr value_ptr<T>::value_ptr(const value_ptr& other)
         : value_(other.value_ ? std::make_unique<T>(*other.value_) : std::unique_ptr<T>())
     {
     }
 
     template <class T>
-    value_ptr<T>& value_ptr<T>::operator=(const value_ptr& other)
+    constexpr value_ptr<T>& value_ptr<T>::operator=(const value_ptr& other)
     {
         if (other.has_value())
         {
@@ -262,65 +261,65 @@ namespace sparrow
     }
 
     template <class T>
-    value_ptr<T>& value_ptr<T>::operator=(std::nullptr_t) noexcept
+    constexpr value_ptr<T>& value_ptr<T>::operator=(std::nullptr_t) noexcept
     {
         reset();
         return *this;
     }
 
     template <class T>
-    void value_ptr<T>::reset() noexcept
+    constexpr void value_ptr<T>::reset() noexcept
     {
         value_.reset();
     }
 
     template <class T>
-    T* value_ptr<T>::get() noexcept
+    constexpr T* value_ptr<T>::get() noexcept
     {
         return value_.get();
     }
 
     template <class T>
-    const T* value_ptr<T>::get() const noexcept
+    constexpr const T* value_ptr<T>::get() const noexcept
     {
         return value_.get();
     }
 
     template <class T>
-    value_ptr<T>::operator bool() const noexcept
+    constexpr value_ptr<T>::operator bool() const noexcept
     {
         return has_value();
     }
 
     template <class T>
-    bool value_ptr<T>::has_value() const noexcept
+    constexpr bool value_ptr<T>::has_value() const noexcept
     {
         return bool(value_);
     }
 
     template <class T>
-    T& value_ptr<T>::operator*()
+    constexpr T& value_ptr<T>::operator*()
     {
         SPARROW_ASSERT_TRUE(value_);
         return *value_;
     }
 
     template <class T>
-    const T& value_ptr<T>::operator*() const
+    constexpr const T& value_ptr<T>::operator*() const
     {
         SPARROW_ASSERT_TRUE(value_);
         return *value_;
     }
 
     template <class T>
-    T* value_ptr<T>::operator->()
+    constexpr T* value_ptr<T>::operator->()
     {
         SPARROW_ASSERT_TRUE(value_);
         return &*value_;
     }
 
     template <class T>
-    const T* value_ptr<T>::operator->() const
+    constexpr const T* value_ptr<T>::operator->() const
     {
         SPARROW_ASSERT_TRUE(value_);
         return &*value_;
@@ -428,8 +427,8 @@ namespace sparrow
     }
 
     template <clonable T>
-    constexpr std::add_lvalue_reference_t<T>
-    cloning_ptr<T>::operator*() const noexcept(noexcept(*std::declval<pointer>()))
+    constexpr std::add_lvalue_reference_t<T> cloning_ptr<T>::operator*() const
+        noexcept(noexcept(*std::declval<pointer>()))
     {
         return *get();
     }

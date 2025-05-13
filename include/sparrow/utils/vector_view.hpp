@@ -15,7 +15,7 @@
 #pragma once
 
 #include <algorithm>
-#include <ranges>
+#include <span>
 #include <vector>
 
 #if defined(__cpp_lib_format)

@@ -25,7 +25,6 @@
 
 #include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
-#include "sparrow/utils/pair.hpp"
 #include "sparrow/utils/ranges.hpp"
 
 #if defined(__cpp_lib_format)
@@ -63,11 +62,6 @@ namespace sparrow
         friend bool operator==(const key_value_view_iterator& lhs, const key_value_view_iterator& rhs)
         {
             return lhs.m_index == rhs.m_index;
-        }
-
-        friend bool operator!=(const key_value_view_iterator& lhs, const key_value_view_iterator& rhs)
-        {
-            return !(lhs == rhs);
         }
 
     private:

@@ -31,7 +31,6 @@
 #include "sparrow/config/config.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/metadata.hpp"
-#include "sparrow/utils/pair.hpp"
 #include "sparrow/utils/ranges.hpp"
 
 namespace sparrow
@@ -89,8 +88,8 @@ namespace sparrow
         SPARROW_API arrow_proxy& operator=(const arrow_proxy&);
 
         // Move constructors
-        SPARROW_API arrow_proxy(arrow_proxy&&);
-        SPARROW_API arrow_proxy& operator=(arrow_proxy&&);
+        SPARROW_API arrow_proxy(arrow_proxy&&) noexcept;
+        SPARROW_API arrow_proxy& operator=(arrow_proxy&&) noexcept;
 
         SPARROW_API ~arrow_proxy();
 
