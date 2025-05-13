@@ -19,9 +19,42 @@
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/utils/iterator.hpp"
 
 namespace sparrow
 {
+
+    class list_value;
+
+    class list_value_iterator
+        : public iterator_base<list_value_iterator, array_traits::const_reference, std::forward_iterator_tag, array_traits::const_reference>
+    {
+    public:
+
+        using self_type = list_value_iterator;
+        using base_type = iterator_base<list_value_iterator, list_value, std::forward_iterator_tag>;
+        using size_type = size_t;
+
+        list_value_iterator() noexcept = default;
+        list_value_iterator(const list_value* layout, size_type index);
+
+    private:
+
+        [[nodiscard]] reference dereference() const;
+
+        void increment();
+        void decrement();
+        void advance(difference_type n);
+        [[nodiscard]] difference_type distance_to(const self_type& rhs) const;
+        [[nodiscard]] bool equal(const self_type& rhs) const;
+        [[nodiscard]] bool less_than(const self_type& rhs) const;
+
+        const list_value* m_list_value = nullptr;
+        difference_type m_index;
+
+        friend class iterator_access;
+    };
+
     class SPARROW_API list_value
     {
     public:
@@ -33,13 +66,21 @@ namespace sparrow
         list_value() = default;
         list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end);
 
-        size_type size() const;
-        bool empty() const;
+        [[nodiscard]] size_type size() const;
+        [[nodiscard]] bool empty() const;
 
         const_reference operator[](size_type i) const;
 
-        const_reference front() const;
-        const_reference back() const;
+        [[nodiscard]] const_reference front() const;
+        [[nodiscard]] const_reference back() const;
+
+        [[nodiscard]] list_value_iterator begin();
+        [[nodiscard]] list_value_iterator begin() const;
+        [[nodiscard]] list_value_iterator cbegin() const;
+
+        [[nodiscard]] list_value_iterator end();
+        [[nodiscard]] list_value_iterator end() const;
+        [[nodiscard]] list_value_iterator cend() const;
 
     private:
 

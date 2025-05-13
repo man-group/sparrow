@@ -18,6 +18,47 @@
 
 namespace sparrow
 {
+    list_value_iterator::list_value_iterator(const list_value* layout, size_type index)
+        : m_list_value(layout)
+        , m_index(index)
+    {
+    }
+
+    auto list_value_iterator::dereference() const -> reference
+    {
+        return m_list_value->operator[](m_index);
+    }
+
+    void list_value_iterator::increment()
+    {
+        ++m_index;
+    }
+
+    void list_value_iterator::decrement()
+    {
+        --m_index;
+    }
+
+    void list_value_iterator::advance(difference_type n)
+    {
+        m_index += n;
+    }
+
+    auto list_value_iterator::distance_to(const self_type& rhs) const -> difference_type
+    {
+        return rhs.m_index - m_index;
+    }
+
+    bool list_value_iterator::equal(const self_type& rhs) const
+    {
+        return (m_list_value == rhs.m_list_value) && (m_index == rhs.m_index);
+    }
+
+    bool list_value_iterator::less_than(const self_type& rhs) const
+    {
+        return m_index < rhs.m_index;
+    }
+
     list_value::list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end)
         : p_flat_array(flat_array)
         , m_index_begin(index_begin)
@@ -53,14 +94,37 @@ namespace sparrow
 
     bool operator==(const list_value& lhs, const list_value& rhs)
     {
-        bool res = lhs.size() == rhs.size();
-        for (std::size_t i = 0; res && i < lhs.size(); ++i)
-        {
-            res = lhs[i] == rhs[i];
-        }
-        return res;
-        // TODO: refactor with the following when list_value is a range
-        // return std::ranges::equal(lhs, rhs);
+        return std::ranges::equal(lhs, rhs);
+    }
+
+    list_value_iterator list_value::begin()
+    {
+        return {this, 0};
+    }
+
+    list_value_iterator list_value::begin() const
+    {
+        return {this, 0};
+    }
+
+    list_value_iterator list_value::cbegin() const
+    {
+        return {this, 0};
+    }
+
+    list_value_iterator list_value::end()
+    {
+        return {this, size()};
+    }
+
+    list_value_iterator list_value::end() const
+    {
+        return {this, size()};
+    }
+
+    list_value_iterator list_value::cend() const
+    {
+        return {this, size()};
     }
 }
 
