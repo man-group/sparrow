@@ -42,6 +42,7 @@ class SparrowRecipe(ConanFile):
         if self.options.get_safe("build_tests"):
             self.test_requires("doctest/2.4.11")
             self.test_requires("catch2/3.7.0")
+            self.test_requires("nlohmann_json/3.12.0")
 
     def build_requirements(self):
         if self.options.get_safe("generate_documentation"):
