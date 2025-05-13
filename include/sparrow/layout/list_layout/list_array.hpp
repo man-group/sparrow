@@ -662,8 +662,9 @@ namespace sparrow
     template <std::ranges::range SIZES_RANGE>
     auto list_array_impl<BIG>::offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
-        ));
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
+            std::forward<SIZES_RANGE>(sizes)
+        );
     }
 
     template <bool BIG>

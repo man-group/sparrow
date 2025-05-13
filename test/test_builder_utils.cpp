@@ -213,8 +213,7 @@ namespace sparrow
             static_assert(std::is_same_v<detail::look_trough_t<nullable<std::vector<int>>>, std::vector<int>>);
             static_assert(std::is_same_v<detail::look_trough_t<nullable<int>>, int>);
             static_assert(std::is_same_v<detail::look_trough_t<nullable<nullable<int>>>, nullable<int>>);
-            static_assert(std::is_same_v<detail::look_trough_t<dict_encode<std::vector<int>>>, std::vector<int>>
-            );
+            static_assert(std::is_same_v<detail::look_trough_t<dict_encode<std::vector<int>>>, std::vector<int>>);
             static_assert(std::is_same_v<detail::look_trough_t<dict_encode<nullable<int>>>, int>);
         }
         TEST_CASE("get_size_save")
