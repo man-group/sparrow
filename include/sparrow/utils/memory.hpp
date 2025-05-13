@@ -176,8 +176,8 @@ namespace sparrow
 
         constexpr explicit operator bool() const noexcept;
 
-        [[nodiscard]] constexpr std::add_lvalue_reference_t<T> operator*() const
-            noexcept(noexcept(*std::declval<pointer>()));
+        [[nodiscard]] constexpr std::add_lvalue_reference_t<T>
+        operator*() const noexcept(noexcept(*std::declval<pointer>()));
 
         [[nodiscard]] constexpr pointer operator->() const noexcept;
 
@@ -427,8 +427,8 @@ namespace sparrow
     }
 
     template <clonable T>
-    constexpr std::add_lvalue_reference_t<T> cloning_ptr<T>::operator*() const
-        noexcept(noexcept(*std::declval<pointer>()))
+    constexpr std::add_lvalue_reference_t<T>
+    cloning_ptr<T>::operator*() const noexcept(noexcept(*std::declval<pointer>()))
     {
         return *get();
     }

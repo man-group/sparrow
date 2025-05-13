@@ -601,8 +601,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(schema_dictionary->release != nullptr);
         if (!is_created_with_sparrow())
         {
-            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema"
-            );
+            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema");
         }
 
         ArrowArray* current_array_dictionary = array_without_sanitize().dictionary;
@@ -629,8 +628,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(schema_dictionary.release != nullptr);
         if (!is_created_with_sparrow())
         {
-            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema"
-            );
+            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema");
         }
 
         ArrowArray* current_array_dictionary = array_without_sanitize().dictionary;
@@ -782,7 +780,8 @@ namespace sparrow
     {
         if (!array_created_with_sparrow())
         {
-            throw arrow_proxy_exception("Cannot resize bitmap on a non-sparrow created ArrowArray or ArrowSchema"
+            throw arrow_proxy_exception(
+                "Cannot resize bitmap on a non-sparrow created ArrowArray or ArrowSchema"
             );
         }
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))

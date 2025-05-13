@@ -310,8 +310,9 @@ namespace sparrow
 
         template <class U>
             requires(not std::same_as<self_type, std::decay_t<U>> and std::constructible_from<T, U &&>)
-        explicit(not std::convertible_to<U&&, T>) constexpr nullable(U&& value
-        ) noexcept(noexcept(T(std::declval<U>())))
+        explicit(not std::convertible_to<U&&, T>) constexpr nullable(U&& value) noexcept(
+            noexcept(T(std::declval<U>()))
+        )
             : m_value(std::forward<U>(value))
             , m_null_flag(true)
         {
@@ -322,8 +323,9 @@ namespace sparrow
         template <class TO, mpl::boolean_like BO>
             requires(impl::both_constructible_from_cref<T, TO, B, BO>
                      and not impl::initializable_from_refs<T, nullable<TO, BO>>)
-        explicit(not impl::both_convertible_from_cref<T, TO, B, BO>) SPARROW_CONSTEXPR
-            nullable(const nullable<TO, BO>& rhs)
+        explicit(not impl::both_convertible_from_cref<T, TO, B, BO>) SPARROW_CONSTEXPR nullable(
+            const nullable<TO, BO>& rhs
+        )
             : m_value(rhs.get())
             , m_null_flag(rhs.null_flag())
         {
@@ -332,8 +334,9 @@ namespace sparrow
 #ifdef __clang__
         template <class TO, mpl::boolean_like BO>
             requires(impl::both_constructible_from_cref<T, TO, B, BO> and std::same_as<std::decay_t<T>, bool>)
-        explicit(not impl::both_convertible_from_cref<T, TO, B, BO>) SPARROW_CONSTEXPR
-            nullable(const nullable<TO, BO>& rhs)
+        explicit(not impl::both_convertible_from_cref<T, TO, B, BO>) SPARROW_CONSTEXPR nullable(
+            const nullable<TO, BO>& rhs
+        )
             : m_value(rhs.get())
             , m_null_flag(rhs.null_flag())
         {
@@ -345,8 +348,9 @@ namespace sparrow
         template <class TO, mpl::boolean_like BO>
             requires(impl::both_constructible_from_cond_ref<T, TO, B, BO>
                      and not impl::initializable_from_refs<T, nullable<TO, BO>>)
-        explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>) SPARROW_CONSTEXPR
-            nullable(nullable<TO, BO>&& rhs)
+        explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>) SPARROW_CONSTEXPR nullable(
+            nullable<TO, BO>&& rhs
+        )
             : m_value(std::move(rhs).get())
             , m_null_flag(std::move(rhs).null_flag())
         {
@@ -356,8 +360,9 @@ namespace sparrow
         template <class TO, mpl::boolean_like BO>
             requires(impl::both_constructible_from_cond_ref<T, TO, B, BO>
                      and std::same_as<std::decay_t<T>, bool>)
-        explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>) SPARROW_CONSTEXPR
-            nullable(nullable<TO, BO>&& rhs)
+        explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>) SPARROW_CONSTEXPR nullable(
+            nullable<TO, BO>&& rhs
+        )
             : m_value(std::move(rhs).get())
             , m_null_flag(std::move(rhs).null_flag())
         {
@@ -411,7 +416,11 @@ namespace sparrow
         }
 
         template <class TO, mpl::boolean_like BO>
-            requires(impl::both_assignable_from_cref<T, TO, B, BO> and not impl::initializable_from_refs<T, nullable<TO, BO>> and not impl::assignable_from_refs<T, nullable<TO, BO>>)
+            requires(
+                impl::both_assignable_from_cref<T, TO, B, BO>
+                and not impl::initializable_from_refs<T, nullable<TO, BO>>
+                and not impl::assignable_from_refs<T, nullable<TO, BO>>
+            )
         constexpr self_type& operator=(const nullable<TO, BO>& rhs) noexcept
         {
             m_value = rhs.get();
@@ -427,7 +436,11 @@ namespace sparrow
         }
 
         template <class TO, mpl::boolean_like BO>
-            requires(impl::both_assignable_from_cond_ref<T, TO, B, BO> and not impl::initializable_from_refs<T, nullable<TO, BO>> and not impl::assignable_from_refs<T, nullable<TO, BO>>)
+            requires(
+                impl::both_assignable_from_cond_ref<T, TO, B, BO>
+                and not impl::initializable_from_refs<T, nullable<TO, BO>>
+                and not impl::assignable_from_refs<T, nullable<TO, BO>>
+            )
         constexpr self_type& operator=(nullable<TO, BO>&& rhs) noexcept
         {
             m_value = std::move(rhs).get();
