@@ -14,6 +14,8 @@
 
 #include "sparrow/layout/struct_layout/struct_array.hpp"
 
+#include "sparrow/array_factory.hpp"
+
 namespace sparrow
 {
     struct_array::struct_array(arrow_proxy proxy)

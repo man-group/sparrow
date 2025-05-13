@@ -14,15 +14,10 @@
 
 #pragma once
 
-#include "sparrow/array_factory.hpp"
-#include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
-#include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/iterator.hpp"
-#include "sparrow/utils/memory.hpp"
-#include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
 {
