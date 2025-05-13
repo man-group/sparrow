@@ -270,7 +270,7 @@ namespace sparrow
 
         std::stringstream ss;
         ss << format_str;
-        char c;
+        char c = 0;
         ss >> m_precision >> c >> m_scale;
 
         // check for failure

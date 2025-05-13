@@ -36,7 +36,7 @@ namespace sparrow
 
         using base_type = std::conditional_t<is_mutable, mutable_array_base<D>, array_crtp_base<D>>;
 
-        using size_type = std::size_t;  // typename base_type::size_type;
+        using size_type = std::size_t;
 
         using bitmap_type = typename base_type::bitmap_type;
         using bitmap_iterator = typename base_type::bitmap_iterator;

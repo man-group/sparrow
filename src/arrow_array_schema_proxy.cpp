@@ -188,7 +188,7 @@ namespace sparrow
         return *this;
     }
 
-    arrow_proxy::arrow_proxy(arrow_proxy&& other)
+    arrow_proxy::arrow_proxy(arrow_proxy&& other) noexcept
         : m_array(std::move(other.m_array))
         , m_schema(std::move(other.m_schema))
         , m_buffers(std::move(other.m_buffers))
@@ -200,7 +200,7 @@ namespace sparrow
         other.reset();
     }
 
-    arrow_proxy& arrow_proxy::operator=(arrow_proxy&& rhs)
+    arrow_proxy& arrow_proxy::operator=(arrow_proxy&& rhs) noexcept
     {
         swap(rhs);
         return *this;

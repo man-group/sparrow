@@ -49,8 +49,8 @@ namespace sparrow
         using const_iterator = typename L::const_data_iterator;
 
         fixed_width_binary_reference(L* layout, size_type index);
-        fixed_width_binary_reference(const fixed_width_binary_reference&) = default;
-        fixed_width_binary_reference(fixed_width_binary_reference&&) = default;
+        fixed_width_binary_reference(const fixed_width_binary_reference&) noexcept = default;
+        fixed_width_binary_reference(fixed_width_binary_reference&&) noexcept = default;
 
         template <std::ranges::sized_range T>
             requires mpl::convertible_ranges<T, typename L::inner_value_type>

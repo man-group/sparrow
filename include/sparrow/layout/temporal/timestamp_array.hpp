@@ -25,6 +25,7 @@
 #include "sparrow/layout/temporal/timestamp_concepts.hpp"
 #include "sparrow/layout/temporal/timestamp_reference.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"

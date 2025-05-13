@@ -22,7 +22,6 @@
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/layout/array_access.hpp"
-#include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
@@ -213,10 +212,7 @@ namespace sparrow
             std::ranges::input_range KEY_RANGE,
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(
-                !std::same_as<KEY_RANGE, keys_buffer_type>
-                and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>
-            )
+            requires(!std::same_as<KEY_RANGE, keys_buffer_type> and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>)
         [[nodiscard]] static arrow_proxy create_proxy(
             KEY_RANGE&& keys,
             array&& values,
@@ -251,7 +247,6 @@ namespace sparrow
         using values_layout = cloning_ptr<array_wrapper>;
 
         [[nodiscard]] const inner_value_type& dummy_inner_value() const;
-        // inner_const_reference dummy_inner_const_reference() const;
         [[nodiscard]] const_reference dummy_const_reference() const;
 
         [[nodiscard]] static keys_layout create_keys_layout(arrow_proxy& proxy);
