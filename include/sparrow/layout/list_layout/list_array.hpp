@@ -23,14 +23,11 @@
 #include "sparrow/array_factory.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
-#include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
-#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/nullable.hpp"
@@ -200,10 +197,8 @@ namespace sparrow
         using size_type = typename base_type::size_type;
 
         using bitmap_type = typename base_type::bitmap_type;
-        // using bitmap_reference = typename base_type::bitmap_reference;
         using bitmap_const_reference = typename base_type::bitmap_const_reference;
 
-        // using bitmap_range = typename base_type::bitmap_range;
         using const_bitmap_range = typename base_type::const_bitmap_range;
 
         using inner_value_type = list_value;
@@ -211,7 +206,6 @@ namespace sparrow
         using inner_const_reference = list_value;
 
         using value_type = nullable<inner_value_type>;
-        // using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using iterator_tag = typename base_type::iterator_tag;
 
@@ -225,8 +219,8 @@ namespace sparrow
         list_array_crtp_base(const self_type&);
         list_array_crtp_base& operator=(const self_type&);
 
-        list_array_crtp_base(self_type&&) = default;
-        list_array_crtp_base& operator=(self_type&&) = default;
+        list_array_crtp_base(self_type&&) noexcept = default;
+        list_array_crtp_base& operator=(self_type&&) noexcept = default;
 
     private:
 
@@ -271,8 +265,8 @@ namespace sparrow
         list_array_impl(const self_type&);
         list_array_impl& operator=(const self_type&);
 
-        list_array_impl(self_type&&) = default;
-        list_array_impl& operator=(self_type&&) = default;
+        list_array_impl(self_type&&) noexcept = default;
+        list_array_impl& operator=(self_type&&) noexcept = default;
 
         template <class... ARGS>
             requires(mpl::excludes_copy_and_move_ctor_v<list_array_impl<BIG>, ARGS...>)

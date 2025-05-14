@@ -22,10 +22,8 @@
 #if defined(__cpp_lib_format)
 #    include "sparrow/utils/format.hpp"
 #endif
-#include <ranges>
 
 #include "sparrow/array_api.hpp"
-#include "sparrow/array_factory.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
@@ -33,7 +31,6 @@
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
-#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/nullable.hpp"
 

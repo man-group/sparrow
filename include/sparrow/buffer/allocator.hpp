@@ -69,7 +69,7 @@ namespace sparrow
 
         any_allocator();
         any_allocator(const any_allocator& rhs);
-        any_allocator(any_allocator&&);
+        any_allocator(any_allocator&&) noexcept;
 
         any_allocator& operator=(const any_allocator& rhs) = delete;
         any_allocator& operator=(any_allocator&& rhs) = delete;
@@ -215,7 +215,7 @@ namespace sparrow
     }
 
     template <class T>
-    any_allocator<T>::any_allocator(any_allocator&& rhs)
+    any_allocator<T>::any_allocator(any_allocator&& rhs) noexcept
         : m_storage(std::move(rhs.m_storage))
     {
         // The possible fix would be to not propagate the allocator,

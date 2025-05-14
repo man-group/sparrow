@@ -31,7 +31,7 @@ namespace sparrow
         decimal(T value, int scale);
 
         bool operator==(const decimal& other) const;
-        bool operator!=(const decimal& other) const;
+
         explicit operator float() const
             requires(!is_int_placeholder_v<T>);
         explicit operator double() const
@@ -91,12 +91,6 @@ namespace sparrow
     bool decimal<T>::operator==(const decimal& other) const
     {
         return m_value == other.m_value && m_scale == other.m_scale;
-    }
-
-    template <decimal_integer_type T>
-    bool decimal<T>::operator!=(const decimal& other) const
-    {
-        return !(*this == other);
     }
 
     template <decimal_integer_type T>

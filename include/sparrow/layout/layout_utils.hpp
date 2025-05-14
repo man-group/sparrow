@@ -15,7 +15,7 @@
 #pragma once
 
 #include "sparrow/buffer/u8_buffer.hpp"
-#include "sparrow/utils/functor_index_iterator.hpp"
+#include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/ranges.hpp"
 
 namespace sparrow::detail
