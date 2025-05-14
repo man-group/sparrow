@@ -34,6 +34,7 @@
 #include "sparrow/layout/temporal/date_array.hpp"
 #include "sparrow/layout/temporal/interval_array.hpp"
 #include "sparrow/layout/temporal/time_array.hpp"
+#include "sparrow/layout/temporal/timestamp_without_timezone_array.hpp"
 #include "sparrow/layout/union_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/utils/ranges.hpp"
@@ -134,6 +135,14 @@ namespace sparrow
         template <typename T>
         concept translates_to_timestamp_layout = std::ranges::input_range<T>
                                                  && mpl::is_type_instance_of_v<ensured_range_value_t<T>, timestamp>;
+
+        template <typename T>
+        concept translates_to_timestamp_without_timezone_layout = std::ranges::input_range<T>
+                                                                  && mpl::any_of(
+                                                                      zoned_time_without_timezone_types_t{},
+                                                                      mpl::predicate::same_as<
+                                                                          ensured_range_value_t<T>>{}
+                                                                  );
 
 
         template <typename T>
@@ -263,6 +272,18 @@ namespace sparrow
                     }
                 }();
                 return type(tz, std::forward<U>(t));
+            }
+        };
+
+        template <translates_to_timestamp_without_timezone_layout T, class OPTION_FLAGS>
+        struct builder<T, dont_enforce_layout, OPTION_FLAGS>
+        {
+            using type = sparrow::timestamp_without_timezone_array<ensured_range_value_t<T>>;
+
+            template <class U>
+            [[nodiscard]] static type create(U&& t)
+            {
+                return type(std::forward<U>(t));
             }
         };
 

@@ -155,6 +155,7 @@ else()
         test_struct_array.cpp
         test_time_array.cpp
         test_timestamp_array.cpp
+        test_timestamp_without_timezone_array.cpp
         test_traits.cpp
         test_u8_buffer.cpp
         test_union_array.cpp
