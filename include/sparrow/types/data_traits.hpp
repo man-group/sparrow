@@ -18,6 +18,7 @@
 #include <concepts>
 
 #include "sparrow/layout/temporal/date_array.hpp"
+#include "sparrow/layout/temporal/date_types.hpp"
 #include "sparrow/layout/temporal/interval_types.hpp"
 #include "sparrow/layout/temporal/time_types.hpp"
 #include "sparrow/layout/temporal/timestamp_without_timezone_types.hpp"

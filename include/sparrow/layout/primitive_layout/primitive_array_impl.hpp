@@ -21,7 +21,6 @@
 #include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/primitive_layout/primitive_data_access.hpp"
-#include "sparrow/layout/temporal/date_types.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 
