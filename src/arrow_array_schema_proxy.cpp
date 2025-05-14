@@ -145,12 +145,12 @@ namespace sparrow
     }
 
     arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema&& schema)
-        : arrow_proxy(std::forward<ArrowArray>(array), std::forward<ArrowSchema>(schema), impl_tag{})
+        : arrow_proxy(std::move(array), std::move(schema), impl_tag{})
     {
     }
 
     arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema* schema)
-        : arrow_proxy(std::forward<ArrowArray>(array), schema, impl_tag{})
+        : arrow_proxy(std::move(array), schema, impl_tag{})
     {
     }
 

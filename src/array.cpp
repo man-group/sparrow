@@ -23,12 +23,12 @@
 namespace sparrow
 {
     array::array(ArrowArray&& array, ArrowSchema&& schema)
-        : p_array(array_factory(arrow_proxy(std::forward<ArrowArray>(array), std::forward<ArrowSchema>(schema))))
+        : p_array(array_factory(arrow_proxy(std::move(array), std::move(schema))))
     {
     }
 
     array::array(ArrowArray&& array, ArrowSchema* schema)
-        : p_array(array_factory(arrow_proxy(std::forward<ArrowArray>(array), schema)))
+        : p_array(array_factory(arrow_proxy(std::move(array), schema)))
     {
     }
 
