@@ -24,6 +24,7 @@
 #include <type_traits>
 #include <variant>
 
+#include "sparrow/config/config.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
 
