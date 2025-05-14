@@ -42,7 +42,7 @@ namespace sparrow
 
         timestamp_reference(L* layout, size_type index);
         timestamp_reference(const timestamp_reference&) = default;
-        timestamp_reference(timestamp_reference&&) = default;
+        timestamp_reference(timestamp_reference&&) noexcept = default;
 
         self_type& operator=(value_type&& rhs);
         self_type& operator=(const value_type& rhs);

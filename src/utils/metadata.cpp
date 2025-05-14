@@ -18,7 +18,7 @@ namespace sparrow
 {
     int32_t extract_int32(const char*& ptr)
     {
-        int32_t value;
+        int32_t value = 0;
         std::memcpy(&value, ptr, sizeof(int32_t));
         ptr += sizeof(int32_t);
         return value;

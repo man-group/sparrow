@@ -394,7 +394,7 @@ namespace sparrow
         {
         }
 
-        constexpr self_type& operator=(nullval_t)
+        constexpr self_type& operator=(nullval_t) noexcept
         {
             m_null_flag = false;
             return *this;
@@ -402,14 +402,14 @@ namespace sparrow
 
         template <class TO>
             requires(not std::same_as<self_type, TO> and std::assignable_from<std::add_lvalue_reference_t<T>, TO>)
-        constexpr self_type& operator=(TO&& rhs)
+        constexpr self_type& operator=(TO&& rhs) noexcept
         {
             m_value = std::forward<TO>(rhs);
             m_null_flag = true;
             return *this;
         }
 
-        constexpr self_type& operator=(const self_type& rhs)
+        constexpr self_type& operator=(const self_type& rhs) noexcept
         {
             m_value = rhs.get();
             m_null_flag = rhs.null_flag();
@@ -422,14 +422,14 @@ namespace sparrow
                 and not impl::initializable_from_refs<T, nullable<TO, BO>>
                 and not impl::assignable_from_refs<T, nullable<TO, BO>>
             )
-        constexpr self_type& operator=(const nullable<TO, BO>& rhs)
+        constexpr self_type& operator=(const nullable<TO, BO>& rhs) noexcept
         {
             m_value = rhs.get();
             m_null_flag = rhs.null_flag();
             return *this;
         }
 
-        constexpr self_type& operator=(self_type&& rhs)
+        constexpr self_type& operator=(self_type&& rhs) noexcept
         {
             m_value = std::move(rhs).get();
             m_null_flag = std::move(rhs).null_flag();
@@ -442,7 +442,7 @@ namespace sparrow
                 and not impl::initializable_from_refs<T, nullable<TO, BO>>
                 and not impl::assignable_from_refs<T, nullable<TO, BO>>
             )
-        constexpr self_type& operator=(nullable<TO, BO>&& rhs)
+        constexpr self_type& operator=(nullable<TO, BO>&& rhs) noexcept
         {
             m_value = std::move(rhs).get();
             m_null_flag = std::move(rhs).null_flag();
@@ -534,7 +534,7 @@ namespace sparrow
         constexpr nullable_variant(nullable_variant&&) noexcept = default;
 
         constexpr nullable_variant& operator=(const nullable_variant&);
-        constexpr nullable_variant& operator=(nullable_variant&&);
+        constexpr nullable_variant& operator=(nullable_variant&&) noexcept;
 
         constexpr explicit operator bool() const;
         constexpr bool has_value() const;
@@ -778,7 +778,7 @@ namespace sparrow
 
     template <class... T>
         requires(is_nullable_v<T> && ...)
-    constexpr nullable_variant<T...>& nullable_variant<T...>::operator=(nullable_variant&& rhs)
+    constexpr nullable_variant<T...>& nullable_variant<T...>::operator=(nullable_variant&& rhs) noexcept
     {
         base_type::operator=(std::move(rhs));
         return *this;

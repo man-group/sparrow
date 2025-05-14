@@ -159,8 +159,8 @@ namespace sparrow
         array_crtp_base(const array_crtp_base&) = default;
         array_crtp_base& operator=(const array_crtp_base&) = default;
 
-        array_crtp_base(array_crtp_base&&) = default;
-        array_crtp_base& operator=(array_crtp_base&&) = default;
+        array_crtp_base(array_crtp_base&&) noexcept = default;
+        array_crtp_base& operator=(array_crtp_base&&) noexcept = default;
 
         [[nodiscard]] arrow_proxy& get_arrow_proxy();
         [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;

@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"

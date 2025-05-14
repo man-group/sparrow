@@ -172,11 +172,11 @@ namespace sparrow
     protected:
 
         mutable_array_base(arrow_proxy);
-        mutable_array_base(const mutable_array_base&) = default;
-        mutable_array_base& operator=(const mutable_array_base&) = default;
+        mutable_array_base(const mutable_array_base&) noexcept = default;
+        mutable_array_base& operator=(const mutable_array_base&) noexcept = default;
 
-        mutable_array_base(mutable_array_base&&) = default;
-        mutable_array_base& operator=(mutable_array_base&&) = default;
+        mutable_array_base(mutable_array_base&&) noexcept = default;
+        mutable_array_base& operator=(mutable_array_base&&) noexcept = default;
 
         [[nodiscard]] bitmap_reference has_value(size_type i);
         using base_type::has_value;

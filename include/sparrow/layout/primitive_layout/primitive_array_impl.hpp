@@ -124,8 +124,8 @@ namespace sparrow
         primitive_array_impl(const primitive_array_impl&);
         primitive_array_impl& operator=(const primitive_array_impl&);
 
-        primitive_array_impl(primitive_array_impl&&);
-        primitive_array_impl& operator=(primitive_array_impl&&);
+        primitive_array_impl(primitive_array_impl&&) noexcept;
+        primitive_array_impl& operator=(primitive_array_impl&&) noexcept;
 
     private:
 
@@ -250,14 +250,14 @@ namespace sparrow
     }
 
     template <trivial_copyable_type T>
-    primitive_array_impl<T>::primitive_array_impl(primitive_array_impl&& rhs)
+    primitive_array_impl<T>::primitive_array_impl(primitive_array_impl&& rhs) noexcept
         : base_type(std::move(rhs))
         , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
     }
 
     template <trivial_copyable_type T>
-    primitive_array_impl<T>& primitive_array_impl<T>::operator=(primitive_array_impl&& rhs)
+    primitive_array_impl<T>& primitive_array_impl<T>::operator=(primitive_array_impl&& rhs) noexcept
     {
         base_type::operator=(std::move(rhs));
         access_class_type::reset_proxy(this->get_arrow_proxy());

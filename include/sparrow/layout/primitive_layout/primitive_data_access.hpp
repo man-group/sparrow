@@ -16,7 +16,8 @@
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
-#include "sparrow/layout/array_access.hpp"
+#include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
+#include "sparrow/buffer/u8_buffer.hpp"
 
 namespace sparrow
 {

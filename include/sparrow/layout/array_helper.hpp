@@ -16,6 +16,7 @@
 
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/types/data_traits.hpp"
 
 // File containing helper functions to avoid bloating the
 // include chain.

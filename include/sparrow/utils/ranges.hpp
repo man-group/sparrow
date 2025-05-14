@@ -16,12 +16,10 @@
 #include <algorithm>
 #include <bitset>
 #include <ranges>
-#include <type_traits>
 #include <vector>
 
 #if defined(__cpp_lib_format)
 #    include <format>
-#    include <ostream>
 #endif
 
 #include "sparrow/utils/mp_utils.hpp"
