@@ -58,17 +58,36 @@ namespace sparrow
             }
         }
 
+        std::size_t begin = 2u;
+        std::size_t end = 7u;
+        array_type ar(make_arrow_proxy<scalar_value_type>());
+        wrapper_type w(&ar);
+
+        list_value l(&w, begin, end);
+
+        TEST_CASE("iterators")
+        {
+            auto it = l.begin();
+            for (std::size_t i = begin; i < end; ++i)
+            {
+                CHECK_EQ(it->has_value(), ar[begin + i].has_value());
+                if (ar[begin + i].has_value())
+                {
+                    CHECK_EQ(
+                        std::get<primitive_array<scalar_value_type>::const_reference>(*it).value(),
+                        ar[i].value()
+                    );
+                }
+                ++it;
+            }
+            CHECK(it == l.end());
+        }
+
         TEST_CASE("equality")
         {
-            std::size_t begin = 2u;
-            std::size_t end = 7u;
             std::size_t end3 = 8u;
-            array_type ar(make_arrow_proxy<scalar_value_type>());
             array_type ar2(make_arrow_proxy<scalar_value_type>());
-            wrapper_type w(&ar);
             wrapper_type w2(&ar);
-
-            list_value l(&w, begin, end);
             list_value l2(&w2, begin, end);
             list_value l3(&w, begin, end3);
 
@@ -79,13 +98,7 @@ namespace sparrow
 #if defined(__cpp_lib_format)
         TEST_CASE("formatting")
         {
-            std::size_t begin = 2u;
-            std::size_t end = 7u;
-            array_type ar(make_arrow_proxy<scalar_value_type>());
-            wrapper_type w(&ar);
-
-            const list_value l(&w, begin, end);
-            std::string expected = "<2, 3, 4, 5, 6>";
+            const std::string expected = "<2, 3, 4, 5, 6>";
             CHECK_EQ(std::format("{}", l), expected);
         }
 #endif
