@@ -205,8 +205,7 @@ namespace sparrow
         concept translate_to_fixed_width_binary_layout = std::ranges::input_range<T>
                                                          && ((mpl::fixed_size_span<ensured_range_value_t<T>>
                                                               || mpl::std_array<ensured_range_value_t<T>>)
-                                                             && fixed_width_binary_types<ensured_range_value_t<T>>
-                                                         );
+                                                             && fixed_width_binary_types<ensured_range_value_t<T>>);
 
         template <class T>
         concept translate_to_union_layout = std::ranges::input_range<T> &&
