@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #pragma once
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
@@ -21,6 +20,7 @@
 #include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/primitive_layout/primitive_data_access.hpp"
+#include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 

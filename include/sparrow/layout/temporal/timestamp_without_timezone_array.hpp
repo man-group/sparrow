@@ -16,7 +16,6 @@
 
 #include "sparrow/layout/primitive_layout/primitive_array_impl.hpp"
 #include "sparrow/layout/temporal/timestamp_without_timezone_types.hpp"
-#include "sparrow/types/data_traits.hpp"
 
 namespace sparrow
 {
