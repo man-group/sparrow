@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdio>
+
 #include "sparrow/layout/temporal/timestamp_array.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -42,6 +44,50 @@ namespace sparrow
             values.push_back(nullable<T>(make_value<T>(i), i % 2));
         }
         return values;
+    }
+
+    template <typename T1, typename T2>
+    void compare_timestamp(const T1& lhs, const T2& rhs)
+    {
+        if constexpr (mpl::is_type_instance_of_v<T1, nullable> && mpl::is_type_instance_of_v<T2, nullable>)
+        {
+            if (!lhs.has_value() || !rhs.has_value())
+            {
+                CHECK_EQ(lhs.has_value(), rhs.has_value());
+                return;
+            }
+            if constexpr (mpl::is_type_instance_of_v<typename T1::value_type, timestamp_reference>
+                          && !mpl::is_type_instance_of_v<typename T2::value_type, timestamp_reference>)
+            {
+                CHECK_EQ(
+                    lhs.get().value().get_sys_time().time_since_epoch(),
+                    rhs.get().get_sys_time().time_since_epoch()
+                );
+                return;
+            }
+            if constexpr (!mpl::is_type_instance_of_v<typename T1::value_type, timestamp_reference>
+                          && mpl::is_type_instance_of_v<typename T2::value_type, timestamp_reference>)
+            {
+                CHECK_EQ(
+                    lhs.get().get_sys_time().time_since_epoch(),
+                    rhs.get().value().get_sys_time().time_since_epoch()
+                );
+                return;
+            }
+            if constexpr (mpl::is_type_instance_of_v<typename T1::value_type, timestamp_reference>
+                          && mpl::is_type_instance_of_v<typename T2::value_type, timestamp_reference>)
+            {
+                CHECK_EQ(
+                    lhs.get().value().get_sys_time().time_since_epoch(),
+                    rhs.get().value().get_sys_time().time_since_epoch()
+                );
+                return;
+            }
+        }
+        else
+        {
+            CHECK_EQ(lhs.get_sys_time().time_since_epoch(), rhs.get_sys_time().time_since_epoch());
+        }
     }
 
     TEST_SUITE("timestamp_array")
@@ -79,9 +125,7 @@ namespace sparrow
                     const timestamp_array<T> ar(new_york, input_values);
                     for (size_t i = 0; i < ar.size(); ++i)
                     {
-                        const auto ari = ar[i];
-                        const auto input_values_i = input_values[i];
-                        CHECK_EQ(ari, input_values_i);
+                        compare_timestamp(ar[i], input_values[i]);
                     }
                 }
 
@@ -106,7 +150,7 @@ namespace sparrow
                     }
                     for (size_t i = 0; i < ar.size(); ++i)
                     {
-                        CHECK_EQ(ar[i], new_values[i]);
+                        compare_timestamp(ar[i], new_values[i]);
                     }
                 }
             }
@@ -116,7 +160,7 @@ namespace sparrow
                 SUBCASE("const")
                 {
                     const timestamp_array<T> ar(new_york, input_values);
-                    CHECK_EQ(ar.front(), input_values.front());
+                    compare_timestamp(ar.front(), input_values.front());
                 }
             }
 
@@ -125,7 +169,7 @@ namespace sparrow
                 SUBCASE("const")
                 {
                     const timestamp_array<T> ar(new_york, input_values);
-                    CHECK_EQ(ar.back(), input_values.back());
+                    compare_timestamp(ar.back(), input_values.back());
                 }
             }
 
@@ -144,7 +188,7 @@ namespace sparrow
                     auto iter = ar_values.begin();
                     for (size_t i = 0; i < ar_values.size(); ++i)
                     {
-                        CHECK_EQ(*iter, input_values[i].get());
+                        compare_timestamp(*iter, input_values[i].get());
                         ++iter;
                     }
                     CHECK_EQ(iter, ar_values.end());
@@ -167,7 +211,7 @@ namespace sparrow
                     auto citer = ar_values.begin();
                     for (size_t i = 0; i < ar_values.size(); ++i)
                     {
-                        CHECK_EQ(*citer, input_values[i].get());
+                        compare_timestamp(*citer, input_values[i].get());
                         ++citer;
                     }
                     CHECK_EQ(citer, ar_values.end());
@@ -181,7 +225,7 @@ namespace sparrow
                 const auto end = ar.end();
                 for (size_t i = 0; i < ar.size(); ++i)
                 {
-                    CHECK_EQ(*it, input_values[i]);
+                    compare_timestamp(*it, input_values[i]);
                     ++it;
                 }
                 CHECK_EQ(it, end);
@@ -193,7 +237,7 @@ namespace sparrow
                 auto it = ar.cbegin();
                 for (size_t i = 0; i < ar.size(); ++i)
                 {
-                    CHECK_EQ(*it, input_values[i]);
+                    compare_timestamp(*it, input_values[i]);
                     ++it;
                 }
                 CHECK_EQ(it, ar.cend());
@@ -203,11 +247,11 @@ namespace sparrow
             {
                 timestamp_array<T> ar(new_york, input_values);
                 auto it = ar.rbegin();
-                CHECK_EQ(*it, *(ar.end() - 1));
+                compare_timestamp(*it, *(ar.end() - 1));
                 for (size_t i = 0; i < ar.size(); ++i)
                 {
                     const auto idx = ar.size() - 1 - i;
-                    CHECK_EQ(*it, input_values[idx]);
+                    compare_timestamp(*it, input_values[idx]);
                     ++it;
                 }
                 CHECK_EQ(it, ar.rend());
@@ -222,10 +266,10 @@ namespace sparrow
                 REQUIRE_EQ(ar.size(), new_size);
                 for (size_t i = 0; i < ar.size() - 2; ++i)
                 {
-                    CHECK_EQ(ar[i], input_values[i]);
+                    compare_timestamp(ar[i], input_values[i]);
                 }
-                CHECK_EQ(ar[input_values.size()], new_value);
-                CHECK_EQ(ar[input_values.size() + 1], new_value);
+                compare_timestamp(ar[input_values.size()], new_value);
+                compare_timestamp(ar[input_values.size() + 1], new_value);
             }
 
             SUBCASE("insert")
@@ -238,10 +282,10 @@ namespace sparrow
                         const auto new_value = make_nullable<T>(make_value<T>(99));
                         auto pos = ar.cbegin();
                         ar.insert(pos, new_value);
-                        CHECK_EQ(ar[0], new_value);
+                        compare_timestamp(ar[0], new_value);
                         for (size_t i = 0; i < ar.size() - 1; ++i)
                         {
-                            CHECK_EQ(ar[i + 1], input_values[i]);
+                            compare_timestamp(ar[i + 1], input_values[i]);
                         }
                     }
 
@@ -254,12 +298,12 @@ namespace sparrow
                         ar.insert(pos, new_value);
                         for (size_t i = 0; i < idx; ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
-                        CHECK_EQ(ar[idx], new_value);
+                        compare_timestamp(ar[idx], new_value);
                         for (size_t i = idx; i < ar.size() - 1; ++i)
                         {
-                            CHECK_EQ(ar[i + 1], input_values[i]);
+                            compare_timestamp(ar[i + 1], input_values[i]);
                         }
                     }
 
@@ -271,9 +315,9 @@ namespace sparrow
                         ar.insert(pos, new_value);
                         for (size_t i = 0; i < ar.size() - 1; ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
-                        CHECK_EQ(ar[ar.size() - 1], new_value);
+                        compare_timestamp(ar[ar.size() - 1], new_value);
                     }
                 }
 
@@ -285,11 +329,11 @@ namespace sparrow
                         const auto new_value = make_nullable<T>(make_value<T>(99));
                         auto pos = ar.cbegin();
                         ar.insert(pos, new_value, 2);
-                        CHECK_EQ(ar[0], new_value);
-                        CHECK_EQ(ar[1], new_value);
+                        compare_timestamp(ar[0], new_value);
+                        compare_timestamp(ar[1], new_value);
                         for (size_t i = 0; i < ar.size() - 2; ++i)
                         {
-                            CHECK_EQ(ar[i + 2], input_values[i]);
+                            compare_timestamp(ar[i + 2], input_values[i]);
                         }
                     }
 
@@ -302,13 +346,13 @@ namespace sparrow
                         ar.insert(pos, new_value, 2);
                         for (size_t i = 0; i < idx; ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
-                        CHECK_EQ(ar[idx], new_value);
-                        CHECK_EQ(ar[idx + 1], new_value);
+                        compare_timestamp(ar[idx], new_value);
+                        compare_timestamp(ar[idx + 1], new_value);
                         for (size_t i = idx; i < ar.size() - 2; ++i)
                         {
-                            CHECK_EQ(ar[i + 2], input_values[i]);
+                            compare_timestamp(ar[i + 2], input_values[i]);
                         }
                     }
 
@@ -320,10 +364,10 @@ namespace sparrow
                         ar.insert(pos, new_value, 2);
                         for (size_t i = 0; i < ar.size() - 2; ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
-                        CHECK_EQ(ar[ar.size() - 2], new_value);
-                        CHECK_EQ(ar[ar.size() - 1], new_value);
+                        compare_timestamp(ar[ar.size() - 2], new_value);
+                        compare_timestamp(ar[ar.size() - 1], new_value);
                     }
                 }
 
@@ -336,11 +380,11 @@ namespace sparrow
                         std::vector<nullable<T>> new_values = {new_value, new_value};
                         auto pos = ar.cbegin();
                         ar.insert(pos, new_values);
-                        CHECK_EQ(ar[0], new_value);
-                        CHECK_EQ(ar[1], new_value);
+                        compare_timestamp(ar[0], new_value);
+                        compare_timestamp(ar[1], new_value);
                         for (size_t i = 0; i < ar.size() - 2; ++i)
                         {
-                            CHECK_EQ(ar[i + 2], input_values[i]);
+                            compare_timestamp(ar[i + 2], input_values[i]);
                         }
                     }
 
@@ -354,13 +398,13 @@ namespace sparrow
                         ar.insert(pos, new_values);
                         for (size_t i = 0; i < idx; ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
-                        CHECK_EQ(ar[idx], new_value);
-                        CHECK_EQ(ar[idx + 1], new_value);
+                        compare_timestamp(ar[idx], new_value);
+                        compare_timestamp(ar[idx + 1], new_value);
                         for (size_t i = idx; i < ar.size() - 2; ++i)
                         {
-                            CHECK_EQ(ar[i + 2], input_values[i]);
+                            compare_timestamp(ar[i + 2], input_values[i]);
                         }
                     }
 
@@ -373,10 +417,10 @@ namespace sparrow
                         ar.insert(pos, new_values);
                         for (size_t i = 0; i < ar.size() - 2; ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
-                        CHECK_EQ(ar[ar.size() - 2], new_value);
-                        CHECK_EQ(ar[ar.size() - 1], new_value);
+                        compare_timestamp(ar[ar.size() - 2], new_value);
+                        compare_timestamp(ar[ar.size() - 1], new_value);
                     }
                 }
 
@@ -388,11 +432,11 @@ namespace sparrow
                         const auto new_value = make_nullable<T>(make_value<T>(99));
                         auto pos = ar.cbegin();
                         ar.insert(pos, {new_value, new_value});
-                        CHECK_EQ(ar[0], new_value);
-                        CHECK_EQ(ar[1], new_value);
+                        compare_timestamp(ar[0], new_value);
+                        compare_timestamp(ar[1], new_value);
                         for (size_t i = 0; i < ar.size() - 2; ++i)
                         {
-                            CHECK_EQ(ar[i + 2], input_values[i]);
+                            compare_timestamp(ar[i + 2], input_values[i]);
                         }
                     }
 
@@ -405,13 +449,13 @@ namespace sparrow
                         ar.insert(pos, {new_value, new_value});
                         for (size_t i = 0; i < idx; ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
-                        CHECK_EQ(ar[idx], new_value);
-                        CHECK_EQ(ar[idx + 1], new_value);
+                        compare_timestamp(ar[idx], new_value);
+                        compare_timestamp(ar[idx + 1], new_value);
                         for (size_t i = idx; i < ar.size() - 2; ++i)
                         {
-                            CHECK_EQ(ar[i + 2], input_values[i]);
+                            compare_timestamp(ar[i + 2], input_values[i]);
                         }
                     }
 
@@ -423,10 +467,10 @@ namespace sparrow
                         ar.insert(pos, {new_value, new_value});
                         for (size_t i = 0; i < ar.size() - 2; ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
-                        CHECK_EQ(ar[ar.size() - 2], new_value);
-                        CHECK_EQ(ar[ar.size() - 1], new_value);
+                        compare_timestamp(ar[ar.size() - 2], new_value);
+                        compare_timestamp(ar[ar.size() - 1], new_value);
                     }
                 }
             }
@@ -442,7 +486,7 @@ namespace sparrow
                         ar.erase(pos);
                         for (size_t i = 0; i < ar.size(); ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i + 1]);
+                            compare_timestamp(ar[i], input_values[i + 1]);
                         }
                     }
 
@@ -454,11 +498,11 @@ namespace sparrow
                         ar.erase(pos);
                         for (size_t i = 0; i < idx; ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
                         for (size_t i = idx; i < ar.size(); ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i + 1]);
+                            compare_timestamp(ar[i], input_values[i + 1]);
                         }
                     }
 
@@ -469,7 +513,7 @@ namespace sparrow
                         ar.erase(pos);
                         for (size_t i = 0; i < ar.size(); ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
                     }
                 }
@@ -483,7 +527,7 @@ namespace sparrow
                         ar.erase(pos, pos + 2);
                         for (size_t i = 0; i < ar.size(); ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i + 2]);
+                            compare_timestamp(ar[i], input_values[i + 2]);
                         }
                     }
 
@@ -495,11 +539,11 @@ namespace sparrow
                         ar.erase(pos, pos + 2);
                         for (size_t i = 0; i < idx; ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
                         for (size_t i = idx; i < ar.size(); ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i + 2]);
+                            compare_timestamp(ar[i], input_values[i + 2]);
                         }
                     }
 
@@ -510,7 +554,7 @@ namespace sparrow
                         ar.erase(pos, ar.cend());
                         for (size_t i = 0; i < ar.size(); ++i)
                         {
-                            CHECK_EQ(ar[i], input_values[i]);
+                            compare_timestamp(ar[i], input_values[i]);
                         }
                     }
                 }
@@ -522,7 +566,7 @@ namespace sparrow
                 const auto new_value = make_nullable<T>(make_value<T>(99));
                 ar.push_back(new_value);
                 CHECK_EQ(ar.size(), input_values.size() + 1);
-                CHECK_EQ(ar[ar.size() - 1], new_value);
+                compare_timestamp(ar[ar.size() - 1], new_value);
             }
 
             SUBCASE("pop_back")
@@ -532,7 +576,7 @@ namespace sparrow
                 CHECK_EQ(ar.size(), input_values.size() - 1);
                 for (size_t i = 0; i < ar.size(); ++i)
                 {
-                    CHECK_EQ(ar[i], input_values[i]);
+                    compare_timestamp(ar[i], input_values[i]);
                 }
             }
         }

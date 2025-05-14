@@ -42,7 +42,7 @@ namespace sparrow
 
         timestamp_reference(L* layout, size_type index);
         timestamp_reference(const timestamp_reference&) = default;
-        timestamp_reference(timestamp_reference&&) = default;
+        timestamp_reference(timestamp_reference&&) noexcept = default;
 
         self_type& operator=(value_type&& rhs);
         self_type& operator=(const value_type& rhs);
@@ -50,12 +50,9 @@ namespace sparrow
         bool operator==(const value_type& rhs) const;
         auto operator<=>(const value_type& rhs) const;
 
-    private:
+        [[nodiscard]] const_reference value() const;
 
-        [[nodiscard]] L::inner_value_type value() const
-        {
-            return static_cast<const L*>(p_layout)->value(m_index);
-        }
+    private:
 
         L* p_layout = nullptr;
         size_type m_index = size_type(0);
@@ -66,7 +63,6 @@ namespace sparrow
 }
 
 namespace std
-
 {
     template <typename Layout, typename T, template <typename> typename TQual, template <typename> typename UQual>
     struct basic_common_reference<sparrow::timestamp_reference<Layout>, sparrow::timestamp<T>, TQual, UQual>
@@ -111,14 +107,19 @@ namespace sparrow
     template <typename L>
     bool timestamp_reference<L>::operator==(const value_type& rhs) const
     {
-        const auto& value = static_cast<const L*>(p_layout)->value(m_index);
-        return value == rhs;
+        return value() == rhs;
     }
 
     template <typename L>
     auto timestamp_reference<L>::operator<=>(const value_type& rhs) const
     {
         return lexicographical_compare_three_way(*this, rhs);
+    }
+
+    template <typename L>
+    auto timestamp_reference<L>::value() const -> const_reference
+    {
+        return static_cast<const L*>(p_layout)->value(m_index);
     }
 }
 
