@@ -26,13 +26,16 @@ namespace sparrow
 
     class list_value;
 
-    class SPARROW_API list_value_iterator
-        : public iterator_base<list_value_iterator, array_traits::const_reference, std::forward_iterator_tag, array_traits::const_reference>
+    class SPARROW_API list_value_iterator : public iterator_base<
+                                                list_value_iterator,
+                                                array_traits::const_reference,
+                                                std::random_access_iterator_tag,
+                                                array_traits::const_reference>
     {
     public:
 
         using self_type = list_value_iterator;
-        using base_type = iterator_base<list_value_iterator, list_value, std::forward_iterator_tag>;
+        using base_type = iterator_base<list_value_iterator, list_value, std::random_access_iterator_tag>;
         using size_type = size_t;
 
         list_value_iterator() noexcept = default;
