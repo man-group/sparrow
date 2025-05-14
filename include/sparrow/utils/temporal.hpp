@@ -18,5 +18,5 @@
 
 namespace sparrow
 {
-    SPARROW_API [[nodiscard]] const date::time_zone* get_timezone(const arrow_proxy& proxy);
+    [[nodiscard]] SPARROW_API const date::time_zone* get_timezone(const arrow_proxy& proxy);
 }
