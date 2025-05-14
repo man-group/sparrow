@@ -25,7 +25,6 @@
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 
-
 namespace sparrow
 {
     template <trivial_copyable_type T>
