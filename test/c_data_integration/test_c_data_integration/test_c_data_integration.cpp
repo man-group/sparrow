@@ -50,12 +50,19 @@ TEST_SUITE("c_data_integration")
 {
     TEST_CASE("ExportSchemaFromJson")
     {
-        for (const auto& json : json_to_test)
+        for (const auto& json_path : jsons_to_test)
         {
-            SUBCASE(json.filename().string().c_str())
+            SUBCASE(json_path.filename().string().c_str())
             {
+                if (!std::filesystem::exists(json_path))
+                {
+                    throw std::runtime_error("File does not exist");
+                }
                 ArrowSchema schema;
-                const auto error = sparrow_CDataIntegration_ExportSchemaFromJson(json.string().c_str(), &schema);
+                const auto error = sparrow_CDataIntegration_ExportSchemaFromJson(
+                    json_path.string().c_str(),
+                    &schema
+                );
                 if (error != nullptr)
                 {
                     CHECK_EQ(std::string_view(error), std::string_view());
@@ -66,17 +73,17 @@ TEST_SUITE("c_data_integration")
 
     TEST_CASE("ImportSchemaAndCompareToJson")
     {
-        for (const auto& json : json_to_test)
+        for (const auto& json_path : jsons_to_test)
         {
-            SUBCASE(json.filename().string().c_str())
+            SUBCASE(json_path.filename().string().c_str())
             {
                 ArrowSchema schema;
-                auto error = sparrow_CDataIntegration_ExportSchemaFromJson(json.string().c_str(), &schema);
+                auto error = sparrow_CDataIntegration_ExportSchemaFromJson(json_path.string().c_str(), &schema);
                 if (error != nullptr)
                 {
                     CHECK_EQ(std::string_view(error), std::string_view());
                 }
-                error = sparrow_CDataIntegration_ImportSchemaAndCompareToJson(json.string().c_str(), &schema);
+                error = sparrow_CDataIntegration_ImportSchemaAndCompareToJson(json_path.string().c_str(), &schema);
                 if (error != nullptr)
                 {
                     CHECK_EQ(std::string_view(error), std::string_view());
@@ -87,12 +94,16 @@ TEST_SUITE("c_data_integration")
 
     TEST_CASE("ExportBatchFromJson")
     {
-        for (const auto& json : json_to_test)
+        for (const auto& json_path : jsons_to_test)
         {
-            SUBCASE(json.filename().string().c_str())
+            SUBCASE(json_path.filename().string().c_str())
             {
                 ArrowArray array;
-                const auto error = sparrow_CDataIntegration_ExportBatchFromJson(json.string().c_str(), 0, &array);
+                const auto error = sparrow_CDataIntegration_ExportBatchFromJson(
+                    json_path.string().c_str(),
+                    0,
+                    &array
+                );
                 if (error != nullptr)
                 {
                     CHECK_EQ(std::string_view(error), std::string_view());
@@ -103,17 +114,17 @@ TEST_SUITE("c_data_integration")
 
     TEST_CASE("ImportBatchAndCompareToJson")
     {
-        for (const auto& json : json_to_test)
+        for (const auto& json_path : jsons_to_test)
         {
-            SUBCASE(json.filename().string().c_str())
+            SUBCASE(json_path.filename().string().c_str())
             {
                 ArrowArray array;
-                auto error = sparrow_CDataIntegration_ExportBatchFromJson(json.string().c_str(), 0, &array);
+                auto error = sparrow_CDataIntegration_ExportBatchFromJson(json_path.string().c_str(), 0, &array);
                 if (error != nullptr)
                 {
                     CHECK_EQ(std::string_view(error), std::string_view());
                 }
-                error = sparrow_CDataIntegration_ImportBatchAndCompareToJson(json.string().c_str(), 0, &array);
+                error = sparrow_CDataIntegration_ImportBatchAndCompareToJson(json_path.string().c_str(), 0, &array);
                 if (error != nullptr)
                 {
                     CHECK_EQ(std::string_view(error), std::string_view());
