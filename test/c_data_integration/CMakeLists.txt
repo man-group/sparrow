@@ -31,6 +31,7 @@ add_library(c_data_integration SHARED
     src/comparison.cpp
     src/fixedsizebinary_parser.cpp
     src/json_parser.cpp
+    src/null_parser.cpp
     src/primitive_parser.cpp
     src/string_parser.cpp
     src/stringview_parser.cpp
