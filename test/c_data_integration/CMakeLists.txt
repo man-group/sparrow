@@ -42,6 +42,7 @@ add_library(c_data_integration SHARED
     include/sparrow/c_data_integration/config.hpp
     include/sparrow/c_data_integration/constant.hpp
     include/sparrow/c_data_integration/fixedsizebinary_parser.hpp
+    include/sparrow/c_data_integration/null_parser.hpp
     include/sparrow/c_data_integration/primitive_parser.hpp
     include/sparrow/c_data_integration/string_parser.hpp
     include/sparrow/c_data_integration/stringview_parser.hpp
