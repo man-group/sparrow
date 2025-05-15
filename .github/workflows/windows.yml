@@ -102,8 +102,13 @@ jobs:
         key: ${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_targets_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}_ccache
 
     - name: Setup vcpkg environment
+      id: vcpkg
       if: matrix.target-arch.name == 'Win32'
-      uses: lukka/run-vcpkg@v11
+      uses: johnwason/vcpkg-action@v6
+      manifest-dir: ${{ github.workspace }}
+      triplet: x86-windows-release
+      token: ${{ github.token }}
+      github-binarycache: true
 
     - name: Set conda environment
       if: matrix.target-arch.name == 'Win64'
