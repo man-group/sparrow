@@ -105,10 +105,11 @@ jobs:
       id: vcpkg
       if: matrix.target-arch.name == 'Win32'
       uses: johnwason/vcpkg-action@v6
-      manifest-dir: ${{ github.workspace }}
-      triplet: x86-windows-release
-      token: ${{ github.token }}
-      github-binarycache: true
+      with:
+        manifest-dir: ${{ github.workspace }}
+        triplet: x86-windows-release
+        token: ${{ github.token }}
+        github-binarycache: true
 
     - name: Set conda environment
       if: matrix.target-arch.name == 'Win64'
