@@ -199,7 +199,7 @@ namespace sparrow::c_data_integration
             schema_map.try_emplace(name, schema);
         }
         const auto& batches = root.at("batches");
-        if (num_batches < batches.size())
+        if (num_batches >= batches.size())
         {
             throw std::runtime_error(
                 "Invalid batch number: " + std::to_string(num_batches) + " out of "
