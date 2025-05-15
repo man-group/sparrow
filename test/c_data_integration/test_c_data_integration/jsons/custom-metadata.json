@@ -1,0 +1,185 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "sort_of_pandas",
+        "type": {
+          "name": "int",
+          "isSigned": true,
+          "bitWidth": 8
+        },
+        "nullable": true,
+        "children": [],
+        "metadata": [
+          {
+            "key": "pandas",
+            "value": "{}"
+          }
+        ]
+      },
+      {
+        "name": "lots_of_meta",
+        "type": {
+          "name": "int",
+          "isSigned": true,
+          "bitWidth": 8
+        },
+        "nullable": true,
+        "children": [],
+        "metadata": [
+          {
+            "key": "a",
+            "value": "{}"
+          },
+          {
+            "key": "b",
+            "value": "{}"
+          },
+          {
+            "key": "c",
+            "value": "{}"
+          },
+          {
+            "key": "d",
+            "value": "{}"
+          },
+          {
+            "key": "..",
+            "value": "{}"
+          },
+          {
+            "key": "w",
+            "value": "{}"
+          },
+          {
+            "key": "x",
+            "value": "{}"
+          },
+          {
+            "key": "y",
+            "value": "{}"
+          },
+          {
+            "key": "z",
+            "value": "{}"
+          }
+        ]
+      },
+      {
+        "name": "unregistered_extension",
+        "type": {
+          "name": "int",
+          "isSigned": true,
+          "bitWidth": 8
+        },
+        "nullable": true,
+        "children": [],
+        "metadata": [
+          {
+            "key": "ARROW:extension:name",
+            "value": "!nonexistent"
+          },
+          {
+            "key": "ARROW:extension:metadata",
+            "value": ""
+          },
+          {
+            "key": "ARROW:integration:allow_unregistered_extension",
+            "value": "true"
+          }
+        ]
+      },
+      {
+        "name": "list_with_odd_values",
+        "type": {
+          "name": "list"
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "item",
+            "type": {
+              "name": "int",
+              "isSigned": true,
+              "bitWidth": 32
+            },
+            "nullable": true,
+            "children": [],
+            "metadata": [
+              {
+                "key": "odd_values",
+                "value": "{}"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "key": "schema_custom_0",
+        "value": "{}"
+      },
+      {
+        "key": "schema_custom_1",
+        "value": "{}"
+      }
+    ]
+  },
+  "batches": [
+    {
+      "count": 1,
+      "columns": [
+        {
+          "name": "sort_of_pandas",
+          "count": 1,
+          "VALIDITY": [
+            1
+          ],
+          "DATA": [
+            0
+          ]
+        },
+        {
+          "name": "lots_of_meta",
+          "count": 1,
+          "VALIDITY": [
+            1
+          ],
+          "DATA": [
+            -37
+          ]
+        },
+        {
+          "name": "unregistered_extension",
+          "count": 1,
+          "VALIDITY": [
+            1
+          ],
+          "DATA": [
+            75
+          ]
+        },
+        {
+          "name": "list_with_odd_values",
+          "count": 1,
+          "VALIDITY": [
+            0
+          ],
+          "OFFSET": [
+            0,
+            0
+          ],
+          "children": [
+            {
+              "name": "item",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
