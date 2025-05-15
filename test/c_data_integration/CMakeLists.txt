@@ -31,6 +31,7 @@ add_library(c_data_integration SHARED
     src/comparison.cpp
     src/fixedsizebinary_parser.cpp
     src/json_parser.cpp
+    src/null_parser.cpp
     src/primitive_parser.cpp
     src/string_parser.cpp
     src/stringview_parser.cpp
@@ -42,6 +43,7 @@ add_library(c_data_integration SHARED
     include/sparrow/c_data_integration/config.hpp
     include/sparrow/c_data_integration/constant.hpp
     include/sparrow/c_data_integration/fixedsizebinary_parser.hpp
+    include/sparrow/c_data_integration/null_parser.hpp
     include/sparrow/c_data_integration/primitive_parser.hpp
     include/sparrow/c_data_integration/string_parser.hpp
     include/sparrow/c_data_integration/stringview_parser.hpp
