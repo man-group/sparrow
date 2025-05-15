@@ -314,7 +314,7 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        template <input_metadata_container METADATA_RANGE>
         static auto create_proxy_impl(
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
@@ -324,7 +324,7 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        SPARROW_API std::size_t element_offset(std::size_t i) const;
+        [[nodiscard]] SPARROW_API std::size_t element_offset(std::size_t i) const;
         friend class union_array_crtp_base<sparse_union_array>;
     };
 
@@ -717,8 +717,8 @@ namespace sparrow
             std::move(element_type),
             std::move(format),
             std::move(type_id_to_child_index),
-            name,
-            metadata
+            std::move(name),
+            std::move(metadata)
         );
     }
 
@@ -761,8 +761,8 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             std::move(format),
-            name,                                 // name
-            metadata,                             // metadata
+            std::move(name),                      // name
+            std::move(metadata),                  // metadata
             std::nullopt,                         // flags,
             child_schemas,                        // children
             repeat_view<bool>(true, n_children),  // children_ownership
@@ -770,8 +770,7 @@ namespace sparrow
             true                                  // dictionary ownership
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs(1);
-        arr_buffs[0] = std::move(element_type).extract_storage();
+        std::vector<buffer<std::uint8_t>> arr_buffs = {std::move(element_type).extract_storage()};
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),  // length
