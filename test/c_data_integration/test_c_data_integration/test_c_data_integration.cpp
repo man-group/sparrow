@@ -29,6 +29,7 @@ const std::filesystem::path json_files_path = JSON_FILES_PATH;
 const std::vector<std::filesystem::path> json_to_test = {
     json_files_path / "primitive-empty.json",
     json_files_path / "primitive.json",
+    json_files_path / "custom-metatada.json",
 };
 
 TEST_SUITE("c_data_integration")
