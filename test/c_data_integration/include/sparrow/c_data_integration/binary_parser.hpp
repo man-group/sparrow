@@ -20,4 +20,10 @@ namespace sparrow::c_data_integration
 {
     sparrow::array
     binary_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
+
+    sparrow::array large_binary_array_from_json(
+        const nlohmann::json& array,
+        const nlohmann::json& schema,
+        const nlohmann::json& root
+    );
 }
