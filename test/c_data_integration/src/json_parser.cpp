@@ -20,9 +20,12 @@
 #include "sparrow/c_data_integration/bool_parser.hpp"
 #include "sparrow/c_data_integration/constant.hpp"
 #include "sparrow/c_data_integration/fixedsizebinary_parser.hpp"
+#include "sparrow/c_data_integration/fixedsizelist_parser.hpp"
+#include "sparrow/c_data_integration/list_parser.hpp"
 #include "sparrow/c_data_integration/primitive_parser.hpp"
 #include "sparrow/c_data_integration/string_parser.hpp"
 #include "sparrow/c_data_integration/stringview_parser.hpp"
+#include "sparrow/c_data_integration/struct_parser.hpp"
 #include "sparrow/c_data_integration/utils.hpp"
 
 namespace sparrow::c_data_integration
@@ -32,6 +35,9 @@ namespace sparrow::c_data_integration
     using array_builder_function = std::function<
         sparrow::array(const nlohmann::json&, const nlohmann::json&, const nlohmann::json&)>;
     const std::unordered_map<std::string, array_builder_function> array_builders{
+        {"struct", struct_array_from_json},
+        {"list", list_array_from_json},
+        {"largelist", large_list_array_from_json},
         {"int", primitive_array_from_json},
         {"floatingpoint", floating_point_from_json},
         {"utf8", string_array_from_json},
@@ -40,6 +46,7 @@ namespace sparrow::c_data_integration
         {"utf8view", string_view_from_json},
         {"fixedsizebinary", fixedsizebinary_from_json},
         {"bool", bool_array_from_json},
+        {"fixedsizelist", fixed_size_list_array_from_json},
     };
 
     std::vector<sparrow::array>
