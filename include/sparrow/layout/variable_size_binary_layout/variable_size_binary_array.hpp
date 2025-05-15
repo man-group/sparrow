@@ -401,13 +401,15 @@ namespace sparrow
         : base_type(std::move(proxy))
     {
         const auto type = this->get_arrow_proxy().data_type();
-        SPARROW_ASSERT_TRUE(type == data_type::STRING || type == data_type::BINARY);  // TODO: Add
-                                                                                      // data_type::LARGE_STRING
-                                                                                      // and
-                                                                                      // data_type::LARGE_BINARY
-        SPARROW_ASSERT_TRUE((
-            (type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>
-        ) );
+        SPARROW_ASSERT_TRUE(
+            type == data_type::STRING || type == data_type::LARGE_STRING || type == data_type::BINARY
+            || type == data_type::LARGE_BINARY
+        );
+        SPARROW_ASSERT_TRUE(
+            (((type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>)
+             || ((type == data_type::LARGE_STRING || type == data_type::LARGE_BINARY)
+                 && std::same_as<OT, int64_t>) )
+        );
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -415,9 +417,8 @@ namespace sparrow
     auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes)
         -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
-            std::forward<SIZES_RANGE>(sizes)
-        );
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
+        ));
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
