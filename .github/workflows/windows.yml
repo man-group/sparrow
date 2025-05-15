@@ -107,7 +107,7 @@ jobs:
       uses: johnwason/vcpkg-action@v6
       with:
         manifest-dir: ${{ github.workspace }}
-        triplet: x86-windows-release
+        triplet: x86-windows
         token: ${{ github.token }}
         github-binarycache: true
 
