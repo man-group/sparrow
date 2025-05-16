@@ -1,0 +1,187 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "f5",
+        "type": {
+          "name": "interval",
+          "unit": "YEAR_MONTH"
+        },
+        "nullable": true,
+        "children": []
+      },
+      {
+        "name": "f6",
+        "type": {
+          "name": "interval",
+          "unit": "DAY_TIME"
+        },
+        "nullable": true,
+        "children": []
+      }
+    ]
+  },
+  "batches": [
+    {
+      "count": 7,
+      "columns": [
+        {
+          "name": "f5",
+          "count": 7,
+          "VALIDITY": [
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1
+          ],
+          "DATA": [
+            -120000,
+            120000,
+            -14793,
+            24243,
+            16797,
+            -83055,
+            -38616
+          ]
+        },
+        {
+          "name": "f6",
+          "count": 7,
+          "VALIDITY": [
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "DATA": [
+            {
+              "days": 1157312,
+              "milliseconds": -13589814
+            },
+            {
+              "days": -1031269,
+              "milliseconds": 43112170
+            },
+            {
+              "days": -1234082,
+              "milliseconds": 52402076
+            },
+            {
+              "days": 1010296,
+              "milliseconds": 992457
+            },
+            {
+              "days": -3372589,
+              "milliseconds": -34019308
+            },
+            {
+              "days": -2841869,
+              "milliseconds": -16477653
+            },
+            {
+              "days": -1177312,
+              "milliseconds": -53727296
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "count": 10,
+      "columns": [
+        {
+          "name": "f5",
+          "count": 10,
+          "VALIDITY": [
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1
+          ],
+          "DATA": [
+            -120000,
+            120000,
+            5510,
+            45542,
+            -85136,
+            75545,
+            -48662,
+            -70923,
+            -82645,
+            117833
+          ]
+        },
+        {
+          "name": "f6",
+          "count": 10,
+          "VALIDITY": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1
+          ],
+          "DATA": [
+            {
+              "days": 3202797,
+              "milliseconds": -81900517
+            },
+            {
+              "days": 2540621,
+              "milliseconds": -44977239
+            },
+            {
+              "days": -2318563,
+              "milliseconds": 71756244
+            },
+            {
+              "days": -1350475,
+              "milliseconds": 85102527
+            },
+            {
+              "days": -69530,
+              "milliseconds": 39974176
+            },
+            {
+              "days": -302482,
+              "milliseconds": -49029262
+            },
+            {
+              "days": -563522,
+              "milliseconds": 7200171
+            },
+            {
+              "days": -1842354,
+              "milliseconds": 1579933
+            },
+            {
+              "days": 303453,
+              "milliseconds": -60759103
+            },
+            {
+              "days": -950197,
+              "milliseconds": 9552941
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
