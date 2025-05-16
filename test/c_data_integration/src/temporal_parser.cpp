@@ -16,6 +16,7 @@
 
 #include "sparrow/c_data_integration/constant.hpp"
 #include "sparrow/c_data_integration/utils.hpp"
+#include "sparrow/layout/temporal/interval_array.hpp"
 
 namespace sparrow::c_data_integration
 {
@@ -353,6 +354,28 @@ namespace sparrow::c_data_integration
                               }
                           );
             return get_array<sparrow::days_time_interval_array>(array, schema, values, name, std::move(metadata));
+        }
+        else if (unit == "MONTH_DAY_NANO")
+        {
+            auto values = array.at(DATA)
+                          | std::views::transform(
+                              [](const nlohmann::json& value) -> sparrow::month_day_nanoseconds_interval
+                              {
+                                  return sparrow::month_day_nanoseconds_interval{
+                                      .months = std::chrono::months{value.at("months").get<int32_t>()},
+                                      .days = std::chrono::days{value.at("days").get<int32_t>()},
+                                      .nanoseconds = std::chrono::nanoseconds{value.at("nanoseconds")
+                                                                                  .get<int64_t>()}
+                                  };
+                              }
+                          );
+            return get_array<sparrow::month_day_nanoseconds_interval_array>(
+                array,
+                schema,
+                values,
+                name,
+                std::move(metadata)
+            );
         }
         else
         {
