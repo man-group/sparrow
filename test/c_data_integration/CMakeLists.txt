@@ -34,6 +34,7 @@ add_library(c_data_integration SHARED
     src/primitive_parser.cpp
     src/string_parser.cpp
     src/stringview_parser.cpp
+    src/temporal_parser.cpp
     src/utils.cpp
     include/sparrow/c_data_integration/binary_parser.hpp
     include/sparrow/c_data_integration/bool_parser.hpp
@@ -45,6 +46,7 @@ add_library(c_data_integration SHARED
     include/sparrow/c_data_integration/primitive_parser.hpp
     include/sparrow/c_data_integration/string_parser.hpp
     include/sparrow/c_data_integration/stringview_parser.hpp
+    include/sparrow/c_data_integration/temporal_parser.hpp
     include/sparrow/c_data_integration/utils.hpp
     )
 
