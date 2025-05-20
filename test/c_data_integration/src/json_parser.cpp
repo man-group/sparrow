@@ -40,6 +40,7 @@ namespace sparrow::c_data_integration
         {"utf8", string_array_from_json},
         {"largeutf8", big_string_array_from_json},
         {"binary", binary_array_from_json},
+        {"largebinary", large_binary_array_from_json},
         {"utf8view", string_view_from_json},
         {"fixedsizebinary", fixedsizebinary_from_json},
         {"bool", bool_array_from_json},
@@ -198,6 +199,13 @@ namespace sparrow::c_data_integration
             schema_map.try_emplace(name, schema);
         }
         const auto& batches = root.at("batches");
+        if (num_batches >= batches.size())
+        {
+            throw std::runtime_error(
+                "Invalid batch number: " + std::to_string(num_batches) + " out of "
+                + std::to_string(batches.size())
+            );
+        }
         const auto& batch = batches.at(num_batches);
 
         const auto& columns = batch.at("columns");

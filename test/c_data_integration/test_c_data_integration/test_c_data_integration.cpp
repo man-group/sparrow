@@ -31,6 +31,8 @@ const std::vector<std::filesystem::path> json_to_test = {
     json_files_path / "null.json",
     json_files_path / "primitive-empty.json",
     json_files_path / "primitive.json",
+    json_files_path / "primitive_large_offsets.json",
+    json_files_path / "primitive_zerolength.json",
     json_files_path / "decimal32.json",
     json_files_path / "decimal64.json",
 #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS

@@ -40,4 +40,26 @@ namespace sparrow::c_data_integration
             return sparrow::array{sparrow::binary_array{std::move(data), false, name, std::move(metadata)}};
         }
     }
+
+    sparrow::array
+    large_binary_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
+    {
+        utils::check_type(schema, "largebinary");
+        const std::string name = schema.at("name").get<std::string>();
+        auto data_str = array.at(DATA).get<std::vector<std::string>>();
+        std::vector<std::vector<std::byte>> data = utils::hex_strings_to_bytes(data_str);
+        const bool nullable = schema.at("nullable").get<bool>();
+        auto metadata = utils::get_metadata(schema);
+        if (nullable)
+        {
+            auto validity = utils::get_validity(array);
+            return sparrow::array{
+                sparrow::big_binary_array{std::move(data), std::move(validity), name, std::move(metadata)}
+            };
+        }
+        else
+        {
+            return sparrow::array{sparrow::big_binary_array{std::move(data), false, name, std::move(metadata)}};
+        }
+    }
 }

@@ -401,13 +401,15 @@ namespace sparrow
         : base_type(std::move(proxy))
     {
         const auto type = this->get_arrow_proxy().data_type();
-        SPARROW_ASSERT_TRUE(type == data_type::STRING || type == data_type::BINARY);  // TODO: Add
-                                                                                      // data_type::LARGE_STRING
-                                                                                      // and
-                                                                                      // data_type::LARGE_BINARY
-        SPARROW_ASSERT_TRUE((
-            (type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>
-        ) );
+        SPARROW_ASSERT_TRUE(
+            type == data_type::STRING || type == data_type::LARGE_STRING || type == data_type::BINARY
+            || type == data_type::LARGE_BINARY
+        );
+        SPARROW_ASSERT_TRUE(
+            (((type == data_type::STRING || type == data_type::BINARY) && std::same_as<OT, int32_t>)
+             || ((type == data_type::LARGE_STRING || type == data_type::LARGE_BINARY)
+                 && std::same_as<OT, int64_t>) )
+        );
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
