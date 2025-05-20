@@ -38,3 +38,4 @@ jobs:
       with:
         name: sparrow-integration-image
         path: /tmp/sparrow-integration-image.tar
+        compression-level: 0

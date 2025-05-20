@@ -18,7 +18,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run integration tests
+      - name: Download docker integration test image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sparrow-integration-image
+          path: ${{ runner.temp }}
+
+      - name: Load image
         run: |
-          echo "::group::Docker Build"
-          docker run --rm -e GITHUB_ACTIONS integration
+          docker load --input ${{ runner.temp }}/sparrow-integration-image.tar
+          docker image ls -a
