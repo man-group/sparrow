@@ -19,6 +19,7 @@
 #include "sparrow/c_data_integration/binary_parser.hpp"
 #include "sparrow/c_data_integration/bool_parser.hpp"
 #include "sparrow/c_data_integration/constant.hpp"
+#include "sparrow/c_data_integration/decimal_parser.hpp"
 #include "sparrow/c_data_integration/fixedsizebinary_parser.hpp"
 #include "sparrow/c_data_integration/null_parser.hpp"
 #include "sparrow/c_data_integration/primitive_parser.hpp"
@@ -42,6 +43,7 @@ namespace sparrow::c_data_integration
         {"utf8view", string_view_from_json},
         {"fixedsizebinary", fixedsizebinary_from_json},
         {"bool", bool_array_from_json},
+        {"decimal", decimal_from_json},
     };
 
     std::vector<sparrow::array>
