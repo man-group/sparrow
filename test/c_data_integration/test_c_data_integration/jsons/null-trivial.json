@@ -1,0 +1,34 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "f0",
+        "type": {
+          "name": "null"
+        },
+        "nullable": true,
+        "children": []
+      }
+    ]
+  },
+  "batches": [
+    {
+      "count": 0,
+      "columns": [
+        {
+          "name": "f0",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "count": 0,
+      "columns": [
+        {
+          "name": "f0",
+          "count": 0
+        }
+      ]
+    }
+  ]
+}
