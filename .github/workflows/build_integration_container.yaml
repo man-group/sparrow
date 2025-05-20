@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - 'ci/docker/integration.dockerfile'
+  pull_request:
+    paths:
+      - 'ci/docker/integration.dockerfile'
 
 jobs:
   build-and-push:
