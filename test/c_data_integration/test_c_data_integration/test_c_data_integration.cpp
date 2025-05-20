@@ -26,7 +26,7 @@
 
 const std::filesystem::path json_files_path = JSON_FILES_PATH;
 
-const std::vector<std::filesystem::path> json_to_test = {
+const std::vector<std::filesystem::path> jsons_to_test = {
     json_files_path / "null-trivial.json",
     json_files_path / "null.json",
     json_files_path / "primitive-empty.json",
