@@ -1,0 +1,22 @@
+name: Build and Push Docker Image used in integration tests
+
+on:
+  push:
+    paths:
+      - 'ci/docker/integration.dockerfile'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Log in to GitHub Container Registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t ghcr.io/man-group/sparrow-integration-tests:latest -f ci/docker/integration.dockerfile .
+        docker push ghcr.io/man-group/sparrow-integration-tests:latest
