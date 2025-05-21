@@ -7,9 +7,6 @@ on:
   pull_request:
     paths:
       - 'ci/docker/integration.dockerfile'
-  schedule:
-    # Run on the 1st day of every other month at 00:00 UTC (approximately every 60 days)
-    - cron: '0 0 1 */2 *'
 
 jobs:
   build-and-push:
@@ -20,22 +17,16 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: Build and export Docker image
-      uses: docker/build-push-action@v6
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
       with:
-        context: .
-        file: ci/docker/integration.dockerfile
-        tags: sparrow-integration-tests:latest
-        outputs: type=docker,dest=/tmp/sparrow-integration-image.tar
-        push: false
-        
-    - name: Upload Docker image artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: sparrow-integration-image
-        path: /tmp/sparrow-integration-image.tar
-        compression-level: 0
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      run: docker build -t ghcr.io/man-group/sparrow-integration-tests -f ci/docker/integration.dockerfile .
+
+    - name: Push Docker image
+      run: docker push ghcr.io/man-group/sparrow-integration-tests:latest
