@@ -25,7 +25,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push Docker image
+    - name: Build Docker image
       run: docker build -t ghcr.io/man-group/sparrow-integration-tests -f ci/docker/integration.dockerfile .
 
     - name: Push Docker image
