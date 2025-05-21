@@ -23,6 +23,8 @@ jobs:
         with:
           name: sparrow-integration-image
           path: ${{ runner.temp }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Load image
         run: |
