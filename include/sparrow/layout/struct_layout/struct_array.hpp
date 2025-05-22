@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <ranges>
 #include <string_view>
 #include <version>
 
@@ -104,26 +105,30 @@ namespace sparrow
     private:
 
         template <
+            std::ranges::input_range CHILDREN_RANGE,
             validity_bitmap_input VB = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, array>
         [[nodiscard]] static auto create_proxy(
-            std::vector<array>&& children,
+            CHILDREN_RANGE&& children,
             VB&& bitmaps,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        template <std::ranges::input_range CHILDREN_RANGE, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, array>
         [[nodiscard]] static auto create_proxy(
-            std::vector<array>&& children,
+            CHILDREN_RANGE&& children,
             bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        template <std::ranges::input_range CHILDREN_RANGE, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, array>
         [[nodiscard]] static auto create_proxy_impl(
-            std::vector<array>&& children,
+            CHILDREN_RANGE&& children,
             std::optional<validity_bitmap>&& bitmap,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
@@ -151,9 +156,10 @@ namespace sparrow
         friend class detail::layout_value_functor<const self_type, inner_value_type>;
     };
 
-    template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
+    template <std::ranges::input_range CHILDREN_RANGE, validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
+        requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, array>
     auto struct_array::create_proxy(
-        std::vector<array>&& children,
+        CHILDREN_RANGE&& children,
         VB&& validity_input,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
@@ -169,9 +175,10 @@ namespace sparrow
         );
     }
 
-    template <input_metadata_container METADATA_RANGE>
+    template <std::ranges::input_range CHILDREN_RANGE, input_metadata_container METADATA_RANGE>
+        requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, array>
     auto struct_array::create_proxy(
-        std::vector<array>&& children,
+        CHILDREN_RANGE&& children,
         bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
@@ -186,9 +193,10 @@ namespace sparrow
         );
     }
 
-    template <input_metadata_container METADATA_RANGE>
+    template <std::ranges::input_range CHILDREN_RANGE, input_metadata_container METADATA_RANGE>
+        requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, array>
     auto struct_array::create_proxy_impl(
-        std::vector<array>&& children,
+        CHILDREN_RANGE&& children,
         std::optional<validity_bitmap>&& bitmap,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata

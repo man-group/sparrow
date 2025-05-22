@@ -73,162 +73,196 @@ namespace sparrow
             array arr3(std::move(flat_arr3));
             std::vector<array> children{std::move(arr1), std::move(arr2), std::move(arr3)};
 
-            struct_array arr(std::move(children));
-
-            // check the size
-            REQUIRE_EQ(arr.size(), 4);
-
-            // check the children
-            REQUIRE_EQ(arr[0].value().size(), 3);
-            REQUIRE_EQ(arr[1].value().size(), 3);
-            REQUIRE_EQ(arr[2].value().size(), 3);
-            REQUIRE_EQ(arr[3].value().size(), 3);
-
-            [[maybe_unused]] auto llol = arr[0].value();
-
-            // check the values
-            auto child0 = arr[0].value();
-            CHECK_NULLABLE_VARIANT_EQ(child0[0], std::int16_t(0));
-            CHECK_NULLABLE_VARIANT_EQ(child0[1], float(4.0f));
-            CHECK_NULLABLE_VARIANT_EQ(child0[2], std::int32_t(8));
-
-            auto child1 = arr[1].value();
-            CHECK_NULLABLE_VARIANT_EQ(child1[0], std::int16_t(1));
-            CHECK_NULLABLE_VARIANT_EQ(child1[1], float(5.0f));
-            CHECK_NULLABLE_VARIANT_EQ(child1[2], std::int32_t(9));
-
-            auto child2 = arr[2].value();
-            CHECK_NULLABLE_VARIANT_EQ(child2[0], std::int16_t(2));
-            CHECK_NULLABLE_VARIANT_EQ(child2[1], float(6.0f));
-            CHECK_NULLABLE_VARIANT_EQ(child2[2], std::int32_t(10));
-        };
-
-        TEST_CASE_TEMPLATE("struct[T, uint8]", T, std::uint8_t, std::int32_t, float, double)
-        {
-            using inner_scalar_type = T;
-            // using inner_nullable_type = nullable<inner_scalar_type>;
-
-            // number of elements in the struct array
-            const std::size_t n = 4;
-            const std::size_t n2 = 3;
-
-            // create a struct array
-            arrow_proxy proxy = test::make_struct_proxy<inner_scalar_type, uint8_t>(n);
-            struct_array struct_arr(std::move(proxy));
-            REQUIRE(struct_arr.size() == n);
-
-            SUBCASE("copy")
+            SUBCASE("with whildren, nullable, name and metadata")
             {
-                struct_array struct_arr2(struct_arr);
-                CHECK_EQ(struct_arr, struct_arr2);
+                const struct_array arr(children, false, "name", metadata_sample_opt);
 
-                struct_array struct_arr3(test::make_struct_proxy<inner_scalar_type, uint8_t>(n2));
-                CHECK_NE(struct_arr3, struct_arr);
-                struct_arr3 = struct_arr;
-                CHECK_EQ(struct_arr3, struct_arr);
+                // check the size
+                REQUIRE_EQ(arr.size(), 4);
+
+                // check the children
+                REQUIRE_EQ(arr[0].value().size(), 3);
+                REQUIRE_EQ(arr[1].value().size(), 3);
+                REQUIRE_EQ(arr[2].value().size(), 3);
+                REQUIRE_EQ(arr[3].value().size(), 3);
+
+                // check the values
+                const auto child0 = arr[0].value();
+                CHECK_NULLABLE_VARIANT_EQ(child0[0], std::int16_t(0));
+                CHECK_NULLABLE_VARIANT_EQ(child0[1], float(4.0f));
+                CHECK_NULLABLE_VARIANT_EQ(child0[2], std::int32_t(8));
+
+                const auto child1 = arr[1].value();
+                CHECK_NULLABLE_VARIANT_EQ(child1[0], std::int16_t(1));
+                CHECK_NULLABLE_VARIANT_EQ(child1[1], float(5.0f));
+                CHECK_NULLABLE_VARIANT_EQ(child1[2], std::int32_t(9));
+
+                const auto child2 = arr[2].value();
+                CHECK_NULLABLE_VARIANT_EQ(child2[0], std::int16_t(2));
+                CHECK_NULLABLE_VARIANT_EQ(child2[1], float(6.0f));
+                CHECK_NULLABLE_VARIANT_EQ(child2[2], std::int32_t(10));
+
+                const auto child3 = arr[3].value();
+                CHECK_NULLABLE_VARIANT_EQ(child3[0], std::int16_t(3));
+                CHECK_NULLABLE_VARIANT_EQ(child3[1], float(7.0f));
+                CHECK_NULLABLE_VARIANT_EQ(child3[2], std::int32_t(11));
             }
 
-            SUBCASE("move")
+            SUBCASE("with whildren, bitmap, name and metadata")
             {
-                struct_array struct_arr2(struct_arr);
-                struct_array struct_arr3(std::move(struct_arr2));
-                CHECK_EQ(struct_arr3, struct_arr);
+                std::vector<bool> bitmap{true, false, true, false};
+                const struct_array arr(children, bitmap, "name", metadata_sample_opt);
 
-                struct_array struct_arr4(test::make_struct_proxy<inner_scalar_type, uint8_t>(n2));
-                CHECK_NE(struct_arr4, struct_arr);
-                struct_arr4 = std::move(struct_arr3);
-                CHECK_EQ(struct_arr4, struct_arr);
+                // check the size
+                REQUIRE_EQ(arr.size(), 4);
+
+                // check the children
+                REQUIRE_EQ(arr[0].value().size(), 3);
+                REQUIRE_EQ(arr[2].value().size(), 3);
+
+                // check the values
+                const auto child0 = arr[0].value();
+                CHECK_NULLABLE_VARIANT_EQ(child0[0], std::int16_t(0));
+                CHECK_NULLABLE_VARIANT_EQ(child0[1], float(4.0f));
+                CHECK_NULLABLE_VARIANT_EQ(child0[2], std::int32_t(8));
+
+                CHECK_FALSE(arr[1].has_value());
+
+                const auto child2 = arr[2].value();
+                CHECK_NULLABLE_VARIANT_EQ(child2[0], std::int16_t(2));
+                CHECK_NULLABLE_VARIANT_EQ(child2[1], float(6.0f));
+                CHECK_NULLABLE_VARIANT_EQ(child2[2], std::int32_t(10));
+
+                CHECK_FALSE(arr[3].has_value());
             }
-
-            SUBCASE("operator[]")
-            {
-                for (std::size_t i = 0; i < n; ++i)
-                {
-                    auto val = struct_arr[i];
-                    REQUIRE(val.has_value());
-                    auto struct_val = val.value();
-                    REQUIRE_EQ(struct_val.size(), 2);
-
-                    auto val0_variant = struct_val[0];
-                    auto val1_variant = struct_val[1];
-
-                    REQUIRE(val0_variant.has_value());
-                    REQUIRE(val1_variant.has_value());
-
-
-                    // using const_scalar_ref = const inner_scalar_type&;
-                    using nullable_inner_scalar_type = nullable<const inner_scalar_type&, bool>;
-                    using nullable_uint8_t = nullable<const std::uint8_t&, bool>;
-
-#if SPARROW_GCC_11_2_WORKAROUND
-                    using variant_type = std::decay_t<decltype(val0_variant)>;
-                    using base_type = typename variant_type::base_type;
-#endif
-                    // visit the variant
-                    std::visit(
-                        [&i](auto&& val0)
-                        {
-                            if constexpr (std::is_same_v<std::decay_t<decltype(val0)>, nullable_inner_scalar_type>)
-                            {
-                                CHECK_EQ(val0.value(), static_cast<inner_scalar_type>(i));
-                            }
-                            else
-                            {
-                                FAIL("unexpected type");
-                            }
-                        },
-#if SPARROW_GCC_11_2_WORKAROUND
-                        static_cast<const base_type&>(val0_variant)
-#else
-                        val0_variant
-#endif
-                    );
-
-                    std::visit(
-                        [&i](auto&& val1)
-                        {
-                            if constexpr (std::is_same_v<std::decay_t<decltype(val1)>, nullable_uint8_t>)
-                            {
-                                CHECK_EQ(val1.value(), static_cast<inner_scalar_type>(i));
-                            }
-                            else
-                            {
-                                FAIL("unexpected type");
-                            }
-                        },
-#if SPARROW_GCC_11_2_WORKAROUND
-                        static_cast<const base_type&>(val1_variant)
-#else
-                        val1_variant
-#endif
-                    );
-                }
-            }
-
-            SUBCASE("operator==(struct_value, struct_value)")
-            {
-                CHECK(struct_arr[0] == struct_arr[0]);
-                CHECK(struct_arr[0] != struct_arr[1]);
-            }
-
-            SUBCASE("consistency")
-            {
-                test::generic_consistency_test(struct_arr);
-            }
-#if defined(__cpp_lib_format)
-            SUBCASE("formatting")
-            {
-                const std::string formatted = std::format("{}", struct_arr);
-                constexpr std::string_view expected = "|item 0|item 1|\n"
-                                                      "---------------\n"
-                                                      "|     0|     0|\n"
-                                                      "|     1|     1|\n"
-                                                      "|     2|     2|\n"
-                                                      "|     3|     3|\n"
-                                                      "---------------";
-                CHECK_EQ(formatted, expected);
-            }
-#endif
         }
+    };
+
+    TEST_CASE_TEMPLATE("struct[T, uint8]", T, std::uint8_t, std::int32_t, float, double)
+    {
+        using inner_scalar_type = T;
+        // using inner_nullable_type = nullable<inner_scalar_type>;
+
+        // number of elements in the struct array
+        const std::size_t n = 4;
+        const std::size_t n2 = 3;
+
+        // create a struct array
+        arrow_proxy proxy = test::make_struct_proxy<inner_scalar_type, uint8_t>(n);
+        struct_array struct_arr(std::move(proxy));
+        REQUIRE(struct_arr.size() == n);
+
+        SUBCASE("copy")
+        {
+            struct_array struct_arr2(struct_arr);
+            CHECK_EQ(struct_arr, struct_arr2);
+
+            struct_array struct_arr3(test::make_struct_proxy<inner_scalar_type, uint8_t>(n2));
+            CHECK_NE(struct_arr3, struct_arr);
+            struct_arr3 = struct_arr;
+            CHECK_EQ(struct_arr3, struct_arr);
+        }
+
+        SUBCASE("move")
+        {
+            struct_array struct_arr2(struct_arr);
+            struct_array struct_arr3(std::move(struct_arr2));
+            CHECK_EQ(struct_arr3, struct_arr);
+
+            struct_array struct_arr4(test::make_struct_proxy<inner_scalar_type, uint8_t>(n2));
+            CHECK_NE(struct_arr4, struct_arr);
+            struct_arr4 = std::move(struct_arr3);
+            CHECK_EQ(struct_arr4, struct_arr);
+        }
+
+        SUBCASE("operator[]")
+        {
+            for (std::size_t i = 0; i < n; ++i)
+            {
+                auto val = struct_arr[i];
+                REQUIRE(val.has_value());
+                auto struct_val = val.value();
+                REQUIRE_EQ(struct_val.size(), 2);
+
+                auto val0_variant = struct_val[0];
+                auto val1_variant = struct_val[1];
+
+                REQUIRE(val0_variant.has_value());
+                REQUIRE(val1_variant.has_value());
+
+
+                // using const_scalar_ref = const inner_scalar_type&;
+                using nullable_inner_scalar_type = nullable<const inner_scalar_type&, bool>;
+                using nullable_uint8_t = nullable<const std::uint8_t&, bool>;
+
+#if SPARROW_GCC_11_2_WORKAROUND
+                using variant_type = std::decay_t<decltype(val0_variant)>;
+                using base_type = typename variant_type::base_type;
+#endif
+                // visit the variant
+                std::visit(
+                    [&i](auto&& val0)
+                    {
+                        if constexpr (std::is_same_v<std::decay_t<decltype(val0)>, nullable_inner_scalar_type>)
+                        {
+                            CHECK_EQ(val0.value(), static_cast<inner_scalar_type>(i));
+                        }
+                        else
+                        {
+                            FAIL("unexpected type");
+                        }
+                    },
+#if SPARROW_GCC_11_2_WORKAROUND
+                    static_cast<const base_type&>(val0_variant)
+#else
+                    val0_variant
+#endif
+                );
+
+                std::visit(
+                    [&i](auto&& val1)
+                    {
+                        if constexpr (std::is_same_v<std::decay_t<decltype(val1)>, nullable_uint8_t>)
+                        {
+                            CHECK_EQ(val1.value(), static_cast<inner_scalar_type>(i));
+                        }
+                        else
+                        {
+                            FAIL("unexpected type");
+                        }
+                    },
+#if SPARROW_GCC_11_2_WORKAROUND
+                    static_cast<const base_type&>(val1_variant)
+#else
+                    val1_variant
+#endif
+                );
+            }
+        }
+
+        SUBCASE("operator==(struct_value, struct_value)")
+        {
+            CHECK(struct_arr[0] == struct_arr[0]);
+            CHECK(struct_arr[0] != struct_arr[1]);
+        }
+
+        SUBCASE("consistency")
+        {
+            test::generic_consistency_test(struct_arr);
+        }
+#if defined(__cpp_lib_format)
+        SUBCASE("formatting")
+        {
+            const std::string formatted = std::format("{}", struct_arr);
+            constexpr std::string_view expected = "|item 0|item 1|\n"
+                                                  "---------------\n"
+                                                  "|     0|     0|\n"
+                                                  "|     1|     1|\n"
+                                                  "|     2|     2|\n"
+                                                  "|     3|     3|\n"
+                                                  "---------------";
+            CHECK_EQ(formatted, expected);
+        }
+#endif
     }
 }
