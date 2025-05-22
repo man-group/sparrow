@@ -27,6 +27,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Load image
+        permissions: {packages: write}
         run: |
           docker load --input ${{ runner.temp }}/sparrow-integration-image.tar
           docker image ls -a
