@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
+#include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/utils/nullable.hpp"
@@ -67,15 +69,16 @@ namespace sparrow
         }
     };
 
+    const std::vector<std::string> words{"hello", " ", "ugly", "", "world"};
+    const std::unordered_set<std::size_t> where_nulls{2, 3};
+
     TEST_SUITE("string_array")
     {
         TEST_CASE("convenience")
         {
             SUBCASE("high-level")
             {
-                std::vector<std::string> words{"hello", " ", "ugly", "", "world"};
-                std::vector<std::size_t> where_nulls{2, 3};
-                string_array array(words, std::move(where_nulls), "name", metadata_sample_opt);
+                string_array array(words, where_nulls, "name", metadata_sample_opt);
 
                 CHECK_EQ(array.name(), "name");
                 test_metadata(metadata_sample, *(array.metadata()));
@@ -107,11 +110,57 @@ namespace sparrow
             {
                 CHECK_NOTHROW(layout_type(std::move(m_arrow_proxy)));
             }
+
+            SUBCASE("from u8_buffer, offset_buffer_type, validity_bitmap_input, name and metadata")
+            {
+                auto size_range = words
+                                  | std::views::transform(
+                                      [](const auto& v)
+                                      {
+                                          return std::ranges::size(v);
+                                      }
+                                  );
+                auto offset_buffer = layout_type::offset_from_sizes(size_range);
+                u8_buffer<char> data_buffer(std::ranges::views::join(words));
+                CHECK_NOTHROW(
+                    layout_type{std::move(data_buffer), std::move(offset_buffer), where_nulls, "name", metadata_sample_opt}
+                );
+
+                CHECK_NOTHROW(layout_type{std::move(data_buffer), std::move(offset_buffer)});
+            }
+
+            SUBCASE("from values range, validity input, name and metadata")
+            {
+                CHECK_NOTHROW(layout_type{words, where_nulls, "name", metadata_sample_opt});
+            }
+
+            SUBCASE("from  values range, nullable, name and metadata")
+            {
+                CHECK_NOTHROW(layout_type{words, true, "name", metadata_sample_opt});
+                CHECK_NOTHROW(layout_type{words, false, "name", metadata_sample_opt});
+            }
+
+            SUBCASE("from nullable range, name and metadata")
+            {
+                std::vector<nullable<std::string>> nullable_words;
+                for (size_t i = 0; i < words.size(); ++i)
+                {
+                    if (where_nulls.contains(i))
+                    {
+                        nullable_words.emplace_back();
+                    }
+                    else
+                    {
+                        nullable_words.emplace_back(words[i]);
+                    }
+                }
+                CHECK_NOTHROW(layout_type{nullable_words, "name", metadata_sample_opt});
+            }
         }
 
         TEST_CASE_FIXTURE(string_array_fixture, "copy")
         {
-            layout_type ar(m_arrow_proxy);
+            const layout_type ar(m_arrow_proxy);
             layout_type ar2(ar);
             CHECK_EQ(ar, ar2);
 
