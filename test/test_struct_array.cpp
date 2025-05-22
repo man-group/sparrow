@@ -87,22 +87,22 @@ namespace sparrow
                 REQUIRE_EQ(arr[3].value().size(), 3);
 
                 // check the values
-                const auto& child0 = arr[0].value();
+                const auto child0 = arr[0].value();
                 CHECK_NULLABLE_VARIANT_EQ(child0[0], std::int16_t(0));
                 CHECK_NULLABLE_VARIANT_EQ(child0[1], float(4.0f));
                 CHECK_NULLABLE_VARIANT_EQ(child0[2], std::int32_t(8));
 
-                const auto& child1 = arr[1].value();
+                const auto child1 = arr[1].value();
                 CHECK_NULLABLE_VARIANT_EQ(child1[0], std::int16_t(1));
                 CHECK_NULLABLE_VARIANT_EQ(child1[1], float(5.0f));
                 CHECK_NULLABLE_VARIANT_EQ(child1[2], std::int32_t(9));
 
-                const auto& child2 = arr[2].value();
+                const auto child2 = arr[2].value();
                 CHECK_NULLABLE_VARIANT_EQ(child2[0], std::int16_t(2));
                 CHECK_NULLABLE_VARIANT_EQ(child2[1], float(6.0f));
                 CHECK_NULLABLE_VARIANT_EQ(child2[2], std::int32_t(10));
 
-                const auto& child3 = arr[3].value();
+                const auto child3 = arr[3].value();
                 CHECK_NULLABLE_VARIANT_EQ(child3[0], std::int16_t(3));
                 CHECK_NULLABLE_VARIANT_EQ(child3[1], float(7.0f));
                 CHECK_NULLABLE_VARIANT_EQ(child3[2], std::int32_t(11));
@@ -119,17 +119,16 @@ namespace sparrow
                 // check the children
                 REQUIRE_EQ(arr[0].value().size(), 3);
                 REQUIRE_EQ(arr[2].value().size(), 3);
-                ;
 
                 // check the values
-                const auto& child0 = arr[0].value();
+                const auto child0 = arr[0].value();
                 CHECK_NULLABLE_VARIANT_EQ(child0[0], std::int16_t(0));
                 CHECK_NULLABLE_VARIANT_EQ(child0[1], float(4.0f));
                 CHECK_NULLABLE_VARIANT_EQ(child0[2], std::int32_t(8));
 
                 CHECK_FALSE(arr[1].has_value());
 
-                const auto& child2 = arr[2].value();
+                const auto child2 = arr[2].value();
                 CHECK_NULLABLE_VARIANT_EQ(child2[0], std::int16_t(2));
                 CHECK_NULLABLE_VARIANT_EQ(child2[1], float(6.0f));
                 CHECK_NULLABLE_VARIANT_EQ(child2[2], std::int32_t(10));
