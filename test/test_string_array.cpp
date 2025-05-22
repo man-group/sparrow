@@ -113,6 +113,7 @@ namespace sparrow
 
             SUBCASE("from u8_buffer, offset_buffer_type, validity_bitmap_input, name and metadata")
             {
+                auto joined_words = std::ranges::views::join(words);
                 auto size_range = words
                                   | std::views::transform(
                                       [](const auto& v)
@@ -121,12 +122,10 @@ namespace sparrow
                                       }
                                   );
                 auto offset_buffer = layout_type::offset_from_sizes(size_range);
-                u8_buffer<char> data_buffer(std::ranges::views::join(words));
+                u8_buffer<char> data_buffer(joined_words);
                 CHECK_NOTHROW(
                     layout_type{std::move(data_buffer), std::move(offset_buffer), where_nulls, "name", metadata_sample_opt}
                 );
-
-                CHECK_NOTHROW(layout_type{std::move(data_buffer), std::move(offset_buffer)});
             }
 
             SUBCASE("from values range, validity input, name and metadata")
