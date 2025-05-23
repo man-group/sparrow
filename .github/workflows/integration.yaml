@@ -5,10 +5,6 @@ on:
   pull_request:
   push:
     branches: [main]
-  
-
-permissions:
-  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.job }}-${{ github.ref }}
@@ -17,7 +13,6 @@ concurrency:
 jobs:
   integration:
     runs-on: ubuntu-latest
-    permissions: {packages: write}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,7 +25,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Load image
-        permissions: {packages: write}
         run: |
           docker load --input ${{ runner.temp }}/sparrow-integration-image.tar
           docker image ls -a
