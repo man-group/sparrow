@@ -1,9 +1,11 @@
 name: Integration
 
 on:
+  permissions: write-all
   pull_request:
   push:
     branches: [main]
+  
 
 permissions:
   contents: read
