@@ -61,7 +61,7 @@ jobs:
     - name: Run Integration tests
       run: |
         docker run --rm \
-          -e ARCHERY_INTEGRATION_WITH_EXTERNAL_LIBRARY=/workspace/build/bin/Release/
+          -e ARCHERY_INTEGRATION_WITH_EXTERNAL_LIBRARY=/workspace/build/bin/Release/ \
           -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_ARRAY_EXPORTER=true \
           -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_ARRAY_IMPORTER=true \
           -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_SCHEMA_EXPORTER=true \
