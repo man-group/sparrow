@@ -42,7 +42,7 @@ jobs:
           -Bbuild \
           -DCMAKE_BUILD_TYPE:STRING=RELEASE \
           -DUSE_DATE_POLYFILL=OFF \
-          -DBUILD_TESTS=OFF \
+          -DBUILD_TESTS=ON \
           -DBUILD_EXAMPLES=OFF \
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
@@ -53,8 +53,7 @@ jobs:
 
     - name: Build c_data_integration target
       working-directory: build
-      run: |
-        cmake --build . --config Release --target c_data_integration
+      run: cmake --build . --config Release --target c_data_integration
 
     - name: Build Docker image
       run: docker build -t sparrow/integration-tests -f ci/docker/integration.dockerfile .
