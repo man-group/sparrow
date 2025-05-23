@@ -1,5 +1,7 @@
 name: Build and Push Docker Image used in integration tests
 
+permissions: write-all
+
 on:
   push:
     paths:
@@ -11,9 +13,6 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
