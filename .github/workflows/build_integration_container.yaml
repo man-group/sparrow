@@ -26,14 +26,22 @@ jobs:
         sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev
 
     - name: Install specific version of tzdata
-      if: matrix.date-polyfill == 'OFF'
       run: sudo apt-get install tzdata=2024a-2ubuntu1 -y --allow-downgrades
+
+    - name: Set conda environment
+      uses: mamba-org/setup-micromamba@main
+      with:
+        environment-name: myenv
+        environment-file: environment-dev.yml
+        init-shell: bash
+        cache-downloads: true
 
     - name: Configure using CMake
       run: |
         cmake -G Ninja \
           -Bbuild \
           -DCMAKE_BUILD_TYPE:STRING=RELEASE \
+          -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
           -DUSE_DATE_POLYFILL=ON \
           -DBUILD_TESTS=ON \
           -DBUILD_EXAMPLES=OFF \
