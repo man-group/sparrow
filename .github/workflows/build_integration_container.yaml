@@ -24,8 +24,15 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build Docker image
-      run: docker build -t ghcr.io/man-group/sparrow-integration-tests -f ci/docker/integration.dockerfile .
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-    - name: Push Docker image
-      run: docker push ghcr.io/man-group/sparrow-integration-tests:latest
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: ci/docker/integration.dockerfile
+        push: true
+        tags: sparrow/integration_tests:latest
+        cache-from: type=registry,ref=sparrow/integration_tests:latest
+        cache-to: type=inline,mode=min
