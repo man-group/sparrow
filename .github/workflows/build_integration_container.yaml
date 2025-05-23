@@ -51,10 +51,10 @@ jobs:
           -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
           -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
 
-    - name: Run c_data_integration tests
+    - name: Build c_data_integration target
       working-directory: build
       run: |
-        cmake --build . --config ${{matrix.config}} --target c_data_integration
+        cmake --build . --config Release --target c_data_integration
 
     - name: Build Docker image
       run: docker build -t sparrow/integration-tests -f ci/docker/integration.dockerfile .
