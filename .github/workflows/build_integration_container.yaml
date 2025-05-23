@@ -23,7 +23,7 @@ jobs:
     - name: Install mold and pthread
       run: |
         sudo apt-get update
-        sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev
+        sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev doctest-dev
 
     - name: Install specific version of tzdata
       run: sudo apt-get install tzdata=2024a-2ubuntu1 -y --allow-downgrades
@@ -46,7 +46,7 @@ jobs:
           -DBUILD_EXAMPLES=OFF \
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
-          -DFETCH_DEPENDENCIES_WITH_CMAKE=ON \
+          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
           -DSPARROW_BUILD_SHARED=ON \
           -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
           -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
