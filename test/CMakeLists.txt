@@ -42,12 +42,12 @@ if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE 
     include(FetchContent)
 
     if(NOT doctest_FOUND)
-        message(STATUS "📦 Fetching doctest v2.4.11")
+        message(STATUS "📦 Fetching doctest v2.4.12")
         FetchContent_Declare(
             doctest
             GIT_SHALLOW TRUE
             GIT_REPOSITORY https://github.com/doctest/doctest.git
-            GIT_TAG v2.4.11
+            GIT_TAG v2.4.12
             GIT_PROGRESS TRUE
             SYSTEM
             EXCLUDE_FROM_ALL)
