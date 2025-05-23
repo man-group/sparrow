@@ -31,10 +31,12 @@
 #include "sparrow/layout/temporal/interval_array.hpp"
 #include "sparrow/layout/temporal/time_array.hpp"
 #include "sparrow/layout/temporal/timestamp_array.hpp"
+#include "sparrow/layout/temporal/timestamp_without_timezone_array.hpp"
 #include "sparrow/layout/union_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
+#include "sparrow/utils/temporal.hpp"
 
 namespace sparrow
 {
@@ -139,13 +141,41 @@ namespace sparrow
                 case data_type::DATE_MILLISECONDS:
                     return func(unwrap_array<date_milliseconds_array>(ar));
                 case data_type::TIMESTAMP_SECONDS:
-                    return func(unwrap_array<timestamp_array<timestamp<std::chrono::seconds>>>(ar));
+                    if (get_timezone(ar.get_arrow_proxy()) == nullptr)
+                    {
+                        return func(unwrap_array<timestamp_without_timezone_seconds_array>(ar));
+                    }
+                    else
+                    {
+                        return func(unwrap_array<timestamp_seconds_array>(ar));
+                    }
                 case data_type::TIMESTAMP_MILLISECONDS:
-                    return func(unwrap_array<timestamp_array<timestamp<std::chrono::milliseconds>>>(ar));
+                    if (get_timezone(ar.get_arrow_proxy()) == nullptr)
+                    {
+                        return func(unwrap_array<timestamp_without_timezone_milliseconds_array>(ar));
+                    }
+                    else
+                    {
+                        return func(unwrap_array<timestamp_milliseconds_array>(ar));
+                    }
                 case data_type::TIMESTAMP_MICROSECONDS:
-                    return func(unwrap_array<timestamp_array<timestamp<std::chrono::microseconds>>>(ar));
+                    if (get_timezone(ar.get_arrow_proxy()) == nullptr)
+                    {
+                        return func(unwrap_array<timestamp_without_timezone_microseconds_array>(ar));
+                    }
+                    else
+                    {
+                        return func(unwrap_array<timestamp_microseconds_array>(ar));
+                    }
                 case data_type::TIMESTAMP_NANOSECONDS:
-                    return func(unwrap_array<timestamp_array<timestamp<std::chrono::nanoseconds>>>(ar));
+                    if (get_timezone(ar.get_arrow_proxy()) == nullptr)
+                    {
+                        return func(unwrap_array<timestamp_without_timezone_nanoseconds_array>(ar));
+                    }
+                    else
+                    {
+                        return func(unwrap_array<timestamp_nanoseconds_array>(ar));
+                    }
                 case data_type::TIME_SECONDS:
                     return func(unwrap_array<time_seconds_array>(ar));
                 case data_type::TIME_MILLISECONDS:
