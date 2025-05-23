@@ -41,13 +41,12 @@ jobs:
         cmake -G Ninja \
           -Bbuild \
           -DCMAKE_BUILD_TYPE:STRING=RELEASE \
-          -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
           -DUSE_DATE_POLYFILL=OFF \
-          -DBUILD_TESTS=ON \
+          -DBUILD_TESTS=OFF \
           -DBUILD_EXAMPLES=OFF \
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
-          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
+          -DFETCH_DEPENDENCIES_WITH_CMAKE=ON \
           -DSPARROW_BUILD_SHARED=ON \
           -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
           -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
@@ -55,7 +54,7 @@ jobs:
     - name: Run c_data_integration tests
       working-directory: build
       run: |
-        cmake --build . --config ${{matrix.config}} --target run_c_data_integration_with_junit_report
+        cmake --build . --config ${{matrix.config}} --target c_data_integration
 
     - name: Build Docker image
       run: docker build -t sparrow/integration-tests -f ci/docker/integration.dockerfile .
