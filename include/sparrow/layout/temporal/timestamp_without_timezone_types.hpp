@@ -23,12 +23,22 @@ namespace sparrow
      */
     struct zoned_time_without_timezone_seconds : public std::chrono::duration<int32_t>
     {
+        using self_type = zoned_time_without_timezone_seconds;
+
         zoned_time_without_timezone_seconds() = default;
 
         explicit zoned_time_without_timezone_seconds(int32_t seconds)
             : std::chrono::duration<int32_t>(seconds)
         {
         }
+
+        ~zoned_time_without_timezone_seconds() = default;
+
+        zoned_time_without_timezone_seconds(const self_type&) = default;
+        self_type& operator=(const self_type&) = default;
+
+        zoned_time_without_timezone_seconds(self_type&&) = default;
+        self_type& operator=(self_type&&) = default;
     };
 
     /**
