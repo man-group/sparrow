@@ -67,6 +67,9 @@ namespace sparrow
 
         using value_type = T;
 
+        template <allocator A>
+        using allocator_value_type = typename std::allocator_traits<std::decay_t<A>>::value_type;
+
         any_allocator();
         any_allocator(const any_allocator& rhs);
         any_allocator(any_allocator&&) noexcept;
@@ -76,7 +79,8 @@ namespace sparrow
 
         template <class A>
         any_allocator(A&& alloc)
-            requires(not std::same_as<std::remove_cvref_t<A>, any_allocator> and sparrow::allocator<A>)
+            requires(not std::same_as<std::remove_cvref_t<A>, any_allocator> and allocator<A>
+                     and std::same_as<allocator_value_type<A>, T>)
             : m_storage(make_storage(std::forward<A>(alloc)))
         {
         }
@@ -111,20 +115,12 @@ namespace sparrow
 
             [[nodiscard]] T* allocate(std::size_t n) override
             {
-                return reinterpret_cast<T*>(m_alloc.allocate(n));  // TODO: To refactor. The allocator should
-                                                                   // return the right type
+                return m_alloc.allocate(n);
             }
 
             void deallocate(T* p, std::size_t n) override
             {
-#if defined(__GNUC__)
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wcast-align"
-#endif
-                m_alloc.deallocate(reinterpret_cast<A::value_type*>(p), n);
-#if defined(__GNUC__)
-#    pragma GCC diagnostic pop
-#endif
+                m_alloc.deallocate(p, n);
             }
 
             [[nodiscard]] std::unique_ptr<interface> clone() const override
