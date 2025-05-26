@@ -71,4 +71,3 @@ jobs:
           -v ${{ github.workspace }}:/workspace \
           -w /arrow-integration sparrow/integration-tests \
           "/arrow-integration/ci/scripts/integration_arrow.sh /arrow-integration /build"
-
