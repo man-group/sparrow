@@ -32,7 +32,7 @@ namespace sparrow::c_data_integration
         if (std::strcmp(schema->format, schema_from_json->format) != 0)
         {
             differences.push_back(
-                prefix + " format mismatch: " + schema->format + " vs " + schema_from_json->format
+                prefix + " format mismatch: pointer=" + schema->format + " vs json=" + schema_from_json->format
             );
         }
         if ((schema->name != nullptr) || (schema_from_json->name != nullptr))
@@ -49,7 +49,7 @@ namespace sparrow::c_data_integration
                 if (std::strcmp(schema->name, schema_from_json->name) != 0)
                 {
                     differences.push_back(
-                        prefix + " name mismatch: " + schema->name + " vs " + schema_from_json->name
+                        prefix + " name mismatch: pointer=" + schema->name + " vs json=" + schema_from_json->name
                     );
                 }
             }
@@ -57,15 +57,15 @@ namespace sparrow::c_data_integration
         if (schema->flags != schema_from_json->flags)
         {
             differences.push_back(
-                prefix + " flags mismatch: " + std::to_string(schema->flags) + " vs "
-                + std::to_string(schema_from_json->flags)
+                prefix + " flags mismatch: pointer=" + std::to_string(schema->flags)
+                + " vs json=" + std::to_string(schema_from_json->flags)
             );
         }
         if (schema->n_children != schema_from_json->n_children)
         {
             differences.push_back(
-                prefix + " children count mismatch: " + std::to_string(schema->n_children) + " vs "
-                + std::to_string(schema_from_json->n_children)
+                prefix + " children count mismatch: pointer=" + std::to_string(schema->n_children)
+                + " vs json=" + std::to_string(schema_from_json->n_children)
             );
         }
         else
@@ -87,8 +87,8 @@ namespace sparrow::c_data_integration
         if (schema_from_json_has_dict != schema_has_dict)
         {
             differences.push_back(
-                prefix + " dictionary mismatch: " + std::to_string(schema_from_json_has_dict) + " vs "
-                + std::to_string(schema_has_dict)
+                prefix + " dictionary mismatch: pointer=" + std::to_string(schema_has_dict)
+                + " vs json=" + std::to_string(schema_from_json_has_dict)
             );
         }
         if (schema_from_json_has_dict && schema_has_dict)
@@ -125,22 +125,22 @@ namespace sparrow::c_data_integration
         if (array->length != array_from_json->length)
         {
             differences.push_back(
-                prefix + " length mismatch: " + std::to_string(array->length) + " vs "
-                + std::to_string(array_from_json->length)
+                prefix + " length mismatch: pointer=" + std::to_string(array->length)
+                + " vs json=" + std::to_string(array_from_json->length)
             );
         }
         if (array->null_count != array_from_json->null_count)
         {
             differences.push_back(
-                prefix + " null count mismatch: " + std::to_string(array->null_count) + " vs "
-                + std::to_string(array_from_json->null_count)
+                prefix + " null count mismatch: pointer=" + std::to_string(array->null_count)
+                + " vs json=" + std::to_string(array_from_json->null_count)
             );
         }
         if (array->n_buffers != array_from_json->n_buffers)
         {
             differences.push_back(
-                prefix + " buffers count mismatch: " + std::to_string(array->n_buffers) + " vs "
-                + std::to_string(array_from_json->n_buffers)
+                prefix + " buffers count mismatch: pointer=" + std::to_string(array->n_buffers)
+                + " vs json=" + std::to_string(array_from_json->n_buffers)
             );
         }
         else
@@ -155,8 +155,8 @@ namespace sparrow::c_data_integration
                 if (from_json_buffer_size != from_buffer_size)
                 {
                     differences.push_back(
-                        prefix + " buffer [" + std::to_string(i) + "] size mismatch: "
-                        + std::to_string(from_json_buffer_size) + " vs " + std::to_string(from_buffer_size)
+                        prefix + " buffer [" + std::to_string(i) + "] size mismatch: pointer="
+                        + std::to_string(from_buffer_size) + " vs json=" + std::to_string(from_json_buffer_size)
                     );
                     continue;
                 }
@@ -166,8 +166,8 @@ namespace sparrow::c_data_integration
                     {
                         differences.push_back(
                             prefix + " buffer [" + std::to_string(i) + "] mismatch [" + std::to_string(y)
-                            + "]:" + std::to_string(from_json.buffers()[i][y]) + " vs "
-                            + std::to_string(from.buffers()[i][y])
+                            + "]: pointer=" + std::to_string(from.buffers()[i][y])
+                            + " vs json=" + std::to_string(from_json.buffers()[i][y])
                         );
                     }
                 }
@@ -176,8 +176,8 @@ namespace sparrow::c_data_integration
         if (array->n_children != array_from_json->n_children)
         {
             differences.push_back(
-                prefix + " children count mismatch: " + std::to_string(array->n_children) + " vs "
-                + std::to_string(array_from_json->n_children)
+                prefix + " children count mismatch: pointer=" + std::to_string(array->n_children)
+                + " vs json=" + std::to_string(array_from_json->n_children)
             );
         }
         else

@@ -66,8 +66,9 @@ const char* external_CDataIntegration_ImportSchemaAndCompareToJson(const char* j
         sparrow::struct_array struct_array = record_batch.extract_struct_array();
         auto [array_from_json, schema_from_json] = sparrow::extract_arrow_structures(std::move(struct_array));
         array_from_json.release(&array_from_json);
+        const std::string schema_name = schema->name != nullptr ? std::string(schema->name) : "N/A";
         const std::optional<std::string> result = sparrow::c_data_integration::compare_schemas(
-            "Schema",
+            "Schema " + schema_name,
             schema,
             &schema_from_json
         );
@@ -128,8 +129,10 @@ external_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, int
         );
         sparrow::struct_array struct_array = record_batch.extract_struct_array();
         auto [array_from_json, schema_from_json] = sparrow::extract_arrow_structures(std::move(struct_array));
+        const std::string schema_name = schema_from_json.name != nullptr ? std::string(schema_from_json.name)
+                                                                         : "N/A";
         const std::optional<std::string> result = sparrow::c_data_integration::compare_arrays(
-            "Batch",
+            "Batch " + schema_name,
             batch,
             &array_from_json,
             &schema_from_json
