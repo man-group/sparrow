@@ -68,5 +68,5 @@ jobs:
           -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_SCHEMA_IMPORTER=true \
           -v ${{ github.workspace }}:/workspace \
           -w /arrow-integration sparrow/integration-tests \
-          /arrow-integration/ci/scripts/integration_arrow.sh /arrow-integration /build
+          "/arrow-integration/ci/scripts/integration_arrow.sh /arrow-integration /build"
 
