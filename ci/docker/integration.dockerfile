@@ -41,7 +41,9 @@ ENV ARROW_NANOARROW_PATH=/build/nanoarrow
 ENV ARROW_RUST_EXE_PATH=/build/rust/debug
 ENV BUILD_DOCS_CPP=OFF
 
-RUN apt-get install build-essential
+RUN apt update
+
+RUN apt install build-essential
 
 # Clone the arrow monorepo // TODO: change to the official repo
 RUN git clone --depth 1 --branch archery_supports_external_libraries https://github.com/Alex-PLACET/arrow.git /arrow-integration --recurse-submodules
