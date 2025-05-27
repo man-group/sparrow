@@ -20,10 +20,10 @@ jobs:
     - name: Run sccache-cache
       uses: mozilla-actions/sccache-action@v0.0.9
 
-    - name: Install mold and pthread
+    - name: Install dependnecies
       run: |
         sudo apt-get update
-        sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev doctest-dev
+        sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev doctest-dev date-dev
 
     - name: Install specific version of tzdata
       run: sudo apt-get install tzdata
