@@ -43,7 +43,7 @@ ENV BUILD_DOCS_CPP=OFF
 
 RUN apt update
 
-RUN apt install build-essential
+RUN apt install build-essential -y
 
 # Clone the arrow monorepo // TODO: change to the official repo
 RUN git clone --depth 1 --branch archery_supports_external_libraries https://github.com/Alex-PLACET/arrow.git /arrow-integration --recurse-submodules
