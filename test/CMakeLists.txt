@@ -42,6 +42,7 @@ if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE 
             SYSTEM
             EXCLUDE_FROM_ALL)
         FetchContent_MakeAvailable(doctest)
+        message(STATUS "\t✅ Fetched doctest v2.4.12")
     endif()
 
     # if(NOT Catch2_FOUND)
@@ -78,7 +79,6 @@ if(NOT CMAKE_BUILD_TYPE)
 else()
     message(STATUS "Tests build type is ${CMAKE_BUILD_TYPE}")
 endif()
-
 
 add_subdirectory(doctest_better_junit)
 

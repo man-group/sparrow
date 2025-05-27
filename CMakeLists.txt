@@ -168,6 +168,8 @@ if(USE_DATE_POLYFILL)
         include(FetchContent)
         if(NOT date_FOUND)
             message(STATUS "📦 Fetching date polyfill")
+            set(USE_SYSTEM_TZ_DB ON)
+            set(BUILD_TZ_LIB ON)
             FetchContent_Declare(
                 date
                 GIT_SHALLOW TRUE
@@ -178,6 +180,8 @@ if(USE_DATE_POLYFILL)
                 EXCLUDE_FROM_ALL)
             FetchContent_MakeAvailable(date)
             message(STATUS "\t✅ Fetched date polyfill")
+        else()
+            message(STATUS "📦 date polyfill found here: ${date_DIR}")
         endif()
     endif()
     list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
