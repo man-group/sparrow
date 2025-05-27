@@ -41,7 +41,7 @@ jobs:
         cmake -G Ninja \
           -Bbuild \
           -DCMAKE_BUILD_TYPE:STRING=RELEASE \
-          -DUSE_DATE_POLYFILL=OFF \
+          -DUSE_DATE_POLYFILL=TRUE \
           -DBUILD_TESTS=ON \
           -DBUILD_EXAMPLES=OFF \
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
