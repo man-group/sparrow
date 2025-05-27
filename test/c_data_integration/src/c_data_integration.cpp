@@ -66,7 +66,7 @@ const char* external_CDataIntegration_ImportSchemaAndCompareToJson(const char* j
         sparrow::struct_array struct_array = record_batch.extract_struct_array();
         auto [array_from_json, schema_from_json] = sparrow::extract_arrow_structures(std::move(struct_array));
         array_from_json.release(&array_from_json);
-        const std::string schema_name = schema->name != nullptr ? std::string(schema->name) : "N/A";
+        const std::string schema_name = schema->name != nullptr ? std::string(schema->name) : "nullptr";
         const std::optional<std::string> result = sparrow::c_data_integration::compare_schemas(
             "Schema " + schema_name,
             schema,

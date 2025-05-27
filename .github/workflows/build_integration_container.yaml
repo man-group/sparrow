@@ -1,4 +1,4 @@
-name: Build and Push Docker Image used in integration tests
+name: Integration tests
 
 permissions: write-all
 

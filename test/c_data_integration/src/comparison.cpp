@@ -39,7 +39,10 @@ namespace sparrow::c_data_integration
         {
             if ((schema->name != nullptr) != (schema_from_json->name != nullptr))
             {
-                differences.push_back(prefix + " name mismatch: one is null");
+                differences.push_back(
+                    prefix + " name mismatch: pointer=" + std::string(schema->name ? schema->name : "nullptr")
+                    + " vs json=" + std::string(schema_from_json->name ? schema_from_json->name : "nullptr")
+                );
             }
             else if (schema->name != nullptr && schema_from_json->name != nullptr)
             {
@@ -49,7 +52,8 @@ namespace sparrow::c_data_integration
                 if (std::strcmp(schema->name, schema_from_json->name) != 0)
                 {
                     differences.push_back(
-                        prefix + " name mismatch: pointer=" + schema->name + " vs json=" + schema_from_json->name
+                        prefix + " name mismatch: pointer=" + std::string(schema->name)
+                        + " vs json=" + std::string(schema_from_json->name)
                     );
                 }
             }
