@@ -23,18 +23,10 @@ jobs:
     - name: Install dependnecies
       run: |
         sudo apt-get update
-        sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev doctest-dev libhowardhinnant-date-dev
+        sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev doctest-dev
 
     - name: Install specific version of tzdata
       run: sudo apt-get install tzdata
-
-    - name: Set conda environment
-      uses: mamba-org/setup-micromamba@main
-      with:
-        environment-name: myenv
-        environment-file: environment-dev.yml
-        init-shell: bash
-        cache-downloads: true
 
     - name: Configure using CMake
       run: |
