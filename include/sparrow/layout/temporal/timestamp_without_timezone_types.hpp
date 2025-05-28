@@ -21,12 +21,12 @@ namespace sparrow
     /**
      * A zoned time value without timezone, in seconds.
      */
-    struct zoned_time_without_timezone_seconds : public std::chrono::duration<int32_t>
+    struct zoned_time_without_timezone_seconds : public std::chrono::duration<int64_t>
     {
         zoned_time_without_timezone_seconds() = default;
 
-        explicit zoned_time_without_timezone_seconds(int32_t seconds)
-            : std::chrono::duration<int32_t>(seconds)
+        explicit zoned_time_without_timezone_seconds(int64_t seconds)
+            : std::chrono::duration<int64_t>(seconds)
         {
         }
     };
@@ -34,12 +34,12 @@ namespace sparrow
     /**
      * A zoned time value without timezone, in milliseconds.
      */
-    struct zoned_time_without_timezone_milliseconds : public std::chrono::duration<int32_t, std::milli>
+    struct zoned_time_without_timezone_milliseconds : public std::chrono::duration<int64_t, std::milli>
     {
         zoned_time_without_timezone_milliseconds() = default;
 
-        explicit zoned_time_without_timezone_milliseconds(int32_t milliseconds)
-            : std::chrono::duration<int32_t, std::milli>(milliseconds)
+        explicit zoned_time_without_timezone_milliseconds(int64_t milliseconds)
+            : std::chrono::duration<int64_t, std::milli>(milliseconds)
         {
         }
     };
