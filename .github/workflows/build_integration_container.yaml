@@ -11,7 +11,7 @@ on:
       - 'ci/docker/integration.dockerfile'
 
 jobs:
-  build-and-push:
+  build_integration_container_and_run_tests:
     runs-on: ubuntu-22.04
     steps:
     - name: Checkout code
