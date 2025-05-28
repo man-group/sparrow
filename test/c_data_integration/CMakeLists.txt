@@ -22,8 +22,6 @@ if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE 
     endif()
 endif()
 
-# find_package(doctest REQUIRED)
-
 add_library(c_data_integration SHARED
     src/binary_parser.cpp
     src/bool_parser.cpp

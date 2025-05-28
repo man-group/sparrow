@@ -24,8 +24,6 @@ endif()
 
 if(NOT FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
     find_package(doctest ${FIND_PACKAGE_OPTIONS})
-    # find_package(Catch2 3 ${FIND_PACKAGE_OPTIONS})
-    find_package(nanoarrow ${FIND_PACKAGE_OPTIONS})
 endif()
 
 if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "MISSING") 
@@ -43,33 +41,6 @@ if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE 
             EXCLUDE_FROM_ALL)
         FetchContent_MakeAvailable(doctest)
         message(STATUS "\t✅ Fetched doctest v2.4.12")
-    endif()
-
-    # if(NOT Catch2_FOUND)
-    #     message(STATUS "📦 Fetching Catch2 v3.7.1")
-    #     FetchContent_Declare(
-    #         Catch2
-    #         GIT_SHALLOW TRUE
-    #         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    #         GIT_TAG v3.7.1
-    #         GIT_PROGRESS TRUE
-    #         SYSTEM
-    #         EXCLUDE_FROM_ALL)
-    #     FetchContent_MakeAvailable(Catch2)
-    # endif()
-
-    if(NOT nanoarrow_FOUND)
-        message(STATUS "📦 Fetching nanoarrow 0.6")
-        FetchContent_Declare(
-            nanoarrow
-            GIT_SHALLOW TRUE
-            GIT_REPOSITORY https://github.com/apache/arrow-nanoarrow.git
-            GIT_TAG apache-arrow-nanoarrow-0.6.0
-            GIT_PROGRESS TRUE
-            SYSTEM
-            EXCLUDE_FROM_ALL)
-        FetchContent_MakeAvailable(nanoarrow)
-        target_compile_options(nanoarrow PRIVATE -w)
     endif()
 endif()
 
@@ -91,7 +62,6 @@ else()
         arrow_array_schema_creation.hpp
         external_array_data_creation.cpp
         external_array_data_creation.hpp
-        nanoarrow_utils.hpp
         main.cpp
         test_allocator.cpp
         test_array_wrapper.cpp
@@ -162,7 +132,6 @@ target_link_libraries(${test_target}
         sparrow
         doctest::doctest
         better_junit_reporter
-        nanoarrow::nanoarrow
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
 # set(test_target_catch2 "test_sparrow_lib_catch2")
