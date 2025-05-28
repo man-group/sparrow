@@ -25,7 +25,6 @@
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
 #include "metadata_sample.hpp"
-#include "nanoarrow_utils.hpp"
 #include "test_utils.hpp"
 
 
@@ -951,49 +950,6 @@ namespace sparrow
             CHECK_EQ(array.value(5), "writing");
             CHECK_EQ(array.value(6), "clean");
             CHECK_EQ(array.value(7), "code");
-        }
-
-        TEST_CASE_FIXTURE(string_array_fixture, "nanoarrow compatibility")
-        {
-            std::vector<std::string>
-                vector{"once", "upon", "a", "time", "I", "was", "writing", "clean", "code", "now"};
-
-            std::vector<nullable<std::string>> nullable_vector{
-                make_nullable<std::string>("once"),
-                make_nullable<std::string>("upon"),
-                make_nullable<std::string>("a"),
-                make_nullable<std::string>("time"),
-                make_nullable<std::string>("I"),
-                make_nullable<std::string>("was"),
-                make_nullable<std::string>("writing"),
-                make_nullable<std::string>("clean", false),
-                make_nullable<std::string>("code"),
-                make_nullable<std::string>("now", false)
-            };
-
-            SUBCASE("Produce array from sparrow and read it thanks nanoarrow")
-            {
-                layout_type array{nullable_vector};
-                const auto [arrow_array, arrow_schema] = sparrow::get_arrow_structures(array);
-                nanoarrow_validation(arrow_array, nullable_vector);
-            }
-
-            SUBCASE("Produce array from nanoarrow and read it thanks sparrow")
-            {
-                auto [arrow_array, arrow_schema] = nanoarrow_create(nullable_vector);
-                layout_type sparrow_array{arrow_proxy{&arrow_array, &arrow_schema}};
-                REQUIRE_EQ(sparrow_array.size(), nullable_vector.size());
-                for (size_t i = 0; i < sparrow_array.size(); ++i)
-                {
-                    CHECK_EQ(sparrow_array[i].has_value(), nullable_vector[i].has_value());
-                    if (nullable_vector[i].has_value())
-                    {
-                        CHECK_EQ(sparrow_array[i].value(), vector[i]);
-                    }
-                }
-                arrow_array.release(&arrow_array);
-                arrow_schema.release(&arrow_schema);
-            }
         }
 
 #if defined(__cpp_lib_format)

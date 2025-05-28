@@ -22,8 +22,6 @@ if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE 
     endif()
 endif()
 
-find_package(doctest REQUIRED)
-
 add_library(c_data_integration SHARED
     src/binary_parser.cpp
     src/bool_parser.cpp
@@ -59,6 +57,7 @@ add_library(c_data_integration SHARED
     )
 
 set_property(TARGET c_data_integration PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(c_data_integration PROPERTIES PREFIX "")
 
 target_compile_options(c_data_integration
     PRIVATE

@@ -1,0 +1,65 @@
+name: Integration tests
+
+permissions: write-all
+
+on:
+  push:
+    paths:
+      - 'ci/docker/integration.dockerfile'
+  pull_request:
+    paths:
+      - 'ci/docker/integration.dockerfile'
+
+jobs:
+  build_integration_container_and_run_tests:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.9
+
+    - name: Install dependnecies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev doctest-dev
+
+    - name: Install specific version of tzdata
+      run: sudo apt-get install tzdata
+
+    - name: Configure using CMake
+      run: |
+        cmake -G Ninja \
+          -Bbuild \
+          -DCMAKE_BUILD_TYPE:STRING=RELEASE \
+          -DUSE_DATE_POLYFILL=TRUE \
+          -DBUILD_TESTS=ON \
+          -DBUILD_EXAMPLES=OFF \
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
+          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
+          -DSPARROW_BUILD_SHARED=OFF \
+          -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
+          -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
+
+    - name: Build c_data_integration target
+      working-directory: build
+      run: cmake --build . --config Release --target c_data_integration
+
+    - name: Build Docker image
+      run: docker build -t sparrow/integration-tests -f ci/docker/integration.dockerfile .
+
+    - name: Run Integration tests
+      run: |
+        docker run --rm \
+          -e ARCHERY_INTEGRATION_WITH_EXTERNAL_LIBRARY=/workspace/build/bin/RELEASE/ \
+          -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_IPC_PRODUCER=false \
+          -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_IPC_CONSUMER=false \
+          -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_ARRAY_EXPORTER=true \
+          -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_ARRAY_IMPORTER=true \
+          -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_SCHEMA_EXPORTER=true \
+          -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_SCHEMA_IMPORTER=true \
+          -v ${{ github.workspace }}:/workspace \
+          -w /arrow-integration sparrow/integration-tests \
+          "/arrow-integration/ci/scripts/integration_arrow.sh /arrow-integration /build"

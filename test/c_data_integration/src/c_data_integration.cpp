@@ -30,7 +30,7 @@
 
 static std::string global_error;
 
-const char* sparrow_CDataIntegration_ExportSchemaFromJson(const char* json_path, ArrowSchema* out)
+const char* external_CDataIntegration_ExportSchemaFromJson(const char* json_path, ArrowSchema* out)
 {
     try
     {
@@ -51,7 +51,7 @@ const char* sparrow_CDataIntegration_ExportSchemaFromJson(const char* json_path,
     return nullptr;
 }
 
-const char* sparrow_CDataIntegration_ImportSchemaAndCompareToJson(const char* json_path, ArrowSchema* schema)
+const char* external_CDataIntegration_ImportSchemaAndCompareToJson(const char* json_path, ArrowSchema* schema)
 {
     if (schema == nullptr)
     {
@@ -63,11 +63,13 @@ const char* sparrow_CDataIntegration_ImportSchemaAndCompareToJson(const char* js
         std::istream& json_stream = json_file;
         const nlohmann::json data = nlohmann::json::parse(json_stream);
         sparrow::record_batch record_batch = sparrow::c_data_integration::build_record_batch_from_json(data, 0);
+
+
         sparrow::struct_array struct_array = record_batch.extract_struct_array();
         auto [array_from_json, schema_from_json] = sparrow::extract_arrow_structures(std::move(struct_array));
         array_from_json.release(&array_from_json);
         const std::optional<std::string> result = sparrow::c_data_integration::compare_schemas(
-            "Schema",
+            "Batch Schema",
             schema,
             &schema_from_json
         );
@@ -86,7 +88,7 @@ const char* sparrow_CDataIntegration_ImportSchemaAndCompareToJson(const char* js
     return nullptr;
 }
 
-const char* sparrow_CDataIntegration_ExportBatchFromJson(const char* json_path, int num_batch, ArrowArray* out)
+const char* external_CDataIntegration_ExportBatchFromJson(const char* json_path, int num_batch, ArrowArray* out)
 {
     try
     {
@@ -111,7 +113,7 @@ const char* sparrow_CDataIntegration_ExportBatchFromJson(const char* json_path, 
 }
 
 const char*
-sparrow_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, int num_batch, ArrowArray* batch)
+external_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, int num_batch, ArrowArray* batch)
 {
     if (batch == nullptr)
     {
@@ -128,8 +130,10 @@ sparrow_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, int 
         );
         sparrow::struct_array struct_array = record_batch.extract_struct_array();
         auto [array_from_json, schema_from_json] = sparrow::extract_arrow_structures(std::move(struct_array));
+        const std::string schema_name = schema_from_json.name != nullptr ? std::string(schema_from_json.name)
+                                                                         : "N/A";
         const std::optional<std::string> result = sparrow::c_data_integration::compare_arrays(
-            "Batch",
+            "Batch " + schema_name,
             batch,
             &array_from_json,
             &schema_from_json
@@ -150,7 +154,7 @@ sparrow_CDataIntegration_ImportBatchAndCompareToJson(const char* json_path, int 
     return nullptr;
 }
 
-int64_t sparrow_BytesAllocated()
+int64_t external_BytesAllocated()
 {
     return 0;
 }

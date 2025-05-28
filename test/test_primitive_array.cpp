@@ -29,7 +29,6 @@
 
 #include "doctest/doctest.h"
 #include "metadata_sample.hpp"
-#include "nanoarrow_utils.hpp"
 
 namespace sparrow
 {
@@ -51,7 +50,6 @@ namespace sparrow
     {
         TEST_CASE_TEMPLATE_DEFINE("", T, primitive_array_id)
         {
-            // using nanoarrow_corresponding__type = nanoarrow_type<T>::type;
             using array_test_type = primitive_array<T>;
 
             const auto make_nullable_values = [](size_t count)
@@ -687,52 +685,6 @@ namespace sparrow
                 for (size_t i = 0; i < ar.size(); ++i)
                 {
                     CHECK_EQ(ar[i], nullable_values[i + offset]);
-                }
-            }
-
-            SUBCASE("nanoarrow compatibility")
-            {
-                using inner_value_type = T;
-
-                std::vector<inner_value_type> data = {
-                    static_cast<inner_value_type>(0),
-                    static_cast<inner_value_type>(1),
-                    static_cast<inner_value_type>(2),
-                    static_cast<inner_value_type>(3)
-                };
-                using nullable_type = nullable<inner_value_type>;
-
-                bool b1 = false;
-
-                const std::vector<nullable_type> nullable_vector{
-                    nullable_type(data[0]),
-                    nullable_type(data[1]),
-                    nullable_type{data[2], b1},
-                    nullable_type(data[3])
-                };
-
-                SUBCASE("Produce array from sparrow and read it thanks nanoarrow")
-                {
-                    primitive_array<T> sparrow_array{nullable_vector};
-                    const auto [arrow_array, arrow_schema] = sparrow::get_arrow_structures(sparrow_array);
-                    nanoarrow_validation(arrow_array, nullable_vector);
-                }
-
-                SUBCASE("Produce array from nanoarrow and read it thanks sparrow")
-                {
-                    auto [arrow_array, arrow_schema] = nanoarrow_create<T>(nullable_vector);
-                    const primitive_array<T> sparrow_array{arrow_proxy{&arrow_array, &arrow_schema}};
-                    REQUIRE_EQ(sparrow_array.size(), data.size());
-                    for (std::size_t i = 0; i < data.size(); ++i)
-                    {
-                        CHECK_EQ(sparrow_array[i].has_value(), nullable_vector[i].has_value());
-                        if (nullable_vector[i].has_value())
-                        {
-                            CHECK_EQ(sparrow_array[i].value(), data[i]);
-                        }
-                    }
-                    arrow_array.release(&arrow_array);
-                    arrow_schema.release(&arrow_schema);
                 }
             }
         }
