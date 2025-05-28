@@ -17,6 +17,8 @@
 #include "sparrow/c_data_integration/constant.hpp"
 #include "sparrow/c_data_integration/utils.hpp"
 #include "sparrow/layout/temporal/interval_array.hpp"
+#include "sparrow/layout/temporal/timestamp_array.hpp"
+#include "sparrow/layout/temporal/timestamp_without_timezone_array.hpp"
 
 namespace sparrow::c_data_integration
 {
@@ -179,82 +181,174 @@ namespace sparrow::c_data_integration
         {
             timezone = schema.at("type").at("timezone").get<std::string>();
         }
-        const date::time_zone* tz = timezone ? date::locate_zone(*timezone) : date::locate_zone("Factory");
+
         const auto& data_str = array.at(DATA).get<std::vector<std::string>>();
         auto data_int = utils::from_strings_to_Is<int64_t>(data_str);
         auto metadata = utils::get_metadata(schema);
         if (unit == "SECOND")
         {
-            auto values = data_int
-                          | std::views::transform(
-                              [tz](int64_t value)
-                              {
-                                  using duration = sparrow::timestamp_second::duration;
-                                  const date::sys_time<duration> sys_time{duration{value}};
-                                  return sparrow::timestamp_second{tz, sys_time};
-                              }
-                          );
-            return get_array<sparrow::timestamp_seconds_array>(tz, array, schema, values, name, std::move(metadata));
+            if (timezone.has_value())
+            {
+                const date::time_zone* tz = date::locate_zone(*timezone);
+                auto values = data_int
+                              | std::views::transform(
+                                  [tz](int64_t value)
+                                  {
+                                      using duration = sparrow::timestamp_second::duration;
+                                      const date::sys_time<duration> sys_time{duration{value}};
+                                      return sparrow::timestamp_second{tz, sys_time};
+                                  }
+                              );
+                return get_array<sparrow::timestamp_seconds_array>(
+                    tz,
+                    array,
+                    schema,
+                    values,
+                    name,
+                    std::move(metadata)
+                );
+            }
+            else
+            {
+                auto values = data_int
+                              | std::views::transform(
+                                  [](int64_t value)
+                                  {
+                                      return zoned_time_without_timezone_seconds{value};
+                                  }
+                              );
+
+                return get_array<sparrow::timestamp_without_timezone_seconds_array>(
+                    array,
+                    schema,
+                    values,
+                    name,
+                    std::move(metadata)
+                );
+            }
         }
         else if (unit == "MILLISECOND")
         {
-            auto values = data_int
-                          | std::views::transform(
-                              [tz](int64_t value)
-                              {
-                                  using duration = sparrow::timestamp_millisecond::duration;
-                                  const date::sys_time<duration> sys_time{duration{value}};
-                                  return sparrow::timestamp_millisecond{tz, sys_time};
-                              }
-                          );
-            return get_array<sparrow::timestamp_milliseconds_array>(
-                tz,
-                array,
-                schema,
-                values,
-                name,
-                std::move(metadata)
-            );
+            if (timezone.has_value())
+            {
+                const date::time_zone* tz = date::locate_zone(*timezone);
+                auto values = data_int
+                              | std::views::transform(
+                                  [tz](int64_t value)
+                                  {
+                                      using duration = sparrow::timestamp_millisecond::duration;
+                                      const date::sys_time<duration> sys_time{duration{value}};
+                                      return sparrow::timestamp_millisecond{tz, sys_time};
+                                  }
+                              );
+                return get_array<sparrow::timestamp_milliseconds_array>(
+                    tz,
+                    array,
+                    schema,
+                    values,
+                    name,
+                    std::move(metadata)
+                );
+            }
+            else
+            {
+                auto values = data_int
+                              | std::views::transform(
+                                  [](int64_t value)
+                                  {
+                                      return zoned_time_without_timezone_milliseconds{value};
+                                  }
+                              );
+                return get_array<sparrow::timestamp_without_timezone_milliseconds_array>(
+                    array,
+                    schema,
+                    values,
+                    name,
+                    std::move(metadata)
+                );
+            }
         }
         else if (unit == "MICROSECOND")
         {
-            auto values = data_int
-                          | std::views::transform(
-                              [tz](int64_t value)
-                              {
-                                  using duration = sparrow::timestamp_microsecond::duration;
-                                  const date::sys_time<duration> sys_time{duration{value}};
-                                  return sparrow::timestamp_microsecond{tz, sys_time};
-                              }
-                          );
-            return get_array<sparrow::timestamp_microseconds_array>(
-                tz,
-                array,
-                schema,
-                values,
-                name,
-                std::move(metadata)
-            );
+            if (timezone.has_value())
+            {
+                const date::time_zone* tz = date::locate_zone(*timezone);
+                auto values = data_int
+                              | std::views::transform(
+                                  [tz](int64_t value)
+                                  {
+                                      using duration = sparrow::timestamp_microsecond::duration;
+                                      const date::sys_time<duration> sys_time{duration{value}};
+                                      return sparrow::timestamp_microsecond{tz, sys_time};
+                                  }
+                              );
+                return get_array<sparrow::timestamp_microseconds_array>(
+                    tz,
+                    array,
+                    schema,
+                    values,
+                    name,
+                    std::move(metadata)
+                );
+            }
+            else
+            {
+                auto values = data_int
+                              | std::views::transform(
+                                  [](int64_t value)
+                                  {
+                                      return zoned_time_without_timezone_microseconds{value};
+                                  }
+                              );
+                return get_array<sparrow::timestamp_without_timezone_microseconds_array>(
+                    array,
+                    schema,
+                    values,
+                    name,
+                    std::move(metadata)
+                );
+            }
         }
         else if (unit == "NANOSECOND")
         {
-            auto values = data_int
-                          | std::views::transform(
-                              [tz](int64_t value)
-                              {
-                                  using duration = sparrow::timestamp_nanosecond::duration;
-                                  const date::sys_time<duration> sys_time{duration{value}};
-                                  return sparrow::timestamp_nanosecond{tz, sys_time};
-                              }
-                          );
-            return get_array<sparrow::timestamp_nanoseconds_array>(
-                tz,
-                array,
-                schema,
-                values,
-                name,
-                std::move(metadata)
-            );
+            if (timezone.has_value())
+            {
+                const date::time_zone* tz = date::locate_zone(*timezone);
+                auto values = data_int
+                              | std::views::transform(
+                                  [tz](int64_t value)
+                                  {
+                                      using duration = sparrow::timestamp_nanosecond::duration;
+                                      const date::sys_time<duration> sys_time{duration{value}};
+                                      return sparrow::timestamp_nanosecond{tz, sys_time};
+                                  }
+                              );
+                return get_array<sparrow::timestamp_nanoseconds_array>(
+                    tz,
+                    array,
+                    schema,
+                    values,
+                    name,
+                    std::move(metadata)
+                );
+            }
+            else
+            {
+                auto values = data_int
+                              | std::views::transform(
+                                  [](int64_t value)
+                                  {
+                                      return zoned_time_without_timezone_nanoseconds{value};
+                                  }
+                              );
+                return get_array<sparrow::timestamp_without_timezone_nanoseconds_array>(
+                    array,
+                    schema,
+                    values,
+                    name,
+                    std::move(metadata)
+                );
+            }
         }
         else
         {
@@ -364,9 +458,8 @@ namespace sparrow::c_data_integration
                                   return sparrow::month_day_nanoseconds_interval{
                                       .months = std::chrono::months{value.at("months").get<int32_t>()},
                                       .days = std::chrono::days{value.at("days").get<int32_t>()},
-                                      .nanoseconds = std::chrono::nanoseconds{
-                                          value.at("nanoseconds").get<int64_t>()
-                                      }
+                                      .nanoseconds = std::chrono::nanoseconds{value.at("nanoseconds")
+                                                                                  .get<int64_t>()}
                                   };
                               }
                           );
