@@ -127,7 +127,7 @@ namespace sparrow::c_data_integration
     std::optional<std::string>
     compare_arrays(const std::string& prefix, ArrowArray* array, ArrowArray* array_from_json, ArrowSchema* schema_from_json)
     {
-        const std::string schema_name = schema_from_json->name ? schema_from_json->name : "nullptr");
+        const std::string schema_name = schema_from_json->name ? schema_from_json->name : "nullptr";
         const std::string prefix_with_name = prefix + " [" + schema_name + "]";
         if (array == nullptr || array_from_json == nullptr)
         {
