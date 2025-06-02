@@ -209,8 +209,8 @@ namespace sparrow::c_data_integration
         if (num_batches >= batches.size())
         {
             throw std::runtime_error(
-                "Invalid batch number: " + std::to_string(num_batches) + " out of "
-                + std::to_string(batches.size())
+                "Invalid batch number: index " + std::to_string(num_batches) + " out of "
+                + std::to_string(batches.size()) + " batches"
             );
         }
         const auto& batch = batches.at(num_batches);
