@@ -78,7 +78,7 @@ namespace sparrow::c_data_integration
         auto metadata = utils::get_metadata(schema);
         if (unit == "DAY")
         {
-            auto date_days_values = array.at(DATA).get<std::vector<int32_t>>()
+            auto date_days_values = std::ranges::views::all(array.at(DATA).get<std::vector<int32_t>>())
                                     | std::views::transform(
                                         [](int32_t value)
                                         {
@@ -89,7 +89,7 @@ namespace sparrow::c_data_integration
         }
         else if (unit == "MILLISECOND")
         {
-            auto data = array.at(DATA).get<std::vector<std::string>>()
+            auto data = std::ranges::views::all(array.at(DATA).get<std::vector<std::string>>())
                         | std::views::transform(
                             [](const std::string& value)
                             {
@@ -119,7 +119,7 @@ namespace sparrow::c_data_integration
         auto metadata = utils::get_metadata(schema);
         if (unit == "SECOND")
         {
-            auto values = array.at(DATA).get<std::vector<int32_t>>()
+            auto values = std::ranges::views::all(array.at(DATA).get<std::vector<int32_t>>())
                           | std::views::transform(
                               [](int32_t value)
                               {
@@ -131,7 +131,7 @@ namespace sparrow::c_data_integration
 
         else if (unit == "MILLISECOND")
         {
-            auto values = array.at(DATA).get<std::vector<int32_t>>()
+            auto values = std::ranges::views::all(array.at(DATA).get<std::vector<int32_t>>())
                           | std::views::transform(
                               [](int32_t value)
                               {
@@ -458,9 +458,8 @@ namespace sparrow::c_data_integration
                                   return sparrow::month_day_nanoseconds_interval{
                                       .months = std::chrono::months{value.at("months").get<int32_t>()},
                                       .days = std::chrono::days{value.at("days").get<int32_t>()},
-                                      .nanoseconds = std::chrono::nanoseconds{
-                                          value.at("nanoseconds").get<int64_t>()
-                                      }
+                                      .nanoseconds = std::chrono::nanoseconds{value.at("nanoseconds")
+                                                                                  .get<int64_t>()}
                                   };
                               }
                           );
