@@ -94,6 +94,8 @@ OPTION(BUILD_EXAMPLES "Build sparrow examples" OFF)
 MESSAGE(STATUS "🔧 Build examples: ${BUILD_EXAMPLES}")
 OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
 MESSAGE(STATUS "🔧 Use date polyfill: ${USE_DATE_POLYFILL}")
+OPTION(ENABLE_INTEGRATION_TEST "Enable integration tests" ON)
+MESSAGE(STATUS "🔧 Enable integration tests: ${ENABLE_INTEGRATION_TEST}")
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 4 OR MSVC)
     set(DEFAULT_USE_LARGE_INT_PLACEHOLDERS ON)
