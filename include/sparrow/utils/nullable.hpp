@@ -522,7 +522,7 @@ namespace sparrow
      * @tparam T the list of nullable in the variant
      */
     template <class... T>
-        requires(is_nullable_v<T> && ...)
+        requires(sizeof...(T) > 0 && (is_nullable_v<T> && ...))
     class nullable_variant : public std::variant<T...>
     {
     public:
@@ -769,7 +769,7 @@ namespace sparrow
      ***********************************/
 
     template <class... T>
-        requires(is_nullable_v<T> && ...)
+        requires(sizeof...(T) > 0 && (is_nullable_v<T> && ...))
     constexpr nullable_variant<T...>& nullable_variant<T...>::operator=(const nullable_variant& rhs)
     {
         base_type::operator=(rhs);
@@ -777,7 +777,7 @@ namespace sparrow
     }
 
     template <class... T>
-        requires(is_nullable_v<T> && ...)
+        requires(sizeof...(T) > 0 && (is_nullable_v<T> && ...))
     constexpr nullable_variant<T...>& nullable_variant<T...>::operator=(nullable_variant&& rhs) noexcept
     {
         base_type::operator=(std::move(rhs));
@@ -785,14 +785,14 @@ namespace sparrow
     }
 
     template <class... T>
-        requires(is_nullable_v<T> && ...)
+        requires(sizeof...(T) > 0 && (is_nullable_v<T> && ...))
     constexpr nullable_variant<T...>::operator bool() const
     {
         return has_value();
     }
 
     template <class... T>
-        requires(is_nullable_v<T> && ...)
+        requires(sizeof...(T) > 0 && (is_nullable_v<T> && ...))
     constexpr bool nullable_variant<T...>::has_value() const
     {
         return std::visit(
