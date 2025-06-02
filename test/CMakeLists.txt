@@ -22,27 +22,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(SPARROW_INCLUDE_DIR ${sparrow_INCLUDE_DIRS})
 endif()
 
-if(NOT FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
-    find_package(doctest ${FIND_PACKAGE_OPTIONS})
-endif()
-
-if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "MISSING") 
-    include(FetchContent)
-
-    if(NOT doctest_FOUND)
-        message(STATUS "📦 Fetching doctest v2.4.12")
-        FetchContent_Declare(
-            doctest
-            GIT_SHALLOW TRUE
-            GIT_REPOSITORY https://github.com/doctest/doctest.git
-            GIT_TAG v2.4.12
-            GIT_PROGRESS TRUE
-            SYSTEM
-            EXCLUDE_FROM_ALL)
-        FetchContent_MakeAvailable(doctest)
-        message(STATUS "\t✅ Fetched doctest v2.4.12")
-    endif()
-endif()
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting tests build type to Release")

@@ -149,44 +149,12 @@ include(sanitizers)
 # Dependencies
 # ============
 
-OPTION(FETCH_DEPENDENCIES_WITH_CMAKE "Fetch dependencies with CMake: Can be OFF, ON, or MISSING, in this case CMake download only dependencies which are not previously found." OFF)
-MESSAGE(STATUS "🔧 FETCH_DEPENDENCIES_WITH_CMAKE: ${FETCH_DEPENDENCIES_WITH_CMAKE}")
-
-if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "OFF")
-    set(FIND_PACKAGE_OPTIONS REQUIRED)
-else()
-    set(FIND_PACKAGE_OPTIONS QUIET)
-endif()
+include(external_dependencies)
 
 set(SPARROW_INTERFACE_DEPENDENCIES "" CACHE STRING "List of dependencies to be linked to the sparrow target")
 set(SPARROW_COMPILE_DEFINITIONS "" CACHE STRING "List of public compile definitions of the sparrow target")
 
 if(USE_DATE_POLYFILL)
-    include(FetchContent)
-    find_package(date CONFIG ${FIND_PACKAGE_OPTIONS})
-    if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "MISSING") 
-        if(NOT date_FOUND)
-            message(STATUS "📦 Fetching date polyfill")
-            set(USE_SYSTEM_TZ_DB ON)
-            set(BUILD_TZ_LIB ON)
-            set(BUILD_SHARED_LIBS ON)
-            FetchContent_Declare(
-                date
-                GIT_SHALLOW TRUE
-                GIT_REPOSITORY https://github.com/HowardHinnant/date.git
-                GIT_TAG v3.0.3
-                GIT_PROGRESS TRUE
-                SYSTEM
-                EXCLUDE_FROM_ALL)
-            FetchContent_MakeAvailable(date)
-            unset(USE_SYSTEM_TZ_DB CACHE)
-            unset(BUILD_TZ_LIB CACHE)
-            unset(BUILD_SHARED_LIBS CACHE)
-            message(STATUS "\t✅ Fetched date polyfill")
-        else()
-            message(STATUS "📦 date polyfill found here: ${date_DIR}")
-        endif()
-    endif()
     list(APPEND SPARROW_INTERFACE_DEPENDENCIES date::date date::date-tz)
     list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_USE_DATE_POLYFILL)
 endif()
