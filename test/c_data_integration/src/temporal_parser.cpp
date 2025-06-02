@@ -105,13 +105,16 @@ namespace sparrow::c_data_integration
                 std::back_inserter(date_milliseconds_values),
                 [](const std::string& value)
                 {
-                    return sparrow::date_milliseconds
-                    {
-                        sparrow::date_milliseconds::duration{std::stoll(value)};
-                    }
+                    return sparrow::date_milliseconds{sparrow::date_milliseconds::duration{std::stoll(value)}};
                 }
             );
-            return get_array<sparrow::date_milliseconds_array>(array, schema, data, name, std::move(metadata));
+            return get_array<sparrow::date_milliseconds_array>(
+                array,
+                schema,
+                std::move(date_milliseconds_values),
+                name,
+                std::move(metadata)
+            );
         }
         else
         {
