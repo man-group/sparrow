@@ -239,6 +239,7 @@ namespace sparrow
         [[nodiscard]] static auto create_proxy(
             const date::time_zone* timezone,
             R&& range,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -441,23 +442,25 @@ namespace sparrow
     arrow_proxy timestamp_array<T>::create_proxy(
         const date::time_zone* timezone,
         R&& range,
+        bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
     {
-        const std::size_t n = range_size(range);
-        const auto iota = std::ranges::iota_view{std::size_t(0), n};
-        std::ranges::transform_view iota_to_is_non_missing(
-            iota,
-            [](std::size_t)
-            {
-                return true;
-            }
-        );
-        return self_type::create_proxy(
+        std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0)
+                                                         : std::nullopt;
+        const auto values = range
+                            | std::views::transform(
+                                [](const auto& v)
+                                {
+                                    return v.get_sys_time().time_since_epoch().count();
+                                }
+                            );
+        u8_buffer<buffer_inner_value_type> data_buffer(values);
+        return self_type::create_proxy_impl(
             timezone,
-            std::forward<R>(range),
-            std::move(iota_to_is_non_missing),
+            std::move(data_buffer),
+            std::move(bitmap),
             std::move(name),
             std::move(metadata)
         );
