@@ -14,6 +14,8 @@
 
 #include "sparrow/c_data_integration/temporal_parser.hpp"
 
+#include <algorithm>
+
 #include "sparrow/c_data_integration/constant.hpp"
 #include "sparrow/c_data_integration/utils.hpp"
 #include "sparrow/layout/temporal/interval_array.hpp"
@@ -78,8 +80,13 @@ namespace sparrow::c_data_integration
         auto metadata = utils::get_metadata(schema);
         if (unit == "DAY")
         {
-            auto date_days_values = std::views::transform(
-                array.at(DATA).get<std::vector<int32_t>>(),
+            auto data = array.at(DATA).get<std::vector<int32_t>>();
+            std::vector<sparrow::date_days> date_days_values;
+            date_days_values.reserve(data.size());
+            std::transform(
+                data.begin(),
+                data.end(),
+                std::back_inserter(date_days_values),
                 [](int32_t value)
                 {
                     return sparrow::date_days{sparrow::date_days::duration{value}};
@@ -89,19 +96,21 @@ namespace sparrow::c_data_integration
         }
         else if (unit == "MILLISECOND")
         {
-            auto data = std::views::transform(
-                            array.at(DATA).get<std::vector<std::string>>(),
-                            [](const std::string& value)
-                            {
-                                return std::stoll(value);
-                            }
-                        )
-                        | std::views::transform(
-                            [](int64_t value)
-                            {
-                                return sparrow::date_milliseconds{sparrow::date_milliseconds::duration{value}};
-                            }
-                        );
+            auto data = array.at(DATA).get<std::vector<std::string>>();
+            std::vector<sparrow::date_milliseconds> date_milliseconds_values;
+            date_milliseconds_values.reserve(array.at(DATA).size());
+            std::transform(
+                data.begin(),
+                data.end(),
+                std::back_inserter(date_milliseconds_values),
+                [](const std::string& value)
+                {
+                    return sparrow::date_milliseconds
+                    {
+                        sparrow::date_milliseconds::duration{std::stoll(value)};
+                    }
+                }
+            );
             return get_array<sparrow::date_milliseconds_array>(array, schema, data, name, std::move(metadata));
         }
         else
@@ -119,26 +128,48 @@ namespace sparrow::c_data_integration
         auto metadata = utils::get_metadata(schema);
         if (unit == "SECOND")
         {
-            auto values = std::views::transform(
-                array.at(DATA).get<std::vector<int32_t>>(),
+            auto data = array.at(DATA).get<std::vector<int32_t>>();
+            std::vector<sparrow::chrono::time_seconds> values;
+            values.reserve(data.size());
+            std::transform(
+                data.begin(),
+                data.end(),
+                std::back_inserter(values),
                 [](int32_t value)
                 {
                     return sparrow::chrono::time_seconds{value};
                 }
             );
-            return get_array<sparrow::time_seconds_array>(array, schema, values, name, std::move(metadata));
+            return get_array<sparrow::time_seconds_array>(
+                array,
+                schema,
+                std::move(values),
+                name,
+                std::move(metadata)
+            );
         }
 
         else if (unit == "MILLISECOND")
         {
-            auto values = std::views::transform(
-                array.at(DATA).get<std::vector<int32_t>>(),
+            auto data = array.at(DATA).get<std::vector<int32_t>>();
+            std::vector<sparrow::chrono::time_milliseconds> values;
+            values.reserve(data.size());
+            std::transform(
+                data.begin(),
+                data.end(),
+                std::back_inserter(values),
                 [](int32_t value)
                 {
                     return sparrow::chrono::time_milliseconds{value};
                 }
             );
-            return get_array<sparrow::time_milliseconds_array>(array, schema, values, name, std::move(metadata));
+            return get_array<sparrow::time_milliseconds_array>(
+                array,
+                schema,
+                std::move(values),
+                name,
+                std::move(metadata)
+            );
         }
         else if (unit == "MICROSECOND")
         {
@@ -458,9 +489,8 @@ namespace sparrow::c_data_integration
                                   return sparrow::month_day_nanoseconds_interval{
                                       .months = std::chrono::months{value.at("months").get<int32_t>()},
                                       .days = std::chrono::days{value.at("days").get<int32_t>()},
-                                      .nanoseconds = std::chrono::nanoseconds{
-                                          value.at("nanoseconds").get<int64_t>()
-                                      }
+                                      .nanoseconds = std::chrono::nanoseconds{value.at("nanoseconds")
+                                                                                  .get<int64_t>()}
                                   };
                               }
                           );
