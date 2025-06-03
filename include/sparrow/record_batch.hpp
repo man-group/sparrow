@@ -67,7 +67,7 @@ namespace sparrow
                 std::convertible_to<std::ranges::range_value_t<NR>, std::string>
                 and std::same_as<std::ranges::range_value_t<CR>, array>
             )
-        record_batch(NR&& names, CR&& columns);
+        record_batch(std::string_view name, NR&& names, CR&& columns);
 
         /*
          * Constructs a @ref record_batch from a range of arrays. Each array
@@ -78,7 +78,7 @@ namespace sparrow
          */
         template <std::ranges::input_range CR>
             requires std::same_as<std::ranges::range_value_t<CR>, array>
-        record_batch(CR&& columns);
+        record_batch(std::string_view name, CR&& columns);
 
         /**
          * Constructs a record_batch from a list of \c std::pair<name_type, array>.
@@ -142,6 +142,11 @@ namespace sparrow
         SPARROW_API const array& get_column(size_type index) const;
 
         /**
+         * @returns name of the \ref record_batch.
+         */
+        SPARROW_API const name_type& name() const;
+
+        /**
          * @returns a range of the names in the \ref record_batch.
          */
         SPARROW_API name_range names() const;
@@ -185,6 +190,7 @@ namespace sparrow
 
         [[nodiscard]] SPARROW_API bool check_consistency() const;
 
+        name_type m_name;
         std::vector<name_type> m_name_list;
         std::vector<array> m_array_list;
         mutable std::unordered_map<name_type, const array*> m_array_map;
@@ -209,9 +215,10 @@ namespace sparrow
     template <std::ranges::input_range NR, std::ranges::input_range CR>
         requires(std::convertible_to<std::ranges::range_value_t<NR>, std::string>
                  and std::same_as<std::ranges::range_value_t<CR>, array>)
-    record_batch::record_batch(NR&& names, CR&& columns)
-        : m_name_list(to_vector<name_type>(std::move(names)))
-        , m_array_list(to_vector<array>(std::move(columns)))
+    record_batch::record_batch(std::string_view name, NR&& names, CR&& columns)
+        : m_name(name)
+        , m_name_list(to_vector<name_type>(std::forward<NR>(names)))
+        , m_array_list(to_vector<array>(std::forward<CR>(columns)))
     {
         update_array_map_cache();
     }
@@ -233,8 +240,9 @@ namespace sparrow
 
     template <std::ranges::input_range CR>
         requires std::same_as<std::ranges::range_value_t<CR>, array>
-    record_batch::record_batch(CR&& columns)
-        : m_name_list(detail::get_names(columns))
+    record_batch::record_batch(std::string_view name, CR&& columns)
+        : m_name(name)
+        , m_name_list(detail::get_names(columns))
         , m_array_list(to_vector<array>(std::move(columns)))
     {
         update_array_map_cache();
