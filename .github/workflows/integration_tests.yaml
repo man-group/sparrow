@@ -1,14 +1,10 @@
 name: Integration tests
 
-permissions: write-all
-
 on:
-  push:
-    paths:
-      - 'ci/docker/integration.dockerfile'
+  workflow_dispatch:
   pull_request:
-    paths:
-      - 'ci/docker/integration.dockerfile'
+  push:
+    branches: [main]
 
 jobs:
   build_integration_container_and_run_tests:
