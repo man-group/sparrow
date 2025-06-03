@@ -24,22 +24,34 @@ namespace sparrow::c_data_integration
     std::optional<std::string>
     compare_schemas(const std::string& prefix, const ArrowSchema* schema, const ArrowSchema* schema_from_json)
     {
+        if (schema == nullptr || schema_from_json == nullptr)
+        {
+            return prefix + " schema is null";
+        }
+
         const std::string schema_name = schema->name
                                             ? schema->name
                                             : (schema_from_json->name ? schema_from_json->name : "nullptr");
         const std::string prefix_with_name = prefix + " [" + schema_name + "]";
-        if (schema == nullptr || schema_from_json == nullptr)
-        {
-            return prefix_with_name + " is null";
-        }
+
         std::vector<std::string> differences;
-        if (std::strcmp(schema->format, schema_from_json->format) != 0)
+
+        // Check format strings are not null before comparing
+        if (schema->format == nullptr || schema_from_json->format == nullptr)
+        {
+            differences.push_back(
+                prefix_with_name + " format is null: pointer=" + (schema->format ? schema->format : "nullptr")
+                + " vs json=" + (schema_from_json->format ? schema_from_json->format : "nullptr")
+            );
+        }
+        else if (std::strcmp(schema->format, schema_from_json->format) != 0)
         {
             differences.push_back(
                 prefix_with_name + " format mismatch: pointer=" + schema->format
                 + " vs json=" + schema_from_json->format
             );
         }
+
         if ((schema->name != nullptr) || (schema_from_json->name != nullptr))
         {
             if ((schema->name != nullptr) != (schema_from_json->name != nullptr))
@@ -52,9 +64,6 @@ namespace sparrow::c_data_integration
             }
             else if (schema->name != nullptr && schema_from_json->name != nullptr)
             {
-                // Compare the names
-                // Note: std::strcmp returns 0 if the strings are equal
-                // and a non-zero value if they are not equal
                 if (std::strcmp(schema->name, schema_from_json->name) != 0)
                 {
                     differences.push_back(
@@ -161,8 +170,11 @@ namespace sparrow::c_data_integration
             sparrow::arrow_proxy from{array, schema_from_json};
             for (size_t i = 0; i < static_cast<size_t>(from_json.n_buffers()); ++i)
             {
-                const size_t from_json_buffer_size = from_json.buffers()[i].size();
-                const size_t from_buffer_size = from.buffers()[i].size();
+                const auto& from_json_buffer = from_json.buffers()[i];
+                const auto& from_buffer = from.buffers()[i];
+
+                const size_t from_json_buffer_size = from_json_buffer.size();
+                const size_t from_buffer_size = from_buffer.size();
 
                 if (from_json_buffer_size != from_buffer_size)
                 {
@@ -172,15 +184,41 @@ namespace sparrow::c_data_integration
                     );
                     continue;
                 }
-                for (size_t y = 0; y < from_json_buffer_size; ++y)
+
+                // Check if both buffers are null or one is null
+                const bool from_json_is_null = from_json_buffer.data() == nullptr;
+                const bool from_is_null = from_buffer.data() == nullptr;
+
+                if (from_json_is_null != from_is_null)
                 {
-                    if (from_json.buffers()[i][y] != from.buffers()[i][y])
+                    differences.push_back(
+                        prefix_with_name + " buffer [" + std::to_string(i)
+                        + "] null mismatch: pointer=" + (from_is_null ? "null" : "not null")
+                        + " vs json=" + (from_json_is_null ? "null" : "not null")
+                    );
+                    continue;
+                }
+
+                // If both are null, they're equal
+                if (from_json_is_null && from_is_null)
+                {
+                    continue;
+                }
+
+                // Compare buffer contents byte by byte
+                if (from_json_buffer_size > 0)
+                {
+                    for (size_t y = 0; y < from_json_buffer_size; ++y)
                     {
-                        differences.push_back(
-                            prefix_with_name + " buffer [" + std::to_string(i) + "] mismatch ["
-                            + std::to_string(y) + "]: pointer=" + std::to_string(from.buffers()[i][y])
-                            + " vs json=" + std::to_string(from_json.buffers()[i][y])
-                        );
+                        if (from_json_buffer.data()[y] != from_buffer.data()[y])
+                        {
+                            differences.push_back(
+                                prefix_with_name + " buffer [" + std::to_string(i) + "] mismatch at byte ["
+                                + std::to_string(y) + "]: pointer="
+                                + std::to_string(static_cast<unsigned char>(from_buffer.data()[y])) + " vs json="
+                                + std::to_string(static_cast<unsigned char>(from_json_buffer.data()[y]))
+                            );
+                        }
                     }
                 }
             }
