@@ -117,6 +117,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
           -DUSE_DATE_POLYFILL=${{matrix.date-polyfill}} \
           -DBUILD_TESTS=ON \
+          -DENABLE_INTEGRATION_TEST=ON \
           -DBUILD_EXAMPLES=ON \
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
