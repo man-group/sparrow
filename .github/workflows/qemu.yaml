@@ -76,6 +76,7 @@ jobs:
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}}
           -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}}
           -DBUILD_TESTS:BOOL=ON
+          -DENABLE_INTEGRATION_TEST=ON
           -DBUILD_EXAMPLES:BOOL=ON
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
