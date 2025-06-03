@@ -237,7 +237,7 @@ namespace sparrow::c_data_integration
                                    return column.at("name").get<std::string>();
                                }
                            );
-        return sparrow::record_batch{"", names, std::move(arrays)};
+        return sparrow::record_batch{names, std::move(arrays), ""};
     }
 
 }  // namespace sparrow::c_data_integration::json_parser

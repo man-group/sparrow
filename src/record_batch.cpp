@@ -108,7 +108,7 @@ namespace sparrow
         return m_array_list[index];
     }
 
-    auto record_batch::name() const -> const name_type&
+    auto record_batch::name() const -> const std::optional<name_type>&
     {
         return m_name;
     }

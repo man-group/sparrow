@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <initializer_list>
+#include <optional>
 #include <ranges>
 #include <string>
 #include <unordered_map>
@@ -63,11 +64,8 @@ namespace sparrow
          * @param columns An input range of arrays.
          */
         template <std::ranges::input_range NR, std::ranges::input_range CR>
-            requires(
-                std::convertible_to<std::ranges::range_value_t<NR>, std::string>
-                and std::same_as<std::ranges::range_value_t<CR>, array>
-            )
-        record_batch(std::string_view name, NR&& names, CR&& columns);
+            requires(std::convertible_to<std::ranges::range_value_t<NR>, std::string> and std::same_as<std::ranges::range_value_t<CR>, array>)
+        record_batch(NR&& names, CR&& columns, std::optional<std::string_view> name = std::nullopt);
 
         /*
          * Constructs a @ref record_batch from a range of arrays. Each array
@@ -78,7 +76,7 @@ namespace sparrow
          */
         template <std::ranges::input_range CR>
             requires std::same_as<std::ranges::range_value_t<CR>, array>
-        record_batch(std::string_view name, CR&& columns);
+        record_batch(CR&& columns, std::optional<std::string_view> name = std::nullopt);
 
         /**
          * Constructs a record_batch from a list of \c std::pair<name_type, array>.
@@ -144,7 +142,7 @@ namespace sparrow
         /**
          * @returns name of the \ref record_batch.
          */
-        SPARROW_API const name_type& name() const;
+        SPARROW_API const std::optional<name_type>& name() const;
 
         /**
          * @returns a range of the names in the \ref record_batch.
@@ -190,7 +188,7 @@ namespace sparrow
 
         [[nodiscard]] SPARROW_API bool check_consistency() const;
 
-        name_type m_name;
+        std::optional<name_type> m_name;
         std::vector<name_type> m_name_list;
         std::vector<array> m_array_list;
         mutable std::unordered_map<name_type, const array*> m_array_map;
@@ -215,7 +213,7 @@ namespace sparrow
     template <std::ranges::input_range NR, std::ranges::input_range CR>
         requires(std::convertible_to<std::ranges::range_value_t<NR>, std::string>
                  and std::same_as<std::ranges::range_value_t<CR>, array>)
-    record_batch::record_batch(std::string_view name, NR&& names, CR&& columns)
+    record_batch::record_batch(NR&& names, CR&& columns, std::optional<std::string_view> name)
         : m_name(name)
         , m_name_list(to_vector<name_type>(std::forward<NR>(names)))
         , m_array_list(to_vector<array>(std::forward<CR>(columns)))
@@ -240,7 +238,7 @@ namespace sparrow
 
     template <std::ranges::input_range CR>
         requires std::same_as<std::ranges::range_value_t<CR>, array>
-    record_batch::record_batch(std::string_view name, CR&& columns)
+    record_batch::record_batch(CR&& columns, std::optional<std::string_view> name)
         : m_name(name)
         , m_name_list(detail::get_names(columns))
         , m_array_list(to_vector<array>(std::move(columns)))
