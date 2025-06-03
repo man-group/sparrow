@@ -54,6 +54,7 @@ const std::vector<std::filesystem::path> jsons_to_test = {
     json_files_path / "decimal256.json",
 #endif
     json_files_path / "duplicate_fieldnames.json",
+	json_files_path / "list_view.json",
 };
 
 TEST_SUITE("c_data_integration")

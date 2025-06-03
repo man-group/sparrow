@@ -23,6 +23,7 @@
 #include "sparrow/c_data_integration/fixedsizebinary_parser.hpp"
 #include "sparrow/c_data_integration/fixedsizelist_parser.hpp"
 #include "sparrow/c_data_integration/list_parser.hpp"
+#include "sparrow/c_data_integration/listview_parser.hpp"
 #include "sparrow/c_data_integration/null_parser.hpp"
 #include "sparrow/c_data_integration/primitive_parser.hpp"
 #include "sparrow/c_data_integration/run_end_encoded_parser.hpp"
@@ -41,27 +42,32 @@ namespace sparrow::c_data_integration
     const std::unordered_map<std::string, array_builder_function> array_builders{
         {"binary", binary_array_from_json},
         {"bool", bool_array_from_json},
+        {"date", date_array_from_json},
         {"decimal", decimal_from_json},
         {"dictionary", dictionary_encode_array_from_json},
+        {"duration", duration_array_from_json},
         {"fixedsizebinary", fixedsizebinary_from_json},
         {"fixedsizelist", fixed_size_list_array_from_json},
         {"floatingpoint", floating_point_from_json},
         {"int", primitive_array_from_json},
+        {"interval", interval_array_from_json},
         {"largebinary", large_binary_array_from_json},
         {"largelist", large_list_array_from_json},
+        {"largelistview", large_list_view_array_from_json},
         {"largeutf8", big_string_array_from_json},
         {"list", list_array_from_json},
+        {"listview", list_view_array_from_json},
         {"null", null_array_from_json},
+        {"runendencoded", runendencoded_array_from_json},
         {"struct", struct_array_from_json},
-        {"utf8", string_array_from_json},
-        {"utf8view", string_view_from_json},
-        {"date", date_array_from_json},
         {"time", time_array_from_json},
         {"timestamp", timestamp_array_from_json},
         {"interval", interval_array_from_json},
         {"duration", duration_array_from_json},
         {"runendencoded", runendencoded_array_from_json},
         {"union", union_array_from_json},
+        {"utf8", string_array_from_json},
+        {"utf8view", string_view_from_json},
     };
 
     std::vector<sparrow::array>

@@ -50,7 +50,7 @@ jobs:
         uses: jirutka/setup-alpine@v1
         id: alpine-target
         with:
-          branch: v3.20
+          branch: v3.22
           arch: ${{ matrix.target.arch }}
           packages: >
             ccache
@@ -64,7 +64,13 @@ jobs:
             musl-dev
             samurai
             tzdata
+            elfutils-dev
           shell-name: alpine.sh
+
+      - name: Install libexecinfo-dev
+        run: |
+          apk add --no-cache --update --repository=https://dl-cdn.alpinelinux.org/alpine/v3.16/main/ libexecinfo-dev
+        shell: alpine.sh --root {0}
       
       - name: Checkout code
         uses: actions/checkout@v4
