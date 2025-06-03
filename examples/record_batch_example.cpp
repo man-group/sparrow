@@ -39,7 +39,8 @@ int main()
     const std::vector<std::string> name_list = {"first", "second", "third"};
     constexpr std::size_t data_size = 10;
     const std::vector<sparrow::array> array_list = make_array_list(data_size);
-    const sparrow::record_batch record{name_list, array_list};
+    const sparrow::record_batch record{"record batch name", name_list, array_list};
+    assert(record.name() == "record batch name");
     assert(record.nb_columns() == array_list.size());
     assert(record.nb_rows() == data_size);
     assert(record.contains_column(name_list[0]));
