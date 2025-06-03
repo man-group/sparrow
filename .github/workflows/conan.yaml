@@ -31,6 +31,7 @@ jobs:
         run: |
           cmake --preset conan-release \
           -DBUILD_TESTS=ON \
+          -DENABLE_INTEGRATION_TEST=ON \
           -DBUILD_EXAMPLES=ON \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
