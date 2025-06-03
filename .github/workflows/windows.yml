@@ -161,6 +161,7 @@ jobs:
         -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX \
         -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX \
         -DBUILD_TESTS=ON \
+        -DENABLE_INTEGRATION_TEST=ON \
         -DBUILD_EXAMPLES=ON \
         -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} \
         $GENERATOR_EXTRA_FLAGS \
