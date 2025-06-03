@@ -181,6 +181,14 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        [[nodiscard]] static arrow_proxy create_proxy(
+            size_t element_size,
+            bool nullable = true,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        );
+
         /**
          * Creates an arrow proxy from a range of ranges of byte_t/uint8_t/int8_t.
          *
@@ -336,6 +344,27 @@ namespace sparrow
         return create_proxy_impl(
             std::move(data_buffer),
             element_count,
+            element_size,
+            std::move(bitmap),
+            std::move(name),
+            std::move(metadata)
+        );
+    }
+
+    template <std::ranges::sized_range T, class CR>
+    template <input_metadata_container METADATA_RANGE>
+    arrow_proxy fixed_width_binary_array_impl<T, CR>::create_proxy(
+        size_t element_size,
+        bool nullable,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
+    {
+        u8_buffer<char> data_buffer{};
+        validity_bitmap bitmap = nullable ? validity_bitmap{} : validity_bitmap{nullptr, 0};
+        return create_proxy_impl(
+            std::move(data_buffer),
+            0,
             element_size,
             std::move(bitmap),
             std::move(name),
