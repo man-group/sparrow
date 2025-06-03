@@ -23,6 +23,7 @@
 #include "sparrow/c_data_integration/fixedsizebinary_parser.hpp"
 #include "sparrow/c_data_integration/fixedsizelist_parser.hpp"
 #include "sparrow/c_data_integration/list_parser.hpp"
+#include "sparrow/c_data_integration/listview_parser.hpp"
 #include "sparrow/c_data_integration/null_parser.hpp"
 #include "sparrow/c_data_integration/primitive_parser.hpp"
 #include "sparrow/c_data_integration/string_parser.hpp"
