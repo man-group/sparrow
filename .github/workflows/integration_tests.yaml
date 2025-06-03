@@ -1,14 +1,10 @@
 name: Integration tests
 
-permissions: write-all
-
 on:
-  push:
-    paths:
-      - 'ci/docker/integration.dockerfile'
+  workflow_dispatch:
   pull_request:
-    paths:
-      - 'ci/docker/integration.dockerfile'
+  push:
+    branches: [main]
 
 jobs:
   build_integration_container_and_run_tests:
@@ -20,7 +16,7 @@ jobs:
     - name: Run sccache-cache
       uses: mozilla-actions/sccache-action@v0.0.9
 
-    - name: Install dependnecies
+    - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev doctest-dev
@@ -35,6 +31,7 @@ jobs:
           -DCMAKE_BUILD_TYPE:STRING=RELEASE \
           -DUSE_DATE_POLYFILL=TRUE \
           -DBUILD_TESTS=ON \
+          -DENABLE_INTEGRATION_TEST=ON \
           -DBUILD_EXAMPLES=OFF \
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
