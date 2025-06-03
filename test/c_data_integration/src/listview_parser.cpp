@@ -14,40 +14,56 @@
 
 #include "sparrow/c_data_integration/listview_parser.hpp"
 
+#include "sparrow/c_data_integration/json_parser.hpp"
+#include "sparrow/c_data_integration/utils.hpp"
+
 namespace sparrow::c_data_integration
 {
     sparrow::array
-    list_view_array_from_json(const nlohmann::json&, const nlohmann::json&, const nlohmann::json&)
+    list_view_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
-        // check_type(array, schema, "listview");
-        // const std::string name = schema.at("name").get<std::string>();
-        // auto validity = get_validity(array);
-        // auto metadata = get_metadata(schema);
-        // sparrow::list_view_array ar{
-        //     std::move(get_children_arrays(array, schema)[0]),
-        //     std::move(validity),
-        //     name,
-        //     std::move(metadata)
-        // };
-        // return sparrow::array{std::move(ar)};
+        utils::check_type(schema, "listview");
+        const std::string name = schema.at("name").get<std::string>();
+        auto validity = utils::get_validity(array);
+        auto offsets = utils::get_offsets(array);
+        auto sizes = utils::get_sizes(array);
+        auto metadata = utils::get_metadata(schema);
+        std::vector<sparrow::array> arrays = get_children_arrays(array, schema, root);
+        sparrow::list_view_array ar{
+            std::move(arrays[0]),
+            std::move(offsets),
+            std::move(sizes),
+            std::move(validity),
+            name,
+            std::move(metadata)
+        };
+        return sparrow::array{std::move(ar)};
         throw std::runtime_error("list_view_array_from_json not implemented");
     }
 
-    sparrow::array
-    large_list_view_array_from_json(const nlohmann::json&, const nlohmann::json&, const nlohmann::json&)
+    sparrow::array large_list_view_array_from_json(
+        const nlohmann::json& array,
+        const nlohmann::json& schema,
+        const nlohmann::json& root
+    )
     {
-        // check_type(array, schema, "largelistview");
-        // const std::string name = schema.at("name").get<std::string>();
-        // const auto children_json = get_children(array, schema);
-        // auto validity = get_validity(array);
-        // auto metadata = get_metadata(schema);
-        // sparrow::big_list_view_array ar{
-        //     std::move(get_children_arrays(array, schema)[0]),
-        //     std::move(validity),
-        //     name,
-        //     std::move(metadata)
-        // };
-        // return sparrow::array{std::move(ar)};
+        utils::check_type(schema, "largelistview");
+        const std::string name = schema.at("name").get<std::string>();
+        const auto children_json = utils::get_children(array, schema);
+        auto validity = utils::get_validity(array);
+        auto offsets = utils::get_offsets(array);
+        auto sizes = utils::get_sizes(array);
+        auto metadata = utils::get_metadata(schema);
+        std::vector<sparrow::array> arrays = get_children_arrays(array, schema, root);
+        sparrow::big_list_view_array ar{
+            std::move(arrays[0]),
+            std::move(offsets),
+            std::move(sizes),
+            std::move(validity),
+            name,
+            std::move(metadata)
+        };
+        return sparrow::array{std::move(ar)};
         throw std::runtime_error("large_list_view_array_from_json not implemented");
     }
 }
