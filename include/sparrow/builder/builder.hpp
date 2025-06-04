@@ -180,21 +180,13 @@ namespace sparrow
         template <class T>
         concept translate_to_fixed_sized_list_layout = std::ranges::input_range<T>
                                                        && tuple_like<ensured_range_value_t<T>>
-                                                       && !(
-                                                           (mpl::fixed_size_span<ensured_range_value_t<T>>
-                                                            || mpl::std_array<ensured_range_value_t<T>>)
-                                                           && fixed_width_binary_types<ensured_range_value_t<T>>
-                                                       )
+                                                       && !((mpl::fixed_size_span<ensured_range_value_t<T>> || mpl::std_array<ensured_range_value_t<T>>) && fixed_width_binary_types<ensured_range_value_t<T>>)
                                                        && all_elements_same<ensured_range_value_t<T>>;
 
         template <class T>
         concept translate_to_variable_sized_binary_layout = std::ranges::input_range<T>
                                                             && std::ranges::input_range<ensured_range_value_t<T>>
-                                                            && !(
-                                                                (mpl::fixed_size_span<ensured_range_value_t<T>>
-                                                                 || mpl::std_array<ensured_range_value_t<T>>)
-                                                                && fixed_width_binary_types<ensured_range_value_t<T>>
-                                                            )
+                                                            && !((mpl::fixed_size_span<ensured_range_value_t<T>> || mpl::std_array<ensured_range_value_t<T>>) && fixed_width_binary_types<ensured_range_value_t<T>>)
                                                             && !tuple_like<ensured_range_value_t<T>>
                                                             &&  // tuples go to struct layout
                                                             // value type of inner must be char like ( char,
@@ -547,7 +539,7 @@ namespace sparrow
                 const auto input_size = range_size(t);
 
                 std::vector<value_type> values{};
-                std::vector<std::size_t> acc_run_lengths{};
+                std::vector<int64_t> acc_run_lengths{};
 
                 values.reserve(input_size);
                 acc_run_lengths.reserve(input_size);
@@ -555,7 +547,7 @@ namespace sparrow
                 const auto eq = nested_eq<value_type>{};
 
                 // accumulate the run lengths
-                std::size_t i = 0;
+                int64_t i = 0;
                 for (const auto& v : t)
                 {
                     // first value
@@ -576,7 +568,7 @@ namespace sparrow
                 }
                 acc_run_lengths.push_back(i);
 
-                auto run_length_typed_array = primitive_array<std::size_t>(acc_run_lengths);
+                auto run_length_typed_array = primitive_array<int64_t>(acc_run_lengths);
 
                 // since we do not support dict[dict or dict[run_end
                 // we can hard code the layout policy here
