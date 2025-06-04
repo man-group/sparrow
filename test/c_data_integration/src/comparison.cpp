@@ -210,13 +210,12 @@ namespace sparrow::c_data_integration
                 {
                     for (size_t y = 0; y < from_json_buffer_size; ++y)
                     {
-                        if (from_json_buffer.data()[y] != from_buffer.data()[y])
+                        if (from_json_buffer[y] != from_buffer[y])
                         {
                             differences.push_back(
                                 prefix_with_name + " buffer [" + std::to_string(i) + "] mismatch at byte ["
-                                + std::to_string(y) + "]: pointer="
-                                + std::to_string(static_cast<unsigned char>(from_buffer.data()[y])) + " vs json="
-                                + std::to_string(static_cast<unsigned char>(from_json_buffer.data()[y]))
+                                + std::to_string(y) + "]: pointer=" + std::to_string(from_buffer[y])
+                                + " vs json=" + std::to_string(from_json_buffer[y])
                             );
                         }
                     }
