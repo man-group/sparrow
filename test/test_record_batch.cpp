@@ -52,7 +52,7 @@ namespace sparrow
 
     record_batch make_record_batch(const std::size_t data_size)
     {
-        return record_batch(make_name_list(), make_array_list(data_size));
+        return record_batch(make_name_list(), make_array_list(data_size), "");
     }
 
     TEST_SUITE("record_batch")
@@ -79,16 +79,17 @@ namespace sparrow
 
             SUBCASE("from column list")
             {
-                record_batch record(make_array_list(col_size));
+                record_batch record(make_array_list(col_size), "name");
                 CHECK_EQ(record.nb_columns(), 3u);
                 CHECK_EQ(record.nb_rows(), 10u);
+                CHECK_EQ(record.name(), "name");
                 CHECK_FALSE(std::ranges::equal(record.names(), make_name_list()));
             }
 
             SUBCASE("from struct array")
             {
-                record_batch record0(struct_array(make_array_list(col_size)));
-                record_batch record1(make_array_list(col_size));
+                record_batch record0(struct_array(make_array_list(col_size), false, "name"));
+                record_batch record1(make_array_list(col_size), "name");
                 CHECK_EQ(record0, record1);
             }
         }

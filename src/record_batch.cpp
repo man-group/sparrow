@@ -108,6 +108,11 @@ namespace sparrow
         return m_array_list[index];
     }
 
+    auto record_batch::name() const -> const std::optional<name_type>&
+    {
+        return m_name;
+    }
+
     auto record_batch::names() const -> name_range
     {
         return std::ranges::ref_view(m_name_list);
@@ -125,7 +130,7 @@ namespace sparrow
             m_array_list[i].set_name(m_name_list[i]);
         }
         m_array_map.clear();
-        return struct_array(std::move(m_array_list));
+        return struct_array(std::move(m_array_list), false, m_name);
     }
 
     void record_batch::add_column(name_type name, array column)
