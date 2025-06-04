@@ -11,15 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #pragma once
 
-#include <string_view>
+#include <nlohmann/json.hpp>
+
+#include <sparrow/array.hpp>
 
 namespace sparrow::c_data_integration
 {
-    inline constexpr std::string_view VALIDITY = "VALIDITY";
-    inline constexpr std::string_view DATA = "DATA";
-    inline constexpr std::string_view OFFSET = "OFFSET";
-    inline constexpr std::string_view SIZE = "SIZE";
-    inline constexpr std::string_view TYPE_ID = "TYPE_ID";
+    sparrow::array
+    list_view_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
+
+    sparrow::array large_list_view_array_from_json(
+        const nlohmann::json& array,
+        const nlohmann::json& schema,
+        const nlohmann::json& root
+    );
 }
