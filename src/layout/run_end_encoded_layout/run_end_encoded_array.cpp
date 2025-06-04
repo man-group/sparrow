@@ -152,10 +152,11 @@ namespace sparrow
     }
 
     template <class T>
-    concept usable_array = mpl::is_type_instance_of_v<T, primitive_array>
-                           && (std::same_as<typename T::inner_value_type, std::uint16_t>
-                               || std::same_as<typename T::inner_value_type, std::uint32_t>
-                               || std::same_as<typename T::inner_value_type, std::uint64_t>);
+    concept usable_array = (mpl::is_type_instance_of_v<T, primitive_array>
+                            || mpl::is_type_instance_of_v<T, primitive_array_impl>)
+                           && (std::same_as<typename T::inner_value_type, std::int16_t>
+                               || std::same_as<typename T::inner_value_type, std::int32_t>
+                               || std::same_as<typename T::inner_value_type, std::int64_t>);
 
     auto run_end_encoded_array::get_acc_lengths_ptr(const array_wrapper& ar) -> acc_length_ptr_variant_type
     {
@@ -207,6 +208,10 @@ namespace sparrow
             {
                 if constexpr (usable_array<std::decay_t<decltype(acc_lengths_array)>>)
                 {
+                    if (length == 0)
+                    {
+                        return;
+                    }
                     auto acc_length_data = acc_lengths_array.data();
                     // get the length of the array (ie last element in the acc_lengths array)
                     length = acc_length_data[raw_size - 1];

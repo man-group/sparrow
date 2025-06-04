@@ -1,0 +1,523 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "ree16",
+        "type": {
+          "name": "runendencoded"
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "run_ends",
+            "type": {
+              "name": "int",
+              "isSigned": true,
+              "bitWidth": 16
+            },
+            "nullable": false,
+            "children": []
+          },
+          {
+            "name": "values",
+            "type": {
+              "name": "int",
+              "isSigned": true,
+              "bitWidth": 32
+            },
+            "nullable": true,
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "ree32",
+        "type": {
+          "name": "runendencoded"
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "run_ends",
+            "type": {
+              "name": "int",
+              "isSigned": true,
+              "bitWidth": 32
+            },
+            "nullable": false,
+            "children": []
+          },
+          {
+            "name": "values",
+            "type": {
+              "name": "utf8"
+            },
+            "nullable": true,
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "ree64",
+        "type": {
+          "name": "runendencoded"
+        },
+        "nullable": true,
+        "children": [
+          {
+            "name": "run_ends",
+            "type": {
+              "name": "int",
+              "isSigned": true,
+              "bitWidth": 64
+            },
+            "nullable": false,
+            "children": []
+          },
+          {
+            "name": "values",
+            "type": {
+              "name": "floatingpoint",
+              "precision": "SINGLE"
+            },
+            "nullable": true,
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "batches": [
+    {
+      "count": 0,
+      "columns": [
+        {
+          "name": "ree16",
+          "count": 0,
+          "children": [
+            {
+              "name": "run_ends",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            },
+            {
+              "name": "values",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            }
+          ]
+        },
+        {
+          "name": "ree32",
+          "count": 0,
+          "children": [
+            {
+              "name": "run_ends",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            },
+            {
+              "name": "values",
+              "count": 0,
+              "VALIDITY": [],
+              "OFFSET": [
+                0
+              ],
+              "DATA": []
+            }
+          ]
+        },
+        {
+          "name": "ree64",
+          "count": 0,
+          "children": [
+            {
+              "name": "run_ends",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            },
+            {
+              "name": "values",
+              "count": 0,
+              "VALIDITY": [],
+              "DATA": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "count": 7,
+      "columns": [
+        {
+          "name": "ree16",
+          "count": 7,
+          "children": [
+            {
+              "name": "run_ends",
+              "count": 7,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "DATA": [
+                12275,
+                13467,
+                16194,
+                17841,
+                20095,
+                26792,
+                28148
+              ]
+            },
+            {
+              "name": "values",
+              "count": 7,
+              "VALIDITY": [
+                1,
+                0,
+                1,
+                0,
+                1,
+                1,
+                1
+              ],
+              "DATA": [
+                -2147483648,
+                2147483647,
+                1226837555,
+                -1589671038,
+                -648490195,
+                1761905056,
+                743065562
+              ]
+            }
+          ]
+        },
+        {
+          "name": "ree32",
+          "count": 7,
+          "children": [
+            {
+              "name": "run_ends",
+              "count": 7,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "DATA": [
+                340080851,
+                634933259,
+                774006918,
+                1085146018,
+                1367973687,
+                1528025969,
+                1708477336
+              ]
+            },
+            {
+              "name": "values",
+              "count": 7,
+              "VALIDITY": [
+                0,
+                1,
+                0,
+                1,
+                1,
+                1,
+                1
+              ],
+              "OFFSET": [
+                0,
+                0,
+                9,
+                9,
+                19,
+                29,
+                39,
+                46
+              ],
+              "DATA": [
+                "",
+                "fecrp\u20acf",
+                "",
+                "j\u00b0\u20ac26ir",
+                "\u00f4bk\u00a3p\u00c2i",
+                "ro2\u00b0dn\u77e2",
+                "34fkjgh"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "ree64",
+          "count": 7,
+          "children": [
+            {
+              "name": "run_ends",
+              "count": 7,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "DATA": [
+                "1515428805025776775",
+                "3396898078297774493",
+                "3637471482899949245",
+                "4582342263655705868",
+                "5384164651830847530",
+                "7244492794755438491",
+                "8851218742975402823"
+              ]
+            },
+            {
+              "name": "values",
+              "count": 7,
+              "VALIDITY": [
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                0
+              ],
+              "DATA": [
+                129.264,
+                -21.958,
+                453.648,
+                -2748.516,
+                -696.883,
+                -475.466,
+                15.283
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "count": 10,
+      "columns": [
+        {
+          "name": "ree16",
+          "count": 10,
+          "children": [
+            {
+              "name": "run_ends",
+              "count": 10,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "DATA": [
+                676,
+                3886,
+                12429,
+                14588,
+                21637,
+                23986,
+                24815,
+                25209,
+                26458,
+                31781
+              ]
+            },
+            {
+              "name": "values",
+              "count": 10,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                1
+              ],
+              "DATA": [
+                -2147483648,
+                2147483647,
+                -1257177981,
+                304148104,
+                -1300491399,
+                -646684235,
+                -866870942,
+                -1293275535,
+                614163044,
+                2114240245
+              ]
+            }
+          ]
+        },
+        {
+          "name": "ree32",
+          "count": 10,
+          "children": [
+            {
+              "name": "run_ends",
+              "count": 10,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "DATA": [
+                173955923,
+                227652508,
+                425459637,
+                536867034,
+                662301991,
+                1095287147,
+                1232779631,
+                1378780316,
+                1465951660,
+                1786968265
+              ]
+            },
+            {
+              "name": "values",
+              "count": 10,
+              "VALIDITY": [
+                1,
+                0,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "OFFSET": [
+                0,
+                8,
+                8,
+                20,
+                31,
+                31,
+                31,
+                31,
+                31,
+                31,
+                40
+              ],
+              "DATA": [
+                "bfjh\u00b5r4",
+                "",
+                "h\u20ackb\u20ac\u00c2o",
+                "\u00f4\u00b0om\u77e2ij",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "ni\u00a3g6\u00b0a"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "ree64",
+          "count": 10,
+          "children": [
+            {
+              "name": "run_ends",
+              "count": 10,
+              "VALIDITY": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "DATA": [
+                "1317798705120120214",
+                "1962691739324027667",
+                "2244441095391998786",
+                "2593792274056286848",
+                "3845795204097791526",
+                "5341318346114182844",
+                "5680051192513372917",
+                "6474595256008128528",
+                "6748920133398318517",
+                "8561593652251320980"
+              ]
+            },
+            {
+              "name": "values",
+              "count": 10,
+              "VALIDITY": [
+                1,
+                0,
+                0,
+                1,
+                1,
+                0,
+                1,
+                1,
+                1,
+                1
+              ],
+              "DATA": [
+                1571.573,
+                -845.419,
+                187.989,
+                -1491.254,
+                -43.26,
+                -720.896,
+                -674.633,
+                595.398,
+                -55.005,
+                -72.452
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
