@@ -208,7 +208,7 @@ namespace sparrow
             {
                 if constexpr (usable_array<std::decay_t<decltype(acc_lengths_array)>>)
                 {
-                    if (length == 0)
+                    if (acc_lengths_array.size() == 0)
                     {
                         return;
                     }
