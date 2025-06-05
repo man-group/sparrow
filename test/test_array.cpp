@@ -350,7 +350,6 @@ namespace sparrow
                 scalar_value = detail::next_test_value(scalar_value);
             }
 
-            ar.slice(2, 8);
             const auto slice_2_8 = ar.slice(2, 8);
             REQUIRE_EQ(slice_2_8.size(), 6);
             if constexpr (std::same_as<scalar_value_type, bool>)

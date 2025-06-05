@@ -92,6 +92,8 @@ namespace sparrow
         [[nodiscard]] std::optional<std::string_view> name() const;
         [[nodiscard]] std::optional<key_value_view> metadata() const;
 
+        void zero_null_values();
+
     private:
 
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>

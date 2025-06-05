@@ -16,6 +16,7 @@
 
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/utils/mp_utils.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
 {
@@ -168,6 +169,8 @@ namespace sparrow
         template <typename T>
         void push_back(const nullable<T>& value);
         void pop_back();
+
+        void zero_null_values(const inner_value_type& value = inner_value_type());
 
     protected:
 
@@ -384,5 +387,16 @@ namespace sparrow
     void mutable_array_base<D>::pop_back()
     {
         erase(std::prev(this->cend()));
+    }
+
+    /**
+     * Sets all null values in the array to zero.
+     *
+     * This function is a no-op if the array does not have a bitmap.
+     */
+    template <class D>
+    void mutable_array_base<D>::zero_null_values(const inner_value_type& value)
+    {
+        sparrow::zero_null_values(*this, value);
     }
 }
