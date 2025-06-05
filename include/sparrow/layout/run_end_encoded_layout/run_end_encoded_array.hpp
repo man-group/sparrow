@@ -22,7 +22,6 @@
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 
-
 namespace sparrow
 {
     class run_end_encoded_array;
