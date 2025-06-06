@@ -28,7 +28,7 @@ namespace sparrow
     {
         run_end_encoded_array make_test_run_encoded_array(bool alterate = false)
         {
-            using acc_type = std::uint32_t;
+            using acc_type = std::int32_t;
             using inner_value_type = std::uint64_t;
 
             // lets encode the following: (length: 8)
