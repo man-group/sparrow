@@ -172,8 +172,10 @@ namespace sparrow
                         CHECK_EQ(array[i].has_value(), bitmaps[i]);
                         if (array[i].has_value())
                         {
-                            array[i].value(
-                            ) = decimal<INTEGER_TYPE>(array[i].value().storage() + 1, array[i].value().scale());
+                            array[i].value() = decimal<INTEGER_TYPE>(
+                                array[i].value().storage() + 1,
+                                array[i].value().scale()
+                            );
                             CHECK_EQ(array[i].value().scale(), scale);
                             CHECK_EQ(static_cast<std::int64_t>(array[i].value().storage()), values[i] + 1);
                         }
