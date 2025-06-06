@@ -36,37 +36,26 @@ namespace sparrow::c_data_integration
         }
         const bool nullable = schema.at("nullable").get<bool>();
         auto metadata = utils::get_metadata(schema);
+
         if (data.empty())
         {
-            if (nullable)
-            {
-                auto validity = utils::get_validity(array);
-                return sparrow::array{
-                    sparrow::fixed_width_binary_array{std::move(data), std::move(validity), name, std::move(metadata)}
-                };
-            }
-            else
-            {
-                return sparrow::array{
-                    sparrow::fixed_width_binary_array{std::move(data), false, name, std::move(metadata)}
-                };
-            }
+            return sparrow::array{
+                sparrow::fixed_width_binary_array{byte_width, nullable, std::move(name), std::move(metadata)}
+            };
+        }
+
+        if (nullable)
+        {
+            auto validity = utils::get_validity(array);
+            return sparrow::array{
+                sparrow::fixed_width_binary_array{std::move(data), std::move(validity), name, std::move(metadata)}
+            };
         }
         else
         {
-            if (nullable)
-            {
-                auto validity = utils::get_validity(array);
-                return sparrow::array{
-                    sparrow::fixed_width_binary_array{std::move(data), std::move(validity), name, std::move(metadata)}
-                };
-            }
-            else
-            {
-                return sparrow::array{
-                    sparrow::fixed_width_binary_array{std::move(data), false, name, std::move(metadata)}
-                };
-            }
+            return sparrow::array{
+                sparrow::fixed_width_binary_array{std::move(data), false, name, std::move(metadata)}
+            };
         }
     }
 }
