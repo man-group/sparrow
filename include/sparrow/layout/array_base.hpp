@@ -152,18 +152,6 @@ namespace sparrow
          */
         [[nodiscard]] D slice_view(size_type start, size_type end) const;
 
-        /**
-         * Sets all null values to the specified value.
-         * This operation modifies the underlying data values but not the validity bitmap.
-         * The bitmap remains unchanged, so the elements will still be considered null.
-         *
-         * @param value The value to assign to null elements
-         */
-        void zero_null_values(const inner_value_type& value = inner_value_type())
-        {
-            sparrow::zero_null_values(*this, value);
-        }
-
     protected:
 
         explicit array_crtp_base(arrow_proxy);
