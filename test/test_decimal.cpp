@@ -274,6 +274,16 @@ namespace sparrow
                     CHECK_EQ(as_string, expected);
                 }
             }
+
+            SUBCASE("=operator")
+            {
+                decimal_type d1(42, 2);
+                decimal_type d2(99, 99);
+                d1 = d2;
+                CHECK_EQ(d1.storage(), d2.storage());
+                CHECK_EQ(d1.scale(), d2.scale());
+                CHECK_EQ(d1, d2);
+            }
         }
         TEST_CASE_TEMPLATE_APPLY(decimal_test_id, testing_types);
     }

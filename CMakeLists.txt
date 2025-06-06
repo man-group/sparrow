@@ -213,6 +213,8 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_base.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_helper.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_wrapper.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/decimal_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/decimal_reference.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dispatch.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.hpp
