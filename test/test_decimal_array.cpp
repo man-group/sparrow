@@ -15,6 +15,7 @@
 #include <cstdint>
 
 #include "sparrow/layout/decimal_array.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 #include "test_utils.hpp"
 
@@ -138,6 +139,78 @@ namespace sparrow
                 CHECK_EQ(val.scale(), scale);
                 CHECK_EQ(static_cast<std::int64_t>(val.storage()), 33);
                 CHECK_EQ(static_cast<double>(val), doctest::Approx(0.0033));
+            }
+
+            SUBCASE("operator[]")
+            {
+                SUBCASE("const")
+                {
+                    const decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
+                    CHECK_EQ(array.size(), 4);
+                    for (std::size_t i = 0; i < array.size(); ++i)
+                    {
+                        CHECK_EQ(array[i].has_value(), bitmaps[i]);
+                        if (array[i].has_value())
+                        {
+                            const auto& val = array[i].value();
+                            CHECK_EQ(val.scale(), scale);
+                            CHECK_EQ(static_cast<std::int64_t>(val.storage()), values[i]);
+                            CHECK_EQ(
+                                static_cast<double>(val),
+                                doctest::Approx(static_cast<double>(values[i]) / std::pow(10, scale))
+                            );
+                        }
+                    }
+                }
+
+                SUBCASE("mutable")
+                {
+                    decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
+                    CHECK_EQ(array.size(), 4);
+                    for (std::size_t i = 0; i < array.size(); ++i)
+                    {
+                        CHECK_EQ(array[i].has_value(), bitmaps[i]);
+                        if (array[i].has_value())
+                        {
+                            auto val = array[i].value();
+                            val = decimal<INTEGER_TYPE>(val.storage() + 1, val.scale());
+                            CHECK_EQ(val.scale(), scale);
+                            CHECK_EQ(static_cast<std::int64_t>(val.storage()), values[i] + 1);
+                            CHECK_EQ(
+                                static_cast<double>(val),
+                                doctest::Approx((static_cast<double>(values[i]) + 1) / std::pow(10, scale))
+                            );
+                        }
+                    }
+                }
+            }
+
+            SUBCASE("modify an element with a different scale")
+            {
+                decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
+                CHECK_EQ(array.size(), 4);
+                decimal<INTEGER_TYPE> new_value(100, 2);  // Different scale
+                array[0] = make_nullable(new_value);
+                CHECK_EQ(array[0].has_value(), true);
+                const auto& val = array[0].value();
+                CHECK_EQ(val.scale(), scale);
+                CHECK_EQ(static_cast<std::int64_t>(val.storage()), 10000);
+                CHECK_EQ(static_cast<double>(val), doctest::Approx(1.0));
+            }
+
+            SUBCASE("zero_null_values")
+            {
+                decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
+                array.zero_null_values();
+                for (std::size_t i = 0; i < array.size(); ++i)
+                {
+                    const auto& val = array[i];
+                    if (!val.has_value())
+                    {
+                        const auto storage = val.get().storage();
+                        CHECK_EQ(storage, 0);
+                    }
+                }
             }
         }
 
