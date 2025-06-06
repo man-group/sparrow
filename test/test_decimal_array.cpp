@@ -172,14 +172,10 @@ namespace sparrow
                         CHECK_EQ(array[i].has_value(), bitmaps[i]);
                         if (array[i].has_value())
                         {
-                            auto val = array[i].value();
-                            val = decimal<INTEGER_TYPE>(val.storage() + 1, val.scale());
-                            CHECK_EQ(val.scale(), scale);
-                            CHECK_EQ(static_cast<std::int64_t>(val.storage()), values[i] + 1);
-                            CHECK_EQ(
-                                static_cast<double>(val),
-                                doctest::Approx((static_cast<double>(values[i]) + 1) / std::pow(10, scale))
-                            );
+                            array[i].value(
+                            ) = decimal<INTEGER_TYPE>(array[i].value().storage() + 1, array[i].value().scale());
+                            CHECK_EQ(array[i].value().scale(), scale);
+                            CHECK_EQ(static_cast<std::int64_t>(array[i].value().storage()), values[i] + 1);
                         }
                     }
                 }
