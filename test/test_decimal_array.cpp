@@ -154,7 +154,7 @@ namespace sparrow
                         {
                             const auto& val = array[i].value();
                             CHECK_EQ(val.scale(), scale);
-                            CHECK_EQ(static_cast<std::int64_t>(val.storage()), values[i]);
+                            CHECK_EQ(val.storage(), values[i]);
                         }
                     }
                 }
