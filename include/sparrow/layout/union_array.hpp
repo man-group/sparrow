@@ -29,6 +29,7 @@
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/mp_utils.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
 {
@@ -114,6 +115,18 @@ namespace sparrow
 
         [[nodiscard]] const_reverse_iterator crbegin() const;
         [[nodiscard]] const_reverse_iterator crend() const;
+
+        /**
+         * Sets all null values to the specified value.
+         * This operation modifies the underlying data values but not the validity bitmap.
+         * The bitmap remains unchanged, so the elements will still be considered null.
+         *
+         * @param value The value to assign to null elements
+         */
+        void zero_null_values(const inner_value_type& value)
+        {
+            sparrow::zero_null_values(*this, value);
+        }
 
     protected:
 

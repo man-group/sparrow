@@ -225,6 +225,23 @@ namespace sparrow
                     }
                 }
             }
+
+            SUBCASE("zero_null_values")
+            {
+                list_array list_arr2(list_arr);
+                list_arr2.zero_null_values();
+                // check that all null values are set to 0
+                // for (std::size_t i = 0; i < n; ++i)
+                // {
+                //     if (!list_arr[i].has_value())
+                //     {
+                //         CHECK(list_arr2[i].value().size() == 1);
+                //         CHECK(list_arr2[i].value()[0] == 0);
+                //     }
+                // }
+
+                CHECK_EQ(list_arr2, list_arr);
+            }
         }
     }
 

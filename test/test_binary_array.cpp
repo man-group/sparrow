@@ -47,9 +47,7 @@ namespace sparrow
 
         static_assert(is_binary_array_v<layout_type>);
         static_assert(std::same_as<layout_type::inner_value_type, value_type>);
-        static_assert(
-            std::same_as<layout_type::inner_reference, sparrow::variable_size_binary_reference<layout_type>>
-        );
+        static_assert(std::same_as<layout_type::inner_reference, sparrow::variable_size_binary_reference<layout_type>>);
         static_assert(std::same_as<layout_type::inner_const_reference, const_reference>);
         using const_value_iterator = layout_type::const_value_iterator;
         static_assert(std::same_as<const_value_iterator::value_type, value_type>);
@@ -402,6 +400,20 @@ namespace sparrow
                 ++it;
                 REQUIRE(it->has_value());
                 CHECK_EQ(it->get(), words[m_offset + 8]);
+            }
+        }
+
+        TEST_CASE_FIXTURE(binary_array_fixture, "zero_null_values")
+        {
+            layout_type array(std::move(m_arrow_proxy));
+            array.zero_null_values();
+            // CHECK that all null values are set to empty vector
+            for (auto&& i : array)
+            {
+                if (!i.has_value())
+                {
+                    CHECK(i.get().empty());
+                }
             }
         }
 #if defined(__cpp_lib_format)
