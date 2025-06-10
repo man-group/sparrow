@@ -85,6 +85,14 @@ namespace sparrow
     };
 
     template <>
+    struct arrow_traits<map_value>
+    {
+        static constexpr data_type type_id = data_type::MAP;
+        using value_type = map_value;
+        using const_reference = map_value;
+    };
+
+    template <>
     struct arrow_traits<struct_value>
     {
         static constexpr data_type type_id = data_type::STRUCT;
