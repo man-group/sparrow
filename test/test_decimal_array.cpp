@@ -166,14 +166,16 @@ namespace sparrow
                     for (std::size_t i = 0; i < array.size(); ++i)
                     {
                         CHECK_EQ(array[i].has_value(), bitmaps[i]);
-                        if (array[i].has_value())
+                        auto ref = array[i];
+                        if (ref.has_value())
                         {
-                            array[i].value() = decimal<INTEGER_TYPE>(
-                                array[i].value().storage() + 1,
-                                array[i].value().scale()
-                            );
-                            CHECK_EQ(array[i].value().scale(), scale);
-                            CHECK_EQ(static_cast<std::int64_t>(array[i].value().storage()), values[i] + 1);
+                            const INTEGER_TYPE new_value = ref.value().storage() + 1;
+                            ref = make_nullable(decimal<INTEGER_TYPE>(new_value, scale));
+
+                            const auto& new_decimal = array[i].value();
+                            CHECK_EQ(new_decimal.scale(), scale);
+                            const INTEGER_TYPE storage = new_decimal.storage();
+                            CHECK_EQ(storage, values[i] + 1);
                         }
                     }
                 }

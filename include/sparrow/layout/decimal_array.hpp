@@ -502,7 +502,10 @@ namespace sparrow
         const auto ptr = this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<storage_type>();
         const auto storage = rhs.storage();
         // Scale the storage value to match the scale of the decimal type
-        const auto scaled_storage = storage * static_cast<storage_type>(std::pow(10, m_scale - rhs.scale()));
+        const auto scaled_storage = storage
+                                    * static_cast<storage_type>(
+                                        static_cast<size_t>(std::pow(10, m_scale - rhs.scale()))
+                                    );
         ptr[index] = scaled_storage;
     }
 
