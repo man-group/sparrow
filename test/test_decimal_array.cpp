@@ -152,7 +152,7 @@ namespace sparrow
                         CHECK_EQ(array[i].has_value(), bitmaps[i]);
                         if (array[i].has_value())
                         {
-                            const auto& val = array[i].value();
+                            const auto val = array[i].value();
                             CHECK_EQ(val.scale(), scale);
                             CHECK_EQ(val.storage(), values[i]);
                         }
@@ -172,7 +172,7 @@ namespace sparrow
                             const INTEGER_TYPE new_value = ref.value().storage() + 1;
                             ref = make_nullable(decimal<INTEGER_TYPE>(new_value, scale));
 
-                            const auto& new_decimal = array[i].value();
+                            const auto new_decimal = array[i].value();
                             CHECK_EQ(new_decimal.scale(), scale);
                             const INTEGER_TYPE storage = new_decimal.storage();
                             CHECK_EQ(storage, values[i] + 1);
@@ -188,7 +188,7 @@ namespace sparrow
                 decimal<INTEGER_TYPE> new_value(100, 2);  // Different scale
                 array[0] = make_nullable(new_value);
                 CHECK_EQ(array[0].has_value(), true);
-                const auto& val = array[0].value();
+                const auto val = array[0].value();
                 CHECK_EQ(val.scale(), scale);
                 CHECK_EQ(static_cast<std::int64_t>(val.storage()), 10000);
                 CHECK_EQ(static_cast<double>(val), doctest::Approx(1.0));
