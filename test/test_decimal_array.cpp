@@ -169,12 +169,13 @@ namespace sparrow
                         auto ref = array[i];
                         if (ref.has_value())
                         {
-                            const INTEGER_TYPE new_value = ref.value().storage() + 1;
+                            auto new_value = ref.value().storage();
+                            new_value += 1;
                             ref = make_nullable(decimal<INTEGER_TYPE>(new_value, scale));
 
                             const auto new_decimal = array[i].value();
                             CHECK_EQ(new_decimal.scale(), scale);
-                            const INTEGER_TYPE storage = new_decimal.storage();
+                            const auto storage = new_decimal.storage();
                             CHECK_EQ(storage, values[i] + 1);
                         }
                     }
