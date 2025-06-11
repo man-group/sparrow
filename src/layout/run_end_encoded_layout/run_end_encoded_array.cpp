@@ -239,7 +239,8 @@ namespace sparrow
             }
         );
         return {null_count, length};
-    };
+    }
+
 }
 
 #if defined(__cpp_lib_format)

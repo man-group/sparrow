@@ -155,6 +155,8 @@ namespace sparrow
         [[nodiscard]] inner_reference value(size_type i);
         [[nodiscard]] inner_const_reference value(size_type i) const;
 
+        void zero_null_values();
+
     private:
 
         template <
@@ -520,5 +522,18 @@ namespace sparrow
             format_str << "," << sizeof_decimal * 8;
         }
         return format_str.str();
+    }
+
+    template <decimal_type T>
+    void decimal_array<T>::zero_null_values()
+    {
+        for (size_type i = 0; i < this->size(); ++i)
+        {
+            const auto ref = this->operator[](i);
+            if (!ref.has_value())
+            {
+                assign(T{}, i);
+            }
+        }
     }
 }

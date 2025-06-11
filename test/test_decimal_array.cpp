@@ -194,6 +194,20 @@ namespace sparrow
                 CHECK_EQ(static_cast<std::int64_t>(val.storage()), 10000);
                 CHECK_EQ(static_cast<double>(val), doctest::Approx(1.0));
             }
+
+            SUBCASE("zero_null_values")
+            {
+                decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
+                array.zero_null_values();
+                CHECK_EQ(array.size(), 4);
+                for (std::size_t i = 0; i < array.size(); ++i)
+                {
+                    if (!array[i].has_value())
+                    {
+                        CHECK_EQ(array[i].get().storage(), 0);
+                    }
+                }
+            }
         }
 
         TEST_CASE_TEMPLATE_APPLY(decimal_array_test_generic_id, integer_types);
