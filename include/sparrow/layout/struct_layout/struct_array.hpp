@@ -102,6 +102,7 @@ namespace sparrow
         [[nodiscard]] SPARROW_API const array_wrapper* raw_child(std::size_t i) const;
         [[nodiscard]] SPARROW_API array_wrapper* raw_child(std::size_t i);
 
+
     private:
 
         template <

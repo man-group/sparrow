@@ -96,13 +96,11 @@ namespace sparrow
                             }
                             else if constexpr (std::is_same_v<T, month_day_nanoseconds_interval>)
                             {
-                                values.push_back(
-                                    nullable<T>(
-                                        T{std::chrono::months(i + 5),
-                                          std::chrono::days(i + 5),
-                                          std::chrono::nanoseconds(i + 5)}
-                                    )
-                                );
+                                values.push_back(nullable<T>(
+                                    T{std::chrono::months(i + 5),
+                                      std::chrono::days(i + 5),
+                                      std::chrono::nanoseconds(i + 5)}
+                                ));
                             }
                             else if constexpr (std::is_same_v<T, chrono::time_seconds>)
                             {
@@ -547,6 +545,19 @@ namespace sparrow
                 for (size_t i = 0; i < ar.size(); ++i)
                 {
                     CHECK_EQ(ar[i], input_values[i]);
+                }
+            }
+
+            SUBCASE("zero_null_values")
+            {
+                time_array<T> ar(input_values);
+                ar.zero_null_values();
+                for (size_t i = 0; i < ar.size(); ++i)
+                {
+                    if (!ar[i].has_value())
+                    {
+                        CHECK_EQ(ar[i].get(), T(0));
+                    }
                 }
             }
 

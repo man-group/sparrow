@@ -250,6 +250,7 @@ namespace sparrow
         {
             test::generic_consistency_test(struct_arr);
         }
+
 #if defined(__cpp_lib_format)
         SUBCASE("formatting")
         {
