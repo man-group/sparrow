@@ -65,20 +65,8 @@ struct std::formatter<sparrow::struct_value>
         return ctx.begin();  // Simple implementation
     }
 
-    inline auto
-    std::formatter<sparrow::struct_value>::format(const sparrow::struct_value& ar, std::format_context& ctx) const
-    {
-        std::format_to(ctx.out(), "<");
-        if (!ar.empty())
-        {
-            for (std::size_t i = 0; i < ar.size() - 1; ++i)
-            {
-                std::format_to(ctx.out(), "{}, ", ar[i]);
-            }
-            std::format_to(ctx.out(), "{}", ar[ar.size() - 1]);
-        }
-        return std::format_to(ctx.out(), ">");
-    }
+    SPARROW_API auto format(const sparrow::struct_value& ar, std::format_context& ctx) const
+        -> decltype(ctx.out());
 };
 
 namespace sparrow
