@@ -65,7 +65,8 @@ struct std::formatter<sparrow::struct_value>
         return ctx.begin();  // Simple implementation
     }
 
-    inline auto format(const sparrow::struct_value& ar, std::format_context& ctx) const
+    inline auto
+    std::formatter<sparrow::struct_value>::format(const sparrow::struct_value& ar, std::format_context& ctx) const
     {
         std::format_to(ctx.out(), "<");
         if (!ar.empty())
