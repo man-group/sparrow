@@ -27,21 +27,8 @@
 const std::filesystem::path json_files_path = JSON_FILES_PATH;
 
 const std::vector<std::filesystem::path> jsons_to_test = {
-    json_files_path / "null-trivial.json",
-    json_files_path / "null.json",
-    json_files_path / "primitive-empty.json",
-    json_files_path / "primitive.json",
-    json_files_path / "primitive_large_offsets.json",
-    json_files_path / "primitive_zerolength.json",
-    json_files_path / "datetime.json",
-    json_files_path / "duration.json",
-    json_files_path / "interval_mdn.json",
-    json_files_path / "interval.json",
-    json_files_path / "nested.json",
-    json_files_path / "nested_large_offsets.json",
-    json_files_path / "recursive-nested.json",
-    json_files_path / "run_end_encoded.json",
     json_files_path / "custom-metadata.json",
+    json_files_path / "datetime.json",
     json_files_path / "datetime.json",
     json_files_path / "decimal32.json",
     json_files_path / "decimal64.json",
@@ -63,7 +50,7 @@ const std::vector<std::filesystem::path> jsons_to_test = {
     json_files_path / "primitive-empty.json",
     json_files_path / "primitive.json",
     json_files_path / "recursive-nested.json",
-
+    json_files_path / "run_end_encoded.json",
 };
 
 TEST_SUITE("c_data_integration")

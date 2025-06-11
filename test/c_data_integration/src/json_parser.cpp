@@ -57,10 +57,12 @@ namespace sparrow::c_data_integration
         {"list", list_array_from_json},
         {"listview", list_view_array_from_json},
         {"null", null_array_from_json},
+        {"runendencoded", runendencoded_array_from_json},
         {"struct", struct_array_from_json},
         {"time", time_array_from_json},
         {"timestamp", timestamp_array_from_json},
-        {"runendencoded", runendencoded_array_from_json},
+        {"utf8", string_array_from_json},
+        {"utf8view", string_view_from_json},
     };
 
     std::vector<sparrow::array>
