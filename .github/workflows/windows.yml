@@ -102,9 +102,14 @@ jobs:
         key: ${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_targets_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}_ccache
 
     - name: Setup vcpkg environment
+      id: vcpkg
       if: matrix.target-arch.name == 'Win32'
-      run: |
-        vcpkg install --triplet=x86-windows
+      uses: johnwason/vcpkg-action@v6
+      with:
+        manifest-dir: ${{ github.workspace }}
+        triplet: x86-windows
+        token: ${{ github.token }}
+        github-binarycache: true
 
     - name: Set conda environment
       if: matrix.target-arch.name == 'Win64'
@@ -175,7 +180,7 @@ jobs:
 
     - name: Build library
       working-directory: build
-      run: cmake --build . --config ${{matrix.config.name}} --target sparrow --parallel 8
+      run: cmake --build . --config ${{matrix.config.name}} --target sparrow
 
     - name: Install
       working-directory: build
@@ -183,7 +188,7 @@ jobs:
 
     - name: Build tests
       working-directory: build
-      run: cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib --parallel 8
+      run: cmake --build . --config ${{matrix.config.name}} --target test_sparrow_lib
 
     - name: Run tests
       working-directory: build
