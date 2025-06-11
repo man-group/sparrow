@@ -83,8 +83,7 @@ namespace sparrow
                         CHECK_EQ(array.name(), "name");
                         test_metadata(metadata_sample, array.metadata().value());
                         CHECK_EQ(array.size(), words.size());
-                        CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE)
-                        );
+                        CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE));
                     }
                 }
             }
