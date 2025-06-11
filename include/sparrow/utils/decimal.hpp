@@ -43,7 +43,7 @@ namespace sparrow
         [[nodiscard]] explicit operator std::string() const
             requires(!is_int_placeholder_v<T>);
 
-        [[nodiscard]] const T& storage() const;
+        [[nodiscard]] T storage() const;
 
         [[nodiscard]] int scale() const;
 
@@ -162,7 +162,7 @@ namespace sparrow
     }
 
     template <decimal_integer_type T>
-    const T& decimal<T>::storage() const
+    T decimal<T>::storage() const
     {
         return m_value;
     }

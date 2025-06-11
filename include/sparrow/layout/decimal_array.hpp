@@ -14,9 +14,7 @@
 
 #pragma once
 
-#include <cstddef>
 #include <ranges>
-#include <sstream>
 
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
@@ -24,6 +22,7 @@
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
+#include "sparrow/layout/decimal_reference.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/decimal.hpp"
@@ -91,14 +90,14 @@ namespace sparrow
         using array_type = decimal_array<T>;
 
         using inner_value_type = T;
-        using inner_reference = T;
+        using inner_reference = decimal_reference<array_type>;
         using inner_const_reference = T;
 
         using bitmap_const_reference = bitmap_type::const_reference;
 
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
 
-        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
+        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_reference>>;
         using const_value_iterator = functor_index_iterator<
             detail::layout_value_functor<const array_type, inner_value_type>>;
         using iterator_tag = std::random_access_iterator_tag;
@@ -109,12 +108,12 @@ namespace sparrow
     constexpr bool is_decimal_array_v = mpl::is_type_instance_of_v<T, decimal_array>;
 
     template <decimal_type T>
-    class decimal_array final : public array_bitmap_base<decimal_array<T>>
+    class decimal_array final : public mutable_array_bitmap_base<decimal_array<T>>
     {
     public:
 
         using self_type = decimal_array<T>;
-        using base_type = array_bitmap_base<self_type>;
+        using base_type = mutable_array_bitmap_base<self_type>;
 
         using inner_types = array_inner_types<self_type>;
         using inner_value_type = typename inner_types::inner_value_type;
@@ -153,6 +152,8 @@ namespace sparrow
         {
         }
 
+        [[nodiscard]] inner_reference value(size_type i);
+        [[nodiscard]] inner_const_reference value(size_type i) const;
 
     private:
 
@@ -225,24 +226,25 @@ namespace sparrow
 
         static std::string generate_format(std::size_t precision, int scale);
 
-        [[nodiscard]] inner_reference value(size_type i);
-        [[nodiscard]] inner_const_reference value(size_type i) const;
-
         [[nodiscard]] value_iterator value_begin();
         [[nodiscard]] value_iterator value_end();
 
         [[nodiscard]] const_value_iterator value_cbegin() const;
         [[nodiscard]] const_value_iterator value_cend() const;
 
+        void assign(const T& rhs, size_type index);
+
         // Modifiers
 
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend base_type;
         friend base_type::base_type;
+        friend base_type::base_type::base_type;
         friend class detail::layout_value_functor<self_type, inner_value_type>;
         friend class detail::layout_value_functor<const self_type, inner_value_type>;
+        friend class decimal_reference<self_type>;
 
-        std::size_t m_precision;  //  The precision of the decimal value
+        std::size_t m_precision;  // The precision of the decimal value
         int m_scale;              // The scale of the decimal value (can be negative)
     };
 
@@ -455,8 +457,7 @@ namespace sparrow
     auto decimal_array<T>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
-        const auto ptr = this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<const storage_type>();
-        return inner_reference(ptr[i], m_scale);
+        return inner_reference(this, i);
     }
 
     template <decimal_type T>
@@ -470,13 +471,13 @@ namespace sparrow
     template <decimal_type T>
     auto decimal_array<T>::value_begin() -> value_iterator
     {
-        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), 0);
+        return value_iterator(detail::layout_value_functor<self_type, inner_reference>(this), 0);
     }
 
     template <decimal_type T>
     auto decimal_array<T>::value_end() -> value_iterator
     {
-        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), this->size());
+        return value_iterator(detail::layout_value_functor<self_type, inner_reference>(this), this->size());
     }
 
     template <decimal_type T>
@@ -492,6 +493,20 @@ namespace sparrow
             detail::layout_value_functor<const self_type, inner_value_type>(this),
             this->size()
         );
+    }
+
+    template <decimal_type T>
+    void decimal_array<T>::assign(const T& rhs, size_type index)
+    {
+        SPARROW_ASSERT_TRUE(index < this->size());
+        const auto ptr = this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<storage_type>();
+        const auto storage = rhs.storage();
+        // Scale the storage value to match the scale of the decimal type
+        const auto scaled_storage = storage
+                                    * static_cast<storage_type>(
+                                        static_cast<size_t>(std::pow(10, m_scale - rhs.scale()))
+                                    );
+        ptr[index] = scaled_storage;
     }
 
     template <decimal_type T>
