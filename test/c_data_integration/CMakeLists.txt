@@ -12,6 +12,7 @@ add_library(c_data_integration SHARED
     src/list_parser.cpp
     src/null_parser.cpp
     src/primitive_parser.cpp
+    src/run_end_encoded_parser.cpp
     src/string_parser.cpp
     src/stringview_parser.cpp
     src/struct_parser.cpp
@@ -29,6 +30,7 @@ add_library(c_data_integration SHARED
     include/sparrow/c_data_integration/list_parser.hpp
     include/sparrow/c_data_integration/null_parser.hpp
     include/sparrow/c_data_integration/primitive_parser.hpp
+    include/sparrow/c_data_integration/run_end_encoded_parser.hpp
     include/sparrow/c_data_integration/string_parser.hpp
     include/sparrow/c_data_integration/stringview_parser.hpp
     include/sparrow/c_data_integration/struct_parser.hpp

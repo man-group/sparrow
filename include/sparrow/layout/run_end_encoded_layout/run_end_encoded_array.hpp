@@ -102,7 +102,7 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        using acc_length_ptr_variant_type = std::variant<const std::uint16_t*, const std::uint32_t*, const std::uint64_t*>;
+        using acc_length_ptr_variant_type = std::variant<const std::int16_t*, const std::int32_t*, const std::int64_t*>;
 
         [[nodiscard]] SPARROW_API static std::pair<std::int64_t, std::int64_t>
         extract_length_and_null_count(const array&, const array&);
