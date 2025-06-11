@@ -64,7 +64,7 @@ namespace sparrow
         auto operator<=>(const value_type& rhs) const;
 
         [[nodiscard]] const_reference value() const;
-        [[nodiscard]] const value_type::integer_type& storage() const;
+        [[nodiscard]] value_type::integer_type storage() const;
         [[nodiscard]] int scale() const;
 
     private:
@@ -131,7 +131,7 @@ namespace sparrow
     }
 
     template <typename L>
-    auto decimal_reference<L>::storage() const -> const value_type::integer_type&
+    auto decimal_reference<L>::storage() const -> value_type::integer_type
     {
         return value().storage();
     }
