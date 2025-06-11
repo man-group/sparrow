@@ -141,12 +141,12 @@ namespace sparrow
         /**
          * @returns the data type of the \ref array.
          */
-        SPARROW_API enum data_type data_type() const;
+        [[nodiscard]] SPARROW_API enum data_type data_type() const;
 
         /**
          * @returns the name of the \ref array. If the name is not set, an empty optional is returned.
          */
-        SPARROW_API std::optional<std::string_view> name() const;
+        [[nodiscard]] SPARROW_API std::optional<std::string_view> name() const;
 
         /**
          * Sets the name of the array to \ref name.
@@ -157,7 +157,7 @@ namespace sparrow
         /**
          * @returns the metadata of the \ref array. If the metadata is not set, an empty optional is returned.
          */
-        SPARROW_API std::optional<key_value_view> metadata() const;
+        [[nodiscard]] SPARROW_API std::optional<key_value_view> metadata() const;
 
         /**
          * Sets the metadata of the array to \ref metadata.
@@ -169,12 +169,12 @@ namespace sparrow
         /**
          * Checks if the array has no element, i.e. whether size() == 0.
          */
-        SPARROW_API [[nodiscard]] bool empty() const;
+        [[nodiscard]] SPARROW_API bool empty() const;
 
         /**
          * @returns the number of elements in the array.
          */
-        SPARROW_API [[nodiscard]] size_type size() const;
+        [[nodiscard]] SPARROW_API size_type size() const;
 
         /**
          * @returns a constant reference to the element at specified \c index,
@@ -183,7 +183,7 @@ namespace sparrow
          * @param index The position of the element in the array.
          * @throw std::out_of_range if \p index is not within the range of the container.
          */
-        SPARROW_API [[nodiscard]] const_reference at(size_type index) const;
+        [[nodiscard]] SPARROW_API const_reference at(size_type index) const;
 
         /**
          * @returns a constant reference to the element at specified \c index.
@@ -196,13 +196,13 @@ namespace sparrow
          * Returns a constant reference to the first element in the container.
          * Calling `front` on an empty array causes undefined behavior.
          */
-        SPARROW_API [[nodiscard]] const_reference front() const;
+        [[nodiscard]] SPARROW_API const_reference front() const;
 
         /**
          * Returns a constant reference to the last element in the container.
          * Calling `back` on an empty array causes undefined behavior.
          */
-        SPARROW_API [[nodiscard]] const_reference back() const;
+        [[nodiscard]] SPARROW_API const_reference back() const;
 
         template <class F>
         using visit_result_t = std::invoke_result_t<F, null_array>;
@@ -228,7 +228,7 @@ namespace sparrow
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        SPARROW_API [[nodiscard]] array slice(size_type start, size_type end) const;
+        [[nodiscard]] SPARROW_API array slice(size_type start, size_type end) const;
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
@@ -239,14 +239,14 @@ namespace sparrow
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        SPARROW_API [[nodiscard]] array slice_view(size_type start, size_type end) const;
+        [[nodiscard]] SPARROW_API array slice_view(size_type start, size_type end) const;
 
     private:
 
         SPARROW_API array(arrow_proxy&& proxy);
 
-        SPARROW_API [[nodiscard]] arrow_proxy& get_arrow_proxy();
-        SPARROW_API [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
+        [[nodiscard]] SPARROW_API arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] SPARROW_API const arrow_proxy& get_arrow_proxy() const;
 
         cloning_ptr<array_wrapper> p_array = nullptr;
 
