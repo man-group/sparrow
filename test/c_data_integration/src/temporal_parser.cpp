@@ -37,9 +37,9 @@ namespace sparrow::c_data_integration
         if (nullable)
         {
             auto validity = utils::get_validity(array);
-            return sparrow::array{
-                T{std::forward<DATA_RANGE>(data), std::move(validity), name, std::move(metadata)}
-            };
+            T ar{std::forward<DATA_RANGE>(data), std::move(validity), name, std::move(metadata)};
+            ar.zero_null_values();
+            return sparrow::array{std::move(ar)};
         }
         else
         {
@@ -492,9 +492,8 @@ namespace sparrow::c_data_integration
                                   return sparrow::month_day_nanoseconds_interval{
                                       .months = std::chrono::months{value.at("months").get<int32_t>()},
                                       .days = std::chrono::days{value.at("days").get<int32_t>()},
-                                      .nanoseconds = std::chrono::nanoseconds{
-                                          value.at("nanoseconds").get<int64_t>()
-                                      }
+                                      .nanoseconds = std::chrono::nanoseconds{value.at("nanoseconds")
+                                                                                  .get<int64_t>()}
                                   };
                               }
                           );

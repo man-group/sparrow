@@ -29,12 +29,14 @@ namespace sparrow::c_data_integration
         if (nullable)
         {
             auto validity = utils::get_validity(array);
-            return sparrow::array{sparrow::primitive_array<bool>{
+            auto primitive_array = sparrow::primitive_array<bool>{
                 array.at(DATA).get<std::vector<bool>>(),
                 std::move(validity),
                 name,
                 std::move(metadata)
-            }};
+            };
+            primitive_array.zero_null_values();
+            return sparrow::array{std::move(primitive_array)};
         }
         else
         {

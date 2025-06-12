@@ -47,9 +47,14 @@ namespace sparrow::c_data_integration
         if (nullable)
         {
             auto validity = utils::get_validity(array);
-            return sparrow::array{
-                sparrow::fixed_width_binary_array{std::move(data), std::move(validity), name, std::move(metadata)}
+            sparrow::fixed_width_binary_array fixed_width_binary_array{
+                std::move(data),
+                std::move(validity),
+                name,
+                std::move(metadata)
             };
+            fixed_width_binary_array.zero_null_values(std::vector<std::byte>(byte_width, std::byte(0)));
+            return sparrow::array{std::move(fixed_width_binary_array)};
         }
         else
         {

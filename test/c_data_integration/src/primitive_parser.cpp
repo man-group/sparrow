@@ -47,13 +47,14 @@ namespace sparrow::c_data_integration
         if (nullable)
         {
             auto validity = utils::get_validity(array);
-            return sparrow::array{
-                sparrow::primitive_array<T>{std::move(data), std::move(validity), name, std::move(metadata)}
-            };
+            sparrow::primitive_array<T> ar{std::move(data), std::move(validity), name, std::move(metadata)};
+            ar.zero_null_values();
+            return sparrow::array{std::move(ar)};
         }
         else
         {
-            return sparrow::array{sparrow::primitive_array<T>{std::move(data), false, name, std::move(metadata)}};
+            return sparrow::array{sparrow::primitive_array<T>{std::move(data), false, name, std::move(metadata)}
+            };
         }
     }
 
