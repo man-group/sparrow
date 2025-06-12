@@ -134,8 +134,9 @@ namespace sparrow
                 case data_type::TIMESTAMP_SECONDS:
                     if (get_timezone(proxy) == nullptr)
                     {
-                        return detail::make_wrapper_ptr<timestamp_without_timezone_seconds_array>(std::move(proxy
-                        ));
+                        return detail::make_wrapper_ptr<timestamp_without_timezone_seconds_array>(
+                            std::move(proxy)
+                        );
                     }
                     else
                     {
