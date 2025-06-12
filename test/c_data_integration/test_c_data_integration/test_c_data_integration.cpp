@@ -29,7 +29,6 @@ const std::filesystem::path json_files_path = JSON_FILES_PATH;
 const std::vector<std::filesystem::path> jsons_to_test = {
     json_files_path / "custom-metadata.json",
     json_files_path / "datetime.json",
-    json_files_path / "datetime.json",
     json_files_path / "decimal32.json",
     json_files_path / "decimal64.json",
 #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
