@@ -25,6 +25,40 @@
 
 namespace sparrow
 {
+    class struct_value;
+
+    class SPARROW_API struct_value_iterator : public iterator_base<
+                                                  struct_value_iterator,
+                                                  array_traits::const_reference,
+                                                  std::random_access_iterator_tag,
+                                                  array_traits::const_reference>
+    {
+    public:
+
+        using self_type = struct_value_iterator;
+        using base_type = iterator_base<struct_value_iterator, struct_value, std::random_access_iterator_tag>;
+        using size_type = size_t;
+
+        struct_value_iterator() noexcept = default;
+        struct_value_iterator(const struct_value* struct_value_ptr, size_type index);
+
+    private:
+
+        [[nodiscard]] reference dereference() const;
+
+        void increment();
+        void decrement();
+        void advance(difference_type n);
+        [[nodiscard]] difference_type distance_to(const self_type& rhs) const;
+        [[nodiscard]] bool equal(const self_type& rhs) const;
+        [[nodiscard]] bool less_than(const self_type& rhs) const;
+
+        const struct_value* m_struct_value_ptr = nullptr;
+        difference_type m_index;
+
+        friend class iterator_access;
+    };
+
     class SPARROW_API struct_value
     {
     public:
@@ -44,6 +78,14 @@ namespace sparrow
 
         [[nodiscard]] const_reference front() const;
         [[nodiscard]] const_reference back() const;
+
+        [[nodiscard]] struct_value_iterator begin();
+        [[nodiscard]] struct_value_iterator begin() const;
+        [[nodiscard]] struct_value_iterator cbegin() const;
+
+        [[nodiscard]] struct_value_iterator end();
+        [[nodiscard]] struct_value_iterator end() const;
+        [[nodiscard]] struct_value_iterator cend() const;
 
     private:
 
