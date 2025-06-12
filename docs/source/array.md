@@ -23,7 +23,7 @@ sp::array ar2(std::move(arr2), std::move(schema2));
 // ...
 arr.release(&arr);
 schema.release(&schema);
-// We don't release arr2 nor shcema2, ar2 will do it for us.
+// We don't release arr2 nor schema2, ar2 will do it for us.
 ```
 
 The array class provides a similar API to that of the [typed arrays](#common_apis), but with certain limitations:

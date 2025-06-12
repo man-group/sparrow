@@ -106,8 +106,8 @@ sp::array ar(&array, &schema);
 // Use ar as you need
 // ...
 // You are responsible for releasing the structure in the end
-arrow_array.release(&arrow_array);
-arrow_schema.release(&arrow_schema);
+array.release(&array);
+schema.release(&schema);
 ```
 
 ### Read data from somewhere and move it into sparrow
