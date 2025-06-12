@@ -134,46 +134,45 @@ namespace sparrow
                 case data_type::TIMESTAMP_SECONDS:
                     if (get_timezone(proxy) == nullptr)
                     {
-                        return detail::make_wrapper_ptr<timestamp_seconds_array>(std::move(proxy));
+                        return detail::make_wrapper_ptr<timestamp_without_timezone_seconds_array>(std::move(proxy
+                        ));
                     }
                     else
                     {
-                        return detail::make_wrapper_ptr<timestamp_without_timezone_seconds_array>(
-                            std::move(proxy)
-                        );
+                        return detail::make_wrapper_ptr<timestamp_seconds_array>(std::move(proxy));
                     }
                 case data_type::TIMESTAMP_MILLISECONDS:
                     if (get_timezone(proxy) == nullptr)
-                    {
-                        return detail::make_wrapper_ptr<timestamp_milliseconds_array>(std::move(proxy));
-                    }
-                    else
                     {
                         return detail::make_wrapper_ptr<timestamp_without_timezone_milliseconds_array>(
                             std::move(proxy)
                         );
                     }
+                    else
+                    {
+                        return detail::make_wrapper_ptr<timestamp_milliseconds_array>(std::move(proxy));
+                    }
                 case data_type::TIMESTAMP_MICROSECONDS:
                     if (get_timezone(proxy) == nullptr)
-                    {
-                        return detail::make_wrapper_ptr<timestamp_microseconds_array>(std::move(proxy));
-                    }
-                    else
                     {
                         return detail::make_wrapper_ptr<timestamp_without_timezone_microseconds_array>(
                             std::move(proxy)
                         );
                     }
+                    else
+                    {
+                        return detail::make_wrapper_ptr<timestamp_microseconds_array>(std::move(proxy));
+                    }
                 case data_type::TIMESTAMP_NANOSECONDS:
                     if (get_timezone(proxy) == nullptr)
-                    {
-                        return detail::make_wrapper_ptr<timestamp_nanoseconds_array>(std::move(proxy));
-                    }
-                    else
                     {
                         return detail::make_wrapper_ptr<timestamp_without_timezone_nanoseconds_array>(
                             std::move(proxy)
                         );
+                    }
+                    else
+                    {
+                        return detail::make_wrapper_ptr<timestamp_nanoseconds_array>(std::move(proxy));
                     }
                 case data_type::DURATION_SECONDS:
                     return detail::make_wrapper_ptr<duration_seconds_array>(std::move(proxy));
