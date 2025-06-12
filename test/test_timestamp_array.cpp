@@ -588,7 +588,7 @@ namespace sparrow
                 {
                     if (!input_values[i].has_value())
                     {
-                        compare_timestamp(ar[i].get(), make_value<T>(0));
+                        compare_timestamp(ar[i].get().value(), make_value<T>(0));
                     }
                 }
             }
