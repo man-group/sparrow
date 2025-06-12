@@ -50,7 +50,7 @@ jobs:
         uses: jirutka/setup-alpine@v1
         id: alpine-target
         with:
-          branch: v3.20
+          branch: v3.22
           arch: ${{ matrix.target.arch }}
           packages: >
             ccache
