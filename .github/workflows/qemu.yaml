@@ -34,7 +34,8 @@ jobs:
 
       - name: Install elfutils-dev
         run: |
-          sudo apt-get install -y elfutils-dev
+          sudo apt-get update
+          sudo apt-get install elfutils-dev
         
       - name: Get current date
         id: date
