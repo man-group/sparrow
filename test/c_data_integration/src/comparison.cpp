@@ -15,8 +15,10 @@
 #include "sparrow/c_data_integration/comparison.hpp"
 
 #include <cstring>
+#include <string>
 #include <vector>
 
+#include "sparrow/array.hpp"
 #include "sparrow/arrow_array_schema_proxy.hpp"
 
 namespace sparrow::c_data_integration
@@ -143,111 +145,58 @@ namespace sparrow::c_data_integration
             return prefix_with_name + " is null";
         }
         std::vector<std::string> differences;
-        if (array->length != array_from_json->length)
+        const sparrow::array array_from_ptr(array, schema_from_json);
+        const sparrow::array array_from_json_ptr(array_from_json, schema_from_json);
+
+        // check is same layout
+        if (array_from_ptr.data_type() != array_from_json_ptr.data_type())
         {
             differences.push_back(
-                prefix_with_name + " length mismatch: pointer=" + std::to_string(array->length)
-                + " vs json=" + std::to_string(array_from_json->length)
+                prefix_with_name + " layout format mismatch: pointer="
+                + std::string(data_type_to_format(array_from_ptr.data_type()))
+                + " vs json=" + std::string(data_type_to_format(array_from_json_ptr.data_type()))
             );
         }
-        if (array->null_count != array_from_json->null_count)
+
+        if (array_from_ptr.size() != array_from_json_ptr.size())
         {
             differences.push_back(
-                prefix_with_name + " null count mismatch: pointer=" + std::to_string(array->null_count)
-                + " vs json=" + std::to_string(array_from_json->null_count)
+                prefix_with_name + " size mismatch: pointer=" + std::to_string(array_from_ptr.size())
+                + " vs json=" + std::to_string(array_from_json_ptr.size())
             );
         }
-        if (array->n_buffers != array_from_json->n_buffers)
-        {
-            differences.push_back(
-                prefix_with_name + " buffers count mismatch: pointer=" + std::to_string(array->n_buffers)
-                + " vs json=" + std::to_string(array_from_json->n_buffers)
-            );
-        }
-        else
-        {
-            sparrow::arrow_proxy from_json{array_from_json, schema_from_json};
-            sparrow::arrow_proxy from{array, schema_from_json};
-            for (size_t i = 0; i < static_cast<size_t>(from_json.n_buffers()); ++i)
+
+        array_from_ptr.visit(
+            [&](const auto& typed_array_from_ptr) -> bool
             {
-                const auto& from_json_buffer = from_json.buffers()[i];
-                const auto& from_buffer = from.buffers()[i];
-
-                const size_t from_json_buffer_size = from_json_buffer.size();
-                const size_t from_buffer_size = from_buffer.size();
-
-                if (from_json_buffer_size != from_buffer_size)
-                {
-                    differences.push_back(
-                        prefix_with_name + " buffer [" + std::to_string(i) + "] size mismatch: pointer="
-                        + std::to_string(from_buffer_size) + " vs json=" + std::to_string(from_json_buffer_size)
-                    );
-                    continue;
-                }
-
-                // Check if both buffers are null or one is null
-                const bool from_json_is_null = from_json_buffer.data() == nullptr;
-                const bool from_is_null = from_buffer.data() == nullptr;
-
-                if (from_json_is_null != from_is_null)
-                {
-                    differences.push_back(
-                        prefix_with_name + " buffer [" + std::to_string(i)
-                        + "] null mismatch: pointer=" + (from_is_null ? "null" : "not null")
-                        + " vs json=" + (from_json_is_null ? "null" : "not null")
-                    );
-                    continue;
-                }
-
-                // If both are null, they're equal
-                if (from_json_is_null && from_is_null)
-                {
-                    continue;
-                }
-
-                // Compare buffer contents byte by byte
-                if (from_json_buffer_size > 0)
-                {
-                    for (size_t y = 0; y < from_json_buffer_size; ++y)
+                return array_from_json_ptr.visit(
+                    [&](const auto& typed_array_from_json_ptr) -> bool
                     {
-                        if (from_json_buffer[y] != from_buffer[y])
+                        if constexpr (!std::same_as<decltype(typed_array_from_ptr), decltype(typed_array_from_json_ptr)>)
                         {
-                            differences.push_back(
-                                prefix_with_name + " buffer [" + std::to_string(i) + "] mismatch at byte ["
-                                + std::to_string(y) + "]: pointer=" + std::to_string(from_buffer[y])
-                                + " vs json=" + std::to_string(from_json_buffer[y])
-                            );
+                            throw std::runtime_error("Cannot compare arrays of different types");
                         }
+                        else
+                        {
+                            for (size_t i = 0; i < typed_array_from_ptr.size(); ++i)
+                            {
+                                if (typed_array_from_ptr[i] != typed_array_from_json_ptr[i])
+                                {
+                                    std::string diff = "Array values mismatch at index " + std::to_string(i);
+#if defined(__cpp_lib_format)
+                                    diff += ": pointer=" + std::format("{}", typed_array_from_ptr[i])
+                                            + " vs json=" + std::format("{}", typed_array_from_json_ptr[i]);
+#endif
+                                    differences.push_back(prefix + " " + diff);
+                                }
+                            }
+                        }
+
+                        return true;
                     }
-                }
-            }
-        }
-        if (array->n_children != array_from_json->n_children)
-        {
-            differences.push_back(
-                prefix_with_name + " children count mismatch: pointer=" + std::to_string(array->n_children)
-                + " vs json=" + std::to_string(array_from_json->n_children)
-            );
-        }
-        else
-        {
-            for (int64_t i = 0; i < array->n_children; ++i)
-            {
-                const auto child_array = array->children[i];
-                const auto child_array_from_json = array_from_json->children[i];
-                const auto child_prefix = prefix_with_name + " child [" + std::to_string(i) + "]";
-                const auto error = compare_arrays(
-                    child_prefix,
-                    child_array,
-                    child_array_from_json,
-                    schema_from_json->children[i]
                 );
-                if (error.has_value())
-                {
-                    differences.push_back(*error);
-                }
             }
-        }
+        );
 
         if (!differences.empty())
         {
