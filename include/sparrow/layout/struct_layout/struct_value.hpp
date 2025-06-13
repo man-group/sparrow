@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "sparrow/layout/layout_utils.hpp"
+#include "sparrow/utils/functor_index_iterator.hpp"
 #if defined(__cpp_lib_format)
 #    include <format>
 #endif
@@ -33,6 +35,8 @@ namespace sparrow
         using const_reference = array_traits::const_reference;
         using size_type = std::size_t;
         using child_ptr = cloning_ptr<array_wrapper>;
+        using const_functor_type = detail::layout_bracket_functor<const struct_value, const_reference>;
+        using const_iterator = functor_index_iterator<const_functor_type>;
 
         struct_value() = default;
         struct_value(const std::vector<child_ptr>& children, size_type index);
@@ -44,6 +48,12 @@ namespace sparrow
 
         [[nodiscard]] const_reference front() const;
         [[nodiscard]] const_reference back() const;
+
+        [[nodiscard]] const_iterator begin() const;
+        [[nodiscard]] const_iterator cbegin() const;
+
+        [[nodiscard]] const_iterator end() const;
+        [[nodiscard]] const_iterator cend() const;
 
     private:
 

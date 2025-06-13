@@ -190,7 +190,6 @@ namespace sparrow
                 REQUIRE(val0_variant.has_value());
                 REQUIRE(val1_variant.has_value());
 
-
                 // using const_scalar_ref = const inner_scalar_type&;
                 using nullable_inner_scalar_type = nullable<const inner_scalar_type&, bool>;
                 using nullable_uint8_t = nullable<const std::uint8_t&, bool>;
@@ -265,5 +264,105 @@ namespace sparrow
             CHECK_EQ(formatted, expected);
         }
 #endif
+
+        SUBCASE("struct_value iterators")
+        {
+            // Get a struct_value from the array
+            auto val = struct_arr[0];
+            REQUIRE(val.has_value());
+            auto struct_val = val.value();
+            REQUIRE_EQ(struct_val.size(), 2);
+
+            // begin() and end() iteration
+            int count1 = 0;
+            for (auto it = struct_val.begin(); it != struct_val.end(); ++it)
+            {
+                CHECK(it->has_value());
+                ++count1;
+            }
+            CHECK_EQ(count1, 2);
+
+            // cbegin() and cend() iteration
+            int count2 = 0;
+            for (auto it = struct_val.cbegin(); it != struct_val.cend(); ++it)
+            {
+                CHECK(it->has_value());
+                ++count2;
+            }
+            CHECK_EQ(count2, 2);
+
+            // Range-based for loop
+            int count3 = 0;
+            for (const auto& elem : struct_val)
+            {
+                CHECK(elem.has_value());
+                ++count3;
+            }
+            CHECK_EQ(count3, 2);
+        }
+
+        SUBCASE("struct_value begin/end iteration")
+        {
+            auto val = struct_arr[2];
+            REQUIRE(val.has_value());
+            auto struct_val = val.value();
+            REQUIRE_EQ(struct_val.size(), 2);
+            int i = 0;
+            for (auto it = struct_val.begin(); it != struct_val.end(); ++it, ++i)
+            {
+                if (i == 0)
+                {
+                    CHECK_NULLABLE_VARIANT_EQ(*it, static_cast<inner_scalar_type>(2));
+                }
+                else if (i == 1)
+                {
+                    CHECK_NULLABLE_VARIANT_EQ(*it, static_cast<std::uint8_t>(2));
+                }
+            }
+            CHECK_EQ(i, 2);
+        }
+
+        SUBCASE("struct_value cbegin/cend iteration")
+        {
+            auto val = struct_arr[2];
+            REQUIRE(val.has_value());
+            auto struct_val = val.value();
+            REQUIRE_EQ(struct_val.size(), 2);
+            int i = 0;
+            for (auto it = struct_val.cbegin(); it != struct_val.cend(); ++it, ++i)
+            {
+                if (i == 0)
+                {
+                    CHECK_NULLABLE_VARIANT_EQ(*it, static_cast<inner_scalar_type>(2));
+                }
+                else if (i == 1)
+                {
+                    CHECK_NULLABLE_VARIANT_EQ(*it, static_cast<std::uint8_t>(2));
+                }
+            }
+            CHECK_EQ(i, 2);
+        }
+
+        SUBCASE("struct_value range-based for loop")
+        {
+            auto val = struct_arr[2];
+            REQUIRE(val.has_value());
+            auto struct_val = val.value();
+            REQUIRE_EQ(struct_val.size(), 2);
+            int i = 0;
+            for (const auto& elem : struct_val)
+            {
+                if (i == 0)
+                {
+                    CHECK_NULLABLE_VARIANT_EQ(elem, static_cast<inner_scalar_type>(2));
+                }
+                else if (i == 1)
+                {
+                    CHECK_NULLABLE_VARIANT_EQ(elem, static_cast<std::uint8_t>(2));
+                }
+                ++i;
+            }
+            CHECK_EQ(i, 2);
+        }
     }
 }
