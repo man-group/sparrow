@@ -79,7 +79,7 @@ namespace sparrow
             for (size_type i = m_index_begin; i != m_index_end; ++i)
             {
                 const auto& val = ar[i];
-                bool res = std::visit([&val](auto&& k) {
+                bool res = std::visit([&val](const auto& k) -> bool {
                     using T = std::decay_t<decltype(k)>;
                     using U = std::decay_t<decltype(val)>;
                     if constexpr (std::same_as<T, U>)
@@ -98,7 +98,6 @@ namespace sparrow
             }
             return m_index_end;
         }, *p_flat_keys);
-        return 0;
     }
 
     auto map_value::value(size_type i) const -> const_reference
