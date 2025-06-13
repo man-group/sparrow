@@ -31,12 +31,11 @@ else()
 endif()
 
 add_subdirectory(doctest_better_junit)
+add_subdirectory(backtrace)
 
-if (SPARROW_TARGET_32BIT)
-    set(SPARROW_TESTS_SOURCES
-        main.cpp
-    )
-else()
+if (SPARROW_TARGET_32BIT)    
+    set(SPARROW_TESTS_SOURCES main.cpp)
+else()   
     set(SPARROW_TESTS_SOURCES
         arrow_array_schema_creation.hpp
         external_array_data_creation.cpp
@@ -112,6 +111,7 @@ target_link_libraries(${test_target}
         sparrow
         doctest::doctest
         better_junit_reporter
+        backtrace
         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
 # set(test_target_catch2 "test_sparrow_lib_catch2")

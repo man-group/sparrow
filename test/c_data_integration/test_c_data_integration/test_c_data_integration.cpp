@@ -13,15 +13,17 @@
 // limitations under the License.
 
 #include <string>
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#define DOCTEST_CONFIG_IMPLEMENT
 
 #include <filesystem>
 
 #include "sparrow/c_data_integration/c_data_integration.hpp"
 #include "sparrow/c_interface.hpp"
 
+#include "../include/test_backtrace.hpp"
 #include "better_junit_reporter.hpp"
 #include "doctest/doctest.h"
+
 
 
 const std::filesystem::path json_files_path = JSON_FILES_PATH;
@@ -138,4 +140,23 @@ TEST_SUITE("c_data_integration")
             }
         }
     }
+}
+
+int main(int argc, char** argv)
+{
+    // Initialize backtrace system for crash reporting
+    sparrow::test::initialize_backtrace_on_crash();
+
+    // Initialize and run doctest
+    doctest::Context context;
+    context.applyCommandLine(argc, argv);
+
+    int res = context.run();  // run queries, or run tests unless --no-run
+
+    if (context.shouldExit())  // important - query flags (help/version) rely on this
+    {
+        return res;  // propagate the result of the tests
+    }
+
+    return res;
 }
