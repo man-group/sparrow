@@ -14,8 +14,6 @@
 
 include(compile_options)
 
-SET (CMAKE_ENABLE_EXPORTS TRUE)
-
 add_library(backtrace STATIC
     src/backtrace.cpp
     include/backtrace.hpp
