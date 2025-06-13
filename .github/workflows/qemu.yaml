@@ -69,8 +69,8 @@ jobs:
 
       - name: Install libexecinfo-dev
         run: |
-          sudo apk add --no-cache --update --repository=https://dl-cdn.alpinelinux.org/alpine/v3.16/main/ libexecinfo-dev
-        shell: alpine.sh {0}
+          apk add --no-cache --update --repository=https://dl-cdn.alpinelinux.org/alpine/v3.16/main/ libexecinfo-dev
+        shell: alpine.sh --root {0}
       
       - name: Checkout code
         uses: actions/checkout@v4
