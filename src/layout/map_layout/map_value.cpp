@@ -18,8 +18,13 @@
 
 namespace sparrow
 {
-    map_value::map_value(const array_wrapper* flat_keys, const array_wrapper* flat_items,
-        size_type index_begin, size_type index_end, bool keys_sorted)
+    map_value::map_value(
+        const array_wrapper* flat_keys,
+        const array_wrapper* flat_items,
+        size_type index_begin,
+        size_type index_end,
+        bool keys_sorted
+    )
         : p_flat_keys(flat_keys)
         , p_flat_items(flat_items)
         , m_index_begin(index_begin)
@@ -38,7 +43,7 @@ namespace sparrow
         return m_index_end - m_index_begin;
     }
 
-    auto map_value::operator[](const key_type& key) const -> const_mapped_reference 
+    auto map_value::operator[](const key_type& key) const -> const_mapped_reference
     {
         size_type index = find_index(key);
         if (index == m_index_end)
@@ -75,34 +80,42 @@ namespace sparrow
 
     auto map_value::find_index(const key_type& key) const noexcept -> size_type
     {
-        return visit([&key, this](const auto& ar) {
-            for (size_type i = m_index_begin; i != m_index_end; ++i)
+        return visit(
+            [&key, this](const auto& ar)
             {
-                const auto& val = ar[i];
-                bool res = std::visit([](const auto& k) {
-                    using T = std::decay_t<decltype(k)>;
-                    return std::same_as<T, int>;
-                }, key);
-                /*bool res = std::visit([&val](const auto& k) -> bool {
-                    using T = std::decay_t<decltype(k)>;
-                    using U = std::decay_t<decltype(val)>;
-                    if constexpr (std::same_as<T, U>)
-                    {
-                        return val == k;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                    return false;
-                }, key);*/
-                if (res)
+                for (size_type i = m_index_begin; i != m_index_end; ++i)
                 {
-                    return i;
+                    const auto& val = ar[i];
+                    bool res = std::visit(
+                        [](const auto& k)
+                        {
+                            using T = std::decay_t<decltype(k)>;
+                            return std::same_as<T, int>;
+                        },
+                        key
+                    );
+                    /*bool res = std::visit([&val](const auto& k) -> bool {
+                        using T = std::decay_t<decltype(k)>;
+                        using U = std::decay_t<decltype(val)>;
+                        if constexpr (std::same_as<T, U>)
+                        {
+                            return val == k;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                        return false;
+                    }, key);*/
+                    if (res)
+                    {
+                        return i;
+                    }
                 }
-            }
-            return m_index_end;
-        }, *p_flat_keys);
+                return m_index_end;
+            },
+            *p_flat_keys
+        );
     }
 
     auto map_value::value(size_type i) const -> const_reference

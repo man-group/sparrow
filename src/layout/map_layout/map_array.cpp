@@ -67,22 +67,22 @@ namespace sparrow
         return p_items_array.get();
     }
 
-    auto map_array::value_begin() -> value_iterator 
+    auto map_array::value_begin() -> value_iterator
     {
         return value_iterator(value_iterator::functor_type(this), 0);
     }
 
-    auto map_array::value_end() -> value_iterator 
+    auto map_array::value_end() -> value_iterator
     {
         return value_iterator(value_iterator::functor_type(this), this->size());
     }
 
-    auto map_array::value_cbegin() const -> const_value_iterator 
+    auto map_array::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator(const_value_iterator::functor_type(this), 0);
     }
 
-    auto map_array::value_cend() const -> const_value_iterator 
+    auto map_array::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(const_value_iterator::functor_type(this), this->size());
     }
@@ -95,10 +95,9 @@ namespace sparrow
     auto map_array::value(size_type i) const -> inner_const_reference
     {
         using st = size_type;
-        return map_value(raw_keys_array(), raw_items_array(), p_list_offsets[i], p_list_offsets[i+1],
-                m_keys_sorted);
+        return map_value(raw_keys_array(), raw_items_array(), p_list_offsets[i], p_list_offsets[i + 1], m_keys_sorted);
     }
-    
+
     auto map_array::make_list_offsets() const -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
