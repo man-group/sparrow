@@ -571,6 +571,10 @@ namespace sparrow
                 return "+l";
             case data_type::LARGE_LIST:
                 return "+L";
+            case data_type::STRUCT:
+                return "+s";
+            case data_type::MAP:
+                return "+m";
             default:
                 // TODO: add missing types
                 throw std::runtime_error("Unsupported data type");
@@ -621,6 +625,7 @@ namespace sparrow
 
     class list_value;
     class struct_value;
+    class map_value;
 
     /// C++ types value representation types matching Arrow types.
     // NOTE: this needs to be in sync-order with `data_type`
@@ -664,6 +669,7 @@ namespace sparrow
         // TODO: add missing fundamental types here
         list_value,
         struct_value,
+        map_value,
         decimal<std::int32_t>,
         decimal<std::int64_t>,
         decimal<int128_t>,

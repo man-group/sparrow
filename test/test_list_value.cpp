@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/layout/list_layout/list_value.hpp"
+#include "sparrow/layout/map_layout/map_value.hpp"
 #include "sparrow/layout/primitive_layout/primitive_array.hpp"
 #include "sparrow/layout/struct_layout/struct_value.hpp"
 
