@@ -13,12 +13,11 @@
 // limitations under the License.
 
 #define DOCTEST_CONFIG_IMPLEMENT
-#include <string>
 
-#include <sparrow/config/sparrow_version.hpp>
+#include <memory>
 
 #include "backtrace.hpp"
-#include "better_junit_reporter.hpp"
+#include "doctest/doctest.h"
 
 int main(int argc, char** argv)
 {
@@ -39,14 +38,26 @@ int main(int argc, char** argv)
     return res;
 }
 
-TEST_CASE("version is readable")
+TEST_SUITE("backtrace")
 {
-    // TODO: once available on OSX, use `<format>` facility instead.
-    // We only try to make sure the version valeus are printable, whatever their type.
-    // AKA this is not written to be fancy but to force conversion to string.
-    using namespace sparrow;
-    [[maybe_unused]] const std::string printable_version = std::string("sparrow version : ")
-                                                           + std::to_string(SPARROW_VERSION_MAJOR) + "."
-                                                           + std::to_string(SPARROW_VERSION_MINOR) + "."
-                                                           + std::to_string(SPARROW_VERSION_PATCH);
+    TEST_CASE("capture_backtrace")
+    {
+        // Test that we can capture a backtrace without crashing
+        std::string backtrace = sparrow::test::capture_backtrace();
+
+        // The backtrace should not be empty and should contain function names
+        CHECK_FALSE(backtrace.empty());
+        CHECK(backtrace.find("capture_backtrace") != std::string::npos);
+    }
+
+    // Disabled by default - uncomment to test crash detection
+    // WARNING: This will actually crash the test and terminate the program
+
+    // TEST_CASE("segmentation_fault_test")
+    // {
+    //     // This test intentionally causes a segmentation fault
+    //     // to verify the backtrace system works
+    //     int* null_ptr = nullptr;
+    //     *null_ptr = 42;  // This will cause a segmentation fault
+    // }
 }

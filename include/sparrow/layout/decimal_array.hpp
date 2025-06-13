@@ -516,7 +516,7 @@ namespace sparrow
         constexpr std::size_t sizeof_decimal = sizeof(storage_type);
         std::stringstream format_str;
         format_str << "d:" << precision << "," << scale;
-        if (sizeof_decimal != 16)  // We don't need to specify the size for 128-bit decimals
+        if constexpr (sizeof_decimal != 16)  // We don't need to specify the size for 128-bit decimals
         {
             format_str << "," << sizeof_decimal * 8;
         }

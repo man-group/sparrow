@@ -13,13 +13,14 @@
 // limitations under the License.
 
 #include <string>
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#define DOCTEST_CONFIG_IMPLEMENT
 
 #include <filesystem>
 
 #include "sparrow/c_data_integration/c_data_integration.hpp"
 #include "sparrow/c_interface.hpp"
 
+#include "../include/test_backtrace.hpp"
 #include "better_junit_reporter.hpp"
 #include "doctest/doctest.h"
 
@@ -27,21 +28,8 @@
 const std::filesystem::path json_files_path = JSON_FILES_PATH;
 
 const std::vector<std::filesystem::path> jsons_to_test = {
-    json_files_path / "null-trivial.json",
-    json_files_path / "null.json",
-    json_files_path / "primitive-empty.json",
-    json_files_path / "primitive.json",
-    json_files_path / "primitive_large_offsets.json",
-    json_files_path / "primitive_zerolength.json",
-    json_files_path / "datetime.json",
-    json_files_path / "duration.json",
-    json_files_path / "interval_mdn.json",
-    json_files_path / "interval.json",
-    json_files_path / "nested.json",
-    json_files_path / "nested_large_offsets.json",
-    json_files_path / "recursive-nested.json",
-    json_files_path / "run_end_encoded.json",
     json_files_path / "custom-metadata.json",
+    json_files_path / "datetime.json",
     json_files_path / "decimal32.json",
     json_files_path / "decimal64.json",
 #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
@@ -49,6 +37,20 @@ const std::vector<std::filesystem::path> jsons_to_test = {
     json_files_path / "decimal128.json",
     json_files_path / "decimal256.json",
 #endif
+    json_files_path / "duration.json",
+    json_files_path / "interval_mdn.json",
+    json_files_path / "interval.json",
+    json_files_path / "list_view.json",
+    json_files_path / "nested_large_offsets.json",
+    json_files_path / "nested.json",
+    json_files_path / "null-trivial.json",
+    json_files_path / "null.json",
+    json_files_path / "primitive_large_offsets.json",
+    json_files_path / "primitive_zerolength.json",
+    json_files_path / "primitive-empty.json",
+    json_files_path / "primitive.json",
+    json_files_path / "recursive-nested.json",
+    json_files_path / "run_end_encoded.json",
 };
 
 TEST_SUITE("c_data_integration")
@@ -137,4 +139,23 @@ TEST_SUITE("c_data_integration")
             }
         }
     }
+}
+
+int main(int argc, char** argv)
+{
+    // Initialize backtrace system for crash reporting
+    sparrow::test::initialize_backtrace_on_crash();
+
+    // Initialize and run doctest
+    doctest::Context context;
+    context.applyCommandLine(argc, argv);
+
+    int res = context.run();  // run queries, or run tests unless --no-run
+
+    if (context.shouldExit())  // important - query flags (help/version) rely on this
+    {
+        return res;  // propagate the result of the tests
+    }
+
+    return res;
 }
