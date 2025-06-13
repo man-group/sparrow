@@ -417,9 +417,8 @@ namespace sparrow
     auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes)
         -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
-            std::forward<SIZES_RANGE>(sizes)
-        );
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
+        ));
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -651,17 +650,17 @@ namespace sparrow
                 data_buffer.resize(new_data_buffer_size);
                 // Move elements to make space for the new value
                 std::move_backward(
-                    data_buffer.begin() + offset_end,
-                    data_buffer.end() - shift_byte_count,
+                    sparrow::next(data_buffer.begin(), offset_end),
+                    sparrow::next(data_buffer.end(), -shift_byte_count),
                     data_buffer.end()
                 );
             }
             else
             {
                 std::move(
-                    data_buffer.begin() + offset_end,
+                    sparrow::next(data_buffer.begin(), offset_end),
                     data_buffer.end(),
-                    data_buffer.begin() + offset_end + shift_byte_count
+                    sparrow::next(data_buffer.begin(), offset_end + shift_byte_count)
                 );
                 data_buffer.resize(new_data_buffer_size);
             }
