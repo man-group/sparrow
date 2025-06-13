@@ -17,47 +17,6 @@
 
 namespace sparrow
 {
-    struct_value_iterator::struct_value_iterator(const struct_value* struct_value_ptr, size_type index)
-        : m_struct_value_ptr(struct_value_ptr)
-        , m_index(index)
-    {
-    }
-
-    auto struct_value_iterator::dereference() const -> reference
-    {
-        return m_struct_value_ptr->operator[](m_index);
-    }
-
-    void struct_value_iterator::increment()
-    {
-        ++m_index;
-    }
-
-    void struct_value_iterator::decrement()
-    {
-        --m_index;
-    }
-
-    void struct_value_iterator::advance(difference_type n)
-    {
-        m_index += n;
-    }
-
-    auto struct_value_iterator::distance_to(const self_type& rhs) const -> difference_type
-    {
-        return rhs.m_index - m_index;
-    }
-
-    bool struct_value_iterator::equal(const self_type& rhs) const
-    {
-        return (m_struct_value_ptr == rhs.m_struct_value_ptr) && (m_index == rhs.m_index);
-    }
-
-    bool struct_value_iterator::less_than(const self_type& rhs) const
-    {
-        return m_index < rhs.m_index;
-    }
-
     struct_value::struct_value(const std::vector<child_ptr>& children, size_type index)
         : p_children(&children)
         , m_index(index)
@@ -94,34 +53,24 @@ namespace sparrow
         return std::ranges::equal(lhs, rhs);
     }
 
-    struct_value_iterator struct_value::begin()
+    auto struct_value::begin() const -> const_iterator
     {
-        return {this, 0};
+        return {const_functor_type(this), 0};
     }
 
-    struct_value_iterator struct_value::begin() const
+    auto struct_value::cbegin() const -> const_iterator
     {
-        return {this, 0};
+        return {const_functor_type(this), 0};
     }
 
-    struct_value_iterator struct_value::cbegin() const
+    auto struct_value::end() const -> const_iterator
     {
-        return {this, 0};
+        return {const_functor_type(this), size()};
     }
 
-    struct_value_iterator struct_value::end()
+    auto struct_value::cend() const -> const_iterator
     {
-        return {this, size()};
-    }
-
-    struct_value_iterator struct_value::end() const
-    {
-        return {this, size()};
-    }
-
-    struct_value_iterator struct_value::cend() const
-    {
-        return {this, size()};
+        return {const_functor_type(this), size()};
     }
 }
 

@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "sparrow/layout/layout_utils.hpp"
+#include "sparrow/utils/functor_index_iterator.hpp"
 #if defined(__cpp_lib_format)
 #    include <format>
 #endif
@@ -25,40 +27,6 @@
 
 namespace sparrow
 {
-    class struct_value;
-
-    class SPARROW_API struct_value_iterator : public iterator_base<
-                                                  struct_value_iterator,
-                                                  array_traits::const_reference,
-                                                  std::random_access_iterator_tag,
-                                                  array_traits::const_reference>
-    {
-    public:
-
-        using self_type = struct_value_iterator;
-        using base_type = iterator_base<struct_value_iterator, struct_value, std::random_access_iterator_tag>;
-        using size_type = size_t;
-
-        struct_value_iterator() noexcept = default;
-        struct_value_iterator(const struct_value* struct_value_ptr, size_type index);
-
-    private:
-
-        [[nodiscard]] reference dereference() const;
-
-        void increment();
-        void decrement();
-        void advance(difference_type n);
-        [[nodiscard]] difference_type distance_to(const self_type& rhs) const;
-        [[nodiscard]] bool equal(const self_type& rhs) const;
-        [[nodiscard]] bool less_than(const self_type& rhs) const;
-
-        const struct_value* m_struct_value_ptr = nullptr;
-        difference_type m_index;
-
-        friend class iterator_access;
-    };
-
     class SPARROW_API struct_value
     {
     public:
@@ -67,6 +35,8 @@ namespace sparrow
         using const_reference = array_traits::const_reference;
         using size_type = std::size_t;
         using child_ptr = cloning_ptr<array_wrapper>;
+        using const_functor_type = detail::layout_bracket_functor<const struct_value, const_reference>;
+        using const_iterator = functor_index_iterator<const_functor_type>;
 
         struct_value() = default;
         struct_value(const std::vector<child_ptr>& children, size_type index);
@@ -79,13 +49,11 @@ namespace sparrow
         [[nodiscard]] const_reference front() const;
         [[nodiscard]] const_reference back() const;
 
-        [[nodiscard]] struct_value_iterator begin();
-        [[nodiscard]] struct_value_iterator begin() const;
-        [[nodiscard]] struct_value_iterator cbegin() const;
+        [[nodiscard]] const_iterator begin() const;
+        [[nodiscard]] const_iterator cbegin() const;
 
-        [[nodiscard]] struct_value_iterator end();
-        [[nodiscard]] struct_value_iterator end() const;
-        [[nodiscard]] struct_value_iterator cend() const;
+        [[nodiscard]] const_iterator end() const;
+        [[nodiscard]] const_iterator cend() const;
 
     private:
 
