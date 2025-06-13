@@ -25,7 +25,6 @@
 #include "doctest/doctest.h"
 
 
-
 const std::filesystem::path json_files_path = JSON_FILES_PATH;
 
 const std::vector<std::filesystem::path> jsons_to_test = {

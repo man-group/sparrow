@@ -20,7 +20,6 @@
 #include "backtrace.hpp"
 #include "better_junit_reporter.hpp"
 
-
 int main(int argc, char** argv)
 {
     // Initialize backtrace system for crash reporting
