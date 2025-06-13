@@ -65,6 +65,7 @@ jobs:
             samurai
             tzdata
             elfutils-dev
+            libexecinfo-dev
           shell-name: alpine.sh
       
       - name: Checkout code
