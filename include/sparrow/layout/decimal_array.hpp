@@ -155,6 +155,7 @@ namespace sparrow
         [[nodiscard]] inner_reference value(size_type i);
         [[nodiscard]] inner_const_reference value(size_type i) const;
 
+
     private:
 
         template <
@@ -521,4 +522,6 @@ namespace sparrow
         }
         return format_str.str();
     }
+
+
 }

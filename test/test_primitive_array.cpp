@@ -687,6 +687,18 @@ namespace sparrow
                     CHECK_EQ(ar[i], nullable_values[i + offset]);
                 }
             }
+
+            SUBCASE("zero_null_values")
+            {
+                ar.zero_null_values();
+                for (size_t i = 0; i < ar.size(); ++i)
+                {
+                    if (!ar[i].has_value())
+                    {
+                        CHECK_EQ(ar[i].get(), T(0));
+                    }
+                }
+            }
         }
         TEST_CASE_TEMPLATE_APPLY(primitive_array_id, testing_types);
 

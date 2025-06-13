@@ -516,6 +516,13 @@ namespace sparrow
     template <class T, mpl::boolean_like B = bool>
     constexpr nullable<T, B> make_nullable(T&& value, B&& flag = true);
 
+    template <std::ranges::range R, typename T = typename std::ranges::range_value_t<R>::value_type>
+        requires(
+            mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
+            && std::is_same_v<typename std::ranges::range_value_t<R>::value_type, T>
+        )
+    constexpr void zero_null_values(R& range, const T& default_value = T{});
+
     /**
      * variant of nullable, exposing has_value for convenience
      *
@@ -762,6 +769,22 @@ namespace sparrow
     constexpr nullable<T, B> make_nullable(T&& value, B&& flag)
     {
         return nullable<T, B>(std::forward<T>(value), std::forward<B>(flag));
+    }
+
+    template <std::ranges::range R, typename T>
+        requires(
+            mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
+            && std::is_same_v<typename std::ranges::range_value_t<R>::value_type, T>
+        )
+    constexpr void zero_null_values(R& range, const T& default_value)
+    {
+        for (auto nullable_value : range)
+        {
+            if (!nullable_value.has_value())
+            {
+                nullable_value.get() = default_value;
+            }
+        }
     }
 
     /***********************************

@@ -579,6 +579,19 @@ namespace sparrow
                     compare_timestamp(ar[i], input_values[i]);
                 }
             }
+
+            SUBCASE("zero_null_values")
+            {
+                timestamp_array<T> ar(new_york, input_values);
+                ar.zero_null_values();
+                for (size_t i = 0; i < ar.size(); ++i)
+                {
+                    if (!input_values[i].has_value())
+                    {
+                        compare_timestamp(ar[i].get().value(), make_value<T>(0));
+                    }
+                }
+            }
         }
         TEST_CASE_TEMPLATE_APPLY(timestamp_array_id, testing_types);
 

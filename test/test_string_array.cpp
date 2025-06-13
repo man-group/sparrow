@@ -952,6 +952,20 @@ namespace sparrow
             CHECK_EQ(array.value(7), "code");
         }
 
+        TEST_CASE_FIXTURE(string_array_fixture, "zero_null_values")
+        {
+            layout_type array(std::move(m_arrow_proxy));
+            CHECK_EQ(array.size(), 9);
+            array.zero_null_values();
+            for (size_t i = 0; i < array.size(); ++i)
+            {
+                if (!array[i].has_value())
+                {
+                    CHECK_EQ(array[i].get(), std::string{});
+                }
+            }
+        }
+
 #if defined(__cpp_lib_format)
         TEST_CASE_FIXTURE(string_array_fixture, "formatting")
         {

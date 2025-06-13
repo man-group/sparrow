@@ -404,6 +404,20 @@ namespace sparrow
                 CHECK_EQ(it->get(), words[m_offset + 8]);
             }
         }
+
+        TEST_CASE_FIXTURE(binary_array_fixture, "zero_null_values")
+        {
+            layout_type array(std::move(m_arrow_proxy));
+            array.zero_null_values();
+            // CHECK that all null values are set to empty vector
+            for (auto&& i : array)
+            {
+                if (!i.has_value())
+                {
+                    CHECK(i.get().empty());
+                }
+            }
+        }
 #if defined(__cpp_lib_format)
         TEST_CASE_FIXTURE(binary_array_fixture, "formatting")
         {

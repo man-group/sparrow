@@ -34,6 +34,14 @@ namespace sparrow::c_data_integration
         if (nullable)
         {
             auto validity = utils::get_validity(array);
+            sparrow::fixed_sized_list_array ar{
+                list_size,
+                std::move(get_children_arrays(array, schema, root)[0]),
+                std::move(validity),
+                name,
+                std::move(metadata)
+            };
+
             return sparrow::array{sparrow::fixed_sized_list_array{
                 list_size,
                 std::move(get_children_arrays(array, schema, root)[0]),

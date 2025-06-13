@@ -767,6 +767,23 @@ namespace sparrow
             }
         }
 
+        TEST_CASE("zero_null_values")
+        {
+            auto [ar, input_values] = make_array(5, 1);
+            REQUIRE_EQ(ar.size(), 4);
+            ar[1].null_flag() = false;
+            ar[3].null_flag() = false;
+            ar.zero_null_values(std::vector<std::byte>{byte_t{0}, byte_t{0}, byte_t{0}});
+            CHECK(ar[0].has_value());
+            CHECK(std::ranges::equal(ar[0].get(), input_values[1]));
+            CHECK_FALSE(ar[1].has_value());
+            CHECK(std::ranges::equal(ar[1].get(), std::array<byte_t, 3>{}));
+            CHECK(ar[2].has_value());
+            CHECK(std::ranges::equal(ar[2].get(), input_values[3]));
+            CHECK_FALSE(ar[3].has_value());
+            CHECK(std::ranges::equal(ar[3].get(), std::array<byte_t, 3>{}));
+        }
+
 
 #if defined(__cpp_lib_format)
         TEST_CASE("formatting")

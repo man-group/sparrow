@@ -37,9 +37,9 @@ namespace sparrow::c_data_integration
         if (nullable)
         {
             auto validity = utils::get_validity(array);
-            return sparrow::array{
-                T{std::forward<DATA_RANGE>(data), std::move(validity), name, std::move(metadata)}
-            };
+            T ar{std::forward<DATA_RANGE>(data), std::move(validity), name, std::move(metadata)};
+            ar.zero_null_values();
+            return sparrow::array{std::move(ar)};
         }
         else
         {

@@ -651,17 +651,17 @@ namespace sparrow
                 data_buffer.resize(new_data_buffer_size);
                 // Move elements to make space for the new value
                 std::move_backward(
-                    data_buffer.begin() + offset_end,
-                    data_buffer.end() - shift_byte_count,
+                    sparrow::next(data_buffer.begin(), offset_end),
+                    sparrow::next(data_buffer.end(), -shift_byte_count),
                     data_buffer.end()
                 );
             }
             else
             {
                 std::move(
-                    data_buffer.begin() + offset_end,
+                    sparrow::next(data_buffer.begin(), offset_end),
                     data_buffer.end(),
-                    data_buffer.begin() + offset_end + shift_byte_count
+                    sparrow::next(data_buffer.begin(), offset_end + shift_byte_count)
                 );
                 data_buffer.resize(new_data_buffer_size);
             }
@@ -683,7 +683,7 @@ namespace sparrow
             }
         );
         // Copy the new value into the buffer
-        std::copy(std::ranges::begin(tmp), std::ranges::end(tmp), data_buffer.begin() + offset_beg);
+        std::copy(std::ranges::begin(tmp), std::ranges::end(tmp), sparrow::next(data_buffer.begin(), offset_beg));
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>

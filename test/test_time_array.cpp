@@ -550,6 +550,19 @@ namespace sparrow
                 }
             }
 
+            SUBCASE("zero_null_values")
+            {
+                time_array<T> ar(input_values);
+                ar.zero_null_values();
+                for (size_t i = 0; i < ar.size(); ++i)
+                {
+                    if (!ar[i].has_value())
+                    {
+                        CHECK_EQ(ar[i].get(), T(0));
+                    }
+                }
+            }
+
 #if defined(__cpp_lib_format)
             SUBCASE("format")
             {

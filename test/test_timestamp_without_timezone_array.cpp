@@ -530,6 +530,19 @@ namespace sparrow
                     CHECK_EQ(ar[i], input_values[i]);
                 }
             }
+
+            SUBCASE("zero_null_values")
+            {
+                timestamp_without_timezone_array<T> ar(input_values);
+                ar.zero_null_values();
+                for (size_t i = 0; i < ar.size(); ++i)
+                {
+                    if (!input_values[i].has_value())
+                    {
+                        CHECK_EQ(ar[i].get(), T{});
+                    }
+                }
+            }
         }
         TEST_CASE_TEMPLATE_APPLY(timestamp_without_timezone_array_id, testing_types);
 

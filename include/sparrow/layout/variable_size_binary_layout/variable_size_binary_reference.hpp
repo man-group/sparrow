@@ -67,6 +67,7 @@ namespace sparrow
         self_type& operator=(const char* rhs);
 
         [[nodiscard]] size_type size() const;
+        [[nodiscard]] bool empty() const;
 
         [[nodiscard]] [[nodiscard]] iterator begin();
         iterator end();
@@ -164,6 +165,12 @@ namespace sparrow
     auto variable_size_binary_reference<L>::size() const -> size_type
     {
         return static_cast<size_type>(offset(m_index + 1) - offset(m_index));
+    }
+
+    template <class L>
+    auto variable_size_binary_reference<L>::empty() const -> bool
+    {
+        return size() == 0;
     }
 
     template <class L>

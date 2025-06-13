@@ -30,9 +30,9 @@ namespace sparrow::c_data_integration
         if (nullable)
         {
             auto validity = utils::get_validity(array);
-            return sparrow::array{
-                sparrow::string_array{std::move(data), std::move(validity), name, std::move(metadata)}
-            };
+            sparrow::string_array ar{std::move(data), std::move(validity), name, std::move(metadata)};
+            ar.zero_null_values();
+            return sparrow::array{std::move(ar)};
         }
         else
         {
@@ -51,9 +51,9 @@ namespace sparrow::c_data_integration
         if (nullable)
         {
             auto validity = utils::get_validity(array);
-            return sparrow::array{
-                sparrow::big_string_array{std::move(data), std::move(validity), name, std::move(metadata)}
-            };
+            sparrow::big_string_array ar{std::move(data), std::move(validity), name, std::move(metadata)};
+            ar.zero_null_values();
+            return sparrow::array{std::move(ar)};
         }
         else
         {

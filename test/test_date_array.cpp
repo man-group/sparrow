@@ -513,6 +513,19 @@ namespace sparrow
                     CHECK_EQ(ar[i], input_values[i]);
                 }
             }
+
+            SUBCASE("zero_null_values")
+            {
+                date_array<T> ar(input_values);
+                ar.zero_null_values();
+                for (size_t i = 0; i < ar.size(); ++i)
+                {
+                    if (!ar[i].has_value())
+                    {
+                        CHECK_EQ(ar[i].get(), T(typename T::duration(0)));
+                    }
+                }
+            }
         }
         TEST_CASE_TEMPLATE_APPLY(date_array_id, testing_types);
     }
