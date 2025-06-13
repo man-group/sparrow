@@ -31,6 +31,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install binfmt-support
+
+      - name: Install elfutils-dev
+        run: |
+          sudo apt-get install -y elfutils-dev
         
       - name: Get current date
         id: date
