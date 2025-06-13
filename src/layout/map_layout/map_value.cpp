@@ -75,11 +75,15 @@ namespace sparrow
 
     auto map_value::find_index(const key_type& key) const noexcept -> size_type
     {
-        return visit([&key, this](const auto& ar) -> size_type {
+        return visit([&key, this](const auto& ar) {
             for (size_type i = m_index_begin; i != m_index_end; ++i)
             {
                 const auto& val = ar[i];
-                bool res = std::visit([&val](const auto& k) -> bool {
+                bool res = std::visit([](const auto& k) {
+                    using T = std::decay_t<decltype(k)>;
+                    return std::same_as<T, int>;
+                }, key);
+                /*bool res = std::visit([&val](const auto& k) -> bool {
                     using T = std::decay_t<decltype(k)>;
                     using U = std::decay_t<decltype(val)>;
                     if constexpr (std::same_as<T, U>)
@@ -90,7 +94,8 @@ namespace sparrow
                     {
                         return false;
                     }
-                }, key);
+                    return false;
+                }, key);*/
                 if (res)
                 {
                     return i;
