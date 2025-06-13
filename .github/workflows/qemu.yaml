@@ -31,11 +31,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install binfmt-support
-
-      - name: Install elfutils-dev
-        run: |
-          sudo apt-get update
-          sudo apt-get install elfutils-dev
         
       - name: Get current date
         id: date
@@ -69,6 +64,7 @@ jobs:
             musl-dev
             samurai
             tzdata
+            elfutils-dev
           shell-name: alpine.sh
       
       - name: Checkout code
