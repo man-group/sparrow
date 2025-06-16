@@ -108,8 +108,6 @@ namespace sparrow::c_data_integration
             {
                 if (dictionary_element.at("id").get<size_t>() == dictionary_id)
                 {
-                    nlohmann::json new_schema = schema;
-                    new_schema["name"] = "";
                     return build_array_from_json(dictionary_element.at("data").at("columns")[0], schema, root, false);
                 }
             }
@@ -119,7 +117,7 @@ namespace sparrow::c_data_integration
         sparrow::array dictionary_array = get_dictionary_array();
 
         const auto& index_type = dictionary.at("indexType");
-        const std::string index_name;  // = index_type.at("name").get<std::string>();
+        const std::string name = schema.at("name").get<std::string>();
         const bool index_is_signed = index_type.at("isSigned").get<bool>();
         const size_t index_bit_width = index_type.at("bitWidth").get<size_t>();
 
@@ -133,7 +131,7 @@ namespace sparrow::c_data_integration
                 std::forward<std::vector<key_element_type>>(keys),
                 std::move(dictionary_array),
                 std::move(index_validity),
-                index_name,
+                name,
                 std::move(index_metadata)
             }};
         };
