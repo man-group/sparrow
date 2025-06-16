@@ -33,7 +33,7 @@ target_include_directories(backtrace
 # Platform-specific linking for Windows debug symbols
 if(WIN32)
     target_link_libraries(backtrace PRIVATE dbghelp)
-elseif()
+else()
     target_link_libraries(backtrace PRIVATE execinfo)
 endif()
 
