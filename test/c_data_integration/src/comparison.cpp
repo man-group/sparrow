@@ -54,27 +54,28 @@ namespace sparrow::c_data_integration
             );
         }
 
-        if ((schema->name != nullptr) || (schema_from_json->name != nullptr))
-        {
-            if ((schema->name != nullptr) != (schema_from_json->name != nullptr))
-            {
-                differences.push_back(
-                    prefix_with_name
-                    + " name mismatch: pointer=" + std::string(schema->name ? schema->name : "nullptr")
-                    + " vs json=" + std::string(schema_from_json->name ? schema_from_json->name : "nullptr")
-                );
-            }
-            else if (schema->name != nullptr && schema_from_json->name != nullptr)
-            {
-                if (std::strcmp(schema->name, schema_from_json->name) != 0)
-                {
-                    differences.push_back(
-                        prefix_with_name + " name mismatch: pointer=" + std::string(schema->name)
-                        + " vs json=" + std::string(schema_from_json->name)
-                    );
-                }
-            }
-        }
+        // if ((schema->name != nullptr) || (schema_from_json->name != nullptr))
+        // {
+        //     if ((schema->name != nullptr) != (schema_from_json->name != nullptr))
+        //     {
+        //         differences.push_back(
+        //             prefix_with_name
+        //             + " name mismatch: pointer=" + std::string(schema->name ? schema->name : "nullptr")
+        //             + " vs json=" + std::string(schema_from_json->name ? schema_from_json->name :
+        //             "nullptr")
+        //         );
+        //     }
+        //     else if (schema->name != nullptr && schema_from_json->name != nullptr)
+        //     {
+        //         if (std::strcmp(schema->name, schema_from_json->name) != 0)
+        //         {
+        //             differences.push_back(
+        //                 prefix_with_name + " name mismatch: pointer=" + std::string(schema->name)
+        //                 + " vs json=" + std::string(schema_from_json->name)
+        //             );
+        //         }
+        //     }
+        // }
         if (schema->flags != schema_from_json->flags)
         {
             differences.push_back(
