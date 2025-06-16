@@ -50,14 +50,27 @@ namespace sparrow
 
     bool operator==(const struct_value& lhs, const struct_value& rhs)
     {
-        bool res = lhs.size() == rhs.size();
-        for (std::size_t i = 0; res && i < lhs.size(); ++i)
-        {
-            res = lhs[i] == rhs[i];
-        }
-        return res;
-        // TODO: refactor with the following when struct_value is a range
-        // return std::ranges::equal(lhs, rhs);
+        return std::ranges::equal(lhs, rhs);
+    }
+
+    auto struct_value::begin() const -> const_iterator
+    {
+        return {const_functor_type(this), 0};
+    }
+
+    auto struct_value::cbegin() const -> const_iterator
+    {
+        return {const_functor_type(this), 0};
+    }
+
+    auto struct_value::end() const -> const_iterator
+    {
+        return {const_functor_type(this), size()};
+    }
+
+    auto struct_value::cend() const -> const_iterator
+    {
+        return {const_functor_type(this), size()};
     }
 }
 
