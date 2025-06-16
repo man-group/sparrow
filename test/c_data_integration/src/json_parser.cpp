@@ -34,7 +34,6 @@
 
 namespace sparrow::c_data_integration
 {
-
     // Unordered map witk key = type name and value = function
     using array_builder_function = std::function<
         sparrow::array(const nlohmann::json&, const nlohmann::json&, const nlohmann::json&)>;
@@ -60,6 +59,7 @@ namespace sparrow::c_data_integration
         {"interval", interval_array_from_json},
         {"duration", duration_array_from_json},
         {"runendencoded", runendencoded_array_from_json},
+        {"dictionary", dictionary_encode_array_from_json}
     };
 
     std::vector<sparrow::array>
@@ -147,39 +147,6 @@ namespace sparrow::c_data_integration
             }
         }
         throw std::runtime_error("Invalid bit width or signedness");
-    }
-
-    void read_schema_from_json(const nlohmann::json& data)
-    {
-        SPARROW_ASSERT_TRUE(data.is_object());
-        const auto fields_it = data.find("fields");
-        if (fields_it != data.end())
-        {
-            SPARROW_ASSERT_TRUE(fields_it->is_array());
-            for (const auto& field : *fields_it)
-            {
-                SPARROW_ASSERT_TRUE(field.is_object());
-
-                const std::string name = field.at("name").get<std::string>();
-                [[maybe_unused]] const bool nullable = field.at("nullable").get<bool>();
-                const auto type = field.at("type");
-
-                // TODO: support dictionary
-                // const auto dictionary_it = field.find("dictionary");
-                // if (dictionary_it != field.end())
-                // {
-                //     SPARROW_ASSERT_TRUE(dictionary_it->is_object());
-                //     const auto id_it = field.find("type");
-                // }
-
-                const auto children_it = field.find("children");
-                if (children_it != field.end())
-                {
-                    SPARROW_ASSERT_TRUE(children_it->is_array());
-                    read_schema_from_json(*children_it);
-                }
-            }
-        }
     }
 
     sparrow::array build_array_from_json(
