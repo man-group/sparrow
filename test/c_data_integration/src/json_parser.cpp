@@ -108,6 +108,8 @@ namespace sparrow::c_data_integration
             {
                 if (dictionary_element.at("id").get<size_t>() == dictionary_id)
                 {
+                    nlohmann::json new_schema = schema;
+                    new_schema["name"] = "";
                     return build_array_from_json(dictionary_element.at("data").at("columns")[0], schema, root, false);
                 }
             }
