@@ -100,7 +100,6 @@ namespace sparrow::c_data_integration
         const nlohmann::json& root
     )
     {
-        const std::string name = schema.at("name").get<std::string>();
         const auto& dictionary = schema.at("dictionary");
         const size_t dictionary_id = dictionary.at("id").get<size_t>();
         const auto get_dictionary_array = [&]()
@@ -118,7 +117,7 @@ namespace sparrow::c_data_integration
         sparrow::array dictionary_array = get_dictionary_array();
 
         const auto& index_type = dictionary.at("indexType");
-        const std::string index_name = index_type.at("name").get<std::string>();
+        const std::string index_name;  // = index_type.at("name").get<std::string>();
         const bool index_is_signed = index_type.at("isSigned").get<bool>();
         const size_t index_bit_width = index_type.at("bitWidth").get<size_t>();
 
@@ -133,7 +132,7 @@ namespace sparrow::c_data_integration
                 std::move(dictionary_array),
                 std::move(index_validity),
                 index_name,
-                std::forward<std::optional<std::vector<sparrow::metadata_pair>>>(index_metadata)
+                std::move(index_metadata)
             }};
         };
 
