@@ -12,32 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#define DOCTEST_CONFIG_IMPLEMENT
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <string>
 
 #include <sparrow/config/sparrow_version.hpp>
 
-#include "backtrace.hpp"
 #include "better_junit_reporter.hpp"
-
-int main(int argc, char** argv)
-{
-    // Initialize backtrace system for crash reporting
-    sparrow::test::initialize_backtrace_on_crash();
-
-    // Initialize and run doctest
-    doctest::Context context;
-    context.applyCommandLine(argc, argv);
-
-    int res = context.run();  // run queries, or run tests unless --no-run
-
-    if (context.shouldExit())  // important - query flags (help/version) rely on this
-    {
-        return res;  // propagate the result of the tests
-    }
-
-    return res;
-}
 
 TEST_CASE("version is readable")
 {

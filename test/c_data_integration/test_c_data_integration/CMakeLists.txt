@@ -3,8 +3,7 @@ target_link_libraries(test_c_data_integration
     PRIVATE
         c_data_integration
         better_junit_reporter
-        doctest::doctest
-        backtrace)
+        doctest::doctest)
 
 target_compile_definitions(test_c_data_integration
     PRIVATE
