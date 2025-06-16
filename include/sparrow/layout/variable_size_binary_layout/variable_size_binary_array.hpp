@@ -417,9 +417,8 @@ namespace sparrow
     auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes)
         -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
-            std::forward<SIZES_RANGE>(sizes)
-        );
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
+        ));
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -438,10 +437,10 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             detail::variable_size_binary_format<T, OT>::format(),
-            std::move(name),      // name
-            std::move(metadata),  // metadata
-            std::nullopt,         // flags,
-            nullptr,              // children
+            std::move(name),                                                                    // name
+            std::move(metadata),                                                                // metadata
+            std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE}),  // flags,
+            nullptr,                                                                            // children
             repeat_view<bool>(true, 0),
             nullptr,  // dictionary
             true

@@ -27,7 +27,6 @@ namespace sparrow::c_data_integration
     {
         utils::check_type(schema, "runendencoded");
         const std::string name = schema.at("name").get<std::string>();
-        // const bool nullable = schema.at("nullable").get<bool>();
         auto metadata = utils::get_metadata(schema);
         auto children = get_children_arrays(array, schema, root);
         if (children.size() != 2)
