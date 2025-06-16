@@ -28,9 +28,9 @@
 #include "sparrow/c_data_integration/run_end_encoded_parser.hpp"
 #include "sparrow/c_data_integration/string_parser.hpp"
 #include "sparrow/c_data_integration/stringview_parser.hpp"
-#include "sparrow/c_data_integration/union_parser.hpp"
 #include "sparrow/c_data_integration/struct_parser.hpp"
 #include "sparrow/c_data_integration/temporal_parser.hpp"
+#include "sparrow/c_data_integration/union_parser.hpp"
 #include "sparrow/c_data_integration/utils.hpp"
 
 namespace sparrow::c_data_integration
