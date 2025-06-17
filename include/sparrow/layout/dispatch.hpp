@@ -35,6 +35,7 @@
 #include "sparrow/layout/temporal/timestamp_without_timezone_array.hpp"
 #include "sparrow/layout/union_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
+#include "sparrow/layout/variable_size_binary_view_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/temporal.hpp"
@@ -103,10 +104,14 @@ namespace sparrow
                     return func(unwrap_array<primitive_array<float64_t>>(ar));
                 case data_type::STRING:
                     return func(unwrap_array<string_array>(ar));
+                case data_type::STRING_VIEW:
+                    return func(unwrap_array<string_view_array>(ar));
                 case data_type::LARGE_STRING:
                     return func(unwrap_array<big_string_array>(ar));
                 case data_type::BINARY:
                     return func(unwrap_array<binary_array>(ar));
+                case data_type::BINARY_VIEW:
+                    return func(unwrap_array<binary_view_array>(ar));
                 case data_type::LARGE_BINARY:
                     return func(unwrap_array<big_binary_array>(ar));
                 case data_type::RUN_ENCODED:

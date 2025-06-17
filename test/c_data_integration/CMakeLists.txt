@@ -2,6 +2,7 @@ include(compile_options)
 
 add_library(c_data_integration SHARED
     src/binary_parser.cpp
+    src/binaryview_parser.cpp
     src/bool_parser.cpp
     src/c_data_integration.cpp
     src/comparison.cpp
@@ -16,12 +17,12 @@ add_library(c_data_integration SHARED
     src/primitive_parser.cpp
     src/run_end_encoded_parser.cpp
     src/string_parser.cpp
-    src/stringview_parser.cpp
     src/struct_parser.cpp
     src/temporal_parser.cpp
     src/union_parser.cpp
     src/utils.cpp
     include/sparrow/c_data_integration/binary_parser.hpp
+    include/sparrow/c_data_integration/binaryview_parser.hpp
     include/sparrow/c_data_integration/bool_parser.hpp
     include/sparrow/c_data_integration/c_data_integration.hpp
     include/sparrow/c_data_integration/comparison.hpp
@@ -36,7 +37,6 @@ add_library(c_data_integration SHARED
     include/sparrow/c_data_integration/primitive_parser.hpp
     include/sparrow/c_data_integration/run_end_encoded_parser.hpp
     include/sparrow/c_data_integration/string_parser.hpp
-    include/sparrow/c_data_integration/stringview_parser.hpp
     include/sparrow/c_data_integration/struct_parser.hpp
     include/sparrow/c_data_integration/temporal_parser.hpp
     include/sparrow/c_data_integration/utils.hpp
