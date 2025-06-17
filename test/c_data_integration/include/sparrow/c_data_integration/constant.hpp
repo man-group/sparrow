@@ -22,4 +22,10 @@ namespace sparrow::c_data_integration
     inline constexpr std::string_view OFFSET = "OFFSET";
     inline constexpr std::string_view SIZE = "SIZE";
     inline constexpr std::string_view TYPE_ID = "TYPE_ID";
+    inline constexpr std::string_view VIEWS = "VIEWS";
+    inline constexpr std::string_view VARIADIC_DATA_BUFFERS = "VARIADIC_DATA_BUFFERS";
+    inline constexpr std::string_view SIZE = "SIZE";
+    inline constexpr std::string_view INLINED = "INLINED";
+    inline constexpr std::string_view PREFIX_HEX = "PREFIX_HEX";
+    inline constexpr std::string_view BUFFER_INDEX = "BUFFER_INDEX";
 }

@@ -2,6 +2,7 @@ include(compile_options)
 
 add_library(c_data_integration SHARED
     src/binary_parser.cpp
+    src/binaryview_parser.cpp
     src/bool_parser.cpp
     src/c_data_integration.cpp
     src/comparison.cpp
@@ -21,6 +22,7 @@ add_library(c_data_integration SHARED
     src/union_parser.cpp
     src/utils.cpp
     include/sparrow/c_data_integration/binary_parser.hpp
+    include/sparrow/c_data_integration/binaryview_parser.hpp
     include/sparrow/c_data_integration/bool_parser.hpp
     include/sparrow/c_data_integration/c_data_integration.hpp
     include/sparrow/c_data_integration/comparison.hpp
