@@ -166,7 +166,7 @@ struct std::formatter<sparrow::key_value_view>
         *out++ = '<';
 
         bool first = true;
-        for (const auto elem : array)
+        for (const auto& elem : array)
         {
             if (!first)
             {
