@@ -10,6 +10,7 @@ add_library(c_data_integration SHARED
     src/fixedsizelist_parser.cpp
     src/json_parser.cpp
     src/list_parser.cpp
+    src/listview_parser.cpp
     src/null_parser.cpp
     src/primitive_parser.cpp
     src/run_end_encoded_parser.cpp

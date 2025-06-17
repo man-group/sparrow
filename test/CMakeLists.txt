@@ -14,6 +14,9 @@
 
 cmake_minimum_required(VERSION 3.28)
 
+SET(CMAKE_ENABLE_EXPORTS TRUE)
+SET(MAKE_EXECUTABLE_ENABLE_EXPORTS TRUE)
+
 enable_testing()
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -32,11 +35,9 @@ endif()
 
 add_subdirectory(doctest_better_junit)
 
-if (SPARROW_TARGET_32BIT)
-    set(SPARROW_TESTS_SOURCES
-        main.cpp
-    )
-else()
+if (SPARROW_TARGET_32BIT)    
+    set(SPARROW_TESTS_SOURCES main.cpp)
+else()   
     set(SPARROW_TESTS_SOURCES
         arrow_array_schema_creation.hpp
         external_array_data_creation.cpp
