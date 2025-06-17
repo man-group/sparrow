@@ -26,8 +26,8 @@ namespace sparrow::c_data_integration::utils
 {
     std::vector<std::vector<std::byte>> hex_strings_to_bytes(const std::vector<std::string>& hexStrings);
 
-    std::vector<std::pair<const nlohmann::json&, const nlohmann::json&>>
-    get_children(const nlohmann::json& array, const nlohmann::json& schema);
+    std::vector<nlohmann::json>
+    get_children_with_same_name(const nlohmann::json& schema_or_array, const std::string& name);
 
     std::vector<bool> get_validity(const nlohmann::json& array);
 

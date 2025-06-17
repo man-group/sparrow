@@ -179,9 +179,6 @@ namespace sparrow
         auto iter = std::find(m_name_list.begin(), m_name_list.end(), "");
         SPARROW_ASSERT(iter == m_name_list.end(), "A column can not have an empty name");
 
-        const auto unique_names = std::unordered_set<name_type>(m_name_list.begin(), m_name_list.end());
-        SPARROW_ASSERT(unique_names.size() == m_name_list.size(), "The names of the columns must be unique");
-
         if (!m_array_list.empty())
         {
             const size_type size = m_array_list[0].size();

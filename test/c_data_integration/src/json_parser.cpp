@@ -65,12 +65,29 @@ namespace sparrow::c_data_integration
     std::vector<sparrow::array>
     get_children_arrays(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
-        const auto children_json = utils::get_children(array, schema);
         std::vector<sparrow::array> children;
-        children.reserve(children_json.size());
-        for (const auto& [child_array, child_schema] : children_json)
+        for (const auto& child_schema : schema.at("children"))
         {
-            children.push_back(build_array_from_json(child_array, child_schema, root));
+            const std::string& name = child_schema.at("name").get<std::string>();
+            auto children_with_same_name = utils::get_children_with_same_name(array, name);
+            size_t children_left = children_with_same_name.size();
+            for (const auto& child_with_same_name : children_with_same_name)
+            {
+                try
+                {
+                    sparrow::array child = build_array_from_json(child_with_same_name, child_schema, root);
+                    children.push_back(std::move(child));
+                    break;
+                }
+                catch (const std::exception& e)
+                {
+                    if (children_left == 1)
+                    {
+                        throw std::runtime_error("Failed to build array for child '" + name + "': " + e.what());
+                    }
+                }
+                children_left--;
+            }
         }
         return children;
     }
@@ -207,11 +224,11 @@ namespace sparrow::c_data_integration
     sparrow::record_batch build_record_batch_from_json(const nlohmann::json& root, size_t num_batches)
     {
         const auto& schemas = root.at("schema").at("fields");
-        std::unordered_map<std::string, const nlohmann::json> schema_map;
+        std::unordered_multimap<std::string, const nlohmann::json> schema_map;
         for (const auto& schema : schemas)
         {
             const std::string name = schema.at("name").get<std::string>();
-            schema_map.try_emplace(name, schema);
+            schema_map.emplace(name, schema);
         }
         const auto& batches = root.at("batches");
         if (num_batches >= batches.size())
@@ -229,8 +246,27 @@ namespace sparrow::c_data_integration
         for (const auto& column : columns)
         {
             const auto column_name = column.at("name").get<std::string>();
-            const auto& schema = schema_map.at(column_name);
-            arrays.emplace_back(build_array_from_json(column, schema, root));
+            const auto schemas_iterators = schema_map.equal_range(column_name);
+            const auto num_schemas = std::distance(schemas_iterators.first, schemas_iterators.second);
+            size_t inc = 0;
+            for (auto& [_, schema] : std::ranges::subrange(schemas_iterators.first, schemas_iterators.second))
+            {
+                try
+                {
+                    arrays.emplace_back(build_array_from_json(column, schema, root));
+                    break;
+                }
+                catch (const std::exception& e)
+                {
+                    if (inc == num_schemas - 1)
+                    {
+                        throw std::runtime_error(
+                            "Failed to build array for column '" + column_name + "': " + e.what()
+                        );
+                    }
+                }
+                ++inc;
+            }
         }
         const auto names = columns
                            | std::views::transform(
