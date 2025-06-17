@@ -24,6 +24,7 @@
 
 namespace sparrow::c_data_integration::utils
 {
+    std::vector<std::byte> hex_string_to_bytes(const std::string& hex_string);
     std::vector<std::vector<std::byte>> hex_strings_to_bytes(const std::vector<std::string>& hexStrings);
 
     std::vector<nlohmann::json>

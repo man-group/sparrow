@@ -34,8 +34,6 @@
 
 namespace sparrow
 {
-
-
     template <class T>
     class variable_size_binary_view_array_impl;
     using string_view_array = variable_size_binary_view_array_impl<std::string_view>;
@@ -153,7 +151,10 @@ namespace sparrow
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         static buffers create_buffers(R&& range);
 
-        template <std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap, input_metadata_container METADATA_RANGE>
+        template <
+            std::ranges::input_range R,
+            validity_bitmap_input VB = validity_bitmap,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         [[nodiscard]] static arrow_proxy create_proxy(
             R&& range,
@@ -162,7 +163,7 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        template <std::ranges::input_range NULLABLE_RANGE, input_metadata_container METADATA_RANGE>
+        template <std::ranges::input_range NULLABLE_RANGE, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T>>
         [[nodiscard]] static arrow_proxy create_proxy(
             NULLABLE_RANGE&& nullable_range,
@@ -170,11 +171,11 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
+        template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         [[nodiscard]] static arrow_proxy create_proxy(
             R&& range,
-            bool = true,
+            bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -200,6 +201,9 @@ namespace sparrow
 
         friend base_type;
         friend base_type::base_type;
+        friend base_type::base_type::base_type;
+        friend class detail::layout_value_functor<self_type, inner_value_type>;
+        friend class detail::layout_value_functor<const self_type, inner_value_type>;
     };
 
     template <class T>

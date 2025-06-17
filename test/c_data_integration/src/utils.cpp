@@ -21,33 +21,37 @@
 
 namespace sparrow::c_data_integration::utils
 {
-    std::vector<std::vector<std::byte>> hex_strings_to_bytes(const std::vector<std::string>& hexStrings)
+    std::vector<std::byte> hex_string_to_bytes(const std::string& hex_string)
+    {
+        std::vector<std::byte> bytes;
+
+        if (hex_string.empty())
+        {
+            return bytes;
+        }
+
+        bytes.reserve(hex_string.size() / 2);
+        for (size_t i = 0; i < hex_string.size(); i += 2)
+        {
+            const std::string_view byte_str = std::string_view(hex_string).substr(i, 2);
+            unsigned char byte_value = 0;
+            auto [ptr, ec] = std::from_chars(byte_str.data(), byte_str.data() + 2, byte_value, 16);
+            if (ec == std::errc{})
+            {
+                bytes.push_back(static_cast<std::byte>(byte_value));
+            }
+        }
+        return bytes;
+    }
+
+    std::vector<std::vector<std::byte>> hex_strings_to_bytes(const std::vector<std::string>& hex_strings)
     {
         std::vector<std::vector<std::byte>> result;
-        result.reserve(hexStrings.size());
+        result.reserve(hex_strings.size());
 
-        for (const auto& hexStr : hexStrings)
+        for (const auto& hexStr : hex_strings)
         {
-            std::vector<std::byte> bytes;
-
-            if (hexStr.empty())
-            {
-                result.push_back(std::move(bytes));
-                continue;
-            }
-
-            bytes.reserve(hexStr.size() / 2);
-            for (size_t i = 0; i < hexStr.size(); i += 2)
-            {
-                const std::string_view byte_str = std::string_view(hexStr).substr(i, 2);
-                unsigned char byte_value = 0;
-                auto [ptr, ec] = std::from_chars(byte_str.data(), byte_str.data() + 2, byte_value, 16);
-                if (ec == std::errc{})
-                {
-                    bytes.push_back(static_cast<std::byte>(byte_value));
-                }
-            }
-            result.push_back(std::move(bytes));
+            result.push_back(hex_string_to_bytes(hexStr));
         }
 
         return result;
