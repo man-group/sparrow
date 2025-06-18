@@ -361,7 +361,8 @@ namespace sparrow
     )
     {
         u8_buffer<char> data_buffer{};
-        validity_bitmap bitmap = nullable ? validity_bitmap{} : validity_bitmap{nullptr, 0};
+        std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0)
+                                                         : std::nullopt;
         return create_proxy_impl(
             std::move(data_buffer),
             0,

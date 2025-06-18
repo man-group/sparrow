@@ -53,39 +53,26 @@ namespace sparrow::c_data_integration::utils
         return result;
     }
 
-    const nlohmann::json& get_child(const nlohmann::json& schema_or_array, const std::string& name)
+    std::vector<nlohmann::json>
+    get_children_with_same_name(const nlohmann::json& schema_or_array, const std::string& name)
     {
-        auto it = std::find_if(
-            schema_or_array.at("children").begin(),
-            schema_or_array.at("children").end(),
-            [&name](const nlohmann::json& child)
+        std::vector<nlohmann::json> matches;
+        const auto& children = schema_or_array.at("children");
+        std::ranges::for_each(
+            children,
+            [&](const auto& child)
             {
-                return child.at("name").get<std::string>() == name;
+                if (child.at("name").template get<std::string>() == name)
+                {
+                    matches.push_back(child);
+                }
             }
         );
-
-        if (it == schema_or_array.at("children").end())
+        if (matches.empty())
         {
             throw std::runtime_error("Child not found: " + name);
         }
-
-        return *it;
-    }
-
-    std::vector<std::pair<const nlohmann::json&, const nlohmann::json&>>
-    get_children(const nlohmann::json& array, const nlohmann::json& schema)
-    {
-        const auto& schema_children = schema.at("children");
-        std::vector<std::pair<const nlohmann::json&, const nlohmann::json&>> children;
-        children.reserve(schema_children.size());
-
-        for (const auto& child_schema : schema_children)
-        {
-            const std::string& name = child_schema.at("name").get<std::string>();
-            children.emplace_back(get_child(array, name), child_schema);
-        }
-
-        return children;
+        return matches;
     }
 
     std::vector<bool> get_validity(const nlohmann::json& array)

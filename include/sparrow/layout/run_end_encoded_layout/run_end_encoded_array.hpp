@@ -137,6 +137,7 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
+        const auto flags = detail::array_access::get_arrow_proxy(encoded_values).flags();
         auto [null_count, length] = extract_length_and_null_count(acc_lengths, encoded_values);
 
         auto [acc_length_array, acc_length_schema] = extract_arrow_structures(std::move(acc_lengths));
@@ -158,7 +159,7 @@ namespace sparrow
             std::string("+r"),
             std::move(name),      // name
             std::move(metadata),  // metadata
-            std::nullopt,         // flags,
+            flags,                // flags,
             child_schemas,        // children
             children_ownserhip,   // children ownership
             nullptr,              // dictionary

@@ -438,10 +438,10 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             detail::variable_size_binary_format<T, OT>::format(),
-            std::move(name),      // name
-            std::move(metadata),  // metadata
-            std::nullopt,         // flags,
-            nullptr,              // children
+            std::move(name),                                                                    // name
+            std::move(metadata),                                                                // metadata
+            std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE}),  // flags,
+            nullptr,                                                                            // children
             repeat_view<bool>(true, 0),
             nullptr,  // dictionary
             true

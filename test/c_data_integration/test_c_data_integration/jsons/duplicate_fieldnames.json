@@ -1,0 +1,113 @@
+{
+    "schema": {
+        "fields": [
+            {
+                "name": "ints",
+                "type": {
+                    "name": "int",
+                    "isSigned": true,
+                    "bitWidth": 8
+                },
+                "nullable": true,
+                "children": []
+            },
+            {
+                "name": "ints",
+                "type": {
+                    "name": "int",
+                    "isSigned": true,
+                    "bitWidth": 32
+                },
+                "nullable": true,
+                "children": []
+            },
+            {
+                "name": "struct",
+                "type": {
+                    "name": "struct"
+                },
+                "nullable": true,
+                "children": [
+                    {
+                        "name": "",
+                        "type": {
+                            "name": "int",
+                            "isSigned": true,
+                            "bitWidth": 32
+                        },
+                        "nullable": true,
+                        "children": []
+                    },
+                    {
+                        "name": "",
+                        "type": {
+                            "name": "utf8"
+                        },
+                        "nullable": true,
+                        "children": []
+                    }
+                ]
+            }
+        ]
+    },
+    "batches": [
+        {
+            "count": 1,
+            "columns": [
+                {
+                    "name": "ints",
+                    "count": 1,
+                    "VALIDITY": [
+                        1
+                    ],
+                    "DATA": [
+                        93
+                    ]
+                },
+                {
+                    "name": "ints",
+                    "count": 1,
+                    "VALIDITY": [
+                        0
+                    ],
+                    "DATA": [
+                        1885343749
+                    ]
+                },
+                {
+                    "name": "struct",
+                    "count": 1,
+                    "VALIDITY": [
+                        1
+                    ],
+                    "children": [
+                        {
+                            "name": "",
+                            "count": 1,
+                            "VALIDITY": [
+                                1
+                            ],
+                            "DATA": [
+                                -511939576
+                            ]
+                        },
+                        {
+                            "name": "",
+                            "count": 1,
+                            "VALIDITY": [
+                                0
+                            ],
+                            "OFFSET": [
+                                0,
+                                0
+                            ],
+                            "DATA": [
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
