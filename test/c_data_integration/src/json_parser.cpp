@@ -248,7 +248,7 @@ namespace sparrow::c_data_integration
             const auto column_name = column.at("name").get<std::string>();
             const auto schemas_iterators = schema_map.equal_range(column_name);
             const auto num_schemas = std::distance(schemas_iterators.first, schemas_iterators.second);
-            size_t inc = 0;
+            int inc = 0;
             for (auto& [_, schema] : std::ranges::subrange(schemas_iterators.first, schemas_iterators.second))
             {
                 try
