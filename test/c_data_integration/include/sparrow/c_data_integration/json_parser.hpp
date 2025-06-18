@@ -40,8 +40,6 @@ namespace sparrow::c_data_integration
     std::vector<sparrow::array>
     get_children_arrays(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 
-    void read_schema_from_json(const nlohmann::json& data);
-
     sparrow::array dictionary_encode_array_from_json(
         const nlohmann::json& array,
         const nlohmann::json& schema,
