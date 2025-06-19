@@ -32,12 +32,13 @@ namespace sparrow::c_data_integration
         const std::string name = schema.at("name").get<std::string>();
         auto metadata = utils::get_metadata(schema);
         auto type_ids_values = schema.at("type").at("typeIds").get<std::vector<uint8_t>>();
-        sparrow::sparse_union_array::type_id_buffer_type type_ids{std::move(type_ids_values)};
+        std::vector<std::uint8_t> type_ids = array.at(TYPE_ID).get<std::vector<std::uint8_t>>();
+        sparrow::sparse_union_array::type_id_buffer_type type_ids_buffer{std::move(type_ids)};
         auto children = get_children_arrays(array, schema, root);
-        std::vector<std::uint8_t> type_mapping{};
+        auto type_mapping = type_ids_values;
         return sparrow::array{sparrow::sparse_union_array{
             std::move(children),
-            std::move(type_ids),
+            std::move(type_ids_buffer),
             std::move(type_mapping),
             name,
             std::move(metadata)
@@ -53,7 +54,6 @@ namespace sparrow::c_data_integration
         {
             throw std::runtime_error("Invalid mode");
         }
-        const bool nullable = schema.at("nullable").get<bool>();
         const std::string name = schema.at("name").get<std::string>();
         auto metadata = utils::get_metadata(schema);
         sparrow::dense_union_array::offset_buffer_type offsets{array.at(OFFSET).get<std::vector<uint32_t>>()};
@@ -62,10 +62,6 @@ namespace sparrow::c_data_integration
         };
         std::vector<std::uint8_t> type_ids = array.at(TYPE_ID).get<std::vector<std::uint8_t>>();
         auto children = get_children_arrays(array, schema, root);
-
-        if (nullable)
-        {
-        }
         return sparrow::array{sparrow::dense_union_array{
             std::move(children),
             std::move(type_ids),

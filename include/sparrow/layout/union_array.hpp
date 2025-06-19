@@ -24,6 +24,7 @@
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/crtp_base.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/memory.hpp"
@@ -226,6 +227,7 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         )
         {
+            SPARROW_ASSERT_TRUE(element_type.size() == offsets.size());
             type_id_buffer_type element_type_buffer{std::move(element_type)};
             offset_buffer_type offsets_buffer{std::move(offsets)};
             return dense_union_array::create_proxy(
@@ -263,6 +265,8 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         )
         {
+            SPARROW_ASSERT_TRUE(std::ranges::distance(element_type) == std::ranges::distance(offsets));
+            SPARROW_ASSERT_TRUE(std::ranges::distance(element_type) == children.size());
             type_id_buffer_type element_type_buffer{std::move(element_type)};
             offset_buffer_type offsets_buffer{std::move(offsets)};
             return dense_union_array::create_proxy_impl(
@@ -374,7 +378,7 @@ namespace sparrow
         {
             for (std::size_t i = 0; i < n; ++i)
             {
-                ret[child_index_to_type_id[i]] = static_cast<std::uint8_t>(i);
+                ret[child_index_to_type_id[static_cast<std::uint8_t>(i)]] = static_cast<std::uint8_t>(i);
             }
         }
         return ret;
@@ -595,6 +599,7 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
+        SPARROW_ASSERT_TRUE(element_type.size() == offsets.size());
         const auto n_children = children.size();
 
         // inverse type mapping (type_id -> child_index)
@@ -628,6 +633,7 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
+        SPARROW_ASSERT_TRUE(element_type.size() == offsets.size());
         const auto n_children = children.size();
         ArrowSchema** child_schemas = new ArrowSchema*[n_children];
         ArrowArray** child_arrays = new ArrowArray*[n_children];
@@ -702,6 +708,7 @@ namespace sparrow
     ) -> arrow_proxy
     {
         const auto n_children = children.size();
+        SPARROW_ASSERT_TRUE(child_index_to_type_id.size() == n_children);
 
         // inverse type mapping (type_id -> child_index)
         auto type_id_to_child_index = type_id_map_from_child_to_type_id(child_index_to_type_id);
@@ -732,6 +739,10 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
+        for (const auto& child : children)
+        {
+            SPARROW_ASSERT_TRUE(child.size() == element_type.size());
+        }
         const auto n_children = children.size();
         ArrowSchema** child_schemas = new ArrowSchema*[n_children];
         ArrowArray** child_arrays = new ArrowArray*[n_children];
