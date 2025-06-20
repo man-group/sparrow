@@ -381,7 +381,7 @@ namespace sparrow::mpl
         struct contains_impl<L<V, U...>, T> : contains_impl<L<U...>, T>
         {
         };
-        
+
         template <class S1, class S2>
         struct merge_set_impl;
 

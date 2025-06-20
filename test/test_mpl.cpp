@@ -134,11 +134,13 @@ namespace sparrow
     static_assert(std::same_as<mpl::typelist<int*, char*>, mpl::transform<std::add_pointer_t, test_list>>);
 
     // merge_set
-    static_assert(std::same_as<mpl::typelist<int, double, float>,
-                               mpl::merge_set<mpl::typelist<int, double>, mpl::typelist<double, float>>>);
+    static_assert(std::same_as<
+                  mpl::typelist<int, double, float>,
+                  mpl::merge_set<mpl::typelist<int, double>, mpl::typelist<double, float>>>);
 
-    static_assert(std::same_as<mpl::typelist<int, double, float>,
-                               mpl::unique<mpl::typelist<int, double, int, float, double>>>);
+    static_assert(
+        std::same_as<mpl::typelist<int, double, float>, mpl::unique<mpl::typelist<int, double, int, float, double>>>
+    );
 
     //////////////////////////////
     // concepts and other stuff
