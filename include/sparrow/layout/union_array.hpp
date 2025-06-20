@@ -366,8 +366,8 @@ namespace sparrow
     template <class DERIVED>
     template <std::ranges::input_range R>
     auto
-    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id)
-        -> type_id_map
+    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id
+    ) -> type_id_map
     {
         std::array<std::uint8_t, 256> ret;
         if (!child_index_to_type_id.has_value())
@@ -669,7 +669,7 @@ namespace sparrow
             child_schemas[i] = new ArrowSchema(std::move(flat_schema));
         }
 
-        bool is_nullable = std::all_of(
+        const bool is_nullable = std::all_of(
             child_schemas,
             child_schemas + n_children,
             [](const ArrowSchema* schema)
@@ -678,7 +678,7 @@ namespace sparrow
             }
         );
 
-        static const std::optional<std::unordered_set<sparrow::ArrowFlag>>
+        const std::optional<std::unordered_set<sparrow::ArrowFlag>>
             flags = is_nullable
                         ? std::make_optional(std::unordered_set<sparrow::ArrowFlag>{ArrowFlag::NULLABLE})
                         : std::nullopt;
@@ -788,11 +788,25 @@ namespace sparrow
             child_schemas[i] = new ArrowSchema(std::move(flat_schema));
         }
 
+        const bool is_nullable = std::all_of(
+            child_schemas,
+            child_schemas + n_children,
+            [](const ArrowSchema* schema)
+            {
+                return to_set_of_ArrowFlags(schema->flags).contains(ArrowFlag::NULLABLE);
+            }
+        );
+
+        const std::optional<std::unordered_set<sparrow::ArrowFlag>>
+            flags = is_nullable
+                        ? std::make_optional(std::unordered_set<sparrow::ArrowFlag>{ArrowFlag::NULLABLE})
+                        : std::nullopt;
+
         ArrowSchema schema = make_arrow_schema(
             std::move(format),
             std::move(name),                      // name
             std::move(metadata),                  // metadata
-            std::nullopt,                         // flags,
+            flags,                                // flags,
             child_schemas,                        // children
             repeat_view<bool>(true, n_children),  // children_ownership
             nullptr,                              // dictionary,
