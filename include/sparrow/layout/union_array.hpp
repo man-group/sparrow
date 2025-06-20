@@ -19,6 +19,7 @@
 
 #include "sparrow/array_api.hpp"
 #include "sparrow/array_factory.hpp"
+#include "sparrow/arrow_interface/arrow_flag_utils.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_helper.hpp"
@@ -668,7 +669,19 @@ namespace sparrow
             child_schemas[i] = new ArrowSchema(std::move(flat_schema));
         }
 
-        static const std::optional<std::unordered_set<sparrow::ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
+        bool is_nullable = std::all_of(
+            child_schemas,
+            child_schemas + n_children,
+            [](const ArrowSchema* schema)
+            {
+                return to_set_of_ArrowFlags(schema->flags).contains(ArrowFlag::NULLABLE);
+            }
+        );
+
+        static const std::optional<std::unordered_set<sparrow::ArrowFlag>>
+            flags = is_nullable
+                        ? std::make_optional(std::unordered_set<sparrow::ArrowFlag>{ArrowFlag::NULLABLE})
+                        : std::nullopt;
 
         ArrowSchema schema = make_arrow_schema(
             std::move(format),
