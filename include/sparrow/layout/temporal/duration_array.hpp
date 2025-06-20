@@ -26,9 +26,8 @@ namespace sparrow
     using duration_types_t = mpl::
         typelist<std::chrono::seconds, std::chrono::milliseconds, std::chrono::microseconds, std::chrono::nanoseconds>;
 
-    static constexpr duration_types_t duration_types;
     template <typename T>
-    concept duration_type = mpl::contains<T>(duration_types);
+    concept duration_type = mpl::contains<duration_types_t, T>();
 
     /**
      * Array of std::chrono::duration values.

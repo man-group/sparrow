@@ -125,10 +125,10 @@ namespace sparrow
     static_assert(mpl::find<std::vector<int>>(test_list{}) == size(test_list{}));
 
     // contains
-    static_assert(mpl::contains<int>(test_list{}));
-    static_assert(mpl::contains<char>(test_list{}));
-    static_assert(not mpl::contains<float>(test_list{}));
-    static_assert(not mpl::contains<double>(test_list{}));
+    static_assert(mpl::contains<test_list, int>());
+    static_assert(mpl::contains<test_list, char>());
+    static_assert(not mpl::contains<test_list, float>());
+    static_assert(not mpl::contains<test_list, double>());
 
     // transfrom
     static_assert(std::same_as<mpl::typelist<int*, char*>, mpl::transform<std::add_pointer_t, test_list>>);

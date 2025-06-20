@@ -25,7 +25,6 @@ namespace sparrow
         timestamp<std::chrono::microseconds>,
         timestamp<std::chrono::nanoseconds>>;
 
-    static constexpr timestamp_types_t timestamp_types;
     template <typename T>
-    concept timestamp_type = mpl::contains<T>(timestamp_types);
+    concept timestamp_type = mpl::contains<timestamp_types_t, T>();
 }  // namespace sparrow

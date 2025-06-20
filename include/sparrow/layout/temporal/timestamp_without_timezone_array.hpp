@@ -26,9 +26,8 @@ namespace sparrow
         zoned_time_without_timezone_microseconds,
         zoned_time_without_timezone_nanoseconds>;
 
-    static constexpr zoned_time_without_timezone_types_t zoned_time_without_timezone_types;
     template <typename T>
-    concept zoned_time_without_timezone_type = mpl::contains<T>(zoned_time_without_timezone_types);
+    concept zoned_time_without_timezone_type = mpl::contains<zoned_time_without_timezone_types_t, T>();
 
     /**
      * Array of timestamps without timezone.

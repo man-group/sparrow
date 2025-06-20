@@ -669,22 +669,14 @@ namespace sparrow
         decimal<int128_t>,
         decimal<int256_t>>;
 
-    /// Type list of every C++ representation types supported by default, in order matching `data_type`
-    /// related values.
-    static constexpr all_base_types_t all_base_types;
-
     /// Matches C++ representation types which are supported by default.
     template <class T>
-    concept is_arrow_base_type = mpl::contains<T>(all_base_types);
+    concept is_arrow_base_type = mpl::contains<all_base_types_t, T>();
 
     /// is arrow base type or arrow compound type (list<T>, struct<T> etc.)
     // template <class T>
     // concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
     using all_base_types_extended_t = mpl::append_t<all_base_types_t, char, std::string_view>;
-
-    /// Type list of every C++ representation types supported by default, in order matching `data_type`
-    /// related values.
-    static constexpr all_base_types_extended_t all_base_types_extended;
 
     /// Checks if a type is an extended base type for Arrow.
     ///
@@ -695,7 +687,7 @@ namespace sparrow
     /// @tparam T The type to check.
     /// @return `true` if `T` is an extended base type for Arrow, `false` otherwise.
     template <class T>
-    concept is_arrow_base_type_extended = mpl::contains<T>(all_base_types_extended);
+    concept is_arrow_base_type_extended = mpl::contains<all_base_types_extended_t, T>();
 
     /// Template alias to get the corresponding Arrow type for a given type.
     ///

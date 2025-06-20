@@ -24,9 +24,8 @@ namespace sparrow
 {
     using date_types_t = mpl::typelist<date_days, date_milliseconds>;
 
-    static constexpr date_types_t date_types;
     template <typename T>
-    concept date_type = mpl::contains<T>(date_types);
+    concept date_type = mpl::contains<date_types_t, T>();
 
     /**
      * Array of std::chrono::duration values.
