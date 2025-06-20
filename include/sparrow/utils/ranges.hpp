@@ -219,18 +219,6 @@ struct std::formatter<std::bitset<T>>
     }
 };
 
-#    include <span>
-
-namespace std
-{
-    // Add equality comparison for std::span
-    template <typename T, std::size_t N1, std::size_t N2>
-    constexpr bool operator==(const std::span<T, N1>& lhs, const std::span<T, N2>& rhs)
-    {
-        return std::ranges::equal(lhs, rhs);
-    }
-}
-
 template <typename T, std::size_t N>
 struct std::formatter<std::span<T, N>>
 {
