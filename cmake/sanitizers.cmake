@@ -1,5 +1,5 @@
 set(AVALAIBLE_SANITIZERS "address;leak;memory;thread;undefined")
-set(USE_SANITIZER "" CACHE STRING "Enable sanitizer(s). Options are: ${AVALAIBLE_SANITIZERS}. Case insensitive; multiple options delimited by comma or space possible.")
+OPTION(USE_SANITIZER "Enable sanitizer(s). Options are: ${AVALAIBLE_SANITIZERS}. Case insensitive; multiple options delimited by comma or space possible." "")
 string(TOLOWER "${USE_SANITIZER}" USE_SANITIZER)
 
 if((CMAKE_BUILD_TYPE IN_LIST "Debug;RelWithDebInfo") AND USE_SANITIZER)

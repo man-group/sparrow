@@ -103,7 +103,7 @@ else()
     set(DEFAULT_USE_LARGE_INT_PLACEHOLDERS OFF)
 endif()
 
-OPTION(USE_LARGE_INT_PLACEHOLDERS "use types without api for big integers 'ON' by default on 32 bit systems and MSVC compilers" ${DEFAULT_USE_LARGE_INT_PLACEHOLDERS})
+OPTION(USE_LARGE_INT_PLACEHOLDERS "Use types without api for big integers 'ON' by default on 32 bit systems and MSVC compilers" ${DEFAULT_USE_LARGE_INT_PLACEHOLDERS})
 MESSAGE(STATUS "🔧 Use large int placeholders: ${USE_LARGE_INT_PLACEHOLDERS}")
 OPTION(SPARROW_TARGET_32BIT "Test 32bit support" OFF)
 MESSAGE(STATUS "🔧 Test 32bit support: ${SPARROW_TARGET_32BIT}")
