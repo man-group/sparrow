@@ -14,8 +14,8 @@
 
 #include "sparrow/array.hpp"
 #include "sparrow/layout/map_layout/map_array.hpp"
-#include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 #include "sparrow/layout/primitive_layout/primitive_array.hpp"
+#include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
 
 #include "doctest/doctest.h"
 #include "test_utils.hpp"
@@ -26,8 +26,8 @@ namespace sparrow
     {
         static const std::vector<std::string> keys =
             {"Dark Knight", "Dark Knight", "Meet the Parents", "Superman", "Meet the Parents", "Superman"};
-        static const std::vector<int> items = { 10, 8, 4, 5, 10, 0 };
-        static const std::vector<std::size_t> sizes = { 1, 3, 0, 2 }; //{ 0, 1, 4, 4, 6};
+        static const std::vector<int> items = {10, 8, 4, 5, 10, 0};
+        static const std::vector<std::size_t> sizes = {1, 3, 0, 2};  //{ 0, 1, 4, 4, 6};
         static const std::unordered_set<std::size_t> where_nulls{2};
 
         struct map_array_underlying
@@ -43,7 +43,6 @@ namespace sparrow
             {
             }
         };
-
 
         void check_array(const map_array& map_arr)
         {
@@ -69,7 +68,7 @@ namespace sparrow
                     continue;
                 }
                 auto m = map_arr[i];
-                for (const auto& v: m.value())
+                for (const auto& v : m.value())
                 {
                     CHECK_NULLABLE_VARIANT_EQ(v.first, std::string_view(keys[flat_index]));
                     if (v.second.has_value())
@@ -86,7 +85,12 @@ namespace sparrow
         map_array make_map_array()
         {
             map_array_underlying mau;
-            return map_array(std::move(mau.flat_keys), std::move(mau.flat_items), std::move(mau.offsets), where_nulls);
+            return map_array(
+                std::move(mau.flat_keys),
+                std::move(mau.flat_items),
+                std::move(mau.offsets),
+                where_nulls
+            );
         }
     }
 
@@ -102,7 +106,12 @@ namespace sparrow
             {
                 SUBCASE("... validity bitmap")
                 {
-                    map_array arr(std::move(mau.flat_keys), std::move(mau.flat_items), std::move(mau.offsets), test::where_nulls);
+                    map_array arr(
+                        std::move(mau.flat_keys),
+                        std::move(mau.flat_items),
+                        std::move(mau.offsets),
+                        test::where_nulls
+                    );
                     test::check_array(arr);
                 }
 
@@ -123,16 +132,25 @@ namespace sparrow
         TEST_CASE("copy")
         {
             test::map_array_underlying mau;
-            map_array arr(std::move(mau.flat_keys), std::move(mau.flat_items), std::move(mau.offsets), test::where_nulls);
+            map_array arr(
+                std::move(mau.flat_keys),
+                std::move(mau.flat_items),
+                std::move(mau.offsets),
+                test::where_nulls
+            );
 
             map_array arr2(arr);
             CHECK_EQ(arr, arr2);
 
-            const std::vector<std::string> keys2 = { "John", "Peter", "Paul" };
-            const std::vector<int> items2 = { 3, 2, 5 };
-            const std::vector<std::size_t> sizes2 = { 2, 1 };
+            const std::vector<std::string> keys2 = {"John", "Peter", "Paul"};
+            const std::vector<int> items2 = {3, 2, 5};
+            const std::vector<std::size_t> sizes2 = {2, 1};
 
-            map_array arr3(array(string_array(keys2)), array(primitive_array<int>(items2)), map_array::offset_from_sizes(sizes2));
+            map_array arr3(
+                array(string_array(keys2)),
+                array(primitive_array<int>(items2)),
+                map_array::offset_from_sizes(sizes2)
+            );
             arr = arr3;
             CHECK_EQ(arr, arr3);
             CHECK_NE(arr, arr2);
@@ -143,17 +161,26 @@ namespace sparrow
         TEST_CASE("move")
         {
             test::map_array_underlying mau;
-            map_array arr(std::move(mau.flat_keys), std::move(mau.flat_items), std::move(mau.offsets), test::where_nulls);
+            map_array arr(
+                std::move(mau.flat_keys),
+                std::move(mau.flat_items),
+                std::move(mau.offsets),
+                test::where_nulls
+            );
 
             map_array arr2(arr);
             map_array arr3(std::move(arr2));
             CHECK_EQ(arr3, arr);
 
-            const std::vector<std::string> keys2 = { "John", "Peter", "Paul" };
-            const std::vector<int> items2 = { 3, 2, 5 };
-            const std::vector<std::size_t> sizes2 = { 2, 1 };
+            const std::vector<std::string> keys2 = {"John", "Peter", "Paul"};
+            const std::vector<int> items2 = {3, 2, 5};
+            const std::vector<std::size_t> sizes2 = {2, 1};
 
-            map_array arr4(array(string_array(keys2)), array(primitive_array<int>(items2)), map_array::offset_from_sizes(sizes2));
+            map_array arr4(
+                array(string_array(keys2)),
+                array(primitive_array<int>(items2)),
+                map_array::offset_from_sizes(sizes2)
+            );
             CHECK_NE(arr4, arr);
             arr4 = std::move(arr3);
             CHECK_EQ(arr4, arr);
@@ -162,7 +189,12 @@ namespace sparrow
         TEST_CASE("consistency")
         {
             test::map_array_underlying mau;
-            map_array arr(std::move(mau.flat_keys), std::move(mau.flat_items), std::move(mau.offsets), test::where_nulls);
+            map_array arr(
+                std::move(mau.flat_keys),
+                std::move(mau.flat_items),
+                std::move(mau.offsets),
+                test::where_nulls
+            );
             test::generic_consistency_test(arr);
         }
 
@@ -170,13 +202,17 @@ namespace sparrow
         TEST_CASE("formatting")
         {
             test::map_array_underlying mau;
-            map_array arr(std::move(mau.flat_keys), std::move(mau.flat_items), std::move(mau.offsets), test::where_nulls);
+            map_array arr(
+                std::move(mau.flat_keys),
+                std::move(mau.flat_items),
+                std::move(mau.offsets),
+                test::where_nulls
+            );
             const std::string formatted = std::format("{}", arr);
-            constexpr std::string_view expected = "Map [name=nullptr | size=4] <<Dark Knight: 10, >, <Dark Knight: 8, Meet the Parents: null, Superman: 5, >, null, <Meet the Parents: 10, Superman: 0, >>";
+            constexpr std::string_view
+                expected = "Map [name=nullptr | size=4] <<Dark Knight: 10, >, <Dark Knight: 8, Meet the Parents: null, Superman: 5, >, null, <Meet the Parents: 10, Superman: 0, >>";
             CHECK_EQ(formatted, expected);
         }
 #endif
-
     }
 }
-

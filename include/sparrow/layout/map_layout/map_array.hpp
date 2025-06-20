@@ -101,7 +101,7 @@ namespace sparrow
 
         [[nodiscard]] inner_reference value(size_type i);
         [[nodiscard]] inner_const_reference value(size_type i) const;
-        
+
         [[nodiscard]] offset_type* make_list_offsets() const;
         [[nodiscard]] cloning_ptr<array_wrapper> make_keys_array() const;
         [[nodiscard]] cloning_ptr<array_wrapper> make_items_array() const;
@@ -146,7 +146,7 @@ namespace sparrow
             );
         }
 
-       template <
+        template <
             validity_bitmap_input VB = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
@@ -232,16 +232,17 @@ namespace sparrow
 
         ArrowSchema schema = make_arrow_schema(
             std::string("+m"),
-            name,                                                          // name
-            metadata,                                                      // metadata
-            flags,                                                         // flags,
-            new ArrowSchema*[2]{                                           // Children
+            name,      // name
+            metadata,  // metadata
+            flags,     // flags,
+            new ArrowSchema*[2]{
+                // Children
                 new ArrowSchema(std::move(flat_keys_schema)),
                 new ArrowSchema(std::move(flat_items_schema))
             },
-            children_ownership,                                            // children ownership
-            nullptr,                                                       // dictionary
-            true                                                           // dictionary ownership
+            children_ownership,  // children ownership
+            nullptr,             // dictionary
+            true                 // dictionary ownership
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
@@ -254,13 +255,10 @@ namespace sparrow
             static_cast<std::int64_t>(null_count),
             0,  // offset
             std::move(arr_buffs),
-            new ArrowArray*[2]{
-                new ArrowArray(std::move(flat_keys_arr)),
-                new ArrowArray(std::move(flat_items_arr))
-            },
-            children_ownership,                                       // children ownership
-            nullptr,                                                  // dictionary
-            true                                                      // dictionary ownership
+            new ArrowArray*[2]{new ArrowArray(std::move(flat_keys_arr)), new ArrowArray(std::move(flat_items_arr))},
+            children_ownership,  // children ownership
+            nullptr,             // dictionary
+            true                 // dictionary ownership
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
@@ -289,7 +287,9 @@ namespace sparrow
         else
         {
             bool keys_sorted = check_keys_sorted(flat_keys, list_offsets);
-            auto flags = keys_sorted ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::MAP_KEYS_SORTED}} : std::nullopt;
+            auto flags = keys_sorted
+                             ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::MAP_KEYS_SORTED}}
+                             : std::nullopt;
 
             const auto size = list_offsets.size() - 1;
 
@@ -298,17 +298,18 @@ namespace sparrow
             const repeat_view<bool> children_ownership{true, 2};
 
             ArrowSchema schema = make_arrow_schema(
-                std::string("+m"),                                             // format
-                name,                                                          // name
-                metadata,                                                      // metadata
-                flags,                                                  // flags,
-                new ArrowSchema*[2]{                                           // Children
+                std::string("+m"),  // format
+                name,               // name
+                metadata,           // metadata
+                flags,              // flags,
+                new ArrowSchema*[2]{
+                    // Children
                     new ArrowSchema(std::move(flat_keys_schema)),
                     new ArrowSchema(std::move(flat_items_schema))
                 },
-                children_ownership,                                            // children ownership
-                nullptr,                                                       // dictionary
-                true                                                           // dictionary ownership
+                children_ownership,  // children ownership
+                nullptr,             // dictionary
+                true                 // dictionary ownership
 
             );
             std::vector<buffer<std::uint8_t>> arr_buffs = {
@@ -325,9 +326,9 @@ namespace sparrow
                     new ArrowArray(std::move(flat_keys_arr)),
                     new ArrowArray(std::move(flat_items_arr))
                 },
-                children_ownership,                                       // children ownership
-                nullptr,                                                  // dictionary
-                true                                                      // dictionary ownership
+                children_ownership,  // children ownership
+                nullptr,             // dictionary
+                true                 // dictionary ownership
             );
             return arrow_proxy{std::move(arr), std::move(schema)};
         }

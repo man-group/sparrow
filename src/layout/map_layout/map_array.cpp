@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/array.hpp"
 #include "sparrow/layout/map_layout/map_array.hpp"
+
+#include "sparrow/array.hpp"
 
 namespace sparrow
 {
@@ -68,22 +69,22 @@ namespace sparrow
         return p_items_array.get();
     }
 
-    auto map_array::value_begin() -> value_iterator 
+    auto map_array::value_begin() -> value_iterator
     {
         return value_iterator(value_iterator::functor_type(this), 0);
     }
 
-    auto map_array::value_end() -> value_iterator 
+    auto map_array::value_end() -> value_iterator
     {
         return value_iterator(value_iterator::functor_type(this), this->size());
     }
 
-    auto map_array::value_cbegin() const -> const_value_iterator 
+    auto map_array::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator(const_value_iterator::functor_type(this), 0);
     }
 
-    auto map_array::value_cend() const -> const_value_iterator 
+    auto map_array::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(const_value_iterator::functor_type(this), this->size());
     }
@@ -96,10 +97,9 @@ namespace sparrow
     auto map_array::value(size_type i) const -> inner_const_reference
     {
         using st = size_type;
-        return map_value(raw_keys_array(), raw_items_array(), p_list_offsets[i], p_list_offsets[i+1],
-                m_keys_sorted);
+        return map_value(raw_keys_array(), raw_items_array(), p_list_offsets[i], p_list_offsets[i + 1], m_keys_sorted);
     }
-    
+
     auto map_array::make_list_offsets() const -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
@@ -125,27 +125,29 @@ namespace sparrow
     bool map_array::check_keys_sorted(const array& flat_keys, const offset_buffer_type& offsets)
     {
         bool sorted = true;
-        for (std::size_t i = 0; i+1 < offsets.size(); ++i)
+        for (std::size_t i = 0; i + 1 < offsets.size(); ++i)
         {
             std::size_t index_begin = offsets[i];
-            std::size_t index_end = offsets[i+1];
-            sorted = flat_keys.visit([index_begin, index_end]<class T>(const T& ar) -> bool
-            {
-                bool isorted = false;
-                if constexpr (std::three_way_comparable<typename T::const_reference>)
+            std::size_t index_end = offsets[i + 1];
+            sorted = flat_keys.visit(
+                [index_begin, index_end]<class T>(const T& ar) -> bool
                 {
-                    isorted = true;
-                    for(std::size_t j = index_begin; j+1 < index_end; ++j)
+                    bool isorted = false;
+                    if constexpr (std::three_way_comparable<typename T::const_reference>)
                     {
-                        isorted = (ar[j] < ar[j+1]);
-                        if (!isorted)
+                        isorted = true;
+                        for (std::size_t j = index_begin; j + 1 < index_end; ++j)
                         {
-                            break;
+                            isorted = (ar[j] < ar[j + 1]);
+                            if (!isorted)
+                            {
+                                break;
+                            }
                         }
                     }
+                    return isorted;
                 }
-                return isorted;
-            });
+            );
             if (!sorted)
             {
                 break;

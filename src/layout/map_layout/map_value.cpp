@@ -12,16 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <variant>
 #include "sparrow/layout/map_layout/map_value.hpp"
+
+#include <variant>
 
 #include "sparrow/layout/dispatch.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 
 namespace sparrow
 {
-    map_value::map_value(const array_wrapper* flat_keys, const array_wrapper* flat_items,
-        size_type index_begin, size_type index_end, bool keys_sorted)
+    map_value::map_value(
+        const array_wrapper* flat_keys,
+        const array_wrapper* flat_items,
+        size_type index_begin,
+        size_type index_end,
+        bool keys_sorted
+    )
         : p_flat_keys(flat_keys)
         , p_flat_items(flat_items)
         , m_index_begin(index_begin)
@@ -40,7 +46,7 @@ namespace sparrow
         return m_index_end - m_index_begin;
     }
 
-    auto map_value::operator[](const key_type& key) const -> const_mapped_reference 
+    auto map_value::operator[](const key_type& key) const -> const_mapped_reference
     {
         size_type index = find_index(key);
         if (index == m_index_end)
@@ -77,37 +83,50 @@ namespace sparrow
 
     auto map_value::find_index(const key_type& key) const noexcept -> size_type
     {
-#if SPARROW_GCC_11_2_WORKAROUND 
+#if SPARROW_GCC_11_2_WORKAROUND
         using variant_type = std::decay_t<decltype(key)>;
         using base_variant_type = variant_type::base_type;
 #endif
-        return std::visit([this](const auto& k) {
-            return visit([&k, this](const auto& ar) {
-                for (size_type i = m_index_begin; i != m_index_end; ++i)
-                {
-                    const auto& val = ar[i];
-                    using T = std::decay_t<decltype(k)>;
-                    using U = std::decay_t<decltype(val)>;
-                    if constexpr (std::same_as<T, U>)
+        return std::visit(
+            [this](const auto& k)
+            {
+                return visit(
+                    [&k, this](const auto& ar)
                     {
-                        if (val == k)
+                        for (size_type i = m_index_begin; i != m_index_end; ++i)
                         {
-                            return i;
+                            const auto& val = ar[i];
+                            using T = std::decay_t<decltype(k)>;
+                            using U = std::decay_t<decltype(val)>;
+                            if constexpr (std::same_as<T, U>)
+                            {
+                                if (val == k)
+                                {
+                                    return i;
+                                }
+                            }
                         }
-                    }
-                }
-                return m_index_end;
-            }, *p_flat_keys);
+                        return m_index_end;
+                    },
+                    *p_flat_keys
+                );
 #if SPARROW_GCC_11_2_WORKAROUND
-        }, static_cast<const base_variant_type&>(key));
+            },
+            static_cast<const base_variant_type&>(key)
+        );
 #else
-        }, key);
+            },
+            key
+        );
 #endif
     }
 
     auto map_value::value(size_type i) const -> const_reference
     {
-        return std::make_pair(array_element(*p_flat_keys, i + m_index_begin), array_element(*p_flat_items, i + m_index_begin));
+        return std::make_pair(
+            array_element(*p_flat_keys, i + m_index_begin),
+            array_element(*p_flat_items, i + m_index_begin)
+        );
     }
 
     bool operator==(const map_value& lhs, const map_value& rhs)
