@@ -64,8 +64,6 @@ namespace sparrow::c_data_integration
         {"struct", struct_array_from_json},
         {"time", time_array_from_json},
         {"timestamp", timestamp_array_from_json},
-        {"interval", interval_array_from_json},
-        {"runendencoded", runendencoded_array_from_json},
         {"union", union_array_from_json},
         {"utf8", string_array_from_json},
         {"utf8view", string_view_from_json},
