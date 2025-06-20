@@ -17,6 +17,7 @@ add_library(c_data_integration SHARED
     src/stringview_parser.cpp
     src/struct_parser.cpp
     src/temporal_parser.cpp
+    src/union_parser.cpp
     src/utils.cpp
     include/sparrow/c_data_integration/binary_parser.hpp
     include/sparrow/c_data_integration/bool_parser.hpp

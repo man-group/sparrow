@@ -42,6 +42,7 @@ const std::vector<std::filesystem::path> jsons_to_test = {
     json_files_path / "recursive-nested.json",
     json_files_path / "run_end_encoded.json",
     json_files_path / "custom-metadata.json",
+    json_files_path / "union.json",
     json_files_path / "decimal32.json",
     json_files_path / "decimal64.json",
 #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
