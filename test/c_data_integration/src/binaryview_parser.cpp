@@ -24,13 +24,11 @@
 namespace sparrow::c_data_integration
 {
     template <typename T>
-    sparrow::array binaryview_array_from_json_impl(
-        const nlohmann::json& array,
-        const nlohmann::json& schema,
-        const nlohmann::json&,
-        bool is_binary
-    )
+    sparrow::array
+    binaryview_array_from_json_impl(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
     {
+        using data_type = std::conditional_t<std::same_as<T, string_view_array>, std::string, std::vector<std::byte>>;
+        constexpr bool is_binary = std::same_as<T, binary_view_array>;
         const auto& variadic_data_buffers_json = array.at(VARIADIC_DATA_BUFFERS);
         const std::vector<std::string> variadic_data_buffers_str = variadic_data_buffers_json
                                                                        .get<std::vector<std::string>>();
@@ -38,27 +36,21 @@ namespace sparrow::c_data_integration
             variadic_data_buffers_str
         );
         const auto& views_json = array.at(VIEWS);
-        std::vector<std::vector<std::byte>> views_data;
+        std::vector<data_type> views_data;
         for (const auto& view_json : views_json)
         {
             const bool inlined = view_json.contains(INLINED);
             if (inlined)
             {
-                std::string inlined_data = view_json.at(DATA).get<std::string>();
-                std::vector<std::byte> inlined_data_bytes;
-                if (!is_binary)
+                const std::string inlined_data = view_json.at(DATA).get<std::string>();
+                if constexpr (!is_binary)
                 {
-                    inlined_data_bytes.reserve(inlined_data.size());
-                    for (char c : inlined_data)
-                    {
-                        inlined_data_bytes.push_back(static_cast<std::byte>(c));
-                    }
+                    views_data.push_back(inlined_data);
                 }
                 else
                 {
-                    inlined_data_bytes = utils::hex_string_to_bytes(inlined_data);
+                    views_data.push_back(utils::hex_string_to_bytes(inlined_data));
                 }
-                views_data.push_back(std::move(inlined_data_bytes));
             }
             else
             {
@@ -70,13 +62,24 @@ namespace sparrow::c_data_integration
                     prefix_hex_json.get<std::string>()
                 );
                 const std::vector<std::byte>& buffer = variadic_data_buffers_bytes.at(buffer_index);
+
                 std::vector<std::byte> view_data = prefix_bytes;
                 view_data.insert(
                     view_data.end(),
                     buffer.begin() + offset,
                     buffer.begin() + offset + size - static_cast<int>(prefix_bytes.size())
                 );
-                views_data.push_back(std::move(view_data));
+
+                if constexpr (!is_binary)
+                {
+                    // Convert to string if the type is string_view_array
+                    std::string view_data_str(reinterpret_cast<const char*>(view_data.data()), view_data.size());
+                    views_data.push_back(std::move(view_data_str));
+                }
+                else
+                {
+                    views_data.push_back(std::move(view_data));
+                }
             }
         }
 
@@ -99,13 +102,13 @@ namespace sparrow::c_data_integration
     binaryview_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
         utils::check_type(schema, "binaryview");
-        return binaryview_array_from_json_impl<binary_view_array>(array, schema, root, true);
+        return binaryview_array_from_json_impl<binary_view_array>(array, schema, root);
     }
 
     sparrow::array
     utf8view_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
         utils::check_type(schema, "utf8view");
-        return binaryview_array_from_json_impl<string_view_array>(array, schema, root, false);
+        return binaryview_array_from_json_impl<string_view_array>(array, schema, root);
     }
 }
