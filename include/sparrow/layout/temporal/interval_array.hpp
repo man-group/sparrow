@@ -26,9 +26,8 @@ namespace sparrow
 {
     using interval_types_t = mpl::typelist<chrono::months, days_time_interval, month_day_nanoseconds_interval>;
 
-    static constexpr interval_types_t interval_types;
     template <typename T>
-    concept interval_type = mpl::contains<T>(interval_types);
+    concept interval_type = mpl::contains<interval_types_t, T>();
 
     /**
      * Array of interval values.

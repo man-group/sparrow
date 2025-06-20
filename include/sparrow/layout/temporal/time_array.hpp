@@ -24,9 +24,8 @@ namespace sparrow
     using time_types_t = mpl::
         typelist<chrono::time_seconds, chrono::time_milliseconds, chrono::time_microseconds, chrono::time_nanoseconds>;
 
-    static constexpr time_types_t time_types;
     template <typename T>
-    concept time_type = mpl::contains<T>(time_types);
+    concept time_type = mpl::contains<time_types_t, T>();
 
     /**
      * Array of time values.

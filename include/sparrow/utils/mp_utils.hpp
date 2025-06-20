@@ -280,13 +280,6 @@ namespace sparrow::mpl
         return all_of(list, as_predicate<Predicate>());
     }
 
-    /// @returns `true` if the provided type list contains `V`
-    template <class V, any_typelist L>
-    [[nodiscard]] consteval bool contains(L list)
-    {
-        return any_of(list, predicate::same_as<V>{});
-    }
-
     /// @returns The index position in the first type in the provided type list `L` that matches the provided
     /// predicate,
     ///          or the size of the list if the matching type was not found.
@@ -333,6 +326,38 @@ namespace sparrow::mpl
 
     namespace impl
     {
+        template <class L, class T>
+        struct contains_impl;
+
+        template <template <class...> class L, class T>
+        struct contains_impl<L<>, T> : std::false_type
+        {
+        };
+
+        template <template <class...> class L, class T, class... U>
+        struct contains_impl<L<T, U...>, T> : std::true_type
+        {
+        };
+
+        template <template <class...> class L, class V, class... U, class T>
+        struct contains_impl<L<V, U...>, T> : contains_impl<L<U...>, T>
+        {
+        };
+    }
+
+    /// @returns `true` if the provided type list contains `V`
+    template <any_typelist L, class V>
+    [[nodiscard]] consteval bool contains()
+    {
+        // Implementation not based on mpl::any_of because this
+        // would require the instantiation of L (and therefore all the
+        // contained types), which is incompatible with the forward-declared
+        // types used in array_traits
+        return impl::contains_impl<L, V>::value;
+    }
+
+    namespace impl
+    {
         template <template <class...> class F, class... L>
         struct transform_impl
         {
@@ -363,25 +388,6 @@ namespace sparrow::mpl
 
     namespace impl
     {
-        // TODO: merge this implementation and the consteval contains function
-        template <class L, class T>
-        struct contains_impl;
-
-        template <template <class...> class L, class T>
-        struct contains_impl<L<>, T> : std::false_type
-        {
-        };
-
-        template <template <class...> class L, class T, class... U>
-        struct contains_impl<L<T, U...>, T> : std::true_type
-        {
-        };
-
-        template <template <class...> class L, class V, class... U, class T>
-        struct contains_impl<L<V, U...>, T> : contains_impl<L<U...>, T>
-        {
-        };
-
         template <class S1, class S2>
         struct merge_set_impl;
 
@@ -394,7 +400,7 @@ namespace sparrow::mpl
         template <template <class...> class L, class... T, class U, class... V>
         struct merge_set_impl<L<T...>, L<U, V...>>
         {
-            using first_arg = std::conditional_t<contains_impl<L<T...>, U>::value, L<T...>, L<T..., U>>;
+            using first_arg = std::conditional_t<contains<L<T...>, U>(), L<T...>, L<T..., U>>;
             using type = typename merge_set_impl<first_arg, L<V...>>::type;
         };
     }

@@ -317,7 +317,7 @@ namespace sparrow
             using raw_value_type = std::ranges::range_value_t<T>;
 
             using type = std::conditional_t<
-                mpl::contains<large_list_flag_t>(OPTION_FLAGS{}),
+                mpl::contains<OPTION_FLAGS, large_list_flag_t>(),
                 sparrow::big_list_array,
                 sparrow::list_array>;
 
