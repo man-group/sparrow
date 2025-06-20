@@ -236,7 +236,7 @@ namespace sparrow::mpl
     //////////////////////////////////////////////////
     //// Algorithms //////////////////////////////////
 
-    /// Checks that at least one type in the provided list of is making the provide predicate return `true`.
+    /// Checks that at least one type in the provided list of is making the provided predicate return `true`.
     /// @returns 'true' if for at least one type T in the type list L,, `Predicate{}(typelist<T>) == true`.
     ///          `false` otherwise or if the list is empty.
     template <class Predicate, template <class...> class L, class... T>
@@ -246,7 +246,7 @@ namespace sparrow::mpl
         return (evaluate<T>(predicate) || ... || false);
     }
 
-    /// Checks that at least one type in the provided list of is making the provide predicate return `true`.
+    /// Checks that at least one type in the provided list of is making the provided predicate return `true`.
     /// @returns 'true' if for at least one type T in the type list L, `Predicate<T>::value == true`.
     ///          `false` otherwise or if the list is empty.
     template <template <class> class Predicate, template <class...> class L, class... T>
@@ -324,7 +324,7 @@ namespace sparrow::mpl
     }
 
     /// @returns The index position in the type `TypeToFind` in the provided type list `L`,
-    ///          or the size of the list if the matching type was not found.
+    ///           or the size of the list if the matching type was not found.
     template <class TypeToFind, any_typelist L>
     [[nodiscard]] consteval std::size_t find(L list)
     {
@@ -360,6 +360,68 @@ namespace sparrow::mpl
     ///         typelist<std::is_same<int, int>, std::is_same<float, int>>
     template <template <class> class F, class... L>
     using transform = typename impl::transform_impl<F, L...>::type;
+
+    namespace impl
+    {
+        // TODO: merge this implementation and the consteval contains function
+        template <class L, class T>
+        struct contains_impl;
+
+        template <template <class...> class L, class T>
+        struct contains_impl<L<>, T> : std::false_type
+        {
+        };
+
+        template <template <class...> class L, class T, class... U>
+        struct contains_impl<L<T, U...>, T> : std::true_type
+        {
+        };
+
+        template <template <class...> class L, class V, class... U, class T>
+        struct contains_impl<L<V, U...>, T> : contains_impl<L<U...>, T>
+        {
+        };
+        
+        template <class S1, class S2>
+        struct merge_set_impl;
+
+        template <template <class...> class L, class... T>
+        struct merge_set_impl<L<T...>, L<>>
+        {
+            using type = L<T...>;
+        };
+
+        template <template <class...> class L, class... T, class U, class... V>
+        struct merge_set_impl<L<T...>, L<U, V...>>
+        {
+            using first_arg = std::conditional_t<contains_impl<L<T...>, U>::value, L<T...>, L<T..., U>>;
+            using type = typename merge_set_impl<first_arg, L<V...>>::type;
+        };
+    }
+
+    /// Generates the union of two typelists L1 and L2 and removes all dupolicated types
+    /// Example:
+    ///    merge_set<typelist<int, float>, typelist<float, double> gives typelist<int, float, double>
+    template <class L1, class L2>
+    using merge_set = typename impl::merge_set_impl<L1, L2>::type;
+
+    namespace impl
+    {
+        template <class L>
+        struct unique_impl;
+
+        template <template <class...> class L, class... T>
+        struct unique_impl<L<T...>>
+        {
+            using type = merge_set<L<>, L<T...>>;
+        };
+    }
+
+    /// Removes all duplicated types in the given typelist
+    /// Example:
+    ///     unique<typelist<int, float, double, float, int> gives typelist<int, float, double>
+    template <class L>
+    using unique = typename impl::unique_impl<L>::type;
 
     //////////////////////////////////////////////////
     //// Miscellaneous ///////////////////////////////

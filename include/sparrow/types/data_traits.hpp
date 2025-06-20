@@ -294,7 +294,7 @@ namespace sparrow
             mpl::rename<mpl::transform<detail::array_value_type_t, all_base_types_t>, nullable_variant>;
         using const_reference =  // nullable_variant<nullable<null_type>, nullable<const bool&>,
                                  // nullable<const uint8_t&>, ...>
-            mpl::rename<mpl::transform<detail::array_const_reference_t, all_base_types_t>, nullable_variant>;
+            mpl::rename<mpl::unique<mpl::transform<detail::array_const_reference_t, all_base_types_t>>, nullable_variant>;
     };
 
     namespace predicate
