@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <compare>
 #include <concepts>
 #include <exception>
@@ -742,7 +743,15 @@ namespace sparrow
     template <class T, class B, class U>
     constexpr bool operator==(const nullable<T, B>& lhs, const U& rhs) noexcept
     {
-        return lhs && (lhs.get() == rhs);
+        // if T or U is std::span, do a deep comparison
+        if constexpr (mpl::is_span_v<T> || mpl::is_span_v<U>)
+        {
+            return lhs && std::ranges::equal(lhs.get(), rhs);
+        }
+        else
+        {
+            return lhs && (lhs.get() == rhs);
+        }
     }
 
     template <class T, class B, class U>
