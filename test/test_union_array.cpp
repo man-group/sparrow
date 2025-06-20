@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <optional>
+
 #include "sparrow/array.hpp"
 #include "sparrow/layout/dispatch.hpp"
 #include "sparrow/layout/primitive_layout/primitive_array.hpp"
@@ -133,7 +135,11 @@ namespace sparrow
                 std::vector<std::size_t> type_mapping{2, 3};
 
                 // the array
-                sparse_union_array arr(std::move(children), std::move(type_ids), std::move(type_mapping));
+                sparse_union_array arr(
+                    std::move(children),
+                    std::move(type_ids),
+                    std::make_optional(std::move(type_mapping))
+                );
 
                 // check the size
                 REQUIRE_EQ(arr.size(), 3);
@@ -375,7 +381,7 @@ namespace sparrow
                     std::move(children),
                     std::move(type_ids),
                     std::move(offsets),
-                    std::move(child_index_to_type_id)
+                    std::make_optional(std::move(child_index_to_type_id))
                 );
 
                 // check the size

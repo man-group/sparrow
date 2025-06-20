@@ -15,6 +15,7 @@
 #pragma once
 
 #include <array>
+#include <optional>
 
 #include "sparrow/array_api.hpp"
 #include "sparrow/array_factory.hpp"
@@ -135,11 +136,12 @@ namespace sparrow
         static type_id_map parse_type_id_map(std::string_view format_string);
 
         template <std::ranges::input_range R>
-        static type_id_map type_id_map_from_child_to_type_id(R&& child_index_to_type_id);
+        static type_id_map type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id);
 
         template <std::ranges::input_range R>
             requires(std::convertible_to<std::ranges::range_value_t<R>, std::uint8_t>)
-        static std::string make_format_string(bool dense, std::size_t n, R&& child_index_to_type_id);
+        static std::string
+        make_format_string(bool dense, std::size_t n, const std::optional<R>& child_index_to_type_id);
 
         using children_type = std::vector<cloning_ptr<array_wrapper>>;
         children_type make_children(arrow_proxy& proxy);
@@ -207,7 +209,7 @@ namespace sparrow
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
             offset_buffer_type&& offsets,
-            TYPE_MAPPING&& type_mapping = TYPE_MAPPING{},
+            std::optional<TYPE_MAPPING>&& type_mapping = std::nullopt,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -222,7 +224,7 @@ namespace sparrow
             std::vector<array>&& children,
             TYPE_ID_BUFFER_RANGE&& element_type,
             OFFSET_BUFFER_RANGE&& offsets,
-            TYPE_MAPPING&& type_mapping = TYPE_MAPPING{},
+            std::optional<TYPE_MAPPING>&& type_mapping = std::nullopt,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         )
@@ -234,7 +236,7 @@ namespace sparrow
                 std::forward<std::vector<array>>(children),
                 std::move(element_type_buffer),
                 std::move(offsets_buffer),
-                std::forward<TYPE_MAPPING>(type_mapping),
+                std::move(type_mapping),
                 std::forward<std::optional<std::string_view>>(name),
                 std::forward<std::optional<METADATA_RANGE>>(metadata)
             );
@@ -313,7 +315,7 @@ namespace sparrow
         static auto create_proxy(
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
-            TYPE_MAPPING&& type_mapping = TYPE_MAPPING{},
+            std::optional<TYPE_MAPPING>&& type_mapping = std::nullopt,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -362,23 +364,30 @@ namespace sparrow
 
     template <class DERIVED>
     template <std::ranges::input_range R>
-    auto union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(R&& child_index_to_type_id)
-        -> type_id_map
+    auto
+    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id
+    ) -> type_id_map
     {
-        const std::size_t n = std::ranges::size(child_index_to_type_id);
         std::array<std::uint8_t, 256> ret;
-        if (n == 0)
+        if (!child_index_to_type_id.has_value())
         {
-            for (std::size_t i = 0; i < 256; ++i)
+            constexpr std::array<std::uint8_t, 256> default_mapping = []
             {
-                ret[i] = static_cast<std::uint8_t>(i);
-            }
+                std::array<std::uint8_t, 256> arr{};
+                for (std::size_t i = 0; i < 256; ++i)
+                {
+                    arr[i] = static_cast<std::uint8_t>(i);
+                }
+                return arr;
+            }();
+            return default_mapping;
         }
         else
         {
+            const std::size_t n = std::ranges::size(*child_index_to_type_id);
             for (std::size_t i = 0; i < n; ++i)
             {
-                ret[child_index_to_type_id[static_cast<std::uint8_t>(i)]] = static_cast<std::uint8_t>(i);
+                ret[(*child_index_to_type_id)[static_cast<std::uint8_t>(i)]] = static_cast<std::uint8_t>(i);
             }
         }
         return ret;
@@ -387,9 +396,10 @@ namespace sparrow
     template <class DERIVED>
     template <std::ranges::input_range R>
         requires(std::convertible_to<std::ranges::range_value_t<R>, std::uint8_t>)
-    std::string union_array_crtp_base<DERIVED>::make_format_string(bool dense, const std::size_t n, R&& range)
+    std::string
+    union_array_crtp_base<DERIVED>::make_format_string(bool dense, const std::size_t n, const std::optional<R>& range)
     {
-        const auto range_size = std::ranges::size(range);
+        const auto range_size = range.has_value() ? std::ranges::size(*range) : 0;
         if (range_size == n || range_size == 0)
         {
             std::string ret = dense ? "+ud:" : "+us:";
@@ -402,7 +412,7 @@ namespace sparrow
             }
             else
             {
-                for (const auto& v : range)
+                for (const auto& v : *range)
                 {
                     ret += std::to_string(v) + ",";
                 }
@@ -594,7 +604,7 @@ namespace sparrow
         std::vector<array>&& children,
         type_id_buffer_type&& element_type,
         offset_buffer_type&& offsets,
-        TYPE_MAPPING&& child_index_to_type_id,
+        std::optional<TYPE_MAPPING>&& child_index_to_type_id,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
@@ -605,11 +615,7 @@ namespace sparrow
         // inverse type mapping (type_id -> child_index)
         auto type_id_to_child_index = type_id_map_from_child_to_type_id(child_index_to_type_id);
 
-        std::string format = make_format_string(
-            true /*dense union*/,
-            n_children,
-            std::forward<TYPE_MAPPING>(child_index_to_type_id)
-        );
+        std::string format = make_format_string(true /*dense union*/, n_children, child_index_to_type_id);
 
         return create_proxy_impl(
             std::move(children),
@@ -702,22 +708,21 @@ namespace sparrow
     auto sparse_union_array::create_proxy(
         std::vector<array>&& children,
         type_id_buffer_type&& element_type,
-        TYPE_MAPPING&& child_index_to_type_id,
+        std::optional<TYPE_MAPPING>&& child_index_to_type_id,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
         const auto n_children = children.size();
-        SPARROW_ASSERT_TRUE(child_index_to_type_id.size() == n_children);
+        if (child_index_to_type_id.has_value())
+        {
+            SPARROW_ASSERT_TRUE((*child_index_to_type_id).size() == n_children);
+        }
 
         // inverse type mapping (type_id -> child_index)
         auto type_id_to_child_index = type_id_map_from_child_to_type_id(child_index_to_type_id);
 
-        std::string format = make_format_string(
-            false /*is dense union*/,
-            n_children,
-            std::forward<TYPE_MAPPING>(child_index_to_type_id)
-        );
+        std::string format = make_format_string(false /*is dense union*/, n_children, child_index_to_type_id);
 
         return create_proxy_impl(
             std::move(children),

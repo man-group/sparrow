@@ -39,7 +39,7 @@ namespace sparrow::c_data_integration
         return sparrow::array{sparrow::sparse_union_array{
             std::move(children),
             std::move(type_ids_buffer),
-            std::move(type_mapping),
+            std::make_optional(std::move(type_mapping)),
             name,
             std::move(metadata)
         }};
@@ -66,7 +66,7 @@ namespace sparrow::c_data_integration
             std::move(children),
             std::move(type_ids),
             std::move(offsets),
-            std::move(child_index_to_type_id),
+            std::make_optional(std::move(child_index_to_type_id)),
             name,
             std::move(metadata)
         }};
