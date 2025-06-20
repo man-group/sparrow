@@ -171,6 +171,10 @@ namespace sparrow
     template <class D>
     bool operator==(const union_array_crtp_base<D>& lhs, const union_array_crtp_base<D>& rhs);
 
+    /**
+     * A dense union array implementation.
+     * Related Apache Arrow specification: https://arrow.apache.org/docs/dev/format/Columnar.html#dense-union
+     */
     class dense_union_array : public union_array_crtp_base<dense_union_array>
     {
     public:
@@ -282,6 +286,10 @@ namespace sparrow
         friend class union_array_crtp_base<dense_union_array>;
     };
 
+    /**
+     * A sparse union array implementation.
+     * Related Apache Arrow specification: https://arrow.apache.org/docs/dev/format/Columnar.html#sparse-union
+     */
     class sparse_union_array : public union_array_crtp_base<sparse_union_array>
     {
     public:

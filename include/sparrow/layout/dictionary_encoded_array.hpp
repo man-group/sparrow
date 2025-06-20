@@ -95,6 +95,14 @@ namespace sparrow
     template <class T>
     constexpr bool is_dictionary_encoded_array_v = detail::is_dictionary_encoded_array<T>::get();
 
+    /**
+     * Dictionary encoded array class.
+     * Dictionary encoding is a data representation technique to represent values by integers referencing a
+     * dictionary usually consisting of unique values. It can be effective when you have data with many
+     * repeated values.
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#dictionary-encoded-layout
+     */
     template <std::integral IT>
     class dictionary_encoded_array
     {
@@ -212,10 +220,7 @@ namespace sparrow
             std::ranges::input_range KEY_RANGE,
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(
-                !std::same_as<KEY_RANGE, keys_buffer_type>
-                and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>
-            )
+            requires(!std::same_as<KEY_RANGE, keys_buffer_type> and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>)
         [[nodiscard]] static arrow_proxy create_proxy(
             KEY_RANGE&& keys,
             array&& values,

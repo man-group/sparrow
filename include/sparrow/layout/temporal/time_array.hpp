@@ -43,9 +43,25 @@ namespace sparrow
     template <time_type T>
     using time_array = primitive_array_impl<T>;
 
+    /**
+     * A time array for \c std::chrono::time_seconds values.
+     * This is useful for representing times with second precision.
+     */
     using time_seconds_array = time_array<chrono::time_seconds>;
+    /**
+     * A time array for \c std::chrono::time_milliseconds values.
+     * This is useful for representing times with millisecond precision.
+     */
     using time_milliseconds_array = time_array<chrono::time_milliseconds>;
+    /**
+     * A time array for \c std::chrono::time_microseconds values.
+     * This is useful for representing times with microsecond precision.
+     */
     using time_microseconds_array = time_array<chrono::time_microseconds>;
+    /**
+     * A time array for \c std::chrono::time_nanoseconds values.
+     * This is useful for representing times with nanosecond precision.
+     */
     using time_nanoseconds_array = time_array<chrono::time_nanoseconds>;
 
     template <class T>

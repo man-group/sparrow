@@ -83,9 +83,48 @@ namespace sparrow
 
     using binary_traits = arrow_traits<std::vector<byte_t>>;
 
+    /**
+     * A variable-size string array implementation.
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-layout
+     * Use this class when you want to store strings with cumulated lengths up to 2^31-1 bytes.
+     * This is useful for datasets where the total size of strings does not exceed 2^31-1 bytes.
+     * Use big_string_array for larger datasets.
+     * @see big_string_array
+     */
     using string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int32_t>;
+
+    /**
+     * A variable-size string array implementation with 64-bit offsets.
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-layout
+     * Use this class when you want to store strings with cumulated lengths up to 2^63-1 bytes.
+     * This is useful for large datasets where the total size of strings may exceed 2^31-1 bytes.
+     * Use string_array for smaller datasets.
+     * @see string_array
+     */
     using big_string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int64_t>;
+
+    /**
+     * A variable-size binary array implementation.
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-layout
+     * Use this class when you want to store binary data with cumulated lengths up to 2^31-1 bytes.
+     * This is useful for datasets where the total size of binary data does not exceed 2^31-1 bytes.
+     * Use \c big_binary_array for larger datasets.
+     * @see big_binary_array
+     */
     using binary_array = variable_size_binary_array_impl<binary_traits::value_type, binary_traits::const_reference, std::int32_t>;
+
+    /**
+     * A variable-size binary array implementation with 64-bit offsets.
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-layout
+     * Use this class when you want to store binary data with cumulated lengths up to 2^63-1 bytes.
+     * This is useful for large datasets where the total size of binary data may exceed 2^31-1 bytes.
+     * Use \c binary_array for smaller datasets.
+     * @see binary_array
+     */
     using big_binary_array = variable_size_binary_array_impl<
         binary_traits::value_type,
         binary_traits::const_reference,
@@ -417,9 +456,8 @@ namespace sparrow
     auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes)
         -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
-            std::forward<SIZES_RANGE>(sizes)
-        );
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
+        ));
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
