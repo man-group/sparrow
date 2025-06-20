@@ -34,11 +34,30 @@
 
 namespace sparrow
 {
+    template <typename T>
+    concept variable_size_binary_view_impl_types = std::is_same_v<T, std::string_view>
+                                                   || std::is_same_v<T, std::span<const std::byte>>;
 
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     class variable_size_binary_view_array_impl;
+
+    /**
+     * A variable-size string view layout implementation.
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-view-layout
+     * @see binary_view_array
+     * @see variable_size_binary_view_array_impl
+     */
     using string_view_array = variable_size_binary_view_array_impl<std::string_view>;
+
+    /**
+     * A variable-size binary view layout implementation.
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-view-layout
+     * @see string_view_array
+     * @see variable_size_binary_view_array_impl
+     */
     using binary_view_array = variable_size_binary_view_array_impl<std::span<const std::byte>>;
 
     namespace detail
@@ -65,7 +84,7 @@ namespace sparrow
         };
     }
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     struct array_inner_types<variable_size_binary_view_array_impl<T>> : array_inner_types_base
     {
         using array_type = variable_size_binary_view_array_impl<T>;
@@ -79,12 +98,12 @@ namespace sparrow
         using iterator_tag = std::random_access_iterator_tag;
     };
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     struct is_variable_size_binary_view_array_impl : std::false_type
     {
     };
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     struct is_variable_size_binary_view_array_impl<variable_size_binary_view_array_impl<T>> : std::true_type
     {
     };
@@ -92,10 +111,10 @@ namespace sparrow
     /**
      * Checks whether T is a variable_size_binary_view_array_impl type.
      */
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     constexpr bool is_variable_size_binary_view_array = is_variable_size_binary_view_array_impl<T>::value;
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     class variable_size_binary_view_array_impl final
         : public mutable_array_bitmap_base<variable_size_binary_view_array_impl<T>>
     {
@@ -202,13 +221,13 @@ namespace sparrow
         friend base_type::base_type;
     };
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     variable_size_binary_view_array_impl<T>::variable_size_binary_view_array_impl(arrow_proxy proxy)
         : base_type(std::move(proxy))
     {
     }
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     template <std::ranges::input_range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
     auto variable_size_binary_view_array_impl<T>::create_buffers(R&& range) -> buffers
@@ -303,7 +322,7 @@ namespace sparrow
 #endif
     }
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     template <std::ranges::input_range R, validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
     arrow_proxy variable_size_binary_view_array_impl<T>::create_proxy(
@@ -358,7 +377,7 @@ namespace sparrow
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     template <std::ranges::input_range NULLABLE_RANGE, input_metadata_container METADATA_RANGE>
         requires std::convertible_to<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T>>
     [[nodiscard]] arrow_proxy variable_size_binary_view_array_impl<T>::create_proxy(
@@ -391,7 +410,7 @@ namespace sparrow
         );
     }
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
     [[nodiscard]] arrow_proxy variable_size_binary_view_array_impl<T>::create_proxy(
@@ -447,13 +466,13 @@ namespace sparrow
         }
     }
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     auto variable_size_binary_view_array_impl<T>::value(size_type i) -> inner_reference
     {
         return static_cast<const self_type*>(this)->value(i);
     }
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     auto variable_size_binary_view_array_impl<T>::value(size_type i) const -> inner_const_reference
     {
 #ifdef __GNUC__
@@ -496,25 +515,25 @@ namespace sparrow
 #endif
     }
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     auto variable_size_binary_view_array_impl<T>::value_begin() -> value_iterator
     {
         return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(), 0);
     }
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     auto variable_size_binary_view_array_impl<T>::value_end() -> value_iterator
     {
         return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), this->size());
     }
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     auto variable_size_binary_view_array_impl<T>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), 0);
     }
 
-    template <class T>
+    template <variable_size_binary_view_impl_types T>
     auto variable_size_binary_view_array_impl<T>::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(

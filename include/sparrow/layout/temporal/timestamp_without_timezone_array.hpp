@@ -31,25 +31,34 @@ namespace sparrow
     concept zoned_time_without_timezone_type = mpl::contains<T>(zoned_time_without_timezone_types);
 
     /**
-     * Array of std::chrono::duration values.
-     *
-     * As the other arrays in sparrow, \c duration_array<T> provides an API as if it was holding
-     * \c nullable<T> values instead of \c T values.
-     *
-     * Internally, the array contains a validity bitmap and a contiguous memory buffer
-     * holding the values.
-     *
-     * @tparam T the type of the values in the array.
-     * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
+     * Array of timestamps without timezone.
      */
     template <zoned_time_without_timezone_type T>
     using timestamp_without_timezone_array = primitive_array_impl<T>;
 
+    /**
+     * A timestamp without timezone array for \c zoned_time_without_timezone_seconds values.
+     * This is useful for representing timestamps with second precision.
+     */
     using timestamp_without_timezone_seconds_array = timestamp_without_timezone_array<zoned_time_without_timezone_seconds>;
+
+    /**
+     * A timestamp without timezone array for \c zoned_time_without_timezone_milliseconds values.
+     * This is useful for representing timestamps with millisecond precision.
+     */
     using timestamp_without_timezone_milliseconds_array = timestamp_without_timezone_array<
         zoned_time_without_timezone_milliseconds>;
+
+    /**
+     * A timestamp without timezone array for \c zoned_time_without_timezone_microseconds values.
+     * This is useful for representing timestamps with microsecond precision.
+     */
     using timestamp_without_timezone_microseconds_array = timestamp_without_timezone_array<
         zoned_time_without_timezone_microseconds>;
+    /**
+     * A timestamp without timezone array for \c zoned_time_without_timezone_nanoseconds values.
+     * This is useful for representing timestamps with nanosecond precision.
+     */
     using timestamp_without_timezone_nanoseconds_array = timestamp_without_timezone_array<
         zoned_time_without_timezone_nanoseconds>;
 

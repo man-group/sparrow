@@ -71,6 +71,12 @@ namespace sparrow
     template <class T>
     constexpr bool is_null_array_v = std::same_as<T, null_array>;
 
+    /**
+     * A null array implementation.
+     * Asimplified memory-efficient layout for the Null data type where all values are null. In this case no
+     * memory buffers are allocated. Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#null-layout
+     */
     class null_array
     {
     public:

@@ -4,7 +4,24 @@ Development build                             {#dev_build}
 Here we describe how to build the project for development purposes on **Linux** or **macOS**.
 For **Windows**, the instructions are similar.
 
-First we create a conda environment with all required development dependencies:
+List of CMake options:
+- `ACTIVATE_LINTER`: Create targets to run clang-format (default: OFF)
+- `ACTIVATE_LINTER_DURING_COMPILATION`: Run linter during the compilation (default: OFF), 
+  requires `ACTIVATE_LINTER` to be ON
+- `BUILD_DOCS`: Build the documentation (default: OFF)
+- `BUILD_EXAMPLES`: Build the examples (default: OFF)
+- `BUILD_TESTS`: Build the tests (default: OFF)
+- `ENABLE_COVERAGE`: Enable coverage reporting (default: OFF)
+- `ENABLE_INTEGRATION_TEST`: Enable integration tests (default: OFF)
+- `SPARROW_BUILD_SHARED`: "Build sparrow as a shared library (default: ON)
+- `USE_DATE_POLYFILL`: Use date polyfill implementation (default: OFF)
+- `USE_LARGE_INT_PLACEHOLDERS`: Use types without api for big integers 'ON' by default on 32 bit systems and MSVC compilers (default: ON on 32 bit systems and MSVC, OFF otherwise)
+- `USE_SANITIZER`: Enable sanitizer(s). Options are: address;leak;memory;thread;undefined (default: )
+
+Building with mamba/micromamba
+------------------------------
+
+First we create a conda environment with all required development dependencies: 
 
 ```bash
 mamba env create -f environment-dev.yml
@@ -24,9 +41,6 @@ cd build
 cmake .. \
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
-    -DBUILD_EXAMPLES=ON \
-    -DBUILD_TESTS=ON \
-    -BUILD_DOCS=ON \
     ..
 ```
 
@@ -55,7 +69,6 @@ To run all examples toat once you can use the `run_examples` target:
 ```bash
 make run_examples
 ```
-
 
 Building the documentation
 --------------------------

@@ -95,6 +95,14 @@ namespace sparrow
     template <class T>
     constexpr bool is_dictionary_encoded_array_v = detail::is_dictionary_encoded_array<T>::get();
 
+    /**
+     * Dictionary encoded array class.
+     * Dictionary encoding is a data representation technique to represent values by integers referencing a
+     * dictionary usually consisting of unique values. It can be effective when you have data with many
+     * repeated values.
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#dictionary-encoded-layout
+     */
     template <std::integral IT>
     class dictionary_encoded_array
     {

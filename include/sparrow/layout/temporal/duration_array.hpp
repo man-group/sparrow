@@ -45,9 +45,25 @@ namespace sparrow
     template <duration_type T>
     using duration_array = primitive_array_impl<T>;
 
+    /**
+     * A duration array for \c std::chrono::seconds values.
+     * This is useful for representing durations in seconds.
+     */
     using duration_seconds_array = duration_array<std::chrono::seconds>;
+    /**
+     * A duration array for \c std::chrono::milliseconds values.
+     * This is useful for representing durations in milliseconds.
+     */
     using duration_milliseconds_array = duration_array<std::chrono::milliseconds>;
+    /**
+     * A duration array for \c std::chrono::microseconds values.
+     * This is useful for representing durations in microseconds.
+     */
     using duration_microseconds_array = duration_array<std::chrono::microseconds>;
+    /**
+     * A duration array for \c std::chrono::nanoseconds values.
+     * This is useful for representing durations in nanoseconds.
+     */
     using duration_nanoseconds_array = duration_array<std::chrono::nanoseconds>;
 
     template <class T>

@@ -10,6 +10,26 @@ A package for the mamba package manager is available on conda-forge:
 mamba install sparrow -c conda-forge
 ```
 
+Using the VCPKG package
+-----------------------
+A package for VCPKG is available:
+
+https://vcpkg.io/en/package/arcticdb-sparrow
+
+```bash
+vcpkg install sparrow
+```
+
+Using the Conan package
+-----------------------
+A package for Conan is available:
+
+https://conan.io/center/recipes/sparrow
+
+```bash
+conan install sparrow/X.X.X
+```
+
 Using the Fedora package
 ------------------------
 

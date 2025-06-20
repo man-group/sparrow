@@ -45,8 +45,20 @@ namespace sparrow
     template <interval_type T>
     using interval_array = primitive_array_impl<T>;
 
+    /**
+     * An interval array for \c std::chrono::months values.
+     * This is useful for representing intervals in months.
+     */
     using months_interval_array = interval_array<chrono::months>;
+    /**
+     * An interval array for \c days_time_interval values.
+     * This is useful for representing intervals in days and time.
+     */
     using days_time_interval_array = interval_array<days_time_interval>;
+    /**
+     * An interval array for \c month_day_nanoseconds_interval values.
+     * This is useful for representing intervals in months, days, and nanoseconds.
+     */
     using month_day_nanoseconds_interval_array = interval_array<month_day_nanoseconds_interval>;
 
     template <class T>

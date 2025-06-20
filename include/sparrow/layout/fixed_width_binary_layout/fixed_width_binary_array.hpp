@@ -45,6 +45,11 @@ namespace sparrow
 
     using fixed_width_binary_traits = arrow_traits<std::vector<byte_t>>;
 
+    /**
+     * A fixed-width binary array implementation.
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-width-binary-layout
+     */
     using fixed_width_binary_array = fixed_width_binary_array_impl<
         fixed_width_binary_traits::value_type,
         fixed_width_binary_traits::const_reference>;

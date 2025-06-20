@@ -43,7 +43,15 @@ namespace sparrow
     template <date_type T>
     using date_array = primitive_array_impl<T>;
 
+    /**
+     * A date array for \c date_days values.
+     * This is useful for representing dates with day precision.
+     */
     using date_days_array = date_array<date_days>;
+    /**
+     * A date array for \c date_milliseconds values.
+     * This is useful for representing dates with millisecond precision.
+     */
     using date_milliseconds_array = date_array<date_milliseconds>;
 
     template <class T>
