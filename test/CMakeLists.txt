@@ -78,6 +78,7 @@ else()
         test_large_int.cpp
         test_list_array.cpp
         test_list_value.cpp
+        test_map_array.cpp
         test_memory.cpp
         test_metadata.cpp
         test_mpl.cpp

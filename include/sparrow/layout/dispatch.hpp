@@ -21,6 +21,7 @@
 #include "sparrow/layout/dictionary_encoded_array.hpp"
 #include "sparrow/layout/fixed_width_binary_array.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
+#include "sparrow/layout/map_layout/map_array.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/layout/null_array.hpp"
 #include "sparrow/layout/primitive_layout/primitive_array.hpp"
@@ -122,6 +123,8 @@ namespace sparrow
                     return func(unwrap_array<fixed_sized_list_array>(ar));
                 case data_type::STRUCT:
                     return func(unwrap_array<struct_array>(ar));
+                case data_type::MAP:
+                    return func(unwrap_array<map_array>(ar));
                 case data_type::DENSE_UNION:
                     return func(unwrap_array<dense_union_array>(ar));
                 case data_type::SPARSE_UNION:

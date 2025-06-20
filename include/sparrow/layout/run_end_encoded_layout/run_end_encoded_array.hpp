@@ -53,6 +53,8 @@ namespace sparrow
         using self_type = run_end_encoded_array;
         using size_type = std::size_t;
         using inner_value_type = array_traits::inner_value_type;
+        using value_type = array_traits::value_type;
+        using const_reference = array_traits::const_reference;
         using iterator = run_encoded_array_iterator<false>;
         using const_iterator = run_encoded_array_iterator<true>;
 

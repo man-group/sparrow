@@ -33,6 +33,7 @@ namespace sparrow
         using self_type = functor_index_iterator<FUNCTOR>;
         using difference_type = std::ptrdiff_t;
         using size_type = std::size_t;
+        using functor_type = FUNCTOR;
 
         constexpr functor_index_iterator() = default;
 
