@@ -49,7 +49,6 @@ namespace sparrow::c_data_integration
     {
         utils::check_type(schema, "largelistview");
         const std::string name = schema.at("name").get<std::string>();
-        const auto children_json = utils::get_children(array, schema);
         auto validity = utils::get_validity(array);
         auto offsets = utils::get_offsets(array);
         auto sizes = utils::get_sizes(array);
