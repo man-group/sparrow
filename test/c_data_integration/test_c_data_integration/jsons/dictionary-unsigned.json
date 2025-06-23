@@ -1,0 +1,323 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "f0",
+        "type": {
+          "name": "utf8"
+        },
+        "nullable": true,
+        "children": [],
+        "dictionary": {
+          "id": 0,
+          "indexType": {
+            "name": "int",
+            "isSigned": false,
+            "bitWidth": 8
+          },
+          "isOrdered": false
+        }
+      },
+      {
+        "name": "f1",
+        "type": {
+          "name": "utf8"
+        },
+        "nullable": true,
+        "children": [],
+        "dictionary": {
+          "id": 1,
+          "indexType": {
+            "name": "int",
+            "isSigned": false,
+            "bitWidth": 16
+          },
+          "isOrdered": false
+        }
+      },
+      {
+        "name": "f2",
+        "type": {
+          "name": "utf8"
+        },
+        "nullable": true,
+        "children": [],
+        "dictionary": {
+          "id": 2,
+          "indexType": {
+            "name": "int",
+            "isSigned": false,
+            "bitWidth": 32
+          },
+          "isOrdered": false
+        }
+      }
+    ]
+  },
+  "dictionaries": [
+    {
+      "id": 0,
+      "data": {
+        "count": 5,
+        "columns": [
+          {
+            "name": "DICT0",
+            "count": 5,
+            "VALIDITY": [
+              1,
+              1,
+              1,
+              0,
+              1
+            ],
+            "OFFSET": [
+              0,
+              9,
+              18,
+              28,
+              28,
+              36
+            ],
+            "DATA": [
+              "6e5bd\u77e2i",
+              "\u00c2wh\u00f4gok",
+              "2\u00c2\u00a3\u00b0pfl",
+              "",
+              "w\u00b53h6ce"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "data": {
+        "count": 5,
+        "columns": [
+          {
+            "name": "DICT1",
+            "count": 5,
+            "VALIDITY": [
+              0,
+              0,
+              0,
+              1,
+              0
+            ],
+            "OFFSET": [
+              0,
+              0,
+              0,
+              0,
+              9,
+              9
+            ],
+            "DATA": [
+              "",
+              "",
+              "",
+              "\u00a3bka6w\u00c2",
+              ""
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "data": {
+        "count": 5,
+        "columns": [
+          {
+            "name": "DICT2",
+            "count": 5,
+            "VALIDITY": [
+              0,
+              0,
+              0,
+              1,
+              1
+            ],
+            "OFFSET": [
+              0,
+              0,
+              0,
+              0,
+              10,
+              19
+            ],
+            "DATA": [
+              "",
+              "",
+              "",
+              "\u00c2ca\u00c2l\u00a3r",
+              "d\u20aceflpj"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "batches": [
+    {
+      "count": 7,
+      "columns": [
+        {
+          "name": "f0",
+          "count": 7,
+          "VALIDITY": [
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "DATA": [
+            4,
+            4,
+            0,
+            2,
+            0,
+            2,
+            3
+          ]
+        },
+        {
+          "name": "f1",
+          "count": 7,
+          "VALIDITY": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            1,
+            0
+          ],
+          "DATA": [
+            4,
+            4,
+            1,
+            3,
+            4,
+            3,
+            4
+          ]
+        },
+        {
+          "name": "f2",
+          "count": 7,
+          "VALIDITY": [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "DATA": [
+            4,
+            2,
+            4,
+            1,
+            3,
+            1,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "count": 10,
+      "columns": [
+        {
+          "name": "f0",
+          "count": 10,
+          "VALIDITY": [
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "DATA": [
+            4,
+            0,
+            4,
+            3,
+            0,
+            0,
+            3,
+            3,
+            2,
+            0
+          ]
+        },
+        {
+          "name": "f1",
+          "count": 10,
+          "VALIDITY": [
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1
+          ],
+          "DATA": [
+            4,
+            4,
+            2,
+            4,
+            4,
+            2,
+            4,
+            3,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "f2",
+          "count": 10,
+          "VALIDITY": [
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "DATA": [
+            2,
+            1,
+            0,
+            4,
+            1,
+            4,
+            3,
+            1,
+            0,
+            2
+          ]
+        }
+      ]
+    }
+  ]
+}
