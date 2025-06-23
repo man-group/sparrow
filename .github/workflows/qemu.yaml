@@ -64,7 +64,6 @@ jobs:
             musl-dev
             samurai
             tzdata
-            elfutils-dev
           shell-name: alpine.sh
 
       - name: Install libexecinfo-dev
