@@ -41,7 +41,7 @@ const std::vector<std::filesystem::path> jsons_to_test = {
     json_files_path / "dictionary.json",
     json_files_path / "dictionary-nested.json",
     json_files_path / "dictionary-unsigned.json",
-	json_files_path / "duplicate_fieldnames.json",
+    json_files_path / "duplicate_fieldnames.json",
     json_files_path / "duration.json",
     json_files_path / "interval_mdn.json",
     json_files_path / "interval.json",
