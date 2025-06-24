@@ -40,8 +40,13 @@ namespace sparrow
         using const_iterator = functor_index_iterator<functor_type>;
 
         map_value() = default;
-        map_value(const array_wrapper* flat_keys, const array_wrapper* flat_items,
-                size_type index_begin, size_type index_end, bool keys_sorted);
+        map_value(
+            const array_wrapper* flat_keys,
+            const array_wrapper* flat_items,
+            size_type index_begin,
+            size_type index_end,
+            bool keys_sorted
+        );
 
         [[nodiscard]] bool empty() const noexcept;
         [[nodiscard]] size_type size() const noexcept;

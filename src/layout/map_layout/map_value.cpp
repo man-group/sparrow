@@ -12,16 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <variant>
 #include "sparrow/layout/map_layout/map_value.hpp"
+
+#include <variant>
 
 #include "sparrow/layout/dispatch.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 
 namespace sparrow
 {
-    map_value::map_value(const array_wrapper* flat_keys, const array_wrapper* flat_items,
-        size_type index_begin, size_type index_end, bool keys_sorted)
+    map_value::map_value(
+        const array_wrapper* flat_keys,
+        const array_wrapper* flat_items,
+        size_type index_begin,
+        size_type index_end,
+        bool keys_sorted
+    )
         : p_flat_keys(flat_keys)
         , p_flat_items(flat_items)
         , m_index_begin(index_begin)
@@ -62,7 +68,10 @@ namespace sparrow
 
     auto map_value::value(size_type i) const -> const_reference
     {
-        return std::make_pair(array_element(*p_flat_keys, i + m_index_begin), array_element(*p_flat_items, i + m_index_begin));
+        return std::make_pair(
+            array_element(*p_flat_keys, i + m_index_begin),
+            array_element(*p_flat_items, i + m_index_begin)
+        );
     }
 
     bool operator==(const map_value& lhs, const map_value& rhs)
