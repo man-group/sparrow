@@ -29,7 +29,6 @@
 #include "sparrow/c_data_integration/primitive_parser.hpp"
 #include "sparrow/c_data_integration/run_end_encoded_parser.hpp"
 #include "sparrow/c_data_integration/string_parser.hpp"
-#include "sparrow/c_data_integration/stringview_parser.hpp"
 #include "sparrow/c_data_integration/struct_parser.hpp"
 #include "sparrow/c_data_integration/temporal_parser.hpp"
 #include "sparrow/c_data_integration/union_parser.hpp"
@@ -66,7 +65,7 @@ namespace sparrow::c_data_integration
         {"timestamp", timestamp_array_from_json},
         {"union", union_array_from_json},
         {"utf8", string_array_from_json},
-        {"utf8view", string_view_from_json},
+        {"utf8view", utf8view_array_from_json},
     };
 
     std::vector<sparrow::array>
