@@ -291,6 +291,8 @@ else()
         ${SPARROW_SOURCE_DIR}/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.cpp
         ${SPARROW_SOURCE_DIR}/layout/list_layout/list_value.cpp
         ${SPARROW_SOURCE_DIR}/layout/null_array.cpp
+        ${SPARROW_SOURCE_DIR}/layout/map_layout/map_array.cpp
+        ${SPARROW_SOURCE_DIR}/layout/map_layout/map_value.cpp
         ${SPARROW_SOURCE_DIR}/layout/run_end_encoded_layout/run_end_encoded_array.cpp
         ${SPARROW_SOURCE_DIR}/layout/struct_layout/struct_array.cpp
         ${SPARROW_SOURCE_DIR}/layout/struct_layout/struct_value.cpp

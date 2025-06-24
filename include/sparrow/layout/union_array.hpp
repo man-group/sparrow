@@ -85,6 +85,7 @@ namespace sparrow
         using derived_type = DERIVED;
         using inner_value_type = array_traits::inner_value_type;
         using value_type = array_traits::const_reference;
+        using const_reference = array_traits::const_reference;
         using functor_type = detail::layout_bracket_functor<derived_type, value_type>;
         using const_functor_type = detail::layout_bracket_functor<const derived_type, value_type>;
         using iterator = functor_index_iterator<functor_type>;

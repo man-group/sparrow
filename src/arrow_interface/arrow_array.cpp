@@ -77,7 +77,6 @@ namespace sparrow
         {
             case data_type::NA:
             case data_type::RUN_ENCODED:
-            case data_type::MAP:
                 return {};
             case data_type::BOOL:
                 return {make_valid_buffer(), make_buffer(1, (size + 7) / 8)};
@@ -121,6 +120,8 @@ namespace sparrow
             case data_type::FIXED_SIZED_LIST:
             case data_type::STRUCT:
                 return {make_valid_buffer()};
+            case data_type::MAP:
+                return {make_valid_buffer(), make_buffer(1, (size + 1) * 4)};
             case data_type::SPARSE_UNION:
                 return {make_buffer(0, size)};
             case data_type::DENSE_UNION:

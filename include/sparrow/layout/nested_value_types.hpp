@@ -19,4 +19,5 @@
 // wherever the nested value type variant is used
 // (otherwise there will be incomplete type errors)
 #include "sparrow/layout/list_layout/list_value.hpp"
+#include "sparrow/layout/map_layout/map_value.hpp"
 #include "sparrow/layout/struct_layout/struct_value.hpp"
