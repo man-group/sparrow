@@ -40,21 +40,6 @@ namespace sparrow
         return m_index_end - m_index_begin;
     }
 
-    auto map_value::operator[](const key_type& key) const -> const_mapped_reference 
-    {
-        size_type index = find_index(key);
-        if (index == m_index_end)
-        {
-            throw std::out_of_range("key not found in map");
-        }
-        return array_element(*p_flat_items, index);
-    }
-
-    auto map_value::find(const key_type& key) const noexcept -> const_iterator
-    {
-        return const_iterator(functor_type(this), find_index(key));
-    }
-
     auto map_value::begin() const -> const_iterator
     {
         return cbegin();
@@ -73,36 +58,6 @@ namespace sparrow
     auto map_value::cend() const -> const_iterator
     {
         return const_iterator(functor_type(this), size());
-    }
-
-    auto map_value::find_index(const key_type& key) const noexcept -> size_type
-    {
-#if SPARROW_GCC_11_2_WORKAROUND 
-        using variant_type = std::decay_t<decltype(key)>;
-        using base_variant_type = variant_type::base_type;
-#endif
-        return std::visit([this](const auto& k) {
-            return visit([&k, this](const auto& ar) {
-                for (size_type i = m_index_begin; i != m_index_end; ++i)
-                {
-                    const auto& val = ar[i];
-                    using T = std::decay_t<decltype(k)>;
-                    using U = std::decay_t<decltype(val)>;
-                    if constexpr (std::same_as<T, U>)
-                    {
-                        if (val == k)
-                        {
-                            return i;
-                        }
-                    }
-                }
-                return m_index_end;
-            }, *p_flat_keys);
-#if SPARROW_GCC_11_2_WORKAROUND
-        }, static_cast<const base_variant_type&>(key));
-#else
-        }, key);
-#endif
     }
 
     auto map_value::value(size_type i) const -> const_reference
