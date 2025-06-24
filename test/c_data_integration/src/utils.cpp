@@ -92,6 +92,87 @@ namespace sparrow::c_data_integration::utils
         return std::vector<bool>(validity_range.begin(), validity_range.end());
     }
 
+    std::vector<size_t> get_offsets(const nlohmann::json& array)
+    {
+        if (!array.contains(OFFSET))
+        {
+            throw std::runtime_error("Offset not found in array");
+        }
+        if (!array.at(OFFSET).is_array())
+        {
+            throw std::runtime_error("Offset is not an array");
+        }
+        if (array.at(OFFSET).empty())
+        {
+            return std::vector<size_t>{};
+        }
+        // check element type
+        if (array.at(OFFSET).front().is_number_unsigned())
+        {
+            return array.at(OFFSET).get<std::vector<size_t>>();
+        }
+        if (array.at(OFFSET).front().is_string())
+        {
+            const auto& strings = array.at(OFFSET).get<std::vector<std::string>>();
+            auto offsets = strings
+                           | std::views::transform(
+                               [](const std::string& str)
+                               {
+                                   size_t value;
+                                   auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
+                                   if (ec != std::errc{})
+                                   {
+                                       throw std::runtime_error("Invalid offset value: " + str);
+                                   }
+                                   return value;
+                               }
+                           );
+            return std::vector<size_t>(offsets.begin(), offsets.end());
+        }
+        throw std::runtime_error("Offset is not an array of unsigned integers or strings");
+    }
+
+    std::vector<size_t> get_sizes(const nlohmann::json& array)
+    {
+        if (!array.contains(SIZE))
+        {
+            throw std::runtime_error("Size not found in array");
+        }
+        if (!array.at(SIZE).is_array())
+        {
+            throw std::runtime_error("Size is not an array");
+        }
+        if (array.at(SIZE).empty())
+        {
+            return std::vector<size_t>{};
+        }
+        // check element type
+        if (array.at(SIZE).front().is_number_unsigned())
+        {
+            return array.at(SIZE).get<std::vector<size_t>>();
+        }
+        if (array.at(SIZE).front().is_string())
+        {
+            const auto& strings = array.at(SIZE).get<std::vector<std::string>>();
+            auto sizes = strings
+                         | std::views::transform(
+                             [](const std::string& str)
+                             {
+                                 size_t value;
+                                 auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
+                                 if (ec != std::errc{})
+                                 {
+                                     throw std::runtime_error("Invalid size value: " + str);
+                                 }
+                                 return value;
+                             }
+                         );
+            return std::vector<size_t>(sizes.begin(), sizes.end());
+        }
+
+        throw std::runtime_error("Size is not an array of unsigned integers or strings");
+    }
+
     void check_type(const nlohmann::json& schema, const std::string& type)
     {
         const std::string schema_type = schema.at("type").at("name").get<std::string>();
@@ -117,6 +198,5 @@ namespace sparrow::c_data_integration::utils
         }
         return metadata;
     }
-
 
 }  // namespace sparrow::c_data_integration::utils

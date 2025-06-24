@@ -35,6 +35,10 @@ namespace sparrow::c_data_integration::utils
 
     std::optional<std::vector<sparrow::metadata_pair>> get_metadata(const nlohmann::json& schema);
 
+    std::vector<size_t> get_offsets(const nlohmann::json& array);
+
+    std::vector<size_t> get_sizes(const nlohmann::json& array);
+
     template <std::integral I>
     auto from_strings_to_Is(const std::vector<std::string>& data_str)
     {
