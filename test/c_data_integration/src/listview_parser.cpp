@@ -38,7 +38,6 @@ namespace sparrow::c_data_integration
             std::move(metadata)
         };
         return sparrow::array{std::move(ar)};
-        throw std::runtime_error("list_view_array_from_json not implemented");
     }
 
     sparrow::array large_list_view_array_from_json(
