@@ -177,7 +177,7 @@ namespace sparrow
          */
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<timestamp_array, Args...>)
-        explicit timestamp_array(Args&&... args)
+        constexpr explicit timestamp_array(Args&&... args)
             : base_type(create_proxy(std::forward<Args>(args)...))
             , m_timezone(get_timezone(this->get_arrow_proxy()))
             , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
@@ -185,7 +185,7 @@ namespace sparrow
         }
 
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-        timestamp_array(
+        constexpr timestamp_array(
             const date::time_zone* timezone,
             std::initializer_list<inner_value_type> init,
             std::optional<std::string_view> name = std::nullopt,
@@ -197,22 +197,22 @@ namespace sparrow
         {
         }
 
-        timestamp_array(const timestamp_array& rhs);
-        timestamp_array& operator=(const timestamp_array& rhs);
+        constexpr timestamp_array(const timestamp_array& rhs);
+        constexpr timestamp_array& operator=(const timestamp_array& rhs);
 
-        timestamp_array(timestamp_array&& rhs);
-        timestamp_array& operator=(timestamp_array&& rhs);
+        constexpr timestamp_array(timestamp_array&& rhs);
+        constexpr timestamp_array& operator=(timestamp_array&& rhs);
 
     private:
 
-        [[nodiscard]] inner_reference value(size_type i);
-        [[nodiscard]] inner_const_reference value(size_type i) const;
+        [[nodiscard]] constexpr inner_reference value(size_type i);
+        [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
-        [[nodiscard]] value_iterator value_begin();
-        [[nodiscard]] value_iterator value_end();
+        [[nodiscard]] constexpr value_iterator value_begin();
+        [[nodiscard]] constexpr value_iterator value_end();
 
-        [[nodiscard]] const_value_iterator value_cbegin() const;
-        [[nodiscard]] const_value_iterator value_cend() const;
+        [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
+        [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
         template <input_metadata_container METADATA_RANGE>
         [[nodiscard]] static arrow_proxy create_proxy(
@@ -289,12 +289,13 @@ namespace sparrow
 
         // Modifiers
 
-        void resize_values(size_type new_length, inner_value_type value);
+        constexpr void resize_values(size_type new_length, inner_value_type value);
 
-        value_iterator insert_value(const_value_iterator pos, inner_value_type value, size_type count);
+        constexpr value_iterator
+        insert_value(const_value_iterator pos, inner_value_type value, size_type count);
 
         template <mpl::iterator_of_type<typename timestamp_array<T>::inner_value_type> InputIt>
-        auto insert_values(const_value_iterator pos, InputIt first, InputIt last) -> value_iterator
+        constexpr auto insert_values(const_value_iterator pos, InputIt first, InputIt last) -> value_iterator
         {
             const auto input_range = std::ranges::subrange(first, last);
             const auto values = input_range
@@ -309,10 +310,10 @@ namespace sparrow
             return sparrow::next(value_begin(), idx);
         }
 
-        value_iterator erase_values(const_value_iterator pos, size_type count);
+        constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
 
-        void assign(const T& rhs, size_type index);
-        void assign(T&& rhs, size_type index);
+        constexpr void assign(const T& rhs, size_type index);
+        constexpr void assign(T&& rhs, size_type index);
 
 
         const date::time_zone* m_timezone;
@@ -328,7 +329,7 @@ namespace sparrow
     };
 
     template <timestamp_type T>
-    timestamp_array<T>::timestamp_array(const timestamp_array& rhs)
+    constexpr timestamp_array<T>::timestamp_array(const timestamp_array& rhs)
         : base_type(rhs)
         , m_timezone(rhs.m_timezone)
         , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
@@ -336,7 +337,7 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    timestamp_array<T>& timestamp_array<T>::operator=(const timestamp_array& rhs)
+    constexpr timestamp_array<T>& timestamp_array<T>::operator=(const timestamp_array& rhs)
     {
         base_type::operator=(rhs);
         m_timezone = rhs.m_timezone;
@@ -345,7 +346,7 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    timestamp_array<T>::timestamp_array(timestamp_array&& rhs)
+    constexpr timestamp_array<T>::timestamp_array(timestamp_array&& rhs)
         : base_type(std::move(rhs))
         , m_timezone(rhs.m_timezone)
         , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
@@ -353,7 +354,7 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    timestamp_array<T>& timestamp_array<T>::operator=(timestamp_array&& rhs)
+    constexpr timestamp_array<T>& timestamp_array<T>::operator=(timestamp_array&& rhs)
     {
         base_type::operator=(std::move(rhs));
         m_timezone = rhs.m_timezone;
@@ -549,28 +550,28 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    void timestamp_array<T>::assign(const T& rhs, size_type index)
+    constexpr void timestamp_array<T>::assign(const T& rhs, size_type index)
     {
         SPARROW_ASSERT_TRUE(index < this->size());
         m_data_access.value(index) = rhs.get_sys_time().time_since_epoch();
     }
 
     template <timestamp_type T>
-    void timestamp_array<T>::assign(T&& rhs, size_type index)
+    constexpr void timestamp_array<T>::assign(T&& rhs, size_type index)
     {
         SPARROW_ASSERT_TRUE(index < this->size());
         m_data_access.value(index) = rhs.get_sys_time().time_since_epoch();
     }
 
     template <timestamp_type T>
-    auto timestamp_array<T>::value(size_type i) -> inner_reference
+    constexpr auto timestamp_array<T>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
         return inner_reference(this, i);
     }
 
     template <timestamp_type T>
-    auto timestamp_array<T>::value(size_type i) const -> inner_const_reference
+    constexpr auto timestamp_array<T>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
         const auto& val = m_data_access.value(i);
@@ -580,37 +581,38 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    auto timestamp_array<T>::value_begin() -> value_iterator
+    constexpr auto timestamp_array<T>::value_begin() -> value_iterator
     {
         return value_iterator(functor_type(this), 0);
     }
 
     template <timestamp_type T>
-    auto timestamp_array<T>::value_end() -> value_iterator
+    constexpr auto timestamp_array<T>::value_end() -> value_iterator
     {
         return value_iterator(functor_type(this), this->size());
     }
 
     template <timestamp_type T>
-    auto timestamp_array<T>::value_cbegin() const -> const_value_iterator
+    constexpr auto timestamp_array<T>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator(const_functor_type(this), 0);
     }
 
     template <timestamp_type T>
-    auto timestamp_array<T>::value_cend() const -> const_value_iterator
+    constexpr auto timestamp_array<T>::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(const_functor_type(this), this->size());
     }
 
     template <timestamp_type T>
-    void timestamp_array<T>::resize_values(size_type new_length, inner_value_type value)
+    constexpr void timestamp_array<T>::resize_values(size_type new_length, inner_value_type value)
     {
         m_data_access.resize_values(new_length, value.get_sys_time().time_since_epoch());
     }
 
     template <timestamp_type T>
-    auto timestamp_array<T>::insert_value(const_value_iterator pos, inner_value_type value, size_type count)
+    constexpr auto
+    timestamp_array<T>::insert_value(const_value_iterator pos, inner_value_type value, size_type count)
         -> value_iterator
     {
         SPARROW_ASSERT_TRUE(pos <= value_cend());
@@ -620,7 +622,7 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    auto timestamp_array<T>::erase_values(const_value_iterator pos, size_type count) -> value_iterator
+    constexpr auto timestamp_array<T>::erase_values(const_value_iterator pos, size_type count) -> value_iterator
     {
         SPARROW_ASSERT_TRUE(pos < value_cend());
         const size_t idx = static_cast<size_t>(std::distance(value_cbegin(), pos));

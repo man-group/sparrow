@@ -40,32 +40,32 @@ namespace sparrow
         using size_type = typename L::size_type;
         using difference_type = std::ptrdiff_t;
 
-        decimal_reference(L* layout, size_type index);
-        decimal_reference(const decimal_reference&) = default;
-        decimal_reference(decimal_reference&&) noexcept = default;
+        constexpr decimal_reference(L* layout, size_type index);
+        constexpr decimal_reference(const decimal_reference&) = default;
+        constexpr decimal_reference(decimal_reference&&) noexcept = default;
 
-        self_type& operator=(self_type&& rhs);
-        self_type& operator=(const self_type& rhs);
+        constexpr self_type& operator=(self_type&& rhs);
+        constexpr self_type& operator=(const self_type& rhs);
 
-        self_type& operator=(value_type&& rhs);
-        self_type& operator=(const value_type& rhs);
+        constexpr self_type& operator=(value_type&& rhs);
+        constexpr self_type& operator=(const value_type& rhs);
 
-        explicit operator float() const
+        constexpr explicit operator float() const
             requires(!is_int_placeholder_v<typename value_type::integer_type>);
-        explicit operator double() const
+        constexpr explicit operator double() const
             requires(!is_int_placeholder_v<typename value_type::integer_type>);
-        explicit operator long double() const
+        constexpr explicit operator long double() const
             requires(!is_int_placeholder_v<typename value_type::integer_type>);
 
         [[nodiscard]] explicit operator std::string() const
             requires(!is_int_placeholder_v<typename value_type::integer_type>);
 
-        bool operator==(const value_type& rhs) const;
-        auto operator<=>(const value_type& rhs) const;
+        constexpr bool operator==(const value_type& rhs) const;
+        constexpr auto operator<=>(const value_type& rhs) const;
 
-        [[nodiscard]] const_reference value() const;
-        [[nodiscard]] value_type::integer_type storage() const;
-        [[nodiscard]] int scale() const;
+        [[nodiscard]] constexpr const_reference value() const;
+        [[nodiscard]] constexpr value_type::integer_type storage() const;
+        [[nodiscard]] constexpr int scale() const;
 
     private:
 
@@ -78,86 +78,86 @@ namespace sparrow
      *************************************/
 
     template <typename L>
-    decimal_reference<L>::decimal_reference(L* layout, size_type index)
+    constexpr decimal_reference<L>::decimal_reference(L* layout, size_type index)
         : p_layout(layout)
         , m_index(index)
     {
     }
 
     template <typename L>
-    auto decimal_reference<L>::operator=(value_type&& rhs) -> self_type&
+    constexpr auto decimal_reference<L>::operator=(value_type&& rhs) -> self_type&
     {
         p_layout->assign(std::forward<value_type>(rhs), m_index);
         return *this;
     }
 
     template <typename L>
-    auto decimal_reference<L>::operator=(const value_type& rhs) -> self_type&
+    constexpr auto decimal_reference<L>::operator=(const value_type& rhs) -> self_type&
     {
         p_layout->assign(rhs, m_index);
         return *this;
     }
 
     template <typename L>
-    auto decimal_reference<L>::operator=(self_type&& rhs) -> self_type&
+    constexpr auto decimal_reference<L>::operator=(self_type&& rhs) -> self_type&
     {
         this->operator=(rhs.value());
         return *this;
     }
 
     template <typename L>
-    auto decimal_reference<L>::operator=(const self_type& rhs) -> self_type&
+    constexpr auto decimal_reference<L>::operator=(const self_type& rhs) -> self_type&
     {
         this->operator=(rhs.value());
         return *this;
     }
 
     template <typename L>
-    bool decimal_reference<L>::operator==(const value_type& rhs) const
+    constexpr bool decimal_reference<L>::operator==(const value_type& rhs) const
     {
         return value() == rhs;
     }
 
     template <typename L>
-    auto decimal_reference<L>::operator<=>(const value_type& rhs) const
+    constexpr auto decimal_reference<L>::operator<=>(const value_type& rhs) const
     {
         return value() <=> rhs;
     }
 
     template <typename L>
-    auto decimal_reference<L>::value() const -> const_reference
+    constexpr auto decimal_reference<L>::value() const -> const_reference
     {
         return static_cast<const L*>(p_layout)->value(m_index);
     }
 
     template <typename L>
-    auto decimal_reference<L>::storage() const -> value_type::integer_type
+    constexpr auto decimal_reference<L>::storage() const -> value_type::integer_type
     {
         return value().storage();
     }
 
     template <typename L>
-    int decimal_reference<L>::scale() const
+    constexpr int decimal_reference<L>::scale() const
     {
         return value().scale();
     }
 
     template <typename L>
-    decimal_reference<L>::operator float() const
+    constexpr decimal_reference<L>::operator float() const
         requires(!is_int_placeholder_v<typename value_type::integer_type>)
     {
         return static_cast<float>(value());
     }
 
     template <typename L>
-    decimal_reference<L>::operator double() const
+    constexpr decimal_reference<L>::operator double() const
         requires(!is_int_placeholder_v<typename value_type::integer_type>)
     {
         return static_cast<double>(value());
     }
 
     template <typename L>
-    decimal_reference<L>::operator long double() const
+    constexpr decimal_reference<L>::operator long double() const
         requires(!is_int_placeholder_v<typename value_type::integer_type>)
     {
         return static_cast<long double>(value());

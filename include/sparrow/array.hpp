@@ -21,25 +21,25 @@ namespace sparrow
 {
     template <layout A>
         requires(not std::is_lvalue_reference_v<A>)
-    array::array(A&& a)
+    constexpr array::array(A&& a)
         : p_array(new array_wrapper_impl<A>(std::forward<A>(a)))
     {
     }
 
     template <layout A>
-    array::array(A* a)
+    constexpr array::array(A* a)
         : p_array(new array_wrapper_impl<A>(a))
     {
     }
 
     template <layout A>
-    array::array(std::shared_ptr<A> a)
+    constexpr array::array(std::shared_ptr<A> a)
         : p_array(new array_wrapper_impl<A>(a))
     {
     }
 
     template <class F>
-    array::visit_result_t<F> array::visit(F&& func) const
+    constexpr array::visit_result_t<F> array::visit(F&& func) const
     {
         return sparrow::visit(std::forward<F>(func), *p_array);
     }

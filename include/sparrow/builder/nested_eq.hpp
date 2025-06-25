@@ -33,7 +33,7 @@ namespace sparrow
             requires std::is_scalar_v<T>
         struct nested_eq<T>
         {
-            [[nodiscard]] bool operator()(const T& a, const T& b) const
+            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const
             {
                 return a == b;
             }
@@ -42,7 +42,7 @@ namespace sparrow
         template <is_express_layout_desire T>
         struct nested_eq<T>
         {
-            [[nodiscard]] bool operator()(const T& a, const T& b) const
+            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const
             {
                 return nested_eq<typename T::value_type>{}(a.get(), b.get());
             }
@@ -53,7 +53,7 @@ namespace sparrow
             requires is_nullable_like<T>
         struct nested_eq<T>
         {
-            [[nodiscard]] bool operator()(const T& a, const T& b) const
+            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const
             {
                 // if one is null and the other is not then the null is less
                 // both are null:
@@ -79,7 +79,7 @@ namespace sparrow
             requires tuple_like<T>
         struct nested_eq<T>
         {
-            [[nodiscard]] bool operator()(const T& a, const T& b) const
+            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const
             {
                 constexpr std::size_t N = std::tuple_size_v<T>;
                 return exitable_for_each_index<N>(
@@ -102,7 +102,7 @@ namespace sparrow
             requires(std::ranges::input_range<T> && !tuple_like<T>)
         struct nested_eq<T>
         {
-            [[nodiscard]] bool operator()(const T& a, const T& b) const
+            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const
             {
                 return std::ranges::equal(a, b, nested_eq<std::ranges::range_value_t<T>>{});
             }
@@ -113,7 +113,7 @@ namespace sparrow
             requires variant_like<T>
         struct nested_eq<T>
         {
-            [[nodiscard]] bool operator()(const T& a, const T& b) const
+            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const
             {
                 if (a.index() != b.index())
                 {

@@ -70,29 +70,26 @@ namespace sparrow
         template <allocator A>
         using allocator_value_type = typename std::allocator_traits<std::decay_t<A>>::value_type;
 
-        any_allocator();
-        any_allocator(const any_allocator& rhs);
-        any_allocator(any_allocator&&) noexcept;
+        constexpr any_allocator();
+        constexpr any_allocator(const any_allocator& rhs);
+        constexpr any_allocator(any_allocator&&) noexcept;
 
-        any_allocator& operator=(const any_allocator& rhs) = delete;
-        any_allocator& operator=(any_allocator&& rhs) = delete;
+        constexpr any_allocator& operator=(const any_allocator& rhs) = delete;
+        constexpr any_allocator& operator=(any_allocator&& rhs) = delete;
 
         template <class A>
-        any_allocator(A&& alloc)
-            requires(
-                not std::same_as<std::remove_cvref_t<A>, any_allocator> and allocator<A>
-                and std::same_as<allocator_value_type<A>, T>
-            )
+        constexpr any_allocator(A&& alloc)
+            requires(not std::same_as<std::remove_cvref_t<A>, any_allocator> and allocator<A> and std::same_as<allocator_value_type<A>, T>)
             : m_storage(make_storage(std::forward<A>(alloc)))
         {
         }
 
-        [[nodiscard]] T* allocate(std::size_t n);
-        void deallocate(T* p, std::size_t n);
+        [[nodiscard]] constexpr T* allocate(std::size_t n);
+        constexpr void deallocate(T* p, std::size_t n);
 
-        [[nodiscard]] any_allocator select_on_container_copy_construction() const;
+        [[nodiscard]] constexpr any_allocator select_on_container_copy_construction() const;
 
-        [[nodiscard]] bool equal(const any_allocator& rhs) const;
+        [[nodiscard]] constexpr bool equal(const any_allocator& rhs) const;
 
     private:
 
@@ -110,17 +107,17 @@ namespace sparrow
         {
             A m_alloc;
 
-            explicit impl(A alloc)
+            constexpr explicit impl(A alloc)
                 : m_alloc(std::move(alloc))
             {
             }
 
-            [[nodiscard]] T* allocate(std::size_t n) override
+            [[nodiscard]] constexpr T* allocate(std::size_t n) override
             {
                 return m_alloc.allocate(n);
             }
 
-            void deallocate(T* p, std::size_t n) override
+            constexpr void deallocate(T* p, std::size_t n) override
             {
                 m_alloc.deallocate(p, n);
             }
@@ -130,7 +127,7 @@ namespace sparrow
                 return std::make_unique<impl<A>>(m_alloc);
             }
 
-            [[nodiscard]] bool equal(const interface& rhs) const override
+            [[nodiscard]] constexpr bool equal(const interface& rhs) const override
             {
                 if (std::type_index(typeid(*this)) == std::type_index(typeid(rhs)))
                 {
@@ -151,12 +148,12 @@ namespace sparrow
 
         template <class A>
             requires can_any_allocator_sbo<A, T>
-        [[nodiscard]] A&& make_storage(A&& alloc) const
+        [[nodiscard]] constexpr A&& make_storage(A&& alloc) const
         {
             return std::forward<A>(alloc);
         }
 
-        [[nodiscard]] storage_type copy_storage(const storage_type& rhs) const
+        [[nodiscard]] constexpr storage_type copy_storage(const storage_type& rhs) const
         {
             return std::visit(
                 overloaded{
@@ -174,7 +171,7 @@ namespace sparrow
         }
 
         template <class F>
-        [[nodiscard]] decltype(auto) visit_storage(F&& f)
+        [[nodiscard]] constexpr decltype(auto) visit_storage(F&& f)
         {
             return std::visit(
                 [&f](auto&& arg)
@@ -201,19 +198,19 @@ namespace sparrow
      ********************************/
 
     template <class T>
-    any_allocator<T>::any_allocator()
+    constexpr any_allocator<T>::any_allocator()
         : m_storage(make_storage(std::allocator<T>()))
     {
     }
 
     template <class T>
-    any_allocator<T>::any_allocator(const any_allocator& rhs)
+    constexpr any_allocator<T>::any_allocator(const any_allocator& rhs)
         : m_storage(copy_storage(rhs.m_storage))
     {
     }
 
     template <class T>
-    any_allocator<T>::any_allocator(any_allocator&& rhs) noexcept
+    constexpr any_allocator<T>::any_allocator(any_allocator&& rhs) noexcept
         : m_storage(std::move(rhs.m_storage))
     {
         // The possible fix would be to not propagate the allocator,
@@ -228,7 +225,7 @@ namespace sparrow
     }
 
     template <class T>
-    [[nodiscard]] T* any_allocator<T>::allocate(std::size_t n)
+    [[nodiscard]] constexpr T* any_allocator<T>::allocate(std::size_t n)
     {
         return visit_storage(
             [n](auto& allocator)
@@ -249,8 +246,7 @@ namespace sparrow
 #        endif
 #    endif
 #endif
-    void
-    any_allocator<T>::deallocate(T* p, std::size_t n)
+    void constexpr any_allocator<T>::deallocate(T* p, std::size_t n)
     {
         return visit_storage(
             [n, p](auto& allocator)
@@ -269,13 +265,13 @@ namespace sparrow
     }
 
     template <class T>
-    any_allocator<T> any_allocator<T>::select_on_container_copy_construction() const
+    constexpr any_allocator<T> any_allocator<T>::select_on_container_copy_construction() const
     {
         return any_allocator(*this);
     }
 
     template <class T>
-    bool any_allocator<T>::equal(const any_allocator& rhs) const
+    constexpr bool any_allocator<T>::equal(const any_allocator& rhs) const
     {
         // YOLO!!
         return std::visit(
@@ -324,7 +320,7 @@ namespace sparrow
     }
 
     template <class T>
-    bool operator==(const any_allocator<T>& lhs, const any_allocator<T>& rhs)
+    constexpr bool operator==(const any_allocator<T>& lhs, const any_allocator<T>& rhs)
     {
         return lhs.equal(rhs);
     }

@@ -76,24 +76,24 @@ namespace sparrow
         using iterator = layout_iterator<iterator_types>;
         using const_iterator = base_type::const_iterator;
 
-        [[nodiscard]] reference operator[](size_type i);
+        [[nodiscard]] constexpr reference operator[](size_type i);
         using base_type::operator[];
 
-        [[nodiscard]] iterator begin();
-        [[nodiscard]] iterator end();
+        [[nodiscard]] constexpr iterator begin();
+        [[nodiscard]] constexpr iterator end();
 
         using base_type::begin;
         using base_type::end;
 
         template <typename T>
-        void resize(size_type new_size, const nullable<T>& value);
+        constexpr void resize(size_type new_size, const nullable<T>& value);
 
         template <typename T>
-        iterator insert(const_iterator pos, const nullable<T>& value);
+        constexpr iterator insert(const_iterator pos, const nullable<T>& value);
         template <typename T>
-        iterator insert(const_iterator pos, const nullable<T>& value, size_type count);
+        constexpr iterator insert(const_iterator pos, const nullable<T>& value, size_type count);
         template <typename T>
-        iterator insert(const_iterator pos, std::initializer_list<nullable<T>> values);
+        constexpr iterator insert(const_iterator pos, std::initializer_list<nullable<T>> values);
 
         /**
          * Inserts elements from range [\c first , \c last ) before \c pos in the array.
@@ -107,7 +107,7 @@ namespace sparrow
         template <typename InputIt>
             requires std::input_iterator<InputIt>
                      && mpl::is_type_instance_of_v<typename std::iterator_traits<InputIt>::value_type, nullable>
-        iterator insert(const_iterator pos, InputIt first, InputIt last)
+        constexpr iterator insert(const_iterator pos, InputIt first, InputIt last)
         {
             SPARROW_ASSERT_TRUE(pos >= this->cbegin())
             SPARROW_ASSERT_TRUE(pos <= this->cend());
@@ -158,34 +158,34 @@ namespace sparrow
          */
         template <std::ranges::input_range R>
             requires mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
-        iterator insert(const_iterator pos, const R& range)
+        constexpr iterator insert(const_iterator pos, const R& range)
         {
             return insert(pos, std::ranges::begin(range), std::ranges::end(range));
         }
 
-        iterator erase(const_iterator pos);
-        iterator erase(const_iterator first, const_iterator last);
+        constexpr iterator erase(const_iterator pos);
+        constexpr iterator erase(const_iterator first, const_iterator last);
 
         template <typename T>
-        void push_back(const nullable<T>& value);
-        void pop_back();
+        constexpr void push_back(const nullable<T>& value);
+        constexpr void pop_back();
 
-        void zero_null_values(const inner_value_type& value = inner_value_type());
+        constexpr void zero_null_values(const inner_value_type& value = inner_value_type());
 
     protected:
 
         mutable_array_base(arrow_proxy);
-        mutable_array_base(const mutable_array_base&) noexcept = default;
-        mutable_array_base& operator=(const mutable_array_base&) noexcept = default;
+        constexpr mutable_array_base(const mutable_array_base&) noexcept = default;
+        constexpr mutable_array_base& operator=(const mutable_array_base&) noexcept = default;
 
-        mutable_array_base(mutable_array_base&&) noexcept = default;
-        mutable_array_base& operator=(mutable_array_base&&) noexcept = default;
+        constexpr mutable_array_base(mutable_array_base&&) noexcept = default;
+        constexpr mutable_array_base& operator=(mutable_array_base&&) noexcept = default;
 
-        [[nodiscard]] bitmap_reference has_value(size_type i);
+        [[nodiscard]] constexpr bitmap_reference has_value(size_type i);
         using base_type::has_value;
 
-        [[nodiscard]] bitmap_iterator bitmap_begin();
-        [[nodiscard]] bitmap_iterator bitmap_end();
+        [[nodiscard]] constexpr bitmap_iterator bitmap_begin();
+        [[nodiscard]] constexpr bitmap_iterator bitmap_end();
 
         friend class layout_iterator<iterator_types>;
     };
@@ -204,7 +204,7 @@ namespace sparrow
      * Returns an iterator to the first element of the array.
      */
     template <class D>
-    auto mutable_array_base<D>::begin() -> iterator
+    constexpr auto mutable_array_base<D>::begin() -> iterator
     {
         auto& derived_cast = this->derived_cast();
         return iterator(derived_cast.value_begin(), derived_cast.bitmap_begin());
@@ -215,7 +215,7 @@ namespace sparrow
      * element of the array.
      */
     template <class D>
-    auto mutable_array_base<D>::end() -> iterator
+    constexpr auto mutable_array_base<D>::end() -> iterator
     {
         auto& derived_cast = this->derived_cast();
         return iterator(derived_cast.value_end(), derived_cast.bitmap_end());
@@ -227,7 +227,7 @@ namespace sparrow
      * @param i the index of the element in the array.
      */
     template <class D>
-    auto mutable_array_base<D>::operator[](size_type i) -> reference
+    constexpr auto mutable_array_base<D>::operator[](size_type i) -> reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
         auto& derived_cast = this->derived_cast();
@@ -235,20 +235,20 @@ namespace sparrow
     }
 
     template <class D>
-    auto mutable_array_base<D>::has_value(size_type i) -> bitmap_reference
+    constexpr auto mutable_array_base<D>::has_value(size_type i) -> bitmap_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
         return *sparrow::next(bitmap_begin(), i);
     }
 
     template <class D>
-    auto mutable_array_base<D>::bitmap_begin() -> bitmap_iterator
+    constexpr auto mutable_array_base<D>::bitmap_begin() -> bitmap_iterator
     {
         return sparrow::next(this->derived_cast().get_bitmap().begin(), this->get_arrow_proxy().offset());
     }
 
     template <class D>
-    auto mutable_array_base<D>::bitmap_end() -> bitmap_iterator
+    constexpr auto mutable_array_base<D>::bitmap_end() -> bitmap_iterator
     {
         return sparrow::next(bitmap_begin(), this->size());
     }
@@ -263,7 +263,7 @@ namespace sparrow
      */
     template <class D>
     template <typename T>
-    void mutable_array_base<D>::resize(size_type new_length, const nullable<T>& value)
+    constexpr void mutable_array_base<D>::resize(size_type new_length, const nullable<T>& value)
     {
         auto& derived = this->derived_cast();
         derived.resize_bitmap(new_length, value.has_value());
@@ -281,7 +281,7 @@ namespace sparrow
      */
     template <class D>
     template <typename T>
-    auto mutable_array_base<D>::insert(const_iterator pos, const nullable<T>& value) -> iterator
+    constexpr auto mutable_array_base<D>::insert(const_iterator pos, const nullable<T>& value) -> iterator
     {
         return insert(pos, value, 1);
     }
@@ -296,8 +296,8 @@ namespace sparrow
      */
     template <class D>
     template <typename T>
-    auto mutable_array_base<D>::insert(const_iterator pos, const nullable<T>& value, size_type count)
-        -> iterator
+    constexpr auto
+    mutable_array_base<D>::insert(const_iterator pos, const nullable<T>& value, size_type count) -> iterator
     {
         SPARROW_ASSERT_TRUE(pos >= this->cbegin());
         SPARROW_ASSERT_TRUE(pos <= this->cend());
@@ -320,8 +320,8 @@ namespace sparrow
      */
     template <class D>
     template <typename T>
-    auto mutable_array_base<D>::insert(const_iterator pos, std::initializer_list<nullable<T>> values)
-        -> iterator
+    constexpr auto
+    mutable_array_base<D>::insert(const_iterator pos, std::initializer_list<nullable<T>> values) -> iterator
     {
         return insert(pos, values.begin(), values.end());
     }
@@ -333,7 +333,7 @@ namespace sparrow
      * @return The iterator following the last element removed.
      */
     template <class D>
-    auto mutable_array_base<D>::erase(const_iterator pos) -> iterator
+    constexpr auto mutable_array_base<D>::erase(const_iterator pos) -> iterator
     {
         SPARROW_ASSERT_TRUE(this->cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos < this->cend());
@@ -348,7 +348,7 @@ namespace sparrow
      * @return The iterator following the last element removed.
      */
     template <class D>
-    auto mutable_array_base<D>::erase(const_iterator first, const_iterator last) -> iterator
+    constexpr auto mutable_array_base<D>::erase(const_iterator first, const_iterator last) -> iterator
     {
         SPARROW_ASSERT_TRUE(first < last);
         SPARROW_ASSERT_TRUE(this->cbegin() <= first)
@@ -375,7 +375,7 @@ namespace sparrow
      */
     template <class D>
     template <typename T>
-    void mutable_array_base<D>::push_back(const nullable<T>& value)
+    constexpr void mutable_array_base<D>::push_back(const nullable<T>& value)
     {
         insert(this->cend(), value);
     }
@@ -384,7 +384,7 @@ namespace sparrow
      * Removes the last element of the array.
      */
     template <class D>
-    void mutable_array_base<D>::pop_back()
+    constexpr void mutable_array_base<D>::pop_back()
     {
         erase(std::prev(this->cend()));
     }
@@ -395,7 +395,7 @@ namespace sparrow
      * This function is a no-op if the array does not have a bitmap.
      */
     template <class D>
-    void mutable_array_base<D>::zero_null_values(const inner_value_type& value)
+    constexpr void mutable_array_base<D>::zero_null_values(const inner_value_type& value)
     {
         sparrow::zero_null_values(*this, value);
     }

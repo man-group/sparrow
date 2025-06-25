@@ -64,11 +64,8 @@ namespace sparrow
          * @param columns An input range of arrays.
          */
         template <std::ranges::input_range NR, std::ranges::input_range CR>
-            requires(
-                std::convertible_to<std::ranges::range_value_t<NR>, std::string>
-                and std::same_as<std::ranges::range_value_t<CR>, array>
-            )
-        record_batch(NR&& names, CR&& columns, std::optional<std::string_view> name = std::nullopt);
+            requires(std::convertible_to<std::ranges::range_value_t<NR>, std::string> and std::same_as<std::ranges::range_value_t<CR>, array>)
+        constexpr record_batch(NR&& names, CR&& columns, std::optional<std::string_view> name = std::nullopt);
 
         /*
          * Constructs a @ref record_batch from a range of arrays. Each array
@@ -216,7 +213,7 @@ namespace sparrow
     template <std::ranges::input_range NR, std::ranges::input_range CR>
         requires(std::convertible_to<std::ranges::range_value_t<NR>, std::string>
                  and std::same_as<std::ranges::range_value_t<CR>, array>)
-    record_batch::record_batch(NR&& names, CR&& columns, std::optional<std::string_view> name)
+    constexpr record_batch::record_batch(NR&& names, CR&& columns, std::optional<std::string_view> name)
         : m_name(name)
         , m_name_list(to_vector<name_type>(std::forward<NR>(names)))
         , m_array_list(to_vector<array>(std::forward<CR>(columns)))

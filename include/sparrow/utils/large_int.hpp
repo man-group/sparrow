@@ -42,16 +42,16 @@ namespace sparrow
 
     struct int128_t
     {
-        int128_t() = default;
+        constexpr int128_t() = default;
 
         std::uint64_t words[2];
 
-        bool operator==(const int128_t& other) const
+        constexpr bool operator==(const int128_t& other) const
         {
             return words[0] == other.words[0] && words[1] == other.words[1];
         }
 
-        bool operator!=(const int128_t& other) const
+        constexpr bool operator!=(const int128_t& other) const
         {
             return !(*this == other);
         }
@@ -59,16 +59,16 @@ namespace sparrow
 
     struct int256_t
     {
-        int256_t() = default;
+        constexpr int256_t() = default;
         std::uint64_t words[4];
 
-        bool operator==(const int256_t& other) const
+        constexpr bool operator==(const int256_t& other) const
         {
             return words[0] == other.words[0] && words[1] == other.words[1] && words[2] == other.words[2]
                    && words[3] == other.words[3];
         }
 
-        bool operator!=(const int256_t& other) const
+        constexpr bool operator!=(const int256_t& other) const
         {
             return !(*this == other);
         }
@@ -85,7 +85,7 @@ namespace sparrow
     using int256_t = primesum::int256_t;
 
     template <typename T>
-    T stobigint(std::string_view str)
+    constexpr T stobigint(std::string_view str)
     {
         if (str.empty())
         {

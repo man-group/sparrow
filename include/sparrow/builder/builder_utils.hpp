@@ -40,7 +40,7 @@ namespace sparrow
             using value_type = T;
 
             // default constructor
-            express_layout_desire() = default;
+            constexpr express_layout_desire() = default;
 
             // variadic perfect forwarding constructor
             template <class... Args>
@@ -49,12 +49,12 @@ namespace sparrow
             {
             }
 
-            [[nodiscard]] const T& get() const
+            [[nodiscard]] constexpr const T& get() const
             {
                 return m_value;
             }
 
-            [[nodiscard]] T& get()
+            [[nodiscard]] constexpr T& get()
             {
                 return m_value;
             }
@@ -121,7 +121,6 @@ namespace sparrow
 
         template <class T>
         concept is_express_layout_desire = is_dict_encode<T> || is_run_end_encode<T>;
-
 
         template <class T>
         concept is_plain_value_type = !is_express_layout_desire<T> && !is_nullable_like<T>;
@@ -212,9 +211,8 @@ namespace sparrow
 
         template <typename T>
         concept all_elements_same = tuple_like<T>
-                                    && all_elements_same_impl<T>(
-                                        std::make_index_sequence<std::tuple_size_v<T>>{}
-                                    );
+                                    && all_elements_same_impl<T>(std::make_index_sequence<std::tuple_size_v<T>>{
+                                    });
 
         template <class T>
         struct maybe_nullable_value_type
@@ -269,7 +267,7 @@ namespace sparrow
         // a save way to return .size from
         // a possibly nullable object or "express layout desire object"
         template <class T>
-        [[nodiscard]] std::size_t get_size_save(T&& t)
+        [[nodiscard]] constexpr std::size_t get_size_save(T&& t)
         {
             using decayed = std::decay_t<T>;
             if constexpr (is_nullable_like<decayed>)
@@ -294,7 +292,7 @@ namespace sparrow
         }
 
         template <class T>
-        [[nodiscard]] decltype(auto) ensure_value(T&& t)
+        [[nodiscard]] constexpr decltype(auto) ensure_value(T&& t)
         {
             using decayed = std::decay_t<T>;
             if constexpr (is_nullable_like<decayed> || is_express_layout_desire<decayed>)
@@ -309,7 +307,7 @@ namespace sparrow
 
         template <std::ranges::range T>
             requires(is_nullable_like<std::ranges::range_value_t<T>>)
-        [[nodiscard]] std::vector<std::size_t> where_null(T&& t)
+        [[nodiscard]] constexpr std::vector<std::size_t> where_null(T&& t)
         {
             std::vector<std::size_t> result;
             for (std::size_t i = 0; i < t.size(); ++i)
@@ -323,11 +321,8 @@ namespace sparrow
         }
 
         template <class T>
-            requires(
-                is_express_layout_desire<std::ranges::range_value_t<T>>
-                && is_nullable_like<typename std::ranges::range_value_t<T>::value_type>
-            )
-        [[nodiscard]] std::vector<std::size_t> where_null(T&& t)
+            requires(is_express_layout_desire<std::ranges::range_value_t<T>> && is_nullable_like<typename std::ranges::range_value_t<T>::value_type>)
+        [[nodiscard]] constexpr std::vector<std::size_t> where_null(T&& t)
         {
             std::vector<std::size_t> result;
             for (std::size_t i = 0; i < t.size(); ++i)
@@ -341,21 +336,21 @@ namespace sparrow
         }
 
         template <class T>
-        [[nodiscard]] std::array<std::size_t, 0> where_null(T&&)
+        [[nodiscard]] constexpr std::array<std::size_t, 0> where_null(T&&)
         {
             return {};
         }
 
         template <class T>
             requires(is_plain_value_type<std::ranges::range_value_t<T>>)
-        [[nodiscard]] decltype(auto) ensure_value_range(T&& t)
+        [[nodiscard]] constexpr decltype(auto) ensure_value_range(T&& t)
         {
             return std::forward<T>(t);
         }
 
         template <class T>
             requires(!is_plain_value_type<std::ranges::range_value_t<T>>)
-        [[nodiscard]] decltype(auto) ensure_value_range(T&& t)
+        [[nodiscard]] constexpr decltype(auto) ensure_value_range(T&& t)
         {
             return t
                    | std::views::transform(

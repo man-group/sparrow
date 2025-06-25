@@ -59,7 +59,7 @@ namespace sparrow
             pointer p_end = nullptr;
             pointer p_storage_end = nullptr;
 
-            buffer_data() = default;
+            constexpr buffer_data() = default;
             constexpr buffer_data(buffer_data&&) noexcept;
             constexpr buffer_data& operator=(buffer_data&&) noexcept;
         };
@@ -77,7 +77,7 @@ namespace sparrow
 
         ~buffer_base();
 
-        buffer_base(buffer_base&&) noexcept = default;
+        constexpr buffer_base(buffer_base&&) noexcept = default;
 
         template <allocator A>
         constexpr buffer_base(buffer_base&& rhs, const A& a);
@@ -163,15 +163,15 @@ namespace sparrow
 
         ~buffer();
 
-        buffer(const buffer& rhs);
+        constexpr buffer(const buffer& rhs);
 
         template <allocator A>
-        buffer(const buffer& rhs, const A& a);
+        constexpr buffer(const buffer& rhs, const A& a);
 
-        buffer(buffer&& rhs) noexcept = default;
+        constexpr buffer(buffer&& rhs) noexcept = default;
 
         template <allocator A>
-        buffer(buffer&& rhs, const A& a);
+        constexpr buffer(buffer&& rhs, const A& a);
 
         constexpr buffer& operator=(const buffer& rhs);
         constexpr buffer& operator=(buffer&& rhs);
@@ -479,7 +479,7 @@ namespace sparrow
     }
 
     template <class T>
-    buffer<T>::buffer(const buffer& rhs)
+    constexpr buffer<T>::buffer(const buffer& rhs)
         : base_type(rhs.get_allocator())
     {
         if (rhs.get_data().p_begin != nullptr)
@@ -491,7 +491,7 @@ namespace sparrow
 
     template <class T>
     template <allocator A>
-    buffer<T>::buffer(const buffer& rhs, const A& a)
+    constexpr buffer<T>::buffer(const buffer& rhs, const A& a)
         : base_type(a)
     {
         if (rhs.get_data().p_begin != nullptr)
@@ -503,7 +503,7 @@ namespace sparrow
 
     template <class T>
     template <allocator A>
-    buffer<T>::buffer(buffer&& rhs, const A& a)
+    constexpr buffer<T>::buffer(buffer&& rhs, const A& a)
         : base_type(a)
     {
         if (rhs.get_allocator() == get_allocator())
@@ -1081,7 +1081,7 @@ namespace sparrow
     {
         const size_type diff_max = static_cast<size_type>(std::numeric_limits<difference_type>::max());
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
-        return (std::min) (diff_max, alloc_max);
+        return (std::min)(diff_max, alloc_max);
     }
 
     template <class T>

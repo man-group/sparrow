@@ -104,31 +104,31 @@ namespace sparrow
         using const_iterator = layout_iterator<iterator_types>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-        [[nodiscard]] std::optional<std::string_view> name() const;
-        [[nodiscard]] std::optional<key_value_view> metadata() const;
+        [[nodiscard]] constexpr std::optional<std::string_view> name() const;
+        [[nodiscard]] constexpr std::optional<key_value_view> metadata() const;
 
-        [[nodiscard]] bool empty() const;
-        [[nodiscard]] size_type size() const;
+        [[nodiscard]] constexpr bool empty() const;
+        [[nodiscard]] constexpr size_type size() const;
 
-        [[nodiscard]] const_reference at(size_type i) const;
-        [[nodiscard]] const_reference operator[](size_type i) const;
-        [[nodiscard]] const_reference front() const;
-        [[nodiscard]] const_reference back() const;
+        [[nodiscard]] constexpr const_reference at(size_type i) const;
+        [[nodiscard]] constexpr const_reference operator[](size_type i) const;
+        [[nodiscard]] constexpr const_reference front() const;
+        [[nodiscard]] constexpr const_reference back() const;
 
-        [[nodiscard]] const_iterator begin() const;
-        [[nodiscard]] const_iterator end() const;
+        [[nodiscard]] constexpr const_iterator begin() const;
+        [[nodiscard]] constexpr const_iterator end() const;
 
-        [[nodiscard]] const_iterator cbegin() const;
-        [[nodiscard]] const_iterator cend() const;
+        [[nodiscard]] constexpr const_iterator cbegin() const;
+        [[nodiscard]] constexpr const_iterator cend() const;
 
-        [[nodiscard]] const_reverse_iterator rbegin() const;
-        [[nodiscard]] const_reverse_iterator rend() const;
+        [[nodiscard]] constexpr const_reverse_iterator rbegin() const;
+        [[nodiscard]] constexpr const_reverse_iterator rend() const;
 
-        [[nodiscard]] const_reverse_iterator crbegin() const;
-        [[nodiscard]] const_reverse_iterator crend() const;
+        [[nodiscard]] constexpr const_reverse_iterator crbegin() const;
+        [[nodiscard]] constexpr const_reverse_iterator crend() const;
 
-        [[nodiscard]] const_bitmap_range bitmap() const;
-        [[nodiscard]] const_value_range values() const;
+        [[nodiscard]] constexpr const_bitmap_range bitmap() const;
+        [[nodiscard]] constexpr const_value_range values() const;
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
@@ -139,7 +139,7 @@ namespace sparrow
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        [[nodiscard]] D slice(size_type start, size_type end) const;
+        [[nodiscard]] constexpr D slice(size_type start, size_type end) const;
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
@@ -150,28 +150,28 @@ namespace sparrow
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        [[nodiscard]] D slice_view(size_type start, size_type end) const;
+        [[nodiscard]] constexpr D slice_view(size_type start, size_type end) const;
 
     protected:
 
         explicit array_crtp_base(arrow_proxy);
 
-        array_crtp_base(const array_crtp_base&) = default;
-        array_crtp_base& operator=(const array_crtp_base&) = default;
+        constexpr array_crtp_base(const array_crtp_base&) = default;
+        constexpr array_crtp_base& operator=(const array_crtp_base&) = default;
 
-        array_crtp_base(array_crtp_base&&) noexcept = default;
-        array_crtp_base& operator=(array_crtp_base&&) noexcept = default;
+        constexpr array_crtp_base(array_crtp_base&&) noexcept = default;
+        constexpr array_crtp_base& operator=(array_crtp_base&&) noexcept = default;
 
-        [[nodiscard]] arrow_proxy& get_arrow_proxy();
-        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
+        [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy() const;
 
-        bitmap_const_reference has_value(size_type i) const;
+        constexpr bitmap_const_reference has_value(size_type i) const;
 
-        const_bitmap_iterator bitmap_begin() const;
-        const_bitmap_iterator bitmap_end() const;
+        constexpr const_bitmap_iterator bitmap_begin() const;
+        constexpr const_bitmap_iterator bitmap_end() const;
 
-        const_bitmap_iterator bitmap_cbegin() const;
-        const_bitmap_iterator bitmap_cend() const;
+        constexpr const_bitmap_iterator bitmap_cbegin() const;
+        constexpr const_bitmap_iterator bitmap_cend() const;
 
     private:
 
@@ -186,20 +186,20 @@ namespace sparrow
     };
 
     template <class D>
-    bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs);
+    constexpr bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs);
 
     /**********************************
      * array_crtp_base implementation *
      **********************************/
 
     template <class D>
-    std::optional<std::string_view> array_crtp_base<D>::name() const
+    constexpr std::optional<std::string_view> array_crtp_base<D>::name() const
     {
         return get_arrow_proxy().name();
     }
 
     template <class D>
-    std::optional<key_value_view> array_crtp_base<D>::metadata() const
+    constexpr std::optional<key_value_view> array_crtp_base<D>::metadata() const
     {
         return get_arrow_proxy().metadata();
     }
@@ -208,7 +208,7 @@ namespace sparrow
      * Checks if the array has no element, i.e. whether begin() == end().
      */
     template <class D>
-    bool array_crtp_base<D>::empty() const
+    constexpr bool array_crtp_base<D>::empty() const
     {
         return size() == size_type(0);
     }
@@ -217,7 +217,7 @@ namespace sparrow
      * Returns the number of elements in the array.
      */
     template <class D>
-    auto array_crtp_base<D>::size() const -> size_type
+    constexpr auto array_crtp_base<D>::size() const -> size_type
     {
         return static_cast<size_type>(get_arrow_proxy().length());
     }
@@ -229,13 +229,14 @@ namespace sparrow
      * @throw std::out_of_range if \c i is not within the range of the container.
      */
     template <class D>
-    auto array_crtp_base<D>::at(size_type i) const -> const_reference
+    constexpr auto array_crtp_base<D>::at(size_type i) const -> const_reference
     {
         if (i >= size())
         {
-            std::ostringstream oss117;
-            oss117 << "Index " << i << "is greater or equal to size of array (" << size() << ")";
-            throw std::out_of_range(oss117.str());
+            const std::string error_message = "Index " + std::to_string(i)
+                                              + " is greater or equal to size of array ("
+                                              + std::to_string(size()) + ")";
+            throw std::out_of_range(error_message);
         }
         return (*this)[i];
     }
@@ -246,7 +247,7 @@ namespace sparrow
      * @param i the index of the element in the array.
      */
     template <class D>
-    auto array_crtp_base<D>::operator[](size_type i) const -> const_reference
+    constexpr auto array_crtp_base<D>::operator[](size_type i) const -> const_reference
     {
         auto& derived_cast = this->derived_cast();
         SPARROW_ASSERT_TRUE(i < derived_cast.size());
@@ -258,7 +259,7 @@ namespace sparrow
      * Calling `front` on an empty container causes undefined behavior.
      */
     template <class D>
-    auto array_crtp_base<D>::front() const -> const_reference
+    constexpr auto array_crtp_base<D>::front() const -> const_reference
     {
         SPARROW_ASSERT_TRUE(!empty());
         return (*this)[size_type(0)];
@@ -269,7 +270,7 @@ namespace sparrow
      * Calling `back` on an empty container causes undefined behavior.
      */
     template <class D>
-    auto array_crtp_base<D>::back() const -> const_reference
+    constexpr auto array_crtp_base<D>::back() const -> const_reference
     {
         SPARROW_ASSERT_TRUE(!empty());
         return (*this)[size() - 1];
@@ -279,7 +280,7 @@ namespace sparrow
      * Returns a constant iterator to the first element of the array.
      */
     template <class D>
-    auto array_crtp_base<D>::begin() const -> const_iterator
+    constexpr auto array_crtp_base<D>::begin() const -> const_iterator
     {
         return cbegin();
     }
@@ -289,7 +290,7 @@ namespace sparrow
      * element of the array.
      */
     template <class D>
-    auto array_crtp_base<D>::end() const -> const_iterator
+    constexpr auto array_crtp_base<D>::end() const -> const_iterator
     {
         return cend();
     }
@@ -300,7 +301,7 @@ namespace sparrow
      * when called on a non-const array.
      */
     template <class D>
-    auto array_crtp_base<D>::cbegin() const -> const_iterator
+    constexpr auto array_crtp_base<D>::cbegin() const -> const_iterator
     {
         return const_iterator(this->derived_cast().value_cbegin(), bitmap_begin());
     }
@@ -311,7 +312,7 @@ namespace sparrow
      * is returned, even when called on a non-const array.
      */
     template <class D>
-    auto array_crtp_base<D>::cend() const -> const_iterator
+    constexpr auto array_crtp_base<D>::cend() const -> const_iterator
     {
         return const_iterator(this->derived_cast().value_cend(), bitmap_end());
     }
@@ -322,7 +323,7 @@ namespace sparrow
      * reversed array.
      */
     template <class D>
-    auto array_crtp_base<D>::rbegin() const -> const_reverse_iterator
+    constexpr auto array_crtp_base<D>::rbegin() const -> const_reverse_iterator
     {
         return crbegin();
     }
@@ -333,7 +334,7 @@ namespace sparrow
      * preceding the first element of the non-reversed array.
      */
     template <class D>
-    auto array_crtp_base<D>::rend() const -> const_reverse_iterator
+    constexpr auto array_crtp_base<D>::rend() const -> const_reverse_iterator
     {
         return crend();
     }
@@ -345,7 +346,7 @@ namespace sparrow
      * iterator is returned, even when called on a non-const array.
      */
     template <class D>
-    auto array_crtp_base<D>::crbegin() const -> const_reverse_iterator
+    constexpr auto array_crtp_base<D>::crbegin() const -> const_reverse_iterator
     {
         return const_reverse_iterator(cend());
     }
@@ -358,7 +359,7 @@ namespace sparrow
      * even when called on a non-const array.
      */
     template <class D>
-    auto array_crtp_base<D>::crend() const -> const_reverse_iterator
+    constexpr auto array_crtp_base<D>::crend() const -> const_reverse_iterator
     {
         return const_reverse_iterator(cbegin());
     }
@@ -368,7 +369,7 @@ namespace sparrow
      * nullable elements) as a constant range.
      */
     template <class D>
-    auto array_crtp_base<D>::bitmap() const -> const_bitmap_range
+    constexpr auto array_crtp_base<D>::bitmap() const -> const_bitmap_range
     {
         return const_bitmap_range(bitmap_begin(), bitmap_end());
     }
@@ -378,7 +379,7 @@ namespace sparrow
      * elements) as a constant range.
      */
     template <class D>
-    auto array_crtp_base<D>::values() const -> const_value_range
+    constexpr auto array_crtp_base<D>::values() const -> const_value_range
     {
         return const_value_range(this->derived_cast().value_cbegin(), this->derived_cast().value_cend());
     }
@@ -390,57 +391,57 @@ namespace sparrow
     }
 
     template <class D>
-    auto array_crtp_base<D>::get_arrow_proxy() -> arrow_proxy&
+    constexpr auto array_crtp_base<D>::get_arrow_proxy() -> arrow_proxy&
     {
         return m_proxy;
     }
 
     template <class D>
-    auto array_crtp_base<D>::get_arrow_proxy() const -> const arrow_proxy&
+    constexpr auto array_crtp_base<D>::get_arrow_proxy() const -> const arrow_proxy&
     {
         return m_proxy;
     }
 
     template <class D>
-    auto array_crtp_base<D>::has_value(size_type i) const -> bitmap_const_reference
+    constexpr auto array_crtp_base<D>::has_value(size_type i) const -> bitmap_const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         return *sparrow::next(bitmap_begin(), i);
     }
 
     template <class D>
-    auto array_crtp_base<D>::bitmap_begin() const -> const_bitmap_iterator
+    constexpr auto array_crtp_base<D>::bitmap_begin() const -> const_bitmap_iterator
     {
         return sparrow::next(this->derived_cast().get_bitmap().cbegin(), get_arrow_proxy().offset());
     }
 
     template <class D>
-    auto array_crtp_base<D>::bitmap_end() const -> const_bitmap_iterator
+    constexpr auto array_crtp_base<D>::bitmap_end() const -> const_bitmap_iterator
     {
         return sparrow::next(bitmap_begin(), size());
     }
 
     template <class D>
-    auto array_crtp_base<D>::bitmap_cbegin() const -> const_bitmap_iterator
+    constexpr auto array_crtp_base<D>::bitmap_cbegin() const -> const_bitmap_iterator
     {
         return bitmap_begin();
     }
 
     template <class D>
-    auto array_crtp_base<D>::bitmap_cend() const -> const_bitmap_iterator
+    constexpr auto array_crtp_base<D>::bitmap_cend() const -> const_bitmap_iterator
     {
         return bitmap_end();
     }
 
     template <class D>
-    D array_crtp_base<D>::slice(size_type start, size_type end) const
+    constexpr D array_crtp_base<D>::slice(size_type start, size_type end) const
     {
         SPARROW_ASSERT_TRUE(start <= end);
         return D{get_arrow_proxy().slice(start, end)};
     }
 
     template <class D>
-    D array_crtp_base<D>::slice_view(size_type start, size_type end) const
+    constexpr D array_crtp_base<D>::slice_view(size_type start, size_type end) const
     {
         SPARROW_ASSERT_TRUE(start <= end);
         return D{get_arrow_proxy().slice_view(start, end)};
@@ -455,7 +456,7 @@ namespace sparrow
      * @param rhs the second array to compare.
      */
     template <class D>
-    bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs)
+    constexpr bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs)
     {
         return std::ranges::equal(lhs, rhs);
     }

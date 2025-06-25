@@ -47,61 +47,61 @@ namespace sparrow
         using reverse_iterator = std::reverse_iterator<iterator>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-        buffer_view() = default;
-        explicit buffer_view(buffer<T>& buffer)
+        constexpr buffer_view() = default;
+        constexpr explicit buffer_view(buffer<T>& buffer)
             requires(!std::is_const_v<T>);
         template <class U>
             requires std::same_as<std::remove_const_t<T>, U>
-        explicit buffer_view(const buffer<U>& buffer);
-        buffer_view(pointer p, size_type n);
+        constexpr explicit buffer_view(const buffer<U>& buffer);
+        constexpr buffer_view(pointer p, size_type n);
 
         template <class It, class End>
             requires std::contiguous_iterator<It> && std::sentinel_for<End, It>
                      && std::same_as<std::remove_const_t<std::iter_value_t<It>>, std::remove_const_t<T>>
-        buffer_view(It first, End last);
+        constexpr buffer_view(It first, End last);
 
-        [[nodiscard]] bool empty() const noexcept;
-        [[nodiscard]] size_type size() const noexcept;
-        [[nodiscard]] size_type max_size() const noexcept;
+        [[nodiscard]] constexpr bool empty() const noexcept;
+        [[nodiscard]] constexpr size_type size() const noexcept;
+        [[nodiscard]] constexpr size_type max_size() const noexcept;
 
-        reference operator[](size_type);
-        const_reference operator[](size_type) const;
+        constexpr reference operator[](size_type);
+        constexpr const_reference operator[](size_type) const;
 
-        reference front();
-        const_reference front() const;
+        constexpr reference front();
+        constexpr const_reference front() const;
 
-        reference back();
-        const_reference back() const;
-
-        template <class U = T>
-        U* data() noexcept;
+        constexpr reference back();
+        constexpr const_reference back() const;
 
         template <class U = T>
-        const U* data() const noexcept;
+        constexpr U* data() noexcept;
 
-        iterator begin();
-        iterator end();
+        template <class U = T>
+        constexpr const U* data() const noexcept;
 
-        const_iterator begin() const;
-        const_iterator end() const;
-        const_iterator cbegin() const;
-        const_iterator cend() const;
+        constexpr iterator begin();
+        constexpr iterator end();
 
-        reverse_iterator rbegin();
-        reverse_iterator rend();
+        constexpr const_iterator begin() const;
+        constexpr const_iterator end() const;
+        constexpr const_iterator cbegin() const;
+        constexpr const_iterator cend() const;
 
-        const_reverse_iterator rbegin() const;
-        const_reverse_iterator rend() const;
-        const_reverse_iterator crbegin() const;
-        const_reverse_iterator crend() const;
+        constexpr reverse_iterator rbegin();
+        constexpr reverse_iterator rend();
 
-        void swap(buffer_view& rhs) noexcept;
+        constexpr const_reverse_iterator rbegin() const;
+        constexpr const_reverse_iterator rend() const;
+        constexpr const_reverse_iterator crbegin() const;
+        constexpr const_reverse_iterator crend() const;
 
-        buffer_view subrange(size_type pos, size_type count) const;
-        buffer_view subrange(size_type pos) const;
-        buffer_view subrange(const_iterator first, const_iterator last) const;
+        constexpr void swap(buffer_view& rhs) noexcept;
 
-        operator buffer<std::remove_const_t<T>>() const;
+        constexpr buffer_view subrange(size_type pos, size_type count) const;
+        constexpr buffer_view subrange(size_type pos) const;
+        constexpr buffer_view subrange(const_iterator first, const_iterator last) const;
+
+        constexpr operator buffer<std::remove_const_t<T>>() const;
 
     private:
 
@@ -117,7 +117,7 @@ namespace sparrow
      ******************************/
 
     template <class T>
-    buffer_view<T>::buffer_view(buffer<T>& buffer)
+    constexpr buffer_view<T>::buffer_view(buffer<T>& buffer)
         requires(!std::is_const_v<T>)
         : p_data(buffer.data())
         , m_size(buffer.size())
@@ -127,14 +127,14 @@ namespace sparrow
     template <class T>
     template <class U>
         requires std::same_as<std::remove_const_t<T>, U>
-    buffer_view<T>::buffer_view(const buffer<U>& buffer)
+    constexpr buffer_view<T>::buffer_view(const buffer<U>& buffer)
         : p_data(buffer.data())
         , m_size(buffer.size())
     {
     }
 
     template <class T>
-    buffer_view<T>::buffer_view(pointer p, size_type n)
+    constexpr buffer_view<T>::buffer_view(pointer p, size_type n)
         : p_data(p)
         , m_size(n)
     {
@@ -145,7 +145,7 @@ namespace sparrow
     template <class It, class End>
         requires std::contiguous_iterator<It> && std::sentinel_for<End, It>
                      && std::same_as<std::remove_const_t<std::iter_value_t<It>>, std::remove_const_t<T>>
-    buffer_view<T>::buffer_view(It first, End last)
+    constexpr buffer_view<T>::buffer_view(It first, End last)
         : p_data(std::to_address(first))
         , m_size(static_cast<size_type>(std::distance(first, last)))
     {
@@ -153,60 +153,60 @@ namespace sparrow
     }
 
     template <class T>
-    bool buffer_view<T>::empty() const noexcept
+    constexpr bool buffer_view<T>::empty() const noexcept
     {
         return size() == size_type(0);
     }
 
     template <class T>
-    auto buffer_view<T>::size() const noexcept -> size_type
+    constexpr auto buffer_view<T>::size() const noexcept -> size_type
     {
         return m_size;
     }
 
     template <class T>
-    auto buffer_view<T>::max_size() const noexcept -> size_type
+    constexpr auto buffer_view<T>::max_size() const noexcept -> size_type
     {
         return size();
     }
 
     template <class T>
-    auto buffer_view<T>::operator[](size_type pos) -> reference
+    constexpr auto buffer_view<T>::operator[](size_type pos) -> reference
     {
         SPARROW_ASSERT_TRUE(pos < size());
         return data()[pos];
     }
 
     template <class T>
-    auto buffer_view<T>::operator[](size_type pos) const -> const_reference
+    constexpr auto buffer_view<T>::operator[](size_type pos) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(pos < size());
         return data()[pos];
     }
 
     template <class T>
-    auto buffer_view<T>::front() -> reference
+    constexpr auto buffer_view<T>::front() -> reference
     {
         SPARROW_ASSERT_TRUE(!empty());
         return data()[0];
     }
 
     template <class T>
-    auto buffer_view<T>::front() const -> const_reference
+    constexpr auto buffer_view<T>::front() const -> const_reference
     {
         SPARROW_ASSERT_TRUE(!empty());
         return data()[0];
     }
 
     template <class T>
-    auto buffer_view<T>::back() -> reference
+    constexpr auto buffer_view<T>::back() -> reference
     {
         SPARROW_ASSERT_TRUE(!empty());
         return data()[m_size - 1];
     }
 
     template <class T>
-    auto buffer_view<T>::back() const -> const_reference
+    constexpr auto buffer_view<T>::back() const -> const_reference
     {
         SPARROW_ASSERT_TRUE(!empty());
         return data()[m_size - 1];
@@ -214,7 +214,7 @@ namespace sparrow
 
     template <class T>
     template <class U>
-    U* buffer_view<T>::data() noexcept
+    constexpr U* buffer_view<T>::data() noexcept
     {
 #if defined(__GNUC__)
 #    pragma GCC diagnostic push
@@ -228,7 +228,7 @@ namespace sparrow
 
     template <class T>
     template <class U>
-    const U* buffer_view<T>::data() const noexcept
+    constexpr const U* buffer_view<T>::data() const noexcept
     {
 #if defined(__GNUC__)
 #    pragma GCC diagnostic push
@@ -241,86 +241,86 @@ namespace sparrow
     }
 
     template <class T>
-    auto buffer_view<T>::begin() -> iterator
+    constexpr auto buffer_view<T>::begin() -> iterator
     {
         return iterator(p_data);
     }
 
     template <class T>
-    auto buffer_view<T>::end() -> iterator
+    constexpr auto buffer_view<T>::end() -> iterator
     {
         return iterator(p_data + m_size);
     }
 
     template <class T>
-    auto buffer_view<T>::begin() const -> const_iterator
+    constexpr auto buffer_view<T>::begin() const -> const_iterator
     {
         return cbegin();
     }
 
     template <class T>
-    auto buffer_view<T>::end() const -> const_iterator
+    constexpr auto buffer_view<T>::end() const -> const_iterator
     {
         return cend();
     }
 
     template <class T>
-    auto buffer_view<T>::cbegin() const -> const_iterator
+    constexpr auto buffer_view<T>::cbegin() const -> const_iterator
     {
         return const_iterator(p_data);
     }
 
     template <class T>
-    auto buffer_view<T>::cend() const -> const_iterator
+    constexpr auto buffer_view<T>::cend() const -> const_iterator
     {
         return const_iterator(p_data + m_size);
     }
 
     template <class T>
-    auto buffer_view<T>::rbegin() -> reverse_iterator
+    constexpr auto buffer_view<T>::rbegin() -> reverse_iterator
     {
         return reverse_iterator(end());
     }
 
     template <class T>
-    auto buffer_view<T>::rend() -> reverse_iterator
+    constexpr auto buffer_view<T>::rend() -> reverse_iterator
     {
         return reverse_iterator(begin());
     }
 
     template <class T>
-    auto buffer_view<T>::rbegin() const -> const_reverse_iterator
+    constexpr auto buffer_view<T>::rbegin() const -> const_reverse_iterator
     {
         return crbegin();
     }
 
     template <class T>
-    auto buffer_view<T>::rend() const -> const_reverse_iterator
+    constexpr auto buffer_view<T>::rend() const -> const_reverse_iterator
     {
         return crend();
     }
 
     template <class T>
-    auto buffer_view<T>::crbegin() const -> const_reverse_iterator
+    constexpr auto buffer_view<T>::crbegin() const -> const_reverse_iterator
     {
         return const_reverse_iterator(cend());
     }
 
     template <class T>
-    auto buffer_view<T>::crend() const -> const_reverse_iterator
+    constexpr auto buffer_view<T>::crend() const -> const_reverse_iterator
     {
         return const_reverse_iterator(cbegin());
     }
 
     template <class T>
-    void buffer_view<T>::swap(buffer_view<T>& rhs) noexcept
+    constexpr void buffer_view<T>::swap(buffer_view<T>& rhs) noexcept
     {
         std::swap(p_data, rhs.p_data);
         std::swap(m_size, rhs.m_size);
     }
 
     template <class T>
-    buffer_view<T> buffer_view<T>::subrange(size_type pos, size_type count) const
+    constexpr buffer_view<T> buffer_view<T>::subrange(size_type pos, size_type count) const
     {
         SPARROW_ASSERT_TRUE(pos <= size());
         SPARROW_ASSERT_TRUE(count <= size() - pos);
@@ -328,21 +328,21 @@ namespace sparrow
     }
 
     template <class T>
-    buffer_view<T> buffer_view<T>::subrange(size_type pos) const
+    constexpr buffer_view<T> buffer_view<T>::subrange(size_type pos) const
     {
         SPARROW_ASSERT_TRUE(pos <= size());
         return buffer_view<T>(p_data + pos, size() - pos);
     }
 
     template <class T>
-    buffer_view<T> buffer_view<T>::subrange(const_iterator first, const_iterator last) const
+    constexpr buffer_view<T> buffer_view<T>::subrange(const_iterator first, const_iterator last) const
     {
         SPARROW_ASSERT_TRUE(first >= begin() && last <= end());
         return buffer_view<T>(first, last);
     }
 
     template <class T>
-    buffer_view<T>::operator buffer<std::remove_const_t<T>>() const
+    constexpr buffer_view<T>::operator buffer<std::remove_const_t<T>>() const
     {
         if (!p_data)
         {

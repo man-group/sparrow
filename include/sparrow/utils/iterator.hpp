@@ -404,51 +404,51 @@ namespace sparrow
         using difference_type = typename base_type::difference_type;
         using iterator_type = Iter;
 
-        iterator_adaptor() = default;
+        constexpr iterator_adaptor() = default;
 
-        explicit iterator_adaptor(const iterator_type& iter)
+        constexpr explicit iterator_adaptor(const iterator_type& iter)
             : p_iter(iter)
         {
         }
 
-        [[nodiscard]] const iterator_type& base() const
+        [[nodiscard]] constexpr const iterator_type& base() const
         {
             return p_iter;
         }
 
     private:
 
-        reference dereference() const
+        constexpr reference dereference() const
         {
             return *p_iter;
         }
 
-        void increment()
+        constexpr void increment()
         {
             ++p_iter;
         }
 
-        void decrement()
+        constexpr void decrement()
         {
             --p_iter;
         }
 
-        void advance(difference_type n)
+        constexpr void advance(difference_type n)
         {
             p_iter += n;
         }
 
-        [[nodiscard]] difference_type distance_to(const self_type& rhs) const
+        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const
         {
             return rhs.p_iter - p_iter;
         }
 
-        [[nodiscard]] bool equal(const self_type& rhs) const
+        [[nodiscard]] constexpr bool equal(const self_type& rhs) const
         {
             return p_iter == rhs.p_iter;
         }
 
-        [[nodiscard]] bool less_than(const self_type& rhs) const
+        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const
         {
             return p_iter < rhs.p_iter;
         }
@@ -478,23 +478,23 @@ namespace sparrow
         using base_type = iterator_adaptor<self_type, T*, T, std::contiguous_iterator_tag>;
         using iterator_type = typename base_type::iterator_type;
 
-        pointer_iterator() = default;
+        constexpr pointer_iterator() = default;
 
-        explicit pointer_iterator(iterator_type p)
+        explicit constexpr pointer_iterator(iterator_type p)
             : base_type(p)
         {
         }
 
         template <class U>
             requires std::convertible_to<U*, iterator_type>
-        explicit pointer_iterator(U* u)
+        explicit constexpr pointer_iterator(U* u)
             : base_type(iterator_type(u))
         {
         }
     };
 
     template <class T>
-    [[nodiscard]] pointer_iterator<T*> make_pointer_iterator(T* t)
+    [[nodiscard]] constexpr pointer_iterator<T*> make_pointer_iterator(T* t)
     {
         return pointer_iterator<T*>(t);
     }

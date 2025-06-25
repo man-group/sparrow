@@ -24,33 +24,33 @@ namespace sparrow
 
         using integer_type = T;
 
-        decimal()
+        constexpr decimal()
             requires(!is_int_placeholder_v<T>);
-        decimal()
+        constexpr decimal()
             requires(is_int_placeholder_v<T>);
-        decimal(T value, int scale);
+        constexpr decimal(T value, int scale);
 
-        bool operator==(const decimal& other) const;
+        constexpr bool operator==(const decimal& other) const;
 
-        explicit operator float() const
+        constexpr explicit operator float() const
             requires(!is_int_placeholder_v<T>);
-        explicit operator double() const
+        constexpr explicit operator double() const
             requires(!is_int_placeholder_v<T>);
-        explicit operator long double() const
+        constexpr explicit operator long double() const
             requires(!is_int_placeholder_v<T>);
 
         // convert to string
         [[nodiscard]] explicit operator std::string() const
             requires(!is_int_placeholder_v<T>);
 
-        [[nodiscard]] T storage() const;
+        [[nodiscard]] constexpr T storage() const;
 
-        [[nodiscard]] int scale() const;
+        [[nodiscard]] constexpr int scale() const;
 
     private:
 
         template <class FLOAT_TYPE>
-        [[nodiscard]] FLOAT_TYPE convert_to_floating_point() const
+        [[nodiscard]] constexpr FLOAT_TYPE convert_to_floating_point() const
             requires(!is_int_placeholder_v<T>);
 
 
@@ -65,7 +65,7 @@ namespace sparrow
     concept decimal_type = is_decimal_v<T> && decimal_integer_type<typename T::integer_type>;
 
     template <decimal_integer_type T>
-    decimal<T>::decimal()
+    constexpr decimal<T>::decimal()
         requires(!is_int_placeholder_v<T>)
         : m_value(0)
         , m_scale()
@@ -73,7 +73,7 @@ namespace sparrow
     }
 
     template <decimal_integer_type T>
-    decimal<T>::decimal()
+    constexpr decimal<T>::decimal()
         requires(is_int_placeholder_v<T>)
         : m_value()
         , m_scale()
@@ -81,34 +81,34 @@ namespace sparrow
     }
 
     template <decimal_integer_type T>
-    decimal<T>::decimal(T value, int scale)
+    constexpr decimal<T>::decimal(T value, int scale)
         : m_value(value)
         , m_scale(scale)
     {
     }
 
     template <decimal_integer_type T>
-    bool decimal<T>::operator==(const decimal& other) const
+    constexpr bool decimal<T>::operator==(const decimal& other) const
     {
         return m_value == other.m_value && m_scale == other.m_scale;
     }
 
     template <decimal_integer_type T>
-    decimal<T>::operator float() const
+    constexpr decimal<T>::operator float() const
         requires(!is_int_placeholder_v<T>)
     {
         return convert_to_floating_point<float>();
     }
 
     template <decimal_integer_type T>
-    decimal<T>::operator double() const
+    constexpr decimal<T>::operator double() const
         requires(!is_int_placeholder_v<T>)
     {
         return convert_to_floating_point<double>();
     }
 
     template <decimal_integer_type T>
-    decimal<T>::operator long double() const
+    constexpr decimal<T>::operator long double() const
         requires(!is_int_placeholder_v<T>)
     {
         return convert_to_floating_point<long double>();
@@ -162,20 +162,20 @@ namespace sparrow
     }
 
     template <decimal_integer_type T>
-    T decimal<T>::storage() const
+    constexpr T decimal<T>::storage() const
     {
         return m_value;
     }
 
     template <decimal_integer_type T>
-    int decimal<T>::scale() const
+    constexpr int decimal<T>::scale() const
     {
         return m_scale;
     }
 
     template <decimal_integer_type T>
     template <class FLOAT_TYPE>
-    FLOAT_TYPE decimal<T>::convert_to_floating_point() const
+    constexpr FLOAT_TYPE decimal<T>::convert_to_floating_point() const
         requires(!is_int_placeholder_v<T>)
     {
         using to_type = FLOAT_TYPE;

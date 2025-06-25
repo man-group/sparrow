@@ -95,30 +95,30 @@ namespace sparrow
 
         using type_id_buffer_type = u8_buffer<std::uint8_t>;
 
-        [[nodiscard]] std::optional<std::string_view> name() const;
-        [[nodiscard]] std::optional<key_value_view> metadata() const;
+        [[nodiscard]] constexpr std::optional<std::string_view> name() const;
+        [[nodiscard]] constexpr std::optional<key_value_view> metadata() const;
 
-        [[nodiscard]] value_type at(size_type i) const;
-        [[nodiscard]] value_type operator[](size_type i) const;
-        [[nodiscard]] value_type operator[](size_type i);
-        [[nodiscard]] value_type front() const;
-        [[nodiscard]] value_type back() const;
+        [[nodiscard]] constexpr value_type at(size_type i) const;
+        [[nodiscard]] constexpr value_type operator[](size_type i) const;
+        [[nodiscard]] constexpr value_type operator[](size_type i);
+        [[nodiscard]] constexpr value_type front() const;
+        [[nodiscard]] constexpr value_type back() const;
 
-        [[nodiscard]] bool empty() const;
-        [[nodiscard]] size_type size() const;
+        [[nodiscard]] constexpr bool empty() const;
+        [[nodiscard]] constexpr size_type size() const;
 
-        [[nodiscard]] iterator begin();
-        [[nodiscard]] iterator end();
-        [[nodiscard]] const_iterator begin() const;
-        [[nodiscard]] const_iterator end() const;
-        [[nodiscard]] const_iterator cbegin() const;
-        [[nodiscard]] const_iterator cend() const;
+        [[nodiscard]] constexpr iterator begin();
+        [[nodiscard]] constexpr iterator end();
+        [[nodiscard]] constexpr const_iterator begin() const;
+        [[nodiscard]] constexpr const_iterator end() const;
+        [[nodiscard]] constexpr const_iterator cbegin() const;
+        [[nodiscard]] constexpr const_iterator cend() const;
 
-        [[nodiscard]] const_reverse_iterator rbegin() const;
-        [[nodiscard]] const_reverse_iterator rend() const;
+        [[nodiscard]] constexpr const_reverse_iterator rbegin() const;
+        [[nodiscard]] constexpr const_reverse_iterator rend() const;
 
-        [[nodiscard]] const_reverse_iterator crbegin() const;
-        [[nodiscard]] const_reverse_iterator crend() const;
+        [[nodiscard]] constexpr const_reverse_iterator crbegin() const;
+        [[nodiscard]] constexpr const_reverse_iterator crend() const;
 
         /**
          * Sets all null values to the specified value.
@@ -127,7 +127,7 @@ namespace sparrow
          *
          * @param value The value to assign to null elements
          */
-        void zero_null_values(const inner_value_type& value)
+        constexpr void zero_null_values(const inner_value_type& value)
         {
             sparrow::zero_null_values(*this, value);
         }
@@ -135,29 +135,30 @@ namespace sparrow
     protected:
 
         using type_id_map = std::array<std::uint8_t, 256>;
-        static type_id_map parse_type_id_map(std::string_view format_string);
+        static constexpr type_id_map parse_type_id_map(std::string_view format_string);
 
         template <std::ranges::input_range R>
-        static type_id_map type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id);
+        static constexpr type_id_map
+        type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id);
 
         template <std::ranges::input_range R>
             requires(std::convertible_to<std::ranges::range_value_t<R>, std::uint8_t>)
-        static std::string
+        static constexpr std::string
         make_format_string(bool dense, std::size_t n, const std::optional<R>& child_index_to_type_id);
 
         using children_type = std::vector<cloning_ptr<array_wrapper>>;
-        children_type make_children(arrow_proxy& proxy);
+        constexpr children_type make_children(arrow_proxy& proxy);
 
         explicit union_array_crtp_base(arrow_proxy proxy);
 
-        union_array_crtp_base(const self_type& rhs);
-        self_type& operator=(const self_type& rhs);
+        constexpr union_array_crtp_base(const self_type& rhs);
+        constexpr self_type& operator=(const self_type& rhs);
 
-        union_array_crtp_base(self_type&& rhs) = default;
-        self_type& operator=(self_type&& rhs) = default;
+        constexpr union_array_crtp_base(self_type&& rhs) = default;
+        constexpr self_type& operator=(self_type&& rhs) = default;
 
-        [[nodiscard]] arrow_proxy& get_arrow_proxy();
-        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
+        [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy() const;
 
         arrow_proxy m_proxy;
         const std::uint8_t* p_type_ids;
@@ -174,7 +175,7 @@ namespace sparrow
     };
 
     template <class D>
-    bool operator==(const union_array_crtp_base<D>& lhs, const union_array_crtp_base<D>& rhs);
+    constexpr bool operator==(const union_array_crtp_base<D>& lhs, const union_array_crtp_base<D>& rhs);
 
     /**
      * A dense union array implementation.
@@ -200,7 +201,7 @@ namespace sparrow
         SPARROW_API dense_union_array(const dense_union_array& rhs);
         SPARROW_API dense_union_array& operator=(const dense_union_array& rhs);
 
-        dense_union_array(dense_union_array&& rhs) = default;
+        constexpr dense_union_array(dense_union_array&& rhs) = default;
         dense_union_array& operator=(dense_union_array&& rhs) = default;
 
     private:
@@ -349,7 +350,8 @@ namespace sparrow
      ****************************************/
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::parse_type_id_map(std::string_view format_string) -> type_id_map
+    constexpr auto union_array_crtp_base<DERIVED>::parse_type_id_map(std::string_view format_string)
+        -> type_id_map
     {
         type_id_map ret;
         // remove +du: / +su: prefix
@@ -374,9 +376,9 @@ namespace sparrow
 
     template <class DERIVED>
     template <std::ranges::input_range R>
-    auto
-    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id)
-        -> type_id_map
+    constexpr auto
+    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id
+    ) -> type_id_map
     {
         std::array<std::uint8_t, 256> ret;
         if (!child_index_to_type_id.has_value())
@@ -406,7 +408,7 @@ namespace sparrow
     template <class DERIVED>
     template <std::ranges::input_range R>
         requires(std::convertible_to<std::ranges::range_value_t<R>, std::uint8_t>)
-    std::string
+    constexpr std::string
     union_array_crtp_base<DERIVED>::make_format_string(bool dense, const std::size_t n, const std::optional<R>& range)
     {
         const auto range_size = range.has_value() ? std::ranges::size(*range) : 0;
@@ -437,25 +439,25 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    std::optional<std::string_view> union_array_crtp_base<DERIVED>::name() const
+    constexpr std::optional<std::string_view> union_array_crtp_base<DERIVED>::name() const
     {
         return m_proxy.name();
     }
 
     template <class DERIVED>
-    std::optional<key_value_view> union_array_crtp_base<DERIVED>::metadata() const
+    constexpr std::optional<key_value_view> union_array_crtp_base<DERIVED>::metadata() const
     {
         return m_proxy.metadata();
     }
 
     template <class DERIVED>
-    arrow_proxy& union_array_crtp_base<DERIVED>::get_arrow_proxy()
+    constexpr arrow_proxy& union_array_crtp_base<DERIVED>::get_arrow_proxy()
     {
         return m_proxy;
     }
 
     template <class DERIVED>
-    const arrow_proxy& union_array_crtp_base<DERIVED>::get_arrow_proxy() const
+    constexpr const arrow_proxy& union_array_crtp_base<DERIVED>::get_arrow_proxy() const
     {
         return m_proxy;
     }
@@ -470,13 +472,13 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    union_array_crtp_base<DERIVED>::union_array_crtp_base(const self_type& rhs)
+    constexpr union_array_crtp_base<DERIVED>::union_array_crtp_base(const self_type& rhs)
         : self_type(rhs.m_proxy)
     {
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::operator=(const self_type& rhs) -> self_type&
+    constexpr auto union_array_crtp_base<DERIVED>::operator=(const self_type& rhs) -> self_type&
     {
         if (this != &rhs)
         {
@@ -489,7 +491,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::operator[](std::size_t i) const -> value_type
+    constexpr auto union_array_crtp_base<DERIVED>::operator[](std::size_t i) const -> value_type
     {
         const auto type_id = static_cast<std::size_t>(p_type_ids[i]);
         const auto child_index = m_type_id_map[type_id];
@@ -498,97 +500,97 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::operator[](std::size_t i) -> value_type
+    constexpr auto union_array_crtp_base<DERIVED>::operator[](std::size_t i) -> value_type
     {
         return static_cast<const derived_type&>(*this)[i];
     }
 
     template <class DERIVED>
-    std::size_t union_array_crtp_base<DERIVED>::size() const
+    constexpr std::size_t union_array_crtp_base<DERIVED>::size() const
     {
         return m_proxy.length();
     }
 
     template <class DERIVED>
-    bool union_array_crtp_base<DERIVED>::empty() const
+    constexpr bool union_array_crtp_base<DERIVED>::empty() const
     {
         return size() == 0;
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::begin() -> iterator
+    constexpr auto union_array_crtp_base<DERIVED>::begin() -> iterator
     {
         return iterator(functor_type{&(this->derived_cast())}, 0);
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::end() -> iterator
+    constexpr auto union_array_crtp_base<DERIVED>::end() -> iterator
     {
         return iterator(functor_type{&(this->derived_cast())}, this->size());
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::begin() const -> const_iterator
+    constexpr auto union_array_crtp_base<DERIVED>::begin() const -> const_iterator
     {
         return cbegin();
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::end() const -> const_iterator
+    constexpr auto union_array_crtp_base<DERIVED>::end() const -> const_iterator
     {
         return cend();
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::cbegin() const -> const_iterator
+    constexpr auto union_array_crtp_base<DERIVED>::cbegin() const -> const_iterator
     {
         return const_iterator(const_functor_type{&(this->derived_cast())}, 0);
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::cend() const -> const_iterator
+    constexpr auto union_array_crtp_base<DERIVED>::cend() const -> const_iterator
     {
         return const_iterator(const_functor_type{&(this->derived_cast())}, this->size());
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::rbegin() const -> const_reverse_iterator
+    constexpr auto union_array_crtp_base<DERIVED>::rbegin() const -> const_reverse_iterator
     {
         return const_reverse_iterator{cend()};
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::rend() const -> const_reverse_iterator
+    constexpr auto union_array_crtp_base<DERIVED>::rend() const -> const_reverse_iterator
     {
         return const_reverse_iterator{cbegin()};
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::crbegin() const -> const_reverse_iterator
+    constexpr auto union_array_crtp_base<DERIVED>::crbegin() const -> const_reverse_iterator
     {
         return rbegin();
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::crend() const -> const_reverse_iterator
+    constexpr auto union_array_crtp_base<DERIVED>::crend() const -> const_reverse_iterator
     {
         return rend();
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::front() const -> value_type
+    constexpr auto union_array_crtp_base<DERIVED>::front() const -> value_type
     {
         return (*this)[0];
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::back() const -> value_type
+    constexpr auto union_array_crtp_base<DERIVED>::back() const -> value_type
     {
         return (*this)[this->size() - 1];
     }
 
     template <class DERIVED>
-    auto union_array_crtp_base<DERIVED>::make_children(arrow_proxy& proxy) -> children_type
+    constexpr auto union_array_crtp_base<DERIVED>::make_children(arrow_proxy& proxy) -> children_type
     {
         children_type children(proxy.children().size(), nullptr);
         for (std::size_t i = 0; i < children.size(); ++i)
@@ -599,7 +601,7 @@ namespace sparrow
     }
 
     template <class D>
-    bool operator==(const union_array_crtp_base<D>& lhs, const union_array_crtp_base<D>& rhs)
+    constexpr bool operator==(const union_array_crtp_base<D>& lhs, const union_array_crtp_base<D>& rhs)
     {
         return std::ranges::equal(lhs, rhs);
     }

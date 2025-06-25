@@ -91,12 +91,12 @@ namespace sparrow
             constexpr value_iterator erase_values(const_value_iterator pos, size_t count);
             constexpr value_iterator erase_values(size_t idx, size_t count);
 
-            void reset_proxy(arrow_proxy& proxy);
+            constexpr void reset_proxy(arrow_proxy& proxy);
 
             template <std::ranges::input_range RANGE>
-            [[nodiscard]] static u8_buffer<T> make_data_buffer(RANGE&& r);
+            [[nodiscard]] constexpr static u8_buffer<T> make_data_buffer(RANGE&& r);
 
-            [[nodiscard]] static u8_buffer<T> make_data_buffer(size_t n, const T& value);
+            [[nodiscard]] constexpr static u8_buffer<T> make_data_buffer(size_t n, const T& value);
 
         private:
 
@@ -347,20 +347,21 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T>
-        void primitive_data_access<T>::reset_proxy(arrow_proxy& proxy)
+        constexpr void primitive_data_access<T>::reset_proxy(arrow_proxy& proxy)
         {
             p_proxy = &proxy;
         }
 
         template <trivial_copyable_type T>
         template <std::ranges::input_range RANGE>
-        [[nodiscard]] u8_buffer<T> primitive_data_access<T>::make_data_buffer(RANGE&& r)
+        [[nodiscard]] constexpr u8_buffer<T> primitive_data_access<T>::make_data_buffer(RANGE&& r)
         {
             return u8_buffer<T>(std::forward<RANGE>(r));
         }
 
         template <trivial_copyable_type T>
-        [[nodiscard]] u8_buffer<T> primitive_data_access<T>::make_data_buffer(size_t size, const T& value)
+        [[nodiscard]] constexpr u8_buffer<T>
+        primitive_data_access<T>::make_data_buffer(size_t size, const T& value)
         {
             return u8_buffer<T>(size, value);
         }

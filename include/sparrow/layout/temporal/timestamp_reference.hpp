@@ -40,17 +40,17 @@ namespace sparrow
         using size_type = typename L::size_type;
         using difference_type = std::ptrdiff_t;
 
-        timestamp_reference(L* layout, size_type index);
-        timestamp_reference(const timestamp_reference&) = default;
-        timestamp_reference(timestamp_reference&&) noexcept = default;
+        constexpr timestamp_reference(L* layout, size_type index);
+        constexpr timestamp_reference(const timestamp_reference&) = default;
+        constexpr timestamp_reference(timestamp_reference&&) noexcept = default;
 
-        self_type& operator=(value_type&& rhs);
-        self_type& operator=(const value_type& rhs);
+        constexpr self_type& operator=(value_type&& rhs);
+        constexpr self_type& operator=(const value_type& rhs);
 
-        bool operator==(const value_type& rhs) const;
-        auto operator<=>(const value_type& rhs) const;
+        constexpr bool operator==(const value_type& rhs) const;
+        constexpr auto operator<=>(const value_type& rhs) const;
 
-        [[nodiscard]] const_reference value() const;
+        [[nodiscard]] constexpr const_reference value() const;
 
     private:
 
@@ -84,40 +84,40 @@ namespace sparrow
      *************************************/
 
     template <typename L>
-    timestamp_reference<L>::timestamp_reference(L* layout, size_type index)
+    constexpr timestamp_reference<L>::timestamp_reference(L* layout, size_type index)
         : p_layout(layout)
         , m_index(index)
     {
     }
 
     template <typename L>
-    auto timestamp_reference<L>::operator=(value_type&& rhs) -> self_type&
+    constexpr auto timestamp_reference<L>::operator=(value_type&& rhs) -> self_type&
     {
         p_layout->assign(std::forward<value_type>(rhs), m_index);
         return *this;
     }
 
     template <typename L>
-    auto timestamp_reference<L>::operator=(const value_type& rhs) -> self_type&
+    constexpr auto timestamp_reference<L>::operator=(const value_type& rhs) -> self_type&
     {
         p_layout->assign(rhs, m_index);
         return *this;
     }
 
     template <typename L>
-    bool timestamp_reference<L>::operator==(const value_type& rhs) const
+    constexpr bool timestamp_reference<L>::operator==(const value_type& rhs) const
     {
         return value() == rhs;
     }
 
     template <typename L>
-    auto timestamp_reference<L>::operator<=>(const value_type& rhs) const
+    constexpr auto timestamp_reference<L>::operator<=>(const value_type& rhs) const
     {
         return lexicographical_compare_three_way(*this, rhs);
     }
 
     template <typename L>
-    auto timestamp_reference<L>::value() const -> const_reference
+    constexpr auto timestamp_reference<L>::value() const -> const_reference
     {
         return static_cast<const L*>(p_layout)->value(m_index);
     }

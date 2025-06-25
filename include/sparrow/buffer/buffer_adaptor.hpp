@@ -62,9 +62,9 @@ namespace sparrow
         using reverse_iterator = std::reverse_iterator<iterator>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-        explicit buffer_adaptor(FromBufferRef buf)
+        constexpr explicit buffer_adaptor(FromBufferRef buf)
             requires(not is_const);
-        explicit buffer_adaptor(const FromBufferRef buf);
+        constexpr explicit buffer_adaptor(const FromBufferRef buf);
 
         [[nodiscard]] constexpr pointer data() noexcept
             requires(not is_const);
@@ -199,7 +199,7 @@ namespace sparrow
 
     template <typename To, BufferReference<To> FromBufferRef>
         requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
-    buffer_adaptor<To, FromBufferRef>::buffer_adaptor(FromBufferRef buf)
+    constexpr buffer_adaptor<To, FromBufferRef>::buffer_adaptor(FromBufferRef buf)
         requires(not is_const)
         : m_buffer(buf)
         , m_max_size(m_buffer.max_size() / m_to_from_size_ratio)
@@ -208,7 +208,7 @@ namespace sparrow
 
     template <typename To, BufferReference<To> FromBufferRef>
         requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
-    buffer_adaptor<To, FromBufferRef>::buffer_adaptor(const FromBufferRef buf)
+    constexpr buffer_adaptor<To, FromBufferRef>::buffer_adaptor(const FromBufferRef buf)
         : m_buffer(buf)
         , m_max_size(m_buffer.max_size() / m_to_from_size_ratio)
     {

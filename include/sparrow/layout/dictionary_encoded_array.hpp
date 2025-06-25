@@ -52,7 +52,7 @@ namespace sparrow
         {
         }
 
-        [[nodiscard]] return_type operator()(std::size_t i) const
+        [[nodiscard]] constexpr return_type operator()(std::size_t i) const
         {
             return p_layout->operator[](i);
         }
@@ -130,40 +130,40 @@ namespace sparrow
 
         explicit dictionary_encoded_array(arrow_proxy);
 
-        dictionary_encoded_array(const self_type&);
-        self_type& operator=(const self_type&);
+        constexpr dictionary_encoded_array(const self_type&);
+        constexpr self_type& operator=(const self_type&);
 
-        dictionary_encoded_array(self_type&&);
-        self_type& operator=(self_type&&);
+        constexpr dictionary_encoded_array(self_type&&);
+        constexpr self_type& operator=(self_type&&);
 
-        [[nodiscard]] std::optional<std::string_view> name() const;
-        [[nodiscard]] std::optional<key_value_view> metadata() const;
+        [[nodiscard]] constexpr std::optional<std::string_view> name() const;
+        [[nodiscard]] constexpr std::optional<key_value_view> metadata() const;
 
-        [[nodiscard]] size_type size() const;
-        [[nodiscard]] bool empty() const;
+        [[nodiscard]] constexpr size_type size() const;
+        [[nodiscard]] constexpr bool empty() const;
 
-        [[nodiscard]] const_reference operator[](size_type i) const;
+        [[nodiscard]] constexpr const_reference operator[](size_type i) const;
 
-        [[nodiscard]] iterator begin();
-        [[nodiscard]] iterator end();
+        [[nodiscard]] constexpr iterator begin();
+        [[nodiscard]] constexpr iterator end();
 
-        [[nodiscard]] const_iterator begin() const;
-        [[nodiscard]] const_iterator end() const;
+        [[nodiscard]] constexpr const_iterator begin() const;
+        [[nodiscard]] constexpr const_iterator end() const;
 
-        [[nodiscard]] const_iterator cbegin() const;
-        [[nodiscard]] const_iterator cend() const;
+        [[nodiscard]] constexpr const_iterator cbegin() const;
+        [[nodiscard]] constexpr const_iterator cend() const;
 
-        [[nodiscard]] reverse_iterator rbegin();
-        [[nodiscard]] reverse_iterator rend();
+        [[nodiscard]] constexpr reverse_iterator rbegin();
+        [[nodiscard]] constexpr reverse_iterator rend();
 
-        [[nodiscard]] const_reverse_iterator rbegin() const;
-        [[nodiscard]] const_reverse_iterator rend() const;
+        [[nodiscard]] constexpr const_reverse_iterator rbegin() const;
+        [[nodiscard]] constexpr const_reverse_iterator rend() const;
 
-        [[nodiscard]] const_reverse_iterator crbegin() const;
-        [[nodiscard]] const_reverse_iterator crend() const;
+        [[nodiscard]] constexpr const_reverse_iterator crbegin() const;
+        [[nodiscard]] constexpr const_reverse_iterator crend() const;
 
-        [[nodiscard]] const_reference front() const;
-        [[nodiscard]] const_reference back() const;
+        [[nodiscard]] constexpr const_reference front() const;
+        [[nodiscard]] constexpr const_reference back() const;
 
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<dictionary_encoded_array<IT>, Args...>)
@@ -181,7 +181,7 @@ namespace sparrow
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        [[nodiscard]] self_type slice(size_type start, size_type end) const;
+        [[nodiscard]] constexpr self_type slice(size_type start, size_type end) const;
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
@@ -192,7 +192,7 @@ namespace sparrow
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
          */
-        [[nodiscard]] self_type slice_view(size_type start, size_type end) const;
+        [[nodiscard]] constexpr self_type slice_view(size_type start, size_type end) const;
 
     private:
 
@@ -231,10 +231,7 @@ namespace sparrow
             std::ranges::input_range KEY_RANGE,
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(
-                !std::same_as<KEY_RANGE, keys_buffer_type>
-                and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>
-            )
+            requires(!std::same_as<KEY_RANGE, keys_buffer_type> and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>)
         [[nodiscard]] static arrow_proxy create_proxy(
             KEY_RANGE&& keys,
             array&& values,
@@ -271,11 +268,11 @@ namespace sparrow
         [[nodiscard]] const inner_value_type& dummy_inner_value() const;
         [[nodiscard]] const_reference dummy_const_reference() const;
 
-        [[nodiscard]] static keys_layout create_keys_layout(arrow_proxy& proxy);
+        [[nodiscard]] constexpr static keys_layout create_keys_layout(arrow_proxy& proxy);
         [[nodiscard]] static values_layout create_values_layout(arrow_proxy& proxy);
 
-        [[nodiscard]] arrow_proxy& get_arrow_proxy();
-        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const;
+        [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy();
+        [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy() const;
 
         arrow_proxy m_proxy;
         keys_layout m_keys_layout;
@@ -285,7 +282,7 @@ namespace sparrow
     };
 
     template <class IT>
-    bool operator==(const dictionary_encoded_array<IT>& lhs, const dictionary_encoded_array<IT>& rhs);
+    constexpr bool operator==(const dictionary_encoded_array<IT>& lhs, const dictionary_encoded_array<IT>& rhs);
 
     /*******************************************
      * dictionary_encoded_array implementation *
@@ -301,7 +298,7 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    dictionary_encoded_array<IT>::dictionary_encoded_array(const self_type& rhs)
+    constexpr dictionary_encoded_array<IT>::dictionary_encoded_array(const self_type& rhs)
         : m_proxy(rhs.m_proxy)
         , m_keys_layout(create_keys_layout(m_proxy))
         , p_values_layout(create_values_layout(m_proxy))
@@ -309,7 +306,7 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::operator=(const self_type& rhs) -> self_type&
+    constexpr auto dictionary_encoded_array<IT>::operator=(const self_type& rhs) -> self_type&
     {
         if (this != &rhs)
         {
@@ -321,7 +318,7 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    dictionary_encoded_array<IT>::dictionary_encoded_array(self_type&& rhs)
+    constexpr dictionary_encoded_array<IT>::dictionary_encoded_array(self_type&& rhs)
         : m_proxy(std::move(rhs.m_proxy))
         , m_keys_layout(create_keys_layout(m_proxy))
         , p_values_layout(create_values_layout(m_proxy))
@@ -329,7 +326,7 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::operator=(self_type&& rhs) -> self_type&
+    constexpr auto dictionary_encoded_array<IT>::operator=(self_type&& rhs) -> self_type&
     {
         if (this != &rhs)
         {
@@ -467,31 +464,31 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    std::optional<std::string_view> dictionary_encoded_array<IT>::name() const
+    constexpr std::optional<std::string_view> dictionary_encoded_array<IT>::name() const
     {
         return m_proxy.name();
     }
 
     template <std::integral IT>
-    std::optional<key_value_view> dictionary_encoded_array<IT>::metadata() const
+    constexpr std::optional<key_value_view> dictionary_encoded_array<IT>::metadata() const
     {
         return m_proxy.metadata();
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::size() const -> size_type
+    constexpr auto dictionary_encoded_array<IT>::size() const -> size_type
     {
         return m_proxy.length();
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::empty() const -> bool
+    constexpr auto dictionary_encoded_array<IT>::empty() const -> bool
     {
         return size() == 0;
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::operator[](size_type i) const -> const_reference
+    constexpr auto dictionary_encoded_array<IT>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         const auto index = m_keys_layout[i];
@@ -508,37 +505,37 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::begin() -> iterator
+    constexpr auto dictionary_encoded_array<IT>::begin() -> iterator
     {
         return iterator(functor_type(this), 0u);
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::end() -> iterator
+    constexpr auto dictionary_encoded_array<IT>::end() -> iterator
     {
         return iterator(functor_type(this), size());
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::begin() const -> const_iterator
+    constexpr auto dictionary_encoded_array<IT>::begin() const -> const_iterator
     {
         return cbegin();
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::end() const -> const_iterator
+    constexpr auto dictionary_encoded_array<IT>::end() const -> const_iterator
     {
         return cend();
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::cbegin() const -> const_iterator
+    constexpr auto dictionary_encoded_array<IT>::cbegin() const -> const_iterator
     {
         return const_iterator(const_functor_type(this), 0u);
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::cend() const -> const_iterator
+    constexpr auto dictionary_encoded_array<IT>::cend() const -> const_iterator
     {
         return const_iterator(const_functor_type(this), size());
     }
@@ -556,25 +553,25 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    [[nodiscard]] auto dictionary_encoded_array<IT>::rbegin() const -> const_reverse_iterator
+    [[nodiscard]] constexpr auto dictionary_encoded_array<IT>::rbegin() const -> const_reverse_iterator
     {
         return const_reverse_iterator(cend());
     }
 
     template <std::integral IT>
-    [[nodiscard]] auto dictionary_encoded_array<IT>::rend() const -> const_reverse_iterator
+    [[nodiscard]] constexpr auto dictionary_encoded_array<IT>::rend() const -> const_reverse_iterator
     {
         return const_reverse_iterator(cbegin());
     }
 
     template <std::integral IT>
-    [[nodiscard]] auto dictionary_encoded_array<IT>::crbegin() const -> const_reverse_iterator
+    [[nodiscard]] constexpr auto dictionary_encoded_array<IT>::crbegin() const -> const_reverse_iterator
     {
         return rbegin();
     }
 
     template <std::integral IT>
-    [[nodiscard]] auto dictionary_encoded_array<IT>::crend() const -> const_reverse_iterator
+    [[nodiscard]] constexpr auto dictionary_encoded_array<IT>::crend() const -> const_reverse_iterator
     {
         return rend();
     }
@@ -587,7 +584,7 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::back() const -> const_reference
+    constexpr auto dictionary_encoded_array<IT>::back() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return operator[](size() - 1);
@@ -601,14 +598,14 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::slice(size_type start, size_type end) const -> self_type
+    constexpr auto dictionary_encoded_array<IT>::slice(size_type start, size_type end) const -> self_type
     {
         SPARROW_ASSERT_TRUE(start <= end);
         return self_type{get_arrow_proxy().slice(start, end)};
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::slice_view(size_type start, size_type end) const -> self_type
+    constexpr auto dictionary_encoded_array<IT>::slice_view(size_type start, size_type end) const -> self_type
     {
         SPARROW_ASSERT_TRUE(start <= end);
         return self_type{get_arrow_proxy().slice_view(start, end)};
@@ -647,25 +644,25 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::create_keys_layout(arrow_proxy& proxy) -> keys_layout
+    constexpr auto dictionary_encoded_array<IT>::create_keys_layout(arrow_proxy& proxy) -> keys_layout
     {
         return keys_layout{arrow_proxy{&proxy.array(), &proxy.schema()}};
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::get_arrow_proxy() -> arrow_proxy&
+    constexpr auto dictionary_encoded_array<IT>::get_arrow_proxy() -> arrow_proxy&
     {
         return m_proxy;
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::get_arrow_proxy() const -> const arrow_proxy&
+    constexpr auto dictionary_encoded_array<IT>::get_arrow_proxy() const -> const arrow_proxy&
     {
         return m_proxy;
     }
 
     template <class IT>
-    bool operator==(const dictionary_encoded_array<IT>& lhs, const dictionary_encoded_array<IT>& rhs)
+    constexpr bool operator==(const dictionary_encoded_array<IT>& lhs, const dictionary_encoded_array<IT>& rhs)
     {
         return std::ranges::equal(lhs, rhs);
     }

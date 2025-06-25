@@ -42,7 +42,7 @@ namespace sparrow
 
         template <std::ranges::input_range R>
             requires std::convertible_to<std::ranges::range_value_t<R>, value_type>
-        explicit dynamic_bitset(const R& r)
+        constexpr explicit dynamic_bitset(const R& r)
             : dynamic_bitset(std::ranges::size(r), true)
         {
             std::size_t i = 0;
@@ -163,11 +163,7 @@ namespace sparrow
 
         // range of indices / integers (but not booleans)
         template <std::ranges::input_range R>
-            requires(
-                std::unsigned_integral<std::ranges::range_value_t<R>>
-                && !std::same_as<std::ranges::range_value_t<R>, bool>
-                && !std::same_as<std::decay_t<R>, validity_bitmap>
-            )
+            requires(std::unsigned_integral<std::ranges::range_value_t<R>> && !std::same_as<std::ranges::range_value_t<R>, bool> && !std::same_as<std::decay_t<R>, validity_bitmap>)
         validity_bitmap ensure_validity_bitmap_impl(std::size_t size, R&& range_of_indices)
         {
             validity_bitmap bitmap(size, true);
