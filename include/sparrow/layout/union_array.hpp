@@ -201,7 +201,7 @@ namespace sparrow
         SPARROW_API dense_union_array(const dense_union_array& rhs);
         SPARROW_API dense_union_array& operator=(const dense_union_array& rhs);
 
-        constexpr dense_union_array(dense_union_array&& rhs) = default;
+        dense_union_array(dense_union_array&& rhs) = default;
         dense_union_array& operator=(dense_union_array&& rhs) = default;
 
     private:
@@ -377,8 +377,8 @@ namespace sparrow
     template <class DERIVED>
     template <std::ranges::input_range R>
     constexpr auto
-    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id)
-        -> type_id_map
+    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id
+    ) -> type_id_map
     {
         std::array<std::uint8_t, 256> ret;
         if (!child_index_to_type_id.has_value())

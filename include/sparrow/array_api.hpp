@@ -129,7 +129,7 @@ namespace sparrow
          *
          * @param rhs The array to move.
          */
-        constexpr array(array&& rhs) = default;
+        array(array&& rhs) = default;
 
         /**
          * The move assignment operator.

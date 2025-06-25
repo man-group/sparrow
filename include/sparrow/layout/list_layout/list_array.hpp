@@ -396,10 +396,7 @@ namespace sparrow
             std::ranges::input_range SIZE_RANGE,
             validity_bitmap_input VB = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(
-                std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, offset_type>
-                && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, list_size_type>
-            )
+            requires(std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, offset_type> && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, list_size_type>)
         [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             OFFSET_BUFFER_RANGE&& list_offsets,
@@ -435,10 +432,7 @@ namespace sparrow
             std::ranges::input_range OFFSET_BUFFER_RANGE,
             std::ranges::input_range SIZE_RANGE,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(
-                std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, offset_type>
-                && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, list_size_type>
-            )
+            requires(std::convertible_to<std::ranges::range_value_t<OFFSET_BUFFER_RANGE>, offset_type> && std::convertible_to<std::ranges::range_value_t<SIZE_RANGE>, list_size_type>)
         [[nodiscard]] static arrow_proxy create_proxy(
             array&& flat_values,
             OFFSET_BUFFER_RANGE&& list_offsets,
@@ -499,7 +493,7 @@ namespace sparrow
         constexpr fixed_sized_list_array(const self_type&) = default;
         fixed_sized_list_array& operator=(const self_type&) = default;
 
-        constexpr fixed_sized_list_array(self_type&&) = default;
+        fixed_sized_list_array(self_type&&) = default;
         fixed_sized_list_array& operator=(self_type&&) = default;
 
         template <class... ARGS>
@@ -533,7 +527,7 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        [[nodiscard]] static constexpr uint64_t list_size_from_format(const std::string_view format);
+        [[nodiscard]] static uint64_t list_size_from_format(const std::string_view format);
         [[nodiscard]] constexpr std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
         uint64_t m_list_size;
@@ -656,9 +650,8 @@ namespace sparrow
     template <std::ranges::range SIZES_RANGE>
     constexpr auto list_array_impl<BIG>::offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
-            std::forward<SIZES_RANGE>(sizes)
-        );
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
+        ));
     }
 
     template <bool BIG>
@@ -969,7 +962,7 @@ namespace sparrow
      * fixed_sized_list_array implementation *
      *****************************************/
 
-    constexpr auto fixed_sized_list_array::list_size_from_format(const std::string_view format) -> uint64_t
+    auto fixed_sized_list_array::list_size_from_format(const std::string_view format) -> uint64_t
     {
         SPARROW_ASSERT(format.size() >= 3, "Invalid format string");
         const auto n_digits = format.size() - 3;

@@ -105,7 +105,7 @@ namespace sparrow
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
         [[nodiscard]] constexpr std::optional<std::string_view> name() const;
-        [[nodiscard]] constexpr std::optional<key_value_view> metadata() const;
+        [[nodiscard]] std::optional<key_value_view> metadata() const;
 
         [[nodiscard]] constexpr bool empty() const;
         [[nodiscard]] constexpr size_type size() const;
@@ -199,7 +199,7 @@ namespace sparrow
     }
 
     template <class D>
-    constexpr std::optional<key_value_view> array_crtp_base<D>::metadata() const
+    std::optional<key_value_view> array_crtp_base<D>::metadata() const
     {
         return get_arrow_proxy().metadata();
     }
