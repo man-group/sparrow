@@ -61,10 +61,10 @@ namespace sparrow
     inline constexpr bool is_nullable_v = is_nullable<T>::value;
 
     template <class N, class T>
-    concept is_nullable_of = is_nullable_v<N> && std::same_as<typename N::value_type, T>;
+    concept nullable_of = is_nullable_v<N> && std::same_as<typename N::value_type, T>;
 
     template <class N, class T>
-    concept is_nullable_of_convertible_to = is_nullable_v<N> && std::convertible_to<typename N::value_type, T>;
+    concept nullable_of_convertible_to = is_nullable_v<N> && std::convertible_to<typename N::value_type, T>;
 
     /*
      * Matches a range of nullables objects.
@@ -212,9 +212,6 @@ namespace sparrow
                                                 and std::is_assignable_v<
                                                     std::add_lvalue_reference_t<To2>,
                                                     conditional_ref_t<To2, From2>>;
-
-        template <class T>
-        static constexpr bool is_nullable_v = mpl::is_type_instance_of_v<T, nullable>;
     }
 
     /**
@@ -500,7 +497,7 @@ namespace sparrow
     constexpr bool operator==(const nullable<T, B>& lhs, const U& rhs) noexcept;
 
     template <class T, class B, class U>
-        requires(!impl::is_nullable_v<U> && std::three_way_comparable_with<U, T>)
+        requires(!is_nullable_v<U> && std::three_way_comparable_with<U, T>)
     constexpr std::compare_three_way_result_t<T, U>
     operator<=>(const nullable<T, B>& lhs, const U& rhs) noexcept;
 
@@ -517,10 +514,7 @@ namespace sparrow
     constexpr nullable<T, B> make_nullable(T&& value, B&& flag = true);
 
     template <std::ranges::range R, typename T = typename std::ranges::range_value_t<R>::value_type>
-        requires(
-            mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
-            && std::is_same_v<typename std::ranges::range_value_t<R>::value_type, T>
-        )
+        requires(nullable_of<std::ranges::range_value_t<R>, T>)
     constexpr void zero_null_values(R& range, const T& default_value = T{});
 
     /**
@@ -555,6 +549,7 @@ namespace std
     // Specialization of basic_common_reference for nullable proxies so
     // we can use ranges algorithm on iterators returning nullable
     template <class T, mpl::boolean_like TB, class U, mpl::boolean_like UB, template <class> class TQual, template <class> class UQual>
+        requires std::common_reference_with<T, U> && std::common_reference_with<TB, UB>
     struct basic_common_reference<sparrow::nullable<T, TB>, sparrow::nullable<U, UB>, TQual, UQual>
     {
         using type = sparrow::
@@ -746,7 +741,7 @@ namespace sparrow
     }
 
     template <class T, class B, class U>
-        requires(!impl::is_nullable_v<U> && std::three_way_comparable_with<U, T>)
+        requires(!is_nullable_v<U> && std::three_way_comparable_with<U, T>)
     constexpr std::compare_three_way_result_t<T, U> operator<=>(const nullable<T, B>& lhs, const U& rhs) noexcept
     {
         return lhs ? lhs.get() <=> rhs : std::strong_ordering::less;
@@ -772,10 +767,7 @@ namespace sparrow
     }
 
     template <std::ranges::range R, typename T>
-        requires(
-            mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
-            && std::is_same_v<typename std::ranges::range_value_t<R>::value_type, T>
-        )
+        requires(nullable_of<std::ranges::range_value_t<R>, T>)
     constexpr void zero_null_values(R& range, const T& default_value)
     {
         for (auto nullable_value : range)
