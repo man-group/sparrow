@@ -43,6 +43,7 @@ else()
         external_array_data_creation.cpp
         external_array_data_creation.hpp
         main.cpp
+        test_all_layouts_mandatory_methods.cpp
         test_allocator.cpp
         test_array_wrapper.cpp
         test_array.cpp

@@ -109,6 +109,27 @@ namespace sparrow
             CHECK_EQ(citer, ar.cend());
         }
 
+        TEST_CASE("reverse_iterator")
+        {
+            constexpr std::size_t size = 3u;
+            null_array ar{size};
+
+            auto iter = ar.rbegin();
+            auto citer = ar.crbegin();
+            CHECK_EQ(*iter, nullval);
+            CHECK_EQ(*citer, nullval);
+
+            ++iter;
+            ++citer;
+            CHECK_EQ(*iter, nullval);
+            CHECK_EQ(*citer, nullval);
+
+            iter += 2;
+            citer += 2;
+            CHECK_EQ(iter, ar.rend());
+            CHECK_EQ(citer, ar.crend());
+        }
+
         TEST_CASE("const_value_iterator")
         {
             constexpr std::size_t size = 3u;

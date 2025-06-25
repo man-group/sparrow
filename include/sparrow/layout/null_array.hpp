@@ -84,7 +84,9 @@ namespace sparrow
         using inner_value_type = null_type;
         using value_type = nullable<inner_value_type>;
         using iterator = empty_iterator<value_type>;
+        using reverse_iterator = std::reverse_iterator<iterator>;
         using const_iterator = empty_iterator<value_type>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
         using reference = iterator::reference;
         using const_reference = const_iterator::reference;
         using size_type = std::size_t;
@@ -123,8 +125,17 @@ namespace sparrow
         [[nodiscard]] SPARROW_API const_iterator begin() const;
         [[nodiscard]] SPARROW_API const_iterator end() const;
 
+        [[nodiscard]] SPARROW_API reverse_iterator rbegin();
+        [[nodiscard]] SPARROW_API reverse_iterator rend();
+
+        [[nodiscard]] SPARROW_API const_reverse_iterator rbegin() const;
+        [[nodiscard]] SPARROW_API const_reverse_iterator rend() const;
+
         [[nodiscard]] SPARROW_API const_iterator cbegin() const;
         [[nodiscard]] SPARROW_API const_iterator cend() const;
+
+        [[nodiscard]] SPARROW_API const_reverse_iterator crbegin() const;
+        [[nodiscard]] SPARROW_API const_reverse_iterator crend() const;
 
         [[nodiscard]] SPARROW_API reference front();
         [[nodiscard]] SPARROW_API const_reference front() const;

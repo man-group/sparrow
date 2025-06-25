@@ -219,6 +219,8 @@ namespace sparrow
 
         friend base_type;
         friend base_type::base_type;
+        friend class detail::layout_value_functor<self_type, inner_value_type>;
+        friend class detail::layout_value_functor<const self_type, inner_value_type>;
     };
 
     template <variable_size_binary_view_impl_types T>
