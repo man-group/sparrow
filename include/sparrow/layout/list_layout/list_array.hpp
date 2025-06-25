@@ -969,7 +969,7 @@ namespace sparrow
      * fixed_sized_list_array implementation *
      *****************************************/
 
-    auto fixed_sized_list_array::list_size_from_format(const std::string_view format) -> uint64_t
+    inline auto fixed_sized_list_array::list_size_from_format(const std::string_view format) -> uint64_t
     {
         SPARROW_ASSERT(format.size() >= 3, "Invalid format string");
         const auto n_digits = format.size() - 3;
