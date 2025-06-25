@@ -96,7 +96,7 @@ namespace sparrow
         using type_id_buffer_type = u8_buffer<std::uint8_t>;
 
         [[nodiscard]] constexpr std::optional<std::string_view> name() const;
-        [[nodiscard]] constexpr std::optional<key_value_view> metadata() const;
+        [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 std::optional<key_value_view> metadata() const;
 
         [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 value_type at(size_type i) const;
         [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 value_type operator[](size_type i) const;
@@ -377,8 +377,8 @@ namespace sparrow
     template <class DERIVED>
     template <std::ranges::input_range R>
     constexpr auto
-    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id)
-        -> type_id_map
+    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id
+    ) -> type_id_map
     {
         std::array<std::uint8_t, 256> ret;
         if (!child_index_to_type_id.has_value())
@@ -445,7 +445,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    constexpr std::optional<key_value_view> union_array_crtp_base<DERIVED>::metadata() const
+    SPARROW_CONSTEXPR_CLANG_17 std::optional<key_value_view> union_array_crtp_base<DERIVED>::metadata() const
     {
         return m_proxy.metadata();
     }
