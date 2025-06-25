@@ -231,10 +231,7 @@ namespace sparrow
             std::ranges::input_range KEY_RANGE,
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(
-                !std::same_as<KEY_RANGE, keys_buffer_type>
-                and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>
-            )
+            requires(!std::same_as<KEY_RANGE, keys_buffer_type> and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>)
         [[nodiscard]] static arrow_proxy create_proxy(
             KEY_RANGE&& keys,
             array&& values,
@@ -544,13 +541,13 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::rbegin() -> reverse_iterator
+    constexpr auto dictionary_encoded_array<IT>::rbegin() -> reverse_iterator
     {
         return reverse_iterator(end());
     }
 
     template <std::integral IT>
-    [[nodiscard]] auto dictionary_encoded_array<IT>::rend() -> reverse_iterator
+    [[nodiscard]] constexpr auto dictionary_encoded_array<IT>::rend() -> reverse_iterator
     {
         return reverse_iterator(begin());
     }
@@ -580,7 +577,7 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    auto dictionary_encoded_array<IT>::front() const -> const_reference
+    constexpr auto dictionary_encoded_array<IT>::front() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return operator[](0);
