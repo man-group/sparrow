@@ -36,7 +36,7 @@ concept forward_iterators = requires(T& t, const T& ct) {
     t.end();
     ct.cbegin();
     ct.cend();
-};
+};  // TODO: Replace by std::ranges::forward_range
 
 
 template <typename T>
@@ -49,7 +49,7 @@ concept bidirectional_iterator = forward_iterators<T> && requires(T& t, const T&
     t.rend();
     ct.crbegin();
     ct.crend();
-};
+};  // TODO: Replace by std::ranges::bidirectional_range
 
 
 static_assert(bidirectional_iterator<sparrow::big_list_array>);
