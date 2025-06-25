@@ -198,6 +198,35 @@ namespace sparrow
             test::generic_consistency_test(arr);
         }
 
+        TEST_CASE("map_value")
+        {
+            test::map_array_underlying mau;
+            map_array arr(std::move(mau.flat_keys), std::move(mau.flat_items), std::move(mau.offsets), test::where_nulls);
+
+            std::size_t flat_index = 0;
+            for (std::size_t i = 0; i < arr.size(); ++i)
+            {
+                if (test::where_nulls.contains(i))
+                {
+                    continue;
+                }
+                auto m = arr[i].value();
+
+                auto it = m.cbegin();
+                for (std::size_t j = 0; j < m.size(); ++j)
+                {
+                    auto k = test::keys[flat_index];
+                    CHECK_EQ(m[k], m.at(k));
+                    CHECK_EQ(m[k], it->second);
+                    ++flat_index;
+                    ++it;
+                }
+            }
+
+            auto m = arr[0].value();
+            CHECK_THROWS_AS(m[std::string("Batman")], std::out_of_range);
+        }
+
 #if defined(__cpp_lib_format)
         TEST_CASE("formatting")
         {

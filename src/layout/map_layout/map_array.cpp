@@ -24,6 +24,13 @@ namespace sparrow
         , p_entries_array(make_entries_array())
         , m_keys_sorted(get_keys_sorted())
     {
+        visit([]<class T>(const T&) {
+            using value_type = typename T::value_type;
+            if constexpr (mpl::is_type_instance_of<value_type, nullable_variant>::value)
+            {
+                throw std::runtime_error("Array of variants cannot be used as array of keys in a map_array");
+            }
+        }, *(raw_keys_array()));
     }
 
     map_array::map_array(const self_type& rhs)

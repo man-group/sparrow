@@ -494,6 +494,7 @@ namespace sparrow
     constexpr std::strong_ordering operator<=>(const nullable<T, B>& lhs, nullval_t) noexcept;
 
     template <class T, class B, class U>
+        requires(!is_nullable_v<U> && mpl::weakly_equality_comparable_with<T, U>)
     constexpr bool operator==(const nullable<T, B>& lhs, const U& rhs) noexcept;
 
     template <class T, class B, class U>
@@ -502,6 +503,7 @@ namespace sparrow
     operator<=>(const nullable<T, B>& lhs, const U& rhs) noexcept;
 
     template <class T, class B, class U, class UB>
+        requires(mpl::weakly_equality_comparable_with<T, U>)
     constexpr bool operator==(const nullable<T, B>& lhs, const nullable<U, UB>& rhs) noexcept;
 
     template <class T, class B, std::three_way_comparable_with<T> U, class UB>
@@ -735,6 +737,7 @@ namespace sparrow
     }
 
     template <class T, class B, class U>
+        requires(!is_nullable_v<U> && mpl::weakly_equality_comparable_with<T, U>)
     constexpr bool operator==(const nullable<T, B>& lhs, const U& rhs) noexcept
     {
         return lhs && (lhs.get() == rhs);
@@ -748,6 +751,7 @@ namespace sparrow
     }
 
     template <class T, class B, class U, class UB>
+        requires(mpl::weakly_equality_comparable_with<T, U>)
     constexpr bool operator==(const nullable<T, B>& lhs, const nullable<U, UB>& rhs) noexcept
     {
         return rhs ? lhs == rhs.get() : !lhs;

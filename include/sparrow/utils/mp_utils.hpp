@@ -611,4 +611,19 @@ namespace sparrow::mpl
             std::span<typename std::remove_cvref_t<T>::element_type, std::remove_cvref_t<T>::extent>,
             std::remove_cvref_t<T>>;
     };
+
+    // Concept to check if the instances of two types can be compared with operator==.
+    // Notice that this concept is less restrictive than std::equality_comparable_with,
+    // which requires the existence of a common refefenrece type for T and U. This additional
+    // restriction makes it impossible to use it in the context of sparrow, where we want to
+    // compare objects that are logically similar while being "physically" different.
+    template <class T, class U>
+    concept weakly_equality_comparable_with =
+        requires(const std::remove_reference_t<T>& t, const std::remove_reference_t<U>& u)
+    {
+        { t == u } -> std::convertible_to<bool>;
+        { t != u } -> std::convertible_to<bool>;
+        { u == t } -> std::convertible_to<bool>;
+        { u != t } -> std::convertible_to<bool>;
+    };
 }
