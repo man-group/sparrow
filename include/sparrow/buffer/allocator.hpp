@@ -79,7 +79,10 @@ namespace sparrow
 
         template <class A>
         constexpr any_allocator(A&& alloc)
-            requires(not std::same_as<std::remove_cvref_t<A>, any_allocator> and allocator<A> and std::same_as<allocator_value_type<A>, T>)
+            requires(
+                not std::same_as<std::remove_cvref_t<A>, any_allocator> and allocator<A>
+                and std::same_as<allocator_value_type<A>, T>
+            )
             : m_storage(make_storage(std::forward<A>(alloc)))
         {
         }

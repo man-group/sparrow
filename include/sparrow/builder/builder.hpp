@@ -181,13 +181,21 @@ namespace sparrow
         template <class T>
         concept translate_to_fixed_sized_list_layout = std::ranges::input_range<T>
                                                        && tuple_like<ensured_range_value_t<T>>
-                                                       && !((mpl::fixed_size_span<ensured_range_value_t<T>> || mpl::std_array<ensured_range_value_t<T>>) && fixed_width_binary_types<ensured_range_value_t<T>>)
+                                                       && !(
+                                                           (mpl::fixed_size_span<ensured_range_value_t<T>>
+                                                            || mpl::std_array<ensured_range_value_t<T>>)
+                                                           && fixed_width_binary_types<ensured_range_value_t<T>>
+                                                       )
                                                        && all_elements_same<ensured_range_value_t<T>>;
 
         template <class T>
         concept translate_to_variable_sized_binary_layout = std::ranges::input_range<T>
                                                             && std::ranges::input_range<ensured_range_value_t<T>>
-                                                            && !((mpl::fixed_size_span<ensured_range_value_t<T>> || mpl::std_array<ensured_range_value_t<T>>) && fixed_width_binary_types<ensured_range_value_t<T>>)
+                                                            && !(
+                                                                (mpl::fixed_size_span<ensured_range_value_t<T>>
+                                                                 || mpl::std_array<ensured_range_value_t<T>>)
+                                                                && fixed_width_binary_types<ensured_range_value_t<T>>
+                                                            )
                                                             && !tuple_like<ensured_range_value_t<T>>
                                                             &&  // tuples go to struct layout
                                                             // value type of inner must be char like ( char,
@@ -214,7 +222,7 @@ namespace sparrow
             using type = sparrow::primitive_array<ensured_range_value_t<T>>;
 
             template <class U>
-            [[nodiscard]] constexpr static type create(U&& t)
+            [[nodiscard]] static constexpr type create(U&& t)
             {
                 return type(std::forward<U>(t));
             }
@@ -238,7 +246,7 @@ namespace sparrow
             using type = sparrow::duration_array<ensured_range_value_t<T>>;
 
             template <class U>
-            [[nodiscard]] constexpr static type create(U&& t)
+            [[nodiscard]] static constexpr type create(U&& t)
             {
                 return type(std::forward<U>(t));
             }
@@ -251,7 +259,7 @@ namespace sparrow
             using timezone_ptr = std::decay_t<decltype(std::declval<ensured_range_value_t<T>>().get_time_zone())>;
 
             template <class U>
-            [[nodiscard]] constexpr static type create(U&& t)
+            [[nodiscard]] static constexpr type create(U&& t)
             {
                 timezone_ptr tz = [&t]() -> timezone_ptr
                 {
@@ -274,7 +282,7 @@ namespace sparrow
             using type = sparrow::timestamp_without_timezone_array<ensured_range_value_t<T>>;
 
             template <class U>
-            [[nodiscard]] constexpr static type create(U&& t)
+            [[nodiscard]] static constexpr type create(U&& t)
             {
                 return type(std::forward<U>(t));
             }
@@ -286,7 +294,7 @@ namespace sparrow
             using type = sparrow::interval_array<ensured_range_value_t<T>>;
 
             template <class U>
-            [[nodiscard]] constexpr static type create(U&& t)
+            [[nodiscard]] static constexpr type create(U&& t)
             {
                 return type(std::forward<U>(t));
             }

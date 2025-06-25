@@ -94,9 +94,9 @@ namespace sparrow
             constexpr void reset_proxy(arrow_proxy& proxy);
 
             template <std::ranges::input_range RANGE>
-            [[nodiscard]] constexpr static u8_buffer<T> make_data_buffer(RANGE&& r);
+            [[nodiscard]] static constexpr u8_buffer<T> make_data_buffer(RANGE&& r);
 
-            [[nodiscard]] constexpr static u8_buffer<T> make_data_buffer(size_t n, const T& value);
+            [[nodiscard]] static constexpr u8_buffer<T> make_data_buffer(size_t n, const T& value);
 
         private:
 
