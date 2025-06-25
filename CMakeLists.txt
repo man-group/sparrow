@@ -48,7 +48,7 @@ if(CMAKE_CXX_COMPILER_LAUNCHER)
     message(STATUS "Using C++ compiler launcher: ${CMAKE_CXX_COMPILER_LAUNCHER}")
 endif()
 
-list(PREPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 message(DEBUG "CMake module path: ${CMAKE_MODULE_PATH}")
 
 # Versionning
