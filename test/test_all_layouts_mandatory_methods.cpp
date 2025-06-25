@@ -31,7 +31,7 @@
 #include <sparrow/layout/variable_size_binary_view_array.hpp>
 
 template <typename T>
-concept HasForwardIteratorMethods = requires(T& t, const T& ct) {
+concept forward_iterators = requires(T& t, const T& ct) {
     t.begin();
     t.end();
     ct.cbegin();
@@ -40,7 +40,7 @@ concept HasForwardIteratorMethods = requires(T& t, const T& ct) {
 
 
 template <typename T>
-concept HasAllBidirectionalIteratorMethods = std::ranges::range<T> && requires(T& t, const T& ct) {
+concept bidirectional_iterator = forward_iterators<T> && requires(T& t, const T& ct) {
     t.begin();
     t.end();
     ct.cbegin();
@@ -52,28 +52,28 @@ concept HasAllBidirectionalIteratorMethods = std::ranges::range<T> && requires(T
 };
 
 
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::big_list_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::big_list_view_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::binary_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::binary_view_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::date_days_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::decimal_128_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::decimal_256_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::decimal_32_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::decimal_64_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::dense_union_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::dictionary_encoded_array<int32_t>>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::duration_milliseconds_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::fixed_width_binary_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::list_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::list_view_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::null_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::primitive_array<bool>>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::primitive_array<float>>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::primitive_array<int32_t>>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::primitive_array<int64_t>>);
-static_assert(HasForwardIteratorMethods<sparrow::run_end_encoded_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::string_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::struct_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::timestamp_microseconds_array>);
-static_assert(HasAllBidirectionalIteratorMethods<sparrow::timestamp_nanoseconds_array>);
+static_assert(bidirectional_iterator<sparrow::big_list_array>);
+static_assert(bidirectional_iterator<sparrow::big_list_view_array>);
+static_assert(bidirectional_iterator<sparrow::binary_array>);
+static_assert(bidirectional_iterator<sparrow::binary_view_array>);
+static_assert(bidirectional_iterator<sparrow::date_days_array>);
+static_assert(bidirectional_iterator<sparrow::decimal_128_array>);
+static_assert(bidirectional_iterator<sparrow::decimal_256_array>);
+static_assert(bidirectional_iterator<sparrow::decimal_32_array>);
+static_assert(bidirectional_iterator<sparrow::decimal_64_array>);
+static_assert(bidirectional_iterator<sparrow::dense_union_array>);
+static_assert(bidirectional_iterator<sparrow::dictionary_encoded_array<int32_t>>);
+static_assert(bidirectional_iterator<sparrow::duration_milliseconds_array>);
+static_assert(bidirectional_iterator<sparrow::fixed_width_binary_array>);
+static_assert(bidirectional_iterator<sparrow::list_array>);
+static_assert(bidirectional_iterator<sparrow::list_view_array>);
+static_assert(bidirectional_iterator<sparrow::null_array>);
+static_assert(bidirectional_iterator<sparrow::primitive_array<bool>>);
+static_assert(bidirectional_iterator<sparrow::primitive_array<float>>);
+static_assert(bidirectional_iterator<sparrow::primitive_array<int32_t>>);
+static_assert(bidirectional_iterator<sparrow::primitive_array<int64_t>>);
+static_assert(forward_iterators<sparrow::run_end_encoded_array>);
+static_assert(bidirectional_iterator<sparrow::string_array>);
+static_assert(bidirectional_iterator<sparrow::struct_array>);
+static_assert(bidirectional_iterator<sparrow::timestamp_microseconds_array>);
+static_assert(bidirectional_iterator<sparrow::timestamp_nanoseconds_array>);
