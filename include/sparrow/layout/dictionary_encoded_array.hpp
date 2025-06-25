@@ -137,7 +137,7 @@ namespace sparrow
         constexpr self_type& operator=(self_type&&);
 
         [[nodiscard]] constexpr std::optional<std::string_view> name() const;
-        [[nodiscard]] constexpr std::optional<key_value_view> metadata() const;
+        [[nodiscard]] std::optional<key_value_view> metadata() const;
 
         [[nodiscard]] constexpr size_type size() const;
         [[nodiscard]] constexpr bool empty() const;
@@ -231,10 +231,7 @@ namespace sparrow
             std::ranges::input_range KEY_RANGE,
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(
-                !std::same_as<KEY_RANGE, keys_buffer_type>
-                and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>
-            )
+            requires(!std::same_as<KEY_RANGE, keys_buffer_type> and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>)
         [[nodiscard]] static arrow_proxy create_proxy(
             KEY_RANGE&& keys,
             array&& values,
@@ -473,7 +470,7 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    constexpr std::optional<key_value_view> dictionary_encoded_array<IT>::metadata() const
+    std::optional<key_value_view> dictionary_encoded_array<IT>::metadata() const
     {
         return m_proxy.metadata();
     }

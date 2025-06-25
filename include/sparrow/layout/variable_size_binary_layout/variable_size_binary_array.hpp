@@ -44,7 +44,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::string, std::int32_t>
         {
-            [[nodiscard]] static constexpr std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
             {
                 return "u";
             }
@@ -53,7 +53,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::string, std::int64_t>
         {
-            [[nodiscard]] static constexpr std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
             {
                 return "U";
             }
@@ -62,7 +62,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::vector<byte_t>, std::int32_t>
         {
-            [[nodiscard]] static constexpr std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
             {
                 return "z";
             }
@@ -71,7 +71,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::vector<byte_t>, std::int64_t>
         {
-            [[nodiscard]] static constexpr std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
             {
                 return "Z";
             }
@@ -456,9 +456,8 @@ namespace sparrow
     constexpr auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes)
         -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
-            std::forward<SIZES_RANGE>(sizes)
-        );
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
+        ));
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
