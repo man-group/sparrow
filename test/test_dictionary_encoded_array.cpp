@@ -244,66 +244,32 @@ namespace sparrow
             CHECK_EQ(iter, dict.cend());
         }
 
-        /*TEST_CASE("const_value_iterator")
+        TEST_CASE("reverse_iterator")
         {
-            const layout_type dict(make_arrow_proxy());
-            const auto vrange = dict.values();
-            auto iter = vrange.begin();
-            CHECK_EQ(*iter, "");
+            const layout_type dict = make_dictionary();
+            auto iter = dict.crbegin();
+            CHECK_EQ(*iter, dict[9]);
+            ++iter;
+            CHECK_EQ(*iter, dict[8]);
+            ++iter;
+            CHECK_EQ(*iter, dict[7]);
+            ++iter;
+            --iter;
+            CHECK_EQ(*iter, dict[7]);
+            ++iter;
+            CHECK_EQ(*iter, dict[6]);
             iter++;
-            CHECK_EQ(*iter, "");
-            iter++;
-            CHECK_EQ(*iter, dict[2].value());
+            CHECK_EQ(*iter, dict[5]);
             ++iter;
-            CHECK_EQ(*iter, dict[3].value());
-            iter++;
-            CHECK_EQ(*iter, "");
-            iter++;
-            CHECK_EQ(*iter, dict[5].value());
+            CHECK_EQ(*iter, dict[4]);
             ++iter;
-            CHECK_EQ(*iter, dict[6].value());
-            ++iter;
-            CHECK_EQ(*iter, dict[7].value());
-            ++iter;
-            CHECK_EQ(*iter, "");
-            ++iter;
-            CHECK_NE(*iter, words[2]);
-            ++iter;
-            CHECK_EQ(iter, vrange.end());
+            CHECK_EQ(*iter, dict[3]);
         }
-
-        TEST_CASE("const_bitmap_iterator")
-        {
-            const layout_type dict(make_arrow_proxy());
-            const auto brange = dict.bitmap();
-            auto iter = brange.begin();
-            CHECK_FALSE(*iter);
-            ++iter;
-            CHECK_FALSE(*iter);
-            ++iter;
-            CHECK(*iter);
-            ++iter;
-            CHECK(*iter);
-            ++iter;
-            CHECK_FALSE(*iter);
-            ++iter;
-            CHECK(*iter);
-            ++iter;
-            CHECK(*iter);
-            ++iter;
-            CHECK(*iter);
-            ++iter;
-            CHECK_FALSE(*iter);
-            ++iter;
-            CHECK(*iter);
-            ++iter;
-            CHECK_EQ(iter, brange.end());
-        }*/
 
 #if defined(__cpp_lib_format)
         TEST_CASE("formatter")
         {
-            const layout_type dict(make_dictionary());
+            const layout_type dict = make_dictionary();
             const std::string formatted = std::format("{}", dict);
             constexpr std::string_view
                 expected = "Dictionary [size=10] <null, null, not, prepared, null, not, ?, you, null, not>";

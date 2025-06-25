@@ -122,7 +122,9 @@ namespace sparrow
         using const_functor_type = layout_element_functor<self_type, true>;
 
         using iterator = functor_index_iterator<functor_type>;
+        using reverse_iterator = std::reverse_iterator<iterator>;
         using const_iterator = functor_index_iterator<const_functor_type>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
         using keys_buffer_type = u8_buffer<IT>;
 
@@ -150,6 +152,15 @@ namespace sparrow
 
         [[nodiscard]] const_iterator cbegin() const;
         [[nodiscard]] const_iterator cend() const;
+
+        [[nodiscard]] reverse_iterator rbegin();
+        [[nodiscard]] reverse_iterator rend();
+
+        [[nodiscard]] const_reverse_iterator rbegin() const;
+        [[nodiscard]] const_reverse_iterator rend() const;
+
+        [[nodiscard]] const_reverse_iterator crbegin() const;
+        [[nodiscard]] const_reverse_iterator crend() const;
 
         [[nodiscard]] const_reference front() const;
         [[nodiscard]] const_reference back() const;
@@ -220,10 +231,7 @@ namespace sparrow
             std::ranges::input_range KEY_RANGE,
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(
-                !std::same_as<KEY_RANGE, keys_buffer_type>
-                and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>
-            )
+            requires(!std::same_as<KEY_RANGE, keys_buffer_type> and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>)
         [[nodiscard]] static arrow_proxy create_proxy(
             KEY_RANGE&& keys,
             array&& values,
@@ -530,6 +538,42 @@ namespace sparrow
     auto dictionary_encoded_array<IT>::cend() const -> const_iterator
     {
         return const_iterator(const_functor_type(this), size());
+    }
+
+    template <std::integral IT>
+    auto dictionary_encoded_array<IT>::rbegin() -> reverse_iterator
+    {
+        return reverse_iterator(end());
+    }
+
+    template <std::integral IT>
+    [[nodiscard]] auto dictionary_encoded_array<IT>::rend() -> reverse_iterator
+    {
+        return reverse_iterator(begin());
+    }
+
+    template <std::integral IT>
+    [[nodiscard]] auto dictionary_encoded_array<IT>::rbegin() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cend());
+    }
+
+    template <std::integral IT>
+    [[nodiscard]] auto dictionary_encoded_array<IT>::rend() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cbegin());
+    }
+
+    template <std::integral IT>
+    [[nodiscard]] auto dictionary_encoded_array<IT>::crbegin() const -> const_reverse_iterator
+    {
+        return rbegin();
+    }
+
+    template <std::integral IT>
+    [[nodiscard]] auto dictionary_encoded_array<IT>::crend() const -> const_reverse_iterator
+    {
+        return rend();
     }
 
     template <std::integral IT>

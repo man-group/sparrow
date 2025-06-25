@@ -59,6 +59,16 @@ namespace sparrow
         return iterator(ssize());
     }
 
+    auto null_array::rbegin() -> reverse_iterator
+    {
+        return reverse_iterator(end());
+    }
+
+    auto null_array::rend() -> reverse_iterator
+    {
+        return reverse_iterator(begin());
+    }
+
     auto null_array::begin() const -> const_iterator
     {
         return cbegin();
@@ -69,6 +79,16 @@ namespace sparrow
         return cend();
     }
 
+    auto null_array::rbegin() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cend());
+    }
+
+    auto null_array::rend() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cbegin());
+    }
+
     auto null_array::cbegin() const -> const_iterator
     {
         return const_iterator(0);
@@ -77,6 +97,16 @@ namespace sparrow
     auto null_array::cend() const -> const_iterator
     {
         return const_iterator(ssize());
+    }
+
+    auto null_array::crbegin() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cend());
+    }
+
+    auto null_array::crend() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cbegin());
     }
 
     auto null_array::front() -> reference
