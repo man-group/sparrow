@@ -44,7 +44,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::string, std::int32_t>
         {
-            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format() noexcept
             {
                 return "u";
             }
@@ -53,7 +53,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::string, std::int64_t>
         {
-            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format() noexcept
             {
                 return "U";
             }
@@ -62,7 +62,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::vector<byte_t>, std::int32_t>
         {
-            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format() noexcept
             {
                 return "z";
             }
@@ -71,7 +71,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::vector<byte_t>, std::int64_t>
         {
-            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format() noexcept
             {
                 return "Z";
             }
@@ -138,7 +138,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::string_array>
         {
-            [[nodiscard]] static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get() noexcept
             {
                 return sparrow::data_type::STRING;
             }
@@ -147,7 +147,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::big_string_array>
         {
-            [[nodiscard]] static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get() noexcept
             {
                 return sparrow::data_type::LARGE_STRING;
             }
@@ -156,7 +156,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::binary_array>
         {
-            [[nodiscard]] static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get() noexcept
             {
                 return sparrow::data_type::BINARY;
             }
@@ -165,7 +165,7 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<sparrow::big_binary_array>
         {
-            [[nodiscard]] static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get() noexcept
             {
                 return sparrow::data_type::LARGE_BINARY;
             }
@@ -456,9 +456,8 @@ namespace sparrow
     constexpr auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes)
         -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
-            std::forward<SIZES_RANGE>(sizes)
-        );
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
+        ));
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>

@@ -40,11 +40,11 @@ namespace sparrow
         using size_type = typename L::size_type;
         using difference_type = std::ptrdiff_t;
 
-        constexpr decimal_reference(L* layout, size_type index);
+        constexpr decimal_reference(L* layout, size_type index) noexcept;
         constexpr decimal_reference(const decimal_reference&) = default;
         constexpr decimal_reference(decimal_reference&&) noexcept = default;
 
-        constexpr self_type& operator=(self_type&& rhs);
+        constexpr self_type& operator=(self_type&& rhs) noexcept;
         constexpr self_type& operator=(const self_type& rhs);
 
         constexpr self_type& operator=(value_type&& rhs);
@@ -78,7 +78,7 @@ namespace sparrow
      *************************************/
 
     template <typename L>
-    constexpr decimal_reference<L>::decimal_reference(L* layout, size_type index)
+    constexpr decimal_reference<L>::decimal_reference(L* layout, size_type index) noexcept
         : p_layout(layout)
         , m_index(index)
     {
@@ -99,7 +99,7 @@ namespace sparrow
     }
 
     template <typename L>
-    constexpr auto decimal_reference<L>::operator=(self_type&& rhs) -> self_type&
+    constexpr auto decimal_reference<L>::operator=(self_type&& rhs) noexcept -> self_type&
     {
         this->operator=(rhs.value());
         return *this;

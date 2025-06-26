@@ -73,7 +73,7 @@ namespace sparrow
         template <std::integral IT>
         struct get_data_type_from_array<sparrow::dictionary_encoded_array<IT>>
         {
-            [[nodiscard]] static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get() noexcept
             {
                 return arrow_traits<typename primitive_array<IT>::inner_value_type>::type_id;
             }
@@ -82,7 +82,7 @@ namespace sparrow
         template <std::integral IT>
         struct is_dictionary_encoded_array<sparrow::dictionary_encoded_array<IT>>
         {
-            [[nodiscard]] static constexpr bool get()
+            [[nodiscard]] static constexpr bool get() noexcept
             {
                 return true;
             }
@@ -231,10 +231,7 @@ namespace sparrow
             std::ranges::input_range KEY_RANGE,
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(
-                !std::same_as<KEY_RANGE, keys_buffer_type>
-                and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>
-            )
+            requires(!std::same_as<KEY_RANGE, keys_buffer_type> and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>)
         [[nodiscard]] static arrow_proxy create_proxy(
             KEY_RANGE&& keys,
             array&& values,
