@@ -37,6 +37,7 @@ namespace sparrow
         using child_ptr = cloning_ptr<array_wrapper>;
         using const_functor_type = detail::layout_bracket_functor<const struct_value, const_reference>;
         using const_iterator = functor_index_iterator<const_functor_type>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
         struct_value() = default;
         struct_value(const std::vector<child_ptr>& children, size_type index);
@@ -54,6 +55,12 @@ namespace sparrow
 
         [[nodiscard]] const_iterator end() const;
         [[nodiscard]] const_iterator cend() const;
+
+        [[nodiscard]] const_reverse_iterator rbegin() const;
+        [[nodiscard]] const_reverse_iterator crbegin() const;
+
+        [[nodiscard]] const_reverse_iterator rend() const;
+        [[nodiscard]] const_reverse_iterator crend() const;
 
     private:
 

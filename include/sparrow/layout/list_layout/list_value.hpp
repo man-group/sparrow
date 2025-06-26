@@ -65,6 +65,7 @@ namespace sparrow
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
         using size_type = std::size_t;
+        using list_value_reverse_iterator = std::reverse_iterator<list_value_iterator>;
 
         list_value() = default;
         list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end);
@@ -84,6 +85,14 @@ namespace sparrow
         [[nodiscard]] list_value_iterator end();
         [[nodiscard]] list_value_iterator end() const;
         [[nodiscard]] list_value_iterator cend() const;
+
+        [[nodiscard]] list_value_reverse_iterator rbegin();
+        [[nodiscard]] list_value_reverse_iterator rbegin() const;
+        [[nodiscard]] list_value_reverse_iterator crbegin() const;
+
+        [[nodiscard]] list_value_reverse_iterator rend();
+        [[nodiscard]] list_value_reverse_iterator rend() const;
+        [[nodiscard]] list_value_reverse_iterator crend() const;
 
     private:
 
