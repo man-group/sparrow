@@ -38,6 +38,7 @@ namespace sparrow
 
         using functor_type = detail::layout_value_functor<const map_value, const_reference>;
         using const_iterator = functor_index_iterator<functor_type>;
+        using const_reverser_iterator = std::reverse_iterator<const_iterator>;
 
         map_value() = default;
         map_value(
@@ -57,9 +58,15 @@ namespace sparrow
         [[nodiscard]] const_iterator end() const;
         [[nodiscard]] const_iterator cend() const;
 
+        [[nodiscard]] const_reverser_iterator rbegin() const;
+        [[nodiscard]] const_reverser_iterator crbegin() const;
+
+        [[nodiscard]] const_reverser_iterator rend() const;
+        [[nodiscard]] const_reverser_iterator crend() const;
+
     private:
 
-        const_reference value(size_type i) const;
+        [[nodiscard]] const_reference value(size_type i) const;
 
         const array_wrapper* p_flat_keys;
         const array_wrapper* p_flat_items;

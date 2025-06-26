@@ -72,6 +72,26 @@ namespace sparrow
     {
         return {const_functor_type(this), size()};
     }
+
+    auto struct_value::rbegin() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cend());
+    }
+
+    auto struct_value::crbegin() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cend());
+    }
+
+    auto struct_value::rend() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cbegin());
+    }
+
+    auto struct_value::crend() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cbegin());
+    }
 }
 
 #if defined(__cpp_lib_format)

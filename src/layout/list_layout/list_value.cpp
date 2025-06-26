@@ -126,6 +126,38 @@ namespace sparrow
     {
         return {this, size()};
     }
+
+    auto list_value::rbegin() -> list_value_reverse_iterator
+    {
+        return list_value_reverse_iterator(end());
+    }
+
+    auto list_value::rbegin() const -> list_value_reverse_iterator
+    {
+        return list_value_reverse_iterator(end());
+    }
+
+    auto list_value::crbegin() const -> list_value_reverse_iterator
+    {
+        return rbegin();
+    }
+
+    auto list_value::rend() -> list_value_reverse_iterator
+    {
+        return list_value_reverse_iterator(begin());
+    }
+
+    auto list_value::rend() const -> list_value_reverse_iterator
+    {
+        return list_value_reverse_iterator(begin());
+    }
+
+    auto list_value::crend() const -> list_value_reverse_iterator
+    {
+        return rend();
+    }
+
+
 }
 
 #if defined(__cpp_lib_format)

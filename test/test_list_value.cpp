@@ -84,6 +84,24 @@ namespace sparrow
             CHECK(it == l.end());
         }
 
+        TEST_CASE("reverse iterators")
+        {
+            auto it = l.rbegin();
+            for (std::size_t i = end; i-- > begin;)
+            {
+                CHECK_EQ(it->has_value(), ar[begin + i].has_value());
+                if (ar[begin + i].has_value())
+                {
+                    CHECK_EQ(
+                        std::get<primitive_array<scalar_value_type>::const_reference>(*it).value(),
+                        ar[i].value()
+                    );
+                }
+                ++it;
+            }
+            CHECK(it == l.rend());
+        }
+
         TEST_CASE("equality")
         {
             std::size_t end3 = 8u;

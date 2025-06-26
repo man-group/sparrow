@@ -66,6 +66,26 @@ namespace sparrow
         return const_iterator(functor_type(this), size());
     }
 
+    auto map_value::rbegin() const -> const_reverser_iterator
+    {
+        return crbegin();
+    }
+
+    auto map_value::crbegin() const -> const_reverser_iterator
+    {
+        return const_reverser_iterator(cend());
+    }
+
+    auto map_value::rend() const -> const_reverser_iterator
+    {
+        return crend();
+    }
+
+    auto map_value::crend() const -> const_reverser_iterator
+    {
+        return const_reverser_iterator(cbegin());
+    }
+
     auto map_value::value(size_type i) const -> const_reference
     {
         return std::make_pair(
