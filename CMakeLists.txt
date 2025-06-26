@@ -35,10 +35,12 @@ cmake_policy(SET CMP0141 NEW)
 
 project(sparrow CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+if(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 20)
+endif()
+message(STATUS "🔧 C++ standard: ${CMAKE_CXX_STANDARD}")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF) # We don't use modules
-
 include(CMakeDependentOption)
 
 set(SPARROW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
