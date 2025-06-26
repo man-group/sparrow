@@ -134,7 +134,9 @@ namespace sparrow
 
     protected:
 
-        using type_id_map = std::array<std::uint8_t, 256>;
+        static constexpr size_t TYPE_ID_MAP_SIZE = 256;
+
+        using type_id_map = std::array<std::uint8_t, TYPE_ID_MAP_SIZE>;
         static constexpr type_id_map parse_type_id_map(std::string_view format_string);
 
         template <std::ranges::input_range R>
@@ -165,7 +167,8 @@ namespace sparrow
         children_type m_children;
 
         // map from type-id to child-index
-        std::array<std::uint8_t, 256> m_type_id_map;
+
+        std::array<std::uint8_t, TYPE_ID_MAP_SIZE> m_type_id_map;
 
         friend class detail::array_access;
 
@@ -377,19 +380,16 @@ namespace sparrow
     template <class DERIVED>
     template <std::ranges::input_range R>
     constexpr auto
-    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id)
-        -> type_id_map
+    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id
+    ) -> type_id_map
     {
-        std::array<std::uint8_t, 256> ret;
+        std::array<std::uint8_t, TYPE_ID_MAP_SIZE> ret;
         if (!child_index_to_type_id.has_value())
         {
-            constexpr std::array<std::uint8_t, 256> default_mapping = []
+            constexpr std::array<std::uint8_t, TYPE_ID_MAP_SIZE> default_mapping = []
             {
-                std::array<std::uint8_t, 256> arr{};
-                for (std::size_t i = 0; i < 256; ++i)
-                {
-                    arr[i] = static_cast<std::uint8_t>(i);
-                }
+                std::array<std::uint8_t, TYPE_ID_MAP_SIZE> arr{};
+                std::iota(arr.begin(), arr.end(), 0);
                 return arr;
             }();
             return default_mapping;

@@ -36,24 +36,24 @@ namespace sparrow
             using inner_type = T;
 
             template <class... Args>
-            constexpr holder(Args&&... args)
+            constexpr holder(Args&&... args) noexcept
                 : value(std::forward<Args>(args)...)
             {
             }
 
             T value;
 
-            [[nodiscard]] constexpr T extract_storage() &&
+            [[nodiscard]] constexpr T extract_storage() && noexcept
             {
                 return std::move(value);
             }
 
-            [[nodiscard]] constexpr const T& storage() const
+            [[nodiscard]] constexpr const T& storage() const noexcept
             {
                 return value;
             }
 
-            [[nodiscard]] constexpr T& storage()
+            [[nodiscard]] constexpr T& storage() noexcept
             {
                 return value;
             }
@@ -79,7 +79,7 @@ namespace sparrow
         using buffer_adaptor_type = buffer_adaptor<T, buffer<std::uint8_t>&>;
         using holder_type::extract_storage;
 
-        constexpr u8_buffer(u8_buffer&& other);
+        constexpr u8_buffer(u8_buffer&& other) noexcept;
         constexpr u8_buffer(const u8_buffer& other);
         u8_buffer& operator=(u8_buffer&& other) = delete;
         u8_buffer& operator=(u8_buffer& other) = delete;
@@ -98,10 +98,7 @@ namespace sparrow
          * @param range The range.
          */
         template <std::ranges::input_range R>
-            requires(
-                !std::same_as<u8_buffer<T>, std::decay_t<R>>
-                && std::convertible_to<std::ranges::range_value_t<R>, T>
-            )
+            requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>)
         constexpr explicit u8_buffer(R&& range);
 
         /**
@@ -120,7 +117,7 @@ namespace sparrow
     };
 
     template <class T>
-    constexpr u8_buffer<T>::u8_buffer(u8_buffer&& other)
+    constexpr u8_buffer<T>::u8_buffer(u8_buffer&& other) noexcept
         : holder_type(std::move(other).extract_storage())
         , buffer_adaptor_type(holder_type::value)
     {

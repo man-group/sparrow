@@ -181,21 +181,13 @@ namespace sparrow
         template <class T>
         concept translate_to_fixed_sized_list_layout = std::ranges::input_range<T>
                                                        && tuple_like<ensured_range_value_t<T>>
-                                                       && !(
-                                                           (mpl::fixed_size_span<ensured_range_value_t<T>>
-                                                            || mpl::std_array<ensured_range_value_t<T>>)
-                                                           && fixed_width_binary_types<ensured_range_value_t<T>>
-                                                       )
+                                                       && !((mpl::fixed_size_span<ensured_range_value_t<T>> || mpl::std_array<ensured_range_value_t<T>>) && fixed_width_binary_types<ensured_range_value_t<T>>)
                                                        && all_elements_same<ensured_range_value_t<T>>;
 
         template <class T>
         concept translate_to_variable_sized_binary_layout = std::ranges::input_range<T>
                                                             && std::ranges::input_range<ensured_range_value_t<T>>
-                                                            && !(
-                                                                (mpl::fixed_size_span<ensured_range_value_t<T>>
-                                                                 || mpl::std_array<ensured_range_value_t<T>>)
-                                                                && fixed_width_binary_types<ensured_range_value_t<T>>
-                                                            )
+                                                            && !((mpl::fixed_size_span<ensured_range_value_t<T>> || mpl::std_array<ensured_range_value_t<T>>) && fixed_width_binary_types<ensured_range_value_t<T>>)
                                                             && !tuple_like<ensured_range_value_t<T>>
                                                             &&  // tuples go to struct layout
                                                             // value type of inner must be char like ( char,
@@ -436,7 +428,7 @@ namespace sparrow
             template <class U>
             [[nodiscard]] static type create(U&& t)
             {
-                return type(std::move(t));
+                return type(std::forward<U>(t));
             }
         };
 

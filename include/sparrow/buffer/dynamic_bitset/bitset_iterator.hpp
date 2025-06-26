@@ -61,15 +61,15 @@ namespace sparrow
     private:
 
         constexpr reference dereference() const noexcept;
-        constexpr void increment();
-        constexpr void decrement();
-        constexpr void advance(difference_type n);
+        constexpr void increment() noexcept;
+        constexpr void decrement() noexcept;
+        constexpr void advance(difference_type n) noexcept;
         [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const noexcept;
         [[nodiscard]] constexpr bool equal(const self_type& rhs) const noexcept;
         [[nodiscard]] constexpr bool less_than(const self_type& rhs) const noexcept;
 
-        [[nodiscard]] static constexpr difference_type as_signed(size_type i);
-        [[nodiscard]] static constexpr size_type as_unsigned(difference_type i);
+        [[nodiscard]] static constexpr difference_type as_signed(size_type i) noexcept;
+        [[nodiscard]] static constexpr size_type as_unsigned(difference_type i) noexcept;
 
         bitset_type* p_bitset = nullptr;
         size_type m_index;
@@ -102,19 +102,19 @@ namespace sparrow
     }
 
     template <class B, bool is_const>
-    constexpr void bitset_iterator<B, is_const>::increment()
+    constexpr void bitset_iterator<B, is_const>::increment() noexcept
     {
         ++m_index;
     }
 
     template <class B, bool is_const>
-    constexpr void bitset_iterator<B, is_const>::decrement()
+    constexpr void bitset_iterator<B, is_const>::decrement() noexcept
     {
         --m_index;
     }
 
     template <class B, bool is_const>
-    constexpr void bitset_iterator<B, is_const>::advance(difference_type n)
+    constexpr void bitset_iterator<B, is_const>::advance(difference_type n) noexcept
     {
         if (n < 0 && static_cast<size_type>(-n) > m_index)
         {
@@ -150,13 +150,13 @@ namespace sparrow
     }
 
     template <class B, bool is_const>
-    constexpr auto bitset_iterator<B, is_const>::as_signed(size_type i) -> difference_type
+    constexpr auto bitset_iterator<B, is_const>::as_signed(size_type i) noexcept -> difference_type
     {
         return static_cast<difference_type>(i);
     }
 
     template <class B, bool is_const>
-    constexpr auto bitset_iterator<B, is_const>::as_unsigned(difference_type i) -> size_type
+    constexpr auto bitset_iterator<B, is_const>::as_unsigned(difference_type i) noexcept -> size_type
     {
         return static_cast<size_type>(i);
     }

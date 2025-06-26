@@ -121,9 +121,8 @@ namespace sparrow
         schema.n_children = static_cast<int64_t>(children_ownership.size());
 
         std::optional<std::string> metadata_str = metadata.has_value()
-                                                      ? std::make_optional(
-                                                            get_metadata_from_key_values(*metadata)
-                                                        )
+                                                      ? std::make_optional(get_metadata_from_key_values(*metadata
+                                                        ))
                                                       : std::nullopt;
 
         schema.private_data = new arrow_schema_private_data(
@@ -202,7 +201,7 @@ namespace sparrow
     /**
      * Swaps the contents of the two ArrowSchema objects.
      */
-    SPARROW_API void swap(ArrowSchema& lhs, ArrowSchema& rhs);
+    SPARROW_API void swap(ArrowSchema& lhs, ArrowSchema& rhs) noexcept;
 
     /**
      * Fills the target `ArrowSchema` with a deep copy of the data from the source `ArrowSchema`.

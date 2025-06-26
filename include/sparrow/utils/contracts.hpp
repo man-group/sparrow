@@ -102,11 +102,10 @@
 #        include <format>
 // clang-format off
 #   define SPARROW_CONTRACTS_LOG_FAILURE( expr__, message__ ) \
-      do { \
-            SPARROW_CONTRACTS_IGNORE_WARNINGS; \
-            ::fprintf(stderr, ::std::format("Assertion Failed ({}:{}): {} - ({} is wrong)\n", __FILE__, __LINE__, message__, #expr__ ).c_str()); \
-            SPARROW_CONTRACTS_RESTORE_WARNINGS; \
-      } while (0);
+      { \
+          auto msg = ::std::format("Assertion Failed ({}:{}): {} - ({} is wrong)\n", __FILE__, __LINE__, message__, #expr__); \
+          ::fprintf(stderr, "%s", msg.c_str()); \
+      }
 // clang-format on
 #    else
 #        include <cstdio>

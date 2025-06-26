@@ -145,7 +145,7 @@ namespace sparrow
     {
     };
 
-    inline bool operator==(const null_type&, const null_type&)
+    constexpr bool operator==(const null_type&, const null_type&) noexcept
     {
         return true;
     }
@@ -211,7 +211,7 @@ namespace sparrow
     };
 
     // helper function to check if a string is all digits
-    inline bool all_digits(const std::string_view s)
+    [[nodiscard]] constexpr bool all_digits(const std::string_view s)
     {
         return !s.empty()
                && std::find_if(
@@ -225,12 +225,12 @@ namespace sparrow
     }
 
     // get the bit width for decimal value type from format
-    SPARROW_API std::size_t num_bytes_for_decimal(const char* format);
+    [[nodiscard]] SPARROW_API std::size_t num_bytes_for_decimal(const char* format);
 
     /// @returns The data_type value matching the provided format string or `data_type::NA`
     ///          if we couldnt find a matching data_type.
     // TODO: consider returning an optional instead
-    inline data_type format_to_data_type(std::string_view format)
+    [[nodiscard]] constexpr data_type format_to_data_type(std::string_view format)
     {
         // TODO: add missing conversions from
         // https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
@@ -426,7 +426,7 @@ namespace sparrow
     ///          sizes will not compile.
     template <std::floating_point T>
         requires(sizeof(T) >= 2 && sizeof(T) <= 8)
-    constexpr data_type data_type_from_size(T = {})
+    [[nodiscard]] constexpr data_type data_type_from_size(T = {}) noexcept
     {
         // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
         switch (sizeof(T))
@@ -447,7 +447,7 @@ namespace sparrow
     ///          sizes will not compile.
     template <std::integral T>
         requires(sizeof(T) >= 1 && sizeof(T) <= 8)
-    constexpr data_type data_type_from_size(T = {})
+    [[nodiscard]] constexpr data_type data_type_from_size(T = {}) noexcept
     {
         if constexpr (std::same_as<bool, T>)
         {
@@ -495,7 +495,7 @@ namespace sparrow
     /// @returns Format string matching the provided data_type.
     ///          The returned string is guaranteed to be null-terminated and to have static storage
     ///          lifetime. (this means you can do data_type_to_format(mytype).data() to get a C pointer.
-    constexpr std::string_view data_type_to_format(data_type type)
+    [[nodiscard]] constexpr std::string_view data_type_to_format(data_type type)
     {
         switch (type)
         {
@@ -582,7 +582,7 @@ namespace sparrow
     }
 
     /// @returns True if the provided data_type is a primitive type, false otherwise.
-    constexpr bool data_type_is_primitive(data_type dt)
+    [[nodiscard]] constexpr bool data_type_is_primitive(data_type dt) noexcept
     {
         switch (dt)
         {
@@ -605,7 +605,7 @@ namespace sparrow
     }
 
     /// @returns True if the provided data_type is an integer type, false otherwise.
-    constexpr bool data_type_is_integer(data_type dt)
+    [[nodiscard]] constexpr bool data_type_is_integer(data_type dt) noexcept
     {
         switch (dt)
         {
@@ -764,7 +764,7 @@ namespace sparrow
     /// @returns Arrow type id to use for a given C++ representation of that type.
     ///          @see `arrow_traits`
     template <has_arrow_type_traits T>
-    constexpr auto arrow_type_id() -> data_type
+    [[nodiscard]] constexpr auto arrow_type_id() noexcept -> data_type
     {
         return arrow_traits<T>::type_id;
     }
@@ -772,7 +772,7 @@ namespace sparrow
     /// @returns Arrow type id to use for the type of a given object.
     ///          @see `arrow_traits`
     template <has_arrow_type_traits T>
-    constexpr auto arrow_type_id(const T&) -> data_type
+    [[nodiscard]] constexpr auto arrow_type_id(const T&) noexcept -> data_type
     {
         return arrow_type_id<T>();
     }
@@ -780,7 +780,7 @@ namespace sparrow
     /// @returns Format string matching the arrow data-type mathcing the provided
     ///          arrow type.
     template <has_arrow_type_traits T>
-    constexpr std::string_view data_type_format_of()
+    [[nodiscard]] constexpr std::string_view data_type_format_of() noexcept
     {
         return data_type_to_format(arrow_type_id<T>());
     }
@@ -795,22 +795,22 @@ namespace sparrow
     {
     public:
 
-        constexpr data_descriptor()
+        constexpr data_descriptor() noexcept
             : data_descriptor(data_type::UINT8)
         {
         }
 
-        data_descriptor(std::string_view format)
+        data_descriptor(std::string_view format) noexcept
             : data_descriptor(format_to_data_type(format))
         {
         }
 
-        constexpr explicit data_descriptor(data_type id)
+        constexpr explicit data_descriptor(data_type id) noexcept
             : m_id(id)
         {
         }
 
-        constexpr data_type id() const
+        [[nodiscard]] constexpr data_type id() const noexcept
         {
             return m_id;
         }

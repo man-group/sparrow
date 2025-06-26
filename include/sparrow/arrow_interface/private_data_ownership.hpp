@@ -27,12 +27,12 @@ namespace sparrow
     {
     public:
 
-        void set_dictionary_ownership(bool ownership);
-        [[nodiscard]] bool has_dictionary_ownership() const;
+        void set_dictionary_ownership(bool ownership) noexcept;
+        [[nodiscard]] bool has_dictionary_ownership() const noexcept;
 
     protected:
 
-        explicit dictionary_ownership(bool ownership)
+        explicit dictionary_ownership(bool ownership) noexcept
             : m_has_ownership(ownership)
         {
         }

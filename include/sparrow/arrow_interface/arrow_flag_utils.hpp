@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <array>
 #include <unordered_set>
 
@@ -20,7 +21,7 @@
 namespace sparrow
 {
     /// @returns `true` if the given value is a valid `ArrowFlag` value, `false` otherwise.
-    constexpr bool is_valid_ArrowFlag_value(int64_t value) noexcept
+    [[nodiscard]] constexpr bool is_valid_ArrowFlag_value(int64_t value) noexcept
     {
         constexpr std::array<ArrowFlag, 3> valid_values = {
             ArrowFlag::DICTIONARY_ORDERED,

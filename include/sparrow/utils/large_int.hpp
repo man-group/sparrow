@@ -46,12 +46,12 @@ namespace sparrow
 
         std::uint64_t words[2];
 
-        constexpr bool operator==(const int128_t& other) const
+        constexpr bool operator==(const int128_t& other) const noexcept
         {
             return words[0] == other.words[0] && words[1] == other.words[1];
         }
 
-        constexpr bool operator!=(const int128_t& other) const
+        constexpr bool operator!=(const int128_t& other) const noexcept
         {
             return !(*this == other);
         }
@@ -62,13 +62,13 @@ namespace sparrow
         constexpr int256_t() = default;
         std::uint64_t words[4];
 
-        constexpr bool operator==(const int256_t& other) const
+        constexpr bool operator==(const int256_t& other) const noexcept
         {
             return words[0] == other.words[0] && words[1] == other.words[1] && words[2] == other.words[2]
                    && words[3] == other.words[3];
         }
 
-        constexpr bool operator!=(const int256_t& other) const
+        constexpr bool operator!=(const int256_t& other) const noexcept
         {
             return !(*this == other);
         }

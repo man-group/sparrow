@@ -59,7 +59,7 @@ namespace sparrow
             pointer p_end = nullptr;
             pointer p_storage_end = nullptr;
 
-            constexpr buffer_data() = default;
+            constexpr buffer_data() noexcept = default;
             constexpr buffer_data(buffer_data&&) noexcept;
             constexpr buffer_data& operator=(buffer_data&&) noexcept;
         };
@@ -1081,7 +1081,7 @@ namespace sparrow
     {
         const size_type diff_max = static_cast<size_type>(std::numeric_limits<difference_type>::max());
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
-        return (std::min) (diff_max, alloc_max);
+        return (std::min)(diff_max, alloc_max);
     }
 
     template <class T>

@@ -33,7 +33,7 @@ namespace sparrow
             requires std::is_scalar_v<T>
         struct nested_eq<T>
         {
-            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const
+            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const noexcept
             {
                 return a == b;
             }
@@ -42,7 +42,7 @@ namespace sparrow
         template <is_express_layout_desire T>
         struct nested_eq<T>
         {
-            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const
+            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const noexcept
             {
                 return nested_eq<typename T::value_type>{}(a.get(), b.get());
             }
@@ -53,7 +53,7 @@ namespace sparrow
             requires is_nullable_like<T>
         struct nested_eq<T>
         {
-            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const
+            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const noexcept
             {
                 // if one is null and the other is not then the null is less
                 // both are null:
