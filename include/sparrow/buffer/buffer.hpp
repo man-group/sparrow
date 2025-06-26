@@ -59,7 +59,7 @@ namespace sparrow
             pointer p_end = nullptr;
             pointer p_storage_end = nullptr;
 
-            constexpr buffer_data() = default;
+            constexpr buffer_data() noexcept = default;
             constexpr buffer_data(buffer_data&&) noexcept;
             constexpr buffer_data& operator=(buffer_data&&) noexcept;
         };

@@ -304,9 +304,9 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         )
         {
-            offset_buffer_type list_offsets{std::move(list_offsets_range)};
+            offset_buffer_type list_offsets{std::forward<OFFSET_BUFFER_RANGE>(list_offsets_range)};
             return list_array_impl<BIG>::create_proxy(
-                std::forward<array>(flat_values),
+                std::move(flat_values),
                 std::move(list_offsets),
                 std::forward<VB>(validity_input),
                 std::forward<std::optional<std::string_view>>(name),
@@ -338,9 +338,9 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         )
         {
-            offset_buffer_type list_offsets{std::move(list_offsets_range)};
+            offset_buffer_type list_offsets{std::forward<OFFSET_BUFFER_RANGE>(list_offsets_range)};
             return list_array_impl<BIG>::create_proxy(
-                std::forward<array>(flat_values),
+                std::move(flat_values),
                 std::move(list_offsets),
                 nullable,
                 std::forward<std::optional<std::string_view>>(name),
@@ -411,8 +411,8 @@ namespace sparrow
         {
             return list_view_array_impl<BIG>::create_proxy(
                 std::move(flat_values),
-                offset_buffer_type(std::move(list_offsets)),
-                size_buffer_type(std::move(list_sizes)),
+                offset_buffer_type(std::forward<OFFSET_BUFFER_RANGE>(list_offsets)),
+                size_buffer_type(std::forward<SIZE_RANGE>(list_sizes)),
                 std::forward<VB>(validity_input),
                 name,
                 metadata
@@ -450,8 +450,8 @@ namespace sparrow
         {
             return list_view_array_impl<BIG>::create_proxy(
                 std::move(flat_values),
-                offset_buffer_type(std::move(list_offsets)),
-                size_buffer_type(std::move(list_sizes)),
+                offset_buffer_type(std::forward<OFFSET_BUFFER_RANGE>(list_offsets)),
+                size_buffer_type(std::forward<SIZE_RANGE>(list_sizes)),
                 nullable,
                 name,
                 metadata

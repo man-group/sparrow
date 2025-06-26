@@ -49,12 +49,12 @@ namespace sparrow
             {
             }
 
-            [[nodiscard]] constexpr const T& get() const
+            [[nodiscard]] constexpr const T& get() const noexcept
             {
                 return m_value;
             }
 
-            [[nodiscard]] constexpr T& get()
+            [[nodiscard]] constexpr T& get() noexcept
             {
                 return m_value;
             }
@@ -340,14 +340,14 @@ namespace sparrow
         }
 
         template <class T>
-        [[nodiscard]] constexpr std::array<std::size_t, 0> where_null(T&&)
+        [[nodiscard]] constexpr std::array<std::size_t, 0> where_null(T&&) noexcept
         {
             return {};
         }
 
         template <class T>
             requires(is_plain_value_type<std::ranges::range_value_t<T>>)
-        [[nodiscard]] constexpr decltype(auto) ensure_value_range(T&& t)
+        [[nodiscard]] constexpr decltype(auto) ensure_value_range(T&& t) noexcept
         {
             return std::forward<T>(t);
         }

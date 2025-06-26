@@ -38,17 +38,17 @@ namespace sparrow
         {
             struct proxy
             {
-                explicit proxy(const Reference& x)
+                explicit proxy(const Reference& x) noexcept
                     : m_reference(x)
                 {
                 }
 
-                explicit proxy(Reference&& x)
+                explicit proxy(Reference&& x) noexcept
                     : m_reference(std::move(x))
                 {
                 }
 
-                Reference* operator->()
+                Reference* operator->() noexcept
                 {
                     return std::addressof(m_reference);
                 }

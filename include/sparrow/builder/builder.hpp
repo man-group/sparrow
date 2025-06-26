@@ -436,7 +436,7 @@ namespace sparrow
             template <class U>
             [[nodiscard]] static type create(U&& t)
             {
-                return type(std::move(t));
+                return type(std::forward<U>(t));
             }
         };
 

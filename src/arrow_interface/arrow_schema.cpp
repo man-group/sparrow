@@ -40,7 +40,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(schema->release == std::addressof(empty_release_arrow_schema));
     }
 
-    void swap(ArrowSchema& lhs, ArrowSchema& rhs)
+    void swap(ArrowSchema& lhs, ArrowSchema& rhs) noexcept
     {
         std::swap(lhs.format, rhs.format);
         std::swap(lhs.name, rhs.name);

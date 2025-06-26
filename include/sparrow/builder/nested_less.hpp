@@ -33,7 +33,7 @@ namespace sparrow
             requires std::is_scalar_v<T>
         struct nested_less<T>
         {
-            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const
+            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const noexcept
             {
                 return a < b;
             }
@@ -42,7 +42,7 @@ namespace sparrow
         template <is_express_layout_desire T>
         struct nested_less<T>
         {
-            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const
+            [[nodiscard]] constexpr bool operator()(const T& a, const T& b) const noexcept
             {
                 return nested_less<typename T::value_type>{}(a.get(), b.get());
             }

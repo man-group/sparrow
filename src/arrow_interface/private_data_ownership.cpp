@@ -23,12 +23,12 @@ namespace sparrow
     // {
     // }
 
-    void dictionary_ownership::set_dictionary_ownership(bool ownership)
+    void dictionary_ownership::set_dictionary_ownership(bool ownership) noexcept
     {
         m_has_ownership = ownership;
     }
 
-    [[nodiscard]] bool dictionary_ownership::has_dictionary_ownership() const
+    [[nodiscard]] bool dictionary_ownership::has_dictionary_ownership() const noexcept
     {
         return m_has_ownership;
     }

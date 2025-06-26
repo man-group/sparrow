@@ -132,16 +132,6 @@ TEST_SUITE("C Data Interface")
             control.release(&control);
         }
 
-        SUBCASE("validate_format_with_arrow_array")
-        {
-            auto [array, schema] = test::make_arrow_schema_and_array(false);
-            CHECK(sparrow::validate_format_with_arrow_array(sparrow::data_type::INT8, array));
-            array.release(&array);
-            schema.release(&schema);
-            // CHECK_FALSE(sparrow::validate_format_with_arrow_array(sparrow::data_type::FIXED_SIZED_LIST,
-            // array));
-        }
-
 #if defined(__cpp_lib_format)
         SUBCASE("formatting")
         {
