@@ -50,17 +50,17 @@ namespace sparrow
             return m_functor(m_index);
         }
 
-        void increment()
+        constexpr void increment()
         {
             ++m_index;
         }
 
-        void decrement()
+        constexpr void decrement()
         {
             --m_index;
         }
 
-        void advance(difference_type n)
+        constexpr void advance(difference_type n)
         {
             if (n >= 0)
             {
@@ -73,17 +73,17 @@ namespace sparrow
             }
         }
 
-        difference_type distance_to(const self_type& rhs) const
+        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const
         {
             return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);
         }
 
-        [[nodiscard]] bool equal(const self_type& rhs) const
+        [[nodiscard]] constexpr bool equal(const self_type& rhs) const
         {
             return m_index == rhs.m_index;
         }
 
-        [[nodiscard]] bool less_than(const self_type& rhs) const
+        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const
         {
             return m_index < rhs.m_index;
         }

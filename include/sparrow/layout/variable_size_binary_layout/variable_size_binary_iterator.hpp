@@ -48,19 +48,19 @@ namespace sparrow
         using size_type = size_t;
         using value_type = base_type::value_type;
 
-        variable_size_binary_value_iterator() noexcept = default;
-        variable_size_binary_value_iterator(layout_type* layout, size_type index);
+        constexpr variable_size_binary_value_iterator() noexcept = default;
+        constexpr variable_size_binary_value_iterator(layout_type* layout, size_type index);
 
     private:
 
-        [[nodiscard]] reference dereference() const;
+        [[nodiscard]] constexpr reference dereference() const;
 
-        void increment();
-        void decrement();
-        void advance(difference_type n);
-        [[nodiscard]] difference_type distance_to(const self_type& rhs) const;
-        [[nodiscard]] bool equal(const self_type& rhs) const;
-        [[nodiscard]] bool less_than(const self_type& rhs) const;
+        constexpr void increment();
+        constexpr void decrement();
+        constexpr void advance(difference_type n);
+        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const;
+        [[nodiscard]] constexpr bool equal(const self_type& rhs) const;
+        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const;
 
         layout_type* p_layout = nullptr;
         difference_type m_index;
@@ -73,7 +73,7 @@ namespace sparrow
      ******************************************************/
 
     template <class Layout, iterator_types Iterator_types>
-    variable_size_binary_value_iterator<Layout, Iterator_types>::variable_size_binary_value_iterator(
+    constexpr variable_size_binary_value_iterator<Layout, Iterator_types>::variable_size_binary_value_iterator(
         layout_type* layout,
         size_type index
     )
@@ -83,7 +83,7 @@ namespace sparrow
     }
 
     template <class Layout, iterator_types Iterator_types>
-    auto variable_size_binary_value_iterator<Layout, Iterator_types>::dereference() const -> reference
+    constexpr auto variable_size_binary_value_iterator<Layout, Iterator_types>::dereference() const -> reference
     {
         if constexpr (std::same_as<reference, typename Layout::inner_const_reference>)
         {
@@ -96,38 +96,40 @@ namespace sparrow
     }
 
     template <class Layout, iterator_types Iterator_types>
-    void variable_size_binary_value_iterator<Layout, Iterator_types>::increment()
+    constexpr void variable_size_binary_value_iterator<Layout, Iterator_types>::increment()
     {
         ++m_index;
     }
 
     template <class Layout, iterator_types Iterator_types>
-    void variable_size_binary_value_iterator<Layout, Iterator_types>::decrement()
+    constexpr void variable_size_binary_value_iterator<Layout, Iterator_types>::decrement()
     {
         --m_index;
     }
 
     template <class Layout, iterator_types Iterator_types>
-    void variable_size_binary_value_iterator<Layout, Iterator_types>::advance(difference_type n)
+    constexpr void variable_size_binary_value_iterator<Layout, Iterator_types>::advance(difference_type n)
     {
         m_index += n;
     }
 
     template <class Layout, iterator_types Iterator_types>
-    auto variable_size_binary_value_iterator<Layout, Iterator_types>::distance_to(const self_type& rhs) const
+    constexpr auto
+    variable_size_binary_value_iterator<Layout, Iterator_types>::distance_to(const self_type& rhs) const
         -> difference_type
     {
         return rhs.m_index - m_index;
     }
 
     template <class Layout, iterator_types Iterator_types>
-    bool variable_size_binary_value_iterator<Layout, Iterator_types>::equal(const self_type& rhs) const
+    constexpr bool variable_size_binary_value_iterator<Layout, Iterator_types>::equal(const self_type& rhs) const
     {
         return (p_layout == rhs.p_layout) && (m_index == rhs.m_index);
     }
 
     template <class Layout, iterator_types Iterator_types>
-    bool variable_size_binary_value_iterator<Layout, Iterator_types>::less_than(const self_type& rhs) const
+    constexpr bool
+    variable_size_binary_value_iterator<Layout, Iterator_types>::less_than(const self_type& rhs) const
     {
         return (p_layout == rhs.p_layout) && (m_index < rhs.m_index);
     }

@@ -158,8 +158,8 @@ namespace sparrow
         using base_type::get_arrow_proxy;
         using base_type::size;
 
-        [[nodiscard]] inner_reference value(size_type i);
-        [[nodiscard]] inner_const_reference value(size_type i) const;
+        [[nodiscard]] constexpr inner_reference value(size_type i);
+        [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
     private:
 
@@ -282,36 +282,36 @@ namespace sparrow
 
         static constexpr size_t DATA_BUFFER_INDEX = 1;
 
-        [[nodiscard]] data_iterator data(size_type i);
+        [[nodiscard]] constexpr data_iterator data(size_type i);
 
-        [[nodiscard]] value_iterator value_begin();
-        [[nodiscard]] value_iterator value_end();
+        [[nodiscard]] constexpr value_iterator value_begin();
+        [[nodiscard]] constexpr value_iterator value_end();
 
-        [[nodiscard]] const_value_iterator value_cbegin() const;
-        [[nodiscard]] const_value_iterator value_cend() const;
+        [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
+        [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
-        [[nodiscard]] const_data_iterator data(size_type i) const;
+        [[nodiscard]] constexpr const_data_iterator data(size_type i) const;
 
         // Modifiers
 
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
-        void resize_values(size_type new_length, U value);
+        constexpr void resize_values(size_type new_length, U value);
 
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
-        value_iterator insert_value(const_value_iterator pos, U value, size_type count);
+        constexpr value_iterator insert_value(const_value_iterator pos, U value, size_type count);
 
         template <typename InputIt>
             requires std::input_iterator<InputIt>
                      && mpl::convertible_ranges<typename std::iterator_traits<InputIt>::value_type, T>
-        value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
+        constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
 
-        value_iterator erase_values(const_value_iterator pos, size_type count);
+        constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
 
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
-        void assign(U&& rhs, size_type index);
+        constexpr void assign(U&& rhs, size_type index);
 
         size_t m_element_size = 0;
 
@@ -529,7 +529,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR>
-    auto fixed_width_binary_array_impl<T, CR>::data(size_type i) -> data_iterator
+    constexpr auto fixed_width_binary_array_impl<T, CR>::data(size_type i) -> data_iterator
     {
         const arrow_proxy& proxy = this->get_arrow_proxy();
         auto data_buffer = proxy.buffers()[DATA_BUFFER_INDEX];
@@ -540,7 +540,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR>
-    auto fixed_width_binary_array_impl<T, CR>::data(size_type i) const -> const_data_iterator
+    constexpr auto fixed_width_binary_array_impl<T, CR>::data(size_type i) const -> const_data_iterator
     {
         const arrow_proxy& proxy = this->get_arrow_proxy();
         const auto data_buffer = proxy.buffers()[DATA_BUFFER_INDEX];
@@ -553,7 +553,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR>
     template <std::ranges::sized_range U>
         requires mpl::convertible_ranges<U, T>
-    void fixed_width_binary_array_impl<T, CR>::assign(U&& rhs, size_type index)
+    constexpr void fixed_width_binary_array_impl<T, CR>::assign(U&& rhs, size_type index)
     {
         SPARROW_ASSERT_TRUE(std::ranges::size(rhs) == m_element_size);
         SPARROW_ASSERT_TRUE(index < size());
@@ -561,14 +561,14 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR>
-    auto fixed_width_binary_array_impl<T, CR>::value(size_type i) -> inner_reference
+    constexpr auto fixed_width_binary_array_impl<T, CR>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         return inner_reference(this, i);
     }
 
     template <std::ranges::sized_range T, class CR>
-    auto fixed_width_binary_array_impl<T, CR>::value(size_type i) const -> inner_const_reference
+    constexpr auto fixed_width_binary_array_impl<T, CR>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
         const auto offset_begin = i * m_element_size;
@@ -579,25 +579,25 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR>
-    auto fixed_width_binary_array_impl<T, CR>::value_begin() -> value_iterator
+    constexpr auto fixed_width_binary_array_impl<T, CR>::value_begin() -> value_iterator
     {
         return value_iterator{functor_type{&(this->derived_cast())}, 0};
     }
 
     template <std::ranges::sized_range T, class CR>
-    auto fixed_width_binary_array_impl<T, CR>::value_end() -> value_iterator
+    constexpr auto fixed_width_binary_array_impl<T, CR>::value_end() -> value_iterator
     {
         return sparrow::next(value_begin(), size());
     }
 
     template <std::ranges::sized_range T, class CR>
-    auto fixed_width_binary_array_impl<T, CR>::value_cbegin() const -> const_value_iterator
+    constexpr auto fixed_width_binary_array_impl<T, CR>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator{const_functor_type{&(this->derived_cast())}, 0};
     }
 
     template <std::ranges::sized_range T, class CR>
-    auto fixed_width_binary_array_impl<T, CR>::value_cend() const -> const_value_iterator
+    constexpr auto fixed_width_binary_array_impl<T, CR>::value_cend() const -> const_value_iterator
     {
         return sparrow::next(value_cbegin(), this->size());
     }
@@ -605,7 +605,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR>
     template <std::ranges::sized_range U>
         requires mpl::convertible_ranges<U, T>
-    void fixed_width_binary_array_impl<T, CR>::resize_values(size_type new_length, U value)
+    constexpr void fixed_width_binary_array_impl<T, CR>::resize_values(size_type new_length, U value)
     {
         SPARROW_ASSERT_TRUE(m_element_size == value.size());
         if (new_length < size())
@@ -625,7 +625,8 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR>
     template <std::ranges::sized_range U>
         requires mpl::convertible_ranges<U, T>
-    auto fixed_width_binary_array_impl<T, CR>::insert_value(const_value_iterator pos, U value, size_type count)
+    constexpr auto
+    fixed_width_binary_array_impl<T, CR>::insert_value(const_value_iterator pos, U value, size_type count)
         -> value_iterator
     {
         SPARROW_ASSERT_TRUE(m_element_size == value.size());
@@ -647,7 +648,7 @@ namespace sparrow
     template <typename InputIt>
         requires std::input_iterator<InputIt>
                  && mpl::convertible_ranges<typename std::iterator_traits<InputIt>::value_type, T>
-    auto
+    constexpr auto
     fixed_width_binary_array_impl<T, CR>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
         -> value_iterator
     {
@@ -682,7 +683,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR>
-    auto fixed_width_binary_array_impl<T, CR>::erase_values(const_value_iterator pos, size_type count)
+    constexpr auto fixed_width_binary_array_impl<T, CR>::erase_values(const_value_iterator pos, size_type count)
         -> value_iterator
     {
         SPARROW_ASSERT_TRUE(pos >= value_cbegin());

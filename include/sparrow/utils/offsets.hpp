@@ -24,7 +24,7 @@ namespace sparrow
 {
     template <layout_offset OT, std::ranges::sized_range R>
         requires std::ranges::sized_range<std::ranges::range_value_t<R>>
-    [[nodiscard]] buffer<OT> make_offset_buffer(const R& range)
+    [[nodiscard]] constexpr buffer<OT> make_offset_buffer(const R& range)
     {
         const size_t range_size = std::ranges::size(range);
         buffer<OT> offsets(range_size + 1, 0);

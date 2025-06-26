@@ -152,9 +152,8 @@ namespace sparrow
         {
         }
 
-        [[nodiscard]] inner_reference value(size_type i);
-        [[nodiscard]] inner_const_reference value(size_type i) const;
-
+        [[nodiscard]] constexpr inner_reference value(size_type i);
+        [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
     private:
 
@@ -225,15 +224,15 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        static std::string generate_format(std::size_t precision, int scale);
+        static constexpr std::string generate_format(std::size_t precision, int scale);
 
-        [[nodiscard]] value_iterator value_begin();
-        [[nodiscard]] value_iterator value_end();
+        [[nodiscard]] constexpr value_iterator value_begin();
+        [[nodiscard]] constexpr value_iterator value_end();
 
-        [[nodiscard]] const_value_iterator value_cbegin() const;
-        [[nodiscard]] const_value_iterator value_cend() const;
+        [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
+        [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
-        void assign(const T& rhs, size_type index);
+        constexpr void assign(const T& rhs, size_type index);
 
         // Modifiers
 
@@ -455,14 +454,14 @@ namespace sparrow
     }
 
     template <decimal_type T>
-    auto decimal_array<T>::value(size_type i) -> inner_reference
+    constexpr auto decimal_array<T>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
         return inner_reference(this, i);
     }
 
     template <decimal_type T>
-    auto decimal_array<T>::value(size_type i) const -> inner_const_reference
+    constexpr auto decimal_array<T>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
         const auto ptr = this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<const storage_type>();
@@ -470,25 +469,25 @@ namespace sparrow
     }
 
     template <decimal_type T>
-    auto decimal_array<T>::value_begin() -> value_iterator
+    constexpr auto decimal_array<T>::value_begin() -> value_iterator
     {
         return value_iterator(detail::layout_value_functor<self_type, inner_reference>(this), 0);
     }
 
     template <decimal_type T>
-    auto decimal_array<T>::value_end() -> value_iterator
+    constexpr auto decimal_array<T>::value_end() -> value_iterator
     {
         return value_iterator(detail::layout_value_functor<self_type, inner_reference>(this), this->size());
     }
 
     template <decimal_type T>
-    auto decimal_array<T>::value_cbegin() const -> const_value_iterator
+    constexpr auto decimal_array<T>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), 0);
     }
 
     template <decimal_type T>
-    auto decimal_array<T>::value_cend() const -> const_value_iterator
+    constexpr auto decimal_array<T>::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(
             detail::layout_value_functor<const self_type, inner_value_type>(this),
@@ -497,7 +496,7 @@ namespace sparrow
     }
 
     template <decimal_type T>
-    void decimal_array<T>::assign(const T& rhs, size_type index)
+    constexpr void decimal_array<T>::assign(const T& rhs, size_type index)
     {
         SPARROW_ASSERT_TRUE(index < this->size());
         const auto ptr = this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX].template data<storage_type>();
@@ -511,17 +510,15 @@ namespace sparrow
     }
 
     template <decimal_type T>
-    std::string decimal_array<T>::generate_format(std::size_t precision, int scale)
+    constexpr std::string decimal_array<T>::generate_format(std::size_t precision, int scale)
     {
         constexpr std::size_t sizeof_decimal = sizeof(storage_type);
-        std::stringstream format_str;
-        format_str << "d:" << precision << "," << scale;
-        if constexpr (sizeof_decimal != 16)  // We don't need to specify the size for 128-bit decimals
+        std::string format_str = "d:" + std::to_string(precision) + "," + std::to_string(scale);
+        if constexpr (sizeof_decimal != 16)  // We don't need to specify the size for 128-bit
+                                             // decimals
         {
-            format_str << "," << sizeof_decimal * 8;
+            format_str += "," + std::to_string(sizeof_decimal * 8);
         }
-        return format_str.str();
+        return format_str;
     }
-
-
 }

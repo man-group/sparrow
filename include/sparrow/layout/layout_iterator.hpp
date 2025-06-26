@@ -59,19 +59,19 @@ namespace sparrow
 
         using bitmap_iterator = Iterator_types::bitmap_iterator;
 
-        layout_iterator() noexcept = default;
-        layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter);
+        constexpr layout_iterator() noexcept = default;
+        constexpr layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter);
 
     private:
 
-        [[nodiscard]] reference dereference() const;
-        [[nodiscard]] reference dereference();
-        void increment();
-        void decrement();
-        void advance(difference_type n);
-        [[nodiscard]] difference_type distance_to(const self_type& rhs) const;
-        [[nodiscard]] bool equal(const self_type& rhs) const;
-        [[nodiscard]] bool less_than(const self_type& rhs) const;
+        [[nodiscard]] constexpr reference dereference() const;
+        [[nodiscard]] constexpr reference dereference();
+        constexpr void increment();
+        constexpr void decrement();
+        constexpr void advance(difference_type n);
+        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const;
+        [[nodiscard]] constexpr bool equal(const self_type& rhs) const;
+        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const;
 
         value_iterator m_value_iter;
         bitmap_iterator m_bitmap_iter;
@@ -84,59 +84,59 @@ namespace sparrow
      **********************************/
 
     template <iterator_types Iterator_types>
-    layout_iterator<Iterator_types>::layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter)
+    constexpr layout_iterator<Iterator_types>::layout_iterator(value_iterator value_iter, bitmap_iterator bitmap_iter)
         : m_value_iter(value_iter)
         , m_bitmap_iter(bitmap_iter)
     {
     }
 
     template <iterator_types Iterator_types>
-    auto layout_iterator<Iterator_types>::dereference() const -> reference
+    constexpr auto layout_iterator<Iterator_types>::dereference() const -> reference
     {
         return reference(*m_value_iter, *m_bitmap_iter);
     }
 
     template <iterator_types Iterator_types>
-    auto layout_iterator<Iterator_types>::dereference() -> reference
+    constexpr auto layout_iterator<Iterator_types>::dereference() -> reference
     {
         return reference(*m_value_iter, *m_bitmap_iter);
     }
 
     template <iterator_types Iterator_types>
-    void layout_iterator<Iterator_types>::increment()
+    constexpr void layout_iterator<Iterator_types>::increment()
     {
         ++m_value_iter;
         ++m_bitmap_iter;
     }
 
     template <iterator_types Iterator_types>
-    void layout_iterator<Iterator_types>::decrement()
+    constexpr void layout_iterator<Iterator_types>::decrement()
     {
         --m_value_iter;
         --m_bitmap_iter;
     }
 
     template <iterator_types Iterator_types>
-    void layout_iterator<Iterator_types>::advance(difference_type n)
+    constexpr void layout_iterator<Iterator_types>::advance(difference_type n)
     {
         m_value_iter += n;
         m_bitmap_iter += n;
     }
 
     template <iterator_types Iterator_types>
-    auto layout_iterator<Iterator_types>::distance_to(const self_type& rhs) const -> difference_type
+    constexpr auto layout_iterator<Iterator_types>::distance_to(const self_type& rhs) const -> difference_type
     {
         return rhs.m_value_iter - m_value_iter;
     }
 
     template <iterator_types Iterator_types>
-    bool layout_iterator<Iterator_types>::equal(const self_type& rhs) const
+    constexpr bool layout_iterator<Iterator_types>::equal(const self_type& rhs) const
     {
         return m_value_iter == rhs.m_value_iter && m_bitmap_iter == rhs.m_bitmap_iter;
     }
 
     template <iterator_types Iterator_types>
-    bool layout_iterator<Iterator_types>::less_than(const self_type& rhs) const
+    constexpr bool layout_iterator<Iterator_types>::less_than(const self_type& rhs) const
     {
         return m_value_iter < rhs.m_value_iter && m_bitmap_iter < rhs.m_bitmap_iter;
     }

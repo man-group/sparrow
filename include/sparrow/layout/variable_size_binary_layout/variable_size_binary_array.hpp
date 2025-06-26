@@ -44,7 +44,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::string, std::int32_t>
         {
-            [[nodiscard]] static std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
             {
                 return "u";
             }
@@ -53,7 +53,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::string, std::int64_t>
         {
-            [[nodiscard]] static std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
             {
                 return "U";
             }
@@ -62,7 +62,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::vector<byte_t>, std::int32_t>
         {
-            [[nodiscard]] static std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
             {
                 return "z";
             }
@@ -71,7 +71,7 @@ namespace sparrow
         template <>
         struct variable_size_binary_format<std::vector<byte_t>, std::int64_t>
         {
-            [[nodiscard]] static std::string format()
+            [[nodiscard]] static SPARROW_CONSTEXPR_GCC_11 std::string format()
             {
                 return "Z";
             }
@@ -306,11 +306,11 @@ namespace sparrow
         using base_type::get_arrow_proxy;
         using base_type::size;
 
-        [[nodiscard]] inner_reference value(size_type i);
-        [[nodiscard]] inner_const_reference value(size_type i) const;
+        [[nodiscard]] constexpr inner_reference value(size_type i);
+        [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
         template <std::ranges::range SIZES_RANGE>
-        [[nodiscard]] static auto offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type;
+        [[nodiscard]] static constexpr auto offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type;
 
     private:
 
@@ -380,49 +380,49 @@ namespace sparrow
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
 
-        [[nodiscard]] offset_iterator offset(size_type i);
-        [[nodiscard]] offset_iterator offsets_begin();
-        [[nodiscard]] offset_iterator offsets_end();
-        [[nodiscard]] data_iterator data(size_type i);
+        [[nodiscard]] constexpr offset_iterator offset(size_type i);
+        [[nodiscard]] constexpr offset_iterator offsets_begin();
+        [[nodiscard]] constexpr offset_iterator offsets_end();
+        [[nodiscard]] constexpr data_iterator data(size_type i);
 
-        [[nodiscard]] value_iterator value_begin();
-        [[nodiscard]] value_iterator value_end();
+        [[nodiscard]] constexpr value_iterator value_begin();
+        [[nodiscard]] constexpr value_iterator value_end();
 
-        [[nodiscard]] const_value_iterator value_cbegin() const;
-        [[nodiscard]] const_value_iterator value_cend() const;
+        [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
+        [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
-        [[nodiscard]] const_offset_iterator offset(size_type i) const;
-        [[nodiscard]] const_offset_iterator offsets_cbegin() const;
-        [[nodiscard]] const_offset_iterator offsets_cend() const;
-        [[nodiscard]] const_data_iterator data(size_type i) const;
+        [[nodiscard]] constexpr const_offset_iterator offset(size_type i) const;
+        [[nodiscard]] constexpr const_offset_iterator offsets_cbegin() const;
+        [[nodiscard]] constexpr const_offset_iterator offsets_cend() const;
+        [[nodiscard]] constexpr const_data_iterator data(size_type i) const;
 
         // Modifiers
 
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
-        void resize_values(size_type new_length, U value);
+        constexpr void resize_values(size_type new_length, U value);
 
-        void resize_offsets(size_type new_length, offset_type offset_value);
+        constexpr void resize_offsets(size_type new_length, offset_type offset_value);
 
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
-        value_iterator insert_value(const_value_iterator pos, U value, size_type count);
+        constexpr value_iterator insert_value(const_value_iterator pos, U value, size_type count);
 
-        offset_iterator insert_offset(const_offset_iterator pos, offset_type size, size_type count);
+        constexpr offset_iterator insert_offset(const_offset_iterator pos, offset_type size, size_type count);
 
         template <mpl::iterator_of_type<T> InputIt>
-        value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
+        constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
 
         template <mpl::iterator_of_type<OT> InputIt>
-        offset_iterator insert_offsets(const_offset_iterator pos, InputIt first, InputIt last);
+        constexpr offset_iterator insert_offsets(const_offset_iterator pos, InputIt first, InputIt last);
 
-        value_iterator erase_values(const_value_iterator pos, size_type count);
+        constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
 
-        offset_iterator erase_offsets(const_offset_iterator pos, size_type count);
+        constexpr offset_iterator erase_offsets(const_offset_iterator pos, size_type count);
 
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
-        void assign(U&& rhs, size_type index);
+        constexpr void assign(U&& rhs, size_type index);
 
         friend class variable_size_binary_reference<self_type>;
         friend const_value_iterator;
@@ -453,7 +453,7 @@ namespace sparrow
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     template <std::ranges::range SIZES_RANGE>
-    auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes)
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes)
         -> offset_buffer_type
     {
         return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
@@ -652,7 +652,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::data(size_type i) -> data_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::data(size_type i) -> data_iterator
     {
         arrow_proxy& proxy = get_arrow_proxy();
         SPARROW_ASSERT_TRUE(proxy.buffers()[DATA_BUFFER_INDEX].size() >= i);
@@ -660,7 +660,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::data(size_type i) const -> const_data_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::data(size_type i) const -> const_data_iterator
     {
         const arrow_proxy& proxy = this->get_arrow_proxy();
         SPARROW_ASSERT_TRUE(proxy.buffers()[DATA_BUFFER_INDEX].size() >= i);
@@ -670,7 +670,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     template <std::ranges::sized_range U>
         requires mpl::convertible_ranges<U, T>
-    void variable_size_binary_array_impl<T, CR, OT>::assign(U&& rhs, size_type index)
+    constexpr void variable_size_binary_array_impl<T, CR, OT>::assign(U&& rhs, size_type index)
     {
         SPARROW_ASSERT_TRUE(index < size());
         const auto offset_beg = *offset(index);
@@ -726,7 +726,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::offset(size_type i) -> offset_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::offset(size_type i) -> offset_iterator
     {
         SPARROW_ASSERT_TRUE(i <= size() + this->get_arrow_proxy().offset());
         return get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
@@ -734,7 +734,8 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::offset(size_type i) const -> const_offset_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::offset(size_type i) const
+        -> const_offset_iterator
     {
         SPARROW_ASSERT_TRUE(i <= this->size() + this->get_arrow_proxy().offset());
         return this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].template data<OT>()
@@ -742,38 +743,38 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::offsets_begin() -> offset_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::offsets_begin() -> offset_iterator
     {
         return offset(0);
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::offsets_cbegin() const -> const_offset_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::offsets_cbegin() const -> const_offset_iterator
     {
         return offset(0);
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::offsets_end() -> offset_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::offsets_end() -> offset_iterator
     {
         return offset(size() + 1);
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::offsets_cend() const -> const_offset_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::offsets_cend() const -> const_offset_iterator
     {
         return offset(size() + 1);
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::value(size_type i) -> inner_reference
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::value(size_type i) -> inner_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         return inner_reference(this, i);
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::value(size_type i) const -> inner_const_reference
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::value(size_type i) const -> inner_const_reference
     {
         SPARROW_ASSERT_TRUE(i < this->size());
         const OT offset_begin = *offset(i);
@@ -786,25 +787,25 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::value_begin() -> value_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::value_begin() -> value_iterator
     {
         return value_iterator{this, 0};
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::value_end() -> value_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::value_end() -> value_iterator
     {
         return sparrow::next(value_begin(), size());
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::value_cbegin() const -> const_value_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator{this, 0};
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::value_cend() const -> const_value_iterator
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::value_cend() const -> const_value_iterator
     {
         return sparrow::next(value_cbegin(), this->size());
     }
@@ -812,7 +813,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     template <std::ranges::sized_range U>
         requires mpl::convertible_ranges<U, T>
-    void variable_size_binary_array_impl<T, CR, OT>::resize_values(size_type new_length, U value)
+    constexpr void variable_size_binary_array_impl<T, CR, OT>::resize_values(size_type new_length, U value)
     {
         const size_t new_size = new_length + static_cast<size_t>(this->get_arrow_proxy().offset());
         auto& buffers = this->get_arrow_proxy().get_array_private_data()->buffers();
@@ -834,7 +835,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     template <std::ranges::sized_range U>
         requires mpl::convertible_ranges<U, T>
-    auto
+    constexpr auto
     variable_size_binary_array_impl<T, CR, OT>::insert_value(const_value_iterator pos, U value, size_type count)
         -> value_iterator
     {
@@ -851,7 +852,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::insert_offset(
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::insert_offset(
         const_offset_iterator pos,
         offset_type value_size,
         size_type count
@@ -881,7 +882,7 @@ namespace sparrow
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     template <mpl::iterator_of_type<T> InputIt>
-    auto
+    constexpr auto
     variable_size_binary_array_impl<T, CR, OT>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
         -> value_iterator
     {
@@ -928,7 +929,7 @@ namespace sparrow
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     template <mpl::iterator_of_type<OT> InputIt>
-    auto variable_size_binary_array_impl<T, CR, OT>::insert_offsets(
+    constexpr auto variable_size_binary_array_impl<T, CR, OT>::insert_offsets(
         const_offset_iterator pos,
         InputIt first_sizes,
         InputIt last_sizes
@@ -969,7 +970,8 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::erase_values(const_value_iterator pos, size_type count)
+    constexpr auto
+    variable_size_binary_array_impl<T, CR, OT>::erase_values(const_value_iterator pos, size_type count)
         -> value_iterator
     {
         SPARROW_ASSERT_TRUE(pos >= value_cbegin());
@@ -992,7 +994,8 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
-    auto variable_size_binary_array_impl<T, CR, OT>::erase_offsets(const_offset_iterator pos, size_type count)
+    constexpr auto
+    variable_size_binary_array_impl<T, CR, OT>::erase_offsets(const_offset_iterator pos, size_type count)
         -> offset_iterator
     {
         SPARROW_ASSERT_TRUE(pos >= offsets_cbegin());

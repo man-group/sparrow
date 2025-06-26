@@ -31,18 +31,18 @@ namespace sparrow
 
         using derived_type = D;
 
-        [[nodiscard]] derived_type& derived_cast();
-        [[nodiscard]] const derived_type& derived_cast() const;
+        [[nodiscard]] constexpr derived_type& derived_cast();
+        [[nodiscard]] constexpr const derived_type& derived_cast() const;
     };
 
     template <class D>
-    auto crtp_base<D>::derived_cast() -> derived_type&
+    constexpr auto crtp_base<D>::derived_cast() -> derived_type&
     {
         return static_cast<derived_type&>(*this);
     }
 
     template <class D>
-    auto crtp_base<D>::derived_cast() const -> const derived_type&
+    constexpr auto crtp_base<D>::derived_cast() const -> const derived_type&
     {
         return static_cast<const derived_type&>(*this);
     }

@@ -53,36 +53,36 @@ namespace sparrow
 
         array_bitmap_base_impl(arrow_proxy);
 
-        array_bitmap_base_impl(const array_bitmap_base_impl&);
-        array_bitmap_base_impl& operator=(const array_bitmap_base_impl&);
+        constexpr array_bitmap_base_impl(const array_bitmap_base_impl&);
+        constexpr array_bitmap_base_impl& operator=(const array_bitmap_base_impl&);
 
-        array_bitmap_base_impl(array_bitmap_base_impl&&) noexcept = default;
-        array_bitmap_base_impl& operator=(array_bitmap_base_impl&&) noexcept = default;
+        constexpr array_bitmap_base_impl(array_bitmap_base_impl&&) noexcept = default;
+        constexpr array_bitmap_base_impl& operator=(array_bitmap_base_impl&&) noexcept = default;
 
-        [[nodiscard]] bitmap_type& get_bitmap()
+        [[nodiscard]] constexpr bitmap_type& get_bitmap()
             requires is_mutable;
-        [[nodiscard]] const bitmap_type& get_bitmap() const;
+        [[nodiscard]] constexpr const bitmap_type& get_bitmap() const;
 
-        void resize_bitmap(size_type new_length, bool value)
+        constexpr void resize_bitmap(size_type new_length, bool value)
             requires is_mutable;
 
-        bitmap_iterator insert_bitmap(const_bitmap_iterator pos, bool value, size_type count)
+        constexpr bitmap_iterator insert_bitmap(const_bitmap_iterator pos, bool value, size_type count)
             requires is_mutable;
 
         template <std::input_iterator InputIt>
             requires std::same_as<typename std::iterator_traits<InputIt>::value_type, bool>
-        bitmap_iterator insert_bitmap(const_bitmap_iterator pos, InputIt first, InputIt last)
+        constexpr bitmap_iterator insert_bitmap(const_bitmap_iterator pos, InputIt first, InputIt last)
             requires is_mutable;
 
-        bitmap_iterator erase_bitmap(const_bitmap_iterator pos, size_type count)
+        constexpr bitmap_iterator erase_bitmap(const_bitmap_iterator pos, size_type count)
             requires is_mutable;
 
-        void update()
+        constexpr void update()
             requires is_mutable;
 
-        [[nodiscard]] non_owning_dynamic_bitset<uint8_t> get_non_owning_dynamic_bitset();
+        [[nodiscard]] constexpr non_owning_dynamic_bitset<uint8_t> get_non_owning_dynamic_bitset();
 
-        [[nodiscard]] bitmap_type make_bitmap();
+        [[nodiscard]] constexpr bitmap_type make_bitmap();
 
     private:
 
@@ -122,14 +122,14 @@ namespace sparrow
     }
 
     template <class D, bool is_mutable>
-    array_bitmap_base_impl<D, is_mutable>::array_bitmap_base_impl(const array_bitmap_base_impl& rhs)
+    constexpr array_bitmap_base_impl<D, is_mutable>::array_bitmap_base_impl(const array_bitmap_base_impl& rhs)
         : base_type(rhs)
         , m_bitmap(make_bitmap())
     {
     }
 
     template <class D, bool is_mutable>
-    array_bitmap_base_impl<D, is_mutable>&
+    constexpr array_bitmap_base_impl<D, is_mutable>&
     array_bitmap_base_impl<D, is_mutable>::operator=(const array_bitmap_base_impl& rhs)
     {
         base_type::operator=(rhs);
@@ -138,22 +138,22 @@ namespace sparrow
     }
 
     template <class D, bool is_mutable>
-    auto array_bitmap_base_impl<D, is_mutable>::get_bitmap() -> bitmap_type&
+    constexpr auto array_bitmap_base_impl<D, is_mutable>::get_bitmap() -> bitmap_type&
         requires is_mutable
     {
         return m_bitmap;
     }
 
     template <class D, bool is_mutable>
-    auto array_bitmap_base_impl<D, is_mutable>::get_bitmap() const -> const bitmap_type&
+    constexpr auto array_bitmap_base_impl<D, is_mutable>::get_bitmap() const -> const bitmap_type&
     {
         return m_bitmap;
     }
 
     template <class D, bool is_mutable>
-    auto array_bitmap_base_impl<D, is_mutable>::make_bitmap() -> bitmap_type
+    constexpr auto array_bitmap_base_impl<D, is_mutable>::make_bitmap() -> bitmap_type
     {
-        static constexpr size_t bitmap_buffer_index = 0;
+        constexpr size_t bitmap_buffer_index = 0;
         arrow_proxy& arrow_proxy = this->get_arrow_proxy();
         SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
         const auto bitmap_size = arrow_proxy.length() + arrow_proxy.offset();
@@ -161,7 +161,7 @@ namespace sparrow
     }
 
     template <class D, bool is_mutable>
-    void array_bitmap_base_impl<D, is_mutable>::resize_bitmap(size_type new_length, bool value)
+    constexpr void array_bitmap_base_impl<D, is_mutable>::resize_bitmap(size_type new_length, bool value)
         requires is_mutable
     {
         arrow_proxy& arrow_proxy = this->get_arrow_proxy();
@@ -170,7 +170,7 @@ namespace sparrow
     }
 
     template <class D, bool is_mutable>
-    auto
+    constexpr auto
     array_bitmap_base_impl<D, is_mutable>::insert_bitmap(const_bitmap_iterator pos, bool value, size_type count)
         -> bitmap_iterator
         requires is_mutable
@@ -187,7 +187,7 @@ namespace sparrow
     template <class D, bool is_mutable>
     template <std::input_iterator InputIt>
         requires std::same_as<typename std::iterator_traits<InputIt>::value_type, bool>
-    auto
+    constexpr auto
     array_bitmap_base_impl<D, is_mutable>::insert_bitmap(const_bitmap_iterator pos, InputIt first, InputIt last)
         -> bitmap_iterator
         requires is_mutable
@@ -203,7 +203,8 @@ namespace sparrow
     }
 
     template <class D, bool is_mutable>
-    auto array_bitmap_base_impl<D, is_mutable>::erase_bitmap(const_bitmap_iterator pos, size_type count)
+    constexpr auto
+    array_bitmap_base_impl<D, is_mutable>::erase_bitmap(const_bitmap_iterator pos, size_type count)
         -> bitmap_iterator
         requires is_mutable
     {
@@ -216,7 +217,7 @@ namespace sparrow
     }
 
     template <class D, bool is_mutable>
-    void array_bitmap_base_impl<D, is_mutable>::update()
+    constexpr void array_bitmap_base_impl<D, is_mutable>::update()
         requires is_mutable
     {
         m_bitmap = make_bitmap();

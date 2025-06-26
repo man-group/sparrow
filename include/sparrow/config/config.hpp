@@ -55,3 +55,10 @@
 #        define SPARROW_GCC_11_2_WORKAROUND 1
 #    endif
 #endif
+
+// If using clang or apple-clang version < 18, we define the constexpr keyword to be empty.
+#if defined(__clang__) && __clang_major__ < 18
+#    define SPARROW_CONSTEXPR_CLANG_17 inline
+#else
+#    define SPARROW_CONSTEXPR_CLANG_17 constexpr
+#endif

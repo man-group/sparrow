@@ -66,12 +66,14 @@ namespace sparrow
 
             SUBCASE("from const non empty buffer")
             {
-                buffer_adaptor<const uint32_t, decltype(input)&> buffer_adapt(input);
+                [[maybe_unused]] buffer_adaptor<const uint32_t, decltype(input)&> buffer_adapt(input);
             }
 
             SUBCASE("from const empty buffer")
             {
-                buffer_adaptor<const uint32_t, decltype(input_empty)&> buffer_adapt_empty(input_empty);
+                [[maybe_unused]] buffer_adaptor<const uint32_t, decltype(input_empty)&> buffer_adapt_empty(
+                    input_empty
+                );
             }
         }
 

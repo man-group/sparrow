@@ -25,7 +25,7 @@ namespace sparrow
     {
         zoned_time_without_timezone_seconds() = default;
 
-        explicit zoned_time_without_timezone_seconds(int64_t seconds)
+        constexpr explicit zoned_time_without_timezone_seconds(int64_t seconds)
             : std::chrono::duration<int64_t>(seconds)
         {
         }
@@ -38,7 +38,7 @@ namespace sparrow
     {
         zoned_time_without_timezone_milliseconds() = default;
 
-        explicit zoned_time_without_timezone_milliseconds(int64_t milliseconds)
+        constexpr explicit zoned_time_without_timezone_milliseconds(int64_t milliseconds)
             : std::chrono::duration<int64_t, std::milli>(milliseconds)
         {
         }
@@ -51,7 +51,7 @@ namespace sparrow
     {
         zoned_time_without_timezone_microseconds() = default;
 
-        explicit zoned_time_without_timezone_microseconds(int64_t microseconds)
+        constexpr explicit zoned_time_without_timezone_microseconds(int64_t microseconds)
             : std::chrono::duration<int64_t, std::micro>(microseconds)
         {
         }
@@ -64,7 +64,7 @@ namespace sparrow
     {
         zoned_time_without_timezone_nanoseconds() = default;
 
-        explicit zoned_time_without_timezone_nanoseconds(int64_t nanoseconds)
+        constexpr explicit zoned_time_without_timezone_nanoseconds(int64_t nanoseconds)
             : std::chrono::duration<int64_t, std::nano>(nanoseconds)
         {
         }

@@ -42,7 +42,7 @@ namespace sparrow
 
         template <std::ranges::input_range R>
             requires std::convertible_to<std::ranges::range_value_t<R>, value_type>
-        explicit dynamic_bitset(const R& r)
+        constexpr explicit dynamic_bitset(const R& r)
             : dynamic_bitset(std::ranges::size(r), true)
         {
             std::size_t i = 0;

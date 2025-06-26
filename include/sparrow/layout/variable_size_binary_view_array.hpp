@@ -198,14 +198,14 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        [[nodiscard]] inner_reference value(size_type i);
-        [[nodiscard]] inner_const_reference value(size_type i) const;
+        [[nodiscard]] constexpr inner_reference value(size_type i);
+        [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
-        [[nodiscard]] value_iterator value_begin();
-        [[nodiscard]] value_iterator value_end();
+        [[nodiscard]] constexpr value_iterator value_begin();
+        [[nodiscard]] constexpr value_iterator value_end();
 
-        [[nodiscard]] const_value_iterator value_cbegin() const;
-        [[nodiscard]] const_value_iterator value_cend() const;
+        [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
+        [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
         static constexpr size_type LENGTH_BUFFER_INDEX = 1;
         static constexpr std::size_t DATA_BUFFER_SIZE = 16;
@@ -469,13 +469,13 @@ namespace sparrow
     }
 
     template <variable_size_binary_view_impl_types T>
-    auto variable_size_binary_view_array_impl<T>::value(size_type i) -> inner_reference
+    constexpr auto variable_size_binary_view_array_impl<T>::value(size_type i) -> inner_reference
     {
         return static_cast<const self_type*>(this)->value(i);
     }
 
     template <variable_size_binary_view_impl_types T>
-    auto variable_size_binary_view_array_impl<T>::value(size_type i) const -> inner_const_reference
+    constexpr auto variable_size_binary_view_array_impl<T>::value(size_type i) const -> inner_const_reference
     {
 #ifdef __GNUC__
 #    pragma GCC diagnostic push
@@ -518,25 +518,25 @@ namespace sparrow
     }
 
     template <variable_size_binary_view_impl_types T>
-    auto variable_size_binary_view_array_impl<T>::value_begin() -> value_iterator
+    constexpr auto variable_size_binary_view_array_impl<T>::value_begin() -> value_iterator
     {
         return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(), 0);
     }
 
     template <variable_size_binary_view_impl_types T>
-    auto variable_size_binary_view_array_impl<T>::value_end() -> value_iterator
+    constexpr auto variable_size_binary_view_array_impl<T>::value_end() -> value_iterator
     {
         return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), this->size());
     }
 
     template <variable_size_binary_view_impl_types T>
-    auto variable_size_binary_view_array_impl<T>::value_cbegin() const -> const_value_iterator
+    constexpr auto variable_size_binary_view_array_impl<T>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), 0);
     }
 
     template <variable_size_binary_view_impl_types T>
-    auto variable_size_binary_view_array_impl<T>::value_cend() const -> const_value_iterator
+    constexpr auto variable_size_binary_view_array_impl<T>::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(
             detail::layout_value_functor<const self_type, inner_value_type>(this),

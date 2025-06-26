@@ -209,30 +209,30 @@ namespace sparrow
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using iterator_tag = typename base_type::iterator_tag;
 
-        [[nodiscard]] const array_wrapper* raw_flat_array() const;
-        [[nodiscard]] array_wrapper* raw_flat_array();
+        [[nodiscard]] constexpr const array_wrapper* raw_flat_array() const;
+        [[nodiscard]] constexpr array_wrapper* raw_flat_array();
 
     protected:
 
         explicit list_array_crtp_base(arrow_proxy proxy);
 
-        list_array_crtp_base(const self_type&);
-        list_array_crtp_base& operator=(const self_type&);
+        constexpr list_array_crtp_base(const self_type&);
+        constexpr list_array_crtp_base& operator=(const self_type&);
 
-        list_array_crtp_base(self_type&&) noexcept = default;
-        list_array_crtp_base& operator=(self_type&&) noexcept = default;
+        constexpr list_array_crtp_base(self_type&&) noexcept = default;
+        constexpr list_array_crtp_base& operator=(self_type&&) noexcept = default;
 
     private:
 
         using list_size_type = inner_types::list_size_type;
 
-        [[nodiscard]] value_iterator value_begin();
-        [[nodiscard]] value_iterator value_end();
-        [[nodiscard]] const_value_iterator value_cbegin() const;
-        [[nodiscard]] const_value_iterator value_cend() const;
+        [[nodiscard]] constexpr value_iterator value_begin();
+        [[nodiscard]] constexpr value_iterator value_end();
+        [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
+        [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
-        [[nodiscard]] inner_reference value(size_type i);
-        [[nodiscard]] inner_const_reference value(size_type i) const;
+        [[nodiscard]] constexpr inner_reference value(size_type i);
+        [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
         [[nodiscard]] cloning_ptr<array_wrapper> make_flat_array();
 
@@ -262,11 +262,11 @@ namespace sparrow
 
         explicit list_array_impl(arrow_proxy proxy);
 
-        list_array_impl(const self_type&);
-        list_array_impl& operator=(const self_type&);
+        constexpr list_array_impl(const self_type&);
+        constexpr list_array_impl& operator=(const self_type&);
 
-        list_array_impl(self_type&&) noexcept = default;
-        list_array_impl& operator=(self_type&&) noexcept = default;
+        constexpr list_array_impl(self_type&&) noexcept = default;
+        constexpr list_array_impl& operator=(self_type&&) noexcept = default;
 
         template <class... ARGS>
             requires(mpl::excludes_copy_and_move_ctor_v<list_array_impl<BIG>, ARGS...>)
@@ -276,7 +276,7 @@ namespace sparrow
         }
 
         template <std::ranges::range SIZES_RANGE>
-        [[nodiscard]] static auto offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type;
+        [[nodiscard]] static constexpr auto offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type;
 
     private:
 
@@ -349,9 +349,9 @@ namespace sparrow
         }
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
-        [[nodiscard]] std::pair<offset_type, offset_type> offset_range(size_type i) const;
+        [[nodiscard]] constexpr std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
-        [[nodiscard]] offset_type* make_list_offsets();
+        [[nodiscard]] constexpr offset_type* make_list_offsets();
 
         offset_type* p_list_offsets;
 
@@ -376,11 +376,11 @@ namespace sparrow
 
         explicit list_view_array_impl(arrow_proxy proxy);
 
-        list_view_array_impl(const self_type&);
-        list_view_array_impl& operator=(const self_type&);
+        constexpr list_view_array_impl(const self_type&);
+        constexpr list_view_array_impl& operator=(const self_type&);
 
-        list_view_array_impl(self_type&&) = default;
-        list_view_array_impl& operator=(self_type&&) = default;
+        constexpr list_view_array_impl(self_type&&) = default;
+        constexpr list_view_array_impl& operator=(self_type&&) = default;
 
         template <class... ARGS>
             requires(mpl::excludes_copy_and_move_ctor_v<list_view_array_impl<BIG>, ARGS...>)
@@ -470,10 +470,10 @@ namespace sparrow
 
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr std::size_t SIZES_BUFFER_INDEX = 2;
-        [[nodiscard]] std::pair<offset_type, offset_type> offset_range(size_type i) const;
+        [[nodiscard]] constexpr std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
-        [[nodiscard]] offset_type* make_list_offsets();
-        [[nodiscard]] offset_type* make_list_sizes();
+        [[nodiscard]] constexpr offset_type* make_list_offsets();
+        [[nodiscard]] constexpr offset_type* make_list_sizes();
 
         offset_type* p_list_offsets;
         offset_type* p_list_sizes;
@@ -496,7 +496,7 @@ namespace sparrow
 
         explicit fixed_sized_list_array(arrow_proxy proxy);
 
-        fixed_sized_list_array(const self_type&) = default;
+        constexpr fixed_sized_list_array(const self_type&) = default;
         fixed_sized_list_array& operator=(const self_type&) = default;
 
         fixed_sized_list_array(self_type&&) = default;
@@ -534,7 +534,7 @@ namespace sparrow
         );
 
         [[nodiscard]] static uint64_t list_size_from_format(const std::string_view format);
-        [[nodiscard]] std::pair<offset_type, offset_type> offset_range(size_type i) const;
+        [[nodiscard]] constexpr std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
         uint64_t m_list_size;
 
@@ -555,14 +555,14 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    list_array_crtp_base<DERIVED>::list_array_crtp_base(const self_type& rhs)
+    constexpr list_array_crtp_base<DERIVED>::list_array_crtp_base(const self_type& rhs)
         : base_type(rhs)
         , p_flat_array(make_flat_array())
     {
     }
 
     template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::operator=(const self_type& rhs) -> self_type&
+    constexpr auto list_array_crtp_base<DERIVED>::operator=(const self_type& rhs) -> self_type&
     {
         base_type::operator=(rhs);
         p_flat_array = make_flat_array();
@@ -570,25 +570,25 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::raw_flat_array() const -> const array_wrapper*
+    constexpr auto list_array_crtp_base<DERIVED>::raw_flat_array() const -> const array_wrapper*
     {
         return p_flat_array.get();
     }
 
     template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::raw_flat_array() -> array_wrapper*
+    constexpr auto list_array_crtp_base<DERIVED>::raw_flat_array() -> array_wrapper*
     {
         return p_flat_array.get();
     }
 
     template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::value_begin() -> value_iterator
+    constexpr auto list_array_crtp_base<DERIVED>::value_begin() -> value_iterator
     {
         return value_iterator(detail::layout_value_functor<DERIVED, inner_value_type>(&this->derived_cast()), 0);
     }
 
     template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::value_end() -> value_iterator
+    constexpr auto list_array_crtp_base<DERIVED>::value_end() -> value_iterator
     {
         return value_iterator(
             detail::layout_value_functor<DERIVED, inner_value_type>(&this->derived_cast()),
@@ -597,7 +597,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::value_cbegin() const -> const_value_iterator
+    constexpr auto list_array_crtp_base<DERIVED>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator(
             detail::layout_value_functor<const DERIVED, inner_value_type>(&this->derived_cast()),
@@ -606,7 +606,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::value_cend() const -> const_value_iterator
+    constexpr auto list_array_crtp_base<DERIVED>::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(
             detail::layout_value_functor<const DERIVED, inner_value_type>(&this->derived_cast()),
@@ -615,7 +615,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::value(size_type i) -> inner_reference
+    constexpr auto list_array_crtp_base<DERIVED>::value(size_type i) -> inner_reference
     {
         const auto r = this->derived_cast().offset_range(i);
         using st = typename list_value::size_type;
@@ -623,7 +623,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    auto list_array_crtp_base<DERIVED>::value(size_type i) const -> inner_const_reference
+    constexpr auto list_array_crtp_base<DERIVED>::value(size_type i) const -> inner_const_reference
     {
         const auto r = this->derived_cast().offset_range(i);
         using st = typename list_value::size_type;
@@ -654,7 +654,7 @@ namespace sparrow
 
     template <bool BIG>
     template <std::ranges::range SIZES_RANGE>
-    auto list_array_impl<BIG>::offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type
+    constexpr auto list_array_impl<BIG>::offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type
     {
         return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
             std::forward<SIZES_RANGE>(sizes)
@@ -767,14 +767,14 @@ namespace sparrow
     }
 
     template <bool BIG>
-    list_array_impl<BIG>::list_array_impl(const self_type& rhs)
+    constexpr list_array_impl<BIG>::list_array_impl(const self_type& rhs)
         : base_type(rhs)
         , p_list_offsets(make_list_offsets())
     {
     }
 
     template <bool BIG>
-    auto list_array_impl<BIG>::operator=(const self_type& rhs) -> self_type&
+    constexpr auto list_array_impl<BIG>::operator=(const self_type& rhs) -> self_type&
     {
         if (this != &rhs)
         {
@@ -785,13 +785,13 @@ namespace sparrow
     }
 
     template <bool BIG>
-    auto list_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type, offset_type>
+    constexpr auto list_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type, offset_type>
     {
         return std::make_pair(p_list_offsets[i], p_list_offsets[i + 1]);
     }
 
     template <bool BIG>
-    auto list_array_impl<BIG>::make_list_offsets() -> offset_type*
+    constexpr auto list_array_impl<BIG>::make_list_offsets() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
             this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
@@ -918,7 +918,7 @@ namespace sparrow
     }
 
     template <bool BIG>
-    list_view_array_impl<BIG>::list_view_array_impl(const self_type& rhs)
+    constexpr list_view_array_impl<BIG>::list_view_array_impl(const self_type& rhs)
         : base_type(rhs)
         , p_list_offsets(make_list_offsets())
         , p_list_sizes(make_list_sizes())
@@ -926,7 +926,7 @@ namespace sparrow
     }
 
     template <bool BIG>
-    auto list_view_array_impl<BIG>::operator=(const self_type& rhs) -> self_type&
+    constexpr auto list_view_array_impl<BIG>::operator=(const self_type& rhs) -> self_type&
     {
         if (this != &rhs)
         {
@@ -938,7 +938,7 @@ namespace sparrow
     }
 
     template <bool BIG>
-    inline auto list_view_array_impl<BIG>::offset_range(size_type i) const
+    inline constexpr auto list_view_array_impl<BIG>::offset_range(size_type i) const
         -> std::pair<offset_type, offset_type>
     {
         const auto offset = p_list_offsets[i];
@@ -946,7 +946,7 @@ namespace sparrow
     }
 
     template <bool BIG>
-    auto list_view_array_impl<BIG>::make_list_offsets() -> offset_type*
+    constexpr auto list_view_array_impl<BIG>::make_list_offsets() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
             this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
@@ -954,7 +954,7 @@ namespace sparrow
     }
 
     template <bool BIG>
-    auto list_view_array_impl<BIG>::make_list_sizes() -> offset_type*
+    constexpr auto list_view_array_impl<BIG>::make_list_sizes() -> offset_type*
     {
         return reinterpret_cast<offset_type*>(
             this->get_arrow_proxy().buffers()[SIZES_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
@@ -983,7 +983,8 @@ namespace sparrow
     {
     }
 
-    inline auto fixed_sized_list_array::offset_range(size_type i) const -> std::pair<offset_type, offset_type>
+    constexpr auto fixed_sized_list_array::offset_range(size_type i) const
+        -> std::pair<offset_type, offset_type>
     {
         const auto offset = i * m_list_size;
         return std::make_pair(offset, offset + m_list_size);

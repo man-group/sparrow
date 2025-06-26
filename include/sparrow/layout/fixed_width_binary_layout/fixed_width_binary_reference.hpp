@@ -48,35 +48,35 @@ namespace sparrow
         using iterator = typename L::data_iterator;
         using const_iterator = typename L::const_data_iterator;
 
-        fixed_width_binary_reference(L* layout, size_type index);
-        fixed_width_binary_reference(const fixed_width_binary_reference&) noexcept = default;
-        fixed_width_binary_reference(fixed_width_binary_reference&&) noexcept = default;
+        constexpr fixed_width_binary_reference(L* layout, size_type index);
+        constexpr fixed_width_binary_reference(const fixed_width_binary_reference&) noexcept = default;
+        constexpr fixed_width_binary_reference(fixed_width_binary_reference&&) noexcept = default;
 
         template <std::ranges::sized_range T>
             requires mpl::convertible_ranges<T, typename L::inner_value_type>
-        self_type& operator=(T&& rhs);
+        constexpr self_type& operator=(T&& rhs);
 
-        [[nodiscard]] size_type size() const;
+        [[nodiscard]] constexpr size_type size() const;
 
-        [[nodiscard]] iterator begin();
-        [[nodiscard]] iterator end();
+        [[nodiscard]] constexpr iterator begin();
+        [[nodiscard]] constexpr iterator end();
 
-        [[nodiscard]] const_iterator begin() const;
-        [[nodiscard]] const_iterator end() const;
-        [[nodiscard]] const_iterator cbegin() const;
-        [[nodiscard]] const_iterator cend() const;
-
-        template <std::ranges::input_range T>
-            requires mpl::convertible_ranges<T, typename L::inner_value_type>
-        bool operator==(const T& rhs) const;
+        [[nodiscard]] constexpr const_iterator begin() const;
+        [[nodiscard]] constexpr const_iterator end() const;
+        [[nodiscard]] constexpr const_iterator cbegin() const;
+        [[nodiscard]] constexpr const_iterator cend() const;
 
         template <std::ranges::input_range T>
             requires mpl::convertible_ranges<T, typename L::inner_value_type>
-        auto operator<=>(const T& rhs) const;
+        constexpr bool operator==(const T& rhs) const;
+
+        template <std::ranges::input_range T>
+            requires mpl::convertible_ranges<T, typename L::inner_value_type>
+        constexpr auto operator<=>(const T& rhs) const;
 
     private:
 
-        [[nodiscard]] size_type offset(size_type index) const;
+        [[nodiscard]] constexpr size_type offset(size_type index) const;
 
         L* p_layout = nullptr;
         size_type m_index = size_type(0);
@@ -105,7 +105,7 @@ namespace sparrow
      ***********************************************/
 
     template <class L>
-    fixed_width_binary_reference<L>::fixed_width_binary_reference(L* layout, size_type index)
+    constexpr fixed_width_binary_reference<L>::fixed_width_binary_reference(L* layout, size_type index)
         : p_layout(layout)
         , m_index(index)
     {
@@ -114,7 +114,7 @@ namespace sparrow
     template <class L>
     template <std::ranges::sized_range T>
         requires mpl::convertible_ranges<T, typename L::inner_value_type>
-    auto fixed_width_binary_reference<L>::operator=(T&& rhs) -> self_type&
+    constexpr auto fixed_width_binary_reference<L>::operator=(T&& rhs) -> self_type&
     {
         SPARROW_ASSERT_TRUE(p_layout->m_element_size == std::ranges::size(rhs));
         p_layout->assign(std::forward<T>(rhs), m_index);
@@ -123,43 +123,43 @@ namespace sparrow
     }
 
     template <class L>
-    auto fixed_width_binary_reference<L>::size() const -> size_type
+    constexpr auto fixed_width_binary_reference<L>::size() const -> size_type
     {
         return p_layout->m_element_size;
     }
 
     template <class L>
-    auto fixed_width_binary_reference<L>::begin() -> iterator
+    constexpr auto fixed_width_binary_reference<L>::begin() -> iterator
     {
         return iterator(p_layout->data(offset(m_index)));
     }
 
     template <class L>
-    auto fixed_width_binary_reference<L>::end() -> iterator
+    constexpr auto fixed_width_binary_reference<L>::end() -> iterator
     {
         return iterator(p_layout->data(offset(m_index + 1)));
     }
 
     template <class L>
-    auto fixed_width_binary_reference<L>::begin() const -> const_iterator
+    constexpr auto fixed_width_binary_reference<L>::begin() const -> const_iterator
     {
         return cbegin();
     }
 
     template <class L>
-    auto fixed_width_binary_reference<L>::end() const -> const_iterator
+    constexpr auto fixed_width_binary_reference<L>::end() const -> const_iterator
     {
         return cend();
     }
 
     template <class L>
-    auto fixed_width_binary_reference<L>::cbegin() const -> const_iterator
+    constexpr auto fixed_width_binary_reference<L>::cbegin() const -> const_iterator
     {
         return const_iterator(p_layout->data(offset(m_index)));
     }
 
     template <class L>
-    auto fixed_width_binary_reference<L>::cend() const -> const_iterator
+    constexpr auto fixed_width_binary_reference<L>::cend() const -> const_iterator
     {
         return const_iterator(p_layout->data(offset(m_index + 1)));
     }
@@ -167,7 +167,7 @@ namespace sparrow
     template <class L>
     template <std::ranges::input_range T>
         requires mpl::convertible_ranges<T, typename L::inner_value_type>
-    bool fixed_width_binary_reference<L>::operator==(const T& rhs) const
+    constexpr bool fixed_width_binary_reference<L>::operator==(const T& rhs) const
     {
         return std::equal(cbegin(), cend(), std::cbegin(rhs), std::cend(rhs));
     }
@@ -175,13 +175,13 @@ namespace sparrow
     template <class L>
     template <std::ranges::input_range T>
         requires mpl::convertible_ranges<T, typename L::inner_value_type>
-    auto fixed_width_binary_reference<L>::operator<=>(const T& rhs) const
+    constexpr auto fixed_width_binary_reference<L>::operator<=>(const T& rhs) const
     {
         return lexicographical_compare_three_way(*this, rhs);
     }
 
     template <class L>
-    auto fixed_width_binary_reference<L>::offset(size_type index) const -> size_type
+    constexpr auto fixed_width_binary_reference<L>::offset(size_type index) const -> size_type
     {
         return p_layout->m_element_size * index;
     }

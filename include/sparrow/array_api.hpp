@@ -56,7 +56,7 @@ namespace sparrow
          */
         template <layout A>
             requires(not std::is_lvalue_reference_v<A>)
-        explicit array(A&& a);
+        constexpr explicit array(A&& a);
 
         /**
          * Constructs an \ref array from the given typed layout. The ownership of
@@ -66,7 +66,7 @@ namespace sparrow
          * @param a A pointer to the typed layout.
          */
         template <layout A>
-        explicit array(A* a);
+        constexpr explicit array(A* a);
 
         /**
          * Constructs an \ref array from the given typed layout. The ownership of
@@ -76,7 +76,7 @@ namespace sparrow
          * @param a A shared pointer holding the layout.
          */
         template <layout A>
-        explicit array(std::shared_ptr<A> a);
+        constexpr explicit array(std::shared_ptr<A> a);
 
         /**
          * Constructs an \ref array from the given Arrow C structures, whose ownerhips
@@ -114,7 +114,7 @@ namespace sparrow
          *
          * @param rhs The array to copy.
          */
-        array(const array& rhs) = default;
+        constexpr array(const array& rhs) = default;
 
         /**
          * Overwrites the content of the array with a deep copy of the given array,
@@ -164,7 +164,7 @@ namespace sparrow
          * @param metadata The new metadata of the array.
          */
         template <input_metadata_container R = std::vector<metadata_pair>>
-        void set_metadata(std::optional<R> metadata);
+        constexpr void set_metadata(std::optional<R> metadata);
 
         /**
          * Checks if the array has no element, i.e. whether size() == 0.
@@ -217,7 +217,7 @@ namespace sparrow
          * @return The result of calling the functor on the internal layout.
          */
         template <class F>
-        visit_result_t<F> visit(F&& func) const;
+        constexpr visit_result_t<F> visit(F&& func) const;
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
@@ -365,7 +365,7 @@ namespace sparrow
     // Implementation
 
     template <input_metadata_container R>
-    void array::set_metadata(std::optional<R> metadata)
+    constexpr void array::set_metadata(std::optional<R> metadata)
     {
         get_arrow_proxy().set_metadata(metadata);
     }

@@ -51,52 +51,52 @@ namespace sparrow
         using const_iterator = typename L::const_data_iterator;
         using offset_type = typename L::offset_type;
 
-        variable_size_binary_reference(L* layout, size_type index);
-        variable_size_binary_reference(const variable_size_binary_reference&) = default;
-        variable_size_binary_reference(variable_size_binary_reference&&) = default;
+        constexpr variable_size_binary_reference(L* layout, size_type index);
+        constexpr variable_size_binary_reference(const variable_size_binary_reference&) = default;
+        constexpr variable_size_binary_reference(variable_size_binary_reference&&) = default;
 
         template <std::ranges::sized_range T>
             requires mpl::convertible_ranges<T, typename L::inner_value_type>
-        self_type& operator=(T&& rhs);
+        constexpr self_type& operator=(T&& rhs);
 
         // This is to avoid const char* from begin caught by the previous
         // operator= overload. It would convert const char* to const char[N],
         // including the null-terminating char.
         template <class U = typename L::inner_value_type>
             requires std::assignable_from<U&, const char*>
-        self_type& operator=(const char* rhs);
+        constexpr self_type& operator=(const char* rhs);
 
-        [[nodiscard]] size_type size() const;
-        [[nodiscard]] bool empty() const;
+        [[nodiscard]] constexpr size_type size() const;
+        [[nodiscard]] constexpr bool empty() const;
 
-        [[nodiscard]] [[nodiscard]] iterator begin();
-        iterator end();
+        [[nodiscard]] constexpr iterator begin();
+        [[nodiscard]] constexpr iterator end();
 
-        [[nodiscard]] const_iterator begin() const;
-        [[nodiscard]] const_iterator end() const;
-        [[nodiscard]] const_iterator cbegin() const;
-        [[nodiscard]] const_iterator cend() const;
-
-        template <std::ranges::input_range T>
-            requires mpl::convertible_ranges<T, typename L::inner_value_type>
-        bool operator==(const T& rhs) const;
-
-        template <class U = typename L::inner_value_type>
-            requires std::assignable_from<U&, const char*>
-        bool operator==(const char* rhs) const;
+        [[nodiscard]] constexpr const_iterator begin() const;
+        [[nodiscard]] constexpr const_iterator end() const;
+        [[nodiscard]] constexpr const_iterator cbegin() const;
+        [[nodiscard]] constexpr const_iterator cend() const;
 
         template <std::ranges::input_range T>
             requires mpl::convertible_ranges<T, typename L::inner_value_type>
-        auto operator<=>(const T& rhs) const;
+        constexpr bool operator==(const T& rhs) const;
 
         template <class U = typename L::inner_value_type>
             requires std::assignable_from<U&, const char*>
-        auto operator<=>(const char* rhs) const;
+        constexpr bool operator==(const char* rhs) const;
+
+        template <std::ranges::input_range T>
+            requires mpl::convertible_ranges<T, typename L::inner_value_type>
+        constexpr auto operator<=>(const T& rhs) const;
+
+        template <class U = typename L::inner_value_type>
+            requires std::assignable_from<U&, const char*>
+        constexpr auto operator<=>(const char* rhs) const;
 
     private:
 
-        [[nodiscard]] offset_type offset(size_type index) const;
-        [[nodiscard]] size_type uoffset(size_type index) const;
+        [[nodiscard]] constexpr offset_type offset(size_type index) const;
+        [[nodiscard]] constexpr size_type uoffset(size_type index) const;
 
         L* p_layout = nullptr;
         size_type m_index = size_type(0);
@@ -137,7 +137,7 @@ namespace sparrow
      *************************************************/
 
     template <class L>
-    variable_size_binary_reference<L>::variable_size_binary_reference(L* layout, size_type index)
+    constexpr variable_size_binary_reference<L>::variable_size_binary_reference(L* layout, size_type index)
         : p_layout(layout)
         , m_index(index)
     {
@@ -146,7 +146,7 @@ namespace sparrow
     template <class L>
     template <std::ranges::sized_range T>
         requires mpl::convertible_ranges<T, typename L::inner_value_type>
-    auto variable_size_binary_reference<L>::operator=(T&& rhs) -> self_type&
+    constexpr auto variable_size_binary_reference<L>::operator=(T&& rhs) -> self_type&
     {
         p_layout->assign(std::forward<T>(rhs), m_index);
         p_layout->get_arrow_proxy().update_buffers();
@@ -156,55 +156,55 @@ namespace sparrow
     template <class L>
     template <class U>
         requires std::assignable_from<U&, const char*>
-    auto variable_size_binary_reference<L>::operator=(const char* rhs) -> self_type&
+    constexpr auto variable_size_binary_reference<L>::operator=(const char* rhs) -> self_type&
     {
         return *this = std::string_view(rhs);
     }
 
     template <class L>
-    auto variable_size_binary_reference<L>::size() const -> size_type
+    constexpr auto variable_size_binary_reference<L>::size() const -> size_type
     {
         return static_cast<size_type>(offset(m_index + 1) - offset(m_index));
     }
 
     template <class L>
-    auto variable_size_binary_reference<L>::empty() const -> bool
+    constexpr auto variable_size_binary_reference<L>::empty() const -> bool
     {
         return size() == 0;
     }
 
     template <class L>
-    auto variable_size_binary_reference<L>::begin() -> iterator
+    constexpr auto variable_size_binary_reference<L>::begin() -> iterator
     {
         return iterator(p_layout->data(uoffset(m_index)));
     }
 
     template <class L>
-    auto variable_size_binary_reference<L>::end() -> iterator
+    constexpr auto variable_size_binary_reference<L>::end() -> iterator
     {
         return iterator(p_layout->data(uoffset(m_index + 1)));
     }
 
     template <class L>
-    auto variable_size_binary_reference<L>::begin() const -> const_iterator
+    constexpr auto variable_size_binary_reference<L>::begin() const -> const_iterator
     {
         return cbegin();
     }
 
     template <class L>
-    auto variable_size_binary_reference<L>::end() const -> const_iterator
+    constexpr auto variable_size_binary_reference<L>::end() const -> const_iterator
     {
         return cend();
     }
 
     template <class L>
-    auto variable_size_binary_reference<L>::cbegin() const -> const_iterator
+    constexpr auto variable_size_binary_reference<L>::cbegin() const -> const_iterator
     {
         return const_iterator(p_layout->data(uoffset(m_index)));
     }
 
     template <class L>
-    auto variable_size_binary_reference<L>::cend() const -> const_iterator
+    constexpr auto variable_size_binary_reference<L>::cend() const -> const_iterator
     {
         return const_iterator(p_layout->data(uoffset(m_index + 1)));
     }
@@ -212,7 +212,7 @@ namespace sparrow
     template <class L>
     template <std::ranges::input_range T>
         requires mpl::convertible_ranges<T, typename L::inner_value_type>
-    bool variable_size_binary_reference<L>::operator==(const T& rhs) const
+    constexpr bool variable_size_binary_reference<L>::operator==(const T& rhs) const
     {
         return std::equal(cbegin(), cend(), std::cbegin(rhs), std::cend(rhs));
     }
@@ -220,7 +220,7 @@ namespace sparrow
     template <class L>
     template <class U>
         requires std::assignable_from<U&, const char*>
-    bool variable_size_binary_reference<L>::operator==(const char* rhs) const
+    constexpr bool variable_size_binary_reference<L>::operator==(const char* rhs) const
     {
         return operator==(std::string_view(rhs));
     }
@@ -228,7 +228,7 @@ namespace sparrow
     template <class L>
     template <std::ranges::input_range T>
         requires mpl::convertible_ranges<T, typename L::inner_value_type>
-    auto variable_size_binary_reference<L>::operator<=>(const T& rhs) const
+    constexpr auto variable_size_binary_reference<L>::operator<=>(const T& rhs) const
     {
         return lexicographical_compare_three_way(*this, rhs);
     }
@@ -236,19 +236,19 @@ namespace sparrow
     template <class L>
     template <class U>
         requires std::assignable_from<U&, const char*>
-    auto variable_size_binary_reference<L>::operator<=>(const char* rhs) const
+    constexpr auto variable_size_binary_reference<L>::operator<=>(const char* rhs) const
     {
         return operator<=>(std::string_view(rhs));
     }
 
     template <class L>
-    auto variable_size_binary_reference<L>::offset(size_type index) const -> offset_type
+    constexpr auto variable_size_binary_reference<L>::offset(size_type index) const -> offset_type
     {
         return *(p_layout->offset(index));
     }
 
     template <class L>
-    auto variable_size_binary_reference<L>::uoffset(size_type index) const -> size_type
+    constexpr auto variable_size_binary_reference<L>::uoffset(size_type index) const -> size_type
     {
         return static_cast<size_type>(offset(index));
     }
