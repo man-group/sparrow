@@ -14,6 +14,7 @@
 
 #ifndef SPARROW_STD_FIXED_FLOAT_SUPPORT
 #    include "sparrow/details/3rdparty/float16_t.hpp"
+
 #    include "doctest/doctest.h"
 
 namespace sparrow
