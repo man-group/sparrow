@@ -58,6 +58,11 @@ namespace sparrow
     template <class T>
     constexpr bool is_struc_array_v = std::same_as<T, struct_array>;
 
+    /**
+     * A struct array.
+     * Stores structured data with named fields, similar to database records or C structs.
+     * Apache Arrow specification: https://arrow.apache.org/docs/format/Columnar.html#struct-layout
+     */
     class struct_array final : public array_bitmap_base<struct_array>
     {
     public:
