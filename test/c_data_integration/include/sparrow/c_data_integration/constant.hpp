@@ -17,9 +17,14 @@
 
 namespace sparrow::c_data_integration
 {
-    inline constexpr std::string_view VALIDITY = "VALIDITY";
-    inline constexpr std::string_view DATA = "DATA";
-    inline constexpr std::string_view OFFSET = "OFFSET";
-    inline constexpr std::string_view SIZE = "SIZE";
-    inline constexpr std::string_view TYPE_ID = "TYPE_ID";
+    constexpr std::string_view VALIDITY = "VALIDITY";
+    constexpr std::string_view DATA = "DATA";
+    constexpr std::string_view OFFSET = "OFFSET";
+    constexpr std::string_view SIZE = "SIZE";
+    constexpr std::string_view TYPE_ID = "TYPE_ID";
+    constexpr std::string_view VIEWS = "VIEWS";
+    constexpr std::string_view VARIADIC_DATA_BUFFERS = "VARIADIC_DATA_BUFFERS";
+    constexpr std::string_view INLINED = "INLINED";
+    constexpr std::string_view PREFIX_HEX = "PREFIX_HEX";
+    constexpr std::string_view BUFFER_INDEX = "BUFFER_INDEX";
 }

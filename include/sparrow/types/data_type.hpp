@@ -617,7 +617,9 @@ namespace sparrow
         float32_t,
         float64_t,
         std::string,
+        std::string_view,
         std::vector<byte_t>,
+        std::span<const byte_t>,
         date_days,
         date_milliseconds,
         timestamp<std::chrono::seconds>,
@@ -655,7 +657,7 @@ namespace sparrow
     /// is arrow base type or arrow compound type (list<T>, struct<T> etc.)
     // template <class T>
     // concept is_arrow_base_type_or_compound = is_arrow_base_type<T> || is_list_value_v<T>;
-    using all_base_types_extended_t = mpl::append_t<all_base_types_t, char, std::string_view>;
+    using all_base_types_extended_t = mpl::append_t<all_base_types_t, char>;
 
     /// Checks if a type is an extended base type for Arrow.
     ///

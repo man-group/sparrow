@@ -69,11 +69,27 @@ namespace sparrow
     };
 
     template <>
+    struct arrow_traits<std::string_view>
+    {
+        static constexpr data_type type_id = data_type::STRING_VIEW;
+        using value_type = std::string_view;
+        using const_reference = std::string_view;
+    };
+
+    template <>
     struct arrow_traits<std::vector<byte_t>>
     {
         static constexpr data_type type_id = data_type::BINARY;
         using value_type = std::vector<byte_t>;
         using const_reference = vector_view<const byte_t>;
+    };
+
+    template <>
+    struct arrow_traits<std::span<const byte_t>>
+    {
+        static constexpr data_type type_id = data_type::BINARY_VIEW;
+        using value_type = std::span<const byte_t>;
+        using const_reference = std::span<const byte_t>;
     };
 
     template <>

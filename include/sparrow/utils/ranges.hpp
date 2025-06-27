@@ -218,4 +218,34 @@ struct std::formatter<std::bitset<T>>
         return out;
     }
 };
+
+template <typename T, std::size_t N>
+struct std::formatter<std::span<T, N>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();  // Simple implementation
+    }
+
+    auto format(const std::span<T, N>& span, std::format_context& ctx) const
+    {
+        auto out = ctx.out();
+        *out++ = '<';
+
+        bool first = true;
+        for (const auto& elem : span)
+        {
+            if (!first)
+            {
+                *out++ = ',';
+                *out++ = ' ';
+            }
+            out = std::format_to(out, "{}", elem);
+            first = false;
+        }
+
+        *out++ = '>';
+        return out;
+    }
+};
 #endif

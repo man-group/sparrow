@@ -611,4 +611,17 @@ namespace sparrow::mpl
             std::span<typename std::remove_cvref_t<T>::element_type, std::remove_cvref_t<T>::extent>,
             std::remove_cvref_t<T>>;
     };
+
+    template <typename T>
+    struct is_span : std::false_type
+    {
+    };
+
+    template <typename T, std::size_t Extent>
+    struct is_span<std::span<T, Extent>> : std::true_type
+    {
+    };
+
+    template <typename T>
+    inline constexpr bool is_span_v = is_span<T>::value;
 }

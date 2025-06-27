@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <compare>
 #include <concepts>
 #include <exception>
@@ -514,7 +515,10 @@ namespace sparrow
     constexpr nullable<T, B> make_nullable(T&& value, B&& flag = true);
 
     template <std::ranges::range R, typename T = typename std::ranges::range_value_t<R>::value_type>
-        requires(nullable_of<std::ranges::range_value_t<R>, T>)
+        requires(
+            mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
+            && std::is_same_v<typename std::ranges::range_value_t<R>::value_type, T>
+        )
     constexpr void zero_null_values(R& range, const T& default_value = T{});
 
     /**
@@ -737,7 +741,15 @@ namespace sparrow
     template <class T, class B, class U>
     constexpr bool operator==(const nullable<T, B>& lhs, const U& rhs) noexcept
     {
-        return lhs && (lhs.get() == rhs);
+        // if T or U is std::span, do a deep comparison
+        if constexpr (mpl::is_span_v<T> || mpl::is_span_v<U>)
+        {
+            return lhs && std::ranges::equal(lhs.get(), rhs);
+        }
+        else
+        {
+            return lhs && (lhs.get() == rhs);
+        }
     }
 
     template <class T, class B, class U>
@@ -767,7 +779,10 @@ namespace sparrow
     }
 
     template <std::ranges::range R, typename T>
-        requires(nullable_of<std::ranges::range_value_t<R>, T>)
+        requires(
+            mpl::is_type_instance_of_v<std::ranges::range_value_t<R>, nullable>
+            && std::is_same_v<typename std::ranges::range_value_t<R>::value_type, T>
+        )
     constexpr void zero_null_values(R& range, const T& default_value)
     {
         for (auto nullable_value : range)
