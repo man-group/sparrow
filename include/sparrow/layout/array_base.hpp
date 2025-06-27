@@ -162,8 +162,8 @@ namespace sparrow
         constexpr array_crtp_base(array_crtp_base&&) noexcept = default;
         constexpr array_crtp_base& operator=(array_crtp_base&&) noexcept = default;
 
-        [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy();
-        [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy() const;
+        [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy() noexcept;
+        [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy() const noexcept;
 
         constexpr bitmap_const_reference has_value(size_type i) const;
 
@@ -391,13 +391,13 @@ namespace sparrow
     }
 
     template <class D>
-    constexpr auto array_crtp_base<D>::get_arrow_proxy() -> arrow_proxy&
+    constexpr auto array_crtp_base<D>::get_arrow_proxy() noexcept -> arrow_proxy&
     {
         return m_proxy;
     }
 
     template <class D>
-    constexpr auto array_crtp_base<D>::get_arrow_proxy() const -> const arrow_proxy&
+    constexpr auto array_crtp_base<D>::get_arrow_proxy() const noexcept -> const arrow_proxy&
     {
         return m_proxy;
     }

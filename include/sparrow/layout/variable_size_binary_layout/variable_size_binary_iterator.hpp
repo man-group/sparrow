@@ -55,12 +55,12 @@ namespace sparrow
 
         [[nodiscard]] constexpr reference dereference() const;
 
-        constexpr void increment();
-        constexpr void decrement();
-        constexpr void advance(difference_type n);
-        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const;
-        [[nodiscard]] constexpr bool equal(const self_type& rhs) const;
-        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const;
+        constexpr void increment() noexcept;
+        constexpr void decrement() noexcept;
+        constexpr void advance(difference_type n) noexcept;
+        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const noexcept;
+        [[nodiscard]] constexpr bool equal(const self_type& rhs) const noexcept;
+        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const noexcept;
 
         layout_type* p_layout = nullptr;
         difference_type m_index;
@@ -96,40 +96,42 @@ namespace sparrow
     }
 
     template <class Layout, iterator_types Iterator_types>
-    constexpr void variable_size_binary_value_iterator<Layout, Iterator_types>::increment()
+    constexpr void variable_size_binary_value_iterator<Layout, Iterator_types>::increment() noexcept
     {
         ++m_index;
     }
 
     template <class Layout, iterator_types Iterator_types>
-    constexpr void variable_size_binary_value_iterator<Layout, Iterator_types>::decrement()
+    constexpr void variable_size_binary_value_iterator<Layout, Iterator_types>::decrement() noexcept
     {
         --m_index;
     }
 
     template <class Layout, iterator_types Iterator_types>
-    constexpr void variable_size_binary_value_iterator<Layout, Iterator_types>::advance(difference_type n)
+    constexpr void
+    variable_size_binary_value_iterator<Layout, Iterator_types>::advance(difference_type n) noexcept
     {
         m_index += n;
     }
 
     template <class Layout, iterator_types Iterator_types>
     constexpr auto
-    variable_size_binary_value_iterator<Layout, Iterator_types>::distance_to(const self_type& rhs) const
+    variable_size_binary_value_iterator<Layout, Iterator_types>::distance_to(const self_type& rhs) const noexcept
         -> difference_type
     {
         return rhs.m_index - m_index;
     }
 
     template <class Layout, iterator_types Iterator_types>
-    constexpr bool variable_size_binary_value_iterator<Layout, Iterator_types>::equal(const self_type& rhs) const
+    constexpr bool
+    variable_size_binary_value_iterator<Layout, Iterator_types>::equal(const self_type& rhs) const noexcept
     {
         return (p_layout == rhs.p_layout) && (m_index == rhs.m_index);
     }
 
     template <class Layout, iterator_types Iterator_types>
     constexpr bool
-    variable_size_binary_value_iterator<Layout, Iterator_types>::less_than(const self_type& rhs) const
+    variable_size_binary_value_iterator<Layout, Iterator_types>::less_than(const self_type& rhs) const noexcept
     {
         return (p_layout == rhs.p_layout) && (m_index < rhs.m_index);
     }

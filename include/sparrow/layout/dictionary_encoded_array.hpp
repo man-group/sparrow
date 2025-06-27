@@ -73,7 +73,7 @@ namespace sparrow
         template <std::integral IT>
         struct get_data_type_from_array<sparrow::dictionary_encoded_array<IT>>
         {
-            [[nodiscard]] static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get() noexcept
             {
                 return arrow_traits<typename primitive_array<IT>::inner_value_type>::type_id;
             }
@@ -82,7 +82,7 @@ namespace sparrow
         template <std::integral IT>
         struct is_dictionary_encoded_array<sparrow::dictionary_encoded_array<IT>>
         {
-            [[nodiscard]] static constexpr bool get()
+            [[nodiscard]] static constexpr bool get() noexcept
             {
                 return true;
             }

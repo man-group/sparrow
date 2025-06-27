@@ -47,7 +47,7 @@ namespace sparrow
         template <class ARRAY>
         struct get_data_type_from_array
         {
-            [[nodiscard]] static constexpr sparrow::data_type get()
+            [[nodiscard]] static constexpr sparrow::data_type get() noexcept
             {
                 return arrow_traits<typename ARRAY::inner_value_type>::type_id;
             }
@@ -56,7 +56,7 @@ namespace sparrow
         template <class ARRAY>
         struct is_dictionary_encoded_array
         {
-            [[nodiscard]] static constexpr bool get()
+            [[nodiscard]] static constexpr bool get() noexcept
             {
                 return false;
             }
@@ -80,7 +80,7 @@ namespace sparrow
 
         [[nodiscard]] wrapper_ptr clone() const;
 
-        [[nodiscard]] constexpr enum data_type data_type() const;
+        [[nodiscard]] constexpr enum data_type data_type() const noexcept;
         [[nodiscard]] constexpr bool is_dictionary() const;
 
         [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy();
@@ -118,10 +118,10 @@ namespace sparrow
 
         using wrapper_ptr = array_wrapper::wrapper_ptr;
 
-        [[nodiscard]] constexpr enum data_type get_data_type() const;
+        [[nodiscard]] constexpr enum data_type get_data_type() const noexcept;
 
         constexpr array_wrapper_impl(const array_wrapper_impl&);
-        [[nodiscard]] constexpr bool is_dictionary_impl() const override;
+        [[nodiscard]] constexpr bool is_dictionary_impl() const noexcept override;
         [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy_impl() override;
         [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy_impl() const override;
         [[nodiscard]] wrapper_ptr clone_impl() const override;
@@ -146,7 +146,7 @@ namespace sparrow
         return clone_impl();
     }
 
-    constexpr enum data_type array_wrapper::data_type() const
+    constexpr enum data_type array_wrapper::data_type() const noexcept
     {
         return m_data_type;
     }
@@ -212,7 +212,7 @@ namespace sparrow
     }
 
     template <class T>
-    constexpr enum data_type array_wrapper_impl<T>::get_data_type() const
+    constexpr enum data_type array_wrapper_impl<T>::get_data_type() const noexcept
     {
         return detail::get_data_type_from_array<T>::get();
     }
@@ -242,7 +242,7 @@ namespace sparrow
     }
 
     template <class T>
-    constexpr bool array_wrapper_impl<T>::is_dictionary_impl() const
+    constexpr bool array_wrapper_impl<T>::is_dictionary_impl() const noexcept
     {
         return detail::is_dictionary_encoded_array<T>::get();
     }
