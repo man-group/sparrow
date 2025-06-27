@@ -127,7 +127,7 @@ namespace sparrow
     }
 };
 
-#if defined(__cpp_lib_format) && !defined(__cpp_lib_format_ranges)
+#if defined(__cpp_lib_format)
 
 template <typename T, std::size_t N>
 struct std::formatter<std::array<T, N>>

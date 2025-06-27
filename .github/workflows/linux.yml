@@ -1,4 +1,3 @@
-
 name: Linux
 on:
   workflow_dispatch:
@@ -14,7 +13,7 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    name: ${{ matrix.compiler }} / ${{ matrix.version }} / ${{ matrix.arch }} / ${{ matrix.config }} / date-polyfill ${{ matrix.date-polyfill}} / shared ${{ matrix.shared }}
+    name: ${{ matrix.compiler }} / ${{ matrix.version }} / ${{ matrix.arch }} / ${{ matrix.config }} / date-polyfill ${{ matrix.date-polyfill}} / shared ${{ matrix.shared }} / cpp${{ matrix.cpp_standard }}
     env:
       SCCACHE_GHA_ENABLED: "true"
     strategy:
@@ -26,6 +25,7 @@ jobs:
         config: [Debug, Release]
         date-polyfill: [ON, OFF]
         shared: [ON, OFF]
+        cpp_standard: [20]
         exclude:
           - compiler: clang
             version: 11
@@ -56,6 +56,21 @@ jobs:
             config: Release
             date-polyfill: OFF
             shared: OFF
+            cpp_standard: 20
+          - compiler: gcc
+            version: 14
+            arch: 64
+            config: Release
+            date-polyfill: OFF
+            shared: OFF
+            cpp_standard: 23
+          - compiler: clang
+            version: 20
+            arch: 64
+            config: Release
+            date-polyfill: OFF
+            shared: OFF
+            cpp_standard: 23
             
     steps:
 
@@ -115,6 +130,7 @@ jobs:
           -Bbuild \
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.config}} \
           -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
+          -DCMAKE_CXX_STANDARD=${{matrix.cpp_standard}} \
           -DUSE_DATE_POLYFILL=${{matrix.date-polyfill}} \
           -DBUILD_TESTS=ON \
           -DENABLE_INTEGRATION_TEST=ON \
@@ -156,7 +172,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: success() || failure()
       with:
-        name: test_sparrow_lib_report_Linux_${{ matrix.compiler }}_${{ matrix.version }}_${{ matrix.config }}_m${{ matrix.arch }}_date-polyfill_${{ matrix.date-polyfill }}_shared_${{ matrix.shared }}
+        name: test_sparrow_lib_report_Linux_${{ matrix.compiler }}_${{ matrix.version }}_${{ matrix.config }}_m${{ matrix.arch }}_date-polyfill_${{ matrix.date-polyfill }}_shared_${{ matrix.shared }}_cpp${{ matrix.cpp_standard }}
         path: ./**/test*.xml
         if-no-files-found: error
 

@@ -34,18 +34,18 @@ namespace sparrow
             // arr[float]
             SUBCASE("float")
             {
-                std::vector<float> v{1.0, 2.0, 3.0};
+                std::vector<float32_t> v{1.0f, 2.0f, 3.0f};
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 3);
-                CHECK_EQ(arr[0].value(), 1.0);
-                CHECK_EQ(arr[1].value(), 2.0);
-                CHECK_EQ(arr[2].value(), 3.0);
+                CHECK_EQ(arr[0].value(), float32_t(1.0));
+                CHECK_EQ(arr[1].value(), float32_t(2.0));
+                CHECK_EQ(arr[2].value(), float32_t(3.0));
             }
             // arr[double] (with nulls)
             SUBCASE("float-with-nulls")
             {
-                std::vector<nt<double>> v{1.0, 2.0, sparrow::nullval, 3.0};
+                std::vector<nt<float64_t>> v{1.0, 2.0, sparrow::nullval, 3.0};
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 4);
@@ -96,7 +96,7 @@ namespace sparrow
             // list[float]
             SUBCASE("list[float]")
             {
-                std::vector<std::vector<float>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
+                std::vector<std::vector<float32_t>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
 
@@ -104,18 +104,18 @@ namespace sparrow
                 REQUIRE_EQ(arr[0].value().size(), 3);
                 REQUIRE_EQ(arr[1].value().size(), 2);
 
-                CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], 1.0f);
-                CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], 2.0f);
-                CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[2], 3.0f);
-                CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], 4.0f);
-                CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1], 5.0f);
+                CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], float32_t(1.0f));
+                CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], float32_t(2.0f));
+                CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[2], float32_t(3.0f));
+                CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], float32_t(4.0f));
+                CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1], float32_t(5.0f));
 
                 // check that the children are **NOT** dict-encoded
                 REQUIRE(!arr.raw_flat_array()->is_dictionary());
             }
             SUBCASE("list[list[float]]")
             {
-                std::vector<std::vector<std::vector<float>>> v{
+                std::vector<std::vector<std::vector<float32_t>>> v{
                     {{1.2f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f}},
                     {{7.0f, 8.0f, 9.0f}, {10.0f, 11.0f, 12.0f}}
                 };
@@ -127,14 +127,14 @@ namespace sparrow
             {
                 SUBCASE("with_large_list_flag")
                 {
-                    std::vector<std::vector<float>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
+                    std::vector<std::vector<float32_t>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
                     auto arr = sparrow::build(v, sparrow::large_list_flag);
                     using array_type = std::decay_t<decltype(arr)>;
                     static_assert(std::is_same_v<array_type, sparrow::big_list_array>);
                 }
                 SUBCASE("without_large_list_flag")
                 {
-                    std::vector<std::vector<float>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
+                    std::vector<std::vector<float32_t>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f}};
                     auto arr = sparrow::build(v);
                     test::generic_consistency_test(arr);
                     using array_type = std::decay_t<decltype(arr)>;
@@ -147,17 +147,17 @@ namespace sparrow
         {
             // struct<float, float>
             {
-                std::vector<std::tuple<float, int>> v{{1.5f, 2}, {3.5f, 4}, {5.5f, 6}};
+                std::vector<std::tuple<float32_t, int>> v{{1.5f, 2}, {3.5f, 4}, {5.5f, 6}};
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 3);
             }
             // struct<float, float> (with nulls)
             {
-                std::vector<nt<std::tuple<float, int>>> v{
-                    std::tuple<float, int>{1.5f, 2},
+                std::vector<nt<std::tuple<float32_t, int>>> v{
+                    std::tuple<float32_t, int>{1.5f, 2},
                     sparrow::nullval,
-                    std::tuple<float, int>{5.5f, 6}
+                    std::tuple<float32_t, int>{5.5f, 6}
                 };
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
@@ -165,7 +165,7 @@ namespace sparrow
             }
             // struct<list[float], uint16>
             {
-                std::vector<std::tuple<std::vector<float>, std::uint16_t>> v{
+                std::vector<std::tuple<std::vector<float32_t>, std::uint16_t>> v{
                     {{1.0f, 2.0f, 3.0f}, 1},
                     {{4.0f, 5.0f, 6.0f}, 2},
                     {{7.0f, 8.0f, 9.0f}, 3}
@@ -180,17 +180,17 @@ namespace sparrow
         {
             // fixed_sized_list<float, 3>
             {
-                std::vector<std::array<float, 3>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f}, {7.0f, 8.0f, 9.0f}};
+                std::vector<std::array<float32_t, 3>> v{{1.0f, 2.0f, 3.0f}, {4.0f, 5.0f, 6.0f}, {7.0f, 8.0f, 9.0f}};
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
                 REQUIRE_EQ(arr.size(), 3);
             }
             // fixed_sized_list<float, 3>  with nulls
             {
-                std::vector<nt<std::array<nt<float>, 3>>> v{
-                    std::array<nt<float>, 3>{1.0f, sparrow::nullval, 3.0f},
+                std::vector<nt<std::array<nt<float32_t>, 3>>> v{
+                    std::array<nt<float32_t>, 3>{1.0f, sparrow::nullval, 3.0f},
                     sparrow::nullval,
-                    std::array<nt<float>, 3>{7.0f, 8.0f, sparrow::nullval}
+                    std::array<nt<float32_t>, 3>{7.0f, 8.0f, sparrow::nullval}
                 };
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
@@ -268,7 +268,7 @@ namespace sparrow
         {
             SUBCASE("simple")
             {
-                using variant_type = std::variant<int, float, std::string>;
+                using variant_type = std::variant<int, float32_t, std::string>;
                 std::vector<variant_type> v{1, 2.0f, "hello"};
 
                 auto arr = sparrow::build(v);
@@ -278,7 +278,7 @@ namespace sparrow
 
                 REQUIRE_EQ(arr.size(), 3);
                 CHECK_NULLABLE_VARIANT_EQ(arr[0], 1);
-                CHECK_NULLABLE_VARIANT_EQ(arr[1], 2.0f);
+                CHECK_NULLABLE_VARIANT_EQ(arr[1], float32_t(2.0f));
                 CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
             }
         }

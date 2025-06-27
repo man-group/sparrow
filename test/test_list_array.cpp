@@ -123,7 +123,7 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_TEMPLATE("list[T]", T, std::uint8_t, std::int32_t, float, double)
+        TEST_CASE_TEMPLATE("list[T]", T, std::uint8_t, std::int32_t, float32_t, float64_t)
         {
             using inner_scalar_type = T;
 
@@ -341,7 +341,7 @@ namespace sparrow
             CHECK_NULLABLE_VARIANT_EQ(list_view_arr[3].value()[2], std::int16_t(2));
         }
 
-        TEST_CASE_TEMPLATE("list_view_array[T]", T, std::uint8_t, std::int32_t, float, double)
+        TEST_CASE_TEMPLATE("list_view_array[T]", T, std::uint8_t, std::int32_t, float32_t, float64_t)
         {
             using inner_scalar_type = T;
 
@@ -480,7 +480,7 @@ namespace sparrow
         static_assert(!is_big_list_view_array_v<fixed_sized_list_array>);
         static_assert(is_fixed_sized_list_array_v<fixed_sized_list_array>);
 
-        TEST_CASE_TEMPLATE("fixed_sized_array_list[T]", T, std::uint8_t, std::int32_t, float, double)
+        TEST_CASE_TEMPLATE("fixed_sized_array_list[T]", T, std::uint8_t, std::int32_t, float32_t, float64_t)
         {
             using inner_scalar_type = T;
 

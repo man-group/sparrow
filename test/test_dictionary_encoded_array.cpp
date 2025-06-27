@@ -128,7 +128,7 @@ namespace sparrow
             using keys_buffer_type = typename array_type::keys_buffer_type;
 
             // the value array
-            primitive_array<float> values{{0.0f, 1.0f, 2.0f, 3.0f}};
+            primitive_array<float32_t> values{{0.0f, 1.0f, 2.0f, 3.0f}};
 
             // detyped array
             array values_arr(std::move(values));
@@ -162,10 +162,10 @@ namespace sparrow
             REQUIRE_EQ(arr[4].has_value(), true);
 
             // check the values
-            CHECK_NULLABLE_VARIANT_EQ(arr[0], 3.0f);
-            CHECK_NULLABLE_VARIANT_EQ(arr[1], 3.0f);
-            CHECK_NULLABLE_VARIANT_EQ(arr[3], 1.0f);
-            CHECK_NULLABLE_VARIANT_EQ(arr[4], 0.0f);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0], float32_t(3.0f));
+            CHECK_NULLABLE_VARIANT_EQ(arr[1], float32_t(3.0f));
+            CHECK_NULLABLE_VARIANT_EQ(arr[3], float32_t(1.0f));
+            CHECK_NULLABLE_VARIANT_EQ(arr[4], float32_t(0.0f));
         }
 
         TEST_CASE("copy")
