@@ -75,34 +75,7 @@ namespace date = std::chrono;
 #if defined(SPARROW_STD_FIXED_FLOAT_SUPPORT)
 #    include <stdfloat>
 #else
-// We disable some warnings for the 3rd party float16_t library
-#    if defined(__clang__)
-#        pragma clang diagnostic push
-#        pragma clang diagnostic ignored "-Wconversion"
-#        pragma clang diagnostic ignored "-Wsign-conversion"
-#        pragma clang diagnostic ignored "-Wold-style-cast"
-#        pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#    elif defined(__GNUC__)
-#        pragma GCC diagnostic push
-#        pragma GCC diagnostic ignored "-Wconversion"
-#        pragma GCC diagnostic ignored "-Wsign-conversion"
-#        pragma GCC diagnostic ignored "-Wold-style-cast"
-#    elif defined(_MSC_VER)
-#        pragma warning(push)
-#        pragma warning(disable : 4365)  // 'action' : conversion from 'type_1' to 'type_2', signed/unsigned
-                                         // mismatch
-#        pragma warning(disable : 4514)  // 'function' : unreferenced inline function has been removed
-#        pragma warning(disable : 4668)  // 'symbol' is not defined as a preprocessor macro, replacing with
-                                         // '0' for 'directives'
-#    endif
 #    include "sparrow/details/3rdparty/float16_t.hpp"
-#    if defined(__GNUC__)
-#        pragma GCC diagnostic pop
-#    elif defined(__clang__)
-#        pragma clang diagnostic pop
-#    elif defined(_MSC_VER)
-#        pragma warning(pop)
-#    endif
 #endif
 
 
@@ -116,7 +89,7 @@ namespace sparrow
     using float32_t = std::float32_t;
     using float64_t = std::float64_t;
 #else
-    using float16_t = numeric::float16_t;
+    using float16_t = half_float::half;
     using float32_t = float;
     using float64_t = double;
 #endif
