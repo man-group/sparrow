@@ -1210,7 +1210,8 @@ namespace sparrow
                     if (i < buffer().size())
                     {
                         const block_type current = buffer().data()[i];
-                        const block_type next = (i + 1 < buffer().size()) ? buffer().data()[i + 1] : block_type(0);
+                        const block_type next = (i + 1 < buffer().size()) ? buffer().data()[i + 1]
+                                                                          : block_type(0);
                         buffer().data()[i] = static_cast<block_type>(
                             (current >> bit_shift) | (next << (s_bits_per_block - bit_shift))
                         );
