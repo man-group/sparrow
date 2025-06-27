@@ -54,7 +54,19 @@ make -j12
 If you prefer to use VCPKG, you can follow these steps:
 First, install the required dependencies using VCPKG:
 
+```bash
+vcpkg install sparrow[date_polyfill,build_tests]
+```
 
+Then, run the cmake configuration:
+
+```bash
+mkdir build
+cd build
+cmake .. \
+    -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+    ..
+```
 
 ### ...with Conan
 
