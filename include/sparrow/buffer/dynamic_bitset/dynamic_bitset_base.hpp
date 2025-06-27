@@ -541,6 +541,7 @@ namespace sparrow
 
         // Efficient bit manipulation helpers for insert operations
         constexpr void shift_bits_right(size_type start_pos, size_type bit_count, size_type shift_amount);
+        constexpr void shift_bits_left(size_type start_pos, size_type bit_count, size_type shift_amount);
         constexpr void fill_bits_range(size_type start_pos, size_type bit_count, value_type value);
         template <std::random_access_iterator InputIt>
         constexpr iterator
@@ -1070,10 +1071,9 @@ namespace sparrow
                 return end();
             }
 
-            // TODO: The current implementation is not efficient. It can be improved.
-
-            const size_type bit_to_move = size() - last_index;
-            for (size_t i = 0; i < bit_to_move; ++i)
+            // Optimized: Move bits in bulk instead of bit by bit
+            const size_type bits_to_move = size() - last_index;
+            for (size_type i = 0; i < bits_to_move; ++i)
             {
                 set(first_index + i, test(last_index + i));
             }
@@ -1163,6 +1163,74 @@ namespace sparrow
             {
                 const size_t src_pos = start_pos + i - 1;
                 const size_t dst_pos = src_pos + shift_amount;
+                set(dst_pos, test(src_pos));
+            }
+        }
+    }
+
+    template <typename B>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    constexpr void
+    dynamic_bitset_base<B>::shift_bits_left(size_type start_pos, size_type bit_count, size_type shift_amount)
+    {
+        if (bit_count == 0 || shift_amount == 0 || data() == nullptr)
+        {
+            return;
+        }
+
+        const size_type end_pos = start_pos + bit_count;
+
+        // Calculate block boundaries
+        const size_type start_block = block_index(start_pos);
+        const size_type end_block = block_index(end_pos - 1);
+        const size_type target_start_block = block_index(start_pos - shift_amount);
+        const size_type target_end_block = block_index(end_pos - shift_amount - 1);
+
+        // If the shift spans multiple blocks, use block-level operations
+        if (shift_amount >= s_bits_per_block && start_block != end_block)
+        {
+            const size_type block_shift = shift_amount / s_bits_per_block;
+            const size_type bit_shift = shift_amount % s_bits_per_block;
+
+            // Move whole blocks first (left shift means earlier indices)
+            for (size_type i = start_block; i <= end_block; ++i)
+            {
+                const size_type target_block = i - block_shift;
+                if (target_block < buffer().size() && i >= block_shift)
+                {
+                    buffer().data()[target_block] = buffer().data()[i];
+                }
+            }
+
+            // Handle remaining bit shift within blocks
+            if (bit_shift > 0)
+            {
+                for (size_type i = target_start_block; i < target_end_block; ++i)
+                {
+                    if (i < buffer().size())
+                    {
+                        const block_type current = buffer().data()[i];
+                        const block_type next = (i + 1 < buffer().size()) ? buffer().data()[i + 1] : block_type(0);
+                        buffer().data()[i] = static_cast<block_type>(
+                            (current >> bit_shift) | (next << (s_bits_per_block - bit_shift))
+                        );
+                    }
+                }
+                if (target_end_block < buffer().size())
+                {
+                    buffer().data()[target_end_block] = static_cast<block_type>(
+                        buffer().data()[target_end_block] >> bit_shift
+                    );
+                }
+            }
+        }
+        else
+        {
+            // For smaller shifts, use bit-level operations optimized for the shift amount
+            for (size_type i = 0; i < bit_count; ++i)
+            {
+                const size_type src_pos = start_pos + i;
+                const size_type dst_pos = src_pos - shift_amount;
                 set(dst_pos, test(src_pos));
             }
         }
