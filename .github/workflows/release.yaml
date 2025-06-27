@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Type of version bump'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      custom_version:
+        description: 'Custom version (optional, overrides version_type)'
+        required: false
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Determine version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.custom_version }}" ]; then
+            echo "version=${{ github.event.inputs.custom_version }}" >> $GITHUB_OUTPUT
+          else
+            # Get current version from header file
+            if [ ! -f "include/sparrow/sparrow_version.hpp" ]; then
+              echo "Error: sparrow_version.hpp not found"
+              exit 1
+            fi
+            
+            CURRENT_MAJOR=$(grep "#define SPARROW_VERSION_MAJOR" include/sparrow/sparrow_version.hpp | awk '{print $3}')
+            CURRENT_MINOR=$(grep "#define SPARROW_VERSION_MINOR" include/sparrow/sparrow_version.hpp | awk '{print $3}')
+            CURRENT_PATCH=$(grep "#define SPARROW_VERSION_PATCH" include/sparrow/sparrow_version.hpp | awk '{print $3}')
+            
+            # Verify version numbers were found
+            if [ -z "$CURRENT_MAJOR" ] || [ -z "$CURRENT_MINOR" ] || [ -z "$CURRENT_PATCH" ]; then
+              echo "Error: Could not parse current version from header file"
+              exit 1
+            fi
+            
+            echo "Current version: ${CURRENT_MAJOR}.${CURRENT_MINOR}.${CURRENT_PATCH}"
+            
+            case "${{ github.event.inputs.version_type }}" in
+              "major")
+                NEW_VERSION="$((CURRENT_MAJOR + 1)).0.0"
+                ;;
+              "minor")
+                NEW_VERSION="${CURRENT_MAJOR}.$((CURRENT_MINOR + 1)).0"
+                ;;
+              "patch")
+                NEW_VERSION="${CURRENT_MAJOR}.${CURRENT_MINOR}.$((CURRENT_PATCH + 1))"
+                ;;
+            esac
+            echo "New version: $NEW_VERSION"
+          git config --local user.name "GitHub Action"
+          git add include/sparrow/sparrow_version.hpp
+          git commit -m "Release version ${{ steps.version.outputs.version }}"
+      
+      - name: Create tag
+        run: |
+          git tag "v${{ steps.version.outputs.version }}"
+      
+      - name: Push changes and tag
+        run: |
+          git push origin main
+          git push origin "v${{ steps.version.outputs.version }}"
+      
+      - name: Create GitHub Release
+        uses: elgohr/Github-Release-Action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          title: "Release v${{ steps.version.outputs.version }}"
+          release_name: "Release v${{ steps.version.outputs.version }}"
+          tag: "v${{ steps.version.outputs.version }}"
+          draft: false
+          prerelease: false
