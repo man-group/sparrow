@@ -35,7 +35,7 @@ namespace sparrow
             std::vector<ArrowArray> children_arrays(2);
             std::vector<ArrowSchema> children_schemas(2);
 
-            test::fill_schema_and_array<float>(children_schemas[0], children_arrays[0], n, 0 /*offset*/, {});
+            test::fill_schema_and_array<float32_t>(children_schemas[0], children_arrays[0], n, 0 /*offset*/, {});
             children_schemas[0].name = "item 0";
 
             test::fill_schema_and_array<std::uint16_t>(children_schemas[1], children_arrays[1], n, 0 /*offset*/, {});
@@ -69,7 +69,7 @@ namespace sparrow
             std::vector<ArrowArray> children_arrays(2);
             std::vector<ArrowSchema> children_schemas(2);
 
-            test::fill_schema_and_array<float>(children_schemas[0], children_arrays[0], n_c, 0 /*offset*/, {});
+            test::fill_schema_and_array<float32_t>(children_schemas[0], children_arrays[0], n_c, 0 /*offset*/, {});
             children_schemas[0].name = "item 0";
 
             test::fill_schema_and_array<std::uint16_t>(
@@ -226,7 +226,7 @@ namespace sparrow
                     [](auto&& arg)
                     {
                         using inner_type = std::decay_t<typename std::decay_t<decltype(arg)>::value_type>;
-                        if constexpr (std::is_same_v<inner_type, float>)
+                        if constexpr (std::is_same_v<inner_type, float32_t>)
                         {
                             REQUIRE_EQ(0.0f, arg.value());
                         }
@@ -269,7 +269,7 @@ namespace sparrow
                     [](auto&& arg)
                     {
                         using inner_type = std::decay_t<typename std::decay_t<decltype(arg)>::value_type>;
-                        if constexpr (std::is_same_v<inner_type, float>)
+                        if constexpr (std::is_same_v<inner_type, float32_t>)
                         {
                             REQUIRE_EQ(2.0f, arg.value());
                         }
@@ -451,7 +451,7 @@ namespace sparrow
                 [](auto&& arg)
                 {
                     using inner_type = std::decay_t<typename std::decay_t<decltype(arg)>::value_type>;
-                    if constexpr (std::is_same_v<inner_type, float>)
+                    if constexpr (std::is_same_v<inner_type, float32_t>)
                     {
                         REQUIRE_EQ(0.0f, arg.value());
                     }
@@ -493,7 +493,7 @@ namespace sparrow
                 [](auto&& arg)
                 {
                     using inner_type = std::decay_t<typename std::decay_t<decltype(arg)>::value_type>;
-                    if constexpr (std::is_same_v<inner_type, float>)
+                    if constexpr (std::is_same_v<inner_type, float32_t>)
                     {
                         REQUIRE_EQ(1.0f, arg.value());
                     }
