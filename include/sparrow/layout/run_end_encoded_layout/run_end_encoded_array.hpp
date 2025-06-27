@@ -46,6 +46,14 @@ namespace sparrow
         };
     }
 
+    /**
+     * A run-end encoded array.
+     * To use for data with long runs of identical values
+     *
+     * This array is used to store data in a run-length encoded format, where each run is represented by a
+     * length and a value. Compresses data by storing run lengths for consecutive identical values.
+     * Apache Arrow specification: https://arrow.apache.org/docs/format/Columnar.html#run-end-encoded-layout
+     */
     class run_end_encoded_array
     {
     public:

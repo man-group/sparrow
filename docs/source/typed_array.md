@@ -196,14 +196,14 @@ T type can be:
 
 **Description:** Stores variable-length lists where each element can contain a different number of sub-elements.
 
-**When to use:** For nested data structures like arrays of arrays, where inner arrays can have different lengths.
+**When to use:** Use the List layout when your data consists of variable-length lists and you want a straightforward, efficient representation where the order of elements in the child array matches the logical order in the parent array. This is the standard layout for most use cases involving variable-length lists, such as arrays of strings or arrays of arrays of numbers.
 
 ### list_view_array / big_list_view_array
 **Header:** `sparrow/layout/list_layout/list_array.hpp`
 
 **Description:** Similar to list arrays but with explicit size information for each list element.
 
-**When to use:** When you need explicit control over list sizes or when working with overlapping list views.
+**When to use:** Use the ListView layout when you need more flexibility than the standard List layout provides, such as when the logical order of lists does not match the physical order in the child array, or when you need to represent lists that share or reuse segments of the child array. This can be useful in advanced scenarios like certain optimizations or data transformations where reordering or sharing of data is required.
 
 ### fixed_sized_list_array
 **Header:** `sparrow/layout/list_layout/list_array.hpp`
@@ -221,6 +221,8 @@ T type can be:
 
 **When to use:** For heterogeneous data with multiple named fields, like database rows or complex objects.
 
+**Apache Arrow specification:** [Struct Layout](https://arrow.apache.org/docs/format/Columnar.html#struct-layout)
+
 ## Union Arrays
 
 ### sparse_union_array / dense_union_array
@@ -229,6 +231,8 @@ T type can be:
 **Description:** Stores values that can be one of several different types, similar to std::variant.
 
 **When to use:** For polymorphic data where each element can be of different types.
+
+**Apache Arrow specification:** [Union Layout](https://arrow.apache.org/docs/format/Columnar.html#union-layout)
 
 ## Temporal Arrays
 

@@ -35,10 +35,6 @@ The `sparrow::builder` function is a template function that takes arbitrary nest
 and returns an Arrow data structure.
 The mapping between stl containers and Arrow data structures is conceptually the following:
 
-
-
-
-
 | Concept | Arrow Layout | Example |
 |  ---------------------------- | ----------------------------- | ------------------------------------------|
 | range of scalars              | primitive layout              | `std::vector<int>`                        |
@@ -48,12 +44,8 @@ The mapping between stl containers and Arrow data structures is conceptually the
 | range of tuples               | struct layout                 | `std::vector<std::tuple<int, double>>`    |
 | range of variants             | sparse/dense union layout     | `std::vector<std::variant<int, double>>`  |
 
-
-
-
 When nesting containers, the above rules are applied recursively. For example, a `std::vector<std::vector<int>>` would be converted to a list layout of primitive layout (ie `list[int]`).
 Here are some more examples:
-
 
 |Type                                                   | Arrow Layout                  |
 |-------------------------------------------------------|-------------------------------|
@@ -63,7 +55,6 @@ Here are some more examples:
 |std::vector<std::vector<std::variant<int, double>>>    | list[variant[int, double]]    |
 |std::vector<std::vector<std::array<int, 3>>>           | list[fixed_size_list[int]]    |
 |std::vector<std::tuple<std::vector<int>, std::string>> | struct[list[int], utf8]       |
-
 
 ## Null Support
 
@@ -76,7 +67,6 @@ The union layout in sparrow does not have its own bitmap. Instead the bitmap of 
 ie `std::vector<std::variant<sp::nullable<int>, sp::nullable<double>>>` instead of `std::vector<sp::nullable<std::variant<int, double>>>`.
 
 ## Dict Encoding and Run End Encoding
-
 
 Arrow has two special encodings: dict encoding and run end encoding.
 Dict encoding is used for columns with a small number of unique values. Instead of storing the values themselves, the indices of the values in a dictionary are stored.
