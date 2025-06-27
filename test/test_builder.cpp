@@ -282,5 +282,22 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
             }
         }
+
+        TEST_CASE("map-layout")
+        {
+            SUBCASE("simple-map")
+            {
+                std::map<std::string, int> m{{"a", 1}, {"b", 2}, {"c", 3}};
+                auto arr = sparrow::build(m);
+                test::generic_consistency_test(arr);
+                using arr_type = std::decay_t<decltype(arr)>;
+                static_assert(std::is_same_v<arr_type, sparrow::map_array>);
+
+                REQUIRE_EQ(arr.size(), 3);
+                CHECK_NULLABLE_VARIANT_EQ(arr[0], std::make_pair("a", 1));
+                CHECK_NULLABLE_VARIANT_EQ(arr[1], std::make_pair("b", 2));
+                CHECK_NULLABLE_VARIANT_EQ(arr[2], std::make_pair("c", 3));
+            }
+        }
     }
 }
