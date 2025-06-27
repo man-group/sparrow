@@ -17,9 +17,11 @@
 
 #include <algorithm>
 #include <bit>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "sparrow/buffer/dynamic_bitset/bitset_iterator.hpp"
 #include "sparrow/buffer/dynamic_bitset/bitset_reference.hpp"
@@ -537,6 +539,13 @@ namespace sparrow
          */
         constexpr void update_null_count(bool old_value, bool new_value);
 
+        // Efficient bit manipulation helpers for insert operations
+        constexpr void shift_bits_right(size_type start_pos, size_type bit_count, size_type shift_amount);
+        constexpr void fill_bits_range(size_type start_pos, size_type bit_count, value_type value);
+        template <std::random_access_iterator InputIt>
+        constexpr iterator
+        insert_range_random_access(const_iterator pos, InputIt first, size_type count, size_type index);
+
         storage_type m_buffer;   ///< The underlying storage for bit data
         size_type m_size;        ///< The number of bits in the bitset
         size_type m_null_count;  ///< The number of bits set to false
@@ -968,29 +977,30 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
+
         if (data() == nullptr && value)
         {
             m_size += count;
+            return iterator(this, index);
         }
-        else
+
+        if (count == 0)
         {
-            const size_type old_size = size();
-            const size_type new_size = old_size + count;
-
-            // TODO: The current implementation is not efficient. It can be improved.
-
-            resize(new_size);
-
-            for (size_type i = old_size + count - 1; i >= index + count; --i)
-            {
-                set(i, test(i - count));
-            }
-
-            for (size_type i = 0; i < count; ++i)
-            {
-                set(index + i, value);
-            }
+            return iterator(this, index);
         }
+
+        const size_type old_size = size();
+        const size_type new_size = old_size + count;
+        const size_type bits_to_move = old_size - index;
+
+        resize(new_size);
+
+        if (bits_to_move > 0)
+        {
+            shift_bits_right(index, bits_to_move, count);
+        }
+
+        fill_bits_range(index, count, value);
 
         return iterator(this, index);
     }
@@ -1002,43 +1012,19 @@ namespace sparrow
     dynamic_bitset_base<B>::insert(const_iterator pos, InputIt first, InputIt last)
     {
         const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
-        const auto count = static_cast<size_type>(std::distance(first, last));
-        if (data() == nullptr)
+
+        if constexpr (std::random_access_iterator<InputIt>)
         {
-            if (std::all_of(
-                    first,
-                    last,
-                    [](auto v)
-                    {
-                        return bool(v);
-                    }
-                ))
-            {
-                m_size += count;
-            }
-            return iterator(this, index);
+            // Fast path for random access iterators
+            const auto count = static_cast<size_type>(std::distance(first, last));
+            return insert_range_random_access(pos, first, count, index);
         }
-        SPARROW_ASSERT_TRUE(cbegin() <= pos);
-        SPARROW_ASSERT_TRUE(pos <= cend());
-
-        const size_type old_size = size();
-        const size_type new_size = old_size + count;
-
-        resize(new_size);
-
-        // TODO: The current implementation is not efficient. It can be improved.
-
-        for (size_type i = old_size + count - 1; i >= index + count; --i)
+        else
         {
-            set(i, test(i - count));
+            // Slower path for input iterators - collect values first
+            std::vector<value_type> values(first, last);
+            return insert_range_random_access(pos, values.begin(), values.size(), index);
         }
-
-        for (size_type i = 0; i < count; ++i)
-        {
-            set(index + i, *first++);
-        }
-
-        return iterator(this, index);
     }
 
     template <typename B>
@@ -1087,7 +1073,7 @@ namespace sparrow
             // TODO: The current implementation is not efficient. It can be improved.
 
             const size_type bit_to_move = size() - last_index;
-            for (size_type i = 0; i < bit_to_move; ++i)
+            for (size_t i = 0; i < bit_to_move; ++i)
             {
                 set(first_index + i, test(last_index + i));
             }
@@ -1113,5 +1099,224 @@ namespace sparrow
             return;
         }
         resize(size() - 1);
+    }
+
+    // Efficient helper functions for insert operations
+
+    template <typename B>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    constexpr void
+    dynamic_bitset_base<B>::shift_bits_right(size_type start_pos, size_type bit_count, size_type shift_amount)
+    {
+        if (bit_count == 0 || shift_amount == 0 || data() == nullptr)
+        {
+            return;
+        }
+
+        const size_type end_pos = start_pos + bit_count;
+
+        // Calculate block boundaries
+        const size_type start_block = block_index(start_pos);
+        const size_type end_block = block_index(end_pos - 1);
+        const size_type target_start_block = block_index(start_pos + shift_amount);
+        const size_type target_end_block = block_index(end_pos + shift_amount - 1);
+
+        // If the shift spans multiple blocks, use block-level operations
+        if (shift_amount >= s_bits_per_block && start_block != end_block)
+        {
+            const size_type block_shift = shift_amount / s_bits_per_block;
+            const size_type bit_shift = shift_amount % s_bits_per_block;
+
+            // Move whole blocks first
+            for (size_type i = end_block; i >= start_block && i != SIZE_MAX; --i)
+            {
+                const size_type target_block = i + block_shift;
+                if (target_block < buffer().size())
+                {
+                    buffer().data()[target_block] = buffer().data()[i];
+                }
+            }
+
+            // Handle remaining bit shift within blocks
+            if (bit_shift > 0)
+            {
+                for (size_type i = target_end_block; i > target_start_block && i != SIZE_MAX; --i)
+                {
+                    const block_type current = buffer().data()[i];
+                    const block_type previous = (i > 0) ? buffer().data()[i - 1] : block_type(0);
+                    buffer().data()[i] = static_cast<block_type>(
+                        (current << bit_shift) | (previous >> (s_bits_per_block - bit_shift))
+                    );
+                }
+                if (target_start_block < buffer().size())
+                {
+                    buffer().data()[target_start_block] = static_cast<block_type>(
+                        buffer().data()[target_start_block] << bit_shift
+                    );
+                }
+            }
+        }
+        else
+        {
+            // For smaller shifts, use bit-level operations optimized for the shift amount
+            for (size_type i = bit_count; i > 0; --i)
+            {
+                const size_t src_pos = start_pos + i - 1;
+                const size_t dst_pos = src_pos + shift_amount;
+                set(dst_pos, test(src_pos));
+            }
+        }
+    }
+
+    template <typename B>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    constexpr void
+    dynamic_bitset_base<B>::fill_bits_range(size_type start_pos, size_type bit_count, value_type value)
+    {
+        if (bit_count == 0 || data() == nullptr)
+        {
+            return;
+        }
+
+        const size_type end_pos = start_pos + bit_count;
+        const size_type start_block = block_index(start_pos);
+        const size_type end_block = block_index(end_pos - 1);
+
+        const block_type fill_value = value ? block_type(~block_type(0)) : block_type(0);
+
+        if (start_block == end_block)
+        {
+            // All bits are in the same block - use efficient bit masking
+            const size_type start_bit = bit_index(start_pos);
+            const size_type end_bit = bit_index(end_pos - 1);
+            const size_type mask_width = end_bit - start_bit + 1;
+            const block_type mask = static_cast<block_type>(((block_type(1) << mask_width) - 1) << start_bit);
+
+            if (value)
+            {
+                buffer().data()[start_block] |= mask;
+            }
+            else
+            {
+                buffer().data()[start_block] &= ~mask;
+            }
+        }
+        else
+        {
+            // Handle first partial block
+            const size_type start_bit = bit_index(start_pos);
+            if (start_bit != 0)
+            {
+                const block_type mask = static_cast<block_type>(~block_type(0) << start_bit);
+                if (value)
+                {
+                    buffer().data()[start_block] |= mask;
+                }
+                else
+                {
+                    buffer().data()[start_block] &= ~mask;
+                }
+            }
+            else
+            {
+                buffer().data()[start_block] = fill_value;
+            }
+
+            // Handle full blocks in between
+            for (size_type block = start_block + 1; block < end_block; ++block)
+            {
+                buffer().data()[block] = fill_value;
+            }
+
+            // Handle last partial block
+            const size_type end_bit = bit_index(end_pos - 1);
+            const block_type mask = static_cast<block_type>((block_type(1) << (end_bit + 1)) - 1);
+            if (value)
+            {
+                buffer().data()[end_block] |= mask;
+            }
+            else
+            {
+                buffer().data()[end_block] &= ~mask;
+            }
+        }
+
+        m_null_count = m_size - count_non_null();
+    }
+
+    template <typename B>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    template <std::random_access_iterator InputIt>
+    constexpr auto dynamic_bitset_base<B>::insert_range_random_access(
+        const_iterator /* pos */,
+        InputIt first,
+        size_type count,
+        size_type index
+    ) -> iterator
+    {
+        if (data() == nullptr)
+        {
+            if (std::all_of(
+                    first,
+                    std::next(first, static_cast<std::ptrdiff_t>(count)),
+                    [](auto v)
+                    {
+                        return bool(v);
+                    }
+                ))
+            {
+                m_size += count;
+            }
+            return iterator(this, index);
+        }
+
+        if (count == 0)
+        {
+            return iterator(this, index);
+        }
+
+        const size_type old_size = size();
+        const size_type new_size = old_size + count;
+        const size_type bits_to_move = old_size - index;
+
+        resize(new_size);
+
+        if (bits_to_move > 0)
+        {
+            shift_bits_right(index, bits_to_move, count);
+        }
+
+        // Set bits efficiently in batches
+        constexpr size_type batch_size = s_bits_per_block;
+        for (size_type i = 0; i < count; i += batch_size)
+        {
+            const size_type current_batch_size = std::min(batch_size, count - i);
+            const size_type batch_start = index + i;
+
+            // Process bits in the current batch
+            if (current_batch_size == s_bits_per_block && bit_index(batch_start) == 0)
+            {
+                // Optimized path: entire block can be set at once
+                block_type block_value = 0;
+                for (size_type j = 0; j < s_bits_per_block; ++j)
+                {
+                    if (bool(*(std::next(first, static_cast<std::ptrdiff_t>(i + j)))))
+                    {
+                        block_value |= static_cast<block_type>(block_type(1) << j);
+                    }
+                }
+                buffer().data()[block_index(batch_start)] = block_value;
+            }
+            else
+            {
+                // Fallback to bit-by-bit setting for partial blocks
+                for (size_type j = 0; j < current_batch_size; ++j)
+                {
+                    set(batch_start + j, bool(*(std::next(first, static_cast<std::ptrdiff_t>(i + j)))));
+                }
+            }
+        }
+
+        return iterator(this, index);
     }
 }
