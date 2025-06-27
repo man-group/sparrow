@@ -11,6 +11,7 @@ add_library(c_data_integration SHARED
     src/json_parser.cpp
     src/list_parser.cpp
     src/listview_parser.cpp
+    src/map_parser.cpp
     src/null_parser.cpp
     src/primitive_parser.cpp
     src/run_end_encoded_parser.cpp
@@ -30,6 +31,7 @@ add_library(c_data_integration SHARED
     include/sparrow/c_data_integration/fixedsizebinary_parser.hpp
     include/sparrow/c_data_integration/fixedsizelist_parser.hpp
     include/sparrow/c_data_integration/list_parser.hpp
+    include/sparrow/c_data_integration/map_parser.hpp
     include/sparrow/c_data_integration/null_parser.hpp
     include/sparrow/c_data_integration/primitive_parser.hpp
     include/sparrow/c_data_integration/run_end_encoded_parser.hpp
