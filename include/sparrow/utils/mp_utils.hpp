@@ -618,9 +618,10 @@ namespace sparrow::mpl
     // restriction makes it impossible to use it in the context of sparrow, where we want to
     // compare objects that are logically similar while being "physically" different.
     template <class T, class U>
-    concept weakly_equality_comparable_with =
-        requires(const std::remove_reference_t<T>& t, const std::remove_reference_t<U>& u)
-    {
+    concept weakly_equality_comparable_with = requires(
+        const std::remove_reference_t<T>& t,
+        const std::remove_reference_t<U>& u
+    ) {
         { t == u } -> std::convertible_to<bool>;
         { t != u } -> std::convertible_to<bool>;
         { u == t } -> std::convertible_to<bool>;

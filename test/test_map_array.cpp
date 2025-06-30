@@ -201,7 +201,12 @@ namespace sparrow
         TEST_CASE("map_value")
         {
             test::map_array_underlying mau;
-            map_array arr(std::move(mau.flat_keys), std::move(mau.flat_items), std::move(mau.offsets), test::where_nulls);
+            map_array arr(
+                std::move(mau.flat_keys),
+                std::move(mau.flat_items),
+                std::move(mau.offsets),
+                test::where_nulls
+            );
 
             std::size_t flat_index = 0;
             for (std::size_t i = 0; i < arr.size(); ++i)

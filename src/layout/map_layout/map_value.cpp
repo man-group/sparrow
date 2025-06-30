@@ -51,7 +51,7 @@ namespace sparrow
         return (*this)[key];
     }
 
-    auto map_value::operator[](const key_type& key) const -> const_mapped_reference 
+    auto map_value::operator[](const key_type& key) const -> const_mapped_reference
     {
         size_type index = find_index(key);
         if (index == m_index_end)
@@ -60,7 +60,7 @@ namespace sparrow
         }
         return array_element(*p_flat_items, index);
     }
-    
+
     auto map_value::begin() const -> const_iterator
     {
         return cbegin();
@@ -117,7 +117,8 @@ namespace sparrow
     namespace
     {
         template <class K, class A>
-        std::size_t find_index_impl(const K& key, const A& ar, std::size_t index_begin, std::size_t index_end, const std::false_type&)
+        std::size_t
+        find_index_impl(const K& key, const A& ar, std::size_t index_begin, std::size_t index_end, const std::false_type&)
         {
             for (std::size_t i = index_begin; i != index_end; ++i)
             {
@@ -135,7 +136,8 @@ namespace sparrow
         }
 
         template <class K, class A>
-        std::size_t find_index_impl(const K& key, const A& ar, std::size_t index_begin, std::size_t index_end, const std::true_type&)
+        std::size_t
+        find_index_impl(const K& key, const A& ar, std::size_t index_begin, std::size_t index_end, const std::true_type&)
         {
             // The initial implementation below has been removed on purpose
             // It increases the size of the library by a factor 3.5 because
@@ -169,19 +171,29 @@ namespace sparrow
 
     auto map_value::find_index(const key_type& key) const noexcept -> size_type
     {
-#if SPARROW_GCC_11_2_WORKAROUND 
+#if SPARROW_GCC_11_2_WORKAROUND
         using variant_type = std::decay_t<decltype(key)>;
         using base_variant_type = variant_type::base_type;
 #endif
-        return std::visit([this](const auto& k) {
-            return visit([&k, this]<class Ar>(const Ar& ar) {
-                using dispatch_tag = mpl::is_type_instance_of<typename Ar::value_type, nullable_variant>;
-                return find_index_impl(k, ar, m_index_begin, m_index_end, dispatch_tag());
-            }, *p_flat_keys);
+        return std::visit(
+            [this](const auto& k)
+            {
+                return visit(
+                    [&k, this]<class Ar>(const Ar& ar)
+                    {
+                        using dispatch_tag = mpl::is_type_instance_of<typename Ar::value_type, nullable_variant>;
+                        return find_index_impl(k, ar, m_index_begin, m_index_end, dispatch_tag());
+                    },
+                    *p_flat_keys
+                );
 #if SPARROW_GCC_11_2_WORKAROUND
-        }, static_cast<const base_variant_type&>(key));
+            },
+            static_cast<const base_variant_type&>(key)
+        );
 #else
-        }, key);
+            },
+            key
+        );
 #endif
     }
 }
