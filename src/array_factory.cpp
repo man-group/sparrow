@@ -18,6 +18,7 @@
 #include "sparrow/layout/dictionary_encoded_array.hpp"
 #include "sparrow/layout/fixed_width_binary_array.hpp"
 #include "sparrow/layout/list_layout/list_array.hpp"
+#include "sparrow/layout/map_layout/map_array.hpp"
 #include "sparrow/layout/null_array.hpp"
 #include "sparrow/layout/primitive_layout/primitive_array.hpp"
 #include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
@@ -198,6 +199,7 @@ namespace sparrow
                 case data_type::TIME_NANOSECONDS:
                     return detail::make_wrapper_ptr<time_nanoseconds_array>(std::move(proxy));
                 case data_type::MAP:
+                    return detail::make_wrapper_ptr<map_array>(std::move(proxy));
                 case data_type::DECIMAL32:
                     return detail::make_wrapper_ptr<decimal_32_array>(std::move(proxy));
                 case data_type::DECIMAL64:

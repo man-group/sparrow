@@ -24,6 +24,7 @@
 #include "sparrow/c_data_integration/fixedsizelist_parser.hpp"
 #include "sparrow/c_data_integration/list_parser.hpp"
 #include "sparrow/c_data_integration/listview_parser.hpp"
+#include "sparrow/c_data_integration/map_parser.hpp"
 #include "sparrow/c_data_integration/null_parser.hpp"
 #include "sparrow/c_data_integration/primitive_parser.hpp"
 #include "sparrow/c_data_integration/run_end_encoded_parser.hpp"
@@ -57,6 +58,7 @@ namespace sparrow::c_data_integration
         {"largeutf8", big_string_array_from_json},
         {"list", list_array_from_json},
         {"listview", list_view_array_from_json},
+        {"map", map_array_from_json},
         {"null", null_array_from_json},
         {"runendencoded", runendencoded_array_from_json},
         {"struct", struct_array_from_json},
