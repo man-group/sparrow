@@ -188,13 +188,21 @@ namespace sparrow
         template <class T>
         concept translate_to_fixed_sized_list_layout = std::ranges::input_range<T>
                                                        && tuple_like<ensured_range_value_t<T>>
-                                                       && !((mpl::fixed_size_span<ensured_range_value_t<T>> || mpl::std_array<ensured_range_value_t<T>>) && fixed_width_binary_types<ensured_range_value_t<T>>)
+                                                       && !(
+                                                           (mpl::fixed_size_span<ensured_range_value_t<T>>
+                                                            || mpl::std_array<ensured_range_value_t<T>>)
+                                                           && fixed_width_binary_types<ensured_range_value_t<T>>
+                                                       )
                                                        && all_elements_same<ensured_range_value_t<T>>;
 
         template <class T>
         concept translate_to_variable_sized_binary_layout = std::ranges::input_range<T>
                                                             && std::ranges::input_range<ensured_range_value_t<T>>
-                                                            && !((mpl::fixed_size_span<ensured_range_value_t<T>> || mpl::std_array<ensured_range_value_t<T>>) && fixed_width_binary_types<ensured_range_value_t<T>>)
+                                                            && !(
+                                                                (mpl::fixed_size_span<ensured_range_value_t<T>>
+                                                                 || mpl::std_array<ensured_range_value_t<T>>)
+                                                                && fixed_width_binary_types<ensured_range_value_t<T>>
+                                                            )
                                                             && !tuple_like<ensured_range_value_t<T>>
                                                             &&  // tuples go to struct layout
                                                             // value type of inner must be char like ( char,
@@ -400,8 +408,7 @@ namespace sparrow
                 using layout_policy_type = layout_flag_t<raw_value_type>;
                 auto keys_array = build_impl<layout_policy_type>(flat_keys, OPTION_FLAGS{});
                 auto items_array = build_impl<layout_policy_type>(flat_items, OPTION_FLAGS{});
-                auto offset = map_array::offset_from_sizes(sparrow::repeat_view<size_t>(1, std::ranges::size(t))
-                );
+                auto offset = map_array::offset_from_sizes(sparrow::repeat_view<size_t>(1, std::ranges::size(t)));
 
                 return type(
                     sparrow::array{std::move(keys_array)},
