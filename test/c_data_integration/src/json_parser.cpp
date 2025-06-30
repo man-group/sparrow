@@ -197,8 +197,7 @@ namespace sparrow::c_data_integration
         return ar;
     }
 
-    nlohmann::json
-    generate_empty_columns_batch(const std::unordered_multimap<std::string, const nlohmann::json>& schemas)
+    nlohmann::json generate_empty_columns_batch(const std::multimap<std::string, const nlohmann::json>& schemas)
     {
         nlohmann::json batch = nlohmann::json::object();
         nlohmann::json empty_columns = nlohmann::json::array();
@@ -219,7 +218,7 @@ namespace sparrow::c_data_integration
     sparrow::record_batch build_record_batch_from_json(const nlohmann::json& root, size_t num_batches)
     {
         const auto& schemas = root.at("schema").at("fields");
-        std::unordered_multimap<std::string, const nlohmann::json> schema_map;
+        std::multimap<std::string, const nlohmann::json> schema_map;
         for (const auto& schema : schemas)
         {
             const std::string name = schema.at("name").get<std::string>();
