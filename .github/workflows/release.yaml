@@ -36,14 +36,14 @@ jobs:
             echo "version=${{ github.event.inputs.custom_version }}" >> $GITHUB_OUTPUT
           else
             # Get current version from header file
-            if [ ! -f "include/sparrow/sparrow_version.hpp" ]; then
+            if [ ! -f "include/sparrow/config/sparrow_version.hpp" ]; then
               echo "Error: sparrow_version.hpp not found"
               exit 1
             fi
             
-            CURRENT_MAJOR=$(grep "#define SPARROW_VERSION_MAJOR" include/sparrow/sparrow_version.hpp | awk '{print $3}')
-            CURRENT_MINOR=$(grep "#define SPARROW_VERSION_MINOR" include/sparrow/sparrow_version.hpp | awk '{print $3}')
-            CURRENT_PATCH=$(grep "#define SPARROW_VERSION_PATCH" include/sparrow/sparrow_version.hpp | awk '{print $3}')
+            CURRENT_MAJOR=$(grep "constexpr int SPARROW_VERSION_MAJOR" include/sparrow/config/sparrow_version.hpp | awk '{print $5}' | tr -d ';')
+            CURRENT_MINOR=$(grep "constexpr int SPARROW_VERSION_MINOR" include/sparrow/config/sparrow_version.hpp | awk '{print $5}' | tr -d ';')
+            CURRENT_PATCH=$(grep "constexpr int SPARROW_VERSION_PATCH" include/sparrow/config/sparrow_version.hpp | awk '{print $5}' | tr -d ';')
             
             # Verify version numbers were found
             if [ -z "$CURRENT_MAJOR" ] || [ -z "$CURRENT_MINOR" ] || [ -z "$CURRENT_PATCH" ]; then
@@ -65,8 +65,55 @@ jobs:
                 ;;
             esac
             echo "New version: $NEW_VERSION"
+            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Update version in header file
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          IFS='.' read -r NEW_MAJOR NEW_MINOR NEW_PATCH <<< "$VERSION"
+          
+          # Get current binary version numbers
+          CURRENT_BINARY=$(grep "constexpr int SPARROW_BINARY_CURRENT" include/sparrow/config/sparrow_version.hpp | awk '{print $5}' | tr -d ';')
+          CURRENT_REVISION=$(grep "constexpr int SPARROW_BINARY_REVISION" include/sparrow/config/sparrow_version.hpp | awk '{print $5}' | tr -d ';')
+          CURRENT_AGE=$(grep "constexpr int SPARROW_BINARY_AGE" include/sparrow/config/sparrow_version.hpp | awk '{print $5}' | tr -d ';')
+          
+          echo "Current binary version: $CURRENT_BINARY:$CURRENT_REVISION:$CURRENT_AGE"
+          
+          # Apply libtool versioning rules based on version bump type
+          case "${{ github.event.inputs.version_type }}" in
+            "patch")
+              # Patch release: only increment revision (compatible changes)
+              NEW_BINARY_CURRENT=$CURRENT_BINARY
+              NEW_BINARY_REVISION=$((CURRENT_REVISION + 1))
+              NEW_BINARY_AGE=$CURRENT_AGE
+              ;;
+            "minor")
+              # Minor release: new APIs added, increment current and age, reset revision
+              NEW_BINARY_CURRENT=$((CURRENT_BINARY + 1))
+              NEW_BINARY_REVISION=0
+              NEW_BINARY_AGE=$((CURRENT_AGE + 1))
+              ;;
+            "major")
+              # Major release: breaking changes, increment current, reset revision and age
+              NEW_BINARY_CURRENT=$((CURRENT_BINARY + 1))
+              NEW_BINARY_REVISION=0
+              NEW_BINARY_AGE=0
+              ;;
+          esac
+          
+          echo "New binary version: $NEW_BINARY_CURRENT:$NEW_BINARY_REVISION:$NEW_BINARY_AGE"
+          
+          # Update version numbers in header file
+          sed -i "s/constexpr int SPARROW_VERSION_MAJOR = [0-9]*/constexpr int SPARROW_VERSION_MAJOR = $NEW_MAJOR/" include/sparrow/config/sparrow_version.hpp
+          sed -i "s/constexpr int SPARROW_VERSION_MINOR = [0-9]*/constexpr int SPARROW_VERSION_MINOR = $NEW_MINOR/" include/sparrow/config/sparrow_version.hpp
+          sed -i "s/constexpr int SPARROW_VERSION_PATCH = [0-9]*/constexpr int SPARROW_VERSION_PATCH = $NEW_PATCH/" include/sparrow/config/sparrow_version.hpp
+          sed -i "s/constexpr int SPARROW_BINARY_CURRENT = [0-9]*/constexpr int SPARROW_BINARY_CURRENT = $NEW_BINARY_CURRENT/" include/sparrow/config/sparrow_version.hpp
+          sed -i "s/constexpr int SPARROW_BINARY_REVISION = [0-9]*/constexpr int SPARROW_BINARY_REVISION = $NEW_BINARY_REVISION/" include/sparrow/config/sparrow_version.hpp
+          sed -i "s/constexpr int SPARROW_BINARY_AGE = [0-9]*/constexpr int SPARROW_BINARY_AGE = $NEW_BINARY_AGE/" include/sparrow/config/sparrow_version.hpp
+          
           git config --local user.name "GitHub Action"
-          git add include/sparrow/sparrow_version.hpp
+          git add include/sparrow/config/sparrow_version.hpp
           git commit -m "Release version ${{ steps.version.outputs.version }}"
       
       - name: Create tag
