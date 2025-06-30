@@ -289,7 +289,7 @@ namespace sparrow
             SUBCASE("map")
             {
                 const std::vector<std::pair<std::string, int>> values{{"a", 1}, {"b", 2}, {"c", 3}};
-                const std::unordered_map<std::string, int> m{{"a", 1}, {"b", 2}, {"c", 3}};
+                const std::map<std::string, int> m{{"a", 1}, {"b", 2}, {"c", 3}};
                 auto arr = sparrow::build(m);
                 test::generic_consistency_test(arr);
                 using arr_type = std::decay_t<decltype(arr)>;
