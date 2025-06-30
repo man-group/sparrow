@@ -197,6 +197,25 @@ namespace sparrow::c_data_integration
         return ar;
     }
 
+    nlohmann::json
+    generate_empty_columns_batch(const std::unordered_multimap<std::string, const nlohmann::json>& schemas)
+    {
+        nlohmann::json batch = nlohmann::json::object();
+        nlohmann::json empty_columns = nlohmann::json::array();
+        for (const auto& [name, schema] : schemas)
+        {
+            nlohmann::json empty_column = nlohmann::json::object();
+            empty_column["name"] = name;
+            empty_column["count"] = 0;
+            empty_column[DATA] = nlohmann::json::array();
+            empty_column[VALIDITY] = nlohmann::json::array();
+            empty_columns.push_back(empty_column);
+        }
+        batch["columns"] = empty_columns;
+        batch["count"] = schemas.size();
+        return batch;
+    }
+
     sparrow::record_batch build_record_batch_from_json(const nlohmann::json& root, size_t num_batches)
     {
         const auto& schemas = root.at("schema").at("fields");
@@ -206,7 +225,12 @@ namespace sparrow::c_data_integration
             const std::string name = schema.at("name").get<std::string>();
             schema_map.emplace(name, schema);
         }
-        const auto& batches = root.at("batches");
+        auto batches = root.at("batches");
+        if (batches.empty())
+        {
+            auto empty_columns = generate_empty_columns_batch(schema_map);
+            batches.push_back(empty_columns);
+        }
         if (num_batches >= batches.size())
         {
             throw std::runtime_error(
