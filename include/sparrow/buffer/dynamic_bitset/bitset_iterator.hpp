@@ -64,9 +64,9 @@ namespace sparrow
         constexpr void increment() noexcept;
         constexpr void decrement() noexcept;
         constexpr void advance(difference_type n) noexcept;
-        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const noexcept;
-        [[nodiscard]] constexpr bool equal(const self_type& rhs) const noexcept;
-        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const noexcept;
+        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const;
+        [[nodiscard]] constexpr bool equal(const self_type& rhs) const;
+        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const;
 
         [[nodiscard]] static constexpr difference_type as_signed(size_type i) noexcept;
         [[nodiscard]] static constexpr size_type as_unsigned(difference_type i) noexcept;
@@ -128,22 +128,21 @@ namespace sparrow
     }
 
     template <class B, bool is_const>
-    constexpr auto bitset_iterator<B, is_const>::distance_to(const self_type& rhs) const noexcept
-        -> difference_type
+    constexpr auto bitset_iterator<B, is_const>::distance_to(const self_type& rhs) const -> difference_type
     {
         SPARROW_ASSERT_TRUE(p_bitset == rhs.p_bitset);
         return as_signed(rhs.m_index) - as_signed(m_index);
     }
 
     template <class B, bool is_const>
-    constexpr bool bitset_iterator<B, is_const>::equal(const self_type& rhs) const noexcept
+    constexpr bool bitset_iterator<B, is_const>::equal(const self_type& rhs) const
     {
         SPARROW_ASSERT_TRUE(p_bitset == rhs.p_bitset);
         return m_index == rhs.m_index;
     }
 
     template <class B, bool is_const>
-    constexpr bool bitset_iterator<B, is_const>::less_than(const self_type& rhs) const noexcept
+    constexpr bool bitset_iterator<B, is_const>::less_than(const self_type& rhs) const
     {
         SPARROW_ASSERT_TRUE(p_bitset == rhs.p_bitset);
         return m_index < rhs.m_index;

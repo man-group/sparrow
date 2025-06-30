@@ -110,7 +110,7 @@ namespace sparrow
 
         // Capacity
 
-        [[nodiscard]] constexpr size_type size() const noexcept;
+        [[nodiscard]] constexpr size_type size() const;
         [[nodiscard]] constexpr size_type max_size() const noexcept;
         [[nodiscard]] constexpr size_type capacity() const noexcept;
         [[nodiscard]] constexpr bool empty() const noexcept;
@@ -390,8 +390,7 @@ namespace sparrow
 
     template <typename To, BufferReference<To> FromBufferRef>
         requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
-    constexpr buffer_adaptor<To, FromBufferRef>::size_type
-    buffer_adaptor<To, FromBufferRef>::size() const noexcept
+    constexpr buffer_adaptor<To, FromBufferRef>::size_type buffer_adaptor<To, FromBufferRef>::size() const
     {
         const double new_size = static_cast<double>(m_buffer.size()) * m_from_to_size_ratio;
         SPARROW_ASSERT(
