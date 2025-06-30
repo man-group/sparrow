@@ -21,8 +21,7 @@ namespace sparrow
     map_array::map_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
         , p_list_offsets(make_list_offsets())
-        , p_keys_array(make_keys_array())
-        , p_items_array(make_items_array())
+        , p_entries_array(make_entries_array())
         , m_keys_sorted(get_keys_sorted())
     {
     }
@@ -30,8 +29,7 @@ namespace sparrow
     map_array::map_array(const self_type& rhs)
         : base_type(rhs)
         , p_list_offsets(make_list_offsets())
-        , p_keys_array(make_keys_array())
-        , p_items_array(make_items_array())
+        , p_entries_array(make_entries_array())
         , m_keys_sorted(rhs.m_keys_sorted)
     {
     }
@@ -42,8 +40,7 @@ namespace sparrow
         {
             base_type::operator=(rhs);
             p_list_offsets = make_list_offsets();
-            p_keys_array = make_keys_array();
-            p_items_array = make_items_array();
+            p_entries_array = make_entries_array();
             m_keys_sorted = rhs.m_keys_sorted;
         }
         return *this;
@@ -51,22 +48,23 @@ namespace sparrow
 
     const array_wrapper* map_array::raw_keys_array() const
     {
-        return p_keys_array.get();
+        return unwrap_array<struct_array>(*p_entries_array).raw_child(std::size_t(0));
+        ;
     }
 
     array_wrapper* map_array::raw_keys_array()
     {
-        return p_keys_array.get();
+        return unwrap_array<struct_array>(*p_entries_array).raw_child(std::size_t(0));
     }
 
     const array_wrapper* map_array::raw_items_array() const
     {
-        return p_items_array.get();
+        return unwrap_array<struct_array>(*p_entries_array).raw_child(std::size_t(1));
     }
 
     array_wrapper* map_array::raw_items_array()
     {
-        return p_items_array.get();
+        return unwrap_array<struct_array>(*p_entries_array).raw_child(std::size_t(1));
     }
 
     auto map_array::value_begin() -> value_iterator
@@ -107,14 +105,9 @@ namespace sparrow
         );
     }
 
-    cloning_ptr<array_wrapper> map_array::make_keys_array() const
+    cloning_ptr<array_wrapper> map_array::make_entries_array() const
     {
         return array_factory(this->get_arrow_proxy().children()[0].view());
-    }
-
-    cloning_ptr<array_wrapper> map_array::make_items_array() const
-    {
-        return array_factory(this->get_arrow_proxy().children()[1].view());
     }
 
     bool map_array::get_keys_sorted() const

@@ -20,6 +20,7 @@
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/layout/struct_layout/struct_array.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 
 namespace sparrow
@@ -103,8 +104,7 @@ namespace sparrow
         [[nodiscard]] inner_const_reference value(size_type i) const;
 
         [[nodiscard]] offset_type* make_list_offsets() const;
-        [[nodiscard]] cloning_ptr<array_wrapper> make_keys_array() const;
-        [[nodiscard]] cloning_ptr<array_wrapper> make_items_array() const;
+        [[nodiscard]] cloning_ptr<array_wrapper> make_entries_array() const;
         [[nodiscard]] bool get_keys_sorted() const;
 
         [[nodiscard]] static bool check_keys_sorted(const array& flat_keys, const offset_buffer_type& offsets);
@@ -186,9 +186,7 @@ namespace sparrow
         static constexpr std::size_t OFFSET_BUFFER_INDEX = 1;
         offset_type* p_list_offsets;
 
-        cloning_ptr<array_wrapper> p_keys_array;
-        cloning_ptr<array_wrapper> p_items_array;
-
+        cloning_ptr<array_wrapper> p_entries_array;
         bool m_keys_sorted;
 
         // friend classes
@@ -224,27 +222,26 @@ namespace sparrow
             flags.value().insert(ArrowFlag::MAP_KEYS_SORTED);
         }
 
-        auto [flat_keys_arr, flat_keys_schema] = extract_arrow_structures(std::move(flat_keys));
-        auto [flat_items_arr, flat_items_schema] = extract_arrow_structures(std::move(flat_items));
+        std::array<sparrow::array, 2> struct_children = {std::move(flat_keys), std::move(flat_items)};
+        struct_array entries(std::move(struct_children), false, std::string("entries"));
+
+        auto [entries_arr, entries_schema] = extract_arrow_structures(std::move(entries));
 
         const auto null_count = vbitmap.null_count();
-        const repeat_view<bool> children_ownership{true, 2};
+        const repeat_view<bool> children_ownership{true, 1};
 
         ArrowSchema schema = make_arrow_schema(
             std::string("+m"),
             name,      // name
             metadata,  // metadata
             flags,     // flags,
-            new ArrowSchema*[2]{
-                // Children
-                new ArrowSchema(std::move(flat_keys_schema)),
-                new ArrowSchema(std::move(flat_items_schema))
-            },
+            new ArrowSchema*[1]{new ArrowSchema(std::move(entries_schema))},
             children_ownership,  // children ownership
             nullptr,             // dictionary
             true                 // dictionary ownership
 
         );
+
         std::vector<buffer<std::uint8_t>> arr_buffs = {
             std::move(vbitmap).extract_storage(),
             std::move(list_offsets).extract_storage()
@@ -255,7 +252,7 @@ namespace sparrow
             static_cast<std::int64_t>(null_count),
             0,  // offset
             std::move(arr_buffs),
-            new ArrowArray*[2]{new ArrowArray(std::move(flat_keys_arr)), new ArrowArray(std::move(flat_items_arr))},
+            new ArrowArray*[1]{new ArrowArray(std::move(entries_arr))},
             children_ownership,  // children ownership
             nullptr,             // dictionary
             true                 // dictionary ownership
@@ -293,25 +290,24 @@ namespace sparrow
 
             const auto size = list_offsets.size() - 1;
 
-            auto [flat_keys_arr, flat_keys_schema] = extract_arrow_structures(std::move(flat_keys));
-            auto [flat_items_arr, flat_items_schema] = extract_arrow_structures(std::move(flat_items));
-            const repeat_view<bool> children_ownership{true, 2};
+            std::array<sparrow::array, 2> struct_children = {std::move(flat_keys), std::move(flat_items)};
+            struct_array entries(std::move(struct_children), false, std::string("entries"));
+
+            auto [entries_arr, entries_schema] = extract_arrow_structures(std::move(entries));
+            const repeat_view<bool> children_ownership{true, 1};
 
             ArrowSchema schema = make_arrow_schema(
-                std::string("+m"),  // format
-                name,               // name
-                metadata,           // metadata
-                flags,              // flags,
-                new ArrowSchema*[2]{
-                    // Children
-                    new ArrowSchema(std::move(flat_keys_schema)),
-                    new ArrowSchema(std::move(flat_items_schema))
-                },
+                std::string_view("+m"),
+                name,      // name
+                metadata,  // metadata
+                flags,     // flags,
+                new ArrowSchema*[1]{new ArrowSchema(std::move(entries_schema))},
                 children_ownership,  // children ownership
                 nullptr,             // dictionary
                 true                 // dictionary ownership
 
             );
+
             std::vector<buffer<std::uint8_t>> arr_buffs = {
                 buffer<std::uint8_t>{nullptr, 0},  // no validity bitmap
                 std::move(list_offsets).extract_storage()
@@ -322,10 +318,7 @@ namespace sparrow
                 0,
                 0,  // offset
                 std::move(arr_buffs),
-                new ArrowArray*[2]{
-                    new ArrowArray(std::move(flat_keys_arr)),
-                    new ArrowArray(std::move(flat_items_arr))
-                },
+                new ArrowArray*[1]{new ArrowArray(std::move(entries_arr))},
                 children_ownership,  // children ownership
                 nullptr,             // dictionary
                 true                 // dictionary ownership

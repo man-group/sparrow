@@ -174,7 +174,7 @@ namespace sparrow
         const auto size = children.empty() ? 0 : children[0].size();
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
         return create_proxy_impl(
-            std::forward<std::vector<array>>(children),
+            std::forward<CHILDREN_RANGE>(children),
             std::move(vbitmap),
             std::move(name),
             std::move(metadata)
@@ -192,7 +192,7 @@ namespace sparrow
     {
         const size_t size = children.empty() ? 0 : children[0].size();
         return create_proxy_impl(
-            std::forward<std::vector<array>>(children),
+            std::forward<CHILDREN_RANGE>(children),
             nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
             std::move(name),
             std::move(metadata)
