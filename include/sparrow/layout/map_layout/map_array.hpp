@@ -222,7 +222,7 @@ namespace sparrow
             flags.value().insert(ArrowFlag::MAP_KEYS_SORTED);
         }
 
-        std::array<sparrow::array, 2> struct_children = { std::move(flat_keys), std::move(flat_items) };
+        std::array<sparrow::array, 2> struct_children = {std::move(flat_keys), std::move(flat_items)};
         struct_array entries(std::move(struct_children), false, std::string("entries"));
 
         auto [entries_arr, entries_schema] = extract_arrow_structures(std::move(entries));
@@ -235,7 +235,7 @@ namespace sparrow
             name,      // name
             metadata,  // metadata
             flags,     // flags,
-            new ArrowSchema*[1]{ new ArrowSchema(std::move(entries_schema)) },
+            new ArrowSchema*[1]{new ArrowSchema(std::move(entries_schema))},
             children_ownership,  // children ownership
             nullptr,             // dictionary
             true                 // dictionary ownership
@@ -290,7 +290,7 @@ namespace sparrow
 
             const auto size = list_offsets.size() - 1;
 
-            std::array<sparrow::array, 2> struct_children = { std::move(flat_keys), std::move(flat_items) };
+            std::array<sparrow::array, 2> struct_children = {std::move(flat_keys), std::move(flat_items)};
             struct_array entries(std::move(struct_children), false, std::string("entries"));
 
             auto [entries_arr, entries_schema] = extract_arrow_structures(std::move(entries));
@@ -301,12 +301,12 @@ namespace sparrow
                 name,      // name
                 metadata,  // metadata
                 flags,     // flags,
-                new ArrowSchema*[1]{ new ArrowSchema(std::move(entries_schema)) },
+                new ArrowSchema*[1]{new ArrowSchema(std::move(entries_schema))},
                 children_ownership,  // children ownership
                 nullptr,             // dictionary
                 true                 // dictionary ownership
 
-            ); 
+            );
 
             std::vector<buffer<std::uint8_t>> arr_buffs = {
                 buffer<std::uint8_t>{nullptr, 0},  // no validity bitmap

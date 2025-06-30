@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/layout/map_layout/map_array.hpp"
+
 #include "sparrow/array.hpp"
 
 namespace sparrow
@@ -47,7 +48,8 @@ namespace sparrow
 
     const array_wrapper* map_array::raw_keys_array() const
     {
-        return unwrap_array<struct_array>(*p_entries_array).raw_child(std::size_t(0));;
+        return unwrap_array<struct_array>(*p_entries_array).raw_child(std::size_t(0));
+        ;
     }
 
     array_wrapper* map_array::raw_keys_array()
