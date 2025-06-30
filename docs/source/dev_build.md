@@ -1,5 +1,4 @@
-Development build                             {#dev_build}
-=================
+# Development build                             {#dev_build}
 
 Here we describe how to build the project for development purposes on **Linux** or **macOS**.
 For **Windows**, the instructions are similar.
@@ -18,8 +17,9 @@ List of CMake options:
 - `USE_LARGE_INT_PLACEHOLDERS`: Use types without api for big integers 'ON' by default on 32 bit systems and MSVC compilers (default: ON on 32 bit systems and MSVC, OFF otherwise)
 - `USE_SANITIZER`: Enable sanitizer(s). Options are: address;leak;memory;thread;undefined (default: )
 
-Building with mamba/micromamba
-------------------------------
+## Building
+
+### ... with mamba/micromamba
 
 First we create a conda environment with all required development dependencies: 
 
@@ -50,32 +50,71 @@ And finally, build the project:
 make -j12
 ```
 
-Running the tests
------------------
+### ... with VCPKG
+If you prefer to use VCPKG, you can follow these steps:
+First, install the required dependencies using VCPKG:
 
-To run the tests, you can either invoke the test binary directly:
 ```bash
-./bin/Debug/test_sparrow_lib
+vcpkg install sparrow[date_polyfill,build_tests]
 ```
 
-or use ctest:
+Then, run the cmake configuration:
+
 ```bash
-make test
+mkdir build
+cd build
+cmake .. \
+    -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
+    ..
+```
+
+### ...with Conan
+
+If you prefer to use Conan, you can follow these steps:
+First, install the required dependencies using Conan:
+
+```bash
+conan install .. --build=missing -s:a compiler.cppstd=20 -o:a use_date_polyfill=True -o:a build_tests=True ...
+```
+Available conan options:
+- `use_date_polyfill`: Use date polyfill implementation (default: False)
+- `build_tests`: Build the tests (default: False)
+- `generate_documentation`: Generate documentation (default: False)
+
+Then, run the cmake configuration
+
+```bash
+mkdir build
+cd build
+cmake --preset conan-release 
+    ..
+```
+
+## Running the tests
+
+To run the tests, the easy way is to use the cmake targets`:
+- `run_tests`: Runs all tests without JUnit report
+- `run_tests_with_junit_report`: Runs all tests and generates a JUnit report in the `test-reports` directory
+- `run_integration_tests`: Runs the integration tests
+- `run_integration_tests_with_junit_report`: Runs the integration tests and generates a JUnit report in the `test-reports` directory
+
+
+```bash
+cmake --build . --config [Release/Debug/...] --target [TARGET_NAME]
 ```
 
 Running the examples
 --------------------
-To run all examples toat once you can use the `run_examples` target:
+To run all examples:
 ```bash
-make run_examples
+cmake --build . --target run_examples
 ```
 
 Building the documentation
 --------------------------
 To build the documentation, you can use the `docs` target:
 ```bash
-make docs
+cmake --build . --target docs
 ```
 
 The documentation will be located in the `docs/html` folder in the build directory. You can open `docs/html/index.html` in your browser to view it.
-

@@ -44,9 +44,31 @@ namespace sparrow
     template <bool BIG>
     class list_view_array_impl;
 
+    /**
+     * A list array implementation.
+     * Stores variable-length lists of values, where each list can have a different length.
+     * Uses 32-bit offsets for smaller datasets.
+     * Apache Arrow specification: https://arrow.apache.org/docs/format/Columnar.html#list-layout
+     * @see big_list_array
+     */
     using list_array = list_array_impl<false>;
+    /**
+     * A big list array implementation.
+     * Stores variable-length lists of values, where each list can have a different length.
+     * Uses 64-bit offsets for larger datasets.
+     * Apache Arrow specification: https://arrow.apache.org/docs/format/Columnar.html#list-layout
+     * @see list_array
+     */
     using big_list_array = list_array_impl<true>;
 
+    /**
+     * A list view array implementation.
+     * Stores variable-length lists where each element can contain a different number of sub-elements.
+     * Use the List layout when your data consists of variable-length lists and you want a straightforward,
+     * efficient representation where the order of elements in the child array matches the logical order in
+     * the parent array. This is the standard layout for most use cases involving variable-length lists, such
+     * as arrays of strings or arrays of arrays of numbers.
+     */
     using list_view_array = list_view_array_impl<false>;
     using big_list_view_array = list_view_array_impl<true>;
 
