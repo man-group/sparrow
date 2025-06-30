@@ -128,14 +128,10 @@
 #ifndef SPARROW_CONTRACTS_ABORT
 #    if defined(SPARROW_CONTRACTS_THROW_ON_FAILURE) && SPARROW_CONTRACTS_THROW_ON_FAILURE == 1
 #        if defined(SPARROW_CONTRACTS_USE_STD_FORMAT) && SPARROW_CONTRACTS_USE_STD_FORMAT == 1
-#            define SPARROW_CONTRACTS_ABORT(expr__, message__)           \
-                throw ::sparrow::contract_assertion_error(::std::format( \
-                    "Assertion Failed ({}:{}): {} - ({} is wrong)",      \
-                    __FILE__,                                            \
-                    __LINE__,                                            \
-                    message__,                                           \
-                    #expr__                                              \
-                ))
+#            define SPARROW_CONTRACTS_ABORT(expr__, message__)                                                            \
+                throw ::sparrow::contract_assertion_error(                                                                \
+                    ::std::format("Assertion Failed ({}:{}): {} - ({} is wrong)", __FILE__, __LINE__, message__, #expr__) \
+                )
 #        else
 #            define SPARROW_CONTRACTS_ABORT(expr__, message__)                                        \
                 throw ::sparrow::contract_assertion_error(                                            \
