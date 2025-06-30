@@ -37,7 +37,9 @@
 #include "sparrow/layout/temporal/timestamp_without_timezone_array.hpp"
 #include "sparrow/layout/union_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/ranges.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
@@ -170,10 +172,14 @@ namespace sparrow
                                                           // variable_size_binary_array
                                                           !mpl::char_like<nested_ensured_range_inner_value_t<T>>;
 
+        template <typename T>
+        concept translate_to_map_layout = mpl::is_type_instance_of_v<std::remove_cvref_t<T>, std::map>
+                                          || mpl::is_type_instance_of_v<std::remove_cvref_t<T>, std::unordered_map>;
+
         template <class T>
         concept translate_to_struct_layout = std::ranges::input_range<T> && tuple_like<ensured_range_value_t<T>>
                                              && !all_elements_same<ensured_range_value_t<T>>
-                                             && !(mpl::is_type_instance_of_v<T, std::map> || mpl::is_type_instance_of_v<T, std::unordered_map>);
+                                             && !translate_to_map_layout<T>;
 
         template <class T>
         concept fixed_width_binary_types = (mpl::fixed_size_span<T> || mpl::std_array<T>)
@@ -208,11 +214,6 @@ namespace sparrow
                                             // nullable variants as in the arrow spec, the nulls are handled
                                             // by the elements **in** the variant
                                             variant_like<std::ranges::range_value_t<T>>;
-
-        template <typename T>
-        concept translate_to_map_layout = std::ranges::input_range<T>
-                                          && (mpl::is_type_instance_of_v<T, std::map>
-                                              || mpl::is_type_instance_of_v<T, std::unordered_map>);
 
         template <translates_to_primitive_layout T, class OPTION_FLAGS>
         struct builder<T, dont_enforce_layout, OPTION_FLAGS>
@@ -373,8 +374,8 @@ namespace sparrow
         {
             using type = sparrow::map_array;
             using raw_value_type = std::ranges::range_value_t<T>;
-            using key_type = typename raw_value_type::key_type;
-            using value_type = typename raw_value_type::mapped_type;
+            using key_type = typename raw_value_type::first_type;
+            using value_type = typename raw_value_type::second_type;
 
             template <class U>
             [[nodiscard]] static type create(U&& t)
@@ -399,8 +400,15 @@ namespace sparrow
                 using layout_policy_type = layout_flag_t<raw_value_type>;
                 auto keys_array = build_impl<layout_policy_type>(flat_keys, OPTION_FLAGS{});
                 auto items_array = build_impl<layout_policy_type>(flat_items, OPTION_FLAGS{});
+                auto offset = map_array::offset_from_sizes(sparrow::repeat_view<size_t>(1, std::ranges::size(t))
+                );
 
-                return type(std::move(keys_array), std::move(items_array), where_null(t));
+                return type(
+                    sparrow::array{std::move(keys_array)},
+                    sparrow::array{std::move(items_array)},
+                    std::move(offset),
+                    where_null(t)
+                );
             }
         };
 
