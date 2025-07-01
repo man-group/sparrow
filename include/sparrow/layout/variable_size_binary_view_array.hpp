@@ -112,6 +112,44 @@ namespace sparrow
     template <variable_size_binary_view_impl_types T>
     constexpr bool is_variable_size_binary_view_array = is_variable_size_binary_view_array_impl<T>::value;
 
+    /**
+     * @brief Variable-size binary view array implementation for efficient string/binary data storage.
+     *
+     * This class implements an Arrow-compatible array for storing variable-length binary data
+     * (strings or byte sequences) using the Binary View layout. This layout is optimized for
+     * performance by storing short values inline and using references to external buffers for
+     * longer values, reducing memory fragmentation and improving cache locality.
+     *
+     * The Binary View layout stores a 16-byte view structure for each element:
+     * - Length (4 bytes): Size of the data in bytes
+     * - Prefix (4 bytes): First 4 bytes of the data (for comparison)
+     * - Buffer Index (4 bytes): Index of buffer containing full data (for long strings)
+     * - Offset (4 bytes): Offset within the buffer (for long strings)
+     *
+     * For strings ≤ 12 bytes, the data is stored inline in the view structure.
+     * For strings > 12 bytes, the data is stored in separate variadic buffers.
+     *
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-view-layout
+     *
+     * @tparam T The view type (std::string_view or std::span<const std::byte>)
+     *
+     * @pre T must be std::string_view or std::span<const std::byte>
+     * @post Maintains Arrow Binary View or String View format compatibility
+     * @post Supports efficient random access with O(1) element retrieval
+     * @post Optimizes memory usage for mixed short/long string workloads
+     *
+     * @example
+     * ```cpp
+     * // String view array
+     * std::vector<std::string> data = {"short", "a very long string that exceeds 12 bytes"};
+     * string_view_array arr(data);
+     *
+     * // Binary view array
+     * std::vector<std::vector<std::byte>> binary_data = {...};
+     * binary_view_array bin_arr(binary_data);
+     * ```
+     */
     template <variable_size_binary_view_impl_types T>
     class variable_size_binary_view_array_impl final
         : public mutable_array_bitmap_base<variable_size_binary_view_array_impl<T>>
@@ -148,8 +186,33 @@ namespace sparrow
         using iterator = typename base_type::iterator;
         using const_iterator = typename base_type::const_iterator;
 
+        /**
+         * @brief Constructs variable-size binary view array from Arrow proxy.
+         *
+         * @param proxy Arrow proxy containing binary/string view array data and schema
+         *
+         * @pre proxy must contain valid Arrow Binary View or String View array and schema
+         * @pre proxy format must be "vu" (string view) or "vz" (binary view)
+         * @pre proxy must have the required buffer layout for view arrays
+         * @post Array is initialized with data from proxy
+         * @post View structures are accessible for efficient element retrieval
+         */
         explicit variable_size_binary_view_array_impl(arrow_proxy);
 
+        /**
+         * @brief Generic constructor for creating variable-size binary view array.
+         *
+         * Creates a variable-size binary view array from various input types.
+         * Arguments are forwarded to compatible create_proxy() functions.
+         *
+         * @tparam Args Parameter pack for constructor arguments
+         * @param args Constructor arguments (data ranges, validity, metadata, etc.)
+         *
+         * @pre Arguments must match one of the create_proxy() overload signatures
+         * @pre Input data must be convertible to T (string_view or span<const byte>)
+         * @post Array is created with optimized Binary View layout
+         * @post Short strings (≤12 bytes) are stored inline, long strings in buffers
+         */
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<variable_size_binary_view_array_impl<T>, Args...>)
         explicit variable_size_binary_view_array_impl(Args&&... args)
@@ -159,17 +222,62 @@ namespace sparrow
 
     private:
 
+        /**
+         * @brief Buffer collection for Binary View layout.
+         *
+         * Encapsulates the three main buffers used in the Binary View format:
+         * - length_buffer: 16-byte view structures for each element
+         * - long_string_storage: Concatenated storage for strings > 12 bytes
+         * - buffer_sizes: Size information for variadic buffers
+         */
         struct buffers
         {
-            buffer<uint8_t> length_buffer;
-            buffer<uint8_t> long_string_storage;
-            u8_buffer<int64_t> buffer_sizes;
+            buffer<uint8_t> length_buffer;        ///< View structures (16 bytes per element)
+            buffer<uint8_t> long_string_storage;  ///< Storage for long strings/binary data
+            u8_buffer<int64_t> buffer_sizes;      ///< Buffer size metadata
         };
 
+        /**
+         * @brief Creates optimized buffer layout from input range.
+         *
+         * Analyzes the input data and creates the appropriate buffer structure for
+         * the Binary View layout. Short strings (≤12 bytes) are stored inline in
+         * the view buffer, while longer strings are stored in separate buffers.
+         *
+         * @tparam R Type of input range
+         * @param range Range of string/binary values to process
+         * @return Optimized buffer structure for Binary View layout
+         *
+         * @pre R must be an input range with values convertible to T
+         * @pre All values in range must be valid and accessible
+         * @post Returns buffers with optimized layout for the given data
+         * @post Short values (≤12 bytes) are inlined in length_buffer
+         * @post Long values (>12 bytes) are stored in long_string_storage
+         * @post buffer_sizes contains metadata for variadic buffer management
+         */
         template <std::ranges::input_range R>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         static buffers create_buffers(R&& range);
 
+        /**
+         * @brief Creates Arrow proxy from range with validity bitmap.
+         *
+         * @tparam R Type of input range containing values
+         * @tparam VB Type of validity bitmap input
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param range Range of values convertible to T
+         * @param bitmap_input Validity bitmap specification
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the binary view array data and schema
+         *
+         * @pre R must be input range with values convertible to T
+         * @pre bitmap_input size must match range.size()
+         * @post Returns valid Arrow proxy with Binary View or String View format
+         * @post Format is "vu" for string_view, "vz" for span<const byte>
+         * @post Array supports null values with NULLABLE flag
+         * @post Optimized buffer layout is created based on string lengths
+         */
         template <std::ranges::input_range R, validity_bitmap_input VB = validity_bitmap, input_metadata_container METADATA_RANGE>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         [[nodiscard]] static arrow_proxy create_proxy(
@@ -179,6 +287,23 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Creates Arrow proxy from range of nullable values.
+         *
+         * @tparam NULLABLE_RANGE Type of input range containing nullable values
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param nullable_range Range of nullable<T> values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the binary view array data and schema
+         *
+         * @pre NULLABLE_RANGE must be input range of nullable<T> values
+         * @pre All non-null values must be valid and accessible
+         * @post Returns valid Arrow proxy with Binary View or String View format
+         * @post Validity bitmap reflects has_value() status of nullable elements
+         * @post Array supports null values (nullable = true)
+         * @post Optimized buffer layout based on actual (non-null) string lengths
+         */
         template <std::ranges::input_range NULLABLE_RANGE, input_metadata_container METADATA_RANGE>
             requires std::convertible_to<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T>>
         [[nodiscard]] static arrow_proxy create_proxy(
@@ -187,6 +312,22 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Creates Arrow proxy from range with nullable flag.
+         *
+         * @tparam R Type of input range containing values
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param range Range of values convertible to T
+         * @param nullable Whether the array should support null values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the binary view array data and schema
+         *
+         * @pre R must be input range with values convertible to T
+         * @pre All values in range must be valid and accessible
+         * @post If nullable is true, array supports null values (though none initially set)
+         * @post If nullable is false, array does not support null values
+         */
         template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         [[nodiscard]] static arrow_proxy create_proxy(
@@ -196,24 +337,80 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Gets mutable reference to element at specified index.
+         *
+         * @param i Index of the element to access
+         * @return Mutable reference to the string/binary view
+         *
+         * @pre i must be < size()
+         * @post Returns valid view referencing the element data
+         * @post For short strings, view points to inline data
+         * @post For long strings, view points to data in variadic buffer
+         */
         [[nodiscard]] constexpr inner_reference value(size_type i);
+
+        /**
+         * @brief Gets const reference to element at specified index.
+         *
+         * @param i Index of the element to access
+         * @return Const reference to the string/binary view
+         *
+         * @pre i must be < size()
+         * @post Returns valid const view referencing the element data
+         * @post For strings ≤12 bytes, view points to inline data in view buffer
+         * @post For strings >12 bytes, view points to data in variadic buffer
+         * @post Returned view is valid for the lifetime of the array
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(i < this->size())
+         */
         [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
+        /**
+         * @brief Gets iterator to beginning of value range.
+         *
+         * @return Iterator pointing to the first element
+         *
+         * @post Returns valid iterator to array beginning
+         */
         [[nodiscard]] constexpr value_iterator value_begin();
+
+        /**
+         * @brief Gets iterator to end of value range.
+         *
+         * @return Iterator pointing past the last element
+         *
+         * @post Returns valid iterator to array end
+         */
         [[nodiscard]] constexpr value_iterator value_end();
 
+        /**
+         * @brief Gets const iterator to beginning of value range.
+         *
+         * @return Const iterator pointing to the first element
+         *
+         * @post Returns valid const iterator to array beginning
+         */
         [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
+
+        /**
+         * @brief Gets const iterator to end of value range.
+         *
+         * @return Const iterator pointing past the last element
+         *
+         * @post Returns valid const iterator to array end
+         */
         [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
-        static constexpr size_type LENGTH_BUFFER_INDEX = 1;
-        static constexpr std::size_t DATA_BUFFER_SIZE = 16;
-        static constexpr std::size_t SHORT_STRING_SIZE = 12;
-        static constexpr std::size_t PREFIX_SIZE = 4;
-        static constexpr std::ptrdiff_t PREFIX_OFFSET = 4;
-        static constexpr std::ptrdiff_t SHORT_STRING_OFFSET = 4;
-        static constexpr std::ptrdiff_t BUFFER_INDEX_OFFSET = 8;
-        static constexpr std::ptrdiff_t BUFFER_OFFSET_OFFSET = 12;
-        static constexpr std::size_t FIRST_VAR_DATA_BUFFER_INDEX = 2;
+        static constexpr size_type LENGTH_BUFFER_INDEX = 1;            ///< Index of length/view buffer
+        static constexpr std::size_t DATA_BUFFER_SIZE = 16;            ///< Size of each view structure
+        static constexpr std::size_t SHORT_STRING_SIZE = 12;           ///< Threshold for inline storage
+        static constexpr std::size_t PREFIX_SIZE = 4;                  ///< Size of prefix for long strings
+        static constexpr std::ptrdiff_t PREFIX_OFFSET = 4;             ///< Offset to prefix in view structure
+        static constexpr std::ptrdiff_t SHORT_STRING_OFFSET = 4;       ///< Offset to inline data
+        static constexpr std::ptrdiff_t BUFFER_INDEX_OFFSET = 8;       ///< Offset to buffer index
+        static constexpr std::ptrdiff_t BUFFER_OFFSET_OFFSET = 12;     ///< Offset to buffer offset
+        static constexpr std::size_t FIRST_VAR_DATA_BUFFER_INDEX = 2;  ///< Index of first variadic buffer
 
         friend base_type;
         friend base_type::base_type;

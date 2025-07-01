@@ -113,9 +113,11 @@ namespace sparrow
         using const_rvalue_reference = const_reference;
     };
 
-    /*
-     * Defines a type of object to be thrown by nullable::value when accessing
-     * a nullable object whose value is null.
+    /**
+     * @brief Exception thrown when accessing a null nullable value.
+     *
+     * This exception is thrown by nullable::value() when attempting to access
+     * the underlying value of a nullable that is currently in a null state.
      */
     class bad_nullable_access : public std::exception
     {
@@ -125,6 +127,13 @@ namespace sparrow
         bad_nullable_access(const bad_nullable_access&) noexcept = default;
         bad_nullable_access& operator=(const bad_nullable_access&) noexcept = default;
 
+        /**
+         * @brief Gets the descriptive error message.
+         *
+         * @return C-string describing the error
+         *
+         * @post Returns non-null pointer to static error message
+         */
         [[nodiscard]] const char* what() const noexcept override
         {
             return message;
@@ -136,20 +145,34 @@ namespace sparrow
     };
 
     /**
-     * nullval_t is an empty class used to indicate that a nullable is null.
+     * @brief Sentinel type to indicate a nullable value is null.
+     *
+     * nullval_t is used to construct or assign nullable objects to a null state.
+     * It has a private constructor to prevent default construction and ensure
+     * only the predefined nullval constant is used.
      */
     struct nullval_t
     {
-        // This is required to disable the generation of
-        // the default constructor. Otherwise, a = {} where
-        // a is a nullable would lead to an ambiguous call
-        // where both operator=(nullable&&) and operator=(nullval_t)
-        // are valid.
+        /**
+         * @brief Private constructor to prevent default construction.
+         */
         constexpr explicit nullval_t(int)
         {
         }
     };
 
+    /**
+     * @brief Global constant representing a null value for nullable objects.
+     *
+     * This constant is used to construct nullable objects in a null state
+     * or to assign null to existing nullable objects.
+     *
+     * @example
+     * ```cpp
+     * nullable<int> n = nullval;  // null nullable
+     * n = nullval;                // assign null
+     * ```
+     */
     inline constexpr nullval_t nullval(0);
 
     namespace impl
@@ -215,63 +238,50 @@ namespace sparrow
     }
 
     /**
-     * The nullable class models a value or a reference that can be "null", or missing,
-     * like values traditionally used in data science libraries.
-     * The flag indicating whether the element should be considered missing can be a
-     * boolean-like value or reference.
+     * @brief A type that models a value or reference that can be "null" or missing.
      *
-     * The value is always valid, independently from the value of the flag. The flag
-     * only indicates whether the value should be considered as specified (flag is true)
-     * or null (flag is false). Assigning nullval to a nullable or setting its flag to
-     * flase does not trigger the destruction of the underlying value.
+     * The nullable class template provides a way to represent values that may be missing,
+     * similar to std::optional but designed specifically for data science applications.
+     * It stores both a value and a flag indicating whether the value should be considered
+     * valid (non-null) or invalid (null).
      *
-     * When the stored object is not a reference, the nullable class has a regular value
-     * semantics: copying or moving it will copy or move the underlying value and flag.
-     * When the stored object is a reference, the nullable class has a view semantics:
-     * copying it or moving it will copy the underlying value and flag instead of reassigining
-     * the references. This allows to create nullable views over two distinct arrays (one
-     * for the values, one for the flags) used to implement a stl-like contianer of nullable.
-     * For instance, if you have the following class:
+     * Key features:
+     * - Value is always accessible, flag determines semantic validity
+     * - Support for both value and reference semantics
+     * - Efficient storage for data science workloads
+     * - Compatible with range algorithms and containers
+     * - Type-safe null checking and access
      *
-     * @code{.cpp}
-     * template <class T, class B>
-     * class nullable_array
-     * {
-     * private:
-     *     std::vector<T> m_values;
-     *     std::vector<bool> m_flags;
+     * When T is not a reference type, nullable has value semantics: copying moves
+     * the underlying value and flag. When T is a reference type, nullable has view
+     * semantics: it provides a view over external value and flag storage.
      *
-     * public:
+     * @tparam T The type of the stored value (can be a value type or reference type)
+     * @tparam B The type of the validity flag (must be boolean-like, defaults to bool)
      *
-     *     using reference = nullable<double&, bool&>;
-     *     using const_reference = nullable<const double&, const bool&>;
+     * @pre T and B must be constructible and assignable types
+     * @pre B must be convertible to and from bool
+     * @post Value is always accessible regardless of flag state
+     * @post Flag accurately reflects intended null/non-null semantics
+     * @post Thread-safe for read operations, requires external synchronization for writes
      *
-     *     reference operator[](size_type i)
-     *     {
-     *         return reference(m_values[i], m_flags[i]);
-     *     }
+     * @example
+     * ```cpp
+     * // Value semantics
+     * nullable<int> n1(42);           // non-null with value 42
+     * nullable<int> n2 = nullval;     // null
      *
-     *     const_reference operator[](size_type i) const
-     *     {
-     *         return const_reference(m_values[i], m_flags[i]);
-     *     }
-     *     // ...
-     * };
-     * @endcode
+     * // Reference semantics (for container implementations)
+     * int value = 10;
+     * bool flag = true;
+     * nullable<int&, bool&> ref_view(value, flag);
      *
-     * Then you want the same semantic for accessing elements of nullable_array
-     * as that of std::vector, meaning that the following:
-     *
-     * @code{.cpp}
-     * nullable_array my_array = { ... };
-     * my_array[1] = my_array[0];
-     * @endcode
-     *
-     * should copy the underlying value and flag of the first element of my_array
-     * to the underlying value and flag of the second element of the array.
-     *
-     * @tparam T the type of the value
-     * @tparam B the type of the flag. This type must be convertible to and assignable from bool
+     * // Safe access
+     * if (n1.has_value()) {
+     *     int val = n1.value();       // safe access
+     * }
+     * int safe_val = n1.value_or(0); // fallback value
+     * ```
      */
     template <class T, mpl::boolean_like B = bool>
     class nullable
@@ -292,6 +302,17 @@ namespace sparrow
         using flag_rvalue_reference = typename flag_traits::rvalue_reference;
         using flag_const_rvalue_reference = typename flag_traits::const_rvalue_reference;
 
+        /**
+         * @brief Default constructor creating a null nullable.
+         *
+         * @tparam U Value type (deduced, must be default constructible)
+         * @tparam BB Flag type (deduced, must be default constructible)
+         *
+         * @pre T and B must be default constructible
+         * @post has_value() returns false
+         * @post get() returns default-constructed value
+         * @post null_flag() returns false
+         */
         template <std::default_initializable U = T, std::default_initializable BB = B>
         constexpr nullable() noexcept
             : m_value()
@@ -299,6 +320,17 @@ namespace sparrow
         {
         }
 
+        /**
+         * @brief Constructor from nullval_t creating a null nullable.
+         *
+         * @tparam U Value type (deduced, must be default constructible)
+         * @tparam BB Flag type (deduced, must be default constructible)
+         *
+         * @pre T and B must be default constructible
+         * @post has_value() returns false
+         * @post get() returns default-constructed value
+         * @post null_flag() returns false
+         */
         template <std::default_initializable U = T, std::default_initializable BB = B>
         constexpr nullable(nullval_t) noexcept
             : m_value()
@@ -306,97 +338,254 @@ namespace sparrow
         {
         }
 
+        /**
+         * @brief Constructor from a value creating a non-null nullable.
+         *
+         * @tparam U Type of the input value (must be constructible to T)
+         * @param value Value to store
+         *
+         * @pre U must be constructible to T
+         * @pre U must not be the same type as nullable (to avoid recursion)
+         * @post has_value() returns true
+         * @post get() returns the constructed value
+         * @post null_flag() returns true
+         */
         template <class U>
             requires(not std::same_as<self_type, std::decay_t<U>> and std::constructible_from<T, U &&>)
-        explicit(not std::convertible_to<U&&, T>) constexpr nullable(U&& value) noexcept(
-            noexcept(T(std::declval<U>()))
-        )
+        explicit(not std::convertible_to<U&&, T>) constexpr nullable(U&& value
+        ) noexcept(noexcept(T(std::declval<U>())))
             : m_value(std::forward<U>(value))
             , m_null_flag(true)
         {
         }
 
-        constexpr nullable(const self_type&) = default;
+        /**
+         * @brief Default copy constructor.
+         *
+         * @param rhs Source nullable to copy from
+         *
+         * @pre rhs must be in a valid state
+         * @post This nullable is an exact copy of rhs
+         * @post has_value() equals rhs.has_value()
+         * @post If non-null, get() equals rhs.get()
+         */
+        constexpr nullable(const self_type& rhs) = default;
 
+        /**
+         * @brief Converting copy constructor from different nullable types.
+         *
+         * @tparam TO Source value type
+         * @tparam BO Source flag type
+         * @param rhs Source nullable to copy from
+         *
+         * @pre T must be constructible from TO
+         * @pre B must be constructible from BO
+         * @pre TO must not be initializable from this nullable type (prevents ambiguity)
+         * @post This nullable contains converted copies of rhs value and flag
+         * @post has_value() equals rhs.has_value()
+         * @post If non-null, get() is constructed from rhs.get()
+         */
         template <class TO, mpl::boolean_like BO>
             requires(impl::both_constructible_from_cref<T, TO, B, BO>
                      and not impl::initializable_from_refs<T, nullable<TO, BO>>)
-        explicit(not impl::both_convertible_from_cref<T, TO, B, BO>) SPARROW_CONSTEXPR nullable(
-            const nullable<TO, BO>& rhs
-        )
+        explicit(not impl::both_convertible_from_cref<T, TO, B, BO>) SPARROW_CONSTEXPR
+            nullable(const nullable<TO, BO>& rhs)
             : m_value(rhs.get())
             , m_null_flag(rhs.null_flag())
         {
         }
 
 #ifdef __clang__
+        /**
+         * @brief Converting copy constructor from different nullable types (Clang workaround for bool).
+         *
+         * This is a Clang-specific workaround for cases where T is bool, which requires
+         * special handling due to compiler-specific template instantiation behavior.
+         *
+         * @tparam TO Source value type
+         * @tparam BO Source flag type
+         * @param rhs Source nullable to copy from
+         *
+         * @pre T must be constructible from TO
+         * @pre B must be constructible from BO
+         * @pre std::decay_t<T> must be bool (enforced by requirement)
+         * @post This nullable contains converted copies of rhs value and flag
+         * @post has_value() equals rhs.has_value()
+         * @post If non-null, get() is constructed from rhs.get()
+         *
+         * @note This overload is only available on Clang and when T decays to bool
+         * @note Required due to Clang's SFINAE instantiation behavior with non-libc++ standard libraries
+         */
         template <class TO, mpl::boolean_like BO>
             requires(impl::both_constructible_from_cref<T, TO, B, BO> and std::same_as<std::decay_t<T>, bool>)
-        explicit(not impl::both_convertible_from_cref<T, TO, B, BO>) SPARROW_CONSTEXPR nullable(
-            const nullable<TO, BO>& rhs
-        )
+        explicit(not impl::both_convertible_from_cref<T, TO, B, BO>) SPARROW_CONSTEXPR
+            nullable(const nullable<TO, BO>& rhs)
             : m_value(rhs.get())
             , m_null_flag(rhs.null_flag())
         {
         }
 #endif
 
-        constexpr nullable(self_type&&) noexcept = default;
+        /**
+         * @brief Default move constructor.
+         *
+         * @param rhs Source nullable to move from
+         *
+         * @pre rhs must be in a valid state
+         * @post This nullable is an exact copy of rhs
+         * @post has_value() equals rhs.has_value()
+         * @post If non-null, get() equals rhs.get()
+         */
+        constexpr nullable(self_type&& rhs) noexcept = default;
 
+        /**
+         * @brief Converting move constructor from different nullable types.
+         *
+         * @tparam TO Source value type
+         * @tparam BO Source flag type
+         * @param rhs Source nullable to move from
+         *
+         * @pre T must be constructible from TO
+         * @pre B must be constructible from BO
+         * @pre TO must not be initializable from this nullable type (prevents ambiguity)
+         * @post This nullable contains converted moves of rhs value and flag
+         * @post has_value() equals rhs.has_value()
+         * @post If non-null, get() is constructed from std::move(rhs).get()
+         */
         template <class TO, mpl::boolean_like BO>
             requires(impl::both_constructible_from_cond_ref<T, TO, B, BO>
                      and not impl::initializable_from_refs<T, nullable<TO, BO>>)
-        explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>) SPARROW_CONSTEXPR nullable(
-            nullable<TO, BO>&& rhs
-        )
+        explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>) SPARROW_CONSTEXPR
+            nullable(nullable<TO, BO>&& rhs)
             : m_value(std::move(rhs).get())
             , m_null_flag(std::move(rhs).null_flag())
         {
         }
 
 #ifdef __clang__
+        /**
+         * @brief Converting move constructor from different nullable types (Clang workaround for bool).
+         *
+         * This is a Clang-specific workaround for cases where T is bool, which requires
+         * special handling due to compiler-specific template instantiation behavior.
+         *
+         * @tparam TO Source value type
+         * @tparam BO Source flag type
+         * @param rhs Source nullable to move from
+         *
+         * @pre T must be constructible from TO
+         * @pre B must be constructible from BO
+         * @pre std::decay_t<T> must be bool (enforced by requirement)
+         * @post This nullable contains converted moves of rhs value and flag
+         * @post has_value() equals rhs.has_value()
+         * @post If non-null, get() is constructed from std::move(rhs).get()
+         * @post rhs is left in a valid but unspecified state
+         *
+         * @note This overload is only available on Clang and when T decays to bool
+         * @note Required due to Clang's SFINAE instantiation behavior with non-libc++ standard libraries
+         */
         template <class TO, mpl::boolean_like BO>
             requires(impl::both_constructible_from_cond_ref<T, TO, B, BO>
                      and std::same_as<std::decay_t<T>, bool>)
-        explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>) SPARROW_CONSTEXPR nullable(
-            nullable<TO, BO>&& rhs
-        )
+        explicit(not impl::both_convertible_from_cond_ref<T, TO, B, BO>) SPARROW_CONSTEXPR
+            nullable(nullable<TO, BO>&& rhs)
             : m_value(std::move(rhs).get())
             , m_null_flag(std::move(rhs).null_flag())
         {
         }
 #endif
 
+        /**
+         * @brief Constructor from value and flag.
+         *
+         * @param value Value to move and store
+         * @param null_flag Flag to move and store
+         *
+         * @post get() returns the moved value
+         * @post null_flag() returns the moved flag
+         * @post Original value and flag are moved from
+         */
         constexpr nullable(value_type&& value, flag_type&& null_flag)
             : m_value(std::move(value))
             , m_null_flag(std::move(null_flag))
         {
         }
 
+        /**
+         * @brief Constructor from lvalue references (for reference semantics).
+         *
+         * @param value Reference to value to store
+         * @param null_flag Reference to flag to store
+         *
+         * @post get() refers to the provided value reference
+         * @post null_flag() refers to the provided flag reference
+         * @post Changes to the nullable affect the referenced objects
+         */
         constexpr nullable(std::add_lvalue_reference_t<T> value, std::add_lvalue_reference_t<B> null_flag)
             : m_value(value)
             , m_null_flag(null_flag)
         {
         }
 
+        /**
+         * @brief Constructor from moved value and flag reference.
+         *
+         * @param value Value to move and store
+         * @param null_flag Reference to flag to store
+         *
+         * @post get() returns the moved value
+         * @post null_flag() refers to the provided flag reference
+         */
         constexpr nullable(value_type&& value, std::add_lvalue_reference_t<B> null_flag)
             : m_value(std::move(value))
             , m_null_flag(null_flag)
         {
         }
 
+        /**
+         * @brief Constructor from value reference and moved flag.
+         *
+         * @param value Reference to value to store
+         * @param null_flag Flag to move and store
+         *
+         * @post get() refers to the provided value reference
+         * @post null_flag() returns the moved flag
+         */
         constexpr nullable(std::add_lvalue_reference_t<T> value, flag_type&& null_flag)
             : m_value(value)
             , m_null_flag(std::move(null_flag))
         {
         }
 
+        /**
+         * @brief Assignment from nullval_t, setting nullable to null state.
+         *
+         * @param nullval_t nullval sentinel value
+         * @return Reference to this nullable
+         *
+         * @post has_value() returns false
+         * @post null_flag() returns false
+         * @post get() remains accessible but semantically invalid
+         */
         constexpr self_type& operator=(nullval_t) noexcept
         {
             m_null_flag = false;
             return *this;
         }
 
+        /**
+         * @brief Assignment from a value, setting nullable to non-null state.
+         *
+         * @tparam TO Type of the assigned value
+         * @param rhs Value to assign
+         * @return Reference to this nullable
+         *
+         * @pre TO must not be the same as nullable type
+         * @pre TO must be assignable to T
+         * @post has_value() returns true
+         * @post get() contains the assigned value
+         * @post null_flag() returns true
+         */
         template <class TO>
             requires(not std::same_as<self_type, TO> and std::assignable_from<std::add_lvalue_reference_t<T>, TO>)
         constexpr self_type& operator=(TO&& rhs) noexcept
@@ -406,6 +595,17 @@ namespace sparrow
             return *this;
         }
 
+        /**
+         * @brief Default copy assignment operator.
+         *
+         * @param rhs Source nullable to copy from
+         * @return Reference to this nullable
+         *
+         * @pre rhs must be in a valid state
+         * @post This nullable is an exact copy of rhs
+         * @post has_value() equals rhs.has_value()
+         * @post get() is assigned from rhs.get()
+         */
         constexpr self_type& operator=(const self_type& rhs) noexcept
         {
             m_value = rhs.get();
@@ -413,12 +613,23 @@ namespace sparrow
             return *this;
         }
 
+        /**
+         * @brief Converting assignment operator from different nullable types.
+         *
+         * @tparam TO Source value type
+         * @tparam BO Source flag type
+         * @param rhs Source nullable to copy from
+         * @return Reference to this nullable
+         *
+         * @pre T must be constructible from TO
+         * @pre B must be constructible from BO
+         * @pre TO must not be initializable from this nullable type (prevents ambiguity)
+         * @post This nullable contains converted copies of rhs value and flag
+         * @post has_value() equals rhs.has_value()
+         * @post If non-null, get() is constructed from rhs.get()
+         */
         template <class TO, mpl::boolean_like BO>
-            requires(
-                impl::both_assignable_from_cref<T, TO, B, BO>
-                and not impl::initializable_from_refs<T, nullable<TO, BO>>
-                and not impl::assignable_from_refs<T, nullable<TO, BO>>
-            )
+            requires(impl::both_assignable_from_cref<T, TO, B, BO> and not impl::initializable_from_refs<T, nullable<TO, BO>> and not impl::assignable_from_refs<T, nullable<TO, BO>>)
         constexpr self_type& operator=(const nullable<TO, BO>& rhs) noexcept
         {
             m_value = rhs.get();
@@ -426,6 +637,17 @@ namespace sparrow
             return *this;
         }
 
+        /**
+         * @brief Default move assignment operator.
+         *
+         * @param rhs Source nullable to move from
+         * @return Reference to this nullable
+         *
+         * @pre rhs must be in a valid state
+         * @post This nullable is an exact copy of rhs
+         * @post has_value() equals rhs.has_value()
+         * @post get() is assigned from std::move(rhs).get()
+         */
         constexpr self_type& operator=(self_type&& rhs) noexcept
         {
             m_value = std::move(rhs).get();
@@ -433,12 +655,23 @@ namespace sparrow
             return *this;
         }
 
+        /**
+         * @brief Converting move assignment operator from different nullable types.
+         *
+         * @tparam TO Source value type
+         * @tparam BO Source flag type
+         * @param rhs Source nullable to move from
+         * @return Reference to this nullable
+         *
+         * @pre T must be constructible from TO
+         * @pre B must be constructible from BO
+         * @pre TO must not be initializable from this nullable type (prevents ambiguity)
+         * @post This nullable contains converted moves of rhs value and flag
+         * @post has_value() equals rhs.has_value()
+         * @post If non-null, get() is constructed from std::move(rhs).get()
+         */
         template <class TO, mpl::boolean_like BO>
-            requires(
-                impl::both_assignable_from_cond_ref<T, TO, B, BO>
-                and not impl::initializable_from_refs<T, nullable<TO, BO>>
-                and not impl::assignable_from_refs<T, nullable<TO, BO>>
-            )
+            requires(impl::both_assignable_from_cond_ref<T, TO, B, BO> and not impl::initializable_from_refs<T, nullable<TO, BO>> and not impl::assignable_from_refs<T, nullable<TO, BO>>)
         constexpr self_type& operator=(nullable<TO, BO>&& rhs) noexcept
         {
             m_value = std::move(rhs).get();
@@ -446,83 +679,380 @@ namespace sparrow
             return *this;
         }
 
+        /**
+         * @brief Conversion to bool indicating non-null state.
+         *
+         * @return true if nullable contains a valid value, false if null
+         *
+         * @post Return value equals has_value()
+         * @post Return value equals static_cast<bool>(null_flag())
+         */
         constexpr explicit operator bool() const noexcept;
+
+        /**
+         * @brief Checks whether the nullable contains a valid value.
+         *
+         * @return true if nullable contains a valid value, false if null
+         *
+         * @post Return value equals static_cast<bool>(*this)
+         * @post Return value equals static_cast<bool>(null_flag())
+         */
         [[nodiscard]] constexpr bool has_value() const noexcept;
 
+        /**
+         * @brief Gets mutable reference to the validity flag.
+         *
+         * @return Mutable reference to the flag
+         *
+         * @post Returned reference can be used to modify the null state
+         * @post Changes to the flag affect has_value() result
+         */
         [[nodiscard]] constexpr flag_reference null_flag() & noexcept;
+
+        /**
+         * @brief Gets const reference to the validity flag.
+         *
+         * @return Const reference to the flag
+         *
+         * @post Returned reference reflects current null state
+         */
         [[nodiscard]] constexpr flag_const_reference null_flag() const& noexcept;
+
+        /**
+         * @brief Gets rvalue reference to the validity flag.
+         *
+         * @return Rvalue reference to the flag
+         *
+         * @post If flag is a reference type, returns the reference
+         * @post If flag is a value type, returns moved flag
+         */
         [[nodiscard]] constexpr flag_rvalue_reference null_flag() && noexcept;
+
+        /**
+         * @brief Gets const rvalue reference to the validity flag.
+         *
+         * @return Const rvalue reference to the flag
+         *
+         * @post If flag is a reference type, returns the reference
+         * @post If flag is a value type, returns moved const flag
+         */
         [[nodiscard]] constexpr flag_const_rvalue_reference null_flag() const&& noexcept;
 
+        /**
+         * @brief Gets mutable reference to the stored value.
+         *
+         * @return Mutable reference to the value
+         *
+         * @post Returned reference provides access to the stored value
+         * @post Value is accessible regardless of null state
+         * @post Modifications through reference affect stored value
+         */
         [[nodiscard]] constexpr reference get() & noexcept;
+
+        /**
+         * @brief Gets const reference to the stored value.
+         *
+         * @return Const reference to the value
+         *
+         * @post Returned reference provides read-only access to stored value
+         * @post Value is accessible regardless of null state
+         */
         [[nodiscard]] constexpr const_reference get() const& noexcept;
+
+        /**
+         * @brief Gets rvalue reference to the stored value.
+         *
+         * @return Rvalue reference to the value
+         *
+         * @post If value is a reference type, returns the reference
+         * @post If value is a value type, returns moved value
+         */
         [[nodiscard]] constexpr rvalue_reference get() && noexcept;
+
+        /**
+         * @brief Gets const rvalue reference to the stored value.
+         *
+         * @return Const rvalue reference to the value
+         *
+         * @post If value is a reference type, returns the reference
+         * @post If value is a value type, returns moved const value
+         */
         [[nodiscard]] constexpr const_rvalue_reference get() const&& noexcept;
 
+        /**
+         * @brief Gets mutable reference to the value with null checking.
+         *
+         * @return Mutable reference to the value
+         *
+         * @pre has_value() must be true
+         * @post Returns reference to the stored value
+         *
+         * @throws bad_nullable_access if has_value() is false
+         */
         [[nodiscard]] constexpr reference value() &;
+
+        /**
+         * @brief Gets const reference to the value with null checking.
+         *
+         * @return Const reference to the value
+         *
+         * @pre has_value() must be true
+         * @post Returns const reference to the stored value
+         *
+         * @throws bad_nullable_access if has_value() is false
+         */
         [[nodiscard]] constexpr const_reference value() const&;
+
+        /**
+         * @brief Gets rvalue reference to the value with null checking.
+         *
+         * @return Rvalue reference to the value
+         *
+         * @pre has_value() must be true
+         * @post Returns rvalue reference to the stored value
+         * @post If value type, original value is moved from
+         *
+         * @throws bad_nullable_access if has_value() is false
+         */
         [[nodiscard]] constexpr rvalue_reference value() &&;
+
+        /**
+         * @brief Gets const rvalue reference to the value with null checking.
+         *
+         * @return Const rvalue reference to the value
+         *
+         * @pre has_value() must be true
+         * @post Returns const rvalue reference to the stored value
+         *
+         * @throws bad_nullable_access if has_value() is false
+         */
         [[nodiscard]] constexpr const_rvalue_reference value() const&&;
 
+        /**
+         * @brief Gets the value or a default if null (const version).
+         *
+         * @tparam U Type of the default value
+         * @param default_value Value to return if nullable is null
+         * @return Stored value if non-null, otherwise default_value
+         *
+         * @pre U must be convertible to value_type
+         * @post If has_value() is true, returns copy of stored value
+         * @post If has_value() is false, returns converted default_value
+         */
         template <class U>
         [[nodiscard]] constexpr value_type value_or(U&& default_value) const&;
 
+        /**
+         * @brief Gets the value or a default if null (rvalue version).
+         *
+         * @tparam U Type of the default value
+         * @param default_value Value to return if nullable is null
+         * @return Moved stored value if non-null, otherwise default_value
+         *
+         * @pre U must be convertible to value_type
+         * @post If has_value() is true, returns moved stored value
+         * @post If has_value() is false, returns converted default_value
+         */
         template <class U>
         [[nodiscard]] constexpr value_type value_or(U&& default_value) &&;
 
+        /**
+         * @brief Swaps this nullable with another.
+         *
+         * @param other Nullable to swap with
+         *
+         * @post This nullable contains other's previous value and flag
+         * @post other contains this nullable's previous value and flag
+         */
         void swap(self_type& other) noexcept;
+
+        /**
+         * @brief Resets the nullable to null state.
+         *
+         * @post has_value() returns false
+         * @post null_flag() returns false
+         * @post get() remains accessible but semantically invalid
+         */
         void reset() noexcept;
 
     private:
 
+        /**
+         * @brief Throws exception if nullable is in null state.
+         *
+         * @throws bad_nullable_access if has_value() is false
+         */
         void throw_if_null() const;
 
-        T m_value;
-        B m_null_flag;
+        T m_value;      ///< The stored value (always valid)
+        B m_null_flag;  ///< The validity flag (true = valid, false = null)
 
         template <class TO, mpl::boolean_like BO>
         friend class nullable;
     };
 
+    /**
+     * @brief Swaps two nullable objects.
+     *
+     * @tparam T Value type
+     * @tparam B Flag type
+     * @param lhs First nullable to swap
+     * @param rhs Second nullable to swap
+     *
+     * @post lhs contains rhs's previous value and flag
+     * @post rhs contains lhs's previous value and flag
+     */
     template <class T, class B>
     constexpr void swap(nullable<T, B>& lhs, nullable<T, B>& rhs) noexcept;
 
+    /**
+     * @brief Equality comparison between nullable and nullval_t.
+     *
+     * @tparam T Value type
+     * @tparam B Flag type
+     * @param lhs Nullable to compare
+     * @param dummy nullval sentinel
+     * @return true if nullable is null, false otherwise
+     *
+     * @post Return value equals !lhs.has_value()
+     */
     template <class T, class B>
     constexpr bool operator==(const nullable<T, B>& lhs, nullval_t) noexcept;
 
+    /**
+     * @brief Three-way comparison between nullable and nullval_t.
+     *
+     * @tparam T Value type
+     * @tparam B Flag type
+     * @param lhs Nullable to compare
+     * @param dummy nullval sentinel
+     * @return Ordering reflecting null state comparison
+     *
+     * @post Returns std::strong_ordering::greater if lhs.has_value()
+     * @post Returns std::strong_ordering::equal if !lhs.has_value()
+     */
     template <class T, mpl::boolean_like B>
-    constexpr std::strong_ordering operator<=>(const nullable<T, B>& lhs, nullval_t) noexcept;
+    constexpr std::strong_ordering operator<=>(const nullable<T, B>& lhs, nullval_t dummy) noexcept;
 
+    /**
+     * @brief Equality comparison between nullable and regular value.
+     *
+     * @tparam T Value type
+     * @tparam B Flag type
+     * @tparam U Type of value to compare with
+     * @param lhs Nullable to compare
+     * @param rhs Value to compare with
+     * @return true if nullable is non-null and values are equal
+     *
+     * @post Returns false if lhs is null
+     * @post Returns lhs.get() == rhs if lhs is non-null
+     */
     template <class T, class B, class U>
         requires(!is_nullable_v<U> && mpl::weakly_equality_comparable_with<T, U>)
     constexpr bool operator==(const nullable<T, B>& lhs, const U& rhs) noexcept;
 
+    /**
+     * @brief Three-way comparison between nullable and regular value.
+     *
+     * @tparam T Value type
+     * @tparam B Flag type
+     * @tparam U Type of value to compare with
+     * @param lhs Nullable to compare
+     * @param rhs Value to compare with
+     * @return Ordering result
+     *
+     * @pre U must be three-way comparable with T
+     * @post Returns std::strong_ordering::less if lhs is null
+     * @post Returns lhs.get() <=> rhs if lhs is non-null
+     */
     template <class T, class B, class U>
         requires(!is_nullable_v<U> && std::three_way_comparable_with<U, T>)
     constexpr std::compare_three_way_result_t<T, U>
     operator<=>(const nullable<T, B>& lhs, const U& rhs) noexcept;
 
+    /**
+     * @brief Equality comparison between two nullable objects.
+     *
+     * @tparam T First value type
+     * @tparam B First flag type
+     * @tparam U Second value type
+     * @tparam UB Second flag type
+     * @param lhs First nullable to compare
+     * @param rhs Second nullable to compare
+     * @return true if both null or both non-null with equal values
+     *
+     * @post Returns true if both are null
+     * @post Returns false if only one is null
+     * @post Returns lhs.get() == rhs.get() if both are non-null
+     */
     template <class T, class B, class U, class UB>
         requires(mpl::weakly_equality_comparable_with<T, U>)
     constexpr bool operator==(const nullable<T, B>& lhs, const nullable<U, UB>& rhs) noexcept;
 
+    /**
+     * @brief Three-way comparison between two nullable objects.
+     *
+     * @tparam T First value type
+     * @tparam B First flag type
+     * @tparam U Second value type (must be three-way comparable with T)
+     * @tparam UB Second flag type
+     * @param lhs First nullable to compare
+     * @param rhs Second nullable to compare
+     * @return Ordering result
+     *
+     * @pre U must be three-way comparable with T
+     * @post Null values compare less than non-null values
+     * @post If both non-null, returns lhs.get() <=> rhs.get()
+     * @post If both null, returns std::strong_ordering::equal
+     */
     template <class T, class B, std::three_way_comparable_with<T> U, class UB>
     constexpr std::compare_three_way_result_t<T, U>
     operator<=>(const nullable<T, B>& lhs, const nullable<U, UB>& rhs) noexcept;
 
-    // Even if we have CTAD in C++20, some constructors add lvalue reference
-    // to their argument, making the deduction impossible.
+    /**
+     * @brief Creates a nullable object with deduced types.
+     *
+     * @tparam T Value type (deduced)
+     * @tparam B Flag type (deduced, defaults to bool)
+     * @param value Value to store
+     * @param flag Validity flag (defaults to true)
+     * @return Nullable object containing the value and flag
+     *
+     * @post Returned nullable has specified value and flag
+     * @post has_value() returns the flag value
+     */
     template <class T, mpl::boolean_like B = bool>
     constexpr nullable<T, B> make_nullable(T&& value, B&& flag = true);
 
+    /**
+     * @brief Sets null values in a range to a default value.
+     *
+     * @tparam R Range type containing nullable values
+     * @tparam T Value type for the default
+     * @param range Range of nullable objects to process
+     * @param default_value Value to assign to null elements
+     *
+     * @pre R must be a range of nullable objects with value type T
+     * @post All previously null elements in range now contain default_value
+     * @post All previously null elements now have has_value() == true
+     * @post Non-null elements remain unchanged
+     */
     template <std::ranges::range R, typename T = typename std::ranges::range_value_t<R>::value_type>
         requires(nullable_of<std::ranges::range_value_t<R>, T>)
     constexpr void zero_null_values(R& range, const T& default_value = T{});
 
     /**
-     * variant of nullable, exposing has_value for convenience
+     * @brief Variant of nullable types with has_value() convenience method.
      *
-     * @tparam T the list of nullable in the variant
+     * This class extends std::variant to work specifically with nullable types,
+     * providing a uniform has_value() interface across all alternative types.
+     *
+     * @tparam T Pack of nullable types that can be stored in the variant
+     *
+     * @pre All types in T must be nullable types
+     * @pre sizeof...(T) must be > 0
+     * @post Provides has_value() that works regardless of active alternative
+     * @post Maintains all std::variant functionality
      */
     template <class... T>
         requires(sizeof...(T) > 0 && (is_nullable_v<T> && ...))
@@ -536,10 +1066,44 @@ namespace sparrow
         constexpr nullable_variant(const nullable_variant&) = default;
         constexpr nullable_variant(nullable_variant&&) noexcept = default;
 
+        /**
+         * @brief Copy assignment operator.
+         *
+         * @param rhs Source variant to copy from
+         * @return Reference to this variant
+         *
+         * @post This variant contains a copy of rhs
+         * @post Active alternative matches rhs
+         */
         constexpr nullable_variant& operator=(const nullable_variant&);
+
+        /**
+         * @brief Move assignment operator.
+         *
+         * @param rhs Source variant to move from
+         * @return Reference to this variant
+         *
+         * @post This variant contains moved content from rhs
+         * @post rhs is left in valid but unspecified state
+         */
         constexpr nullable_variant& operator=(nullable_variant&&) noexcept;
 
+        /**
+         * @brief Conversion to bool indicating non-null state.
+         *
+         * @return true if active alternative has a valid value
+         *
+         * @post Return value equals has_value()
+         */
         constexpr explicit operator bool() const;
+
+        /**
+         * @brief Checks whether the active alternative contains a valid value.
+         *
+         * @return true if active alternative is non-null, false otherwise
+         *
+         * @post Calls has_value() on the active nullable alternative
+         */
         constexpr bool has_value() const;
     };
 }

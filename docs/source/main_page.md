@@ -1,13 +1,10 @@
 Sparrow                             {#mainpage}
 =======
 
-**!!!The documentation is still under development and may be incomplete or contain errors!!!**
-
-
 Introduction
 ------------
 
-Sparrow stands for simple arrow and is an implementation of the [Apache Arrow Columnar format](https://arrow.apache.org/docs/format/Columnar.html) in C++20. It provides array structures with idiomatic APIs and convenient conversions from and to the [C interface](https://arrow.apache.org/docs/dev/format/CDataInterface.html#structure-definitions).
+Sparrow stands for "Simple Arrow" and is an implementation of the [Apache Arrow Columnar format](https://arrow.apache.org/docs/format/Columnar.html) in C++20. It provides array structures with idiomatic APIs and convenient conversions from and to the [C interface](https://arrow.apache.org/docs/dev/format/CDataInterface.html#structure-definitions).
 
 Sparrow requires a modern C++ compiler supporting C++20:
 

@@ -42,7 +42,10 @@ namespace sparrow
      * @param buffers Vector of `sparrow::buffer<uint8_t>`.
      * @param children Pointer to a sequence of `ArrowArray` pointers or nullptr. Must be `nullptr` if
      * `n_children` is `0`.
+     * @param children_ownership Ownership of the children arrays. Must be `true` if the `ArrowArray` owns
+     * the children arrays, `false` otherwise.
      * @param dictionary `ArrowArray` pointer or `nullptr`.
+     * @param dictionary_ownership Whether the dictionary is owned by the `ArrowArray` or not.
      * @return The created `ArrowArray`.
      */
     template <class B, std::ranges::input_range CHILDREN_OWNERSHIP>
@@ -83,13 +86,13 @@ namespace sparrow
      * @param buffers Vector of `sparrow::buffer<uint8_t>`.
      * @param children Pointer to a sequence of `ArrowArray` pointers or `nullptr`. Must be `nullptr` if
      * `n_children` is `0`.
+     * @param children_ownership Ownership of the children arrays. Must be `true` if the `ArrowArray` owns
+     * the children arrays, `false` otherwise.
      * @param dictionary `ArrowArray` pointer or `nullptr`.
+     * @param dictionary_ownership Whether the dictionary is owned by the `ArrowArray` or not.
      */
     template <class B, std::ranges::input_range CHILDREN_OWNERSHIP>
-        requires(
-            std::constructible_from<arrow_array_private_data::BufferType, B>
-            && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>
-        )
+        requires(std::constructible_from<arrow_array_private_data::BufferType, B> && std::is_same_v<std::ranges::range_value_t<CHILDREN_OWNERSHIP>, bool>)
     void fill_arrow_array(
         ArrowArray& array,
         int64_t length,

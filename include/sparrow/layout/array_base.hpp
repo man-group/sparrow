@@ -31,36 +31,76 @@
 namespace sparrow
 {
     /**
-     * Base class for array_inner_types specialization
+     * @brief Base class for array_inner_types specializations.
      *
-     * It defines common types used in the array implementation
-     * classes.
-     * */
+     * Defines common types used across all array implementation classes.
+     * Provides the foundation for array type traits and ensures consistency
+     * across different array implementations.
+     *
+     * @post Provides bitmap_type definition for all array implementations
+     */
     struct array_inner_types_base
     {
         using bitmap_type = dynamic_bitset_view<std::uint8_t>;
     };
 
     /**
-     * Traits class that must be specialized by array
-     * classes inheriting from array_crtp_base.
+     * @brief Traits class that must be specialized by array implementations.
      *
-     * @tparam D the class inheriting from array_crtp_base.
+     * This traits class defines the types and interfaces that array classes
+     * must provide. Each array implementation must specialize this template
+     * to define their specific type requirements.
+     *
+     * @tparam D The derived array class type
+     *
+     * @pre D must be a complete array implementation type
+     * @post Specialization must provide all required type definitions
+     * @post Must inherit from array_inner_types_base
+     *
+     * Required specialization members:
+     * - inner_value_type: The type of values stored in the array
+     * - inner_reference: Reference type for array elements
+     * - inner_const_reference: Const reference type for array elements
+     * - value_iterator: Iterator type for values
+     * - const_value_iterator: Const iterator type for values
+     * - iterator_tag: Iterator category tag
      */
     template <class D>
     struct array_inner_types;
 
     /**
-     * Base class defining common immutable interface for arrays
-     * with a bitmap.
+     * @brief CRTP base class providing common immutable interface for arrays with bitmaps.
      *
-     * This class is a CRTP base class that defines and implements
-     * common immutable interface for arrays with a bitmap. These
-     * arrays hold nullable elements.
+     * This class defines and implements the standard interface for arrays that hold
+     * nullable elements using a validity bitmap. It provides efficient iteration,
+     * element access, and range-based operations while maintaining Arrow format
+     * compatibility.
      *
-     * @tparam D The derived type, i.e. the inheriting class for which
-     *           array_crtp_base provides the interface.
-     * @see nullable
+     * Key features:
+     * - Const-correct element access with bounds checking
+     * - STL-compatible iterator interface
+     * - Range-based operations for values and validity bitmap
+     * - Efficient slicing operations
+     * - Arrow metadata access
+     *
+     * @tparam D The derived array implementation type (CRTP pattern)
+     *
+     * @pre D must specialize array_inner_types<D>
+     * @pre D must implement required virtual methods (value, value_cbegin, value_cend, get_bitmap)
+     * @post Provides complete const array interface
+     * @post Maintains Arrow format compatibility
+     * @post Thread-safe for read operations
+     *
+     * @example
+     * ```cpp
+     * class my_array : public array_crtp_base<my_array> {
+     *     // Implement required methods
+     * };
+     *
+     * my_array arr = ...;
+     * auto nullable_elem = arr[0];  // Access with null checking
+     * for (const auto& elem : arr) { ... }  // Range-based iteration
+     * ```
      */
     template <class D>
     class array_crtp_base : public crtp_base<D>
@@ -104,56 +144,258 @@ namespace sparrow
         using const_iterator = layout_iterator<iterator_types>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
+        /**
+         * @brief Gets the optional name of the array.
+         *
+         * @return Optional string view of the array name from Arrow schema
+         *
+         * @post Returns nullopt if no name is set
+         * @post Returned string view remains valid while array exists
+         */
         [[nodiscard]] constexpr std::optional<std::string_view> name() const;
+
+        /**
+         * @brief Gets the metadata associated with the array.
+         *
+         * @return Optional view of key-value metadata pairs from Arrow schema
+         *
+         * @post Returns nullopt if no metadata is set
+         * @post Returned view remains valid while array exists
+         */
         [[nodiscard]] std::optional<key_value_view> metadata() const;
 
+        /**
+         * @brief Checks if the array is empty.
+         *
+         * @return true if the array has no elements, false otherwise
+         *
+         * @post Return value equals (size() == 0)
+         * @post Equivalent to begin() == end()
+         */
         [[nodiscard]] constexpr bool empty() const;
+
+        /**
+         * @brief Gets the number of elements in the array.
+         *
+         * @return Number of elements in the array
+         *
+         * @post Returns non-negative value
+         * @post Value corresponds to Arrow array length
+         */
         [[nodiscard]] constexpr size_type size() const;
 
+        /**
+         * @brief Gets element at specified position with bounds checking.
+         *
+         * @param i Index of the element to access
+         * @return Const reference to nullable element at position i
+         *
+         * @pre i must be < size()
+         * @post Returns valid const_reference to element
+         * @post Element includes both value and validity information
+         *
+         * @throws std::out_of_range if i >= size()
+         */
         [[nodiscard]] constexpr const_reference at(size_type i) const;
+
+        /**
+         * @brief Gets element at specified position without bounds checking.
+         *
+         * @param i Index of the element to access
+         * @return Const reference to nullable element at position i
+         *
+         * @pre i must be < size()
+         * @post Returns valid const_reference to element
+         * @post Element includes both value and validity information
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(i < derived_cast.size())
+         */
         [[nodiscard]] constexpr const_reference operator[](size_type i) const;
+
+        /**
+         * @brief Gets reference to the first element.
+         *
+         * @return Const reference to the first element
+         *
+         * @pre Array must not be empty (!empty())
+         * @post Returns valid reference to first element
+         * @post Equivalent to (*this)[0]
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(!empty())
+         * @note Calling front() on empty array causes undefined behavior
+         */
         [[nodiscard]] constexpr const_reference front() const;
+
+        /**
+         * @brief Gets reference to the last element.
+         *
+         * @return Const reference to the last element
+         *
+         * @pre Array must not be empty (!empty())
+         * @post Returns valid reference to last element
+         * @post Equivalent to (*this)[size() - 1]
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(!empty())
+         * @note Calling back() on empty array causes undefined behavior
+         */
         [[nodiscard]] constexpr const_reference back() const;
 
+        /**
+         * @brief Gets iterator to the beginning of the array.
+         *
+         * @return Const iterator pointing to the first element
+         *
+         * @post Iterator is valid for array traversal
+         * @post Equivalent to cbegin()
+         */
         [[nodiscard]] constexpr const_iterator begin() const;
+
+        /**
+         * @brief Gets iterator to the end of the array.
+         *
+         * @return Const iterator pointing past the last element
+         *
+         * @post Iterator marks the end of the array range
+         * @post Equivalent to cend()
+         */
         [[nodiscard]] constexpr const_iterator end() const;
 
+        /**
+         * @brief Gets const iterator to the beginning of the array.
+         *
+         * @return Const iterator pointing to the first element
+         *
+         * @post Iterator is valid for array traversal
+         * @post Guarantees const iterator even for non-const arrays
+         */
         [[nodiscard]] constexpr const_iterator cbegin() const;
+
+        /**
+         * @brief Gets const iterator to the end of the array.
+         *
+         * @return Const iterator pointing past the last element
+         *
+         * @post Iterator marks the end of the array range
+         * @post Guarantees const iterator even for non-const arrays
+         */
         [[nodiscard]] constexpr const_iterator cend() const;
 
+        /**
+         * @brief Gets reverse iterator to the beginning of reversed array.
+         *
+         * @return Const reverse iterator pointing to the last element
+         *
+         * @post Iterator is valid for reverse traversal
+         * @post Equivalent to crbegin()
+         */
         [[nodiscard]] constexpr const_reverse_iterator rbegin() const;
+
+        /**
+         * @brief Gets reverse iterator to the end of reversed array.
+         *
+         * @return Const reverse iterator pointing before the first element
+         *
+         * @post Iterator marks the end of reverse traversal
+         * @post Equivalent to crend()
+         */
         [[nodiscard]] constexpr const_reverse_iterator rend() const;
 
+        /**
+         * @brief Gets const reverse iterator to the beginning of reversed array.
+         *
+         * @return Const reverse iterator pointing to the last element
+         *
+         * @post Iterator is valid for reverse traversal
+         * @post Guarantees const iterator even for non-const arrays
+         */
         [[nodiscard]] constexpr const_reverse_iterator crbegin() const;
+
+        /**
+         * @brief Gets const reverse iterator to the end of reversed array.
+         *
+         * @return Const reverse iterator pointing before the first element
+         *
+         * @post Iterator marks the end of reverse traversal
+         * @post Guarantees const iterator even for non-const arrays
+         */
         [[nodiscard]] constexpr const_reverse_iterator crend() const;
 
+        /**
+         * @brief Gets the validity bitmap as a range.
+         *
+         * @return Range over the validity bitmap
+         *
+         * @post Range size equals array size
+         * @post Range provides access to validity flags for each element
+         * @post true indicates valid element, false indicates null
+         */
         [[nodiscard]] constexpr const_bitmap_range bitmap() const;
+
+        /**
+         * @brief Gets the raw values as a range.
+         *
+         * @return Range over the raw values (without validity information)
+         *
+         * @post Range size equals array size
+         * @post Range provides access to stored values regardless of validity
+         * @post Values at null positions are still accessible but semantically invalid
+         */
         [[nodiscard]] constexpr const_value_range values() const;
 
         /**
-         * Slices the array to keep only the elements between the given \p start and \p end.
-         * A copy of the \ref array is modified. The data is not modified, only the ArrowArray.offset and
-         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
-         * elements will be invalid.
+         * @brief Creates a sliced copy of the array.
          *
-         * @param start The index of the first element to keep. Must be less than \p end.
-         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         * Creates a new array containing only elements between start and end indices.
+         * The underlying data is not copied; only the Arrow offset and length are modified.
+         *
+         * @param start Index of the first element to keep (inclusive)
+         * @param end Index of the first element to exclude (exclusive)
+         * @return New array containing the sliced range
+         *
+         * @pre start must be <= end
+         * @pre start must be <= size()
+         * @pre end should be <= size() for valid elements
+         * @post Returned array has length (end - start)
+         * @post Elements maintain their original validity and values
+         * @post If end > buffer size, trailing elements may be invalid
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(start <= end)
          */
         [[nodiscard]] constexpr D slice(size_type start, size_type end) const;
 
         /**
-         * Slices the array to keep only the elements between the given \p start and \p end.
-         * A view of the \ref array is returned. The data is not modified, only the ArrowArray.offset and
-         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
-         * elements will be invalid.
+         * @brief Creates a sliced view of the array.
          *
-         * @param start The index of the first element to keep. Must be less than \p end.
-         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         * Creates a view over elements between start and end indices without copying.
+         * The underlying data buffers are shared with the original array.
+         *
+         * @param start Index of the first element to keep (inclusive)
+         * @param end Index of the first element to exclude (exclusive)
+         * @return Array view containing the sliced range
+         *
+         * @pre start must be <= end
+         * @pre start must be <= size()
+         * @pre end should be <= size() for valid elements
+         * @pre Original array must remain valid while view is used
+         * @post Returned view has length (end - start)
+         * @post View shares data with original array
+         * @post Changes to original array may affect the view
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(start <= end)
          */
         [[nodiscard]] constexpr D slice_view(size_type start, size_type end) const;
 
     protected:
 
+        /**
+         * @brief Protected constructor from Arrow proxy.
+         *
+         * @param proxy Arrow proxy containing array data and schema
+         *
+         * @pre proxy must contain valid Arrow array and schema
+         * @post Array is initialized with data from proxy
+         * @post Arrow proxy is moved and stored internally
+         */
         explicit array_crtp_base(arrow_proxy);
 
         constexpr array_crtp_base(const array_crtp_base&) = default;
@@ -162,20 +404,80 @@ namespace sparrow
         constexpr array_crtp_base(array_crtp_base&&) noexcept = default;
         constexpr array_crtp_base& operator=(array_crtp_base&&) noexcept = default;
 
+        /**
+         * @brief Gets mutable reference to the Arrow proxy.
+         *
+         * @return Mutable reference to internal Arrow proxy
+         *
+         * @post Returns valid reference to Arrow proxy
+         */
         [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy() noexcept;
+
+        /**
+         * @brief Gets const reference to the Arrow proxy.
+         *
+         * @return Const reference to internal Arrow proxy
+         *
+         * @post Returns valid const reference to Arrow proxy
+         */
         [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy() const noexcept;
 
+        /**
+         * @brief Checks if element at index i has a valid value.
+         *
+         * @param i Index of element to check
+         * @return Reference to validity flag for element i
+         *
+         * @pre i must be < size()
+         * @post Returns reference to validity bit for element i
+         * @post true indicates valid element, false indicates null
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(i < size())
+         */
         constexpr bitmap_const_reference has_value(size_type i) const;
 
+        /**
+         * @brief Gets bitmap iterator to the beginning.
+         *
+         * @return Iterator to first validity bit
+         *
+         * @post Iterator accounts for array offset
+         * @post Iterator is valid for bitmap traversal
+         */
         constexpr const_bitmap_iterator bitmap_begin() const;
+
+        /**
+         * @brief Gets bitmap iterator to the end.
+         *
+         * @return Iterator past last validity bit
+         *
+         * @post Iterator marks end of bitmap range
+         */
         constexpr const_bitmap_iterator bitmap_end() const;
 
+        /**
+         * @brief Gets const bitmap iterator to the beginning.
+         *
+         * @return Const iterator to first validity bit
+         *
+         * @post Iterator accounts for array offset
+         * @post Guarantees const iterator
+         */
         constexpr const_bitmap_iterator bitmap_cbegin() const;
+
+        /**
+         * @brief Gets const bitmap iterator to the end.
+         *
+         * @return Const iterator past last validity bit
+         *
+         * @post Iterator marks end of bitmap range
+         * @post Guarantees const iterator
+         */
         constexpr const_bitmap_iterator bitmap_cend() const;
 
     private:
 
-        arrow_proxy m_proxy;
+        arrow_proxy m_proxy;  ///< Internal Arrow proxy containing array data
 
         // friend classes
         friend class layout_iterator<iterator_types>;
@@ -204,30 +506,18 @@ namespace sparrow
         return get_arrow_proxy().metadata();
     }
 
-    /**
-     * Checks if the array has no element, i.e. whether begin() == end().
-     */
     template <class D>
     constexpr bool array_crtp_base<D>::empty() const
     {
         return size() == size_type(0);
     }
 
-    /**
-     * Returns the number of elements in the array.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::size() const -> size_type
     {
         return static_cast<size_type>(get_arrow_proxy().length());
     }
 
-    /**
-     * Returns a constant reference to the element at the specified position
-     * in the array with bounds checking.
-     * @param i the index of the element in the array.
-     * @throw std::out_of_range if \c i is not within the range of the container.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::at(size_type i) const -> const_reference
     {
@@ -241,11 +531,6 @@ namespace sparrow
         return (*this)[i];
     }
 
-    /**
-     * Returns a constant reference to the element at the specified position
-     * in the array.
-     * @param i the index of the element in the array.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::operator[](size_type i) const -> const_reference
     {
@@ -254,10 +539,6 @@ namespace sparrow
         return const_reference(inner_const_reference(derived_cast.value(i)), derived_cast.has_value(i));
     }
 
-    /**
-     * Returns a constant reference to the first element in the container.
-     * Calling `front` on an empty container causes undefined behavior.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::front() const -> const_reference
     {
@@ -265,10 +546,6 @@ namespace sparrow
         return (*this)[size_type(0)];
     }
 
-    /**
-     * Returns a constant reference to the last element in the container.
-     * Calling `back` on an empty container causes undefined behavior.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::back() const -> const_reference
     {
@@ -276,108 +553,60 @@ namespace sparrow
         return (*this)[size() - 1];
     }
 
-    /**
-     * Returns a constant iterator to the first element of the array.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::begin() const -> const_iterator
     {
         return cbegin();
     }
 
-    /**
-     * Returns a constant iterator to the element following the last
-     * element of the array.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::end() const -> const_iterator
     {
         return cend();
     }
 
-    /**
-     * Returns a constant iterator to the first element of the array.
-     * This method ensures that a constant iterator is returned, even
-     * when called on a non-const array.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::cbegin() const -> const_iterator
     {
         return const_iterator(this->derived_cast().value_cbegin(), bitmap_begin());
     }
 
-    /**
-     * Returns a constant iterator to the element following the last
-     * element of the array. This method ensures that a constant iterator
-     * is returned, even when called on a non-const array.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::cend() const -> const_iterator
     {
         return const_iterator(this->derived_cast().value_cend(), bitmap_end());
     }
 
-    /**
-     * Returns a constant reverse iterator to the first element of the
-     * reversed array. It corresponds to the last element of the non-
-     * reversed array.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::rbegin() const -> const_reverse_iterator
     {
         return crbegin();
     }
 
-    /**
-     * Returns a reverse iterator to the element following the last
-     * element of the reversed array. It corresponds to the element
-     * preceding the first element of the non-reversed array.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::rend() const -> const_reverse_iterator
     {
         return crend();
     }
 
-    /**
-     * Returns a constant reverse iterator to the first element of the
-     * reversed array. It corresponds to the last element of the non-
-     * reversed array. This method ensures that a constant reverse
-     * iterator is returned, even when called on a non-const array.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::crbegin() const -> const_reverse_iterator
     {
         return const_reverse_iterator(cend());
     }
 
-    /**
-     * Returns a reverse iterator to the element following the last
-     * element of the reversed array. It corresponds to the element
-     * preceding the first element of the non-reversed array. This
-     * method ensures that a constant reverse iterator is returned,
-     * even when called on a non-const array.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::crend() const -> const_reverse_iterator
     {
         return const_reverse_iterator(cbegin());
     }
 
-    /**
-     * Returns the validity bitmap of the array (i.e. the "has_value" part of the
-     * nullable elements) as a constant range.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::bitmap() const -> const_bitmap_range
     {
         return const_bitmap_range(bitmap_begin(), bitmap_end());
     }
 
-    /**
-     * Returns the raw values of the array (i.e. the "value" part og the nullable
-     * elements) as a constant range.
-     */
     template <class D>
     constexpr auto array_crtp_base<D>::values() const -> const_value_range
     {
@@ -447,13 +676,18 @@ namespace sparrow
         return D{get_arrow_proxy().slice_view(start, end)};
     }
 
-    /**
-     * Checks if the contents of lhs and rhs are equal, that is, they have the same
-     * number of elements and each element in lhs compares equal with the element
-     * in rhs at the same position.
+    /*
+     * @brief Equality comparison operator for arrays.
      *
-     * @param lhs the first array to compare.
-     * @param rhs the second array to compare.
+     * Compares two arrays element-wise, including both values and validity flags.
+     *
+     * @tparam D Array type
+     * @param lhs First array to compare
+     * @param rhs Second array to compare
+     * @return true if arrays are element-wise equal, false otherwise
+     *
+     * @post Returns true iff arrays have same size and all elements compare equal
+     * @post Comparison includes both values and validity states
      */
     template <class D>
     constexpr bool operator==(const array_crtp_base<D>& lhs, const array_crtp_base<D>& rhs)

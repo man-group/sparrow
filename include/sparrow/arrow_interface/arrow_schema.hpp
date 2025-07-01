@@ -53,8 +53,11 @@ namespace sparrow
      * @param flags An optional set of flags to attach to the schema.
      * @param children Pointer to a sequence of `ArrowSchema` pointers or `nullptr`. Must be `nullptr` if
      * `n_children` is `0`.
+     * @param children_ownership A range of booleans indicating ownership of the `ArrowSchema` pointers in
+     * `children`. If the range is empty, `children` must be `nullptr`.
      * @param dictionary Pointer to `an ArrowSchema`. Must be present if the `ArrowSchema` represents a
      * dictionary-encoded type. Must be `nullptr` otherwise.
+     * @param dictionary_ownership Indicates whether the `dictionary` is owned by the `ArrowSchema`.
      * @return The created `ArrowSchema` unique pointer.
      */
     template <class F, class N, input_metadata_container M = std::vector<metadata_pair>, std::ranges::input_range CHILDREN_OWNERSHIP>
@@ -121,9 +124,8 @@ namespace sparrow
         schema.n_children = static_cast<int64_t>(children_ownership.size());
 
         std::optional<std::string> metadata_str = metadata.has_value()
-                                                      ? std::make_optional(
-                                                            get_metadata_from_key_values(*metadata)
-                                                        )
+                                                      ? std::make_optional(get_metadata_from_key_values(*metadata
+                                                        ))
                                                       : std::nullopt;
 
         schema.private_data = new arrow_schema_private_data(

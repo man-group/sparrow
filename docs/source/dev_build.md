@@ -12,16 +12,17 @@ List of CMake options:
 - `BUILD_TESTS`: Build the tests (default: OFF)
 - `ENABLE_COVERAGE`: Enable coverage reporting (default: OFF)
 - `ENABLE_INTEGRATION_TEST`: Enable integration tests (default: OFF)
-- `SPARROW_BUILD_SHARED`: "Build sparrow as a shared library (default: ON)
-- `USE_DATE_POLYFILL`: Use date polyfill implementation (default: OFF)
-- `USE_LARGE_INT_PLACEHOLDERS`: Use types without api for big integers 'ON' by default on 32 bit systems and MSVC compilers (default: ON on 32 bit systems and MSVC, OFF otherwise)
-- `USE_SANITIZER`: Enable sanitizer(s). Options are: address;leak;memory;thread;undefined (default: )
+- `SPARROW_BUILD_SHARED`: Build sparrow as a shared library (default: ON)
+- `SPARROW_CONTRACTS_THROW_ON_FAILURE`: Throw exceptions instead of aborting on contract failures (default: OFF)
+- `USE_DATE_POLYFILL`: Use date polyfill implementation (default: ON)
+- `USE_LARGE_INT_PLACEHOLDERS`: Use types without API for big integers, ON by default on 32-bit systems and MSVC compilers (default: ON on 32-bit systems and MSVC, OFF otherwise)
+- `USE_SANITIZER`: Enable sanitizer(s). Options are: address;leak;memory;thread;undefined (default: empty)
 
 ## Building
 
 ### ... with mamba/micromamba
 
-First we create a conda environment with all required development dependencies: 
+First, we create a conda environment with all required development dependencies: 
 
 ```bash
 mamba env create -f environment-dev.yml
@@ -33,15 +34,14 @@ Then we activate the environment:
 mamba activate sparrow
 ```
 
-create a build directory and run cmake from it:
+Create a build directory and run cmake from it:
 
 ```bash
 mkdir build
 cd build
 cmake .. \
     -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
-    ..
+    -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
 ```
 
 And finally, build the project:
@@ -64,57 +64,57 @@ Then, run the cmake configuration:
 mkdir build
 cd build
 cmake .. \
-    -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
-    ..
+    -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
 ```
 
-### ...with Conan
+### ... with Conan
 
 If you prefer to use Conan, you can follow these steps:
 First, install the required dependencies using Conan:
 
 ```bash
-conan install .. --build=missing -s:a compiler.cppstd=20 -o:a use_date_polyfill=True -o:a build_tests=True ...
+conan install .. --build=missing -s:a compiler.cppstd=20 -o:a use_date_polyfill=True -o:a build_tests=True
 ```
-Available conan options:
+Available Conan options:
 - `use_date_polyfill`: Use date polyfill implementation (default: False)
 - `build_tests`: Build the tests (default: False)
 - `generate_documentation`: Generate documentation (default: False)
 
-Then, run the cmake configuration
+Then, run the cmake configuration:
 
 ```bash
 mkdir build
 cd build
-cmake --preset conan-release 
-    ..
+cmake --preset conan-release
 ```
 
 ## Running the tests
 
-To run the tests, the easy way is to use the cmake targets`:
+To run the tests, the easy way is to use the cmake targets:
 - `run_tests`: Runs all tests without JUnit report
 - `run_tests_with_junit_report`: Runs all tests and generates a JUnit report in the `test-reports` directory
 - `run_integration_tests`: Runs the integration tests
 - `run_integration_tests_with_junit_report`: Runs the integration tests and generates a JUnit report in the `test-reports` directory
 
-
 ```bash
 cmake --build . --config [Release/Debug/...] --target [TARGET_NAME]
 ```
 
-Running the examples
---------------------
+## Running the examples
+
 To run all examples:
 ```bash
 cmake --build . --target run_examples
 ```
 
-Building the documentation
---------------------------
+## Building the documentation
+
 To build the documentation, you can use the `docs` target:
 ```bash
 cmake --build . --target docs
+```
+
+The documentation will be located in the `docs/html` folder in the build directory. You can open `docs/html/index.html` in your browser to view it.
 ```
 
 The documentation will be located in the `docs/html` folder in the build directory. You can open `docs/html/index.html` in your browser to view it.

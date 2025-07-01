@@ -33,12 +33,21 @@
 
 namespace sparrow
 {
+    /**
+     * Array implementation for decimal types.
+     *
+     * @tparam T The decimal type (e.g., decimal<int32_t>, decimal<int64_t>, etc.).
+     */
     template <decimal_type T>
     class decimal_array;
 
+    /** Type alias for 32-bit decimal array. */
     using decimal_32_array = decimal_array<decimal<int32_t>>;
+    /** Type alias for 64-bit decimal array. */
     using decimal_64_array = decimal_array<decimal<int64_t>>;
+    /** Type alias for 128-bit decimal array. */
     using decimal_128_array = decimal_array<decimal<int128_t>>;
+    /** Type alias for 256-bit decimal array. */
     using decimal_256_array = decimal_array<decimal<int256_t>>;
 
     namespace detail
@@ -46,33 +55,56 @@ namespace sparrow
         template <>
         struct get_data_type_from_array<decimal_32_array>
         {
+            /**
+             * Gets the data type for 32-bit decimal.
+             *
+             * @return The DECIMAL32 data type.
+             */
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::DECIMAL32;
             }
         };
 
+        /** Specialization for 64-bit decimal array. */
         template <>
         struct get_data_type_from_array<decimal_64_array>
         {
+            /**
+             * Gets the data type for 64-bit decimal.
+             *
+             * @return The DECIMAL64 data type.
+             */
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::DECIMAL64;
             }
         };
 
+        /** Specialization for 128-bit decimal array. */
         template <>
         struct get_data_type_from_array<decimal_128_array>
         {
+            /**
+             * Gets the data type for 128-bit decimal.
+             *
+             * @return The DECIMAL128 data type.
+             */
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::DECIMAL128;
             }
         };
 
+        /** Specialization for 256-bit decimal array. */
         template <>
         struct get_data_type_from_array<decimal_256_array>
         {
+            /**
+             * Gets the data type for 256-bit decimal.
+             *
+             * @return The DECIMAL256 data type.
+             */
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
                 return sparrow::data_type::DECIMAL256;
@@ -101,9 +133,22 @@ namespace sparrow
     };
 
 
+    /**
+     * Type trait to check if a type is a decimal array.
+     *
+     * @tparam T The type to check.
+     */
     template <class T>
     constexpr bool is_decimal_array_v = mpl::is_type_instance_of_v<T, decimal_array>;
 
+    /**
+     * Array implementation for decimal types with fixed precision and scale.
+     * 
+     * This class provides a container for decimal values with a specified precision
+     * and scale, stored as integer values with an associated scaling factor.
+     *
+     * @tparam T The decimal type, must satisfy the decimal_type concept.
+     */
     template <decimal_type T>
     class decimal_array final : public mutable_array_bitmap_base<decimal_array<T>>
     {
@@ -140,8 +185,19 @@ namespace sparrow
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
 
-        explicit decimal_array(arrow_proxy);
+        /**
+         * Constructs a decimal array from an arrow proxy.
+         *
+         * @param proxy The arrow proxy containing the array data and schema.
+         */
+        explicit decimal_array(arrow_proxy proxy);
 
+        /**
+         * Constructs a decimal array with the given arguments.
+         *
+         * @tparam Args The argument types.
+         * @param args Arguments forwarded to create_proxy.
+         */
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<decimal_array<T>, Args...>)
         explicit decimal_array(Args&&... args)
@@ -149,11 +205,38 @@ namespace sparrow
         {
         }
 
+        /**
+         * Gets a mutable reference to the value at the specified index.
+         *
+         * @param i The index of the element.
+         * @return Mutable reference to the decimal value.
+         */
         [[nodiscard]] constexpr inner_reference value(size_type i);
+
+        /**
+         * Gets a constant reference to the value at the specified index.
+         *
+         * @param i The index of the element.
+         * @return Constant reference to the decimal value.
+         */
         [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
     private:
 
+        /**
+         * Creates an arrow proxy from a value range and validity bitmap.
+         *
+         * @tparam VALUE_RANGE The value range type.
+         * @tparam VALIDITY_RANGE The validity bitmap type.
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param range The range of values to store.
+         * @param bitmaps The validity bitmap.
+         * @param precision The precision of the decimal values.
+         * @param scale The scale of the decimal values.
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the decimal array data.
+         */
         template <
             std::ranges::input_range VALUE_RANGE,
             validity_bitmap_input VALIDITY_RANGE,
@@ -168,6 +251,18 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * Creates an arrow proxy from a range of nullable values.
+         *
+         * @tparam NULLABLE_VALUE_RANGE The nullable value range type.
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param range The range of nullable values to store.
+         * @param precision The precision of the decimal values.
+         * @param scale The scale of the decimal values.
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the decimal array data.
+         */
         template <
             std::ranges::input_range NULLABLE_VALUE_RANGE,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
@@ -180,6 +275,19 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * Creates an arrow proxy from a value range.
+         *
+         * @tparam VALUE_RANGE The value range type.
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param range The range of values to store.
+         * @param precision The precision of the decimal values.
+         * @param scale The scale of the decimal values.
+         * @param nullable Whether the array can contain null values.
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the decimal array data.
+         */
         template <std::ranges::input_range VALUE_RANGE, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::is_same_v<std::ranges::range_value_t<VALUE_RANGE>, typename T::integer_type>
         [[nodiscard]] static auto create_proxy(
@@ -191,6 +299,19 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * Creates an arrow proxy from a data buffer and validity bitmap.
+         *
+         * @tparam R The validity bitmap input type.
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param data_buffer The buffer containing the decimal storage values.
+         * @param bitmaps The validity bitmap.
+         * @param precision The precision of the decimal values.
+         * @param scale The scale of the decimal values.
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the decimal array data.
+         */
         template <validity_bitmap_input R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<storage_type>&& data_buffer,
@@ -201,6 +322,18 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * Creates an arrow proxy from a data buffer.
+         *
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param data_buffer The buffer containing the decimal storage values.
+         * @param precision The precision of the decimal values.
+         * @param scale The scale of the decimal values.
+         * @param nullable Whether the array can contain null values.
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the decimal array data.
+         */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             u8_buffer<storage_type>&& data_buffer,
@@ -211,28 +344,76 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * Internal implementation for creating an arrow proxy.
+         *
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param data_buffer The buffer containing the decimal storage values.
+         * @param precision The precision of the decimal values.
+         * @param scale The scale of the decimal values.
+         * @param bitmap Optional validity bitmap.
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the decimal array data.
+         */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy_impl(
             u8_buffer<storage_type>&& data_buffer,
             std::size_t precision,
             int scale,
-            std::optional<validity_bitmap>,
+            std::optional<validity_bitmap> bitmap,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * Generates the format string for the decimal type.
+         *
+         * @param precision The precision of the decimal values.
+         * @param scale The scale of the decimal values.
+         * @return The format string.
+         */
         static constexpr std::string generate_format(std::size_t precision, int scale);
 
+        /**
+         * Gets an iterator to the beginning of the values.
+         *
+         * @return Iterator to the beginning of values.
+         */
         [[nodiscard]] constexpr value_iterator value_begin();
+
+        /**
+         * Gets an iterator to the end of the values.
+         *
+         * @return Iterator to the end of values.
+         */
         [[nodiscard]] constexpr value_iterator value_end();
 
+        /**
+         * Gets a constant iterator to the beginning of the values.
+         *
+         * @return Constant iterator to the beginning of values.
+         */
         [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
+
+        /**
+         * Gets a constant iterator to the end of the values.
+         *
+         * @return Constant iterator to the end of values.
+         */
         [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
+        /**
+         * Assigns a decimal value to the specified index.
+         *
+         * @param rhs The decimal value to assign.
+         * @param index The index where to assign the value.
+         */
         constexpr void assign(const T& rhs, size_type index);
 
         // Modifiers
 
+        /** Index of the data buffer in the Arrow array buffers. */
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend base_type;
         friend base_type::base_type;
@@ -241,8 +422,10 @@ namespace sparrow
         friend class detail::layout_value_functor<const self_type, inner_value_type>;
         friend class decimal_reference<self_type>;
 
-        std::size_t m_precision;  // The precision of the decimal value
-        int m_scale;              // The scale of the decimal value (can be negative)
+        /** The precision of the decimal values (total number of digits). */
+        std::size_t m_precision;
+        /** The scale of the decimal values (number of digits after decimal point, can be negative). */
+        int m_scale;
     };
 
     /**********************************

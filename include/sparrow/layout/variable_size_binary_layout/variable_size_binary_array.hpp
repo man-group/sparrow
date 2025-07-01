@@ -84,46 +84,58 @@ namespace sparrow
     using binary_traits = arrow_traits<std::vector<byte_t>>;
 
     /**
-     * A variable-size string array implementation.
+     * @brief Type alias for variable-size string arrays with 32-bit offsets.
+     * 
+     * A variable-size string array implementation for storing UTF-8 strings
+     * where the cumulative length of all strings does not exceed 2^31-1 bytes.
+     * This is the standard choice for most string datasets.
+     * 
      * Related Apache Arrow specification:
      * https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-layout
-     * Use this class when you want to store strings with cumulated lengths up to 2^31-1 bytes.
-     * This is useful for datasets where the total size of strings does not exceed 2^31-1 bytes.
-     * Use big_string_array for larger datasets.
-     * @see big_string_array
+     * 
+     * @see big_string_array for larger datasets requiring 64-bit offsets
      */
     using string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int32_t>;
 
     /**
-     * A variable-size string array implementation with 64-bit offsets.
+     * @brief Type alias for variable-size string arrays with 64-bit offsets.
+     * 
+     * A variable-size string array implementation for storing UTF-8 strings
+     * where the cumulative length of all strings may exceed 2^31-1 bytes.
+     * Use this for very large string datasets.
+     * 
      * Related Apache Arrow specification:
      * https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-layout
-     * Use this class when you want to store strings with cumulated lengths up to 2^63-1 bytes.
-     * This is useful for large datasets where the total size of strings may exceed 2^31-1 bytes.
-     * Use string_array for smaller datasets.
-     * @see string_array
+     * 
+     * @see string_array for smaller datasets with 32-bit offsets
      */
     using big_string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int64_t>;
 
     /**
-     * A variable-size binary array implementation.
+     * @brief Type alias for variable-size binary arrays with 32-bit offsets.
+     * 
+     * A variable-size binary array implementation for storing arbitrary binary data
+     * where the cumulative length does not exceed 2^31-1 bytes.
+     * This is the standard choice for most binary datasets.
+     * 
      * Related Apache Arrow specification:
      * https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-layout
-     * Use this class when you want to store binary data with cumulated lengths up to 2^31-1 bytes.
-     * This is useful for datasets where the total size of binary data does not exceed 2^31-1 bytes.
-     * Use \c big_binary_array for larger datasets.
-     * @see big_binary_array
+     * 
+     * @see big_binary_array for larger datasets requiring 64-bit offsets
      */
     using binary_array = variable_size_binary_array_impl<binary_traits::value_type, binary_traits::const_reference, std::int32_t>;
 
     /**
-     * A variable-size binary array implementation with 64-bit offsets.
+     * @brief Type alias for variable-size binary arrays with 64-bit offsets.
+     * 
+     * A variable-size binary array implementation for storing arbitrary binary data
+     * where the cumulative length may exceed 2^31-1 bytes.
+     * Use this for very large binary datasets.
+     * 
      * Related Apache Arrow specification:
      * https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-layout
-     * Use this class when you want to store binary data with cumulated lengths up to 2^63-1 bytes.
-     * This is useful for large datasets where the total size of binary data may exceed 2^31-1 bytes.
-     * Use \c binary_array for smaller datasets.
-     * @see binary_array
+     * 
+     * @see binary_array for smaller datasets with 32-bit offsets
      */
     using big_binary_array = variable_size_binary_array_impl<
         binary_traits::value_type,
@@ -241,6 +253,14 @@ namespace sparrow
         // using const_iterator = layout_iterator<array_type, true, CR>;
     };
 
+    /**
+     * A variable-size binary array.
+     * This array is used to store variable-length binary data.
+     *
+     * Related Apache Arrow description and specification:
+     * - https://arrow.apache.org/docs/dev/format/Intro.html#variable-length-binary-and-string
+     * - https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-layout
+     */
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     class variable_size_binary_array_impl final
         : public mutable_array_bitmap_base<variable_size_binary_array_impl<T, CR, OT>>
@@ -291,8 +311,37 @@ namespace sparrow
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
 
+        /**
+         * @brief Constructs array from Arrow proxy.
+         * 
+         * @param proxy Arrow proxy containing variable-size binary array data and schema
+         * 
+         * @pre proxy must contain valid Arrow variable-size binary array and schema
+         * @pre proxy format must match the expected format for T and OT
+         * @pre For 32-bit offsets: format must be "u" (string) or "z" (binary)
+         * @pre For 64-bit offsets: format must be "U" (large string) or "Z" (large binary)
+         * @post Array is initialized with data from proxy
+         * @post All elements are accessible via array interface
+         * 
+         * @note Internal assertions verify data type and offset type compatibility:
+         *   - SPARROW_ASSERT_TRUE(type == expected_data_type)
+         *   - SPARROW_ASSERT_TRUE(offset_type_matches_data_type)
+         */
         explicit variable_size_binary_array_impl(arrow_proxy);
 
+        /**
+         * @brief Generic constructor for creating array from various inputs.
+         * 
+         * Creates a variable-size binary array from different input combinations.
+         * Arguments are forwarded to compatible create_proxy() functions.
+         * 
+         * @tparam ARGS Parameter pack for constructor arguments
+         * @param args Constructor arguments (data, offsets, validity, metadata, etc.)
+         * 
+         * @pre Arguments must match one of the create_proxy() overload signatures
+         * @pre ARGS must exclude copy and move constructor signatures
+         * @post Array is created with the specified data and configuration
+         */
         template <class... ARGS>
             requires(mpl::excludes_copy_and_move_ctor_v<variable_size_binary_array_impl<T, CR, OT>, ARGS...>)
         variable_size_binary_array_impl(ARGS&&... args)
@@ -303,14 +352,78 @@ namespace sparrow
         using base_type::get_arrow_proxy;
         using base_type::size;
 
+        /**
+         * @brief Gets mutable reference to element at specified index.
+         * 
+         * @param i Index of the element to access
+         * @return Mutable reference to the binary element
+         * 
+         * @pre i must be < size()
+         * @post Returns valid reference providing access to element data
+         * @post Reference allows modification of the underlying data
+         * 
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(i < size())
+         */
         [[nodiscard]] constexpr inner_reference value(size_type i);
+        
+        /**
+         * @brief Gets const reference to element at specified index.
+         * 
+         * @param i Index of the element to access
+         * @return Const reference to the binary element
+         * 
+         * @pre i must be < size()
+         * @post Returns valid const reference to element data
+         * @post Element data spans from offset[i] to offset[i+1]
+         * 
+         * @note Internal assertions verify index bounds and offset validity:
+         *   - SPARROW_ASSERT_TRUE(i < this->size())
+         *   - SPARROW_ASSERT_TRUE(offset_begin >= 0)
+         *   - SPARROW_ASSERT_TRUE(offset_end >= 0)
+         */
         [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
+        /**
+         * @brief Creates offset buffer from a range of sizes.
+         * 
+         * Converts a range of element sizes into cumulative offsets suitable
+         * for the variable-size binary format. The resulting buffer starts
+         * with 0 and contains cumulative sums of the input sizes.
+         * 
+         * @tparam SIZES_RANGE Type of the sizes range
+         * @param sizes Range of individual element sizes
+         * @return Offset buffer with cumulative offsets
+         * 
+         * @pre sizes must be a valid range of size values
+         * @post Returned buffer has size() + 1 elements
+         * @post First element is 0, subsequent elements are cumulative sums
+         * @post Can be used directly for array construction
+         */
         template <std::ranges::range SIZES_RANGE>
         [[nodiscard]] static constexpr auto offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type;
 
     private:
 
+        /**
+         * @brief Creates Arrow proxy from data buffer and offsets with explicit validity.
+         * 
+         * @tparam C Character type for data buffer
+         * @tparam VB Validity bitmap input type
+         * @tparam METADATA_RANGE Metadata container type
+         * @param data_buffer Buffer containing concatenated binary data
+         * @param list_offsets Buffer containing cumulative offsets
+         * @param validity_input Validity bitmap specification
+         * @param name Optional name for the array
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing the array data and schema
+         * 
+         * @pre C must be char-like type
+         * @pre data_buffer must contain valid binary data
+         * @pre list_offsets must have size() + 1 elements with valid cumulative offsets
+         * @pre validity_input size must match offset buffer size - 1
+         * @post Returns valid Arrow proxy with appropriate format
+         * @post Schema includes nullable flag when validity bitmap provided
+         */
         template <
             mpl::char_like C,
             validity_bitmap_input VB = validity_bitmap,
@@ -323,15 +436,31 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Creates Arrow proxy from range of ranges with explicit validity.
+         * 
+         * @tparam R Range type containing ranges of char-like elements
+         * @tparam VB Validity bitmap input type
+         * @tparam METADATA_RANGE Metadata container type
+         * @param values Range of binary/string values to store
+         * @param validity_input Validity bitmap specification
+         * @param name Optional name for the array
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing the array data and schema
+         * 
+         * @pre R must be input range of input ranges
+         * @pre Inner ranges must contain char-like elements
+         * @pre validity_input size must match values size
+         * @post Returns valid Arrow proxy with data from values
+         * @post Offsets are computed automatically from value sizes
+         */
         template <
             std::ranges::input_range R,
             validity_bitmap_input VB = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(
-                std::ranges::input_range<std::ranges::range_value_t<R>> &&  // a range of ranges
-                mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>  // inner range is a
-                                                                                           // range of
-                                                                                           // char-like
+                std::ranges::input_range<std::ranges::range_value_t<R>> &&
+                mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>
             )
         [[nodiscard]] static arrow_proxy create_proxy(
             R&& values,
@@ -340,14 +469,29 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Creates Arrow proxy from range of ranges with nullable flag.
+         * 
+         * @tparam R Range type containing ranges of char-like elements
+         * @tparam METADATA_RANGE Metadata container type
+         * @param values Range of binary/string values to store
+         * @param nullable Whether the array should support null values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing the array data and schema
+         * 
+         * @pre R must be input range of input ranges
+         * @pre Inner ranges must contain char-like elements
+         * @post If nullable is true, array supports null values (none initially set)
+         * @post If nullable is false, array does not support null values
+         * @post Offsets are computed automatically from value sizes
+         */
         template <
             std::ranges::input_range R,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(
-                std::ranges::input_range<std::ranges::range_value_t<R>> &&  // a range of ranges
-                mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>  // inner range is a
-                                                                                           // range of
-                                                                                           // char-like
+                std::ranges::input_range<std::ranges::range_value_t<R>> &&
+                mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<R>>>
             )
         [[nodiscard]] static arrow_proxy create_proxy(
             R&& values,
@@ -356,7 +500,20 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        // range of nullable values
+        /**
+         * @brief Creates Arrow proxy from range of nullable values.
+         * 
+         * @tparam R Range type containing nullable<T> elements
+         * @tparam METADATA_RANGE Metadata container type
+         * @param range Range of nullable values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing the array data and schema
+         * 
+         * @pre R must be input range of nullable<T> elements
+         * @post Returns valid Arrow proxy with null/non-null information extracted
+         * @post Validity bitmap reflects the has_value() state of each element
+         */
         template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
         [[nodiscard]] static arrow_proxy create_proxy(
@@ -365,6 +522,23 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Implementation helper for creating Arrow proxy from components.
+         * 
+         * @tparam C Character type for data buffer
+         * @tparam METADATA_RANGE Metadata container type
+         * @param data_buffer Buffer containing concatenated binary data
+         * @param list_offsets Buffer containing cumulative offsets
+         * @param bitmap Optional validity bitmap
+         * @param name Optional name for the array
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing the array data and schema
+         * 
+         * @pre data_buffer and list_offsets must be consistent
+         * @pre If bitmap is provided, its size must match offset buffer size - 1
+         * @post Returns valid Arrow proxy with appropriate format string
+         * @post Schema includes correct flags based on bitmap presence
+         */
         template <mpl::char_like C, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy_impl(
             u8_buffer<C>&& data_buffer,
@@ -377,46 +551,286 @@ namespace sparrow
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
 
+        /**
+         * @brief Gets mutable pointer to offset at specified index.
+         * 
+         * @param i Index of the offset to access
+         * @return Mutable pointer to offset value
+         * 
+         * @pre i must be <= size() + offset()
+         * @post Returns valid pointer to offset in buffer
+         * 
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(i <= size() + this->get_arrow_proxy().offset())
+         */
         [[nodiscard]] constexpr offset_iterator offset(size_type i);
+        
+        /**
+         * @brief Gets iterator to beginning of offset buffer.
+         * 
+         * @return Iterator pointing to first offset
+         * 
+         * @post Iterator is valid for offset traversal
+         */
         [[nodiscard]] constexpr offset_iterator offsets_begin();
+        
+        /**
+         * @brief Gets iterator to end of offset buffer.
+         * 
+         * @return Iterator pointing past last offset
+         * 
+         * @post Iterator marks end of offset range
+         */
         [[nodiscard]] constexpr offset_iterator offsets_end();
+        
+        /**
+         * @brief Gets mutable pointer to data at specified byte offset.
+         * 
+         * @param i Byte offset into data buffer
+         * @return Mutable pointer to data at offset i
+         * 
+         * @pre i must be within data buffer bounds
+         * @post Returns valid pointer to data byte
+         * 
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(proxy.buffers()[DATA_BUFFER_INDEX].size() >= i)
+         */
         [[nodiscard]] constexpr data_iterator data(size_type i);
 
+        /**
+         * @brief Gets iterator to beginning of value range.
+         * 
+         * @return Iterator pointing to first value
+         * 
+         * @post Iterator is valid for value traversal
+         */
         [[nodiscard]] constexpr value_iterator value_begin();
+        
+        /**
+         * @brief Gets iterator to end of value range.
+         * 
+         * @return Iterator pointing past last value
+         * 
+         * @post Iterator marks end of value range
+         */
         [[nodiscard]] constexpr value_iterator value_end();
 
+        /**
+         * @brief Gets const iterator to beginning of value range.
+         * 
+         * @return Const iterator pointing to first value
+         * 
+         * @post Iterator is valid for value traversal
+         */
         [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
+        
+        /**
+         * @brief Gets const iterator to end of value range.
+         * 
+         * @return Const iterator pointing past last value
+         * 
+         * @post Iterator marks end of value range
+         */
         [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
+        /**
+         * @brief Gets const pointer to offset at specified index.
+         * 
+         * @param i Index of the offset to access
+         * @return Const pointer to offset value
+         * 
+         * @pre i must be <= size() + offset()
+         * @post Returns valid const pointer to offset
+         * 
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(i <= this->size() + this->get_arrow_proxy().offset())
+         */
         [[nodiscard]] constexpr const_offset_iterator offset(size_type i) const;
+        
+        /**
+         * @brief Gets const iterator to beginning of offset buffer.
+         * 
+         * @return Const iterator pointing to first offset
+         * 
+         * @post Iterator is valid for offset traversal
+         */
         [[nodiscard]] constexpr const_offset_iterator offsets_cbegin() const;
+        
+        /**
+         * @brief Gets const iterator to end of offset buffer.
+         * 
+         * @return Const iterator pointing past last offset
+         * 
+         * @post Iterator marks end of offset range
+         */
         [[nodiscard]] constexpr const_offset_iterator offsets_cend() const;
+        
+        /**
+         * @brief Gets const pointer to data at specified byte offset.
+         * 
+         * @param i Byte offset into data buffer
+         * @return Const pointer to data at offset i
+         * 
+         * @pre i must be within data buffer bounds
+         * @post Returns valid const pointer to data byte
+         * 
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(proxy.buffers()[DATA_BUFFER_INDEX].size() >= i)
+         */
         [[nodiscard]] constexpr const_data_iterator data(size_type i) const;
 
         // Modifiers
 
+        /**
+         * @brief Resizes the array to specified length, filling with given value.
+         * 
+         * @tparam U Type of value to fill with (must be convertible to T)
+         * @param new_length New size for the array
+         * @param value Value to use for new elements (if growing)
+         * 
+         * @pre U must be convertible to T
+         * @post Array size equals new_length
+         * @post If shrinking, trailing elements are removed
+         * @post If growing, new elements are set to value
+         */
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
         constexpr void resize_values(size_type new_length, U value);
 
+        /**
+         * @brief Resizes offset buffer to specified length.
+         * 
+         * @param new_length New number of offsets
+         * @param offset_value Value to use for new offsets
+         * 
+         * @post Offset buffer has new_length + 1 elements
+         * @post New offsets are set to offset_value
+         */
         constexpr void resize_offsets(size_type new_length, offset_type offset_value);
 
+        /**
+         * @brief Inserts copies of a value at specified position.
+         * 
+         * @tparam U Type of value to insert (must be convertible to T)
+         * @param pos Iterator position where to insert
+         * @param value Value to insert
+         * @param count Number of copies to insert
+         * @return Iterator pointing to first inserted element
+         * 
+         * @pre pos must be valid iterator within [value_cbegin(), value_cend()]
+         * @pre U must be convertible to T
+         * @post count copies of value are inserted at pos
+         * @post Array size increases by count
+         * @post Offsets are adjusted accordingly
+         */
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
         constexpr value_iterator insert_value(const_value_iterator pos, U value, size_type count);
 
+        /**
+         * @brief Inserts offset values at specified position.
+         * 
+         * @param pos Iterator position where to insert
+         * @param size Size value for the offsets
+         * @param count Number of offsets to insert
+         * @return Iterator pointing to first inserted offset
+         * 
+         * @pre pos must be valid offset iterator
+         * @post count offsets are inserted with appropriate cumulative values
+         * @post Subsequent offsets are adjusted by cumulative size
+         */
         constexpr offset_iterator insert_offset(const_offset_iterator pos, offset_type size, size_type count);
 
+        /**
+         * @brief Inserts range of values at specified position.
+         * 
+         * @tparam InputIt Iterator type for values (must yield T elements)
+         * @param pos Position where to insert
+         * @param first Beginning of range to insert
+         * @param last End of range to insert
+         * @return Iterator pointing to first inserted element
+         * 
+         * @pre InputIt must yield elements of type T
+         * @pre pos must be valid value iterator
+         * @pre [first, last) must be valid range
+         * @post Elements from [first, last) are inserted at pos
+         * @post Array size increases by distance(first, last)
+         * @post Data buffer and offsets are adjusted accordingly
+         */
         template <mpl::iterator_of_type<T> InputIt>
         constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
 
+        /**
+         * @brief Inserts range of offset sizes at specified position.
+         * 
+         * @tparam InputIt Iterator type for offset sizes (must yield OT elements)
+         * @param pos Position where to insert offsets
+         * @param first_sizes Beginning of size range
+         * @param last_sizes End of size range
+         * @return Iterator pointing to first inserted offset
+         * 
+         * @pre InputIt must yield elements of type OT
+         * @pre pos must be valid offset iterator
+         * @pre [first_sizes, last_sizes) must be valid range
+         * @post Offsets corresponding to sizes are inserted
+         * @post Subsequent offsets are adjusted by cumulative size
+         * 
+         * @note Internal assertions verify iterator bounds:
+         *   - SPARROW_ASSERT_TRUE(pos >= offsets_cbegin())
+         *   - SPARROW_ASSERT_TRUE(pos <= offsets_cend())
+         *   - SPARROW_ASSERT_TRUE(first_sizes <= last_sizes)
+         */
         template <mpl::iterator_of_type<OT> InputIt>
-        constexpr offset_iterator insert_offsets(const_offset_iterator pos, InputIt first, InputIt last);
+        constexpr offset_iterator insert_offsets(const_offset_iterator pos, InputIt first_sizes, InputIt last_sizes);
 
+        /**
+         * @brief Erases specified number of values starting at position.
+         * 
+         * @param pos Position where to start erasing
+         * @param count Number of values to erase
+         * @return Iterator pointing to element after last erased
+         * 
+         * @pre pos must be valid value iterator
+         * @pre pos + count must not exceed value_cend()
+         * @post count values are removed starting at pos
+         * @post Array size decreases by count
+         * @post Data buffer and offsets are adjusted accordingly
+         * 
+         * @note Internal assertions verify iterator bounds:
+         *   - SPARROW_ASSERT_TRUE(pos >= value_cbegin())
+         *   - SPARROW_ASSERT_TRUE(pos <= value_cend())
+         */
         constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
 
+        /**
+         * @brief Erases specified number of offsets starting at position.
+         * 
+         * @param pos Position where to start erasing
+         * @param count Number of offsets to erase
+         * @return Iterator pointing to offset after last erased
+         * 
+         * @pre pos must be valid offset iterator
+         * @pre pos + count must not exceed offsets_cend()
+         * @post count offsets are removed starting at pos
+         * @post Subsequent offsets are adjusted accordingly
+         * 
+         * @note Internal assertions verify iterator bounds:
+         *   - SPARROW_ASSERT_TRUE(pos >= offsets_cbegin())
+         *   - SPARROW_ASSERT_TRUE(pos <= offsets_cend())
+         */
         constexpr offset_iterator erase_offsets(const_offset_iterator pos, size_type count);
 
+        /**
+         * @brief Assigns new value to element at specified index.
+         * 
+         * @tparam U Type of value to assign (must be convertible to T)
+         * @param rhs Value to assign
+         * @param index Index of element to modify
+         * 
+         * @pre U must be convertible to T
+         * @pre index must be < size()
+         * @post Element at index contains data from rhs
+         * @post Data buffer may be resized if new value has different length
+         * @post Offsets are adjusted if value length changes
+         * 
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(index < size())
+         */
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
         constexpr void assign(U&& rhs, size_type index);
@@ -453,9 +867,8 @@ namespace sparrow
     constexpr auto variable_size_binary_array_impl<T, CR, OT>::offset_from_sizes(SIZES_RANGE&& sizes)
         -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
-            std::forward<SIZES_RANGE>(sizes)
-        );
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
+        ));
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -678,7 +1091,7 @@ namespace sparrow
         auto& data_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
         if (shift_byte_count != 0)
         {
-            const auto shift_val_abs = static_cast<size_type>(std::abs(shift_byte_count));
+            const auto shift_val_abs = static_cast<size_t>(std::abs(shift_byte_count));
             const auto new_data_buffer_size = shift_byte_count < 0 ? data_buffer.size() - shift_val_abs
                                                                    : data_buffer.size() + shift_val_abs;
 
@@ -778,8 +1191,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(offset_begin >= 0);
         const OT offset_end = *offset(i + 1);
         SPARROW_ASSERT_TRUE(offset_end >= 0);
-        const const_data_iterator pointer_begin = data(static_cast<size_type>(offset_begin));
-        const const_data_iterator pointer_end = data(static_cast<size_type>(offset_end));
+        const const_data_iterator pointer_begin = data(static_cast<size_t>(offset_begin));
+        const const_data_iterator pointer_end = data(static_cast<size_t>(offset_end));
         return inner_const_reference(pointer_begin, pointer_end);
     }
 

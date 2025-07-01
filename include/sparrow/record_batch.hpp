@@ -33,16 +33,38 @@
 namespace sparrow
 {
     /**
-     * Table-like data structure.
+     * @brief Table-like data structure for storing columnar data with named fields.
      *
-     * A record batch is a collection of equal-length arrays mapped to
-     * names. Each array represents a column of the table. record_batch
-     * is provided as a convenient unit of work for various serialization
-     * and computation functions.
+     * A record batch is a collection of equal-length arrays mapped to unique names,
+     * representing a table where each array forms a column. This provides a convenient
+     * unit of work for various serialization, computation, and data manipulation functions
+     * while maintaining Arrow compatibility.
      *
-     * Example of usage:
+     * The record batch ensures that:
+     * - All arrays have the same length (number of rows)
+     * - Column names are unique within the batch
+     * - Efficient name-based and index-based column access
+     * - Consistent internal state through validation
      *
-     * @snippet{trimleft} examples/record_batch_example.cpp use_record_batch
+     * @pre All arrays must have the same length
+     * @pre Column names must be unique within the record batch
+     * @post Maintains consistent mapping between names and arrays
+     * @post Provides O(1) access to columns by index and O(1) average access by name
+     * @post Thread-safe for read operations, requires external synchronization for writes
+     *
+     * @example
+     * ```cpp
+     * // Create from separate names and arrays
+     * std::vector<std::string> names = {"id", "name", "age"};
+     * std::vector<array> columns = {id_array, name_array, age_array};
+     * record_batch batch(names, columns, "employee_data");
+     *
+     * // Create from named arrays
+     * std::vector<array> named_columns;
+     * named_columns.emplace_back(id_array.with_name("id"));
+     * named_columns.emplace_back(name_array.with_name("name"));
+     * record_batch batch2(named_columns);
+     * ```
      */
     class record_batch
     {
@@ -56,155 +78,336 @@ namespace sparrow
         using column_range = std::ranges::ref_view<const std::vector<array>>;
 
         /**
-         * Constructs a @ref record_batch from a range of names and a range of arrays.
-         * Each array is internally mapped to the name at the same position in the
-         * names range.
+         * @brief Constructs a record_batch from separate name and array ranges.
          *
-         * @param names An input range of names. The names must be unique.
-         * @param columns An input range of arrays.
+         * Each array is mapped to the name at the corresponding position in the names range.
+         * The ranges must have the same size, and all arrays must have equal length.
+         *
+         * @tparam NR Input range type for names (convertible to std::string)
+         * @tparam CR Input range type for arrays
+         * @param names Input range of column names (must be unique)
+         * @param columns Input range of arrays (must have equal lengths)
+         * @param name Optional name for the record batch itself
+         *
+         * @pre std::ranges::size(names) == std::ranges::size(columns)
+         * @pre All names in the range must be unique
+         * @pre All arrays must have the same length
+         * @pre Names must be convertible to std::string
+         * @post Record batch contains mapping from names to arrays
+         * @post Internal consistency is maintained
+         * @post Array map cache is properly initialized
+         *
+         * @throws std::invalid_argument if preconditions are violated
          */
         template <std::ranges::input_range NR, std::ranges::input_range CR>
-            requires(
-                std::convertible_to<std::ranges::range_value_t<NR>, std::string>
-                and std::same_as<std::ranges::range_value_t<CR>, array>
-            )
+            requires(std::convertible_to<std::ranges::range_value_t<NR>, std::string> and std::same_as<std::ranges::range_value_t<CR>, array>)
         constexpr record_batch(NR&& names, CR&& columns, std::optional<std::string_view> name = std::nullopt);
 
-        /*
-         * Constructs a @ref record_batch from a range of arrays. Each array
-         * must have a name: if \c arr is an array, then \c arr.name(), must
-         * not return an empty string.
+        /**
+         * @brief Constructs a record_batch from arrays with existing names.
          *
-         * @param comumns An input range of arrays
+         * Each array must have a non-empty name. The array names are extracted
+         * and used as column names in the record batch.
+         *
+         * @tparam CR Input range type for arrays
+         * @param columns Input range of named arrays
+         * @param name Optional name for the record batch itself
+         *
+         * @pre All arrays must have non-empty names (arr.name().has_value() && !arr.name()->empty())
+         * @pre All array names must be unique within the range
+         * @pre All arrays must have the same length
+         * @post Record batch contains arrays mapped to their internal names
+         * @post Internal consistency is maintained
+         *
+         * @throws std::invalid_argument if any array lacks a name or names are not unique
+         * @throws std::invalid_argument if arrays have different lengths
          */
         template <std::ranges::input_range CR>
             requires std::same_as<std::ranges::range_value_t<CR>, array>
         record_batch(CR&& columns, std::optional<std::string_view> name = std::nullopt);
 
         /**
-         * Constructs a record_batch from a list of \c std::pair<name_type, array>.
+         * @brief Constructs a record_batch from initializer list of name-array pairs.
          *
-         * @param init a list of pair "name - array".
+         * @param init Initializer list of std::pair<name_type, array>
+         *
+         * @pre All names in the initializer list must be unique
+         * @pre All arrays must have the same length
+         * @post Record batch contains the specified name-array mappings
+         * @post Internal consistency is maintained
+         *
+         * @throws std::invalid_argument if names are not unique or arrays have different lengths
          */
         SPARROW_API record_batch(initializer_type init);
 
         /**
-         * Construct a record batch from the given struct array.
-         * The array must owns its internal arrow structures.
+         * @brief Constructs a record_batch from a struct_array.
          *
-         * @param ar An input struct array
+         * The struct array's fields become the columns of the record batch,
+         * with field names becoming column names.
+         *
+         * @param ar Struct array to convert (must own its internal Arrow structures)
+         *
+         * @pre ar must be a valid struct array with owned Arrow structures
+         * @pre ar must have at least one field
+         * @pre All field names must be unique (guaranteed by struct_array invariants)
+         * @post Record batch contains columns corresponding to struct fields
+         * @post Struct array is moved and becomes invalid
+         * @post Internal consistency is maintained
          */
         SPARROW_API record_batch(struct_array&& ar);
 
-        SPARROW_API record_batch(const record_batch&);
-        SPARROW_API record_batch& operator=(const record_batch&);
+        /**
+         * @brief Copy constructor.
+         *
+         * @param other The record_batch to copy from
+         *
+         * @pre other must be in a valid state
+         * @post This record batch is an independent copy of other
+         * @post All arrays are deep-copied
+         * @post Internal consistency is maintained
+         */
+        SPARROW_API record_batch(const record_batch& other);
+
+        /**
+         * @brief Copy assignment operator.
+         *
+         * @param other The record_batch to copy from
+         * @return Reference to this record_batch
+         *
+         * @pre other must be in a valid state
+         * @post This record batch is an independent copy of other
+         * @post Previous data is properly released
+         * @post All arrays are deep-copied
+         * @post Internal consistency is maintained
+         */
+        SPARROW_API record_batch& operator=(const record_batch& other);
 
         record_batch(record_batch&&) = default;
         record_batch& operator=(record_batch&&) = default;
 
         /**
-         * @returns the number of columns (i.e. arrays) in the \ref record_batch.
+         * @brief Gets the number of columns in the record batch.
+         *
+         * @return Number of columns (arrays) in the record batch
+         *
+         * @post Returns non-negative value
+         * @post Return value equals the number of unique column names
          */
         SPARROW_API size_type nb_columns() const;
 
         /**
-         * @returns the number of rows (i.e. the size of each array) in the
-         * \ref record_batch.
+         * @brief Gets the number of rows in the record batch.
+         *
+         * @return Number of rows (length of each array) in the record batch
+         *
+         * @post Returns non-negative value
+         * @post If nb_columns() > 0, all arrays have this length
+         * @post If nb_columns() == 0, returns 0
          */
         SPARROW_API size_type nb_rows() const;
 
         /**
-         * Checks if the \ref record_batch constains a column mapped to the specified
-         * name.
+         * @brief Checks if the record batch contains a column with the specified name.
          *
-         * @param key The name of the column.
-         * @returns \c true if the \ref record_batch contains the mapping, \c false otherwise.
+         * @param key The name of the column to search for
+         * @return true if the column exists, false otherwise
+         *
+         * @post Return value is consistent with get_column(key) success/failure
+         * @post O(1) average time complexity due to internal hash map
          */
         SPARROW_API bool contains_column(const name_type& key) const;
 
         /**
-         * @returns the name mapped to the column at the given index.
-         * @param index The index of the column in the \ref record_batch. The index must be less than the
-         * number of columns.
+         * @brief Gets the name of the column at the specified index.
+         *
+         * @param index The index of the column (0-based)
+         * @return Const reference to the column name
+         *
+         * @pre index must be < nb_columns()
+         * @post Returns valid reference to the column name
+         * @post Returned reference remains valid while record batch exists
+         *
+         * @throws std::out_of_range if index >= nb_columns()
          */
         SPARROW_API const name_type& get_column_name(size_type index) const;
 
         /**
-         * @returns the column mapped ot the specified name in the \ref record_batch.
-         * @param key The name of the column to search for.
-         * @exception std::out_of_range if the column is not found.
+         * @brief Gets the column with the specified name.
+         *
+         * @param key The name of the column to retrieve
+         * @return Const reference to the array
+         *
+         * @pre Column with the specified name must exist
+         * @post Returns valid reference to the column array
+         * @post Returned reference remains valid while record batch exists
+         *
+         * @throws std::out_of_range if column with key does not exist
          */
         SPARROW_API const array& get_column(const name_type& key) const;
 
         /**
-         * @returns the column at the specified index in the \ref record_batch.
-         * @param index The index of the column. The index must be less than the number of columns.
+         * @brief Gets the column at the specified index.
+         *
+         * @param index The index of the column (0-based)
+         * @return Const reference to the array
+         *
+         * @pre index must be < nb_columns()
+         * @post Returns valid reference to the column array
+         * @post Returned reference remains valid while record batch exists
+         *
+         * @throws std::out_of_range if index >= nb_columns()
          */
         SPARROW_API const array& get_column(size_type index) const;
 
         /**
-         * @returns name of the \ref record_batch.
+         * @brief Gets the name of the record batch.
+         *
+         * @return Optional name of the record batch
+         *
+         * @post Returns the name specified during construction (if any)
          */
         SPARROW_API const std::optional<name_type>& name() const;
 
         /**
-         * @returns a range of the names in the \ref record_batch.
+         * @brief Gets a range view of the column names.
+         *
+         * @return Range view over the column names in insertion order
+         *
+         * @post Range size equals nb_columns()
+         * @post Range elements are in the same order as columns
+         * @post Range remains valid while record batch exists and is not modified
          */
         SPARROW_API name_range names() const;
 
         /**
-         * @returns a range of the columns (i.e. arrays) hold in this
-         * \ref record_batch.
+         * @brief Gets a range view of the columns.
+         *
+         * @return Range view over the arrays in insertion order
+         *
+         * @post Range size equals nb_columns()
+         * @post Range elements correspond to names() in the same order
+         * @post Range remains valid while record batch exists and is not modified
          */
         SPARROW_API column_range columns() const;
 
         /**
-         * Moves the internal columns of the record batch into a struct_array
-         * object. The record batch is empty anymore after calling this
-         * method.
+         * @brief Moves the internal columns into a struct_array and empties the record batch.
+         *
+         * After this operation, the record batch becomes empty and should not be used
+         * until new data is added.
+         *
+         * @return struct_array containing the moved columns
+         *
+         * @pre Record batch must not be empty (nb_columns() > 0)
+         * @post Record batch becomes empty (nb_columns() == 0, nb_rows() == 0)
+         * @post Returned struct_array contains all previous columns as fields
+         * @post Column data is moved, not copied
+         * @post Internal state is reset to empty but valid state
          */
         SPARROW_API struct_array extract_struct_array();
 
         /**
-         * Appends the array \ref column to the record batch, and maps it with
-         * \ref name.
+         * @brief Adds a new column to the record batch with the specified name.
          *
-         * @param name The name of the column to append.
-         * @param column The array to append.
+         * @param name The name for the new column (must be unique)
+         * @param column The array to add as a column
+         *
+         * @pre name must not already exist in the record batch
+         * @pre If record batch is not empty, column.size() must equal nb_rows()
+         * @pre name must not be empty
+         * @post Record batch contains the new column mapped to name
+         * @post nb_columns() increases by 1
+         * @post If this was the first column, nb_rows() equals column.size()
+         * @post Internal consistency is maintained
+         * @post Array map cache is updated
+         *
+         * @throws std::invalid_argument if name already exists or column size is incompatible
          */
         SPARROW_API void add_column(name_type name, array column);
 
         /**
-         * Appends the array \ref column to the record batch, and maps it to
-         * its internal name. \ref column must have a name.
+         * @brief Adds a new column using the array's internal name.
          *
-         * @param column The array to append.
+         * @param column The array to add (must have a non-empty name)
+         *
+         * @pre column must have a non-empty name (column.name().has_value() && !column.name()->empty())
+         * @pre column.name() must not already exist in the record batch
+         * @pre If record batch is not empty, column.size() must equal nb_rows()
+         * @post Record batch contains the new column mapped to column.name()
+         * @post nb_columns() increases by 1
+         * @post If this was the first column, nb_rows() equals column.size()
+         * @post Internal consistency is maintained
+         *
+         * @throws std::invalid_argument if column lacks name, name exists, or size is incompatible
          */
         SPARROW_API void add_column(array column);
 
     private:
 
+        /**
+         * @brief Converts a range to a vector of the specified type.
+         *
+         * @tparam U The element type of the resulting vector
+         * @tparam R The range type
+         * @param range The input range to convert
+         * @return Vector containing the elements from the range
+         *
+         * @post Returned vector contains all elements from range in order
+         * @post If range is sized, vector capacity is pre-allocated
+         */
         template <class U, class R>
         [[nodiscard]] std::vector<U> to_vector(R&& range) const;
 
+        /**
+         * @brief Updates the internal array map cache for fast name-based lookups.
+         *
+         * @post Internal map cache reflects current name-to-array mappings
+         * @post Cache dirty flag is cleared
+         * @post Subsequent name-based lookups will be O(1) average time
+         */
         SPARROW_API void update_array_map_cache() const;
 
+        /**
+         * @brief Checks the internal consistency of the record batch.
+         *
+         * Validates that:
+         * - Name list and array list have the same size
+         * - All names are unique
+         * - All arrays have the same length
+         * - Array map cache is consistent (if not dirty)
+         *
+         * @return true if the record batch is consistent, false otherwise
+         *
+         * @post Return value indicates whether all invariants are satisfied
+         *
+         * @note This is primarily used for debugging and testing
+         */
         [[nodiscard]] SPARROW_API bool check_consistency() const;
 
-        std::optional<name_type> m_name;
-        std::vector<name_type> m_name_list;
-        std::vector<array> m_array_list;
-        mutable std::unordered_map<name_type, const array*> m_array_map;
-        mutable bool m_dirty_map = true;
+        std::optional<name_type> m_name;     ///< Optional name of the record batch
+        std::vector<name_type> m_name_list;  ///< Ordered list of column names
+        std::vector<array> m_array_list;     ///< Ordered list of column arrays
+        mutable std::unordered_map<name_type, const array*> m_array_map;  ///< Cache for fast name-based
+                                                                          ///< lookup
+        mutable bool m_dirty_map = true;  ///< Flag indicating cache needs update
     };
 
     /**
-     * Compares the content of two \ref record_batch objects.
+     * @brief Compares two record_batch objects for equality.
      *
-     * @param lhs the first \ref record_batch to compare
-     * @param rhs the second \ref record_batch to compare
-     * @return \c true if the contents of both \ref record_batch
-     * are equal, \c false otherwise.
+     * Two record batches are considered equal if:
+     * - They have the same number of columns
+     * - Column names match in the same order
+     * - Corresponding arrays are equal
+     * - Record batch names match (both present and equal, or both absent)
+     *
+     * @param lhs First record batch to compare
+     * @param rhs Second record batch to compare
+     * @return true if the record batches are equal, false otherwise
+     *
+     * @post Comparison is symmetric: lhs == rhs iff rhs == lhs
+     * @post Comparison includes both structure and data equality
      */
     SPARROW_API
     bool operator==(const record_batch& lhs, const record_batch& rhs);

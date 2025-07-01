@@ -9,7 +9,7 @@ The array can simply have references to the structures, or take their ownership.
 Example:
 ```cpp
 #include "sparrow/sparrow.hpp"
-#include "thrid-party-lib.hpp"
+#include "third-party-lib.hpp"
 namespace sp = sparrow;
 namespace tpl = third_party_library;
 
@@ -23,16 +23,16 @@ sp::array ar2(std::move(arr2), std::move(schema2));
 // ...
 arr.release(&arr);
 schema.release(&schema);
-// We don't release arr2 nor schema2, ar2 will do it for us.
+// We don't release arr2 nor schema2; ar2 will do it for us.
 ```
 
 The array class provides a similar API to that of the [typed arrays](#common_apis), but with certain limitations:
-iterators are not provided, for performance reasons. Instead, a method for visiting the array and apply
-an algorithm to the undelying typed array is provided.
+iterators are not provided, for performance reasons. Instead, a method for visiting the array and applying
+an algorithm to the underlying typed array is provided.
 
 ### Deep copy
 
-Copying an array always perform a deep copy, regardless of whether the source array owns its internal data. This
+Copying an array always performs a deep copy, regardless of whether the source array owns its internal data. This
 reduces the complexity of the memory model when mixing views and arrays within layouts that have children.
 
 Array API
@@ -60,7 +60,7 @@ std::cout << a.empty() << std::endl; // Prints false
 ### Element access
 
 Accessing an element in an `array` yields a [std::variant](https://en.cppreference.com/w/cpp/utility/variant)
-of \ref nullable objects. The variant can hold any data type used by the [typed array classes](#layout_types).
+of \ref sparrow::nullable objects. The variant can hold any data type used by the [typed array classes](#layout_types).
 A method is provided so that the user can retrieve the dynamic data_type of the array.
 
 | Method     | Description                                   |
@@ -143,9 +143,9 @@ destruction.
 
 | Method                   | Description                                                |
 | ------------------------ | ---------------------------------------------------------- |
-| get_arrow_array          | Returns a pointer to the internal ArrowArray               |
-| get_arrow_schema         | Returns a pointer to the internal ArrowSchema              |
-| get_arrow_structures     | Returns a pair of pointer to the internal Arrow structures |
+| get_arrow_array          | Returns a pointer to the internal ArrowArray               |
+| get_arrow_schema         | Returns a pointer to the internal ArrowSchema              |
+| get_arrow_structures     | Returns a pair of pointers to the internal Arrow structures |
 
 Example:
 ```cpp

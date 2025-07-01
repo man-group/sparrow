@@ -52,6 +52,7 @@ namespace sparrow
          * Constructs an \ref array from the given typed layout. The ownership
          * of the layout is transferred to the \ref array.
          *
+         * @tparam A The layout type.
          * @param a An rvalue reference to the typed layout.
          */
         template <layout A>
@@ -63,6 +64,7 @@ namespace sparrow
          * the layout is not transferred to the \ref array and the layout's lifetime
          * must be longer than that of the \ref array.
          *
+         * @tparam A The layout type.
          * @param a A pointer to the typed layout.
          */
         template <layout A>
@@ -73,24 +75,25 @@ namespace sparrow
          * the layout is shared by this \ref array and any other shared pointer
          * referencing it.
          *
+         * @tparam A The layout type.
          * @param a A shared pointer holding the layout.
          */
         template <layout A>
         constexpr explicit array(std::shared_ptr<A> a);
 
         /**
-         * Constructs an \ref array from the given Arrow C structures, whose ownerhips
+         * Constructs an \ref array from the given Arrow C structures, whose ownership
          * is transferred to the \ref array. The user should not use \p array nor \p schema
          * after calling this constructor.
          *
          * @param array The ArrowArray structure to transfer into the \ref array.
-         * @param schema The ArowSchema structure to transfer into the \ref array.
+         * @param schema The ArrowSchema structure to transfer into the \ref array.
          */
         SPARROW_API array(ArrowArray&& array, ArrowSchema&& schema);
 
         /**
          * Constructs an \ref array from the given Arrow C structures. The \ref array takes
-         * the ownerhship of the ArrowArray only. The used should not use \p array
+         * the ownership of the ArrowArray only. The user should not use \p array
          * after calling this constructor. \p schema can still be used normally.
          *
          * @param array The ArrowArray structure to transfer into the \ref array.
@@ -118,9 +121,10 @@ namespace sparrow
 
         /**
          * Overwrites the content of the array with a deep copy of the given array,
-         * event if it does not have the ownership of its internal data.
+         * even if it does not have the ownership of its internal data.
          *
          * @param rhs The array to assign.
+         * @return Reference to this array.
          */
         array& operator=(const array& rhs) = default;
 
@@ -135,6 +139,7 @@ namespace sparrow
          * The move assignment operator.
          *
          * @param rhs The array to move.
+         * @return Reference to this array.
          */
         array& operator=(array&& rhs) = default;
 
@@ -150,6 +155,7 @@ namespace sparrow
 
         /**
          * Sets the name of the array to \ref name.
+         *
          * @param name The new name of the array.
          */
         SPARROW_API void set_name(std::optional<std::string_view> name);
@@ -161,6 +167,8 @@ namespace sparrow
 
         /**
          * Sets the metadata of the array to \ref metadata.
+         *
+         * @tparam R The metadata container type.
          * @param metadata The new metadata of the array.
          */
         template <input_metadata_container R = std::vector<metadata_pair>>
@@ -168,6 +176,8 @@ namespace sparrow
 
         /**
          * Checks if the array has no element, i.e. whether size() == 0.
+         *
+         * @return true if the array is empty, false otherwise.
          */
         [[nodiscard]] SPARROW_API bool empty() const;
 
@@ -195,12 +205,16 @@ namespace sparrow
         /**
          * Returns a constant reference to the first element in the container.
          * Calling `front` on an empty array causes undefined behavior.
+         *
+         * @return Constant reference to the first element.
          */
         [[nodiscard]] SPARROW_API const_reference front() const;
 
         /**
          * Returns a constant reference to the last element in the container.
          * Calling `back` on an empty array causes undefined behavior.
+         *
+         * @return Constant reference to the last element.
          */
         [[nodiscard]] SPARROW_API const_reference back() const;
 
@@ -209,10 +223,11 @@ namespace sparrow
 
         /**
          * Returns the result of calling the given functor \c func on the
-         * layout internally hold by the array. The actual type of the
+         * layout internally held by the array. The actual type of the
          * layout is retrieved via a visitor dispatch. \c func must
          * accept any kind of layout.
          *
+         * @tparam F The functor type.
          * @param func The functor to apply.
          * @return The result of calling the functor on the internal layout.
          */
@@ -221,12 +236,13 @@ namespace sparrow
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
-         * A copy of the  \ref array is modified. The data is not modified, only the ArrowArray.offset and
+         * A copy of the \ref array is returned. The data is not modified, only the ArrowArray.offset and
          * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
          * elements will be invalid.
          *
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         * @return A sliced copy of the array.
          */
         [[nodiscard]] SPARROW_API array slice(size_type start, size_type end) const;
 
@@ -238,14 +254,31 @@ namespace sparrow
          *
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         * @return A sliced view of the array.
          */
         [[nodiscard]] SPARROW_API array slice_view(size_type start, size_type end) const;
 
     private:
 
+        /**
+         * Constructs an array from an arrow proxy.
+         *
+         * @param proxy The arrow proxy to construct from.
+         */
         SPARROW_API array(arrow_proxy&& proxy);
 
+        /**
+         * Gets a reference to the internal arrow proxy.
+         *
+         * @return Reference to the arrow proxy.
+         */
         [[nodiscard]] SPARROW_API arrow_proxy& get_arrow_proxy();
+
+        /**
+         * Gets a constant reference to the internal arrow proxy.
+         *
+         * @return Constant reference to the arrow proxy.
+         */
         [[nodiscard]] SPARROW_API const arrow_proxy& get_arrow_proxy() const;
 
         cloning_ptr<array_wrapper> p_array = nullptr;
@@ -282,8 +315,9 @@ namespace sparrow
      * Returns \c true if the given layout or array has ownership
      * of its internal ArrowSchema.
      *
+     * @tparam A The layout or array type.
      * @param a An array or a typed layout object.
-     * @returns \c true if \p a owns its internal ArrowSchema, \c false
+     * @return \c true if \p a owns its internal ArrowSchema, \c false
      * otherwise.
      */
     template <layout_or_array A>
@@ -293,8 +327,9 @@ namespace sparrow
      * Returns a pointer to the internal ArrowArray of the given
      * array or layout.
      *
+     * @tparam A The layout or array type.
      * @param a An \ref array or a typed layout.
-     * @returns a pointer to the internal ArrowArray.
+     * @return a pointer to the internal ArrowArray.
      */
     template <layout_or_array A>
     ArrowArray* get_arrow_array(A& a);
@@ -303,8 +338,9 @@ namespace sparrow
      * Returns a pointer to the internal ArrowSchema of the given
      * array or layout.
      *
+     * @tparam A The layout or array type.
      * @param a An \ref array or a typed layout.
-     * @returns a pointer to the internal ArrowSchema.
+     * @return a pointer to the internal ArrowSchema.
      */
     template <layout_or_array A>
     ArrowSchema* get_arrow_schema(A& a);
@@ -313,8 +349,9 @@ namespace sparrow
      * Returns pointers to the internal ArrowArray and ArrowSchema of
      * the given \ref array or layout.
      *
+     * @tparam A The layout or array type.
      * @param a An \ref array or a typed layout.
-     * @returns pointers to the internal ArrowArray and ArrowSchema.
+     * @return pointers to the internal ArrowArray and ArrowSchema.
      */
     template <layout_or_array A>
     std::pair<ArrowArray*, ArrowSchema*> get_arrow_structures(A& a);
@@ -324,11 +361,11 @@ namespace sparrow
      * or typed layout. After this call, the user is responsible for
      * the management of the returned ArrowArray.
      *
-     * @exception std::runtime_error If \p a does not own its internal
-     * ArrowSchema before this call.
-     *
+     * @tparam A The layout or array type.
      * @param a An array or a typed layout.
-     * @returns The internal ArrowArray.
+     * @return The internal ArrowArray.
+     * @exception std::runtime_error If \p a does not own its internal
+     * ArrowArray before this call.
      */
     template <layout_or_array A>
     ArrowArray extract_arrow_array(A&& a);
@@ -338,26 +375,26 @@ namespace sparrow
      * or typed layout. After this call, the user is responsible for
      * the management of the returned ArrowSchema.
      *
+     * @tparam A The layout or array type.
+     * @param a An array or a typed layout.
+     * @return The internal ArrowSchema.
      * @exception std::runtime_error If \p a does not own its internal
      * ArrowSchema before this call.
-     *
-     * @param a An array or a typed layout.
-     * @returns The internal ArrowSchema.
      */
     template <layout_or_array A>
     ArrowSchema extract_arrow_schema(A&& a);
 
     /**
-     * Extracts the internal ArrowArrays and ArrowSchema structures from
+     * Extracts the internal ArrowArray and ArrowSchema structures from
      * the given array or typed layout. After this call, the user is
      * responsible for the management of the returned ArrowArray and
      * ArrowSchema.
      *
+     * @tparam A The layout or array type.
+     * @param a An array or a typed layout.
+     * @return The internal ArrowArray and ArrowSchema.
      * @exception std::runtime_error If \p a does not own its internal
      * ArrowArray and ArrowSchema before this call.
-     *
-     * @param a An array or a typed layout.
-     * @returns The internal ArrowArray and ArrowSchema.
      */
     template <layout_or_array A>
     std::pair<ArrowArray, ArrowSchema> extract_arrow_structures(A&& a);

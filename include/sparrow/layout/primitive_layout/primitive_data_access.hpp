@@ -47,7 +47,7 @@ namespace sparrow
 
             /**
              * @brief Constructor for primitive_data_access.
-             * @param layout Pointer to the layout object.
+             * @param proxy Arrow proxy object that holds the data buffer.
              * @param data_buffer_index Index of the data buffer.
              */
             primitive_data_access(arrow_proxy& proxy, size_t data_buffer_index);
