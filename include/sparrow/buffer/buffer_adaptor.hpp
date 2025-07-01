@@ -390,8 +390,8 @@ namespace sparrow
 
     template <typename To, BufferReference<To> FromBufferRef>
         requires T_is_const_if_FromBufferRef_is_const<FromBufferRef, To>
-    constexpr buffer_adaptor<To, FromBufferRef>::size_type buffer_adaptor<To, FromBufferRef>::size() const
-        noexcept(!SPARROW_CONTRACTS_THROW_ON_FAILURE)
+    constexpr buffer_adaptor<To, FromBufferRef>::size_type
+    buffer_adaptor<To, FromBufferRef>::size() const noexcept(!SPARROW_CONTRACTS_THROW_ON_FAILURE)
     {
         const double new_size = static_cast<double>(m_buffer.size()) * m_from_to_size_ratio;
         SPARROW_ASSERT(
