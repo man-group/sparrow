@@ -14,6 +14,7 @@
 
 #include <array>
 #include <tuple>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -280,6 +281,36 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(arr[0], 1);
                 CHECK_NULLABLE_VARIANT_EQ(arr[1], float32_t(2.0f));
                 CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
+            }
+        }
+
+        TEST_CASE("map-layout")
+        {
+            SUBCASE("map")
+            {
+                const std::vector<std::pair<std::string, int>> values{{"a", 1}, {"b", 2}, {"c", 3}};
+                const std::map<std::string, int> m{{"a", 1}, {"b", 2}, {"c", 3}};
+                auto arr = sparrow::build(m);
+                test::generic_consistency_test(arr);
+                using arr_type = std::decay_t<decltype(arr)>;
+                static_assert(std::is_same_v<arr_type, sparrow::map_array>);
+
+                REQUIRE_EQ(arr.size(), 3);
+                // Check the values
+                std::size_t flat_index = 0;
+                for (std::size_t i = 0; i < m.size(); ++i)
+                {
+                    auto val = arr[i];
+                    for (const auto& v : val.value())
+                    {
+                        CHECK_NULLABLE_VARIANT_EQ(v.first, std::string_view(values[flat_index].first));
+                        if (v.second.has_value())
+                        {
+                            CHECK_NULLABLE_VARIANT_EQ(v.second, values[flat_index].second);
+                        }
+                        ++flat_index;
+                    }
+                }
             }
         }
     }

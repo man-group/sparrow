@@ -19,6 +19,7 @@
 #include <ranges>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -37,7 +38,9 @@
 #include "sparrow/layout/temporal/timestamp_without_timezone_array.hpp"
 #include "sparrow/layout/union_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/ranges.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
@@ -170,9 +173,14 @@ namespace sparrow
                                                           // variable_size_binary_array
                                                           !mpl::char_like<nested_ensured_range_inner_value_t<T>>;
 
+        template <typename T>
+        concept translate_to_map_layout = mpl::is_type_instance_of_v<std::remove_cvref_t<T>, std::map>
+                                          || mpl::is_type_instance_of_v<std::remove_cvref_t<T>, std::unordered_map>;
+
         template <class T>
         concept translate_to_struct_layout = std::ranges::input_range<T> && tuple_like<ensured_range_value_t<T>>
-                                             && !all_elements_same<ensured_range_value_t<T>>;
+                                             && !all_elements_same<ensured_range_value_t<T>>
+                                             && !translate_to_map_layout<T>;
 
         template <class T>
         concept fixed_width_binary_types = (mpl::fixed_size_span<T> || mpl::std_array<T>)
@@ -365,6 +373,48 @@ namespace sparrow
                 return type(
                     static_cast<std::uint64_t>(list_size),
                     array(build_impl<layout_policy_type>(flat_list_view, OPTION_FLAGS{})),
+                    where_null(t)
+                );
+            }
+        };
+
+        template <translate_to_map_layout T, class OPTION_FLAGS>
+        struct builder<T, dont_enforce_layout, OPTION_FLAGS>
+        {
+            using type = sparrow::map_array;
+            using raw_value_type = std::ranges::range_value_t<T>;
+            using key_type = typename raw_value_type::first_type;
+            using value_type = typename raw_value_type::second_type;
+
+            template <class U>
+            [[nodiscard]] static type create(U&& t)
+            {
+                auto flat_keys = t
+                                 | std::views::transform(
+                                     [](const auto& kv)
+                                     {
+                                         return kv.first;
+                                     }
+                                 );
+                auto flat_items = t
+                                  | std::views::transform(
+                                      [](const auto& kv)
+                                      {
+                                          return kv.second;
+                                      }
+                                  );
+
+                // when the raw_value_type is a "express layout desire" we need to
+                // propagate this information to the builder, so it can handle the
+                using layout_policy_type = layout_flag_t<raw_value_type>;
+                auto keys_array = build_impl<layout_policy_type>(flat_keys, OPTION_FLAGS{});
+                auto items_array = build_impl<layout_policy_type>(flat_items, OPTION_FLAGS{});
+                auto offset = map_array::offset_from_sizes(sparrow::repeat_view<size_t>(1, std::ranges::size(t)));
+
+                return type(
+                    sparrow::array{std::move(keys_array)},
+                    sparrow::array{std::move(items_array)},
+                    std::move(offset),
                     where_null(t)
                 );
             }
