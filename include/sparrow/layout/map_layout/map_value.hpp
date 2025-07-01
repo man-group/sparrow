@@ -55,6 +55,9 @@ namespace sparrow
         [[nodiscard]] const_mapped_reference at(const key_type& key) const;
         [[nodiscard]] const_mapped_reference operator[](const key_type& key) const;
 
+        [[nodiscard]] bool contains(const key_type& key) const;
+        [[nodiscard]] const_iterator find(const key_type& key) const;
+
         [[nodiscard]] const_iterator begin() const;
         [[nodiscard]] const_iterator cbegin() const;
 
