@@ -73,7 +73,7 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::BINARY;
         using value_type = std::vector<byte_t>;
-        using const_reference = vector_view<const byte_t>;
+        using const_reference = sequence_view<const byte_t>;
     };
 
     template <>

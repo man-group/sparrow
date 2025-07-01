@@ -183,14 +183,14 @@ namespace sparrow
                                              && !translate_to_map_layout<T>;
 
         template <class T>
-        concept fixed_width_binary_types = (mpl::fixed_size_span<T> || mpl::std_array<T>)
+        concept fixed_width_binary_types = (fixed_size_sequence_view<T> || mpl::std_array<T>)
                                            && std::is_same_v<std::ranges::range_value_t<T>, byte_t>;
 
         template <class T>
         concept translate_to_fixed_sized_list_layout = std::ranges::input_range<T>
                                                        && tuple_like<ensured_range_value_t<T>>
                                                        && !(
-                                                           (mpl::fixed_size_span<ensured_range_value_t<T>>
+                                                           (fixed_size_sequence_view<ensured_range_value_t<T>>
                                                             || mpl::std_array<ensured_range_value_t<T>>)
                                                            && fixed_width_binary_types<ensured_range_value_t<T>>
                                                        )
@@ -200,7 +200,7 @@ namespace sparrow
         concept translate_to_variable_sized_binary_layout = std::ranges::input_range<T>
                                                             && std::ranges::input_range<ensured_range_value_t<T>>
                                                             && !(
-                                                                (mpl::fixed_size_span<ensured_range_value_t<T>>
+                                                                (fixed_size_sequence_view<ensured_range_value_t<T>>
                                                                  || mpl::std_array<ensured_range_value_t<T>>)
                                                                 && fixed_width_binary_types<ensured_range_value_t<T>>
                                                             )
@@ -212,7 +212,7 @@ namespace sparrow
 
         template <class T>
         concept translate_to_fixed_width_binary_layout = std::ranges::input_range<T>
-                                                         && ((mpl::fixed_size_span<ensured_range_value_t<T>>
+                                                         && ((fixed_size_sequence_view<ensured_range_value_t<T>>
                                                               || mpl::std_array<ensured_range_value_t<T>>)
                                                              && fixed_width_binary_types<ensured_range_value_t<T>>);
 

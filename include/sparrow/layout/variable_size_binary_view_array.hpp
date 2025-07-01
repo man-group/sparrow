@@ -31,12 +31,13 @@
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/ranges.hpp"
 #include "sparrow/utils/repeat_container.hpp"
+#include "sparrow/utils/sequence_view.hpp"
 
 namespace sparrow
 {
     template <typename T>
     concept variable_size_binary_view_impl_types = std::is_same_v<T, std::string_view>
-                                                   || std::is_same_v<T, std::span<const std::byte>>;
+                                                   || std::is_same_v<T, sequence_view<const std::byte>>;
 
 
     template <variable_size_binary_view_impl_types T>
@@ -58,7 +59,7 @@ namespace sparrow
      * @see string_view_array
      * @see variable_size_binary_view_array_impl
      */
-    using binary_view_array = variable_size_binary_view_array_impl<std::span<const std::byte>>;
+    using binary_view_array = variable_size_binary_view_array_impl<sequence_view<const std::byte>>;
 
     namespace detail
     {

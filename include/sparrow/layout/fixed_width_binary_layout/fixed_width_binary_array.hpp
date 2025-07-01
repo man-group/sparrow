@@ -663,7 +663,7 @@ namespace sparrow
         auto& data_buffer = get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
         data_buffer.resize(data_buffer.size() + cumulative_sizes);
         const auto idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
-        std::span<byte_t> casted_values{reinterpret_cast<byte_t*>(data_buffer.data()), data_buffer.size()};
+        sequence_view<byte_t> casted_values{reinterpret_cast<byte_t*>(data_buffer.data()), data_buffer.size()};
         const auto offset_begin = m_element_size * (idx + get_arrow_proxy().offset());
         auto insert_pos = sparrow::next(casted_values.begin(), offset_begin);
 

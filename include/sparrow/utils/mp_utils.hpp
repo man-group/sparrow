@@ -19,7 +19,6 @@
 #include <iterator>
 #include <memory>
 #include <ranges>
-#include <span>
 #include <tuple>
 #include <type_traits>
 
@@ -599,16 +598,6 @@ namespace sparrow::mpl
         typename std::remove_cvref_t<T>::value_type;
         requires std::same_as<
             std::array<typename std::remove_cvref_t<T>::value_type, std::tuple_size<std::remove_cvref_t<T>>::value>,
-            std::remove_cvref_t<T>>;
-    };
-
-    // Concept for fixed-size std::span
-    template <typename T>
-    concept fixed_size_span = requires {
-        typename std::remove_cvref_t<T>::element_type;
-        requires std::tuple_size_v<T> != std::dynamic_extent;
-        requires std::same_as<
-            std::span<typename std::remove_cvref_t<T>::element_type, std::remove_cvref_t<T>::extent>,
             std::remove_cvref_t<T>>;
     };
 
