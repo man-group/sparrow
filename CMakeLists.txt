@@ -110,6 +110,9 @@ MESSAGE(STATUS "🔧 Use large int placeholders: ${USE_LARGE_INT_PLACEHOLDERS}")
 OPTION(SPARROW_TARGET_32BIT "Test 32bit support" OFF)
 MESSAGE(STATUS "🔧 Test 32bit support: ${SPARROW_TARGET_32BIT}")
 
+OPTION(SPARROW_CONTRACTS_THROW_ON_FAILURE "Throw exceptions instead of aborting on contract failures" OFF)
+MESSAGE(STATUS "🔧 Contracts throw on failure: ${SPARROW_CONTRACTS_THROW_ON_FAILURE}")
+
 OPTION(ENABLE_COVERAGE "Enable test coverage" OFF)
 MESSAGE(STATUS "🔧 Enable coverage: ${ENABLE_COVERAGE}")
 
@@ -166,6 +169,11 @@ endif()
 if(USE_LARGE_INT_PLACEHOLDERS)
     message(STATUS "Using large int placeholders")
     list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_USE_LARGE_INT_PLACEHOLDERS)
+endif()
+
+if(SPARROW_CONTRACTS_THROW_ON_FAILURE)
+    message(STATUS "Using contract exceptions")
+    list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_CONTRACTS_THROW_ON_FAILURE=1)
 endif()
 
 # Build

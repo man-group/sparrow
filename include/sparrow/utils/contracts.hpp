@@ -20,6 +20,18 @@
 #include <csignal>
 #include <cstdio>
 
+#if !defined(SPARROW_CONTRACTS_THROW_ON_FAILURE)
+#    define SPARROW_CONTRACTS_THROW_ON_FAILURE 0
+#endif
+
+// Include sparrow exception if throwing is enabled
+#if SPARROW_CONTRACTS_THROW_ON_FAILURE == 1
+#    include <string>
+
+#    include "sparrow_exception.hpp"
+
+#endif
+
 
 ///////////////////////////////////////////////////////////////////
 // Possible bits used to compose the behavior:
@@ -118,13 +130,32 @@
 #endif
 
 #ifndef SPARROW_CONTRACTS_ABORT
-#    define SPARROW_CONTRACTS_ABORT() std::abort()
+#    if SPARROW_CONTRACTS_THROW_ON_FAILURE == 1
+#        if defined(SPARROW_CONTRACTS_USE_STD_FORMAT) && SPARROW_CONTRACTS_USE_STD_FORMAT == 1
+#            define SPARROW_CONTRACTS_ABORT(expr__, message__)                                                            \
+                throw ::sparrow::contract_assertion_error(                                                                \
+                    ::std::format("Assertion Failed ({}:{}): {} - ({} is wrong)", __FILE__, __LINE__, message__, #expr__) \
+                )
+#        else
+#            define SPARROW_CONTRACTS_ABORT(expr__, message__)                                        \
+                throw ::sparrow::contract_assertion_error(                                            \
+                    ::std::string("Assertion Failed (") + __FILE__ + ":" + ::std::to_string(__LINE__) \
+                    + "): " + message__ + " - (" + #expr__ + " is wrong)"                             \
+                )
+#        endif
+#    else
+#        define SPARROW_CONTRACTS_ABORT(expr__, message__) std::abort()
+#    endif
 #endif
 
 // User specifies to just continue instead of abort on failure.
 #if defined(SPARROW_CONTRACTS_CONTINUE_ON_FAILURE) and SPARROW_CONTRACTS_CONTINUE_ON_FAILURE == 1
 #    undef SPARROW_CONTRACTS_ABORT
-#    define SPARROW_CONTRACTS_ABORT
+#    if SPARROW_CONTRACTS_THROW_ON_FAILURE == 1
+#        define SPARROW_CONTRACTS_ABORT(expr__, message__)
+#    else
+#        define SPARROW_CONTRACTS_ABORT
+#    endif
 #endif
 
 #ifndef SPARROW_CONTRACTS_DEBUGBREAK
@@ -144,7 +175,7 @@
 #define SPARROW_CONTRACTS_DEFAULT_ON_FAILURE(expr__, message__) \
     SPARROW_CONTRACTS_LOG_FAILURE(expr__, message__);           \
     SPARROW_CONTRACTS_DEBUGBREAK();                             \
-    SPARROW_CONTRACTS_ABORT();
+    SPARROW_CONTRACTS_ABORT(expr__, message__);
 
 ///////////////////////////////////////////////////////////////////
 // Apply Configuration:
