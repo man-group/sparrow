@@ -24,7 +24,7 @@
 #include "sparrow/layout/temporal/timestamp_without_timezone_types.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/utils/vector_view.hpp"
+#include "sparrow/utils/sequence_view.hpp"
 
 namespace sparrow
 {
@@ -73,7 +73,7 @@ namespace sparrow
     {
         static constexpr data_type type_id = data_type::BINARY;
         using value_type = std::vector<byte_t>;
-        using const_reference = vector_view<const byte_t>;
+        using const_reference = sequence_view<const byte_t>;
     };
 
     template <>

@@ -23,6 +23,7 @@
 #endif
 
 #include "sparrow/utils/mp_utils.hpp"
+#include "sparrow/utils/sequence_view.hpp"
 
 namespace sparrow
 {
@@ -44,9 +45,9 @@ namespace sparrow
         requires std::ranges::sized_range<std::ranges::range_value_t<Range>>
     [[nodiscard]] constexpr bool all_same_size(const Range& range)
     {
-        // Optimization for std::array and fixed-size std::span
+        // Optimization for std::array and fixed-size sequence_view
         if constexpr (mpl::std_array<std::ranges::range_value_t<Range>>
-                      || mpl::fixed_size_span<std::ranges::range_value_t<Range>>)
+                      || fixed_size_sequence_view<std::ranges::range_value_t<Range>>)
         {
             return true;
         }
