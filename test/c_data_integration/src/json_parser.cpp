@@ -197,7 +197,8 @@ namespace sparrow::c_data_integration
         return ar;
     }
 
-    nlohmann::json generate_empty_columns_batch(const std::multimap<std::string, const nlohmann::json>& schemas)
+    nlohmann::json
+    generate_empty_columns_batch(const std::vector<std::pair<std::string, const nlohmann::json>>& schemas)
     {
         nlohmann::json batch = nlohmann::json::object();
         nlohmann::json empty_columns = nlohmann::json::array();
@@ -218,11 +219,11 @@ namespace sparrow::c_data_integration
     sparrow::record_batch build_record_batch_from_json(const nlohmann::json& root, size_t num_batches)
     {
         const auto& schemas = root.at("schema").at("fields");
-        std::multimap<std::string, const nlohmann::json> schema_map;
+        std::vector<std::pair<std::string, const nlohmann::json>> schema_map;
         for (const auto& schema : schemas)
         {
             const std::string name = schema.at("name").get<std::string>();
-            schema_map.emplace(name, schema);
+            schema_map.emplace_back(name, schema);
         }
         auto batches = root.at("batches");
         if (batches.empty())
@@ -245,10 +246,16 @@ namespace sparrow::c_data_integration
         for (const auto& column : columns)
         {
             const auto column_name = column.at("name").get<std::string>();
-            const auto schemas_iterators = schema_map.equal_range(column_name);
-            const auto num_schemas = std::distance(schemas_iterators.first, schemas_iterators.second);
+            auto schemas_with_name = schema_map
+                                     | std::views::filter(
+                                         [&column_name](const auto& pair)
+                                         {
+                                             return pair.first == column_name;
+                                         }
+                                     );
+            const auto num_schemas = std::ranges::distance(schemas_with_name);
             int inc = 0;
-            for (auto& [_, schema] : std::ranges::subrange(schemas_iterators.first, schemas_iterators.second))
+            for (const auto& [_, schema] : schemas_with_name)
             {
                 try
                 {
