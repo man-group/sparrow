@@ -24,7 +24,7 @@
 #include "sparrow/layout/temporal/timestamp_without_timezone_types.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/utils/vector_view.hpp"
+#include "sparrow/utils/sequence_view.hpp"
 
 namespace sparrow
 {
