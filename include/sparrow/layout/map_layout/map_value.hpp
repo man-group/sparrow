@@ -52,6 +52,9 @@ namespace sparrow
         [[nodiscard]] bool empty() const noexcept;
         [[nodiscard]] size_type size() const noexcept;
 
+        [[nodiscard]] const_mapped_reference at(const key_type& key) const;
+        [[nodiscard]] const_mapped_reference operator[](const key_type& key) const;
+
         [[nodiscard]] const_iterator begin() const;
         [[nodiscard]] const_iterator cbegin() const;
 
@@ -66,7 +69,8 @@ namespace sparrow
 
     private:
 
-        [[nodiscard]] const_reference value(size_type i) const;
+        size_type find_index(const key_type& key) const noexcept;
+        const_reference value(size_type i) const;
 
         const array_wrapper* p_flat_keys;
         const array_wrapper* p_flat_items;

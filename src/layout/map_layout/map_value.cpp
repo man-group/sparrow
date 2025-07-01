@@ -46,6 +46,21 @@ namespace sparrow
         return m_index_end - m_index_begin;
     }
 
+    auto map_value::at(const key_type& key) const -> const_mapped_reference
+    {
+        return (*this)[key];
+    }
+
+    auto map_value::operator[](const key_type& key) const -> const_mapped_reference
+    {
+        size_type index = find_index(key);
+        if (index == m_index_end)
+        {
+            throw std::out_of_range("key not found in map");
+        }
+        return array_element(*p_flat_items, index);
+    }
+
     auto map_value::begin() const -> const_iterator
     {
         return cbegin();
@@ -97,6 +112,89 @@ namespace sparrow
     bool operator==(const map_value& lhs, const map_value& rhs)
     {
         return std::ranges::equal(lhs, rhs);
+    }
+
+    namespace
+    {
+        template <class K, class A>
+        std::size_t
+        find_index_impl(const K& key, const A& ar, std::size_t index_begin, std::size_t index_end, const std::false_type&)
+        {
+            for (std::size_t i = index_begin; i != index_end; ++i)
+            {
+                const auto& val = ar[i];
+                using U = std::decay_t<decltype(val)>;
+                if constexpr (mpl::weakly_equality_comparable_with<K, U>)
+                {
+                    if (val == key)
+                    {
+                        return i;
+                    }
+                }
+            }
+            return index_end;
+        }
+
+        template <class K, class A>
+        std::size_t
+        find_index_impl(const K& key, const A& ar, std::size_t index_begin, std::size_t index_end, const std::true_type&)
+        {
+            // The initial implementation below has been removed on purpose
+            // It increases the size of the library by a factor 3.5 because
+            // of all the possible combinations of the variants. Besides, it
+            // does not really make sense to use variant values for the keys.
+            // We ensure this by throwing in the constructor of map_array.
+            // Even if this function is not supposed to be called at runtime,
+            // we need to implement it so that the compiler does not complain
+            // when building all the branches of find_index.
+            //
+            // Initial implementation:
+            // for (std::size_t i = index_begin; i != index_end; ++i)
+            // {
+            //    bool res = std::visit([&key]<class T>(const T& val) {
+            //        if constexpr (mpl::weakly_equality_comparable_with<T, K>)
+            //        {
+            //            return val == key;
+            //        }
+            //        return false;
+            //    }, ar[i]);
+            //    if (res)
+            //    {
+            //        return i;
+            //    }
+            // }
+
+            // Returns index_end, meaning the key is never found.
+            return index_end;
+        }
+    }
+
+    auto map_value::find_index(const key_type& key) const noexcept -> size_type
+    {
+#if SPARROW_GCC_11_2_WORKAROUND
+        using variant_type = std::decay_t<decltype(key)>;
+        using base_variant_type = variant_type::base_type;
+#endif
+        return std::visit(
+            [this](const auto& k)
+            {
+                return visit(
+                    [&k, this]<class Ar>(const Ar& ar)
+                    {
+                        using dispatch_tag = mpl::is_type_instance_of<typename Ar::value_type, nullable_variant>;
+                        return find_index_impl(k, ar, m_index_begin, m_index_end, dispatch_tag());
+                    },
+                    *p_flat_keys
+                );
+#if SPARROW_GCC_11_2_WORKAROUND
+            },
+            static_cast<const base_variant_type&>(key)
+        );
+#else
+            },
+            key
+        );
+#endif
     }
 }
 
