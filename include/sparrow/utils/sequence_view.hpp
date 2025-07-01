@@ -57,7 +57,8 @@ namespace sparrow
     constexpr bool operator==(const sequence_view<T, E>& lhs, const R& rhs);
 
     template <class T, std::size_t E>
-    constexpr std::compare_three_way_result<T> operator<=>(const sequence_view<T, E>& lhs, const sequence_view<T, E>& rhs);
+    constexpr std::compare_three_way_result<T>
+    operator<=>(const sequence_view<T, E>& lhs, const sequence_view<T, E>& rhs);
 
     template <class T, std::size_t E, std::ranges::input_range R>
     constexpr std::compare_three_way_result<T, std::ranges::range_value_t<R>>
@@ -67,8 +68,7 @@ namespace sparrow
 namespace std
 {
     template <class T, std::size_t E>
-    struct tuple_size<sparrow::sequence_view<T, E>>
-        : tuple_size<std::span<T, E>>
+    struct tuple_size<sparrow::sequence_view<T, E>> : tuple_size<std::span<T, E>>
     {
     };
 
@@ -112,7 +112,8 @@ namespace sparrow
     }
 
     template <class T, std::size_t E>
-    constexpr std::compare_three_way_result<T> operator<=>(const sequence_view<T, E>& lhs, const sequence_view<T, E>& rhs)
+    constexpr std::compare_three_way_result<T>
+    operator<=>(const sequence_view<T, E>& lhs, const sequence_view<T, E>& rhs)
     {
         return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
     }
