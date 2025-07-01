@@ -61,6 +61,16 @@ namespace sparrow
         return array_element(*p_flat_items, index);
     }
 
+    bool map_value::contains(const key_type& key) const
+    {
+        return find_index(key) != m_index_end;
+    }
+
+    auto map_value::find(const key_type& key) const -> const_iterator
+    {
+        return cbegin() + find_index(key) - m_index_begin;
+    }
+
     auto map_value::begin() const -> const_iterator
     {
         return cbegin();

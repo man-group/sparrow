@@ -208,28 +208,48 @@ namespace sparrow
                 test::where_nulls
             );
 
-            std::size_t flat_index = 0;
-            for (std::size_t i = 0; i < arr.size(); ++i)
+            SUBCASE("access")
             {
-                if (test::where_nulls.contains(i))
+                std::size_t flat_index = 0;
+                for (std::size_t i = 0; i < arr.size(); ++i)
                 {
-                    continue;
-                }
-                auto m = arr[i].value();
+                    if (test::where_nulls.contains(i))
+                    {
+                        continue;
+                    }
+                    auto m = arr[i].value();
 
-                auto it = m.cbegin();
-                for (std::size_t j = 0; j < m.size(); ++j)
-                {
-                    auto k = test::keys[flat_index];
-                    CHECK_EQ(m[k], m.at(k));
-                    CHECK_EQ(m[k], it->second);
-                    ++flat_index;
-                    ++it;
+                    auto it = m.cbegin();
+                    for (std::size_t j = 0; j < m.size(); ++j)
+                    {
+                        auto k = test::keys[flat_index];
+                        CHECK_EQ(m[k], m.at(k));
+                        CHECK_EQ(m[k], it->second);
+                        ++flat_index;
+                        ++it;
+                    }
                 }
+
+                auto m = arr[0].value();
+                CHECK_THROWS_AS(m[std::string("Batman")], std::out_of_range);
             }
 
-            auto m = arr[0].value();
-            CHECK_THROWS_AS(m[std::string("Batman")], std::out_of_range);
+            SUBCASE("find")
+            {
+                auto m = arr[1].value();
+                auto iter = m.find(std::string("Superman"));
+                CHECK_EQ(iter, m.begin() + 2);
+
+                auto not_found = m.find(std::string("Joker"));
+                CHECK_EQ(not_found, m.end());
+            }
+
+            SUBCASE("contains")
+            {
+                auto m = arr[1].value();
+                CHECK(m.contains(std::string("Superman")));
+                CHECK(!m.contains(std::string("Joker")));
+            }
         }
 
 #if defined(__cpp_lib_format)
