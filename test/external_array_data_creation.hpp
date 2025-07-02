@@ -408,8 +408,13 @@ namespace sparrow::test
     }
 
     template <>
-    inline void fill_schema_and_array<
-        sparrow::null_type>(ArrowSchema& schema, ArrowArray& arr, size_t size, size_t offset, const std::vector<size_t>&)
+    inline void fill_schema_and_array<sparrow::null_type>(
+        ArrowSchema& schema,
+        ArrowArray& arr,
+        size_t size,
+        size_t offset,
+        const std::vector<size_t>&
+    )
     {
         const repeat_view<bool> children_ownership(true, 0);
         sparrow::fill_arrow_schema(

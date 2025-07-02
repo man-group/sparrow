@@ -227,21 +227,23 @@ namespace sparrow
     constexpr array_wrapper_impl<T>::array_wrapper_impl(const array_wrapper_impl& rhs)
         : array_wrapper(rhs)
         , m_storage(value_ptr<T>(T(rhs.get_wrapped())))
-        , p_array(std::visit(
-              [](auto&& arg)
-              {
-                  using U = std::decay_t<decltype(arg)>;
-                  if constexpr (std::is_same_v<U, T*>)
+        , p_array(
+              std::visit(
+                  [](auto&& arg)
                   {
-                      return arg;
-                  }
-                  else
-                  {
-                      return arg.get();
-                  }
-              },
-              m_storage
-          ))  // Always deep copy
+                      using U = std::decay_t<decltype(arg)>;
+                      if constexpr (std::is_same_v<U, T*>)
+                      {
+                          return arg;
+                      }
+                      else
+                      {
+                          return arg.get();
+                      }
+                  },
+                  m_storage
+              )
+          )  // Always deep copy
     {
     }
 
