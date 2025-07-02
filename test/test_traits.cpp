@@ -40,34 +40,6 @@ namespace sparrow
     static_assert(mpl::all_of(all_base_types_t{}, predicate::is_arrow_base_type));
     static_assert(mpl::all_of(all_base_types_t{}, predicate::has_arrow_traits));
 
-
-    // Native basic standard types support
-
-    using basic_native_types = mpl::typelist<
-        bool,
-        char,
-        unsigned char,
-        signed char,
-        short,
-        unsigned short,
-        int,
-        unsigned int,
-        long,
-        unsigned long,  // `long long` could be bigger than 64bits and is not supported
-        float,
-        double,  // `long double` could be bigger than 64bit and is not supported
-        std::uint8_t,
-        std::int8_t,
-        std::uint16_t,
-        std::int16_t,
-        std::uint32_t,
-        std::int32_t,
-        std::uint64_t,
-        std::int64_t,
-        float16_t,
-        float32_t,
-        float64_t>;
-
     template <std::integral T>
     consteval bool is_possible_arrow_data_type(data_type type_id)
     {
