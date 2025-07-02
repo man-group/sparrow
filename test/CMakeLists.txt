@@ -73,6 +73,7 @@ else()
         test_dynamic_bitset_view.cpp
         test_dynamic_bitset.cpp
         test_fixed_width_binary_array.cpp
+        test_fixed_width_binary_utils.cpp
         test_float16_t.cpp
         test_format.cpp
         test_high_level_constructors.cpp

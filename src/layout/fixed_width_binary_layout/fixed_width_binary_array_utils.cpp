@@ -26,6 +26,10 @@ namespace sparrow
             throw std::invalid_argument("Invalid format for fixed width binary");
         }
         const std::string number{format.substr(2)};
+        if (number.starts_with("-") || number.find(".") != std::string::npos)
+        {
+            throw std::invalid_argument("Invalid format for fixed width binary");
+        }
         const size_t element_size = std::stoull(number);
         return element_size;
     }
