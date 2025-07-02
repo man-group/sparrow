@@ -66,7 +66,7 @@ namespace sparrow
         struct get_data_type_from_array;
 
         template <>
-        struct get_data_type_from_array<primitive_array<bool>>
+        struct get_data_type_from_array<primitive_array_impl<bool>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -75,7 +75,7 @@ namespace sparrow
         };
 
         template <>
-        struct get_data_type_from_array<primitive_array<std::int8_t>>
+        struct get_data_type_from_array<primitive_array_impl<std::int8_t>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -84,7 +84,7 @@ namespace sparrow
         };
 
         template <>
-        struct get_data_type_from_array<primitive_array<std::uint8_t>>
+        struct get_data_type_from_array<primitive_array_impl<std::uint8_t>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -93,7 +93,7 @@ namespace sparrow
         };
 
         template <>
-        struct get_data_type_from_array<primitive_array<std::int16_t>>
+        struct get_data_type_from_array<primitive_array_impl<std::int16_t>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -102,7 +102,7 @@ namespace sparrow
         };
 
         template <>
-        struct get_data_type_from_array<primitive_array<std::uint16_t>>
+        struct get_data_type_from_array<primitive_array_impl<std::uint16_t>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -111,7 +111,7 @@ namespace sparrow
         };
 
         template <>
-        struct get_data_type_from_array<primitive_array<std::int32_t>>
+        struct get_data_type_from_array<primitive_array_impl<std::int32_t>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -120,7 +120,7 @@ namespace sparrow
         };
 
         template <>
-        struct get_data_type_from_array<primitive_array<std::uint32_t>>
+        struct get_data_type_from_array<primitive_array_impl<std::uint32_t>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -129,7 +129,7 @@ namespace sparrow
         };
 
         template <>
-        struct get_data_type_from_array<primitive_array<std::int64_t>>
+        struct get_data_type_from_array<primitive_array_impl<std::int64_t>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -138,7 +138,7 @@ namespace sparrow
         };
 
         template <>
-        struct get_data_type_from_array<primitive_array<std::uint64_t>>
+        struct get_data_type_from_array<primitive_array_impl<std::uint64_t>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -147,7 +147,7 @@ namespace sparrow
         };
 
         template <>
-        struct get_data_type_from_array<primitive_array<float16_t>>
+        struct get_data_type_from_array<primitive_array_impl<float16_t>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -156,7 +156,7 @@ namespace sparrow
         };
 
         template <>
-        struct get_data_type_from_array<primitive_array<float32_t>>
+        struct get_data_type_from_array<primitive_array_impl<float32_t>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -165,7 +165,7 @@ namespace sparrow
         };
 
         template <>
-        struct get_data_type_from_array<primitive_array<float64_t>>
+        struct get_data_type_from_array<primitive_array_impl<float64_t>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
