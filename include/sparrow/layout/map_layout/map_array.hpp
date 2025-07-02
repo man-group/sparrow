@@ -43,6 +43,21 @@ namespace sparrow
     template <class T>
     constexpr bool is_map_array_v = std::same_as<T, map_array>;
 
+    namespace detail
+    {
+        template <class T>
+        struct get_data_type_from_array;
+
+        template <>
+        struct get_data_type_from_array<sparrow::map_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::MAP;
+            }
+        };
+    }
+
     class SPARROW_API map_array final : public array_bitmap_base<map_array>
     {
     public:
@@ -197,9 +212,8 @@ namespace sparrow
     template <std::ranges::range SIZES_RANGE>
     auto map_array::offset_from_sizes(SIZES_RANGE&& sizes) -> offset_buffer_type
     {
-        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(
-            std::forward<SIZES_RANGE>(sizes)
-        );
+        return detail::offset_buffer_from_sizes<std::remove_const_t<offset_type>>(std::forward<SIZES_RANGE>(sizes
+        ));
     }
 
     template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE>

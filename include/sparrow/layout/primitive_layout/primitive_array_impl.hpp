@@ -20,6 +20,7 @@
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
+#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/primitive_layout/primitive_data_access.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
@@ -418,14 +419,14 @@ namespace sparrow
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
-            sparrow::data_type_format_of<T>(),  // format
-            std::move(name),                    // name
-            std::move(metadata),                // metadata
-            flags,                              // flags
-            nullptr,                            // children
-            repeat_view<bool>(true, 0),         // children_ownership
-            nullptr,                            // dictionary
-            true                                // dictionary ownership
+            data_type_to_format(detail::get_data_type_from_array<self_type>::get()),  // format
+            std::move(name),                                                          // name
+            std::move(metadata),                                                      // metadata
+            flags,                                                                    // flags
+            nullptr,                                                                  // children
+            repeat_view<bool>(true, 0),                                               // children_ownership
+            nullptr,                                                                  // dictionary
+            true                                                                      // dictionary ownership
         );
 
         buffer<uint8_t> bitmap_buffer = bitmap_has_value ? std::move(*bitmap).extract_storage()

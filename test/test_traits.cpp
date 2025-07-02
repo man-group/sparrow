@@ -139,23 +139,4 @@ namespace sparrow
         }
     }
 
-    // Tests `data_type_from_size` and it's usage in `arrow_traits<T>::type_id`
-    struct
-    {
-        template <class T>
-            requires has_arrow_type_traits<T>
-        consteval bool operator()(mpl::typelist<T>)
-        {
-            constexpr auto deduced_type_id = data_type_from_size<T>();
-            static_assert(deduced_type_id == arrow_traits<T>::type_id);
-
-            return is_possible_arrow_data_type<T>(arrow_traits<T>::type_id);
-        }
-    } constexpr has_possible_arrow_data_type;
-
-    // Every basic native types must have an arrow trait, whatever the platform,
-    // including when fixed-size standard library names are or not alias to basic types.
-    // Only exceptions: types that could be bigger than 64bit (`long long`, `long double`, etc.)
-    static_assert(mpl::all_of(basic_native_types{}, has_possible_arrow_data_type));
-
 }

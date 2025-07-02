@@ -708,10 +708,6 @@ namespace sparrow
     /// @see `arrow_traits`, `has_arrow_type_traits`
     template <class T>
     concept is_arrow_traits = mpl::is_type_instance_of_v<T, arrow_traits> and requires {
-        /// Must provide a compile-time value of type `data_type`.
-        /// This is used to identify which arrow data type is represented in `value_type`
-        requires std::same_as<std::remove_cvref_t<decltype(T::type_id)>, ::sparrow::data_type>;
-
         /// The C++ representation of the arrow value. For `arrow_traits<X>`, this is usually `X`.
         typename T::value_type;
 
@@ -734,29 +730,6 @@ namespace sparrow
     template <class T>
     concept any_arrow_type = is_arrow_base_type<T> or has_arrow_type_traits<T>;
 
-    /// @returns Arrow type id to use for a given C++ representation of that type.
-    ///          @see `arrow_traits`
-    template <has_arrow_type_traits T>
-    [[nodiscard]] constexpr auto arrow_type_id() noexcept -> data_type
-    {
-        return arrow_traits<T>::type_id;
-    }
-
-    /// @returns Arrow type id to use for the type of a given object.
-    ///          @see `arrow_traits`
-    template <has_arrow_type_traits T>
-    [[nodiscard]] constexpr auto arrow_type_id(const T&) noexcept -> data_type
-    {
-        return arrow_type_id<T>();
-    }
-
-    /// @returns Format string matching the arrow data-type mathcing the provided
-    ///          arrow type.
-    template <has_arrow_type_traits T>
-    [[nodiscard]] constexpr std::string_view data_type_format_of() noexcept
-    {
-        return data_type_to_format(arrow_type_id<T>());
-    }
 
     /// Binary layout type to use by default for the given C++ representation T of an arrow value.
     template <has_arrow_type_traits T>

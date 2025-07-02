@@ -75,4 +75,37 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_interval_array_v = is_interval_array<T>::value;
-}
+
+    namespace detail
+    {
+        template <class T>
+        struct get_data_type_from_array;
+
+        template <>
+        struct get_data_type_from_array<months_interval_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::INTERVAL_MONTHS;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<days_time_interval_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::INTERVAL_DAYS_TIME;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<month_day_nanoseconds_interval_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS;
+            }
+        };
+    }
+};

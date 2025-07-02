@@ -76,4 +76,46 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_timestamp_without_timezone_array_v = is_timestamp_without_timezone_array<T>::value;
+
+    namespace detail
+    {
+        template <class T>
+        struct get_data_type_from_array;
+
+        template <>
+        struct get_data_type_from_array<timestamp_without_timezone_seconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIMESTAMP_SECONDS;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<timestamp_without_timezone_milliseconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIMESTAMP_MILLISECONDS;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<timestamp_without_timezone_microseconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIMESTAMP_MICROSECONDS;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<timestamp_without_timezone_nanoseconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIMESTAMP_NANOSECONDS;
+            }
+        };
+    }
 }

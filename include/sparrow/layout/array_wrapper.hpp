@@ -20,6 +20,7 @@
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/utils/memory.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -49,7 +50,12 @@ namespace sparrow
         {
             [[nodiscard]] static constexpr sparrow::data_type get() noexcept
             {
-                return arrow_traits<typename ARRAY::inner_value_type>::type_id;
+                static_assert(
+                    mpl::dependent_false<ARRAY>::value,
+                    "get_data_type_from_array is not specialized for this array type. "
+                    "Please provide a specialization for your array type."
+                );
+                return sparrow::data_type::NA;
             }
         };
 
@@ -221,23 +227,21 @@ namespace sparrow
     constexpr array_wrapper_impl<T>::array_wrapper_impl(const array_wrapper_impl& rhs)
         : array_wrapper(rhs)
         , m_storage(value_ptr<T>(T(rhs.get_wrapped())))
-        , p_array(
-              std::visit(
-                  [](auto&& arg)
+        , p_array(std::visit(
+              [](auto&& arg)
+              {
+                  using U = std::decay_t<decltype(arg)>;
+                  if constexpr (std::is_same_v<U, T*>)
                   {
-                      using U = std::decay_t<decltype(arg)>;
-                      if constexpr (std::is_same_v<U, T*>)
-                      {
-                          return arg;
-                      }
-                      else
-                      {
-                          return arg.get();
-                      }
-                  },
-                  m_storage
-              )
-          )  // Always deep copy
+                      return arg;
+                  }
+                  else
+                  {
+                      return arg.get();
+                  }
+              },
+              m_storage
+          ))  // Always deep copy
     {
     }
 

@@ -78,4 +78,46 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_time_array_v = is_time_array<T>::value;
+
+    namespace detail
+    {
+        template <class T>
+        struct get_data_type_from_array;
+
+        template <>
+        struct get_data_type_from_array<sparrow::time_seconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIME_SECONDS;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<sparrow::time_milliseconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIME_MILLISECONDS;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<sparrow::time_microseconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIME_MICROSECONDS;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<sparrow::time_nanoseconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIME_NANOSECONDS;
+            }
+        };
+    }
 }

@@ -68,4 +68,29 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_date_array_v = is_date_array<T>::value;
+
+    namespace detail
+    {
+        template <class T>
+        struct get_data_type_from_array;
+
+        template <>
+        struct get_data_type_from_array<date_days_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::DATE_DAYS;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<date_milliseconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::DATE_MILLISECONDS;
+            }
+        };
+
+    }
 }

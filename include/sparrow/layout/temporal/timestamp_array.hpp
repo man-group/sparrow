@@ -81,6 +81,48 @@ namespace sparrow
     using timestamp_microseconds_array = timestamp_array<timestamp_microsecond>;
     using timestamp_nanoseconds_array = timestamp_array<timestamp_nanosecond>;
 
+    namespace detail
+    {
+        template <class T>
+        struct get_data_type_from_array;
+
+        template <>
+        struct get_data_type_from_array<timestamp_seconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIMESTAMP_SECONDS;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<timestamp_milliseconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIMESTAMP_MILLISECONDS;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<timestamp_microseconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIMESTAMP_MICROSECONDS;
+            }
+        };
+
+        template <>
+        struct get_data_type_from_array<timestamp_nanoseconds_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::TIMESTAMP_NANOSECONDS;
+            }
+        };
+    }
+
     /**
      * Array of timestamps.
      *
@@ -508,7 +550,7 @@ namespace sparrow
         const auto size = data_buffer.size();
         const auto null_count = bitmap.has_value() ? bitmap->null_count() : 0;
 
-        std::string format(data_type_to_format(arrow_traits<T>::type_id));
+        std::string format(data_type_to_format(detail::get_data_type_from_array<self_type>::get()));
         format += timezone->name();
 
         const repeat_view<bool> children_ownership{true, 0};

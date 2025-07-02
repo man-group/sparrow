@@ -75,7 +75,7 @@ namespace sparrow
         {
             [[nodiscard]] static constexpr sparrow::data_type get() noexcept
             {
-                return arrow_traits<typename primitive_array<IT>::inner_value_type>::type_id;
+                return get_data_type_from_array<primitive_array<IT>>::get();
             }
         };
 
@@ -231,10 +231,7 @@ namespace sparrow
             std::ranges::input_range KEY_RANGE,
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(
-                !std::same_as<KEY_RANGE, keys_buffer_type>
-                and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>
-            )
+            requires(!std::same_as<KEY_RANGE, keys_buffer_type> and std::same_as<IT, std::ranges::range_value_t<KEY_RANGE>>)
         [[nodiscard]] static arrow_proxy create_proxy(
             KEY_RANGE&& keys,
             array&& values,
@@ -403,14 +400,14 @@ namespace sparrow
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
-            sparrow::data_type_format_of<IT>(),
-            std::move(name),                           // name
-            std::move(metadata),                       // metadata
-            flags,                                     // flags
-            nullptr,                                   // children
-            children_ownership,                        // children_ownership
-            new ArrowSchema(std::move(value_schema)),  // dictionary
-            true                                       // dictionary ownership
+            data_type_to_format(detail::get_data_type_from_array<self_type>::get()),  // format
+            std::move(name),                                                          // name
+            std::move(metadata),                                                      // metadata
+            flags,                                                                    // flags
+            nullptr,                                                                  // children
+            children_ownership,                                                       // children_ownership
+            new ArrowSchema(std::move(value_schema)),                                 // dictionary
+            true                                                                      // dictionary ownership
         );
 
         const size_t null_count = validity.has_value() ? validity->null_count() : 0;
