@@ -99,9 +99,9 @@ namespace sparrow
                 case data_type::HALF_FLOAT:
                     return detail::make_wrapper_ptr<primitive_array<float16_t>>(std::move(proxy));
                 case data_type::FLOAT:
-                    return detail::make_wrapper_ptr<primitive_array<float>>(std::move(proxy));
+                    return detail::make_wrapper_ptr<primitive_array<float32_t>>(std::move(proxy));
                 case data_type::DOUBLE:
-                    return detail::make_wrapper_ptr<primitive_array<double>>(std::move(proxy));
+                    return detail::make_wrapper_ptr<primitive_array<float64_t>>(std::move(proxy));
                 case data_type::LIST:
                     return detail::make_wrapper_ptr<list_array>(std::move(proxy));
                 case data_type::LARGE_LIST:
@@ -135,9 +135,8 @@ namespace sparrow
                 case data_type::TIMESTAMP_SECONDS:
                     if (get_timezone(proxy) == nullptr)
                     {
-                        return detail::make_wrapper_ptr<timestamp_without_timezone_seconds_array>(
-                            std::move(proxy)
-                        );
+                        return detail::make_wrapper_ptr<timestamp_without_timezone_seconds_array>(std::move(proxy
+                        ));
                     }
                     else
                     {
