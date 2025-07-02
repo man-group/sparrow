@@ -48,15 +48,7 @@ namespace sparrow
         template <class ARRAY>
         struct get_data_type_from_array
         {
-            [[nodiscard]] static constexpr sparrow::data_type get() noexcept
-            {
-                static_assert(
-                    mpl::dependent_false<ARRAY>::value,
-                    "get_data_type_from_array is not specialized for this array type. "
-                    "Please provide a specialization for your array type."
-                );
-                return sparrow::data_type::NA;
-            }
+            [[nodiscard]] static constexpr sparrow::data_type get() noexcept;
         };
 
         template <class ARRAY>
