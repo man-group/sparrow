@@ -87,6 +87,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libpthread-stubs0-dev libboost-thread-dev
 
+    - uses: rui314/setup-mold@v1
+      with:
+        mold-version: 2.40.1
+        make-default: true
+
     - name: Install GCC
       if: matrix.compiler == 'gcc'
       uses: egor-tensin/setup-gcc@v1
@@ -143,7 +148,9 @@ jobs:
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
-          -DSPARROW_BUILD_SHARED=${{matrix.shared}}
+          -DSPARROW_BUILD_SHARED=${{matrix.shared}} \
+          -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
+          -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
 
     - name: Build library
       working-directory: build
