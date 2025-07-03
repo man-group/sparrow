@@ -82,10 +82,10 @@ jobs:
     - name: Run sccache-cache
       uses: mozilla-actions/sccache-action@v0.0.9
 
-    - name: Install mold and pthread
+    - name: Install pthread
       run: |
         sudo apt-get update
-        sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev
+        sudo apt-get install -y libpthread-stubs0-dev libboost-thread-dev
 
     - name: Install GCC
       if: matrix.compiler == 'gcc'
@@ -143,9 +143,7 @@ jobs:
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
-          -DSPARROW_BUILD_SHARED=${{matrix.shared}} \
-          -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
-          -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
+          -DSPARROW_BUILD_SHARED=${{matrix.shared}}
 
     - name: Build library
       working-directory: build
