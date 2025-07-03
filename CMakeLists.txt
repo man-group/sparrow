@@ -271,7 +271,6 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/nullable.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/offsets.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/pair.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/utils/reference_wrapper_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/sequence_view.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/temporal.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
