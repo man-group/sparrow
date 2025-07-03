@@ -470,7 +470,7 @@ namespace sparrow
         /// the layout. For instance:
         ///
         /// template <>
-        /// struct get_data_typt_from_array<list_array>
+        /// struct get_data_type_from_array<list_array>
         /// {
         ///     [[nodiscard]] static constexpr sparrow::data_type get()
         ///     {
