@@ -46,10 +46,7 @@ namespace sparrow
         // do not have a inner_value_type, therefore we specialize
         // this in their respecitve headers.
         template <class ARRAY>
-        struct get_data_type_from_array
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get() noexcept;
-        };
+        struct get_data_type_from_array;
 
         template <class ARRAY>
         struct is_dictionary_encoded_array
