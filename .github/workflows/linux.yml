@@ -12,8 +12,8 @@ defaults:
     shell: bash -e -l {0}
 jobs:
   build:
-    runs-on: ubuntu-24.04
-    name: ${{ matrix.compiler }} / ${{ matrix.version }} / ${{ matrix.arch }} / ${{ matrix.config }} / date-polyfill ${{ matrix.date-polyfill}} / shared ${{ matrix.shared }} / cpp${{ matrix.cpp_standard }}
+    runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
+    name: ${{runner.name}} / ${{ matrix.compiler }} / ${{ matrix.version }} / ${{ matrix.arch }} / ${{ matrix.config }} / date-polyfill ${{ matrix.date-polyfill}} / shared ${{ matrix.shared }} / cpp${{ matrix.cpp_standard }}
     env:
       SCCACHE_GHA_ENABLED: "true"
     strategy:
@@ -172,11 +172,10 @@ jobs:
       uses: actions/upload-artifact@v4
       if: success() || failure()
       with:
-        name: test_sparrow_lib_report_Linux_${{ matrix.compiler }}_${{ matrix.version }}_${{ matrix.config }}_m${{ matrix.arch }}_date-polyfill_${{ matrix.date-polyfill }}_shared_${{ matrix.shared }}_cpp${{ matrix.cpp_standard }}
+        name: test_sparrow_lib_report_Linux_${{runner.name}}_${{ matrix.compiler }}_${{ matrix.version }}_${{ matrix.config }}_m${{ matrix.arch }}_date-polyfill_${{ matrix.date-polyfill }}_shared_${{ matrix.shared }}_cpp${{ matrix.cpp_standard }}
         path: ./**/test*.xml
         if-no-files-found: error
 
     - name: Run all examples
       working-directory: build
       run: cmake --build . --config ${{matrix.config}} --target run_examples
-
