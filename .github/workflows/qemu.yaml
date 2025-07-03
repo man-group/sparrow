@@ -13,9 +13,6 @@ jobs:
     strategy:
       matrix:
         target:
-          # - { arch: armv7,   date-polyfill: 'ON' }
-          - { arch: aarch64, date-polyfill: 'ON' }
-          - { arch: aarch64, date-polyfill: 'OFF'}
           - { arch: riscv64, date-polyfill: 'ON' }
           - { arch: s390x,   date-polyfill: 'ON' }
           - { arch: s390x,   date-polyfill: 'OFF' }

@@ -12,15 +12,12 @@ defaults:
     shell: bash -e -l {0}
 jobs:
   build:
-    runs-on: ubuntu-24.04
-    name: ${{ matrix.compiler }} / ${{ matrix.version }} / ${{ matrix.arch }} / ${{ matrix.config }} / date-polyfill ${{ matrix.date-polyfill}} / shared ${{ matrix.shared }} / cpp${{ matrix.cpp_standard }}
-    env:
-      SCCACHE_GHA_ENABLED: "true"
     strategy:
       fail-fast: false
       matrix:
         compiler: [clang, gcc]
         version: [11, 12, 13, 14, 17, 18, 19, 20]
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
         arch: [64]
         config: [Debug, Release]
         date-polyfill: [ON, OFF]
@@ -52,6 +49,7 @@ jobs:
         include:
           - compiler: gcc
             version: 13
+            os: ubuntu-24.04
             arch: 32
             config: Release
             date-polyfill: OFF
@@ -59,6 +57,7 @@ jobs:
             cpp_standard: 20
           - compiler: gcc
             version: 14
+            os: ubuntu-24.04
             arch: 64
             config: Release
             date-polyfill: OFF
@@ -66,21 +65,32 @@ jobs:
             cpp_standard: 23
           - compiler: clang
             version: 20
+            os: ubuntu-24.04
             arch: 64
             config: Release
             date-polyfill: OFF
             shared: OFF
             cpp_standard: 23
-            
+           
+    runs-on: ${{ matrix.os }}
+    name: ${{matrix.os}} / ${{ matrix.compiler }} / ${{ matrix.version }} / ${{ matrix.arch }} / ${{ matrix.config }} / date-polyfill ${{ matrix.date-polyfill}} / shared ${{ matrix.shared }} / cpp${{ matrix.cpp_standard }}
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+ 
     steps:
 
     - name: Run sccache-cache
       uses: mozilla-actions/sccache-action@v0.0.9
 
-    - name: Install mold and pthread
+    - name: Install pthread
       run: |
         sudo apt-get update
-        sudo apt-get install -y mold libpthread-stubs0-dev libboost-thread-dev
+        sudo apt-get install -y libpthread-stubs0-dev libboost-thread-dev
+
+    - uses: rui314/setup-mold@v1
+      with:
+        mold-version: 2.40.1
+        make-default: true
 
     - name: Install GCC
       if: matrix.compiler == 'gcc'
@@ -172,11 +182,10 @@ jobs:
       uses: actions/upload-artifact@v4
       if: success() || failure()
       with:
-        name: test_sparrow_lib_report_Linux_${{ matrix.compiler }}_${{ matrix.version }}_${{ matrix.config }}_m${{ matrix.arch }}_date-polyfill_${{ matrix.date-polyfill }}_shared_${{ matrix.shared }}_cpp${{ matrix.cpp_standard }}
+        name: test_sparrow_lib_report_Linux_${{matrix.os}}_${{ matrix.compiler }}_${{ matrix.version }}_${{ matrix.config }}_m${{ matrix.arch }}_date-polyfill_${{ matrix.date-polyfill }}_shared_${{ matrix.shared }}_cpp${{ matrix.cpp_standard }}
         path: ./**/test*.xml
         if-no-files-found: error
 
     - name: Run all examples
       working-directory: build
       run: cmake --build . --config ${{matrix.config}} --target run_examples
-

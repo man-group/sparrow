@@ -3693,7 +3693,14 @@ namespace half_float {
 		int abs = arg.data_ & 0x7FFF, exp;
 		if(!abs || abs >= 0x7C00) {
 			detail::raise(FE_INVALID);
+			#if defined(__GNUC__) && !defined(__clang__)
+			#pragma GCC diagnostic push
+			#pragma GCC diagnostic ignored "-Wduplicated-branches"
+			#endif
 			return !abs ? FP_ILOGB0 : (abs==0x7C00) ? INT_MAX : FP_ILOGBNAN;
+			#if defined(__GNUC__) && !defined(__clang__)
+			#pragma GCC diagnostic pop
+			#endif
 		}
 		for(exp=(abs>>10)-15; abs<0x200; abs<<=1,--exp) ;
 		return exp;
