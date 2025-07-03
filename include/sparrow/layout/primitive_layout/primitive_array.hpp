@@ -27,76 +27,20 @@ namespace sparrow
 
     namespace detail
     {
+        template <primitive_type T>
+        struct primitive_data_traits<T>
+        {
+            // Using data_type_from_size instead of specializing primitive_data_traits
+            // for all integers and floating point types nicely handles platforms
+            // where std::size_t or unsigned long are not the same as fixed width
+            // integer types.
+            static constexpr sparrow::data_type type_id = sparrow::data_type_from_size<T>();
+        };
+
         template <>
         struct primitive_data_traits<bool>
         {
             static constexpr sparrow::data_type type_id = sparrow::data_type::BOOL;
-        };
-
-        template <>
-        struct primitive_data_traits<std::int8_t>
-        {
-            static constexpr sparrow::data_type type_id = sparrow::data_type::INT8;
-        };
-
-        template <>
-        struct primitive_data_traits<std::uint8_t>
-        {
-            static constexpr sparrow::data_type type_id = sparrow::data_type::UINT8;
-        };
-
-        template <>
-        struct primitive_data_traits<std::int16_t>
-        {
-            static constexpr sparrow::data_type type_id = sparrow::data_type::INT16;
-        };
-
-        template <>
-        struct primitive_data_traits<std::uint16_t>
-        {
-            static constexpr sparrow::data_type type_id = sparrow::data_type::UINT16;
-        };
-
-        template <>
-        struct primitive_data_traits<std::int32_t>
-        {
-            static constexpr sparrow::data_type type_id = sparrow::data_type::INT32;
-        };
-
-        template <>
-        struct primitive_data_traits<std::uint32_t>
-        {
-            static constexpr sparrow::data_type type_id = sparrow::data_type::UINT32;
-        };
-
-        template <>
-        struct primitive_data_traits<std::int64_t>
-        {
-            static constexpr sparrow::data_type type_id = sparrow::data_type::INT64;
-        };
-
-        template <>
-        struct primitive_data_traits<std::uint64_t>
-        {
-            static constexpr sparrow::data_type type_id = sparrow::data_type::UINT64;
-        };
-
-        template <>
-        struct primitive_data_traits<float16_t>
-        {
-            static constexpr sparrow::data_type type_id = sparrow::data_type::HALF_FLOAT;
-        };
-
-        template <>
-        struct primitive_data_traits<float32_t>
-        {
-            static constexpr sparrow::data_type type_id = sparrow::data_type::FLOAT;
-        };
-
-        template <>
-        struct primitive_data_traits<float64_t>
-        {
-            static constexpr sparrow::data_type type_id = sparrow::data_type::DOUBLE;
         };
     }
 

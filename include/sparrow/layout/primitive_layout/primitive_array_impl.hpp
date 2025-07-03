@@ -53,7 +53,7 @@ namespace sparrow
 
     namespace detail
     {
-        template <trivial_copyable_type T>
+        template <class T>
         struct primitive_data_traits;
 
         template <trivial_copyable_type T>
