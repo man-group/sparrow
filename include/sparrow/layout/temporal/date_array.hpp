@@ -27,6 +27,21 @@ namespace sparrow
     template <typename T>
     concept date_type = mpl::contains<date_types_t, T>();
 
+    namespace detail
+    {
+        template <>
+        struct primitive_data_traits<sparrow::date_days>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::DATE_DAYS;
+        };
+
+        template <>
+        struct primitive_data_traits<sparrow::date_milliseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::DATE_MILLISECONDS;
+        };
+    }
+
     /**
      * Array of std::chrono::duration values.
      *
@@ -68,29 +83,4 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_date_array_v = is_date_array<T>::value;
-
-    namespace detail
-    {
-        template <class T>
-        struct get_data_type_from_array;
-
-        template <>
-        struct get_data_type_from_array<date_days_array>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::DATE_DAYS;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<date_milliseconds_array>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::DATE_MILLISECONDS;
-            }
-        };
-
-    }
 }

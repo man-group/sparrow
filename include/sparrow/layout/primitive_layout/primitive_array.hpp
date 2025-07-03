@@ -23,7 +23,82 @@ namespace sparrow
 {
     template <typename T>
     concept primitive_type = std::is_arithmetic_v<T> || std::is_same_v<T, float16_t>
-                             || std::is_same_v<T, bool> || std::is_same_v<T, std::byte>;
+                             || std::is_same_v<T, bool>;
+
+    namespace detail
+    {
+        template <>
+        struct primitive_data_traits<bool>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::BOOL;
+        };
+
+        template <>
+        struct primitive_data_traits<std::int8_t>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::INT8;
+        };
+
+        template <>
+        struct primitive_data_traits<std::uint8_t>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::UINT8;
+        };
+
+        template <>
+        struct primitive_data_traits<std::int16_t>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::INT16;
+        };
+
+        template <>
+        struct primitive_data_traits<std::uint16_t>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::UINT16;
+        };
+
+        template <>
+        struct primitive_data_traits<std::int32_t>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::INT32;
+        };
+
+        template <>
+        struct primitive_data_traits<std::uint32_t>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::UINT32;
+        };
+
+        template <>
+        struct primitive_data_traits<std::int64_t>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::INT64;
+        };
+
+        template <>
+        struct primitive_data_traits<std::uint64_t>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::UINT64;
+        };
+
+        template <>
+        struct primitive_data_traits<float16_t>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::HALF_FLOAT;
+        };
+
+        template <>
+        struct primitive_data_traits<float32_t>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::FLOAT;
+        };
+
+        template <>
+        struct primitive_data_traits<float64_t>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::DOUBLE;
+        };
+    }
 
     /**
      * Array of values of whose type has fixed binary size.
@@ -59,6 +134,4 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_primitive_array_v = is_primitive_array<T>::value;
-
-
 }

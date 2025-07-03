@@ -53,114 +53,15 @@ namespace sparrow
 
     namespace detail
     {
-        template <class T>
-        struct get_data_type_from_array;
+        template <trivial_copyable_type T>
+        struct primitive_data_traits;
 
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<bool>>
+        template <trivial_copyable_type T>
+        struct get_data_type_from_array<primitive_array_impl<T>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
-                return sparrow::data_type::BOOL;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<std::int8_t>>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::INT8;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<std::uint8_t>>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::UINT8;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<std::int16_t>>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::INT16;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<std::uint16_t>>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::UINT16;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<std::int32_t>>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::INT32;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<std::uint32_t>>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::UINT32;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<std::int64_t>>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::INT64;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<std::uint64_t>>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::UINT64;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<float16_t>>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::HALF_FLOAT;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<float32_t>>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::FLOAT;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<primitive_array_impl<float64_t>>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::DOUBLE;
+                return primitive_data_traits<T>::type_id;
             }
         };
     }

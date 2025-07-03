@@ -29,6 +29,33 @@ namespace sparrow
     template <typename T>
     concept duration_type = mpl::contains<duration_types_t, T>();
 
+    namespace detail
+    {
+        template <>
+        struct primitive_data_traits<std::chrono::seconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::DURATION_SECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<std::chrono::milliseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::DURATION_MILLISECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<std::chrono::microseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::DURATION_MICROSECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<std::chrono::nanoseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::DURATION_NANOSECONDS;
+        };
+    }
+
     /**
      * Array of std::chrono::duration values.
      *
@@ -80,47 +107,4 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_duration_array_v = is_duration_array<T>::value;
-
-    namespace detail
-    {
-        template <class T>
-        struct get_data_type_from_array;
-
-        template <>
-        struct get_data_type_from_array<duration_seconds_array>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::DURATION_SECONDS;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<duration_milliseconds_array>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::DURATION_MILLISECONDS;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<duration_microseconds_array>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::DURATION_MICROSECONDS;
-            }
-        };
-
-        template <>
-        struct get_data_type_from_array<duration_nanoseconds_array>
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get()
-            {
-                return sparrow::data_type::DURATION_NANOSECONDS;
-            }
-        };
-
-    }
 }
