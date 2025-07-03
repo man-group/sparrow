@@ -22,8 +22,7 @@
 namespace sparrow
 {
     template <typename T>
-    concept primitive_type = std::is_arithmetic_v<T> || std::is_same_v<T, float16_t>
-                             || std::is_same_v<T, bool>;
+    concept primitive_type = std::is_arithmetic_v<T> || std::is_same_v<T, float16_t> || std::is_same_v<T, bool>;
 
     namespace detail
     {

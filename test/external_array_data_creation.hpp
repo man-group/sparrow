@@ -82,9 +82,10 @@ namespace sparrow::test
         std::string_view data_type_str = sparrow::data_type_to_format(
             sparrow::detail::get_data_type_from_array<sparrow::primitive_array<T>>::get()
         );
-        //char* format = new char[data_type_str.size() + 1];
-        //std::copy(data_type_str.begin(), data_type_str.end(), format);
-        schema.format = data_type_str.data();;
+        // char* format = new char[data_type_str.size() + 1];
+        // std::copy(data_type_str.begin(), data_type_str.end(), format);
+        schema.format = data_type_str.data();
+        ;
         schema.name = "test";
         schema.metadata = "test metadata";
         schema.n_children = 0;
