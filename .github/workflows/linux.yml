@@ -13,61 +13,61 @@ defaults:
 jobs:
   build:
     strategy:
-    fail-fast: false
-    matrix:
-      compiler: [clang, gcc]
-      version: [11, 12, 13, 14, 17, 18, 19, 20]
-      os: [ubuntu-24.04, ubuntu-24.04-arm]
-      arch: [64]
-      config: [Debug, Release]
-      date-polyfill: [ON, OFF]
-      shared: [ON, OFF]
-      cpp_standard: [20]
-      exclude:
-        - compiler: clang
-          version: 11
-        - compiler: clang
-          version: 12
-        - compiler: clang
-          version: 13
-        - compiler: clang
-          version: 14
-        - compiler: gcc
-          version: 17
-        - compiler: gcc
-          version: 18
-        - compiler: gcc
-          version: 19
-        - compiler: gcc
-          version: 20
-        - compiler: gcc
-          version: 11
-          date-polyfill: OFF
-        - compiler: gcc
-          version: 12
-          date-polyfill: OFF
-      include:
-        - compiler: gcc
-          version: 13
-          arch: 32
-          config: Release
-          date-polyfill: OFF
-          shared: OFF
-          cpp_standard: 20
-        - compiler: gcc
-          version: 14
-          arch: 64
-          config: Release
-          date-polyfill: OFF
-          shared: OFF
-          cpp_standard: 23
-        - compiler: clang
-          version: 20
-          arch: 64
-          config: Release
-          date-polyfill: OFF
-          shared: OFF
-          cpp_standard: 23
+      fail-fast: false
+      matrix:
+        compiler: [clang, gcc]
+        version: [11, 12, 13, 14, 17, 18, 19, 20]
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+        arch: [64]
+        config: [Debug, Release]
+        date-polyfill: [ON, OFF]
+        shared: [ON, OFF]
+        cpp_standard: [20]
+        exclude:
+          - compiler: clang
+            version: 11
+          - compiler: clang
+            version: 12
+          - compiler: clang
+            version: 13
+          - compiler: clang
+            version: 14
+          - compiler: gcc
+            version: 17
+          - compiler: gcc
+            version: 18
+          - compiler: gcc
+            version: 19
+          - compiler: gcc
+            version: 20
+          - compiler: gcc
+            version: 11
+            date-polyfill: OFF
+          - compiler: gcc
+            version: 12
+            date-polyfill: OFF
+        include:
+          - compiler: gcc
+            version: 13
+            arch: 32
+            config: Release
+            date-polyfill: OFF
+            shared: OFF
+            cpp_standard: 20
+          - compiler: gcc
+            version: 14
+            arch: 64
+            config: Release
+            date-polyfill: OFF
+            shared: OFF
+            cpp_standard: 23
+          - compiler: clang
+            version: 20
+            arch: 64
+            config: Release
+            date-polyfill: OFF
+            shared: OFF
+            cpp_standard: 23
            
     runs-on: ${{ matrix.os }}
     name: ${{matrix.os}} / ${{ matrix.compiler }} / ${{ matrix.version }} / ${{ matrix.arch }} / ${{ matrix.config }} / date-polyfill ${{ matrix.date-polyfill}} / shared ${{ matrix.shared }} / cpp${{ matrix.cpp_standard }}
