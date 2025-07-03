@@ -67,9 +67,6 @@ namespace sparrow
 
     namespace detail
     {
-        template <class T>
-        struct get_data_type_from_array;
-
         template <std::integral IT>
         struct get_data_type_from_array<sparrow::dictionary_encoded_array<IT>>
         {

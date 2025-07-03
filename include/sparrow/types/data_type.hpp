@@ -462,6 +462,25 @@ namespace sparrow
         mpl::unreachable();
     }
 
+    namespace detail
+    {
+        /// Metafunction for retrieving the data_type of a typed array.
+        /// Each typed array (or layout) must specialize this Metafunction
+        /// and define a static get function that returns the data_type of
+        /// the layout. For instance:
+        ///
+        /// template <>
+        /// struct get_data_type_from_array<list_array>
+        /// {
+        ///     [[nodiscard]] static constexpr sparrow::data_type get()
+        ///     {
+        ///         return sparrow::data_type::LIST;
+        ///     }
+        /// };
+        template <class A>
+        struct get_data_type_from_array;
+    }
+
     // REMARK: this functions is non-applicable for the following types
     // - all decimal types because further information is needed (precision, scale)
     // - fixed-sized binary because further information is needed (element size)

@@ -41,9 +41,6 @@ namespace sparrow
 
     namespace detail
     {
-        template <class T>
-        struct get_data_type_from_array;
-
         template <>
         struct get_data_type_from_array<sparrow::dense_union_array>
         {
