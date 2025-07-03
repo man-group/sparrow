@@ -49,6 +49,7 @@ jobs:
         include:
           - compiler: gcc
             version: 13
+            os: ubuntu-24.04
             arch: 32
             config: Release
             date-polyfill: OFF
@@ -56,6 +57,7 @@ jobs:
             cpp_standard: 20
           - compiler: gcc
             version: 14
+            os: ubuntu-24.04
             arch: 64
             config: Release
             date-polyfill: OFF
@@ -63,6 +65,7 @@ jobs:
             cpp_standard: 23
           - compiler: clang
             version: 20
+            os: ubuntu-24.04
             arch: 64
             config: Release
             date-polyfill: OFF
