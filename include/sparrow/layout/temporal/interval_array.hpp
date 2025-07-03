@@ -29,6 +29,27 @@ namespace sparrow
     template <typename T>
     concept interval_type = mpl::contains<interval_types_t, T>();
 
+    namespace detail
+    {
+        template <>
+        struct primitive_data_traits<chrono::months>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::INTERVAL_MONTHS;
+        };
+
+        template <>
+        struct primitive_data_traits<days_time_interval>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::INTERVAL_DAYS_TIME;
+        };
+
+        template <>
+        struct primitive_data_traits<month_day_nanoseconds_interval>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS;
+        };
+    }
+
     /**
      * Array of interval values.
      *
@@ -75,4 +96,4 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_interval_array_v = is_interval_array<T>::value;
-}
+};

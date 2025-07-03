@@ -29,6 +29,33 @@ namespace sparrow
     template <typename T>
     concept duration_type = mpl::contains<duration_types_t, T>();
 
+    namespace detail
+    {
+        template <>
+        struct primitive_data_traits<std::chrono::seconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::DURATION_SECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<std::chrono::milliseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::DURATION_MILLISECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<std::chrono::microseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::DURATION_MICROSECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<std::chrono::nanoseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::DURATION_NANOSECONDS;
+        };
+    }
+
     /**
      * Array of std::chrono::duration values.
      *

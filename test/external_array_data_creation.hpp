@@ -21,6 +21,8 @@
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/primitive_layout/primitive_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
 
@@ -77,7 +79,13 @@ namespace sparrow::test
         const std::vector<size_t>& false_bitmap
     )
     {
-        schema.format = sparrow::data_type_format_of<T>().data();
+        std::string_view data_type_str = sparrow::data_type_to_format(
+            sparrow::detail::get_data_type_from_array<sparrow::primitive_array<T>>::get()
+        );
+        // char* format = new char[data_type_str.size() + 1];
+        // std::copy(data_type_str.begin(), data_type_str.end(), format);
+        schema.format = data_type_str.data();
+        ;
         schema.name = "test";
         schema.metadata = "test metadata";
         schema.n_children = 0;
@@ -118,7 +126,7 @@ namespace sparrow::test
     {
         sparrow::fill_arrow_schema(
             schema,
-            sparrow::data_type_format_of<T>(),
+            data_type_to_format(sparrow::detail::get_data_type_from_array<sparrow::primitive_array<T>>::get()),
             "test",
             metadata_sample_opt,
             std::nullopt,

@@ -43,6 +43,21 @@ namespace sparrow
     template <class T>
     constexpr bool is_map_array_v = std::same_as<T, map_array>;
 
+    namespace detail
+    {
+        template <class T>
+        struct get_data_type_from_array;
+
+        template <>
+        struct get_data_type_from_array<sparrow::map_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::MAP;
+            }
+        };
+    }
+
     class SPARROW_API map_array final : public array_bitmap_base<map_array>
     {
     public:

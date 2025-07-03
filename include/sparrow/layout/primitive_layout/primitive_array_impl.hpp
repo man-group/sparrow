@@ -20,6 +20,7 @@
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
+#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/primitive_layout/primitive_data_access.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
@@ -49,6 +50,21 @@ namespace sparrow
 
         using iterator_tag = std::random_access_iterator_tag;
     };
+
+    namespace detail
+    {
+        template <class T>
+        struct primitive_data_traits;
+
+        template <trivial_copyable_type T>
+        struct get_data_type_from_array<primitive_array_impl<T>>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return primitive_data_traits<T>::type_id;
+            }
+        };
+    }
 
     template <trivial_copyable_type T>
     class primitive_array_impl final : public mutable_array_bitmap_base<primitive_array_impl<T>>,
@@ -418,14 +434,14 @@ namespace sparrow
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
-            sparrow::data_type_format_of<T>(),  // format
-            std::move(name),                    // name
-            std::move(metadata),                // metadata
-            flags,                              // flags
-            nullptr,                            // children
-            repeat_view<bool>(true, 0),         // children_ownership
-            nullptr,                            // dictionary
-            true                                // dictionary ownership
+            data_type_to_format(detail::get_data_type_from_array<self_type>::get()),  // format
+            std::move(name),                                                          // name
+            std::move(metadata),                                                      // metadata
+            flags,                                                                    // flags
+            nullptr,                                                                  // children
+            repeat_view<bool>(true, 0),                                               // children_ownership
+            nullptr,                                                                  // dictionary
+            true                                                                      // dictionary ownership
         );
 
         buffer<uint8_t> bitmap_buffer = bitmap_has_value ? std::move(*bitmap).extract_storage()

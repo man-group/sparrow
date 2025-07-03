@@ -22,6 +22,7 @@
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/layout/array_access.hpp"
+#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/nullable.hpp"
@@ -70,6 +71,21 @@ namespace sparrow
      */
     template <class T>
     constexpr bool is_null_array_v = std::same_as<T, null_array>;
+
+    namespace detail
+    {
+        template <class T>
+        struct get_data_type_from_array;
+
+        template <>
+        struct get_data_type_from_array<null_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::NA;
+            }
+        };
+    }
 
     /**
      * A null array implementation.

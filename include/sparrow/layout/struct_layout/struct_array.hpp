@@ -39,6 +39,21 @@ namespace sparrow
 {
     class struct_array;
 
+    namespace detail
+    {
+        template <class T>
+        struct get_data_type_from_array;
+
+        template <>
+        struct get_data_type_from_array<struct_array>
+        {
+            [[nodiscard]] static constexpr sparrow::data_type get()
+            {
+                return sparrow::data_type::STRUCT;
+            }
+        };
+    }
+
     template <>
     struct array_inner_types<struct_array> : array_inner_types_base
     {

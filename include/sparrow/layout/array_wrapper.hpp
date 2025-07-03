@@ -20,6 +20,7 @@
 #include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/utils/memory.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
@@ -45,13 +46,7 @@ namespace sparrow
         // do not have a inner_value_type, therefore we specialize
         // this in their respecitve headers.
         template <class ARRAY>
-        struct get_data_type_from_array
-        {
-            [[nodiscard]] static constexpr sparrow::data_type get() noexcept
-            {
-                return arrow_traits<typename ARRAY::inner_value_type>::type_id;
-            }
-        };
+        struct get_data_type_from_array;
 
         template <class ARRAY>
         struct is_dictionary_encoded_array

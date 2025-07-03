@@ -39,7 +39,6 @@ namespace sparrow
     template <>
     struct arrow_traits<null_type>
     {
-        static constexpr data_type type_id = data_type::NA;
         using value_type = null_type;
         using const_reference = null_type;
     };
@@ -49,13 +48,11 @@ namespace sparrow
         requires std::integral<T> or std::floating_point<T>
     struct arrow_traits<T> : common_native_types_traits<T>
     {
-        static constexpr data_type type_id = data_type_from_size<T>();
     };
 
     template <>
     struct arrow_traits<bool>
     {
-        static constexpr data_type type_id = data_type::BOOL;
         using value_type = bool;
         using const_reference = bool;
     };
@@ -63,7 +60,6 @@ namespace sparrow
     template <>
     struct arrow_traits<std::string>
     {
-        static constexpr data_type type_id = data_type::STRING;
         using value_type = std::string;
         using const_reference = std::string_view;
     };
@@ -71,7 +67,6 @@ namespace sparrow
     template <>
     struct arrow_traits<std::vector<byte_t>>
     {
-        static constexpr data_type type_id = data_type::BINARY;
         using value_type = std::vector<byte_t>;
         using const_reference = sequence_view<const byte_t>;
     };
@@ -79,7 +74,6 @@ namespace sparrow
     template <>
     struct arrow_traits<list_value>
     {
-        static constexpr data_type type_id = data_type::LIST;
         using value_type = list_value;
         using const_reference = list_value;
     };
@@ -87,7 +81,6 @@ namespace sparrow
     template <>
     struct arrow_traits<map_value>
     {
-        static constexpr data_type type_id = data_type::MAP;
         using value_type = map_value;
         using const_reference = map_value;
     };
@@ -95,7 +88,6 @@ namespace sparrow
     template <>
     struct arrow_traits<struct_value>
     {
-        static constexpr data_type type_id = data_type::STRUCT;
         using value_type = struct_value;
         using const_reference = struct_value;
     };
@@ -103,7 +95,6 @@ namespace sparrow
     template <>
     struct arrow_traits<decimal<std::int32_t>>
     {
-        static constexpr data_type type_id = data_type::DECIMAL32;
         using value_type = decimal<std::int32_t>;
         using const_reference = decimal<std::int32_t>;
     };
@@ -111,7 +102,6 @@ namespace sparrow
     template <>
     struct arrow_traits<decimal<std::int64_t>>
     {
-        static constexpr data_type type_id = data_type::DECIMAL64;
         using value_type = decimal<std::int64_t>;
         using const_reference = decimal<std::int64_t>;
     };
@@ -119,7 +109,6 @@ namespace sparrow
     template <>
     struct arrow_traits<decimal<int128_t>>
     {
-        static constexpr data_type type_id = data_type::DECIMAL128;
         using value_type = decimal<int128_t>;
         using const_reference = decimal<int128_t>;
     };
@@ -127,7 +116,6 @@ namespace sparrow
     template <>
     struct arrow_traits<decimal<int256_t>>
     {
-        static constexpr data_type type_id = data_type::DECIMAL256;
         using value_type = decimal<int256_t>;
         using const_reference = decimal<int256_t>;
     };
@@ -135,43 +123,36 @@ namespace sparrow
     template <>
     struct arrow_traits<date_days> : common_native_types_traits<date_days>
     {
-        static constexpr data_type type_id = data_type::DATE_DAYS;
     };
 
     template <>
     struct arrow_traits<date_milliseconds> : common_native_types_traits<date_milliseconds>
     {
-        static constexpr data_type type_id = data_type::DATE_MILLISECONDS;
     };
 
     template <>
     struct arrow_traits<std::chrono::seconds> : common_native_types_traits<std::chrono::seconds>
     {
-        static constexpr data_type type_id = data_type::DURATION_SECONDS;
     };
 
     template <>
     struct arrow_traits<std::chrono::milliseconds> : common_native_types_traits<std::chrono::milliseconds>
     {
-        static constexpr data_type type_id = data_type::DURATION_MILLISECONDS;
     };
 
     template <>
     struct arrow_traits<std::chrono::microseconds> : common_native_types_traits<std::chrono::microseconds>
     {
-        static constexpr data_type type_id = data_type::DURATION_MICROSECONDS;
     };
 
     template <>
     struct arrow_traits<std::chrono::nanoseconds> : common_native_types_traits<std::chrono::nanoseconds>
     {
-        static constexpr data_type type_id = data_type::DURATION_NANOSECONDS;
     };
 
     template <>
     struct arrow_traits<timestamp<std::chrono::seconds>>
     {
-        static constexpr data_type type_id = data_type::TIMESTAMP_SECONDS;
         using value_type = timestamp<std::chrono::seconds>;
         using const_reference = timestamp<std::chrono::seconds>;
     };
@@ -179,7 +160,6 @@ namespace sparrow
     template <>
     struct arrow_traits<timestamp<std::chrono::milliseconds>>
     {
-        static constexpr data_type type_id = data_type::TIMESTAMP_MILLISECONDS;
         using value_type = timestamp<std::chrono::milliseconds>;
         using const_reference = timestamp<std::chrono::milliseconds>;
     };
@@ -187,7 +167,6 @@ namespace sparrow
     template <>
     struct arrow_traits<timestamp<std::chrono::microseconds>>
     {
-        static constexpr data_type type_id = data_type::TIMESTAMP_MICROSECONDS;
         using value_type = timestamp<std::chrono::microseconds>;
         using const_reference = timestamp<std::chrono::microseconds>;
     };
@@ -195,7 +174,6 @@ namespace sparrow
     template <>
     struct arrow_traits<timestamp<std::chrono::nanoseconds>>
     {
-        static constexpr data_type type_id = data_type::TIMESTAMP_NANOSECONDS;
         using value_type = timestamp<std::chrono::nanoseconds>;
         using const_reference = timestamp<std::chrono::nanoseconds>;
     };
@@ -204,71 +182,60 @@ namespace sparrow
     struct arrow_traits<zoned_time_without_timezone_seconds>
         : common_native_types_traits<zoned_time_without_timezone_seconds>
     {
-        static constexpr data_type type_id = data_type::TIMESTAMP_SECONDS;
     };
 
     template <>
     struct arrow_traits<zoned_time_without_timezone_milliseconds>
         : common_native_types_traits<zoned_time_without_timezone_milliseconds>
     {
-        static constexpr data_type type_id = data_type::TIMESTAMP_MILLISECONDS;
     };
 
     template <>
     struct arrow_traits<zoned_time_without_timezone_microseconds>
         : common_native_types_traits<zoned_time_without_timezone_microseconds>
     {
-        static constexpr data_type type_id = data_type::TIMESTAMP_MICROSECONDS;
     };
 
     template <>
     struct arrow_traits<zoned_time_without_timezone_nanoseconds>
         : common_native_types_traits<zoned_time_without_timezone_nanoseconds>
     {
-        static constexpr data_type type_id = data_type::TIMESTAMP_NANOSECONDS;
     };
 
     template <>
     struct arrow_traits<chrono::time_seconds> : common_native_types_traits<chrono::time_seconds>
     {
-        static constexpr data_type type_id = data_type::TIME_SECONDS;
     };
 
     template <>
     struct arrow_traits<chrono::time_milliseconds> : common_native_types_traits<chrono::time_milliseconds>
     {
-        static constexpr data_type type_id = data_type::TIME_MILLISECONDS;
     };
 
     template <>
     struct arrow_traits<chrono::time_microseconds> : common_native_types_traits<chrono::time_microseconds>
     {
-        static constexpr data_type type_id = data_type::TIME_MICROSECONDS;
     };
 
     template <>
     struct arrow_traits<chrono::time_nanoseconds> : common_native_types_traits<chrono::time_nanoseconds>
     {
-        static constexpr data_type type_id = data_type::TIME_NANOSECONDS;
     };
 
     template <>
     struct arrow_traits<chrono::months> : common_native_types_traits<chrono::months>
     {
-        static constexpr data_type type_id = data_type::INTERVAL_MONTHS;
     };
 
     template <>
     struct arrow_traits<days_time_interval> : common_native_types_traits<days_time_interval>
     {
-        static constexpr data_type type_id = data_type::INTERVAL_DAYS_TIME;
     };
 
     template <>
     struct arrow_traits<month_day_nanoseconds_interval>
         : common_native_types_traits<month_day_nanoseconds_interval>
     {
-        static constexpr data_type type_id = data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS;
     };
 
     namespace detail

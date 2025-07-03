@@ -29,6 +29,33 @@ namespace sparrow
     template <typename T>
     concept zoned_time_without_timezone_type = mpl::contains<zoned_time_without_timezone_types_t, T>();
 
+    namespace detail
+    {
+        template <>
+        struct primitive_data_traits<zoned_time_without_timezone_seconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::TIMESTAMP_SECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<zoned_time_without_timezone_milliseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::TIMESTAMP_MILLISECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<zoned_time_without_timezone_microseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::TIMESTAMP_MICROSECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<zoned_time_without_timezone_nanoseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::TIMESTAMP_NANOSECONDS;
+        };
+    }
+
     /**
      * Array of timestamps without timezone.
      */

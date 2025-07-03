@@ -25,19 +25,13 @@ namespace sparrow
 {
     class run_end_encoded_array;
 
-    /**
-     * Checks whether T is a run_end_encoded_array type.
-     */
-    template <class T>
-    constexpr bool is_run_end_encoded_array_v = std::same_as<T, run_end_encoded_array>;
-
     namespace detail
     {
         template <class T>
         struct get_data_type_from_array;
 
         template <>
-        struct get_data_type_from_array<sparrow::run_end_encoded_array>
+        struct get_data_type_from_array<run_end_encoded_array>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -45,6 +39,12 @@ namespace sparrow
             }
         };
     }
+
+    /**
+     * Checks whether T is a run_end_encoded_array type.
+     */
+    template <class T>
+    constexpr bool is_run_end_encoded_array_v = std::same_as<T, run_end_encoded_array>;
 
     /**
      * A run-end encoded array.

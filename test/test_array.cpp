@@ -14,6 +14,7 @@
 
 #include "sparrow/array.hpp"
 #include "sparrow/array_factory.hpp"
+#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/primitive_layout/primitive_array.hpp"
 #include "sparrow/utils/nullable.hpp"
 
@@ -102,7 +103,7 @@ namespace sparrow
             array ar = test::make_array<scalar_value_type>(size);
             data_type dt = ar.data_type();
 
-            CHECK_EQ(dt, arrow_traits<scalar_value_type>::type_id);
+            CHECK_EQ(dt, detail::get_data_type_from_array<AR>::get());
         }
         TEST_CASE_TEMPLATE_APPLY(data_type_id, testing_types);
 

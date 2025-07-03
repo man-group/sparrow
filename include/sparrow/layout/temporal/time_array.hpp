@@ -27,6 +27,33 @@ namespace sparrow
     template <typename T>
     concept time_type = mpl::contains<time_types_t, T>();
 
+    namespace detail
+    {
+        template <>
+        struct primitive_data_traits<chrono::time_seconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::TIME_SECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<chrono::time_milliseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::TIME_MILLISECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<chrono::time_microseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::TIME_MICROSECONDS;
+        };
+
+        template <>
+        struct primitive_data_traits<chrono::time_nanoseconds>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::TIME_NANOSECONDS;
+        };
+    }
+
     /**
      * Array of time values.
      *

@@ -14,13 +14,34 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "sparrow/layout/primitive_layout/primitive_array_impl.hpp"
+#include "sparrow/types/data_type.hpp"
 
 namespace sparrow
 {
     template <typename T>
-    concept primitive_type = std::is_arithmetic_v<T> || std::is_same_v<T, float16_t>
-                             || std::is_same_v<T, bool> || std::is_same_v<T, std::byte>;
+    concept primitive_type = std::is_arithmetic_v<T> || std::is_same_v<T, float16_t> || std::is_same_v<T, bool>;
+
+    namespace detail
+    {
+        template <primitive_type T>
+        struct primitive_data_traits<T>
+        {
+            // Using data_type_from_size instead of specializing primitive_data_traits
+            // for all integers and floating point types nicely handles platforms
+            // where std::size_t or unsigned long are not the same as fixed width
+            // integer types.
+            static constexpr sparrow::data_type type_id = sparrow::data_type_from_size<T>();
+        };
+
+        template <>
+        struct primitive_data_traits<bool>
+        {
+            static constexpr sparrow::data_type type_id = sparrow::data_type::BOOL;
+        };
+    }
 
     /**
      * Array of values of whose type has fixed binary size.

@@ -40,34 +40,6 @@ namespace sparrow
     static_assert(mpl::all_of(all_base_types_t{}, predicate::is_arrow_base_type));
     static_assert(mpl::all_of(all_base_types_t{}, predicate::has_arrow_traits));
 
-
-    // Native basic standard types support
-
-    using basic_native_types = mpl::typelist<
-        bool,
-        char,
-        unsigned char,
-        signed char,
-        short,
-        unsigned short,
-        int,
-        unsigned int,
-        long,
-        unsigned long,  // `long long` could be bigger than 64bits and is not supported
-        float,
-        double,  // `long double` could be bigger than 64bit and is not supported
-        std::uint8_t,
-        std::int8_t,
-        std::uint16_t,
-        std::int16_t,
-        std::uint32_t,
-        std::int32_t,
-        std::uint64_t,
-        std::int64_t,
-        float16_t,
-        float32_t,
-        float64_t>;
-
     template <std::integral T>
     consteval bool is_possible_arrow_data_type(data_type type_id)
     {
@@ -138,24 +110,5 @@ namespace sparrow
                 return false;
         }
     }
-
-    // Tests `data_type_from_size` and it's usage in `arrow_traits<T>::type_id`
-    struct
-    {
-        template <class T>
-            requires has_arrow_type_traits<T>
-        consteval bool operator()(mpl::typelist<T>)
-        {
-            constexpr auto deduced_type_id = data_type_from_size<T>();
-            static_assert(deduced_type_id == arrow_traits<T>::type_id);
-
-            return is_possible_arrow_data_type<T>(arrow_traits<T>::type_id);
-        }
-    } constexpr has_possible_arrow_data_type;
-
-    // Every basic native types must have an arrow trait, whatever the platform,
-    // including when fixed-size standard library names are or not alias to basic types.
-    // Only exceptions: types that could be bigger than 64bit (`long long`, `long double`, etc.)
-    static_assert(mpl::all_of(basic_native_types{}, has_possible_arrow_data_type));
 
 }
