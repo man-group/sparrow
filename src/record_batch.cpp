@@ -185,9 +185,13 @@ namespace sparrow
             for (size_type i = 1u; i < m_array_list.size(); ++i)
             {
                 const bool same_size = m_array_list[i].size() == size;
-                SPARROW_ASSERT(same_size, "The arrays of a record batch must have the same size");
+
                 if (!same_size)
                 {
+                    const std::string error = "The size of the array at index " + std::to_string(i) + " is "
+                                              + std::to_string(m_array_list[i].size())
+                                              + ", but the size of the first array is " + std::to_string(size);
+                    SPARROW_ASSERT(same_size, error);
                     return false;
                 }
             }
