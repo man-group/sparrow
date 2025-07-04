@@ -54,7 +54,7 @@ namespace sparrow
 
                 SUBCASE("nullable range, name and metadata")
                 {
-                    std::vector<sparrow::nullable<std::string_view>> nullable_words;
+                    std::vector<sparrow::nullable<std::string>> nullable_words;
                     for (const auto& word : words)
                     {
                         nullable_words.emplace_back(word);

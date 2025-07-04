@@ -81,7 +81,17 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, layout_offset OT>
     class variable_size_binary_array_impl;
 
-    using binary_traits = arrow_traits<std::vector<byte_t>>;
+    template <layout_offset OT>
+    using string_array_impl = variable_size_binary_array_impl<
+        arrow_traits<std::string>::value_type,
+        arrow_traits<std::string>::const_reference,
+        OT>;
+
+    template <layout_offset OT>
+    using binary_array_impl = variable_size_binary_array_impl<
+        arrow_traits<std::vector<byte_t>>::value_type,
+        arrow_traits<std::vector<byte_t>>::const_reference,
+        OT>;
 
     /**
      * @brief Type alias for variable-size string arrays with 32-bit offsets.
@@ -95,7 +105,7 @@ namespace sparrow
      *
      * @see big_string_array for larger datasets requiring 64-bit offsets
      */
-    using string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int32_t>;
+    using string_array = string_array_impl<std::int32_t>;
 
     /**
      * @brief Type alias for variable-size string arrays with 64-bit offsets.
@@ -109,7 +119,7 @@ namespace sparrow
      *
      * @see string_array for smaller datasets with 32-bit offsets
      */
-    using big_string_array = variable_size_binary_array_impl<std::string, std::string_view, std::int64_t>;
+    using big_string_array = string_array_impl<std::int64_t>;
 
     /**
      * @brief Type alias for variable-size binary arrays with 32-bit offsets.
@@ -123,7 +133,7 @@ namespace sparrow
      *
      * @see big_binary_array for larger datasets requiring 64-bit offsets
      */
-    using binary_array = variable_size_binary_array_impl<binary_traits::value_type, binary_traits::const_reference, std::int32_t>;
+    using binary_array = binary_array_impl<std::int32_t>;
 
     /**
      * @brief Type alias for variable-size binary arrays with 64-bit offsets.
@@ -137,10 +147,7 @@ namespace sparrow
      *
      * @see binary_array for smaller datasets with 32-bit offsets
      */
-    using big_binary_array = variable_size_binary_array_impl<
-        binary_traits::value_type,
-        binary_traits::const_reference,
-        std::int64_t>;
+    using big_binary_array = binary_array_impl<std::int64_t>;
 
     namespace detail
     {
