@@ -461,7 +461,11 @@ namespace sparrow
             {
                 // write data itself
                 sparrow::ranges::copy(val_casted, length_ptr + SHORT_STRING_OFFSET);
-                std::fill(length_ptr + SHORT_STRING_OFFSET + length, length_ptr + DATA_BUFFER_SIZE, std::uint8_t(0));
+                std::fill(
+                    length_ptr + SHORT_STRING_OFFSET + length,
+                    length_ptr + DATA_BUFFER_SIZE,
+                    std::uint8_t(0)
+                );
             }
             else
             {
