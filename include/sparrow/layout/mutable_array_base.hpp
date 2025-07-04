@@ -341,7 +341,7 @@ namespace sparrow
     }
 
     /**
-     * Removes the elemens in the range [\cfirst , \clast ) from the array.
+     * Removes the elements in the range [ \c first , \c last ) from the array.
      *
      * @param first The iterator to the first element to remove.
      * @param last The iterator to the element following the last element to remove.

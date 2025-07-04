@@ -66,6 +66,33 @@ namespace sparrow
         };
     }
 
+    /**
+     * @brief Array implementation for primitive (trivially copyable) types.
+     *
+     * This class provides a concrete implementation of an Arrow-compatible array
+     * for primitive types such as integers, floating-point numbers, and other
+     * trivially copyable types. It manages both the data buffer and validity bitmap.
+     *
+     * Related Apache Arrow description and specification:
+     * - https://arrow.apache.org/docs/dev/format/Intro.html#fixed-size-primitive-layout
+     * - https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
+     *
+     * @tparam T The primitive type to store. Must satisfy trivial_copyable_type concept.
+     *
+     * @pre T must be trivially copyable
+     * @post Array maintains Arrow array format compatibility
+     *
+     * @example
+     * ```cpp
+     * // Create array from range
+     * primitive_array_impl<int> arr(std::ranges::iota_view{0, 10});
+     *
+     * // Create array with missing values
+     * std::vector<int> values{1, 2, 3, 4, 5};
+     * std::vector<bool> validity{true, false, true, true, false};
+     * primitive_array_impl<int> arr_with_nulls(values, validity);
+     * ```
+     */
     template <trivial_copyable_type T>
     class primitive_array_impl final : public mutable_array_bitmap_base<primitive_array_impl<T>>,
                                        private details::primitive_data_access<T>
@@ -88,31 +115,37 @@ namespace sparrow
         using value_iterator = typename base_type::value_iterator;
         using const_value_iterator = typename base_type::const_value_iterator;
 
+        /**
+         * @brief Constructs a primitive array from an existing Arrow proxy.
+         *
+         * @param proxy_param Arrow proxy containing the array data and schema
+         *
+         * @pre proxy_param must contain valid Arrow array and schema data
+         * @pre Arrow schema format must match the primitive type T
+         * @post Array is initialized with data from the proxy
+         * @post Array maintains ownership of the proxy data
+         */
         explicit primitive_array_impl(arrow_proxy);
 
         /**
-         * Constructs an array of trivial copyable type, with the passed range of values and an optional
-         * bitmap.
+         * @brief Constructs an array of trivial copyable type with values and optional bitmap.
          *
          * The first argument can be any range of values as long as its value type is convertible
          * to \c T.
          * The second argument can be:
          * - a bitmap range, i.e. a range of boolean-like values indicating the non-missing values.
          *   The bitmap range and the value range must have the same size.
-         * ```cpp
-         * std::vector<bool> a_bitmap(10, true);
-         * a_bitmap[3] = false;
-         * primitive_array_impl<int> pr(std::ranges::iota_view{0, 10}, a_bitmap);
-         * ```
          * - a range of indices indicating the missing values.
-         * ```cpp
-         * std::vector<std::size_t> false_pos  { 3, 8 };
-         * primitive_array_impl<int> pr(std::ranges::iota_view{0, 10}, a_bitmap);
-         * ```
          * - omitted: this is equivalent as passing a bitmap range full of \c true.
-         * ```cpp
-         * primitive_array_impl<int> pr((std::ranges::iota_view{0, 10});
-         * ```
+         *
+         * @tparam Args Parameter pack for constructor arguments
+         *
+         * @param args Constructor arguments (values, optional validity bitmap, optional metadata)
+         *
+         * @pre First argument must be convertible to a range of T values
+         * @pre If bitmap is provided, it must have the same size as the value range
+         * @post Array contains copies of the provided values
+         * @post Validity bitmap is set according to the provided bitmap or defaults to all valid
          */
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<primitive_array_impl<T>, Args...>)
@@ -123,7 +156,18 @@ namespace sparrow
         }
 
         /**
-         * Constructs a primitive array from an \c initializer_list of raw values.
+         * @brief Constructs a primitive array from an initializer list of raw values.
+         *
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param init Initializer list of values
+         * @param nullable Whether the array should support null values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         *
+         * @pre All values in init must be valid instances of inner_value_type
+         * @post Array contains copies of all values from the initializer list
+         * @post If nullable is true, array supports null values (though none are set)
+         * @post If nullable is false, array does not support null values
          */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         primitive_array_impl(
@@ -137,14 +181,72 @@ namespace sparrow
         {
         }
 
+        /**
+         * @brief Copy constructor.
+         *
+         * @param rhs Source array to copy from
+         *
+         * @pre rhs must be in a valid state
+         * @post This array contains a deep copy of rhs data
+         * @post This array is independent of rhs (no shared ownership)
+         */
         constexpr primitive_array_impl(const primitive_array_impl&);
+
+        /**
+         * @brief Copy assignment operator.
+         *
+         * @param rhs Source array to copy from
+         * @return Reference to this array
+         *
+         * @pre rhs must be in a valid state
+         * @post This array contains a deep copy of rhs data
+         * @post Previous data in this array is properly released
+         * @post This array is independent of rhs (no shared ownership)
+         */
         constexpr primitive_array_impl& operator=(const primitive_array_impl&);
 
+        /**
+         * @brief Move constructor.
+         *
+         * @param rhs Source array to move from
+         *
+         * @pre rhs must be in a valid state
+         * @post This array takes ownership of rhs data
+         * @post rhs is left in a valid but unspecified state
+         */
         constexpr primitive_array_impl(primitive_array_impl&&) noexcept;
+
+        /**
+         * @brief Move assignment operator.
+         *
+         * @param rhs Source array to move from
+         * @return Reference to this array
+         *
+         * @pre rhs must be in a valid state
+         * @post This array takes ownership of rhs data
+         * @post Previous data in this array is properly released
+         * @post rhs is left in a valid but unspecified state
+         */
         constexpr primitive_array_impl& operator=(primitive_array_impl&&) noexcept;
 
     private:
 
+        /**
+         * @brief Creates an Arrow proxy from a data buffer and validity bitmap.
+         *
+         * @tparam VALIDITY_RANGE Type of validity bitmap input
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param data_buffer Buffer containing the array data
+         * @param size Number of elements in the array
+         * @param bitmaps Validity bitmap specification
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the array data and schema
+         *
+         * @pre data_buffer must contain at least size elements of type T
+         * @pre If bitmaps specifies a bitmap, it must have exactly size bits
+         * @post Returned proxy contains valid Arrow array and schema
+         */
         template <
             validity_bitmap_input VALIDITY_RANGE = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
@@ -156,6 +258,24 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * @brief Creates an Arrow proxy from a data buffer with nullable flag.
+         *
+         * @tparam VALIDITY_RANGE Type of validity bitmap input
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param data_buffer Buffer containing the array data
+         * @param size Number of elements in the array
+         * @param nullable Whether the array should support null values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the array data and schema
+         *
+         * @pre data_buffer must contain at least size elements of type T
+         * @pre size must match the actual number of elements in data_buffer
+         * @post Returned proxy contains valid Arrow array and schema
+         * @post If nullable is true, array supports null values (though none are initially set)
+         * @post If nullable is false, array does not support null values
+         */
         template <
             validity_bitmap_input VALIDITY_RANGE = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
@@ -167,7 +287,24 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        // range of values (no missing values)
+        /**
+         * @brief Creates an Arrow proxy from a range of values (no missing values).
+         *
+         * @tparam R Type of input range containing values
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param range Input range of values convertible to T
+         * @param nullable Whether the array should support null values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the array data and schema
+         *
+         * @pre R must be an input range with values convertible to T
+         * @pre R must not be a u8_buffer type
+         * @pre range must be valid and accessible
+         * @post Returned proxy contains copies of all values from the range
+         * @post If nullable is true, array supports null values (though none are initially set)
+         * @post All values in the array are marked as valid (non-null)
+         */
         template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(std::convertible_to<std::ranges::range_value_t<R>, T> && !mpl::is_type_instance_of_v<R, u8_buffer>)
         [[nodiscard]] static auto create_proxy(
@@ -177,6 +314,24 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * @brief Creates an Arrow proxy with n copies of the same value.
+         *
+         * @tparam U Type of the value to replicate (must be convertible to T)
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param n Number of elements to create
+         * @param value Value to replicate n times
+         * @param nullable Whether the array should support null values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the array data and schema
+         *
+         * @pre n must be a valid size (typically n >= 0)
+         * @pre value must be convertible to type T
+         * @post Returned proxy contains exactly n elements, all equal to static_cast<T>(value)
+         * @post If nullable is true, array supports null values (though none are initially set)
+         * @post All values in the array are marked as valid (non-null)
+         */
         template <class U, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<U, T>
         [[nodiscard]] static arrow_proxy create_proxy(
@@ -187,7 +342,27 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        // range of values, validity_bitmap_input
+        /**
+         * @brief Creates an Arrow proxy from a range of values and validity bitmap.
+         *
+         * @tparam R Type of input range containing values
+         * @tparam R2 Type of validity bitmap input
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param values Input range of values convertible to T
+         * @param validity_input Validity bitmap specification (bitmap or indices)
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the array data and schema
+         *
+         * @pre R must be an input range with values convertible to T
+         * @pre R2 must satisfy validity_bitmap_input concept
+         * @pre values and validity_input must have compatible sizes
+         * @pre If validity_input is a bitmap, it must have the same size as values
+         * @pre If validity_input is indices, all indices must be valid positions in values
+         * @post Returned proxy contains copies of all values from the range
+         * @post Validity bitmap is set according to validity_input
+         * @post Array supports null values (nullable = true)
+         */
         template <
             std::ranges::input_range R,
             validity_bitmap_input R2,
@@ -200,7 +375,23 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        // range of nullable values
+        /**
+         * @brief Creates an Arrow proxy from a range of nullable values.
+         *
+         * @tparam NULLABLE_RANGE Type of input range containing nullable<T> values
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param nullable_range Input range of nullable<T> values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the array data and schema
+         *
+         * @pre NULLABLE_RANGE must be an input range of exactly nullable<T> values
+         * @pre nullable_range must be valid and accessible
+         * @post Returned proxy contains the unwrapped values from nullable_range
+         * @post Validity bitmap reflects the has_value() status of each nullable<T>
+         * @post Array supports null values (nullable = true)
+         * @post Elements where nullable<T>.has_value() == false are marked as null
+         */
         template <std::ranges::input_range NULLABLE_RANGE, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::is_same_v<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T>>
         [[nodiscard]] static arrow_proxy create_proxy(
@@ -209,6 +400,24 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Implementation helper for creating Arrow proxy from components.
+         *
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param data_buffer Buffer containing the array data
+         * @param size Number of elements in the array
+         * @param bitmap Optional validity bitmap
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the array data and schema
+         *
+         * @pre data_buffer must contain at least size elements of type T
+         * @pre If bitmap has value, it must have exactly size bits
+         * @pre size must accurately reflect the number of elements
+         * @post Returned proxy contains valid Arrow array and schema
+         * @post Arrow array format matches primitive type T requirements
+         * @post Null count in Arrow array matches bitmap null count (if bitmap present)
+         */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy_impl(
             u8_buffer<T>&& data_buffer,

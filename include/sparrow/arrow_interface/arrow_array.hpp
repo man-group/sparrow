@@ -42,7 +42,10 @@ namespace sparrow
      * @param buffers Vector of `sparrow::buffer<uint8_t>`.
      * @param children Pointer to a sequence of `ArrowArray` pointers or nullptr. Must be `nullptr` if
      * `n_children` is `0`.
+     * @param children_ownership Ownership of the children arrays. Must be `true` if the `ArrowArray` owns
+     * the children arrays, `false` otherwise.
      * @param dictionary `ArrowArray` pointer or `nullptr`.
+     * @param dictionary_ownership Whether the dictionary is owned by the `ArrowArray` or not.
      * @return The created `ArrowArray`.
      */
     template <class B, std::ranges::input_range CHILDREN_OWNERSHIP>
@@ -83,7 +86,10 @@ namespace sparrow
      * @param buffers Vector of `sparrow::buffer<uint8_t>`.
      * @param children Pointer to a sequence of `ArrowArray` pointers or `nullptr`. Must be `nullptr` if
      * `n_children` is `0`.
+     * @param children_ownership Ownership of the children arrays. Must be `true` if the `ArrowArray` owns
+     * the children arrays, `false` otherwise.
      * @param dictionary `ArrowArray` pointer or `nullptr`.
+     * @param dictionary_ownership Whether the dictionary is owned by the `ArrowArray` or not.
      */
     template <class B, std::ranges::input_range CHILDREN_OWNERSHIP>
         requires(

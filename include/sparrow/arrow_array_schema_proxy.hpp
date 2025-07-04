@@ -36,12 +36,20 @@
 namespace sparrow
 {
     /**
-     * Exception thrown by the arrow_proxy class.
+     * @brief Exception thrown by arrow_proxy operations.
+     *
+     * This exception is thrown when arrow_proxy operations fail due to invalid
+     * state, ownership violations, or incompatible Arrow structures.
      */
     class arrow_proxy_exception : public std::runtime_error
     {
     public:
 
+        /**
+         * @brief Constructs an arrow_proxy_exception with a descriptive message.
+         *
+         * @param message Description of the error condition
+         */
         explicit arrow_proxy_exception(const std::string& message)
             : std::runtime_error(message)
         {
@@ -61,69 +69,244 @@ namespace sparrow
     };
 
     /**
-     * Proxy class over `ArrowArray` and `ArrowSchema`.
-     * It ease the use of `ArrowArray` and `ArrowSchema` by providing a more user-friendly interface.
-     * It can take ownership of the `ArrowArray` and `ArrowSchema` or use them as pointers.
-     * If the arrow_proxy takes ownership of the `ArrowArray` and `ArrowSchema`, they are released when the
-     * arrow_proxy is destroyed. Otherwise, the `arrow_proxy` does not release the `ArrowArray` and
-     * `ArrowSchema`.
+     * @brief Proxy class providing a user-friendly interface over ArrowArray and ArrowSchema.
+     *
+     * The arrow_proxy class simplifies working with Apache Arrow C data interface structures
+     * by providing a modern C++ interface with automatic memory management, type safety,
+     * and convenient access methods. It can either take ownership of Arrow structures or
+     * work with external references, making it suitable for various integration scenarios.
+     *
+     * Key features:
+     * - Automatic memory management with clear ownership semantics
+     * - Type-safe access to Arrow data and metadata
+     * - Support for nested structures (children, dictionaries)
+     * - Efficient buffer management and manipulation
+     * - Validation and consistency checking
+     * - Slicing and view operations
+     *
+     * @pre Arrow structures must be valid and properly initialized
+     * @pre Owned structures are automatically released on destruction
+     * @post Maintains Arrow C data interface compatibility
+     * @post Provides thread-safe read access, requires external synchronization for writes
+     * @post Preserves data integrity through validation and bounds checking
+     *
+     * @example
+     * ```cpp
+     * // Taking ownership of Arrow structures
+     * ArrowArray array = create_arrow_array();
+     * ArrowSchema schema = create_arrow_schema();
+     * arrow_proxy proxy(std::move(array), std::move(schema));
+     *
+     * // Working with external references
+     * arrow_proxy view_proxy(&external_array, &external_schema);
+     *
+     * // Accessing data
+     * auto buffers = proxy.buffers();
+     * auto data_type = proxy.data_type();
+     * auto slice = proxy.slice(10, 20);
+     * ```
      */
     class arrow_proxy
     {
     public:
 
-        /// Constructs an `arrow_proxy` which takes the ownership of the `ArrowArray` and `ArrowSchema`.
-        /// The array and schema are released when the `arrow_proxy` is destroyed.
+        /**
+         * @brief Constructs an arrow_proxy taking ownership of both ArrowArray and ArrowSchema.
+         *
+         * @param array ArrowArray to take ownership of
+         * @param schema ArrowSchema to take ownership of
+         *
+         * @pre array and schema must be valid Arrow structures
+         * @pre array and schema must be compatible (matching data types)
+         * @post This proxy owns both structures and will release them on destruction
+         * @post Buffers, children, and dictionary are properly initialized
+         * @post Internal consistency is validated
+         */
         SPARROW_API explicit arrow_proxy(ArrowArray&& array, ArrowSchema&& schema);
-        /// Constructs an `arrow_proxy` which takes the ownership of the `ArrowArray` and uses the provided
-        /// `ArrowSchema`. The array is released when the `arrow_proxy` is destroyed. The schema is not
-        /// released.
+
+        /**
+         * @brief Constructs an arrow_proxy taking ownership of ArrowArray, referencing ArrowSchema.
+         *
+         * @param array ArrowArray to take ownership of
+         * @param schema Pointer to ArrowSchema (not owned)
+         *
+         * @pre array must be a valid Arrow structure
+         * @pre schema must be a valid pointer to ArrowSchema
+         * @pre array and schema must be compatible
+         * @post This proxy owns the array but not the schema
+         * @post Schema must remain valid for the lifetime of this proxy
+         * @post Buffers and children are properly initialized
+         */
         SPARROW_API explicit arrow_proxy(ArrowArray&& array, ArrowSchema* schema);
-        /// Constructs an `arrow_proxy` which uses the provided `ArrowArray` and `ArrowSchema`.
-        /// Neither the array nor the schema are released when the `arrow_proxy` is destroyed.
+
+        /**
+         * @brief Constructs an arrow_proxy referencing external ArrowArray and ArrowSchema.
+         *
+         * @param array Pointer to ArrowArray (not owned)
+         * @param schema Pointer to ArrowSchema (not owned)
+         *
+         * @pre array must be a valid pointer to ArrowArray
+         * @pre schema must be a valid pointer to ArrowSchema
+         * @pre array and schema must be compatible
+         * @pre External structures must remain valid for the lifetime of this proxy
+         * @post This proxy does not own either structure
+         * @post External structures must be managed by the caller
+         * @post Buffers and children are properly initialized as views
+         */
         SPARROW_API explicit arrow_proxy(ArrowArray* array, ArrowSchema* schema);
 
-        // Copy constructors
-        SPARROW_API arrow_proxy(const arrow_proxy&);
-        SPARROW_API arrow_proxy& operator=(const arrow_proxy&);
+        /**
+         * @brief Copy constructor creating independent copy.
+         *
+         * @param other Source arrow_proxy to copy from
+         *
+         * @pre other must be in a valid state
+         * @post This proxy is an independent copy of other
+         * @post If other owns structures, this proxy owns copies
+         * @post If other references external structures, this proxy references the same
+         * @post Deep copy of all children and dictionary (if owned)
+         */
+        SPARROW_API arrow_proxy(const arrow_proxy& other);
 
-        // Move constructors
-        SPARROW_API arrow_proxy(arrow_proxy&&) noexcept;
-        SPARROW_API arrow_proxy& operator=(arrow_proxy&&) noexcept;
+        /**
+         * @brief Copy assignment operator.
+         *
+         * @param other Source arrow_proxy to copy from
+         * @return Reference to this arrow_proxy
+         *
+         * @pre other must be in a valid state
+         * @post This proxy is an independent copy of other
+         * @post Previous structures are properly released (if owned)
+         * @post Deep copy of all children and dictionary (if owned)
+         */
+        SPARROW_API arrow_proxy& operator=(const arrow_proxy& other);
 
+        /**
+         * @brief Move constructor transferring ownership.
+         *
+         * @param other Source arrow_proxy to move from
+         *
+         * @pre other must be in a valid state
+         * @post This proxy takes ownership from other
+         * @post other is left in a valid but unspecified state
+         * @post No copying of Arrow structures occurs
+         */
+        SPARROW_API arrow_proxy(arrow_proxy&& other) noexcept;
+
+        /**
+         * @brief Move assignment operator.
+         *
+         * @param other Source arrow_proxy to move from
+         * @return Reference to this arrow_proxy
+         *
+         * @pre other must be in a valid state
+         * @post This proxy takes ownership from other
+         * @post Previous structures are properly released (if owned)
+         * @post other is left in a valid but unspecified state
+         */
+        SPARROW_API arrow_proxy& operator=(arrow_proxy&& other) noexcept;
+
+        /**
+         * @brief Destructor releasing owned Arrow structures.
+         *
+         * @post All owned Arrow structures are properly released
+         * @post Referenced external structures are not affected
+         * @post Children and dictionary are recursively released (if owned)
+         */
         SPARROW_API ~arrow_proxy();
 
+        /**
+         * @brief Gets the Arrow format string describing the data type.
+         *
+         * @return String view of the format specification
+         *
+         * @post Returns valid format string according to Arrow specification
+         * @post Format string remains valid while proxy exists
+         */
         [[nodiscard]] SPARROW_API const std::string_view format() const;
 
         /**
-         * Set the format according to the Arrow format specification:
-         * https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
-         * @exception `arrow_proxy_exception` If the `ArrowSchema` was not created with sparrow.
-         * @param format The format to set.
+         * @brief Sets the Arrow format string.
+         *
+         * @param format New format string to set
+         *
+         * @pre ArrowSchema must be created with sparrow (owned by this proxy)
+         * @pre format must be a valid Arrow format string
+         * @post Schema format is updated to the specified value
+         * @post Data type is updated accordingly
+         *
+         * @throws arrow_proxy_exception if schema is not owned by sparrow
          */
         SPARROW_API void set_format(const std::string_view format);
+
+        /**
+         * @brief Gets the data type enum corresponding to the format.
+         *
+         * @return Data type enumeration value
+         *
+         * @post Returns data type consistent with format string
+         */
         [[nodiscard]] SPARROW_API enum data_type data_type() const;
 
         /**
-         * Set the data type. It's a convenient way to set the format of the `ArrowSchema`.
-         * @exception `arrow_proxy_exception` If the `ArrowSchema` was not created with sparrow.
-         * @param data_type The data type to set.
+         * @brief Sets the data type (updates format string accordingly).
+         *
+         * @param data_type New data type to set
+         *
+         * @pre ArrowSchema must be created with sparrow (owned by this proxy)
+         * @pre data_type must be a valid sparrow data type
+         * @post Schema format is updated to match the data type
+         * @post Format string is updated accordingly
+         *
+         * @throws arrow_proxy_exception if schema is not owned by sparrow
          */
         void SPARROW_API set_data_type(enum data_type data_type);
+
+        /**
+         * @brief Gets the optional name of the array/field.
+         *
+         * @return Optional string view of the name
+         *
+         * @post Returns nullopt if no name is set
+         * @post Returned string view remains valid while proxy exists
+         */
         [[nodiscard]] SPARROW_API std::optional<std::string_view> name() const;
 
         /**
-         * Set the name of the `ArrowSchema`.
-         * @exception `arrow_proxy_exception` If the `ArrowSchema` was not created with sparrow.
-         * @param name The name to set.
+         * @brief Sets the name of the array/field.
+         *
+         * @param name Optional name to set (nullopt to clear)
+         *
+         * @pre ArrowSchema must be created with sparrow (owned by this proxy)
+         * @post Schema name is updated to the specified value
+         * @post Name can be retrieved via name() method
+         *
+         * @throws arrow_proxy_exception if schema is not owned by sparrow
          */
         SPARROW_API void set_name(std::optional<std::string_view> name);
+
+        /**
+         * @brief Gets the metadata key-value pairs.
+         *
+         * @return Optional view of metadata key-value pairs
+         *
+         * @post Returns nullopt if no metadata is set
+         * @post Returned view remains valid while proxy exists
+         */
         [[nodiscard]] SPARROW_API std::optional<key_value_view> metadata() const;
 
         /**
-         * Set the metadata of the `ArrowSchema`.
-         * @exception `arrow_proxy_exception` If the `ArrowSchema` was not created with sparrow.
-         * @param metadata The metadata to set.
+         * @brief Sets the metadata key-value pairs.
+         *
+         * @tparam R Container type for metadata pairs
+         * @param metadata Optional metadata container (nullopt to clear)
+         *
+         * @pre ArrowSchema must be created with sparrow (owned by this proxy)
+         * @pre R must satisfy input_metadata_container concept
+         * @post Schema metadata is updated to the specified values
+         * @post Metadata can be retrieved via metadata() method
+         *
+         * @throws arrow_proxy_exception if schema is not owned by sparrow
          */
         template <input_metadata_container R>
         void set_metadata(std::optional<R> metadata)
@@ -144,127 +327,316 @@ namespace sparrow
             schema().metadata = private_data->metadata_ptr();
         }
 
+        /**
+         * @brief Gets the Arrow flags set for this array.
+         *
+         * @return Set of Arrow flags
+         *
+         * @post Returns current flag configuration
+         * @post Flags reflect capabilities and constraints of the array
+         */
         [[nodiscard]] SPARROW_API std::unordered_set<ArrowFlag> flags() const;
 
         /**
-         * Set the flags of the `ArrowSchema`.
-         * @exception `arrow_proxy_exception` If the `ArrowSchema` was not created with sparrow.
-         * @param flags The flags to set.
+         * @brief Sets the Arrow flags for this array.
+         *
+         * @param flags Set of Arrow flags to apply
+         *
+         * @pre ArrowSchema must be created with sparrow (owned by this proxy)
+         * @pre Flags must be compatible with the data type
+         * @post Schema flags are updated to the specified values
+         * @post Flags affect array behavior and validation
+         *
+         * @throws arrow_proxy_exception if schema is not owned by sparrow
          */
         SPARROW_API void set_flags(const std::unordered_set<ArrowFlag>& flags);
+
+        /**
+         * @brief Gets the number of elements in the array.
+         *
+         * @return Number of elements
+         *
+         * @post Returns non-negative value
+         * @post Value is consistent with buffer sizes
+         */
         [[nodiscard]] SPARROW_API size_t length() const;
 
         /**
-         * Set the length of the `ArrowArray`. This method does not resize the buffers of the `ArrowArray`.
-         * You have to change the length before replacing/resizing the buffers to have the right sizes when
-         * calling `buffers()`.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @param length The length to set.
+         * @brief Sets the number of elements in the array.
+         *
+         * This method updates the length field but does not resize buffers.
+         * Buffers should be resized separately to match the new length.
+         *
+         * @param length New number of elements
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre length should be consistent with buffer sizes after buffer operations
+         * @post Array length is updated to the specified value
+         * @post Buffer operations should follow to maintain consistency
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
          */
         SPARROW_API void set_length(size_t length);
+
+        /**
+         * @brief Gets the number of null values in the array.
+         *
+         * @return Number of null values (-1 if unknown)
+         *
+         * @post Returns value consistent with validity bitmap
+         * @post -1 indicates null count should be computed
+         */
         [[nodiscard]] SPARROW_API int64_t null_count() const;
 
         /**
-         * Set the null count of the `ArrowArray`. This method does not change the bitmap.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @param null_count The null count to set.
+         * @brief Sets the number of null values in the array.
+         *
+         * This method updates the null count field but does not modify the bitmap.
+         * The bitmap should be updated separately to reflect the actual null count.
+         *
+         * @param null_count New null count (-1 for unknown)
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre null_count should be consistent with actual validity bitmap
+         * @post Array null count is updated to the specified value
+         * @post Bitmap operations should follow to maintain consistency
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
          */
         SPARROW_API void set_null_count(int64_t null_count);
+
+        /**
+         * @brief Gets the starting offset within the buffers.
+         *
+         * @return Starting offset for array data
+         *
+         * @post Returns non-negative value
+         * @post Offset is used for array slicing operations
+         */
         [[nodiscard]] SPARROW_API size_t offset() const;
 
         /**
-         * Set the offset of the `ArrowArray`.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @param offset The offset to set.
+         * @brief Sets the starting offset within the buffers.
+         *
+         * @param offset New starting offset
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre offset must be within buffer bounds
+         * @pre offset + length must not exceed buffer capacity
+         * @post Array offset is updated to the specified value
+         * @post Effective array data starts at the new offset
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
          */
         SPARROW_API void set_offset(size_t offset);
+
+        /**
+         * @brief Gets the number of buffers in the array.
+         *
+         * @return Number of buffers
+         *
+         * @post Returns value consistent with data type requirements
+         * @post Value matches buffers().size()
+         */
         [[nodiscard]] SPARROW_API size_t n_buffers() const;
 
         /**
-         * Set the number of buffers of the `ArrowArray`. Resize the buffers vector of the `ArrowArray`
-         * private data.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @param n_buffers The number of buffers to set.
+         * @brief Sets the number of buffers and resizes the buffer vector.
+         *
+         * @param n_buffers New number of buffers
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre n_buffers must be appropriate for the data type
+         * @post Buffer vector is resized to n_buffers
+         * @post Additional buffers are initialized as empty
+         * @post Removed buffers are properly released
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
          */
         SPARROW_API void set_n_buffers(size_t n_buffers);
+
+        /**
+         * @brief Gets the number of child arrays.
+         *
+         * @return Number of child arrays
+         *
+         * @post Returns value consistent with data type (0 for primitive types)
+         * @post Value matches children().size()
+         */
         [[nodiscard]] SPARROW_API size_t n_children() const;
+
+        /**
+         * @brief Gets const reference to the buffer views.
+         *
+         * @return Const reference to vector of buffer views
+         *
+         * @post Buffer views remain valid while proxy exists
+         * @post Number of buffers matches n_buffers()
+         * @post Buffer sizes are consistent with array length and offset
+         */
         [[nodiscard]] SPARROW_API const std::vector<sparrow::buffer_view<uint8_t>>& buffers() const;
+
+        /**
+         * @brief Gets mutable reference to the buffer views.
+         *
+         * @return Mutable reference to vector of buffer views
+         *
+         * @post Buffer views can be modified through the returned reference
+         * @post Changes to buffers may require calling update_buffers()
+         * @post Buffer modifications should maintain data type consistency
+         */
         [[nodiscard]] SPARROW_API std::vector<sparrow::buffer_view<uint8_t>>& buffers();
 
         /**
-         * Set the buffer at the given index. You have to call the `set_length` method before calling this
-         * method to have the right sizes when calling `buffers()`.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @param index The index of the buffer to set.
-         * @param buffer The buffer to set.
+         * @brief Sets a specific buffer at the given index.
+         *
+         * @param index Index of the buffer to set
+         * @param buffer Buffer view to set
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre index must be < n_buffers()
+         * @pre set_length() should be called first for proper buffer sizing
+         * @pre buffer must be appropriate for the data type and index
+         * @post Buffer at index is updated to the specified buffer
+         * @post Buffer views are refreshed automatically
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
+         * @throws std::out_of_range if index >= n_buffers()
          */
         SPARROW_API void set_buffer(size_t index, const buffer_view<uint8_t>& buffer);
 
         /**
-         * Set the buffer at the given index. You have to call the `set_length` method before calling this
-         * method to have the right sizes when calling `buffers()`.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @param index The index of the buffer to set.
-         * @param buffer The buffer to set.
+         * @brief Sets a specific buffer by moving it at the given index.
+         *
+         * @param index Index of the buffer to set
+         * @param buffer Buffer to move and set
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre index must be < n_buffers()
+         * @pre set_length() should be called first for proper buffer sizing
+         * @pre buffer must be appropriate for the data type and index
+         * @post Buffer at index is updated to the moved buffer
+         * @post Buffer views are refreshed automatically
+         * @post Original buffer is moved and becomes invalid
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
+         * @throws std::out_of_range if index >= n_buffers()
          */
         SPARROW_API void set_buffer(size_t index, buffer<uint8_t>&& buffer);
 
         /**
-         * Resize the bitmap buffer of the `ArrowArray`.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
-         * @param new_size The new size of the bitmap buffer.
-         * @param value The value to set in the new elements. True by default.
+         * @brief Resizes the validity bitmap buffer.
+         *
+         * @param new_size New size for the bitmap buffer
+         * @param value Default value for new bits (true = valid, false = null)
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre Data type must support validity bitmap
+         * @pre new_size should be consistent with array length requirements
+         * @post Bitmap buffer is resized to accommodate new_size bits
+         * @post New bits (if any) are set to the specified value
+         * @post Existing bits are preserved
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
+         * @throws arrow_proxy_exception if data type doesn't support validity bitmap
          */
         SPARROW_API void resize_bitmap(size_t new_size, bool value = true);
 
         /**
-         * Insert elements of the same value in the bitmap buffer at the given index.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
-         * @exception `std::out_of_range` If the index is greater than the length of the bitmap.
-         * @param index The index where to insert the value. Must be less than the length of the bitmap.
-         * @param value The value to insert.
-         * @param count The number of times to insert the value. 1 by default
-         * @return The index of the first inserted value.
+         * @brief Inserts validity bits with the same value at specified position.
+         *
+         * @param index Position where to insert bits
+         * @param value Validity value to insert (true = valid, false = null)
+         * @param count Number of bits to insert
+         * @return Index of the first inserted bit
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre Data type must support validity bitmap
+         * @pre index must be <= current bitmap length
+         * @pre count must be >= 0
+         * @post count bits with specified value are inserted at index
+         * @post Bitmap length increases by count
+         * @post Subsequent bits are shifted right
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
+         * @throws arrow_proxy_exception if data type doesn't support validity bitmap
+         * @throws std::out_of_range if index > bitmap length
          */
         SPARROW_API size_t insert_bitmap(size_t index, bool value, size_t count = 1);
 
         /**
-         * Insert several elements in the bitmap buffer at the given index.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
-         * @exception `std::out_of_range` If the index is greater than the length of the bitmap.
-         * @param index The index where to insert the values. Must be less than the length of the bitmap.
-         * @param range The range of values to insert.
-         * @return The index of the first inserted value.
+         * @brief Inserts a range of validity bits at specified position.
+         *
+         * @tparam R Range type containing boolean values
+         * @param index Position where to insert bits
+         * @param range Range of boolean values to insert
+         * @return Index of the first inserted bit
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre Data type must support validity bitmap
+         * @pre index must be <= current bitmap length
+         * @pre range must be a valid input range of boolean-convertible values
+         * @post All bits from range are inserted at index
+         * @post Bitmap length increases by range size
+         * @post Subsequent bits are shifted right
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
+         * @throws arrow_proxy_exception if data type doesn't support validity bitmap
+         * @throws std::out_of_range if index > bitmap length
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
          */
         template <std::ranges::input_range R>
         size_t insert_bitmap(size_t index, const R& range);
 
         /**
-         * Erase several elements in the bitmap buffer at the given index.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
-         * @exception `std::out_of_range` If the index is greater than the length of the bitmap.
-         * @param index The index of the first value to erase. Must be less than the length of the bitmap.
-         * @param count The number of elements to erase. 1 by default.
-         * @return The index of the first erased value.
+         * @brief Erases validity bits starting at specified position.
+         *
+         * @param index Position where to start erasing bits
+         * @param count Number of bits to erase
+         * @return Index of the first erased bit
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre Data type must support validity bitmap
+         * @pre index must be < current bitmap length
+         * @pre index + count must not exceed bitmap length
+         * @pre count must be >= 0
+         * @post count bits starting at index are removed
+         * @post Bitmap length decreases by count
+         * @post Subsequent bits are shifted left
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
+         * @throws arrow_proxy_exception if data type doesn't support validity bitmap
+         * @throws std::out_of_range if index >= bitmap length
          */
         SPARROW_API size_t erase_bitmap(size_t index, size_t count = 1);
 
         /**
-         * Push a value at the end of the bitmap buffer.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
-         * @param value The value to push.
+         * @brief Appends a validity bit at the end of the bitmap.
+         *
+         * @param value Validity value to append (true = valid, false = null)
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre Data type must support validity bitmap
+         * @post One bit with specified value is added at the end
+         * @post Bitmap length increases by 1
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
+         * @throws arrow_proxy_exception if data type doesn't support validity bitmap
          */
         SPARROW_API void push_back_bitmap(bool value);
 
         /**
-         * Pop a value at the end of the bitmap buffer.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` was not created with sparrow.
-         * @exception `arrow_proxy_exception` If the array format does not support a validity bitmap.
+         * @brief Removes the last validity bit from the bitmap.
+         *
+         * @pre ArrowArray must be created with sparrow (owned by this proxy)
+         * @pre Data type must support validity bitmap
+         * @pre Bitmap must not be empty
+         * @post Last bit is removed from the bitmap
+         * @post Bitmap length decreases by 1
+         *
+         * @throws arrow_proxy_exception if array is not owned by sparrow
+         * @throws arrow_proxy_exception if data type doesn't support validity bitmap
          */
         SPARROW_API void pop_back_bitmap();
 
@@ -282,7 +654,7 @@ namespace sparrow
          * Add children and take their ownership.
          * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
          * in this proxy were not created with sparrow.
-         * @param arrow_array_and_schema The children to add.
+         * @param arrow_array_and_schemas The children to add.
          */
         template <std::ranges::input_range R>
             requires std::same_as<std::ranges::range_value_t<R>, arrow_array_and_schema>
@@ -336,10 +708,53 @@ namespace sparrow
          */
         SPARROW_API void set_child(size_t index, ArrowArray&& array, ArrowSchema&& schema);
 
+
+        /**
+         * @brief Returns a constant reference to the vector of child arrow proxies.
+         *
+         * This method provides read-only access to the collection of child arrow proxies
+         * associated with this arrow array schema proxy. The children represent nested
+         * or structured data elements within the schema.
+         *
+         * @return const std::vector<arrow_proxy>& A constant reference to the vector
+         *         containing the child arrow proxies.
+         */
         [[nodiscard]] SPARROW_API const std::vector<arrow_proxy>& children() const;
+
+        /**
+         * @brief Returns a mutable reference to the vector of child arrow proxies.
+         *
+         * This method provides read-write access to the collection of child arrow proxies
+         * associated with this arrow array schema proxy. The children represent nested
+         * or structured data elements within the schema.
+         *
+         * @return std::vector<arrow_proxy>& A mutable reference to the vector
+         *         containing the child arrow proxies.
+         */
         [[nodiscard]] SPARROW_API std::vector<arrow_proxy>& children();
 
+        /**
+         * @brief Returns a constant reference to the dictionary arrow proxy.
+         *
+         * This method provides read-only access to the dictionary arrow proxy associated
+         * with this arrow array schema proxy. The dictionary is used for encoding categorical
+         * data types.
+         *
+         * @return const std::unique_ptr<arrow_proxy>& A constant reference to the dictionary
+         *         arrow proxy, or nullptr if no dictionary is set.
+         */
         [[nodiscard]] SPARROW_API const std::unique_ptr<arrow_proxy>& dictionary() const;
+
+        /**
+         * @brief Returns a mutable reference to the dictionary arrow proxy.
+         *
+         * This method provides read-write access to the dictionary arrow proxy associated
+         * with this arrow array schema proxy. The dictionary is used for encoding categorical
+         * data types.
+         *
+         * @return std::unique_ptr<arrow_proxy>& A mutable reference to the dictionary
+         *         arrow proxy, or nullptr if no dictionary is set.
+         */
         [[nodiscard]] SPARROW_API std::unique_ptr<arrow_proxy>& dictionary();
 
         /**
@@ -358,9 +773,8 @@ namespace sparrow
          * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` wrapped
          * in this proxy were not created with
          * sparrow.
-         * @param index The index of the child to set.
-         * @param array The `ArrowArray` to set as child.
-         * @param schema The `ArrowSchema` to set as child.
+         * @param array_dictionary The `ArrowArray` to set as dictionary.
+         * @param schema_dictionary The `ArrowSchema` to set as dictionary.s
          */
         SPARROW_API void set_dictionary(ArrowArray&& array_dictionary, ArrowSchema&& schema_dictionary);
 

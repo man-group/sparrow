@@ -35,6 +35,12 @@
 
 namespace sparrow
 {
+    /**
+     * Functor for accessing elements in a layout.
+     *
+     * @tparam Layout The layout type.
+     * @tparam is_const Whether the functor provides const access.
+     */
     template <class Layout, bool is_const>
     class layout_element_functor
     {
@@ -45,13 +51,27 @@ namespace sparrow
         using return_type = std::
             conditional_t<is_const, typename layout_type::const_reference, typename layout_type::reference>;
 
+        /**
+         * Default constructor.
+         */
         constexpr layout_element_functor() = default;
 
+        /**
+         * Constructs a functor with the given layout.
+         *
+         * @param layout_ Pointer to the layout to access.
+         */
         constexpr explicit layout_element_functor(storage_type layout_)
             : p_layout(layout_)
         {
         }
 
+        /**
+         * Access operator for getting element at index.
+         *
+         * @param i The index of the element to access.
+         * @return Reference to the element at the specified index.
+         */
         [[nodiscard]] constexpr return_type operator()(std::size_t i) const
         {
             return p_layout->operator[](i);
@@ -59,9 +79,15 @@ namespace sparrow
 
     private:
 
+        /** Pointer to the layout being accessed. */
         storage_type p_layout;
     };
 
+    /**
+     * Forward declaration of dictionary_encoded_array.
+     *
+     * @tparam IT The integral type used for dictionary keys.
+     */
     template <std::integral IT>
     class dictionary_encoded_array;
 
@@ -70,15 +96,30 @@ namespace sparrow
         template <std::integral IT>
         struct get_data_type_from_array<sparrow::dictionary_encoded_array<IT>>
         {
+            /**
+             * Gets the data type for the dictionary keys.
+             *
+             * @return The data type corresponding to the key type.
+             */
             [[nodiscard]] static constexpr sparrow::data_type get() noexcept
             {
                 return get_data_type_from_array<primitive_array<IT>>::get();
             }
         };
 
+        /**
+         * Specialization to identify dictionary_encoded_array types.
+         *
+         * @tparam IT The integral type used for dictionary keys.
+         */
         template <std::integral IT>
         struct is_dictionary_encoded_array<sparrow::dictionary_encoded_array<IT>>
         {
+            /**
+             * Returns true for dictionary_encoded_array types.
+             *
+             * @return Always true.
+             */
             [[nodiscard]] static constexpr bool get() noexcept
             {
                 return true;
@@ -88,6 +129,8 @@ namespace sparrow
 
     /**
      * Checks whether T is a dictionary_encoded_array type.
+     *
+     * @tparam T The type to check.
      */
     template <class T>
     constexpr bool is_dictionary_encoded_array_v = detail::is_dictionary_encoded_array<T>::get();
@@ -99,6 +142,8 @@ namespace sparrow
      * repeated values.
      * Related Apache Arrow specification:
      * https://arrow.apache.org/docs/dev/format/Columnar.html#dictionary-encoded-layout
+     *
+     * @tparam IT The integral type used for dictionary keys.
      */
     template <std::integral IT>
     class dictionary_encoded_array
@@ -125,43 +170,183 @@ namespace sparrow
 
         using keys_buffer_type = u8_buffer<IT>;
 
-        explicit dictionary_encoded_array(arrow_proxy);
+        /**
+         * Constructs a dictionary encoded array from an arrow proxy.
+         *
+         * @param proxy The arrow proxy containing the array data and schema.
+         */
+        explicit dictionary_encoded_array(arrow_proxy proxy);
 
-        constexpr dictionary_encoded_array(const self_type&);
-        constexpr self_type& operator=(const self_type&);
+        /**
+         * Copy constructor.
+         *
+         * @param other The dictionary_encoded_array to copy from.
+         */
+        constexpr dictionary_encoded_array(const self_type& other);
 
-        constexpr dictionary_encoded_array(self_type&&);
-        constexpr self_type& operator=(self_type&&);
+        /**
+         * Copy assignment operator.
+         *
+         * @param other The dictionary_encoded_array to copy from.
+         * @return Reference to this dictionary_encoded_array.
+         */
+        constexpr self_type& operator=(const self_type& other);
 
+        /**
+         * Move constructor.
+         *
+         * @param other The dictionary_encoded_array to move from.
+         */
+        constexpr dictionary_encoded_array(self_type&& other);
+
+        /**
+         * Move assignment operator.
+         *
+         * @param other The dictionary_encoded_array to move from.
+         * @return Reference to this dictionary_encoded_array.
+         */
+        constexpr self_type& operator=(self_type&& other);
+
+        /**
+         * Gets the name of the array.
+         *
+         * @return Optional name of the array.
+         */
         [[nodiscard]] constexpr std::optional<std::string_view> name() const;
+
+        /**
+         * Gets the metadata of the array.
+         *
+         * @return Optional metadata of the array.
+         */
         [[nodiscard]] std::optional<key_value_view> metadata() const;
 
+        /**
+         * Gets the number of elements in the array.
+         *
+         * @return The number of elements.
+         */
         [[nodiscard]] constexpr size_type size() const;
+
+        /**
+         * Checks if the array is empty.
+         *
+         * @return true if the array is empty, false otherwise.
+         */
         [[nodiscard]] constexpr bool empty() const;
 
+        /**
+         * Access operator for getting element at index.
+         *
+         * @param i The index of the element to access.
+         * @return Constant reference to the element at the specified index.
+         */
         [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 const_reference operator[](size_type i) const;
 
+        /**
+         * Gets an iterator to the beginning of the array.
+         *
+         * @return Iterator to the beginning.
+         */
         [[nodiscard]] constexpr iterator begin();
+
+        /**
+         * Gets an iterator to the end of the array.
+         *
+         * @return Iterator to the end.
+         */
         [[nodiscard]] constexpr iterator end();
 
+        /**
+         * Gets a constant iterator to the beginning of the array.
+         *
+         * @return Constant iterator to the beginning.
+         */
         [[nodiscard]] constexpr const_iterator begin() const;
+
+        /**
+         * Gets a constant iterator to the end of the array.
+         *
+         * @return Constant iterator to the end.
+         */
         [[nodiscard]] constexpr const_iterator end() const;
 
+        /**
+         * Gets a constant iterator to the beginning of the array.
+         *
+         * @return Constant iterator to the beginning.
+         */
         [[nodiscard]] constexpr const_iterator cbegin() const;
+
+        /**
+         * Gets a constant iterator to the end of the array.
+         *
+         * @return Constant iterator to the end.
+         */
         [[nodiscard]] constexpr const_iterator cend() const;
 
+        /**
+         * Gets a reverse iterator to the beginning of the array.
+         *
+         * @return Reverse iterator to the beginning.
+         */
         [[nodiscard]] constexpr reverse_iterator rbegin();
+
+        /**
+         * Gets a reverse iterator to the end of the array.
+         *
+         * @return Reverse iterator to the end.
+         */
         [[nodiscard]] constexpr reverse_iterator rend();
 
+        /**
+         * Gets a constant reverse iterator to the beginning of the array.
+         *
+         * @return Constant reverse iterator to the beginning.
+         */
         [[nodiscard]] constexpr const_reverse_iterator rbegin() const;
+
+        /**
+         * Gets a constant reverse iterator to the end of the array.
+         *
+         * @return Constant reverse iterator to the end.
+         */
         [[nodiscard]] constexpr const_reverse_iterator rend() const;
 
+        /**
+         * Gets a constant reverse iterator to the beginning of the array.
+         *
+         * @return Constant reverse iterator to the beginning.
+         */
         [[nodiscard]] constexpr const_reverse_iterator crbegin() const;
+
+        /**
+         * Gets a constant reverse iterator to the end of the array.
+         *
+         * @return Constant reverse iterator to the end.
+         */
         [[nodiscard]] constexpr const_reverse_iterator crend() const;
 
+        /**
+         * Gets a reference to the first element.
+         *
+         * @return Constant reference to the first element.
+         */
         [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 const_reference front() const;
+
+        /**
+         * Gets a reference to the last element.
+         *
+         * @return Constant reference to the last element.
+         */
         [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 const_reference back() const;
 
+        /**
+         * Constructs a dictionary encoded array with the given arguments.
+         *
+         * @tparam Args The argument types.
+         * @param args Arguments forwarded to create_proxy.
+         */
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<dictionary_encoded_array<IT>, Args...>)
         explicit dictionary_encoded_array(Args&&... args)
@@ -193,6 +378,18 @@ namespace sparrow
 
     private:
 
+        /**
+         * Creates an arrow proxy from keys buffer, values array, and validity bitmap.
+         *
+         * @tparam R The validity bitmap input type.
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param keys The buffer containing dictionary keys.
+         * @param values The array containing dictionary values.
+         * @param bitmaps The validity bitmap.
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the dictionary encoded array data.
+         */
         template <
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
@@ -204,6 +401,18 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * Creates an arrow proxy from keys buffer and values array.
+         *
+         * @tparam R The validity bitmap input type.
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param keys The buffer containing dictionary keys.
+         * @param values The array containing dictionary values.
+         * @param nullable Whether the array can contain null values.
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the dictionary encoded array data.
+         */
         template <
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
@@ -215,6 +424,17 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * Internal implementation for creating an arrow proxy.
+         *
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param keys The buffer containing dictionary keys.
+         * @param values The array containing dictionary values.
+         * @param validity Optional validity bitmap.
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the dictionary encoded array data.
+         */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy_impl(
             keys_buffer_type&& keys,
@@ -224,6 +444,19 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * Creates an arrow proxy from a key range and values array.
+         *
+         * @tparam KEY_RANGE The key range type.
+         * @tparam R The validity bitmap input type.
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param keys The range of keys to store.
+         * @param values The array containing dictionary values.
+         * @param bitmaps The validity bitmap.
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the dictionary encoded array data.
+         */
         template <
             std::ranges::input_range KEY_RANGE,
             validity_bitmap_input R = validity_bitmap,
@@ -250,7 +483,17 @@ namespace sparrow
             );
         }
 
-        // range of nullable values
+        /**
+         * Creates an arrow proxy from a range of nullable keys and values array.
+         *
+         * @tparam NULLABLE_KEY_RANGE The nullable key range type.
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param nullable_keys The range of nullable keys to store.
+         * @param values The array containing dictionary values.
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the dictionary encoded array data.
+         */
         template <
             std::ranges::input_range NULLABLE_KEY_RANGE,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
@@ -264,23 +507,68 @@ namespace sparrow
 
         using keys_layout = primitive_array<IT>;
         using values_layout = cloning_ptr<array_wrapper>;
-
+        /**
+         * Gets a dummy inner value for null references.
+         *
+         * @return Constant reference to a dummy inner value.
+         */
         [[nodiscard]] const inner_value_type& dummy_inner_value() const;
+
+        /**
+         * Gets a dummy const reference for null values.
+         *
+         * @return A dummy const reference.
+         */
         [[nodiscard]] const_reference dummy_const_reference() const;
 
+        /**
+         * Creates a keys layout from the arrow proxy.
+         *
+         * @param proxy The arrow proxy containing the keys data.
+         * @return A keys layout object.
+         */
         [[nodiscard]] static constexpr keys_layout create_keys_layout(arrow_proxy& proxy);
+
+        /**
+         * Creates a values layout from the arrow proxy.
+         *
+         * @param proxy The arrow proxy containing the values data.
+         * @return A values layout object.
+         */
         [[nodiscard]] static values_layout create_values_layout(arrow_proxy& proxy);
 
+        /**
+         * Gets a reference to the internal arrow proxy.
+         *
+         * @return Reference to the arrow proxy.
+         */
         [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy();
+
+        /**
+         * Gets a constant reference to the internal arrow proxy.
+         *
+         * @return Constant reference to the arrow proxy.
+         */
         [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy() const;
 
+        /** The arrow proxy containing the array data and schema. */
         arrow_proxy m_proxy;
+        /** The layout for accessing dictionary keys. */
         keys_layout m_keys_layout;
+        /** The layout for accessing dictionary values. */
         values_layout p_values_layout;
 
         friend class detail::array_access;
     };
 
+    /**
+     * Equality comparison operator for dictionary_encoded_array.
+     *
+     * @tparam IT The integral type used for dictionary keys.
+     * @param lhs The first dictionary_encoded_array to compare.
+     * @param rhs The second dictionary_encoded_array to compare.
+     * @return true if the arrays are equal, false otherwise.
+     */
     template <class IT>
     constexpr bool operator==(const dictionary_encoded_array<IT>& lhs, const dictionary_encoded_array<IT>& rhs);
 

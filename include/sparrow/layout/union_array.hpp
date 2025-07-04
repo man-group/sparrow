@@ -61,18 +61,65 @@ namespace sparrow
     }
 
     /**
-     * Checks whether T is a dense_union_array type.
+     * @brief Type trait to check if a type is a dense_union_array.
+     *
+     * @tparam T Type to check
      */
     template <class T>
     constexpr bool is_dense_union_array_v = std::same_as<T, dense_union_array>;
 
     /**
-     * Checks whether T is a sparse_union_array type.
+     * @brief Type trait to check if a type is a sparse_union_array.
+     *
+     * @tparam T Type to check
      */
     template <class T>
     constexpr bool is_sparse_union_array_v = std::same_as<T, sparse_union_array>;
 
-    // helper crtp-base to have sparse and dense and dense union share most of their code
+    /**
+     * @brief CRTP base class providing shared functionality for union array implementations.
+     *
+     * This class implements the common interface and logic shared between dense and sparse
+     * union arrays. Union arrays can store values of different types in a single array,
+     * with each element having an associated type ID that indicates which child array
+     * contains the actual value.
+     *
+     * Key features:
+     * - Type-safe heterogeneous storage
+     * - Efficient type dispatch using type ID mapping
+     * - STL-compatible container interface
+     * - Support for both dense and sparse union layouts
+     * - Arrow format compatibility
+     *
+     * The union array consists of:
+     * - Type ID buffer: Maps each element to its corresponding child array
+     * - Child arrays: Store the actual values for each supported type
+     * - Type ID mapping: Translates type IDs to child array indices
+     *
+     * @tparam DERIVED The derived union array type (dense_union_array or sparse_union_array)
+     *
+     * @pre DERIVED must inherit from this class (CRTP pattern)
+     * @pre DERIVED must implement element_offset() method
+     * @post Provides complete union array interface
+     * @post Maintains Arrow union format compatibility
+     * @post Thread-safe for read operations
+     *
+     * @code{.cpp}
+     * // Union arrays can store different types
+     * dense_union_array union_arr = create_union_with_int_and_string();
+     *
+     * // Access elements (type is determined at runtime)
+     * auto elem = union_arr[0];
+     * if (elem.has_value()) {
+     *     // elem could be int or string depending on type ID
+     * }
+     *
+     * // Iteration over heterogeneous elements
+     * for (const auto& element : union_arr) {
+     *     // Process element of unknown type
+     * }
+     * @endcode
+     */
     template <class DERIVED>
     class union_array_crtp_base : public crtp_base<DERIVED>
     {
@@ -92,37 +139,217 @@ namespace sparrow
 
         using type_id_buffer_type = u8_buffer<std::uint8_t>;
 
+        /**
+         * @brief Gets the optional name of the union array.
+         *
+         * @return Optional string view of the array name from Arrow schema
+         *
+         * @post Returns nullopt if no name is set
+         * @post Returned string view remains valid while array exists
+         */
         [[nodiscard]] constexpr std::optional<std::string_view> name() const;
+
+        /**
+         * @brief Gets the metadata associated with the union array.
+         *
+         * @return Optional view of key-value metadata pairs from Arrow schema
+         *
+         * @post Returns nullopt if no metadata is set
+         * @post Returned view remains valid while array exists
+         */
         [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 std::optional<key_value_view> metadata() const;
 
+        /**
+         * @brief Gets element at specified position with bounds checking.
+         *
+         * @param i Index of the element to access
+         * @return Value from the appropriate child array
+         *
+         * @pre i must be < size()
+         * @post Returns valid value from child array indicated by type ID
+         * @post Value type depends on the type ID at position i
+         *
+         * @throws std::out_of_range if i >= size()
+         */
         [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 value_type at(size_type i) const;
+
+        /**
+         * @brief Gets element at specified position without bounds checking.
+         *
+         * @param i Index of the element to access
+         * @return Value from the appropriate child array
+         *
+         * @pre i must be < size()
+         * @post Returns value from child array indicated by type ID
+         * @post Value type depends on the type ID at position i
+         */
         [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 value_type operator[](size_type i) const;
+
+        /**
+         * @brief Gets mutable element at specified position.
+         *
+         * @param i Index of the element to access
+         * @return Value from the appropriate child array
+         *
+         * @pre i must be < size()
+         * @post Returns value from child array indicated by type ID
+         * @post Value type depends on the type ID at position i
+         */
         [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 value_type operator[](size_type i);
+
+        /**
+         * @brief Gets reference to the first element.
+         *
+         * @return Value from the appropriate child array for first element
+         *
+         * @pre Array must not be empty (!empty())
+         * @post Returns valid value from child array
+         * @post Equivalent to (*this)[0]
+         */
         [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 value_type front() const;
+
+        /**
+         * @brief Gets reference to the last element.
+         *
+         * @return Value from the appropriate child array for last element
+         *
+         * @pre Array must not be empty (!empty())
+         * @post Returns valid value from child array
+         * @post Equivalent to (*this)[size() - 1]
+         */
         [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 value_type back() const;
 
+        /**
+         * @brief Checks if the union array is empty.
+         *
+         * @return true if array contains no elements, false otherwise
+         *
+         * @post Return value equals (size() == 0)
+         */
         [[nodiscard]] constexpr bool empty() const;
+
+        /**
+         * @brief Gets the number of elements in the union array.
+         *
+         * @return Number of elements in the array
+         *
+         * @post Returns non-negative value
+         * @post Equals the number of type IDs in the type buffer
+         */
         [[nodiscard]] constexpr size_type size() const;
 
+        /**
+         * @brief Gets iterator to the beginning of the array.
+         *
+         * @return Iterator pointing to the first element
+         *
+         * @post Iterator is valid for array traversal
+         * @post For empty array, equals end()
+         */
         [[nodiscard]] constexpr iterator begin();
+
+        /**
+         * @brief Gets iterator to the end of the array.
+         *
+         * @return Iterator pointing past the last element
+         *
+         * @post Iterator marks the end of the array range
+         * @post Not dereferenceable
+         */
         [[nodiscard]] constexpr iterator end();
+
+        /**
+         * @brief Gets const iterator to the beginning of the array.
+         *
+         * @return Const iterator pointing to the first element
+         *
+         * @post Iterator is valid for array traversal
+         * @post For empty array, equals end()
+         */
         [[nodiscard]] constexpr const_iterator begin() const;
+
+        /**
+         * @brief Gets const iterator to the end of the array.
+         *
+         * @return Const iterator pointing past the last element
+         *
+         * @post Iterator marks the end of the array range
+         * @post Not dereferenceable
+         */
         [[nodiscard]] constexpr const_iterator end() const;
+
+        /**
+         * @brief Gets const iterator to the beginning of the array.
+         *
+         * @return Const iterator pointing to the first element
+         *
+         * @post Iterator is valid for array traversal
+         * @post Guarantees const iterator even for non-const array
+         */
         [[nodiscard]] constexpr const_iterator cbegin() const;
+
+        /**
+         * @brief Gets const iterator to the end of the array.
+         *
+         * @return Const iterator pointing past the last element
+         *
+         * @post Iterator marks the end of the array range
+         * @post Guarantees const iterator even for non-const array
+         */
         [[nodiscard]] constexpr const_iterator cend() const;
 
+        /**
+         * @brief Gets reverse iterator to the beginning of reversed array.
+         *
+         * @return Const reverse iterator pointing to the last element
+         *
+         * @post Iterator is valid for reverse traversal
+         * @post For empty array, equals rend()
+         */
         [[nodiscard]] constexpr const_reverse_iterator rbegin() const;
+
+        /**
+         * @brief Gets reverse iterator to the end of reversed array.
+         *
+         * @return Const reverse iterator pointing before the first element
+         *
+         * @post Iterator marks the end of reverse traversal
+         * @post Not dereferenceable
+         */
         [[nodiscard]] constexpr const_reverse_iterator rend() const;
 
+        /**
+         * @brief Gets const reverse iterator to the beginning of reversed array.
+         *
+         * @return Const reverse iterator pointing to the last element
+         *
+         * @post Iterator is valid for reverse traversal
+         * @post Guarantees const iterator even for non-const array
+         */
         [[nodiscard]] constexpr const_reverse_iterator crbegin() const;
+
+        /**
+         * @brief Gets const reverse iterator to the end of reversed array.
+         *
+         * @return Const reverse iterator pointing before the first element
+         *
+         * @post Iterator marks the end of reverse traversal
+         * @post Guarantees const iterator even for non-const array
+         */
         [[nodiscard]] constexpr const_reverse_iterator crend() const;
 
         /**
-         * Sets all null values to the specified value.
+         * @brief Sets all null values to the specified value.
+         *
          * This operation modifies the underlying data values but not the validity bitmap.
          * The bitmap remains unchanged, so the elements will still be considered null.
+         * Only the actual stored values are replaced.
          *
          * @param value The value to assign to null elements
+         *
+         * @post All null positions contain the specified value
+         * @post Validity bitmap remains unchanged
+         * @post Elements are still logically null despite having a value
          */
         constexpr void zero_null_values(const inner_value_type& value)
         {
@@ -134,38 +361,129 @@ namespace sparrow
         static constexpr size_t TYPE_ID_MAP_SIZE = 256;
 
         using type_id_map = std::array<std::uint8_t, TYPE_ID_MAP_SIZE>;
+
+        /**
+         * @brief Parses type ID mapping from Arrow format string.
+         *
+         * @param format_string Arrow format string containing type ID mappings
+         * @return Array mapping type IDs to child indices
+         *
+         * @pre format_string must be valid Arrow union format ("+du:" or "+su:" prefix)
+         * @post Returns valid type ID to child index mapping
+         * @post Mapping is used for efficient type dispatch
+         */
         static constexpr type_id_map parse_type_id_map(std::string_view format_string);
 
+        /**
+         * @brief Creates type ID mapping from child index to type ID mapping.
+         *
+         * @tparam R Range type containing type IDs
+         * @param child_index_to_type_id Optional mapping from child index to type ID
+         * @return Inverse mapping from type ID to child index
+         *
+         * @post If no mapping provided, uses identity mapping (0->0, 1->1, etc.)
+         * @post Returned mapping enables efficient child array lookup
+         */
         template <std::ranges::input_range R>
         static constexpr type_id_map
         type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id);
 
+        /**
+         * @brief Creates Arrow format string for union arrays.
+         *
+         * @tparam R Range type for type ID mapping
+         * @param dense Whether this is a dense union (true) or sparse (false)
+         * @param n Number of child arrays
+         * @param range Optional type ID mapping range
+         * @return Arrow format string for the union
+         *
+         * @pre If range is provided, its size must equal n or be 0
+         * @pre Range elements must be convertible to std::uint8_t
+         * @post Returns valid Arrow format string ("+ud:" or "+us:" prefix)
+         *
+         * @throws std::invalid_argument if range size doesn't match n
+         */
         template <std::ranges::input_range R>
             requires(std::convertible_to<std::ranges::range_value_t<R>, std::uint8_t>)
         static constexpr std::string
         make_format_string(bool dense, std::size_t n, const std::optional<R>& child_index_to_type_id);
 
         using children_type = std::vector<cloning_ptr<array_wrapper>>;
+
+        /**
+         * @brief Creates child array wrappers from Arrow proxy.
+         *
+         * @param proxy Arrow proxy containing child array data
+         * @return Vector of child array wrappers
+         *
+         * @pre proxy must contain valid child array data
+         * @post Returns valid children collection
+         * @post Each child corresponds to a union member type
+         */
         constexpr children_type make_children(arrow_proxy& proxy);
 
+        /**
+         * @brief Protected constructor from Arrow proxy.
+         *
+         * @param proxy Arrow proxy containing union array data and schema
+         *
+         * @pre proxy must contain valid Arrow union array and schema
+         * @pre proxy format must be valid union format
+         * @post Array is initialized with data from proxy
+         * @post Type ID mapping is parsed and cached
+         * @post Child arrays are created and accessible
+         */
         explicit union_array_crtp_base(arrow_proxy proxy);
 
+        /**
+         * @brief Copy constructor.
+         *
+         * @param rhs Source union array to copy from
+         *
+         * @pre rhs must be in a valid state
+         * @post This array contains a copy of rhs data
+         * @post Child arrays and type mapping are reconstructed
+         */
         constexpr union_array_crtp_base(const self_type& rhs);
+
+        /**
+         * @brief Copy assignment operator.
+         *
+         * @param rhs Source union array to copy from
+         * @return Reference to this array
+         *
+         * @pre rhs must be in a valid state
+         * @post This array contains a copy of rhs data
+         * @post Previous data is properly released
+         * @post Child arrays and type mapping are reconstructed
+         */
         constexpr self_type& operator=(const self_type& rhs);
 
         constexpr union_array_crtp_base(self_type&& rhs) = default;
         constexpr self_type& operator=(self_type&& rhs) = default;
 
+        /**
+         * @brief Gets mutable reference to the Arrow proxy.
+         *
+         * @return Mutable reference to internal Arrow proxy
+         *
+         * @post Returns valid reference to Arrow proxy
+         */
         [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy();
+
+        /**
+         * @brief Gets const reference to the Arrow proxy.
+         *
+         * @return Const reference to internal Arrow proxy
+         *
+         * @post Returns valid const reference to Arrow proxy
+         */
         [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy() const;
 
-        arrow_proxy m_proxy;
-        const std::uint8_t* p_type_ids;
-        children_type m_children;
-
-        // map from type-id to child-index
-
-        std::array<std::uint8_t, TYPE_ID_MAP_SIZE> m_type_id_map;
+        arrow_proxy m_proxy;                                       ///< Internal Arrow proxy
+        const std::uint8_t* p_type_ids;                            ///< Pointer to type ID buffer
+        children_type m_children;                                  ///< Child array wrappers
+        std::array<std::uint8_t, TYPE_ID_MAP_SIZE> m_type_id_map;  ///< Type ID to child index mapping
 
         friend class detail::array_access;
 
@@ -174,12 +492,52 @@ namespace sparrow
 #endif
     };
 
+    /**
+     * @brief Equality comparison operator for union arrays.
+     *
+     * Compares two union arrays element-wise, ensuring both type IDs and values match.
+     *
+     * @tparam D Union array type
+     * @param lhs First union array to compare
+     * @param rhs Second union array to compare
+     * @return true if arrays are element-wise equal, false otherwise
+     *
+     * @post Returns true iff arrays have same size and all elements compare equal
+     * @post Comparison includes both type IDs and actual values
+     */
     template <class D>
     constexpr bool operator==(const union_array_crtp_base<D>& lhs, const union_array_crtp_base<D>& rhs);
 
     /**
-     * A dense union array implementation.
-     * Related Apache Arrow specification: https://arrow.apache.org/docs/dev/format/Columnar.html#dense-union
+     * @brief Dense union array implementation with offset buffer.
+     *
+     * Dense union arrays store an additional offset buffer that maps each element
+     * to its position within the corresponding child array. This allows child arrays
+     * to be densely packed (only containing values that are actually used), making
+     * them more memory efficient when union elements are sparse.
+     *
+     * Memory layout:
+     * - Type ID buffer: Maps each element to child array type
+     * - Offset buffer: Maps each element to position in child array
+     * - Child arrays: Contain only the values actually used
+     *
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#dense-union
+     *
+     * @post Maintains Arrow dense union format compatibility ("+ud:")
+     * @post Child arrays can be shorter than the union array length
+     * @post Provides memory-efficient storage for sparse union data
+     *
+     * @code{.cpp}
+     * // Create dense union with int and string children
+     * std::vector<array> children = {int_array, string_array};
+     * type_id_buffer_type type_ids = {0, 1, 0, 1};        // alternating types
+     * offset_buffer_type offsets = {0, 0, 1, 1};          // positions in child arrays
+     *
+     * dense_union_array union_arr(std::move(children),
+     *                              std::move(type_ids),
+     *                              std::move(offsets));
+     * @endcode
      */
     class dense_union_array : public union_array_crtp_base<dense_union_array>
     {
@@ -189,6 +547,20 @@ namespace sparrow
         using offset_buffer_type = u8_buffer<std::uint32_t>;
         using type_id_buffer_type = typename base_type::type_id_buffer_type;
 
+        /**
+         * @brief Generic constructor for creating dense union arrays.
+         *
+         * Creates a dense union array from various input combinations including
+         * child arrays, type IDs, offsets, and optional type mapping.
+         *
+         * @tparam Args Parameter pack for constructor arguments
+         * @param args Constructor arguments (children, type_ids, offsets, etc.)
+         *
+         * @pre Args must match one of the create_proxy() overload signatures
+         * @pre Args must exclude copy and move constructor signatures
+         * @pre Children, type IDs, and offsets must have consistent sizes
+         * @post Array is created with the specified children and configuration
+         */
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<dense_union_array, Args...>)
         explicit dense_union_array(Args&&... args)
@@ -196,9 +568,41 @@ namespace sparrow
         {
         }
 
+        /**
+         * @brief Constructs dense union array from Arrow proxy.
+         *
+         * @param proxy Arrow proxy containing dense union array data and schema
+         *
+         * @pre proxy must contain valid Arrow dense union array and schema
+         * @pre proxy format must be "+ud:..."
+         * @pre proxy must have type ID buffer and offset buffer
+         * @post Array is initialized with data from proxy
+         * @post Offset buffer pointer is cached for efficient access
+         */
         SPARROW_API explicit dense_union_array(arrow_proxy proxy);
 
+        /**
+         * @brief Copy constructor.
+         *
+         * @param rhs Source dense union array to copy from
+         *
+         * @pre rhs must be in a valid state
+         * @post This array contains a copy of rhs data
+         * @post Offset buffer pointer is properly set
+         */
         SPARROW_API dense_union_array(const dense_union_array& rhs);
+
+        /**
+         * @brief Copy assignment operator.
+         *
+         * @param rhs Source dense union array to copy from
+         * @return Reference to this array
+         *
+         * @pre rhs must be in a valid state
+         * @post This array contains a copy of rhs data
+         * @post Previous data is properly released
+         * @post Offset buffer pointer is updated
+         */
         SPARROW_API dense_union_array& operator=(const dense_union_array& rhs);
 
         dense_union_array(dense_union_array&& rhs) = default;
@@ -208,6 +612,22 @@ namespace sparrow
 
         using type_id_map = typename base_type::type_id_map;
 
+        /**
+         * @brief Creates proxy for dense union array from child arrays, type IDs, and offsets.
+         *
+         * @tparam TYPE_MAPPING Optional type mapping range (default: std::vector<std::uint8_t>)
+         * @tparam METADATA_RANGE Optional metadata range (default: std::vector<metadata_pair>)
+         * @param children Child arrays for the union
+         * @param element_type Type ID buffer
+         * @param offsets Offset buffer
+         * @param type_mapping Optional mapping from child index to type ID
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy representing the dense union array
+         *
+         * @pre Children, type IDs, and offsets must have consistent sizes
+         * @post Returns valid Arrow proxy for the dense union array
+         */
         template <
             std::ranges::input_range TYPE_MAPPING = std::vector<std::uint8_t>,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
@@ -221,6 +641,24 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * @brief Creates proxy for dense union array from child arrays, type IDs, and offsets.
+         *
+         * @tparam TYPE_ID_BUFFER_RANGE Range for type ID buffer
+         * @tparam OFFSET_BUFFER_RANGE Range for offset buffer
+         * @tparam TYPE_MAPPING Optional type mapping range (default: std::vector<std::uint8_t>)
+         * @tparam METADATA_RANGE Optional metadata range (default: std::vector<metadata_pair>)
+         * @param children Child arrays for the union
+         * @param element_type Type ID buffer
+         * @param offsets Offset buffer
+         * @param type_mapping Optional mapping from child index to type ID
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy representing the dense union array
+         *
+         * @pre Children, type IDs, and offsets must have consistent sizes
+         * @post Returns valid Arrow proxy for the dense union array
+         */
         template <
             std::ranges::input_range TYPE_ID_BUFFER_RANGE,
             std::ranges::input_range OFFSET_BUFFER_RANGE,
@@ -249,6 +687,22 @@ namespace sparrow
             );
         }
 
+        /**
+         * @brief Implementation of create_proxy() for dense union arrays.
+         *
+         * @tparam METADATA_RANGE Optional metadata range (default: std::vector<metadata_pair>)
+         * @param children Child arrays for the union
+         * @param element_type Type ID buffer
+         * @param offsets Offset buffer
+         * @param format Arrow format string
+         * @param tim Type ID to child index mapping
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy representing the dense union array
+         *
+         * @pre Children, type IDs, and offsets must have consistent sizes
+         * @post Returns valid Arrow proxy for the dense union array
+         */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy_impl(
             std::vector<array>&& children,
@@ -260,6 +714,22 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Implementation of create_proxy() for dense union arrays.
+         *
+         * @tparam METADATA_RANGE Optional metadata range (default: std::vector<metadata_pair>)
+         * @param children Child arrays for the union
+         * @param element_type Type ID buffer
+         * @param offsets Offset buffer
+         * @param format Arrow format string
+         * @param tim Type ID to child index mapping
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy representing the dense union array
+         *
+         * @pre Children, type IDs, and offsets must have consistent sizes
+         * @post Returns valid Arrow proxy for the dense union array
+         */
         template <
             std::ranges::input_range TYPE_ID_BUFFER_RANGE,
             std::ranges::input_range OFFSET_BUFFER_RANGE,
@@ -289,15 +759,49 @@ namespace sparrow
             );
         }
 
+        /**
+         * @brief Gets the offset for an element in its child array.
+         *
+         * @param i Index of the element in the union array
+         * @return Offset of the element in its corresponding child array
+         *
+         * @pre i must be < size()
+         * @post Returns valid offset into the appropriate child array
+         * @post Used internally for element access in dense layout
+         */
         SPARROW_API std::size_t element_offset(std::size_t i) const;
 
-        const std::int32_t* p_offsets;
+        const std::int32_t* p_offsets;  ///< Pointer to offset buffer
         friend class union_array_crtp_base<dense_union_array>;
     };
 
     /**
-     * A sparse union array implementation.
-     * Related Apache Arrow specification: https://arrow.apache.org/docs/dev/format/Columnar.html#sparse-union
+     * @brief Sparse union array implementation without offset buffer.
+     *
+     * Sparse union arrays do not store an offset buffer. Instead, all child arrays
+     * have the same length as the union array, and each element directly corresponds
+     * to the same position in its child array. This is simpler but less memory
+     * efficient when union elements are sparse.
+     *
+     * Memory layout:
+     * - Type ID buffer: Maps each element to child array type
+     * - Child arrays: All have the same length as the union array
+     *
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/dev/format/Columnar.html#sparse-union
+     *
+     * @post Maintains Arrow sparse union format compatibility ("+us:")
+     * @post All child arrays have the same length as the union array
+     * @post Provides simpler access pattern at the cost of memory efficiency
+     *
+     * @code{.cpp}
+     * // Create sparse union with int and string children
+     * std::vector<array> children = {int_array, string_array};  // same length as union
+     * type_id_buffer_type type_ids = {0, 1, 0, 1};              // alternating types
+     *
+     * sparse_union_array union_arr(std::move(children),
+     *                               std::move(type_ids));
+     * @endcode
      */
     class sparse_union_array : public union_array_crtp_base<sparse_union_array>
     {
@@ -306,6 +810,20 @@ namespace sparrow
         using base_type = union_array_crtp_base<sparse_union_array>;
         using type_id_buffer_type = typename base_type::type_id_buffer_type;
 
+        /**
+         * @brief Generic constructor for creating sparse union arrays.
+         *
+         * Creates a sparse union array from various input combinations including
+         * child arrays, type IDs, and optional type mapping.
+         *
+         * @tparam Args Parameter pack for constructor arguments
+         * @param args Constructor arguments (children, type_ids, etc.)
+         *
+         * @pre Args must match one of the create_proxy() overload signatures
+         * @pre Args must exclude copy and move constructor signatures
+         * @pre All child arrays must have the same length
+         * @post Array is created with the specified children and configuration
+         */
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<sparse_union_array, Args...>)
         explicit sparse_union_array(Args&&... args)
@@ -313,12 +831,38 @@ namespace sparrow
         {
         }
 
+        /**
+         * @brief Constructs sparse union array from Arrow proxy.
+         *
+         * @param proxy Arrow proxy containing sparse union array data and schema
+         *
+         * @pre proxy must contain valid Arrow sparse union array and schema
+         * @pre proxy format must be "+us:..."
+         * @pre proxy must have type ID buffer
+         * @pre All child arrays must have same length as union array
+         * @post Array is initialized with data from proxy
+         */
         SPARROW_API explicit sparse_union_array(arrow_proxy proxy);
 
     private:
 
         using type_id_map = typename base_type::type_id_map;
 
+        /**
+         * @brief Creates proxy for sparse union array from child arrays, type IDs, and optional type mapping.
+         *
+         * @tparam TYPE_MAPPING Optional type mapping range (default: std::vector<std::uint8_t>)
+         * @tparam METADATA_RANGE Optional metadata range (default: std::vector<metadata_pair>)
+         * @param children Child arrays for the union
+         * @param element_type Type ID buffer
+         * @param type_mapping Optional mapping from child index to type ID
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy representing the sparse union array
+         *
+         * @pre All child arrays must have the same length
+         * @post Returns valid Arrow proxy for the sparse union array
+         */
         template <
             std::ranges::input_range TYPE_MAPPING = std::vector<std::uint8_t>,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
@@ -331,6 +875,21 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * @brief Implementation of create_proxy() for sparse union arrays.
+         *
+         * @tparam METADATA_RANGE Optional metadata range (default: std::vector<metadata_pair>)
+         * @param children Child arrays for the union
+         * @param element_type Type ID buffer
+         * @param format Arrow format string
+         * @param tim Type ID to child index mapping
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy representing the sparse union array
+         *
+         * @pre All child arrays must have the same length
+         * @post Returns valid Arrow proxy for the sparse union array
+         */
         template <input_metadata_container METADATA_RANGE>
         static auto create_proxy_impl(
             std::vector<array>&& children,
@@ -341,6 +900,19 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * @brief Gets the offset for an element in its child array.
+         *
+         * For sparse unions, this always returns the same index as the union array
+         * since all child arrays have the same length.
+         *
+         * @param i Index of the element in the union array
+         * @return The same index i (direct correspondence)
+         *
+         * @pre i must be < size()
+         * @post Returns i (sparse layout uses direct indexing)
+         * @post Used internally for element access in sparse layout
+         */
         [[nodiscard]] SPARROW_API std::size_t element_offset(std::size_t i) const;
         friend class union_array_crtp_base<sparse_union_array>;
     };
@@ -840,15 +1412,39 @@ namespace sparrow
 
 #if defined(__cpp_lib_format)
 
+/**
+ * @brief std::format formatter specialization for union arrays.
+ *
+ * Provides formatting support for union arrays in std::format contexts.
+ * Outputs the union type, metadata, and element values.
+ *
+ * @tparam U Union array type (dense_union_array or sparse_union_array)
+ */
 template <typename U>
     requires std::derived_from<U, sparrow::union_array_crtp_base<U>>
 struct std::formatter<U>
 {
+    /**
+     * @brief Parses format specification (currently unused).
+     *
+     * @param ctx Format parse context
+     * @return Iterator to end of format specification
+     */
     constexpr auto parse(std::format_parse_context& ctx)
     {
         return ctx.begin();  // Simple implementation
     }
 
+    /**
+     * @brief Formats the union array for output.
+     *
+     * @param ar Union array to format
+     * @param ctx Format context
+     * @return Iterator to end of formatted output
+     *
+     * @post Outputs format: "DenseUnion|SparseUnion [name=NAME | size=SIZE] <elem1, elem2, ..., elemN>"
+     * @post Name shows "nullptr" if not set
+     */
     auto format(const U& ar, std::format_context& ctx) const
     {
         if constexpr (std::is_same_v<U, sparrow::dense_union_array>)
@@ -882,6 +1478,16 @@ struct std::formatter<U>
 
 namespace sparrow
 {
+    /**
+     * @brief Stream output operator for union arrays.
+     *
+     * @tparam U Union array type (dense_union_array or sparse_union_array)
+     * @param os Output stream
+     * @param value Union array to output
+     * @return Reference to the output stream
+     *
+     * @post Outputs the union array using std::format formatter
+     */
     template <typename U>
         requires std::derived_from<U, sparrow::union_array_crtp_base<U>>
     std::ostream& operator<<(std::ostream& os, const U& value)

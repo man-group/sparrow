@@ -24,17 +24,30 @@
 
 namespace sparrow
 {
+    /**
+     * Concept that checks if a type is a buffer reference suitable for adaptation.
+     *
+     * @tparam FromBufferRef The buffer reference type to check.
+     * @tparam T The target element type.
+     */
     template <typename FromBufferRef, typename T>
     concept BufferReference = std::ranges::contiguous_range<FromBufferRef> && std::is_reference_v<FromBufferRef>
                               && (sizeof(std::ranges::range_value_t<FromBufferRef>) <= sizeof(T));
 
+    /**
+     * Concept that ensures T is const if FromBufferRef is const.
+     *
+     * @tparam FromBufferRef The buffer reference type.
+     * @tparam T The target type.
+     */
     template <typename FromBufferRef, typename T>
     concept T_is_const_if_FromBufferRef_is_const = mpl::T_matches_qualifier_if_Y_is<T, FromBufferRef, std::is_const>;
 
     /**
-     * Class which have internally a reference to a contiguous container of a certain type and provides an API
+     * Class which has internally a reference to a contiguous container of a certain type and provides an API
      * to access it as if it was a buffer<T>.
-     * @tparam To The type to which the buffer will be adapted. The size of the type To must be equal of
+     *
+     * @tparam To The type to which the buffer will be adapted. The size of the type To must be equal or
      * bigger than the element type of the container.
      * @tparam FromBufferRef The type of the container to adapt. If it's a const reference, all non-const
      * methods are disabled.
@@ -62,114 +75,360 @@ namespace sparrow
         using reverse_iterator = std::reverse_iterator<iterator>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
+        /**
+         * Constructs a buffer adaptor with a non-const buffer reference.
+         *
+         * @param buf The buffer reference to adapt.
+         */
         constexpr explicit buffer_adaptor(FromBufferRef buf)
             requires(not is_const);
+
+        /**
+         * Constructs a buffer adaptor with a const buffer reference.
+         *
+         * @param buf The const buffer reference to adapt.
+         */
         constexpr explicit buffer_adaptor(const FromBufferRef buf);
 
+        /**
+         * Returns a pointer to the underlying data.
+         *
+         * @return Pointer to the data.
+         */
         [[nodiscard]] constexpr pointer data() noexcept
             requires(not is_const);
+
+        /**
+         * Returns a constant pointer to the underlying data.
+         *
+         * @return Constant pointer to the data.
+         */
         [[nodiscard]] constexpr const_pointer data() const noexcept;
 
         // Element access
 
+        /**
+         * Returns a reference to the element at the specified index.
+         *
+         * @param idx The index of the element.
+         * @return Reference to the element.
+         */
         [[nodiscard]] constexpr reference operator[](size_type idx)
             requires(not is_const);
+
+        /**
+         * Returns a constant reference to the element at the specified index.
+         *
+         * @param idx The index of the element.
+         * @return Constant reference to the element.
+         */
         [[nodiscard]] constexpr const_reference operator[](size_type idx) const;
 
+        /**
+         * Returns a reference to the first element.
+         *
+         * @return Reference to the first element.
+         */
         [[nodiscard]] constexpr reference front()
             requires(not is_const);
+
+        /**
+         * Returns a constant reference to the first element.
+         *
+         * @return Constant reference to the first element.
+         */
         [[nodiscard]] constexpr const_reference front() const;
 
+        /**
+         * Returns a reference to the last element.
+         *
+         * @return Reference to the last element.
+         */
         [[nodiscard]] constexpr reference back()
             requires(not is_const);
+
+        /**
+         * Returns a constant reference to the last element.
+         *
+         * @return Constant reference to the last element.
+         */
         [[nodiscard]] constexpr const_reference back() const;
 
         // Iterators
 
+        /**
+         * Returns an iterator to the beginning.
+         *
+         * @return Iterator to the beginning.
+         */
         [[nodiscard]] constexpr iterator begin() noexcept
             requires(not is_const);
+
+        /**
+         * Returns an iterator to the end.
+         *
+         * @return Iterator to the end.
+         */
         [[nodiscard]] constexpr iterator end() noexcept
             requires(not is_const);
 
+        /**
+         * Returns a constant iterator to the beginning.
+         *
+         * @return Constant iterator to the beginning.
+         */
         [[nodiscard]] constexpr const_iterator begin() const noexcept;
+
+        /**
+         * Returns a constant iterator to the end.
+         *
+         * @return Constant iterator to the end.
+         */
         [[nodiscard]] constexpr const_iterator end() const noexcept;
 
+        /**
+         * Returns a constant iterator to the beginning.
+         *
+         * @return Constant iterator to the beginning.
+         */
         [[nodiscard]] constexpr const_iterator cbegin() const noexcept;
+
+        /**
+         * Returns a constant iterator to the end.
+         *
+         * @return Constant iterator to the end.
+         */
         [[nodiscard]] constexpr const_iterator cend() const noexcept;
 
+        /**
+         * Returns a reverse iterator to the beginning.
+         *
+         * @return Reverse iterator to the beginning.
+         */
         [[nodiscard]] constexpr reverse_iterator rbegin() noexcept
             requires(not is_const);
+
+        /**
+         * Returns a reverse iterator to the end.
+         *
+         * @return Reverse iterator to the end.
+         */
         [[nodiscard]] constexpr reverse_iterator rend() noexcept
             requires(not is_const);
 
+        /**
+         * Returns a constant reverse iterator to the beginning.
+         *
+         * @return Constant reverse iterator to the beginning.
+         */
         [[nodiscard]] constexpr const_reverse_iterator rbegin() const noexcept;
+
+        /**
+         * Returns a constant reverse iterator to the end.
+         *
+         * @return Constant reverse iterator to the end.
+         */
         [[nodiscard]] constexpr const_reverse_iterator rend() const noexcept;
 
+        /**
+         * Returns a constant reverse iterator to the beginning.
+         *
+         * @return Constant reverse iterator to the beginning.
+         */
         [[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept;
+
+        /**
+         * Returns a constant reverse iterator to the end.
+         *
+         * @return Constant reverse iterator to the end.
+         */
         [[nodiscard]] constexpr const_reverse_iterator crend() const noexcept;
 
         // Capacity
 
+        /**
+         * Returns the number of elements that can be held in currently allocated storage.
+         *
+         * @return The capacity.
+         */
         [[nodiscard]] constexpr size_type size() const noexcept(!SPARROW_CONTRACTS_THROW_ON_FAILURE);
+        /**
+         * Returns the maximum possible number of elements.
+         *
+         * @return The maximum possible number of elements.
+         */
         [[nodiscard]] constexpr size_type max_size() const noexcept;
+
+        /**
+         * Returns the number of elements that can be held in currently allocated storage.
+         *
+         * @return The capacity.
+         */
         [[nodiscard]] constexpr size_type capacity() const noexcept;
+
+        /**
+         * Checks whether the container is empty.
+         *
+         * @return true if the container is empty, false otherwise.
+         */
         [[nodiscard]] constexpr bool empty() const noexcept;
+
+        /**
+         * Reserves storage for at least the specified number of elements.
+         *
+         * @param new_cap The new capacity.
+         */
         constexpr void reserve(size_type new_cap)
             requires(not is_const);
+
+        /**
+         * Requests the removal of unused capacity.
+         */
         constexpr void shrink_to_fit()
             requires(not is_const);
 
         // Modifiers
 
+        /**
+         * Clears the contents.
+         */
         constexpr void clear() noexcept
             requires(not is_const);
 
+        /**
+         * Inserts an element at the specified position.
+         *
+         * @param pos The position to insert at.
+         * @param value The value to insert.
+         * @return Iterator pointing to the inserted element.
+         */
         constexpr iterator insert(const_iterator pos, const value_type& value)
             requires(not is_const);
+
+        /**
+         * Inserts multiple copies of an element at the specified position.
+         *
+         * @param pos The position to insert at.
+         * @param count The number of elements to insert.
+         * @param value The value to insert.
+         * @return Iterator pointing to the first inserted element.
+         */
         constexpr iterator insert(const_iterator pos, size_type count, const value_type& value)
             requires(not is_const);
 
+        /**
+         * Inserts elements from a range at the specified position.
+         *
+         * @tparam InputIt The iterator type.
+         * @param pos The position to insert at.
+         * @param first The beginning of the range to insert.
+         * @param last The end of the range to insert.
+         * @return Iterator pointing to the first inserted element.
+         */
         template <class InputIt>
             requires std::input_iterator<InputIt>
         constexpr iterator insert(const_iterator pos, InputIt first, InputIt last)
             requires(not is_const);
+
+        /**
+         * Inserts elements from an initializer list at the specified position.
+         *
+         * @param pos The position to insert at.
+         * @param ilist The initializer list to insert.
+         * @return Iterator pointing to the first inserted element.
+         */
         constexpr iterator insert(const_iterator pos, std::initializer_list<value_type> ilist)
             requires(not is_const);
 
+        /**
+         * Constructs an element in-place at the specified position.
+         *
+         * @tparam Args The argument types.
+         * @param pos The position to emplace at.
+         * @param args Arguments to forward to the constructor.
+         * @return Iterator pointing to the emplaced element.
+         */
         template <class... Args>
         constexpr iterator emplace(const_iterator pos, Args&&... args)
             requires(not is_const);
 
+        /**
+         * Erases an element at the specified position.
+         *
+         * @param pos The position of the element to erase.
+         * @return Iterator following the last element removed.
+         */
         constexpr iterator erase(const_iterator pos)
             requires(not is_const);
+
+        /**
+         * Erases elements in the specified range.
+         *
+         * @param first The beginning of the range to erase.
+         * @param last The end of the range to erase.
+         * @return Iterator following the last element removed.
+         */
         constexpr iterator erase(const_iterator first, const_iterator last)
             requires(not is_const);
 
+        /**
+         * Adds an element to the end.
+         *
+         * @param value The value to add.
+         */
         constexpr void push_back(const value_type& value)
             requires(not is_const);
 
+        /**
+         * Removes the last element.
+         */
         constexpr void pop_back()
             requires(not is_const);
 
+        /**
+         * Changes the number of elements stored.
+         *
+         * @param new_size The new size.
+         */
         constexpr void resize(size_type new_size)
             requires(not is_const);
 
+        /**
+         * Changes the number of elements stored, filling new elements with the specified value.
+         *
+         * @param new_size The new size.
+         * @param value The value to fill new elements with.
+         */
         constexpr void resize(size_type new_size, const value_type& value)
             requires(not is_const);
 
     private:
 
+        /** Size ratio from source buffer to target buffer. */
         static constexpr double m_from_to_size_ratio = static_cast<double>(sizeof(buffer_reference_value_type))
                                                        / static_cast<double>(sizeof(value_type));
 
+        /** Size ratio from target buffer to source buffer. */
         static constexpr size_type m_to_from_size_ratio = static_cast<size_type>(1. / m_from_to_size_ratio);
 
+        /**
+         * Converts an index in the adapted buffer to an index in the source buffer.
+         *
+         * @param idx The index in the adapted buffer.
+         * @return The corresponding index in the source buffer.
+         */
         [[nodiscard]] constexpr std::remove_cvref_t<buffer_reference>::size_type
         index_for_buffer(size_type idx) const noexcept
         {
             return idx * m_to_from_size_ratio;
         }
 
+        /**
+         * Gets a buffer reference iterator from a const_iterator position.
+         *
+         * @param pos The const_iterator position.
+         * @return The corresponding buffer reference iterator.
+         */
         [[nodiscard]] std::remove_cvref_t<buffer_reference>::const_iterator
         get_buffer_reference_iterator(const_iterator pos)
         {

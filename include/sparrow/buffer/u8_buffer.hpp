@@ -27,7 +27,11 @@ namespace sparrow
 
     namespace detail
     {
-
+        /**
+         * A holder class that wraps a value and provides storage management.
+         *
+         * @tparam T The type of the value to hold.
+         */
         template <class T>
         class holder
         {
@@ -35,6 +39,12 @@ namespace sparrow
 
             using inner_type = T;
 
+            /**
+             * Constructs a holder with the given arguments forwarded to the wrapped value.
+             *
+             * @tparam Args The argument types.
+             * @param args Arguments to forward to the value constructor.
+             */
             template <class... Args>
             constexpr holder(Args&&... args) noexcept
                 : value(std::forward<Args>(args)...)
@@ -43,21 +53,41 @@ namespace sparrow
 
             T value;
 
+            /**
+             * Extracts the storage by moving the wrapped value.
+             *
+             * @return The moved storage value.
+             */
             [[nodiscard]] constexpr T extract_storage() && noexcept
             {
                 return std::move(value);
             }
 
+            /**
+             * Gets a constant reference to the storage.
+             *
+             * @return Constant reference to the storage.
+             */
             [[nodiscard]] constexpr const T& storage() const noexcept
             {
                 return value;
             }
 
+            /**
+             * Gets a reference to the storage.
+             *
+             * @return Reference to the storage.
+             */
             [[nodiscard]] constexpr T& storage() noexcept
             {
                 return value;
             }
 
+            /**
+             * Assigns a new value to the storage.
+             *
+             * @param other The value to assign.
+             */
             constexpr void assign(T&& other)
             {
                 value = std::move(other);
@@ -66,8 +96,10 @@ namespace sparrow
     }
 
     /**
-     * This buffer class is use as storage buffer for all sparrow arrays.
+     * This buffer class is used as storage buffer for all sparrow arrays.
      * Its internal storage can be extracted.
+     *
+     * @tparam T The element type stored in the buffer.
      */
     template <class T>
     class u8_buffer : private detail::holder<buffer<std::uint8_t>>,
@@ -79,14 +111,38 @@ namespace sparrow
         using buffer_adaptor_type = buffer_adaptor<T, buffer<std::uint8_t>&>;
         using holder_type::extract_storage;
 
+        /**
+         * Move constructor.
+         *
+         * @param other The buffer to move from.
+         */
         constexpr u8_buffer(u8_buffer&& other) noexcept;
+
+        /**
+         * Copy constructor.
+         *
+         * @param other The buffer to copy from.
+         */
         constexpr u8_buffer(const u8_buffer& other);
+
+        /**
+         * Move assignment operator (deleted).
+         */
         u8_buffer& operator=(u8_buffer&& other) = delete;
+
+        /**
+         * Copy assignment operator (deleted).
+         */
         u8_buffer& operator=(u8_buffer& other) = delete;
+
+        /**
+         * Destructor.
+         */
         ~u8_buffer() = default;
 
         /**
          * Constructs a buffer with \c n elements, each initialized to \c val.
+         *
          * @param n Number of elements.
          * @param val Value to initialize the elements with.
          */
@@ -94,8 +150,11 @@ namespace sparrow
 
         /**
          * Constructs a buffer with the elements of the range \c range.
-         * The range elements  must be convertible to \c T.
-         * @param range The range.
+         * The range elements must be convertible to \c T.
+         * This constructor performs a copy of the elements in the range into the buffer.
+         *
+         * @tparam R The range type.
+         * @param range The range to copy elements from.
          */
         template <std::ranges::input_range R>
             requires(
@@ -106,14 +165,18 @@ namespace sparrow
 
         /**
          * Constructs a buffer with the elements of the initializer list \c ilist.
+         *
          * @param ilist The initializer list.
          */
         constexpr u8_buffer(std::initializer_list<T> ilist);
 
         /**
          * Constructs a buffer by taking ownership of the storage pointed to by \c data_ptr.
+         *
+         * @tparam A The allocator type.
          * @param data_ptr Pointer to the storage.
          * @param count Number of elements in the storage.
+         * @param a The allocator to use.
          */
         template <allocator A = std::allocator<std::uint8_t>>
         constexpr u8_buffer(T* data_ptr, std::size_t count, const A& a = A());

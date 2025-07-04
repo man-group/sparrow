@@ -1,21 +1,19 @@
-Typed arrays      {#typed_arrays}
-============
+# Typed Arrays      {#typed_arrays}
 
 `sparrow` offers an array class for each Arrow layout. These arrays are commonly referred to as
-typed arrays because the exact data type is known. Despite differences in memory layout, all these
+typed arrays because the exact data type is known at compile time. Despite differences in memory layout, all these
 arrays share a consistent API for reading data. This API is designed to resemble that of the standard
 container [std::vector](https://en.cppreference.com/w/cpp/container/vector).
 
-Common API    {#common_apis}
-----------
+## Common API    {#common_apis}
 
 ### Support for null values
 
 Typed arrays support missing values, or "nulls": any value in an array may be semantically null,
-regardless of its type.Therefore, when reading data from an array, one does not get scalar values,
-but a value of a special type that can handle missing values: \ref nullable.
+regardless of its type. Therefore, when reading data from an array, one does not get scalar values,
+but a value of a special type that can handle missing values: \ref sparrow::nullable.
 
-\ref nullable has an API similar to [std::optional](https://en.cppreference.com/w/cpp/utility/optional):
+\ref sparrow::nullable has an API similar to [std::optional](https://en.cppreference.com/w/cpp/utility/optional):
 
 ```cpp
 #include "sparrow/sparrow.hpp"
@@ -29,9 +27,9 @@ sp::nullable<double> nd = sp::nullval;
 std::cout << nd.has_value() << std::endl; // Prints false
 ```
 
-Contrary to [std::optional](https://en.cppreference.com/w/cpp/utility/optional), \ref nullable
-can hold a reference and act as a reference proxy. Assigning to a nullable proxy will assign to
-referenced value, it won't rebind the internal reference:
+Unlike [std::optional](https://en.cppreference.com/w/cpp/utility/optional), \ref sparrow::nullable
+can hold a reference and act as a reference proxy. Assigning to a nullable proxy will assign to the
+referenced value; it won't rebind the internal reference:
 
 ```cpp
 #include "sparrow/sparrow.hpp"
@@ -43,8 +41,8 @@ n = 7;
 std::cout << i << std::endl; // Prints 7
 ```
 
-However, assigning null to a nullable proxy does not change the underlying value, it just reset the internal
-flags:
+However, assigning null to a nullable proxy does not change the underlying value; it just resets the internal
+flag:
 
 ```cpp
 #include "sparrow/sparrow.hpp"
@@ -71,7 +69,7 @@ Example:
 #include "sparrow/sparrow.hpp"
 namespace sp = sparrow;
 
-sp::primitive_array<int> pa = { 1, 2, 3, 4};
+sp::primitive_array<int> pa = {1, 2, 3, 4};
 std::cout << pa.size() << std::endl;  // Prints 4
 std::cout << pa.empty() << std::endl; // Prints false
 ```
@@ -96,16 +94,20 @@ Example:
 #include "sparrow/sparrow.hpp"
 namespace sp = sparrow;
 
-sp::primitive_array<int> pa = { 1, 2, 3, 4};
+sp::primitive_array<int> pa = {1, 2, 3, 4};
 std::cout << pa.front().value() << std::endl; // Prints 1
 std::cout << pa.back().value() << std::endl;  // Prints 4
 std::cout << pa[2].value() << std::endl;      // Prints 3
-std::cout << pa.at(5).value() << std::endl;   // Throws
+try {
+    std::cout << pa.at(5).value() << std::endl;   // Throws std::out_of_range
+} catch (const std::out_of_range& e) {
+    std::cout << "Index out of range" << std::endl;
+}
 ```
 
 ### Iterators
 
-Typed arrays also provide traditional iterating methods:
+Typed arrays also provide traditional iteration methods:
 
 | Method  | Description                                 |
 | ------- | ------------------------------------------- |
@@ -124,25 +126,24 @@ Example:
 #include "sparrow/sparrow.hpp"
 namespace sp = sparrow;
 
-sp::primitive_array<int> pa = { 1, 2, 3, 4};
+sp::primitive_array<int> pa = {1, 2, 3, 4};
 std::for_each(pa.begin(), pa.end(), [](auto n) { std::cout << n.value() << ' '; });
 std::cout << '\n';
 // Prints 1 2 3 4
 ```
 
-Layout types  {#layout_types}
-------------
+## Layout Types  {#layout_types}
 
 In addition to the common API described above, typed arrays offer convenient
-constructors tailored to their specific types. They also implement full value-semantics
+constructors tailored to their specific types. They also implement full value semantics
 and can therefore be copied and moved:
 
 ```cpp
 #include "sparrow/sparrow.hpp"
 namespace sp = sparrow;
 
-sp::primitive_array<int> pa0 = { 1, 2, 3, 4};
-sp::primitive_array<int> pa1 = { 2, 3, 4, 5};
+sp::primitive_array<int> pa0 = {1, 2, 3, 4};
+sp::primitive_array<int> pa1 = {2, 3, 4, 5};
 
 sp::primitive_array<int> pa2(pa0);
 sp::primitive_array<int> pa3(std::move(pa1));
@@ -150,13 +151,13 @@ pa2 = pa3;
 pa3 = std::move(pa0);
 ```
 
-## Primitive Arrays
+### Primitive Arrays
 
-### primitive_array<T>
+#### primitive_array<T>
 **Header:** `sparrow/layout/primitive_layout/primitive_array.hpp`
 
 **Description:** Stores scalar values of a specific type (integers, floats, booleans) in a contiguous memory layout.
-T type can be:
+The T type can be:
 - `int8_t`, `int16_t`, `int32_t`, `int64_t`
 - `uint8_t`, `uint16_t`, `uint32_t`, `uint64_t`
 - `float16_t`, `float`, `double`
@@ -164,57 +165,57 @@ T type can be:
 
 **When to use:** For homogeneous collections of scalar values.
 
-## Variable-Size Binary Arrays
+### Variable-Size Binary Arrays
 
-### string_array / big_string_array
+#### string_array / big_string_array
 **Header:** `sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp`
 
 **Description:** Stores variable-length strings or binary data. `big_string_array` uses 64-bit offsets for larger datasets.
 
 **When to use:** For text data, variable-length strings, or binary blobs.
 
-### binary_array / big_binary_array
+#### binary_array / big_binary_array
 **Header:** `sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp`
 
 **Description:** Similar to string arrays but for binary data (sequences of bytes).
 
 **When to use:** For variable-length binary data like images, serialized objects, or raw byte sequences.
 
-## Fixed-Width Binary Arrays
+### Fixed-Width Binary Arrays
 
-### fixed_width_binary_array
+#### fixed_width_binary_array
 **Header:** `sparrow/layout/fixed_width_binary_array.hpp`
 
 **Description:** Stores fixed-size binary data where all elements have the same byte length.
 
 **When to use:** For fixed-size binary data like UUIDs, hashes, or fixed-size encoded data.
 
-## List Arrays
+### List Arrays
 
-### list_array / big_list_array
+#### list_array / big_list_array
 **Header:** `sparrow/layout/list_layout/list_array.hpp`
 
 **Description:** Stores variable-length lists where each element can contain a different number of sub-elements.
 
 **When to use:** Use the List layout when your data consists of variable-length lists and you want a straightforward, efficient representation where the order of elements in the child array matches the logical order in the parent array. This is the standard layout for most use cases involving variable-length lists, such as arrays of strings or arrays of arrays of numbers.
 
-### list_view_array / big_list_view_array
+#### list_view_array / big_list_view_array
 **Header:** `sparrow/layout/list_layout/list_array.hpp`
 
 **Description:** Similar to list arrays but with explicit size information for each list element.
 
 **When to use:** Use the ListView layout when you need more flexibility than the standard List layout provides, such as when the logical order of lists does not match the physical order in the child array, or when you need to represent lists that share or reuse segments of the child array. This can be useful in advanced scenarios like certain optimizations or data transformations where reordering or sharing of data is required.
 
-### fixed_sized_list_array
+#### fixed_size_list_array
 **Header:** `sparrow/layout/list_layout/list_array.hpp`
 
 **Description:** Stores lists where all elements have the same fixed number of sub-elements.
 
 **When to use:** For homogeneous nested structures like 3D coordinates, RGB values, or fixed-size tuples.
 
-## Struct Arrays
+### Struct Arrays
 
-### struct_array
+#### struct_array
 **Header:** `sparrow/layout/struct_layout/struct_array.hpp`
 
 **Description:** Stores structured data with named fields, similar to database records or C structs.
@@ -223,9 +224,9 @@ T type can be:
 
 **Apache Arrow specification:** [Struct Layout](https://arrow.apache.org/docs/format/Columnar.html#struct-layout)
 
-## Union Arrays
+### Union Arrays
 
-### sparse_union_array / dense_union_array
+#### sparse_union_array / dense_union_array
 **Header:** `sparrow/layout/union_array.hpp`
 
 **Description:** Stores values that can be one of several different types, similar to std::variant.
@@ -234,9 +235,9 @@ T type can be:
 
 **Apache Arrow specification:** [Union Layout](https://arrow.apache.org/docs/format/Columnar.html#union-layout)
 
-## Temporal Arrays
+### Temporal Arrays
 
-### timestamp_array<T>
+#### timestamp_array<T>
 **Header:** `sparrow/layout/temporal/timestamp_array.hpp`
 
 **Description:** Stores timestamps with timezone information.
@@ -249,7 +250,7 @@ T type can be:
 - `timestamp_microseconds_array`
 - `timestamp_nanoseconds_array`
 
-### timestamp_without_timezone_array<T>
+#### timestamp_without_timezone_array<T>
 **Header:** `sparrow/layout/temporal/timestamp_without_timezone_array.hpp`
 
 **Description:** Stores timestamps without timezone information.
@@ -262,7 +263,7 @@ T type can be:
 - `timestamp_without_timezone_microseconds_array`
 - `timestamp_without_timezone_nanoseconds_array`
 
-### date_array<T>
+#### date_array<T>
 **Header:** `sparrow/layout/temporal/date_array.hpp`
 
 **Description:** Stores date values (days or milliseconds since epoch).
@@ -273,7 +274,7 @@ T type can be:
 - `date_days_array`
 - `date_milliseconds_array`
 
-### time_array<T>
+#### time_array<T>
 **Header:** `sparrow/layout/temporal/time_array.hpp`
 
 **Description:** Stores time-of-day values with various precisions.
@@ -286,7 +287,7 @@ T type can be:
 - `time_microseconds_array`
 - `time_nanoseconds_array`
 
-### duration_array<T>
+#### duration_array<T>
 **Header:** `sparrow/layout/temporal/duration_array.hpp`
 
 **Description:** Stores duration/time interval values.
@@ -299,7 +300,7 @@ T type can be:
 - `duration_microseconds_array`
 - `duration_nanoseconds_array`
 
-### interval_array<T>
+#### interval_array<T>
 **Header:** `sparrow/layout/temporal/interval_array.hpp`
 
 **Description:** Stores calendar intervals (months, days, nanoseconds).
@@ -311,18 +312,18 @@ T type can be:
 - `days_time_interval_array`
 - `month_day_nanoseconds_interval_array`
 
-## Decimal Arrays
+### Decimal Arrays
 
-### decimal_array<T>
+#### decimal_array<T>
 **Header:** `sparrow/layout/decimal_array.hpp`
 
 **Description:** Stores fixed-precision decimal numbers.
 
 **When to use:** For financial calculations or when exact decimal precision is required.
 
-## Special Layout Arrays
+### Special Layout Arrays
 
-### null_array
+#### null_array
 **Header:** `sparrow/layout/null_array.hpp`
 
 **Description:** An array where all elements are null.
@@ -331,7 +332,7 @@ T type can be:
 
 **Apache Arrow specification:** [Null Layout](https://arrow.apache.org/docs/format/Columnar.html#null-layout)
 
-### dictionary_encoded_array
+#### dictionary_encoded_array
 **Header:** `sparrow/layout/dictionary_encoded_array.hpp`
 
 **Description:** Stores data using dictionary encoding to reduce memory usage for repeated values.
@@ -340,12 +341,12 @@ T type can be:
 
 **Apache Arrow specification:** [Dictionary Encoding](https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout)
 
-### run_end_encoded_array
+#### run_end_encoded_array
 **Header:** `sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp`
 
 **Description:** Compresses data by storing run lengths for consecutive identical values.
 
-**When to use:** For data with long runs of identical values.
+**When to use:** For data with long runs of consecutive identical values.
 
 **Apache Arrow specification:** [Run-end Encoding](https://arrow.apache.org/docs/format/Columnar.html#run-end-encoded-layout)
 

@@ -46,9 +46,33 @@ namespace sparrow
     using fixed_width_binary_traits = arrow_traits<std::vector<byte_t>>;
 
     /**
-     * A fixed-width binary array implementation.
-     * Related Apache Arrow specification:
+     * @brief Fixed-width binary array implementation for storing binary data with uniform element sizes.
+     *
+     * This class implements an Arrow-compatible array for storing fixed-width binary data where all
+     * elements have the same byte length. Each element is a sequence of bytes with a predetermined size
+     * that is specified at array creation time and encoded in the Arrow schema format.
+     *
+     * Related Apache Arrow description and specification:
+     * https://arrow.apache.org/docs/dev/format/Intro.html#list
      * https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-width-binary-layout
+     *
+     * @tparam T The container type for binary data (must be a sized range of byte-like elements)
+     * @tparam CR The const reference type returned when accessing elements
+     *
+     * @pre T must be a sized range where each element has sizeof(byte_t)
+     * @pre All binary elements in the array must have the same size
+     * @post Maintains Arrow Fixed Width Binary format compatibility
+     * @post Element size is encoded in the Arrow format string as "w:<size>"
+     *
+     * @example
+     * ```cpp
+     * // Create array of 4-byte binary values
+     * std::vector<std::vector<uint8_t>> data = {
+     *     {0x01, 0x02, 0x03, 0x04},
+     *     {0x05, 0x06, 0x07, 0x08}
+     * };
+     * fixed_width_binary_array arr(data);
+     * ```
      */
     using fixed_width_binary_array = fixed_width_binary_array_impl<
         fixed_width_binary_traits::value_type,
@@ -138,11 +162,35 @@ namespace sparrow
         using functor_type = typename inner_types::functor_type;
         using const_functor_type = typename inner_types::const_functor_type;
 
+        /**
+         * @brief Constructs fixed-width binary array from Arrow proxy.
+         *
+         * @param proxy Arrow proxy containing fixed-width binary array data and schema
+         *
+         * @pre proxy must contain valid Arrow Fixed Width Binary array and schema
+         * @pre proxy format must be "w:[size]" where [size] is the element byte size
+         * @pre proxy data type must be FIXED_WIDTH_BINARY
+         * @post Array is initialized with data from proxy
+         * @post Element size is extracted from format string
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(proxy.data_type() == data_type::FIXED_WIDTH_BINARY)
+         */
         explicit fixed_width_binary_array_impl(arrow_proxy);
 
         /**
-         * Constructs a fixed-width binary array.
-         * The arguments are forwarded to the compatibles \sa create_proxy() functions.
+         * @brief Generic constructor for creating fixed-width binary array.
+         *
+         * Creates a fixed-width binary array from various input types. The arguments are
+         * forwarded to compatible create_proxy() functions based on their types.
+         *
+         * @tparam ARGS Parameter pack for constructor arguments
+         * @param args Constructor arguments (data, element_size, validity, metadata, etc.)
+         *
+         * @pre Arguments must match one of the create_proxy() overload signatures
+         * @pre If providing data ranges, all elements must have the same size
+         * @pre Element size must be > 0 for non-empty arrays
+         * @post Array is created with the specified data and configuration
+         * @post Element size is properly set and encoded in format string
          */
         template <class... ARGS>
             requires(mpl::excludes_copy_and_move_ctor_v<fixed_width_binary_array_impl<T, CR>, ARGS...>)
@@ -155,20 +203,54 @@ namespace sparrow
         using base_type::get_arrow_proxy;
         using base_type::size;
 
+        /**
+         * @brief Gets mutable reference to element at specified index.
+         *
+         * @param i Index of the element to access
+         * @return Mutable reference to the binary element
+         *
+         * @pre i must be < size()
+         * @post Returns valid reference that can modify the element
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(i < size())
+         */
         [[nodiscard]] constexpr inner_reference value(size_type i);
+
+        /**
+         * @brief Gets const reference to element at specified index.
+         *
+         * @param i Index of the element to access
+         * @return Const reference to the binary element
+         *
+         * @pre i must be < size()
+         * @post Returns valid const reference to the element data
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(i < size())
+         */
         [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
     private:
 
         /**
-         * Creates an arrow proxy from a data buffer.
+         * @brief Creates Arrow proxy from data buffer with element specifications.
          *
-         * @param data_buffer The buffer containing the data.
-         * @param element_size The size of each element in the buffer.
-         * @param validity_input The validity bitmap.
-         * @param name The name of the array.
-         * @param metadata The metadata of the array.
-         * @return The arrow proxy.
+         * @tparam C Character-like type for the buffer data
+         * @tparam VB Type of validity bitmap input
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param data_buffer Buffer containing the binary data
+         * @param element_count Number of elements in the array
+         * @param element_size Size in bytes of each element
+         * @param validity_input Validity bitmap specification
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the fixed-width binary array data and schema
+         *
+         * @pre C must be char-like (sizeof(C) == sizeof(byte_t))
+         * @pre element_count * element_size must equal data_buffer.size()
+         * @pre element_size must be > 0 if element_count > 0
+         * @pre validity_input size must match element_count
+         * @post Returns valid Arrow proxy with Fixed Width Binary format
+         * @post Format string is "w:<element_size>"
          */
         template <
             mpl::char_like C,
@@ -183,6 +265,21 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Creates empty Arrow proxy with specified element size.
+         *
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param element_size Size in bytes of each element
+         * @param nullable Whether the array should support null values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing empty fixed-width binary array
+         *
+         * @pre element_size must be >= 0
+         * @post Returns valid Arrow proxy with no elements
+         * @post If nullable is true, array supports null values
+         * @post Format string is "w:<element_size>"
+         */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy(
             size_t element_size,
@@ -192,25 +289,32 @@ namespace sparrow
         );
 
         /**
-         * Creates an arrow proxy from a range of ranges of byte_t/uint8_t/int8_t.
+         * @brief Creates Arrow proxy from range of binary value ranges with validity bitmap.
          *
-         * @param values The range of ranges of byte_t/uint8_t/int8_t. All the elements must have the same
-         * size.
-         * @param validity_input The validity bitmap.
-         * @param name The name of the array.
-         * @param metadata The metadata of the array.
-         * @return The arrow proxy.
+         * @tparam VALUES Type of input range containing binary value ranges
+         * @tparam VB Type of validity bitmap input
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param values Range of ranges containing binary data (all must have same size)
+         * @param validity_input Validity bitmap specification
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the fixed-width binary array data and schema
+         *
+         * @pre VALUES must be a range of ranges of char-like elements
+         * @pre All inner ranges must have the same size
+         * @pre validity_input size must match values.size()
+         * @post Returns valid Arrow proxy with Fixed Width Binary format
+         * @post Element size is determined from first non-empty element
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(all_same_size(values))
          */
         template <
             std::ranges::input_range VALUES,
             validity_bitmap_input VB = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(
-                std::ranges::input_range<std::ranges::range_value_t<VALUES>> &&  // a range of ranges
-                mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<VALUES>>>  // inner range
-                                                                                                // is a range
-                                                                                                // of
-                                                                                                // char-like
+                std::ranges::input_range<std::ranges::range_value_t<VALUES>>
+                && mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<VALUES>>>
             )
         [[nodiscard]] static arrow_proxy create_proxy(
             VALUES&& values,
@@ -220,24 +324,28 @@ namespace sparrow
         );
 
         /**
-         * Creates an arrow proxy from a range of ranges of byte_t/uint8_t/int8_t.
+         * @brief Creates Arrow proxy from range of binary value ranges with nullable flag.
          *
-         * @param values The range of ranges of byte_t/uint8_t/int8_t. All the elements must have the same
-         * size.
-         * @param nullable Whether the array's element are nullable.
-         * @param name The name of the array.
-         * @param metadata The metadata of the array.
-         * @return The arrow proxy.
+         * @tparam VALUES Type of input range containing binary value ranges
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param values Range of ranges containing binary data (all must have same size)
+         * @param nullable Whether the array should support null values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the fixed-width binary array data and schema
+         *
+         * @pre VALUES must be a range of ranges of char-like elements
+         * @pre All inner ranges must have the same size
+         * @post If nullable is true, array supports null values (though none initially set)
+         * @post If nullable is false, array does not support null values
+         * @post Element size is determined from first non-empty element
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(all_same_size(values))
          */
-        template <
-            std::ranges::input_range VALUES,
-            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        template <std::ranges::input_range VALUES, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires(
-                std::ranges::input_range<std::ranges::range_value_t<VALUES>> &&  // a range of ranges
-                mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<VALUES>>>  // inner range
-                                                                                                // is a range
-                                                                                                // of
-                                                                                                // char-like
+                std::ranges::input_range<std::ranges::range_value_t<VALUES>>
+                && mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<VALUES>>>
             )
         [[nodiscard]] static arrow_proxy create_proxy(
             VALUES&& values,
@@ -247,13 +355,21 @@ namespace sparrow
         );
 
         /**
-         * Creates an arrow proxy from a range of nullable values. The inner range must be a range of
-         * byte_t/uint8_t/int8_t.
+         * @brief Creates Arrow proxy from range of nullable binary values.
          *
-         * @param range The range of nullable values. All the elements must have the same size.
-         * @param name The name of the array.
-         * @param metadata The metadata of the array.
-         * @return The arrow proxy.
+         * @tparam NULLABLE_VALUES Type of input range containing nullable binary values
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param range Range of nullable binary values (inner values must have same size)
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the fixed-width binary array data and schema
+         *
+         * @pre NULLABLE_VALUES must be a range of nullable<binary_range>
+         * @pre All non-null inner ranges must have the same size
+         * @pre Inner ranges must contain byte_t elements
+         * @post Returns valid Arrow proxy with Fixed Width Binary format
+         * @post Validity bitmap reflects has_value() status of nullable elements
+         * @post Array supports null values (nullable = true)
          */
         template <std::ranges::input_range NULLABLE_VALUES, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires mpl::is_type_instance_of_v<std::ranges::range_value_t<NULLABLE_VALUES>, nullable>
@@ -267,6 +383,29 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Implementation helper for creating Arrow proxy from components.
+         *
+         * @tparam C Character-like type for the buffer data
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param data_buffer Buffer containing the binary data
+         * @param element_count Number of elements in the array
+         * @param element_size Size in bytes of each element
+         * @param validity_input Optional validity bitmap
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the fixed-width binary array data and schema
+         *
+         * @pre element_size == 0 implies data_buffer.size() == 0
+         * @pre element_size > 0 implies data_buffer.size() % element_size == 0
+         * @pre element_count * element_size == data_buffer.size()
+         * @post Returns valid Arrow proxy with Fixed Width Binary format
+         * @post Format string is "w:<element_size>"
+         * @post Null count matches validity bitmap null count (if present)
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(element_size == 0 ? (data_buffer.size() == 0) :
+         * (data_buffer.size() % element_size == 0))
+         */
         template <mpl::char_like C, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy_impl(
             u8_buffer<C>&& data_buffer,
@@ -279,33 +418,179 @@ namespace sparrow
 
         static constexpr size_t DATA_BUFFER_INDEX = 1;
 
+        /**
+         * @brief Gets mutable pointer to data at byte offset.
+         *
+         * @param i Byte offset into the data buffer
+         * @return Mutable pointer to data at the specified offset
+         *
+         * @pre i must be within buffer bounds considering array offset
+         * @post Returns valid pointer to mutable data
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(data_buffer_size >= index_offset)
+         */
         [[nodiscard]] constexpr data_iterator data(size_type i);
 
+        /**
+         * @brief Gets iterator to beginning of value range.
+         *
+         * @return Iterator pointing to the first element
+         *
+         * @post Returns valid iterator to array beginning
+         */
         [[nodiscard]] constexpr value_iterator value_begin();
+
+        /**
+         * @brief Gets iterator to end of value range.
+         *
+         * @return Iterator pointing past the last element
+         *
+         * @post Returns valid iterator to array end
+         */
         [[nodiscard]] constexpr value_iterator value_end();
 
+        /**
+         * @brief Gets const iterator to beginning of value range.
+         *
+         * @return Const iterator pointing to the first element
+         *
+         * @post Returns valid const iterator to array beginning
+         */
         [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
+
+        /**
+         * @brief Gets const iterator to end of value range.
+         *
+         * @return Const iterator pointing past the last element
+         *
+         * @post Returns valid const iterator to array end
+         */
         [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
+        /**
+         * @brief Gets const pointer to data at byte offset.
+         *
+         * @param i Byte offset into the data buffer
+         * @return Const pointer to data at the specified offset
+         *
+         * @pre i must be within buffer bounds considering array offset
+         * @post Returns valid pointer to const data
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(data_buffer_size >= index_offset)
+         */
         [[nodiscard]] constexpr const_data_iterator data(size_type i) const;
 
         // Modifiers
 
+        /**
+         * @brief Resizes the array to specified length, filling with given value.
+         *
+         * @tparam U Type of fill value (must be convertible to T)
+         * @param new_length New size for the array
+         * @param value Value to use for new elements (if growing)
+         *
+         * @pre U must be convertible to T and sized range
+         * @pre value.size() must equal element_size
+         * @pre new_length must be valid array size
+         * @post Array size is exactly new_length
+         * @post If growing, new elements are copies of value
+         * @post If shrinking, excess elements are removed
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(m_element_size == value.size())
+         */
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
         constexpr void resize_values(size_type new_length, U value);
 
+        /**
+         * @brief Inserts copies of a value at specified position.
+         *
+         * @tparam U Type of value to insert (must be convertible to T)
+         * @param pos Iterator position where to insert
+         * @param value Value to insert multiple times
+         * @param count Number of copies to insert
+         * @return Iterator pointing to first inserted element
+         *
+         * @pre U must be convertible to T and sized range
+         * @pre pos must be valid iterator within [value_cbegin(), value_cend()]
+         * @pre value.size() must equal element_size
+         * @pre count must be >= 0
+         * @post count copies of value are inserted at pos
+         * @post Array size increases by count
+         * @post Returns iterator to first inserted element
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(m_element_size == value.size())
+         */
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
         constexpr value_iterator insert_value(const_value_iterator pos, U value, size_type count);
 
+        /**
+         * @brief Inserts range of values at specified position.
+         *
+         * @tparam InputIt Input iterator type
+         * @param pos Iterator position where to insert
+         * @param first Iterator to beginning of range to insert
+         * @param last Iterator to end of range to insert
+         * @return Iterator pointing to first inserted element
+         *
+         * @pre InputIt must be input iterator with value_type convertible to T
+         * @pre pos must be valid iterator within [value_cbegin(), value_cend()]
+         * @pre [first, last) must be valid range
+         * @pre All values in [first, last) must have the same size
+         * @pre All values must have size equal to element_size
+         * @post All values in [first, last) are inserted at pos
+         * @post Array size increases by distance(first, last)
+         * @post Returns iterator to first inserted element
+         *
+         * @note Internal assertions:
+         *   - SPARROW_ASSERT_TRUE(value_cbegin() <= pos)
+         *   - SPARROW_ASSERT_TRUE(pos <= value_cend())
+         *   - SPARROW_ASSERT_TRUE(first <= last)
+         *   - SPARROW_ASSERT_TRUE(all_same_size(range))
+         *   - SPARROW_ASSERT_TRUE(m_element_size == std::ranges::size(*first))
+         */
         template <typename InputIt>
             requires std::input_iterator<InputIt>
                      && mpl::convertible_ranges<typename std::iterator_traits<InputIt>::value_type, T>
         constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
 
+        /**
+         * @brief Erases elements starting at specified position.
+         *
+         * @param pos Iterator position where to start erasing
+         * @param count Number of elements to erase
+         * @return Iterator pointing to element after the erased range
+         *
+         * @pre pos must be valid iterator within [value_cbegin(), value_cend()]
+         * @pre count must be >= 0
+         * @pre pos + count must not exceed value_cend()
+         * @post count elements starting at pos are removed
+         * @post Array size decreases by count
+         * @post Returns iterator to element after erased range
+         *
+         * @note Internal assertions:
+         *   - SPARROW_ASSERT_TRUE(pos >= value_cbegin())
+         *   - SPARROW_ASSERT_TRUE(pos <= value_cend())
+         */
         constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
 
+        /**
+         * @brief Assigns new value to element at specified index.
+         *
+         * @tparam U Type of new value (must be convertible to T)
+         * @param rhs New value to assign
+         * @param index Index of element to modify
+         *
+         * @pre U must be convertible to T and sized range
+         * @pre rhs.size() must equal element_size
+         * @pre index must be < size()
+         * @post Element at index is replaced with copy of rhs
+         *
+         * @note Internal assertions:
+         *   - SPARROW_ASSERT_TRUE(std::ranges::size(rhs) == m_element_size)
+         *   - SPARROW_ASSERT_TRUE(index < size())
+         */
         template <std::ranges::sized_range U>
             requires mpl::convertible_ranges<U, T>
         constexpr void assign(U&& rhs, size_type index);

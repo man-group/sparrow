@@ -15,8 +15,6 @@
 
 #pragma once
 
-#include <vector>
-
 #include <sparrow/builder/builder_utils.hpp>
 #include <sparrow/utils/ranges.hpp>
 

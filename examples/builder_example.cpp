@@ -1,8 +1,3 @@
-/** @example array_builder.cpp
- * Example of usage of the generic builder
- */
-
-
 #include <array>
 #include <cassert>
 #include <list>

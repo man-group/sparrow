@@ -52,7 +52,7 @@ namespace sparrow
      * holding the values.
      *
      * @tparam T the type of the values in the array.
-     * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
+     * @see primitive_array_impl
      */
     template <date_type T>
     using date_array = primitive_array_impl<T>;

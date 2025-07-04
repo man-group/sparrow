@@ -60,7 +60,6 @@ namespace sparrow
      * holding the values.
      *
      * @tparam T the type of the values in the array.
-     * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
      */
     template <interval_type T>
     using interval_array = primitive_array_impl<T>;
