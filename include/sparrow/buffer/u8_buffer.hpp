@@ -157,7 +157,10 @@ namespace sparrow
          * @param range The range to copy elements from.
          */
         template <std::ranges::input_range R>
-            requires(!std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>)
+            requires(
+                !std::same_as<u8_buffer<T>, std::decay_t<R>>
+                && std::convertible_to<std::ranges::range_value_t<R>, T>
+            )
         constexpr explicit u8_buffer(R&& range);
 
         /**

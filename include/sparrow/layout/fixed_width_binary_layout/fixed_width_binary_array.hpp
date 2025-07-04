@@ -312,7 +312,10 @@ namespace sparrow
             std::ranges::input_range VALUES,
             validity_bitmap_input VB = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(std::ranges::input_range<std::ranges::range_value_t<VALUES>> && mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<VALUES>>>)
+            requires(
+                std::ranges::input_range<std::ranges::range_value_t<VALUES>>
+                && mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<VALUES>>>
+            )
         [[nodiscard]] static arrow_proxy create_proxy(
             VALUES&& values,
             VB&& validity_input,
@@ -340,7 +343,10 @@ namespace sparrow
          * @note Internal assertion: SPARROW_ASSERT_TRUE(all_same_size(values))
          */
         template <std::ranges::input_range VALUES, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(std::ranges::input_range<std::ranges::range_value_t<VALUES>> && mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<VALUES>>>)
+            requires(
+                std::ranges::input_range<std::ranges::range_value_t<VALUES>>
+                && mpl::char_like<std::ranges::range_value_t<std::ranges::range_value_t<VALUES>>>
+            )
         [[nodiscard]] static arrow_proxy create_proxy(
             VALUES&& values,
             bool nullable = true,

@@ -100,7 +100,10 @@ namespace sparrow
          * @throws std::invalid_argument if preconditions are violated
          */
         template <std::ranges::input_range NR, std::ranges::input_range CR>
-            requires(std::convertible_to<std::ranges::range_value_t<NR>, std::string> and std::same_as<std::ranges::range_value_t<CR>, array>)
+            requires(
+                std::convertible_to<std::ranges::range_value_t<NR>, std::string>
+                and std::same_as<std::ranges::range_value_t<CR>, array>
+            )
         constexpr record_batch(NR&& names, CR&& columns, std::optional<std::string_view> name = std::nullopt);
 
         /**

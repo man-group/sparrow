@@ -60,7 +60,7 @@ namespace sparrow
 
     /**
      * @brief Type trait to check if a type is a timestamp_array.
-     * 
+     *
      * @tparam T Type to check
      */
     template <typename T>
@@ -70,7 +70,7 @@ namespace sparrow
 
     /**
      * @brief Specialization for timestamp_array types.
-     * 
+     *
      * @tparam T Timestamp type parameter
      */
     template <typename T>
@@ -80,7 +80,7 @@ namespace sparrow
 
     /**
      * @brief Variable template for convenient access to is_timestamp_array.
-     * 
+     *
      * @tparam T Type to check
      */
     template <typename T>
@@ -143,12 +143,12 @@ namespace sparrow
 
     /**
      * @brief Array implementation for storing timestamp values with timezone information.
-     * 
+     *
      * The timestamp_array provides efficient storage for datetime values with precise
      * duration types and timezone awareness. It stores timestamps as duration values
      * since the Unix epoch while maintaining timezone information for proper
      * interpretation and conversion.
-     * 
+     *
      * Key features:
      * - Timezone-aware timestamp storage
      * - Support for multiple precision levels (seconds to nanoseconds)
@@ -156,26 +156,26 @@ namespace sparrow
      * - Arrow format compatibility
      * - Nullable timestamp support via validity bitmap
      * - Mutable operations (insert, erase, resize)
-     * 
+     *
      * The array internally stores:
      * - A validity bitmap for null/non-null timestamp tracking
      * - A contiguous buffer of duration values since Unix epoch
      * - Timezone pointer for proper timestamp interpretation
-     * 
+     *
      * Supported timestamp types:
      * - sparrow::timestamp<std::chrono::seconds>
      * - sparrow::timestamp<std::chrono::milliseconds>
      * - sparrow::timestamp<std::chrono::microseconds>
      * - sparrow::timestamp<std::chrono::nanoseconds>
-     * 
+     *
      * @tparam T The timestamp type with specific duration precision
-     * 
+     *
      * @pre T must satisfy the timestamp_type concept
      * @pre T must be one of the supported timestamp duration types
      * @post Maintains Arrow temporal format compatibility
      * @post All stored timestamps reference the same timezone
      * @post Thread-safe for read operations, requires external synchronization for writes
-     * 
+     *
      * @code{.cpp}
      * // Create timestamp array with New York timezone
      * const auto* ny_tz = date::locate_zone("America/New_York");
@@ -183,9 +183,9 @@ namespace sparrow
      *     timestamp_second{ny_tz, std::chrono::sys_seconds{std::chrono::seconds{1609459200}}}, // 2021-01-01
      *     timestamp_second{ny_tz, std::chrono::sys_seconds{std::chrono::seconds{1609545600}}}  // 2021-01-02
      * };
-     * 
+     *
      * timestamp_seconds_array arr(ny_tz, timestamps);
-     * 
+     *
      * // Access timestamps
      * auto first = arr[0];
      * if (first.has_value()) {
@@ -238,9 +238,9 @@ namespace sparrow
 
         /**
          * @brief Constructs timestamp array from Arrow proxy.
-         * 
+         *
          * @param proxy Arrow proxy containing timestamp array data and schema
-         * 
+         *
          * @pre proxy must contain valid Arrow timestamp array and schema
          * @pre proxy format must match expected timestamp format for T
          * @pre proxy schema must include valid timezone information
@@ -252,39 +252,39 @@ namespace sparrow
 
         /**
          * @brief Generic constructor for creating timestamp arrays from various inputs.
-         * 
+         *
          * Creates a timestamp array from different input combinations including
          * timezone, values, validity information, and metadata. Arguments are
          * forwarded to compatible create_proxy() functions.
-         * 
+         *
          * The first argument must always be a const date::time_zone* pointer.
          * Subsequent arguments can include:
          * - Range of timestamp values
          * - Validity bitmap or boolean range
          * - Individual count and fill value
          * - Array name and metadata
-         * 
+         *
          * @tparam Args Parameter pack for constructor arguments
          * @param args Constructor arguments starting with timezone
-         * 
+         *
          * @pre First argument must be valid date::time_zone pointer
          * @pre Remaining arguments must match one of the create_proxy() signatures
          * @pre Args must exclude copy and move constructor signatures
          * @post Array is created with specified timezone and data
          * @post All timestamps reference the provided timezone
-         * 
+         *
          * @code{.cpp}
          * // Various construction patterns
          * const auto* utc = date::locate_zone("UTC");
-         * 
+         *
          * // From range with validity
          * std::vector<timestamp_second> values = {...};
          * std::vector<bool> validity = {...};
          * timestamp_seconds_array arr1(utc, values, validity);
-         * 
+         *
          * // From range, nullable
          * timestamp_seconds_array arr2(utc, values, true);
-         * 
+         *
          * // From count and fill value
          * timestamp_seconds_array arr3(utc, 100, timestamp_second{...});
          * @endcode
@@ -300,13 +300,13 @@ namespace sparrow
 
         /**
          * @brief Constructs timestamp array from initializer list.
-         * 
+         *
          * @tparam METADATA_RANGE Type of metadata container
          * @param timezone Timezone for all timestamps in the array
          * @param init Initializer list of timestamp values
          * @param name Optional name for the array
          * @param metadata Optional metadata key-value pairs
-         * 
+         *
          * @pre timezone must be a valid date::time_zone pointer
          * @pre All timestamps in init should reference the same timezone
          * @post Array contains timestamps from initializer list
@@ -327,22 +327,22 @@ namespace sparrow
 
         /**
          * @brief Copy constructor.
-         * 
+         *
          * @param rhs Source timestamp array to copy from
-         * 
+         *
          * @pre rhs must be in a valid state
          * @post This array contains a deep copy of rhs data
          * @post Timezone pointer is copied (shared reference)
          * @post Data access is reinitialized for this array
          */
         constexpr timestamp_array(const timestamp_array& rhs);
-        
+
         /**
          * @brief Copy assignment operator.
-         * 
+         *
          * @param rhs Source timestamp array to copy from
          * @return Reference to this array
-         * 
+         *
          * @pre rhs must be in a valid state
          * @post This array contains a deep copy of rhs data
          * @post Previous data is properly released
@@ -352,21 +352,21 @@ namespace sparrow
 
         /**
          * @brief Move constructor.
-         * 
+         *
          * @param rhs Source timestamp array to move from
-         * 
+         *
          * @post This array takes ownership of rhs data
          * @post rhs is left in a valid but unspecified state
          * @post Timezone and data access are properly transferred
          */
         constexpr timestamp_array(timestamp_array&& rhs);
-        
+
         /**
          * @brief Move assignment operator.
-         * 
+         *
          * @param rhs Source timestamp array to move from
          * @return Reference to this array
-         * 
+         *
          * @post This array takes ownership of rhs data
          * @post Previous data is properly released
          * @post rhs is left in a valid but unspecified state
@@ -377,63 +377,63 @@ namespace sparrow
 
         /**
          * @brief Gets mutable reference to timestamp at specified index.
-         * 
+         *
          * @param i Index of the timestamp to access
          * @return Mutable reference to the timestamp
-         * 
+         *
          * @pre i must be < size()
          * @post Returns valid reference for timestamp modification
-         * 
+         *
          * @note Internal assertion: SPARROW_ASSERT_TRUE(i < this->size())
          */
         [[nodiscard]] constexpr inner_reference value(size_type i);
-        
+
         /**
          * @brief Gets const reference to timestamp at specified index.
-         * 
+         *
          * @param i Index of the timestamp to access
          * @return Const timestamp value with timezone information
-         * 
+         *
          * @pre i must be < size()
          * @post Returns timestamp constructed from stored duration and timezone
          * @post Returned timestamp reflects the array's timezone setting
-         * 
+         *
          * @note Internal assertion: SPARROW_ASSERT_TRUE(i < this->size())
          */
         [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
         /**
          * @brief Gets iterator to beginning of value range.
-         * 
+         *
          * @return Iterator pointing to first timestamp
-         * 
+         *
          * @post Iterator is valid for timestamp traversal
          */
         [[nodiscard]] constexpr value_iterator value_begin();
-        
+
         /**
          * @brief Gets iterator to end of value range.
-         * 
+         *
          * @return Iterator pointing past last timestamp
-         * 
+         *
          * @post Iterator marks end of timestamp range
          */
         [[nodiscard]] constexpr value_iterator value_end();
 
         /**
          * @brief Gets const iterator to beginning of value range.
-         * 
+         *
          * @return Const iterator pointing to first timestamp
-         * 
+         *
          * @post Iterator is valid for timestamp traversal
          */
         [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
-        
+
         /**
          * @brief Gets const iterator to end of value range.
-         * 
+         *
          * @return Const iterator pointing past last timestamp
-         * 
+         *
          * @post Iterator marks end of timestamp range
          */
         [[nodiscard]] constexpr const_value_iterator value_cend() const;
@@ -515,10 +515,10 @@ namespace sparrow
 
         /**
          * @brief Resizes the array to specified length, filling with given timestamp.
-         * 
+         *
          * @param new_length New size for the array
          * @param value Timestamp value to use for new elements (if growing)
-         * 
+         *
          * @post Array size equals new_length
          * @post If shrinking, trailing elements are removed
          * @post If growing, new elements are set to value's duration
@@ -528,12 +528,12 @@ namespace sparrow
 
         /**
          * @brief Inserts copies of a timestamp at specified position.
-         * 
+         *
          * @param pos Iterator position where to insert
          * @param value Timestamp value to insert
          * @param count Number of copies to insert
          * @return Iterator pointing to first inserted timestamp
-         * 
+         *
          * @pre pos must be valid iterator within [value_cbegin(), value_cend()]
          * @pre value should use the same timezone as the array
          * @post count copies of value are inserted at pos
@@ -545,13 +545,13 @@ namespace sparrow
 
         /**
          * @brief Inserts range of timestamps at specified position.
-         * 
+         *
          * @tparam InputIt Iterator type for timestamps (must yield inner_value_type)
          * @param pos Position where to insert
          * @param first Beginning of range to insert
          * @param last End of range to insert
          * @return Iterator pointing to first inserted timestamp
-         * 
+         *
          * @pre InputIt must yield elements of type inner_value_type
          * @pre pos must be valid value iterator
          * @pre [first, last) must be valid range
@@ -578,47 +578,47 @@ namespace sparrow
 
         /**
          * @brief Erases specified number of timestamps starting at position.
-         * 
+         *
          * @param pos Position where to start erasing
          * @param count Number of timestamps to erase
          * @return Iterator pointing to timestamp after last erased
-         * 
+         *
          * @pre pos must be valid value iterator
          * @pre pos must be < value_cend()
          * @pre pos + count must not exceed array bounds
          * @post count timestamps are removed starting at pos
          * @post Array size decreases by count
-         * 
+         *
          * @note Internal assertion: SPARROW_ASSERT_TRUE(pos < value_cend())
          */
         constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
 
         /**
          * @brief Assigns new timestamp value to element at specified index.
-         * 
+         *
          * @param rhs Timestamp value to assign
          * @param index Index of element to modify
-         * 
+         *
          * @pre index must be < size()
          * @pre rhs should use compatible timezone
          * @post Element at index contains duration from rhs
          * @post Timezone interpretation remains unchanged
-         * 
+         *
          * @note Internal assertion: SPARROW_ASSERT_TRUE(index < this->size())
          */
         constexpr void assign(const T& rhs, size_type index);
-        
+
         /**
          * @brief Assigns new timestamp value (by move) to element at specified index.
-         * 
+         *
          * @param rhs Timestamp value to assign (moved)
          * @param index Index of element to modify
-         * 
+         *
          * @pre index must be < size()
          * @pre rhs should use compatible timezone
          * @post Element at index contains duration from rhs
          * @post Timezone interpretation remains unchanged
-         * 
+         *
          * @note Internal assertion: SPARROW_ASSERT_TRUE(index < this->size())
          */
         constexpr void assign(T&& rhs, size_type index);

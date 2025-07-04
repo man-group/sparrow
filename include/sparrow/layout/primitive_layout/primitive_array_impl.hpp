@@ -50,7 +50,7 @@ namespace sparrow
 
         using iterator_tag = std::random_access_iterator_tag;
     };
-    
+
     namespace detail
     {
         template <class T>

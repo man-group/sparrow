@@ -143,7 +143,7 @@ namespace sparrow
 
     /**
      * Array implementation for decimal types with fixed precision and scale.
-     * 
+     *
      * This class provides a container for decimal values with a specified precision
      * and scale, stored as integer values with an associated scaling factor.
      *

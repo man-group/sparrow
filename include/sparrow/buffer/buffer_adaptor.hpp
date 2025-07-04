@@ -246,13 +246,13 @@ namespace sparrow
 
         // Capacity
 
-		/**
+        /**
          * Returns the number of elements that can be held in currently allocated storage.
          *
          * @return The capacity.
          */
         [[nodiscard]] constexpr size_type size() const noexcept(!SPARROW_CONTRACTS_THROW_ON_FAILURE);
-		/**
+        /**
          * Returns the maximum possible number of elements.
          *
          * @return The maximum possible number of elements.
