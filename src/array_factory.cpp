@@ -31,6 +31,7 @@
 #include "sparrow/layout/temporal/timestamp_without_timezone_array.hpp"
 #include "sparrow/layout/union_array.hpp"
 #include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
+#include "sparrow/layout/variable_size_binary_view_array.hpp"
 #include "sparrow/utils/temporal.hpp"
 
 namespace sparrow
@@ -116,6 +117,8 @@ namespace sparrow
                     return detail::make_wrapper_ptr<struct_array>(std::move(proxy));
                 case data_type::STRING:
                     return detail::make_wrapper_ptr<string_array>(std::move(proxy));
+                case data_type::STRING_VIEW:
+                    return detail::make_wrapper_ptr<string_view_array>(std::move(proxy));
                 case data_type::LARGE_STRING:
                     return detail::make_wrapper_ptr<big_string_array>(std::move(proxy));
                 case data_type::BINARY:
@@ -210,6 +213,8 @@ namespace sparrow
                     return detail::make_wrapper_ptr<decimal_256_array>(std::move(proxy));
                 case data_type::FIXED_WIDTH_BINARY:
                     return detail::make_wrapper_ptr<fixed_width_binary_array>(std::move(proxy));
+                case data_type::BINARY_VIEW:
+                    return detail::make_wrapper_ptr<binary_view_array>(std::move(proxy));
                 default:
                     throw std::runtime_error("not supported data type");
             }

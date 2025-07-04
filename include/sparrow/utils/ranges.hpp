@@ -219,4 +219,5 @@ struct std::formatter<std::bitset<T>>
         return out;
     }
 };
+
 #endif

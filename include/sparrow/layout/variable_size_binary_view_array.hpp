@@ -90,9 +90,9 @@ namespace sparrow
         using inner_reference = CR;
         using inner_const_reference = inner_reference;
 
-        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
+        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_reference>>;
         using const_value_iterator = functor_index_iterator<
-            detail::layout_value_functor<const array_type, inner_reference>>;
+            detail::layout_value_functor<const array_type, inner_const_reference>>;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
@@ -415,7 +415,8 @@ namespace sparrow
 
         friend base_type;
         friend base_type::base_type;
-        friend class detail::layout_value_functor<self_type, inner_value_type>;
+        friend base_type::base_type::base_type;
+        friend class detail::layout_value_functor<self_type, inner_reference>;
         friend class detail::layout_value_functor<const self_type, inner_const_reference>;
     };
 
@@ -460,6 +461,11 @@ namespace sparrow
             {
                 // write data itself
                 sparrow::ranges::copy(val_casted, length_ptr + SHORT_STRING_OFFSET);
+                std::fill(
+                    length_ptr + SHORT_STRING_OFFSET + length,
+                    length_ptr + DATA_BUFFER_SIZE,
+                    std::uint8_t(0)
+                );
             }
             else
             {
@@ -717,26 +723,26 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR>
     constexpr auto variable_size_binary_view_array_impl<T, CR>::value_begin() -> value_iterator
     {
-        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(), 0);
+        return value_iterator(detail::layout_value_functor<self_type, inner_reference>(), 0);
     }
 
     template <std::ranges::sized_range T, class CR>
     constexpr auto variable_size_binary_view_array_impl<T, CR>::value_end() -> value_iterator
     {
-        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), this->size());
+        return value_iterator(detail::layout_value_functor<self_type, inner_reference>(this), this->size());
     }
 
     template <std::ranges::sized_range T, class CR>
     constexpr auto variable_size_binary_view_array_impl<T, CR>::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), 0);
+        return const_value_iterator(detail::layout_value_functor<const self_type, inner_const_reference>(this), 0);
     }
 
     template <std::ranges::sized_range T, class CR>
     constexpr auto variable_size_binary_view_array_impl<T, CR>::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(
-            detail::layout_value_functor<const self_type, inner_value_type>(this),
+            detail::layout_value_functor<const self_type, inner_const_reference>(this),
             this->size()
         );
     }
