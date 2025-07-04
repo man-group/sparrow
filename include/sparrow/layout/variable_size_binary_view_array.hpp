@@ -671,7 +671,8 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR>
-    constexpr auto variable_size_binary_view_array_impl<T, CR>::value(size_type i) const -> inner_const_reference
+    constexpr auto variable_size_binary_view_array_impl<T, CR>::value(size_type i) const
+        -> inner_const_reference
     {
 #ifdef __GNUC__
 #    pragma GCC diagnostic push
