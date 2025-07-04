@@ -107,6 +107,12 @@ namespace sparrow
                     }
                 }
             }
+
+            SUBCASE("consistency")
+            {
+                string_view_array array(words, where_nulls, "name", metadata_sample_opt);
+                test::generic_consistency_test(array);
+            }
         }
     }
 }
