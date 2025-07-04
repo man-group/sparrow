@@ -16,6 +16,8 @@
 
 #include <chrono>
 #include <concepts>
+#include <string>
+#include <vector>
 
 #include "sparrow/layout/temporal/date_array.hpp"
 #include "sparrow/layout/temporal/date_types.hpp"
