@@ -344,7 +344,6 @@ namespace sparrow::mpl
      *
      * @tparam T Type to evaluate
      * @tparam P Template predicate to apply
-     * @param _ Predicate instance
      * @return Boolean result of P<T>::value
      *
      * @pre P must satisfy ct_type_predicate concept for T
@@ -352,7 +351,7 @@ namespace sparrow::mpl
      */
     template <class T, template <class> class P>
         requires ct_type_predicate<P, T>
-    consteval bool evaluate(P<T> _)
+    consteval bool evaluate(P<T>)
     {
         return P<T>::value;
     }
@@ -480,7 +479,6 @@ namespace sparrow::mpl
      * @tparam Predicate Callable predicate type
      * @tparam L Typelist template
      * @tparam T Types in the typelist
-     * @param _ Typelist instance
      * @param predicate Predicate to apply
      * @return true if all types satisfy the predicate
      *
@@ -491,7 +489,7 @@ namespace sparrow::mpl
      */
     template <class Predicate, template <class...> class L, class... T>
         requires any_typelist<L<T...>> and (callable_type_predicate<Predicate, T> && ...)
-    [[nodiscard]] consteval bool all_of(L<T...> _, [[maybe_unused]] Predicate predicate)
+    [[nodiscard]] consteval bool all_of(L<T...>, [[maybe_unused]] Predicate predicate)
     {
         return (evaluate<T>(predicate) && ... && true);
     }
