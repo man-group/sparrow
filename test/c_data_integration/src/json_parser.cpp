@@ -198,7 +198,7 @@ namespace sparrow::c_data_integration
     }
 
     nlohmann::json
-    generate_empty_columns_batch(const std::vector<std::pair<std::string, const nlohmann::json>>& schemas)
+    generate_empty_columns_batch(const std::vector<std::pair<std::string, nlohmann::json>>& schemas)
     {
         nlohmann::json batch = nlohmann::json::object();
         nlohmann::json empty_columns = nlohmann::json::array();
@@ -219,7 +219,7 @@ namespace sparrow::c_data_integration
     sparrow::record_batch build_record_batch_from_json(const nlohmann::json& root, size_t num_batches)
     {
         const auto& schemas = root.at("schema").at("fields");
-        std::vector<std::pair<std::string, const nlohmann::json>> schema_map;
+        std::vector<std::pair<std::string, nlohmann::json>> schema_map;
         for (const auto& schema : schemas)
         {
             const std::string name = schema.at("name").get<std::string>();
@@ -246,34 +246,23 @@ namespace sparrow::c_data_integration
         for (const auto& column : columns)
         {
             const auto column_name = column.at("name").get<std::string>();
-            auto schemas_with_name = schema_map
-                                     | std::views::filter(
-                                         [&column_name](const auto& pair)
-                                         {
-                                             return pair.first == column_name;
-                                         }
-                                     );
-            const auto num_schemas = std::ranges::distance(schemas_with_name);
-            int inc = 0;
-            for (const auto& [_, schema] : schemas_with_name)
+            auto schema_with_name_it = std::ranges::find_if(
+                schema_map,
+                [&column_name](const auto& pair)
+                {
+                    return pair.first == column_name;
+                }
+            );
+            if (schema_with_name_it == schema_map.end())
             {
-                try
-                {
-                    arrays.emplace_back(build_array_from_json(column, schema, root));
-                    break;
-                }
-                catch (const std::exception& e)
-                {
-                    if (inc == num_schemas - 1)
-                    {
-                        throw std::runtime_error(
-                            "Failed to build array for column '" + column_name + "': " + e.what()
-                        );
-                    }
-                }
-                ++inc;
+                throw std::runtime_error("Column '" + column_name + "' not found in schema");
             }
+            const auto& schema = schema_with_name_it->second;
+
+            arrays.emplace_back(build_array_from_json(column, schema, root));
+            schema_map.erase(schema_with_name_it);  // Remove processed schema
         }
+
         const auto names = columns
                            | std::views::transform(
                                [](const nlohmann::json& column)
