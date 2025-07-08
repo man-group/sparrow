@@ -175,7 +175,7 @@ namespace sparrow
                 {
                     buffers[i + 2] = make_buffer(i + 2, var_buffer_sizes[i]);
                 }
-                buffers.back() = make_buffer(buffer_count - 1, size * 4);
+                buffers.back() = make_buffer(buffer_count - 1, num_extra_data_buffers * 8);
                 return buffers;
         }
         // To avoid stupid warning "control reaches end of non-void function"

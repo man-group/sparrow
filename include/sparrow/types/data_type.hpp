@@ -21,6 +21,7 @@
 #include "sparrow/layout/temporal/interval_types.hpp"
 #include "sparrow/layout/temporal/time_types.hpp"
 #include "sparrow/layout/temporal/timestamp_without_timezone_types.hpp"
+#include "sparrow/utils/sequence_view.hpp"
 
 #if defined(SPARROW_USE_DATE_POLYFILL)
 

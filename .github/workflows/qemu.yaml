@@ -78,6 +78,7 @@ jobs:
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_C_COMPILER_LAUNCHER=ccache
+          -DSPARROW_CONTRACTS_THROW_ON_FAILURE=ON
           -B build
 
         shell: alpine.sh {0}

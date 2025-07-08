@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
-
 #include <nlohmann/json.hpp>
 
 #include <sparrow/array.hpp>
@@ -21,5 +19,8 @@
 namespace sparrow::c_data_integration
 {
     sparrow::array
-    string_view_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
+    binaryview_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
+
+    sparrow::array
+    utf8view_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 }

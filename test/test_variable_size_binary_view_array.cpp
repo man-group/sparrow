@@ -86,6 +86,13 @@ namespace sparrow
                         CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE));
                     }
                 }
+
+                SUBCASE("copy")
+                {
+                    string_view_array array(words, where_nulls, "name", metadata_sample_opt);
+                    string_view_array array_copy(array);
+                    CHECK_EQ(array, array_copy);
+                }
             }
 
             SUBCASE("general")
@@ -106,6 +113,12 @@ namespace sparrow
                         CHECK(array[i].value() == words[i]);
                     }
                 }
+            }
+
+            SUBCASE("consistency")
+            {
+                string_view_array array(words, where_nulls, "name", metadata_sample_opt);
+                test::generic_consistency_test(array);
             }
         }
     }

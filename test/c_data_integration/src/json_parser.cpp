@@ -17,6 +17,7 @@
 #include <sparrow/layout/array_access.hpp>
 
 #include "sparrow/c_data_integration/binary_parser.hpp"
+#include "sparrow/c_data_integration/binaryview_parser.hpp"
 #include "sparrow/c_data_integration/bool_parser.hpp"
 #include "sparrow/c_data_integration/constant.hpp"
 #include "sparrow/c_data_integration/decimal_parser.hpp"
@@ -29,7 +30,6 @@
 #include "sparrow/c_data_integration/primitive_parser.hpp"
 #include "sparrow/c_data_integration/run_end_encoded_parser.hpp"
 #include "sparrow/c_data_integration/string_parser.hpp"
-#include "sparrow/c_data_integration/stringview_parser.hpp"
 #include "sparrow/c_data_integration/struct_parser.hpp"
 #include "sparrow/c_data_integration/temporal_parser.hpp"
 #include "sparrow/c_data_integration/union_parser.hpp"
@@ -42,6 +42,7 @@ namespace sparrow::c_data_integration
         sparrow::array(const nlohmann::json&, const nlohmann::json&, const nlohmann::json&)>;
     const std::unordered_map<std::string, array_builder_function> array_builders{
         {"binary", binary_array_from_json},
+        {"binaryview", binaryview_array_from_json},
         {"bool", bool_array_from_json},
         {"date", date_array_from_json},
         {"decimal", decimal_from_json},
@@ -64,12 +65,9 @@ namespace sparrow::c_data_integration
         {"struct", struct_array_from_json},
         {"time", time_array_from_json},
         {"timestamp", timestamp_array_from_json},
-        {"interval", interval_array_from_json},
-        {"duration", duration_array_from_json},
-        {"runendencoded", runendencoded_array_from_json},
         {"union", union_array_from_json},
         {"utf8", string_array_from_json},
-        {"utf8view", string_view_from_json},
+        {"utf8view", utf8view_array_from_json},
     };
 
     std::vector<sparrow::array>
