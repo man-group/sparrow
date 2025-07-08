@@ -42,7 +42,7 @@ namespace sparrow::c_data_integration
             const bool inlined = view_json.contains(INLINED);
             if (inlined)
             {
-                const std::string inlined_data = view_json.at(DATA).get<std::string>();
+                const std::string inlined_data = view_json.at(INLINED).get<std::string>();
                 if constexpr (!is_binary)
                 {
                     views_data.push_back(inlined_data);
