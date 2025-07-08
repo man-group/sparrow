@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sparrow/union_array.hpp"
+
+#include "sparrow/array.hpp"
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/repeat_container.hpp"
-#include "sparrow/array.hpp"
-#include "sparrow/union_array.hpp"
 
 namespace sparrow
 {

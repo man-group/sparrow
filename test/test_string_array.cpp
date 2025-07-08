@@ -17,10 +17,10 @@
 #include <vector>
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
-#include "sparrow/utils/nullable.hpp"
 #include "sparrow/c_interface.hpp"
-#include "sparrow/variable_size_binary_array.hpp"
 #include "sparrow/u8_buffer.hpp"
+#include "sparrow/utils/nullable.hpp"
+#include "sparrow/variable_size_binary_array.hpp"
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"

@@ -23,10 +23,11 @@
 #include <type_traits>
 #include <vector>
 
-#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/c_interface.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/fixed_width_binary_array_utils.hpp"
 #include "sparrow/layout/fixed_width_binary_reference.hpp"
@@ -36,7 +37,6 @@
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
-#include "sparrow/c_interface.hpp"
 
 namespace sparrow
 {

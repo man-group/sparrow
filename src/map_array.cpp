@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/array.hpp"
 #include "sparrow/map_array.hpp"
+
+#include "sparrow/array.hpp"
 
 namespace sparrow
 {

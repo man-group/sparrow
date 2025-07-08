@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sparrow/layout/fixed_width_binary_array_utils.hpp"
+
 #include <stdexcept>
 #include <string>
-
-#include "sparrow/layout/fixed_width_binary_array_utils.hpp"
 
 namespace sparrow
 {

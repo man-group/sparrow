@@ -14,8 +14,8 @@
 
 #include <cstdio>
 
-#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/timestamp_array.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 #include "doctest/doctest.h"
 

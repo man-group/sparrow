@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/timestamp_without_timezone_array.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 #include "doctest/doctest.h"
 

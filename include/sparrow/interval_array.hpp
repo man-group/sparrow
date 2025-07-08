@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "sparrow/layout/primitive_array_impl.hpp"
 #include "sparrow/layout/interval_types.hpp"
+#include "sparrow/layout/primitive_array_impl.hpp"
 #include "sparrow/types/data_traits.hpp"
 
 // tiM : std::chrono::months

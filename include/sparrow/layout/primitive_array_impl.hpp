@@ -21,9 +21,9 @@
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/primitive_data_access.hpp"
+#include "sparrow/u8_buffer.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
-#include "sparrow/u8_buffer.hpp"
 
 namespace sparrow
 {

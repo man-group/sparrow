@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/layout/array_helper.hpp"
+
 #include "sparrow/layout/dispatch.hpp"
 
 namespace sparrow

@@ -14,11 +14,11 @@
 
 #include <optional>
 
-#include "sparrow/layout/dispatch.hpp"
-#include "sparrow/utils/nullable.hpp"
 #include "sparrow/array.hpp"
+#include "sparrow/layout/dispatch.hpp"
 #include "sparrow/primitive_array.hpp"
 #include "sparrow/union_array.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"

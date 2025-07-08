@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sparrow/layout/map_value.hpp"
+
 #include <variant>
 
-#include "sparrow/layout/map_value.hpp"
 #include "sparrow/layout/dispatch.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 

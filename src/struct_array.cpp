@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/array_factory.hpp"
 #include "sparrow/struct_array.hpp"
+
+#include "sparrow/layout/array_factory.hpp"
 
 namespace sparrow
 {

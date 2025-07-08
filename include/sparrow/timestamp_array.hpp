@@ -24,12 +24,12 @@
 #include "sparrow/layout/timestamp_concepts.hpp"
 #include "sparrow/layout/timestamp_reference.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/u8_buffer.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 #include "sparrow/utils/temporal.hpp"
-#include "sparrow/u8_buffer.hpp"
 
 // tts : timestamp<std::chrono::seconds>
 // tsm : timestamp<std::chrono::milliseconds>

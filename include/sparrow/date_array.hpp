@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "sparrow/layout/primitive_array_impl.hpp"
 #include "sparrow/layout/date_types.hpp"
+#include "sparrow/layout/primitive_array_impl.hpp"
 
 // tdD : std::chrono::seconds
 // tdm : std::chrono::milliseconds

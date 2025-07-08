@@ -18,8 +18,8 @@
 #include <string>
 #include <vector>
 
-#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/array.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 
 namespace sparrow::c_data_integration
 {

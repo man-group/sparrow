@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sparrow/run_end_encoded_array.hpp"
+
+#include "sparrow/array.hpp"
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/dispatch.hpp"
-#include "sparrow/utils/repeat_container.hpp"
-#include "sparrow/array.hpp"
 #include "sparrow/primitive_array.hpp"
-#include "sparrow/run_end_encoded_array.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {

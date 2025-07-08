@@ -19,6 +19,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "sparrow/array_api.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
@@ -31,7 +32,6 @@
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/repeat_container.hpp"
-#include "sparrow/array_api.hpp"
 
 namespace sparrow
 {

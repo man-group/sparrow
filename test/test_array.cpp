@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sparrow/array.hpp"
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
-#include "sparrow/utils/nullable.hpp"
-#include "sparrow/array.hpp"
 #include "sparrow/primitive_array.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"

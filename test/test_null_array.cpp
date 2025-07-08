@@ -13,9 +13,9 @@
 // limitations under the License.
 
 
+#include <sparrow/null_array.hpp>
 #include <sparrow/utils/nullable.hpp>
 #include <sparrow/utils/ranges.hpp>
-#include <sparrow/null_array.hpp>
 
 #include "external_array_data_creation.hpp"
 #include "metadata_sample.hpp"

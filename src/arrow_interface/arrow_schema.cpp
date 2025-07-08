@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+
 #include "sparrow/arrow_interface/arrow_array_schema_common_release.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 

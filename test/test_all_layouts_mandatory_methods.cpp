@@ -14,17 +14,17 @@
 
 #include <ranges>
 
+#include <sparrow/date_array.hpp>
 #include <sparrow/decimal_array.hpp>
 #include <sparrow/dictionary_encoded_array.hpp>
+#include <sparrow/duration_array.hpp>
 #include <sparrow/fixed_width_binary_array.hpp>
+#include <sparrow/interval_array.hpp>
 #include <sparrow/list_array.hpp>
 #include <sparrow/null_array.hpp>
 #include <sparrow/primitive_array.hpp>
 #include <sparrow/run_end_encoded_array.hpp>
 #include <sparrow/struct_array.hpp>
-#include <sparrow/date_array.hpp>
-#include <sparrow/duration_array.hpp>
-#include <sparrow/interval_array.hpp>
 #include <sparrow/timestamp_array.hpp>
 #include <sparrow/union_array.hpp>
 #include <sparrow/variable_size_binary_array.hpp>

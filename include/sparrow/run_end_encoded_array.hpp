@@ -14,12 +14,12 @@
 
 #pragma once
 
+#include "sparrow/array_api.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/run_end_encoded_iterator.hpp"
 #include "sparrow/utils/memory.hpp"
-#include "sparrow/array_api.hpp"
 
 namespace sparrow
 {

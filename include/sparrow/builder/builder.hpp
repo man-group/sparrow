@@ -23,23 +23,23 @@
 #include <utility>
 #include <vector>
 
+#include "sparrow/array.hpp"
 #include "sparrow/builder/builder_utils.hpp"
 #include "sparrow/builder/nested_eq.hpp"
 #include "sparrow/builder/nested_less.hpp"
-#include "sparrow/utils/mp_utils.hpp"
-#include "sparrow/utils/ranges.hpp"
-#include "sparrow/utils/repeat_container.hpp"
-#include "sparrow/array.hpp"
+#include "sparrow/date_array.hpp"
 #include "sparrow/dictionary_encoded_array.hpp"
 #include "sparrow/fixed_width_binary_array.hpp"
+#include "sparrow/interval_array.hpp"
 #include "sparrow/list_array.hpp"
 #include "sparrow/primitive_array.hpp"
 #include "sparrow/struct_array.hpp"
-#include "sparrow/date_array.hpp"
-#include "sparrow/interval_array.hpp"
 #include "sparrow/time_array.hpp"
 #include "sparrow/timestamp_without_timezone_array.hpp"
 #include "sparrow/union_array.hpp"
+#include "sparrow/utils/mp_utils.hpp"
+#include "sparrow/utils/ranges.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 #include "sparrow/variable_size_binary_array.hpp"
 
 namespace sparrow

@@ -13,6 +13,7 @@
 //
 
 #include "sparrow/arrow_interface/private_data_ownership.hpp"
+
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow

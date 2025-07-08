@@ -17,6 +17,7 @@
 #include <array>
 #include <optional>
 
+#include "sparrow/array_api.hpp"
 #include "sparrow/arrow_interface/arrow_flag_utils.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_access.hpp"
@@ -32,7 +33,6 @@
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/nullable.hpp"
-#include "sparrow/array_api.hpp"
 
 namespace sparrow
 {

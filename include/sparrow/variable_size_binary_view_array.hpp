@@ -25,6 +25,7 @@
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/u8_buffer.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
@@ -32,7 +33,6 @@
 #include "sparrow/utils/ranges.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 #include "sparrow/utils/sequence_view.hpp"
-#include "sparrow/u8_buffer.hpp"
 
 namespace sparrow
 {

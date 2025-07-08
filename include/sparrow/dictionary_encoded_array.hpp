@@ -16,22 +16,22 @@
 
 #include <optional>
 
+#include "sparrow/array_api.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/c_interface.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/primitive_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/mp_utils.hpp"
-#include "sparrow/array_api.hpp"
-#include "sparrow/c_interface.hpp"
-#include "sparrow/primitive_array.hpp"
 
 namespace sparrow
 {
