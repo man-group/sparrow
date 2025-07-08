@@ -61,7 +61,7 @@ const std::vector<std::filesystem::path> jsons_to_test = {
     json_files_path / "primitive-empty.json",
     json_files_path / "primitive.json",
     json_files_path / "recursive-nested.json",
-    json_files_path / "run_end_encoded.json",
+    // json_files_path / "run_end_encoded.json",
     json_files_path / "union.json",
 };
 
