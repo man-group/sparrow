@@ -14,7 +14,7 @@
 
 #include <string_view>
 
-#include "sparrow/layout/primitive_layout/primitive_array.hpp"
+#include "sparrow/primitive_array.hpp"
 #include "sparrow/record_batch.hpp"
 
 #include "doctest/doctest.h"

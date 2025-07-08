@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "sparrow/buffer/u8_buffer.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/ranges.hpp"
+#include "sparrow/u8_buffer.hpp"
 
 namespace sparrow::detail
 {

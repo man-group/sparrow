@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/record_batch.hpp"
-
 #include <unordered_set>
 
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/record_batch.hpp"
+
 
 namespace sparrow
 {

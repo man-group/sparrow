@@ -20,7 +20,7 @@
 #include <ranges>
 #include <utility>
 
-#include "sparrow/arrow_array_schema_proxy.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/layout_iterator.hpp"

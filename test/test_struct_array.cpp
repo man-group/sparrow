@@ -15,9 +15,8 @@
 #include <string_view>
 
 #include "sparrow/array.hpp"
-#include "sparrow/layout/primitive_layout/primitive_array.hpp"
-#include "sparrow/layout/struct_layout/struct_array.hpp"
-#include "sparrow/utils/nullable.hpp"
+#include "sparrow/primitive_array.hpp"
+#include "sparrow/struct_array.hpp"
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
@@ -34,10 +33,10 @@ namespace sparrow
             std::vector<ArrowArray> children_arrays(2);
             std::vector<ArrowSchema> children_schemas(2);
 
-            test::fill_schema_and_array<T0>(children_schemas[0], children_arrays[0], n, 0 /*offset*/, {});
+            test::fill_schema_and_array<T0>(children_schemas[0], children_arrays[0], n, 0, {});
             children_schemas[0].name = "item 0";
 
-            test::fill_schema_and_array<T1>(children_schemas[1], children_arrays[1], n, 0 /*offset*/, {});
+            test::fill_schema_and_array<T1>(children_schemas[1], children_arrays[1], n, 0, {});
             children_schemas[1].name = "item 1";
 
             ArrowArray arr{};

@@ -18,9 +18,9 @@
 
 #include "sparrow/c_data_integration/constant.hpp"
 #include "sparrow/c_data_integration/utils.hpp"
-#include "sparrow/layout/temporal/interval_array.hpp"
-#include "sparrow/layout/temporal/timestamp_array.hpp"
-#include "sparrow/layout/temporal/timestamp_without_timezone_array.hpp"
+#include "sparrow/interval_array.hpp"
+#include "sparrow/timestamp_array.hpp"
+#include "sparrow/timestamp_without_timezone_array.hpp"
 
 namespace sparrow::c_data_integration
 {

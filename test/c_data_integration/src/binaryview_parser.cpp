@@ -19,7 +19,7 @@
 
 #include "sparrow/c_data_integration/constant.hpp"
 #include "sparrow/c_data_integration/utils.hpp"
-#include "sparrow/layout/variable_size_binary_view_array.hpp"
+#include "sparrow/variable_size_binary_view_array.hpp"
 
 namespace sparrow::c_data_integration
 {

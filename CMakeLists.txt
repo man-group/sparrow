@@ -190,27 +190,34 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${BINARY_BUILD_DIR}")
 set(SPARROW_HEADERS
 
     # arrow_interface
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/private_data.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_common_release.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_info_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_proxy.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_flag_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/private_data_ownership.hpp
 
     # buffer
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/allocator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_adaptor.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_view.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset_base.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/bitset_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/bitset_reference.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/allocator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_adaptor.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_view.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset.hpp
+
+    # builder
+    ${SPARROW_INCLUDE_DIR}/sparrow/builder/builder.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/builder/builder_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/builder/nested_eq.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/builder/nested_less.hpp
 
     # config
     ${SPARROW_INCLUDE_DIR}/sparrow/config/config.hpp
@@ -220,42 +227,37 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
 
     # layout
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_access.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_bitmap_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_helper.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_wrapper.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/decimal_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/date_types.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/decimal_reference.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/dictionary_encoded_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/dispatch.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_layout/fixed_width_binary_reference.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_array_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_reference.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/interval_types.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_utils.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_layout/list_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_layout/list_value.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/primitive_layout/primitive_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/primitive_layout/primitive_array_impl.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/primitive_layout/primitive_data_access.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_value.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/map_value.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/mutable_array_base.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/nested_value_types.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/null_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_layout/struct_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_layout/struct_value.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/date_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/duration_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/interval_types.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/time_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/time_types.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_concepts.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_reference.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_without_timezone_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal/timestamp_without_timezone_types.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_iterator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_layout/variable_size_binary_reference.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/primitive_array_impl.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/primitive_data_access.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/run_end_encoded_iterator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/struct_value.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/temporal_types.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/time_types.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/timestamp_concepts.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/timestamp_reference.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/timestamp_without_timezone_types.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_iterator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/variable_size_binary_reference.hpp
 
-    # array
+    # types
     ${SPARROW_INCLUDE_DIR}/sparrow/types/data_traits.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/types/data_type.hpp
 
@@ -263,26 +265,50 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/bit.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/buffers.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/contracts.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/crtp_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/decimal.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/format.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/functor_index_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/iterator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/large_int.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/memory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/metadata.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/mp_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/nullable.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/offsets.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/pair.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/ranges.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/repeat_container.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/sequence_view.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/sparrow_exception.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/temporal.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
 
     # ../
     ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array_api.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/array_factory.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_array_schema_proxy.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/date_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/decimal_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/dictionary_encoded_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/duration_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/fixed_width_binary_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/list_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/null_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/primitive_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/record_batch.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/run_end_encoded_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/struct_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/time_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/timestamp_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/timestamp_without_timezone_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/u8_buffer.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/union_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_view_array.hpp
+
+
 )
 
 if(SPARROW_TARGET_32BIT)
@@ -291,26 +317,26 @@ if(SPARROW_TARGET_32BIT)
     )
 else()
     set(SPARROW_SRC
-        ${SPARROW_SOURCE_DIR}/array_factory.cpp
-        ${SPARROW_SOURCE_DIR}/array_helper.cpp
-        ${SPARROW_SOURCE_DIR}/array.cpp
-        ${SPARROW_SOURCE_DIR}/arrow_array_schema_proxy.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
+        ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array_schema_proxy.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
         ${SPARROW_SOURCE_DIR}/arrow_interface/private_data_ownership.cpp
-        ${SPARROW_SOURCE_DIR}/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.cpp
-        ${SPARROW_SOURCE_DIR}/layout/list_layout/list_value.cpp
-        ${SPARROW_SOURCE_DIR}/layout/null_array.cpp
-        ${SPARROW_SOURCE_DIR}/layout/map_layout/map_array.cpp
-        ${SPARROW_SOURCE_DIR}/layout/map_layout/map_value.cpp
-        ${SPARROW_SOURCE_DIR}/layout/run_end_encoded_layout/run_end_encoded_array.cpp
-        ${SPARROW_SOURCE_DIR}/layout/struct_layout/struct_array.cpp
-        ${SPARROW_SOURCE_DIR}/layout/struct_layout/struct_value.cpp
-        ${SPARROW_SOURCE_DIR}/layout/union_array.cpp
-        ${SPARROW_SOURCE_DIR}/record_batch.cpp
+        ${SPARROW_SOURCE_DIR}/layout/array_factory.cpp
+        ${SPARROW_SOURCE_DIR}/layout/array_helper.cpp
+        ${SPARROW_SOURCE_DIR}/layout/fixed_width_binary_array_utils.cpp
+        ${SPARROW_SOURCE_DIR}/layout/list_value.cpp
+        ${SPARROW_SOURCE_DIR}/layout/map_value.cpp
+        ${SPARROW_SOURCE_DIR}/layout/struct_value.cpp
         ${SPARROW_SOURCE_DIR}/types/data_type.cpp
         ${SPARROW_SOURCE_DIR}/utils/metadata.cpp
         ${SPARROW_SOURCE_DIR}/utils/temporal.cpp
+        ${SPARROW_SOURCE_DIR}/array.cpp
+        ${SPARROW_SOURCE_DIR}/map_array.cpp
+        ${SPARROW_SOURCE_DIR}/null_array.cpp
+        ${SPARROW_SOURCE_DIR}/record_batch.cpp
+        ${SPARROW_SOURCE_DIR}/run_end_encoded_array.cpp
+        ${SPARROW_SOURCE_DIR}/struct_array.cpp
+        ${SPARROW_SOURCE_DIR}/union_array.cpp
     )
 endif()
 

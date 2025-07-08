@@ -13,16 +13,10 @@
 //
 
 #include "sparrow/arrow_interface/private_data_ownership.hpp"
-
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
-    // dictionary_ownership::dictionary_ownership(bool ownership)
-
-    // {
-    // }
-
     void dictionary_ownership::set_dictionary_ownership(bool ownership) noexcept
     {
         m_has_ownership = ownership;

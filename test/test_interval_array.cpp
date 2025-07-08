@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/temporal/interval_array.hpp"
+#include "sparrow/interval_array.hpp"
 
 #include "doctest/doctest.h"
 

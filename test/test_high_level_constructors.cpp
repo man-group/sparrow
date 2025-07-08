@@ -16,8 +16,8 @@
 #include <ranges>
 
 #include "sparrow/array.hpp"
-#include "sparrow/layout/list_layout/list_array.hpp"
-#include "sparrow/layout/primitive_layout/primitive_array.hpp"
+#include "sparrow/list_array.hpp"
+#include "sparrow/primitive_array.hpp"
 
 #include "doctest/doctest.h"
 #include "test_utils.hpp"
