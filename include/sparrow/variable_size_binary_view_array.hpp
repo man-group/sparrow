@@ -438,6 +438,113 @@ namespace sparrow
         [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
         /**
+         * @brief Assigns new value to element at specified index.
+         *
+         * @tparam U Type of value to assign (must be convertible to T)
+         * @param rhs Value to assign
+         * @param index Index of element to modify
+         *
+         * @pre U must be convertible to T
+         * @pre index must be < size()
+         * @post Element at index contains data from rhs
+         * @post For view arrays, assignment may require buffer reorganization
+         * @post String/binary data may be moved between inline and external storage
+         *
+         * @warning This operation can be expensive for binary view arrays due to
+         *          potential reorganization of storage layout when switching between
+         *          inline (≤12 bytes) and external (>12 bytes) storage.
+         *
+         * @note Internal assertion: SPARROW_ASSERT_TRUE(index < size())
+         */
+        template <std::ranges::sized_range U>
+            requires mpl::convertible_ranges<U, T>
+        constexpr void assign(U&& rhs, size_type index);
+
+        // Modifiers
+
+        /**
+         * @brief Resizes the array to specified length, filling with given value.
+         *
+         * @tparam U Type of value to fill with (must be convertible to T)
+         * @param new_length New size for the array
+         * @param value Value to use for new elements (if growing)
+         *
+         * @pre U must be convertible to T
+         * @post Array size equals new_length
+         * @post If shrinking, trailing elements are removed and buffers compacted
+         * @post If growing, new elements are set to value
+         * @post View structures and variadic buffers are reorganized as needed
+         *
+         * @warning This operation is expensive for binary view arrays due to
+         *          potential complete reorganization of the storage layout.
+         */
+        template <std::ranges::sized_range U>
+            requires mpl::convertible_ranges<U, T>
+        constexpr void resize_values(size_type new_length, U value);
+
+        /**
+         * @brief Inserts copies of a value at specified position.
+         *
+         * @tparam U Type of value to insert (must be convertible to T)
+         * @param pos Iterator position where to insert
+         * @param value Value to insert
+         * @param count Number of copies to insert
+         * @return Iterator pointing to first inserted element
+         *
+         * @pre pos must be valid iterator within [value_cbegin(), value_cend()]
+         * @pre U must be convertible to T
+         * @post count copies of value are inserted at pos
+         * @post Array size increases by count
+         * @post View structures and variadic buffers are reorganized as needed
+         *
+         * @warning This operation is expensive for binary view arrays due to
+         *          potential reorganization of the entire storage layout.
+         */
+        template <std::ranges::sized_range U>
+            requires mpl::convertible_ranges<U, T>
+        constexpr value_iterator insert_value(const_value_iterator pos, U value, size_type count);
+
+        /**
+         * @brief Inserts range of values at specified position.
+         *
+         * @tparam InputIt Iterator type for values (must yield T elements)
+         * @param pos Position where to insert
+         * @param first Beginning of range to insert
+         * @param last End of range to insert
+         * @return Iterator pointing to first inserted element
+         *
+         * @pre InputIt must yield elements of type T
+         * @pre pos must be valid value iterator
+         * @pre [first, last) must be valid range
+         * @post Elements from [first, last) are inserted at pos
+         * @post Array size increases by distance(first, last)
+         * @post View structures and variadic buffers are reorganized as needed
+         *
+         * @warning This operation is expensive for binary view arrays due to
+         *          potential reorganization of the entire storage layout.
+         */
+        template <mpl::iterator_of_type<T> InputIt>
+        constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
+
+        /**
+         * @brief Erases specified number of values starting at position.
+         *
+         * @param pos Position where to start erasing
+         * @param count Number of values to erase
+         * @return Iterator pointing to element after last erased
+         *
+         * @pre pos must be valid value iterator
+         * @pre pos + count must not exceed value_cend()
+         * @post count values are removed starting at pos
+         * @post Array size decreases by count
+         * @post View structures and variadic buffers are compacted as needed
+         *
+         * @warning This operation is expensive for binary view arrays due to
+         *          potential reorganization of the entire storage layout.
+         */
+        constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
+
+        /**
          * @brief Gets iterator to beginning of value range.
          *
          * @return Iterator pointing to the first element
@@ -837,4 +944,457 @@ namespace sparrow
             this->size()
         );
     }
+
+    template <std::ranges::sized_range T, class CR>
+    template <std::ranges::sized_range U>
+        requires mpl::convertible_ranges<U, T>
+    constexpr void variable_size_binary_view_array_impl<T, CR>::assign(U&& rhs, size_type index)
+    {
+        SPARROW_ASSERT_TRUE(index < this->size());
+
+        // Note: Binary view arrays have a complex layout optimized for read access.
+        // Modifying elements requires careful handling of the view structure and
+        // potential reorganization of storage buffers.
+        //
+        // This implementation provides a basic assign operation but may not be
+        // as efficient as the variable_size_binary_array equivalent due to the
+        // complexity of the view layout format.
+
+        const auto new_length = static_cast<std::size_t>(std::ranges::size(rhs));
+
+        // Get pointer to the view structure for this element
+        auto& length_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[LENGTH_BUFFER_INDEX];
+        auto view_ptr = length_buffer.data() + (index * DATA_BUFFER_SIZE);
+
+        // Read current length
+        const auto current_length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr));
+
+        // Update the length in the view structure
+        *reinterpret_cast<std::int32_t*>(view_ptr) = static_cast<std::int32_t>(new_length);
+
+        if (new_length <= SHORT_STRING_SIZE)
+        {
+            // Store inline: copy data directly into the view structure
+            auto data_ptr = view_ptr + SHORT_STRING_OFFSET;
+
+            // Transform and copy the new data
+            auto transformed = rhs
+                               | std::ranges::views::transform(
+                                   [](const auto& v)
+                                   {
+                                       using char_or_byte = typename T::value_type;
+                                       return static_cast<char_or_byte>(v);
+                                   }
+                               );
+
+            std::ranges::copy(transformed, reinterpret_cast<typename T::value_type*>(data_ptr));
+
+            // Clear any remaining bytes in the inline storage
+            if (new_length < SHORT_STRING_SIZE)
+            {
+                std::fill_n(
+                    reinterpret_cast<typename T::value_type*>(data_ptr) + new_length,
+                    SHORT_STRING_SIZE - new_length,
+                    typename T::value_type{}
+                );
+            }
+        }
+        else
+        {
+            // Handle assignment of long strings (> 12 bytes)
+            // This requires managing the variadic buffers and potentially reorganizing the layout
+
+            auto& buffers = this->get_arrow_proxy().get_array_private_data()->buffers();
+            auto& var_data_buffer = buffers[FIRST_VAR_DATA_BUFFER_INDEX];
+            auto& buffer_sizes_buffer = buffers[buffers.size() - 1];  // Last buffer contains sizes
+
+            // Check if current element was already a long string
+            const bool was_long_string = current_length > SHORT_STRING_SIZE;
+            std::size_t current_buffer_offset = 0;
+
+            if (was_long_string)
+            {
+                // Read current buffer offset from view structure
+                current_buffer_offset = static_cast<std::size_t>(
+                    *reinterpret_cast<const std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET)
+                );
+            }
+
+            // Transform new data once for efficiency
+            auto transformed_data = rhs
+                                    | std::ranges::views::transform(
+                                        [](const auto& v)
+                                        {
+                                            using char_or_byte = typename T::value_type;
+                                            return static_cast<char_or_byte>(v);
+                                        }
+                                    );
+
+            // Check for memory reuse optimization: if the new value is identical to existing data
+            bool can_reuse_memory = false;
+            if (was_long_string && new_length == current_length)
+            {
+                const auto* existing_data = var_data_buffer.data() + current_buffer_offset;
+                can_reuse_memory = std::ranges::equal(
+                    transformed_data,
+                    std::span<const typename T::value_type>(
+                        reinterpret_cast<const typename T::value_type*>(existing_data),
+                        new_length
+                    )
+                );
+            }
+
+            if (can_reuse_memory)
+            {
+                // Data is identical - just update the view structure prefix and we're done
+                auto prefix_range = rhs | std::ranges::views::take(PREFIX_SIZE);
+                auto prefix_transformed = prefix_range
+                                          | std::ranges::views::transform(
+                                              [](const auto& v)
+                                              {
+                                                  return static_cast<std::uint8_t>(v);
+                                              }
+                                          );
+                std::ranges::copy(prefix_transformed, view_ptr + PREFIX_OFFSET);
+                return;  // Early exit - no buffer management needed
+            }
+
+            // Calculate space requirements and buffer management strategy
+            const auto length_diff = static_cast<std::ptrdiff_t>(new_length)
+                                     - static_cast<std::ptrdiff_t>(current_length);
+            const bool can_fit_in_place = was_long_string && length_diff <= 0;
+
+            std::size_t final_offset = 0;
+
+            if (can_fit_in_place)
+            {
+                // We can reuse the existing space (new data is same size or smaller)
+                final_offset = current_buffer_offset;
+
+                // If the new data is smaller, we need to compact the buffer
+                if (length_diff < 0)
+                {
+                    const auto bytes_to_compact = static_cast<std::size_t>(-length_diff);
+                    const auto move_start = current_buffer_offset + current_length;
+                    const auto move_end = var_data_buffer.size();
+                    const auto bytes_to_move = move_end - move_start;
+
+                    if (bytes_to_move > 0)
+                    {
+                        // Move data after current element to fill the gap
+                        std::move(
+                            var_data_buffer.data() + move_start,
+                            var_data_buffer.data() + move_end,
+                            var_data_buffer.data() + move_start - bytes_to_compact
+                        );
+                    }
+
+                    // Resize buffer to remove unused space
+                    var_data_buffer.resize(var_data_buffer.size() - bytes_to_compact);
+
+                    // Update buffer offsets for all elements that come after this one
+                    const auto array_size = this->size();
+                    for (size_type i = 0; i < array_size; ++i)
+                    {
+                        if (i == index)
+                        {
+                            continue;  // Skip current element
+                        }
+
+                        auto other_view_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
+                        auto other_length = static_cast<std::size_t>(
+                            *reinterpret_cast<const std::int32_t*>(other_view_ptr)
+                        );
+
+                        if (other_length > SHORT_STRING_SIZE)
+                        {
+                            auto other_offset = static_cast<std::size_t>(
+                                *reinterpret_cast<const std::int32_t*>(other_view_ptr + BUFFER_OFFSET_OFFSET)
+                            );
+
+                            // Update offset if this element comes after our current element
+                            if (other_offset > current_buffer_offset + current_length)
+                            {
+                                *reinterpret_cast<std::int32_t*>(
+                                    other_view_ptr + BUFFER_OFFSET_OFFSET
+                                ) = static_cast<std::int32_t>(other_offset - bytes_to_compact);
+                            }
+                        }
+                    }
+
+                    // Update buffer sizes metadata
+                    auto buffer_sizes_ptr = buffer_sizes_buffer.template data<std::int64_t>();
+                    *buffer_sizes_ptr = static_cast<std::int64_t>(var_data_buffer.size());
+                }
+            }
+            else
+            {
+                // Need to expand buffer or assign to new location
+                const auto expansion_needed = was_long_string ? length_diff
+                                                              : static_cast<std::ptrdiff_t>(new_length);
+                const auto new_var_buffer_size = var_data_buffer.size() + expansion_needed;
+
+                if (was_long_string && length_diff > 0)
+                {
+                    // Expand in-place: move data after current element to make space
+                    final_offset = current_buffer_offset;
+                    const auto expansion_bytes = static_cast<std::size_t>(length_diff);
+                    const auto move_start = current_buffer_offset + current_length;
+                    const auto bytes_to_move = var_data_buffer.size() - move_start;
+
+                    // Resize buffer first
+                    var_data_buffer.resize(new_var_buffer_size);
+
+                    if (bytes_to_move > 0)
+                    {
+                        // Move data to make space for expansion
+                        std::move_backward(
+                            var_data_buffer.data() + move_start,
+                            var_data_buffer.data() + move_start + bytes_to_move,
+                            var_data_buffer.data() + move_start + bytes_to_move + expansion_bytes
+                        );
+                    }
+
+                    // Update buffer offsets for all elements that come after this one
+                    const auto array_size = this->size();
+                    for (size_type i = 0; i < array_size; ++i)
+                    {
+                        if (i == index)
+                        {
+                            continue;  // Skip current element
+                        }
+
+                        auto other_view_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
+                        auto other_length = static_cast<std::size_t>(
+                            *reinterpret_cast<const std::int32_t*>(other_view_ptr)
+                        );
+
+                        if (other_length > SHORT_STRING_SIZE)
+                        {
+                            auto other_offset = static_cast<std::size_t>(
+                                *reinterpret_cast<const std::int32_t*>(other_view_ptr + BUFFER_OFFSET_OFFSET)
+                            );
+
+                            // Update offset if this element comes after our expansion point
+                            if (other_offset >= move_start)
+                            {
+                                *reinterpret_cast<std::int32_t*>(
+                                    other_view_ptr + BUFFER_OFFSET_OFFSET
+                                ) = static_cast<std::int32_t>(other_offset + expansion_bytes);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Append to end of buffer (new long string)
+                    final_offset = var_data_buffer.size();
+                    var_data_buffer.resize(new_var_buffer_size);
+                }
+
+                // Update buffer sizes metadata
+                auto buffer_sizes_ptr = buffer_sizes_buffer.template data<std::int64_t>();
+                *buffer_sizes_ptr = static_cast<std::int64_t>(new_var_buffer_size);
+            }
+
+            // Copy new data into variadic buffer at the determined offset
+            std::ranges::copy(transformed_data, var_data_buffer.data() + final_offset);
+
+            // Update view structure for long string format
+            // Write prefix (first 4 bytes)
+            auto prefix_range = rhs | std::ranges::views::take(PREFIX_SIZE);
+            auto prefix_transformed = prefix_range
+                                      | std::ranges::views::transform(
+                                          [](const auto& v)
+                                          {
+                                              return static_cast<std::uint8_t>(v);
+                                          }
+                                      );
+            std::ranges::copy(prefix_transformed, view_ptr + PREFIX_OFFSET);
+
+            // Write buffer index
+            *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_INDEX_OFFSET) = static_cast<std::int32_t>(
+                FIRST_VAR_DATA_BUFFER_INDEX
+            );
+
+            // Write buffer offset
+            *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET) = static_cast<std::int32_t>(
+                final_offset
+            );
+        }
+    }
+
+    template <std::ranges::sized_range T, class CR>
+    template <std::ranges::sized_range U>
+        requires mpl::convertible_ranges<U, T>
+    constexpr void variable_size_binary_view_array_impl<T, CR>::resize_values(size_type new_length, U value)
+    {
+        const size_t current_size = this->size();
+
+        if (new_length == current_size)
+        {
+            return;  // Nothing to do
+        }
+
+        if (new_length < current_size)
+        {
+            // Shrinking: remove elements from the end
+            erase_values(sparrow::next(value_cbegin(), new_length), current_size - new_length);
+        }
+        else
+        {
+            // Growing: insert copies of value at the end
+            insert_value(value_cend(), value, new_length - current_size);
+        }
+    }
+
+    template <std::ranges::sized_range T, class CR>
+    template <std::ranges::sized_range U>
+        requires mpl::convertible_ranges<U, T>
+    constexpr auto
+    variable_size_binary_view_array_impl<T, CR>::insert_value(const_value_iterator pos, U value, size_type count)
+        -> value_iterator
+    {
+        if (count == 0)
+        {
+            const auto insert_index = std::distance(value_cbegin(), pos);
+            return value_begin() + insert_index;
+        }
+
+        // For binary view arrays, insertion requires complete reconstruction
+        // Create a vector to hold all the current and new values
+        std::vector<T> all_values;
+        all_values.reserve(this->size() + count);
+
+        const auto insert_index = static_cast<size_t>(std::distance(value_cbegin(), pos));
+
+        // Copy values before insertion point
+        for (size_type i = 0; i < insert_index; ++i)
+        {
+            all_values.emplace_back(this->value(i));
+        }
+
+        // Insert new values
+        for (size_type i = 0; i < count; ++i)
+        {
+            all_values.emplace_back(value.begin(), value.end());
+        }
+
+        // Copy values after insertion point
+        for (size_type i = insert_index; i < this->size(); ++i)
+        {
+            all_values.emplace_back(this->value(i));
+        }
+
+        // Reconstruct the array with the new data
+        auto new_proxy = create_proxy(all_values, true);  // Keep nullable state
+        *this = variable_size_binary_view_array_impl(std::move(new_proxy));
+
+        return sparrow::next(value_begin(), insert_index);
+    }
+
+    template <std::ranges::sized_range T, class CR>
+    template <mpl::iterator_of_type<T> InputIt>
+    constexpr auto
+    variable_size_binary_view_array_impl<T, CR>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        -> value_iterator
+    {
+        const auto insert_count = std::distance(first, last);
+        if (insert_count == 0)
+        {
+            const auto insert_index = std::distance(value_cbegin(), pos);
+            return value_begin() + insert_index;
+        }
+
+        // For binary view arrays, insertion requires complete reconstruction
+        std::vector<T> all_values;
+        all_values.reserve(this->size() + insert_count);
+
+        const auto insert_index = std::distance(value_cbegin(), pos);
+
+        // Copy values before insertion point
+        for (size_type i = 0; i < insert_index; ++i)
+        {
+            all_values.emplace_back(this->value(i));
+        }
+
+        // Insert new values
+        for (auto it = first; it != last; ++it)
+        {
+            all_values.emplace_back(*it);
+        }
+
+        // Copy values after insertion point
+        for (size_type i = insert_index; i < this->size(); ++i)
+        {
+            all_values.emplace_back(this->value(i));
+        }
+
+        // Reconstruct the array with the new data
+        auto new_proxy = create_proxy(all_values, true);  // Keep nullable state
+        *this = variable_size_binary_view_array_impl(std::move(new_proxy));
+
+        return value_begin() + insert_index;
+    }
+
+    template <std::ranges::sized_range T, class CR>
+    constexpr auto
+    variable_size_binary_view_array_impl<T, CR>::erase_values(const_value_iterator pos, size_type count)
+        -> value_iterator
+    {
+        if (count == 0)
+        {
+            const auto erase_index = std::distance(value_cbegin(), pos);
+            return value_begin() + erase_index;
+        }
+
+        const size_t erase_index = static_cast<size_t>(std::distance(value_cbegin(), pos));
+        const size_t current_size = this->size();
+
+        // Validate bounds
+        if (erase_index + count > current_size)
+        {
+            count = current_size - erase_index;
+        }
+
+        if (count == 0)
+        {
+            const auto erase_index_bis = std::distance(value_cbegin(), pos);
+            return value_begin() + erase_index_bis;
+        }
+
+        // For binary view arrays, erasing requires complete reconstruction
+        std::vector<T> remaining_values;
+        remaining_values.reserve(current_size - count);
+
+        // Copy values before erase point
+        for (size_type i = 0; i < erase_index; ++i)
+        {
+            remaining_values.emplace_back(this->value(i));
+        }
+
+        // Copy values after erase point
+        for (size_type i = erase_index + count; i < current_size; ++i)
+        {
+            remaining_values.emplace_back(this->value(i));
+        }
+
+        // Reconstruct the array with the remaining data
+        if (remaining_values.empty())
+        {
+            // Create empty array
+            auto new_proxy = create_proxy(std::vector<T>{}, true);
+            *this = variable_size_binary_view_array_impl(std::move(new_proxy));
+            return value_begin();
+        }
+        else
+        {
+            auto new_proxy = create_proxy(remaining_values, true);  // Keep nullable state
+            *this = variable_size_binary_view_array_impl(std::move(new_proxy));
+
+            // Return iterator to element after last erased, or end if we erased to the end
+            return erase_index < this->size() ? sparrow::next(value_begin(), erase_index) : value_end();
+        }
+    }
+
 }
