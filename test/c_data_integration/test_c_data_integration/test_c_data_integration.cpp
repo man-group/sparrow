@@ -17,11 +17,14 @@
 
 #include <filesystem>
 
+#include <doctest/doctest.h>
+#include <nlohmann/json.hpp>
+
 #include "sparrow/c_data_integration/c_data_integration.hpp"
+#include "sparrow/c_data_integration/json_parser.hpp"
 #include "sparrow/c_interface.hpp"
 
 #include "better_junit_reporter.hpp"
-#include "doctest/doctest.h"
 
 
 const std::filesystem::path json_files_path = JSON_FILES_PATH;
@@ -61,6 +64,17 @@ const std::vector<std::filesystem::path> jsons_to_test = {
     json_files_path / "run_end_encoded.json",
     json_files_path / "union.json",
 };
+
+size_t get_number_of_batches(const std::filesystem::path& json_path)
+{
+    std::ifstream json_file(json_path);
+    if (!json_file.is_open())
+    {
+        throw std::runtime_error("Could not open file: " + json_path.string());
+    }
+    const nlohmann::json data = nlohmann::json::parse(json_file);
+    return data["batches"].size();
+}
 
 TEST_SUITE("c_data_integration")
 {
@@ -114,15 +128,18 @@ TEST_SUITE("c_data_integration")
         {
             SUBCASE(json_path.filename().string().c_str())
             {
-                ArrowArray array;
-                const auto error = external_CDataIntegration_ExportBatchFromJson(
-                    json_path.string().c_str(),
-                    0,
-                    &array
-                );
-                if (error != nullptr)
+                for (size_t i = 0; i < get_number_of_batches(json_path); ++i)
                 {
-                    CHECK_EQ(std::string_view(error), std::string_view());
+                    ArrowArray array;
+                    const auto error = external_CDataIntegration_ExportBatchFromJson(
+                        json_path.string().c_str(),
+                        static_cast<int>(i),
+                        &array
+                    );
+                    if (error != nullptr)
+                    {
+                        CHECK_EQ(std::string_view(error), std::string_view());
+                    }
                 }
             }
         }
@@ -134,16 +151,27 @@ TEST_SUITE("c_data_integration")
         {
             SUBCASE(json_path.filename().string().c_str())
             {
-                ArrowArray array;
-                auto error = external_CDataIntegration_ExportBatchFromJson(json_path.string().c_str(), 0, &array);
-                if (error != nullptr)
+                for (size_t i = 0; i < get_number_of_batches(json_path); ++i)
                 {
-                    CHECK_EQ(std::string_view(error), std::string_view());
-                }
-                error = external_CDataIntegration_ImportBatchAndCompareToJson(json_path.string().c_str(), 0, &array);
-                if (error != nullptr)
-                {
-                    CHECK_EQ(std::string_view(error), std::string_view());
+                    ArrowArray array;
+                    auto error = external_CDataIntegration_ExportBatchFromJson(
+                        json_path.string().c_str(),
+                        static_cast<int>(i),
+                        &array
+                    );
+                    if (error != nullptr)
+                    {
+                        CHECK_EQ(std::string_view(error), std::string_view());
+                    }
+                    error = external_CDataIntegration_ImportBatchAndCompareToJson(
+                        json_path.string().c_str(),
+                        static_cast<int>(i),
+                        &array
+                    );
+                    if (error != nullptr)
+                    {
+                        CHECK_EQ(std::string_view(error), std::string_view());
+                    }
                 }
             }
         }
