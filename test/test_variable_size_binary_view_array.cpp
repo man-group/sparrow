@@ -84,7 +84,8 @@ namespace sparrow
                         CHECK_EQ(array.name(), "name");
                         test_metadata(metadata_sample, array.metadata().value());
                         CHECK_EQ(array.size(), words.size());
-                        CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE));
+                        CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE)
+                        );
                     }
                 }
 
@@ -209,6 +210,528 @@ namespace sparrow
             {
                 string_view_array array(words, where_nulls, "name", metadata_sample_opt);
                 test::generic_consistency_test(array);
+            }
+
+            SUBCASE("mutating methods")
+            {
+                SUBCASE("resize_values")
+                {
+                    SUBCASE("shrink array")
+                    {
+                        string_view_array array(words);
+                        const size_t original_size = array.size();
+                        const size_t new_size = original_size - 2;
+
+                        array.resize(new_size, sparrow::make_nullable<std::string>("fill"));
+
+                        CHECK_EQ(array.size(), new_size);
+                        for (std::size_t i = 0; i < new_size; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+                    }
+
+                    SUBCASE("grow array with short string")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+                        const auto new_size = original_size + 3;
+                        const std::string fill_value = "new";
+
+                        array.resize(new_size, sparrow::make_nullable<std::string>(fill_value));
+
+                        CHECK_EQ(array.size(), new_size);
+
+                        // Check original elements
+                        for (std::size_t i = 0; i < original_size; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+
+                        // Check new elements
+                        for (std::size_t i = original_size; i < new_size; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), fill_value);
+                        }
+                    }
+
+                    SUBCASE("grow array with long string")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+                        const auto new_size = original_size + 2;
+                        const std::string fill_value = "this is a long string that exceeds 12 bytes";
+
+                        array.resize_values(new_size, sparrow::make_nullable<std::string>(fill_value));
+
+                        CHECK_EQ(array.size(), new_size);
+
+                        // Check original elements
+                        for (std::size_t i = 0; i < original_size; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+
+                        // Check new elements
+                        for (std::size_t i = original_size; i < new_size; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), fill_value);
+                        }
+                    }
+
+                    SUBCASE("resize to same size")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+
+                        array.resize_values(original_size, sparrow::make_nullable<std::string>("unchanged"));
+
+                        CHECK_EQ(array.size(), original_size);
+                        for (std::size_t i = 0; i < original_size; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+                    }
+
+                    SUBCASE("resize to zero")
+                    {
+                        string_view_array array(words);
+
+                        array.resize(0, sparrow::make_nullable<std::string>("empty"));
+
+                        CHECK_EQ(array.size(), 0);
+                    }
+                }
+
+                SUBCASE("insert_value")
+                {
+                    SUBCASE("insert at beginning")
+                    {
+                        string_view_array array(words);
+                        const std::string new_value = "prefix";
+                        const auto original_size = array.size();
+
+                        auto it = array.insert(array.cbegin(), new_value, 1);
+
+                        CHECK_EQ(array.size(), original_size + 1);
+                        CHECK_EQ(std::distance(array.value_begin(), it), 0);
+                        CHECK_EQ(array[0].value(), new_value);
+
+                        // Check shifted elements
+                        for (std::size_t i = 1; i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i - 1]);
+                        }
+                    }
+
+                    SUBCASE("insert at middle")
+                    {
+                        string_view_array array(words);
+                        const std::string new_value = "middle";
+                        const auto original_size = array.size();
+                        const std::size_t insert_pos = 2;
+
+                        auto it = array.insert_value(array.value_cbegin() + insert_pos, new_value, 1);
+
+                        CHECK_EQ(array.size(), original_size + 1);
+                        CHECK_EQ(std::distance(array.value_begin(), it), insert_pos);
+                        CHECK_EQ(array[insert_pos].value(), new_value);
+
+                        // Check elements before insertion
+                        for (std::size_t i = 0; i < insert_pos; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+
+                        // Check elements after insertion
+                        for (std::size_t i = insert_pos + 1; i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i - 1]);
+                        }
+                    }
+
+                    SUBCASE("insert at end")
+                    {
+                        string_view_array array(words);
+                        const std::string new_value = "suffix";
+                        const auto original_size = array.size();
+
+                        auto it = array.insert_value(array.value_cend(), new_value, 1);
+
+                        CHECK_EQ(array.size(), original_size + 1);
+                        CHECK_EQ(std::distance(array.value_begin(), it), original_size);
+                        CHECK_EQ(array[original_size].value(), new_value);
+
+                        // Check original elements
+                        for (std::size_t i = 0; i < original_size; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+                    }
+
+                    SUBCASE("insert multiple copies")
+                    {
+                        string_view_array array(words);
+                        const std::string new_value = "repeated";
+                        const auto original_size = array.size();
+                        const std::size_t count = 3;
+                        const std::size_t insert_pos = 1;
+
+                        auto it = array.insert_value(array.value_cbegin() + insert_pos, new_value, count);
+
+                        CHECK_EQ(array.size(), original_size + count);
+                        CHECK_EQ(std::distance(array.value_begin(), it), insert_pos);
+
+                        // Check elements before insertion
+                        for (std::size_t i = 0; i < insert_pos; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+
+                        // Check inserted elements
+                        for (std::size_t i = insert_pos; i < insert_pos + count; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), new_value);
+                        }
+
+                        // Check elements after insertion
+                        for (std::size_t i = insert_pos + count; i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i - count]);
+                        }
+                    }
+
+                    SUBCASE("insert long string")
+                    {
+                        string_view_array array(words);
+                        const std::string new_value = "this is a very long string that definitely exceeds 12 bytes";
+                        const auto original_size = array.size();
+
+                        auto it = array.insert_value(array.value_cbegin() + 1, new_value, 1);
+
+                        CHECK_EQ(array.size(), original_size + 1);
+                        CHECK_EQ(array[1].value(), new_value);
+                    }
+
+                    SUBCASE("insert zero count")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+
+                        auto it = array.insert_value(array.value_cbegin() + 1, "test", 0);
+
+                        CHECK_EQ(array.size(), original_size);
+                        CHECK_EQ(std::distance(array.value_begin(), it), 1);
+
+                        // Check all elements unchanged
+                        for (std::size_t i = 0; i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+                    }
+                }
+
+                SUBCASE("insert_values")
+                {
+                    SUBCASE("insert range at beginning")
+                    {
+                        string_view_array array(words);
+                        const std::vector<std::string> to_insert = {"new1", "new2", "new3"};
+                        const auto original_size = array.size();
+
+                        auto it = array.insert_values(array.value_cbegin(), to_insert.begin(), to_insert.end());
+
+                        CHECK_EQ(array.size(), original_size + to_insert.size());
+                        CHECK_EQ(std::distance(array.value_begin(), it), 0);
+
+                        // Check inserted elements
+                        for (std::size_t i = 0; i < to_insert.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), to_insert[i]);
+                        }
+
+                        // Check shifted elements
+                        for (std::size_t i = to_insert.size(); i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i - to_insert.size()]);
+                        }
+                    }
+
+                    SUBCASE("insert range at middle")
+                    {
+                        string_view_array array(words);
+                        const std::vector<std::string> to_insert = {"mid1", "mid2"};
+                        const auto original_size = array.size();
+                        const std::size_t insert_pos = 2;
+
+                        auto it = array.insert_values(
+                            array.value_cbegin() + insert_pos,
+                            to_insert.begin(),
+                            to_insert.end()
+                        );
+
+                        CHECK_EQ(array.size(), original_size + to_insert.size());
+                        CHECK_EQ(std::distance(array.value_begin(), it), insert_pos);
+
+                        // Check elements before insertion
+                        for (std::size_t i = 0; i < insert_pos; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+
+                        // Check inserted elements
+                        for (std::size_t i = 0; i < to_insert.size(); ++i)
+                        {
+                            CHECK_EQ(array[insert_pos + i].value(), to_insert[i]);
+                        }
+
+                        // Check elements after insertion
+                        for (std::size_t i = insert_pos + to_insert.size(); i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i - to_insert.size()]);
+                        }
+                    }
+
+                    SUBCASE("insert range at end")
+                    {
+                        string_view_array array(words);
+                        const std::vector<std::string> to_insert = {"end1", "end2"};
+                        const auto original_size = array.size();
+
+                        auto it = array.insert_values(array.value_cend(), to_insert.begin(), to_insert.end());
+
+                        CHECK_EQ(array.size(), original_size + to_insert.size());
+                        CHECK_EQ(std::distance(array.value_begin(), it), original_size);
+
+                        // Check original elements
+                        for (std::size_t i = 0; i < original_size; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+
+                        // Check inserted elements
+                        for (std::size_t i = 0; i < to_insert.size(); ++i)
+                        {
+                            CHECK_EQ(array[original_size + i].value(), to_insert[i]);
+                        }
+                    }
+
+                    SUBCASE("insert empty range")
+                    {
+                        string_view_array array(words);
+                        const std::vector<std::string> to_insert;
+                        const auto original_size = array.size();
+
+                        auto it = array.insert_values(
+                            array.value_cbegin() + 1,
+                            to_insert.begin(),
+                            to_insert.end()
+                        );
+
+                        CHECK_EQ(array.size(), original_size);
+                        CHECK_EQ(std::distance(array.value_begin(), it), 1);
+
+                        // Check all elements unchanged
+                        for (std::size_t i = 0; i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+                    }
+
+                    SUBCASE("insert range with mixed string lengths")
+                    {
+                        string_view_array array(words);
+                        const std::vector<std::string> to_insert = {
+                            "short",
+                            "this is a very long string that exceeds 12 bytes limit",
+                            "mid"
+                        };
+                        const auto original_size = array.size();
+                        const std::size_t insert_pos = 1;
+
+                        auto it = array.insert_values(
+                            array.value_cbegin() + insert_pos,
+                            to_insert.begin(),
+                            to_insert.end()
+                        );
+
+                        CHECK_EQ(array.size(), original_size + to_insert.size());
+
+                        // Check inserted elements
+                        for (std::size_t i = 0; i < to_insert.size(); ++i)
+                        {
+                            CHECK_EQ(array[insert_pos + i].value(), to_insert[i]);
+                        }
+                    }
+                }
+
+                SUBCASE("erase_values")
+                {
+                    SUBCASE("erase from beginning")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+                        const std::size_t erase_count = 2;
+
+                        auto it = array.erase_values(array.value_cbegin(), erase_count);
+
+                        CHECK_EQ(array.size(), original_size - erase_count);
+                        CHECK_EQ(std::distance(array.value_begin(), it), 0);
+
+                        // Check remaining elements
+                        for (std::size_t i = 0; i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i + erase_count]);
+                        }
+                    }
+
+                    SUBCASE("erase from middle")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+                        const std::size_t erase_pos = 2;
+                        const std::size_t erase_count = 2;
+
+                        auto it = array.erase_values(array.value_cbegin() + erase_pos, erase_count);
+
+                        CHECK_EQ(array.size(), original_size - erase_count);
+                        CHECK_EQ(std::distance(array.value_begin(), it), erase_pos);
+
+                        // Check elements before erase position
+                        for (std::size_t i = 0; i < erase_pos; ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+
+                        // Check elements after erase position
+                        for (std::size_t i = erase_pos; i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i + erase_count]);
+                        }
+                    }
+
+                    SUBCASE("erase from end")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+                        const std::size_t erase_count = 2;
+                        const std::size_t erase_pos = original_size - erase_count;
+
+                        auto it = array.erase_values(array.value_cbegin() + erase_pos, erase_count);
+
+                        CHECK_EQ(array.size(), original_size - erase_count);
+                        CHECK_EQ(it, array.value_end());
+
+                        // Check remaining elements
+                        for (std::size_t i = 0; i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+                    }
+
+                    SUBCASE("erase all elements")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+
+                        auto it = array.erase_values(array.value_cbegin(), original_size);
+
+                        CHECK_EQ(array.size(), 0);
+                        CHECK_EQ(it, array.value_begin());
+                        CHECK_EQ(it, array.value_end());
+                    }
+
+                    SUBCASE("erase zero count")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+                        const std::size_t erase_pos = 2;
+
+                        auto it = array.erase_values(array.value_cbegin() + erase_pos, 0);
+
+                        CHECK_EQ(array.size(), original_size);
+                        CHECK_EQ(std::distance(array.value_begin(), it), erase_pos);
+
+                        // Check all elements unchanged
+                        for (std::size_t i = 0; i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+                    }
+
+                    SUBCASE("erase with count exceeding bounds")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+                        const std::size_t erase_pos = original_size - 2;
+                        const std::size_t erase_count = 5;  // More than available
+
+                        auto it = array.erase_values(array.value_cbegin() + erase_pos, erase_count);
+
+                        CHECK_EQ(array.size(), erase_pos);  // Should erase only available elements
+                        CHECK_EQ(it, array.value_end());
+
+                        // Check remaining elements
+                        for (std::size_t i = 0; i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+                    }
+                }
+
+                SUBCASE("combined operations")
+                {
+                    SUBCASE("resize then insert")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+
+                        // First resize
+                        array.resize_values(original_size + 2, "extra");
+                        CHECK_EQ(array.size(), original_size + 2);
+
+                        // Then insert
+                        array.insert_value(array.value_cbegin() + 1, "inserted", 1);
+                        CHECK_EQ(array.size(), original_size + 3);
+                        CHECK_EQ(array[1].value(), "inserted");
+                    }
+
+                    SUBCASE("insert then erase")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+
+                        // First insert
+                        array.insert_value(array.value_cbegin() + 2, "temp", 2);
+                        CHECK_EQ(array.size(), original_size + 2);
+
+                        // Then erase what we inserted
+                        array.erase_values(array.value_cbegin() + 2, 2);
+                        CHECK_EQ(array.size(), original_size);
+
+                        // Should be back to original
+                        for (std::size_t i = 0; i < array.size(); ++i)
+                        {
+                            CHECK_EQ(array[i].value(), words[i]);
+                        }
+                    }
+
+                    SUBCASE("erase then resize")
+                    {
+                        string_view_array array(words);
+                        const auto original_size = array.size();
+
+                        // First erase
+                        array.erase_values(array.value_cbegin() + 1, 2);
+                        CHECK_EQ(array.size(), original_size - 2);
+
+                        // Then resize back up
+                        array.resize_values(original_size, "refill");
+                        CHECK_EQ(array.size(), original_size);
+                        CHECK_EQ(array[original_size - 1].value(), "refill");
+                        CHECK_EQ(array[original_size - 2].value(), "refill");
+                    }
+                }
             }
         }
     }
