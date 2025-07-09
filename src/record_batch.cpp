@@ -166,10 +166,10 @@ namespace sparrow
             }
         }
         m_dirty_map = false;
-        SPARROW_ASSERT_TRUE(check_consistency());
+        check_consistency();
     }
 
-    bool record_batch::check_consistency() const
+    void record_batch::check_consistency() const
     {
         SPARROW_ASSERT(
             m_name_list.size() == m_array_list.size(),
@@ -185,14 +185,16 @@ namespace sparrow
             for (size_type i = 1u; i < m_array_list.size(); ++i)
             {
                 const bool same_size = m_array_list[i].size() == size;
-                SPARROW_ASSERT(same_size, "The arrays of a record batch must have the same size");
+
                 if (!same_size)
                 {
-                    return false;
+                    const std::string error = "The size of the array at index " + std::to_string(i) + " is "
+                                              + std::to_string(m_array_list[i].size())
+                                              + ", but the size of the first array is " + std::to_string(size);
+                    SPARROW_ASSERT(same_size, error.c_str());
                 }
             }
         }
-        return true;
     }
 
     bool operator==(const record_batch& lhs, const record_batch& rhs)
