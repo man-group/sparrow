@@ -76,6 +76,31 @@ namespace sparrow::c_data_integration
         //         }
         //     }
         // }
+
+        // check metadata
+        if (schema->metadata != nullptr || schema_from_json->metadata != nullptr)
+        {
+            if ((schema->metadata != nullptr) != (schema_from_json->metadata != nullptr))
+            {
+                differences.push_back(
+                    prefix_with_name
+                    + " metadata mismatch: pointer=" + (schema->metadata ? schema->metadata : "nullptr")
+                    + " vs json=" + (schema_from_json->metadata ? schema_from_json->metadata : "nullptr")
+                );
+            }
+            else if (schema->metadata != nullptr && schema_from_json->metadata != nullptr)
+            {
+                if (std::strcmp(schema->metadata, schema_from_json->metadata) != 0)
+                {
+                    differences.push_back(
+                        prefix_with_name + " metadata mismatch: pointer=" + schema->metadata
+                        + " vs json=" + schema_from_json->metadata
+                    );
+                }
+            }
+        }
+
+
         if (schema->flags != schema_from_json->flags)
         {
             differences.push_back(
