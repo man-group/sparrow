@@ -85,15 +85,17 @@ namespace sparrow::c_data_integration
                 return "nullptr";
             }
             sparrow::key_value_view metadata_view(metadata);
-
-            constexpr std::string opening_bracket = "(";
-            constexpr std::string closing_bracket = ")";
-            constexpr std::string separator = ": ";
+            constexpr std::string_view opening_bracket = "(";
+            constexpr std::string_view closing_bracket = ")";
+            constexpr std::string_view separator = ": ";
             std::string result;
             for (const auto& pair : metadata_view)
             {
-                result += opening_bracket + std::string(pair.first) + separator + std::string(pair.second)
-                          + closing_bracket;
+                result += opening_bracket;
+                result += std::string(pair.first);
+                result += separator;
+                result += std::string(pair.second);
+                result += closing_bracket;
             }
             return result;
         };
