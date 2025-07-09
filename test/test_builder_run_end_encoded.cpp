@@ -17,7 +17,7 @@
 #include <variant>
 #include <vector>
 
-#include "sparrow/builder/builder.hpp"
+#include "sparrow/builder.hpp"
 
 #include "test_utils.hpp"
 

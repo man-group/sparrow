@@ -1,7 +1,7 @@
 #include <cassert>
 #include <list>
 
-#include <sparrow/builder/builder.hpp>
+#include <sparrow/builder.hpp>
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {

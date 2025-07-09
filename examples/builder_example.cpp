@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include <sparrow/builder/builder.hpp>
+#include <sparrow/builder.hpp>
 
 void primitve_array()
 {
