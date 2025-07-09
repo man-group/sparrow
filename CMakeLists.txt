@@ -214,7 +214,6 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset.hpp
 
     # builder
-    ${SPARROW_INCLUDE_DIR}/sparrow/builder/builder.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/builder/builder_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/builder/nested_eq.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/builder/nested_less.hpp
@@ -287,6 +286,7 @@ set(SPARROW_HEADERS
     # ../
     ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array_api.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/builder.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/date_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/decimal_array.hpp
@@ -307,8 +307,6 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/union_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_view_array.hpp
-
-
 )
 
 if(SPARROW_TARGET_32BIT)

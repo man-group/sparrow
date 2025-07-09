@@ -154,7 +154,7 @@ pa3 = std::move(pa0);
 ### Primitive Arrays
 
 #### primitive_array<T>
-**Header:** `sparrow/layout/primitive_layout/primitive_array.hpp`
+**Header:** `sparrow/primitive_array.hpp`
 
 **Description:** Stores scalar values of a specific type (integers, floats, booleans) in a contiguous memory layout.
 The T type can be:
@@ -168,14 +168,14 @@ The T type can be:
 ### Variable-Size Binary Arrays
 
 #### string_array / big_string_array
-**Header:** `sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp`
+**Header:** `sparrow/variable_size_binary_array.hpp`
 
 **Description:** Stores variable-length strings or binary data. `big_string_array` uses 64-bit offsets for larger datasets.
 
 **When to use:** For text data, variable-length strings, or binary blobs.
 
 #### binary_array / big_binary_array
-**Header:** `sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp`
+**Header:** `sparrow/variable_size_binary_array.hpp`
 
 **Description:** Similar to string arrays but for binary data (sequences of bytes).
 
@@ -184,7 +184,7 @@ The T type can be:
 ### Fixed-Width Binary Arrays
 
 #### fixed_width_binary_array
-**Header:** `sparrow/layout/fixed_width_binary_array.hpp`
+**Header:** `sparrow/fixed_width_binary_array.hpp`
 
 **Description:** Stores fixed-size binary data where all elements have the same byte length.
 
@@ -193,21 +193,21 @@ The T type can be:
 ### List Arrays
 
 #### list_array / big_list_array
-**Header:** `sparrow/layout/list_layout/list_array.hpp`
+**Header:** `sparrow/list_array.hpp`
 
 **Description:** Stores variable-length lists where each element can contain a different number of sub-elements.
 
 **When to use:** Use the List layout when your data consists of variable-length lists and you want a straightforward, efficient representation where the order of elements in the child array matches the logical order in the parent array. This is the standard layout for most use cases involving variable-length lists, such as arrays of strings or arrays of arrays of numbers.
 
 #### list_view_array / big_list_view_array
-**Header:** `sparrow/layout/list_layout/list_array.hpp`
+**Header:** `sparrow/list_array.hpp`
 
 **Description:** Similar to list arrays but with explicit size information for each list element.
 
 **When to use:** Use the ListView layout when you need more flexibility than the standard List layout provides, such as when the logical order of lists does not match the physical order in the child array, or when you need to represent lists that share or reuse segments of the child array. This can be useful in advanced scenarios like certain optimizations or data transformations where reordering or sharing of data is required.
 
 #### fixed_size_list_array
-**Header:** `sparrow/layout/list_layout/list_array.hpp`
+**Header:** `sparrow/list_array.hpp`
 
 **Description:** Stores lists where all elements have the same fixed number of sub-elements.
 
@@ -216,7 +216,7 @@ The T type can be:
 ### Struct Arrays
 
 #### struct_array
-**Header:** `sparrow/layout/struct_layout/struct_array.hpp`
+**Header:** `sparrow/struct_array.hpp`
 
 **Description:** Stores structured data with named fields, similar to database records or C structs.
 
@@ -227,7 +227,7 @@ The T type can be:
 ### Union Arrays
 
 #### sparse_union_array / dense_union_array
-**Header:** `sparrow/layout/union_array.hpp`
+**Header:** `sparrow/union_array.hpp`
 
 **Description:** Stores values that can be one of several different types, similar to std::variant.
 
@@ -238,7 +238,7 @@ The T type can be:
 ### Temporal Arrays
 
 #### timestamp_array<T>
-**Header:** `sparrow/layout/temporal/timestamp_array.hpp`
+**Header:** `sparrow/timestamp_array.hpp`
 
 **Description:** Stores timestamps with timezone information.
 
@@ -251,7 +251,7 @@ The T type can be:
 - `timestamp_nanoseconds_array`
 
 #### timestamp_without_timezone_array<T>
-**Header:** `sparrow/layout/temporal/timestamp_without_timezone_array.hpp`
+**Header:** `sparrow/timestamp_without_timezone_array.hpp`
 
 **Description:** Stores timestamps without timezone information.
 
@@ -264,7 +264,7 @@ The T type can be:
 - `timestamp_without_timezone_nanoseconds_array`
 
 #### date_array<T>
-**Header:** `sparrow/layout/temporal/date_array.hpp`
+**Header:** `sparrow/date_array.hpp`
 
 **Description:** Stores date values (days or milliseconds since epoch).
 
@@ -275,7 +275,7 @@ The T type can be:
 - `date_milliseconds_array`
 
 #### time_array<T>
-**Header:** `sparrow/layout/temporal/time_array.hpp`
+**Header:** `sparrow/time_array.hpp`
 
 **Description:** Stores time-of-day values with various precisions.
 
@@ -288,7 +288,7 @@ The T type can be:
 - `time_nanoseconds_array`
 
 #### duration_array<T>
-**Header:** `sparrow/layout/temporal/duration_array.hpp`
+**Header:** `sparrow/duration_array.hpp`
 
 **Description:** Stores duration/time interval values.
 
@@ -301,7 +301,7 @@ The T type can be:
 - `duration_nanoseconds_array`
 
 #### interval_array<T>
-**Header:** `sparrow/layout/temporal/interval_array.hpp`
+**Header:** `sparrow/interval_array.hpp`
 
 **Description:** Stores calendar intervals (months, days, nanoseconds).
 
@@ -315,7 +315,7 @@ The T type can be:
 ### Decimal Arrays
 
 #### decimal_array<T>
-**Header:** `sparrow/layout/decimal_array.hpp`
+**Header:** `sparrow/decimal_array.hpp`
 
 **Description:** Stores fixed-precision decimal numbers.
 
@@ -324,7 +324,7 @@ The T type can be:
 ### Special Layout Arrays
 
 #### null_array
-**Header:** `sparrow/layout/null_array.hpp`
+**Header:** `sparrow/null_array.hpp`
 
 **Description:** An array where all elements are null.
 
@@ -333,7 +333,7 @@ The T type can be:
 **Apache Arrow specification:** [Null Layout](https://arrow.apache.org/docs/format/Columnar.html#null-layout)
 
 #### dictionary_encoded_array
-**Header:** `sparrow/layout/dictionary_encoded_array.hpp`
+**Header:** `sparrow/dictionary_encoded_array.hpp`
 
 **Description:** Stores data using dictionary encoding to reduce memory usage for repeated values.
 
@@ -342,7 +342,7 @@ The T type can be:
 **Apache Arrow specification:** [Dictionary Encoding](https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout)
 
 #### run_end_encoded_array
-**Header:** `sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp`
+**Header:** `sparrow/run_end_encoded_array.hpp`
 
 **Description:** Compresses data by storing run lengths for consecutive identical values.
 
