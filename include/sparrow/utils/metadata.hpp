@@ -93,11 +93,13 @@ namespace sparrow
     {
     public:
 
-        using iterator_category = std::input_iterator_tag;
+        //using iterator_category = std::input_iterator_tag;
         using value_type = metadata_pair;
         using difference_type = std::ptrdiff_t;
         using pointer = value_type*;
         using reference = value_type&;
+        using iterator_concept = std::forward_iterator_tag;
+
 
         /**
          * @brief Constructs an iterator for the given view at the specified index.
@@ -129,11 +131,19 @@ namespace sparrow
          *
          * @return Reference to this iterator after advancement
          *
-         * @pre Iterator must not be at end position before increment
-         * @post Iterator is advanced to next position or end
-         * @post Internal buffer pointer is correctly positioned for next extraction
+         * @post Iterator is advanced to next position
+         * @post Internal buffer pointer is correctly positioned for next extraction or past the end
          */
         SPARROW_API key_value_view_iterator& operator++();
+
+        /**
+         * @brief Advances the iterator to the next key-value pair.
+         *
+         * @return Copy of this iterator before advancement
+         * @post Iterator is advanced to next position
+         * @post Internal buffer pointer is correctly positioned for next extraction or past the end
+         */
+        SPARROW_API key_value_view_iterator operator++(int);
 
         /**
          * @brief Equality comparison operator for iterators.
