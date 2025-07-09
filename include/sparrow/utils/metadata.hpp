@@ -93,7 +93,7 @@ namespace sparrow
     {
     public:
 
-        //using iterator_category = std::input_iterator_tag;
+        // using iterator_category = std::input_iterator_tag;
         using value_type = metadata_pair;
         using difference_type = std::ptrdiff_t;
         using pointer = value_type*;
