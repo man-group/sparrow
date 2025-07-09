@@ -19,7 +19,7 @@ jobs:
         version: [11, 12, 13, 14, 17, 18, 19, 20]
         os: [ubuntu-24.04, ubuntu-24.04-arm]
         arch: [64]
-        config: [Debug, Release]
+        config: [Debug, RelWithDebInfo]
         date-polyfill: [ON, OFF]
         shared: [ON, OFF]
         cpp_standard: [20]
@@ -146,6 +146,7 @@ jobs:
           -DENABLE_INTEGRATION_TEST=${{matrix.shared}} \
           -DBUILD_EXAMPLES=ON \
           -DCREATE_JSON_READER_TARGET=ON \
+          -DBUILD_BENCHMARKS=OFF \
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
