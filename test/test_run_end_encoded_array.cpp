@@ -14,8 +14,8 @@
 
 #include "sparrow/array.hpp"
 #include "sparrow/layout/dispatch.hpp"
-#include "sparrow/layout/primitive_layout/primitive_array.hpp"
-#include "sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp"
+#include "sparrow/primitive_array.hpp"
+#include "sparrow/run_end_encoded_array.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 #include "../test/external_array_data_creation.hpp"

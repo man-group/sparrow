@@ -13,9 +13,9 @@
 // limitations under the License.
 
 #include "sparrow/array.hpp"
-#include "sparrow/layout/map_layout/map_array.hpp"
-#include "sparrow/layout/primitive_layout/primitive_array.hpp"
-#include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
+#include "sparrow/map_array.hpp"
+#include "sparrow/primitive_array.hpp"
+#include "sparrow/variable_size_binary_array.hpp"
 
 #include "doctest/doctest.h"
 #include "test_utils.hpp"

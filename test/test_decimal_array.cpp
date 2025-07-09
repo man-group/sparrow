@@ -14,8 +14,7 @@
 
 #include <cstdint>
 
-#include "sparrow/layout/decimal_array.hpp"
-#include "sparrow/utils/nullable.hpp"
+#include "sparrow/decimal_array.hpp"
 
 #include "test_utils.hpp"
 

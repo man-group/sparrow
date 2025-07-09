@@ -14,21 +14,21 @@
 
 #include <ranges>
 
-#include <sparrow/layout/decimal_array.hpp>
-#include <sparrow/layout/dictionary_encoded_array.hpp>
-#include <sparrow/layout/fixed_width_binary_array.hpp>
-#include <sparrow/layout/list_layout/list_array.hpp>
-#include <sparrow/layout/null_array.hpp>
-#include <sparrow/layout/primitive_layout/primitive_array.hpp>
-#include <sparrow/layout/run_end_encoded_layout/run_end_encoded_array.hpp>
-#include <sparrow/layout/struct_layout/struct_array.hpp>
-#include <sparrow/layout/temporal/date_array.hpp>
-#include <sparrow/layout/temporal/duration_array.hpp>
-#include <sparrow/layout/temporal/interval_array.hpp>
-#include <sparrow/layout/temporal/timestamp_array.hpp>
-#include <sparrow/layout/union_array.hpp>
-#include <sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp>
-#include <sparrow/layout/variable_size_binary_view_array.hpp>
+#include <sparrow/date_array.hpp>
+#include <sparrow/decimal_array.hpp>
+#include <sparrow/dictionary_encoded_array.hpp>
+#include <sparrow/duration_array.hpp>
+#include <sparrow/fixed_width_binary_array.hpp>
+#include <sparrow/interval_array.hpp>
+#include <sparrow/list_array.hpp>
+#include <sparrow/null_array.hpp>
+#include <sparrow/primitive_array.hpp>
+#include <sparrow/run_end_encoded_array.hpp>
+#include <sparrow/struct_array.hpp>
+#include <sparrow/timestamp_array.hpp>
+#include <sparrow/union_array.hpp>
+#include <sparrow/variable_size_binary_array.hpp>
+#include <sparrow/variable_size_binary_view_array.hpp>
 
 template <typename T>
 concept forward_iterators = requires(T& t, const T& ct) {

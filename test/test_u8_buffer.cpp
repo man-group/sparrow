@@ -14,7 +14,7 @@
 
 #include <doctest/doctest.h>
 
-#include "sparrow/buffer/u8_buffer.hpp"
+#include "sparrow/u8_buffer.hpp"
 
 TEST_SUITE("u8_buffer")
 {

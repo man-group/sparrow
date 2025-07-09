@@ -16,8 +16,8 @@
 
 #include <utility>
 
-#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 

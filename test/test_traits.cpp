@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <sparrow/layout/fixed_width_binary_array.hpp>
+#include <sparrow/fixed_width_binary_array.hpp>
 #include <sparrow/types/data_traits.hpp>
 
 /////////////////////////////////////////////////////////////////////////////////////////

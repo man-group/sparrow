@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include <sparrow/layout/null_array.hpp>
+#include <sparrow/null_array.hpp>
 #include <sparrow/utils/nullable.hpp>
 #include <sparrow/utils/ranges.hpp>
 

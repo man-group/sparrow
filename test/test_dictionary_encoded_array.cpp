@@ -18,12 +18,12 @@
 
 #include "sparrow/array.hpp"
 #include "sparrow/array_api.hpp"
-#include "sparrow/arrow_array_schema_proxy.hpp"
-#include "sparrow/layout/dictionary_encoded_array.hpp"
-#include "sparrow/layout/variable_size_binary_layout/variable_size_binary_array.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
+#include "sparrow/dictionary_encoded_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/variable_size_binary_array.hpp"
 
 #include "doctest/doctest.h"
 #include "metadata_sample.hpp"

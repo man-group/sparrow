@@ -15,7 +15,7 @@
 #include "sparrow/arrow_interface/arrow_array.hpp"
 
 #include "sparrow/arrow_interface/arrow_array_schema_common_release.hpp"
-#include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.hpp"
+#include "sparrow/layout/fixed_width_binary_array_utils.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 

@@ -17,10 +17,10 @@
 #include <chrono>
 #include <version>
 
-#include "sparrow/layout/temporal/date_types.hpp"
-#include "sparrow/layout/temporal/interval_types.hpp"
-#include "sparrow/layout/temporal/time_types.hpp"
-#include "sparrow/layout/temporal/timestamp_without_timezone_types.hpp"
+#include "sparrow/layout/date_types.hpp"
+#include "sparrow/layout/interval_types.hpp"
+#include "sparrow/layout/time_types.hpp"
+#include "sparrow/layout/timestamp_without_timezone_types.hpp"
 #include "sparrow/utils/sequence_view.hpp"
 
 #if defined(SPARROW_USE_DATE_POLYFILL)

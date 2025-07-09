@@ -16,7 +16,7 @@
 
 #include <cstdint>
 
-#include <sparrow/layout/primitive_layout/primitive_array.hpp>
+#include <sparrow/primitive_array.hpp>
 
 #include "sparrow/c_data_integration/constant.hpp"
 #include "sparrow/c_data_integration/utils.hpp"

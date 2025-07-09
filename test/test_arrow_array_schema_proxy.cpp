@@ -15,7 +15,7 @@
 
 #include <string_view>
 
-#include "sparrow/arrow_array_schema_proxy.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/utils/metadata.hpp"

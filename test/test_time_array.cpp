@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/temporal/time_array.hpp"
+#include "sparrow/time_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 
 #include "doctest/doctest.h"

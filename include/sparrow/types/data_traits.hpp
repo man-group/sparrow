@@ -19,11 +19,10 @@
 #include <string>
 #include <vector>
 
-#include "sparrow/layout/temporal/date_array.hpp"
-#include "sparrow/layout/temporal/date_types.hpp"
-#include "sparrow/layout/temporal/interval_types.hpp"
-#include "sparrow/layout/temporal/time_types.hpp"
-#include "sparrow/layout/temporal/timestamp_without_timezone_types.hpp"
+#include "sparrow/layout/date_types.hpp"
+#include "sparrow/layout/interval_types.hpp"
+#include "sparrow/layout/time_types.hpp"
+#include "sparrow/layout/timestamp_without_timezone_types.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/sequence_view.hpp"

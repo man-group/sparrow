@@ -15,8 +15,8 @@
 #include <vector>
 
 #include "sparrow/layout/array_access.hpp"
-#include "sparrow/layout/variable_size_binary_view_array.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/variable_size_binary_view_array.hpp"
 
 #include "metadata_sample.hpp"
 #include "test_utils.hpp"

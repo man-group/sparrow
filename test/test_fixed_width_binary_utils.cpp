@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/fixed_width_binary_layout/fixed_width_binary_array_utils.hpp"
+#include "sparrow/layout/fixed_width_binary_array_utils.hpp"
 
 #include "doctest/doctest.h"
 

@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "sparrow/array.hpp"
-#include "sparrow/layout/struct_layout/struct_array.hpp"
+#include "sparrow/struct_array.hpp"
 #include "sparrow/utils/contracts.hpp"
 
 #if defined(__cpp_lib_format)

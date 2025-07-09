@@ -5,7 +5,7 @@
 
 #include <cassert>
 
-#include "sparrow/layout/temporal/timestamp_array.hpp"
+#include "sparrow/timestamp_array.hpp"
 
 int main()
 {

@@ -17,12 +17,12 @@
 #include <numeric>
 #include <string>
 
-#include "sparrow/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
-#include "sparrow/layout/primitive_layout/primitive_array.hpp"
+#include "sparrow/primitive_array.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/types/data_type.hpp"
 
