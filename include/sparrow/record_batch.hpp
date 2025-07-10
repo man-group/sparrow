@@ -386,7 +386,7 @@ namespace sparrow
          *
          * @note This is primarily used for debugging and testing
          */
-        [[nodiscard]] SPARROW_API bool check_consistency() const;
+        SPARROW_API void check_consistency() const;
 
         std::optional<name_type> m_name;     ///< Optional name of the record batch
         std::vector<name_type> m_name_list;  ///< Ordered list of column names
