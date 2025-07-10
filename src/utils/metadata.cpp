@@ -20,7 +20,7 @@ namespace sparrow
     {
         int32_t value = 0;
         std::memcpy(&value, ptr, sizeof(int32_t));
-        ptr += sizeof(int32_t);
+        std::advance(ptr, sizeof(int32_t));
         return value;
     }
 
@@ -70,7 +70,7 @@ namespace sparrow
 
     key_value_view_iterator::value_type key_value_view_iterator::operator*() const
     {
-        return std::pair(m_key, m_value);
+        return std::pair(metadata_key{m_key}, metadata_value{m_value});
     }
 
     key_value_view_iterator& key_value_view_iterator::operator++()
@@ -91,7 +91,7 @@ namespace sparrow
     {
         const int32_t length = extract_int32(m_current);
         std::string_view str_view(m_current, static_cast<size_t>(length));
-        m_current += length;
+        std::advance(m_current, length);
         return str_view;
     }
 
