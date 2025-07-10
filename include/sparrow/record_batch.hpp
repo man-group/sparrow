@@ -85,9 +85,11 @@ namespace sparrow
          *
          * @tparam NR Input range type for names (convertible to std::string)
          * @tparam CR Input range type for arrays
+         * @tparam METADATA_RANGE Type of metadata container (default: std::vector<metadata_pair>)
          * @param names Input range of column names (must be unique)
          * @param columns Input range of arrays (must have equal lengths)
          * @param name Optional name for the record batch itself
+         * @param metadata Optional metadata for the record batch
          *
          * @pre std::ranges::size(names) == std::ranges::size(columns)
          * @pre All names in the range must be unique
@@ -99,12 +101,17 @@ namespace sparrow
          *
          * @throws std::invalid_argument if preconditions are violated
          */
-        template <std::ranges::input_range NR, std::ranges::input_range CR>
-            requires(
-                std::convertible_to<std::ranges::range_value_t<NR>, std::string>
-                and std::same_as<std::ranges::range_value_t<CR>, array>
-            )
-        constexpr record_batch(NR&& names, CR&& columns, std::optional<std::string_view> name = std::nullopt);
+        template <
+            std::ranges::input_range NR,
+            std::ranges::input_range CR,
+            input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires(std::convertible_to<std::ranges::range_value_t<NR>, std::string> and std::same_as<std::ranges::range_value_t<CR>, array>)
+        constexpr record_batch(
+            NR&& names,
+            CR&& columns,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        );
 
         /**
          * @brief Constructs a record_batch from arrays with existing names.
@@ -113,8 +120,10 @@ namespace sparrow
          * and used as column names in the record batch.
          *
          * @tparam CR Input range type for arrays
+         * @tparam METADATA_RANGE Type of metadata container (default: std::vector<metadata_pair>)
          * @param columns Input range of named arrays
          * @param name Optional name for the record batch itself
+         * @param metadata Optional metadata for the record batch
          *
          * @pre All arrays must have non-empty names (arr.name().has_value() && !arr.name()->empty())
          * @pre All array names must be unique within the range
@@ -125,9 +134,13 @@ namespace sparrow
          * @throws std::invalid_argument if any array lacks a name or names are not unique
          * @throws std::invalid_argument if arrays have different lengths
          */
-        template <std::ranges::input_range CR>
+        template <std::ranges::input_range CR, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::same_as<std::ranges::range_value_t<CR>, array>
-        record_batch(CR&& columns, std::optional<std::string_view> name = std::nullopt);
+        record_batch(
+            CR&& columns,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        );
 
         /**
          * @brief Constructs a record_batch from initializer list of name-array pairs.
@@ -388,9 +401,10 @@ namespace sparrow
          */
         SPARROW_API void check_consistency() const;
 
-        std::optional<name_type> m_name;     ///< Optional name of the record batch
-        std::vector<name_type> m_name_list;  ///< Ordered list of column names
-        std::vector<array> m_array_list;     ///< Ordered list of column arrays
+        std::optional<name_type> m_name;                       ///< Optional name of the record batch
+        std::optional<std::vector<metadata_pair>> m_metadata;  ///< Optional metadata for the record batch
+        std::vector<name_type> m_name_list;                    ///< Ordered list of column names
+        std::vector<array> m_array_list;                       ///< Ordered list of column arrays
         mutable std::unordered_map<name_type, const array*> m_array_map;  ///< Cache for fast name-based
                                                                           ///< lookup
         mutable bool m_dirty_map = true;  ///< Flag indicating cache needs update
@@ -419,11 +433,17 @@ namespace sparrow
      * record_batch implementation *
      *******************************/
 
-    template <std::ranges::input_range NR, std::ranges::input_range CR>
+    template <std::ranges::input_range NR, std::ranges::input_range CR, input_metadata_container METADATA_RANGE>
         requires(std::convertible_to<std::ranges::range_value_t<NR>, std::string>
                  and std::same_as<std::ranges::range_value_t<CR>, array>)
-    constexpr record_batch::record_batch(NR&& names, CR&& columns, std::optional<std::string_view> name)
+    constexpr record_batch::record_batch(
+        NR&& names,
+        CR&& columns,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
         : m_name(name)
+        , m_metadata(std::move(metadata))
         , m_name_list(to_vector<name_type>(std::forward<NR>(names)))
         , m_array_list(to_vector<array>(std::forward<CR>(columns)))
     {
@@ -445,12 +465,13 @@ namespace sparrow
         }
     }
 
-    template <std::ranges::input_range CR>
+    template <std::ranges::input_range CR, input_metadata_container METADATA_RANGE>
         requires std::same_as<std::ranges::range_value_t<CR>, array>
-    record_batch::record_batch(CR&& columns, std::optional<std::string_view> name)
+    record_batch::record_batch(CR&& columns, std::optional<std::string_view> name, std::optional<METADATA_RANGE> metadata)
         : m_name(name)
         , m_name_list(detail::get_names(columns))
         , m_array_list(to_vector<array>(std::move(columns)))
+        , m_metadata(std::move(metadata))
     {
         update_array_map_cache();
     }

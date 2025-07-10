@@ -130,7 +130,7 @@ namespace sparrow
             m_array_list[i].set_name(m_name_list[i]);
         }
         m_array_map.clear();
-        return struct_array(std::move(m_array_list), false, m_name);
+        return struct_array(std::move(m_array_list), false, m_name, std::move(m_metadata));
     }
 
     void record_batch::add_column(name_type name, array column)
