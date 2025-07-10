@@ -113,6 +113,16 @@ namespace sparrow
                         CHECK(array[i].value() == words[i]);
                     }
                 }
+                CHECK_EQ(detail::array_access::get_arrow_proxy(array).format(), "vu");
+
+                const std::vector<std::vector<byte_t>> input{
+                    {static_cast<byte_t>(1), static_cast<byte_t>(2), static_cast<byte_t>(3)},
+                    {static_cast<byte_t>(4), static_cast<byte_t>(5), static_cast<byte_t>(6)},
+                    {static_cast<byte_t>(7), static_cast<byte_t>(8), static_cast<byte_t>(9)}
+                };
+
+                binary_view_array binary_array(input, where_nulls, "name", metadata_sample_opt);
+                CHECK_EQ(detail::array_access::get_arrow_proxy(binary_array).format(), "vz");
             }
 
             SUBCASE("consistency")
