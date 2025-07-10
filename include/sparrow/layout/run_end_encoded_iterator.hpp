@@ -30,7 +30,7 @@ namespace sparrow
     class run_encoded_array_iterator : public iterator_base<
                                            run_encoded_array_iterator<is_const>,
                                            array_traits::const_reference,
-                                           std::forward_iterator_tag,
+                                           std::bidirectional_iterator_tag,
                                            array_traits::const_reference>
     {
     private:
@@ -46,12 +46,15 @@ namespace sparrow
 
         [[nodiscard]] bool equal(const run_encoded_array_iterator& rhs) const;
         void increment();
+        void decrement();
         [[nodiscard]] array_traits::const_reference dereference() const;
+
         array_ptr_type p_array = nullptr;
         array_wrapper* p_encoded_values_array = nullptr;
-        std::uint64_t m_index = 0;          // the current index / the index the user sees
-        std::uint64_t m_run_end_index = 0;  // the current index in the run ends array
-        std::uint64_t m_runs_left = 0;      // the number of runs left in the current run
+        std::uint64_t m_index = 0;           // the current index / the index the user sees
+        std::uint64_t m_run_end_index = 0;   // the current index in the run ends array
+        std::uint64_t m_acc_length_up = 0;   // the accumulated length at m_run_end_index
+        std::uint64_t m_acc_length_down = 0; // the accumulated length at m_run_end_index-1
 
         friend class iterator_access;
     };
@@ -66,7 +69,8 @@ namespace sparrow
         , p_encoded_values_array(array_ptr->p_encoded_values_array.get())
         , m_index(index)
         , m_run_end_index(run_end_index)
-        , m_runs_left(array_ptr->get_run_length(index))
+        , m_acc_length_up(m_index < p_array->size() ? p_array->get_acc_length(m_run_end_index) : p_array->m_encoded_length)
+        , m_acc_length_down(m_run_end_index == 0 ? 0 : p_array->get_acc_length(m_run_end_index-1))
     {
     }
 
@@ -80,12 +84,38 @@ namespace sparrow
     void run_encoded_array_iterator<is_const>::increment()
     {
         ++m_index;
-        --m_runs_left;
-        if (m_runs_left == 0 && m_index < p_array->size())
+        if (m_index == 0)
+        {
+            m_run_end_index = 0;
+            m_acc_length_up = p_array->get_acc_length(m_run_end_index);
+            m_acc_length_down = 0;
+        }
+        else if (m_index >= p_array->size())
+        {
+            m_run_end_index = p_array->m_encoded_length;
+        }
+        else if (m_index == m_acc_length_up)
         {
             ++m_run_end_index;
-            m_runs_left = p_array->get_run_length(m_run_end_index);
+            m_acc_length_up = p_array->get_acc_length(m_run_end_index);
+            m_acc_length_down = p_array->get_acc_length(m_run_end_index-1);
         }
+    }
+
+    template <bool is_const>
+    void run_encoded_array_iterator<is_const>::decrement()
+    {
+        if (m_index == 0)
+        {
+            m_run_end_index = p_array->m_encoded_length;
+        }
+        else if (m_index == p_array->size() || m_index == m_acc_length_down)
+        {
+            --m_run_end_index;
+            m_acc_length_up = p_array->get_acc_length(m_run_end_index);
+            m_acc_length_down = m_run_end_index == 0 ? 0 : p_array->get_acc_length(m_run_end_index - 1);
+        }
+        --m_index;
     }
 
     template <bool is_const>

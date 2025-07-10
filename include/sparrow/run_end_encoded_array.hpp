@@ -65,6 +65,8 @@ namespace sparrow
         using const_reference = array_traits::const_reference;
         using iterator = run_encoded_array_iterator<false>;
         using const_iterator = run_encoded_array_iterator<true>;
+        using reverse_iterator = std::reverse_iterator<iterator>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
         SPARROW_API explicit run_end_encoded_array(arrow_proxy proxy);
 
@@ -93,6 +95,15 @@ namespace sparrow
         [[nodiscard]] SPARROW_API const_iterator cbegin() const;
         [[nodiscard]] SPARROW_API const_iterator cend() const;
 
+        [[nodiscard]] SPARROW_API reverse_iterator rbegin();
+        [[nodiscard]] SPARROW_API reverse_iterator rend();
+
+        [[nodiscard]] SPARROW_API const_reverse_iterator rbegin() const;
+        [[nodiscard]] SPARROW_API const_reverse_iterator rend() const;
+
+        [[nodiscard]] SPARROW_API const_reverse_iterator crbegin() const;
+        [[nodiscard]] SPARROW_API const_reverse_iterator crend() const;
+
         [[nodiscard]] SPARROW_API array_traits::const_reference front() const;
         [[nodiscard]] SPARROW_API array_traits::const_reference back() const;
 
@@ -118,7 +129,7 @@ namespace sparrow
         extract_length_and_null_count(const array&, const array&);
         [[nodiscard]] SPARROW_API static acc_length_ptr_variant_type
         get_acc_lengths_ptr(const array_wrapper& ar);
-        [[nodiscard]] SPARROW_API std::uint64_t get_run_length(std::uint64_t run_index) const;
+        [[nodiscard]] SPARROW_API std::uint64_t get_acc_length(std::uint64_t run_index) const;
 
         [[nodiscard]] SPARROW_API arrow_proxy& get_arrow_proxy();
         [[nodiscard]] SPARROW_API const arrow_proxy& get_arrow_proxy() const;
