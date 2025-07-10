@@ -69,21 +69,12 @@ namespace sparrow
         return m_proxy.metadata();
     }
 
-    auto run_end_encoded_array::get_run_length(std::uint64_t run_index) const -> std::uint64_t
+    auto run_end_encoded_array::get_acc_length(std::uint64_t run_index) const -> std::uint64_t
     {
         auto ret = std::visit(
             [run_index](auto&& acc_lengths_ptr) -> std::uint64_t
             {
-                if (run_index == 0)
-                {
-                    return static_cast<std::uint64_t>(acc_lengths_ptr[run_index]);
-                }
-                else
-                {
-                    return static_cast<std::uint64_t>(
-                        acc_lengths_ptr[run_index] - acc_lengths_ptr[run_index - 1]
-                    );
-                }
+                return static_cast<std::uint64_t>(acc_lengths_ptr[run_index]);
             },
             m_acc_lengths
         );
@@ -112,7 +103,7 @@ namespace sparrow
 
     auto run_end_encoded_array::end() -> iterator
     {
-        return iterator(this, size(), 0);
+        return iterator(this, size(), m_encoded_length);
     }
 
     auto run_end_encoded_array::begin() const -> const_iterator
@@ -132,7 +123,37 @@ namespace sparrow
 
     auto run_end_encoded_array::cend() const -> const_iterator
     {
-        return const_iterator(this, size(), 0);
+        return const_iterator(this, size(), m_encoded_length);
+    }
+
+    auto run_end_encoded_array::rbegin() -> reverse_iterator
+    {
+        return reverse_iterator(end());
+    }
+
+    auto run_end_encoded_array::rend() -> reverse_iterator
+    {
+        return reverse_iterator(begin());
+    }
+
+    auto run_end_encoded_array::rbegin() const -> const_reverse_iterator
+    {
+        return crbegin();
+    }
+
+    auto run_end_encoded_array::rend() const -> const_reverse_iterator
+    {
+        return crend();
+    }
+
+    auto run_end_encoded_array::crbegin() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cend());
+    }
+
+    auto run_end_encoded_array::crend() const -> const_reverse_iterator
+    {
+        return const_reverse_iterator(cbegin());
     }
 
     auto run_end_encoded_array::front() const -> array_traits::const_reference

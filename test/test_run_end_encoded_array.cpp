@@ -197,7 +197,55 @@ namespace sparrow
                 }
             }
 
-            SUBCASE("consitency")
+            SUBCASE("reverse_iterator")
+            {
+                auto iter = rle_array.rbegin();
+                // check elements
+                for (std::size_t i = 0; i < n; ++i)
+                {
+                    REQUIRE(iter != rle_array.rend());
+                    const auto idx = rle_array.size() - i - 1;
+                    CHECK(iter->has_value() == bool(expected_bitmap[idx]));
+                    if (iter->has_value())
+                    {
+                        auto val = *iter;
+#if SPARROW_GCC_11_2_WORKAROUND
+                        using variant_type = std::decay_t<decltype(val)>;
+                        using base_type = typename variant_type::base_type;
+#endif
+                        std::visit(
+                            [&](auto&& nullable) -> void
+                            {
+                                using T = std::decay_t<decltype(nullable)>;
+                                using inner_type = std::decay_t<typename T::value_type>;
+                                if constexpr (std::is_same_v<inner_type, inner_value_type>)
+                                {
+                                    if (nullable.has_value())
+                                    {
+                                        CHECK(nullable.value() == expected_values[idx]);
+                                    }
+                                    else
+                                    {
+                                        CHECK(false);
+                                    }
+                                }
+                                else
+                                {
+                                    CHECK(false);
+                                }
+                            },
+#if SPARROW_GCC_11_2_WORKAROUND
+                            *static_cast<const base_type*>(&val)
+#else
+                            val
+#endif
+                        );
+                    }
+                    ++iter;
+                }
+            }
+
+            SUBCASE("consistency")
             {
                 test::generic_consistency_test(rle_array);
             }
