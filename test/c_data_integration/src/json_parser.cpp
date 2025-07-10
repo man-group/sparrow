@@ -271,7 +271,7 @@ namespace sparrow::c_data_integration
         std::optional<std::vector<sparrow::metadata_pair>> metadata;
         if (root.at("schema").contains("metadata"))
         {
-            metadata = utils::get_metadata(root.at("schema").at("metadata"));
+            metadata = utils::get_metadata(root.at("schema"));
         }
         return sparrow::record_batch{names, std::move(arrays), "", std::move(metadata)};
     }
