@@ -472,9 +472,9 @@ namespace sparrow
         requires std::same_as<std::ranges::range_value_t<CR>, array>
     record_batch::record_batch(CR&& columns, std::optional<std::string_view> name, std::optional<METADATA_RANGE> metadata)
         : m_name(name)
+        , m_metadata(std::move(metadata))
         , m_name_list(detail::get_names(columns))
         , m_array_list(to_vector<array>(std::move(columns)))
-        , m_metadata(std::move(metadata))
     {
         update_array_map_cache();
     }
