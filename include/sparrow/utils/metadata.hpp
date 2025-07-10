@@ -40,7 +40,8 @@ namespace sparrow
      * Represents the key portion of a metadata key-value pair as a string view.
      * String views are used for efficiency to avoid unnecessary string copies.
      */
-    using metadata_key = std::string_view;
+    using metadata_key = std::string;
+    using metadata_key_const_reference = std::string_view;
 
     /**
      * @brief Type alias for metadata values.
@@ -48,7 +49,8 @@ namespace sparrow
      * Represents the value portion of a metadata key-value pair as a string view.
      * String views are used for efficiency to avoid unnecessary string copies.
      */
-    using metadata_value = std::string_view;
+    using metadata_value = std::string;
+    using metadata_value_const_reference = std::string_view;
 
     /**
      * @brief Type alias for metadata key-value pairs.
@@ -57,6 +59,7 @@ namespace sparrow
      * both as string views for efficient processing.
      */
     using metadata_pair = std::pair<metadata_key, metadata_value>;
+    using metadata_pair_const_reference = std::pair<metadata_key_const_reference, metadata_value_const_reference>;
 
     /**
      * @brief Helper function to extract a 32-bit integer from a character buffer.
@@ -94,7 +97,7 @@ namespace sparrow
     public:
 
         // using iterator_category = std::input_iterator_tag;
-        using value_type = metadata_pair;
+        using value_type = metadata_pair_const_reference;
         using difference_type = std::ptrdiff_t;
         using pointer = value_type*;
         using reference = value_type&;
@@ -321,18 +324,23 @@ namespace sparrow
      * @return String containing the binary representation
      *
      * @pre T must satisfy input_metadata_container concept
+     * @pre Container size must be < INT32_MAX
      * @pre All keys and values must have size < INT32_MAX
      * @post Returned string contains valid binary metadata format
      * @post String can be used to reconstruct the metadata pairs via key_value_view
      *
-     * @note Internal assertions verify that key and value sizes fit in int32_t:
+     * @note Internal assertions verify size constraints:
+     *   - SPARROW_ASSERT_TRUE(std::cmp_less(metadata.size(), std::numeric_limits<int32_t>::max()))
      *   - SPARROW_ASSERT_TRUE(std::cmp_less(key.size(), std::numeric_limits<int32_t>::max()))
      *   - SPARROW_ASSERT_TRUE(std::cmp_less(value.size(), std::numeric_limits<int32_t>::max()))
      */
     template <input_metadata_container T>
     std::string get_metadata_from_key_values(const T& metadata)
     {
+        // Check that the number of key-value pairs fits in int32_t
+        SPARROW_ASSERT_TRUE(std::cmp_less(metadata.size(), std::numeric_limits<int32_t>::max()));
         const auto number_of_key_values = static_cast<int32_t>(metadata.size());
+
         const size_t metadata_size = std::accumulate(
             metadata.cbegin(),
             metadata.cend(),
@@ -347,27 +355,30 @@ namespace sparrow
         );
         const size_t total_size = sizeof(int32_t) + metadata_size;
         std::string metadata_buf(total_size, '\0');
-        char* metadata_ptr = metadata_buf.data();
-        std::memcpy(metadata_ptr, &number_of_key_values, sizeof(int32_t));
-        metadata_ptr += sizeof(int32_t);
+
+        // Use iterators instead of pointer arithmetic to avoid warnings
+        auto metadata_iter = metadata_buf.begin();
+        std::memcpy(&(*metadata_iter), &number_of_key_values, sizeof(int32_t));
+        std::advance(metadata_iter, sizeof(int32_t));
+
         for (const auto& [key, value] : metadata)
         {
             SPARROW_ASSERT_TRUE(std::cmp_less(key.size(), std::numeric_limits<int32_t>::max()));
             SPARROW_ASSERT_TRUE(std::cmp_less(value.size(), std::numeric_limits<int32_t>::max()));
 
             const auto key_size = static_cast<int32_t>(key.size());
-            std::memcpy(metadata_ptr, &key_size, sizeof(int32_t));
-            metadata_ptr += sizeof(int32_t);
+            std::memcpy(&(*metadata_iter), &key_size, sizeof(int32_t));
+            std::advance(metadata_iter, sizeof(int32_t));
 
-            sparrow::ranges::copy(key, metadata_ptr);
-            metadata_ptr += key.size();
+            sparrow::ranges::copy(key, &(*metadata_iter));
+            std::advance(metadata_iter, key.size());
 
             const auto value_size = static_cast<int32_t>(value.size());
-            std::memcpy(metadata_ptr, &value_size, sizeof(int32_t));
-            metadata_ptr += sizeof(int32_t);
+            std::memcpy(&(*metadata_iter), &value_size, sizeof(int32_t));
+            std::advance(metadata_iter, sizeof(int32_t));
 
-            sparrow::ranges::copy(value, metadata_ptr);
-            metadata_ptr += value.size();
+            sparrow::ranges::copy(value, &(*metadata_iter));
+            std::advance(metadata_iter, value.size());
         }
         return metadata_buf;
     }

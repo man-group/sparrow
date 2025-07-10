@@ -20,6 +20,7 @@
 
 #include "sparrow/array.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
+#include "sparrow/utils/metadata.hpp"
 
 namespace sparrow::c_data_integration
 {
@@ -76,6 +77,54 @@ namespace sparrow::c_data_integration
         //         }
         //     }
         // }
+
+        auto metadata_to_string = [](const char* metadata) -> std::string
+        {
+            if (metadata == nullptr)
+            {
+                return "nullptr";
+            }
+            sparrow::key_value_view metadata_view(metadata);
+            constexpr std::string_view opening_bracket = "(";
+            constexpr std::string_view closing_bracket = ")";
+            constexpr std::string_view separator = ": ";
+            std::string result;
+            for (const auto& pair : metadata_view)
+            {
+                result += opening_bracket;
+                result += std::string(pair.first);
+                result += separator;
+                result += std::string(pair.second);
+                result += closing_bracket;
+            }
+            return result;
+        };
+
+        // check metadata
+        if (schema->metadata != nullptr || schema_from_json->metadata != nullptr)
+        {
+            const std::string pointer_metadata = metadata_to_string(schema->metadata);
+            const std::string json_metadata = metadata_to_string(schema_from_json->metadata);
+            if ((schema->metadata != nullptr) != (schema_from_json->metadata != nullptr))
+            {
+                differences.push_back(
+                    prefix_with_name + " metadata mismatch: pointer=" + pointer_metadata
+                    + " vs json=" + json_metadata
+                );
+            }
+            else if (schema->metadata != nullptr && schema_from_json->metadata != nullptr)
+            {
+                if (pointer_metadata != json_metadata)
+                {
+                    // If metadata is not equal, we need to show the differences
+                    differences.push_back(
+                        prefix_with_name + " metadata mismatch: \npointer=" + pointer_metadata
+                        + "vs json=" + json_metadata
+                    );
+                }
+            }
+        }
+
         if (schema->flags != schema_from_json->flags)
         {
             differences.push_back(
