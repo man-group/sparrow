@@ -145,6 +145,12 @@ namespace sparrow::c_data_integration
         {
             return prefix_with_name + " is null";
         }
+        if (array->null_count != array_from_json->null_count)
+        {
+            return prefix_with_name + " null count mismatch: pointer=" + std::to_string(array->null_count)
+                   + " vs json=" + std::to_string(array_from_json->null_count);
+        }
+
         std::vector<std::string> differences;
         const sparrow::array array_from_ptr(array, schema_from_json);
         const sparrow::array array_from_json_ptr(array_from_json, schema_from_json);
