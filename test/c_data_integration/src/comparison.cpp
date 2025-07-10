@@ -119,7 +119,7 @@ namespace sparrow::c_data_integration
                     // If metadata is not equal, we need to show the differences
                     differences.push_back(
                         prefix_with_name + " metadata mismatch: \npointer=" + pointer_metadata
-                        + "\nvs\njson=" + json_metadata
+                        + "vs json=" + json_metadata
                     );
                 }
             }
