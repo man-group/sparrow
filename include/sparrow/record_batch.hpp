@@ -105,7 +105,10 @@ namespace sparrow
             std::ranges::input_range NR,
             std::ranges::input_range CR,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(std::convertible_to<std::ranges::range_value_t<NR>, std::string> and std::same_as<std::ranges::range_value_t<CR>, array>)
+            requires(
+                std::convertible_to<std::ranges::range_value_t<NR>, std::string>
+                and std::same_as<std::ranges::range_value_t<CR>, array>
+            )
         constexpr record_batch(
             NR&& names,
             CR&& columns,
