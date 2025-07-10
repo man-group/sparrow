@@ -41,6 +41,7 @@ namespace sparrow
      * String views are used for efficiency to avoid unnecessary string copies.
      */
     using metadata_key = std::string;
+    using metadata_key_const_reference = std::string_view;
 
     /**
      * @brief Type alias for metadata values.
@@ -49,6 +50,7 @@ namespace sparrow
      * String views are used for efficiency to avoid unnecessary string copies.
      */
     using metadata_value = std::string;
+    using metadata_value_const_reference = std::string_view;
 
     /**
      * @brief Type alias for metadata key-value pairs.
@@ -57,6 +59,7 @@ namespace sparrow
      * both as string views for efficient processing.
      */
     using metadata_pair = std::pair<metadata_key, metadata_value>;
+    using metadata_pair_const_reference = std::pair<metadata_key_const_reference, metadata_value_const_reference>;
 
     /**
      * @brief Helper function to extract a 32-bit integer from a character buffer.
@@ -94,7 +97,7 @@ namespace sparrow
     public:
 
         // using iterator_category = std::input_iterator_tag;
-        using value_type = metadata_pair;
+        using value_type = metadata_pair_const_reference;
         using difference_type = std::ptrdiff_t;
         using pointer = value_type*;
         using reference = value_type&;

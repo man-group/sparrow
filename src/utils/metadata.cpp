@@ -70,7 +70,7 @@ namespace sparrow
 
     key_value_view_iterator::value_type key_value_view_iterator::operator*() const
     {
-        return std::pair(metadata_key{m_key}, metadata_value{m_value});
+        return std::pair(m_key, m_value);
     }
 
     key_value_view_iterator& key_value_view_iterator::operator++()
