@@ -19,19 +19,17 @@ FROM apache/arrow-dev:amd64-conda-integration
 
 ENV ARROW_USE_CCACHE=OFF \
     ARROW_CPP_EXE_PATH=/build/cpp/debug \
-    ARROW_NANOARROW_PATH=/build/nanoarrow \
     BUILD_DOCS_CPP=OFF \
     ARROW_INTEGRATION_CPP=ON \
     ARROW_INTEGRATION_CSHARP=OFF \
     ARROW_INTEGRATION_GO=OFF \
     ARROW_INTEGRATION_JAVA=OFF \
     ARROW_INTEGRATION_JS=OFF \
-    ARCHERY_INTEGRATION_WITH_NANOARROW="1" \
+    ARCHERY_INTEGRATION_WITH_NANOARROW="0" \
     ARCHERY_INTEGRATION_WITH_RUST="0"
 
 ENV ARROW_USE_CCACHE=OFF
 ENV ARROW_CPP_EXE_PATH=/build/cpp/debug
-ENV ARROW_NANOARROW_PATH=/build/nanoarrow
 ENV BUILD_DOCS_CPP=OFF
 
 RUN apt update
@@ -40,9 +38,6 @@ RUN apt install build-essential git -y
 
 # Clone the arrow monorepo // TODO: change to the official repo
 RUN git clone --depth 1 --branch try_both_fix https://github.com/Alex-PLACET/arrow.git /arrow-integration --recurse-submodules
-
-# Clone the nanoarrow repo
-RUN git clone --depth 1 --branch apache-arrow-nanoarrow-0.7.0 https://github.com/apache/arrow-nanoarrow /arrow-integration/nanoarrow
 
 # Build all the integrations
 RUN conda run --no-capture-output \
