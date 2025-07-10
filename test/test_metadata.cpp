@@ -31,6 +31,16 @@ TEST_SUITE("metadata")
         auto kv_2 = *kv_it;
         CHECK_EQ(kv_2.first, "key2");
         CHECK_EQ(kv_2.second, "val2");
+
+        // Test iterator end
+        kv_it = key_values.cbegin();
+        auto kv_end = key_values.cend();
+        while (kv_it != kv_end)
+        {
+            ++kv_it;
+        }
+
+        CHECK_EQ(kv_it, kv_end);
     }
 
     TEST_CASE("get_metadata_from_key_values")

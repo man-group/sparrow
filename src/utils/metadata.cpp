@@ -61,7 +61,7 @@ namespace sparrow
         , m_current(parent.m_ptr)
     {
         SPARROW_ASSERT_TRUE(m_index >= 0);
-        SPARROW_ASSERT_TRUE(m_index < m_parent->m_num_pairs);
+        SPARROW_ASSERT_TRUE(m_index <= m_parent->m_num_pairs);
         for (int32_t i = 0; i <= m_index; ++i)
         {
             extract_key_value();
@@ -76,11 +76,15 @@ namespace sparrow
     key_value_view_iterator& key_value_view_iterator::operator++()
     {
         ++m_index;
-        if (m_index < m_parent->m_num_pairs)
-        {
-            extract_key_value();
-        }
+        extract_key_value();
         return *this;
+    }
+
+    key_value_view_iterator key_value_view_iterator::operator++(int)
+    {
+        key_value_view_iterator ret(*this);
+        ++(*this);
+        return ret;
     }
 
     std::string_view key_value_view_iterator::extract_string_view()
@@ -93,7 +97,16 @@ namespace sparrow
 
     void key_value_view_iterator::extract_key_value()
     {
-        m_key = extract_string_view();
-        m_value = extract_string_view();
+        if (m_index >= m_parent->m_num_pairs)
+        {
+            m_key = std::string_view{};
+            m_value = std::string_view{};
+            m_current = nullptr;
+        }
+        else
+        {
+            m_key = extract_string_view();
+            m_value = extract_string_view();
+        }
     }
 }
