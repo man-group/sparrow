@@ -731,8 +731,8 @@ namespace sparrow
             true
         );
 
-        auto validity_bitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
-        std::vector<buffer<uint8_t>> buffers{std::move(validity_bitmap).extract_storage(), std::move(buffer_view)};
+        auto bitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
+        std::vector<buffer<uint8_t>> buffers{std::move(bitmap).extract_storage(), std::move(buffer_view)};
         for (auto&& buf : value_buffers)
         {
             buffers.push_back(std::forward<decltype(buf)>(buf));
