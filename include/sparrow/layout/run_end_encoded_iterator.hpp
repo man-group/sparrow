@@ -51,10 +51,10 @@ namespace sparrow
 
         array_ptr_type p_array = nullptr;
         array_wrapper* p_encoded_values_array = nullptr;
-        std::uint64_t m_index = 0;           // the current index / the index the user sees
-        std::uint64_t m_run_end_index = 0;   // the current index in the run ends array
-        std::uint64_t m_acc_length_up = 0;   // the accumulated length at m_run_end_index
-        std::uint64_t m_acc_length_down = 0; // the accumulated length at m_run_end_index-1
+        std::uint64_t m_index = 0;            // the current index / the index the user sees
+        std::uint64_t m_run_end_index = 0;    // the current index in the run ends array
+        std::uint64_t m_acc_length_up = 0;    // the accumulated length at m_run_end_index
+        std::uint64_t m_acc_length_down = 0;  // the accumulated length at m_run_end_index-1
 
         friend class iterator_access;
     };
@@ -69,8 +69,10 @@ namespace sparrow
         , p_encoded_values_array(array_ptr->p_encoded_values_array.get())
         , m_index(index)
         , m_run_end_index(run_end_index)
-        , m_acc_length_up(m_index < p_array->size() ? p_array->get_acc_length(m_run_end_index) : p_array->m_encoded_length)
-        , m_acc_length_down(m_run_end_index == 0 ? 0 : p_array->get_acc_length(m_run_end_index-1))
+        , m_acc_length_up(
+              m_index < p_array->size() ? p_array->get_acc_length(m_run_end_index) : p_array->m_encoded_length
+          )
+        , m_acc_length_down(m_run_end_index == 0 ? 0 : p_array->get_acc_length(m_run_end_index - 1))
     {
     }
 
@@ -98,7 +100,7 @@ namespace sparrow
         {
             ++m_run_end_index;
             m_acc_length_up = p_array->get_acc_length(m_run_end_index);
-            m_acc_length_down = p_array->get_acc_length(m_run_end_index-1);
+            m_acc_length_down = p_array->get_acc_length(m_run_end_index - 1);
         }
     }
 

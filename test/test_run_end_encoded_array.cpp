@@ -243,7 +243,6 @@ namespace sparrow
                     }
                     ++iter;
                 }
-
             }
 
             SUBCASE("consistency")
