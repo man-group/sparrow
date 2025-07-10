@@ -633,7 +633,8 @@ namespace sparrow
             // create arrow schema and array
             const repeat_view<bool> children_ownership(true, 0);
             ArrowSchema schema = make_arrow_schema(
-                std::is_same<T, std::string_view>::value ? std::string_view("vu") : std::string_view("vz"),
+                std::is_same<T, arrow_traits<std::string>::value_type>::value ? std::string_view("vu")
+                                                                              : std::string_view("vz"),
                 std::move(name),      // name
                 std::move(metadata),  // metadata
                 std::nullopt,         // flags
