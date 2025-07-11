@@ -26,9 +26,10 @@ namespace sparrow
 {
 
     template <class T>
-    concept layout = requires(T& t) {
-        // inner_value_type
+    concept layout = requires(const T& t) {
         typename T::inner_value_type;
+        typename T::value_type;
+        typename T::const_reference;
 
         t[std::size_t()];
         t.size();
@@ -36,6 +37,10 @@ namespace sparrow
         t.end();
         t.cbegin();
         t.cend();
+        t.rbegin();
+        t.rend();
+        t.crbegin();
+        t.crend();
     };
 
     namespace detail
