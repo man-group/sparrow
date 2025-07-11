@@ -238,6 +238,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_array_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_reference.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/interval_types.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_concept.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_value.hpp

@@ -127,14 +127,6 @@ namespace sparrow
         self_type& operator=(self_type&&) = default;
 
         /**
-         * Access operator for getting element at index.
-         *
-         * @param i The index of the element to access.
-         * @return Constant reference to the element at the specified index.
-         */
-        [[nodiscard]] SPARROW_API array_traits::const_reference operator[](std::uint64_t i);
-
-        /**
          * Constant access operator for getting element at index.
          *
          * @param i The index of the element to access.

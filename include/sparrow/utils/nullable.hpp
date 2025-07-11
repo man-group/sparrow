@@ -1122,6 +1122,19 @@ namespace sparrow
          */
         constexpr bool has_value() const;
     };
+
+    template <class T>
+    struct is_nullable_variant : std::false_type
+    {
+    };
+
+    template <class... T>
+    struct is_nullable_variant<nullable_variant<T...>> : std::true_type
+    {
+    };
+
+    template <class T>
+    inline constexpr bool is_nullable_variant_v = is_nullable_variant<T>::value;
 }
 
 namespace std

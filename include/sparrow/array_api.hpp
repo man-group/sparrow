@@ -18,6 +18,7 @@
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/layout_concept.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/null_array.hpp"
 #include "sparrow/types/data_traits.hpp"

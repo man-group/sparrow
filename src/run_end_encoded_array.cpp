@@ -91,11 +91,6 @@ namespace sparrow
         return m_proxy;
     }
 
-    auto run_end_encoded_array::operator[](std::uint64_t i) -> array_traits::const_reference
-    {
-        return static_cast<const run_end_encoded_array*>(this)->operator[](i);
-    }
-
     auto run_end_encoded_array::begin() -> iterator
     {
         return iterator(this, 0, 0);
