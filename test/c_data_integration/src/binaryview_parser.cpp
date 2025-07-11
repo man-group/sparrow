@@ -63,6 +63,9 @@ namespace sparrow::c_data_integration
                         data_bytes.push_back(static_cast<std::byte>(static_cast<unsigned char>(c)));
                     }
                 }
+                
+                // This ensures that if the length is less than 12, the remaining bytes are zeroed out
+                std::memset(view_ptr, 0, VIEW_STRUCTURE_SIZE);
 
                 std::memcpy(view_ptr, &length, sizeof(std::int32_t));
 
