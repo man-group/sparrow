@@ -25,7 +25,8 @@
 namespace sparrow::c_data_integration
 {
 
-    sparrow::u8_buffer<uint8_t> create_buffer_view_from_json(const nlohmann::json& views_json, bool is_binary_type)
+    sparrow::u8_buffer<uint8_t>
+    create_buffer_view_from_json(const nlohmann::json& views_json, bool is_binary_type)
     {
         constexpr std::size_t VIEW_STRUCTURE_SIZE = 16;
         const std::size_t element_count = views_json.size();
@@ -46,7 +47,7 @@ namespace sparrow::c_data_integration
                 const std::string inlined_data = view_json.at(INLINED).get<std::string>();
                 // Use the SIZE field from JSON as the authoritative length
                 const auto length = static_cast<std::int32_t>(view_json.at(SIZE).get<int>());
-                
+
                 std::vector<std::byte> data_bytes;
                 if (is_binary_type)
                 {
@@ -62,10 +63,13 @@ namespace sparrow::c_data_integration
                         data_bytes.push_back(static_cast<std::byte>(static_cast<unsigned char>(c)));
                     }
                 }
-                
+
                 std::memcpy(view_ptr, &length, sizeof(std::int32_t));
 
-                const std::size_t inline_size = std::min(static_cast<std::size_t>(length), static_cast<std::size_t>(12));
+                const std::size_t inline_size = std::min(
+                    static_cast<std::size_t>(length),
+                    static_cast<std::size_t>(12)
+                );
                 std::memcpy(view_ptr + 4, data_bytes.data(), inline_size);
             }
             else
@@ -75,7 +79,7 @@ namespace sparrow::c_data_integration
                 const auto offset = static_cast<std::int32_t>(view_json.at(OFFSET).get<int>());
                 const auto size = static_cast<std::int32_t>(view_json.at(SIZE).get<int>());
                 const std::string prefix_hex = view_json.at(PREFIX_HEX).get<std::string>();
-                
+
                 std::vector<std::byte> prefix_bytes;
                 if (is_binary_type)
                 {
@@ -108,8 +112,12 @@ namespace sparrow::c_data_integration
     }
 
     template <typename T>
-    sparrow::array
-    binaryview_array_from_json_impl(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&, bool is_binary_type)
+    sparrow::array binaryview_array_from_json_impl(
+        const nlohmann::json& array,
+        const nlohmann::json& schema,
+        const nlohmann::json&,
+        bool is_binary_type
+    )
     {
         const auto& variadic_data_buffers_json = array.at(VARIADIC_DATA_BUFFERS);
         const std::vector<std::string> variadic_data_buffers_str = variadic_data_buffers_json
@@ -167,14 +175,16 @@ namespace sparrow::c_data_integration
     binaryview_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
         utils::check_type(schema, "binaryview");
-        return binaryview_array_from_json_impl<binary_view_array>(array, schema, root, true); // true for binary type
+        return binaryview_array_from_json_impl<binary_view_array>(array, schema, root, true);  // true for
+                                                                                               // binary type
     }
 
     sparrow::array
     utf8view_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
         utils::check_type(schema, "utf8view");
-        return binaryview_array_from_json_impl<string_view_array>(array, schema, root, false); // false for string type
+        return binaryview_array_from_json_impl<string_view_array>(array, schema, root, false);  // false for
+                                                                                                // string type
     }
 
 }
