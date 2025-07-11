@@ -78,4 +78,3 @@ static_assert(sparrow::layout<sparrow::timestamp_nanoseconds_array>);
 
 static_assert(!sparrow::layout<std::vector<int32_t>>);
 static_assert(!sparrow::layout<std::array<int32_t, 10>>);
-
