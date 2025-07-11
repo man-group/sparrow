@@ -310,7 +310,7 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API static acc_length_ptr_variant_type
         get_acc_lengths_ptr(const array_wrapper& ar);
-        
+
         /**
          * Gets the run-end value at the given index as an unsigned 64-bits integer.
          *
