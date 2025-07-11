@@ -68,8 +68,30 @@ namespace sparrow
         using reverse_iterator = std::reverse_iterator<iterator>;
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
+        /**
+         * @brief Constructs run-end encoded array from Arrow proxy.
+         *
+         * @param proxy Arrow proxy containing run-end encoded array data and schema
+         *
+         * @pre proxy must contain valid run-end encoded array and schema
+         * @pre proxy format must be "+r"
+         * @pre proxy must have two children arrays
+         * @post Array is initialized with data from proxy
+         */
         SPARROW_API explicit run_end_encoded_array(arrow_proxy proxy);
 
+        /**
+         * @brief Generic constructor for creating run-end encoded array.
+         *
+         * Creates a run-end encoded array from various input types.
+         * Arguments are forwarded to compatible create_proxy() functions.
+         *
+         * @tparam Args Parameter pack for constructor arguments
+         * @param args Constructor arguments (data ranges, validity, metadata, etc.)
+         *
+         * @pre Arguments must match one of the create_proxy() overload signatures
+         * @post Array is created the specified data and configuration.
+         */
         template <class... Args>
             requires(mpl::excludes_copy_and_move_ctor_v<run_end_encoded_array, Args...>)
         explicit run_end_encoded_array(Args&&... args)
@@ -77,44 +99,188 @@ namespace sparrow
         {
         }
 
+        /**
+         * @brief Copy constructor.
+         *
+         * @param rhs Source array to copy from
+         *
+         * @pre rhs must be in a valid state
+         * @post This array contains a deep copy of rhs data
+         * @post Child arrays and offset pointers are reconstructed
+         */
         SPARROW_API run_end_encoded_array(const self_type&);
+
+        /**
+         * @brief Copy assignment operator.
+         *
+         * @param rhs Source array to copy from
+         * @return Reference to this array
+         *
+         * @pre rhs must be in a valid state
+         * @post This array contains a deep copy of rhs data
+         * @post Previous data is properly released
+         * @post Child arrays and offset pointers are reconstructed
+         */
         SPARROW_API self_type& operator=(const self_type&);
 
         run_end_encoded_array(self_type&&) = default;
         self_type& operator=(self_type&&) = default;
 
+        /**
+         * Access operator for getting element at index.
+         *
+         * @param i The index of the element to access.
+         * @return Constant reference to the element at the specified index.
+         */
         [[nodiscard]] SPARROW_API array_traits::const_reference operator[](std::uint64_t i);
+
+        /**
+         * Constant access operator for getting element at index.
+         *
+         * @param i The index of the element to access.
+         * @return Constant reference to the element at the specified index.
+         */
         [[nodiscard]] SPARROW_API array_traits::const_reference operator[](std::uint64_t i) const;
 
+        /**
+         * Gets an iterator to the beginning of the array.
+         *
+         * @return Iterator to the beginning.
+         */
         [[nodiscard]] SPARROW_API iterator begin();
+
+
+        /**
+         * Gets an iterator to the end of the array.
+         *
+         * @return Iterator to the end.
+         */
         [[nodiscard]] SPARROW_API iterator end();
 
+        /**
+         * Gets a constant iterator to the beginning of the array.
+         *
+         * @return Constant iterator to the beginning.
+         */
         [[nodiscard]] SPARROW_API const_iterator begin() const;
+
+        /**
+         * Gets a constant iterator to the end of the array.
+         *
+         * @return Constant iterator to the end.
+         */
         [[nodiscard]] SPARROW_API const_iterator end() const;
 
+        /**
+         * Gets a constant iterator to the beginning of the array.
+         *
+         * @return Constant iterator to the beginning.
+         */
         [[nodiscard]] SPARROW_API const_iterator cbegin() const;
+
+        /**
+         * Gets a constant iterator to the end of the array.
+         *
+         * @return Constant iterator to the end.
+         */
         [[nodiscard]] SPARROW_API const_iterator cend() const;
 
+        /**
+         * Gets a reverse iterator to the beginning of the reversed array.
+         *
+         * @return Reverse iterator to the beginning.
+         */
         [[nodiscard]] SPARROW_API reverse_iterator rbegin();
+
+        /**
+         * Gets a reverse iterator to the end of the reversed array.
+         *
+         * @return Reverse iterator to the end.
+         */
         [[nodiscard]] SPARROW_API reverse_iterator rend();
 
+        /**
+         * Gets a constant reverse iterator to the beginning of reversed the array.
+         *
+         * @return Constant reverse iterator to the beginning.
+         */
         [[nodiscard]] SPARROW_API const_reverse_iterator rbegin() const;
+
+        /**
+         * Gets a constant reverse iterator to the end of the reversed array.
+         *
+         * @return Constant reverse iterator to the end.
+         */
         [[nodiscard]] SPARROW_API const_reverse_iterator rend() const;
 
+        /**
+         * Gets a constant reverse iterator to the beginning of reversed the array.
+         *
+         * @return Constant reverse iterator to the beginning.
+         */
         [[nodiscard]] SPARROW_API const_reverse_iterator crbegin() const;
+
+        /**
+         * Gets a constant reverse iterator to the end of the reversed array.
+         *
+         * @return Constant reverse iterator to the end.
+         */
         [[nodiscard]] SPARROW_API const_reverse_iterator crend() const;
 
+        /**
+         * Gets a constant reference to the first element.
+         *
+         * @return Constant reference to the first element.
+         */
         [[nodiscard]] SPARROW_API array_traits::const_reference front() const;
+
+        /**
+         * Gets a reference to the last element.
+         *
+         * @return Constant reference to the last element.
+         */
         [[nodiscard]] SPARROW_API array_traits::const_reference back() const;
 
+        /**
+         * Checks if the array is empty.
+         *
+         * @return true if the array is empty, false otherwise.
+         */
         [[nodiscard]] SPARROW_API bool empty() const;
+
+        /**
+         * Gets the number of elements in the array.
+         *
+         * @return The number of elements.
+         */
         [[nodiscard]] SPARROW_API size_type size() const;
 
+        /**
+         * Gets the name of the array.
+         *
+         * @return Optional name of the array.
+         */
         [[nodiscard]] std::optional<std::string_view> name() const;
+
+        /**
+         * Gets the metadata of the array.
+         *
+         * @return Optional metadata of the array.
+         */
         [[nodiscard]] std::optional<key_value_view> metadata() const;
 
     private:
 
+        /**
+         * Creates an arrow proxy from run-ends and values children arrays.
+         *
+         * @tparam METADATA_RANGE The metadata container type.
+         * @param acc_lengths The array containing the accumulated lengths (run-ends)
+         * @param encoded_values The array containing the values
+         * @param name Optional name for the array.
+         * @param metadata Optional metadata for the array.
+         * @return An arrow proxy containing the run-end encoded array data.
+         */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
             array&& acc_lengths,
@@ -125,20 +291,58 @@ namespace sparrow
 
         using acc_length_ptr_variant_type = std::variant<const std::int16_t*, const std::int32_t*, const std::int64_t*>;
 
+        /**
+         * Extracts the logical length and null count of the run-end encoded array
+         * from its children.
+         *
+         * @param acc_lenghts_arr The child array containing the run-ends.
+         * @param encoded_values_arr The child array containing the values.
+         * @return a pair containing the length and the null count of the array.
+         */
         [[nodiscard]] SPARROW_API static std::pair<std::int64_t, std::int64_t>
-        extract_length_and_null_count(const array&, const array&);
+        extract_length_and_null_count(const array& acc_lengths_arr, const array& encoded_values_arr);
+
+        /**
+         * Returns a pointer to the data buffer containing the run-ends.
+         *
+         * @param ar The child array containing the rnu-ends.
+         * @return A pointer to the data buffer containing the run-ends.
+         */
         [[nodiscard]] SPARROW_API static acc_length_ptr_variant_type
         get_acc_lengths_ptr(const array_wrapper& ar);
+
+        /**
+         * Gets the run-end value at the given index as an unsigned 64-bits integer.
+         *
+         * @param run_index the index in the run-end array.
+         * @return run-end value as an unsigned 64-bits integer.
+         */
         [[nodiscard]] SPARROW_API std::uint64_t get_acc_length(std::uint64_t run_index) const;
 
+        /**
+         * Gets a reference to the internal arrow proxy.
+         *
+         * @return Reference to the arrow proxy.
+         */
         [[nodiscard]] SPARROW_API arrow_proxy& get_arrow_proxy();
+
+        /**
+         * Gets a constant reference to the internal arrow proxy.
+         *
+         * @return Constant reference to the arrow proxy.
+         */
         [[nodiscard]] SPARROW_API const arrow_proxy& get_arrow_proxy() const;
 
+        /** The arrow proxy containing the array data and schema. */
         arrow_proxy m_proxy;
+        /** The length of therun-ends child array **/
         std::uint64_t m_encoded_length;
 
+        /** The child array containing the run ends **/
         cloning_ptr<array_wrapper> p_acc_lengths_array;
+        /** The child array containing the values **/
         cloning_ptr<array_wrapper> p_encoded_values_array;
+        /** A pointer to the run-end child data buffer **/
         acc_length_ptr_variant_type m_acc_lengths;
 
         // friend classes
