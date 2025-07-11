@@ -62,10 +62,10 @@ namespace sparrow
     inline constexpr bool is_nullable_v = is_nullable<T>::value;
 
     template <class N, class T>
-    concept nullable_of = is_nullable_v<N> && std::same_as<typename N::value_type, T>;
+    concept nullable_of = is_nullable_v<N> && std::same_as<typename N::stored_value_type, T>;
 
     template <class N, class T>
-    concept nullable_of_convertible_to = is_nullable_v<N> && std::convertible_to<typename N::value_type, T>;
+    concept nullable_of_convertible_to = is_nullable_v<N> && std::convertible_to<typename N::stored_value_type, T>;
 
     /*
      * Matches a range of nullables objects.
@@ -289,6 +289,7 @@ namespace sparrow
     {
     public:
 
+        using stored_value_type = T;
         using self_type = nullable<T, B>;
         using value_traits = nullable_traits<T>;
         using value_type = typename value_traits::value_type;
