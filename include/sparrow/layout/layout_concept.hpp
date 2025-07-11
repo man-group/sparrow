@@ -38,8 +38,7 @@ namespace sparrow
      * @param T Layout type to check.
      */
     template <class T>
-    concept layout = requires(const T& t)
-    {
+    concept layout = requires(const T& t) {
         typename T::inner_value_type;
         typename T::value_type;
         typename T::const_reference;
