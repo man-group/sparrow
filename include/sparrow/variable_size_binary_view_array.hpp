@@ -720,8 +720,10 @@ namespace sparrow
         constexpr repeat_view<bool> children_ownership(true, 0);
         static const std::optional<std::unordered_set<sparrow::ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
 
+
         ArrowSchema schema = make_arrow_schema(
-            std::is_same<T, std::string_view>::value ? std::string_view("vu") : std::string_view("vz"),
+            std::is_same<T, arrow_traits<std::string>::value_type>::value ? std::string_view("vu")
+                                                                          : std::string_view("vz"),
             std::move(name),      // name
             std::move(metadata),  // metadata
             flags,                // flags
