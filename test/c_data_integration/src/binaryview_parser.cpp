@@ -53,6 +53,11 @@ namespace sparrow::c_data_integration
                 {
                     // For binary view: data is hex-encoded
                     data_bytes = utils::hex_string_to_bytes(inlined_data);
+                    // Ensure the data_bytes size matches the length
+                    SPARROW_ASSERT_TRUE(
+                        data_bytes.size() == static_cast<std::size_t>(length),
+                        "Data bytes size exceeds specified length"
+                    );
                 }
                 else
                 {
@@ -64,16 +69,8 @@ namespace sparrow::c_data_integration
                     }
                 }
 
-                // This ensures that if the length is less than 12, the remaining bytes are zeroed out
-                std::memset(view_ptr, 0, VIEW_STRUCTURE_SIZE);
-
                 std::memcpy(view_ptr, &length, sizeof(std::int32_t));
-
-                const std::size_t inline_size = std::min(
-                    static_cast<std::size_t>(length),
-                    static_cast<std::size_t>(12)
-                );
-                std::memcpy(view_ptr + 4, data_bytes.data(), inline_size);
+                std::memcpy(view_ptr + 4, data_bytes.data(), &length);
             }
             else
             {
