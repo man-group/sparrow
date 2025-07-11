@@ -14,6 +14,7 @@
 
 #include <ranges>
 
+#include <sparrow/array.hpp>
 #include <sparrow/date_array.hpp>
 #include <sparrow/decimal_array.hpp>
 #include <sparrow/dictionary_encoded_array.hpp>
@@ -76,5 +77,6 @@ static_assert(sparrow::layout<sparrow::timestamp_milliseconds_array>);
 static_assert(sparrow::layout<sparrow::timestamp_microseconds_array>);
 static_assert(sparrow::layout<sparrow::timestamp_nanoseconds_array>);
 
+static_assert(!sparrow::layout<sparrow::array>);
 static_assert(!sparrow::layout<std::vector<int32_t>>);
 static_assert(!sparrow::layout<std::array<int32_t, 10>>);
