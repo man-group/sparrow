@@ -438,6 +438,44 @@ namespace sparrow
          */
         [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
+        /// \cond PRIVATE_DOCS
+
+        /**
+         * @brief Creates Arrow proxy with specified count of default-initialized timestamp values.
+         *
+         * Creates a timestamp array proxy with n elements, each initialized to the default
+         * timestamp value (Unix epoch: 1970-01-01 00:00:00 UTC). This is useful for creating
+         * arrays that will be populated later or for allocating space with a known baseline.
+         *
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param timezone Timezone for interpreting all timestamp elements
+         * @param n Number of elements to create
+         * @param name Optional name for the array column
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing n default-initialized timestamp elements
+         *
+         * @pre timezone must be a valid date::time_zone pointer
+         * @pre n must be >= 0
+         * @post Returns proxy with n timestamp elements
+         * @post All elements contain Unix epoch duration (zero)
+         * @post No validity bitmap (all elements considered valid)
+         * @post All elements use the specified timezone for interpretation
+         *
+         * @note Efficient for creating large arrays that will be populated later
+         * @note All elements start with the same baseline value (Unix epoch)
+         * @note No null values - use other overloads if nullability is needed
+         * @note Elements can be modified after array construction
+         *
+         * @code{.cpp}
+         * // Create array of 1000 timestamps initialized to Unix epoch
+         * const auto* utc = date::locate_zone("UTC");
+         * auto proxy = timestamp_seconds_array::create_proxy(utc, 1000);
+         *
+         * // All elements will represent 1970-01-01 00:00:00 UTC
+         * timestamp_seconds_array arr(std::move(proxy));
+         * // Elements can be modified: arr[0] = some_timestamp;
+         * @endcode
+         */
         template <input_metadata_container METADATA_RANGE>
         [[nodiscard]] static arrow_proxy create_proxy(
             const date::time_zone* timezone,
@@ -446,6 +484,7 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        //
         /**
          * @brief Creates Arrow proxy from pre-allocated data buffer and validity bitmap.
          *
@@ -521,43 +560,6 @@ namespace sparrow
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
-
-        /**
-         * @brief Creates Arrow proxy with specified count of identical timestamp values.
-         *
-         * Creates a timestamp array proxy where all elements have the same timestamp value.
-         * This is useful for creating arrays filled with a default or constant timestamp.
-         *
-         * @tparam U Type convertible to timestamp type T
-         * @tparam METADATA_RANGE Type of metadata container
-         * @param timezone Timezone for interpreting the fill value
-         * @param n Number of elements to create
-         * @param value Timestamp value to replicate across all elements
-         * @param name Optional name for the array column
-         * @param metadata Optional metadata key-value pairs
-         * @return Arrow proxy containing n copies of the timestamp value
-         *
-         * @pre timezone must be a valid date::time_zone pointer
-         * @pre n must be >= 0
-         * @pre value must be convertible to timestamp type T
-         * @pre value should use compatible timezone
-         * @post Returns proxy with n identical timestamp elements
-         * @post All elements contain the duration from value
-         * @post No validity bitmap (all elements considered valid)
-         *
-         * @note Efficient for creating large arrays with constant values
-         * @note Duration component is extracted once and replicated
-         * @note Timezone interpretation uses the provided timezone parameter
-         */
-        template <typename U, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires std::convertible_to<U, T>
-        [[nodiscard]] static arrow_proxy create_proxy(
-            const date::time_zone* timezone,
-            size_type n,
-            const U& value = U{},
-            std::optional<std::string_view> name = std::nullopt,
-            std::optional<METADATA_RANGE> metadata = std::nullopt
-        );
 
         /**
          * @brief Creates Arrow proxy from value range and separate validity information.
@@ -688,6 +690,8 @@ namespace sparrow
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
+
+        /// \endcond
 
         // Modifiers
 
