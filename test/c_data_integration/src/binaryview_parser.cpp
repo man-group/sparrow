@@ -44,6 +44,8 @@ namespace sparrow::c_data_integration
             if (inlined)
             {
                 const std::string inlined_data = view_json.at(INLINED).get<std::string>();
+                // Use the SIZE field from JSON as the authoritative length
+                const auto length = static_cast<std::int32_t>(view_json.at(SIZE).get<int>());
                 
                 std::vector<std::byte> data_bytes;
                 if (is_binary_type)
@@ -61,12 +63,9 @@ namespace sparrow::c_data_integration
                     }
                 }
                 
-                // Use signed int32_t for length as per specification
-                const auto length = static_cast<std::int32_t>(data_bytes.size());
-
                 std::memcpy(view_ptr, &length, sizeof(std::int32_t));
 
-                const std::size_t inline_size = std::min(data_bytes.size(), static_cast<std::size_t>(12));
+                const std::size_t inline_size = std::min(static_cast<std::size_t>(length), static_cast<std::size_t>(12));
                 std::memcpy(view_ptr + 4, data_bytes.data(), inline_size);
             }
             else
@@ -98,11 +97,8 @@ namespace sparrow::c_data_integration
                 const std::size_t prefix_size = std::min(prefix_bytes.size(), static_cast<std::size_t>(4));
                 std::memcpy(view_ptr + 4, prefix_bytes.data(), prefix_size);
 
-                // Convert logical buffer index to Arrow buffer index
-                // Buffer index 0 in JSON refers to first variadic data buffer, which is at Arrow index 2
-                constexpr std::size_t FIRST_VAR_DATA_BUFFER_INDEX = 2;
-                const auto buf_idx = static_cast<std::int32_t>(buffer_index + FIRST_VAR_DATA_BUFFER_INDEX);
-                std::memcpy(view_ptr + 8, &buf_idx, sizeof(std::int32_t));
+                const auto buf_idx = static_cast<uint32_t>(buffer_index);
+                std::memcpy(view_ptr + 8, &buf_idx, sizeof(uint32_t));
 
                 std::memcpy(view_ptr + 12, &offset, sizeof(std::int32_t));
             }
