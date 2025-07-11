@@ -709,7 +709,6 @@ namespace sparrow
             type_id_buffer_type&& element_type,
             offset_buffer_type&& offsets,
             std::string&& format,
-            type_id_map&& tim,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -739,7 +738,6 @@ namespace sparrow
             TYPE_ID_BUFFER_RANGE&& element_type,
             OFFSET_BUFFER_RANGE&& offsets,
             std::string&& format,
-            type_id_map&& tim,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         )
@@ -753,7 +751,6 @@ namespace sparrow
                 std::move(element_type_buffer),
                 std::move(offsets_buffer),
                 std::forward<std::string>(format),
-                std::forward<type_id_map>(tim),
                 std::forward<std::optional<std::string_view>>(name),
                 std::forward<std::optional<METADATA_RANGE>>(metadata)
             );
@@ -895,7 +892,6 @@ namespace sparrow
             std::vector<array>&& children,
             type_id_buffer_type&& element_type,
             std::string&& format,
-            type_id_map&& tim,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -949,8 +945,8 @@ namespace sparrow
     template <class DERIVED>
     template <std::ranges::input_range R>
     constexpr auto
-    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id)
-        -> type_id_map
+    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id
+    ) -> type_id_map
     {
         std::array<std::uint8_t, TYPE_ID_MAP_SIZE> ret;
         if (!child_index_to_type_id.has_value())
@@ -1194,9 +1190,6 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(element_type.size() == offsets.size());
         const auto n_children = children.size();
 
-        // inverse type mapping (type_id -> child_index)
-        auto type_id_to_child_index = type_id_map_from_child_to_type_id(child_index_to_type_id);
-
         std::string format = make_format_string(true /*dense union*/, n_children, child_index_to_type_id);
 
         return create_proxy_impl(
@@ -1204,7 +1197,6 @@ namespace sparrow
             std::move(element_type),
             std::move(offsets),
             std::move(format),
-            std::move(type_id_to_child_index),
             std::move(name),
             std::move(metadata)
         );
@@ -1216,7 +1208,6 @@ namespace sparrow
         type_id_buffer_type&& element_type,
         offset_buffer_type&& offsets,
         std::string&& format,
-        type_id_map&& tim,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
@@ -1226,21 +1217,6 @@ namespace sparrow
         ArrowSchema** child_schemas = new ArrowSchema*[n_children];
         ArrowArray** child_arrays = new ArrowArray*[n_children];
         const auto size = element_type.size();
-
-        // count nulls (expensive!)
-        int64_t null_count = 0;
-        for (std::size_t i = 0; i < size; ++i)
-        {
-            // child_id from type_id
-            const auto type_id = static_cast<std::uint8_t>(element_type[i]);
-            const auto child_index = tim[type_id];
-            const auto offset = static_cast<std::size_t>(offsets[i]);
-            // check if child is null
-            if (!children[child_index][offset].has_value())
-            {
-                ++null_count;
-            }
-        }
 
         for (std::size_t i = 0; i < n_children; ++i)
         {
@@ -1282,8 +1258,8 @@ namespace sparrow
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),  // length
-            static_cast<std::int64_t>(null_count),
-            0,  // offset
+            0,                                // null_count: always 0 as the nullability is in children
+            0,                                // offset
             std::move(arr_buffs),
             child_arrays,                         // children
             repeat_view<bool>(true, n_children),  // children_ownership
@@ -1313,16 +1289,12 @@ namespace sparrow
             SPARROW_ASSERT_TRUE((*child_index_to_type_id).size() == n_children);
         }
 
-        // inverse type mapping (type_id -> child_index)
-        auto type_id_to_child_index = type_id_map_from_child_to_type_id(child_index_to_type_id);
-
         std::string format = make_format_string(false /*is dense union*/, n_children, child_index_to_type_id);
 
         return create_proxy_impl(
             std::move(children),
             std::move(element_type),
             std::move(format),
-            std::move(type_id_to_child_index),
             std::move(name),
             std::move(metadata)
         );
@@ -1333,7 +1305,6 @@ namespace sparrow
         std::vector<array>&& children,
         type_id_buffer_type&& element_type,
         std::string&& format,
-        type_id_map&& tim,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
@@ -1346,20 +1317,6 @@ namespace sparrow
         ArrowSchema** child_schemas = new ArrowSchema*[n_children];
         ArrowArray** child_arrays = new ArrowArray*[n_children];
         const auto size = element_type.size();
-
-        // count nulls (expensive!)
-        int64_t null_count = 0;
-        for (std::size_t i = 0; i < size; ++i)
-        {
-            // child_id from type_id
-            const auto type_id = static_cast<std::uint8_t>(element_type[i]);
-            const auto child_index = tim[type_id];
-            // check if child is null
-            if (!children[child_index][i].has_value())
-            {
-                ++null_count;
-            }
-        }
 
         for (std::size_t i = 0; i < n_children; ++i)
         {
@@ -1398,8 +1355,8 @@ namespace sparrow
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),  // length
-            static_cast<std::int64_t>(null_count),
-            0,  // offset
+            0,                                // null_count: always 0 as the nullability is in children
+            0,                                // offset
             std::move(arr_buffs),
             child_arrays,                         // children
             repeat_view<bool>(true, n_children),  // children_ownership
