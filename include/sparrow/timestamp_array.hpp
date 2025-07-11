@@ -446,6 +446,33 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Creates Arrow proxy from pre-allocated data buffer and validity bitmap.
+         *
+         * Creates a timestamp array proxy from an existing data buffer containing duration
+         * values and an optional validity bitmap. This is the most direct way to create
+         * a timestamp array when you have pre-processed duration data.
+         *
+         * @tparam R Validity bitmap input type
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param timezone Timezone for interpreting stored duration values
+         * @param data_buffer Buffer containing duration values since Unix epoch
+         * @param bitmaps Validity bitmap or input to create validity bitmap
+         * @param name Optional name for the array column
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing timestamp array with specified data
+         *
+         * @pre timezone must be a valid date::time_zone pointer
+         * @pre data_buffer must contain valid duration values
+         * @pre If provided, bitmaps must match data_buffer size
+         * @post Returns proxy with timestamps constructed from data_buffer values
+         * @post Validity information is properly configured from bitmaps
+         * @post All timestamps use the specified timezone for interpretation
+         *
+         * @note Duration values are interpreted as time since Unix epoch
+         * @note This method takes ownership of the data_buffer
+         * @note Validity bitmap is ensured to match array size if provided
+         */
         template <
             validity_bitmap_input R = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
@@ -457,7 +484,34 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
-        // range of values (no missing values)
+        /**
+         * @brief Creates Arrow proxy from range of timestamp values (no missing values).
+         *
+         * Creates a timestamp array proxy from a range of timestamp objects. This method
+         * extracts duration components from timestamps and creates a dense array without
+         * null values (unless nullable=true, which adds an empty validity bitmap).
+         *
+         * @tparam R Range type containing convertible timestamp values
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param timezone Timezone for all timestamps (should match range values)
+         * @param range Input range of timestamp values
+         * @param nullable Whether to create validity bitmap (empty if true)
+         * @param name Optional name for the array column
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing timestamp array from range
+         *
+         * @pre timezone must be a valid date::time_zone pointer
+         * @pre Range elements must be convertible to timestamp type T
+         * @pre All timestamps in range should reference compatible timezone
+         * @post Returns proxy with timestamps from range
+         * @post Duration values are extracted and stored efficiently
+         * @post If nullable=true, empty validity bitmap is created
+         * @post If nullable=false, no validity bitmap (all values valid)
+         *
+         * @note Timezone compatibility is not enforced but recommended
+         * @note Duration extraction preserves precision of timestamp type
+         * @note This is optimal for dense timestamp data without nulls
+         */
         template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         [[nodiscard]] static auto create_proxy(
@@ -468,6 +522,33 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+        /**
+         * @brief Creates Arrow proxy with specified count of identical timestamp values.
+         *
+         * Creates a timestamp array proxy where all elements have the same timestamp value.
+         * This is useful for creating arrays filled with a default or constant timestamp.
+         *
+         * @tparam U Type convertible to timestamp type T
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param timezone Timezone for interpreting the fill value
+         * @param n Number of elements to create
+         * @param value Timestamp value to replicate across all elements
+         * @param name Optional name for the array column
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing n copies of the timestamp value
+         *
+         * @pre timezone must be a valid date::time_zone pointer
+         * @pre n must be >= 0
+         * @pre value must be convertible to timestamp type T
+         * @pre value should use compatible timezone
+         * @post Returns proxy with n identical timestamp elements
+         * @post All elements contain the duration from value
+         * @post No validity bitmap (all elements considered valid)
+         *
+         * @note Efficient for creating large arrays with constant values
+         * @note Duration component is extracted once and replicated
+         * @note Timezone interpretation uses the provided timezone parameter
+         */
         template <typename U, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<U, T>
         [[nodiscard]] static arrow_proxy create_proxy(
@@ -478,7 +559,36 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        // range of values, validity_bitmap_input
+        /**
+         * @brief Creates Arrow proxy from value range and separate validity information.
+         *
+         * Creates a timestamp array proxy from a range of timestamp values and separate
+         * validity information. This allows precise control over which elements are null
+         * while providing timestamp values for non-null elements.
+         *
+         * @tparam VALUE_RANGE Range type containing timestamp values
+         * @tparam VALIDITY_RANGE Range or bitmap type for validity information
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param timezone Timezone for interpreting timestamp values
+         * @param values Range of timestamp values (for non-null positions)
+         * @param validity Validity bitmap or boolean range
+         * @param name Optional name for the array column
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing timestamp array with validity info
+         *
+         * @pre timezone must be a valid date::time_zone pointer
+         * @pre VALUE_RANGE elements must be convertible to timestamp type T
+         * @pre validity must provide validity information for each element
+         * @pre Both ranges must have compatible sizes
+         * @post Returns proxy with timestamps and validity bitmap
+         * @post Null positions are marked according to validity input
+         * @post Non-null positions contain duration values from range
+         * @post All timestamps use the specified timezone
+         *
+         * @note Provides fine-grained control over null/non-null elements
+         * @note Values range should provide meaningful data for non-null positions
+         * @note Validity information determines the final null count
+         */
         template <
             std::ranges::input_range VALUE_RANGE,
             validity_bitmap_input VALIDITY_RANGE,
@@ -492,7 +602,34 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
-        // range of nullable values
+        /**
+         * @brief Creates Arrow proxy from range of nullable timestamp values.
+         *
+         * Creates a timestamp array proxy from a range of nullable timestamp objects.
+         * Each element in the range specifies both its value (if non-null) and whether
+         * it should be considered null, providing a convenient single-range interface.
+         *
+         * @tparam R Range type containing nullable<T> elements
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param timezone Timezone for interpreting non-null timestamp values
+         * @param range Range of nullable timestamp values
+         * @param name Optional name for the array column
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing timestamp array from nullable range
+         *
+         * @pre timezone must be a valid date::time_zone pointer
+         * @pre Range elements must be of type nullable<T>
+         * @pre Non-null timestamps should use compatible timezone
+         * @post Returns proxy with timestamps and validity from nullable range
+         * @post Validity bitmap reflects has_value() state of each element
+         * @post Non-null elements contain duration values from get() calls
+         * @post All timestamps use the specified timezone
+         *
+         * @note Convenient for ranges where null status is embedded in values
+         * @note Automatically separates values and validity information
+         * @note Handles mixed null/non-null data efficiently
+         * @note Null elements don't require meaningful timestamp values
+         */
         template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::is_same_v<std::ranges::range_value_t<R>, nullable<T>>
         [[nodiscard]] static arrow_proxy create_proxy(
@@ -502,11 +639,52 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
 
+        /**
+         * @brief Core implementation for creating Arrow proxy from processed data.
+         *
+         * This is the fundamental implementation that all other create_proxy methods
+         * ultimately call. It creates a complete Arrow proxy with schema and array
+         * from pre-processed duration data and validity information.
+         *
+         * The method handles:
+         * - Arrow schema creation with proper timestamp format and timezone
+         * - Arrow array creation with validity bitmap and duration data
+         * - Proper buffer management and ownership transfer
+         * - Metadata and naming integration
+         * - Null count calculation and flag setting
+         *
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param timezone Timezone for timestamp interpretation (embedded in schema)
+         * @param data_buffer Buffer containing duration values since Unix epoch
+         * @param bitmap Optional validity bitmap (null if all values valid)
+         * @param name Optional name for the array column
+         * @param metadata Optional metadata key-value pairs
+         * @return Complete Arrow proxy ready for timestamp_array construction
+         *
+         * @pre timezone must be a valid date::time_zone pointer
+         * @pre data_buffer must contain valid duration values
+         * @pre If bitmap provided, must match data_buffer size
+         * @pre Metadata must be valid key-value pairs if provided
+         * @post Returns complete Arrow proxy with schema and array
+         * @post Schema includes timezone information in format string
+         * @post Array buffers contain validity bitmap and duration data
+         * @post Proper null count and nullable flags are set
+         * @post All buffer ownership is properly transferred
+         *
+         * @note This is the core implementation used by all create_proxy overloads
+         * @note Creates Arrow-compatible timestamp format with timezone suffix
+         * @note Handles buffer ownership transfer to prevent memory leaks
+         * @note Schema format follows Arrow timestamp specification
+         * @note Supports both nullable and non-nullable configurations
+         *
+         * @see Arrow timestamp format specification
+         * @see ArrowSchema and ArrowArray creation utilities
+         */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy_impl(
             const date::time_zone* timezone,
             u8_buffer<buffer_inner_value_type>&& data_buffer,
-            std::optional<validity_bitmap>&& bitmap_input,
+            std::optional<validity_bitmap>&& bitmap,
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
