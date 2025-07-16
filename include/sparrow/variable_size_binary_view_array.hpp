@@ -780,16 +780,16 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(i < this->size());
 
         constexpr std::size_t element_size = 16;
-        auto data_ptr = this->get_arrow_proxy().buffers()[LENGTH_BUFFER_INDEX].template data<uint8_t>()
-                        + (i * element_size);
+        const auto data_ptr = this->get_arrow_proxy().buffers()[LENGTH_BUFFER_INDEX].template data<uint8_t>()
+                              + (i * element_size);
 
-        auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr));
+        const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr));
         using char_or_byte = typename inner_const_reference::value_type;
 
         if (length <= 12)
         {
             constexpr std::ptrdiff_t data_offset = 4;
-            auto ptr = reinterpret_cast<const char_or_byte*>(data_ptr);
+            const auto ptr = reinterpret_cast<const char_or_byte*>(data_ptr);
             const auto ret = inner_const_reference(ptr + data_offset, length);
             return ret;
         }
@@ -797,13 +797,13 @@ namespace sparrow
         {
             constexpr std::ptrdiff_t buffer_index_offset = 8;
             constexpr std::ptrdiff_t buffer_offset_offset = 12;
-            auto buffer_index = static_cast<std::size_t>(
+            const auto buffer_index = static_cast<std::size_t>(
                 *reinterpret_cast<const std::int32_t*>(data_ptr + buffer_index_offset)
             );
-            auto buffer_offset = static_cast<std::size_t>(
+            const auto buffer_offset = static_cast<std::size_t>(
                 *reinterpret_cast<const std::int32_t*>(data_ptr + buffer_offset_offset)
             );
-            auto buffer = this->get_arrow_proxy().buffers()[buffer_index].template data<const char_or_byte>();
+            const auto buffer = this->get_arrow_proxy().buffers()[buffer_index].template data<const char_or_byte>();
             return inner_const_reference(buffer + buffer_offset, length);
         }
 

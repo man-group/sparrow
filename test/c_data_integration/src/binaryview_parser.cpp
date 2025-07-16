@@ -46,7 +46,7 @@ namespace sparrow::c_data_integration
             {
                 const std::string inlined_data = view_json.at(INLINED).get<std::string>();
                 // Use the SIZE field from JSON as the authoritative length
-                const auto length = static_cast<std::int32_t>(view_json.at(SIZE).get<int>());
+                const auto length = static_cast<std::uint32_t>(view_json.at(SIZE).get<int>());
 
                 std::vector<std::byte> data_bytes;
                 if (is_binary_type)
@@ -54,10 +54,7 @@ namespace sparrow::c_data_integration
                     // For binary view: data is hex-encoded
                     data_bytes = utils::hex_string_to_bytes(inlined_data);
                     // Ensure the data_bytes size matches the length
-                    SPARROW_ASSERT_TRUE(
-                        data_bytes.size() == static_cast<std::size_t>(length),
-                        "Data bytes size exceeds specified length"
-                    );
+                    SPARROW_ASSERT_TRUE(data_bytes.size() == static_cast<std::size_t>(length));
                 }
                 else
                 {
@@ -70,40 +67,18 @@ namespace sparrow::c_data_integration
                 }
 
                 std::memcpy(view_ptr, &length, sizeof(std::int32_t));
-                std::memcpy(view_ptr + 4, data_bytes.data(), &length);
+                std::memcpy(view_ptr + 4, data_bytes.data(), data_bytes.size());
             }
             else
             {
-                const std::size_t buffer_index = view_json.at(BUFFER_INDEX).get<std::size_t>();
-                // Use signed int32_t for offset and size as per specification
-                const auto offset = static_cast<std::int32_t>(view_json.at(OFFSET).get<int>());
-                const auto size = static_cast<std::int32_t>(view_json.at(SIZE).get<int>());
+                const uint32_t buffer_index = view_json.at(BUFFER_INDEX).get<uint32_t>();
+                const std::uint32_t offset = view_json.at(OFFSET).get<std::uint32_t>();
+                const std::uint32_t size = view_json.at(SIZE).get<std::uint32_t>();
                 const std::string prefix_hex = view_json.at(PREFIX_HEX).get<std::string>();
-
-                std::vector<std::byte> prefix_bytes;
-                if (is_binary_type)
-                {
-                    // For binary view: prefix is hex-encoded
-                    prefix_bytes = utils::hex_string_to_bytes(prefix_hex);
-                }
-                else
-                {
-                    // For string view: prefix should be UTF-8 string converted to bytes
-                    prefix_bytes.reserve(prefix_hex.size());
-                    for (char c : prefix_hex)
-                    {
-                        prefix_bytes.push_back(static_cast<std::byte>(static_cast<unsigned char>(c)));
-                    }
-                }
-
+                const std::vector<std::byte> prefix_bytes = utils::hex_string_to_bytes(prefix_hex);
                 std::memcpy(view_ptr, &size, sizeof(std::int32_t));
-
-                const std::size_t prefix_size = std::min(prefix_bytes.size(), static_cast<std::size_t>(4));
-                std::memcpy(view_ptr + 4, prefix_bytes.data(), prefix_size);
-
-                const auto buf_idx = static_cast<uint32_t>(buffer_index);
-                std::memcpy(view_ptr + 8, &buf_idx, sizeof(uint32_t));
-
+                std::memcpy(view_ptr + 4, prefix_bytes.data(), prefix_bytes.size());
+                std::memcpy(view_ptr + 8, &buffer_index, sizeof(uint32_t));
                 std::memcpy(view_ptr + 12, &offset, sizeof(std::int32_t));
             }
         }
