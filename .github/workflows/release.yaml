@@ -118,20 +118,20 @@ jobs:
       
       - name: Create tag
         run: |
-          git tag "v${{ steps.version.outputs.version }}"
+          git tag -a "${{ steps.version.outputs.version }}" -m "Release version ${{ steps.version.outputs.version }}"
       
       - name: Push changes and tag
         run: |
           git push origin main
-          git push origin "v${{ steps.version.outputs.version }}"
+          git push origin "${{ steps.version.outputs.version }}"
       
       - name: Create GitHub Release
         uses: elgohr/Github-Release-Action@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          title: "Release v${{ steps.version.outputs.version }}"
-          release_name: "Release v${{ steps.version.outputs.version }}"
-          tag: "v${{ steps.version.outputs.version }}"
+          title: "Release ${{ steps.version.outputs.version }}"
+          release_name: "Release ${{ steps.version.outputs.version }}"
+          tag: "${{ steps.version.outputs.version }}"
           draft: false
           prerelease: false
