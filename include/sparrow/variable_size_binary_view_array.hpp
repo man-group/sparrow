@@ -504,9 +504,7 @@ namespace sparrow
                 sparrow::ranges::copy(prefix_sub_range, length_ptr + PREFIX_OFFSET);
 
                 // write the buffer index
-                *reinterpret_cast<std::int32_t*>(
-                    length_ptr + BUFFER_INDEX_OFFSET
-                ) = static_cast<std::int32_t>(FIRST_VAR_DATA_BUFFER_INDEX);
+                *reinterpret_cast<std::int32_t*>(length_ptr + BUFFER_INDEX_OFFSET) = 0;
 
                 // write the buffer offset
                 *reinterpret_cast<std::int32_t*>(

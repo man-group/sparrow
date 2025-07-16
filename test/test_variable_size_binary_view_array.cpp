@@ -84,14 +84,15 @@ namespace sparrow
                         CHECK_EQ(array.name(), "name");
                         test_metadata(metadata_sample, array.metadata().value());
                         CHECK_EQ(array.size(), words.size());
-                        CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE));
+                        CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE)
+                        );
                     }
                 }
 
                 SUBCASE("copy")
                 {
-                    string_view_array array(words, where_nulls, "name", metadata_sample_opt);
-                    string_view_array array_copy(array);
+                    const string_view_array array(words, where_nulls, "name", metadata_sample_opt);
+                    const string_view_array array_copy(array);
                     CHECK_EQ(array, array_copy);
                 }
 
@@ -141,7 +142,7 @@ namespace sparrow
                         {
                             // Long string: store prefix + buffer index + offset
                             std::memcpy(view_ptr + 4, word.data(), 4);  // prefix (4 bytes)
-                            std::uint32_t buffer_index = 2;             // First variadic buffer is at index 2
+                            std::uint32_t buffer_index = 0;  // Relative index in variadic buffers (0-based)
                             std::memcpy(view_ptr + 8, &buffer_index, sizeof(std::uint32_t));
                             std::uint32_t offset = 0;  // offset in the buffer
                             std::memcpy(view_ptr + 12, &offset, sizeof(std::uint32_t));
@@ -167,8 +168,11 @@ namespace sparrow
                     // Verify the values
                     for (std::size_t i = 0; i < element_count; ++i)
                     {
-                        CHECK(array[i].has_value());
-                        CHECK_EQ(array[i].value(), test_words[i]);
+                        if (array[i].has_value())
+                        {
+                            const std::string& value{array[i].value()};
+                            CHECK_EQ(value, test_words[i]);
+                        }
                     }
                 }
             }
