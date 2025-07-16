@@ -19,26 +19,29 @@
 
 #include <nlohmann/json.hpp>
 
+#include "sparrow/c_data_integration/config.hpp"
 #include "sparrow/utils/large_int.hpp"
 #include "sparrow/utils/metadata.hpp"
 
 namespace sparrow::c_data_integration::utils
 {
-    std::vector<std::byte> hex_string_to_bytes(const std::string& hex_string);
-    std::vector<std::vector<std::byte>> hex_strings_to_bytes(const std::vector<std::string>& hexStrings);
+    SPARROW_C_DATA_INTEGRATION_API std::vector<std::byte> hex_string_to_bytes(const std::string& hex_string);
+    SPARROW_C_DATA_INTEGRATION_API std::vector<std::vector<std::byte>>
+    hex_strings_to_bytes(const std::vector<std::string>& hexStrings);
 
-    std::vector<nlohmann::json>
+    SPARROW_C_DATA_INTEGRATION_API std::vector<nlohmann::json>
     get_children_with_same_name(const nlohmann::json& schema_or_array, const std::string& name);
 
-    std::vector<bool> get_validity(const nlohmann::json& array);
+    SPARROW_C_DATA_INTEGRATION_API std::vector<bool> get_validity(const nlohmann::json& array);
 
-    void check_type(const nlohmann::json& schema, const std::string& type);
+    SPARROW_C_DATA_INTEGRATION_API void check_type(const nlohmann::json& schema, const std::string& type);
 
-    std::optional<std::vector<sparrow::metadata_pair>> get_metadata(const nlohmann::json& schema);
+    SPARROW_C_DATA_INTEGRATION_API std::optional<std::vector<sparrow::metadata_pair>>
+    get_metadata(const nlohmann::json& schema);
 
-    std::vector<size_t> get_offsets(const nlohmann::json& array);
+    SPARROW_C_DATA_INTEGRATION_API std::vector<size_t> get_offsets(const nlohmann::json& array);
 
-    std::vector<size_t> get_sizes(const nlohmann::json& array);
+    SPARROW_C_DATA_INTEGRATION_API std::vector<size_t> get_sizes(const nlohmann::json& array);
 
     template <std::integral I>
     auto from_strings_to_Is(const std::vector<std::string>& data_str)

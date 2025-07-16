@@ -24,8 +24,19 @@
 
 namespace sparrow::c_data_integration
 {
+    std::vector<std::byte> utf8_string_to_bytes(const std::string& utf8_str)
+    {
+        std::vector<std::byte> bytes;
+        bytes.reserve(utf8_str.size());
+        for (char c : utf8_str)
+        {
+            bytes.push_back(static_cast<std::byte>(static_cast<unsigned char>(c)));
+        }
+        return bytes;
+    }
 
-    sparrow::u8_buffer<uint8_t> create_buffer_view_from_json(const nlohmann::json& views_json)
+    sparrow::u8_buffer<uint8_t>
+    create_buffer_view_from_json(const nlohmann::json& views_json, bool is_binary_type)
     {
         constexpr std::size_t VIEW_STRUCTURE_SIZE = 16;
         const std::size_t element_count = views_json.size();
@@ -44,31 +55,36 @@ namespace sparrow::c_data_integration
             if (inlined)
             {
                 const std::string inlined_data = view_json.at(INLINED).get<std::string>();
-                const std::vector<std::byte> data_bytes = utils::hex_string_to_bytes(inlined_data);
-                const auto length = static_cast<uint32_t>(data_bytes.size());
+                // Use the SIZE field from JSON as the authoritative length
+                const auto length = static_cast<std::uint32_t>(view_json.at(SIZE).get<int>());
 
-                std::memcpy(view_ptr, &length, sizeof(uint32_t));
+                std::vector<std::byte> data_bytes;
+                if (is_binary_type)
+                {
+                    // For binary view: data is hex-encoded
+                    data_bytes = utils::hex_string_to_bytes(inlined_data);
+                }
+                else
+                {
+                    // For string view: data is UTF-8 string, convert directly to bytes
+                    data_bytes = utf8_string_to_bytes(inlined_data);
+                }
+                SPARROW_ASSERT_TRUE(data_bytes.size() == static_cast<std::size_t>(length));
 
-                const std::size_t inline_size = std::min(data_bytes.size(), static_cast<std::size_t>(12));
-                std::memcpy(view_ptr + 4, data_bytes.data(), inline_size);
+                std::memcpy(view_ptr, &length, sizeof(std::int32_t));
+                std::memcpy(view_ptr + 4, data_bytes.data(), data_bytes.size());
             }
             else
             {
-                const std::size_t buffer_index = view_json.at(BUFFER_INDEX).get<std::size_t>();
-                const auto offset = static_cast<uint32_t>(view_json.at(OFFSET).get<int>());
-                const auto size = static_cast<uint32_t>(view_json.at(SIZE).get<int>());
+                const uint32_t buffer_index = view_json.at(BUFFER_INDEX).get<uint32_t>();
+                const std::uint32_t offset = view_json.at(OFFSET).get<std::uint32_t>();
+                const std::uint32_t size = view_json.at(SIZE).get<std::uint32_t>();
                 const std::string prefix_hex = view_json.at(PREFIX_HEX).get<std::string>();
                 const std::vector<std::byte> prefix_bytes = utils::hex_string_to_bytes(prefix_hex);
-
-                std::memcpy(view_ptr, &size, sizeof(uint32_t));
-
-                const std::size_t prefix_size = std::min(prefix_bytes.size(), static_cast<std::size_t>(4));
-                std::memcpy(view_ptr + 4, prefix_bytes.data(), prefix_size);
-
-                const auto buf_idx = static_cast<uint32_t>(buffer_index);
-                std::memcpy(view_ptr + 8, &buf_idx, sizeof(uint32_t));
-
-                std::memcpy(view_ptr + 12, &offset, sizeof(uint32_t));
+                std::memcpy(view_ptr, &size, sizeof(std::int32_t));
+                std::memcpy(view_ptr + 4, prefix_bytes.data(), prefix_bytes.size());
+                std::memcpy(view_ptr + 8, &buffer_index, sizeof(uint32_t));
+                std::memcpy(view_ptr + 12, &offset, sizeof(std::int32_t));
             }
         }
 
@@ -76,18 +92,24 @@ namespace sparrow::c_data_integration
     }
 
     template <typename T>
-    sparrow::array
-    binaryview_array_from_json_impl(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json&)
+    sparrow::array binaryview_array_from_json_impl(
+        const nlohmann::json& array,
+        const nlohmann::json& schema,
+        const nlohmann::json&,
+        bool is_binary_type
+    )
     {
         const auto& variadic_data_buffers_json = array.at(VARIADIC_DATA_BUFFERS);
         const std::vector<std::string> variadic_data_buffers_str = variadic_data_buffers_json
                                                                        .get<std::vector<std::string>>();
-        const std::vector<std::vector<std::byte>> variadic_data_buffers_bytes = utils::hex_strings_to_bytes(
+
+        std::vector<std::vector<std::byte>> variadic_data_buffers_bytes = utils::hex_strings_to_bytes(
             variadic_data_buffers_str
         );
+
         const auto& views_json = array.at(VIEWS);
 
-        auto buffer_view = create_buffer_view_from_json(views_json);
+        auto buffer_view = create_buffer_view_from_json(views_json, is_binary_type);
 
         std::vector<sparrow::u8_buffer<uint8_t>> value_buffers;
         for (const auto& buf : variadic_data_buffers_bytes)
@@ -135,14 +157,16 @@ namespace sparrow::c_data_integration
     binaryview_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
         utils::check_type(schema, "binaryview");
-        return binaryview_array_from_json_impl<binary_view_array>(array, schema, root);
+        return binaryview_array_from_json_impl<binary_view_array>(array, schema, root, true);  // true for
+                                                                                               // binary type
     }
 
     sparrow::array
     utf8view_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root)
     {
         utils::check_type(schema, "utf8view");
-        return binaryview_array_from_json_impl<string_view_array>(array, schema, root);
+        return binaryview_array_from_json_impl<string_view_array>(array, schema, root, false);  // false for
+                                                                                                // string type
     }
 
 }

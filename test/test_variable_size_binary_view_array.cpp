@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -89,9 +90,88 @@ namespace sparrow
 
                 SUBCASE("copy")
                 {
-                    string_view_array array(words, where_nulls, "name", metadata_sample_opt);
-                    string_view_array array_copy(array);
+                    const string_view_array array(words, where_nulls, "name", metadata_sample_opt);
+                    const string_view_array array_copy(array);
                     CHECK_EQ(array, array_copy);
+                }
+
+                SUBCASE("u8_buffers constructor")
+                {
+                    // Create buffer view (16 bytes per element - each element contains length + inline data
+                    // or pointers)
+                    const std::size_t element_count = 3;
+                    const std::size_t view_structure_size = 16;
+                    sparrow::u8_buffer<uint8_t> buffer_view(element_count * view_structure_size);
+
+                    // Clear buffer
+                    std::memset(buffer_view.data(), 0, buffer_view.size());
+
+                    // Test data: mix of short and long strings
+                    const std::vector<std::string> test_words = {
+                        "hi",
+                        "short_string",
+                        "this_is_a_very_long_string_that_exceeds_twelve_bytes"
+                    };
+
+                    // Create value buffers for long strings
+                    std::vector<sparrow::u8_buffer<uint8_t>> value_buffers;
+
+                    // Buffer for long strings (only the third string is > 12 bytes)
+                    const std::string& long_string = test_words[2];
+                    sparrow::u8_buffer<uint8_t> long_string_buffer(long_string.size());
+                    std::memcpy(long_string_buffer.data(), long_string.data(), long_string.size());
+                    value_buffers.push_back(std::move(long_string_buffer));
+
+                    // Build view structures manually
+                    for (std::size_t i = 0; i < element_count; ++i)
+                    {
+                        uint8_t* view_ptr = buffer_view.data() + (i * view_structure_size);
+                        const std::string& word = test_words[i];
+
+                        // Write length (first 4 bytes)
+                        std::uint32_t length = static_cast<std::uint32_t>(word.size());
+                        std::memcpy(view_ptr, &length, sizeof(std::uint32_t));
+
+                        if (word.size() <= 12)
+                        {
+                            // Short string: store inline in bytes 4-15
+                            std::memcpy(view_ptr + 4, word.data(), word.size());
+                        }
+                        else
+                        {
+                            // Long string: store prefix + buffer index + offset
+                            std::memcpy(view_ptr + 4, word.data(), 4);  // prefix (4 bytes)
+                            std::uint32_t buffer_index = 0;  // Relative index in variadic buffers (0-based)
+                            std::memcpy(view_ptr + 8, &buffer_index, sizeof(std::uint32_t));
+                            std::uint32_t offset = 0;  // offset in the buffer
+                            std::memcpy(view_ptr + 12, &offset, sizeof(std::uint32_t));
+                        }
+                    }
+
+                    // Create array with validity bitmap (no nulls)
+                    std::vector<std::size_t> no_nulls{};
+                    string_view_array array(
+                        element_count,
+                        std::move(buffer_view),
+                        std::move(value_buffers),
+                        no_nulls,
+                        "u8_test",
+                        metadata_sample_opt
+                    );
+
+                    CHECK_EQ(array.name(), "u8_test");
+                    test_metadata(metadata_sample, array.metadata().value());
+                    CHECK_EQ(array.size(), element_count);
+                    CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE));
+
+                    // Verify the values
+                    for (std::size_t i = 0; i < element_count; ++i)
+                    {
+                        if (array[i].has_value())
+                        {
+                            CHECK_EQ(array[i].value(), test_words[i]);
+                        }
+                    }
                 }
             }
 
@@ -110,7 +190,7 @@ namespace sparrow
                     else
                     {
                         CHECK(array[i].has_value());
-                        CHECK(array[i].value() == words[i]);
+                        CHECK_EQ(array[i].value(), words[i]);
                     }
                 }
                 CHECK_EQ(detail::array_access::get_arrow_proxy(array).format(), "vu");
