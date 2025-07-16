@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -22,6 +23,7 @@
 #include "sparrow/c_data_integration/utils.hpp"
 
 #include "doctest/doctest.h"
+
 
 namespace sparrow::c_data_integration::utils
 {
@@ -524,7 +526,7 @@ namespace sparrow::c_data_integration::utils
                 const auto result_range = from_strings_to_Is<int64_t>(data);
                 const std::vector<int64_t> result(result_range.begin(), result_range.end());
 
-                const std::vector<int64_t> expected = {9223372036854775807LL, -9223372036854775808LL};
+                const std::vector<int64_t> expected = {INT64_MAX, INT64_MIN};
                 CHECK(result == expected);
             }
 
