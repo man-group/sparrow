@@ -160,9 +160,7 @@ jobs:
       
       - name: Push changes and tag
         run: |
-          if [ "${{ steps.version.outputs.is_prerelease }}" = "false" ]; then
-            git push origin main
-          fi
+          git push origin main
           git push origin "${{ steps.version.outputs.version }}"
       
       - name: Create GitHub Release
