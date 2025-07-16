@@ -5,6 +5,7 @@
 [![GHA Windows](https://github.com/man-group/sparrow/actions/workflows/windows.yml/badge.svg)](https://github.com/man-group/sparrow/actions/workflows/windows.yml)
 [![GHA Docs](https://github.com/man-group/sparrow/actions/workflows/docs.yaml/badge.svg)](https://github.com/man-group/sparrow/actions/workflows/docs.yaml)
 [![Codecov](https://codecov.io/gh/man-group/sparrow/graph/badge.svg)](https://app.codecov.io/gh/man-group/sparrow)
+[![Integration tests](https://github.com/man-group/sparrow/actions/workflows/integration_tests.yaml/badge.svg?branch=main)](https://github.com/man-group/sparrow/actions/workflows/integration_tests.yaml)
 
 C++20 idiomatic APIs for the Apache Arrow Columnar Format
 
