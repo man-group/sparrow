@@ -24,7 +24,6 @@
 
 #include "doctest/doctest.h"
 
-
 namespace sparrow::c_data_integration::utils
 {
     TEST_SUITE("utils")
