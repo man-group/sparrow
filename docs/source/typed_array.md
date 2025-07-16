@@ -16,7 +16,7 @@ but a value of a special type that can handle missing values: \ref sparrow::null
 \ref sparrow::nullable has an API similar to [std::optional](https://en.cppreference.com/w/cpp/utility/optional):
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::nullable<int> n = 2;
@@ -32,7 +32,7 @@ can hold a reference and act as a reference proxy. Assigning to a nullable proxy
 referenced value; it won't rebind the internal reference:
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 int i = 5;
@@ -45,7 +45,7 @@ However, assigning null to a nullable proxy does not change the underlying value
 flag:
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 int i = 5;
@@ -66,7 +66,7 @@ Typed arrays provide the following methods regarding their capacity:
 Example:
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> pa = {1, 2, 3, 4};
@@ -91,7 +91,7 @@ of type `nullable<const T&>`.
 Example:
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> pa = {1, 2, 3, 4};
@@ -123,7 +123,7 @@ Typed arrays also provide traditional iteration methods:
 Example:
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> pa = {1, 2, 3, 4};
@@ -139,7 +139,7 @@ constructors tailored to their specific types. They also implement full value se
 and can therefore be copied and moved:
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> pa0 = {1, 2, 3, 4};

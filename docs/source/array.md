@@ -8,7 +8,7 @@ The array can simply have references to the structures, or take their ownership.
 
 Example:
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 #include "third-party-lib.hpp"
 namespace sp = sparrow;
 namespace tpl = third_party_library;
@@ -48,7 +48,7 @@ Like typed arrays, array provides the following methods regarding its capacity:
 | size   | Returns the number of elements        |
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> pa = { 1, 2, 3, 4};
@@ -74,7 +74,7 @@ A method is provided so that the user can retrieve the dynamic data_type of the 
 Example:
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> pa = { 1, 2, 3, 4};
@@ -93,7 +93,7 @@ must accept any kind of [typed array](#layout_types).
 Example:
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> pa = { 1, 2, 3, 4};
@@ -126,7 +126,7 @@ or to extract them.
 
 Example:
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> pa = { 1, 2, 3, 4};
@@ -149,7 +149,7 @@ destruction.
 
 Example:
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> pa = { 1, 2, 3, 4};
@@ -173,7 +173,7 @@ for calling the `release` method of these structures after use.
 
 Example:
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> pa = { 1, 2, 3, 4};
