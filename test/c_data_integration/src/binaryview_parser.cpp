@@ -63,14 +63,13 @@ namespace sparrow::c_data_integration
                 {
                     // For binary view: data is hex-encoded
                     data_bytes = utils::hex_string_to_bytes(inlined_data);
-                    // Ensure the data_bytes size matches the length
-                    SPARROW_ASSERT_TRUE(data_bytes.size() == static_cast<std::size_t>(length));
                 }
                 else
                 {
                     // For string view: data is UTF-8 string, convert directly to bytes
                     data_bytes = utf8_string_to_bytes(inlined_data);
                 }
+                SPARROW_ASSERT_TRUE(data_bytes.size() == static_cast<std::size_t>(length));
 
                 std::memcpy(view_ptr, &length, sizeof(std::int32_t));
                 std::memcpy(view_ptr + 4, data_bytes.data(), data_bytes.size());
@@ -100,30 +99,14 @@ namespace sparrow::c_data_integration
         bool is_binary_type
     )
     {
-        // Determine if this is a UTF-8 view based on the template type
-        constexpr bool is_utf8_view = std::is_same_v<T, string_view_array>;
-
         const auto& variadic_data_buffers_json = array.at(VARIADIC_DATA_BUFFERS);
         const std::vector<std::string> variadic_data_buffers_str = variadic_data_buffers_json
                                                                        .get<std::vector<std::string>>();
 
-        std::vector<std::vector<std::byte>> variadic_data_buffers_bytes;
+        std::vector<std::vector<std::byte>> variadic_data_buffers_bytes = utils::hex_strings_to_bytes(
+            variadic_data_buffers_str
+        );
 
-        if constexpr (is_utf8_view)
-        {
-            // For UTF-8 view, the JSON contains actual UTF-8 strings
-            variadic_data_buffers_bytes.reserve(variadic_data_buffers_str.size());
-            for (const auto& utf8_str : variadic_data_buffers_str)
-            {
-                std::vector<std::byte> bytes = utf8_string_to_bytes(utf8_str);
-                variadic_data_buffers_bytes.push_back(std::move(bytes));
-            }
-        }
-        else
-        {
-            // For binary view, the JSON contains hex-encoded strings
-            variadic_data_buffers_bytes = utils::hex_strings_to_bytes(variadic_data_buffers_str);
-        }
         const auto& views_json = array.at(VIEWS);
 
         auto buffer_view = create_buffer_view_from_json(views_json, is_binary_type);
