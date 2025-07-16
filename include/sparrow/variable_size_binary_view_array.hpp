@@ -749,9 +749,9 @@ namespace sparrow
         buffers.push_back(std::move(buffer_sizes).extract_storage());
 
         ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // length
-            static_cast<int64_t>(0),          // null_count
-            0,                                // offset
+            static_cast<std::int64_t>(size),                 // length
+            static_cast<std::int64_t>(bitmap.null_count()),  // null_count
+            0,                                               // offset
             std::move(buffers),
             nullptr,  // children
             children_ownership,
