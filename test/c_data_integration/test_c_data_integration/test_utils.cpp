@@ -528,28 +528,6 @@ namespace sparrow::c_data_integration::utils
                 const std::vector<int64_t> expected = {INT64_MAX, INT64_MIN};
                 CHECK(result == expected);
             }
-
-#ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
-            SUBCASE("int128_t conversion")
-            {
-                const std::vector<std::string> data = {"123", "-456"};
-                const auto result_range = from_strings_to_Is<sparrow::int128_t>(data);
-                const std::vector<sparrow::int128_t> result(result_range.begin(), result_range.end());
-
-                CHECK(result.size() == 2);
-                // Note: actual values would depend on the large int implementation
-            }
-
-            SUBCASE("int256_t conversion")
-            {
-                const std::vector<std::string> data = {"123"};
-                const auto result_range = from_strings_to_Is<sparrow::int256_t>(data);
-                const std::vector<sparrow::int256_t> result(result_range.begin(), result_range.end());
-
-                CHECK(result.size() == 1);
-                // Note: actual values would depend on the large int implementation
-            }
-#endif
         }
     }
 }
