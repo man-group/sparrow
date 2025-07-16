@@ -169,8 +169,7 @@ namespace sparrow
                     {
                         if (array[i].has_value())
                         {
-                            const std::string& value{array[i].value()};
-                            CHECK_EQ(value, test_words[i]);
+                            CHECK_EQ(array[i].value(), test_words[i]);
                         }
                     }
                 }
