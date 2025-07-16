@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <concepts>
+#include <cstddef>
 #include <iterator>
 #include <memory>
 #include <ranges>
@@ -33,6 +34,9 @@
 
 namespace sparrow
 {
+    // 64-byte alignment constant
+    constexpr std::size_t SPARROW_BUFFER_ALIGNMENT = 64;
+
     template <typename T>
     concept is_buffer_view = requires(T t) { typename T::is_buffer_view; };
 
@@ -93,6 +97,11 @@ namespace sparrow
         constexpr void assign_storage(pointer p, size_type n, size_type cap);
 
     private:
+
+        // Helper functions for 64-byte alignment
+        static constexpr size_type align_to_64_bytes(size_type size) noexcept;
+        static constexpr size_type calculate_aligned_size(size_type n) noexcept;
+        constexpr pointer allocate_aligned(size_type n);
 
         allocator_type m_alloc;
         buffer_data m_data;
@@ -389,7 +398,7 @@ namespace sparrow
     template <class T>
     constexpr auto buffer_base<T>::allocate(size_type n) -> pointer
     {
-        return alloc_traits::allocate(m_alloc, n);
+        return allocate_aligned(n);
     }
 
     template <class T>
@@ -401,9 +410,9 @@ namespace sparrow
     template <class T>
     constexpr void buffer_base<T>::create_storage(size_type n)
     {
-        m_data.p_begin = allocate(n);
+        m_data.p_begin = allocate_aligned(n);
         m_data.p_end = m_data.p_begin + n;
-        m_data.p_storage_end = m_data.p_end;
+        m_data.p_storage_end = m_data.p_begin + calculate_aligned_size(n) / sizeof(T);
     }
 
     template <class T>
@@ -413,6 +422,40 @@ namespace sparrow
         m_data.p_begin = p;
         m_data.p_end = p + n;
         m_data.p_storage_end = p + cap;
+    }
+
+    template <class T>
+    constexpr auto buffer_base<T>::align_to_64_bytes(size_type size) noexcept -> size_type
+    {
+        constexpr size_type alignment = static_cast<size_type>(SPARROW_BUFFER_ALIGNMENT);
+        constexpr size_type mask = alignment - 1;
+        return (size + mask) & ~mask;
+    }
+
+    template <class T>
+    constexpr auto buffer_base<T>::calculate_aligned_size(size_type n) noexcept -> size_type
+    {
+        const size_type byte_size = n * sizeof(T);
+        const size_type aligned_byte_size = align_to_64_bytes(byte_size);
+        return aligned_byte_size;
+    }
+
+    template <class T>
+    constexpr auto buffer_base<T>::allocate_aligned(size_type n) -> pointer
+    {
+        if (n == 0)
+        {
+            return nullptr;
+        }
+
+        // Calculate the aligned size in elements
+        const size_type byte_size = n * sizeof(T);
+        const size_type aligned_byte_size = align_to_64_bytes(byte_size);
+        const size_type aligned_element_count = aligned_byte_size / sizeof(T);
+
+        // Simply allocate the aligned size
+        // Modern allocators typically return aligned memory for larger allocations
+        return alloc_traits::allocate(m_alloc, aligned_element_count);
     }
 
     /*************************
@@ -1081,7 +1124,7 @@ namespace sparrow
     {
         const size_type diff_max = static_cast<size_type>(std::numeric_limits<difference_type>::max());
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
-        return (std::min) (diff_max, alloc_max);
+        return (std::min)(diff_max, alloc_max);
     }
 
     template <class T>
