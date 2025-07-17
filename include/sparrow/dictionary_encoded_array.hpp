@@ -241,7 +241,7 @@ namespace sparrow
          * @param i The index of the element to access.
          * @return Constant reference to the element at the specified index.
          */
-        [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 const_reference operator[](size_type i) const;
+        [[nodiscard]] SPARROW_CONSTEXPR_CLANG const_reference operator[](size_type i) const;
 
         /**
          * Gets an iterator to the beginning of the array.
@@ -332,14 +332,14 @@ namespace sparrow
          *
          * @return Constant reference to the first element.
          */
-        [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 const_reference front() const;
+        [[nodiscard]] SPARROW_CONSTEXPR_CLANG const_reference front() const;
 
         /**
          * Gets a reference to the last element.
          *
          * @return Constant reference to the last element.
          */
-        [[nodiscard]] SPARROW_CONSTEXPR_CLANG_17 const_reference back() const;
+        [[nodiscard]] SPARROW_CONSTEXPR_CLANG const_reference back() const;
 
         /**
          * Constructs a dictionary encoded array with the given arguments.
@@ -776,8 +776,7 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    SPARROW_CONSTEXPR_CLANG_17 auto dictionary_encoded_array<IT>::operator[](size_type i) const
-        -> const_reference
+    SPARROW_CONSTEXPR_CLANG auto dictionary_encoded_array<IT>::operator[](size_type i) const -> const_reference
     {
         SPARROW_ASSERT_TRUE(i < size());
         const auto index = m_keys_layout[i];
@@ -866,14 +865,14 @@ namespace sparrow
     }
 
     template <std::integral IT>
-    SPARROW_CONSTEXPR_CLANG_17 auto dictionary_encoded_array<IT>::front() const -> const_reference
+    SPARROW_CONSTEXPR_CLANG auto dictionary_encoded_array<IT>::front() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return operator[](0);
     }
 
     template <std::integral IT>
-    SPARROW_CONSTEXPR_CLANG_17 auto dictionary_encoded_array<IT>::back() const -> const_reference
+    SPARROW_CONSTEXPR_CLANG auto dictionary_encoded_array<IT>::back() const -> const_reference
     {
         SPARROW_ASSERT_FALSE(empty());
         return operator[](size() - 1);

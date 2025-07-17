@@ -56,9 +56,10 @@
 #    endif
 #endif
 
-// If using clang or apple-clang version < 18, we define the constexpr keyword to be empty.
-#if defined(__clang__) && __clang_major__ < 18
-#    define SPARROW_CONSTEXPR_CLANG_17 inline
+// If using clang or apple-clang version < 18 or clang 18 on Android, we define the constexpr keyword to be
+// "inline".
+#if defined(__clang__) && ((__clang_major__ < 18) || (__clang_major__ == 18 && defined(__ANDROID__)))
+#    define SPARROW_CONSTEXPR_CLANG inline
 #else
-#    define SPARROW_CONSTEXPR_CLANG_17 constexpr
+#    define SPARROW_CONSTEXPR_CLANG constexpr
 #endif
