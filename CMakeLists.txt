@@ -284,7 +284,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/temporal.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
 
-    # ../
+    # ./
     ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array_api.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/builder.hpp
@@ -299,7 +299,6 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/primitive_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/record_batch.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/run_end_encoded_array.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/sparrow.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/struct_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/time_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/timestamp_array.hpp
@@ -308,6 +307,9 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/union_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_view_array.hpp
+
+    #../
+    ${SPARROW_INCLUDE_DIR}/sparrow.hpp
 )
 
 if(SPARROW_TARGET_32BIT)
@@ -461,6 +463,9 @@ install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     PATTERN ".clang-*" EXCLUDE
     PATTERN "README.md" EXCLUDE)
+
+install(FILES ${SPARROW_INCLUDE_DIR}/sparrow.hpp
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 set(SPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
     STRING "install path for sparrowConfig.cmake")

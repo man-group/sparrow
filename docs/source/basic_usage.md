@@ -15,7 +15,7 @@ by the sparrow array. This latter must not be used after, and it is our
 responsibility to release the C structures when we don't need them anymore.
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> ar = { 1, 3, 5, 7, 9 };
@@ -36,7 +36,7 @@ NOT release the Arrow structures after we don't need them; the sparrow array
 will do it.
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 namespace sp = sparrow;
 
 sp::primitive_array<int> ar = { 1, 3, 5, 7, 9 };
@@ -63,7 +63,7 @@ will simply reference them internally, but it will not release them when it goes
 of scope. We are responsible for doing it.
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 #include "third-party-lib.hpp"
 namespace sp = sparrow;
 namespace tpl = third_party_library;
@@ -86,7 +86,7 @@ In this example, we transfer the ownership of the Arrow C structures
 to the sparrow array. It will release them when it is destroyed.
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 #include "third-party-lib.hpp"
 namespace sp = sparrow;
 namespace tpl = third_party_library;
@@ -110,7 +110,7 @@ stores the data and passes it to the user-defined functor. As a result, the func
 be designed to handle any typed array provided by Sparrow.
 
 ```cpp
-#include "sparrow/sparrow.hpp"
+#include "sparrow.hpp"
 #include "third-party-lib.hpp"
 namespace sp = sparrow;
 namespace tpl = third_party_library;
