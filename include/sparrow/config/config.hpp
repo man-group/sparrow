@@ -56,9 +56,9 @@
 #    endif
 #endif
 
-// If using clang or apple-clang version < 18, we define the constexpr keyword to be empty.
-#if defined(__clang__) && __clang_major__ < 18
-#    define SPARROW_CONSTEXPR_CLANG_17 inline
+// If using clang or apple-clang version < 19, we define the constexpr keyword to be empty.
+#if defined(__clang__) && __clang_major__ < 19
+#    define SPARROW_CONSTEXPR_CLANG_18 inline
 #else
-#    define SPARROW_CONSTEXPR_CLANG_17 constexpr
+#    define SPARROW_CONSTEXPR_CLANG_18 constexpr
 #endif
