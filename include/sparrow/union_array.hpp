@@ -157,7 +157,7 @@ namespace sparrow
          * @post Returns nullopt if no metadata is set
          * @post Returned view remains valid while array exists
          */
-        [[nodiscard]] SPARROW_CONSTEXPR_CLANG_18 std::optional<key_value_view> metadata() const;
+        [[nodiscard]] SPARROW_CONSTEXPR_CLANG std::optional<key_value_view> metadata() const;
 
         /**
          * @brief Gets element at specified position with bounds checking.
@@ -171,7 +171,7 @@ namespace sparrow
          *
          * @throws std::out_of_range if i >= size()
          */
-        [[nodiscard]] SPARROW_CONSTEXPR_CLANG_18 value_type at(size_type i) const;
+        [[nodiscard]] SPARROW_CONSTEXPR_CLANG value_type at(size_type i) const;
 
         /**
          * @brief Gets element at specified position without bounds checking.
@@ -183,7 +183,7 @@ namespace sparrow
          * @post Returns value from child array indicated by type ID
          * @post Value type depends on the type ID at position i
          */
-        [[nodiscard]] SPARROW_CONSTEXPR_CLANG_18 value_type operator[](size_type i) const;
+        [[nodiscard]] SPARROW_CONSTEXPR_CLANG value_type operator[](size_type i) const;
 
         /**
          * @brief Gets mutable element at specified position.
@@ -195,7 +195,7 @@ namespace sparrow
          * @post Returns value from child array indicated by type ID
          * @post Value type depends on the type ID at position i
          */
-        [[nodiscard]] SPARROW_CONSTEXPR_CLANG_18 value_type operator[](size_type i);
+        [[nodiscard]] SPARROW_CONSTEXPR_CLANG value_type operator[](size_type i);
 
         /**
          * @brief Gets reference to the first element.
@@ -206,7 +206,7 @@ namespace sparrow
          * @post Returns valid value from child array
          * @post Equivalent to (*this)[0]
          */
-        [[nodiscard]] SPARROW_CONSTEXPR_CLANG_18 value_type front() const;
+        [[nodiscard]] SPARROW_CONSTEXPR_CLANG value_type front() const;
 
         /**
          * @brief Gets reference to the last element.
@@ -217,7 +217,7 @@ namespace sparrow
          * @post Returns valid value from child array
          * @post Equivalent to (*this)[size() - 1]
          */
-        [[nodiscard]] SPARROW_CONSTEXPR_CLANG_18 value_type back() const;
+        [[nodiscard]] SPARROW_CONSTEXPR_CLANG value_type back() const;
 
         /**
          * @brief Checks if the union array is empty.
@@ -945,8 +945,8 @@ namespace sparrow
     template <class DERIVED>
     template <std::ranges::input_range R>
     constexpr auto
-    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id)
-        -> type_id_map
+    union_array_crtp_base<DERIVED>::type_id_map_from_child_to_type_id(const std::optional<R>& child_index_to_type_id
+    ) -> type_id_map
     {
         std::array<std::uint8_t, TYPE_ID_MAP_SIZE> ret;
         if (!child_index_to_type_id.has_value())
@@ -1010,7 +1010,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    SPARROW_CONSTEXPR_CLANG_18 std::optional<key_value_view> union_array_crtp_base<DERIVED>::metadata() const
+    SPARROW_CONSTEXPR_CLANG std::optional<key_value_view> union_array_crtp_base<DERIVED>::metadata() const
     {
         return m_proxy.metadata();
     }
@@ -1056,8 +1056,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    SPARROW_CONSTEXPR_CLANG_18 auto union_array_crtp_base<DERIVED>::operator[](std::size_t i) const
-        -> value_type
+    SPARROW_CONSTEXPR_CLANG auto union_array_crtp_base<DERIVED>::operator[](std::size_t i) const -> value_type
     {
         const auto type_id = static_cast<std::size_t>(p_type_ids[i]);
         const auto child_index = m_type_id_map[type_id];
@@ -1066,7 +1065,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    SPARROW_CONSTEXPR_CLANG_18 auto union_array_crtp_base<DERIVED>::operator[](std::size_t i) -> value_type
+    SPARROW_CONSTEXPR_CLANG auto union_array_crtp_base<DERIVED>::operator[](std::size_t i) -> value_type
     {
         return static_cast<const derived_type&>(*this)[i];
     }
@@ -1144,13 +1143,13 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    SPARROW_CONSTEXPR_CLANG_18 auto union_array_crtp_base<DERIVED>::front() const -> value_type
+    SPARROW_CONSTEXPR_CLANG auto union_array_crtp_base<DERIVED>::front() const -> value_type
     {
         return (*this)[0];
     }
 
     template <class DERIVED>
-    SPARROW_CONSTEXPR_CLANG_18 auto union_array_crtp_base<DERIVED>::back() const -> value_type
+    SPARROW_CONSTEXPR_CLANG auto union_array_crtp_base<DERIVED>::back() const -> value_type
     {
         return (*this)[this->size() - 1];
     }
