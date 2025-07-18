@@ -60,7 +60,7 @@ if(BUILD_TESTS)
     endif()
 endif()
 
-if(ENABLE_INTEGRATION_TEST)
+if(CREATE_JSON_READER_TARGET)
     if(NOT FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
         find_package(nlohmann_json ${FIND_PACKAGE_OPTIONS})
     endif()
