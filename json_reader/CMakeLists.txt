@@ -41,7 +41,6 @@ add_library(json_reader STATIC
     )
 
 set_property(TARGET json_reader PROPERTY POSITION_INDEPENDENT_CODE ON)
-set_target_properties(json_reader PROPERTIES PREFIX "")
 
 target_compile_options(json_reader
     PRIVATE
@@ -62,6 +61,9 @@ set_target_properties(json_reader
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS NO
         FOLDER json_reader
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}"
 )
 
 target_link_libraries(json_reader
