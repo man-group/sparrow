@@ -157,26 +157,18 @@ jobs:
       working-directory: build
       run: cmake --build . --config ${{matrix.config}} --target sparrow --parallel 8
 
-    - name: Install
-      working-directory: build
-      run: cmake --install . --config ${{matrix.config}}
-
     - name: Build tests
       working-directory: build
       run: cmake --build . --config ${{matrix.config}} --target test_sparrow_lib --parallel 8
-
-    - name: Build json_reader tests
-      working-directory: build
-      run: cmake --build . --config ${{matrix.config}} --target test_json_reader --parallel 8
-
-    - name: Run sccache stat for check
-      shell: bash
-      run: ${SCCACHE_PATH} --show-stats
 
     - name: Run tests
       working-directory: build
       run: |
         cmake --build . --config ${{matrix.config}} --target run_tests_with_junit_report
+
+    - name: Build json_reader tests
+      working-directory: build
+      run: cmake --build . --config ${{matrix.config}} --target test_json_reader --parallel 8
 
     - name: Run json_reader tests
       working-directory: build
@@ -199,3 +191,11 @@ jobs:
     - name: Run all examples
       working-directory: build
       run: cmake --build . --config ${{matrix.config}} --target run_examples
+  
+    - name: Install
+      working-directory: build
+      run: cmake --install . --config ${{matrix.config}}
+
+    - name: Run sccache stat for check
+      shell: bash
+      run: ${SCCACHE_PATH} --show-stats
