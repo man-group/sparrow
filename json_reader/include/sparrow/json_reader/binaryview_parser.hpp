@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma once
+
 #include <cstddef>
 #include <vector>
 
@@ -20,11 +22,13 @@
 #include <sparrow/array.hpp>
 #include <sparrow/u8_buffer.hpp>
 
+#include "sparrow/json_reader/config.hpp"
+
 namespace sparrow::json_reader
 {
-    sparrow::array
+    SPARROW_JSON_READER_API sparrow::array
     binaryview_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 
-    sparrow::array
+    SPARROW_JSON_READER_API sparrow::array
     utf8view_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 }

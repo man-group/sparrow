@@ -18,20 +18,22 @@
 
 #include <sparrow/array.hpp>
 
+#include "sparrow/json_reader/config.hpp"
+
 namespace sparrow::json_reader
 {
-    sparrow::array sparse_union_array_from_json(
+    SPARROW_JSON_READER_API sparrow::array sparse_union_array_from_json(
         const nlohmann::json& array,
         const nlohmann::json& schema,
         const nlohmann::json& root
     );
 
-    sparrow::array dense_union_array_from_json(
+    SPARROW_JSON_READER_API sparrow::array dense_union_array_from_json(
         const nlohmann::json& array,
         const nlohmann::json& schema,
         const nlohmann::json& root
     );
 
-    sparrow::array
+    SPARROW_JSON_READER_API sparrow::array
     union_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 }

@@ -19,12 +19,14 @@
 
 #include <sparrow/c_interface.hpp>
 
+#include "sparrow/json_reader/config.hpp"
+
 namespace sparrow::json_reader
 {
-    std::optional<std::string>
+    SPARROW_JSON_READER_API std::optional<std::string>
     compare_schemas(const std::string& prefix, const ArrowSchema* schema, const ArrowSchema* schema_from_json);
 
-    std::optional<std::string> compare_arrays(
+    SPARROW_JSON_READER_API std::optional<std::string> compare_arrays(
         const std::string& prefix,
         ArrowArray* array,
         ArrowArray* array_from_json,

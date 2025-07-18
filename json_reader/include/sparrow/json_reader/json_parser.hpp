@@ -28,25 +28,27 @@
 #include <sparrow/array.hpp>
 #include <sparrow/record_batch.hpp>
 
+#include "sparrow/json_reader/config.hpp"
+
 namespace sparrow::json_reader
 {
-    sparrow::array build_array_from_json(
+    SPARROW_JSON_READER_API sparrow::array build_array_from_json(
         const nlohmann::json& array,
         const nlohmann::json& schema,
         const nlohmann::json& root,
         bool check_dictionary = true
     );
 
-    std::vector<sparrow::array>
+    SPARROW_JSON_READER_API std::vector<sparrow::array>
     get_children_arrays(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 
-    sparrow::array dictionary_encode_array_from_json(
+    SPARROW_JSON_READER_API sparrow::array dictionary_encode_array_from_json(
         const nlohmann::json& array,
         const nlohmann::json& schema,
         const nlohmann::json& root
     );
 
-    sparrow::record_batch build_record_batch_from_json(const nlohmann::json& root, size_t num_batches);
+    SPARROW_JSON_READER_API sparrow::record_batch build_record_batch_from_json(const nlohmann::json& root, size_t num_batches);
 }
 
 // namespace sparrow::json_reader::json_parser
