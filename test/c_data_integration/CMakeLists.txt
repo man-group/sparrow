@@ -1,78 +1,39 @@
-include(compile_options)
-
-add_library(c_data_integration SHARED
-    src/binary_parser.cpp
-    src/binaryview_parser.cpp
-    src/bool_parser.cpp
-    src/c_data_integration.cpp
-    src/comparison.cpp
-    src/decimal_parser.cpp
-    src/fixedsizebinary_parser.cpp
-    src/fixedsizelist_parser.cpp
-    src/json_parser.cpp
-    src/list_parser.cpp
-    src/listview_parser.cpp
-    src/map_parser.cpp
-    src/null_parser.cpp
-    src/primitive_parser.cpp
-    src/run_end_encoded_parser.cpp
-    src/string_parser.cpp
-    src/struct_parser.cpp
-    src/temporal_parser.cpp
-    src/union_parser.cpp
-    src/utils.cpp
-    include/sparrow/c_data_integration/binary_parser.hpp
-    include/sparrow/c_data_integration/binaryview_parser.hpp
-    include/sparrow/c_data_integration/bool_parser.hpp
-    include/sparrow/c_data_integration/c_data_integration.hpp
-    include/sparrow/c_data_integration/comparison.hpp
-    include/sparrow/c_data_integration/config.hpp
-    include/sparrow/c_data_integration/constant.hpp
-    include/sparrow/c_data_integration/decimal_parser.hpp
-    include/sparrow/c_data_integration/fixedsizebinary_parser.hpp
-    include/sparrow/c_data_integration/fixedsizelist_parser.hpp
-    include/sparrow/c_data_integration/list_parser.hpp
-    include/sparrow/c_data_integration/map_parser.hpp
-    include/sparrow/c_data_integration/null_parser.hpp
-    include/sparrow/c_data_integration/primitive_parser.hpp
-    include/sparrow/c_data_integration/run_end_encoded_parser.hpp
-    include/sparrow/c_data_integration/string_parser.hpp
-    include/sparrow/c_data_integration/struct_parser.hpp
-    include/sparrow/c_data_integration/temporal_parser.hpp
-    include/sparrow/c_data_integration/utils.hpp
-    )
-
-set_property(TARGET c_data_integration PROPERTY POSITION_INDEPENDENT_CODE ON)
-set_target_properties(c_data_integration PROPERTIES PREFIX "")
-
-target_compile_options(c_data_integration
+add_executable(test_c_data_integration test_c_data_integration.cpp
+)
+target_link_libraries(test_c_data_integration
     PRIVATE
-        ${compile_options}
+        c_data_integration
+        better_junit_reporter
+        doctest::doctest)
+
+target_compile_definitions(test_c_data_integration
+    PRIVATE
+        JSON_FILES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../resources/jsons/")
+
+set_target_properties(test_c_data_integration PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+    FOLDER c_data_integration)
+
+add_custom_target(run_c_data_integration_tests
+    COMMAND test_c_data_integration
+    DEPENDS 
+        c_data_integration
+    COMMENT "Running c_data_integration tests"
+    USES_TERMINAL
 )
 
-target_compile_definitions(c_data_integration
-    PRIVATE
-        SPARROW_C_DATA_INTEGRATION_EXPORTS)
+set_target_properties(run_c_data_integration_tests PROPERTIES FOLDER "Tests utilities")
 
-set_target_properties(c_data_integration
-    PROPERTIES
-        VERSION ${SPARROW_BINARY_VERSION}
-        SOVERSION ${SPARROW_BINARY_CURRENT}
-        CXX_STANDARD 20
-        CXX_STANDARD_REQUIRED YES
-        CXX_EXTENSIONS NO
-        FOLDER c_data_integration
+set(JUNIT_REPORT_FILE_C_DATA_INTEGRATION_TESTS ${CMAKE_CURRENT_BINARY_DIR}/test_c_data_integration.xml)
+
+add_custom_target(run_c_data_integration_with_junit_report
+    COMMAND test_c_data_integration --reporters=better_junit --out=${JUNIT_REPORT_FILE_C_DATA_INTEGRATION_TESTS} --no-path-filenames=true
+    DEPENDS
+        test_c_data_integration
+    COMMENT "Running tests with JUnit reports saved to: ${JUNIT_REPORT_FILE_C_DATA_INTEGRATION_TESTS}"
+    USES_TERMINAL
 )
 
-target_link_libraries(c_data_integration
-    PUBLIC
-        sparrow
-        nlohmann_json::nlohmann_json)
-
-target_include_directories(c_data_integration
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>)
-
-add_subdirectory(test_c_data_integration)
-        
+set_target_properties(run_c_data_integration_with_junit_report PROPERTIES FOLDER "Tests utilities")

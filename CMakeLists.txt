@@ -98,6 +98,12 @@ OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
 MESSAGE(STATUS "🔧 Use date polyfill: ${USE_DATE_POLYFILL}")
 OPTION(ENABLE_INTEGRATION_TEST "Enable integration tests" OFF)
 MESSAGE(STATUS "🔧 Enable integration tests: ${ENABLE_INTEGRATION_TEST}")
+OPTION(CREATE_JSON_READER_TARGET "Create json_reader target, usualy used for integration tests" OFF)
+if(ENABLE_INTEGRATION_TEST AND NOT CREATE_JSON_READER_TARGET)
+    message(STATUS "🤖 User sets ENABLE_INTEGRATION_TEST, but CREATE_JSON_READER_TARGET is OFF. We force it ON.")
+    set(CREATE_JSON_READER_TARGET ON)
+endif()
+MESSAGE(STATUS "🔧 Create json_reader target: ${CREATE_JSON_READER_TARGET}")
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 4 OR MSVC)
     set(DEFAULT_USE_LARGE_INT_PLACEHOLDERS ON)
@@ -420,6 +426,14 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     )
 endif()
 
+if(CREATE_JSON_READER_TARGET)
+    add_subdirectory(json_reader)
+endif()
+
+if(ENABLE_INTEGRATION_TEST)
+    add_subdirectory(c_data_integration_tests)
+endif()
+
 if(BUILD_TESTS)
     message(STATUS "🧪 Create tests targets")
     enable_testing()
@@ -443,7 +457,12 @@ endif()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-install(TARGETS sparrow
+set(SPARROW_INSTALL_TARGETS sparrow)
+if(CREATE_JSON_READER_TARGET)
+    list(APPEND SPARROW_INSTALL_TARGETS json_reader)
+endif()
+
+install(TARGETS ${SPARROW_INSTALL_TARGETS}
     EXPORT ${PROJECT_NAME}-targets)
 
 # Makes the project importable from the build directory
@@ -459,6 +478,14 @@ install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
 install(FILES ${SPARROW_INCLUDE_DIR}/sparrow.hpp
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
+# Install json_reader headers if the target is built
+if(CREATE_JSON_READER_TARGET)
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/json_reader/include/sparrow/json_reader
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sparrow
+        PATTERN ".clang-*" EXCLUDE
+        PATTERN "README.md" EXCLUDE)
+endif()
+
 set(SPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
     STRING "install path for sparrowConfig.cmake")
 
@@ -466,15 +493,9 @@ configure_package_config_file(${PROJECT_NAME}Config.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
     INSTALL_DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
 
-# sparrow is header-only and does not depend on the architecture.
-# Remove CMAKE_SIZEOF_VOID_P from sparrowConfigVersion.cmake so that an sparrowConfig.cmake
-# generated for a 64 bit target can be used for 32 bit targets and vice versa.
-set(_SPARROW_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
-unset(CMAKE_SIZEOF_VOID_P)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
     VERSION ${CMAKE_PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion)
-set(CMAKE_SIZEOF_VOID_P ${_SPARROW_CMAKE_SIZEOF_VOID_P})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
     DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
