@@ -492,8 +492,9 @@ namespace sparrow::json_reader
                                   return sparrow::month_day_nanoseconds_interval{
                                       .months = std::chrono::months{value.at("months").get<int32_t>()},
                                       .days = std::chrono::days{value.at("days").get<int32_t>()},
-                                      .nanoseconds = std::chrono::nanoseconds{value.at("nanoseconds")
-                                                                                  .get<int64_t>()}
+                                      .nanoseconds = std::chrono::nanoseconds{
+                                          value.at("nanoseconds").get<int64_t>()
+                                      }
                                   };
                               }
                           );
