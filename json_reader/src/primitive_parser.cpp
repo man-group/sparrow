@@ -53,8 +53,7 @@ namespace sparrow::json_reader
         }
         else
         {
-            return sparrow::array{sparrow::primitive_array<T>{std::move(data), false, name, std::move(metadata)}
-            };
+            return sparrow::array{sparrow::primitive_array<T>{std::move(data), false, name, std::move(metadata)}};
         }
     }
 

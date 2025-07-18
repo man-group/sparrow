@@ -385,10 +385,9 @@ TEST_SUITE("json_reader_utils")
     TEST_CASE("get_metadata")
     {
         // Test with metadata
-        nlohmann::json metadata_json = nlohmann::json::array({
-            {{"key", "key1"}, {"value", "value1"}},
-            {{"key", "key2"}, {"value", "value2"}}
-        });
+        nlohmann::json metadata_json = nlohmann::json::array(
+            {{{"key", "key1"}, {"value", "value1"}}, {{"key", "key2"}, {"value", "value2"}}}
+        );
 
         nlohmann::json json_object = nlohmann::json::object();
         json_object["metadata"] = metadata_json;
