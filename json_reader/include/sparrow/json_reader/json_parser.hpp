@@ -48,7 +48,8 @@ namespace sparrow::json_reader
         const nlohmann::json& root
     );
 
-    SPARROW_JSON_READER_API sparrow::record_batch build_record_batch_from_json(const nlohmann::json& root, size_t num_batches);
+    SPARROW_JSON_READER_API sparrow::record_batch
+    build_record_batch_from_json(const nlohmann::json& root, size_t num_batches);
 }
 
 // namespace sparrow::json_reader::json_parser
