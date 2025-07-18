@@ -457,11 +457,8 @@ endif()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
+# Install target
 set(SPARROW_INSTALL_TARGETS sparrow)
-if(CREATE_JSON_READER_TARGET)
-    list(APPEND SPARROW_INSTALL_TARGETS json_reader)
-endif()
-
 install(TARGETS ${SPARROW_INSTALL_TARGETS}
     EXPORT ${PROJECT_NAME}-targets)
 
@@ -470,6 +467,7 @@ export(EXPORT ${PROJECT_NAME}-targets
     FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
     NAMESPACE sparrow::)
 
+# Install headers
 install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     PATTERN ".clang-*" EXCLUDE
@@ -478,14 +476,7 @@ install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
 install(FILES ${SPARROW_INCLUDE_DIR}/sparrow.hpp
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-# Install json_reader headers if the target is built
-if(CREATE_JSON_READER_TARGET)
-    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/json_reader/include/sparrow/json_reader
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sparrow
-        PATTERN ".clang-*" EXCLUDE
-        PATTERN "README.md" EXCLUDE)
-endif()
-
+# Install CMake configuration files
 set(SPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
     STRING "install path for sparrowConfig.cmake")
 
@@ -496,9 +487,12 @@ configure_package_config_file(${PROJECT_NAME}Config.cmake.in
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
     VERSION ${CMAKE_PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+
+install(FILES 
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
     DESTINATION ${SPARROW_CMAKECONFIG_INSTALL_DIR})
+
 install(EXPORT ${PROJECT_NAME}-targets
     FILE ${PROJECT_NAME}Targets.cmake
     NAMESPACE sparrow::

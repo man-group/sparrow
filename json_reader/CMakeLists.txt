@@ -78,4 +78,18 @@ target_include_directories(json_reader
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
+
+# Installation
+# ============
+include(GNUInstallDirs)
+
+# Install json_reader target
+install(TARGETS json_reader
+    EXPORT sparrow-targets)
+
+# Install json_reader headers
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/sparrow/json_reader
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sparrow
+    PATTERN ".clang-*" EXCLUDE
+    PATTERN "README.md" EXCLUDE)
         
