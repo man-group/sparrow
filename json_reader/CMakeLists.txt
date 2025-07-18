@@ -1,6 +1,6 @@
 include(compile_options)
 
-add_library(json_reader STATIC
+add_library(json_reader ${SPARROW_LIBRARY_TYPE}
     src/binary_parser.cpp
     src/binaryview_parser.cpp
     src/bool_parser.cpp
@@ -51,7 +51,7 @@ target_compile_definitions(json_reader
     PRIVATE
         SPARROW_JSON_READER_EXPORTS
     PUBLIC
-        SPARROW_JSON_READER_STATIC)
+        $<$<NOT:$<BOOL:${SPARROW_BUILD_SHARED}>>:SPARROW_JSON_READER_STATIC>)
 
 set_target_properties(json_reader
     PROPERTIES
