@@ -27,4 +27,19 @@ class TestPackageConan(ConanFile):
 
     def test(self):
         if can_run(self):
-            self.run(os.path.join(self.cpp.build.bindirs[0], "standalone"), env="conanrun")
+            # Run the main test
+            self.run(
+                os.path.join(self.cpp.build.bindirs[0], "standalone"), env="conanrun"
+            )
+
+            # Run the json_reader test if it exists
+            json_reader_test_path = os.path.join(
+                self.cpp.build.bindirs[0], "json_reader_test"
+            )
+            if os.path.exists(json_reader_test_path) or os.path.exists(
+                json_reader_test_path + ".exe"
+            ):
+                self.output.info("Running json_reader test")
+                self.run(json_reader_test_path, env="conanrun")
+            else:
+                self.output.info("json_reader test not found, skipping")

@@ -54,7 +54,7 @@ namespace sparrow
 
             SUBCASE("assignment")
             {
-                T init = 3;
+                T init = static_cast<T>(3);
                 float16_t f(2);
                 f = init;
                 CHECK_EQ(f, init);

@@ -35,11 +35,15 @@
 #    pragma GCC diagnostic ignored "-Wold-style-cast"
 #elif defined(_MSC_VER)
 #    pragma warning(push)
+#    pragma warning(disable : 4127)	 // conditional expression is constant
+#    pragma warning(disable : 4146)  // unary minus operator applied to unsigned type, result still unsigned
 #    pragma warning(disable : 4365)  // 'action' : conversion from 'type_1' to 'type_2', signed/unsigned
                                      // mismatch
 #    pragma warning(disable : 4514)  // 'function' : unreferenced inline function has been removed
 #    pragma warning(disable : 4668)  // 'symbol' is not defined as a preprocessor macro, replacing with
                                      // '0' for 'directives'
+#    pragma warning(disable : 4996)	 // std::float_denorm_style		 
+
 #endif
 
 
@@ -1946,8 +1950,11 @@ namespace std {
 		/// Supports signaling NaNs.
 		static constexpr bool has_signaling_NaN = true;
 
+// if C++ version < 23
+#if __cplusplus < 202300L
 		/// Supports subnormal values.
 		static constexpr float_denorm_style has_denorm = denorm_present;
+#endif
 
 		/// Supports no denormalization detection.
 		static constexpr bool has_denorm_loss = false;
@@ -2985,7 +2992,7 @@ namespace half_float {
 			*sin = half(detail::binary, detail::rounded<half::round_style,true>(arg.data_-1, 1, 1));
 			*cos = half(detail::binary, detail::rounded<half::round_style,true>(0x3BFF, 1, 1));
 		} else {
-			if(half::round_style != std::round_to_nearest) {
+			if constexpr (half::round_style != std::round_to_nearest) {
 				switch(abs) {
 				case 0x48B7:
 					*sin = half(detail::binary, detail::rounded<half::round_style,true>((~arg.data_&0x8000)|0x1D07, 1, 1));
@@ -3036,7 +3043,7 @@ namespace half_float {
 			return half(detail::binary, (abs==0x7C00) ? detail::invalid() : detail::signal(arg.data_));
 		if(abs < 0x2900)
 			return half(detail::binary, detail::rounded<half::round_style,true>(arg.data_-1, 1, 1));
-		if(half::round_style != std::round_to_nearest)
+		if constexpr (half::round_style != std::round_to_nearest)
 			switch(abs) {
 				case 0x48B7: return half(detail::binary, detail::rounded<half::round_style,true>((~arg.data_&0x8000)|0x1D07, 1, 1));
 				case 0x6A64: return half(detail::binary, detail::rounded<half::round_style,true>((~arg.data_&0x8000)|0x3BFE, 1, 1));
@@ -3067,8 +3074,9 @@ namespace half_float {
 			return half(detail::binary, (abs==0x7C00) ? detail::invalid() : detail::signal(arg.data_));
 		if(abs < 0x2500)
 			return half(detail::binary, detail::rounded<half::round_style,true>(0x3BFF, 1, 1));
-		if(half::round_style != std::round_to_nearest && abs == 0x598C)
-			return half(detail::binary, detail::rounded<half::round_style,true>(0x80FC, 1, 1));
+		if constexpr (half::round_style != std::round_to_nearest)
+		 	if(abs == 0x598C)
+				return half(detail::binary, detail::rounded<half::round_style,true>(0x80FC, 1, 1));
 		std::pair<detail::uint32,detail::uint32> sc = detail::sincos(detail::angle_arg(abs, k), 28);
 		detail::uint32 sign = -static_cast<detail::uint32>(((k>>1)^k)&1);
 		return half(detail::binary, detail::fixed2half<half::round_style,30,true,true,true>((((k&1) ? sc.first : sc.second)^sign) - sign));
