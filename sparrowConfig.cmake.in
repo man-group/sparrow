@@ -26,6 +26,10 @@ if("@USE_DATE_POLYFILL@")
     find_dependency(date)
 endif()
 
+if("@CREATE_JSON_READER_TARGET@")
+    find_dependency(nlohmann_json)
+endif()
+
 if(NOT TARGET sparrow::sparrow)
     include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
     get_target_property(@PROJECT_NAME@_INCLUDE_DIRS sparrow::sparrow INTERFACE_INCLUDE_DIRECTORIES)
