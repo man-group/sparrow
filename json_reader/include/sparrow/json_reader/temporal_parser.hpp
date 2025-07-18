@@ -18,20 +18,22 @@
 
 #include <sparrow/array.hpp>
 
+#include "sparrow/json_reader/config.hpp"
+
 namespace sparrow::json_reader
 {
-    sparrow::array
+    SPARROW_JSON_READER_API sparrow::array
     date_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 
-    sparrow::array
+    SPARROW_JSON_READER_API sparrow::array
     time_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 
-    sparrow::array
+    SPARROW_JSON_READER_API sparrow::array
     timestamp_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 
-    sparrow::array
+    SPARROW_JSON_READER_API sparrow::array
     duration_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 
-    sparrow::array
+    SPARROW_JSON_READER_API sparrow::array
     interval_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 }

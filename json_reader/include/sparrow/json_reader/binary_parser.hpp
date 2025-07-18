@@ -12,16 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma once
+
 #include <nlohmann/json.hpp>
 
 #include <sparrow/array.hpp>
 
+#include "sparrow/json_reader/config.hpp"
+
 namespace sparrow::json_reader
 {
-    sparrow::array
+    SPARROW_JSON_READER_API sparrow::array
     binary_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 
-    sparrow::array large_binary_array_from_json(
+    SPARROW_JSON_READER_API sparrow::array large_binary_array_from_json(
         const nlohmann::json& array,
         const nlohmann::json& schema,
         const nlohmann::json& root

@@ -18,11 +18,13 @@
 
 #include <sparrow/array.hpp>
 
+#include "sparrow/json_reader/config.hpp"
+
 namespace sparrow::json_reader
 {
-    sparrow::array
+    SPARROW_JSON_READER_API sparrow::array
     primitive_array_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 
-    sparrow::array
+    SPARROW_JSON_READER_API sparrow::array
     floating_point_from_json(const nlohmann::json& array, const nlohmann::json& schema, const nlohmann::json& root);
 }
