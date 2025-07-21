@@ -74,6 +74,7 @@ jobs:
           -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}}
           -DBUILD_TESTS:BOOL=ON
           -DENABLE_INTEGRATION_TEST=ON
+          -DCREATE_JSON_READER_TARGET=ON
           -DBUILD_EXAMPLES:BOOL=ON
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -105,7 +106,7 @@ jobs:
         run: cmake --build build --config ${{matrix.config.name}} --target run_tests_with_junit_report
         shell: alpine.sh {0}
 
-      - name: Running sparrow tests
+      - name: Running c_data_integration tests
         env:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: cmake --build build --config ${{matrix.config.name}} --target run_c_data_integration_with_junit_report
