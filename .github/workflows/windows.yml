@@ -35,13 +35,6 @@ jobs:
             gnu-flags: "-m64",
             msvc-dev-cmd: "win64"
           }
-        - {
-            name: "Win32",
-            vs-flags: "-A Win32", # only used by VS generator
-            cl-flags: "/arch (x86)",
-            gnu-flags: "-m32",
-            msvc-dev-cmd: "win32"
-          }
         config:
         - {name: Debug}
         - {name: Release}
@@ -101,16 +94,6 @@ jobs:
       with:
         key: ${{ matrix.toolchain.compiler }}_${{ matrix.build-system.name }}_${{ matrix.config.name }}_targets_${{ matrix.target-arch.name }}_date-polyfill_${{ matrix.toolchain.date-polyfill}}_ccache
 
-    - name: Setup vcpkg environment
-      id: vcpkg
-      if: matrix.target-arch.name == 'Win32'
-      uses: johnwason/vcpkg-action@v6
-      with:
-        manifest-dir: ${{ github.workspace }}
-        triplet: x86-windows
-        token: ${{ github.token }}
-        github-binarycache: true
-
     - name: Set conda environment
       if: matrix.target-arch.name == 'Win64'
       uses: mamba-org/setup-micromamba@main
@@ -127,27 +110,12 @@ jobs:
       run: |
         echo "SPARROW_DEPS_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
         echo "SPARROW_INSTALL_PREFIX=$CONDA_PREFIX" >> $GITHUB_ENV
-        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL" >> $GITHUB_ENV
- 
-    - name: Set dependencies install prefix dir for 32bit
-      if: matrix.target-arch.name == 'Win32'
-      run: |
-        echo "SPARROW_DEPS_PREFIX=$VCPKG_INSTALLED_DIR" >> $GITHUB_ENV
-        echo "SPARROW_INSTALL_PREFIX=${{ github.workspace }}/install" >> $GITHUB_ENV
-        echo "VCPKG_TARGET_TRIPLET='x86-windows'" >> $GITHUB_ENV
-        echo "VCPKG_BUILD_TYPE='Release'" >> $GITHUB_ENV
-        echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
-        echo "SPARROW_ADDITIONAL_OPTIONS=-DSPARROW_TARGET_32BIT=ON" >> $GITHUB_ENV
-        choco install ninja
+        echo "SPARROW_ADDITIONAL_OPTIONS=-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL" >> $GITHUB_ENV
 
     - name: Enable runtime size/length/offset validity checks
       if: matrix.config.name == 'Debug'
       run: |
         echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPARROW_ENABLE_SIZE_CHECKS=ON'" >> $GITHUB_ENV
-
-    - name: Enable runtime 32bit size/length/offset limit
-      if: matrix.target-arch.name == 'Win32' # Note: this is not a mandatory limitation in any context, we add this just to have at least one configuration testing that feature
-      run: echo "SPARROW_CHECKS='$SPARROW_CHECKS -DSPARROW_ENABLE_32BIT_SIZE_LIMIT=ON'" >> $GITHUB_ENV
 
     - name: Enable tests coverage
       if: matrix.config.name == 'Debug' && matrix.toolchain.compiler == 'msvc'
@@ -195,7 +163,6 @@ jobs:
       run: cmake --build . --config ${{matrix.config.name}} --target run_tests_with_junit_report
 
     - name: Run c_data_integration tests
-      if: matrix.target-arch.name != 'Win32'
       working-directory: build
       run: cmake --build . --config ${{matrix.config.name}} --target run_c_data_integration_with_junit_report
 
