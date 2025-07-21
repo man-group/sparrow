@@ -73,7 +73,6 @@ target_link_libraries(json_reader
     PUBLIC
         sparrow
         nlohmann_json::nlohmann_json)
-
 target_include_directories(json_reader
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -83,9 +82,8 @@ target_include_directories(json_reader
 # ============
 include(GNUInstallDirs)
 
-# Install json_reader headers
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/sparrow/json_reader
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sparrow
-    PATTERN ".clang-*" EXCLUDE
-    PATTERN "README.md" EXCLUDE)
-        
+# Install your target json_reader
+install(TARGETS json_reader
+  EXPORT sparrow-targets
+  DESTINATION lib
+)
