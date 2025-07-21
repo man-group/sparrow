@@ -459,6 +459,9 @@ include(CMakePackageConfigHelpers)
 
 # Install target
 set(SPARROW_INSTALL_TARGETS sparrow)
+if(CREATE_JSON_READER_TARGET)
+    list(APPEND SPARROW_INSTALL_TARGETS json_reader nlohmann_json)
+endif()
 install(TARGETS ${SPARROW_INSTALL_TARGETS}
     EXPORT ${PROJECT_NAME}-targets)
 

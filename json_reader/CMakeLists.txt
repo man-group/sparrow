@@ -77,13 +77,3 @@ target_include_directories(json_reader
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
-
-# Installation
-# ============
-include(GNUInstallDirs)
-
-# Install your target json_reader
-install(TARGETS json_reader
-  EXPORT sparrow-targets
-  DESTINATION lib
-)
