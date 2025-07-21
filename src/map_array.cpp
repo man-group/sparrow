@@ -105,7 +105,6 @@ namespace sparrow
 
     auto map_array::value(size_type i) const -> inner_const_reference
     {
-        using st = size_type;
         return map_value(raw_keys_array(), raw_items_array(), p_list_offsets[i], p_list_offsets[i + 1], m_keys_sorted);
     }
 
