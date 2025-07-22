@@ -1,6 +1,10 @@
 include(compile_options)
 
-add_library(c_data_integration SHARED
+if(NOT SPARROW_BUILD_SHARED)
+    message(FATAL_ERROR "c_data_integration requires SPARROW_BUILD_SHARED to be ON")
+endif()
+
+add_library(c_data_integration ${SPARROW_LIBRARY_TYPE}
     src/c_data_integration.cpp
     include/sparrow/c_data_integration/c_data_integration.hpp
     include/sparrow/c_data_integration/config.hpp

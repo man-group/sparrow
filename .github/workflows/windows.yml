@@ -134,7 +134,7 @@ jobs:
         -DCMAKE_PREFIX_PATH=$SPARROW_DEPS_PREFIX \
         -DCMAKE_INSTALL_PREFIX=$SPARROW_INSTALL_PREFIX \
         -DBUILD_TESTS=ON \
-        -DENABLE_INTEGRATION_TEST=ON \
+        -DENABLE_INTEGRATION_TEST=${{matrix.toolchain.shared}} \
         -DBUILD_EXAMPLES=ON \
         -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} \
         $GENERATOR_EXTRA_FLAGS \
@@ -168,6 +168,7 @@ jobs:
 
     - name: Run c_data_integration tests
       working-directory: build
+      if: matrix.shared == 'ON'
       run: cmake --build . --config ${{matrix.config.name}} --target run_c_data_integration_with_junit_report
 
     - name: Upload test results
