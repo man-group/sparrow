@@ -136,6 +136,7 @@ jobs:
         -DBUILD_TESTS=ON \
         -DENABLE_INTEGRATION_TEST=${{matrix.toolchain.shared}} \
         -DBUILD_EXAMPLES=ON \
+        -DCREATE_JSON_READER_TARGET=ON \
         -DUSE_DATE_POLYFILL=${{matrix.toolchain.date-polyfill}} \
         $GENERATOR_EXTRA_FLAGS \
         $SPARROW_CHECKS \
