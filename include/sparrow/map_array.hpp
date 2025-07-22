@@ -84,7 +84,7 @@ namespace sparrow
      * map_array arr(std::move(keys), std::move(values), std::move(offsets));
      * ```
      */
-    class SPARROW_API map_array final : public array_bitmap_base<map_array>
+    class map_array final : public array_bitmap_base<map_array>
     {
     public:
 
@@ -123,7 +123,7 @@ namespace sparrow
          * @post Keys sorted flag is extracted from Arrow flags
          * @post Offset pointers and child arrays are set up for efficient access
          */
-        explicit map_array(arrow_proxy proxy);
+        SPARROW_API explicit map_array(arrow_proxy proxy);
 
         /**
          * @brief Generic constructor for creating map array from various inputs.
@@ -156,7 +156,7 @@ namespace sparrow
          * @post This array contains a deep copy of rhs data
          * @post Child arrays and offset pointers are reconstructed
          */
-        map_array(const self_type& rhs);
+        SPARROW_API map_array(const self_type& rhs);
 
         /**
          * @brief Copy assignment operator.
@@ -169,7 +169,7 @@ namespace sparrow
          * @post Previous data is properly released
          * @post Child arrays and offset pointers are reconstructed
          */
-        map_array& operator=(const self_type& rhs);
+        SPARROW_API map_array& operator=(const self_type& rhs);
 
         map_array(map_array&&) noexcept = default;
         map_array& operator=(map_array&&) noexcept = default;
@@ -181,7 +181,7 @@ namespace sparrow
          *
          * @post Returns non-null pointer to valid array_wrapper containing all keys
          */
-        [[nodiscard]] const array_wrapper* raw_keys_array() const;
+        [[nodiscard]] SPARROW_API const array_wrapper* raw_keys_array() const;
 
         /**
          * @brief Gets mutable access to the keys array.
@@ -190,7 +190,7 @@ namespace sparrow
          *
          * @post Returns non-null pointer to valid array_wrapper containing all keys
          */
-        [[nodiscard]] array_wrapper* raw_keys_array();
+        [[nodiscard]] SPARROW_API array_wrapper* raw_keys_array();
 
         /**
          * @brief Gets read-only access to the values array.
@@ -199,7 +199,7 @@ namespace sparrow
          *
          * @post Returns non-null pointer to valid array_wrapper containing all values
          */
-        [[nodiscard]] const array_wrapper* raw_items_array() const;
+        [[nodiscard]] SPARROW_API const array_wrapper* raw_items_array() const;
 
         /**
          * @brief Gets mutable access to the values array.
@@ -208,7 +208,7 @@ namespace sparrow
          *
          * @post Returns non-null pointer to valid array_wrapper containing all values
          */
-        [[nodiscard]] array_wrapper* raw_items_array();
+        [[nodiscard]] SPARROW_API array_wrapper* raw_items_array();
 
         /**
          * @brief Creates offset buffer from map sizes.
@@ -239,7 +239,7 @@ namespace sparrow
          *
          * @post Returns valid iterator to array beginning
          */
-        [[nodiscard]] value_iterator value_begin();
+        [[nodiscard]] SPARROW_API value_iterator value_begin();
 
         /**
          * @brief Gets iterator to end of value range.
@@ -248,7 +248,7 @@ namespace sparrow
          *
          * @post Returns valid iterator to array end
          */
-        [[nodiscard]] value_iterator value_end();
+        [[nodiscard]] SPARROW_API value_iterator value_end();
 
         /**
          * @brief Gets const iterator to beginning of value range.
@@ -257,7 +257,7 @@ namespace sparrow
          *
          * @post Returns valid const iterator to array beginning
          */
-        [[nodiscard]] const_value_iterator value_cbegin() const;
+        [[nodiscard]] SPARROW_API const_value_iterator value_cbegin() const;
 
         /**
          * @brief Gets const iterator to end of value range.
@@ -266,7 +266,7 @@ namespace sparrow
          *
          * @post Returns valid const iterator to array end
          */
-        [[nodiscard]] const_value_iterator value_cend() const;
+        [[nodiscard]] SPARROW_API const_value_iterator value_cend() const;
 
         /**
          * @brief Gets mutable reference to map at specified index.
@@ -277,7 +277,7 @@ namespace sparrow
          * @pre i must be < size()
          * @post Returns valid reference that provides access to key-value pairs
          */
-        [[nodiscard]] inner_reference value(size_type i);
+        [[nodiscard]] SPARROW_API inner_reference value(size_type i);
 
         /**
          * @brief Gets const reference to map at specified index.
@@ -288,7 +288,7 @@ namespace sparrow
          * @pre i must be < size()
          * @post Returns valid const reference that provides access to key-value pairs
          */
-        [[nodiscard]] inner_const_reference value(size_type i) const;
+        [[nodiscard]] SPARROW_API inner_const_reference value(size_type i) const;
 
         /**
          * @brief Gets pointer to the offset buffer.
@@ -298,7 +298,7 @@ namespace sparrow
          * @post Returns non-null pointer to offset data
          * @post Pointer is adjusted for any array offset
          */
-        [[nodiscard]] offset_type* make_list_offsets() const;
+        [[nodiscard]] SPARROW_API offset_type* make_list_offsets() const;
 
         /**
          * @brief Creates the entries array (struct with key/value fields).
@@ -308,7 +308,7 @@ namespace sparrow
          * @post Returns valid array_wrapper containing struct array
          * @post Struct array has exactly 2 fields: keys and values
          */
-        [[nodiscard]] cloning_ptr<array_wrapper> make_entries_array() const;
+        [[nodiscard]] SPARROW_API cloning_ptr<array_wrapper> make_entries_array() const;
 
         /**
          * @brief Gets whether keys are sorted within each map.
@@ -317,7 +317,7 @@ namespace sparrow
          *
          * @post Returns the value of ArrowFlag::MAP_KEYS_SORTED from schema flags
          */
-        [[nodiscard]] bool get_keys_sorted() const;
+        [[nodiscard]] SPARROW_API bool get_keys_sorted() const;
 
         /**
          * @brief Checks if keys are sorted within each map.
@@ -334,7 +334,8 @@ namespace sparrow
          * @pre All offsets must be within bounds of flat_keys
          * @post Returns true only if keys within each map are in sorted order
          */
-        [[nodiscard]] static bool check_keys_sorted(const array& flat_keys, const offset_buffer_type& offsets);
+        [[nodiscard]] SPARROW_API static bool
+        check_keys_sorted(const array& flat_keys, const offset_buffer_type& offsets);
 
         /**
          * @brief Creates Arrow proxy from keys, values, offsets, and validity bitmap.

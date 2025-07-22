@@ -77,7 +77,8 @@ jobs:
           -DBUILD_TESTS=ON \
           -DBUILD_EXAMPLES=ON \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
-          -DSPARROW_BUILD_SHARED=ON
+          -DSPARROW_BUILD_SHARED=ON \
+          -DCREATE_JSON_READER_TARGET=ON
 
     - name: Build library
       working-directory: sparrow/build
@@ -85,13 +86,6 @@ jobs:
         micromamba activate sparrow
         source /opt/rh/devtoolset-11/enable
         cmake --build . --config ${{ matrix.config }} --target sparrow --parallel 8
-
-    - name: Install
-      working-directory: sparrow/build
-      run: |
-        micromamba activate sparrow
-        source /opt/rh/devtoolset-11/enable
-        cmake --install . --config ${{matrix.config}}
 
     - name: Build tests
       working-directory: sparrow/build
@@ -106,3 +100,24 @@ jobs:
         micromamba activate sparrow
         source /opt/rh/devtoolset-11/enable
         cmake --build . --config ${{matrix.config}} --target run_tests_with_junit_report
+
+    - name: Build json_reader tests
+      working-directory: sparrow/build
+      run: |
+        micromamba activate sparrow
+        source /opt/rh/devtoolset-11/enable
+        cmake --build . --config ${{matrix.config}} --target test_json_reader --parallel 8
+
+    - name: Run json_reader tests
+      working-directory: sparrow/build
+      run: |
+        micromamba activate sparrow
+        source /opt/rh/devtoolset-11/enable
+        cmake --build . --config ${{matrix.config}} --target run_test_json_reader_with_junit_report
+
+    - name: Install
+      working-directory: sparrow/build
+      run: |
+        micromamba activate sparrow
+        source /opt/rh/devtoolset-11/enable
+        cmake --install . --config ${{matrix.config}}

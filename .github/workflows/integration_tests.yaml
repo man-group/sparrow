@@ -36,7 +36,7 @@ jobs:
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
-          -DSPARROW_BUILD_SHARED=OFF \
+          -DSPARROW_BUILD_SHARED=ON \
           -DSPARROW_CONTRACTS_THROW_ON_FAILURE=ON \
           -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
           -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"

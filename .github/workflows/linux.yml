@@ -143,8 +143,9 @@ jobs:
           -DCMAKE_CXX_STANDARD=${{matrix.cpp_standard}} \
           -DUSE_DATE_POLYFILL=${{matrix.date-polyfill}} \
           -DBUILD_TESTS=ON \
-          -DENABLE_INTEGRATION_TEST=ON \
+          -DENABLE_INTEGRATION_TEST=${{matrix.shared}} \
           -DBUILD_EXAMPLES=ON \
+          -DCREATE_JSON_READER_TARGET=ON \
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
@@ -156,25 +157,27 @@ jobs:
       working-directory: build
       run: cmake --build . --config ${{matrix.config}} --target sparrow --parallel 8
 
-    - name: Install
-      working-directory: build
-      run: cmake --install . --config ${{matrix.config}}
-
     - name: Build tests
       working-directory: build
       run: cmake --build . --config ${{matrix.config}} --target test_sparrow_lib --parallel 8
-
-    - name: Run sccache stat for check
-      shell: bash
-      run: ${SCCACHE_PATH} --show-stats
 
     - name: Run tests
       working-directory: build
       run: |
         cmake --build . --config ${{matrix.config}} --target run_tests_with_junit_report
 
+    - name: Build json_reader tests
+      working-directory: build
+      run: cmake --build . --config ${{matrix.config}} --target test_json_reader --parallel 8
+
+    - name: Run json_reader tests
+      working-directory: build
+      run: |
+        cmake --build . --config ${{matrix.config}} --target run_test_json_reader_with_junit_report
+
     - name: Run c_data_integration tests
       working-directory: build
+      if: matrix.shared == 'ON'
       run: |
         cmake --build . --config ${{matrix.config}} --target run_c_data_integration_with_junit_report
 
@@ -189,3 +192,11 @@ jobs:
     - name: Run all examples
       working-directory: build
       run: cmake --build . --config ${{matrix.config}} --target run_examples
+  
+    - name: Install
+      working-directory: build
+      run: cmake --install . --config ${{matrix.config}}
+
+    - name: Run sccache stat for check
+      shell: bash
+      run: ${SCCACHE_PATH} --show-stats
