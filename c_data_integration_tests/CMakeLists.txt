@@ -29,6 +29,12 @@ set_target_properties(c_data_integration
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS NO
         FOLDER c_data_integration
+        # RPATH settings for Unix-like systems
+        $<$<PLATFORM_ID:Linux,Darwin>:INSTALL_RPATH_USE_LINK_PATH> TRUE
+        $<$<PLATFORM_ID:Linux,Darwin>:BUILD_WITH_INSTALL_RPATH> FALSE
+        $<$<PLATFORM_ID:Linux>:INSTALL_RPATH> "$ORIGIN"
+        $<$<PLATFORM_ID:Darwin>:INSTALL_RPATH> "@loader_path"
+        BUILD_RPATH_USE_ORIGIN TRUE
 )
 
 target_link_libraries(c_data_integration
