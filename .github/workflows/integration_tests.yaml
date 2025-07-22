@@ -56,7 +56,6 @@ jobs:
           -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_ARRAY_IMPORTER=true \
           -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_SCHEMA_EXPORTER=true \
           -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_SCHEMA_IMPORTER=true \ 
-          -e LD_LIBRARY_PATH=/workspace/build/bin/RELEASE:${{ env.LD_LIBRARY_PATH }} \
           -v ${{ github.workspace }}:/workspace \
           -w /arrow-integration sparrow/integration-tests \
           "/arrow-integration/ci/scripts/integration_arrow.sh /arrow-integration /build"
