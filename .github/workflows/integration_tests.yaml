@@ -49,15 +49,14 @@ jobs:
       run: docker build -t sparrow/integration-tests -f ci/docker/integration.dockerfile .
 
     - name: Run Integration tests
-      env:
-        LD_LIBRARY_PATH: /workspace/build/bin/RELEASE:${{ env.LD_LIBRARY_PATH }}
       run: |
         docker run --rm \
           -e ARCHERY_INTEGRATION_WITH_EXTERNAL_LIBRARY=/workspace/build/bin/RELEASE/ \
           -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_ARRAY_EXPORTER=true \
           -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_ARRAY_IMPORTER=true \
           -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_SCHEMA_EXPORTER=true \
-          -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_SCHEMA_IMPORTER=true \
+          -e ARCHERY_INTEGRATION_EXTERNAL_LIBRARY_C_DATA_SCHEMA_IMPORTER=true \ 
+          -e LD_LIBRARY_PATH=/workspace/build/bin/RELEASE:${{ env.LD_LIBRARY_PATH }} \
           -v ${{ github.workspace }}:/workspace \
           -w /arrow-integration sparrow/integration-tests \
           "/arrow-integration/ci/scripts/integration_arrow.sh /arrow-integration /build"
