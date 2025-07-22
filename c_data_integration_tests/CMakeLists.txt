@@ -33,7 +33,7 @@ set_target_properties(c_data_integration
 
 target_link_libraries(c_data_integration
     PUBLIC
-        json_reader)
+        sparrow_json_reader)
 
 target_include_directories(c_data_integration
     PUBLIC

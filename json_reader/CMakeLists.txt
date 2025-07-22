@@ -67,6 +67,12 @@ set_target_properties(json_reader
         LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE}"
         RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}"
         RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}"
+        NAME sparrow_json_reader
+        # RPATH settings for Unix-like systems
+        $<$<PLATFORM_ID:Linux,Darwin>:INSTALL_RPATH_USE_LINK_PATH> TRUE
+        $<$<PLATFORM_ID:Linux,Darwin>:BUILD_WITH_INSTALL_RPATH> FALSE
+        $<$<PLATFORM_ID:Linux>:INSTALL_RPATH> "$ORIGIN"
+        $<$<PLATFORM_ID:Darwin>:INSTALL_RPATH> "@loader_path"
 )
 
 target_link_libraries(json_reader
