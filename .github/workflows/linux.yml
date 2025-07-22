@@ -143,7 +143,7 @@ jobs:
           -DCMAKE_CXX_STANDARD=${{matrix.cpp_standard}} \
           -DUSE_DATE_POLYFILL=${{matrix.date-polyfill}} \
           -DBUILD_TESTS=ON \
-          -DENABLE_INTEGRATION_TEST=ON \
+          -DENABLE_INTEGRATION_TEST=${{matrix.shared}} \
           -DBUILD_EXAMPLES=ON \
           -DCMAKE_C_COMPILER_LAUNCHER=sccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
@@ -176,6 +176,7 @@ jobs:
 
     - name: Run c_data_integration tests
       working-directory: build
+      if: matrix.shared == 'ON'
       run: |
         cmake --build . --config ${{matrix.config}} --target run_c_data_integration_with_junit_report
 
