@@ -99,11 +99,12 @@ MESSAGE(STATUS "🔧 Use date polyfill: ${USE_DATE_POLYFILL}")
 OPTION(ENABLE_INTEGRATION_TEST "Enable integration tests" OFF)
 MESSAGE(STATUS "🔧 Enable integration tests: ${ENABLE_INTEGRATION_TEST}")
 OPTION(CREATE_JSON_READER_TARGET "Create json_reader target, usualy used for integration tests" OFF)
-if(ENABLE_INTEGRATION_TEST AND NOT CREATE_JSON_READER_TARGET)
-    message(STATUS "🤖 User sets ENABLE_INTEGRATION_TEST, but CREATE_JSON_READER_TARGET is OFF. We force it ON.")
+OPTION(ENABLE_INTEGRATION_TEST "Creates json_reader target and enable integration tests" OFF)
+OPTION(CREATE_JSON_READER_TARGET "Create json_reader target, automatically set when ENABLE_INTEGRATION_TEST is ON" OFF)
+
+if(ENABLE_INTEGRATION_TEST)
     set(CREATE_JSON_READER_TARGET ON)
 endif()
-MESSAGE(STATUS "🔧 Create json_reader target: ${CREATE_JSON_READER_TARGET}")
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 4 OR MSVC)
     set(DEFAULT_USE_LARGE_INT_PLACEHOLDERS ON)
@@ -458,8 +459,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 # Install target
-set(SPARROW_INSTALL_TARGETS sparrow)
-install(TARGETS ${SPARROW_INSTALL_TARGETS}
+install(TARGETS sparrow
     EXPORT ${PROJECT_NAME}-targets)
 
 # Makes the project importable from the build directory

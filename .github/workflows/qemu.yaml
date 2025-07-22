@@ -74,7 +74,6 @@ jobs:
           -DUSE_DATE_POLYFILL=${{matrix.target.date-polyfill}}
           -DBUILD_TESTS:BOOL=ON
           -DENABLE_INTEGRATION_TEST=ON
-          -DCREATE_JSON_READER_TARGET=ON
           -DBUILD_EXAMPLES:BOOL=ON
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache

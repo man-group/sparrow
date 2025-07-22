@@ -6,7 +6,6 @@ add_library(c_data_integration SHARED
     include/sparrow/c_data_integration/config.hpp
     )
 
-set_property(TARGET c_data_integration PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_target_properties(c_data_integration PROPERTIES PREFIX "")
 
 target_compile_options(c_data_integration
