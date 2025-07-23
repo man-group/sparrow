@@ -55,6 +55,15 @@ namespace sparrow
         }
     }
 
+    constexpr std::size_t aligned_capacity(std::size_t n)
+    {
+        constexpr std::size_t alignment = SPARROW_BUFFER_ALIGNMENT;
+        constexpr std::size_t mask = alignment - 1;
+        std::size_t byte_size = n * sizeof(int32_t);
+        std::size_t aligned_byte_size = (byte_size + mask) & ~mask;
+        return aligned_byte_size / sizeof(int32_t);
+    }
+
     TEST_SUITE("buffer")
     {
         TEST_CASE("constructors")
@@ -73,7 +82,7 @@ namespace sparrow
                 const buffer_test_type b(expected_size);
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), expected_size);
-                CHECK_EQ(b.capacity(), expected_size);
+                CHECK_EQ(b.capacity(), aligned_capacity(expected_size));
                 for (std::size_t i = 0; i < expected_size; ++i)
                 {
                     CHECK_EQ(b[i], 0);
@@ -86,7 +95,7 @@ namespace sparrow
                 const buffer_test_type b(expected_size, value);
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), expected_size);
-                CHECK_EQ(b.capacity(), expected_size);
+                CHECK_EQ(b.capacity(), aligned_capacity(expected_size));
                 for (std::size_t i = 0; i < expected_size; ++i)
                 {
                     CHECK_EQ(b[i], value);
@@ -98,7 +107,7 @@ namespace sparrow
                 const buffer_test_type b(expected_size, std::allocator<int32_t>());
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), expected_size);
-                CHECK_EQ(b.capacity(), expected_size);
+                CHECK_EQ(b.capacity(), aligned_capacity(expected_size));
             }
 
             SUBCASE("with pointer and size")
@@ -122,7 +131,7 @@ namespace sparrow
                 const buffer_test_type b{1u, 3u, 5u};
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), 3u);
-                CHECK_EQ(b.capacity(), 3u);
+                CHECK_EQ(b.capacity(), aligned_capacity(3u));
             }
 
             SUBCASE("with range")
@@ -131,7 +140,7 @@ namespace sparrow
                 const buffer_test_type b(vec.cbegin(), vec.cend());
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), 3u);
-                CHECK_EQ(b.capacity(), 3u);
+                CHECK_EQ(b.capacity(), aligned_capacity(3u));
                 for (std::size_t i = 0; i < vec.size(); ++i)
                 {
                     CHECK_EQ(b[i], vec[i]);
@@ -144,7 +153,7 @@ namespace sparrow
                 const buffer_test_type b(vec.begin(), vec.end());
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), 3u);
-                CHECK_EQ(b.capacity(), 3u);
+                CHECK_EQ(b.capacity(), aligned_capacity(3u));
                 for (std::size_t i = 0; i < vec.size(); ++i)
                 {
                     CHECK_EQ(b[i], vec[i]);
@@ -158,13 +167,13 @@ namespace sparrow
             buffer_test_type b1(make_test_buffer(size), size);
             buffer_test_type b2(b1);
             CHECK_EQ(b1, b2);
-            CHECK_EQ(b1.capacity(), b2.capacity());
+            CHECK_EQ(b1.capacity(), size);
 
             const std::size_t size2 = 8u;
             buffer_test_type b3(make_test_buffer(size2, 4), size2);
             b2 = b3;
             CHECK_EQ(b2, b3);
-            CHECK_EQ(b2.capacity(), b2.size());
+            CHECK_EQ(b2.capacity(), aligned_capacity(b2.size()));
             CHECK_NE(b1, b2);
 
             buffer_test_type bnullptr(nullptr, 0);
@@ -446,14 +455,14 @@ namespace sparrow
                 buffer_test_type b1(nullptr, 0);
                 const std::size_t new_cap = 8u;
                 b1.reserve(new_cap);
-                CHECK_EQ(b1.capacity(), new_cap);
+                CHECK_EQ(b1.capacity(), aligned_capacity(new_cap));
             }
             SUBCASE("from empty buffer")
             {
                 const std::size_t new_cap = 8u;
                 buffer_test_type b;
                 b.reserve(new_cap);
-                CHECK_EQ(b.capacity(), new_cap);
+                CHECK_EQ(b.capacity(), aligned_capacity(new_cap));
             }
             SUBCASE("from non-empty buffer")
             {
@@ -478,7 +487,7 @@ namespace sparrow
                 const std::size_t size = 4u;
                 b1.resize(size);
                 CHECK_EQ(b1.size(), size);
-                CHECK_EQ(b1.capacity(), size);
+                CHECK_EQ(b1.capacity(), aligned_capacity(size));
                 for (std::size_t i = 0; i < size; ++i)
                 {
                     CHECK_EQ(b1[i], 0);
@@ -491,7 +500,7 @@ namespace sparrow
                 buffer_test_type b;
                 b.resize(size);
                 CHECK_EQ(b.size(), size);
-                CHECK_EQ(b.capacity(), size);
+                CHECK_EQ(b.capacity(), aligned_capacity(size));
                 for (std::size_t i = 0; i < size; ++i)
                 {
                     CHECK_EQ(b[i], 0);
@@ -534,7 +543,7 @@ namespace sparrow
                 b1.reserve(new_cap);
                 CHECK_EQ(b1.capacity(), new_cap);
                 b1.shrink_to_fit();
-                CHECK_EQ(b1.capacity(), size1);
+                CHECK_EQ(b1.capacity(), aligned_capacity(size1));
             }
 
             SUBCASE("from null buffer")
@@ -597,7 +606,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.emplace(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), 1);
-                CHECK_EQ(b.capacity(), 2);
+                CHECK_EQ(b.capacity(), aligned_capacity(2));
                 CHECK_EQ(b[0], expected_value);
             }
 
@@ -655,7 +664,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.emplace(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), 1);
-                CHECK_EQ(b.capacity(), 2);
+                CHECK_EQ(b.capacity(), aligned_capacity(2));
                 CHECK_EQ(b[0], expected_value);
             }
         }
@@ -668,7 +677,7 @@ namespace sparrow
                 constexpr int32_t expected_value = 101;
                 b.insert(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), 1);
-                CHECK_EQ(b.capacity(), b.size() * SPARROW_BUFFER_GROWTH_FACTOR);
+                CHECK_EQ(b.capacity(), aligned_capacity(b.size()));
                 CHECK_EQ(b[0], expected_value);
                 CHECK_EQ(b.back(), expected_value);
                 CHECK_EQ(b.cend()[-1], expected_value);

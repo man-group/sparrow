@@ -26,7 +26,9 @@
 #include "sparrow/buffer/allocator.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/memory_alignment.hpp"
 #include "sparrow/utils/mp_utils.hpp"
+
 
 #if not defined(SPARROW_BUFFER_GROWTH_FACTOR)
 #    define SPARROW_BUFFER_GROWTH_FACTOR 2
@@ -34,9 +36,6 @@
 
 namespace sparrow
 {
-    // 64-byte alignment constant
-    constexpr std::size_t SPARROW_BUFFER_ALIGNMENT = 64;
-
     template <typename T>
     concept is_buffer_view = requires(T t) { typename T::is_buffer_view; };
 
@@ -98,9 +97,6 @@ namespace sparrow
 
     private:
 
-        // Helper functions for 64-byte alignment
-        static constexpr size_type align_to_64_bytes(size_type size) noexcept;
-        static constexpr size_type calculate_aligned_size(size_type n) noexcept;
         constexpr pointer allocate_aligned(size_type n);
 
         allocator_type m_alloc;
@@ -412,7 +408,7 @@ namespace sparrow
     {
         m_data.p_begin = allocate_aligned(n);
         m_data.p_end = m_data.p_begin + n;
-        m_data.p_storage_end = m_data.p_begin + calculate_aligned_size(n) / sizeof(T);
+        m_data.p_storage_end = m_data.p_begin + calculate_aligned_size<T>(n) / sizeof(T);
     }
 
     template <class T>
@@ -422,22 +418,6 @@ namespace sparrow
         m_data.p_begin = p;
         m_data.p_end = p + n;
         m_data.p_storage_end = p + cap;
-    }
-
-    template <class T>
-    constexpr auto buffer_base<T>::align_to_64_bytes(size_type size) noexcept -> size_type
-    {
-        constexpr size_type alignment = static_cast<size_type>(SPARROW_BUFFER_ALIGNMENT);
-        constexpr size_type mask = alignment - 1;
-        return (size + mask) & ~mask;
-    }
-
-    template <class T>
-    constexpr auto buffer_base<T>::calculate_aligned_size(size_type n) noexcept -> size_type
-    {
-        const size_type byte_size = n * sizeof(T);
-        const size_type aligned_byte_size = align_to_64_bytes(byte_size);
-        return aligned_byte_size;
     }
 
     template <class T>
@@ -1124,7 +1104,7 @@ namespace sparrow
     {
         const size_type diff_max = static_cast<size_type>(std::numeric_limits<difference_type>::max());
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
-        return (std::min) (diff_max, alloc_max);
+        return (std::min)(diff_max, alloc_max);
     }
 
     template <class T>

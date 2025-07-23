@@ -80,6 +80,7 @@ set(SPARROW_TESTS_SOURCES
     test_list_value.cpp
     test_map_array.cpp
     test_memory.cpp
+    test_memory_alignment.cpp
     test_metadata.cpp
     test_mpl.cpp
     test_nested_comperators.cpp

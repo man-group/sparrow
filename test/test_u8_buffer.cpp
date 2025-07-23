@@ -15,6 +15,7 @@
 #include <doctest/doctest.h>
 
 #include "sparrow/u8_buffer.hpp"
+#include "sparrow/utils/memory_alignment.hpp"
 
 TEST_SUITE("u8_buffer")
 {
@@ -193,7 +194,7 @@ TEST_SUITE("u8_buffer")
 
     TEST_CASE("capacity")
     {
-        CHECK_EQ(const_sample_buffer.capacity(), values.size());
+        CHECK_EQ(const_sample_buffer.capacity(), 16u);
     }
 
     TEST_CASE("reserve")
@@ -214,7 +215,7 @@ TEST_SUITE("u8_buffer")
         CHECK_EQ(sample_buffer.capacity(), 16u);
         sample_buffer.shrink_to_fit();
 
-        CHECK_EQ(sample_buffer.capacity(), values.size());
+        CHECK_EQ(sample_buffer.capacity(), 16u);
         for (std::size_t i = 0; i < values.size(); ++i)
         {
             CHECK_EQ(sample_buffer[i], values[i]);
@@ -225,7 +226,7 @@ TEST_SUITE("u8_buffer")
     {
         sample_buffer.clear();
         CHECK_EQ(sample_buffer.size(), 0u);
-        CHECK_EQ(sample_buffer.capacity(), values.size());
+        CHECK_EQ(sample_buffer.capacity(), 16u);
     }
 
     TEST_CASE("insert")

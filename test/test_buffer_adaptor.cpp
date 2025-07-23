@@ -20,6 +20,7 @@
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/utils/bit.hpp"
+#include "sparrow/utils/memory_alignment.hpp"
 
 #include "doctest/doctest.h"
 
@@ -371,8 +372,8 @@ namespace sparrow
         {
             buffer<uint8_t> buf(input);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
-            CHECK_EQ(buffer_adapt.capacity(), 2);
-            CHECK_EQ(buf.capacity(), 8);
+            CHECK_EQ(buffer_adapt.capacity(), 16);
+            CHECK_EQ(buf.capacity(), sparrow::calculate_aligned_size<uint32_t>(8));
         }
 
         TEST_CASE("reserve")
@@ -380,22 +381,22 @@ namespace sparrow
             buffer<uint8_t> buf(input);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             buffer_adapt.reserve(10);
-            CHECK_EQ(buffer_adapt.capacity(), 10);
-            CHECK_EQ(buf.capacity(), 40);
+            CHECK_EQ(buffer_adapt.capacity(), 16);
+            CHECK_EQ(buf.capacity(), 64);
         }
 
         TEST_CASE("shrink_to_fit")
         {
             buffer<uint8_t> buf(input);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
-            CHECK_EQ(buffer_adapt.capacity(), 2);
-            CHECK_EQ(buf.capacity(), 8);
+            CHECK_EQ(buffer_adapt.capacity(), 16);
+            CHECK_EQ(buf.capacity(), 64);
             buffer_adapt.reserve(50);
             CHECK_EQ(buffer_adapt.capacity(), 50);
             CHECK_EQ(buf.capacity(), 200);
             buffer_adapt.shrink_to_fit();
-            CHECK_EQ(buffer_adapt.capacity(), 2);
-            CHECK_EQ(buf.capacity(), 8);
+            CHECK_EQ(buffer_adapt.capacity(), 16);
+            CHECK_EQ(buf.capacity(), 64);
         }
 
         // Modifiers
