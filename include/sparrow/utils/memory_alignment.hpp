@@ -14,22 +14,24 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace sparrow
 {
     // 64-byte alignment constant
-    constexpr size_t SPARROW_BUFFER_ALIGNMENT = 64;
+    constexpr std::size_t SPARROW_BUFFER_ALIGNMENT = 64;
 
-    [[nodiscard]] constexpr size_t align_to_64_bytes(size_t size) noexcept
+    [[nodiscard]] constexpr std::size_t align_to_64_bytes(std::size_t size) noexcept
     {
-        constexpr size_t mask = SPARROW_BUFFER_ALIGNMENT - 1;
+        constexpr std::size_t mask = SPARROW_BUFFER_ALIGNMENT - 1;
         return (size + mask) & ~mask;
     }
 
     template <class T>
-    [[nodiscard]] size_t calculate_aligned_size(size_t n) noexcept
+    [[nodiscard]] std::size_t calculate_aligned_size(std::size_t n) noexcept
     {
-        const size_t byte_size = n * sizeof(T);
-        const size_t aligned_byte_size = align_to_64_bytes(byte_size);
+        const std::size_t byte_size = n * sizeof(T);
+        const std::size_t aligned_byte_size = align_to_64_bytes(byte_size);
         return aligned_byte_size;
     }
 }
