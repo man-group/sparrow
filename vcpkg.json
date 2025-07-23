@@ -5,6 +5,7 @@
 		"doctest",
 		"nlohmann-json",
 		"date",
+		"benchmark",
 		{
 			"name": "vcpkg-tool-ninja",
 			"host": true

@@ -26,6 +26,7 @@ class SparrowRecipe(ConanFile):
         "fPIC": [True, False],
         "use_date_polyfill": [True, False],
         "build_tests": [True, False],
+        "build_benchmarks": [True, False],
         "generate_documentation": [True, False],
     }
     default_options = {
@@ -33,6 +34,7 @@ class SparrowRecipe(ConanFile):
         "fPIC": True,
         "use_date_polyfill": False,
         "build_tests": False,
+        "build_benchmarks": False,
         "generate_documentation": False,
     }
 
@@ -43,6 +45,8 @@ class SparrowRecipe(ConanFile):
             self.test_requires("doctest/2.4.11")
             self.test_requires("catch2/3.7.0")
             self.test_requires("nlohmann_json/3.12.0")
+        if self.options.get_safe("build_benchmarks"):
+            self.test_requires("benchmark/1.9.4")
 
     def build_requirements(self):
         if self.options.get_safe("generate_documentation"):
@@ -88,6 +92,9 @@ class SparrowRecipe(ConanFile):
         tc.variables["USE_DATE_POLYFILL"] = self.options.get_safe(
             "use_date_polyfill", False)
         tc.variables["BUILD_TESTS"] = self.options.get_safe("build_tests", False)
+        tc.variables["BUILD_BENCHMARKS"] = self.options.get_safe(
+            "build_benchmarks", False
+        )
         if is_msvc(self):
             tc.variables["USE_LARGE_INT_PLACEHOLDERS"] = True
         tc.generate()

@@ -1,0 +1,137 @@
+name: Benchmarks
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.job }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash -e -l {0}
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [clang]
+        version: [20]
+        os: [ubuntu-24.04]
+        arch: [64]
+        config: [RelWithDebInfo]
+        date-polyfill: [OFF]
+        shared: [OFF]
+        cpp_standard: [20]
+           
+    runs-on: ${{ matrix.os }}
+    name: Benchmark / ${{matrix.os}} / ${{ matrix.compiler }} / ${{ matrix.version }} / ${{ matrix.arch }} / ${{ matrix.config }} / date-polyfill ${{ matrix.date-polyfill}} / shared ${{ matrix.shared }} / cpp${{ matrix.cpp_standard }}
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+ 
+    steps:
+
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.9
+
+    - name: Install pthread
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libpthread-stubs0-dev libboost-thread-dev
+
+    - uses: rui314/setup-mold@v1
+      with:
+        mold-version: 2.40.1
+        make-default: true
+
+    - name: Install GCC
+      if: matrix.compiler == 'gcc'
+      uses: egor-tensin/setup-gcc@v1
+      with:
+        version: ${{matrix.version}}
+        platform: x64
+
+    - name: Install LLVM and Clang
+      if: matrix.compiler == 'clang'
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh ${{matrix.version}}
+        sudo apt-get install -y clang-tools-${{matrix.version}} 
+        sudo update-alternatives --install /usr/bin/clang++				    clang++					    /usr/bin/clang++-${{matrix.version}} 200
+        sudo update-alternatives --install /usr/bin/clang					    clang					      /usr/bin/clang-${{matrix.version}} 200
+        sudo update-alternatives --install /usr/bin/clang-scan-deps   clang-scan-deps     /usr/bin/clang-scan-deps-${{matrix.version}} 200 
+        sudo update-alternatives --set clang /usr/bin/clang-${{matrix.version}}
+        sudo update-alternatives --set clang++ /usr/bin/clang++-${{matrix.version}}
+        sudo update-alternatives --set clang-scan-deps /usr/bin/clang-scan-deps-${{matrix.version}}
+
+    - name: Install specific version of tzdata
+      if: matrix.date-polyfill == 'OFF'
+      run: sudo apt-get install tzdata=2024a-2ubuntu1 -y --allow-downgrades
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set conda environment
+      uses: mamba-org/setup-micromamba@main
+      with:
+        environment-name: myenv
+        environment-file: environment-dev.yml
+        init-shell: bash
+        cache-downloads: true
+
+    - name: Configure using CMake
+      run: |
+        if [[ "${{matrix.compiler}}" = "gcc" ]]; then export CC=gcc-${{matrix.version}}; export CXX=g++-${{matrix.version}}; else export CC=clang; export CXX=clang++; fi
+        cmake -G Ninja \
+          -Bbuild \
+          -DCMAKE_BUILD_TYPE:STRING=${{matrix.config}} \
+          -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
+          -DCMAKE_CXX_STANDARD=${{matrix.cpp_standard}} \
+          -DUSE_DATE_POLYFILL=${{matrix.date-polyfill}} \
+          -DBUILD_TESTS=OFF \
+          -DENABLE_INTEGRATION_TEST=OFF \
+          -DBUILD_EXAMPLES=OFF \
+          -DBUILD_BENCHMARKS=ON \
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
+          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
+          -DSPARROW_BUILD_SHARED=${{matrix.shared}} \
+          -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
+          -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
+
+    - name: Build the benchmark target(s)
+      working-directory: build
+      run: cmake --build . --config ${{matrix.config}} --target sparrow_benchmarks
+
+    - name: Run benchmarks
+      working-directory: build
+      run: cmake --build . --config ${{matrix.config}} --target run_benchmarks_json
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results
+        path: ./**/sparrow_benchmarks.json
+
+    - name: Download previous benchmark data
+      uses: actions/cache@v4
+      with:
+        path: ./cache
+        key: ${{ runner.os }}-benchmarks
+
+    - name: Store benchmark result
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        # What benchmark tool the output.txt came from
+        tool: 'googlecpp'
+        # Where the output from the benchmark tool is stored
+        output-file-path: build/benchmarks/sparrow_benchmarks.json
+        # Where the previous data file is stored
+        external-data-json-path: ./cache/benchmark-data.json
+        # Workflow will fail when an alert happens
+        fail-on-alert: true
+
+    - name: Run sccache stat for check
+      shell: bash
+      run: ${SCCACHE_PATH} --show-stats
