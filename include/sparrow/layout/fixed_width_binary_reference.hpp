@@ -234,6 +234,36 @@ namespace sparrow
             requires mpl::convertible_ranges<T, typename L::inner_value_type>
         constexpr auto operator<=>(const T& rhs) const;
 
+        /**
+         * @brief Byte-level access to the binary element (unchecked).
+         * @param i Byte index (0 <= i < size())
+         * @return Reference to the i-th byte
+         */
+        [[nodiscard]] constexpr reference operator[](size_type i);
+
+        /**
+         * @brief Byte-level access to the binary element (const, unchecked).
+         * @param i Byte index (0 <= i < size())
+         * @return Const reference to the i-th byte
+         */
+        [[nodiscard]] constexpr const_reference operator[](size_type i) const;
+
+        /**
+         * @brief Checked byte-level access to the binary element.
+         * @param i Byte index (0 <= i < size())
+         * @return Reference to the i-th byte
+         * @throws std::out_of_range if i >= size()
+         */
+        [[nodiscard]] constexpr reference at(size_type i);
+
+        /**
+         * @brief Checked byte-level access to the binary element (const).
+         * @param i Byte index (0 <= i < size())
+         * @return Const reference to the i-th byte
+         * @throws std::out_of_range if i >= size()
+         */
+        [[nodiscard]] constexpr const_reference at(size_type i) const;
+
     private:
 
         /**
@@ -353,6 +383,39 @@ namespace sparrow
     constexpr auto fixed_width_binary_reference<L>::offset(size_type index) const -> size_type
     {
         return p_layout->m_element_size * index;
+    }
+
+    template <class L>
+    [[nodiscard]] constexpr auto fixed_width_binary_reference<L>::operator[](size_type i) -> reference
+    {
+        return *(begin() + i);
+    }
+
+    template <class L>
+    [[nodiscard]] constexpr auto fixed_width_binary_reference<L>::operator[](size_type i) const
+        -> const_reference
+    {
+        return *(cbegin() + i);
+    }
+
+    template <class L>
+    [[nodiscard]] constexpr auto fixed_width_binary_reference<L>::at(size_type i) -> reference
+    {
+        if (i >= size())
+        {
+            throw std::out_of_range("fixed_width_binary_reference::at() index out of range");
+        }
+        return operator[](i);
+    }
+
+    template <class L>
+    [[nodiscard]] constexpr auto fixed_width_binary_reference<L>::at(size_type i) const -> const_reference
+    {
+        if (i >= size())
+        {
+            throw std::out_of_range("fixed_width_binary_reference::at() index out of range");
+        }
+        return operator[](i);
     }
 }
 
