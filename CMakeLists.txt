@@ -277,6 +277,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/functor_index_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/large_int.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/memory_alignment.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/memory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/metadata.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/mp_utils.hpp
