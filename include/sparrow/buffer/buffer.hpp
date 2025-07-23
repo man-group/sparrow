@@ -61,6 +61,7 @@ namespace sparrow
             pointer p_begin = nullptr;
             pointer p_end = nullptr;
             pointer p_storage_end = nullptr;
+            bool owns_memory = false;  // Track if buffer owns the memory
 
             constexpr buffer_data() noexcept = default;
             constexpr buffer_data(buffer_data&&) noexcept;
@@ -314,10 +315,12 @@ namespace sparrow
         : p_begin(rhs.p_begin)
         , p_end(rhs.p_end)
         , p_storage_end(rhs.p_storage_end)
+        , owns_memory(rhs.owns_memory)
     {
         rhs.p_begin = nullptr;
         rhs.p_end = nullptr;
         rhs.p_storage_end = nullptr;
+        rhs.owns_memory = false;
     }
 
     template <class T>
@@ -326,6 +329,7 @@ namespace sparrow
         std::swap(p_begin, rhs.p_begin);
         std::swap(p_end, rhs.p_end);
         std::swap(p_storage_end, rhs.p_storage_end);
+        std::swap(owns_memory, rhs.owns_memory);
         return *this;
     }
 
@@ -356,7 +360,10 @@ namespace sparrow
     template <class T>
     buffer_base<T>::~buffer_base()
     {
-        deallocate(m_data.p_begin, static_cast<size_type>(m_data.p_storage_end - m_data.p_begin));
+        if (m_data.owns_memory)
+        {
+            deallocate(m_data.p_begin, static_cast<size_type>(m_data.p_storage_end - m_data.p_begin));
+        }
     }
 
     template <class T>
@@ -409,6 +416,7 @@ namespace sparrow
         m_data.p_begin = allocate_aligned(n);
         m_data.p_end = m_data.p_begin + n;
         m_data.p_storage_end = m_data.p_begin + calculate_aligned_size<T>(n) / sizeof(T);
+        m_data.owns_memory = true;  // Buffer owns this memory
     }
 
     template <class T>
@@ -418,6 +426,7 @@ namespace sparrow
         m_data.p_begin = p;
         m_data.p_end = p + n;
         m_data.p_storage_end = p + cap;
+        m_data.owns_memory = false;  // External memory - buffer doesn't own it
     }
 
     template <class T>
@@ -557,10 +566,13 @@ namespace sparrow
             else
             {
                 clear();
-                this->deallocate(
-                    get_data().p_begin,
-                    static_cast<size_type>(get_data().p_storage_end - get_data().p_begin)
-                );
+                if (get_data().owns_memory)
+                {
+                    this->deallocate(
+                        get_data().p_begin,
+                        static_cast<size_type>(get_data().p_storage_end - get_data().p_begin)
+                    );
+                }
                 this->assign_storage(nullptr, 0, 0);
             }
         }
@@ -794,11 +806,15 @@ namespace sparrow
                     std::make_move_iterator(get_data().p_end)
                 );
                 destroy(get_data().p_begin, get_data().p_end, get_allocator());
-                this->deallocate(
-                    get_data().p_begin,
-                    static_cast<size_type>(get_data().p_storage_end - get_data().p_begin)
-                );
+                if (get_data().owns_memory)
+                {
+                    this->deallocate(
+                        get_data().p_begin,
+                        static_cast<size_type>(get_data().p_storage_end - get_data().p_begin)
+                    );
+                }
                 this->assign_storage(tmp, old_size, new_cap);
+                get_data().owns_memory = true;  // Buffer now owns the new memory
             }
         }
     }
@@ -1048,8 +1064,12 @@ namespace sparrow
             check_init_length(len, get_allocator());
             pointer p = allocate_and_copy(len, first, last);
             destroy(get_data().p_begin, get_data().p_end, get_allocator());
-            this->deallocate(get_data().p_begin, capacity());
+            if (get_data().owns_memory)
+            {
+                this->deallocate(get_data().p_begin, capacity());
+            }
             this->assign_storage(p, len, len);
+            get_data().owns_memory = true;  // Buffer now owns the new memory
         }
         else if (sz >= len)
         {
@@ -1104,7 +1124,7 @@ namespace sparrow
     {
         const size_type diff_max = static_cast<size_type>(std::numeric_limits<difference_type>::max());
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
-        return (std::min) (diff_max, alloc_max);
+        return (std::min)(diff_max, alloc_max);
     }
 
     template <class T>
