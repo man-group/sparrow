@@ -1104,7 +1104,7 @@ namespace sparrow
     {
         const size_type diff_max = static_cast<size_type>(std::numeric_limits<difference_type>::max());
         const size_type alloc_max = std::allocator_traits<allocator_type>::max_size(a);
-        return (std::min)(diff_max, alloc_max);
+        return (std::min) (diff_max, alloc_max);
     }
 
     template <class T>
