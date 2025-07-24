@@ -275,7 +275,7 @@ namespace xsimd
 
     namespace detail
     {
-        constexpr void* xaligned_malloc(size_t size, size_t alignment)
+        inline void* xaligned_malloc(size_t size, size_t alignment)
         {
             assert(((alignment & (alignment - 1)) == 0) && "alignment must be a power of two");
             assert((alignment >= sizeof(void*)) && "alignment must be at least the size of a pointer");
