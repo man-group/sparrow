@@ -501,27 +501,6 @@ namespace sparrow::benchmark
         state.SetItemsProcessed(static_cast<int64_t>(state.iterations() * size));
     }
 
-    // Benchmark: Move operation
-    template <typename T>
-    static void BM_DynamicBitset_Move(::benchmark::State& state)
-    {
-        const size_t size = static_cast<size_t>(state.range(0));
-        const auto& data = get_bool_data(size);
-
-        for (auto _ : state)
-        {
-            state.PauseTiming();
-            dynamic_bitset<T> source_bitset(data);
-            state.ResumeTiming();
-
-            dynamic_bitset<T> moved_bitset(std::move(source_bitset));
-            ::benchmark::DoNotOptimize(moved_bitset);
-            ::benchmark::ClobberMemory();
-        }
-
-        state.SetItemsProcessed(static_cast<int64_t>(state.iterations() * size));
-    }
-
     // Benchmark: null_count() operation
     template <typename T>
     static void BM_DynamicBitset_NullCount(::benchmark::State& state)
@@ -625,10 +604,6 @@ namespace sparrow::benchmark
         ->RangeMultiplier(range_multiplier)                            \
         ->Range(range_min, range_max)                                  \
         ->Unit(::benchmark::kMicrosecond);                             \
-    BENCHMARK_TEMPLATE(BM_DynamicBitset_Move, TYPE)                    \
-        ->RangeMultiplier(range_multiplier)                            \
-        ->Range(range_min, range_max)                                  \
-        ->Unit(::benchmark::kNanosecond);                              \
     BENCHMARK_TEMPLATE(BM_DynamicBitset_NullCount, TYPE)               \
         ->RangeMultiplier(range_multiplier)                            \
         ->Range(range_min, range_max)                                  \
