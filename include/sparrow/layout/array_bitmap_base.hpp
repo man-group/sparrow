@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/mutable_array_base.hpp"
 
@@ -177,8 +179,9 @@ namespace sparrow
          *   - SPARROW_ASSERT_TRUE(pos <= this->bitmap_cend())
          * @note Only available when is_mutable is true
          */
-        constexpr bitmap_iterator insert_bitmap(const_bitmap_iterator pos, bool value, size_type count)
-            requires is_mutable;
+        template <bool enabled = is_mutable>
+        constexpr std::enable_if_t<enabled, bitmap_iterator>
+        insert_bitmap(const_bitmap_iterator pos, bool value, size_type count);
 
         /**
          * @brief Inserts range of validity bits at specified position.
@@ -204,10 +207,10 @@ namespace sparrow
          *   - SPARROW_ASSERT_TRUE(first <= last)
          * @note Only available when is_mutable is true
          */
-        template <std::input_iterator InputIt>
+        template <std::input_iterator InputIt, bool enabled = is_mutable>
             requires std::same_as<typename std::iterator_traits<InputIt>::value_type, bool>
-        constexpr bitmap_iterator insert_bitmap(const_bitmap_iterator pos, InputIt first, InputIt last)
-            requires is_mutable;
+        constexpr std::enable_if_t<enabled, bitmap_iterator>
+        insert_bitmap(const_bitmap_iterator pos, InputIt first, InputIt last);
 
         /**
          * @brief Erases validity bits starting at specified position.
@@ -230,8 +233,9 @@ namespace sparrow
          *   - SPARROW_ASSERT_TRUE(pos < this->bitmap_cend())
          * @note Only available when is_mutable is true
          */
-        constexpr bitmap_iterator erase_bitmap(const_bitmap_iterator pos, size_type count)
-            requires is_mutable;
+        template <bool enabled = is_mutable>
+        constexpr std::enable_if_t<enabled, bitmap_iterator>
+        erase_bitmap(const_bitmap_iterator pos, size_type count);
 
         /**
          * @brief Updates internal bitmap after external modifications to Arrow data.
@@ -365,10 +369,10 @@ namespace sparrow
     }
 
     template <class D, bool is_mutable>
+    template <bool enabled>
     constexpr auto
     array_bitmap_base_impl<D, is_mutable>::insert_bitmap(const_bitmap_iterator pos, bool value, size_type count)
-        -> bitmap_iterator
-        requires is_mutable
+        -> std::enable_if_t<enabled, bitmap_iterator>
     {
         SPARROW_ASSERT_TRUE(this->bitmap_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= this->bitmap_cend())
@@ -380,12 +384,11 @@ namespace sparrow
     }
 
     template <class D, bool is_mutable>
-    template <std::input_iterator InputIt>
+    template <std::input_iterator InputIt, bool enabled>
         requires std::same_as<typename std::iterator_traits<InputIt>::value_type, bool>
     constexpr auto
     array_bitmap_base_impl<D, is_mutable>::insert_bitmap(const_bitmap_iterator pos, InputIt first, InputIt last)
-        -> bitmap_iterator
-        requires is_mutable
+        -> std::enable_if_t<enabled, bitmap_iterator>
     {
         SPARROW_ASSERT_TRUE(this->bitmap_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= this->bitmap_cend());
@@ -398,10 +401,10 @@ namespace sparrow
     }
 
     template <class D, bool is_mutable>
+    template <bool enabled>
     constexpr auto
     array_bitmap_base_impl<D, is_mutable>::erase_bitmap(const_bitmap_iterator pos, size_type count)
-        -> bitmap_iterator
-        requires is_mutable
+        -> std::enable_if_t<enabled, bitmap_iterator>
     {
         SPARROW_ASSERT_TRUE(this->bitmap_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos < this->bitmap_cend())
