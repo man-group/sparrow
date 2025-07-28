@@ -266,6 +266,193 @@ namespace sparrow
             CHECK_EQ(*iter, dict[3]);
         }
 
+        TEST_CASE("empty")
+        {
+            const layout_type dict = make_dictionary();
+            CHECK_FALSE(dict.empty());
+
+            // Test with empty dictionary
+            layout_type::keys_buffer_type empty_keys{};
+            string_array empty_words_arr{std::vector<nullable<std::string>>{}};
+            array empty_ar(std::move(empty_words_arr));
+            const layout_type
+                empty_dict{std::move(empty_keys), std::move(empty_ar), false, "empty", metadata_sample_opt};
+            CHECK(empty_dict.empty());
+            CHECK_EQ(empty_dict.size(), 0);
+        }
+
+        TEST_CASE("front")
+        {
+            const layout_type dict = make_dictionary();
+            CHECK_FALSE(dict.front().has_value());
+            CHECK_EQ(dict.front(), dict[0]);
+        }
+
+        TEST_CASE("back")
+        {
+            const layout_type dict = make_dictionary();
+            REQUIRE(dict.back().has_value());
+            CHECK_EQ(get_dict_value(dict.back()).value(), words[3]);
+            CHECK_EQ(dict.back(), dict[9]);
+        }
+
+        TEST_CASE("slice")
+        {
+            const layout_type dict = make_dictionary();
+            auto sliced = dict.slice(2, 6);
+            CHECK_EQ(sliced.size(), 4);
+            // Test that slice creates a valid array with the correct size
+            // and that elements can be accessed without errors
+            for (size_t i = 0; i < sliced.size(); ++i)
+            {
+                // Just ensure we can access elements without crashing
+                [[maybe_unused]] auto element = sliced[i];
+            }
+        }
+
+        TEST_CASE("slice_view")
+        {
+            const layout_type dict = make_dictionary();
+            auto sliced_view = dict.slice_view(1, 5);
+            CHECK_EQ(sliced_view.size(), 4);
+            // Test that slice_view creates a valid array with the correct size
+            // and that elements can be accessed without errors
+            for (size_t i = 0; i < sliced_view.size(); ++i)
+            {
+                // Just ensure we can access elements without crashing
+                [[maybe_unused]] auto element = sliced_view[i];
+            }
+        }
+
+        TEST_CASE("name_and_metadata")
+        {
+            const layout_type dict = make_dictionary();
+            CHECK_EQ(dict.name().value(), "name");
+
+            // Test metadata separately with a simple case
+            layout_type::keys_buffer_type keys{0, 1};
+            string_array words_arr{std::vector<nullable<std::string>>{"a", "b"}};
+            array ar(std::move(words_arr));
+
+            // Create metadata manually
+            std::optional<std::vector<std::pair<std::string, std::string>>> simple_metadata{
+                std::vector<std::pair<std::string, std::string>>{{"test_key", "test_value"}}
+            };
+            const layout_type simple_dict{std::move(keys), std::move(ar), false, "test", simple_metadata};
+
+            CHECK_EQ(simple_dict.name().value(), "test");
+            CHECK(simple_dict.metadata().has_value());
+        }
+
+        TEST_CASE("equality")
+        {
+            const layout_type dict1 = make_dictionary();
+            const layout_type dict2 = make_dictionary();
+            CHECK_EQ(dict1, dict2);
+
+            // Test with different data
+            layout_type::keys_buffer_type keys{0, 1, 2};
+            string_array words_arr{std::vector<nullable<std::string>>{"a", "b", "c"}};
+            array ar(std::move(words_arr));
+            const layout_type dict3{std::move(keys), std::move(ar), false, "different", metadata_sample_opt};
+            CHECK_NE(dict1, dict3);
+        }
+
+        TEST_CASE("non_mutable_iterators")
+        {
+            const layout_type dict = make_dictionary();
+
+            // Test that begin() on const object returns const_iterator
+            auto iter = dict.begin();
+            CHECK_EQ(iter, dict.cbegin());
+
+            // Test that end() on const object returns const_iterator
+            auto end_iter = dict.end();
+            CHECK_EQ(end_iter, dict.cend());
+        }
+
+        TEST_CASE("iterator_arithmetic")
+        {
+            const layout_type dict = make_dictionary();
+            auto iter = dict.cbegin();
+
+            // Test += operator
+            iter += 3;
+            CHECK_EQ(*iter, dict[3]);
+
+            // Test -= operator (if available)
+            iter -= 2;
+            CHECK_EQ(*iter, dict[1]);
+
+            // Test iterator difference
+            auto iter2 = dict.cbegin();
+            auto diff = iter - iter2;
+            CHECK_EQ(diff, 1);
+        }
+
+        TEST_CASE("range_based_for_loop")
+        {
+            const layout_type dict = make_dictionary();
+            size_t index = 0;
+            for (const auto& element : dict)
+            {
+                CHECK_EQ(element, dict[index]);
+                ++index;
+            }
+            CHECK_EQ(index, dict.size());
+        }
+
+        TEST_CASE("edge_cases")
+        {
+            SUBCASE("single_element")
+            {
+                layout_type::keys_buffer_type keys{0};
+                string_array words_arr{std::vector<nullable<std::string>>{"single"}};
+                array ar(std::move(words_arr));
+                const layout_type single_dict{std::move(keys), std::move(ar), false, "single", metadata_sample_opt};
+
+                CHECK_EQ(single_dict.size(), 1);
+                CHECK_EQ(single_dict.front(), single_dict.back());
+                REQUIRE(single_dict[0].has_value());
+                CHECK_EQ(std::get<nullable<std::string_view>>(single_dict[0]).value(), "single");
+            }
+
+            SUBCASE("all_nulls")
+            {
+                layout_type::keys_buffer_type keys{0, 1, 2};
+                string_array words_arr{std::vector<nullable<std::string>>{"a", "b", "c"}};
+                array ar(std::move(words_arr));
+                std::vector<size_t> all_nulls{0, 1, 2};
+                const layout_type null_dict{
+                    std::move(keys),
+                    std::move(ar),
+                    std::move(all_nulls),
+                    "nulls",
+                    metadata_sample_opt
+                };
+
+                CHECK_EQ(null_dict.size(), 3);
+                CHECK_FALSE(null_dict[0].has_value());
+                CHECK_FALSE(null_dict[1].has_value());
+                CHECK_FALSE(null_dict[2].has_value());
+            }
+
+            SUBCASE("no_nulls")
+            {
+                layout_type::keys_buffer_type keys{0, 1, 2, 0, 1};
+                string_array words_arr{std::vector<nullable<std::string>>{"a", "b", "c"}};
+                array ar(std::move(words_arr));
+                const layout_type
+                    no_null_dict{std::move(keys), std::move(ar), false, "no_nulls", metadata_sample_opt};
+
+                CHECK_EQ(no_null_dict.size(), 5);
+                for (size_t i = 0; i < no_null_dict.size(); ++i)
+                {
+                    REQUIRE(no_null_dict[i].has_value());
+                }
+            }
+        }
+
 #if defined(__cpp_lib_format)
         TEST_CASE("formatter")
         {
