@@ -23,6 +23,7 @@
 #include <type_traits>
 
 #include "sparrow/buffer/allocator.hpp"
+#include "sparrow/details/3rdparty/xsimd_aligned_allocator.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
@@ -70,10 +71,10 @@ namespace sparrow
         constexpr buffer_base(const A& a) noexcept;
 
         template <allocator A = allocator_type>
-        constexpr buffer_base(size_type n, const A& a = A());
+        constexpr buffer_base(size_type n, const A& a = A(xsimd::aligned_allocator<T>()));
 
         template <allocator A = allocator_type>
-        constexpr buffer_base(pointer p, size_type n, const A& a = A());
+        constexpr buffer_base(pointer p, size_type n, const A& a = A(xsimd::aligned_allocator<T>()));
 
         ~buffer_base();
 
