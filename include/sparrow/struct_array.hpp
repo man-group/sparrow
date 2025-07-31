@@ -527,7 +527,7 @@ struct std::formatter<sparrow::struct_array>
 
 namespace sparrow
 {
-    SPARROW_API std::ostream& operator<<(std::ostream& os, const sparrow::struct_array& value);
+    SPARROW_API std::ostream& operator<<(std::ostream& os, const struct_array& value);
 }
 
 #endif

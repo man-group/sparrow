@@ -946,10 +946,13 @@ struct std::formatter<sparrow::null_type>
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const sparrow::null_type&)
+namespace sparrow
 {
-    os << std::format("{}", "null");
-    return os;
+    inline std::ostream& operator<<(std::ostream& os, const null_type&)
+    {
+        os << std::format("{}", "null");
+        return os;
+    }
 }
 
 template <>

@@ -113,7 +113,7 @@ auto std::formatter<sparrow::struct_value>::format(const sparrow::struct_value& 
 
 namespace sparrow
 {
-    std::ostream& operator<<(std::ostream& os, const sparrow::struct_value& value)
+    std::ostream& operator<<(std::ostream& os, const struct_value& value)
     {
         os << std::format("{}", value);
         return os;

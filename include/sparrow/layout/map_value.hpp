@@ -104,7 +104,7 @@ struct std::formatter<sparrow::map_value>
 
 namespace sparrow
 {
-    SPARROW_API std::ostream& operator<<(std::ostream& os, const sparrow::map_value& value);
+    SPARROW_API std::ostream& operator<<(std::ostream& os, const map_value& value);
 }
 
 #endif

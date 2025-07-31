@@ -140,11 +140,14 @@ struct std::formatter<sparrow::timestamp_reference<L>>
     }
 };
 
-template <typename L>
-inline std::ostream& operator<<(std::ostream& os, const sparrow::timestamp_reference<L>& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    template <typename L>
+    std::ostream& operator<<(std::ostream& os, const timestamp_reference<L>& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 #endif

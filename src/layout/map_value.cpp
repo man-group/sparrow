@@ -227,7 +227,7 @@ auto std::formatter<sparrow::map_value>::format(const sparrow::map_value& map_va
 
 namespace sparrow
 {
-    std::ostream& operator<<(std::ostream& os, const sparrow::map_value& value)
+    std::ostream& operator<<(std::ostream& os, const map_value& value)
     {
         os << std::format("{}", value);
         return os;

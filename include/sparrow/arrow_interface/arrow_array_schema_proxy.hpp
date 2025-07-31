@@ -1062,10 +1062,13 @@ public:
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const sparrow::buffer_view<uint8_t>& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    inline std::ostream& operator<<(std::ostream& os, const buffer_view<uint8_t>& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 template <>
@@ -1117,10 +1120,13 @@ struct std::formatter<sparrow::arrow_proxy>
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const sparrow::arrow_proxy& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    inline std::ostream& operator<<(std::ostream& os, const arrow_proxy& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 #endif

@@ -178,7 +178,7 @@ auto std::formatter<sparrow::list_value>::format(const sparrow::list_value& list
 
 namespace sparrow
 {
-    std::ostream& operator<<(std::ostream& os, const sparrow::list_value& value)
+    std::ostream& operator<<(std::ostream& os, const list_value& value)
     {
         os << std::format("{}", value);
         return os;

@@ -522,10 +522,13 @@ struct std::formatter<sparrow::record_batch>
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const sparrow::record_batch& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    inline std::ostream& operator<<(std::ostream& os, const record_batch& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 #endif
