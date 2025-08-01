@@ -1445,7 +1445,7 @@ namespace sparrow
      * @post Outputs the union array using std::format formatter
      */
     template <typename U>
-        requires std::derived_from<U, sparrow::union_array_crtp_base<U>>
+        requires std::derived_from<U, union_array_crtp_base<U>>
     std::ostream& operator<<(std::ostream& os, const U& value)
     {
         os << std::format("{}", value);

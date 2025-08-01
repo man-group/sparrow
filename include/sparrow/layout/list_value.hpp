@@ -445,7 +445,7 @@ struct std::formatter<sparrow::list_value>
 
 namespace sparrow
 {
-    SPARROW_API std::ostream& operator<<(std::ostream& os, const sparrow::list_value& value);
+    SPARROW_API std::ostream& operator<<(std::ostream& os, const list_value& value);
 }
 
 #endif

@@ -361,11 +361,14 @@ struct std::formatter<sparrow::decimal_reference<L>>
     }
 };
 
-template <typename L>
-inline std::ostream& operator<<(std::ostream& os, const sparrow::decimal_reference<L>& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    template <typename L>
+    std::ostream& operator<<(std::ostream& os, const decimal_reference<L>& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 #endif

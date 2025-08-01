@@ -145,7 +145,7 @@ auto std::formatter<sparrow::struct_array>::format(
 
 namespace sparrow
 {
-    std::ostream& operator<<(std::ostream& os, const sparrow::struct_array& value)
+    std::ostream& operator<<(std::ostream& os, const struct_array& value)
     {
         os << std::format("{}", value);
         return os;

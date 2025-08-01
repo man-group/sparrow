@@ -981,10 +981,14 @@ struct std::formatter<sparrow::dictionary_encoded_array<IT>>
     }
 };
 
-template <std::integral IT>
-std::ostream& operator<<(std::ostream& os, const sparrow::dictionary_encoded_array<IT>& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    template <std::integral IT>
+    std::ostream& operator<<(std::ostream& os, const dictionary_encoded_array<IT>& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
+
 #endif

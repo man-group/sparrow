@@ -417,7 +417,7 @@ struct std::formatter<sparrow::run_end_encoded_array>
 
 namespace sparrow
 {
-    SPARROW_API std::ostream& operator<<(std::ostream& os, const sparrow::run_end_encoded_array& value);
+    SPARROW_API std::ostream& operator<<(std::ostream& os, const run_end_encoded_array& value);
 }
 
 #endif

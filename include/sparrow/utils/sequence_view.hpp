@@ -149,11 +149,14 @@ struct std::formatter<sparrow::sequence_view<T, E>>
     }
 };
 
-template <typename T, std::size_t E>
-std::ostream& operator<<(std::ostream& os, const sparrow::sequence_view<T, E>& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    template <typename T, std::size_t E>
+    std::ostream& operator<<(std::ostream& os, const sequence_view<T, E>& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 #endif

@@ -444,11 +444,14 @@ struct std::formatter<sparrow::fixed_width_binary_reference<Layout>>
     }
 };
 
-template <typename Layout>
-inline std::ostream& operator<<(std::ostream& os, const sparrow::fixed_width_binary_reference<Layout>& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    template <typename Layout>
+    std::ostream& operator<<(std::ostream& os, const fixed_width_binary_reference<Layout>& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 #endif

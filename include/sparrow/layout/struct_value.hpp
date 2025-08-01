@@ -88,7 +88,7 @@ struct std::formatter<sparrow::struct_value>
 
 namespace sparrow
 {
-    SPARROW_API std::ostream& operator<<(std::ostream& os, const sparrow::struct_value& value);
+    SPARROW_API std::ostream& operator<<(std::ostream& os, const struct_value& value);
 }
 
 #endif

@@ -286,7 +286,7 @@ auto std::formatter<sparrow::run_end_encoded_array>::format(
 
 namespace sparrow
 {
-    std::ostream& operator<<(std::ostream& os, const sparrow::run_end_encoded_array& value)
+    std::ostream& operator<<(std::ostream& os, const run_end_encoded_array& value)
     {
         os << std::format("{}", value);
         return os;

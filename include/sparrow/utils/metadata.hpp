@@ -417,10 +417,13 @@ struct std::formatter<sparrow::key_value_view>
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const sparrow::key_value_view& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    inline std::ostream& operator<<(std::ostream& os, const key_value_view& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 #endif

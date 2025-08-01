@@ -1453,11 +1453,14 @@ struct std::formatter<sparrow::nullable<T, B>>
     std::string m_format_string = "{:";
 };
 
-template <typename T, sparrow::mpl::boolean_like B>
-std::ostream& operator<<(std::ostream& os, const sparrow::nullable<T, B>& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    template <typename T, mpl::boolean_like B>
+    std::ostream& operator<<(std::ostream& os, const nullable<T, B>& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 template <class... T>
@@ -1496,11 +1499,14 @@ struct std::formatter<sparrow::nullable_variant<T...>>
     std::string m_format_string = "{:";
 };
 
-template <class... T>
-std::ostream& operator<<(std::ostream& os, const sparrow::nullable_variant<T...>& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    template <class... T>
+    std::ostream& operator<<(std::ostream& os, const nullable_variant<T...>& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 template <>
@@ -1519,11 +1525,14 @@ struct std::formatter<sparrow::nullval_t>
 
 #endif
 
-inline std::ostream& operator<<(std::ostream& os, const sparrow::nullval_t&)
+namespace sparrow
 {
-    constexpr std::string_view nullval_str = "nullval";
-    os << nullval_str;
-    return os;
+    inline std::ostream& operator<<(std::ostream& os, const nullval_t&)
+    {
+        constexpr std::string_view nullval_str = "nullval";
+        os << nullval_str;
+        return os;
+    }
 }
 
 #undef SPARROW_CONSTEXPR

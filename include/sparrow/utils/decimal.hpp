@@ -400,11 +400,14 @@ struct std::formatter<sparrow::decimal<T>>
     }
 };
 
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const sparrow::decimal<T>& value)
+namespace sparrow
 {
-    os << std::format("{}", value);
-    return os;
+    template <typename T>
+    std::ostream& operator<<(std::ostream& os, const decimal<T>& value)
+    {
+        os << std::format("{}", value);
+        return os;
+    }
 }
 
 #endif
