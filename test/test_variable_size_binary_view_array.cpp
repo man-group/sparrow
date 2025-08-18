@@ -218,7 +218,7 @@ namespace sparrow
                 {
                     SUBCASE("shrink array")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const size_t original_size = array.size();
                         const size_t new_size = original_size - 2;
 
@@ -233,12 +233,12 @@ namespace sparrow
 
                     SUBCASE("grow array with short string")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
                         const auto new_size = original_size + 3;
                         const std::string fill_value = "new";
 
-                        array.resize(new_size, sparrow::make_nullable<std::string>(fill_value));
+                        array.resize(new_size, sparrow::make_nullable(fill_value));
 
                         CHECK_EQ(array.size(), new_size);
 
@@ -257,12 +257,12 @@ namespace sparrow
 
                     SUBCASE("grow array with long string")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
                         const auto new_size = original_size + 2;
                         const std::string fill_value = "this is a long string that exceeds 12 bytes";
 
-                        array.resize_values(new_size, sparrow::make_nullable<std::string>(fill_value));
+                        array.resize(new_size, sparrow::make_nullable(fill_value));
 
                         CHECK_EQ(array.size(), new_size);
 
@@ -281,10 +281,10 @@ namespace sparrow
 
                     SUBCASE("resize to same size")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
 
-                        array.resize_values(original_size, sparrow::make_nullable<std::string>("unchanged"));
+                        array.resize(original_size, sparrow::make_nullable<std::string>("unchanged"));
 
                         CHECK_EQ(array.size(), original_size);
                         for (std::size_t i = 0; i < original_size; ++i)
@@ -295,7 +295,7 @@ namespace sparrow
 
                     SUBCASE("resize to zero")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
 
                         array.resize(0, sparrow::make_nullable<std::string>("empty"));
 
@@ -307,14 +307,14 @@ namespace sparrow
                 {
                     SUBCASE("insert at beginning")
                     {
-                        string_view_array array(words);
-                        const std::string new_value = "prefix";
+                        string_view_array array(words, true);
+                        const sparrow::nullable<std::string> new_value = "prefix";
                         const auto original_size = array.size();
 
                         auto it = array.insert(array.cbegin(), new_value, 1);
 
-                        CHECK_EQ(array.size(), original_size + 1);
-                        CHECK_EQ(std::distance(array.value_begin(), it), 0);
+                        REQUIRE_EQ(array.size(), original_size + 1);
+                        CHECK_EQ(std::distance(array.begin(), it), 0);
                         CHECK_EQ(array[0].value(), new_value);
 
                         // Check shifted elements
@@ -326,15 +326,15 @@ namespace sparrow
 
                     SUBCASE("insert at middle")
                     {
-                        string_view_array array(words);
-                        const std::string new_value = "middle";
+                        string_view_array array(words, true);
+                        const auto new_value = sparrow::make_nullable<std::string>("middle");
                         const auto original_size = array.size();
                         const std::size_t insert_pos = 2;
 
-                        auto it = array.insert_value(array.value_cbegin() + insert_pos, new_value, 1);
+                        auto it = array.insert(array.cbegin() + insert_pos, new_value, 1);
 
-                        CHECK_EQ(array.size(), original_size + 1);
-                        CHECK_EQ(std::distance(array.value_begin(), it), insert_pos);
+                        REQUIRE_EQ(array.size(), original_size + 1);
+                        CHECK_EQ(std::distance(array.begin(), it), insert_pos);
                         CHECK_EQ(array[insert_pos].value(), new_value);
 
                         // Check elements before insertion
@@ -352,14 +352,14 @@ namespace sparrow
 
                     SUBCASE("insert at end")
                     {
-                        string_view_array array(words);
-                        const std::string new_value = "suffix";
+                        string_view_array array(words, true);
+                        const auto new_value = sparrow::make_nullable<std::string>("suffix");
                         const auto original_size = array.size();
 
-                        auto it = array.insert_value(array.value_cend(), new_value, 1);
+                        auto it = array.insert(array.cend(), new_value, 1);
 
-                        CHECK_EQ(array.size(), original_size + 1);
-                        CHECK_EQ(std::distance(array.value_begin(), it), original_size);
+                        REQUIRE_EQ(array.size(), original_size + 1);
+                        CHECK_EQ(std::distance(array.begin(), it), original_size);
                         CHECK_EQ(array[original_size].value(), new_value);
 
                         // Check original elements
@@ -371,16 +371,16 @@ namespace sparrow
 
                     SUBCASE("insert multiple copies")
                     {
-                        string_view_array array(words);
-                        const std::string new_value = "repeated";
+                        string_view_array array(words, true);
+                        const auto new_value = sparrow::make_nullable<std::string>("repeated");
                         const auto original_size = array.size();
                         const std::size_t count = 3;
                         const std::size_t insert_pos = 1;
 
-                        auto it = array.insert_value(array.value_cbegin() + insert_pos, new_value, count);
+                        auto it = array.insert(array.cbegin() + insert_pos, new_value, count);
 
-                        CHECK_EQ(array.size(), original_size + count);
-                        CHECK_EQ(std::distance(array.value_begin(), it), insert_pos);
+                        REQUIRE_EQ(array.size(), original_size + count);
+                        CHECK_EQ(std::distance(array.begin(), it), insert_pos);
 
                         // Check elements before insertion
                         for (std::size_t i = 0; i < insert_pos; ++i)
@@ -403,25 +403,27 @@ namespace sparrow
 
                     SUBCASE("insert long string")
                     {
-                        string_view_array array(words);
-                        const std::string new_value = "this is a very long string that definitely exceeds 12 bytes";
+                        string_view_array array(words, true);
+                        const auto new_value = sparrow::make_nullable<std::string>(
+                            "this is a very long string that definitely exceeds 12 bytes"
+                        );
                         const auto original_size = array.size();
 
-                        auto it = array.insert_value(array.value_cbegin() + 1, new_value, 1);
+                        array.insert(array.cbegin() + 1, new_value, 1);
 
-                        CHECK_EQ(array.size(), original_size + 1);
+                        REQUIRE_EQ(array.size(), original_size + 1);
                         CHECK_EQ(array[1].value(), new_value);
                     }
 
                     SUBCASE("insert zero count")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
 
-                        auto it = array.insert_value(array.value_cbegin() + 1, "test", 0);
+                        auto it = array.insert(array.cbegin() + 1, sparrow::make_nullable<std::string>("test"), 0);
 
-                        CHECK_EQ(array.size(), original_size);
-                        CHECK_EQ(std::distance(array.value_begin(), it), 1);
+                        REQUIRE_EQ(array.size(), original_size);
+                        CHECK_EQ(std::distance(array.begin(), it), 1);
 
                         // Check all elements unchanged
                         for (std::size_t i = 0; i < array.size(); ++i)
@@ -431,18 +433,22 @@ namespace sparrow
                     }
                 }
 
-                SUBCASE("insert_values")
+                SUBCASE("insert")
                 {
                     SUBCASE("insert range at beginning")
                     {
-                        string_view_array array(words);
-                        const std::vector<std::string> to_insert = {"new1", "new2", "new3"};
+                        string_view_array array(words, true);
+                        const std::vector<sparrow::nullable<std::string>> to_insert = {
+                            sparrow::make_nullable<std::string>("new1"),
+                            sparrow::make_nullable<std::string>("new2"),
+                            sparrow::make_nullable<std::string>("new3")
+                        };
                         const auto original_size = array.size();
 
-                        auto it = array.insert_values(array.value_cbegin(), to_insert.begin(), to_insert.end());
+                        auto it = array.insert(array.cbegin(), to_insert.begin(), to_insert.end());
 
-                        CHECK_EQ(array.size(), original_size + to_insert.size());
-                        CHECK_EQ(std::distance(array.value_begin(), it), 0);
+                        REQUIRE_EQ(array.size(), original_size + to_insert.size());
+                        CHECK_EQ(std::distance(array.begin(), it), 0);
 
                         // Check inserted elements
                         for (std::size_t i = 0; i < to_insert.size(); ++i)
@@ -459,19 +465,18 @@ namespace sparrow
 
                     SUBCASE("insert range at middle")
                     {
-                        string_view_array array(words);
-                        const std::vector<std::string> to_insert = {"mid1", "mid2"};
+                        string_view_array array(words, true);
+                        const std::vector<sparrow::nullable<std::string>> to_insert = {
+                            sparrow::make_nullable<std::string>("mid1"),
+                            sparrow::make_nullable<std::string>("mid2")
+                        };
                         const auto original_size = array.size();
                         const std::size_t insert_pos = 2;
 
-                        auto it = array.insert_values(
-                            array.value_cbegin() + insert_pos,
-                            to_insert.begin(),
-                            to_insert.end()
-                        );
+                        auto it = array.insert(array.cbegin() + insert_pos, to_insert.begin(), to_insert.end());
 
-                        CHECK_EQ(array.size(), original_size + to_insert.size());
-                        CHECK_EQ(std::distance(array.value_begin(), it), insert_pos);
+                        REQUIRE_EQ(array.size(), original_size + to_insert.size());
+                        CHECK_EQ(std::distance(array.begin(), it), insert_pos);
 
                         // Check elements before insertion
                         for (std::size_t i = 0; i < insert_pos; ++i)
@@ -494,14 +499,17 @@ namespace sparrow
 
                     SUBCASE("insert range at end")
                     {
-                        string_view_array array(words);
-                        const std::vector<std::string> to_insert = {"end1", "end2"};
+                        string_view_array array(words, true);
+                        const std::vector<sparrow::nullable<std::string>> to_insert = {
+                            sparrow::make_nullable<std::string>("end1"),
+                            sparrow::make_nullable<std::string>("end2")
+                        };
                         const auto original_size = array.size();
 
-                        auto it = array.insert_values(array.value_cend(), to_insert.begin(), to_insert.end());
+                        auto it = array.insert(array.cend(), to_insert.begin(), to_insert.end());
 
-                        CHECK_EQ(array.size(), original_size + to_insert.size());
-                        CHECK_EQ(std::distance(array.value_begin(), it), original_size);
+                        REQUIRE_EQ(array.size(), original_size + to_insert.size());
+                        CHECK_EQ(std::distance(array.begin(), it), original_size);
 
                         // Check original elements
                         for (std::size_t i = 0; i < original_size; ++i)
@@ -518,18 +526,14 @@ namespace sparrow
 
                     SUBCASE("insert empty range")
                     {
-                        string_view_array array(words);
-                        const std::vector<std::string> to_insert;
+                        string_view_array array(words, true);
+                        const std::vector<sparrow::nullable<std::string>> to_insert;
                         const auto original_size = array.size();
 
-                        auto it = array.insert_values(
-                            array.value_cbegin() + 1,
-                            to_insert.begin(),
-                            to_insert.end()
-                        );
+                        auto it = array.insert(array.cbegin() + 1, to_insert.begin(), to_insert.end());
 
-                        CHECK_EQ(array.size(), original_size);
-                        CHECK_EQ(std::distance(array.value_begin(), it), 1);
+                        REQUIRE_EQ(array.size(), original_size);
+                        CHECK_EQ(std::distance(array.begin(), it), 1);
 
                         // Check all elements unchanged
                         for (std::size_t i = 0; i < array.size(); ++i)
@@ -540,22 +544,20 @@ namespace sparrow
 
                     SUBCASE("insert range with mixed string lengths")
                     {
-                        string_view_array array(words);
-                        const std::vector<std::string> to_insert = {
-                            "short",
-                            "this is a very long string that exceeds 12 bytes limit",
-                            "mid"
+                        string_view_array array(words, true);
+                        const std::vector<sparrow::nullable<std::string>> to_insert = {
+                            sparrow::make_nullable<std::string>("short"),
+                            sparrow::make_nullable<std::string>(
+                                "this is a very long string that exceeds 12 bytes limit"
+                            ),
+                            sparrow::make_nullable<std::string>("mid")
                         };
                         const auto original_size = array.size();
                         const std::size_t insert_pos = 1;
 
-                        auto it = array.insert_values(
-                            array.value_cbegin() + insert_pos,
-                            to_insert.begin(),
-                            to_insert.end()
-                        );
+                        array.insert(array.cbegin() + insert_pos, to_insert.begin(), to_insert.end());
 
-                        CHECK_EQ(array.size(), original_size + to_insert.size());
+                        REQUIRE_EQ(array.size(), original_size + to_insert.size());
 
                         // Check inserted elements
                         for (std::size_t i = 0; i < to_insert.size(); ++i)
@@ -565,18 +567,18 @@ namespace sparrow
                     }
                 }
 
-                SUBCASE("erase_values")
+                SUBCASE("erase")
                 {
                     SUBCASE("erase from beginning")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
                         const std::size_t erase_count = 2;
 
-                        auto it = array.erase_values(array.value_cbegin(), erase_count);
+                        auto it = array.erase(array.cbegin(), array.cbegin() + erase_count);
 
-                        CHECK_EQ(array.size(), original_size - erase_count);
-                        CHECK_EQ(std::distance(array.value_begin(), it), 0);
+                        REQUIRE_EQ(array.size(), original_size - erase_count);
+                        CHECK_EQ(std::distance(array.begin(), it), 0);
 
                         // Check remaining elements
                         for (std::size_t i = 0; i < array.size(); ++i)
@@ -587,15 +589,15 @@ namespace sparrow
 
                     SUBCASE("erase from middle")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
                         const std::size_t erase_pos = 2;
                         const std::size_t erase_count = 2;
 
-                        auto it = array.erase_values(array.value_cbegin() + erase_pos, erase_count);
+                        auto it = array.erase(array.cbegin() + erase_pos, array.cbegin() + erase_pos + erase_count);
 
-                        CHECK_EQ(array.size(), original_size - erase_count);
-                        CHECK_EQ(std::distance(array.value_begin(), it), erase_pos);
+                        REQUIRE_EQ(array.size(), original_size - erase_count);
+                        CHECK_EQ(std::distance(array.begin(), it), erase_pos);
 
                         // Check elements before erase position
                         for (std::size_t i = 0; i < erase_pos; ++i)
@@ -612,15 +614,18 @@ namespace sparrow
 
                     SUBCASE("erase from end")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
                         const std::size_t erase_count = 2;
                         const std::size_t erase_pos = original_size - erase_count;
 
-                        auto it = array.erase_values(array.value_cbegin() + erase_pos, erase_count);
+                        auto it = array.erase(
+                            sparrow::next(array.cbegin(), erase_pos),
+                            sparrow::next(array.cbegin(), erase_pos + erase_count)
+                        );
 
-                        CHECK_EQ(array.size(), original_size - erase_count);
-                        CHECK_EQ(it, array.value_end());
+                        REQUIRE_EQ(array.size(), original_size - erase_count);
+                        CHECK_EQ(it, array.end());
 
                         // Check remaining elements
                         for (std::size_t i = 0; i < array.size(); ++i)
@@ -631,26 +636,29 @@ namespace sparrow
 
                     SUBCASE("erase all elements")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
 
-                        auto it = array.erase_values(array.value_cbegin(), original_size);
+                        auto it = array.erase(array.cbegin(), sparrow::next(array.cbegin(), original_size));
 
-                        CHECK_EQ(array.size(), 0);
-                        CHECK_EQ(it, array.value_begin());
-                        CHECK_EQ(it, array.value_end());
+                        REQUIRE_EQ(array.size(), 0);
+                        CHECK_EQ(it, array.begin());
+                        CHECK_EQ(it, array.end());
                     }
 
                     SUBCASE("erase zero count")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
                         const std::size_t erase_pos = 2;
 
-                        auto it = array.erase_values(array.value_cbegin() + erase_pos, 0);
+                        auto it = array.erase(
+                            sparrow::next(array.cbegin(), erase_pos),
+                            sparrow::next(array.cbegin(), erase_pos)
+                        );
 
-                        CHECK_EQ(array.size(), original_size);
-                        CHECK_EQ(std::distance(array.value_begin(), it), erase_pos);
+                        REQUIRE_EQ(array.size(), original_size);
+                        CHECK_EQ(std::distance(array.begin(), it), erase_pos);
 
                         // Check all elements unchanged
                         for (std::size_t i = 0; i < array.size(); ++i)
@@ -661,15 +669,18 @@ namespace sparrow
 
                     SUBCASE("erase with count exceeding bounds")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
                         const std::size_t erase_pos = original_size - 2;
                         const std::size_t erase_count = 5;  // More than available
 
-                        auto it = array.erase_values(array.value_cbegin() + erase_pos, erase_count);
+                        auto it = array.erase(
+                            sparrow::next(array.cbegin(), erase_pos),
+                            sparrow::next(array.cbegin(), erase_pos + erase_count)
+                        );
 
-                        CHECK_EQ(array.size(), erase_pos);  // Should erase only available elements
-                        CHECK_EQ(it, array.value_end());
+                        REQUIRE_EQ(array.size(), erase_pos);  // Should erase only available elements
+                        CHECK_EQ(it, array.end());
 
                         // Check remaining elements
                         for (std::size_t i = 0; i < array.size(); ++i)
@@ -683,30 +694,30 @@ namespace sparrow
                 {
                     SUBCASE("resize then insert")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
 
                         // First resize
-                        array.resize_values(original_size + 2, "extra");
-                        CHECK_EQ(array.size(), original_size + 2);
+                        array.resize(original_size + 2, sparrow::make_nullable<std::string>("extra"));
+                        REQUIRE_EQ(array.size(), original_size + 2);
 
                         // Then insert
-                        array.insert_value(array.value_cbegin() + 1, "inserted", 1);
+                        array.insert(array.cbegin() + 1, sparrow::make_nullable<std::string>("inserted"), 1);
                         CHECK_EQ(array.size(), original_size + 3);
                         CHECK_EQ(array[1].value(), "inserted");
                     }
 
                     SUBCASE("insert then erase")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
 
                         // First insert
-                        array.insert_value(array.value_cbegin() + 2, "temp", 2);
-                        CHECK_EQ(array.size(), original_size + 2);
+                        array.insert(array.cbegin() + 2, sparrow::make_nullable<std::string>("temp"), 2);
+                        REQUIRE_EQ(array.size(), original_size + 2);
 
                         // Then erase what we inserted
-                        array.erase_values(array.value_cbegin() + 2, 2);
+                        array.erase(array.cbegin() + 2, array.cbegin() + 2 + 2);
                         CHECK_EQ(array.size(), original_size);
 
                         // Should be back to original
@@ -718,15 +729,15 @@ namespace sparrow
 
                     SUBCASE("erase then resize")
                     {
-                        string_view_array array(words);
+                        string_view_array array(words, true);
                         const auto original_size = array.size();
 
                         // First erase
-                        array.erase_values(array.value_cbegin() + 1, 2);
-                        CHECK_EQ(array.size(), original_size - 2);
+                        array.erase(array.cbegin() + 1, array.cbegin() + 1 + 2);
+                        REQUIRE_EQ(array.size(), original_size - 2);
 
                         // Then resize back up
-                        array.resize_values(original_size, "refill");
+                        array.resize(original_size, sparrow::make_nullable<std::string>("refill"));
                         CHECK_EQ(array.size(), original_size);
                         CHECK_EQ(array[original_size - 1].value(), "refill");
                         CHECK_EQ(array[original_size - 2].value(), "refill");
