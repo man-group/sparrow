@@ -561,6 +561,44 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
 
+
+        /**
+         * @brief Creates Arrow proxy from scalar timestamp value.
+         *
+         * Creates a timestamp array proxy from a single timestamp value. This method
+         * wraps the value in an array structure and provides metadata for Arrow compatibility.
+         *
+         * @tparam U Type of the scalar value
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param timezone Timezone for interpreting the timestamp value
+         * @param n Number of elements in the array (must be 1 for scalar)
+         * @param value Scalar timestamp value
+         * @param name Optional name for the array column
+         * @param metadata Optional metadata key-value pairs
+         * @return Arrow proxy containing timestamp array from scalar value
+         *
+         * @pre timezone must be a valid date::time_zone pointer
+         * @pre n must be 1 for scalar values
+         * @pre value must be convertible to timestamp type T
+         * @post Returns proxy with timestamp from scalar value
+         * @post Duration values are extracted and stored efficiently
+         * @post If nullable=true, empty validity bitmap is created
+         * @post If nullable=false, no validity bitmap (all values valid)
+         *
+         * @note Timezone compatibility is not enforced but recommended
+         * @note Duration extraction preserves precision of timestamp type
+         * @note This is optimal for dense timestamp data without nulls
+         */
+        template <typename U, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+            requires std::convertible_to<U, T>
+        [[nodiscard]] static arrow_proxy create_proxy(
+            const date::time_zone* timezone,
+            size_type n,
+            const U& value = U{},
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<METADATA_RANGE> metadata = std::nullopt
+        );
+
         /**
          * @brief Creates Arrow proxy from value range and separate validity information.
          *
