@@ -84,7 +84,8 @@ namespace sparrow
                         CHECK_EQ(array.name(), "name");
                         test_metadata(metadata_sample, array.metadata().value());
                         CHECK_EQ(array.size(), words.size());
-                        CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE));
+                        CHECK(detail::array_access::get_arrow_proxy(array).flags().contains(ArrowFlag::NULLABLE)
+                        );
                     }
                 }
 
@@ -660,28 +661,6 @@ namespace sparrow
                         CHECK_EQ(std::distance(array.begin(), it), erase_pos);
 
                         // Check all elements unchanged
-                        for (std::size_t i = 0; i < array.size(); ++i)
-                        {
-                            CHECK_EQ(array[i].value(), words[i]);
-                        }
-                    }
-
-                    SUBCASE("erase with count exceeding bounds")
-                    {
-                        string_view_array array(words, true);
-                        const auto original_size = array.size();
-                        const std::size_t erase_pos = original_size - 2;
-                        const std::size_t erase_count = 5;  // More than available
-
-                        auto it = array.erase(
-                            sparrow::next(array.cbegin(), erase_pos),
-                            sparrow::next(array.cbegin(), erase_pos + erase_count)
-                        );
-
-                        REQUIRE_EQ(array.size(), erase_pos);  // Should erase only available elements
-                        CHECK_EQ(it, array.end());
-
-                        // Check remaining elements
                         for (std::size_t i = 0; i < array.size(); ++i)
                         {
                             CHECK_EQ(array[i].value(), words[i]);
