@@ -1308,21 +1308,19 @@ namespace sparrow
             const auto bytes_to_move = (current_size - insert_index) * DATA_BUFFER_SIZE;
             const auto src_offset = insert_index * DATA_BUFFER_SIZE;
             const auto dst_offset = (insert_index + count) * DATA_BUFFER_SIZE;
-            
-            std::memmove(
-                view_data + dst_offset,
-                view_data + src_offset,
-                bytes_to_move
-            );
-            
+
+            std::memmove(view_data + dst_offset, view_data + src_offset, bytes_to_move);
+
             // Update buffer offsets for moved long strings
             if (additional_var_storage > 0)
             {
                 for (size_type i = insert_index + count; i < new_size; ++i)
                 {
                     auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-                    const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr));
-                    
+                    const auto length = static_cast<std::size_t>(
+                        *reinterpret_cast<const std::int32_t*>(view_ptr)
+                    );
+
                     if (length > SHORT_STRING_SIZE)
                     {
                         auto* offset_ptr = reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET);
@@ -1333,18 +1331,22 @@ namespace sparrow
         }
 
         // Insert new view structures
-        auto transformed_value = value | std::ranges::views::transform(
-            [](const auto& v) { return static_cast<std::uint8_t>(v); }
-        );
+        auto transformed_value = value
+                                 | std::ranges::views::transform(
+                                     [](const auto& v)
+                                     {
+                                         return static_cast<std::uint8_t>(v);
+                                     }
+                                 );
 
         for (size_type i = 0; i < count; ++i)
         {
             const auto view_index = insert_index + i;
             auto* view_ptr = view_data + (view_index * DATA_BUFFER_SIZE);
-            
+
             // Write length
             *reinterpret_cast<std::int32_t*>(view_ptr) = static_cast<std::int32_t>(value_length);
-            
+
             if (value_length <= SHORT_STRING_SIZE)
             {
                 // Store inline
@@ -1362,7 +1364,7 @@ namespace sparrow
                 auto prefix_end = std::ranges::end(transformed_value);
                 std::size_t copied = 0;
                 auto* prefix_dest = view_ptr + PREFIX_OFFSET;
-                
+
                 while (prefix_iter != prefix_end && copied < PREFIX_SIZE)
                 {
                     *prefix_dest = *prefix_iter;
@@ -1370,20 +1372,23 @@ namespace sparrow
                     ++prefix_dest;
                     ++copied;
                 }
-                
+
                 // Set buffer index
                 *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_INDEX_OFFSET) = 0;
-                
+
                 // Set buffer offset (append to end of existing data)
-                const auto offset = buffers[FIRST_VAR_DATA_BUFFER_INDEX].size() - additional_var_storage + (i * value_length);
-                *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET) = static_cast<std::int32_t>(offset);
-                
+                const auto offset = buffers[FIRST_VAR_DATA_BUFFER_INDEX].size() - additional_var_storage
+                                    + (i * value_length);
+                *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET) = static_cast<std::int32_t>(
+                    offset
+                );
+
                 // Copy data to variadic buffer
                 sparrow::ranges::copy(transformed_value, buffers[FIRST_VAR_DATA_BUFFER_INDEX].data() + offset);
             }
         }
 
-        // Update buffers  
+        // Update buffers
         proxy.update_buffers();
 
         return sparrow::next(value_begin(), insert_index);
@@ -1411,7 +1416,7 @@ namespace sparrow
         std::size_t additional_var_storage = 0;
         std::vector<std::size_t> value_lengths;
         value_lengths.reserve(insert_count);
-        
+
         for (auto it = first; it != last; ++it)
         {
             const auto length = static_cast<std::size_t>(std::ranges::size(*it));
@@ -1450,21 +1455,19 @@ namespace sparrow
             const auto bytes_to_move = (current_size - insert_index) * DATA_BUFFER_SIZE;
             const auto src_offset = insert_index * DATA_BUFFER_SIZE;
             const auto dst_offset = (insert_index + insert_count) * DATA_BUFFER_SIZE;
-            
-            std::memmove(
-                view_data + dst_offset,
-                view_data + src_offset,
-                bytes_to_move
-            );
-            
+
+            std::memmove(view_data + dst_offset, view_data + src_offset, bytes_to_move);
+
             // Update buffer offsets for moved long strings
             if (additional_var_storage > 0)
             {
                 for (size_type i = insert_index + insert_count; i < new_size; ++i)
                 {
                     auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-                    const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr));
-                    
+                    const auto length = static_cast<std::size_t>(
+                        *reinterpret_cast<const std::int32_t*>(view_ptr)
+                    );
+
                     if (length > SHORT_STRING_SIZE)
                     {
                         auto* offset_ptr = reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET);
@@ -1477,20 +1480,24 @@ namespace sparrow
         // Insert new view structures
         std::size_t var_offset = buffers[FIRST_VAR_DATA_BUFFER_INDEX].size() - additional_var_storage;
         size_type value_idx = 0;
-        
+
         for (auto it = first; it != last; ++it, ++value_idx)
         {
             const auto view_index = insert_index + value_idx;
             auto* view_ptr = view_data + (view_index * DATA_BUFFER_SIZE);
             const auto value_length = value_lengths[value_idx];
-            
-            auto transformed_value = *it | std::ranges::views::transform(
-                [](const auto& v) { return static_cast<std::uint8_t>(v); }
-            );
-            
+
+            auto transformed_value = *it
+                                     | std::ranges::views::transform(
+                                         [](const auto& v)
+                                         {
+                                             return static_cast<std::uint8_t>(v);
+                                         }
+                                     );
+
             // Write length
             *reinterpret_cast<std::int32_t*>(view_ptr) = static_cast<std::int32_t>(value_length);
-            
+
             if (value_length <= SHORT_STRING_SIZE)
             {
                 // Store inline
@@ -1508,7 +1515,7 @@ namespace sparrow
                 auto prefix_end = std::ranges::end(transformed_value);
                 std::size_t copied = 0;
                 auto* prefix_dest = view_ptr + PREFIX_OFFSET;
-                
+
                 while (prefix_iter != prefix_end && copied < PREFIX_SIZE)
                 {
                     *prefix_dest = *prefix_iter;
@@ -1516,28 +1523,29 @@ namespace sparrow
                     ++prefix_dest;
                     ++copied;
                 }
-                
+
                 // Set buffer index
                 *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_INDEX_OFFSET) = 0;
-                
+
                 // Set buffer offset
-                *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET) = static_cast<std::int32_t>(var_offset);
-                
+                *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET) = static_cast<std::int32_t>(
+                    var_offset
+                );
+
                 // Copy data to variadic buffer
                 sparrow::ranges::copy(transformed_value, buffers[FIRST_VAR_DATA_BUFFER_INDEX].data() + var_offset);
                 var_offset += value_length;
             }
         }
 
-        // Update buffers  
+        // Update buffers
         proxy.update_buffers();
 
         return value_begin() + static_cast<difference_type>(insert_index);
     }
 
     template <std::ranges::sized_range T, class CR>
-    auto
-    variable_size_binary_view_array_impl<T, CR>::erase_values(const_value_iterator pos, size_type count)
+    auto variable_size_binary_view_array_impl<T, CR>::erase_values(const_value_iterator pos, size_type count)
         -> value_iterator
     {
         if (count == 0)
@@ -1591,11 +1599,11 @@ namespace sparrow
             }
             buffers[LENGTH_BUFFER_INDEX].clear();
             buffers[FIRST_VAR_DATA_BUFFER_INDEX].clear();
-            
+
             auto& buffer_sizes = buffers[buffers.size() - 1];
             auto* sizes_ptr = reinterpret_cast<std::int64_t*>(buffer_sizes.data());
             *sizes_ptr = 0;
-            
+
             proxy.update_buffers();
             return value_begin();
         }
@@ -1605,10 +1613,10 @@ namespace sparrow
         {
             auto& var_buffer = buffers[FIRST_VAR_DATA_BUFFER_INDEX];
             std::size_t write_offset = 0;
-            
+
             // Create mapping of old offsets to new offsets
             std::unordered_map<std::size_t, std::size_t> offset_mapping;
-            
+
             for (size_type i = 0; i < current_size; ++i)
             {
                 if (i >= erase_index && i < erase_index + count)
@@ -1616,7 +1624,7 @@ namespace sparrow
                     // Skip erased elements
                     continue;
                 }
-                
+
                 auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
                 const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr));
                 if (length > SHORT_STRING_SIZE)
@@ -1624,40 +1632,36 @@ namespace sparrow
                     const auto old_offset = static_cast<std::size_t>(
                         *reinterpret_cast<const std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET)
                     );
-                    
+
                     // Record mapping for updating view structures later
                     offset_mapping[old_offset] = write_offset;
-                    
+
                     // Move data if needed
                     if (write_offset != old_offset)
                     {
-                        std::memmove(
-                            var_buffer.data() + write_offset,
-                            var_buffer.data() + old_offset,
-                            length
-                        );
+                        std::memmove(var_buffer.data() + write_offset, var_buffer.data() + old_offset, length);
                     }
-                    
+
                     write_offset += length;
                 }
             }
-            
+
             // Resize variadic buffer
             var_buffer.resize(var_buffer.size() - freed_var_storage);
-            
+
             // Update buffer sizes metadata
             auto& buffer_sizes = buffers[buffers.size() - 1];
             auto* sizes_ptr = reinterpret_cast<std::int64_t*>(buffer_sizes.data());
             *sizes_ptr = static_cast<std::int64_t>(var_buffer.size());
-            
+
             // Update view structure offsets
             for (size_type i = 0; i < current_size; ++i)
             {
                 if (i >= erase_index && i < erase_index + count)
                 {
-                    continue; // Skip erased elements
+                    continue;  // Skip erased elements
                 }
-                
+
                 auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
                 const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr));
                 if (length > SHORT_STRING_SIZE)
@@ -1668,8 +1672,9 @@ namespace sparrow
                     auto it = offset_mapping.find(old_offset);
                     if (it != offset_mapping.end())
                     {
-                        *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET) = 
-                            static_cast<std::int32_t>(it->second);
+                        *reinterpret_cast<std::int32_t*>(
+                            view_ptr + BUFFER_OFFSET_OFFSET
+                        ) = static_cast<std::int32_t>(it->second);
                     }
                 }
             }
@@ -1681,18 +1686,14 @@ namespace sparrow
             const auto src_offset = (erase_index + count) * DATA_BUFFER_SIZE;
             const auto dst_offset = erase_index * DATA_BUFFER_SIZE;
             const auto bytes_to_move = (current_size - erase_index - count) * DATA_BUFFER_SIZE;
-            
-            std::memmove(
-                view_data + dst_offset,
-                view_data + src_offset,
-                bytes_to_move
-            );
+
+            std::memmove(view_data + dst_offset, view_data + src_offset, bytes_to_move);
         }
-        
+
         // Resize view buffer
         buffers[LENGTH_BUFFER_INDEX].resize(new_size * DATA_BUFFER_SIZE);
 
-        // Update buffers  
+        // Update buffers
         proxy.update_buffers();
 
         // Return iterator to element after last erased, or end if we erased to the end
