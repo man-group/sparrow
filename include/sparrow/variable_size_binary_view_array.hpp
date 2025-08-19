@@ -232,7 +232,7 @@ namespace sparrow
          * - long_string_storage: Concatenated storage for strings > 12 bytes
          * - buffer_sizes: Size information for variadic buffers
          */
-        struct buffers
+        struct buffers_collection
         {
             buffer<uint8_t> length_buffer;        ///< View structures (16 bytes per element)
             buffer<uint8_t> long_string_storage;  ///< Storage for long strings/binary data
@@ -299,7 +299,7 @@ namespace sparrow
          */
         template <std::ranges::input_range R>
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
-        static buffers create_buffers(R&& range);
+        static buffers_collection create_buffers(R&& range);
 
         /**
          * @brief Creates Arrow proxy from range with validity bitmap.
@@ -613,7 +613,7 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR>
     template <std::ranges::input_range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
-    auto variable_size_binary_view_array_impl<T, CR>::create_buffers(R&& range) -> buffers
+    auto variable_size_binary_view_array_impl<T, CR>::create_buffers(R&& range) -> buffers_collection
     {
 #ifdef __GNUC__
 #    pragma GCC diagnostic push
@@ -1336,9 +1336,8 @@ namespace sparrow
                 for (size_type i = insert_index + count; i < new_size; ++i)
                 {
                     auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-                    const auto length = static_cast<std::size_t>(
-                        *reinterpret_cast<const std::int32_t*>(view_ptr)
-                    );
+                    const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr
+                    ));
 
                     if (length > SHORT_STRING_SIZE)
                     {
