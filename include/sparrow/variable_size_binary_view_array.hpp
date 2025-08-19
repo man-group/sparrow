@@ -1336,8 +1336,9 @@ namespace sparrow
                 for (size_type i = insert_index + count; i < new_size; ++i)
                 {
                     auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-                    const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr
-                    ));
+                    const auto length = static_cast<std::size_t>(
+                        *reinterpret_cast<const std::int32_t*>(view_ptr)
+                    );
 
                     if (length > SHORT_STRING_SIZE)
                     {
