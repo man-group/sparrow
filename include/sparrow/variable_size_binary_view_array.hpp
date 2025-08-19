@@ -1336,9 +1336,8 @@ namespace sparrow
                 for (size_type i = insert_index + count; i < new_size; ++i)
                 {
                     auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-                    const auto length = static_cast<std::size_t>(
-                        *reinterpret_cast<const std::int32_t*>(view_ptr)
-                    );
+                    const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr
+                    ));
 
                     if (length > SHORT_STRING_SIZE)
                     {
@@ -1359,25 +1358,25 @@ namespace sparrow
             auto* view_ptr = view_data + (view_index * DATA_BUFFER_SIZE);
             const auto value_length = value_lengths[value_idx];
 
-            std::vector<std::uint8_t> transformed_value;
-            transformed_value.reserve((*it).size());
-            std::transform(
-                (*it).begin(),
-                (*it).end(),
-                std::back_inserter(transformed_value),
-                [](const auto& v)
-                {
-                    return static_cast<std::uint8_t>(v);
-                }
-            );
+            const auto& current_value = *it;
 
             // Write length
             *reinterpret_cast<std::int32_t*>(view_ptr) = static_cast<std::int32_t>(value_length);
 
             if (value_length <= SHORT_STRING_SIZE)
             {
-                // Store inline
-                sparrow::ranges::copy(transformed_value, view_ptr + SHORT_STRING_OFFSET);
+                // Store inline - convert and copy elements manually
+                auto src_it = std::ranges::begin(current_value);
+                auto src_end = std::ranges::end(current_value);
+                auto* dest = view_ptr + SHORT_STRING_OFFSET;
+
+                while (src_it != src_end)
+                {
+                    *dest = static_cast<std::uint8_t>(*src_it);
+                    ++src_it;
+                    ++dest;
+                }
+
                 std::fill(
                     view_ptr + SHORT_STRING_OFFSET + value_length,
                     view_ptr + DATA_BUFFER_SIZE,
@@ -1386,16 +1385,16 @@ namespace sparrow
             }
             else
             {
-                // Store prefix
-                auto prefix_iter = std::ranges::begin(transformed_value);
-                auto prefix_end = std::ranges::end(transformed_value);
-                std::size_t copied = 0;
+                // Store prefix - copy first PREFIX_SIZE elements manually
+                auto src_it = std::ranges::begin(current_value);
+                auto src_end = std::ranges::end(current_value);
                 auto* prefix_dest = view_ptr + PREFIX_OFFSET;
+                std::size_t copied = 0;
 
-                while (prefix_iter != prefix_end && copied < PREFIX_SIZE)
+                while (src_it != src_end && copied < PREFIX_SIZE)
                 {
-                    *prefix_dest = *prefix_iter;
-                    ++prefix_iter;
+                    *prefix_dest = static_cast<std::uint8_t>(*src_it);
+                    ++src_it;
                     ++prefix_dest;
                     ++copied;
                 }
@@ -1408,8 +1407,17 @@ namespace sparrow
                     var_offset
                 );
 
-                // Copy data to variadic buffer
-                sparrow::ranges::copy(transformed_value, buffers[FIRST_VAR_DATA_BUFFER_INDEX].data() + var_offset);
+                // Copy data to variadic buffer - convert and copy manually
+                src_it = std::ranges::begin(current_value);
+                auto* var_dest = buffers[FIRST_VAR_DATA_BUFFER_INDEX].data() + var_offset;
+
+                while (src_it != src_end)
+                {
+                    *var_dest = static_cast<std::uint8_t>(*src_it);
+                    ++src_it;
+                    ++var_dest;
+                }
+
                 var_offset += value_length;
             }
         }
