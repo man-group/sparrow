@@ -1359,13 +1359,26 @@ namespace sparrow
             auto* view_ptr = view_data + (view_index * DATA_BUFFER_SIZE);
             const auto value_length = value_lengths[value_idx];
 
-            auto transformed_value = std::ranges::subrange(std::begin(*it), std::end(*it))
+            // std::vector<std::uint8_t> transformed_value;
+            // transformed_value.reserve((*it).size());
+            // std::transform(
+            //     (*it).begin(),
+            //     (*it).end(),
+            //     std::back_inserter(transformed_value),
+            //     [](const auto& v)
+            //     {
+            //         return static_cast<std::uint8_t>(v);
+            //     }
+            // );
+
+            auto transformed_value = std::views::all(*it)
                                      | std::ranges::views::transform(
                                          [](const auto& v)
                                          {
                                              return static_cast<std::uint8_t>(v);
                                          }
                                      );
+
 
             // Write length
             *reinterpret_cast<std::int32_t*>(view_ptr) = static_cast<std::int32_t>(value_length);
