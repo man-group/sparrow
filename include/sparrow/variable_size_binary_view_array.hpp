@@ -1336,9 +1336,8 @@ namespace sparrow
                 for (size_type i = insert_index + count; i < new_size; ++i)
                 {
                     auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-                    const auto length = static_cast<std::size_t>(
-                        *reinterpret_cast<const std::int32_t*>(view_ptr)
-                    );
+                    const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr
+                    ));
 
                     if (length > SHORT_STRING_SIZE)
                     {
@@ -1359,7 +1358,7 @@ namespace sparrow
             auto* view_ptr = view_data + (view_index * DATA_BUFFER_SIZE);
             const auto value_length = value_lengths[value_idx];
 
-            auto transformed_value = *it
+            auto transformed_value = std::ranges::subrange(std::begin(*it), std::end(*it))
                                      | std::ranges::views::transform(
                                          [](const auto& v)
                                          {
