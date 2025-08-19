@@ -1262,6 +1262,18 @@ namespace sparrow
     variable_size_binary_view_array_impl<T, CR>::insert_value(const_value_iterator pos, U value, size_type count)
         -> value_iterator
     {
+        const auto repeat_view = sparrow::repeat_view<U>(value, count);
+        return insert_values(pos, std::ranges::begin(repeat_view), std::ranges::end(repeat_view));
+    }
+
+    template <std::ranges::sized_range T, class CR>
+    template <mpl::iterator_of_type<T> InputIt>
+    auto
+    variable_size_binary_view_array_impl<T, CR>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        -> value_iterator
+    {
+        SPARROW_ASSERT_TRUE(first <= last);
+        const size_type count = static_cast<size_type>(std::distance(first, last));
         if (count == 0)
         {
             const auto insert_index = std::distance(value_cbegin(), pos);
@@ -1272,12 +1284,19 @@ namespace sparrow
         const auto current_size = this->size();
         const auto new_size = current_size + count;
 
-        // Calculate new buffer sizes
-        const auto value_length = static_cast<std::size_t>(std::ranges::size(value));
+        // Calculate total additional variadic storage needed
         std::size_t additional_var_storage = 0;
-        if (value_length > SHORT_STRING_SIZE)
+        std::vector<std::size_t> value_lengths;
+        value_lengths.reserve(count);
+
+        for (auto it = first; it != last; ++it)
         {
-            additional_var_storage = value_length * count;
+            const auto length = static_cast<std::size_t>(std::ranges::size(*it));
+            value_lengths.push_back(length);
+            if (length > SHORT_STRING_SIZE)
+            {
+                additional_var_storage += length;
+            }
         }
 
         // Get access to current buffers
@@ -1317,156 +1336,8 @@ namespace sparrow
                 for (size_type i = insert_index + count; i < new_size; ++i)
                 {
                     auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-                    const auto length = static_cast<std::size_t>(
-                        *reinterpret_cast<const std::int32_t*>(view_ptr)
-                    );
-
-                    if (length > SHORT_STRING_SIZE)
-                    {
-                        auto* offset_ptr = reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET);
-                        *offset_ptr += static_cast<std::int32_t>(additional_var_storage);
-                    }
-                }
-            }
-        }
-
-        // Insert new view structures
-        auto transformed_value = value
-                                 | std::ranges::views::transform(
-                                     [](const auto& v)
-                                     {
-                                         return static_cast<std::uint8_t>(v);
-                                     }
-                                 );
-
-        for (size_type i = 0; i < count; ++i)
-        {
-            const auto view_index = insert_index + i;
-            auto* view_ptr = view_data + (view_index * DATA_BUFFER_SIZE);
-
-            // Write length
-            *reinterpret_cast<std::int32_t*>(view_ptr) = static_cast<std::int32_t>(value_length);
-
-            if (value_length <= SHORT_STRING_SIZE)
-            {
-                // Store inline
-                sparrow::ranges::copy(transformed_value, view_ptr + SHORT_STRING_OFFSET);
-                std::fill(
-                    view_ptr + SHORT_STRING_OFFSET + value_length,
-                    view_ptr + DATA_BUFFER_SIZE,
-                    std::uint8_t(0)
-                );
-            }
-            else
-            {
-                // Store prefix
-                auto prefix_iter = std::ranges::begin(transformed_value);
-                auto prefix_end = std::ranges::end(transformed_value);
-                std::size_t copied = 0;
-                auto* prefix_dest = view_ptr + PREFIX_OFFSET;
-
-                while (prefix_iter != prefix_end && copied < PREFIX_SIZE)
-                {
-                    *prefix_dest = *prefix_iter;
-                    ++prefix_iter;
-                    ++prefix_dest;
-                    ++copied;
-                }
-
-                // Set buffer index
-                *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_INDEX_OFFSET) = 0;
-
-                // Set buffer offset (append to end of existing data)
-                const auto offset = buffers[FIRST_VAR_DATA_BUFFER_INDEX].size() - additional_var_storage
-                                    + (i * value_length);
-                *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET) = static_cast<std::int32_t>(
-                    offset
-                );
-
-                // Copy data to variadic buffer
-                sparrow::ranges::copy(transformed_value, buffers[FIRST_VAR_DATA_BUFFER_INDEX].data() + offset);
-            }
-        }
-
-        // Update buffers
-        proxy.update_buffers();
-
-        return sparrow::next(value_begin(), insert_index);
-    }
-
-    template <std::ranges::sized_range T, class CR>
-    template <mpl::iterator_of_type<T> InputIt>
-    auto
-    variable_size_binary_view_array_impl<T, CR>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
-        -> value_iterator
-    {
-        SPARROW_ASSERT_TRUE(first <= last);
-        const size_type insert_count = static_cast<size_type>(std::distance(first, last));
-        if (insert_count == 0)
-        {
-            const auto insert_index = std::distance(value_cbegin(), pos);
-            return value_begin() + insert_index;
-        }
-
-        const auto insert_index = static_cast<size_t>(std::distance(value_cbegin(), pos));
-        const auto current_size = this->size();
-        const auto new_size = current_size + insert_count;
-
-        // Calculate total additional variadic storage needed
-        std::size_t additional_var_storage = 0;
-        std::vector<std::size_t> value_lengths;
-        value_lengths.reserve(insert_count);
-
-        for (auto it = first; it != last; ++it)
-        {
-            const auto length = static_cast<std::size_t>(std::ranges::size(*it));
-            value_lengths.push_back(length);
-            if (length > SHORT_STRING_SIZE)
-            {
-                additional_var_storage += length;
-            }
-        }
-
-        // Get access to current buffers
-        auto& proxy = this->get_arrow_proxy();
-        auto* private_data = proxy.get_array_private_data();
-        auto& buffers = private_data->buffers();
-
-        // Resize view buffer
-        const auto new_view_buffer_size = new_size * DATA_BUFFER_SIZE;
-        buffers[LENGTH_BUFFER_INDEX].resize(new_view_buffer_size);
-
-        // Resize variadic data buffer if needed
-        if (additional_var_storage > 0)
-        {
-            const auto current_var_size = buffers[FIRST_VAR_DATA_BUFFER_INDEX].size();
-            buffers[FIRST_VAR_DATA_BUFFER_INDEX].resize(current_var_size + additional_var_storage);
-        }
-
-        // Update buffer sizes metadata
-        auto& buffer_sizes = buffers[buffers.size() - 1];
-        auto* sizes_ptr = reinterpret_cast<std::int64_t*>(buffer_sizes.data());
-        *sizes_ptr = static_cast<std::int64_t>(buffers[FIRST_VAR_DATA_BUFFER_INDEX].size());
-
-        // Shift existing view structures after insertion point
-        auto* view_data = buffers[LENGTH_BUFFER_INDEX].data();
-        if (insert_index < current_size)
-        {
-            const auto bytes_to_move = (current_size - insert_index) * DATA_BUFFER_SIZE;
-            const auto src_offset = insert_index * DATA_BUFFER_SIZE;
-            const auto dst_offset = (insert_index + insert_count) * DATA_BUFFER_SIZE;
-
-            std::memmove(view_data + dst_offset, view_data + src_offset, bytes_to_move);
-
-            // Update buffer offsets for moved long strings
-            if (additional_var_storage > 0)
-            {
-                for (size_type i = insert_index + insert_count; i < new_size; ++i)
-                {
-                    auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-                    const auto length = static_cast<std::size_t>(
-                        *reinterpret_cast<const std::int32_t*>(view_ptr)
-                    );
+                    const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr
+                    ));
 
                     if (length > SHORT_STRING_SIZE)
                     {
