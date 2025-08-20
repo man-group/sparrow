@@ -131,7 +131,7 @@ namespace sparrow
 
     auto record_batch::columns() const -> column_range
     {
-        return std::ranges::ref_view(m_array_list);
+        return std::ranges::ref_view(std::as_const(m_array_list));
     }
 
     struct_array record_batch::extract_struct_array()
