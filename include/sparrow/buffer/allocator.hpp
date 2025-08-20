@@ -51,8 +51,8 @@ namespace sparrow
      */
     template <class A, class T>
     concept can_any_allocator_sbo = allocator<A>
-                                    && (std::same_as<A, std::allocator<T>>
-                                        || std::same_as<A, std::pmr::polymorphic_allocator<T>>);
+                                    && (std::same_as<std::remove_cvref_t<A>, std::allocator<T>>
+                                        || std::same_as<std::remove_cvref_t<A>, std::pmr::polymorphic_allocator<T>>);
 
     /*
      * Type erasure class for allocators. This allows to use any kind of allocator
