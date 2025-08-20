@@ -810,5 +810,28 @@ namespace sparrow
             CHECK_EQ(formatted, expected);
         }
 #endif
+
+        TEST_CASE("Check no copy")
+        {
+            size_t num_rows = 100000;
+            uint8_t* data_ptr = std::allocator<uint8_t>().allocate(sizeof(uint64_t) * num_rows);
+            auto cast_ptr = reinterpret_cast<uint64_t*>(data_ptr);
+            for (size_t idx = 0; idx < num_rows; ++idx)
+            {
+                cast_ptr[idx] = idx;
+            }
+            sparrow::u8_buffer<uint64_t> u8_buffer(reinterpret_cast<uint64_t*>(data_ptr), num_rows);
+            for (size_t idx = 0; idx < num_rows; ++idx)
+            {
+                CHECK_EQ(cast_ptr[idx], idx);
+                CHECK_EQ(u8_buffer[idx], idx);
+            }
+
+            sparrow::primitive_array<uint64_t> primitive_array{std::move(u8_buffer), num_rows};
+            for (size_t idx = 0; idx < num_rows; ++idx)
+            {
+                CHECK_EQ(cast_ptr[idx], idx);
+            }
+        }
     }
 }
