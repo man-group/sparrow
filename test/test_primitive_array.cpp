@@ -813,6 +813,10 @@ namespace sparrow
 
         TEST_CASE("Check no copy")
         {
+#if defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
             size_t num_rows = 100000;
             uint8_t* data_ptr = std::allocator<uint8_t>().allocate(sizeof(uint64_t) * num_rows);
             auto cast_ptr = reinterpret_cast<uint64_t*>(data_ptr);
@@ -832,6 +836,9 @@ namespace sparrow
             {
                 CHECK_EQ(cast_ptr[idx], idx);
             }
+#if defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC diagnostic pop
+#endif
         }
     }
 }
