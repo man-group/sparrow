@@ -571,6 +571,22 @@ namespace sparrow
     {
     }
 
+    namespace
+    {
+        // Utility functions for safe unaligned access to int32 values
+        inline std::int32_t read_int32_unaligned(const std::uint8_t* ptr)
+        {
+            std::int32_t value;
+            std::memcpy(&value, ptr, sizeof(std::int32_t));
+            return value;
+        }
+
+        inline void write_int32_unaligned(std::uint8_t* ptr, std::int32_t value)
+        {
+            std::memcpy(ptr, &value, sizeof(std::int32_t));
+        }
+    }
+
     template <std::ranges::sized_range T, class CR>
     template <std::ranges::input_range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, T>
@@ -600,7 +616,7 @@ namespace sparrow
             auto length_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
 
             // write length
-            *reinterpret_cast<std::int32_t*>(length_ptr) = static_cast<std::int32_t>(length);
+            write_int32_unaligned(length_ptr, static_cast<std::int32_t>(length));
 
             if (length <= SHORT_STRING_SIZE)
             {
@@ -619,12 +635,13 @@ namespace sparrow
                 sparrow::ranges::copy(prefix_sub_range, length_ptr + PREFIX_OFFSET);
 
                 // write the buffer index
-                *reinterpret_cast<std::int32_t*>(length_ptr + BUFFER_INDEX_OFFSET) = 0;
+                write_int32_unaligned(length_ptr + BUFFER_INDEX_OFFSET, 0);
 
                 // write the buffer offset
-                *reinterpret_cast<std::int32_t*>(
-                    length_ptr + BUFFER_OFFSET_OFFSET
-                ) = static_cast<std::int32_t>(long_string_storage_size);
+                write_int32_unaligned(
+                    length_ptr + BUFFER_OFFSET_OFFSET,
+                    static_cast<std::int32_t>(long_string_storage_size)
+                );
 
                 // count the size of the long string storage
                 long_string_storage_size += length;
@@ -895,7 +912,7 @@ namespace sparrow
 
         auto data_ptr = this->get_arrow_proxy().buffers()[LENGTH_BUFFER_INDEX].template data<uint8_t>()
                         + (i * DATA_BUFFER_SIZE);
-        const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(data_ptr));
+        const auto length = static_cast<std::size_t>(read_int32_unaligned(data_ptr));
 
         if (length <= SHORT_STRING_SIZE)
         {
@@ -907,10 +924,10 @@ namespace sparrow
         else
         {
             const auto buffer_index = static_cast<std::size_t>(
-                *reinterpret_cast<const std::int32_t*>(data_ptr + BUFFER_INDEX_OFFSET)
+                read_int32_unaligned(data_ptr + BUFFER_INDEX_OFFSET)
             );
             const auto buffer_offset = static_cast<std::size_t>(
-                *reinterpret_cast<const std::int32_t*>(data_ptr + BUFFER_OFFSET_OFFSET)
+                read_int32_unaligned(data_ptr + BUFFER_OFFSET_OFFSET)
             );
             const auto buffer = this->get_arrow_proxy()
                                     .buffers()[buffer_index + FIRST_VAR_DATA_BUFFER_INDEX]
@@ -972,10 +989,10 @@ namespace sparrow
         auto view_ptr = length_buffer.data() + (index * DATA_BUFFER_SIZE);
 
         // Read current length
-        const auto current_length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr));
+        const auto current_length = static_cast<std::size_t>(read_int32_unaligned(view_ptr));
 
         // Update the length in the view structure
-        *reinterpret_cast<std::int32_t*>(view_ptr) = static_cast<std::int32_t>(new_length);
+        write_int32_unaligned(view_ptr, static_cast<std::int32_t>(new_length));
 
         if (new_length <= SHORT_STRING_SIZE)
         {
@@ -1021,7 +1038,7 @@ namespace sparrow
             {
                 // Read current buffer offset from view structure
                 current_buffer_offset = static_cast<std::size_t>(
-                    *reinterpret_cast<const std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET)
+                    read_int32_unaligned(view_ptr + BUFFER_OFFSET_OFFSET)
                 );
             }
 
@@ -1334,14 +1351,15 @@ namespace sparrow
                 for (size_type i = insert_index + count; i < new_size; ++i)
                 {
                     auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-                    const auto length = static_cast<std::size_t>(
-                        *reinterpret_cast<const std::int32_t*>(view_ptr)
-                    );
+                    std::int32_t length;
+                    std::memcpy(&length, view_ptr, sizeof(std::int32_t));
 
-                    if (length > SHORT_STRING_SIZE)
+                    if (static_cast<std::size_t>(length) > SHORT_STRING_SIZE)
                     {
-                        auto* offset_ptr = reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET);
-                        *offset_ptr += static_cast<std::int32_t>(additional_var_storage);
+                        std::int32_t current_offset;
+                        std::memcpy(&current_offset, view_ptr + BUFFER_OFFSET_OFFSET, sizeof(std::int32_t));
+                        current_offset += static_cast<std::int32_t>(additional_var_storage);
+                        std::memcpy(view_ptr + BUFFER_OFFSET_OFFSET, &current_offset, sizeof(std::int32_t));
                     }
                 }
             }
@@ -1360,7 +1378,8 @@ namespace sparrow
             const auto& current_value = *it;
 
             // Write length
-            *reinterpret_cast<std::int32_t*>(view_ptr) = static_cast<std::int32_t>(value_length);
+            const std::int32_t value_length_int32 = static_cast<std::int32_t>(value_length);
+            std::memcpy(view_ptr, &value_length_int32, sizeof(std::int32_t));
 
             if (value_length <= SHORT_STRING_SIZE)
             {
@@ -1399,12 +1418,12 @@ namespace sparrow
                 }
 
                 // Set buffer index
-                *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_INDEX_OFFSET) = 0;
+                const std::int32_t buffer_index_zero = 0;
+                std::memcpy(view_ptr + BUFFER_INDEX_OFFSET, &buffer_index_zero, sizeof(std::int32_t));
 
                 // Set buffer offset
-                *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET) = static_cast<std::int32_t>(
-                    var_offset
-                );
+                const std::int32_t var_offset_int32 = static_cast<std::int32_t>(var_offset);
+                std::memcpy(view_ptr + BUFFER_OFFSET_OFFSET, &var_offset_int32, sizeof(std::int32_t));
 
                 // Copy data to variadic buffer - convert and copy manually
                 src_it = std::ranges::begin(current_value);
@@ -1465,10 +1484,11 @@ namespace sparrow
         for (size_type i = erase_index; i < erase_index + count; ++i)
         {
             auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-            const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr));
-            if (length > SHORT_STRING_SIZE)
+            std::int32_t length;
+            std::memcpy(&length, view_ptr, sizeof(std::int32_t));
+            if (static_cast<std::size_t>(length) > SHORT_STRING_SIZE)
             {
-                freed_var_storage += length;
+                freed_var_storage += static_cast<std::size_t>(length);
             }
         }
 
@@ -1509,12 +1529,13 @@ namespace sparrow
                 }
 
                 auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-                const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr));
-                if (length > SHORT_STRING_SIZE)
+                std::int32_t length;
+                std::memcpy(&length, view_ptr, sizeof(std::int32_t));
+                if (static_cast<std::size_t>(length) > SHORT_STRING_SIZE)
                 {
-                    const auto old_offset = static_cast<std::size_t>(
-                        *reinterpret_cast<const std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET)
-                    );
+                    std::int32_t old_offset_int32;
+                    std::memcpy(&old_offset_int32, view_ptr + BUFFER_OFFSET_OFFSET, sizeof(std::int32_t));
+                    const auto old_offset = static_cast<std::size_t>(old_offset_int32);
 
                     // Record mapping for updating view structures later
                     offset_mapping[old_offset] = write_offset;
@@ -1522,10 +1543,14 @@ namespace sparrow
                     // Move data if needed
                     if (write_offset != old_offset)
                     {
-                        std::memmove(var_buffer.data() + write_offset, var_buffer.data() + old_offset, length);
+                        std::memmove(
+                            var_buffer.data() + write_offset,
+                            var_buffer.data() + old_offset,
+                            static_cast<std::size_t>(length)
+                        );
                     }
 
-                    write_offset += length;
+                    write_offset += static_cast<std::size_t>(length);
                 }
             }
 
@@ -1546,18 +1571,18 @@ namespace sparrow
                 }
 
                 auto* view_ptr = view_data + (i * DATA_BUFFER_SIZE);
-                const auto length = static_cast<std::size_t>(*reinterpret_cast<const std::int32_t*>(view_ptr));
-                if (length > SHORT_STRING_SIZE)
+                std::int32_t length;
+                std::memcpy(&length, view_ptr, sizeof(std::int32_t));
+                if (static_cast<std::size_t>(length) > SHORT_STRING_SIZE)
                 {
-                    const auto old_offset = static_cast<std::size_t>(
-                        *reinterpret_cast<const std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET)
-                    );
+                    std::int32_t old_offset_int32;
+                    std::memcpy(&old_offset_int32, view_ptr + BUFFER_OFFSET_OFFSET, sizeof(std::int32_t));
+                    const auto old_offset = static_cast<std::size_t>(old_offset_int32);
                     auto it = offset_mapping.find(old_offset);
                     if (it != offset_mapping.end())
                     {
-                        *reinterpret_cast<std::int32_t*>(
-                            view_ptr + BUFFER_OFFSET_OFFSET
-                        ) = static_cast<std::int32_t>(it->second);
+                        const std::int32_t new_offset = static_cast<std::int32_t>(it->second);
+                        std::memcpy(view_ptr + BUFFER_OFFSET_OFFSET, &new_offset, sizeof(std::int32_t));
                     }
                 }
             }
