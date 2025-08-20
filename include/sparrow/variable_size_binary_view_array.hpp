@@ -15,6 +15,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstring>
 #include <ranges>
 #include <unordered_map>
 
@@ -1317,8 +1318,8 @@ namespace sparrow
 
         // Update buffer sizes metadata
         auto& buffer_sizes = buffers[buffers.size() - 1];
-        auto* sizes_ptr = reinterpret_cast<std::int64_t*>(buffer_sizes.data());
-        *sizes_ptr = static_cast<std::int64_t>(buffers[FIRST_VAR_DATA_BUFFER_INDEX].size());
+        const auto buffer_size = static_cast<std::int64_t>(buffers[FIRST_VAR_DATA_BUFFER_INDEX].size());
+        std::memcpy(buffer_sizes.data(), &buffer_size, sizeof(std::int64_t));
 
         // Shift existing view structures after insertion point
         auto* view_data = buffers[LENGTH_BUFFER_INDEX].data();
@@ -1486,8 +1487,8 @@ namespace sparrow
             buffers[FIRST_VAR_DATA_BUFFER_INDEX].clear();
 
             auto& buffer_sizes = buffers[buffers.size() - 1];
-            auto* sizes_ptr = reinterpret_cast<std::int64_t*>(buffer_sizes.data());
-            *sizes_ptr = 0;
+            const std::int64_t zero_size = 0;
+            std::memcpy(buffer_sizes.data(), &zero_size, sizeof(std::int64_t));
 
             proxy.update_buffers();
             return value_begin();
@@ -1536,8 +1537,8 @@ namespace sparrow
 
             // Update buffer sizes metadata
             auto& buffer_sizes = buffers[buffers.size() - 1];
-            auto* sizes_ptr = reinterpret_cast<std::int64_t*>(buffer_sizes.data());
-            *sizes_ptr = static_cast<std::int64_t>(var_buffer.size());
+            const auto new_var_buffer_size = static_cast<std::int64_t>(var_buffer.size());
+            std::memcpy(buffer_sizes.data(), &new_var_buffer_size, sizeof(std::int64_t));
 
             // Update view structure offsets
             for (size_type i = 0; i < current_size; ++i)
