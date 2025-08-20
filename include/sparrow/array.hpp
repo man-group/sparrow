@@ -76,6 +76,13 @@ namespace sparrow
     }
 
     template <layout_or_array A>
+    std::pair<const ArrowArray*, const ArrowSchema*> get_arrow_structures(const A& a)
+    {
+        const arrow_proxy& proxy = detail::array_access::get_arrow_proxy(a);
+        return std::make_pair(&(proxy.array()), &(proxy.schema()));
+    }
+
+    template <layout_or_array A>
     ArrowArray extract_arrow_array(A&& a)
     {
         return detail::array_access::get_arrow_proxy(a).extract_array();
