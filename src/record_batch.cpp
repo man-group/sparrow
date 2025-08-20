@@ -93,6 +93,11 @@ namespace sparrow
 
     const array& record_batch::get_column(const name_type& name) const
     {
+        return get_column(name);
+    }
+
+    array& record_batch::get_column(const name_type& name)
+    {
         update_array_map_cache();
         const auto iter = m_array_map.find(name);
         if (iter == m_array_map.end())
@@ -100,6 +105,12 @@ namespace sparrow
             throw std::out_of_range("Column's name not found in record batch");
         }
         return *(iter->second);
+    }
+
+    array& record_batch::get_column(size_type index)
+    {
+        SPARROW_ASSERT_TRUE(index < nb_columns());
+        return m_array_list[index];
     }
 
     const array& record_batch::get_column(size_type index) const
@@ -160,7 +171,9 @@ namespace sparrow
         // already contained in it.
         for (std::size_t i = m_name_list.size(); i != 0; --i)
         {
-            if (!m_array_map.try_emplace(m_name_list[i - 1], &(m_array_list[i - 1])).second)
+            const auto& name = m_name_list[i - 1];
+            array* ar = &(m_array_list[i - 1]);
+            if (!m_array_map.try_emplace(name, ar).second)
             {
                 break;
             }
