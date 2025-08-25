@@ -793,7 +793,7 @@ namespace sparrow
         /**
          * Check whether the proxy is a view.
          */
-        [[nodiscard]] SPARROW_API constexpr bool is_view() const noexcept;
+        [[nodiscard]] SPARROW_API bool is_view() const noexcept;
 
         /**
          * Check whether the proxy has ownership of its internal the `ArrowArray`.
