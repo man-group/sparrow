@@ -358,6 +358,17 @@ namespace sparrow
     std::pair<ArrowArray*, ArrowSchema*> get_arrow_structures(A& a);
 
     /**
+     * Returns const pointers to the internal ArrowArray and ArrowSchema of
+     * the given \ref array or layout.
+     *
+     * @tparam A The layout or array type.
+     * @param a An \ref array or a typed layout.
+     * @return const pointers to the internal ArrowArray and ArrowSchema.
+     */
+    template <layout_or_array A>
+    std::pair<const ArrowArray*, const ArrowSchema*> get_arrow_structures(const A& a);
+
+    /**
      * Extracts the internal ArrowArray structure from the given \ref array
      * or typed layout. After this call, the user is responsible for
      * the management of the returned ArrowArray.
