@@ -42,7 +42,7 @@ namespace sparrow
         return arrow_proxy(array_ptr, schema_ptr);
     }
 
-    constexpr bool arrow_proxy::is_view() const noexcept
+    [[nodiscard]] constexpr bool arrow_proxy::is_view() const noexcept
     {
         return (m_schema.index() == 0) && (m_array.index() == 0);  // If we don't own the schema and array, we
                                                                    // are a view
