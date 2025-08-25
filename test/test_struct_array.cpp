@@ -98,16 +98,31 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(child0[2], std::int32_t(8));
 
                 const auto child1 = arr[1].value();
+                const auto child1_names = child1.names();
+                REQUIRE_EQ(child1_names.size(), 3);
+                CHECK_EQ(child1_names[0], "flat_arr1");
+                CHECK_EQ(child1_names[1], "flat_arr2");
+                CHECK_EQ(child1_names[2], "flat_arr3");
                 CHECK_NULLABLE_VARIANT_EQ(child1[0], std::int16_t(1));
                 CHECK_NULLABLE_VARIANT_EQ(child1[1], float32_t(5.0f));
                 CHECK_NULLABLE_VARIANT_EQ(child1[2], std::int32_t(9));
 
                 const auto child2 = arr[2].value();
+                const auto child2_names = child2.names();
+                REQUIRE_EQ(child2_names.size(), 3);
+                CHECK_EQ(child2_names[0], "flat_arr1");
+                CHECK_EQ(child2_names[1], "flat_arr2");
+                CHECK_EQ(child2_names[2], "flat_arr3");
                 CHECK_NULLABLE_VARIANT_EQ(child2[0], std::int16_t(2));
                 CHECK_NULLABLE_VARIANT_EQ(child2[1], float32_t(6.0f));
                 CHECK_NULLABLE_VARIANT_EQ(child2[2], std::int32_t(10));
 
                 const auto child3 = arr[3].value();
+                const auto child3_names = child3.names();
+                REQUIRE_EQ(child3_names.size(), 3);
+                CHECK_EQ(child3_names[0], "flat_arr1");
+                CHECK_EQ(child3_names[1], "flat_arr2");
+                CHECK_EQ(child3_names[2], "flat_arr3");
                 CHECK_NULLABLE_VARIANT_EQ(child3[0], std::int16_t(3));
                 CHECK_NULLABLE_VARIANT_EQ(child3[1], float32_t(7.0f));
                 CHECK_NULLABLE_VARIANT_EQ(child3[2], std::int32_t(11));
@@ -243,6 +258,81 @@ namespace sparrow
                 );
             }
         }
+
+        SUBCASE("at")
+        {
+            for (std::size_t i = 0; i < n; ++i)
+            {
+                auto val = struct_arr[i];
+                REQUIRE(val.has_value());
+                auto struct_val = val.value();
+                REQUIRE_EQ(struct_val.size(), 2);
+
+                auto val0_variant = struct_val.at(0);
+                auto val1_variant = struct_val.at(1);
+
+                REQUIRE(val0_variant.has_value());
+                REQUIRE(val1_variant.has_value());
+
+                // using const_scalar_ref = const inner_scalar_type&;
+                using nullable_inner_scalar_type = nullable<const inner_scalar_type&, bool>;
+                using nullable_uint8_t = nullable<const std::uint8_t&, bool>;
+
+#if SPARROW_GCC_11_2_WORKAROUND
+                using variant_type = std::decay_t<decltype(val0_variant)>;
+                using base_type = typename variant_type::base_type;
+#endif
+                // visit the variant
+                std::visit(
+                    [&i](auto&& val0)
+                    {
+                        if constexpr (std::is_same_v<std::decay_t<decltype(val0)>, nullable_inner_scalar_type>)
+                        {
+                            CHECK_EQ(val0.value(), static_cast<inner_scalar_type>(i));
+                        }
+                        else
+                        {
+                            FAIL("unexpected type");
+                        }
+                    },
+#if SPARROW_GCC_11_2_WORKAROUND
+                    static_cast<const base_type&>(val0_variant)
+#else
+                    val0_variant
+#endif
+                );
+
+                std::visit(
+                    [&i](auto&& val1)
+                    {
+                        if constexpr (std::is_same_v<std::decay_t<decltype(val1)>, nullable_uint8_t>)
+                        {
+                            CHECK_EQ(val1.value(), static_cast<inner_scalar_type>(i));
+                        }
+                        else
+                        {
+                            FAIL("unexpected type");
+                        }
+                    },
+#if SPARROW_GCC_11_2_WORKAROUND
+                    static_cast<const base_type&>(val1_variant)
+#else
+                    val1_variant
+#endif
+                );
+            }
+        }
+
+        SUBCASE("at outside bounds")
+        {
+            auto val = struct_arr[0];
+            REQUIRE(val.has_value());
+            auto struct_val = val.value();
+            REQUIRE_EQ(struct_val.size(), 2);
+            CHECK_THROWS_AS(struct_val.at(2), std::out_of_range);
+            CHECK_THROWS_AS(struct_val.at(100), std::out_of_range);
+        }
+
 
         SUBCASE("operator==(struct_value, struct_value)")
         {
