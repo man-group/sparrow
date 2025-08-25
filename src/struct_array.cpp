@@ -100,6 +100,13 @@ namespace sparrow
         }
         return children;
     }
+
+    void struct_array::pop_children(size_t n)
+    {
+        get_arrow_proxy().pop_children(n);
+        m_children = make_children();
+    }
+
 }
 
 #if defined(__cpp_lib_format)
