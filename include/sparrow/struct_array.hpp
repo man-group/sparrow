@@ -120,7 +120,7 @@ namespace sparrow
      * auto id_field = person["id"];  // Access field by name
      * ```
      */
-    class struct_array final : public array_bitmap_base<struct_array>
+    class struct_array : public array_bitmap_base<struct_array>
     {
     public:
 
@@ -242,7 +242,23 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API array_wrapper* raw_child(std::size_t i);
 
-    private:
+        /**
+         * @brief Gets the names of all child arrays.
+         *
+         * @return Range of child array names.
+         */
+        [[nodiscard]] auto names() const
+        {
+            return get_arrow_proxy().children()
+                   | std::views::transform(
+                       [](const auto& child)
+                       {
+                           return child.name();
+                       }
+                   );
+        }
+
+    protected:
 
         /**
          * @brief Creates Arrow proxy from children arrays with explicit validity bitmap.
@@ -400,6 +416,30 @@ namespace sparrow
          * @post Each child corresponds to a field in the struct
          */
         [[nodiscard]] SPARROW_API children_type make_children();
+
+        template <layout_or_array A>
+        SPARROW_API void add_child(A&& child)
+        {
+            SPARROW_ASSERT_TRUE(child.size() == size());
+            auto [array, schema] = extract_arrow_structures(std::forward<A>(child));
+            get_arrow_proxy().add_child(std::move(array), std::move(schema));
+            m_children = make_children();
+        }
+
+        template <layout_or_array A>
+        SPARROW_API void set_child(A&& child, size_t index)
+        {
+            SPARROW_ASSERT_TRUE(child.size() == size());
+            auto [array, schema] = extract_arrow_structures(std::forward<A>(child));
+            get_arrow_proxy().set_child(std::move(array), std::move(schema), index);
+            m_children = make_children();
+        }
+
+        SPARROW_API void pop_children(size_t n)
+        {
+            get_arrow_proxy().pop_children(n);
+            m_children = make_children();
+        }
 
         // data members
         children_type m_children;  ///< Collection of child arrays (fields)

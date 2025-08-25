@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 
@@ -35,7 +37,29 @@ namespace sparrow
 
     auto struct_value::operator[](size_type i) const -> const_reference
     {
+        SPARROW_ASSERT_TRUE(i < size());
         return array_element(*(((*p_children)[i]).get()), m_index);
+    }
+
+    auto struct_value::at(size_type i) const -> const_reference
+    {
+        return array_element(*((p_children->at(i)).get()), m_index);
+    }
+
+    auto struct_value::at(std::string_view name) const -> const_reference
+    {
+        auto it = std::ranges::find_if(
+            *p_children,
+            [&name](const auto& child)
+            {
+                return child->get_arrow_proxy().name() == name;
+            }
+        );
+        if (it != p_children->end())
+        {
+            return array_element(*((*it).get()), m_index);
+        }
+        throw std::out_of_range("Child not found");
     }
 
     auto struct_value::front() const -> const_reference
