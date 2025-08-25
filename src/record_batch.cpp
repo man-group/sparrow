@@ -93,7 +93,7 @@ namespace sparrow
 
     const array& record_batch::get_column(const name_type& name) const
     {
-        return get_column(name);
+        return const_cast<record_batch&>(*this).get_column(name);
     }
 
     array& record_batch::get_column(const name_type& name)
