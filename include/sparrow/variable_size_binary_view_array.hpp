@@ -976,22 +976,10 @@ namespace sparrow
     constexpr void variable_size_binary_view_array_impl<T, CR>::assign(U&& rhs, size_type index)
     {
         SPARROW_ASSERT_TRUE(index < this->size());
-
-        // Note: Binary view arrays have a complex layout optimized for read access.
-        // Modifying elements requires careful handling of the view structure and
-        // potential reorganization of storage buffers.
-        //
-        // This implementation provides a basic assign operation but may not be
-        // as efficient as the variable_size_binary_array equivalent due to the
-        // complexity of the view layout format.
-
         const auto new_length = static_cast<std::size_t>(std::ranges::size(rhs));
 
-        // Get pointer to the view structure for this element
         auto& length_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[LENGTH_BUFFER_INDEX];
         auto view_ptr = length_buffer.data() + (index * DATA_BUFFER_SIZE);
-
-        // Read current length
         const auto current_length = static_cast<std::size_t>(read_int32_unaligned(view_ptr));
 
         // Update the length in the view structure
@@ -999,10 +987,7 @@ namespace sparrow
 
         if (new_length <= SHORT_STRING_SIZE)
         {
-            // Store inline: copy data directly into the view structure
             auto data_ptr = view_ptr + SHORT_STRING_OFFSET;
-
-            // Transform and copy the new data
             auto transformed = rhs
                                | std::ranges::views::transform(
                                    [](const auto& v)
@@ -1033,19 +1018,16 @@ namespace sparrow
             auto& var_data_buffer = buffers[FIRST_VAR_DATA_BUFFER_INDEX];
             auto& buffer_sizes_buffer = buffers[buffers.size() - 1];  // Last buffer contains sizes
 
-            // Check if current element was already a long string
             const bool was_long_string = current_length > SHORT_STRING_SIZE;
             std::size_t current_buffer_offset = 0;
 
             if (was_long_string)
             {
-                // Read current buffer offset from view structure
                 current_buffer_offset = static_cast<std::size_t>(
                     read_int32_unaligned(view_ptr + BUFFER_OFFSET_OFFSET)
                 );
             }
 
-            // Transform new data once for efficiency
             auto transformed_data = rhs
                                     | std::ranges::views::transform(
                                         [](const auto& v)
@@ -1106,7 +1088,6 @@ namespace sparrow
 
                     if (bytes_to_move > 0)
                     {
-                        // Move data after current element to fill the gap
                         std::move(
                             var_data_buffer.data() + move_start,
                             var_data_buffer.data() + move_end,
@@ -1114,7 +1095,6 @@ namespace sparrow
                         );
                     }
 
-                    // Resize buffer to remove unused space
                     var_data_buffer.resize(var_data_buffer.size() - bytes_to_compact);
 
                     // Update buffer offsets for all elements that come after this one
@@ -1123,7 +1103,7 @@ namespace sparrow
                     {
                         if (i == index)
                         {
-                            continue;  // Skip current element
+                            continue;
                         }
 
                         auto other_view_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
@@ -1186,7 +1166,7 @@ namespace sparrow
                     {
                         if (i == index)
                         {
-                            continue;  // Skip current element
+                            continue;
                         }
 
                         auto other_view_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
@@ -1222,7 +1202,6 @@ namespace sparrow
                 *buffer_sizes_ptr = static_cast<std::int64_t>(new_var_buffer_size);
             }
 
-            // Copy new data into variadic buffer at the determined offset
             std::ranges::copy(transformed_data, var_data_buffer.data() + final_offset);
 
             // Update view structure for long string format
@@ -1237,12 +1216,10 @@ namespace sparrow
                                       );
             std::ranges::copy(prefix_transformed, view_ptr + PREFIX_OFFSET);
 
-            // Write buffer index
             *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_INDEX_OFFSET) = static_cast<std::int32_t>(
                 FIRST_VAR_DATA_BUFFER_INDEX
             );
 
-            // Write buffer offset
             *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET) = static_cast<std::int32_t>(
                 final_offset
             );
@@ -1258,17 +1235,15 @@ namespace sparrow
 
         if (new_length == current_size)
         {
-            return;  // Nothing to do
+            return;
         }
 
         if (new_length < current_size)
         {
-            // Shrinking: remove elements from the end
             erase_values(sparrow::next(value_cbegin(), new_length), current_size - new_length);
         }
         else
         {
-            // Growing: insert copies of value at the end
             insert_value(value_cend(), value, new_length - current_size);
         }
     }
@@ -1317,23 +1292,19 @@ namespace sparrow
             }
         }
 
-        // Get access to current buffers
         auto& proxy = this->get_arrow_proxy();
         auto* private_data = proxy.get_array_private_data();
         auto& buffers = private_data->buffers();
 
-        // Resize view buffer
         const auto new_view_buffer_size = new_size * DATA_BUFFER_SIZE;
         buffers[LENGTH_BUFFER_INDEX].resize(new_view_buffer_size);
 
-        // Resize variadic data buffer if needed
         if (additional_var_storage > 0)
         {
             const auto current_var_size = buffers[FIRST_VAR_DATA_BUFFER_INDEX].size();
             buffers[FIRST_VAR_DATA_BUFFER_INDEX].resize(current_var_size + additional_var_storage);
         }
 
-        // Update buffer sizes metadata
         auto& buffer_sizes = buffers[buffers.size() - 1];
         const auto buffer_size = static_cast<std::int64_t>(buffers[FIRST_VAR_DATA_BUFFER_INDEX].size());
         std::memcpy(buffer_sizes.data(), &buffer_size, sizeof(std::int64_t));
