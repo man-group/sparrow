@@ -22,6 +22,7 @@
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/null_array.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/utils/memory.hpp"
 
 namespace sparrow
 {
@@ -234,6 +235,20 @@ namespace sparrow
          */
         template <class F>
         constexpr visit_result_t<F> visit(F&& func) const;
+
+        /**
+         * Returns a view of the array. The data is not copied.
+         *
+         * @return A view of the array.
+         */
+        [[nodiscard]] SPARROW_API array view() const;
+
+        /**
+         * Checks if the array is a view.
+         *
+         * @return True if the array is a view, false otherwise.
+         */
+        [[nodiscard]] SPARROW_API bool is_view() const;
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.

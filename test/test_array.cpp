@@ -326,6 +326,17 @@ namespace sparrow
             }
         }
 
+        TEST_CASE_TEMPLATE_DEFINE("view", AR, view_id)
+        {
+            using scalar_value_type = typename AR::inner_value_type;
+            constexpr size_t size = 10;
+            array ar = test::make_array<scalar_value_type>(size);
+            CHECK_FALSE(ar.is_view());
+            auto ar_view = ar.view();
+            CHECK(ar_view.is_view());
+        }
+        TEST_CASE_TEMPLATE_APPLY(view_id, testing_types);
+
         TEST_CASE_TEMPLATE_DEFINE("slice", AR, slice_id)
         {
             using const_reference = typename AR::const_reference;
