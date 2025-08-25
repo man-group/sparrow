@@ -100,6 +100,16 @@ namespace sparrow
         return (*this)[size() - 1];
     }
 
+    array array::view() const
+    {
+        return {get_arrow_proxy().view()};
+    }
+
+    bool array::is_view() const
+    {
+        return get_arrow_proxy().is_view();
+    }
+
     array array::slice(size_type start, size_type end) const
     {
         SPARROW_ASSERT_TRUE(start <= end);

@@ -773,4 +773,19 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             CHECK_THROWS_AS(proxy.pop_back_bitmap(), std::runtime_error);
         }
     }
+
+    TEST_CASE("view")
+    {
+        auto [array, schema] = test::make_arrow_schema_and_array(false);
+        const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+        const auto view = proxy.view();
+        CHECK_EQ(view.format(), "c");
+        CHECK_EQ(view.length(), 10);
+        CHECK_EQ(view.null_count(), 2);
+        CHECK_EQ(view.offset(), 0);
+        CHECK_EQ(view.n_buffers(), 2);
+        CHECK_EQ(view.n_children(), 0);
+        CHECK_FALSE(view.dictionary());
+        CHECK(view.is_view());
+    }
 }
