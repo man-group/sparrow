@@ -165,6 +165,19 @@ namespace sparrow
             }
         }
 
+        TEST_CASE("const get_column")
+        {
+            const auto record = make_record_batch(col_size);
+            const auto col_list = make_array_list(col_size);
+            const auto name_list = make_name_list();
+
+            for (std::size_t i = 0; i < name_list.size(); ++i)
+            {
+                CHECK_EQ(col_list[i], record.get_column(i));
+                CHECK_EQ(col_list[i], record.get_column(name_list[i]));
+            }
+        }
+
         TEST_CASE("names")
         {
             auto record = make_record_batch(col_size);
