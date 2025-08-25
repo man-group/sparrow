@@ -258,6 +258,39 @@ namespace sparrow
                    );
         }
 
+        /**
+         * @brief Adds a child array to the struct.
+         *
+         * @param child The child array to add
+         *
+         * @post Increases the number of children by one
+         */
+        template <layout_or_array A>
+        void add_child(A&& child);
+
+        /**
+         * @brief Sets a child array at the specified index.
+         *
+         * @param child The child array to set
+         * @param index The index at which to set the child
+         *
+         * @pre index must be < children_count()
+         * @post Replaces the child array at the specified index. Release the array if it has the ownership.
+         */
+        template <layout_or_array A>
+        void set_child(A&& child, size_t index);
+
+        /**
+         * @brief Removes the last n children from the struct.
+         *
+         * @param n The number of children to remove
+         *
+         * @pre n must be <= children_count()
+         * @post Decreases the number of children by n.
+         * @post The owned arrays are released.
+         */
+        SPARROW_API void pop_children(size_t n);
+
     protected:
 
         /**
@@ -417,29 +450,6 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API children_type make_children();
 
-        template <layout_or_array A>
-        SPARROW_API void add_child(A&& child)
-        {
-            SPARROW_ASSERT_TRUE(child.size() == size());
-            auto [array, schema] = extract_arrow_structures(std::forward<A>(child));
-            get_arrow_proxy().add_child(std::move(array), std::move(schema));
-            m_children = make_children();
-        }
-
-        template <layout_or_array A>
-        SPARROW_API void set_child(A&& child, size_t index)
-        {
-            SPARROW_ASSERT_TRUE(child.size() == size());
-            auto [array, schema] = extract_arrow_structures(std::forward<A>(child));
-            get_arrow_proxy().set_child(std::move(array), std::move(schema), index);
-            m_children = make_children();
-        }
-
-        SPARROW_API void pop_children(size_t n)
-        {
-            get_arrow_proxy().pop_children(n);
-            m_children = make_children();
-        }
 
         // data members
         children_type m_children;  ///< Collection of child arrays (fields)
@@ -547,6 +557,24 @@ namespace sparrow
             true                                  // dictionary ownership
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
+    }
+
+    template <layout_or_array A>
+    void struct_array::add_child(A&& child)
+    {
+        SPARROW_ASSERT_TRUE(child.size() == size());
+        auto [array, schema] = extract_arrow_structures(std::forward<A>(child));
+        get_arrow_proxy().add_child(std::move(array), std::move(schema));
+        m_children = make_children();
+    }
+
+    template <layout_or_array A>
+    void struct_array::set_child(A&& child, size_t index)
+    {
+        SPARROW_ASSERT_TRUE(child.size() == size());
+        auto [array, schema] = extract_arrow_structures(std::forward<A>(child));
+        get_arrow_proxy().set_child(index, std::move(array), std::move(schema));
+        m_children = make_children();
     }
 }
 

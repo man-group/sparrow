@@ -333,7 +333,6 @@ namespace sparrow
             CHECK_THROWS_AS(struct_val.at(100), std::out_of_range);
         }
 
-
         SUBCASE("operator==(struct_value, struct_value)")
         {
             CHECK(struct_arr[0] == struct_arr[0]);
@@ -343,6 +342,34 @@ namespace sparrow
         SUBCASE("consistency")
         {
             test::generic_consistency_test(struct_arr);
+        }
+
+        SUBCASE("add_child")
+        {
+            primitive_array<std::int16_t> new_child(
+                {{std::int16_t(90), std::int16_t(91), std::int16_t(92), std::int16_t(93)}, true, "new_child"}
+            );
+            struct_arr.add_child(std::move(new_child));
+            CHECK_EQ(struct_arr.children_count(), 3);
+            CHECK_EQ(struct_arr.names().back(), "new_child");
+            CHECK_NULLABLE_VARIANT_EQ(struct_arr[0].value().at(2), std::int16_t(90));
+        }
+
+        SUBCASE("set_child")
+        {
+            primitive_array<std::int16_t> new_child(
+                {{std::int16_t(90), std::int16_t(91), std::int16_t(92), std::int16_t(93)}, true, "new_child"}
+            );
+            struct_arr.set_child(std::move(new_child), 1);
+            CHECK_EQ(struct_arr.children_count(), 2);
+            CHECK_EQ(struct_arr.names().back(), "new_child");
+            CHECK_NULLABLE_VARIANT_EQ(struct_arr[0].value().at(1), std::int16_t(90));
+        }
+
+        SUBCASE("pop_children")
+        {
+            struct_arr.pop_children(1);
+            CHECK_EQ(struct_arr.children_count(), 1);
         }
 
 #if defined(__cpp_lib_format)
