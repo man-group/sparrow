@@ -59,11 +59,11 @@ namespace sparrow
         TEST_CASE("constructors")
         {
             primitive_array<std::int16_t> flat_arr(
-                {{std::int16_t(0), std::int16_t(1), std::int16_t(2), std::int16_t(3)}}
+                {{std::int16_t(0), std::int16_t(1), std::int16_t(2), std::int16_t(3)}, true, "flat_arr1"}
             );
-            primitive_array<float32_t> flat_arr2({{4.0f, 5.0f, 6.0f, 7.0f}});
+            primitive_array<float32_t> flat_arr2({{4.0f, 5.0f, 6.0f, 7.0f}, true, "flat_arr2"});
             primitive_array<std::int32_t> flat_arr3(
-                {{std::int32_t(8), std::int32_t(9), std::int32_t(10), std::int32_t(11)}}
+                {{std::int32_t(8), std::int32_t(9), std::int32_t(10), std::int32_t(11)}, true, "flat_arr3"}
             );
 
             // detyped arrays
@@ -87,6 +87,12 @@ namespace sparrow
 
                 // check the values
                 const auto child0 = arr[0].value();
+                const auto child0_names = child0.names();
+                REQUIRE_EQ(child0_names.size(), 3);
+                CHECK_EQ(child0_names[0], "flat_arr1");
+                CHECK_EQ(child0_names[1], "flat_arr2");
+                CHECK_EQ(child0_names[2], "flat_arr3");
+
                 CHECK_NULLABLE_VARIANT_EQ(child0[0], std::int16_t(0));
                 CHECK_NULLABLE_VARIANT_EQ(child0[1], float32_t(4.0f));
                 CHECK_NULLABLE_VARIANT_EQ(child0[2], std::int32_t(8));

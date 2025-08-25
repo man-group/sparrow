@@ -64,12 +64,12 @@ namespace sparrow
 
     auto struct_array::value_end() -> value_iterator
     {
-        return value_iterator(detail::layout_value_functor<self_type, inner_value_type>(this), this->size());
+        return {detail::layout_value_functor<self_type, inner_value_type>(this), this->size()};
     }
 
     auto struct_array::value_cbegin() const -> const_value_iterator
     {
-        return const_value_iterator(detail::layout_value_functor<const self_type, inner_value_type>(this), 0);
+        return {detail::layout_value_functor<const self_type, inner_value_type>(this), 0};
     }
 
     auto struct_array::value_cend() const -> const_value_iterator
