@@ -138,6 +138,7 @@ namespace sparrow
          * @post Buffers and children are properly initialized
          */
         SPARROW_API explicit arrow_proxy(ArrowArray&& array, ArrowSchema* schema);
+        SPARROW_API explicit arrow_proxy(ArrowArray&& array, const ArrowSchema* schema);
 
         /**
          * @brief Constructs an arrow_proxy referencing external ArrowArray and ArrowSchema.
@@ -154,6 +155,7 @@ namespace sparrow
          * @post Buffers and children are properly initialized as views
          */
         SPARROW_API explicit arrow_proxy(ArrowArray* array, ArrowSchema* schema);
+        SPARROW_API explicit arrow_proxy(const ArrowArray* array, const ArrowSchema* schema);
 
         /**
          * @brief Copy constructor creating independent copy.
@@ -893,8 +895,8 @@ namespace sparrow
 
     private:
 
-        std::variant<ArrowArray*, ArrowArray> m_array;
-        std::variant<ArrowSchema*, ArrowSchema> m_schema;
+        std::variant<ArrowArray*, const ArrowArray*, ArrowArray> m_array;
+        std::variant<ArrowSchema*, const ArrowSchema*, ArrowSchema> m_schema;
         std::vector<sparrow::buffer_view<uint8_t>> m_buffers;
         std::vector<arrow_proxy> m_children;
         std::unique_ptr<arrow_proxy> m_dictionary;

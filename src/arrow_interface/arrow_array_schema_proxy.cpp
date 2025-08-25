@@ -14,7 +14,10 @@
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 
+#include <stdexcept>
+#include <type_traits>
 #include <utility>
+#include <variant>
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
@@ -24,15 +27,59 @@
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
     static constexpr size_t bitmap_buffer_index = 0;
 
+    using lol = std::remove_cvref_t<ArrowArray* const&>;
+
+    static_assert(std::same_as<std::remove_reference_t<ArrowArray* const&>, ArrowArray* const>);
+    static_assert(std::is_pointer_v<ArrowArray* const>);
+    static_assert(std::is_const_v<ArrowArray* const>);
+    static_assert(std::is_const_v<std::remove_pointer_t<const ArrowArray*>>);
+    static_assert(std::is_const_v<std::remove_reference_t<ArrowArray* const&>>);
+    static_assert(std::is_const_v<std::remove_pointer_t<std::remove_reference_t<const ArrowArray*&>>>);
+    static_assert(
+        std::is_const_v<std::remove_reference_t<ArrowArray* const&>>
+        && !std::is_const_v<std::remove_reference_t<ArrowArray>>
+    );
+
     template <typename T>
     [[nodiscard]] constexpr T& get_value_reference_of_variant(auto& var)
     {
-        return var.index() == 0 ? *std::get<0>(var) : std::get<1>(var);
+        return std::visit(
+            [](auto&& arg) -> T&
+            {
+                // Check is const
+                using Y = decltype(arg);
+
+                if constexpr (std::is_pointer_v<std::remove_reference_t<Y>>)
+                {
+                    if constexpr (std::is_const_v<std::remove_reference_t<T>>
+                                  || !std::is_const_v<std::remove_pointer_t<std::remove_reference_t<Y>>>)
+                    {
+                        return *arg;
+                    }
+                    else
+                    {
+                        throw std::runtime_error("Can't get non-const reference from const variant");
+                        // static_assert(
+                        //     sparrow::mpl::dependent_false<>::value,
+                        //     "Can't get non-const reference from const variant"
+                        // );
+                        sparrow::mpl::unreachable();
+                    }
+                }
+                else
+                {
+                    return arg;
+                }
+                mpl::unreachable();
+            },
+            var
+        );
     }
 
     arrow_proxy arrow_proxy::view() const
@@ -114,8 +161,8 @@ namespace sparrow
     }
 
     arrow_proxy::arrow_proxy()
-        : m_array(nullptr)
-        , m_schema(nullptr)
+        : m_array(static_cast<const ArrowArray*>(nullptr))
+        , m_schema(static_cast<const ArrowSchema*>(nullptr))
     {
     }
 
@@ -160,6 +207,11 @@ namespace sparrow
     {
     }
 
+    arrow_proxy::arrow_proxy(ArrowArray&& array, const ArrowSchema* schema)
+        : arrow_proxy(std::move(array), const_cast<ArrowSchema*>(schema), impl_tag{})
+    {
+    }
+
     arrow_proxy::arrow_proxy(ArrowArray* array, ArrowSchema* schema)
         : arrow_proxy(array, schema, impl_tag{})
     {
@@ -178,8 +230,8 @@ namespace sparrow
         }
         else
         {
-            m_array = nullptr;
-            m_schema = nullptr;
+            m_array = static_cast<const ArrowArray*>(nullptr);
+            m_schema = static_cast<const ArrowSchema*>(nullptr);
         }
     }
 
