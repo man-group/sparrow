@@ -110,6 +110,7 @@ namespace sparrow
         using holder_type = detail::holder<buffer<std::uint8_t>>;
         using buffer_adaptor_type = buffer_adaptor<T, buffer<std::uint8_t>&>;
         using holder_type::extract_storage;
+        using default_allocator_type = std::allocator<std::uint8_t>;
 
         /**
          * Move constructor.
@@ -184,7 +185,7 @@ namespace sparrow
          * @param count Number of elements in the storage.
          * @param a The allocator to use.
          */
-        template <allocator A = std::allocator<std::uint8_t>>
+        template <allocator A = default_allocator_type>
         constexpr u8_buffer(T* data_ptr, std::size_t count, const A& a = A());
     };
 
