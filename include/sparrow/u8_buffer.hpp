@@ -179,6 +179,9 @@ namespace sparrow
 
         /**
          * Constructs a buffer by taking ownership of the storage pointed to by \c data_ptr.
+         * `data_ptr` must have been allocated with the same allocator used by u8_buffer.
+         * Especially, one should not mixed operator new[] and std::allocator, as this
+         * later is not guaranteed to free the memory with a call to operator delete[] only.
          *
          * @tparam A The allocator type.
          * @param data_ptr Pointer to the storage.
