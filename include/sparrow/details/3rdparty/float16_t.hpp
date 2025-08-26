@@ -200,6 +200,30 @@
 	#define FE_ALL_EXCEPT	(FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW|FE_INEXACT)
 #endif
 
+#ifdef __EMSCRIPTEN__
+// Emscripten defines FE_ALL_EXCEPT as 0, which causes the fallback above to be skipped,
+// but does not define the individual FE_* macros. So we patch them manually here.
+
+#ifndef FE_INEXACT
+#define FE_INEXACT 0x02
+#endif
+#ifndef FE_INVALID
+#define FE_INVALID 0x04
+#endif
+#ifndef FE_OVERFLOW
+#define FE_OVERFLOW 0x08
+#endif
+#ifndef FE_UNDERFLOW
+#define FE_UNDERFLOW 0x10
+#endif
+#ifndef FE_DIVBYZERO
+#define FE_DIVBYZERO 0x01
+#endif
+#ifndef FE_ALL_EXCEPT
+#define FE_ALL_EXCEPT (FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW | FE_INEXACT)
+#endif
+#endif // __EMSCRIPTEN__
+
 
 /// Main namespace for half-precision functionality.
 /// This namespace contains all the functionality provided by the library.
