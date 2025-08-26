@@ -36,6 +36,8 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             const bool is_array_release_null = array.release == nullptr;
             CHECK(is_schema_release_null);
             CHECK(is_array_release_null);
+            CHECK_FALSE(proxy.is_array_const());
+            CHECK_FALSE(proxy.is_schema_const());
         }
 
         SUBCASE("pointer")
@@ -46,8 +48,24 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             const bool is_array_release_null = array.release == nullptr;
             CHECK_FALSE(is_schema_release_null);
             CHECK_FALSE(is_array_release_null);
+            CHECK_FALSE(proxy.is_array_const());
+            CHECK_FALSE(proxy.is_schema_const());
             array.release(&array);
             schema.release(&schema);
+        }
+
+        SUBCASE("const pointers")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            const bool is_schema_release_null = schema.release == nullptr;
+            const bool is_array_release_null = array.release == nullptr;
+            CHECK_FALSE(is_schema_release_null);
+            CHECK_FALSE(is_array_release_null);
+            CHECK(proxy.is_array_const());
+            CHECK(proxy.is_schema_const());
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
         }
     }
 
@@ -157,6 +175,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS(proxy.set_format("U"));
         }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS(proxy.set_format("U"));
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
+        }
     }
 
     TEST_CASE("name")
@@ -181,6 +208,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_name("new name"), std::runtime_error);
+        }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS(proxy.set_name("new name"));
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
         }
     }
 
@@ -220,6 +256,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_metadata(metadata), std::runtime_error);
         }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS(proxy.set_metadata(metadata));
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
+        }
     }
 
     TEST_CASE("flags")
@@ -256,6 +301,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
                 std::runtime_error
             );
         }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS(proxy.set_flags({sparrow::ArrowFlag::DICTIONARY_ORDERED, sparrow::ArrowFlag::NULLABLE}));
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
+        }
     }
 
     TEST_CASE("length")
@@ -280,6 +334,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_length(20), std::runtime_error);
+        }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS_AS(proxy.set_length(20), std::runtime_error);
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
         }
     }
 
@@ -306,6 +369,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_null_count(5), std::runtime_error);
         }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS(proxy.set_null_count(20));
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
+        }
     }
 
     TEST_CASE("offset")
@@ -330,6 +402,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_offset(5), std::runtime_error);
+        }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS(proxy.set_offset(20));
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
         }
     }
 
@@ -357,6 +438,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.set_n_buffers(3), std::runtime_error);
+        }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS(proxy.set_n_buffers(3));
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
         }
     }
 
@@ -422,6 +512,16 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto buffer = sparrow::buffer<uint8_t>({1, 2, 3});
             CHECK_THROWS_AS(proxy.set_buffer(1, std::move(buffer)), std::runtime_error);
         }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            auto buffer = sparrow::buffer<uint8_t>({1, 2, 3});
+            CHECK_THROWS_AS(proxy.set_buffer(1, std::move(buffer)), std::runtime_error);
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
+        }
     }
 
     TEST_CASE("children")
@@ -465,6 +565,21 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             array_schema_pair.first.release(&array_schema_pair.first);
             array_schema_pair.second.release(&array_schema_pair.second);
         }
+
+        SUBCASE("on const view")
+        {
+            auto array_schema_pair = make_external_arrow_schema_and_array();
+            std::array<sparrow::arrow_array_and_schema_pointers, 1> array_child_ptr{
+                {{&array_schema_pair.first, &array_schema_pair.second}}
+            };
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS(proxy.add_children(array_child_ptr));
+            array_schema_pair.first.release(&array_schema_pair.first);
+            array_schema_pair.second.release(&array_schema_pair.second);
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
+        }
     }
 
     TEST_CASE("pop_children")
@@ -492,6 +607,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.pop_children(1), std::runtime_error);
+        }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS(proxy.pop_children(1));
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
         }
     }
 
@@ -526,6 +650,18 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             array_dict.release(&array_dict);
             schema_dict.release(&schema_dict);
         }
+
+        SUBCASE("on const view")
+        {
+            auto [array_dict, schema_dict] = make_external_arrow_schema_and_array();
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS_AS(proxy.set_dictionary(&array_dict, &schema_dict), std::runtime_error);
+            array_dict.release(&array_dict);
+            schema_dict.release(&schema_dict);
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
+        }
     }
 
     TEST_CASE("is_created_with_sparrow")
@@ -541,13 +677,28 @@ TEST_SUITE("ArrowArrowSchemaProxy")
 
     TEST_CASE("private_data")
     {
-        auto [array, schema] = test::make_arrow_schema_and_array(false);
-        const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-        CHECK_NE(proxy.private_data(), nullptr);
+        SUBCASE("on sparrow c structure")
+        {
+            auto [array, schema] = test::make_arrow_schema_and_array(false);
+            const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+            CHECK_NE(proxy.private_data(), nullptr);
+        }
 
-        auto [array_ext, schema_ext] = make_external_arrow_schema_and_array();
-        const sparrow::arrow_proxy proxy_ext(std::move(array_ext), std::move(schema_ext));
-        CHECK_EQ(proxy_ext.private_data(), nullptr);
+        SUBCASE("on external c structure")
+        {
+            auto [array_ext, schema_ext] = make_external_arrow_schema_and_array();
+            const sparrow::arrow_proxy proxy_ext(std::move(array_ext), std::move(schema_ext));
+            CHECK_EQ(proxy_ext.private_data(), nullptr);
+        }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS_AS(proxy.private_data(), std::runtime_error);
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
+        }
     }
 
     TEST_CASE("resize_bitmap")
@@ -572,6 +723,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.resize_bitmap(5), std::runtime_error);
+        }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS_AS(proxy.resize_bitmap(5), std::runtime_error);
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
         }
     }
 
@@ -601,6 +761,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
                 auto [array, schema] = make_external_arrow_schema_and_array();
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
                 CHECK_THROWS_AS(proxy.insert_bitmap(1, true), std::runtime_error);
+            }
+
+            SUBCASE("on const view")
+            {
+                const auto [array, schema] = test::make_arrow_schema_and_array(false);
+                sparrow::arrow_proxy proxy(&array, &schema);
+                CHECK_THROWS_AS(proxy.insert_bitmap(1, true), std::runtime_error);
+                array.release(const_cast<ArrowArray*>(&array));
+                schema.release(const_cast<ArrowSchema*>(&schema));
             }
         }
 
@@ -633,6 +802,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
                 auto [array, schema] = make_external_arrow_schema_and_array();
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
                 CHECK_THROWS_AS(proxy.insert_bitmap(1, true, 2), std::runtime_error);
+            }
+
+            SUBCASE("on const view")
+            {
+                const auto [array, schema] = test::make_arrow_schema_and_array(false);
+                sparrow::arrow_proxy proxy(&array, &schema);
+                CHECK_THROWS_AS(proxy.insert_bitmap(1, true, 2), std::runtime_error);
+                array.release(const_cast<ArrowArray*>(&array));
+                schema.release(const_cast<ArrowSchema*>(&schema));
             }
         }
 
@@ -670,6 +848,16 @@ TEST_SUITE("ArrowArrowSchemaProxy")
                 std::vector<uint8_t> values{0, 1, 0, 1};
                 CHECK_THROWS_AS(proxy.insert_bitmap(1, values), std::runtime_error);
             }
+
+            SUBCASE("on const view")
+            {
+                const auto [array, schema] = test::make_arrow_schema_and_array(false);
+                sparrow::arrow_proxy proxy(&array, &schema);
+                std::vector<uint8_t> values{0, 1, 0, 1};
+                CHECK_THROWS_AS(proxy.insert_bitmap(1, values), std::runtime_error);
+                array.release(const_cast<ArrowArray*>(&array));
+                schema.release(const_cast<ArrowSchema*>(&schema));
+            }
         }
     }
 
@@ -692,6 +880,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
                 CHECK_THROWS_AS(proxy.erase_bitmap(1), std::runtime_error);
             }
+
+            SUBCASE("on const view")
+            {
+                const auto [array, schema] = test::make_arrow_schema_and_array(false);
+                sparrow::arrow_proxy proxy(&array, &schema);
+                CHECK_THROWS_AS(proxy.erase_bitmap(1), std::runtime_error);
+                array.release(const_cast<ArrowArray*>(&array));
+                schema.release(const_cast<ArrowSchema*>(&schema));
+            }
         }
 
         SUBCASE("with index and count")
@@ -710,6 +907,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
                 auto [array, schema] = make_external_arrow_schema_and_array();
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
                 CHECK_THROWS_AS(proxy.erase_bitmap(1, 2), std::runtime_error);
+            }
+
+            SUBCASE("on const view")
+            {
+                const auto [array, schema] = test::make_arrow_schema_and_array(false);
+                sparrow::arrow_proxy proxy(&array, &schema);
+                CHECK_THROWS_AS(proxy.erase_bitmap(1, 2), std::runtime_error);
+                array.release(const_cast<ArrowArray*>(&array));
+                schema.release(const_cast<ArrowSchema*>(&schema));
             }
         }
     }
@@ -743,6 +949,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.push_back_bitmap(1), std::runtime_error);
         }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS_AS(proxy.push_back_bitmap(1), std::runtime_error);
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
+        }
     }
 
     TEST_CASE("pop_back_bitmap")
@@ -771,6 +986,15 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_THROWS_AS(proxy.pop_back_bitmap(), std::runtime_error);
+        }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS_AS(proxy.pop_back_bitmap(), std::runtime_error);
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
         }
     }
 

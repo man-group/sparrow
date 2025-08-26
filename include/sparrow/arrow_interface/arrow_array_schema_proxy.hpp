@@ -893,13 +893,25 @@ namespace sparrow
          */
         SPARROW_API void update_buffers();
 
+        /**
+         * Check if the array is const.
+         */
+        [[nodiscard]] SPARROW_API bool is_array_const() const;
+
+        /**
+         * Check if the schema is const.
+         */
+        [[nodiscard]] SPARROW_API bool is_schema_const() const;
+
     private:
 
-        std::variant<ArrowArray*, const ArrowArray*, ArrowArray> m_array;
-        std::variant<ArrowSchema*, const ArrowSchema*, ArrowSchema> m_schema;
+        std::variant<ArrowArray*, ArrowArray> m_array;
+        std::variant<ArrowSchema*, ArrowSchema> m_schema;
         std::vector<sparrow::buffer_view<uint8_t>> m_buffers;
         std::vector<arrow_proxy> m_children;
         std::unique_ptr<arrow_proxy> m_dictionary;
+        bool m_schema_is_immutable = false;
+        bool m_array_is_immutable = false;
 
         struct impl_tag
         {
@@ -909,8 +921,8 @@ namespace sparrow
         arrow_proxy();
 
         template <typename AA, typename AS>
-            requires std::same_as<std::remove_pointer_t<std::remove_cvref_t<AA>>, ArrowArray>
-                     && std::same_as<std::remove_pointer_t<std::remove_cvref_t<AS>>, ArrowSchema>
+            requires std::same_as<std::remove_const_t<std::remove_pointer_t<std::remove_cvref_t<AA>>>, ArrowArray>
+                     && std::same_as<std::remove_const_t<std::remove_pointer_t<std::remove_cvref_t<AS>>>, ArrowSchema>
         arrow_proxy(AA&& array, AS&& schema, impl_tag);
 
         [[nodiscard]] bool empty() const;
@@ -955,7 +967,13 @@ namespace sparrow
     {
         if (!is_created_with_sparrow())
         {
-            throw arrow_proxy_exception("Cannot set n_buffers on non-sparrow created ArrowArray or ArrowSchema");
+            throw arrow_proxy_exception("Cannot add children on non-sparrow created ArrowArray or ArrowSchema");
+        }
+        if (m_schema_is_immutable || m_array_is_immutable)
+        {
+            throw arrow_proxy_exception(
+                "Cannot add children on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
+            );
         }
 
         const size_t add_children_count = std::ranges::size(arrow_array_and_schema_pointers);
