@@ -456,10 +456,10 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set offset on non-sparrow created ArrowArray");
         }
-        if (m_schema_is_immutable)
+        if (m_array_is_immutable)
         {
             throw arrow_proxy_exception(
-                "Cannot set offset on an immutable arrow_proxy. You may have passed a const ArrowSchema* at the creation."
+                "Cannot set offset on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
             );
         }
         array_without_sanitize().offset = static_cast<int64_t>(offset);
