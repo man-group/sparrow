@@ -140,7 +140,7 @@ namespace sparrow
          * Destructor.
          */
         ~u8_buffer() = default;
-         /**
+        /**
          * Constructs a buffer with \c n uninitialized elements.
          *
          * @param n Number of elements.
@@ -212,7 +212,7 @@ namespace sparrow
         , buffer_adaptor_type(holder_type::value)
     {
     }
-        
+
     template <class T>
     constexpr u8_buffer<T>::u8_buffer(std::size_t n, const T& val)
         : u8_buffer(n)
@@ -222,8 +222,9 @@ namespace sparrow
 
     template <class T>
     template <std::ranges::input_range R>
-        requires(!std::same_as<u8_buffer<T>, std::decay_t<R>>
-                 && std::convertible_to<std::ranges::range_value_t<R>, T>)
+        requires(
+            !std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>
+        )
     constexpr u8_buffer<T>::u8_buffer(R&& range)
         : u8_buffer(range_size(range))
     {
