@@ -40,9 +40,16 @@ namespace sparrow
 
     arrow_proxy arrow_proxy::view() const
     {
-        ArrowArray* array_ptr = const_cast<ArrowArray*>(&array());
-        ArrowSchema* schema_ptr = const_cast<ArrowSchema*>(&schema());
-        return arrow_proxy(array_ptr, schema_ptr);
+        if (m_array_is_immutable || m_schema_is_immutable)
+        {
+            return arrow_proxy(&array(), &schema());
+        }
+        else
+        {
+            ArrowArray* array_ptr = const_cast<ArrowArray*>(&array());
+            ArrowSchema* schema_ptr = const_cast<ArrowSchema*>(&schema());
+            return arrow_proxy(array_ptr, schema_ptr);
+        }
     }
 
     [[nodiscard]] bool arrow_proxy::is_view() const noexcept
@@ -59,7 +66,11 @@ namespace sparrow
             array_without_sanitize().buffers = get_array_private_data()->buffers_ptrs<void>();
             array_without_sanitize().n_buffers = static_cast<int64_t>(n_buffers());
         }
-        m_buffers = get_arrow_array_buffers(array_without_sanitize(), schema_without_sanitize());
+        const arrow_proxy& const_this = *this;
+        m_buffers = get_arrow_array_buffers(
+            const_this.array_without_sanitize(),
+            const_this.schema_without_sanitize()
+        );
     }
 
     void arrow_proxy::update_children()
@@ -67,8 +78,9 @@ namespace sparrow
         m_children.clear();
         m_children.reserve(n_children());
 
-        ArrowArray** array_children = array_without_sanitize().children;
-        ArrowSchema** schema_children = schema_without_sanitize().children;
+        const arrow_proxy& const_this = *this;
+        ArrowArray** array_children = const_this.array_without_sanitize().children;
+        ArrowSchema** schema_children = const_this.schema_without_sanitize().children;
         for (size_t i = 0; i < n_children(); ++i)
         {
             m_children.emplace_back(array_children[i], schema_children[i]);
@@ -77,15 +89,17 @@ namespace sparrow
 
     void arrow_proxy::update_dictionary()
     {
-        if (array_without_sanitize().dictionary == nullptr || schema_without_sanitize().dictionary == nullptr)
+        const arrow_proxy& const_this = *this;
+        if (const_this.array_without_sanitize().dictionary == nullptr
+            || const_this.schema_without_sanitize().dictionary == nullptr)
         {
             m_dictionary = nullptr;
         }
         else
         {
             m_dictionary = std::make_unique<arrow_proxy>(
-                array_without_sanitize().dictionary,
-                schema_without_sanitize().dictionary
+                const_this.array_without_sanitize().dictionary,
+                const_this.schema_without_sanitize().dictionary
             );
         }
     }

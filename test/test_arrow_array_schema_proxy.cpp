@@ -695,7 +695,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             const auto [array, schema] = test::make_arrow_schema_and_array(false);
             sparrow::arrow_proxy proxy(&array, &schema);
-            CHECK_THROWS_AS(proxy.private_data(), std::runtime_error);
+            CHECK_NE(proxy.private_data(), nullptr);
             array.release(const_cast<ArrowArray*>(&array));
             schema.release(const_cast<ArrowSchema*>(&schema));
         }
