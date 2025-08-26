@@ -110,6 +110,7 @@ namespace sparrow
         using holder_type = detail::holder<buffer<std::uint8_t>>;
         using buffer_adaptor_type = buffer_adaptor<T, buffer<std::uint8_t>&>;
         using holder_type::extract_storage;
+        using default_allocator_type = std::allocator<std::uint8_t>;
 
         /**
          * Move constructor.
@@ -139,6 +140,12 @@ namespace sparrow
          * Destructor.
          */
         ~u8_buffer() = default;
+        /**
+         * Constructs a buffer with \c n uninitialized elements.
+         *
+         * @param n Number of elements.
+         */
+        constexpr explicit u8_buffer(std::size_t n);
 
         /**
          * Constructs a buffer with \c n elements, each initialized to \c val.
@@ -146,7 +153,7 @@ namespace sparrow
          * @param n Number of elements.
          * @param val Value to initialize the elements with.
          */
-        constexpr u8_buffer(std::size_t n, const T& val = T{});
+        constexpr u8_buffer(std::size_t n, const T& val);
 
         /**
          * Constructs a buffer with the elements of the range \c range.
@@ -172,13 +179,16 @@ namespace sparrow
 
         /**
          * Constructs a buffer by taking ownership of the storage pointed to by \c data_ptr.
+         * `data_ptr` must have been allocated with the same allocator used by u8_buffer.
+         * Especially, one should not mixed operator new[] and std::allocator, as this
+         * later is not guaranteed to free the memory with a call to operator delete[] only.
          *
          * @tparam A The allocator type.
          * @param data_ptr Pointer to the storage.
          * @param count Number of elements in the storage.
          * @param a The allocator to use.
          */
-        template <allocator A = std::allocator<std::uint8_t>>
+        template <allocator A = default_allocator_type>
         constexpr u8_buffer(T* data_ptr, std::size_t count, const A& a = A());
     };
 
@@ -197,28 +207,33 @@ namespace sparrow
     }
 
     template <class T>
-    constexpr u8_buffer<T>::u8_buffer(std::size_t n, const T& val)
+    constexpr u8_buffer<T>::u8_buffer(std::size_t n)
         : holder_type{n * sizeof(T)}
         , buffer_adaptor_type(holder_type::value)
+    {
+    }
+
+    template <class T>
+    constexpr u8_buffer<T>::u8_buffer(std::size_t n, const T& val)
+        : u8_buffer(n)
     {
         std::fill(this->begin(), this->end(), val);
     }
 
     template <class T>
     template <std::ranges::input_range R>
-        requires(!std::same_as<u8_buffer<T>, std::decay_t<R>>
-                 && std::convertible_to<std::ranges::range_value_t<R>, T>)
+        requires(
+            !std::same_as<u8_buffer<T>, std::decay_t<R>> && std::convertible_to<std::ranges::range_value_t<R>, T>
+        )
     constexpr u8_buffer<T>::u8_buffer(R&& range)
-        : holder_type{range_size(range) * sizeof(T)}
-        , buffer_adaptor_type(holder_type::value)
+        : u8_buffer(range_size(range))
     {
         sparrow::ranges::copy(range, this->begin());
     }
 
     template <class T>
     constexpr u8_buffer<T>::u8_buffer(std::initializer_list<T> ilist)
-        : holder_type{ilist.size() * sizeof(T)}
-        , buffer_adaptor_type(holder_type::value)
+        : u8_buffer(ilist.size())
     {
         std::copy(ilist.begin(), ilist.end(), this->begin());
     }
