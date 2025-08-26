@@ -435,7 +435,7 @@ namespace sparrow
         std::optional<name_type> m_name;                       ///< Optional name of the record batch
         std::optional<std::vector<metadata_pair>> m_metadata;  ///< Optional metadata for the record batch
         std::vector<name_type> m_name_list;                    ///< Ordered list of column names
-        mutable std::vector<array> m_array_list;               ///< Ordered list of column arrays
+        std::vector<array> m_array_list;                       ///< Ordered list of column arrays
         mutable std::unordered_map<name_type, array*> m_array_map;  ///< Cache for fast name-based
                                                                     ///< lookup
         mutable bool m_dirty_map = true;                            ///< Flag indicating cache needs update

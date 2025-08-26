@@ -172,7 +172,7 @@ namespace sparrow
         for (std::size_t i = m_name_list.size(); i != 0; --i)
         {
             const auto& name = m_name_list[i - 1];
-            array* ar = &(m_array_list[i - 1]);
+            array* ar = const_cast<array*>(&(m_array_list[i - 1]));
             if (!m_array_map.try_emplace(name, ar).second)
             {
                 break;
