@@ -17,6 +17,8 @@
 #include <ranges>
 #include <vector>
 
+#include "sparrow/config/config.hpp"
+
 namespace sparrow
 {
     /*
@@ -51,10 +53,10 @@ namespace sparrow
     public:
 
         [[nodiscard]] std::size_t children_size() const noexcept;
-        void set_child_ownership(std::size_t child, bool ownership);
+        void SPARROW_API set_child_ownership(std::size_t child, bool ownership);
         template <std::ranges::input_range CHILDREN_OWNERSHIP>
         void set_children_ownership(const CHILDREN_OWNERSHIP& children_ownership_values);
-        [[nodiscard]] bool has_child_ownership(std::size_t child) const;
+        [[nodiscard]] SPARROW_API bool has_child_ownership(std::size_t child) const;
 
         void resize_children(std::size_t size);
 

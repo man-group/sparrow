@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <optional>
@@ -696,30 +697,84 @@ namespace sparrow
          * @param array The `ArrowArray` to set as child.
          * @param schema The `ArrowSchema` to set as child.
          */
-        SPARROW_API void set_child(size_t index, ArrowArray* array, ArrowSchema* schema);
+        template <typename AA, typename AS>
+            requires(std::same_as<AA, ArrowArray> || std::same_as<AA, ArrowArray*>
+                     || std::same_as<AA, const ArrowArray*> || std::same_as<AA, ArrowArray &&>
+                     || std::same_as<AA, nullptr_t>)
+                    && (std::same_as<AS, ArrowSchema> || std::same_as<AS, ArrowSchema*>
+                        || std::same_as<AS, const ArrowSchema*> || std::same_as<AS, ArrowSchema &&>
+                        || std::same_as<AS, nullptr_t>)
+        void set_child(size_t index, AA child_array, AS child_schema)
+        {
+            if (!is_created_with_sparrow())
+            {
+                throw arrow_proxy_exception("Cannot set child on non-sparrow created ArrowArray or ArrowSchema");
+            }
+            if (m_array_is_immutable || m_schema_is_immutable)
+            {
+                throw arrow_proxy_exception(
+                    "Cannot set child on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
+                );
+            }
+            SPARROW_ASSERT_TRUE(std::cmp_less(index, n_children()));
+            using is_child_array_pointer = std::bool_constant<
+                std::same_as<AA, ArrowArray*> || std::same_as<AA, const ArrowArray*>>;
+            if constexpr (is_child_array_pointer::value)
+            {
+                SPARROW_ASSERT_TRUE(child_array != nullptr);
+                SPARROW_ASSERT_TRUE(child_array->release != nullptr);
+            }
+            using is_child_schema_pointer = std::bool_constant<
+                std::same_as<AS, ArrowSchema*> || std::same_as<AS, const ArrowSchema*>>;
+            if constexpr (is_child_schema_pointer::value)
+            {
+                SPARROW_ASSERT_TRUE(child_schema != nullptr);
+                SPARROW_ASSERT_TRUE(child_schema->release != nullptr);
+            }
 
-        /**
-         * Set the child at the given index. It does not take the ownership on the `ArrowArray` and
-         * `ArrowSchema` passed by pointers.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
-         * in this proxy were not created with sparrow.
-         * @param index The index of the child to set.
-         * @param array The `ArrowArray` to set as child.
-         * @param schema The `ArrowSchema` to set as child.
-         */
-        SPARROW_API void set_child(size_t index, const ArrowArray* array, const ArrowSchema* schema);
+            // Check if there's an existing child that needs to be released
+            ArrowArray& array_ref = array_without_sanitize();
+            ArrowSchema& schema_ref = schema_without_sanitize();
 
-        /**
-         * Set the child at the given index. It takes the ownership on the `ArrowArray` and`ArrowSchema`
-         * passed by rvalue referencess.
-         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` wrapped
-         * in this proxy were not created with
-         * sparrow.
-         * @param index The index of the child to set.
-         * @param array The `ArrowArray` to set as child.
-         * @param schema The `ArrowSchema` to set as child.
-         */
-        SPARROW_API void set_child(size_t index, ArrowArray&& array, ArrowSchema&& schema);
+            if (get_schema_private_data()->has_child_ownership(index))
+            {
+                ArrowSchema* existing_child = schema_ref.children[index];
+                if (existing_child != nullptr)
+                {
+                    existing_child->release(existing_child);
+                }
+            }
+            if (get_array_private_data()->has_child_ownership(index))
+            {
+                ArrowArray* existing_child = array_ref.children[index];
+                if (existing_child != nullptr)
+                {
+                    existing_child->release(existing_child);
+                }
+            }
+
+            if constexpr (is_child_array_pointer::value)
+            {
+                array_ref.children[index] = const_cast<ArrowArray*>(child_array);
+            }
+            else
+            {
+                array_ref.children[index] = new ArrowArray(std::move(child_array));
+            }
+
+            if constexpr (is_child_schema_pointer::value)
+            {
+                schema_ref.children[index] = const_cast<ArrowSchema*>(child_schema);
+            }
+            else
+            {
+                schema_ref.children[index] = new ArrowSchema(std::move(child_schema));
+            }
+
+            m_children[index] = arrow_proxy(array_ref.children[index], schema_ref.children[index]);
+            get_array_private_data()->set_child_ownership(index, !is_child_array_pointer::value);
+            get_schema_private_data()->set_child_ownership(index, !is_child_schema_pointer::value);
+        }
 
         /**
          * @brief Returns a constant reference to the vector of child arrow proxies.
@@ -956,11 +1011,11 @@ namespace sparrow
 
         [[nodiscard]] size_t get_null_count() const;
 
-        [[nodiscard]] ArrowArray& array_without_sanitize();
-        [[nodiscard]] const ArrowArray& array_without_sanitize() const;
+        [[nodiscard]] SPARROW_API ArrowArray& array_without_sanitize();
+        [[nodiscard]] SPARROW_API const ArrowArray& array_without_sanitize() const;
 
-        [[nodiscard]] ArrowSchema& schema_without_sanitize();
-        [[nodiscard]] const ArrowSchema& schema_without_sanitize() const;
+        [[nodiscard]] SPARROW_API ArrowSchema& schema_without_sanitize();
+        [[nodiscard]] SPARROW_API const ArrowSchema& schema_without_sanitize() const;
 
         /**
          * If the null_count of the proxy or the one from the dictionary is greater than 0, the schema
