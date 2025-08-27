@@ -24,6 +24,7 @@
 #include "sparrow/arrow_interface/arrow_flag_utils.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
+#include "sparrow/arrow_interface/private_data_ownership.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/utils/contracts.hpp"
@@ -674,8 +675,29 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(child_array->release != nullptr);
         SPARROW_ASSERT_TRUE(child_schema->release != nullptr);
 
-        array_without_sanitize().children[index] = child_array;
-        schema_without_sanitize().children[index] = child_schema;
+        // Check if there's an existing child that needs to be released
+        ArrowArray& array_ref = array_without_sanitize();
+        ArrowSchema& schema_ref = schema_without_sanitize();
+
+        if (get_schema_private_data()->has_child_ownership(index))
+        {
+            ArrowSchema* existing_child = schema_ref.children[index];
+            if (existing_child != nullptr)
+            {
+                existing_child->release(existing_child);
+            }
+        }
+        if (get_array_private_data()->has_child_ownership(index))
+        {
+            ArrowArray* existing_child = array_ref.children[index];
+            if (existing_child != nullptr)
+            {
+                existing_child->release(existing_child);
+            }
+        }
+
+        array_ref.children[index] = child_array;
+        schema_ref.children[index] = child_schema;
         m_children[index] = arrow_proxy(child_array, child_schema);
         get_array_private_data()->set_child_ownership(index, false);
         get_schema_private_data()->set_child_ownership(index, false);
@@ -698,8 +720,30 @@ namespace sparrow
                 "Cannot set child on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
             );
         }
-        array_without_sanitize().children[index] = const_cast<ArrowArray*>(child_array);
-        schema_without_sanitize().children[index] = const_cast<ArrowSchema*>(child_schema);
+
+        // Check if there's an existing child that needs to be released
+        ArrowArray& array_ref = array_without_sanitize();
+        ArrowSchema& schema_ref = schema_without_sanitize();
+
+        if (get_schema_private_data()->has_child_ownership(index))
+        {
+            ArrowSchema* existing_child = schema_ref.children[index];
+            if (existing_child != nullptr)
+            {
+                existing_child->release(existing_child);
+            }
+        }
+        if (get_array_private_data()->has_child_ownership(index))
+        {
+            ArrowArray* existing_child = array_ref.children[index];
+            if (existing_child != nullptr)
+            {
+                existing_child->release(existing_child);
+            }
+        }
+
+        array_ref.children[index] = const_cast<ArrowArray*>(child_array);
+        schema_ref.children[index] = const_cast<ArrowSchema*>(child_schema);
         m_children[index] = arrow_proxy(child_array, child_schema);
         get_array_private_data()->set_child_ownership(index, false);
         get_schema_private_data()->set_child_ownership(index, false);
@@ -720,8 +764,30 @@ namespace sparrow
                 "Cannot set child on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
             );
         }
-        array_without_sanitize().children[index] = new ArrowArray(std::move(child_array));
-        schema_without_sanitize().children[index] = new ArrowSchema(std::move(child_schema));
+
+        // Check if there's an existing child that needs to be released
+        ArrowArray& array_ref = array_without_sanitize();
+        ArrowSchema& schema_ref = schema_without_sanitize();
+
+        if (get_schema_private_data()->has_child_ownership(index))
+        {
+            ArrowSchema* existing_child = schema_ref.children[index];
+            if (existing_child != nullptr)
+            {
+                existing_child->release(existing_child);
+            }
+        }
+        if (get_array_private_data()->has_child_ownership(index))
+        {
+            ArrowArray* existing_child = array_ref.children[index];
+            if (existing_child != nullptr)
+            {
+                existing_child->release(existing_child);
+            }
+        }
+
+        array_ref.children[index] = new ArrowArray(std::move(child_array));
+        schema_ref.children[index] = new ArrowSchema(std::move(child_schema));
         m_children[index] = arrow_proxy(array().children[index], schema_without_sanitize().children[index]);
         get_array_private_data()->set_child_ownership(index, true);
         get_schema_private_data()->set_child_ownership(index, true);
