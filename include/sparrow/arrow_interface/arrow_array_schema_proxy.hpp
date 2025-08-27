@@ -741,6 +741,7 @@ namespace sparrow
                 {
                     existing_child->release(existing_child);
                 }
+                delete existing_child;
             }
             if (get_array_private_data()->has_child_ownership(index))
             {
@@ -749,6 +750,7 @@ namespace sparrow
                 {
                     existing_child->release(existing_child);
                 }
+                delete existing_child;
             }
 
             if constexpr (is_child_array_pointer::value)
