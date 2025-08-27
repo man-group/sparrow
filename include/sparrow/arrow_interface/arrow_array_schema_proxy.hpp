@@ -699,6 +699,17 @@ namespace sparrow
         SPARROW_API void set_child(size_t index, ArrowArray* array, ArrowSchema* schema);
 
         /**
+         * Set the child at the given index. It does not take the ownership on the `ArrowArray` and
+         * `ArrowSchema` passed by pointers.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
+         * in this proxy were not created with sparrow.
+         * @param index The index of the child to set.
+         * @param array The `ArrowArray` to set as child.
+         * @param schema The `ArrowSchema` to set as child.
+         */
+        SPARROW_API void set_child(size_t index, const ArrowArray* array, const ArrowSchema* schema);
+
+        /**
          * Set the child at the given index. It takes the ownership on the `ArrowArray` and`ArrowSchema`
          * passed by rvalue referencess.
          * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` wrapped
@@ -709,7 +720,6 @@ namespace sparrow
          * @param schema The `ArrowSchema` to set as child.
          */
         SPARROW_API void set_child(size_t index, ArrowArray&& array, ArrowSchema&& schema);
-
 
         /**
          * @brief Returns a constant reference to the vector of child arrow proxies.

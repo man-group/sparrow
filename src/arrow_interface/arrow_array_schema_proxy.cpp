@@ -658,6 +658,31 @@ namespace sparrow
 
     void arrow_proxy::set_child(size_t index, ArrowArray* child_array, ArrowSchema* child_schema)
     {
+        if (!is_created_with_sparrow())
+        {
+            throw arrow_proxy_exception("Cannot set child on non-sparrow created ArrowArray or ArrowSchema");
+        }
+        if (m_array_is_immutable || m_schema_is_immutable)
+        {
+            throw arrow_proxy_exception(
+                "Cannot set child on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
+            );
+        }
+        SPARROW_ASSERT_TRUE(std::cmp_less(index, n_children()));
+        SPARROW_ASSERT_TRUE(child_array != nullptr);
+        SPARROW_ASSERT_TRUE(child_schema != nullptr);
+        SPARROW_ASSERT_TRUE(child_array->release != nullptr);
+        SPARROW_ASSERT_TRUE(child_schema->release != nullptr);
+
+        array_without_sanitize().children[index] = child_array;
+        schema_without_sanitize().children[index] = child_schema;
+        m_children[index] = arrow_proxy(child_array, child_schema);
+        get_array_private_data()->set_child_ownership(index, false);
+        get_schema_private_data()->set_child_ownership(index, false);
+    }
+
+    void arrow_proxy::set_child(size_t index, const ArrowArray* child_array, const ArrowSchema* child_schema)
+    {
         SPARROW_ASSERT_TRUE(std::cmp_less(index, n_children()));
         SPARROW_ASSERT_TRUE(child_array != nullptr);
         SPARROW_ASSERT_TRUE(child_schema != nullptr);
@@ -673,8 +698,8 @@ namespace sparrow
                 "Cannot set child on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
             );
         }
-        array_without_sanitize().children[index] = child_array;
-        schema_without_sanitize().children[index] = child_schema;
+        array_without_sanitize().children[index] = const_cast<ArrowArray*>(child_array);
+        schema_without_sanitize().children[index] = const_cast<ArrowSchema*>(child_schema);
         m_children[index] = arrow_proxy(child_array, child_schema);
         get_array_private_data()->set_child_ownership(index, false);
         get_schema_private_data()->set_child_ownership(index, false);

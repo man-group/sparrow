@@ -186,6 +186,42 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         }
     }
 
+    TEST_CASE("data_type")
+    {
+        auto [array, schema] = test::make_arrow_schema_and_array(false);
+        const sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+        CHECK_EQ(proxy.data_type(), sparrow::data_type::INT8);
+    }
+
+    TEST_CASE("set_data_type")
+    {
+        SUBCASE("on sparrow c structure")
+        {
+            auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+            proxy.set_data_type(sparrow::data_type::UINT64);
+            CHECK_EQ(proxy.data_type(), sparrow::data_type::UINT64);
+            CHECK_EQ(proxy.format(), "L");
+        }
+
+        SUBCASE("on external c structure")
+        {
+            auto [array, schema] = make_external_arrow_schema_and_array();
+            sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+            CHECK_THROWS(proxy.set_data_type(sparrow::data_type::UINT64));
+        }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(false);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS(proxy.set_data_type(sparrow::data_type::UINT64));
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
+        }
+    }
+
+
     TEST_CASE("name")
     {
         auto [array, schema] = test::make_arrow_schema_and_array(false);
@@ -577,6 +613,51 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             CHECK_THROWS(proxy.add_children(array_child_ptr));
             array_schema_pair.first.release(&array_schema_pair.first);
             array_schema_pair.second.release(&array_schema_pair.second);
+            array.release(const_cast<ArrowArray*>(&array));
+            schema.release(const_cast<ArrowSchema*>(&schema));
+        }
+    }
+
+    TEST_CASE("set_child")
+    {
+        SUBCASE("on sparrow c structure")
+        {
+            SUBCASE("child view")
+            {
+                auto [array, schema] = test::make_arrow_schema_and_array(true);
+                sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+                auto [child_array, child_schema] = test::make_arrow_schema_and_array(true);
+                proxy.set_child(0, &child_array, &child_schema);
+                CHECK_EQ(&proxy.children()[0].array(), &child_array);
+                CHECK_EQ(&proxy.children()[0].schema(), &child_schema);
+                child_array.release(&child_array);
+                child_schema.release(&child_schema);
+            }
+
+            SUBCASE("child ownership")
+            {
+                auto [array, schema] = test::make_arrow_schema_and_array(true);
+                sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+                auto [child_array, child_schema] = test::make_arrow_schema_and_array(true);
+                proxy.set_child(0, std::move(child_array), std::move(child_schema));
+            }
+        }
+
+        SUBCASE("on external c structure")
+        {
+            auto [array, schema] = make_external_arrow_schema_and_array();
+            sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+            auto [child_array, child_schema] = test::make_arrow_schema_and_array(true);
+            CHECK_THROWS_AS(proxy.set_child(0, &child_array, &child_schema), std::runtime_error);
+            child_array.release(&child_array);
+            child_schema.release(&child_schema);
+        }
+
+        SUBCASE("on const view")
+        {
+            const auto [array, schema] = test::make_arrow_schema_and_array(true);
+            sparrow::arrow_proxy proxy(&array, &schema);
+            CHECK_THROWS(proxy.set_child(0, &array, &schema));
             array.release(const_cast<ArrowArray*>(&array));
             schema.release(const_cast<ArrowSchema*>(&schema));
         }
