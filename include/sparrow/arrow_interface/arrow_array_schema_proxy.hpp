@@ -699,11 +699,9 @@ namespace sparrow
          */
         template <typename AA, typename AS>
             requires(std::same_as<AA, ArrowArray> || std::same_as<AA, ArrowArray*>
-                     || std::same_as<AA, const ArrowArray*> || std::same_as<AA, ArrowArray &&>
-                     || std::same_as<AA, nullptr_t>)
+                     || std::same_as<AA, const ArrowArray*> || std::same_as<AA, ArrowArray &&>)
                     && (std::same_as<AS, ArrowSchema> || std::same_as<AS, ArrowSchema*>
-                        || std::same_as<AS, const ArrowSchema*> || std::same_as<AS, ArrowSchema &&>
-                        || std::same_as<AS, nullptr_t>)
+                        || std::same_as<AS, const ArrowSchema*> || std::same_as<AS, ArrowSchema &&>)
         void set_child(size_t index, AA child_array, AS child_schema)
         {
             if (!is_created_with_sparrow())
