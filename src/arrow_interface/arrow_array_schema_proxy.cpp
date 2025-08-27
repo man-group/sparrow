@@ -1017,7 +1017,7 @@ namespace sparrow
 
     void arrow_proxy::sanitize_schema()
     {
-        if (is_created_with_sparrow() && !m_schema_is_immutable && !m_schema_is_immutable)
+        if (is_created_with_sparrow() && !m_schema_is_immutable && !m_array_is_immutable)
         {
             bool has_nulls = null_count() != 0;
 
