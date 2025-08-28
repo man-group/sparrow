@@ -258,12 +258,26 @@ namespace sparrow
          * @return Const reference to the array
          *
          * @pre Column with the specified name must exist
-         * @post Returns valid reference to the column array
+         * @post Returns valid const reference to the column array
          * @post Returned reference remains valid while record batch exists
          *
          * @throws std::out_of_range if column with key does not exist
          */
         SPARROW_API const array& get_column(const name_type& key) const;
+
+        /**
+         * @brief Gets the column with the specified name.
+         *
+         * @param key The name of the column to retrieve
+         * @return Reference to the array
+         *
+         * @pre Column with the specified name must exist
+         * @post Returns valid reference to the column array
+         * @post Returned reference remains valid while record batch exists
+         *
+         * @throws std::out_of_range if column with key does not exist
+         */
+        SPARROW_API array& get_column(const name_type& key);
 
         /**
          * @brief Gets the column at the specified index.
@@ -272,12 +286,26 @@ namespace sparrow
          * @return Const reference to the array
          *
          * @pre index must be < nb_columns()
-         * @post Returns valid reference to the column array
+         * @post Returns valid const reference to the column array
          * @post Returned reference remains valid while record batch exists
          *
          * @throws std::out_of_range if index >= nb_columns()
          */
         SPARROW_API const array& get_column(size_type index) const;
+
+        /**
+         * @brief Gets the column at the specified index.
+         *
+         * @param index The index of the column (0-based)
+         * @return Reference to the array
+         *
+         * @pre index must be < nb_columns()
+         * @post Returns valid reference to the column array
+         * @post Returned reference remains valid while record batch exists
+         *
+         * @throws std::out_of_range if index >= nb_columns()
+         */
+        SPARROW_API array& get_column(size_type index);
 
         /**
          * @brief Gets the name of the record batch.
@@ -408,9 +436,9 @@ namespace sparrow
         std::optional<std::vector<metadata_pair>> m_metadata;  ///< Optional metadata for the record batch
         std::vector<name_type> m_name_list;                    ///< Ordered list of column names
         std::vector<array> m_array_list;                       ///< Ordered list of column arrays
-        mutable std::unordered_map<name_type, const array*> m_array_map;  ///< Cache for fast name-based
-                                                                          ///< lookup
-        mutable bool m_dirty_map = true;  ///< Flag indicating cache needs update
+        mutable std::unordered_map<name_type, array*> m_array_map;  ///< Cache for fast name-based
+                                                                    ///< lookup
+        mutable bool m_dirty_map = true;                            ///< Flag indicating cache needs update
     };
 
     /**
