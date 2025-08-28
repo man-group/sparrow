@@ -14,12 +14,10 @@
 
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <optional>
 #include <ranges>
-#include <source_location>
 #include <string>
 #include <string_view>
 #include <unordered_set>
@@ -140,6 +138,20 @@ namespace sparrow
          * @post Buffers and children are properly initialized
          */
         SPARROW_API explicit arrow_proxy(ArrowArray&& array, ArrowSchema* schema);
+
+        /**
+         * @brief Constructs an arrow_proxy taking ownership of ArrowArray, referencing const ArrowSchema.
+         *
+         * @param array ArrowArray to take ownership of
+         * @param schema Pointer to ArrowSchema (not owned)
+         *
+         * @pre array must be a valid Arrow structure
+         * @pre schema must be a valid const pointer to ArrowSchema
+         * @pre array and schema must be compatible
+         * @post This proxy owns the array but not the schema
+         * @post Schema must remain valid for the lifetime of this proxy
+         * @post Buffers and children are properly initialized
+         */
         SPARROW_API explicit arrow_proxy(ArrowArray&& array, const ArrowSchema* schema);
 
         /**
@@ -157,6 +169,21 @@ namespace sparrow
          * @post Buffers and children are properly initialized as views
          */
         SPARROW_API explicit arrow_proxy(ArrowArray* array, ArrowSchema* schema);
+
+        /**
+         * @brief Constructs an arrow_proxy referencing external const ArrowArray and const ArrowSchema.
+         *
+         * @param array Const pointer to ArrowArray (not owned)
+         * @param schema Const pointer to ArrowSchema (not owned)
+         *
+         * @pre array must be a valid pointer to ArrowArray
+         * @pre schema must be a valid pointer to ArrowSchema
+         * @pre array and schema must be compatible
+         * @pre External structures must remain valid for the lifetime of this proxy
+         * @post This proxy does not own either structure
+         * @post External structures must be managed by the caller
+         * @post Buffers and children are properly initialized as views
+         */
         SPARROW_API explicit arrow_proxy(const ArrowArray* array, const ArrowSchema* schema);
 
         /**
@@ -1007,32 +1034,36 @@ namespace sparrow
                                      + " on non-sparrow created ArrowArray or ArrowSchema";
                 throw arrow_proxy_exception(error_message);
             }
-            if ((check_array_is_mutable || check_schema_is_mutable)
-                && (m_array_is_immutable || m_schema_is_immutable))
+            if constexpr (check_array_is_mutable || check_schema_is_mutable)
             {
-                std::string error_message = cannot_call + std::string(function_name);
-                if constexpr (check_array_is_mutable && !check_schema_is_mutable)
+                if (m_array_is_immutable || m_schema_is_immutable)
                 {
-                    if (m_array_is_immutable)
                     {
-                        error_message += " on an immutable ArrowArray. You may have passed a const ArrowArray* at the creation.";
+                        std::string error_message = cannot_call + std::string(function_name);
+                        if constexpr (check_array_is_mutable && !check_schema_is_mutable)
+                        {
+                            if (m_array_is_immutable)
+                            {
+                                error_message += " on an immutable ArrowArray. You may have passed a const ArrowArray* at the creation.";
+                            }
+                        }
+                        else if constexpr (check_schema_is_mutable && !check_array_is_mutable)
+                        {
+                            if (m_schema_is_immutable)
+                            {
+                                error_message += " on an immutable ArrowSchema. You may have passed a const ArrowSchema* at the creation.";
+                            }
+                        }
+                        else if constexpr (check_array_is_mutable && check_schema_is_mutable)
+                        {
+                            if (m_array_is_immutable && m_schema_is_immutable)
+                            {
+                                error_message += " on an immutable ArrowArray and ArrowSchema. You may have passed const ArrowArray* and const ArrowSchema* at the creation.";
+                            }
+                        }
+                        throw arrow_proxy_exception(error_message);
                     }
                 }
-                else if (check_schema_is_mutable && !check_array_is_mutable)
-                {
-                    if (m_schema_is_immutable)
-                    {
-                        error_message += " on an immutable ArrowSchema. You may have passed a const ArrowSchema* at the creation.";
-                    }
-                }
-                else if (check_array_is_mutable && check_schema_is_mutable)
-                {
-                    if (m_array_is_immutable && m_schema_is_immutable)
-                    {
-                        error_message += " on an immutable ArrowArray and ArrowSchema. You may have passed const ArrowArray* and const ArrowSchema* at the creation.";
-                    }
-                }
-                throw arrow_proxy_exception(error_message);
             }
         }
     };
