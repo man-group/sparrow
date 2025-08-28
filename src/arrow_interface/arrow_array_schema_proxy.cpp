@@ -147,6 +147,9 @@ namespace sparrow
         m_buffers.clear();
         m_children.clear();
         m_dictionary.reset();
+        m_is_dictionary_immutable = false;
+        m_children_array_immutable.clear();
+        m_children_schema_immutable.clear();
     }
 
     bool arrow_proxy::array_created_with_sparrow() const
@@ -217,6 +220,8 @@ namespace sparrow
             SPARROW_ASSERT_TRUE(schema != nullptr);
         }
 
+        m_children_array_immutable = std::vector<bool>(n_children(), m_array_is_immutable);
+        m_children_schema_immutable = std::vector<bool>(n_children(), m_schema_is_immutable);
         validate_array_and_schema();
         update_buffers();
         update_children();
@@ -256,6 +261,9 @@ namespace sparrow
             m_schema = copy_schema(other.schema());
             m_array_is_immutable = false;
             m_schema_is_immutable = false;
+            m_is_dictionary_immutable = false;
+            m_children_array_immutable = std::vector<bool>(n_children(), false);
+            m_children_schema_immutable = std::vector<bool>(n_children(), false);
             validate_array_and_schema();
             update_buffers();
             update_children();
@@ -267,6 +275,9 @@ namespace sparrow
             m_schema = nullptr;
             m_array_is_immutable = false;
             m_schema_is_immutable = false;
+            m_is_dictionary_immutable = false;
+            m_children_array_immutable.clear();
+            m_children_schema_immutable.clear();
         }
     }
 
@@ -289,6 +300,9 @@ namespace sparrow
         , m_dictionary(std::move(other.m_dictionary))
         , m_array_is_immutable(other.m_array_is_immutable)
         , m_schema_is_immutable(other.m_schema_is_immutable)
+        , m_is_dictionary_immutable(other.m_is_dictionary_immutable)
+        , m_children_array_immutable(std::move(other.m_children_array_immutable))
+        , m_children_schema_immutable(std::move(other.m_children_schema_immutable))
     {
         other.m_array = {};
         other.m_schema = {};
@@ -555,8 +569,8 @@ namespace sparrow
         static constexpr const char function_name[] = "set_child";
         throw_if_immutable<function_name, true, true>();
         remove_child(index);
-        m_children_array_immutable[index] = false;
-        m_children_schema_immutable[index] = false;
+        m_children_array_immutable[index] = true;
+        m_children_schema_immutable[index] = true;
         array_without_sanitize().children[index] = const_cast<ArrowArray*>(array);
         schema_without_sanitize().children[index] = const_cast<ArrowSchema*>(schema);
         m_children[index] = arrow_proxy(
@@ -630,6 +644,8 @@ namespace sparrow
         array_private_data->resize_children(children_count);
         schema_private_data->resize_children(children_count);
         m_children.resize(children_count, arrow_proxy());
+        m_children_schema_immutable.resize(children_count, false);
+        m_children_array_immutable.resize(children_count, false);
 
         new_array_children.reset(tmp_array_children);
         new_schema_children.reset(tmp_schema_children);
@@ -695,6 +711,12 @@ namespace sparrow
         add_children(std::ranges::single_view(value_type{array, schema}));
     }
 
+    void arrow_proxy::add_child(const ArrowArray* array, const ArrowSchema* schema)
+    {
+        resize_children(n_children() + 1);
+        set_child(n_children() - 1, array, schema);
+    }
+
     void arrow_proxy::add_child(ArrowArray&& array, ArrowSchema&& schema)
     {
         using value_type = arrow_array_and_schema;
@@ -749,7 +771,7 @@ namespace sparrow
         schema_without_sanitize().dictionary = schema_dictionary;
         get_array_private_data()->set_dictionary_ownership(false);
         get_schema_private_data()->set_dictionary_ownership(false);
-        m_is_dictionary_immutable = true;
+        m_is_dictionary_immutable = false;
         update_dictionary();
     }
 

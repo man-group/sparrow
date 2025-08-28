@@ -1041,17 +1041,8 @@ namespace sparrow
         requires std::same_as<std::ranges::range_value_t<R>, arrow_array_and_schema_pointers>
     void arrow_proxy::add_children(const R& arrow_array_and_schema_pointers)
     {
-        if (!is_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot add children on non-sparrow created ArrowArray or ArrowSchema");
-        }
-        if (m_schema_is_immutable || m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot add children on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
-            );
-        }
-
+        static constexpr const char function_name[] = "add_children";
+        throw_if_immutable<function_name, true, true>();
         const size_t add_children_count = std::ranges::size(arrow_array_and_schema_pointers);
         const size_t original_children_count = n_children();
         const size_t new_children_count = original_children_count + add_children_count;
