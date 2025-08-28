@@ -160,6 +160,37 @@ namespace sparrow
         SPARROW_API record_batch(initializer_type init);
 
         /**
+         * Constructs a \ref record_batch from the given Arrow C structures, whose
+         * ownership is transferred to the \ref record_batch. The user should not
+         * use \p array nor \p schema after calling this constructor.
+         *
+         * @param array The ArrowArray structure to transfer into the \ref record_batch.
+         * @param schema The ArrowSchema structure to transfer into the \ref record_batch.
+         */
+        SPARROW_API record_batch(ArrowArray&& array, ArrowSchema&& schema);
+
+        /**
+         * Constructs an \ref record_batch from the given Arrow C structures. The
+         * \ref record_batch takes the ownership of the ArrowArray only. The user
+         * should not use \p array after calling this constructor. \p schema can
+         * still be used normally.
+         *
+         * @param array The ArrowArray structure to transfer into the \ref record_batch.
+         * @param schema The ArrowSchema to reference in the \ref record_batch.
+         */
+        SPARROW_API record_batch(ArrowArray&& array, ArrowSchema* schema);
+
+        /**
+         * Constructs an record_batch from the given Arrow C structures. Both structures
+         * are referenced from the \ref record_batch and can still be used normally after
+         * calling this constructor.
+         *
+         * @param array The ArrowArray structure to reference in the \ref record_batch.
+         * @param schema The ArrowSchema to reference in the \ref record_batch.
+         */
+        SPARROW_API record_batch(ArrowArray* array, ArrowSchema* schema);
+
+        /**
          * @brief Constructs a record_batch from a struct_array.
          *
          * The struct array's fields become the columns of the record batch,
@@ -392,6 +423,8 @@ namespace sparrow
 
     private:
 
+        SPARROW_API void partial_init_from_schema(const ArrowSchema& sch);
+
         /**
          * @brief Converts a range to a vector of the specified type.
          *
@@ -432,10 +465,11 @@ namespace sparrow
          */
         SPARROW_API void check_consistency() const;
 
-        std::optional<name_type> m_name;                       ///< Optional name of the record batch
-        std::optional<std::vector<metadata_pair>> m_metadata;  ///< Optional metadata for the record batch
-        std::vector<name_type> m_name_list;                    ///< Ordered list of column names
-        std::vector<array> m_array_list;                       ///< Ordered list of column arrays
+        using metadata_type = std::vector<metadata_pair>;
+        std::optional<name_type> m_name = std::nullopt;          ///< Optional name of the record batch
+        std::optional<metadata_type> m_metadata = std::nullopt;  ///< Optional metadata for the record batch
+        std::vector<name_type> m_name_list;                      ///< Ordered list of column names
+        std::vector<array> m_array_list;                         ///< Ordered list of column arrays
         mutable std::unordered_map<name_type, array*> m_array_map;  ///< Cache for fast name-based
                                                                     ///< lookup
         mutable bool m_dirty_map = true;                            ///< Flag indicating cache needs update

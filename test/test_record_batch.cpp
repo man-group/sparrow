@@ -50,6 +50,58 @@ namespace sparrow
         return name_list;
     }
 
+    std::vector<array> make_named_array_list(const std::size_t data_size)
+    {
+        auto array_list = make_array_list(data_size);
+        auto name_list = make_name_list();
+        for (std::size_t i = 0; i < array_list.size(); ++i)
+        {
+            array_list[i].set_name(name_list[i]);
+        }
+        return array_list;
+    }
+
+    arrow_proxy make_rb_arrow_proxy(const std::size_t data_size)
+    {
+        auto arr_list = make_named_array_list(data_size);
+
+        ArrowArray** arr_children = new ArrowArray*[data_size];
+        ArrowSchema** sch_children = new ArrowSchema*[data_size];
+
+        for (std::size_t i = 0; i < arr_list.size(); ++i)
+        {
+            auto [arr, sch] = extract_arrow_structures(std::move(arr_list[i]));
+            arr_children[i] = new ArrowArray(std::move(arr));
+            sch_children[i] = new ArrowSchema(std::move(sch));
+        }
+
+        std::vector<buffer<std::uint8_t>> arr_buffs(1, buffer<std::uint8_t>(nullptr, 0));
+
+        auto rb_array = make_arrow_array(
+            static_cast<int64_t>(data_size),
+            0,
+            0,
+            std::move(arr_buffs),
+            arr_children,
+            repeat_view<bool>(true, arr_list.size()),
+            nullptr,
+            true
+        );
+
+        auto rb_schema = make_arrow_schema(
+            std::string("+s"),
+            std::optional<std::string_view>(),
+            std::optional<std::vector<metadata_pair>>(),
+            std::nullopt,
+            sch_children,
+            repeat_view<bool>(true, arr_list.size()),
+            nullptr,
+            true
+        );
+
+        return arrow_proxy(std::move(rb_array), std::move(rb_schema));
+    }
+
     record_batch make_record_batch(const std::size_t data_size)
     {
         return record_batch(make_name_list(), make_array_list(data_size), "");
@@ -91,6 +143,30 @@ namespace sparrow
                 record_batch record0(struct_array(make_array_list(col_size), false, "name"));
                 record_batch record1(make_array_list(col_size), "name");
                 CHECK_EQ(record0, record1);
+            }
+
+            SUBCASE("from moved Arrow C structs")
+            {
+                auto record_exp = make_record_batch(col_size);
+                auto proxy = make_rb_arrow_proxy(col_size);
+                record_batch record(proxy.extract_array(), proxy.extract_schema());
+                CHECK_EQ(record, record_exp);
+            }
+
+            SUBCASE("from pointers to Arrow C structs")
+            {
+                auto record_exp = make_record_batch(col_size);
+                auto proxy = make_rb_arrow_proxy(col_size);
+                record_batch record(&(proxy.array()), &(proxy.schema()));
+                CHECK_EQ(record, record_exp);
+            }
+
+            SUBCASE("from ArrowArray&& and ArrowSchema*")
+            {
+                auto record_exp = make_record_batch(col_size);
+                auto proxy = make_rb_arrow_proxy(col_size);
+                record_batch record(proxy.extract_array(), &(proxy.schema()));
+                CHECK_EQ(record, record_exp);
             }
         }
 

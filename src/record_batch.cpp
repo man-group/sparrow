@@ -34,6 +34,54 @@ namespace sparrow
         update_array_map_cache();
     }
 
+    record_batch::record_batch(ArrowArray&& arr, ArrowSchema&& sch)
+    {
+        partial_init_from_schema(sch);
+
+        std::size_t column_size = m_name_list.capacity();
+        for (std::size_t i = 0; i < column_size; ++i)
+        {
+            m_name_list.emplace_back(sch.children[i]->name);
+            m_array_list.emplace_back(std::move(*(arr.children[i])), std::move(*(sch.children[i])));
+            arr.children[i] = nullptr;
+            sch.children[i] = nullptr;
+        }
+        arr.release(&arr);
+        sch.release(&sch);
+
+        update_array_map_cache();
+    }
+
+    record_batch::record_batch(ArrowArray&& arr, ArrowSchema* sch)
+    {
+        partial_init_from_schema(*sch);
+
+        std::size_t column_size = m_name_list.capacity();
+        for (std::size_t i = 0; i < column_size; ++i)
+        {
+            m_name_list.emplace_back(sch->children[i]->name);
+            m_array_list.emplace_back(std::move(*(arr.children[i])), sch->children[i]);
+            arr.children[i] = nullptr;
+        }
+        arr.release(&arr);
+
+        update_array_map_cache();
+    }
+
+    record_batch::record_batch(ArrowArray* arr, ArrowSchema* sch)
+    {
+        partial_init_from_schema(*sch);
+
+        std::size_t column_size = m_name_list.capacity();
+        for (std::size_t i = 0; i < column_size; ++i)
+        {
+            m_name_list.emplace_back(sch->children[i]->name);
+            m_array_list.emplace_back(arr->children[i], sch->children[i]);
+        }
+
+        update_array_map_cache();
+    }
+
     record_batch::record_batch(struct_array&& arr)
     {
         SPARROW_ASSERT_TRUE(owns_arrow_array(arr));
@@ -157,6 +205,24 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(opt_col_name.has_value());
         std::string name(opt_col_name.value());
         add_column(std::move(name), std::move(column));
+    }
+
+    void record_batch::partial_init_from_schema(const ArrowSchema& sch)
+    {
+        if (sch.name)
+        {
+            m_name = std::string(sch.name);
+        }
+
+        if (sch.metadata)
+        {
+            auto rg = key_value_view(sch.metadata);
+            m_metadata = metadata_type(rg.begin(), rg.end());
+        }
+
+        std::size_t column_size = static_cast<std::size_t>(sch.n_children);
+        m_name_list.reserve(column_size);
+        m_array_list.reserve(column_size);
     }
 
     void record_batch::update_array_map_cache() const
