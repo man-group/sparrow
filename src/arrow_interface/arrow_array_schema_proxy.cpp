@@ -554,8 +554,22 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set child on non-sparrow created ArrowArray or ArrowSchema");
         }
-        array_without_sanitize().children[index] = child_array;
-        schema_without_sanitize().children[index] = child_schema;
+        // Release previous child first
+        ArrowSchema** schema_children = schema_without_sanitize().children;
+        ArrowArray** array_children = array_without_sanitize().children;
+        if (get_schema_private_data()->has_child_ownership(index))
+        {
+            ArrowSchema* child = schema_children[index];
+            child->release(child);
+        }
+        if (get_array_private_data()->has_child_ownership(index))
+        {
+            ArrowArray* child = array_children[index];
+            child->release(child);
+        }
+
+        array_children[index] = child_array;
+        schema_children[index] = child_schema;
         m_children[index] = arrow_proxy(child_array, child_schema);
         get_array_private_data()->set_child_ownership(index, false);
         get_schema_private_data()->set_child_ownership(index, false);
@@ -570,9 +584,23 @@ namespace sparrow
         {
             throw arrow_proxy_exception("Cannot set child on non-sparrow created ArrowArray or ArrowSchema");
         }
-        array_without_sanitize().children[index] = new ArrowArray(std::move(child_array));
-        schema_without_sanitize().children[index] = new ArrowSchema(std::move(child_schema));
-        m_children[index] = arrow_proxy(array().children[index], schema_without_sanitize().children[index]);
+        // Release previous child first
+        ArrowSchema** schema_children = schema_without_sanitize().children;
+        ArrowArray** array_children = array_without_sanitize().children;
+        if (get_schema_private_data()->has_child_ownership(index))
+        {
+            ArrowSchema* child = schema_children[index];
+            child->release(child);
+        }
+        if (get_array_private_data()->has_child_ownership(index))
+        {
+            ArrowArray* child = array_children[index];
+            child->release(child);
+        }
+
+        array_children[index] = new ArrowArray(std::move(child_array));
+        schema_children[index] = new ArrowSchema(std::move(child_schema));
+        m_children[index] = arrow_proxy(array_children[index], schema_children[index]);
         get_array_private_data()->set_child_ownership(index, true);
         get_schema_private_data()->set_child_ownership(index, true);
     }

@@ -46,6 +46,8 @@ namespace sparrow
         [[nodiscard]] bool empty() const;
 
         [[nodiscard]] const_reference operator[](size_type i) const;
+        [[nodiscard]] const_reference at(size_type i) const;
+        [[nodiscard]] const_reference at(std::string_view name) const;
 
         [[nodiscard]] const_reference front() const;
         [[nodiscard]] const_reference back() const;
@@ -61,6 +63,18 @@ namespace sparrow
 
         [[nodiscard]] const_reverse_iterator rend() const;
         [[nodiscard]] const_reverse_iterator crend() const;
+
+        [[nodiscard]] auto names() const
+        {
+            const auto result = (*p_children)
+                                | std::views::transform(
+                                    [](const auto& child)
+                                    {
+                                        return child->get_arrow_proxy().name();
+                                    }
+                                );
+            return result;
+        }
 
     private:
 
