@@ -19,6 +19,7 @@
 #include <iterator>
 #include <optional>
 #include <ranges>
+#include <source_location>
 #include <string>
 #include <string_view>
 #include <unordered_set>
@@ -704,16 +705,7 @@ namespace sparrow
                         || std::same_as<AS, const ArrowSchema*> || std::same_as<AS, ArrowSchema &&>)
         void set_child(size_t index, AA child_array, AS child_schema)
         {
-            if (!is_created_with_sparrow())
-            {
-                throw arrow_proxy_exception("Cannot set child on non-sparrow created ArrowArray or ArrowSchema");
-            }
-            if (m_array_is_immutable || m_schema_is_immutable)
-            {
-                throw arrow_proxy_exception(
-                    "Cannot set child on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
-                );
-            }
+            throw_if_immutable();
             SPARROW_ASSERT_TRUE(std::cmp_less(index, n_children()));
             using is_child_array_pointer = std::bool_constant<
                 std::same_as<AA, ArrowArray*> || std::same_as<AA, const ArrowArray*>>;
@@ -1024,6 +1016,41 @@ namespace sparrow
         void sanitize_schema();
 
         void swap(arrow_proxy& other) noexcept;
+
+        template <const char* function_name, bool check_array_is_mutable, bool check_schema_is_mutable>
+        void throw_if_immutable() const
+        {
+            static constexpr std::string cannot_call = "Cannot call ";
+            if (!is_created_with_sparrow())
+            {
+                constexpr auto error_message = cannot_call + std::string(function_name)
+                                               + " on non-sparrow created ArrowArray or ArrowSchema";
+                throw arrow_proxy_exception(error_message);
+            }
+            if (check_array_is_mutable || check_schema_is_mutable)
+            {
+                auto error_message = cannot_call + std::string(function_name);
+                if constexpr (check_array_is_mutable && !check_schema_is_mutable)
+                {
+                }
+                else if (check_schema_is_mutable && !check_array_is_mutable)
+                {
+                }
+                else if (check_array_is_mutable && check_schema_is_mutable)
+                {
+                }
+                throw arrow_proxy_exception(error_message);
+            }
+            if (m_array_is_immutable || m_schema_is_immutable)
+            {
+                constexpr auto error_message = cannot_call + std::string(function_name)
+                                               + " on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation.";
+                if
+                {
+                    throw arrow_proxy_exception(error_message);
+                }
+            }
+        }
     };
 
     template <std::ranges::input_range R>

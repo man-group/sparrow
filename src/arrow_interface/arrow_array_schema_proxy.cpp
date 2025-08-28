@@ -15,6 +15,7 @@
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 
 #include <stdexcept>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -37,6 +38,30 @@ namespace sparrow
     [[nodiscard]] constexpr T& get_value_reference_of_variant(auto& var)
     {
         return var.index() == 0 ? *std::get<0>(var) : std::get<1>(var);
+    }
+
+    constexpr void assert_if_invalid_pointers(const ArrowArray* array, const ArrowSchema* schema)
+    {
+        SPARROW_ASSERT_TRUE(array != nullptr);
+        SPARROW_ASSERT_TRUE(array->release != nullptr);
+        SPARROW_ASSERT_TRUE(schema != nullptr);
+        SPARROW_ASSERT_TRUE(schema->release != nullptr);
+    }
+
+    void arrow_proxy::throw_if_immutable(const std::source_location location) const
+    {
+        if (!is_created_with_sparrow())
+        {
+            const auto error_message = std::string("Cannot call ") + std::string(location.function_name())
+                                       + " on non-sparrow created ArrowArray or ArrowSchema";
+            throw arrow_proxy_exception(error_message);
+        }
+        if (m_array_is_immutable || m_schema_is_immutable)
+        {
+            const auto error_message = std::string("Cannot call ") + std::string(location.function_name())
+                                       + " on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation.";
+            throw arrow_proxy_exception(error_message);
+        }
     }
 
     arrow_proxy arrow_proxy::view() const
