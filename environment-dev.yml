@@ -3,7 +3,9 @@ channels:
   - conda-forge
 dependencies:
   # Build
-  - cmake
+  # cmake 4.1.1 has an bug on OSX 15 preventing the compiler from building
+  # a simple test program ( -lto_library library filename must be 'libLTO.dylib')
+  - cmake < 4.1.1
   - ninja
   # Tests
   - doctest
