@@ -1000,7 +1000,7 @@ namespace sparrow
         template <const char* function_name, bool check_array_is_mutable, bool check_schema_is_mutable>
         void throw_if_immutable() const
         {
-            static constexpr std::string cannot_call = "Cannot call ";
+            static const std::string cannot_call = "Cannot call ";
             if (!is_created_with_sparrow())
             {
                 auto error_message = cannot_call + std::string(function_name)
