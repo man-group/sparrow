@@ -17,8 +17,6 @@
 #include <ranges>
 #include <vector>
 
-#include "sparrow/config/config.hpp"
-
 namespace sparrow
 {
     /*
