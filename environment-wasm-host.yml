@@ -1,0 +1,5 @@
+name: sparrow-wasm-host
+channels:
+  - https://repo.prefix.dev/emscripten-forge-dev
+dependencies:
+  - howardhinnant_date

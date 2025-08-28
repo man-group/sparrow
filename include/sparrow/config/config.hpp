@@ -63,3 +63,21 @@
 #else
 #    define SPARROW_CONSTEXPR_CLANG constexpr
 #endif
+
+#if defined(__EMSCRIPTEN__) && defined(__CLANG_REPL__)
+#    include <clang/Interpreter/CppInterOp.h>
+
+#    ifndef SPARROW_USE_DATE_POLYFILL
+#        define SPARROW_USE_DATE_POLYFILL 1
+#    endif
+
+#    ifndef HALF_ERRHANDLING_THROWS
+#        define HALF_ERRHANDLING_THROWS 1
+#    endif
+
+static bool _sparrow_loaded = []()
+{
+    Cpp::LoadLibrary("/lib/libsparrow.so", false);
+    return true;
+}();
+#endif
