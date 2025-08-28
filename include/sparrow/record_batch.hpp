@@ -466,13 +466,13 @@ namespace sparrow
         SPARROW_API void check_consistency() const;
 
         using metadata_type = std::vector<metadata_pair>;
-        std::optional<name_type> m_name = std::nullopt;         ///< Optional name of the record batch
-        std::optional<metadata_type> m_metadata = std::nullopt; ///< Optional metadata for the record batch
-        std::vector<name_type> m_name_list;                     ///< Ordered list of column names
-        std::vector<array> m_array_list;                        ///< Ordered list of column arrays
+        std::optional<name_type> m_name = std::nullopt;          ///< Optional name of the record batch
+        std::optional<metadata_type> m_metadata = std::nullopt;  ///< Optional metadata for the record batch
+        std::vector<name_type> m_name_list;                      ///< Ordered list of column names
+        std::vector<array> m_array_list;                         ///< Ordered list of column arrays
         mutable std::unordered_map<name_type, array*> m_array_map;  ///< Cache for fast name-based
-                                                                          ///< lookup
-        mutable bool m_dirty_map = true;  ///< Flag indicating cache needs update
+                                                                    ///< lookup
+        mutable bool m_dirty_map = true;                            ///< Flag indicating cache needs update
     };
 
     /**

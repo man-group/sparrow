@@ -81,7 +81,7 @@ namespace sparrow
 
         update_array_map_cache();
     }
-    
+
     record_batch::record_batch(struct_array&& arr)
     {
         SPARROW_ASSERT_TRUE(owns_arrow_array(arr));
@@ -206,7 +206,7 @@ namespace sparrow
         std::string name(opt_col_name.value());
         add_column(std::move(name), std::move(column));
     }
-    
+
     void record_batch::partial_init_from_schema(const ArrowSchema& sch)
     {
         if (sch.name)

@@ -54,7 +54,7 @@ namespace sparrow
     {
         auto array_list = make_array_list(data_size);
         auto name_list = make_name_list();
-        for(std::size_t i = 0; i < array_list.size(); ++i)
+        for (std::size_t i = 0; i < array_list.size(); ++i)
         {
             array_list[i].set_name(name_list[i]);
         }
@@ -167,7 +167,6 @@ namespace sparrow
                 auto proxy = make_rb_arrow_proxy(col_size);
                 record_batch record(proxy.extract_array(), &(proxy.schema()));
                 CHECK_EQ(record, record_exp);
-
             }
         }
 
