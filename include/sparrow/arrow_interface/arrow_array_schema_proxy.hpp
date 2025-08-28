@@ -1010,11 +1010,11 @@ namespace sparrow
 
         [[nodiscard]] size_t get_null_count() const;
 
-        [[nodiscard]] SPARROW_API ArrowArray& array_without_sanitize();
-        [[nodiscard]] SPARROW_API const ArrowArray& array_without_sanitize() const;
+        [[nodiscard]] ArrowArray& array_without_sanitize();
+        [[nodiscard]] const ArrowArray& array_without_sanitize() const;
 
-        [[nodiscard]] SPARROW_API ArrowSchema& schema_without_sanitize();
-        [[nodiscard]] SPARROW_API const ArrowSchema& schema_without_sanitize() const;
+        [[nodiscard]] ArrowSchema& schema_without_sanitize();
+        [[nodiscard]] const ArrowSchema& schema_without_sanitize() const;
 
         /**
          * If the null_count of the proxy or the one from the dictionary is greater than 0, the schema

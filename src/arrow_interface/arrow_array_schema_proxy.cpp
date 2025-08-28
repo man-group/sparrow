@@ -14,11 +14,7 @@
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 
-#include <stdexcept>
-#include <string_view>
-#include <type_traits>
 #include <utility>
-#include <variant>
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
@@ -50,9 +46,17 @@ namespace sparrow
 
     arrow_proxy arrow_proxy::view() const
     {
-        if (m_array_is_immutable || m_schema_is_immutable)
+        if (m_array_is_immutable && !m_schema_is_immutable)
         {
-            return arrow_proxy(&array(), &schema());
+            return arrow_proxy(const_cast<ArrowArray*>(&array_without_sanitize()), &schema_without_sanitize());
+        }
+        else if (!m_array_is_immutable && m_schema_is_immutable)
+        {
+            return arrow_proxy(&array_without_sanitize(), const_cast<ArrowSchema*>(&schema_without_sanitize()));
+        }
+        else if (m_array_is_immutable && m_schema_is_immutable)
+        {
+            return arrow_proxy(&array_without_sanitize(), &schema_without_sanitize());
         }
         else
         {
