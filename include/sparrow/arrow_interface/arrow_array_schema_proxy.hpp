@@ -674,6 +674,15 @@ namespace sparrow
         SPARROW_API void add_child(ArrowArray* array, ArrowSchema* schema);
 
         /**
+         * Add a child without taking its ownership.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
+         * in this proxy were not created with sparrow.
+         * @param array The `ArrowArray` to set as child.
+         * @param schema The `ArrowSchema` to set as child.
+         */
+        SPARROW_API void add_child(const ArrowArray* array, const ArrowSchema* schema);
+
+        /**
          * Add a child and takes its ownership.
          * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
          * in this proxy were not created with sparrow.
@@ -698,75 +707,31 @@ namespace sparrow
          * @param array The `ArrowArray` to set as child.
          * @param schema The `ArrowSchema` to set as child.
          */
-        template <typename AA, typename AS>
-            requires(std::same_as<AA, ArrowArray> || std::same_as<AA, ArrowArray*>
-                     || std::same_as<AA, const ArrowArray*> || std::same_as<AA, ArrowArray &&>)
-                    && (std::same_as<AS, ArrowSchema> || std::same_as<AS, ArrowSchema*>
-                        || std::same_as<AS, const ArrowSchema*> || std::same_as<AS, ArrowSchema &&>)
-        void set_child(size_t index, AA child_array, AS child_schema)
-        {
-            throw_if_immutable();
-            SPARROW_ASSERT_TRUE(std::cmp_less(index, n_children()));
-            using is_child_array_pointer = std::bool_constant<
-                std::same_as<AA, ArrowArray*> || std::same_as<AA, const ArrowArray*>>;
-            if constexpr (is_child_array_pointer::value)
-            {
-                SPARROW_ASSERT_TRUE(child_array != nullptr);
-                SPARROW_ASSERT_TRUE(child_array->release != nullptr);
-            }
-            using is_child_schema_pointer = std::bool_constant<
-                std::same_as<AS, ArrowSchema*> || std::same_as<AS, const ArrowSchema*>>;
-            if constexpr (is_child_schema_pointer::value)
-            {
-                SPARROW_ASSERT_TRUE(child_schema != nullptr);
-                SPARROW_ASSERT_TRUE(child_schema->release != nullptr);
-            }
+        SPARROW_API void set_child(size_t index, ArrowArray* array, ArrowSchema* schema);
 
-            // Check if there's an existing child that needs to be released
-            ArrowArray& array_ref = array_without_sanitize();
-            ArrowSchema& schema_ref = schema_without_sanitize();
+        /**
+         * Set the child at the given index. It does not take the ownership on the `ArrowArray` and
+         * `ArrowSchema` passed by const pointers.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
+         * in this proxy were not created with sparrow.
+         * @param index The index of the child to set.
+         * @param array The `ArrowArray` to set as child.
+         * @param schema The `ArrowSchema` to set as child.
+         */
+        SPARROW_API void set_child(size_t index, const ArrowArray* array, const ArrowSchema* schema);
 
-            if (get_schema_private_data()->has_child_ownership(index))
-            {
-                ArrowSchema* existing_child = schema_ref.children[index];
-                if (existing_child != nullptr)
-                {
-                    existing_child->release(existing_child);
-                }
-                delete existing_child;
-            }
-            if (get_array_private_data()->has_child_ownership(index))
-            {
-                ArrowArray* existing_child = array_ref.children[index];
-                if (existing_child != nullptr)
-                {
-                    existing_child->release(existing_child);
-                }
-                delete existing_child;
-            }
+        /**
+         * Set the child at the given index. It takes the ownership on the `ArrowArray` and`ArrowSchema`
+         * passed by rvalue referencess.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` wrapped
+         * in this proxy were not created with
+         * sparrow.
+         * @param index The index of the child to set.
+         * @param array The `ArrowArray` to set as child.
+         * @param schema The `ArrowSchema` to set as child.
+         */
+        SPARROW_API void set_child(size_t index, ArrowArray&& array, ArrowSchema&& schema);
 
-            if constexpr (is_child_array_pointer::value)
-            {
-                array_ref.children[index] = const_cast<ArrowArray*>(child_array);
-            }
-            else
-            {
-                array_ref.children[index] = new ArrowArray(std::move(child_array));
-            }
-
-            if constexpr (is_child_schema_pointer::value)
-            {
-                schema_ref.children[index] = const_cast<ArrowSchema*>(child_schema);
-            }
-            else
-            {
-                schema_ref.children[index] = new ArrowSchema(std::move(child_schema));
-            }
-
-            m_children[index] = arrow_proxy(array_ref.children[index], schema_ref.children[index]);
-            get_array_private_data()->set_child_ownership(index, !is_child_array_pointer::value);
-            get_schema_private_data()->set_child_ownership(index, !is_child_schema_pointer::value);
-        }
 
         /**
          * @brief Returns a constant reference to the vector of child arrow proxies.
@@ -817,7 +782,7 @@ namespace sparrow
         [[nodiscard]] SPARROW_API std::unique_ptr<arrow_proxy>& dictionary();
 
         /**
-         * Set the dictionary.It does not take the ownership on the `ArrowArray` and
+         * Set the dictionary. It does not take the ownership on the `ArrowArray` and
          * `ArrowSchema` passed by pointers.
          * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
          * sparrow.
@@ -825,6 +790,16 @@ namespace sparrow
          * @param schema The `ArrowSchema` to set as dictionary.
          */
         SPARROW_API void set_dictionary(ArrowArray* array, ArrowSchema* schema);
+
+        /**
+         * Set the dictionary. It does not take the ownership on the `ArrowArray` and
+         * `ArrowSchema` passed by pointers.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
+         * sparrow.
+         * @param array The `ArrowArray` to set as dictionary.
+         * @param schema The `ArrowSchema` to set as dictionary.
+         */
+        SPARROW_API void set_dictionary(const ArrowArray* array, const ArrowSchema* schema);
 
         /**
          * Set the dictionary. It takes the ownership on the `ArrowArray` and`ArrowSchema`
@@ -969,6 +944,9 @@ namespace sparrow
         std::unique_ptr<arrow_proxy> m_dictionary;
         bool m_schema_is_immutable = false;
         bool m_array_is_immutable = false;
+        std::vector<bool> m_children_array_immutable;
+        std::vector<bool> m_children_schema_immutable;
+        bool m_is_dictionary_immutable = false;
 
         struct impl_tag
         {
@@ -991,6 +969,8 @@ namespace sparrow
         void update_dictionary();
         void update_null_count();
         void reset();
+        void remove_dictionary();
+        void remove_child(size_t index);
 
         [[nodiscard]] bool array_created_with_sparrow() const;
         [[nodiscard]] SPARROW_API bool schema_created_with_sparrow() const;
@@ -1023,32 +1003,36 @@ namespace sparrow
             static constexpr std::string cannot_call = "Cannot call ";
             if (!is_created_with_sparrow())
             {
-                constexpr auto error_message = cannot_call + std::string(function_name)
-                                               + " on non-sparrow created ArrowArray or ArrowSchema";
+                auto error_message = cannot_call + std::string(function_name)
+                                     + " on non-sparrow created ArrowArray or ArrowSchema";
                 throw arrow_proxy_exception(error_message);
             }
-            if (check_array_is_mutable || check_schema_is_mutable)
+            if ((check_array_is_mutable || check_schema_is_mutable)
+                && (m_array_is_immutable || m_schema_is_immutable))
             {
-                auto error_message = cannot_call + std::string(function_name);
+                std::string error_message = cannot_call + std::string(function_name);
                 if constexpr (check_array_is_mutable && !check_schema_is_mutable)
                 {
+                    if (m_array_is_immutable)
+                    {
+                        error_message += " on an immutable ArrowArray. You may have passed a const ArrowArray* at the creation.";
+                    }
                 }
                 else if (check_schema_is_mutable && !check_array_is_mutable)
                 {
+                    if (m_schema_is_immutable)
+                    {
+                        error_message += " on an immutable ArrowSchema. You may have passed a const ArrowSchema* at the creation.";
+                    }
                 }
                 else if (check_array_is_mutable && check_schema_is_mutable)
                 {
+                    if (m_array_is_immutable && m_schema_is_immutable)
+                    {
+                        error_message += " on an immutable ArrowArray and ArrowSchema. You may have passed const ArrowArray* and const ArrowSchema* at the creation.";
+                    }
                 }
                 throw arrow_proxy_exception(error_message);
-            }
-            if (m_array_is_immutable || m_schema_is_immutable)
-            {
-                constexpr auto error_message = cannot_call + std::string(function_name)
-                                               + " on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation.";
-                if
-                {
-                    throw arrow_proxy_exception(error_message);
-                }
             }
         }
     };

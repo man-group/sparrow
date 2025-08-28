@@ -48,22 +48,6 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(schema->release != nullptr);
     }
 
-    void arrow_proxy::throw_if_immutable(const std::source_location location) const
-    {
-        if (!is_created_with_sparrow())
-        {
-            const auto error_message = std::string("Cannot call ") + std::string(location.function_name())
-                                       + " on non-sparrow created ArrowArray or ArrowSchema";
-            throw arrow_proxy_exception(error_message);
-        }
-        if (m_array_is_immutable || m_schema_is_immutable)
-        {
-            const auto error_message = std::string("Cannot call ") + std::string(location.function_name())
-                                       + " on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation.";
-            throw arrow_proxy_exception(error_message);
-        }
-    }
-
     arrow_proxy arrow_proxy::view() const
     {
         if (m_array_is_immutable || m_schema_is_immutable)
@@ -109,7 +93,25 @@ namespace sparrow
         ArrowSchema** schema_children = const_this.schema_without_sanitize().children;
         for (size_t i = 0; i < n_children(); ++i)
         {
-            m_children.emplace_back(array_children[i], schema_children[i]);
+            if (m_children_array_immutable[i] && m_children_schema_immutable[i])
+            {
+                m_children.emplace_back(
+                    const_cast<const ArrowArray*>(array_children[i]),
+                    const_cast<const ArrowSchema*>(schema_children[i])
+                );
+            }
+            else if (m_children_array_immutable[i] && !m_children_schema_immutable[i])
+            {
+                m_children.emplace_back(const_cast<const ArrowArray*>(array_children[i]), schema_children[i]);
+            }
+            else if (!m_children_array_immutable[i] && m_children_schema_immutable[i])
+            {
+                m_children.emplace_back(array_children[i], const_cast<const ArrowSchema*>(schema_children[i]));
+            }
+            else
+            {
+                m_children.emplace_back(array_children[i], schema_children[i]);
+            }
         }
     }
 
@@ -123,10 +125,20 @@ namespace sparrow
         }
         else
         {
-            m_dictionary = std::make_unique<arrow_proxy>(
-                const_this.array_without_sanitize().dictionary,
-                const_this.schema_without_sanitize().dictionary
-            );
+            if (m_is_dictionary_immutable)
+            {
+                m_dictionary = std::make_unique<arrow_proxy>(
+                    const_cast<const ArrowArray*>(const_this.array_without_sanitize().dictionary),
+                    const_cast<const ArrowSchema*>(const_this.schema_without_sanitize().dictionary)
+                );
+            }
+            else
+            {
+                m_dictionary = std::make_unique<arrow_proxy>(
+                    const_this.array_without_sanitize().dictionary,
+                    const_this.schema_without_sanitize().dictionary
+                );
+            }
         }
     }
 
@@ -346,16 +358,8 @@ namespace sparrow
 
     void arrow_proxy::set_format(const std::string_view format)
     {
-        if (!is_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set format on non-sparrow created ArrowArray");
-        }
-        if (m_schema_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot set format on an immutable arrow_proxy. You may have passed a const ArrowSchema* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "set_format";
+        throw_if_immutable<function_name, false, true>();
 #if defined(__GNUC__) && !defined(__clang__)  // Bypass the bug:
                                               // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651
 #    if __GNUC__ == 12
@@ -379,10 +383,8 @@ namespace sparrow
 
     void arrow_proxy::set_data_type(enum data_type data_type)
     {
-        if (!schema_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set data_type on non-sparrow created ArrowArray");
-        }
+        static constexpr const char function_name[] = "set_data_type";
+        throw_if_immutable<function_name, false, true>();
         set_format(data_type_to_format(data_type));
         schema_without_sanitize().format = get_schema_private_data()->format_ptr();
     }
@@ -398,10 +400,8 @@ namespace sparrow
 
     void arrow_proxy::set_name(std::optional<std::string_view> name)
     {
-        if (!schema_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set name on non-sparrow created ArrowArray");
-        }
+        static constexpr const char function_name[] = "set_name";
+        throw_if_immutable<function_name, false, true>();
         auto private_data = get_schema_private_data();
         private_data->name() = name;
         schema_without_sanitize().name = private_data->name_ptr();
@@ -423,10 +423,8 @@ namespace sparrow
 
     void arrow_proxy::set_flags(const std::unordered_set<ArrowFlag>& flags)
     {
-        if (!schema_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set flags on non-sparrow created ArrowArray");
-        }
+        static constexpr const char function_name[] = "set_flags";
+        throw_if_immutable<function_name, false, true>();
         schema_without_sanitize().flags = to_ArrowFlag_value(flags);
     }
 
@@ -441,10 +439,8 @@ namespace sparrow
     void arrow_proxy::set_length(size_t length)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(length, std::numeric_limits<int64_t>::max()));
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set length on non-sparrow created ArrowArray");
-        }
+        static constexpr const char function_name[] = "set_length";
+        throw_if_immutable<function_name, false, true>();
         array_without_sanitize().length = static_cast<int64_t>(length);
         update_buffers();
         update_null_count();
@@ -457,16 +453,8 @@ namespace sparrow
 
     void arrow_proxy::set_null_count(int64_t null_count)
     {
-        if (!is_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set null_count on non-sparrow created ArrowArray");
-        }
-        if (m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot set null_count on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "set_null_count";
+        throw_if_immutable<function_name, true, false>();
         array_without_sanitize().null_count = null_count;
     }
 
@@ -478,16 +466,8 @@ namespace sparrow
     void arrow_proxy::set_offset(size_t offset)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(offset, std::numeric_limits<int64_t>::max()));
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set offset on non-sparrow created ArrowArray");
-        }
-        if (m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot set offset on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "set_offset";
+        throw_if_immutable<function_name, true, false>();
         array_without_sanitize().offset = static_cast<int64_t>(offset);
     }
 
@@ -499,16 +479,8 @@ namespace sparrow
     void arrow_proxy::set_n_buffers(size_t n_buffers)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(n_buffers, std::numeric_limits<int64_t>::max()));
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set n_buffers on non-sparrow created ArrowArray");
-        }
-        if (m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot set n_buffers on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "set_n_buffers";
+        throw_if_immutable<function_name, true, false>();
         array_without_sanitize().n_buffers = static_cast<int64_t>(n_buffers);
         arrow_array_private_data* private_data = get_array_private_data();
         private_data->resize_buffers(n_buffers);
@@ -522,16 +494,8 @@ namespace sparrow
 
     void arrow_proxy::pop_children(size_t n)
     {
-        if (!is_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set n_buffers on non-sparrow created ArrowArray or ArrowSchema");
-        }
-        if (m_array_is_immutable || m_schema_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot pop children on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "pop_children";
+        throw_if_immutable<function_name, true, true>();
         if (n > n_children())
         {
             throw arrow_proxy_exception("Cannot pop more children than the current number of children");
@@ -540,19 +504,92 @@ namespace sparrow
         resize_children(n_children() - n);
     }
 
+    void arrow_proxy::remove_child(size_t index)
+    {
+        static constexpr const char function_name[] = "remove_child";
+        throw_if_immutable<function_name, true, true>();
+
+        if (get_schema_private_data()->has_child_ownership(index))
+        {
+            ArrowSchema* existing_child = schema_without_sanitize().children[index];
+            if (existing_child != nullptr)
+            {
+                existing_child->release(existing_child);
+            }
+            delete existing_child;
+            schema_without_sanitize().children[index] = nullptr;
+        }
+        if (get_array_private_data()->has_child_ownership(index))
+        {
+            ArrowArray* existing_child = array_without_sanitize().children[index];
+            if (existing_child != nullptr)
+            {
+                existing_child->release(existing_child);
+            }
+            delete existing_child;
+            array_without_sanitize().children[index] = nullptr;
+        }
+    }
+
+    void arrow_proxy::set_child(size_t index, ArrowArray* array, ArrowSchema* schema)
+    {
+        assert_if_invalid_pointers(array, schema);
+        static constexpr const char function_name[] = "set_child";
+        throw_if_immutable<function_name, true, true>();
+        remove_child(index);
+        m_children_array_immutable[index] = false;
+        m_children_schema_immutable[index] = false;
+        array_without_sanitize().children[index] = array;
+        schema_without_sanitize().children[index] = schema;
+        m_children[index] = arrow_proxy(
+            array_without_sanitize().children[index],
+            schema_without_sanitize().children[index]
+        );
+        get_array_private_data()->set_child_ownership(index, false);
+        get_schema_private_data()->set_child_ownership(index, false);
+    }
+
+    void arrow_proxy::set_child(size_t index, const ArrowArray* array, const ArrowSchema* schema)
+    {
+        assert_if_invalid_pointers(array, schema);
+        static constexpr const char function_name[] = "set_child";
+        throw_if_immutable<function_name, true, true>();
+        remove_child(index);
+        m_children_array_immutable[index] = false;
+        m_children_schema_immutable[index] = false;
+        array_without_sanitize().children[index] = const_cast<ArrowArray*>(array);
+        schema_without_sanitize().children[index] = const_cast<ArrowSchema*>(schema);
+        m_children[index] = arrow_proxy(
+            array_without_sanitize().children[index],
+            schema_without_sanitize().children[index]
+        );
+        get_array_private_data()->set_child_ownership(index, false);
+        get_schema_private_data()->set_child_ownership(index, false);
+    }
+
+    void arrow_proxy::set_child(size_t index, ArrowArray&& array, ArrowSchema&& schema)
+    {
+        assert_if_invalid_pointers(&array, &schema);
+        static constexpr const char function_name[] = "set_child";
+        throw_if_immutable<function_name, true, true>();
+        remove_child(index);
+        m_children_array_immutable[index] = false;
+        m_children_schema_immutable[index] = false;
+        array_without_sanitize().children[index] = new ArrowArray(std::move(array));
+        schema_without_sanitize().children[index] = new ArrowSchema(std::move(schema));
+        m_children[index] = arrow_proxy(
+            array_without_sanitize().children[index],
+            schema_without_sanitize().children[index]
+        );
+        get_array_private_data()->set_child_ownership(index, true);
+        get_schema_private_data()->set_child_ownership(index, true);
+    }
+
     void arrow_proxy::resize_children(size_t children_count)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(children_count, std::numeric_limits<int64_t>::max()));
-        if (!is_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot resize the children of a non-sparrow created ArrowArray");
-        }
-        if (m_array_is_immutable || m_schema_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot resize the children on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "resize_children";
+        throw_if_immutable<function_name, true, true>();
         arrow_array_private_data* array_private_data = get_array_private_data();
         arrow_schema_private_data* schema_private_data = get_schema_private_data();
         // Release the remaining children if the new size is smaller than the current size
@@ -564,11 +601,13 @@ namespace sparrow
             {
                 ArrowSchema* child = schema_ref.children[i];
                 child->release(child);
+                delete child;
             }
             if (array_private_data->has_child_ownership(i))
             {
                 ArrowArray* child = array_ref.children[i];
                 child->release(child);
+                delete child;
             }
         }
 
@@ -598,31 +637,15 @@ namespace sparrow
 
     arrow_schema_private_data* arrow_proxy::get_schema_private_data()
     {
-        if (!schema_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot get schema private data on non-sparrow created ArrowArray");
-        }
-        if (m_schema_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot get schema private data on an immutable arrow_proxy. You may have passed a const ArrowSchema* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "get_schema_private_data";
+        throw_if_immutable<function_name, false, true>();
         return static_cast<arrow_schema_private_data*>(schema_without_sanitize().private_data);
     }
 
     arrow_array_private_data* arrow_proxy::get_array_private_data()
     {
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot get array private data on non-sparrow created ArrowArray");
-        }
-        if (m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot get array private data on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "get_array_private_data";
+        throw_if_immutable<function_name, true, false>();
         return static_cast<arrow_array_private_data*>(array_without_sanitize().private_data);
     }
 
@@ -639,16 +662,8 @@ namespace sparrow
     void arrow_proxy::set_buffer(size_t index, const buffer_view<uint8_t>& buffer)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(index, n_buffers()));
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set buffer on non-sparrow created ArrowArray");
-        }
-        if (m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot set buffer on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "set_buffer";
+        throw_if_immutable<function_name, true, false>();
         get_array_private_data()->set_buffer(index, buffer);
         update_null_count();
         update_buffers();
@@ -657,16 +672,8 @@ namespace sparrow
     void arrow_proxy::set_buffer(size_t index, buffer<uint8_t>&& buffer)
     {
         SPARROW_ASSERT_TRUE(std::cmp_less(index, n_buffers()));
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set buffer on non-sparrow created ArrowArray");
-        }
-        if (m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot set buffer on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "set_buffer";
+        throw_if_immutable<function_name, true, false>();
         get_array_private_data()->set_buffer(index, std::move(buffer));
         update_null_count();
         update_buffers();
@@ -704,38 +711,62 @@ namespace sparrow
         return m_dictionary;
     }
 
+    void arrow_proxy::remove_dictionary()
+    {
+        if (get_array_private_data()->has_dictionary_ownership())
+        {
+            ArrowArray* current_array_dictionary = array_without_sanitize().dictionary;
+            if (current_array_dictionary != nullptr)
+            {
+                current_array_dictionary->release(current_array_dictionary);
+            }
+            delete current_array_dictionary;
+            array_without_sanitize().dictionary = nullptr;
+        }
+
+        if (get_array_private_data()->has_dictionary_ownership())
+        {
+            ArrowSchema* current_dictionary_schema = schema_without_sanitize().dictionary;
+            if (current_dictionary_schema != nullptr)
+            {
+                current_dictionary_schema->release(current_dictionary_schema);
+            }
+            delete current_dictionary_schema;
+            schema_without_sanitize().dictionary = nullptr;
+        }
+    }
+
     void arrow_proxy::set_dictionary(ArrowArray* array_dictionary, ArrowSchema* schema_dictionary)
     {
         SPARROW_ASSERT_TRUE(array_dictionary != nullptr);
         SPARROW_ASSERT_TRUE(schema_dictionary != nullptr);
         SPARROW_ASSERT_TRUE(array_dictionary->release != nullptr);
         SPARROW_ASSERT_TRUE(schema_dictionary->release != nullptr);
-        if (!is_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema");
-        }
-        if (m_array_is_immutable || m_schema_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot set dictionary on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
-            );
-        }
-
-        ArrowArray* current_array_dictionary = array_without_sanitize().dictionary;
-        if (current_array_dictionary != nullptr)
-        {
-            current_array_dictionary->release(current_array_dictionary);
-        }
-        ArrowSchema* current_dictionary_schema = schema_without_sanitize().dictionary;
-        if (current_dictionary_schema != nullptr)
-        {
-            current_dictionary_schema->release(current_dictionary_schema);
-        }
-
+        static constexpr const char function_name[] = "set_dictionary";
+        throw_if_immutable<function_name, true, true>();
+        remove_dictionary();
         array_without_sanitize().dictionary = array_dictionary;
         schema_without_sanitize().dictionary = schema_dictionary;
         get_array_private_data()->set_dictionary_ownership(false);
         get_schema_private_data()->set_dictionary_ownership(false);
+        m_is_dictionary_immutable = true;
+        update_dictionary();
+    }
+
+    void arrow_proxy::set_dictionary(const ArrowArray* array_dictionary, const ArrowSchema* schema_dictionary)
+    {
+        SPARROW_ASSERT_TRUE(array_dictionary != nullptr);
+        SPARROW_ASSERT_TRUE(schema_dictionary != nullptr);
+        SPARROW_ASSERT_TRUE(array_dictionary->release != nullptr);
+        SPARROW_ASSERT_TRUE(schema_dictionary->release != nullptr);
+        static constexpr const char function_name[] = "set_dictionary";
+        throw_if_immutable<function_name, true, true>();
+        remove_dictionary();
+        array_without_sanitize().dictionary = const_cast<ArrowArray*>(array_dictionary);
+        schema_without_sanitize().dictionary = const_cast<ArrowSchema*>(schema_dictionary);
+        get_array_private_data()->set_dictionary_ownership(false);
+        get_schema_private_data()->set_dictionary_ownership(false);
+        m_is_dictionary_immutable = true;
         update_dictionary();
     }
 
@@ -743,32 +774,14 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(array_dictionary.release != nullptr);
         SPARROW_ASSERT_TRUE(schema_dictionary.release != nullptr);
-        if (!is_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set dictionary on non-sparrow created ArrowArray or ArrowSchema");
-        }
-        if (m_array_is_immutable || m_schema_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot set dictionary on an immutable arrow_proxy. You may have passed a const ArrowArray* or const ArrowSchema* at the creation."
-            );
-        }
-
-        ArrowArray* current_array_dictionary = array_without_sanitize().dictionary;
-        if (current_array_dictionary != nullptr)
-        {
-            current_array_dictionary->release(current_array_dictionary);
-        }
-        ArrowSchema* current_dictionary_schema = schema_without_sanitize().dictionary;
-        if (current_dictionary_schema != nullptr)
-        {
-            current_dictionary_schema->release(current_dictionary_schema);
-        }
-
+        static constexpr const char function_name[] = "set_dictionary";
+        throw_if_immutable<function_name, true, true>();
+        remove_dictionary();
         array_without_sanitize().dictionary = new ArrowArray(std::move(array_dictionary));
         schema_without_sanitize().dictionary = new ArrowSchema(std::move(schema_dictionary));
         get_array_private_data()->set_dictionary_ownership(true);
         get_schema_private_data()->set_dictionary_ownership(true);
+        m_is_dictionary_immutable = false;
         update_dictionary();
     }
 
@@ -913,18 +926,8 @@ namespace sparrow
 
     void arrow_proxy::resize_bitmap(size_t new_size, bool value)
     {
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception(
-                "Cannot resize bitmap on a non-sparrow created ArrowArray or ArrowSchema"
-            );
-        }
-        if (m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot resize bitmap on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "resize_bitmap";
+        throw_if_immutable<function_name, true, false>();
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         auto bitmap = get_non_owning_dynamic_bitset();
         bitmap.resize(new_size, value);
@@ -933,18 +936,8 @@ namespace sparrow
 
     size_t arrow_proxy::insert_bitmap(size_t index, bool value, size_t count)
     {
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception(
-                "Cannot insert values in bitmap on a non-sparrow created ArrowArray or ArrowSchema"
-            );
-        }
-        if (m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot insert values in bitmap on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "insert_bitmap";
+        throw_if_immutable<function_name, true, false>();
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         SPARROW_ASSERT_TRUE(std::cmp_less_equal(index, length() + offset()))
         if (count == 0)
@@ -959,18 +952,8 @@ namespace sparrow
 
     size_t arrow_proxy::erase_bitmap(size_t index, size_t count)
     {
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception(
-                "Cannot erase values in bitmap on a non-sparrow created ArrowArray or ArrowSchema"
-            );
-        }
-        if (m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot erase values in bitmap on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "erase_bitmap";
+        throw_if_immutable<function_name, true, false>();
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         SPARROW_ASSERT_TRUE(std::cmp_less(index, length()))
         auto bitmap = get_non_owning_dynamic_bitset();
@@ -983,18 +966,8 @@ namespace sparrow
 
     void arrow_proxy::push_back_bitmap(bool value)
     {
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception(
-                "Cannot push_back value in bitmap on a non-sparrow created ArrowArray or ArrowSchema"
-            );
-        }
-        if (m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot push_back value in bitmap on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "push_back_bitmap";
+        throw_if_immutable<function_name, true, false>();
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         insert_bitmap(length(), value);
         update_buffers();
@@ -1002,18 +975,8 @@ namespace sparrow
 
     void arrow_proxy::pop_back_bitmap()
     {
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception(
-                "Cannot pop_back value in bitmap on a non-sparrow created ArrowArray or ArrowSchema"
-            );
-        }
-        if (m_array_is_immutable)
-        {
-            throw arrow_proxy_exception(
-                "Cannot pop_back value in bitmap on an immutable arrow_proxy. You may have passed a const ArrowArray* at the creation."
-            );
-        }
+        static constexpr const char function_name[] = "pop_back_bitmap";
+        throw_if_immutable<function_name, true, false>();
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         erase_bitmap(length() - 1);
         update_buffers();
