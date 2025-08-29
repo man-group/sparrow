@@ -419,9 +419,15 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND WIN32)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(sparrow
+    if (EMSCRIPTEN)
+        target_compile_options(sparrow
+        PRIVATE
+        -fPIC)
+    else ()
+        target_compile_options(sparrow
         PUBLIC
         -Wno-c99-extensions)
+    endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_compile_options(sparrow
         PUBLIC
