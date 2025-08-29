@@ -140,6 +140,21 @@ namespace sparrow
         SPARROW_API explicit arrow_proxy(ArrowArray&& array, ArrowSchema* schema);
 
         /**
+         * @brief Constructs an arrow_proxy taking ownership of ArrowArray, referencing const ArrowSchema.
+         *
+         * @param array ArrowArray to take ownership of
+         * @param schema Pointer to ArrowSchema (not owned)
+         *
+         * @pre array must be a valid Arrow structure
+         * @pre schema must be a valid const pointer to ArrowSchema
+         * @pre array and schema must be compatible
+         * @post This proxy owns the array but not the schema
+         * @post Schema must remain valid for the lifetime of this proxy
+         * @post Buffers and children are properly initialized
+         */
+        SPARROW_API explicit arrow_proxy(ArrowArray&& array, const ArrowSchema* schema);
+
+        /**
          * @brief Constructs an arrow_proxy referencing external ArrowArray and ArrowSchema.
          *
          * @param array Pointer to ArrowArray (not owned)
@@ -154,6 +169,22 @@ namespace sparrow
          * @post Buffers and children are properly initialized as views
          */
         SPARROW_API explicit arrow_proxy(ArrowArray* array, ArrowSchema* schema);
+
+        /**
+         * @brief Constructs an arrow_proxy referencing external const ArrowArray and const ArrowSchema.
+         *
+         * @param array Const pointer to ArrowArray (not owned)
+         * @param schema Const pointer to ArrowSchema (not owned)
+         *
+         * @pre array must be a valid pointer to ArrowArray
+         * @pre schema must be a valid pointer to ArrowSchema
+         * @pre array and schema must be compatible
+         * @pre External structures must remain valid for the lifetime of this proxy
+         * @post This proxy does not own either structure
+         * @post External structures must be managed by the caller
+         * @post Buffers and children are properly initialized as views
+         */
+        SPARROW_API explicit arrow_proxy(const ArrowArray* array, const ArrowSchema* schema);
 
         /**
          * @brief Copy constructor creating independent copy.
@@ -670,6 +701,15 @@ namespace sparrow
         SPARROW_API void add_child(ArrowArray* array, ArrowSchema* schema);
 
         /**
+         * Add a child without taking its ownership.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
+         * in this proxy were not created with sparrow.
+         * @param array The `ArrowArray` to set as child.
+         * @param schema The `ArrowSchema` to set as child.
+         */
+        SPARROW_API void add_child(const ArrowArray* array, const ArrowSchema* schema);
+
+        /**
          * Add a child and takes its ownership.
          * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
          * in this proxy were not created with sparrow.
@@ -695,6 +735,17 @@ namespace sparrow
          * @param schema The `ArrowSchema` to set as child.
          */
         SPARROW_API void set_child(size_t index, ArrowArray* array, ArrowSchema* schema);
+
+        /**
+         * Set the child at the given index. It does not take the ownership on the `ArrowArray` and
+         * `ArrowSchema` passed by const pointers.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or the `ArrowSchema` wrapped
+         * in this proxy were not created with sparrow.
+         * @param index The index of the child to set.
+         * @param array The `ArrowArray` to set as child.
+         * @param schema The `ArrowSchema` to set as child.
+         */
+        SPARROW_API void set_child(size_t index, const ArrowArray* array, const ArrowSchema* schema);
 
         /**
          * Set the child at the given index. It takes the ownership on the `ArrowArray` and`ArrowSchema`
@@ -758,7 +809,7 @@ namespace sparrow
         [[nodiscard]] SPARROW_API std::unique_ptr<arrow_proxy>& dictionary();
 
         /**
-         * Set the dictionary.It does not take the ownership on the `ArrowArray` and
+         * Set the dictionary. It does not take the ownership on the `ArrowArray` and
          * `ArrowSchema` passed by pointers.
          * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
          * sparrow.
@@ -766,6 +817,16 @@ namespace sparrow
          * @param schema The `ArrowSchema` to set as dictionary.
          */
         SPARROW_API void set_dictionary(ArrowArray* array, ArrowSchema* schema);
+
+        /**
+         * Set the dictionary. It does not take the ownership on the `ArrowArray` and
+         * `ArrowSchema` passed by pointers.
+         * @exception `arrow_proxy_exception` If the `ArrowArray` or `ArrowSchema` were not created with
+         * sparrow.
+         * @param array The `ArrowArray` to set as dictionary.
+         * @param schema The `ArrowSchema` to set as dictionary.
+         */
+        SPARROW_API void set_dictionary(const ArrowArray* array, const ArrowSchema* schema);
 
         /**
          * Set the dictionary. It takes the ownership on the `ArrowArray` and`ArrowSchema`
@@ -891,6 +952,16 @@ namespace sparrow
          */
         SPARROW_API void update_buffers();
 
+        /**
+         * Check if the array is const.
+         */
+        [[nodiscard]] SPARROW_API bool is_array_const() const;
+
+        /**
+         * Check if the schema is const.
+         */
+        [[nodiscard]] SPARROW_API bool is_schema_const() const;
+
     private:
 
         std::variant<ArrowArray*, ArrowArray> m_array;
@@ -898,6 +969,11 @@ namespace sparrow
         std::vector<sparrow::buffer_view<uint8_t>> m_buffers;
         std::vector<arrow_proxy> m_children;
         std::unique_ptr<arrow_proxy> m_dictionary;
+        bool m_schema_is_immutable = false;
+        bool m_array_is_immutable = false;
+        std::vector<bool> m_children_array_immutable;
+        std::vector<bool> m_children_schema_immutable;
+        bool m_is_dictionary_immutable = false;
 
         struct impl_tag
         {
@@ -907,8 +983,8 @@ namespace sparrow
         arrow_proxy();
 
         template <typename AA, typename AS>
-            requires std::same_as<std::remove_pointer_t<std::remove_cvref_t<AA>>, ArrowArray>
-                     && std::same_as<std::remove_pointer_t<std::remove_cvref_t<AS>>, ArrowSchema>
+            requires std::same_as<std::remove_const_t<std::remove_pointer_t<std::remove_cvref_t<AA>>>, ArrowArray>
+                     && std::same_as<std::remove_const_t<std::remove_pointer_t<std::remove_cvref_t<AS>>>, ArrowSchema>
         arrow_proxy(AA&& array, AS&& schema, impl_tag);
 
         [[nodiscard]] bool empty() const;
@@ -920,6 +996,8 @@ namespace sparrow
         void update_dictionary();
         void update_null_count();
         void reset();
+        void remove_dictionary();
+        void remove_child(size_t index);
 
         [[nodiscard]] bool array_created_with_sparrow() const;
         [[nodiscard]] SPARROW_API bool schema_created_with_sparrow() const;
@@ -945,17 +1023,57 @@ namespace sparrow
         void sanitize_schema();
 
         void swap(arrow_proxy& other) noexcept;
+
+        template <const char* function_name, bool check_array_is_mutable, bool check_schema_is_mutable>
+        void throw_if_immutable() const
+        {
+            static const std::string cannot_call = "Cannot call ";
+            if (!is_created_with_sparrow())
+            {
+                auto error_message = cannot_call + std::string(function_name)
+                                     + " on non-sparrow created ArrowArray or ArrowSchema";
+                throw arrow_proxy_exception(error_message);
+            }
+            if constexpr (check_array_is_mutable || check_schema_is_mutable)
+            {
+                if (m_array_is_immutable || m_schema_is_immutable)
+                {
+                    {
+                        std::string error_message = cannot_call + std::string(function_name);
+                        if constexpr (check_array_is_mutable && !check_schema_is_mutable)
+                        {
+                            if (m_array_is_immutable)
+                            {
+                                error_message += " on an immutable ArrowArray. You may have passed a const ArrowArray* at the creation.";
+                            }
+                        }
+                        else if constexpr (check_schema_is_mutable && !check_array_is_mutable)
+                        {
+                            if (m_schema_is_immutable)
+                            {
+                                error_message += " on an immutable ArrowSchema. You may have passed a const ArrowSchema* at the creation.";
+                            }
+                        }
+                        else if constexpr (check_array_is_mutable && check_schema_is_mutable)
+                        {
+                            if (m_array_is_immutable && m_schema_is_immutable)
+                            {
+                                error_message += " on an immutable ArrowArray and ArrowSchema. You may have passed const ArrowArray* and const ArrowSchema* at the creation.";
+                            }
+                        }
+                        throw arrow_proxy_exception(error_message);
+                    }
+                }
+            }
+        }
     };
 
     template <std::ranges::input_range R>
         requires std::same_as<std::ranges::range_value_t<R>, arrow_array_and_schema_pointers>
     void arrow_proxy::add_children(const R& arrow_array_and_schema_pointers)
     {
-        if (!is_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot set n_buffers on non-sparrow created ArrowArray or ArrowSchema");
-        }
-
+        static constexpr const char function_name[] = "add_children";
+        throw_if_immutable<function_name, true, true>();
         const size_t add_children_count = std::ranges::size(arrow_array_and_schema_pointers);
         const size_t original_children_count = n_children();
         const size_t new_children_count = original_children_count + add_children_count;
