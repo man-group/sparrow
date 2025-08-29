@@ -181,57 +181,6 @@ namespace sparrow
     {
     }
 
-    template <typename AA, typename AS>
-        requires std::same_as<std::remove_const_t<std::remove_pointer_t<std::remove_cvref_t<AA>>>, ArrowArray>
-                 && std::same_as<std::remove_const_t<std::remove_pointer_t<std::remove_cvref_t<AS>>>, ArrowSchema>
-    arrow_proxy::arrow_proxy(AA&& array, AS&& schema, impl_tag)
-    {
-        if constexpr (std::is_const_v<std::remove_pointer_t<std::remove_reference_t<AA>>>)
-        {
-            m_array_is_immutable = true;
-            m_array = const_cast<ArrowArray*>(array);
-        }
-        else
-        {
-            m_array = std::forward<AA>(array);
-        }
-
-        if constexpr (std::is_const_v<std::remove_pointer_t<std::remove_reference_t<AS>>>)
-        {
-            m_schema_is_immutable = true;
-            m_schema = const_cast<ArrowSchema*>(schema);
-        }
-        else
-        {
-            m_schema = std::forward<AS>(schema);
-        }
-
-        if constexpr (std::is_rvalue_reference_v<AA&&>)
-        {
-            array = {};
-        }
-        else if constexpr (std::is_pointer_v<std::remove_cvref_t<AA>>)
-        {
-            SPARROW_ASSERT_TRUE(array != nullptr);
-        }
-
-        if constexpr (std::is_rvalue_reference_v<AS&&>)
-        {
-            schema = {};
-        }
-        else if constexpr (std::is_pointer_v<std::remove_cvref_t<AS>>)
-        {
-            SPARROW_ASSERT_TRUE(schema != nullptr);
-        }
-
-        m_children_array_immutable = std::vector<bool>(n_children(), m_array_is_immutable);
-        m_children_schema_immutable = std::vector<bool>(n_children(), m_schema_is_immutable);
-        validate_array_and_schema();
-        update_buffers();
-        update_children();
-        update_dictionary();
-    }
-
     arrow_proxy::arrow_proxy(ArrowArray&& array, ArrowSchema&& schema)
         : arrow_proxy(std::move(array), std::move(schema), impl_tag{})
     {
