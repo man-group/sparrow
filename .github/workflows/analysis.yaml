@@ -34,17 +34,17 @@ jobs:
           init-shell: bash
           cache-downloads: true
 
-    - name: Run C++ analysis
-      uses: cpp-linter/cpp-linter-action@v2.15.1
-      id: linter
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        version: 20
-        files-changed-only: false
-        database: 'build'
-        style: 'file'  # Use .clang-format config file
-        tidy-checks: '' # Use .clang-tidy config file
-        step-summary: true
-        ignore: 'build'
-        extra-args: '-std=c++20'
+      - name: Run C++ analysis
+        uses: cpp-linter/cpp-linter-action@v2.15.1
+        id: linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          version: 20
+          files-changed-only: false
+          database: "build"
+          style: "file" # Use .clang-format config file
+          tidy-checks: "" # Use .clang-tidy config file
+          step-summary: true
+          ignore: "build"
+          extra-args: "-std=c++20"
