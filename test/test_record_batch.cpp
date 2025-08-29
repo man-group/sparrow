@@ -161,11 +161,28 @@ namespace sparrow
                 CHECK_EQ(record, record_exp);
             }
 
+            SUBCASE("from const pointers to Arrow C structs")
+            {
+                auto record_exp = make_record_batch(col_size);
+                const auto proxy = make_rb_arrow_proxy(col_size);
+                record_batch record(&(proxy.array()), &(proxy.schema()));
+                CHECK_EQ(record, record_exp);
+            }
+
             SUBCASE("from ArrowArray&& and ArrowSchema*")
             {
                 auto record_exp = make_record_batch(col_size);
                 auto proxy = make_rb_arrow_proxy(col_size);
                 record_batch record(proxy.extract_array(), &(proxy.schema()));
+                CHECK_EQ(record, record_exp);
+            }
+
+            SUBCASE("from ArrowArray&& and const ArrowSchema*")
+            {
+                auto record_exp = make_record_batch(col_size);
+                auto proxy = make_rb_arrow_proxy(col_size);
+                const ArrowSchema* sch = &(proxy.schema());
+                record_batch record(proxy.extract_array(), sch);
                 CHECK_EQ(record, record_exp);
             }
         }
