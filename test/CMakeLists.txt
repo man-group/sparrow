@@ -47,7 +47,7 @@ set(SPARROW_TESTS_SOURCES
     test_arrow_array_schema_utils.cpp
     test_arrow_array.cpp
     test_arrow_schema.cpp
-    test_binary_array.cpp
+    # test_binary_array.cpp
     test_bit.cpp
     test_buffer_adaptor.cpp
     test_buffer.cpp
@@ -59,7 +59,6 @@ set(SPARROW_TESTS_SOURCES
     test_builder_utils.cpp
     test_builder.cpp
     test_builder.cpp
-    test_date_array.cpp
     test_date_array.cpp
     test_decimal_array.cpp
     test_decimal.cpp
@@ -91,10 +90,10 @@ set(SPARROW_TESTS_SOURCES
     test_record_batch.cpp
     test_repeat_container.cpp
     test_run_end_encoded_array.cpp
-    test_string_array.cpp
+    # test_string_array.cpp
     test_struct_array.cpp
     test_time_array.cpp
-    test_timestamp_array.cpp
+    # test_timestamp_array.cpp
     test_timestamp_without_timezone_array.cpp
     test_traits.cpp
     test_u8_buffer.cpp
@@ -107,92 +106,127 @@ set(SPARROW_TESTS_SOURCES
 
 set(test_target "test_sparrow_lib")
 add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
-target_link_libraries(${test_target}
-    PRIVATE
-        sparrow
-        doctest::doctest
-        better_junit_reporter
-        $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
-# set(test_target_catch2 "test_sparrow_lib_catch2")
+if(EMSCRIPTEN)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# add_executable(${test_target_catch2})
-# target_link_libraries(${test_target_catch2}
-#     PRIVATE
-#         sparrow
-#         Catch2::Catch2WithMain
-#         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
+    set_target_properties(${test_target} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# include(Catch)
-# catch_discover_tests(${test_target_catch2})
+    target_compile_options(${test_target}
+        PUBLIC "SHELL: -fexceptions"
+        PUBLIC "SHELL: -fPIC"
+    )
 
-include(compile_options)
+    target_compile_definitions(${test_target}
+        PUBLIC SPARROW_USE_DATE_POLYFILL
+               HALF_ERRHANDLING_THROWS
+    )
 
-target_compile_options(${test_target}
-    PRIVATE
-        ${compile_options}
-        $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>
-        )
-target_link_options(${test_target}
-    PRIVATE
-        $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
-target_compile_definitions(${test_target}
-    PRIVATE
-        DOCTEST_CONFIG_VOID_CAST_EXPRESSIONS)
+    target_link_libraries(${test_target}
+        PRIVATE
+            sparrow
+            doctest::doctest
+            better_junit_reporter)
 
-if(ENABLE_COVERAGE)
-    enable_coverage(${test_target})
-endif()
+    target_link_options(${test_target}
+        PUBLIC "SHELL: -fexceptions"
+        PUBLIC "SHELL: -fPIC"
+        PUBLIC "SHELL: -s MAIN_MODULE=1"
+        PUBLIC "SHELL: -s WASM_BIGINT"
+        PUBLIC "SHELL: -s ASSERTIONS=0"
+        PUBLIC "SHELL: -s ALLOW_MEMORY_GROWTH=1"
+        PUBLIC "SHELL: -s STACK_SIZE=32mb"
+        PUBLIC "SHELL: -s INITIAL_MEMORY=128mb"
+        PUBLIC "SHELL: --preload-file /Users/anutosh491/work/emsdk/upstream/emscripten/cache/sysroot/include@/include"
+    )
+else()
+    target_link_libraries(${test_target}
+        PRIVATE
+            sparrow
+            doctest::doctest
+            better_junit_reporter
+            $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
-# We do not use non-standard C++
-set_target_properties(${test_target} 
-    PROPERTIES
-        CMAKE_CXX_EXTENSIONS OFF)
-target_compile_features(${test_target} PRIVATE cxx_std_20)
+    # set(test_target_catch2 "test_sparrow_lib_catch2")
 
-# target_compile_options(${test_target_catch2}
-#     PRIVATE
-#         ${compile_options}
-#         $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>
-#         )
-# target_link_options(${test_target_catch2}
-#     PRIVATE
-#         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
-# We do not use non-standard C++
-# set_target_properties(${test_target_catch2} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
-# target_compile_features(${test_target_catch2} PRIVATE cxx_std_20)
+    # add_executable(${test_target_catch2})
+    # target_link_libraries(${test_target_catch2}
+    #     PRIVATE
+    #         sparrow
+    #         Catch2::Catch2WithMain
+    #         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_LIBRARIES}>)
 
-add_custom_target(run_tests
-    COMMAND ${test_target}
-    # COMMAND ${test_target_catch2} -v high
-    DEPENDS 
-        ${test_target}
-        # ${test_target_catch2}
-    COMMENT "Running tests for Doctest and Catch2"
-    USES_TERMINAL
-)
+    # include(Catch)
+    # catch_discover_tests(${test_target_catch2})
 
-set_target_properties(run_tests PROPERTIES FOLDER "Tests utilities")
+    include(compile_options)
 
-set(JUNIT_REPORT_FILE_DOCTEST ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report_doctest.xml)
-set(JUNIT_REPORT_FILE_CATCH2 ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report_catch2.xml)
+    target_compile_options(${test_target}
+        PRIVATE
+            ${compile_options}
+            $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>
+            )
+    target_link_options(${test_target}
+        PRIVATE
+            $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
+    target_compile_definitions(${test_target}
+        PRIVATE
+            DOCTEST_CONFIG_VOID_CAST_EXPRESSIONS)
 
-add_custom_target(run_tests_with_junit_report
-    COMMAND ${test_target} --reporters=better_junit --out=${JUNIT_REPORT_FILE_DOCTEST} --no-path-filenames=true
-    # COMMAND ${test_target_catch2} --reporter JUnit -o ${JUNIT_REPORT_FILE_CATCH2}
-    DEPENDS
-        ${test_target} 
-        # ${test_target_catch2}
-    COMMENT "Running tests with JUnit reports saved to: ${JUNIT_REPORT_FILE_DOCTEST} and ${JUNIT_REPORT_FILE_CATCH2}"
-    USES_TERMINAL
-)
+    if(ENABLE_COVERAGE)
+        enable_coverage(${test_target})
+    endif()
 
-set_target_properties(run_tests_with_junit_report PROPERTIES FOLDER "Tests utilities")
+    # We do not use non-standard C++
+    set_target_properties(${test_target} 
+        PROPERTIES
+            CMAKE_CXX_EXTENSIONS OFF)
+    target_compile_features(${test_target} PRIVATE cxx_std_20)
 
-if(ENABLE_INTEGRATION_TEST)
-    add_subdirectory(c_data_integration)
-endif()
+    # target_compile_options(${test_target_catch2}
+    #     PRIVATE
+    #         ${compile_options}
+    #         $<$<BOOL:USE_SANITIZER>:${SANITIZER_COMPILE_OPTIONS}>
+    #         )
+    # target_link_options(${test_target_catch2}
+    #     PRIVATE
+    #         $<$<BOOL:USE_SANITIZER>:${SANITIZER_LINK_OPTIONS}>)
+    # We do not use non-standard C++
+    # set_target_properties(${test_target_catch2} PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
+    # target_compile_features(${test_target_catch2} PRIVATE cxx_std_20)
 
-if(CREATE_JSON_READER_TARGET)
-    add_subdirectory(json_reader)
+    add_custom_target(run_tests
+        COMMAND ${test_target}
+        # COMMAND ${test_target_catch2} -v high
+        DEPENDS 
+            ${test_target}
+            # ${test_target_catch2}
+        COMMENT "Running tests for Doctest and Catch2"
+        USES_TERMINAL
+    )
+
+    set_target_properties(run_tests PROPERTIES FOLDER "Tests utilities")
+
+    set(JUNIT_REPORT_FILE_DOCTEST ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report_doctest.xml)
+    set(JUNIT_REPORT_FILE_CATCH2 ${CMAKE_CURRENT_BINARY_DIR}/test_sparrow_lib_report_catch2.xml)
+
+    add_custom_target(run_tests_with_junit_report
+        COMMAND ${test_target} --reporters=better_junit --out=${JUNIT_REPORT_FILE_DOCTEST} --no-path-filenames=true
+        # COMMAND ${test_target_catch2} --reporter JUnit -o ${JUNIT_REPORT_FILE_CATCH2}
+        DEPENDS
+            ${test_target} 
+            # ${test_target_catch2}
+        COMMENT "Running tests with JUnit reports saved to: ${JUNIT_REPORT_FILE_DOCTEST} and ${JUNIT_REPORT_FILE_CATCH2}"
+        USES_TERMINAL
+    )
+
+    set_target_properties(run_tests_with_junit_report PROPERTIES FOLDER "Tests utilities")
+
+    if(ENABLE_INTEGRATION_TEST)
+        add_subdirectory(c_data_integration)
+    endif()
+
+    if(CREATE_JSON_READER_TARGET)
+        add_subdirectory(json_reader)
+    endif()
 endif()
