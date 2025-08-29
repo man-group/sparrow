@@ -1144,7 +1144,7 @@ namespace sparrow
         if (!is_created_with_sparrow())
         {
             auto error_message = cannot_call + std::string(function_name)
-                                    + " on non-sparrow created ArrowArray or ArrowSchema";
+                                 + " on non-sparrow created ArrowArray or ArrowSchema";
             throw arrow_proxy_exception(error_message);
         }
         if constexpr (check_array_is_mutable || check_schema_is_mutable)
