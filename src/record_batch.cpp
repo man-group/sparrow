@@ -43,8 +43,8 @@ namespace sparrow
         {
             m_name_list.emplace_back(sch.children[i]->name);
             m_array_list.emplace_back(std::move(*(arr.children[i])), std::move(*(sch.children[i])));
-            arr.children[i] = nullptr;
-            sch.children[i] = nullptr;
+            *(arr.children[i]) = make_empty_arrow_array();
+            *(sch.children[i]) = make_empty_arrow_schema();
         }
         arr.release(&arr);
         sch.release(&sch);
@@ -61,7 +61,7 @@ namespace sparrow
         {
             m_name_list.emplace_back(sch->children[i]->name);
             m_array_list.emplace_back(std::move(*(arr.children[i])), sch->children[i]);
-            arr.children[i] = nullptr;
+            *(arr.children[i]) = make_empty_arrow_array();
         }
         arr.release(&arr);
 
