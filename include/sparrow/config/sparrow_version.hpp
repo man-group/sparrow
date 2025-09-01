@@ -24,5 +24,8 @@ namespace sparrow
     constexpr int SPARROW_BINARY_REVISION = 0;
     constexpr int SPARROW_BINARY_AGE = 1;
 
-    static_assert(SPARROW_BINARY_AGE <= SPARROW_BINARY_CURRENT, "SPARROW_BINARY_AGE cannot be greater than SPARROW_BINARY_CURRENT");
+    static_assert(
+        SPARROW_BINARY_AGE <= SPARROW_BINARY_CURRENT,
+        "SPARROW_BINARY_AGE cannot be greater than SPARROW_BINARY_CURRENT"
+    );
 }

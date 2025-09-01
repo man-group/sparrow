@@ -32,6 +32,6 @@ TEST_CASE("versions are readable")
 
     [[maybe_unused]] const std::string printable_binary_version = std::string("sparrow binary version: ")
                                                                   + std::to_string(SPARROW_BINARY_CURRENT) + "."
-                                                                  + std::to_string(SPARROW_BINARY_REVISION) + "."
-                                                                  + std::to_string(SPARROW_BINARY_AGE);
+                                                                  + std::to_string(SPARROW_BINARY_REVISION)
+                                                                  + "." + std::to_string(SPARROW_BINARY_AGE);
 }
