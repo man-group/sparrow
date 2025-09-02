@@ -1,7 +1,7 @@
 from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.build.cppstd import check_min_cppstd
-from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
+from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 from conan.tools.files import copy
 from conan.tools.microsoft import is_msvc
 from conan.tools.scm import Version
@@ -14,12 +14,11 @@ class SparrowRecipe(ConanFile):
     description = "C++20 idiomatic APIs for the Apache Arrow Columnar Format"
     license = "Apache-2.0"
     author = "Man Group"
-    url = "https://github.com/conan-io/conan-center-index"
-    homepage = "https://github.com/man-group/sparrow"
+    url = "https://github.com/man-group/sparrow"
+    homepage = "https://man-group.github.io/sparrow"
     topics = ("arrow", "apache arrow", "columnar format", "dataframe")
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
-    generators = "CMakeDeps"
     exports_sources = "include/*", "LICENSE", "src/*", "cmake/*", "docs/*", "CMakeLists.txt", "sparrowConfig.cmake.in"
     options = {
         "shared": [True, False],
@@ -49,6 +48,7 @@ class SparrowRecipe(ConanFile):
             self.test_requires("benchmark/1.9.4")
 
     def build_requirements(self):
+        self.tool_requires("cmake/[>=3.28.1 <4.2.0]")
         if self.options.get_safe("generate_documentation"):
             self.tool_requires("doxygen/1.9.4", options={"enable_app": "True"})
 
@@ -88,6 +88,9 @@ class SparrowRecipe(ConanFile):
         cmake_layout(self, src_folder=".")
 
     def generate(self):
+        deps = CMakeDeps(self)
+        deps.generate()
+
         tc = CMakeToolchain(self)
         tc.variables["USE_DATE_POLYFILL"] = self.options.get_safe(
             "use_date_polyfill", False)
