@@ -59,10 +59,10 @@ namespace sparrow
 
         using base_type = dynamic_bitset_base<buffer<T>>;       ///< Base class type
         using storage_type = typename base_type::storage_type;  ///< Underlying storage container type
-        using default_allocator = typename storage_type::default_allocator; ///< Type of default allocator
-        using block_type = typename base_type::block_type;      ///< Type of each storage block (same as T)
-        using value_type = typename base_type::value_type;      ///< Type of individual bit values (bool)
-        using size_type = typename base_type::size_type;        ///< Type used for sizes and indices
+        using default_allocator = typename storage_type::default_allocator;  ///< Type of default allocator
+        using block_type = typename base_type::block_type;  ///< Type of each storage block (same as T)
+        using value_type = typename base_type::value_type;  ///< Type of individual bit values (bool)
+        using size_type = typename base_type::size_type;    ///< Type used for sizes and indices
 
         /**
          * @brief Constructs a dynamic_bitset from an input range of convertible values.
@@ -195,7 +195,7 @@ namespace sparrow
 
     template <std::integral T>
     template <class A>
-            requires(not std::same_as<A, dynamic_bitset<T>> and allocator<A>)
+        requires(not std::same_as<A, dynamic_bitset<T>> and allocator<A>)
     constexpr dynamic_bitset<T>::dynamic_bitset(const A& a)
         : base_type(storage_type(a), 0u)
     {
