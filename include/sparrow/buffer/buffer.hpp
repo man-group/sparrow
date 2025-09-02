@@ -219,8 +219,7 @@ namespace sparrow
         [[nodiscard]]
         // Capacity
 
-        [[nodiscard]] constexpr bool
-        empty() const noexcept;
+        [[nodiscard]] constexpr bool empty() const noexcept;
         [[nodiscard]] constexpr size_type capacity() const noexcept;
         [[nodiscard]] constexpr size_type size() const noexcept;
         [[nodiscard]] constexpr size_type max_size() const noexcept;
