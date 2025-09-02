@@ -71,10 +71,10 @@ namespace sparrow
         constexpr buffer_base(const A& a) noexcept;
 
         template <allocator A = allocator_type>
-        constexpr buffer_base(size_type n, const A& a = A(xsimd::aligned_allocator<T>()));
+        constexpr buffer_base(size_type n, const A& a);
 
         template <allocator A = allocator_type>
-        constexpr buffer_base(pointer p, size_type n, const A& a = A(xsimd::aligned_allocator<T>()));
+        constexpr buffer_base(pointer p, size_type n, const A& a);
 
         ~buffer_base();
 
@@ -122,6 +122,7 @@ namespace sparrow
     public:
 
         using allocator_type = typename base_type::allocator_type;
+        using default_allocator = std::allocator<T>;
         using value_type = T;
         using reference = value_type&;
         using const_reference = const value_type&;
@@ -143,22 +144,22 @@ namespace sparrow
         {
         }
 
-        template <allocator A = allocator_type>
+        template <allocator A = default_allocator>
         constexpr explicit buffer(size_type n, const A& a = A());
 
-        template <allocator A = allocator_type>
+        template <allocator A = default_allocator>
         constexpr buffer(size_type n, const value_type& v, const A& a = A());
 
-        template <allocator A = allocator_type>
+        template <allocator A = default_allocator>
         constexpr buffer(pointer p, size_type n, const A& a = A());
 
-        template <allocator A = allocator_type>
+        template <allocator A = default_allocator>
         constexpr buffer(std::initializer_list<value_type> init, const A& a = A());
 
-        template <class It, allocator A = allocator_type>
+        template <class It, allocator A = default_allocator>
         constexpr buffer(It first, It last, const A& a = A());
 
-        template <std::ranges::input_range Range, allocator A = allocator_type>
+        template <std::ranges::input_range Range, allocator A = default_allocator>
             requires(std::same_as<std::ranges::range_value_t<Range>, T> && !is_buffer_view<Range>)
         constexpr buffer(const Range& range, const A& a = A());
 
