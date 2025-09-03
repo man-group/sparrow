@@ -107,10 +107,11 @@ namespace sparrow
     {
     public:
 
-        using holder_type = detail::holder<buffer<std::uint8_t>>;
-        using buffer_adaptor_type = buffer_adaptor<T, buffer<std::uint8_t>&>;
+        using buffer_type = buffer<std::uint8_t>;
+        using holder_type = detail::holder<buffer_type>;
+        using buffer_adaptor_type = buffer_adaptor<T, buffer_type&>;
         using holder_type::extract_storage;
-        using default_allocator_type = std::allocator<std::uint8_t>;
+        using default_allocator = buffer_type::default_allocator;
 
         /**
          * Move constructor.
@@ -183,12 +184,26 @@ namespace sparrow
          * Especially, one should not mixed operator new[] and std::allocator, as this
          * later is not guaranteed to free the memory with a call to operator delete[] only.
          *
+         * The recommended way to allocate data_ptr is to use the default allocator
+         * provided by u8_buffer:
+         * \code{.cpp}
+         * using allocator = u8_buffer::default_allocator;
+         * auto* data_ptr = reinterpret_cast<T*>(default_allocator().allocate(sizeof(uint8_t) * count));
+         * u8_buffer buf(data_ptr, count);
+         * \endcode
+         *
+         * However, if you prefer to provide your own allocator, you must ensure that:
+         * - either it allocates and returns a buffer or std::uint8_t
+         * - or it accepts a std::uint8_t* as its deallocate argument
+         * The first option is safer and more conformant to the standard allocator,
+         * but requires and extract cast in the client code.
+         *
          * @tparam A The allocator type.
          * @param data_ptr Pointer to the storage.
          * @param count Number of elements in the storage.
          * @param a The allocator to use.
          */
-        template <allocator A = default_allocator_type>
+        template <allocator A = default_allocator>
         constexpr u8_buffer(T* data_ptr, std::size_t count, const A& a = A());
     };
 

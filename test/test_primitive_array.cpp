@@ -818,7 +818,8 @@ namespace sparrow
 #    pragma GCC diagnostic ignored "-Wcast-align"
 #endif
             size_t num_rows = 100000;
-            uint8_t* data_ptr = std::allocator<uint8_t>().allocate(sizeof(uint64_t) * num_rows);
+            using allocator_type = sparrow::u8_buffer<uint64_t>::default_allocator;
+            uint8_t* data_ptr = allocator_type().allocate(sizeof(uint64_t) * num_rows);
             auto cast_ptr = reinterpret_cast<uint64_t*>(data_ptr);
             for (size_t idx = 0; idx < num_rows; ++idx)
             {
