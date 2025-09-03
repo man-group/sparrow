@@ -350,7 +350,7 @@ namespace sparrow
     template <class D>
     constexpr auto mutable_array_base<D>::erase(const_iterator first, const_iterator last) -> iterator
     {
-        SPARROW_ASSERT_TRUE(first < last);
+        SPARROW_ASSERT_TRUE(first <= last);
         SPARROW_ASSERT_TRUE(this->cbegin() <= first)
         SPARROW_ASSERT_TRUE(last <= this->cend());
         const difference_type first_index = std::distance(this->cbegin(), first);
