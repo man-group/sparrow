@@ -254,7 +254,7 @@ namespace sparrow
          */
         SPARROW_API record_batch& operator=(const record_batch& other);
 
-        record_batch(record_batch&&) = default;
+        record_batch(record_batch&&) noexcept = default;
         record_batch& operator=(record_batch&&) = default;
 
         /**
