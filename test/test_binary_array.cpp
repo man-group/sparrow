@@ -13,11 +13,11 @@
 // limitations under the License.
 
 #include <cstddef>
-#include <vector>
 #include <numeric>
+#include <vector>
 
-#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/utils/nullable.hpp"
@@ -33,7 +33,7 @@ namespace sparrow
     // Type list for testing both binary_array and big_binary_array
     using binary_array_types = std::tuple<binary_array, big_binary_array>;
 
-    template<class T>
+    template <class T>
     struct binary_array_fixture
     {
         using layout_type = T;
@@ -69,7 +69,7 @@ namespace sparrow
             ArrowSchema schema{};
             ArrowArray array{};
             const std::vector<size_t> false_bitmap{m_false_bitmap.begin(), m_false_bitmap.end()};
-            
+
             if constexpr (std::same_as<layout_type, binary_array>)
             {
                 test::fill_schema_and_array<std::vector<byte_t>>(schema, array, m_length, m_offset, false_bitmap);
@@ -78,11 +78,12 @@ namespace sparrow
             {
                 fill_big_binary_schema_and_array(schema, array, m_length, m_offset, false_bitmap);
             }
-            
+
             return arrow_proxy{std::move(array), std::move(schema)};
         }
 
     private:
+
         void fill_big_binary_schema_and_array(
             ArrowSchema& schema,
             ArrowArray& arr,
@@ -126,7 +127,8 @@ namespace sparrow
                 byte_t* ptr = value_buf.data<byte_t>();
                 for (std::size_t i = 0; i < size; ++i)
                 {
-                    offset_data[i + 1] = offset_data[i] + static_cast<std::int64_t>(bytes[i].size());  // Use int64_t
+                    offset_data[i + 1] = offset_data[i] + static_cast<std::int64_t>(bytes[i].size());  // Use
+                                                                                                       // int64_t
                     sparrow::ranges::copy(bytes[i], ptr);
                     ptr += bytes[i].size();
                 }
@@ -212,7 +214,7 @@ namespace sparrow
         {
             binary_array_fixture<T> fixture;
             using layout_type = T;
-            
+
             layout_type ar(fixture.m_arrow_proxy);
             layout_type ar2(ar);
             CHECK_EQ(ar, ar2);
@@ -226,7 +228,7 @@ namespace sparrow
         {
             binary_array_fixture<T> fixture;
             using layout_type = T;
-            
+
             layout_type ar(fixture.m_arrow_proxy);
             layout_type ar2(ar);
             layout_type ar3(std::move(ar));
@@ -241,7 +243,7 @@ namespace sparrow
         {
             binary_array_fixture<T> fixture;
             using layout_type = T;
-            
+
             const layout_type array(std::move(fixture.m_arrow_proxy));
             CHECK_EQ(array.size(), fixture.m_length - fixture.m_offset);
         }
@@ -250,7 +252,7 @@ namespace sparrow
         {
             binary_array_fixture<T> fixture;
             using layout_type = T;
-            
+
             std::vector<std::vector<byte_t>> words = test::make_testing_bytes(fixture.m_length);
 
             SUBCASE("const")
@@ -333,7 +335,7 @@ namespace sparrow
         {
             binary_array_fixture<T> fixture;
             using layout_type = T;
-            
+
             std::vector<std::vector<byte_t>> words = test::make_testing_bytes(fixture.m_length);
 
             SUBCASE("const")
@@ -380,7 +382,7 @@ namespace sparrow
         {
             binary_array_fixture<T> fixture;
             using layout_type = T;
-            
+
             SUBCASE("ordering")
             {
                 const layout_type array(std::move(fixture.m_arrow_proxy));
@@ -410,7 +412,7 @@ namespace sparrow
         {
             binary_array_fixture<T> fixture;
             using layout_type = T;
-            
+
             std::vector<std::vector<byte_t>> words = test::make_testing_bytes(fixture.m_length);
 
             SUBCASE("const")
@@ -519,7 +521,7 @@ namespace sparrow
         {
             binary_array_fixture<T> fixture;
             using layout_type = T;
-            
+
             layout_type array(std::move(fixture.m_arrow_proxy));
             array.zero_null_values();
             // CHECK that all null values are set to empty vector
@@ -536,10 +538,10 @@ namespace sparrow
         {
             binary_array_fixture<T> fixture;
             using layout_type = T;
-            
+
             const layout_type array(std::move(fixture.m_arrow_proxy));
             const std::string formatted = std::format("{}", array);
-            
+
             if constexpr (std::same_as<layout_type, binary_array>)
             {
                 constexpr std::string_view
