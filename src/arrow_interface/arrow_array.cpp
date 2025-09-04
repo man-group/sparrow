@@ -99,35 +99,35 @@ namespace sparrow
             case data_type::BINARY:
                 return {
                     make_valid_buffer(),
-                    make_buffer(1, (size + 1) * 4),
+                    make_buffer(1, (size + 1) * sizeof(int32_t)),
                     make_buffer(2, static_const_ptr_cast<int32_t>(array.buffers[1])[size])
                 };
             case data_type::LARGE_STRING:
             case data_type::LARGE_BINARY:
                 return {
                     make_valid_buffer(),
-                    make_buffer(1, (size + 1) * 4),
+                    make_buffer(1, (size + 1) * sizeof(int64_t)),
                     make_buffer(2, static_const_ptr_cast<int64_t>(array.buffers[1])[size])
                 };
             case data_type::LIST:
-                return {make_valid_buffer(), make_buffer(1, (size + 1) * 4)};
+                return {make_valid_buffer(), make_buffer(1, (size + 1) * sizeof(int32_t))};
             case data_type::LARGE_LIST:
-                return {make_valid_buffer(), make_buffer(1, (size + 1) * 8)};
+                return {make_valid_buffer(), make_buffer(1, (size + 1) * sizeof(int64_t))};
             case data_type::LIST_VIEW:
-                return {make_valid_buffer(), make_buffer(1, size * 4), make_buffer(2, size * 4)};
+                return {make_valid_buffer(), make_buffer(1, size * sizeof(int32_t)), make_buffer(2, size * 4)};
             case data_type::LARGE_LIST_VIEW:
-                return {make_valid_buffer(), make_buffer(1, size * 8), make_buffer(2, size * 8)};
+                return {make_valid_buffer(), make_buffer(1, size * sizeof(int64_t)), make_buffer(2, size * 8)};
             case data_type::FIXED_SIZED_LIST:
             case data_type::STRUCT:
                 return {make_valid_buffer()};
             case data_type::MAP:
-                return {make_valid_buffer(), make_buffer(1, (size + 1) * 4)};
+                return {make_valid_buffer(), make_buffer(1, (size + 1) * sizeof(int32_t))};
             case data_type::SPARSE_UNION:
                 return {make_buffer(0, size)};
             case data_type::DENSE_UNION:
-                return {make_buffer(0, size), make_buffer(1, size * 4)};
+                return {make_buffer(0, size), make_buffer(1, size * sizeof(int32_t))};
             case data_type::DATE_DAYS:
-                return {make_valid_buffer(), make_buffer(1, size * 4)};
+                return {make_valid_buffer(), make_buffer(1, size * sizeof(int32_t))};
             case data_type::DATE_MILLISECONDS:
             case data_type::TIMESTAMP_SECONDS:
             case data_type::TIMESTAMP_MILLISECONDS:
