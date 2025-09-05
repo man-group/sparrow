@@ -143,6 +143,7 @@ jobs:
           -DCMAKE_CXX_STANDARD=${{matrix.cpp_standard}} \
           -DUSE_DATE_POLYFILL=${{matrix.date-polyfill}} \
           -DBUILD_TESTS=ON \
+          -DTRACK_COPIES=ON \
           -DENABLE_INTEGRATION_TEST=${{matrix.shared}} \
           -DBUILD_EXAMPLES=ON \
           -DCREATE_JSON_READER_TARGET=ON \
