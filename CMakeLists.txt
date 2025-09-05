@@ -103,6 +103,7 @@ MESSAGE(STATUS "🔧 Enable integration tests: ${ENABLE_INTEGRATION_TEST}")
 OPTION(CREATE_JSON_READER_TARGET "Create json_reader target, usualy used for integration tests" OFF)
 OPTION(ENABLE_INTEGRATION_TEST "Creates json_reader target and enable integration tests" OFF)
 OPTION(CREATE_JSON_READER_TARGET "Create json_reader target, automatically set when ENABLE_INTEGRATION_TEST is ON" OFF)
+OPTION(TRACK_COPIES, "Track copies in tests" OFF)
 
 if(ENABLE_INTEGRATION_TEST)
     set(CREATE_JSON_READER_TARGET ON)
@@ -182,6 +183,11 @@ if(SPARROW_CONTRACTS_THROW_ON_FAILURE)
     list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_CONTRACTS_THROW_ON_FAILURE=1)
 endif()
 
+if(TRACK_COPIES)
+    message(STATUS "Tracking copies in tests")
+    list(APPEND SPARROW_COMPILE_DEFINITIONS SPARROW_TRACK_COPIES)
+endif()
+
 # Build
 # =====
 set(BINARY_BUILD_DIR "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}")
@@ -227,6 +233,9 @@ set(SPARROW_HEADERS
     # config
     ${SPARROW_INCLUDE_DIR}/sparrow/config/config.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/config/sparrow_version.hpp
+
+    # debug
+    ${SPARROW_INCLUDE_DIR}/sparrow/debug/copy_tracker.hpp
 
     # detail
     ${SPARROW_INCLUDE_DIR}/sparrow/details/3rdparty/float16_t.hpp
@@ -324,6 +333,7 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array_schema_proxy.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/private_data_ownership.cpp
+    ${SPARROW_SOURCE_DIR}/debug/copy_tracker.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_factory.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_helper.cpp
     ${SPARROW_SOURCE_DIR}/layout/fixed_width_binary_array_utils.cpp
