@@ -64,6 +64,7 @@ jobs:
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
           -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
           -DBUILD_TESTS=ON \
+          -DTRACK_COPIES=ON \
           -DENABLE_INTEGRATION_TEST=ON \
           -DBUILD_EXAMPLES=ON \
           -DUSE_DATE_POLYFILL=ON \
