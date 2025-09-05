@@ -16,10 +16,20 @@
 
 #include <unordered_set>
 
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
+    namespace copy_tracker
+    {
+        template <>
+        SPARROW_API std::string key<record_batch>()
+        {
+            return "record_batch";
+        }
+    }
+
     record_batch::record_batch(initializer_type init)
     {
         m_name_list.reserve(init.size());
@@ -97,6 +107,7 @@ namespace sparrow
         , m_array_list(rhs.m_array_list)
     {
         update_array_map_cache();
+        copy_tracker::increase(copy_tracker::key<record_batch>());
     }
 
     record_batch& record_batch::operator=(const record_batch& rhs)
