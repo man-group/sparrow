@@ -26,4 +26,3 @@ namespace sparrow::copy_tracker
     SPARROW_API std::vector<std::string> key_list();
 
 }
-

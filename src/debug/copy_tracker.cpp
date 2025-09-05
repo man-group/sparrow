@@ -73,7 +73,7 @@ namespace sparrow::copy_tracker
     std::vector<std::string> key_list()
     {
         auto keys = copy_tracker_impl::instance().key_list();
-        return { keys.begin(), keys.end() };
+        return {keys.begin(), keys.end()};
     }
 
 #else
