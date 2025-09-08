@@ -53,7 +53,6 @@ set(SPARROW_TESTS_SOURCES
     test_builder_dict_encoded.cpp
     test_builder_run_end_encoded.cpp
     test_builder_utils.cpp
-    test_builder.cpp
     test_date_array.cpp
     test_decimal_array.cpp
     test_decimal.cpp
@@ -100,6 +99,7 @@ set(SPARROW_TESTS_SOURCES
 if(NOT EMSCRIPTEN)
   list(APPEND SPARROW_TESTS_SOURCES
     test_binary_array.cpp
+    test_builder.cpp
     test_string_array.cpp
     test_timestamp_array.cpp
   )
