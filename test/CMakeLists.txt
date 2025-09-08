@@ -47,17 +47,12 @@ set(SPARROW_TESTS_SOURCES
     test_arrow_array_schema_utils.cpp
     test_arrow_array.cpp
     test_arrow_schema.cpp
-    # test_binary_array.cpp
     test_bit.cpp
     test_buffer_adaptor.cpp
     test_buffer.cpp
     test_builder_dict_encoded.cpp
-    test_builder_dict_encoded.cpp
-    test_builder_run_end_encoded.cpp
     test_builder_run_end_encoded.cpp
     test_builder_utils.cpp
-    test_builder_utils.cpp
-    test_builder.cpp
     test_builder.cpp
     test_date_array.cpp
     test_decimal_array.cpp
@@ -90,10 +85,8 @@ set(SPARROW_TESTS_SOURCES
     test_record_batch.cpp
     test_repeat_container.cpp
     test_run_end_encoded_array.cpp
-    # test_string_array.cpp
     test_struct_array.cpp
     test_time_array.cpp
-    # test_timestamp_array.cpp
     test_timestamp_without_timezone_array.cpp
     test_traits.cpp
     test_u8_buffer.cpp
@@ -104,22 +97,22 @@ set(SPARROW_TESTS_SOURCES
     test_variable_size_binary_view_array.cpp
 )
 
+if(NOT EMSCRIPTEN)
+  list(APPEND SPARROW_TESTS_SOURCES
+    test_binary_array.cpp
+    test_string_array.cpp
+    test_timestamp_array.cpp
+  )
+endif()
+
 set(test_target "test_sparrow_lib")
 add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
 
 if(EMSCRIPTEN)
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-    set_target_properties(${test_target} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
     target_compile_options(${test_target}
         PUBLIC "SHELL: -fexceptions"
         PUBLIC "SHELL: -fPIC"
-    )
-
-    target_compile_definitions(${test_target}
-        PUBLIC SPARROW_USE_DATE_POLYFILL
-               HALF_ERRHANDLING_THROWS
     )
 
     target_link_libraries(${test_target}
@@ -137,7 +130,7 @@ if(EMSCRIPTEN)
         PUBLIC "SHELL: -s ALLOW_MEMORY_GROWTH=1"
         PUBLIC "SHELL: -s STACK_SIZE=32mb"
         PUBLIC "SHELL: -s INITIAL_MEMORY=128mb"
-        PUBLIC "SHELL: --preload-file /Users/anutosh491/work/emsdk/upstream/emscripten/cache/sysroot/include@/include"
+        PUBLIC "SHELL: --preload-file ${SYSROOT_PATH}/include@/include"
     )
 else()
     target_link_libraries(${test_target}
