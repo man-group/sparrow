@@ -1025,47 +1025,7 @@ namespace sparrow
         void swap(arrow_proxy& other) noexcept;
 
         template <const char* function_name, bool check_array_is_mutable, bool check_schema_is_mutable>
-        void throw_if_immutable() const
-        {
-            static const std::string cannot_call = "Cannot call ";
-            if (!is_created_with_sparrow())
-            {
-                auto error_message = cannot_call + std::string(function_name)
-                                     + " on non-sparrow created ArrowArray or ArrowSchema";
-                throw arrow_proxy_exception(error_message);
-            }
-            if constexpr (check_array_is_mutable || check_schema_is_mutable)
-            {
-                if (m_array_is_immutable || m_schema_is_immutable)
-                {
-                    {
-                        std::string error_message = cannot_call + std::string(function_name);
-                        if constexpr (check_array_is_mutable && !check_schema_is_mutable)
-                        {
-                            if (m_array_is_immutable)
-                            {
-                                error_message += " on an immutable ArrowArray. You may have passed a const ArrowArray* at the creation.";
-                            }
-                        }
-                        else if constexpr (check_schema_is_mutable && !check_array_is_mutable)
-                        {
-                            if (m_schema_is_immutable)
-                            {
-                                error_message += " on an immutable ArrowSchema. You may have passed a const ArrowSchema* at the creation.";
-                            }
-                        }
-                        else if constexpr (check_array_is_mutable && check_schema_is_mutable)
-                        {
-                            if (m_array_is_immutable && m_schema_is_immutable)
-                            {
-                                error_message += " on an immutable ArrowArray and ArrowSchema. You may have passed const ArrowArray* and const ArrowSchema* at the creation.";
-                            }
-                        }
-                        throw arrow_proxy_exception(error_message);
-                    }
-                }
-            }
-        }
+        void throw_if_immutable() const;
     };
 
     template <std::ranges::input_range R>
@@ -1124,6 +1084,100 @@ namespace sparrow
         auto bitmap = get_non_owning_dynamic_bitset();
         const auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), range.begin(), range.end());
         return static_cast<size_t>(std::distance(bitmap.begin(), it));
+    }
+
+    template <typename AA, typename AS>
+        requires std::same_as<std::remove_const_t<std::remove_pointer_t<std::remove_cvref_t<AA>>>, ArrowArray>
+                 && std::same_as<std::remove_const_t<std::remove_pointer_t<std::remove_cvref_t<AS>>>, ArrowSchema>
+    arrow_proxy::arrow_proxy(AA&& array, AS&& schema, impl_tag)
+    {
+        if constexpr (std::is_const_v<std::remove_pointer_t<std::remove_reference_t<AA>>>)
+        {
+            m_array_is_immutable = true;
+            m_array = const_cast<ArrowArray*>(array);
+        }
+        else
+        {
+            m_array = std::forward<AA>(array);
+        }
+
+        if constexpr (std::is_const_v<std::remove_pointer_t<std::remove_reference_t<AS>>>)
+        {
+            m_schema_is_immutable = true;
+            m_schema = const_cast<ArrowSchema*>(schema);
+        }
+        else
+        {
+            m_schema = std::forward<AS>(schema);
+        }
+
+        if constexpr (std::is_rvalue_reference_v<AA&&>)
+        {
+            array = {};
+        }
+        else if constexpr (std::is_pointer_v<std::remove_cvref_t<AA>>)
+        {
+            SPARROW_ASSERT_TRUE(array != nullptr);
+        }
+
+        if constexpr (std::is_rvalue_reference_v<AS&&>)
+        {
+            schema = {};
+        }
+        else if constexpr (std::is_pointer_v<std::remove_cvref_t<AS>>)
+        {
+            SPARROW_ASSERT_TRUE(schema != nullptr);
+        }
+
+        m_children_array_immutable = std::vector<bool>(n_children(), m_array_is_immutable);
+        m_children_schema_immutable = std::vector<bool>(n_children(), m_schema_is_immutable);
+        validate_array_and_schema();
+        update_buffers();
+        update_children();
+        update_dictionary();
+    }
+
+    template <const char* function_name, bool check_array_is_mutable, bool check_schema_is_mutable>
+    void arrow_proxy::throw_if_immutable() const
+    {
+        static const std::string cannot_call = "Cannot call ";
+        if (!is_created_with_sparrow())
+        {
+            auto error_message = cannot_call + std::string(function_name)
+                                 + " on non-sparrow created ArrowArray or ArrowSchema";
+            throw arrow_proxy_exception(error_message);
+        }
+        if constexpr (check_array_is_mutable || check_schema_is_mutable)
+        {
+            if (m_array_is_immutable || m_schema_is_immutable)
+            {
+                {
+                    std::string error_message = cannot_call + std::string(function_name);
+                    if constexpr (check_array_is_mutable && !check_schema_is_mutable)
+                    {
+                        if (m_array_is_immutable)
+                        {
+                            error_message += " on an immutable ArrowArray. You may have passed a const ArrowArray* at the creation.";
+                        }
+                    }
+                    else if constexpr (check_schema_is_mutable && !check_array_is_mutable)
+                    {
+                        if (m_schema_is_immutable)
+                        {
+                            error_message += " on an immutable ArrowSchema. You may have passed a const ArrowSchema* at the creation.";
+                        }
+                    }
+                    else if constexpr (check_array_is_mutable && check_schema_is_mutable)
+                    {
+                        if (m_array_is_immutable && m_schema_is_immutable)
+                        {
+                            error_message += " on an immutable ArrowArray and ArrowSchema. You may have passed const ArrowArray* and const ArrowSchema* at the creation.";
+                        }
+                    }
+                    throw arrow_proxy_exception(error_message);
+                }
+            }
+        }
     }
 }
 

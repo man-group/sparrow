@@ -181,6 +181,17 @@ namespace sparrow
         SPARROW_API record_batch(ArrowArray&& array, ArrowSchema* schema);
 
         /**
+         * Constructs an \ref record_batch from the given Arrow C structures. The
+         * \ref record_batch takes the ownership of the ArrowArray only. The user
+         * should not use \p array after calling this constructor. \p schema can
+         * still be used normally.
+         *
+         * @param array The ArrowArray structure to transfer into the \ref record_batch.
+         * @param schema The const ArrowSchema to reference in the \ref record_batch.
+         */
+        SPARROW_API record_batch(ArrowArray&& array, const ArrowSchema* schema);
+
+        /**
          * Constructs an record_batch from the given Arrow C structures. Both structures
          * are referenced from the \ref record_batch and can still be used normally after
          * calling this constructor.
@@ -189,6 +200,16 @@ namespace sparrow
          * @param schema The ArrowSchema to reference in the \ref record_batch.
          */
         SPARROW_API record_batch(ArrowArray* array, ArrowSchema* schema);
+
+        /**
+         * Constructs an record_batch from the given Arrow C structures. Both structures
+         * are referenced from the \ref record_batch and can still be used normally after
+         * calling this constructor.
+         *
+         * @param array The const ArrowArray structure to reference in the \ref record_batch.
+         * @param schema The const ArrowSchema to reference in the \ref record_batch.
+         */
+        SPARROW_API record_batch(const ArrowArray* array, const ArrowSchema* schema);
 
         /**
          * @brief Constructs a record_batch from a struct_array.
@@ -233,7 +254,7 @@ namespace sparrow
          */
         SPARROW_API record_batch& operator=(const record_batch& other);
 
-        record_batch(record_batch&&) = default;
+        record_batch(record_batch&&) noexcept = default;
         record_batch& operator=(record_batch&&) = default;
 
         /**
@@ -423,6 +444,12 @@ namespace sparrow
 
     private:
 
+        template <class AS>
+        void init(ArrowArray&& arr, AS* sch);
+
+        template <class AA, class AS>
+        void init(AA* arr, AS* sch);
+
         SPARROW_API void partial_init_from_schema(const ArrowSchema& sch);
 
         /**
@@ -538,6 +565,34 @@ namespace sparrow
         , m_name_list(detail::get_names(columns))
         , m_array_list(to_vector<array>(std::move(columns)))
     {
+        update_array_map_cache();
+    }
+
+    template <class AS>
+    void record_batch::init(ArrowArray&& arr, AS* sch)
+    {
+        partial_init_from_schema(*sch);
+        std::size_t column_size = m_name_list.capacity();
+        for (std::size_t i = 0; i < column_size; ++i)
+        {
+            m_name_list.emplace_back(sch->children[i]->name);
+            m_array_list.emplace_back(std::move(*(arr.children[i])), sch->children[i]);
+            *(arr.children[i]) = make_empty_arrow_array();
+        }
+        arr.release(&arr);
+        update_array_map_cache();
+    }
+
+    template <class AA, class AS>
+    void record_batch::init(AA* arr, AS* sch)
+    {
+        partial_init_from_schema(*sch);
+        std::size_t column_size = m_name_list.capacity();
+        for (std::size_t i = 0; i < column_size; ++i)
+        {
+            m_name_list.emplace_back(sch->children[i]->name);
+            m_array_list.emplace_back(arr->children[i], sch->children[i]);
+        }
         update_array_map_cache();
     }
 

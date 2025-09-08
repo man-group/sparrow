@@ -11,13 +11,13 @@ jobs:
 
     steps:
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.6
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Conan Environment
-        uses: hankhsu1996/setup-conan@v1.0.0
+        uses: hankhsu1996/setup-conan@v1.1.0
         with:
           cache-dependencies: false
           cache-tool: false

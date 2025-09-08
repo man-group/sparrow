@@ -54,32 +54,22 @@ namespace sparrow
 
     record_batch::record_batch(ArrowArray&& arr, ArrowSchema* sch)
     {
-        partial_init_from_schema(*sch);
+        init(std::move(arr), sch);
+    }
 
-        std::size_t column_size = m_name_list.capacity();
-        for (std::size_t i = 0; i < column_size; ++i)
-        {
-            m_name_list.emplace_back(sch->children[i]->name);
-            m_array_list.emplace_back(std::move(*(arr.children[i])), sch->children[i]);
-            *(arr.children[i]) = make_empty_arrow_array();
-        }
-        arr.release(&arr);
-
-        update_array_map_cache();
+    record_batch::record_batch(ArrowArray&& arr, const ArrowSchema* sch)
+    {
+        init(std::move(arr), sch);
     }
 
     record_batch::record_batch(ArrowArray* arr, ArrowSchema* sch)
     {
-        partial_init_from_schema(*sch);
+        init(arr, sch);
+    }
 
-        std::size_t column_size = m_name_list.capacity();
-        for (std::size_t i = 0; i < column_size; ++i)
-        {
-            m_name_list.emplace_back(sch->children[i]->name);
-            m_array_list.emplace_back(arr->children[i], sch->children[i]);
-        }
-
-        update_array_map_cache();
+    record_batch::record_batch(const ArrowArray* arr, const ArrowSchema* sch)
+    {
+        init(arr, sch);
     }
 
     record_batch::record_batch(struct_array&& arr)
