@@ -33,9 +33,6 @@ jobs:
             compiler: apple-clang
           - os: 14
             compiler: apple-clang
-          # Latest GHA runner image is bugged
-          - os: 15
-            compiler: clang
 
     steps:
       - name: Checkout code
@@ -49,7 +46,7 @@ jobs:
       - name: Add specification of clang++ in the conda environment specification
         if: matrix.compiler == 'clang'
         run: |
-          echo "  - clangxx==18.1.8" >> environment-dev.yml
+          echo "  - cxx-compiler" >> environment-dev.yml
 
       - name: Set conda environment
         uses: mamba-org/setup-micromamba@main
