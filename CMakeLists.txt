@@ -100,7 +100,6 @@ OPTION(USE_DATE_POLYFILL "Use date polyfill implementation" ON)
 MESSAGE(STATUS "🔧 Use date polyfill: ${USE_DATE_POLYFILL}")
 OPTION(ENABLE_INTEGRATION_TEST "Enable integration tests" OFF)
 MESSAGE(STATUS "🔧 Enable integration tests: ${ENABLE_INTEGRATION_TEST}")
-OPTION(CREATE_JSON_READER_TARGET "Create json_reader target, usualy used for integration tests" OFF)
 OPTION(ENABLE_INTEGRATION_TEST "Creates json_reader target and enable integration tests" OFF)
 OPTION(CREATE_JSON_READER_TARGET "Create json_reader target, automatically set when ENABLE_INTEGRATION_TEST is ON" OFF)
 
@@ -488,6 +487,11 @@ install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
 
 install(FILES ${SPARROW_INCLUDE_DIR}/sparrow.hpp
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+if(CREATE_JSON_READER_TARGET)
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/json_reader/include/sparrow
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
 
 # Install CMake configuration files
 set(SPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
