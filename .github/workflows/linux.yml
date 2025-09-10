@@ -198,6 +198,10 @@ jobs:
       working-directory: build
       run: cmake --install . --config ${{matrix.config}}
 
+    - name: Verify json_reader headers installation
+      run: |
+        test -f $CONDA_PREFIX/include/sparrow/json_reader/json_parser.hpp
+
     - name: Run sccache stat for check
       shell: bash
       run: ${SCCACHE_PATH} --show-stats
