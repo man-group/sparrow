@@ -475,6 +475,9 @@ set(SPARROW_EXPORTED_TARGETS sparrow)
 
 if(CREATE_JSON_READER_TARGET)
     list(APPEND SPARROW_EXPORTED_TARGETS json_reader)
+    if(TARGET nlohmann_json)
+        list(APPEND SPARROW_EXPORTED_TARGETS nlohmann_json)
+    endif()
 endif()
 
 install(TARGETS ${SPARROW_EXPORTED_TARGETS}
