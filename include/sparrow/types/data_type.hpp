@@ -955,18 +955,4 @@ namespace sparrow
     }
 }
 
-template <>
-struct std::formatter<std::byte>
-{
-    constexpr auto parse(std::format_parse_context& ctx)
-    {
-        return ctx.begin();  // Simple implementation
-    }
-
-    auto format(const std::byte& b, std::format_context& ctx) const
-    {
-        return std::format_to(ctx.out(), "{}", static_cast<int>(b));
-    }
-};
-
 #endif

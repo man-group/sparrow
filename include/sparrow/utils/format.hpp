@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <numeric>
 #include <ranges>
@@ -55,6 +56,24 @@ namespace std
         }
 
         std::string m_format_string = "{:";
+    };
+
+    template <>
+    struct formatter<std::byte>
+    {
+        constexpr auto parse(format_parse_context& ctx)
+        {
+            return m_underlying_formatter.parse(ctx);
+        }
+
+        auto format(std::byte b, std::format_context& ctx) const
+        {
+           return std::format_to(ctx.out(), "{:#04x}", std::to_integer<unsigned>(b) );
+        }
+
+        private:
+        // Store the parsed format specification
+        std::formatter<unsigned> m_underlying_formatter;
     };
 }
 

@@ -20,7 +20,7 @@
 #include <vector>
 
 #if defined(__cpp_lib_format)
-#    include <format>
+#    include "sparrow/utils/format.hpp"
 #endif
 
 #include "sparrow/utils/mp_utils.hpp"
@@ -144,8 +144,12 @@ struct std::formatter<sparrow::sequence_view<T, E>>
             {
                 std::format_to(ctx.out(), "{}, ", vec[i]);
             }
+            return std::format_to(ctx.out(), "{}>", vec.back());
         }
-        return std::format_to(ctx.out(), "{}>", vec.back());
+        else
+        {
+            return std::format_to(ctx.out(), ">");
+        }
     }
 };
 

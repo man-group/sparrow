@@ -198,6 +198,13 @@ TEST_SUITE("format")
             CHECK_EQ(out, expected);
         }
     }
+
+    TEST_CASE("std::byte")
+    {
+        std::vector<std::byte> data(10, std::byte{0x1});
+        std::string out = std::format("{}", data);
+        CHECK_EQ(out, "<0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01>");
+    }
 }
 
 #endif
