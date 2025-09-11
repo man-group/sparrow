@@ -68,10 +68,11 @@ namespace std
 
         auto format(std::byte b, std::format_context& ctx) const
         {
-           return std::format_to(ctx.out(), "{:#04x}", std::to_integer<unsigned>(b) );
+            return std::format_to(ctx.out(), "{:#04x}", std::to_integer<unsigned>(b));
         }
 
-        private:
+    private:
+
         // Store the parsed format specification
         std::formatter<unsigned> m_underlying_formatter;
     };
