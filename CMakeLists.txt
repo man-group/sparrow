@@ -471,7 +471,13 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 # Install target
-install(TARGETS sparrow
+set(SPARROW_EXPORTED_TARGETS sparrow)
+
+if(CREATE_JSON_READER_TARGET)
+    list(APPEND SPARROW_EXPORTED_TARGETS json_reader)
+endif()
+
+install(TARGETS ${SPARROW_EXPORTED_TARGETS}
     EXPORT ${PROJECT_NAME}-targets)
 
 # Makes the project importable from the build directory
