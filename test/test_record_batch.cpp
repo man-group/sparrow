@@ -535,7 +535,18 @@ namespace sparrow
                     std::vector<bool>{true, true, true, false, true, false, true, true, true, true}
                 );
                 sparrow::string_array col2(
-                    std::vector<std::string>{"こんにちは", "this", "is", "a", "test", "of", "the", "string", "array", "formatting"},
+                    std::vector<std::string>{
+                        "こんにちは",
+                        "this",
+                        "is",
+                        "a",
+                        "test",
+                        "of",
+                        "the",
+                        "string",
+                        "array",
+                        "formatting"
+                    },
                     vb2,
                     "column     string"
                 );
