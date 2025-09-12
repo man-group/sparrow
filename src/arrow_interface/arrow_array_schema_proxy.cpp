@@ -657,7 +657,7 @@ namespace sparrow
     {
         return m_children;
     }
-    
+
     void arrow_proxy::add_child(ArrowArray* array, ArrowSchema* schema)
     {
         using value_type = arrow_array_and_schema_pointers;
