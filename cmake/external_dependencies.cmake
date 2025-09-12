@@ -83,11 +83,6 @@ if(CREATE_JSON_READER_TARGET)
             message(STATUS "\t✅ Fetched nlohmann_json ${NLOHMANN_JSON_VERSION}")
         endif()
     endif()
-# TODO remove this and add comments elsewhere?
-#     # The target name depends on whether nlohmann_json is fetched (nlohmann_json) or found (nlohmann_json::nlohmann_json)
-#     if(NOT TARGET nlohmann_json::nlohmann_json)
-#         add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
-#     endif()
 endif()
 
 if(BUILD_BENCHMARKS)

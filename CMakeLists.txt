@@ -478,7 +478,8 @@ if(CREATE_JSON_READER_TARGET)
     if(TARGET nlohmann_json)
         get_target_property(is_imported nlohmann_json IMPORTED)
         if(NOT is_imported)
-            # This is from FetchContent, export the base target
+            # This means `nlohmann_json` was fetched using FetchContent
+            # We need to export `nlohmann_json` target explicitly
             list(APPEND SPARROW_EXPORTED_TARGETS nlohmann_json)
         endif()
     endif()
