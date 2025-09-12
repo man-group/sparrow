@@ -20,6 +20,7 @@
 
 #if defined(__cpp_lib_format)
 #    include <format>
+
 #    include "sparrow/utils/format.hpp"
 #endif
 
@@ -136,7 +137,7 @@ struct std::formatter<std::array<T, N>>
 {
     constexpr auto parse(std::format_parse_context& ctx)
     {
-         return m_spec.parse(ctx.begin(), ctx.end());
+        return m_spec.parse(ctx.begin(), ctx.end());
     }
 
     auto format(const std::array<T, N>& array, std::format_context& ctx) const
@@ -146,9 +147,9 @@ struct std::formatter<std::array<T, N>>
         return std::ranges::copy(out_str, ctx.out()).out;
     }
 
-       private:
-        sparrow::detail::sequence_format_spec m_spec;
+private:
 
+    sparrow::detail::sequence_format_spec m_spec;
 };
 
 template <typename T>
@@ -156,7 +157,7 @@ struct std::formatter<std::vector<T>>
 {
     constexpr auto parse(std::format_parse_context& ctx)
     {
-      return m_spec.parse(ctx.begin(), ctx.end());
+        return m_spec.parse(ctx.begin(), ctx.end());
     }
 
     auto format(const std::vector<T>& vector, std::format_context& ctx) const
@@ -166,15 +167,17 @@ struct std::formatter<std::vector<T>>
         return std::ranges::copy(out_str, ctx.out()).out;
     }
 
-           private:
-        sparrow::detail::sequence_format_spec m_spec;
+private:
+
+    sparrow::detail::sequence_format_spec m_spec;
 };
 
 template <std::size_t T>
 struct std::formatter<std::bitset<T>>
 {
     constexpr auto parse(std::format_parse_context& ctx)
-    {return m_spec.parse(ctx.begin(), ctx.end());
+    {
+        return m_spec.parse(ctx.begin(), ctx.end());
     }
 
     auto format(const std::bitset<T>& vector, std::format_context& ctx) const
@@ -184,8 +187,9 @@ struct std::formatter<std::bitset<T>>
         return std::ranges::copy(out_str, ctx.out()).out;
     }
 
-          private:
-        sparrow::detail::sequence_format_spec m_spec;
+private:
+
+    sparrow::detail::sequence_format_spec m_spec;
 };
 
 #endif

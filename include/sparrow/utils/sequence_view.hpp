@@ -132,7 +132,7 @@ struct std::formatter<sparrow::sequence_view<T, E>>
 {
     constexpr auto parse(std::format_parse_context& ctx)
     {
-         return m_spec.parse(ctx.begin(), ctx.end());
+        return m_spec.parse(ctx.begin(), ctx.end());
     }
 
     auto format(const sparrow::sequence_view<T, E>& vec, std::format_context& ctx) const
@@ -141,8 +141,10 @@ struct std::formatter<sparrow::sequence_view<T, E>>
         std::string out_str = m_spec.apply_alignment(std::move(core));
         return std::ranges::copy(out_str, ctx.out()).out;
     }
-    private:
-        sparrow::detail::sequence_format_spec m_spec;
+
+private:
+
+    sparrow::detail::sequence_format_spec m_spec;
 };
 
 namespace sparrow

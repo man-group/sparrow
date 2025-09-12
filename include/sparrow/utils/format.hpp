@@ -31,8 +31,8 @@ namespace sparrow::detail
 {
     struct sequence_format_spec
     {
-        char fill  = ' ';
-        char align = '>';   // '<', '>', '^'
+        char fill = ' ';
+        char align = '>';  // '<', '>', '^'
         std::size_t width = 0;
 
         // Parse:  [[fill]align] [width]
@@ -50,9 +50,8 @@ namespace sparrow::detail
             if (next != end)
             {
                 ++next;
-                if (next != end
-                    && (*next == '<' || *next == '>' || *next == '^')
-                    && *it != '<' && *it != '>' && *it != '^')
+                if (next != end && (*next == '<' || *next == '>' || *next == '^') && *it != '<' && *it != '>'
+                    && *it != '^')
                 {
                     fill = *it;
                     align = *next;
@@ -131,7 +130,7 @@ namespace sparrow::detail
             return core;
         }
     };
-} // namespace sparrow::detail
+}  // namespace sparrow::detail
 
 namespace std
 {
