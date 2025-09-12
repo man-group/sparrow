@@ -494,24 +494,26 @@ namespace sparrow
                 const auto record = make_record_batch(col_size);
                 const std::string formatted = std::format("{}", record);
                 constexpr std::string_view expected = "|first|second|third|\n"
-                                                    "--------------------\n"
-                                                    "|    0|     4|    2|\n"
-                                                    "|    1|     5|    3|\n"
-                                                    "|    2|     6|    4|\n"
-                                                    "|    3|     7|    5|\n"
-                                                    "|    4|     8|    6|\n"
-                                                    "|    5|     9|    7|\n"
-                                                    "|    6|    10|    8|\n"
-                                                    "|    7|    11|    9|\n"
-                                                    "|    8|    12|   10|\n"
-                                                    "|    9|    13|   11|\n"
-                                                    "--------------------";
+                                                      "--------------------\n"
+                                                      "|    0|     4|    2|\n"
+                                                      "|    1|     5|    3|\n"
+                                                      "|    2|     6|    4|\n"
+                                                      "|    3|     7|    5|\n"
+                                                      "|    4|     8|    6|\n"
+                                                      "|    5|     9|    7|\n"
+                                                      "|    6|    10|    8|\n"
+                                                      "|    7|    11|    9|\n"
+                                                      "|    8|    12|   10|\n"
+                                                      "|    9|    13|   11|\n"
+                                                      "--------------------";
                 CHECK_EQ(formatted, expected);
             }
 
             SUBCASE("complex")
             {
-                sparrow::validity_bitmap vb(std::vector<bool>{true, false, true, true, true, false, true, true, true, true});
+                sparrow::validity_bitmap vb(
+                    std::vector<bool>{true, false, true, true, true, false, true, true, true, true}
+                );
                 sparrow::fixed_width_binary_array col(
                     std::vector<std::array<std::byte, 3>>{
                         {std::byte{1}, std::byte{2}, std::byte{3}},
@@ -529,20 +531,11 @@ namespace sparrow
                     "column fixed_width_binary_array"
                 );
 
-                 sparrow::validity_bitmap vb2(std::vector<bool>{true, true, true, false, true, false, true, true, true, true});
+                sparrow::validity_bitmap vb2(
+                    std::vector<bool>{true, true, true, false, true, false, true, true, true, true}
+                );
                 sparrow::string_array col2(
-                    std::vector<std::string>{
-                        "hello",
-                        "this",
-                        "is",
-                        "a",
-                        "test",
-                        "of",
-                        "the",
-                        "string",
-                        "array",
-                        "formatting"
-                    },
+                    std::vector<std::string>{"hello", "this", "is", "a", "test", "of", "the", "string", "array", "formatting"},
                     vb2,
                     "column     string"
                 );
@@ -554,19 +547,19 @@ namespace sparrow
 
                 sparrow::record_batch record_batch(std::move(arr_list));
                 const std::string formatted = std::format("{}", record_batch);
-                constexpr std::string_view expected =  "|column fixed_width_binary_array|column     string|\n"
- "---------------------------------------------------\n"
- "|             <0x01, 0x02, 0x03>|            hello|\n"
- "|                           null|             this|\n"
- "|             <0x07, 0x08, 0x09>|               is|\n"
- "|             <0x0a, 0x0b, 0x0c>|             null|\n"
- "|             <0x0d, 0x0e, 0x0f>|             test|\n"
- "|                           null|             null|\n"
- "|             <0x13, 0x14, 0x15>|              the|\n"
- "|             <0x16, 0x17, 0x18>|           string|\n"
- "|             <0x19, 0x1a, 0x1b>|            array|\n"
- "|             <0x1c, 0x1d, 0x1e>|       formatting|\n"
- "---------------------------------------------------";
+                constexpr std::string_view expected = "|column fixed_width_binary_array|column     string|\n"
+                                                      "---------------------------------------------------\n"
+                                                      "|             <0x01, 0x02, 0x03>|            hello|\n"
+                                                      "|                           null|             this|\n"
+                                                      "|             <0x07, 0x08, 0x09>|               is|\n"
+                                                      "|             <0x0a, 0x0b, 0x0c>|             null|\n"
+                                                      "|             <0x0d, 0x0e, 0x0f>|             test|\n"
+                                                      "|                           null|             null|\n"
+                                                      "|             <0x13, 0x14, 0x15>|              the|\n"
+                                                      "|             <0x16, 0x17, 0x18>|           string|\n"
+                                                      "|             <0x19, 0x1a, 0x1b>|            array|\n"
+                                                      "|             <0x1c, 0x1d, 0x1e>|       formatting|\n"
+                                                      "---------------------------------------------------";
 
                 CHECK_EQ(formatted, expected);
             }
