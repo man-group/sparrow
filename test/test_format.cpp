@@ -58,6 +58,11 @@ TEST_SUITE("format")
         {
             CHECK_EQ(size_of_utf8("αβγδε"), 5);
         }
+
+        SUBCASE("p├┤r4┬Á3i")
+        {
+            CHECK_EQ(size_of_utf8("p├┤r4┬Á3i"), 9);
+        }
     }
 
     TEST_CASE("max_width")
@@ -78,6 +83,18 @@ TEST_SUITE("format")
         {
             const std::vector<std::string> data{"a", "bb", "ccc"};
             CHECK_EQ(max_width(data), 3);
+        }
+
+        SUBCASE("mixed")
+        {
+            const std::vector<std::string> data{"a", "bb", "こんにちは"};
+            CHECK_EQ(max_width(data), 5);
+        }
+
+        SUBCASE("mixed 2")
+        {
+            const std::vector<std::string> data{"a", "bb", "p├┤r4┬Á3i"};
+            CHECK_EQ(max_width(data), 9);
         }
 
         SUBCASE("floating points")

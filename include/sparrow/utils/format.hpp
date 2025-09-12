@@ -22,6 +22,7 @@
 #include <numeric>
 #include <ranges>
 #include <string>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
@@ -212,9 +213,10 @@ namespace sparrow
         size_t max_width = 0;
         for (const auto& value : data)
         {
-            if constexpr (std::is_same_v<std::decay_t<decltype(value)>, std::string>
-                          || std::is_same_v<std::decay_t<decltype(value)>, std::string_view>
-                          || std::is_same_v<std::decay_t<decltype(value)>, const char*>)
+            if constexpr(std::is_same_v<std::remove_cvref_t<std::decay_t<decltype(value)>>, std::string> || 
+                         std::is_same_v<std::remove_cvref_t<std::decay_t<decltype(value)>>, std::string_view> ||
+                         std::is_same_v<std::remove_cvref_t<std::decay_t<decltype(value)>>, const char*> ||  
+                         std::is_same_v<std::remove_cvref_t<std::decay_t<decltype(value)>>, char*>)
             {
                 max_width = std::max(max_width, size_of_utf8(value));
             }
