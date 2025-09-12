@@ -212,8 +212,8 @@ namespace sparrow
         size_t max_width = 0;
         for (const auto& value : data)
         {
-            if constexpr(std::is_same_v<std::decay_t<decltype(value)>, std::string> || 
-                         std::is_same_v<std::decay_t<decltype(value)>, std::string_view>)
+            if constexpr (std::is_same_v<std::decay_t<decltype(value)>, std::string>
+                          || std::is_same_v<std::decay_t<decltype(value)>, std::string_view>)
             {
                 max_width = std::max(max_width, size_of_utf8(value));
             }
