@@ -194,12 +194,33 @@ namespace sparrow
     template <typename T>
     concept RangeOfFormats = std::ranges::range<T> && Format<std::ranges::range_value_t<T>>;
 
+    constexpr size_t size_of_utf8(const std::string_view str)
+    {
+        size_t size = 0;
+        for (const char c : str)
+        {
+            if ((c & 0xC0) != 0x80)
+            {
+                ++size;
+            }
+        }
+        return size;
+    }
+
     constexpr size_t max_width(const std::ranges::input_range auto& data)
     {
         size_t max_width = 0;
         for (const auto& value : data)
         {
-            max_width = std::max(max_width, std::format("{}", value).size());
+            if constexpr(std::is_same_v<std::decay_t<decltype(value)>, std::string> || 
+                         std::is_same_v<std::decay_t<decltype(value)>, std::string_view>)
+            {
+                max_width = std::max(max_width, size_of_utf8(value));
+            }
+            else
+            {
+                max_width = std::max(max_width, std::format("{}", value).size());
+            }
         }
         return max_width;
     }
