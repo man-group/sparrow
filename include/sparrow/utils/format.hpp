@@ -27,6 +27,112 @@
 
 #include "sparrow/utils/contracts.hpp"
 
+namespace sparrow::detail
+{
+    struct sequence_format_spec
+    {
+        char fill  = ' ';
+        char align = '>';   // '<', '>', '^'
+        std::size_t width = 0;
+
+        // Parse:  [[fill]align] [width]
+        // Grammar subset:  (fill? align?) width?
+        template <class It>
+        constexpr It parse(It it, It end)
+        {
+            if (it == end || *it == '}')
+            {
+                return it;
+            }
+
+            // Detect [fill][align] or [align]
+            auto next = it;
+            if (next != end)
+            {
+                ++next;
+                if (next != end
+                    && (*next == '<' || *next == '>' || *next == '^')
+                    && *it != '<' && *it != '>' && *it != '^')
+                {
+                    fill = *it;
+                    align = *next;
+                    it = ++next;
+                }
+                else if (*it == '<' || *it == '>' || *it == '^')
+                {
+                    align = *it;
+                    ++it;
+                }
+            }
+
+            // Parse width
+            std::size_t w = 0;
+            bool has_w = false;
+            while (it != end && *it >= '0' && *it <= '9')
+            {
+                has_w = true;
+                w = w * 10 + static_cast<unsigned>(*it - '0');
+                ++it;
+            }
+            if (has_w)
+            {
+                width = w;
+            }
+
+            // Ignore (silently) everything until '}' (keeps constexpr friendliness)
+            while (it != end && *it != '}')
+            {
+                ++it;
+            }
+
+            return it;
+        }
+
+        std::string apply_alignment(std::string inner) const
+        {
+            if (width <= inner.size())
+            {
+                return inner;
+            }
+
+            const std::size_t pad = width - inner.size();
+            switch (align)
+            {
+                case '<':
+                    return inner + std::string(pad, fill);
+                case '^':
+                {
+                    std::size_t left = pad / 2;
+                    std::size_t right = pad - left;
+                    return std::string(left, fill) + inner + std::string(right, fill);
+                }
+                case '>':
+                default:
+                    return std::string(pad, fill) + inner;
+            }
+        }
+
+        template <class Seq>
+        std::string build_core(const Seq& seq) const
+        {
+            std::string core;
+            core.push_back('<');
+            bool first = true;
+            for (auto&& elem : seq)
+            {
+                if (!first)
+                {
+                    core.append(", ");
+                }
+                std::format_to(std::back_inserter(core), "{}", elem);
+                first = false;
+            }
+            core.push_back('>');
+            return core;
+        }
+    };
+} // namespace sparrow::detail
+
 namespace std
 {
     template <class... T>

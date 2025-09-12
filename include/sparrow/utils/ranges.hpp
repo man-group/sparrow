@@ -20,6 +20,7 @@
 
 #if defined(__cpp_lib_format)
 #    include <format>
+#    include "sparrow/utils/format.hpp"
 #endif
 
 #include "sparrow/utils/mp_utils.hpp"
@@ -135,29 +136,19 @@ struct std::formatter<std::array<T, N>>
 {
     constexpr auto parse(std::format_parse_context& ctx)
     {
-        return ctx.begin();  // Simple implementation
+         return m_spec.parse(ctx.begin(), ctx.end());
     }
 
     auto format(const std::array<T, N>& array, std::format_context& ctx) const
     {
-        auto out = ctx.out();
-        *out++ = '<';
-
-        bool first = true;
-        for (const auto& elem : array)
-        {
-            if (!first)
-            {
-                *out++ = ',';
-                *out++ = ' ';
-            }
-            out = std::format_to(out, "{}", elem);
-            first = false;
-        }
-
-        *out++ = '>';
-        return out;
+        std::string core = m_spec.build_core(array);
+        std::string out_str = m_spec.apply_alignment(std::move(core));
+        return std::ranges::copy(out_str, ctx.out()).out;
     }
+
+       private:
+        sparrow::detail::sequence_format_spec m_spec;
+
 };
 
 template <typename T>
@@ -165,59 +156,36 @@ struct std::formatter<std::vector<T>>
 {
     constexpr auto parse(std::format_parse_context& ctx)
     {
-        return ctx.begin();  // Simple implementation
+      return m_spec.parse(ctx.begin(), ctx.end());
     }
 
     auto format(const std::vector<T>& vector, std::format_context& ctx) const
     {
-        auto out = ctx.out();
-        *out++ = '<';
-
-        bool first = true;
-        for (const auto& elem : vector)
-        {
-            if (!first)
-            {
-                *out++ = ',';
-                *out++ = ' ';
-            }
-            out = std::format_to(out, "{}", elem);
-            first = false;
-        }
-
-        *out++ = '>';
-        return out;
+        std::string core = m_spec.build_core(vector);
+        std::string out_str = m_spec.apply_alignment(std::move(core));
+        return std::ranges::copy(out_str, ctx.out()).out;
     }
+
+           private:
+        sparrow::detail::sequence_format_spec m_spec;
 };
 
 template <std::size_t T>
 struct std::formatter<std::bitset<T>>
 {
     constexpr auto parse(std::format_parse_context& ctx)
-    {
-        return ctx.begin();  // Simple implementation
+    {return m_spec.parse(ctx.begin(), ctx.end());
     }
 
     auto format(const std::bitset<T>& vector, std::format_context& ctx) const
     {
-        auto out = ctx.out();
-        *out++ = '<';
-
-        bool first = true;
-        for (const auto& elem : vector)
-        {
-            if (!first)
-            {
-                *out++ = ',';
-                *out++ = ' ';
-            }
-            out = std::format_to(out, "{}", elem);
-            first = false;
-        }
-
-        *out++ = '>';
-        return out;
+        std::string core = m_spec.build_core(vector);
+        std::string out_str = m_spec.apply_alignment(std::move(core));
+        return std::ranges::copy(out_str, ctx.out()).out;
     }
+
+          private:
+        sparrow::detail::sequence_format_spec m_spec;
 };
 
 #endif
