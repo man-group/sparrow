@@ -979,12 +979,12 @@ namespace sparrow
         TEST_CASE("formatting with utf8")
         {
             const std::vector<nullable<std::string>> values = {
-                make_nullable<std::string>("こんにちは"), // "Hello" in Japanese
-                 make_nullable<std::string>("😊"),        // Smiling face emoji
-                 make_nullable<std::string>("Café"),     // Word with accent
-                 make_nullable<std::string>("naïve"),    // Word with diaeresis
-                 make_nullable<std::string>("Σὲ γνωρίζω ἀπὸ τὴν κόψη"),   // Greek phrase
-                 make_nullable<std::string>("coöperate") // Word with diaeresis
+                make_nullable<std::string>("こんにちは"),               // "Hello" in Japanese
+                make_nullable<std::string>("😊"),                       // Smiling face emoji
+                make_nullable<std::string>("Café"),                     // Word with accent
+                make_nullable<std::string>("naïve"),                    // Word with diaeresis
+                make_nullable<std::string>("Σὲ γνωρίζω ἀπὸ τὴν κόψη"),  // Greek phrase
+                make_nullable<std::string>("coöperate")                 // Word with diaeresis
             };
 
             string_array array(values);
