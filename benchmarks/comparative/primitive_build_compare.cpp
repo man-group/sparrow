@@ -164,32 +164,32 @@ static void BM_Arrow_CreateArray(benchmark::State& state) {
             array = *maybe_array;
         } else if constexpr (std::is_same_v<T, float>) {
             arrow::FloatBuilder builder;
-            builder.Reserve(size);
-            builder.AppendValues(data);
+            auto status = builder.Reserve(size);
+            status = builder.AppendValues(data);
             auto maybe_array = builder.Finish();
             array = *maybe_array;
         } else if constexpr (std::is_same_v<T, double>) {
             arrow::DoubleBuilder builder;
-            builder.Reserve(size);
-            builder.AppendValues(data);
+            auto status = builder.Reserve(size);
+            status = builder.AppendValues(data);
             auto maybe_array = builder.Finish();
             array = *maybe_array;
         } else if constexpr (std::is_same_v<T, std::uint32_t>) {
             arrow::UInt32Builder builder;
-            builder.Reserve(size);
-            builder.AppendValues(data);
+            auto status = builder.Reserve(size);
+            status = builder.AppendValues(data);
             auto maybe_array = builder.Finish();
             array = *maybe_array;
         } else if constexpr (std::is_same_v<T, std::uint64_t>) {
             arrow::UInt64Builder builder;
-            builder.Reserve(size);
-            builder.AppendValues(data);
+            auto status = builder.Reserve(size);
+            status = builder.AppendValues(data);
             auto maybe_array = builder.Finish();
             array = *maybe_array;
         } else if constexpr (std::is_same_v<T, bool>) {
             arrow::BooleanBuilder builder;
-            builder.Reserve(size);
-            builder.AppendValues(data);
+            auto status = builder.Reserve(size);
+            status = builder.AppendValues(data);
             auto maybe_array = builder.Finish();
             array = *maybe_array;
         }
@@ -456,19 +456,19 @@ static void BM_Sparrow_CreateArrayWithNulls(benchmark::State& state) {
 template <typename T>
 static void BM_Arrow_CreateArrayWithNulls(benchmark::State& state) {
     const size_t size = static_cast<size_t>(state.range(0));
-    std::mt19937 gen(42);  // Fixed seed for reproducibility
     auto data = generate_sequential_data<T>(size);
     
-    // Generate validity vector (10% nulls)
-    std::vector<bool> validity;
-    validity.reserve(size);
-    std::bernoulli_distribution null_dist(0.1);
-    
-    for (size_t i = 0; i < size; ++i) {
-        validity.push_back(!null_dist(gen));  // true means valid, false means null
-    }
-    
     for (auto _ : state) {
+        std::mt19937 gen(42);  // Fixed seed for reproducibility - same as Sparrow
+        
+        // Generate validity vector (10% nulls)
+        std::vector<bool> validity;
+        validity.reserve(size);
+        std::bernoulli_distribution null_dist(0.1);
+        
+        for (size_t i = 0; i < size; ++i) {
+            validity.push_back(!null_dist(gen));  // true means valid, false means null
+        }
         std::shared_ptr<arrow::Array> array;
         
         if constexpr (std::is_same_v<T, std::int32_t>) {
