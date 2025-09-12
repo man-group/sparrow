@@ -545,13 +545,13 @@ namespace sparrow
             if constexpr (std::same_as<layout_type, binary_array>)
             {
                 constexpr std::string_view
-                    expected = "Binary [name=test | size=9] <<1, 1, 255, 0>, null, <2, 3>, <3, 5, 255>, null, <8, 13>, <13, 21, 251, 8>, <21, 34, 248>, <34, 55>>";
+                    expected = "`Binary [name=test | size=9] <<0x01, 0x01, 0xff, 0x00>, null, <0x02, 0x03>, <0x03, 0x05, 0xff>, null, <0x08, 0x0d>, <0x0d, 0x15, 0xfb, 0x08>, <0x15, 0x22, 0xf8>, <0x22, 0x37>>";
                 CHECK_EQ(formatted, expected);
             }
             else if constexpr (std::same_as<layout_type, big_binary_array>)
             {
                 constexpr std::string_view
-                    expected = "Large binary [name=test | size=9] <<1, 1, 255, 0>, null, <2, 3>, <3, 5, 255>, null, <8, 13>, <13, 21, 251, 8>, <21, 34, 248>, <34, 55>>";
+                    expected = "`Large binary [name=test | size=9] <<0x01, 0x01, 0xff, 0x00>, null, <0x02, 0x03>, <0x03, 0x05, 0xff>, null, <0x08, 0x0d>, <0x0d, 0x15, 0xfb, 0x08>, <0x15, 0x22, 0xf8>, <0x22, 0x37>>";
                 CHECK_EQ(formatted, expected);
             }
         }
