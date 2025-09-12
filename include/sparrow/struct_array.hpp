@@ -120,7 +120,7 @@ namespace sparrow
      * auto id_field = person["id"];  // Access field by name
      * ```
      */
-    class struct_array : public array_bitmap_base<struct_array>
+    class struct_array final : public array_bitmap_base<struct_array>
     {
     public:
 
