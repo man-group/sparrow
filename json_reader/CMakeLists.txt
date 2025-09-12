@@ -76,18 +76,19 @@ set_target_properties(json_reader
         BUILD_RPATH_USE_ORIGIN TRUE
 )
 
-if(TARGET nlohmann_json::nlohmann_json)
-    set(NLOHMANN_JSON_LINK_TARGET nlohmann_json::nlohmann_json)
-elseif(TARGET nlohmann_json)
-    set(NLOHMANN_JSON_LINK_TARGET nlohmann_json)
-else()
-    message(FATAL_ERROR "nlohmann_json target not found for linking.")
-endif()
+# if(TARGET nlohmann_json::nlohmann_json)
+#     set(NLOHMANN_JSON_LINK_TARGET nlohmann_json::nlohmann_json)
+# elseif(TARGET nlohmann_json)
+#     set(NLOHMANN_JSON_LINK_TARGET nlohmann_json)
+# else()
+#     message(FATAL_ERROR "nlohmann_json target not found for linking.")
+# endif()
 
 target_link_libraries(json_reader
     PUBLIC
         sparrow
-        ${NLOHMANN_JSON_LINK_TARGET})
+        #${NLOHMANN_JSON_LINK_TARGET})
+        nlohmann_json::nlohmann_json)
 
 target_include_directories(json_reader
     PUBLIC
