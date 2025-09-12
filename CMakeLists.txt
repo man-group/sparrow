@@ -476,7 +476,11 @@ set(SPARROW_EXPORTED_TARGETS sparrow)
 if(CREATE_JSON_READER_TARGET)
     list(APPEND SPARROW_EXPORTED_TARGETS json_reader)
     if(TARGET nlohmann_json)
-        list(APPEND SPARROW_EXPORTED_TARGETS nlohmann_json)
+        get_target_property(is_imported nlohmann_json IMPORTED)
+        if(NOT is_imported)
+            # This is from FetchContent, export the base target
+            list(APPEND SPARROW_EXPORTED_TARGETS nlohmann_json)
+        endif()
     endif()
 endif()
 
