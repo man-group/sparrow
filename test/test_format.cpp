@@ -17,6 +17,7 @@
 #if defined(__cpp_lib_format)
 
 #    include "sparrow/utils/format.hpp"
+#    include "sparrow/utils/ranges.hpp"
 
 #    include "doctest/doctest.h"
 
