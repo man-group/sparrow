@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
 #include <version>
 
 #if defined(__cpp_lib_format)
@@ -204,6 +205,14 @@ TEST_SUITE("format")
     {
         std::vector<std::byte> data(10, std::byte{0x1});
         std::string out = std::format("{}", data);
+        CHECK_EQ(out, "<0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01>");
+    }
+
+    TEST_CASE("sequence_view")
+    {
+        std::vector<std::byte> data(10, std::byte{0x1});
+        sequence_view<std::byte> view(data);
+        std::string out = std::format("{}", view);
         CHECK_EQ(out, "<0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01>");
     }
 }
