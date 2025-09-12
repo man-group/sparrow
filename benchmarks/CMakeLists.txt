@@ -74,3 +74,7 @@ set_target_properties(run_benchmarks_json
     PROPERTIES
         FOLDER "Benchmarks"
 )
+
+if(BUILD_COMPARATIVE_BENCHMARKS)
+    add_subdirectory(comparative)
+endif()
