@@ -535,7 +535,7 @@ namespace sparrow
                     std::vector<bool>{true, true, true, false, true, false, true, true, true, true}
                 );
                 sparrow::string_array col2(
-                    std::vector<std::string>{"hello", "this", "is", "a", "test", "of", "the", "string", "array", "formatting"},
+                    std::vector<std::string>{"こんにちは", "this", "is", "a", "test", "of", "the", "string", "array", "formatting"},
                     vb2,
                     "column     string"
                 );
@@ -549,7 +549,7 @@ namespace sparrow
                 const std::string formatted = std::format("{}", record_batch);
                 constexpr std::string_view expected = "|column fixed_width_binary_array|column     string|\n"
                                                       "---------------------------------------------------\n"
-                                                      "|             <0x01, 0x02, 0x03>|            hello|\n"
+                                                      "|             <0x01, 0x02, 0x03>|       こんにちは|\n"
                                                       "|                           null|             this|\n"
                                                       "|             <0x07, 0x08, 0x09>|               is|\n"
                                                       "|             <0x0a, 0x0b, 0x0c>|             null|\n"

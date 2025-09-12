@@ -27,6 +27,39 @@ using namespace sparrow;
 
 TEST_SUITE("format")
 {
+    TEST_CASE("size_of_utf8")
+    {
+        SUBCASE("empty")
+        {
+            CHECK_EQ(size_of_utf8(""), 0);
+        }
+
+        SUBCASE("ascii")
+        {
+            CHECK_EQ(size_of_utf8("hello"), 5);
+        }
+
+        SUBCASE("multibyte characters")
+        {
+            CHECK_EQ(size_of_utf8("こんにちは"), 5);
+        }
+
+        SUBCASE("mixed characters")
+        {
+            CHECK_EQ(size_of_utf8("hello こんにちは"), 11);
+        }
+
+        SUBCASE("emoji")
+        {
+            CHECK_EQ(size_of_utf8("😀😃😄😁"), 4);
+        }
+
+        SUBCASE("greek letters")
+        {
+            CHECK_EQ(size_of_utf8("αβγδε"), 5);
+        }
+    }
+
     TEST_CASE("max_width")
     {
         SUBCASE("empty")
