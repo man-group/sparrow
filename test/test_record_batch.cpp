@@ -331,6 +331,15 @@ namespace sparrow
             CHECK(res);
         }
 
+        TEST_CASE("extract_arrow_structures")
+        {
+            auto record = make_record_batch(col_size);
+            auto [arr, sch] = extract_arrow_structures(std::move(record));
+            record_batch record2(std::move(arr), std::move(sch));
+            auto record_check = make_record_batch(col_size);
+            CHECK_EQ(record2, record_check);
+        }
+
 #if defined(__cpp_lib_format)
         TEST_CASE("formatter")
         {
