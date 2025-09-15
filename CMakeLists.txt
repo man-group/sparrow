@@ -471,7 +471,21 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 # Install target
-install(TARGETS sparrow
+set(SPARROW_EXPORTED_TARGETS sparrow)
+
+if(CREATE_JSON_READER_TARGET)
+    list(APPEND SPARROW_EXPORTED_TARGETS json_reader)
+    if(TARGET nlohmann_json)
+        get_target_property(is_imported nlohmann_json IMPORTED)
+        if(NOT is_imported)
+            # This means `nlohmann_json` was fetched using FetchContent
+            # We need to export `nlohmann_json` target explicitly
+            list(APPEND SPARROW_EXPORTED_TARGETS nlohmann_json)
+        endif()
+    endif()
+endif()
+
+install(TARGETS ${SPARROW_EXPORTED_TARGETS}
     EXPORT ${PROJECT_NAME}-targets)
 
 # Makes the project importable from the build directory
