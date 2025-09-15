@@ -18,10 +18,10 @@ namespace sparrow
 {
     constexpr int SPARROW_VERSION_MAJOR = 1;
     constexpr int SPARROW_VERSION_MINOR = 1;
-    constexpr int SPARROW_VERSION_PATCH = 1;
+    constexpr int SPARROW_VERSION_PATCH = 2;
 
     constexpr int SPARROW_BINARY_CURRENT = 10;
-    constexpr int SPARROW_BINARY_REVISION = 1;
+    constexpr int SPARROW_BINARY_REVISION = 2;
     constexpr int SPARROW_BINARY_AGE = 1;
 
     static_assert(
