@@ -12,23 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <memory>
 #include <random>
 #include <string>
 #include <type_traits>
 #include <vector>
 
-#include <benchmark/benchmark.h>
-
-#include "sparrow/primitive_array.hpp"
-#include "sparrow/utils/nullable.hpp"
-
-
-// Arrow headers
 #include <arrow/api.h>
 #include <arrow/array.h>
 #include <arrow/builder.h>
 #include <arrow/type.h>
+#include <benchmark/benchmark.h>
+
+#include <sparrow/primitive_array.hpp>
 
 namespace
 {
@@ -599,5 +594,3 @@ REGISTER_PRIMITIVE_BENCHMARKS(double, "Double")
 REGISTER_PRIMITIVE_BENCHMARKS(bool, "Bool")
 
 #undef REGISTER_PRIMITIVE_BENCHMARKS
-
-BENCHMARK_MAIN();

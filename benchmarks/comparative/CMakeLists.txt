@@ -1,14 +1,10 @@
 # Comparative benchmarks between sparrow and Apache Arrow
 
-cmake_minimum_required(VERSION 3.28)
+message(STATUS "Configuring comparative benchmarks...")
 
 add_executable(sparrow_benchmarks_comparative
-    primitive_build_compare.cpp
+    benchmark_primitives.cpp
 )
-
-# For Arrow, we only need the core array / buffer / type APIs
-# Link against arrow::arrow and google benchmark + sparrow
-
 
 target_link_libraries(sparrow_benchmarks_comparative
     PRIVATE
