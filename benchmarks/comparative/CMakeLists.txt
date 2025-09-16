@@ -3,7 +3,7 @@
 message(STATUS "Configuring comparative benchmarks...")
 
 add_executable(sparrow_benchmarks_comparative
-    benchmark_primitives.cpp
+    benchmark_primitive.cpp
 )
 
 target_link_libraries(sparrow_benchmarks_comparative
