@@ -86,7 +86,7 @@ Typed arrays provide the following const methods to read elements:
 | back       | Access the last element                       |
 
 For an array holding data of type `T`, these methods return values
-of type `nullable<const T&>`.
+of type `nullable<const T&>`. Using `nullable` allows you to handle potential null values gracefully but has a performance penalty.
 
 Example:
 
@@ -105,6 +105,27 @@ try {
 }
 ```
 
+### Ranges
+
+Typed arrays provide the following method to access a range of elements:
+
+| Method | Description                             |
+| ------ | ----------------------------------------|
+| values | Returns the raw values as a range.      |
+| bitmap | Returns the validity bitmap as a range. |
+
+The `values` method returns a range of type `span<const T>`, allowing efficient access to the underlying data. This is particularly useful for operations that need to process all values, including nulls.
+
+```cpp
+#include "sparrow.hpp"
+namespace sp = sparrow;
+
+sp::primitive_array<int> pa = {1, 2, 3, 4};
+for (auto v : pa.values()) {
+    std::cout << v << ' '; // Prints 1 2 3 4
+}
+```
+
 ### Iterators
 
 Typed arrays also provide traditional iteration methods:
@@ -119,6 +140,8 @@ Typed arrays also provide traditional iteration methods:
 | crbegin | Returns a reverse iterator to the beginning |
 | rend    | Returns a reverse iterator to the end       |
 | crend   | Returns a reverse iterator to the end       |
+
+These methods return iterators that dereference to `nullable<const T&>`.
 
 Example:
 
