@@ -111,14 +111,15 @@ namespace
 
         T sum = T{};
         size_t index = 0;
+        const auto values = array.values();
+        const auto bitmap = array.bitmap();
 
         for (auto _ : state)
         {
             const size_t real_index = index % size;
-            const auto& element = array[real_index];
-            if (element.has_value())
+            if (bitmap[real_index])
             {
-                sum += element.value();
+                sum += values[real_index];
             }
             index++;
             benchmark::DoNotOptimize(sum);
@@ -234,7 +235,15 @@ namespace
             array = *maybe_array;
         };
 
-        if constexpr (std::is_same_v<T, std::int32_t>)
+        if constexpr (std::is_same_v<T, std::int8_t>)
+        {
+            build_array.template operator()<arrow::Int8Builder>();
+        }
+        else if constexpr (std::is_same_v<T, std::int16_t>)
+        {
+            build_array.template operator()<arrow::Int16Builder>();
+        }
+        else if constexpr (std::is_same_v<T, std::int32_t>)
         {
             build_array.template operator()<arrow::Int32Builder>();
         }
@@ -289,7 +298,15 @@ namespace
             state.SetItemsProcessed(static_cast<int64_t>(state.iterations()));
         };
 
-        if constexpr (std::is_same_v<T, std::int32_t>)
+        if constexpr (std::is_same_v<T, std::int8_t>)
+        {
+            bench.template operator()<arrow::Int8Array>();
+        }
+        else if constexpr (std::is_same_v<T, std::int16_t>)
+        {
+            bench.template operator()<arrow::Int16Array>();
+        }
+        else if constexpr (std::is_same_v<T, std::int32_t>)
         {
             bench.template operator()<arrow::Int32Array>();
         }
@@ -367,7 +384,15 @@ namespace
             }
         };
 
-        if constexpr (std::is_same_v<T, std::int32_t>)
+        if constexpr (std::is_same_v<T, std::int8_t>)
+        {
+            bench.template operator()<arrow::Int8Array>();
+        }
+        else if constexpr (std::is_same_v<T, std::int16_t>)
+        {
+            bench.template operator()<arrow::Int16Array>();
+        }
+        else if constexpr (std::is_same_v<T, std::int32_t>)
         {
             bench.template operator()<arrow::Int32Array>();
         }
@@ -439,7 +464,21 @@ namespace
         {
             std::shared_ptr<arrow::Array> array;
 
-            if constexpr (std::is_same_v<T, std::int32_t>)
+            if constexpr (std::is_same_v<T, std::int8_t>)
+            {
+                arrow::Int8Builder builder;
+                builder.AppendValues(data, validity);
+                auto maybe_array = builder.Finish();
+                array = *maybe_array;
+            }
+            else if constexpr (std::is_same_v<T, std::int16_t>)
+            {
+                arrow::Int16Builder builder;
+                builder.AppendValues(data, validity);
+                auto maybe_array = builder.Finish();
+                array = *maybe_array;
+            }
+            else if constexpr (std::is_same_v<T, std::int32_t>)
             {
                 arrow::Int32Builder builder;
                 builder.AppendValues(data, validity);
@@ -549,6 +588,8 @@ namespace
 }  // namespace
 
 // Register benchmarks for all types
+REGISTER_PRIMITIVE_BENCHMARKS(std::int8_t, "Int8")
+REGISTER_PRIMITIVE_BENCHMARKS(std::int16_t, "Int16")
 REGISTER_PRIMITIVE_BENCHMARKS(std::int32_t, "Int32")
 REGISTER_PRIMITIVE_BENCHMARKS(std::int64_t, "Int64")
 REGISTER_PRIMITIVE_BENCHMARKS(std::uint32_t, "UInt32")

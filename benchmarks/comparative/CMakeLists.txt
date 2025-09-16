@@ -2,10 +2,6 @@
 
 cmake_minimum_required(VERSION 3.28)
 
-# Try to find an existing Arrow installation first.
-# Users can provide Arrow via CMAKE_PREFIX_PATH, vcpkg, conan, etc.
-find_package(Arrow QUIET CONFIG REQUIRED)
-
 add_executable(sparrow_benchmarks_comparative
     primitive_build_compare.cpp
 )
@@ -13,13 +9,23 @@ add_executable(sparrow_benchmarks_comparative
 # For Arrow, we only need the core array / buffer / type APIs
 # Link against arrow::arrow and google benchmark + sparrow
 
+
 target_link_libraries(sparrow_benchmarks_comparative
     PRIVATE
         sparrow
-        arrow::arrow
+        arrow_static
         benchmark::benchmark
         benchmark::benchmark_main
 )
+
+set(ARROW_INCLUDE_DIRS  ${CMAKE_BINARY_DIR}/_deps/arrow-src/cpp/src ${CMAKE_BINARY_DIR}/_deps/arrow-build/src)
+
+target_include_directories(sparrow_benchmarks_comparative
+    PRIVATE
+        ${ARROW_INCLUDE_DIRS}
+)
+
+message("Arrow include dir: ${ARROW_INCLUDE_DIR}")
 
 set_target_properties(sparrow_benchmarks_comparative PROPERTIES FOLDER "Benchmarks")
 
