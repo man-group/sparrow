@@ -107,29 +107,22 @@ namespace
     {
         const size_t size = static_cast<size_t>(state.range(0));
         auto data = generate_sequential_data<T>(size);
-        sparrow::primitive_array<T> array(data);
+        const sparrow::primitive_array<T> array(data);
 
         T sum = T{};
         size_t index = 0;
 
         for (auto _ : state)
         {
-            auto element = array[index % size];
+            const size_t real_index = index % size;
+            const auto& element = array[real_index];
             if (element.has_value())
             {
-                if constexpr (!std::is_same_v<T, bool>)
-                {
-                    sum += element.value();
-                }
-                else if constexpr (std::is_same_v<T, bool>)
-                {
-                    sum += element.value() ? 1 : 0;  // Count true values
-                }
+                sum += element.value();
             }
             index++;
             benchmark::DoNotOptimize(sum);
         }
-
         state.SetItemsProcessed(static_cast<int64_t>(state.iterations()));
     }
 
@@ -148,14 +141,7 @@ namespace
             {
                 if (element.has_value())
                 {
-                    if constexpr (!std::is_same_v<T, bool>)
-                    {
-                        sum += element.value();
-                    }
-                    else if constexpr (std::is_same_v<T, bool>)
-                    {
-                        sum += element.value() ? 1 : 0;  // Count true values
-                    }
+                    sum += element.value();
                 }
             }
             benchmark::DoNotOptimize(sum);
@@ -287,18 +273,20 @@ namespace
         const auto array = create_arrow_array<T>(size);
         const auto bench = [&]<typename U>()
         {
-            auto typed_array = std::static_pointer_cast<U>(array);
+            const auto typed_array = std::static_pointer_cast<U>(array);
             T sum = T{};
             size_t index = 0;
             for (auto _ : state)
             {
-                if (!typed_array->IsNull(index % size))
+                const size_t real_index = index % size;
+                if (!typed_array->IsNull(real_index))
                 {
-                    sum += typed_array->Value(index % size);
+                    sum += typed_array->Value(real_index);
                 }
                 index++;
                 benchmark::DoNotOptimize(sum);
             }
+            state.SetItemsProcessed(static_cast<int64_t>(state.iterations()));
         };
 
         if constexpr (std::is_same_v<T, std::int32_t>)
@@ -329,7 +317,6 @@ namespace
         {
             bench.template operator()<arrow::BooleanArray>();
         }
-        state.SetItemsProcessed(static_cast<int64_t>(state.iterations()));
     }
 
     // Arrow Array Reading Benchmarks - Raw values access
