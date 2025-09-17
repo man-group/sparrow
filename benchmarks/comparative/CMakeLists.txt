@@ -34,7 +34,7 @@ add_custom_target(run_comparative_benchmarks
 set_target_properties(run_comparative_benchmarks PROPERTIES FOLDER "Benchmarks")
 
 add_custom_target(run_comparative_benchmarks_json
-    COMMAND sparrow_benchmarks_comparative --benchmark_format=json --benchmark_out=sparrow_comparative_benchmarks.json
+    COMMAND sparrow_benchmarks_comparative --benchmark_format=json --benchmark_out=sparrow_benchmarks_comparative.json
     DEPENDS sparrow_benchmarks_comparative
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Running comparative benchmarks (JSON output)"
