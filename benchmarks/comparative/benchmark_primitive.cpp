@@ -364,15 +364,7 @@ namespace
                 {
                     for (size_t i = 0; i < size; ++i)
                     {
-                        if constexpr (!std::is_same_v<T, bool>)
-                        {
-                            sum += raw_values[i];
-                        }
-                        else if constexpr (std::is_same_v<T, bool>)
-                        {
-                            volatile bool val = raw_values[i];
-                            benchmark::DoNotOptimize(val);
-                        }
+                        sum += raw_values[i];
                     }
                     benchmark::DoNotOptimize(sum);
                 }

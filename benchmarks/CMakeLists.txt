@@ -20,13 +20,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(SPARROW_INCLUDE_DIR ${sparrow_INCLUDE_DIRS})
 endif()
 
-if(NOT CMAKE_BUILD_TYPE)
-    message(STATUS "Setting benchmarks build type to Release")
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-else()
-    message(STATUS "Benchmarks build type is ${CMAKE_BUILD_TYPE}")
-endif()
-
 set(SPARROW_BENCHMARK_SOURCES
     main.cpp
     bench_dynamic_bitset.cpp
