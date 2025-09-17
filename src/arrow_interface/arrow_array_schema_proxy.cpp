@@ -847,7 +847,11 @@ namespace sparrow
         if (has_bitmap(data_type()))
         {
             const auto& validity_buffer = buffers().front();
-            const dynamic_bitset_view<const std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
+            const dynamic_bitset_view<const std::uint8_t> bitmap(
+                validity_buffer.data(),
+                length() + offset(),
+                offset()
+            );
             const auto null_count = bitmap.null_count();
             set_null_count(static_cast<int64_t>(null_count));
         }
