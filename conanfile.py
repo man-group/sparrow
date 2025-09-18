@@ -26,6 +26,7 @@ class SparrowRecipe(ConanFile):
         "use_date_polyfill": [True, False],
         "build_tests": [True, False],
         "build_benchmarks": [True, False],
+        "build_comparative_benchmarks": [True, False],
         "generate_documentation": [True, False],
     }
     default_options = {
@@ -34,23 +35,26 @@ class SparrowRecipe(ConanFile):
         "use_date_polyfill": False,
         "build_tests": False,
         "build_benchmarks": False,
+        "build_comparative_benchmarks": False,
         "generate_documentation": False,
     }
 
     def requirements(self):
         if self.options.get_safe("use_date_polyfill"):
-            self.requires("date/3.0.3")
+            self.requires("date/3.0.4")
         if self.options.get_safe("build_tests"):
-            self.test_requires("doctest/2.4.11")
-            self.test_requires("catch2/3.7.0")
+            self.test_requires("doctest/2.4.12")
+            self.test_requires("catch2/3.10.0")
             self.test_requires("nlohmann_json/3.12.0")
         if self.options.get_safe("build_benchmarks"):
             self.test_requires("benchmark/1.9.4")
+        if self.options.get_safe("build_comparative_benchmarks"):
+            self.test_requires("arrow/21.0.0")
 
     def build_requirements(self):
         self.tool_requires("cmake/[>=3.28.1 <4.2.0]")
         if self.options.get_safe("generate_documentation"):
-            self.tool_requires("doxygen/1.9.4", options={"enable_app": "True"})
+            self.tool_requires("doxygen/1.14.0", options={"enable_app": "True"})
 
     @property
     def _min_cppstd(self):
@@ -97,6 +101,9 @@ class SparrowRecipe(ConanFile):
         tc.variables["BUILD_TESTS"] = self.options.get_safe("build_tests", False)
         tc.variables["BUILD_BENCHMARKS"] = self.options.get_safe(
             "build_benchmarks", False
+        )
+        tc.variables["BUILD_COMPARATIVE_BENCHMARKS"] = self.options.get_safe(
+            "build_comparative_benchmarks", False
         )
         if is_msvc(self):
             tc.variables["USE_LARGE_INT_PLACEHOLDERS"] = True
