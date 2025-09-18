@@ -270,4 +270,11 @@ namespace sparrow
     {
         return std::ranges::equal(lhs.names(), rhs.names()) && std::ranges::equal(lhs.columns(), rhs.columns());
     }
+
+    std::pair<ArrowArray, ArrowSchema> extract_arrow_structures(sparrow::record_batch&& rb)
+    {
+        struct_array sa = rb.extract_struct_array();
+        arrow_proxy& proxy = detail::array_access::get_arrow_proxy(sa);
+        return std::make_pair(proxy.extract_array(), proxy.extract_schema());
+    }
 }

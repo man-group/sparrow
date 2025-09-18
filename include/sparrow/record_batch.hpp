@@ -521,6 +521,8 @@ namespace sparrow
     SPARROW_API
     bool operator==(const record_batch& lhs, const record_batch& rhs);
 
+    SPARROW_API std::pair<ArrowArray, ArrowSchema> extract_arrow_structures(sparrow::record_batch&& rb);
+
     /*******************************
      * record_batch implementation *
      *******************************/
