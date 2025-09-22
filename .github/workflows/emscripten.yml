@@ -46,18 +46,30 @@ jobs:
         mkdir build
         pushd build
 
+        export BUILD_PREFIX=$MAMBA_ROOT_PREFIX/envs/sparrow-wasm-build
         export PREFIX=$MAMBA_ROOT_PREFIX/envs/sparrow-wasm-host
+        export SYSROOT_PATH=$BUILD_PREFIX/opt/emsdk/upstream/emscripten/cache/sysroot
 
         emcmake cmake \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_FIND_ROOT_PATH=$PREFIX \
           -DCMAKE_INSTALL_PREFIX=$PREFIX \
           -DBUILD_EXAMPLES=OFF \
-          -DBUILD_TESTS=OFF \
+          -DBUILD_TESTS=ON \
           -DBUILD_DOCS=OFF \
+          -DSYSROOT_PATH=$SYSROOT_PATH \
           ..
 
         emmake make -j ${{ env.ncpus }} install
 
-    # TODO: Enable tests through subsequent PRs
-    # - name: Run tests
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '23.x'
+
+    - name: Run tests
+      shell: bash
+      working-directory: build/bin/Release
+      run: |
+        node --version
+        node ./test_sparrow_lib.js
