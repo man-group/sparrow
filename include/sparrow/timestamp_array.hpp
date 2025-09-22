@@ -756,7 +756,7 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0)
+        std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0u, 0u)
                                                          : std::nullopt;
         const auto values = range
                             | std::views::transform(

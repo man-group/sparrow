@@ -443,7 +443,7 @@ namespace sparrow
         const size_t size = children.empty() ? 0 : children[0].size();
         return create_proxy_impl(
             std::forward<CHILDREN_RANGE>(children),
-            nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size, 0u) : std::nullopt,
             std::move(name),
             std::move(metadata)
         );

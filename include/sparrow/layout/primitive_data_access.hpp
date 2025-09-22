@@ -172,8 +172,6 @@ namespace sparrow
             template <class F>
             [[nodiscard]] static u8_buffer<bool> make_data_buffer(size_t size, F init_func);
 
-            [[nodiscard]] size_t get_offset(size_t i) const;
-
             [[nodiscard]] adaptor_iterator adaptor_begin();
             [[nodiscard]] adaptor_iterator adaptor_end();
 
@@ -400,17 +398,17 @@ namespace sparrow
 
         [[nodiscard]] inline auto primitive_data_access<bool>::value(size_t i) -> inner_reference
         {
-            return m_view[get_offset(i)];
+            return m_view[i];
         }
 
         [[nodiscard]] inline auto primitive_data_access<bool>::value(size_t i) const -> inner_const_reference
         {
-            return m_view[get_offset(i)];
+            return m_view[i];
         }
 
         [[nodiscard]] inline auto primitive_data_access<bool>::value_begin() -> value_iterator
         {
-            return sparrow::next(m_view.begin(), get_offset(0u));
+            return m_view.begin();
         }
 
         [[nodiscard]] inline auto primitive_data_access<bool>::value_end() -> value_iterator
@@ -420,7 +418,7 @@ namespace sparrow
 
         [[nodiscard]] inline auto primitive_data_access<bool>::value_cbegin() const -> const_value_iterator
         {
-            return sparrow::next(m_view.cbegin(), get_offset(0u));
+            return m_view.cbegin();
         }
 
         [[nodiscard]] inline auto primitive_data_access<bool>::value_cend() const -> const_value_iterator
@@ -430,7 +428,7 @@ namespace sparrow
 
         inline void primitive_data_access<bool>::resize_values(size_t new_length, bool value)
         {
-            m_adaptor.resize(get_offset(new_length), value);
+            m_adaptor.resize(new_length, value);
             update_data_view();
         }
 
@@ -533,19 +531,14 @@ namespace sparrow
             }
             u8_buffer<bool> res(block_nb);
             std::uint8_t* buffer = reinterpret_cast<std::uint8_t*>(res.data());
-            bitset_view v(buffer, size);
+            bitset_view v(buffer, size, 0);
             init_func(v);
             return res;
         }
 
-        [[nodiscard]] inline size_t primitive_data_access<bool>::get_offset(size_t i) const
-        {
-            return i + get_proxy().offset();
-        }
-
         [[nodiscard]] inline auto primitive_data_access<bool>::adaptor_begin() -> adaptor_iterator
         {
-            return sparrow::next(m_adaptor.begin(), get_offset(0u));
+            return m_adaptor.begin();
         }
 
         [[nodiscard]] inline auto primitive_data_access<bool>::adaptor_end() -> adaptor_iterator
@@ -555,7 +548,7 @@ namespace sparrow
 
         [[nodiscard]] inline auto primitive_data_access<bool>::adaptor_cbegin() const -> const_adaptor_iterator
         {
-            return sparrow::next(m_adaptor.cbegin(), get_offset(0u));
+            return sparrow::next(m_adaptor.cbegin(), 0u);
         }
 
         [[nodiscard]] inline auto primitive_data_access<bool>::adaptor_cend() const -> const_adaptor_iterator
@@ -576,8 +569,8 @@ namespace sparrow
         [[nodiscard]] inline auto primitive_data_access<bool>::get_data_view() -> bitset_view
         {
             auto& proxy = get_proxy();
-            size_t size = proxy.length() + proxy.offset();
-            return bitset_view(proxy.buffers()[m_data_buffer_index].data(), size);
+            const size_t size = proxy.length();
+            return {proxy.buffers()[m_data_buffer_index].data(), size, proxy.offset()};
         }
 
         [[nodiscard]] inline auto primitive_data_access<bool>::get_data_adaptor() -> bitset_adaptor
@@ -585,18 +578,23 @@ namespace sparrow
             auto& proxy = get_proxy();
             if (proxy.is_created_with_sparrow())
             {
-                size_t size = proxy.length() + proxy.offset();
-                return bitset_adaptor(&(proxy.get_array_private_data()->buffers()[m_data_buffer_index]), size);
+                const size_t size = proxy.length();
+                return bitset_adaptor(
+                    &(proxy.get_array_private_data()->buffers()[m_data_buffer_index]),
+                    size,
+                    proxy.offset()
+                );
             }
             else
             {
-                return bitset_adaptor(&m_dummy_buffer, 0u);
+                return bitset_adaptor(&m_dummy_buffer, 0u, 0);
             }
         }
 
         inline void primitive_data_access<bool>::update_data_view()
         {
-            m_view = bitset_view(get_proxy().buffers()[m_data_buffer_index].data(), m_adaptor.size());
+            auto& proxy = get_proxy();
+            m_view = bitset_view(proxy.buffers()[m_data_buffer_index].data(), m_adaptor.size(), proxy.offset());
         }
     }
 }

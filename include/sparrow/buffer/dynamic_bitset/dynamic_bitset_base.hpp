@@ -577,7 +577,7 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
     {
         SPARROW_ASSERT_TRUE(pos < size());
-        return reference(*this, pos + m_offset);
+        return reference(*this, pos);
     }
 
     template <typename B>
@@ -603,7 +603,8 @@ namespace sparrow
         {
             return true;
         }
-        return !m_null_count || buffer().data()[block_index(pos + m_offset)] & bit_mask(pos + m_offset);
+        const size_t pos_with_offset = pos + m_offset;
+        return !m_null_count || buffer().data()[block_index(pos_with_offset)] & bit_mask(pos_with_offset);
     }
 
     template <typename B>
@@ -632,15 +633,16 @@ namespace sparrow
                 }
             }
         }
-        block_type& block = buffer().data()[block_index(pos)];
-        const bool old_value = block & bit_mask(pos);
+        const size_t pos_with_offset = pos + m_offset;
+        block_type& block = buffer().data()[block_index(pos_with_offset)];
+        const bool old_value = block & bit_mask(pos_with_offset);
         if (value)
         {
-            block |= bit_mask(pos);
+            block |= bit_mask(pos_with_offset);
         }
         else
         {
-            block &= block_type(~bit_mask(pos));
+            block &= block_type(~bit_mask(pos_with_offset));
         }
         update_null_count(old_value, value);
     }

@@ -68,7 +68,7 @@ namespace sparrow
 
         TEST_CASE_FIXTURE(bitmap_fixture, "constructor")
         {
-            bitmap_view b(p_buffer, m_size);
+            bitmap_view b(p_buffer, m_size, 0u);
             CHECK_EQ(b.data(), p_buffer);
 
             const bitmap_view& b2 = b;
@@ -77,7 +77,7 @@ namespace sparrow
 
         TEST_CASE_FIXTURE(bitmap_fixture, "copy semantic")
         {
-            bitmap_view b(p_buffer, m_size);
+            bitmap_view b(p_buffer, m_size, 0u);
             bitmap_view b2(b);
 
             CHECK_EQ(b.size(), b2.size());
@@ -91,7 +91,7 @@ namespace sparrow
 
         TEST_CASE_FIXTURE(bitmap_fixture, "move semantic")
         {
-            bitmap_view bref(p_buffer, m_size);
+            bitmap_view bref(p_buffer, m_size, 0u);
             bitmap_view b(bref);
 
             bitmap_view b2(std::move(b));

@@ -352,7 +352,7 @@ namespace sparrow
         arrow_proxy& arrow_proxy = this->get_arrow_proxy();
         SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
         const auto bitmap_size = arrow_proxy.length() + arrow_proxy.offset();
-        return bitmap_type(arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size);
+        return bitmap_type(arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size, arrow_proxy.offset());
     }
 
     template <class D, bool is_mutable>
@@ -373,8 +373,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(this->bitmap_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= this->bitmap_cend())
         arrow_proxy& arrow_proxy = this->get_arrow_proxy();
-        const auto pos_index = static_cast<size_t>(std::distance(this->bitmap_cbegin(), pos))
-                               + arrow_proxy.offset();
+        const auto pos_index = static_cast<size_t>(std::distance(this->bitmap_cbegin(), pos));
         const auto idx = arrow_proxy.insert_bitmap(pos_index, value, count);
         return sparrow::next(this->bitmap_begin(), idx);
     }
@@ -391,8 +390,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(pos <= this->bitmap_cend());
         SPARROW_ASSERT_TRUE(first <= last);
         arrow_proxy& arrow_proxy = this->get_arrow_proxy();
-        const auto pos_index = static_cast<size_t>(std::distance(this->bitmap_cbegin(), pos))
-                               + arrow_proxy.offset();
+        const auto pos_index = static_cast<size_t>(std::distance(this->bitmap_cbegin(), pos));
         const auto idx = arrow_proxy.insert_bitmap(pos_index, std::ranges::subrange(first, last));
         return sparrow::next(this->bitmap_begin(), idx);
     }

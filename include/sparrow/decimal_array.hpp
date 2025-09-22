@@ -531,7 +531,7 @@ namespace sparrow
             std::move(data_buffer),
             precision,
             scale,
-            nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size, 0u) : std::nullopt,
             name,
             metadata
         );
@@ -555,7 +555,7 @@ namespace sparrow
             std::move(u8_data_buffer),
             precision,
             scale,
-            nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size, 0u) : std::nullopt,
             name,
             metadata
         );

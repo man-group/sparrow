@@ -150,7 +150,7 @@ namespace sparrow
          *          and contains properly formatted bit data.
          */
         template <allocator A = default_allocator>
-        constexpr dynamic_bitset(block_type* p, size_type n, const A& a = A());
+        constexpr dynamic_bitset(block_type* p, size_type n, size_type offset, const A& a = A());
 
         /**
          * @brief Constructs a bitset using existing memory with null count tracking.
@@ -168,7 +168,13 @@ namespace sparrow
          * @post null_count() == null_count
          */
         template <allocator A = default_allocator>
-        constexpr dynamic_bitset(block_type* p, size_type n, size_type null_count, const A& a = A());
+        constexpr dynamic_bitset(
+            block_type* p,
+            size_type n,
+            size_type offset,
+            size_type null_count,
+            const A& a = A()
+        );
 
         constexpr ~dynamic_bitset() = default;
         constexpr dynamic_bitset(const dynamic_bitset&) = default;
@@ -197,7 +203,7 @@ namespace sparrow
     template <class A>
         requires(not std::same_as<A, dynamic_bitset<T>> and allocator<A>)
     constexpr dynamic_bitset<T>::dynamic_bitset(const A& a)
-        : base_type(storage_type(a), 0u)
+        : base_type(storage_type(a), 0u, 0u)
     {
         base_type::zero_unused_bits();
     }
@@ -224,16 +230,17 @@ namespace sparrow
 
     template <std::integral T>
     template <allocator A>
-    constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, const A& a)
-        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n) : 0, a), n)
+    constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type offset, const A& a)
+        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n) : 0, a), n, offset)
     {
         base_type::zero_unused_bits();
     }
 
     template <std::integral T>
     template <allocator A>
-    constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type null_count, const A& a)
-        : base_type(storage_type(p, this->compute_block_count(n), a), n, null_count)
+    constexpr dynamic_bitset<
+        T>::dynamic_bitset(block_type* p, size_type n, size_type offset, size_type null_count, const A& a)
+        : base_type(storage_type(p, this->compute_block_count(n), a), n, offset, null_count)
     {
         base_type::zero_unused_bits();
         SPARROW_ASSERT_TRUE(base_type::null_count() == base_type::size() - base_type::count_non_null());

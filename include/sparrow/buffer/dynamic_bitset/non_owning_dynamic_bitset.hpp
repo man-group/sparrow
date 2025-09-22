@@ -30,7 +30,7 @@ namespace sparrow
         using value_type = typename base_type::value_type;
         using size_type = typename base_type::size_type;
 
-        constexpr explicit non_owning_dynamic_bitset(buffer<T>* buffer, size_type n);
+        constexpr explicit non_owning_dynamic_bitset(buffer<T>* buffer, size_type n, size_type offset);
 
         constexpr ~non_owning_dynamic_bitset() = default;
         constexpr non_owning_dynamic_bitset(const non_owning_dynamic_bitset&) = default;
@@ -49,8 +49,8 @@ namespace sparrow
     };
 
     template <std::integral T>
-    constexpr non_owning_dynamic_bitset<T>::non_owning_dynamic_bitset(buffer<T>* buffer, size_type n)
-        : base_type(buffer, n)
+    constexpr non_owning_dynamic_bitset<T>::non_owning_dynamic_bitset(buffer<T>* buffer, size_type n, size_type offset)
+        : base_type(buffer, n, offset)
     {
         SPARROW_ASSERT_TRUE(buffer != nullptr);
     }
