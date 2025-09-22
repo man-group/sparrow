@@ -334,6 +334,15 @@ namespace sparrow
             return std::move(m_buffer);
         }
 
+        /**
+         * @brief Returns the bit offset from the start of the buffer.
+         *
+         * This value indicates how many bits from the beginning of the underlying storage
+         * are skipped before the bitset's logical start. It is set during construction and
+         * remains constant for the lifetime of the bitset.
+         *
+         * @return The number of bits offset from the start of the buffer.
+         */
         [[nodiscard]] size_t offset() const noexcept;
 
     protected:
@@ -358,7 +367,7 @@ namespace sparrow
          * @post size() == size
          * @post null_count() == null_count
          */
-        constexpr dynamic_bitset_base(storage_type buffer, size_type size, size_type null_count, size_type offset);
+        constexpr dynamic_bitset_base(storage_type buffer, size_type size, size_type offset, size_type null_count);
 
         constexpr ~dynamic_bitset_base() = default;
 
@@ -810,8 +819,8 @@ namespace sparrow
     constexpr dynamic_bitset_base<B>::dynamic_bitset_base(
         storage_type buf,
         size_type size,
-        size_type null_count,
-        size_type offset
+        size_type offset,
+        size_type null_count
     )
         : m_buffer(std::move(buf))
         , m_size(size)
