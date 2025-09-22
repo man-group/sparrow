@@ -548,7 +548,7 @@ namespace sparrow
 
         [[nodiscard]] inline auto primitive_data_access<bool>::adaptor_cbegin() const -> const_adaptor_iterator
         {
-            return sparrow::next(m_adaptor.cbegin(), 0u);
+            return m_adaptor.cbegin();
         }
 
         [[nodiscard]] inline auto primitive_data_access<bool>::adaptor_cend() const -> const_adaptor_iterator

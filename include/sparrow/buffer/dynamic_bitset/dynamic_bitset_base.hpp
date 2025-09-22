@@ -928,7 +928,7 @@ namespace sparrow
             return;
         }
         size_type old_block_count = buffer().size();
-        const size_type new_block_count = compute_block_count(n);
+        const size_type new_block_count = compute_block_count(n + m_offset);
         const block_type value = b ? block_type(~block_type(0)) : block_type(0);
 
         if (new_block_count != old_block_count)
