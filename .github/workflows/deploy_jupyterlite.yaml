@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build and Deploy JupyterLite page
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
 
   deploy:
     needs: build
-    # if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     permissions:
       pages: write
       id-token: write
