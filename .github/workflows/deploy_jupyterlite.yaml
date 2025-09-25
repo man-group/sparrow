@@ -21,9 +21,8 @@ jobs:
           python-version: "3.12"
 
       - name: Install mamba
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
-          micromamba-version: "1.5.8-0"
           environment-file: jupyterlite_build_environment.yml
           cache-environment: true
 
