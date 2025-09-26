@@ -1,4 +1,4 @@
-name: Build and Deploy JupyterLite page
+name: Build JupyterLite
 
 on:
   push:
@@ -7,13 +7,15 @@ on:
   pull_request:
     branches:
       - "*"
+  workflow_dispatch:
+  workflow_call:
 
 jobs:
-  build:
+  build-jupyterlite:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -31,24 +33,9 @@ jobs:
         run: |
           jupyter lite build --contents notebooks --output-dir dist
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload JupyterLite artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: jupyterlite-site
           path: ./dist
-
-  deploy:
-    needs: build
-    # if: github.ref == 'refs/heads/main'
-    permissions:
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}/jupyterlite
-
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          retention-days: 30

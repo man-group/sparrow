@@ -1,0 +1,166 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Call the build workflows
+  build-docs:
+    uses: ./.github/workflows/build-docs.yaml
+
+  build-jupyterlite:
+    uses: ./.github/workflows/build-jupyterlite.yaml
+
+  # Deploy job that depends on the build workflows
+  deploy:
+    needs: [build-docs, build-jupyterlite]
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download docs artifact from build-docs workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: doxygen-docs
+          path: ./site/docs
+
+      - name: Download JupyterLite artifact from build-jupyterlite workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: jupyterlite-site
+          path: ./site/jupyterlite
+
+      - name: Create index page
+        run: |
+          mkdir -p ./site
+          cat > ./site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Sparrow - Apache Arrow C++20 Implementation</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      max-width: 800px;
+                      margin: 0 auto;
+                      padding: 40px 20px;
+                      line-height: 1.6;
+                      color: #333;
+                  }
+                  .header {
+                      text-align: center;
+                      margin-bottom: 50px;
+                  }
+                  .header h1 {
+                      color: #2c3e50;
+                      margin-bottom: 10px;
+                  }
+                  .header p {
+                      color: #666;
+                      font-size: 1.1em;
+                  }
+                  .cards {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                      gap: 30px;
+                      margin-top: 40px;
+                  }
+                  .card {
+                      border: 1px solid #e1e5e9;
+                      border-radius: 8px;
+                      padding: 30px;
+                      text-decoration: none;
+                      color: inherit;
+                      transition: all 0.2s ease;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                  }
+                  .card:hover {
+                      transform: translateY(-2px);
+                      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                      text-decoration: none;
+                  }
+                  .card h2 {
+                      margin-top: 0;
+                      color: #2c3e50;
+                  }
+                  .card p {
+                      color: #666;
+                      margin-bottom: 20px;
+                  }
+                  .card .btn {
+                      display: inline-block;
+                      background: #3498db;
+                      color: white;
+                      padding: 10px 20px;
+                      border-radius: 5px;
+                      text-decoration: none;
+                      font-weight: 500;
+                  }
+                  .card .btn:hover {
+                      background: #2980b9;
+                  }
+                  .footer {
+                      text-align: center;
+                      margin-top: 60px;
+                      padding-top: 20px;
+                      border-top: 1px solid #e1e5e9;
+                      color: #666;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="header">
+                  <h1>Sparrow</h1>
+                  <p>Apache Arrow C++20 Implementation</p>
+              </div>
+              
+              <div class="cards">
+                  <a href="./docs/" class="card">
+                      <h2>📚 Documentation</h2>
+                      <p>Browse the complete API documentation generated with Doxygen, including detailed class references, examples, and implementation guides.</p>
+                      <span class="btn">View Docs</span>
+                  </a>
+                  
+                  <a href="./jupyterlite/" class="card">
+                      <h2>🚀 Interactive Notebooks</h2>
+                      <p>Try Sparrow directly in your browser with JupyterLite. Explore examples and experiment with the library without any installation.</p>
+                      <span class="btn">Launch JupyterLite</span>
+                  </a>
+              </div>
+              
+              <div class="footer">
+                  <p>Built with ❤️ by the Sparrow team | <a href="https://github.com/Alex-PLACET/sparrow">GitHub Repository</a></p>
+              </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload combined site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
