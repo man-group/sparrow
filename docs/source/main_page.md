@@ -1,16 +1,12 @@
 Sparrow                             {#mainpage}
 =======
 
-<div style="text-align: center; margin: 20px 0;">
-<a href="./jupyterlite/" target="_blank">
-<img src="https://jupyterlite.rtfd.io/en/latest/_static/badge.svg" alt="Try Sparrow in JupyterLite" style="margin: 10px;"/>
-</a>
-</div>
-
 Introduction
 ------------
 
 Sparrow stands for "Simple Arrow" and is an implementation of the [Apache Arrow Columnar format](https://arrow.apache.org/docs/format/Columnar.html) in C++20. It provides array structures with idiomatic APIs and convenient conversions from and to the [C interface](https://arrow.apache.org/docs/dev/format/CDataInterface.html#structure-definitions).
+
+Try it online without any installation ! [![Try Sparrow in JupyterLite](https://jupyterlite.rtfd.io/en/latest/_static/badge.svg)](./jupyterlite/)
 
 Sparrow requires a modern C++ compiler supporting C++20:
 
