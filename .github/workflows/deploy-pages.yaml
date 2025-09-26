@@ -1,0 +1,62 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  # pull_request:
+  #   branches:
+  #     - "*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Call the build workflows
+  build-docs:
+    uses: ./.github/workflows/build-docs.yaml
+
+  build-jupyterlite:
+    uses: ./.github/workflows/build-jupyterlite.yaml
+
+  # Deploy job that depends on the build workflows
+  deploy:
+    needs: [build-docs, build-jupyterlite]
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download docs artifact from build-docs workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: doxygen-docs
+          path: ./site
+
+      - name: Download JupyterLite artifact from build-jupyterlite workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: jupyterlite-site
+          path: ./site/jupyterlite
+
+      - name: Upload combined site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
