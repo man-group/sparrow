@@ -51,7 +51,7 @@ jobs:
         with:
           name: jupyterlite-site
           path: ./site/jupyterlite
-          
+
       - name: Upload combined site artifact
         uses: actions/upload-pages-artifact@v3
         with:
