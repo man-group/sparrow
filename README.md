@@ -14,6 +14,8 @@ C++20 idiomatic APIs for the Apache Arrow Columnar Format
 `sparrow` is an implementation of the Apache Arrow Columnar format in C++. It provides array structures
 with idiomatic APIs and convenient conversions from and to the [C interface](https://arrow.apache.org/docs/dev/format/CDataInterface.html#structure-definitions).
 
+Try it online without any installation ! [![Try Sparrow in JupyterLite](https://jupyterlite.rtfd.io/en/latest/_static/badge.svg)](https://man-group.github.io/sparrow/jupyterlite)
+
 `sparrow` requires a modern C++ compiler supporting C++20.
 
 ## Installation
