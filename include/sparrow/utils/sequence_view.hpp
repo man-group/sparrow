@@ -20,7 +20,7 @@
 #include <vector>
 
 #if defined(__cpp_lib_format)
-#    include <format>
+#    include "sparrow/utils/format.hpp"
 #endif
 
 #include "sparrow/utils/mp_utils.hpp"
@@ -132,21 +132,19 @@ struct std::formatter<sparrow::sequence_view<T, E>>
 {
     constexpr auto parse(std::format_parse_context& ctx)
     {
-        return ctx.begin();  // Simple implementation
+        return m_spec.parse(ctx.begin(), ctx.end());
     }
 
     auto format(const sparrow::sequence_view<T, E>& vec, std::format_context& ctx) const
     {
-        std::format_to(ctx.out(), "<");
-        if (!vec.empty())
-        {
-            for (std::size_t i = 0; i < vec.size() - 1; ++i)
-            {
-                std::format_to(ctx.out(), "{}, ", vec[i]);
-            }
-        }
-        return std::format_to(ctx.out(), "{}>", vec.back());
+        std::string core = m_spec.build_core(vec);
+        std::string out_str = m_spec.apply_alignment(std::move(core));
+        return std::ranges::copy(out_str, ctx.out()).out;
     }
+
+private:
+
+    sparrow::detail::sequence_format_spec m_spec;
 };
 
 namespace sparrow
