@@ -112,15 +112,10 @@ struct std::formatter<sparrow::array>
         return ctx.begin();  // Simple implementation
     }
 
-    auto format(const sparrow::array& ar, std::format_context& ctx) const
-    {
-        return ar.visit(
-            [&ctx](const auto& layout)
-            {
-                return std::format_to(ctx.out(), "{}", layout);
-            }
-        );
-    }
+    using iterator = std::format_context::iterator;
+
+    SPARROW_API
+    iterator format(const sparrow::array& ar, std::format_context& ctx) const;
 };
 
 namespace sparrow
