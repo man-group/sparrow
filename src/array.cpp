@@ -155,13 +155,13 @@ namespace sparrow
     }
 }
 #if defined(__cpp_lib_format)
-    auto std::formatter<sparrow::array>::format(const sparrow::array& ar, std::format_context& ctx) const -> iterator
-    {
-        return ar.visit(
-            [&ctx](const auto& layout)
-            {
-                return std::format_to(ctx.out(), "{}", layout);
-            }
-        );
-    }
+auto std::formatter<sparrow::array>::format(const sparrow::array& ar, std::format_context& ctx) const -> iterator
+{
+    return ar.visit(
+        [&ctx](const auto& layout)
+        {
+            return std::format_to(ctx.out(), "{}", layout);
+        }
+    );
+}
 #endif
