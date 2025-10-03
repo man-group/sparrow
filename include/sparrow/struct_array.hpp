@@ -269,13 +269,32 @@ namespace sparrow
         void add_child(A&& child);
 
         /**
+         * @brief Adds multiple children to the struct array.
+         *
+         * This function template adds a range of children (layouts or arrays) to the struct array.
+         * All children must have the same size as the current struct array.
+         *
+         * @tparam R An input range type whose value type satisfies the layout_or_array concept
+         * @param children A range of child elements to be added to the struct array
+         *
+         * @throws Assertion error if any child's size doesn't match the struct array's size
+         *
+         * @note The function reserves memory upfront to optimize performance when adding multiple children
+         * @note Children are forwarded to maintain their value category (lvalue/rvalue)
+         */
+        template <std::ranges::input_range R>
+            requires layout_or_array<std::ranges::range_value_t<R>>
+        void add_children(R&& children);
+
+        /**
          * @brief Sets a child array at the specified index.
          *
          * @param child The child array to set
          * @param index The index at which to set the child
          *
          * @pre index must be < children_count()
-         * @post Replaces the child array at the specified index. Release the array if it has the ownership.
+         * @post Replaces the child array at the specified index. Release the array if it has the
+         * ownership.
          */
         template <layout_or_array A>
         void set_child(A&& child, size_t index);
@@ -565,7 +584,22 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(child.size() == size());
         auto [array, schema] = extract_arrow_structures(std::forward<A>(child));
         get_arrow_proxy().add_child(std::move(array), std::move(schema));
-        m_children = make_children();
+        m_children.emplace_back(array_factory(get_arrow_proxy().children().back().view()));
+    }
+
+    template <std::ranges::input_range R>
+        requires layout_or_array<std::ranges::range_value_t<R>>
+    void struct_array::add_children(R&& children)
+    {
+        for (const auto& child : children)
+        {
+            SPARROW_ASSERT_TRUE(child.size() == size());
+        }
+        m_children.reserve(m_children.size() + children.size());
+        for (auto&& child : children)
+        {
+            add_child(std::forward<decltype(child)>(child));
+        }
     }
 
     template <layout_or_array A>
@@ -574,7 +608,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(child.size() == size());
         auto [array, schema] = extract_arrow_structures(std::forward<A>(child));
         get_arrow_proxy().set_child(index, std::move(array), std::move(schema));
-        m_children = make_children();
+        m_children[index] = array_factory(get_arrow_proxy().children()[index].view());
     }
 }
 
