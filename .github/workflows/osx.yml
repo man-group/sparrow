@@ -18,7 +18,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - 13
           - 14
           - 15
           # - "15-large"
@@ -29,8 +28,6 @@ jobs:
           - clang
           - apple-clang
         exclude:
-          - os: 13
-            compiler: apple-clang
           - os: 14
             compiler: apple-clang
 
@@ -109,7 +106,7 @@ jobs:
       - name: Run all examples
         working-directory: build
         run: cmake --build . --config ${{matrix.config.name}} --target run_examples
-      
+
       - name: Install
         working-directory: build
         run: cmake --install . --config ${{matrix.config.name}}
