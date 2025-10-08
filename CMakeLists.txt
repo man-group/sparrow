@@ -113,6 +113,8 @@ else()
     set(DEFAULT_USE_LARGE_INT_PLACEHOLDERS OFF)
 endif()
 
+set(CMAKE_DEBUG_POSTFIX "d")
+
 OPTION(USE_LARGE_INT_PLACEHOLDERS "Use types without api for big integers 'ON' by default on 32 bit systems and MSVC compilers" ${DEFAULT_USE_LARGE_INT_PLACEHOLDERS})
 MESSAGE(STATUS "🔧 Use large int placeholders: ${USE_LARGE_INT_PLACEHOLDERS}")
 OPTION(SPARROW_CONTRACTS_THROW_ON_FAILURE "Throw exceptions instead of aborting on contract failures" OFF)
