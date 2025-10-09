@@ -640,6 +640,36 @@ namespace sparrow
             return [](const auto& v) { return static_cast<std::uint8_t>(v); };
         }
 
+        // Helper function to manually copy and convert elements (for when ranges might not be contiguous)
+        template <typename InputRange, typename OutputIt>
+        inline void copy_and_convert_to_uint8(InputRange&& range, OutputIt dest)
+        {
+            auto src_it = std::ranges::begin(range);
+            auto src_end = std::ranges::end(range);
+            while (src_it != src_end)
+            {
+                *dest = static_cast<std::uint8_t>(*src_it);
+                ++src_it;
+                ++dest;
+            }
+        }
+
+        // Helper function to copy first N elements and convert to uint8
+        template <typename InputRange, typename OutputIt>
+        inline void copy_prefix_to_uint8(InputRange&& range, OutputIt dest, std::size_t count)
+        {
+            auto src_it = std::ranges::begin(range);
+            auto src_end = std::ranges::end(range);
+            std::size_t copied = 0;
+            while (src_it != src_end && copied < count)
+            {
+                *dest = static_cast<std::uint8_t>(*src_it);
+                ++src_it;
+                ++dest;
+                ++copied;
+            }
+        }
+
         // Helper function to update buffer offsets for long strings after a specific offset
         template <typename SizeType>
         inline void update_buffer_offsets_after(
@@ -971,9 +1001,8 @@ namespace sparrow
 
         if (length <= SHORT_STRING_SIZE)
         {
-            constexpr std::ptrdiff_t data_offset = 4;
             const auto ptr = reinterpret_cast<const char_or_byte*>(data_ptr);
-            const auto ret = inner_const_reference(ptr + data_offset, length);
+            const auto ret = inner_const_reference(ptr + SHORT_STRING_OFFSET, length);
             return ret;
         }
         else
@@ -1362,16 +1391,7 @@ namespace sparrow
             if (value_length <= SHORT_STRING_SIZE)
             {
                 // Store inline - convert and copy elements manually
-                auto src_it = std::ranges::begin(current_value);
-                auto src_end = std::ranges::end(current_value);
-                auto* dest = view_ptr + SHORT_STRING_OFFSET;
-
-                while (src_it != src_end)
-                {
-                    *dest = static_cast<std::uint8_t>(*src_it);
-                    ++src_it;
-                    ++dest;
-                }
+                copy_and_convert_to_uint8(current_value, view_ptr + SHORT_STRING_OFFSET);
 
                 std::fill(
                     view_ptr + SHORT_STRING_OFFSET + value_length,
@@ -1382,18 +1402,7 @@ namespace sparrow
             else
             {
                 // Store prefix - copy first PREFIX_SIZE elements manually
-                auto src_it = std::ranges::begin(current_value);
-                auto src_end = std::ranges::end(current_value);
-                auto* prefix_dest = view_ptr + PREFIX_OFFSET;
-                std::size_t copied = 0;
-
-                while (src_it != src_end && copied < PREFIX_SIZE)
-                {
-                    *prefix_dest = static_cast<std::uint8_t>(*src_it);
-                    ++src_it;
-                    ++prefix_dest;
-                    ++copied;
-                }
+                copy_prefix_to_uint8(current_value, view_ptr + PREFIX_OFFSET, PREFIX_SIZE);
 
                 // Set buffer index
                 const std::int32_t buffer_index_zero = 0;
@@ -1404,15 +1413,7 @@ namespace sparrow
                 std::memcpy(view_ptr + BUFFER_OFFSET_OFFSET, &var_offset_int32, sizeof(std::int32_t));
 
                 // Copy data to variadic buffer - convert and copy manually
-                src_it = std::ranges::begin(current_value);
-                auto* var_dest = buffers[FIRST_VAR_DATA_BUFFER_INDEX].data() + var_offset;
-
-                while (src_it != src_end)
-                {
-                    *var_dest = static_cast<std::uint8_t>(*src_it);
-                    ++src_it;
-                    ++var_dest;
-                }
+                copy_and_convert_to_uint8(current_value, buffers[FIRST_VAR_DATA_BUFFER_INDEX].data() + var_offset);
 
                 var_offset += value_length;
             }
