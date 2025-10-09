@@ -585,6 +585,58 @@ namespace sparrow
         {
             std::memcpy(ptr, &value, sizeof(std::int32_t));
         }
+
+        // Helper function to get format string for string vs binary view arrays
+        template <typename T>
+        inline constexpr std::string_view get_view_format_string()
+        {
+            return std::is_same_v<T, arrow_traits<std::string>::value_type> ? std::string_view("vu")
+                                                                             : std::string_view("vz");
+        }
+
+        // Helper function to transform values to uint8_t
+        inline constexpr auto to_uint8_transform()
+        {
+            return [](const auto& v) { return static_cast<std::uint8_t>(v); };
+        }
+
+        // Helper function to update buffer offsets for long strings after a specific offset
+        template <typename SizeType>
+        inline void update_buffer_offsets_after(
+            std::uint8_t* view_data,
+            SizeType array_size,
+            std::size_t data_buffer_size,
+            std::size_t short_string_size,
+            std::ptrdiff_t buffer_offset_offset,
+            std::size_t threshold_offset,
+            std::ptrdiff_t offset_adjustment,
+            SizeType skip_index = static_cast<SizeType>(-1)
+        )
+        {
+            for (SizeType i = 0; i < array_size; ++i)
+            {
+                if (i == skip_index)
+                {
+                    continue;
+                }
+
+                auto* view_ptr = view_data + (i * data_buffer_size);
+                std::int32_t length;
+                std::memcpy(&length, view_ptr, sizeof(std::int32_t));
+
+                if (static_cast<std::size_t>(length) > short_string_size)
+                {
+                    std::int32_t current_offset;
+                    std::memcpy(&current_offset, view_ptr + buffer_offset_offset, sizeof(std::int32_t));
+                    
+                    if (static_cast<std::size_t>(current_offset) > threshold_offset)
+                    {
+                        current_offset += static_cast<std::int32_t>(offset_adjustment);
+                        std::memcpy(view_ptr + buffer_offset_offset, &current_offset, sizeof(std::int32_t));
+                    }
+                }
+            }
+        }
     }
 
     template <std::ranges::sized_range T, class CR>
@@ -604,13 +656,7 @@ namespace sparrow
         std::size_t i = 0;
         for (auto&& val : range)
         {
-            auto val_casted = val
-                              | std::ranges::views::transform(
-                                  [](const auto& v)
-                                  {
-                                      return static_cast<std::uint8_t>(v);
-                                  }
-                              );
+            auto val_casted = val | std::ranges::views::transform(to_uint8_transform());
 
             const auto length = val.size();
             auto length_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
@@ -657,13 +703,7 @@ namespace sparrow
             const auto length = val.size();
             if (length > SHORT_STRING_SIZE)
             {
-                auto val_casted = val
-                                  | std::ranges::views::transform(
-                                      [](const auto& v)
-                                      {
-                                          return static_cast<std::uint8_t>(v);
-                                      }
-                                  );
+                auto val_casted = val | std::ranges::views::transform(to_uint8_transform());
 
                 sparrow::ranges::copy(val_casted, long_string_storage.data() + long_string_storage_offset);
                 long_string_storage_offset += length;
@@ -706,8 +746,7 @@ namespace sparrow
 
         // create arrow schema and array
         ArrowSchema schema = make_arrow_schema(
-            std::is_same<T, arrow_traits<std::string>::value_type>::value ? std::string_view("vu")
-                                                                          : std::string_view("vz"),
+            get_view_format_string<T>(),
             std::move(name),      // name
             std::move(metadata),  // metadata
             flags,                // flags
@@ -794,8 +833,7 @@ namespace sparrow
             // create arrow schema and array
             const repeat_view<bool> children_ownership(true, 0);
             ArrowSchema schema = make_arrow_schema(
-                std::is_same<T, arrow_traits<std::string>::value_type>::value ? std::string_view("vu")
-                                                                              : std::string_view("vz"),
+                get_view_format_string<T>(),
                 std::move(name),      // name
                 std::move(metadata),  // metadata
                 std::nullopt,         // flags
@@ -852,8 +890,7 @@ namespace sparrow
 
 
         ArrowSchema schema = make_arrow_schema(
-            std::is_same<T, arrow_traits<std::string>::value_type>::value ? std::string_view("vu")
-                                                                          : std::string_view("vz"),
+            get_view_format_string<T>(),
             std::move(name),      // name
             std::move(metadata),  // metadata
             flags,                // flags
@@ -1052,13 +1089,7 @@ namespace sparrow
             {
                 // Data is identical - just update the view structure prefix and we're done
                 auto prefix_range = rhs | std::ranges::views::take(PREFIX_SIZE);
-                auto prefix_transformed = prefix_range
-                                          | std::ranges::views::transform(
-                                              [](const auto& v)
-                                              {
-                                                  return static_cast<std::uint8_t>(v);
-                                              }
-                                          );
+                auto prefix_transformed = prefix_range | std::ranges::views::transform(to_uint8_transform());
                 std::ranges::copy(prefix_transformed, view_ptr + PREFIX_OFFSET);
                 return;  // Early exit - no buffer management needed
             }
@@ -1095,34 +1126,16 @@ namespace sparrow
                     var_data_buffer.resize(var_data_buffer.size() - bytes_to_compact);
 
                     // Update buffer offsets for all elements that come after this one
-                    const auto array_size = this->size();
-                    for (size_type i = 0; i < array_size; ++i)
-                    {
-                        if (i == index)
-                        {
-                            continue;
-                        }
-
-                        auto other_view_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
-                        auto other_length = static_cast<std::size_t>(
-                            *reinterpret_cast<const std::int32_t*>(other_view_ptr)
-                        );
-
-                        if (other_length > SHORT_STRING_SIZE)
-                        {
-                            auto other_offset = static_cast<std::size_t>(
-                                *reinterpret_cast<const std::int32_t*>(other_view_ptr + BUFFER_OFFSET_OFFSET)
-                            );
-
-                            // Update offset if this element comes after our current element
-                            if (other_offset > current_buffer_offset + current_length)
-                            {
-                                *reinterpret_cast<std::int32_t*>(
-                                    other_view_ptr + BUFFER_OFFSET_OFFSET
-                                ) = static_cast<std::int32_t>(other_offset - bytes_to_compact);
-                            }
-                        }
-                    }
+                    update_buffer_offsets_after(
+                        length_buffer.data(),
+                        this->size(),
+                        DATA_BUFFER_SIZE,
+                        SHORT_STRING_SIZE,
+                        BUFFER_OFFSET_OFFSET,
+                        current_buffer_offset + current_length,
+                        -static_cast<std::ptrdiff_t>(bytes_to_compact),
+                        index
+                    );
 
                     // Update buffer sizes metadata
                     auto buffer_sizes_ptr = buffer_sizes_buffer.template data<std::int64_t>();
@@ -1158,34 +1171,16 @@ namespace sparrow
                     }
 
                     // Update buffer offsets for all elements that come after this one
-                    const auto array_size = this->size();
-                    for (size_type i = 0; i < array_size; ++i)
-                    {
-                        if (i == index)
-                        {
-                            continue;
-                        }
-
-                        auto other_view_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
-                        auto other_length = static_cast<std::size_t>(
-                            *reinterpret_cast<const std::int32_t*>(other_view_ptr)
-                        );
-
-                        if (other_length > SHORT_STRING_SIZE)
-                        {
-                            auto other_offset = static_cast<std::size_t>(
-                                *reinterpret_cast<const std::int32_t*>(other_view_ptr + BUFFER_OFFSET_OFFSET)
-                            );
-
-                            // Update offset if this element comes after our expansion point
-                            if (other_offset >= move_start)
-                            {
-                                *reinterpret_cast<std::int32_t*>(
-                                    other_view_ptr + BUFFER_OFFSET_OFFSET
-                                ) = static_cast<std::int32_t>(other_offset + expansion_bytes);
-                            }
-                        }
-                    }
+                    update_buffer_offsets_after(
+                        length_buffer.data(),
+                        this->size(),
+                        DATA_BUFFER_SIZE,
+                        SHORT_STRING_SIZE,
+                        BUFFER_OFFSET_OFFSET,
+                        move_start - 1,  // threshold is just before move_start
+                        static_cast<std::ptrdiff_t>(expansion_bytes),
+                        index
+                    );
                 }
                 else
                 {
@@ -1204,13 +1199,7 @@ namespace sparrow
             // Update view structure for long string format
             // Write prefix (first 4 bytes)
             auto prefix_range = rhs | std::ranges::views::take(PREFIX_SIZE);
-            auto prefix_transformed = prefix_range
-                                      | std::ranges::views::transform(
-                                          [](const auto& v)
-                                          {
-                                              return static_cast<std::uint8_t>(v);
-                                          }
-                                      );
+            auto prefix_transformed = prefix_range | std::ranges::views::transform(to_uint8_transform());
             std::ranges::copy(prefix_transformed, view_ptr + PREFIX_OFFSET);
 
             *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_INDEX_OFFSET) = static_cast<std::int32_t>(
