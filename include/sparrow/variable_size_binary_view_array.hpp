@@ -631,20 +631,26 @@ namespace sparrow
         inline constexpr std::string_view get_view_format_string()
         {
             return std::is_same_v<T, arrow_traits<std::string>::value_type> ? std::string_view("vu")
-                                                                             : std::string_view("vz");
+                                                                            : std::string_view("vz");
         }
 
         // Helper function to transform values to uint8_t
         inline constexpr auto to_uint8_transform()
         {
-            return [](const auto& v) { return static_cast<std::uint8_t>(v); };
+            return [](const auto& v)
+            {
+                return static_cast<std::uint8_t>(v);
+            };
         }
 
         // Helper function to transform values to a specific char_or_byte type
         template <typename CharOrByte>
         inline constexpr auto to_char_or_byte_transform()
         {
-            return [](const auto& v) { return static_cast<CharOrByte>(v); };
+            return [](const auto& v)
+            {
+                return static_cast<CharOrByte>(v);
+            };
         }
 
         // Helper function to manually copy and convert elements (for when ranges might not be contiguous)
@@ -705,7 +711,7 @@ namespace sparrow
                 {
                     std::int32_t current_offset;
                     std::memcpy(&current_offset, view_ptr + buffer_offset_offset, sizeof(std::int32_t));
-                    
+
                     if (static_cast<std::size_t>(current_offset) > threshold_offset)
                     {
                         current_offset += static_cast<std::int32_t>(offset_adjustment);
@@ -1084,7 +1090,10 @@ namespace sparrow
         if (new_length <= SHORT_STRING_SIZE)
         {
             auto data_ptr = view_ptr + SHORT_STRING_OFFSET;
-            auto transformed = rhs | std::ranges::views::transform(to_char_or_byte_transform<typename T::value_type>());
+            auto transformed = rhs
+                               | std::ranges::views::transform(
+                                   to_char_or_byte_transform<typename T::value_type>()
+                               );
 
             std::ranges::copy(transformed, reinterpret_cast<typename T::value_type*>(data_ptr));
 
@@ -1117,7 +1126,10 @@ namespace sparrow
                 );
             }
 
-            auto transformed_data = rhs | std::ranges::views::transform(to_char_or_byte_transform<typename T::value_type>());
+            auto transformed_data = rhs
+                                    | std::ranges::views::transform(
+                                        to_char_or_byte_transform<typename T::value_type>()
+                                    );
 
             // Check for memory reuse optimization: if the new value is identical to existing data
             bool can_reuse_memory = false;
@@ -1186,7 +1198,10 @@ namespace sparrow
                     );
 
                     // Update buffer sizes metadata
-                    update_buffer_sizes_metadata(buffer_sizes_buffer, static_cast<std::int64_t>(var_data_buffer.size()));
+                    update_buffer_sizes_metadata(
+                        buffer_sizes_buffer,
+                        static_cast<std::int64_t>(var_data_buffer.size())
+                    );
                 }
             }
             else
@@ -1338,7 +1353,10 @@ namespace sparrow
         }
 
         auto& buffer_sizes = buffers[buffers.size() - 1];
-        update_buffer_sizes_metadata(buffer_sizes, static_cast<std::int64_t>(buffers[FIRST_VAR_DATA_BUFFER_INDEX].size()));
+        update_buffer_sizes_metadata(
+            buffer_sizes,
+            static_cast<std::int64_t>(buffers[FIRST_VAR_DATA_BUFFER_INDEX].size())
+        );
 
         // Shift existing view structures after insertion point
         auto* view_data = buffers[LENGTH_BUFFER_INDEX].data();
