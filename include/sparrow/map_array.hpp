@@ -667,7 +667,7 @@ namespace sparrow
                 std::move(flat_items),
                 std::move(list_offsets),
                 buffer<std::uint8_t>{nullptr, 0},  // no validity bitmap
-                0,  // null_count
+                0,                                 // null_count
                 std::move(flags),
                 name,
                 std::forward<std::optional<METADATA_RANGE>>(metadata)
