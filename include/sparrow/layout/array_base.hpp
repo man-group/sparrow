@@ -641,7 +641,7 @@ namespace sparrow
     template <class D>
     constexpr auto array_crtp_base<D>::bitmap_begin() const -> const_bitmap_iterator
     {
-        return sparrow::next(this->derived_cast().get_bitmap().cbegin(), get_arrow_proxy().offset());
+        return this->derived_cast().get_bitmap().cbegin();
     }
 
     template <class D>

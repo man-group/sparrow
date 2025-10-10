@@ -334,27 +334,40 @@ namespace sparrow
             return std::move(m_buffer);
         }
 
+        /**
+         * @brief Returns the bit offset from the start of the buffer.
+         *
+         * This value indicates how many bits from the beginning of the underlying storage
+         * are skipped before the bitset's logical start. It is set during construction and
+         * remains constant for the lifetime of the bitset.
+         *
+         * @return The number of bits offset from the start of the buffer.
+         */
+        [[nodiscard]] size_t offset() const noexcept;
+
     protected:
 
         /**
          * @brief Constructs a bitset with the given storage and size.
          * @param buffer The storage buffer to use
          * @param size The number of bits in the bitset
+         * @param offset The number of bits to offset from the start of the buffer
          * @post size() == size
          * @post null_count() is computed by counting unset bits
          */
-        constexpr dynamic_bitset_base(storage_type buffer, size_type size);
+        constexpr dynamic_bitset_base(storage_type buffer, size_type size, size_type offset);
 
         /**
          * @brief Constructs a bitset with the given storage, size, and null count.
          * @param buffer The storage buffer to use
          * @param size The number of bits in the bitset
          * @param null_count The number of unset bits
+         * @param offset The number of bits to offset from the start of the buffer
          * @pre null_count <= size
          * @post size() == size
          * @post null_count() == null_count
          */
-        constexpr dynamic_bitset_base(storage_type buffer, size_type size, size_type null_count);
+        constexpr dynamic_bitset_base(storage_type buffer, size_type size, size_type offset, size_type null_count);
 
         constexpr ~dynamic_bitset_base() = default;
 
@@ -540,6 +553,7 @@ namespace sparrow
         storage_type m_buffer;   ///< The underlying storage for bit data
         size_type m_size;        ///< The number of bits in the bitset
         size_type m_null_count;  ///< The number of bits set to false
+        size_t m_offset = 0;     ///< The number of bits to offset from the start of the buffer
 
         friend class bitset_iterator<self_type, true>;   ///< Const iterator needs access to internals
         friend class bitset_iterator<self_type, false>;  ///< Mutable iterator needs access to internals
@@ -598,7 +612,8 @@ namespace sparrow
         {
             return true;
         }
-        return !m_null_count || buffer().data()[block_index(pos)] & bit_mask(pos);
+        const size_t pos_with_offset = pos + m_offset;
+        return !m_null_count || buffer().data()[block_index(pos_with_offset)] & bit_mask(pos_with_offset);
     }
 
     template <typename B>
@@ -627,15 +642,16 @@ namespace sparrow
                 }
             }
         }
-        block_type& block = buffer().data()[block_index(pos)];
-        const bool old_value = block & bit_mask(pos);
+        const size_t pos_with_offset = pos + m_offset;
+        block_type& block = buffer().data()[block_index(pos_with_offset)];
+        const bool old_value = block & bit_mask(pos_with_offset);
         if (value)
         {
-            block |= bit_mask(pos);
+            block |= bit_mask(pos_with_offset);
         }
         else
         {
-            block &= block_type(~bit_mask(pos));
+            block &= block_type(~bit_mask(pos_with_offset));
         }
         update_null_count(old_value, value);
     }
@@ -790,19 +806,26 @@ namespace sparrow
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr dynamic_bitset_base<B>::dynamic_bitset_base(storage_type buf, size_type size)
+    constexpr dynamic_bitset_base<B>::dynamic_bitset_base(storage_type buf, size_type size, size_type offset)
         : m_buffer(std::move(buf))
         , m_size(size)
         , m_null_count(m_size - count_non_null())
+        , m_offset(offset)
     {
     }
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr dynamic_bitset_base<B>::dynamic_bitset_base(storage_type buf, size_type size, size_type null_count)
+    constexpr dynamic_bitset_base<B>::dynamic_bitset_base(
+        storage_type buf,
+        size_type size,
+        size_type offset,
+        size_type null_count
+    )
         : m_buffer(std::move(buf))
         , m_size(size)
         , m_null_count(null_count)
+        , m_offset(offset)
     {
     }
 
@@ -914,7 +937,7 @@ namespace sparrow
             return;
         }
         size_type old_block_count = buffer().size();
-        const size_type new_block_count = compute_block_count(n);
+        const size_type new_block_count = compute_block_count(n + m_offset);
         const block_type value = b ? block_type(~block_type(0)) : block_type(0);
 
         if (new_block_count != old_block_count)

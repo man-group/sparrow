@@ -183,7 +183,7 @@ namespace sparrow::test
             ++nb_blocks;
         }
         buffer_type data_buf(nb_blocks);
-        dynamic_bitset_view<std::uint8_t> view(data_buf.data(), size);
+        dynamic_bitset_view<std::uint8_t> view(data_buf.data(), size, 0);
         for (std::size_t i = 0; i < size; ++i)
         {
             view[i] = i % 2 != 0;

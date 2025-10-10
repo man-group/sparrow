@@ -500,7 +500,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         auto buffers = proxy.buffers();
         REQUIRE_EQ(buffers.size(), 2);
         CHECK_EQ(buffers[0].size(), 2);
-        const sparrow::dynamic_bitset_view<uint8_t> bitmap(buffers[0].data(), 10);
+        const sparrow::dynamic_bitset_view<uint8_t> bitmap(buffers[0].data(), 10, 0);
         CHECK(bitmap.test(0));
         CHECK(bitmap.test(1));
         CHECK_FALSE(bitmap.test(2));
@@ -791,7 +791,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             proxy.resize_bitmap(5);
             const auto buffers = proxy.buffers();
             REQUIRE_EQ(buffers.size(), 2);
-            const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 5);
+            const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 5, 0);
             CHECK(bitmap.test(0));
             CHECK(bitmap.test(1));
             CHECK_FALSE(bitmap.test(2));
@@ -827,7 +827,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
                 proxy.insert_bitmap(1, false);
                 const auto buffers = proxy.buffers();
                 REQUIRE_EQ(buffers.size(), 2);
-                const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 7);
+                const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 7, 0);
                 CHECK(bitmap.test(0));
                 CHECK_FALSE(bitmap.test(1));
                 CHECK(bitmap.test(2));
@@ -863,7 +863,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
                 proxy.insert_bitmap(1, false, 2);
                 const auto buffers = proxy.buffers();
                 REQUIRE_EQ(buffers.size(), 2);
-                const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 12);
+                const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 12, 0);
                 CHECK(bitmap.test(0));
                 CHECK_FALSE(bitmap.test(1));
                 CHECK_FALSE(bitmap.test(2));
@@ -905,7 +905,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
                 proxy.insert_bitmap(1, values);
                 const auto buffers = proxy.buffers();
                 REQUIRE_EQ(buffers.size(), 2);
-                const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 14);
+                const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 14, 0);
                 CHECK(bitmap.test(0));
                 CHECK_FALSE(bitmap.test(1));
                 CHECK(bitmap.test(2));
@@ -1010,7 +1010,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             proxy.push_back_bitmap(1);
             const auto buffers = proxy.buffers();
             REQUIRE_EQ(buffers.size(), 2);
-            const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 11);
+            const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 11, 0);
             CHECK(bitmap.test(0));
             CHECK(bitmap.test(1));
             CHECK_FALSE(bitmap.test(2));
@@ -1050,7 +1050,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             proxy.pop_back_bitmap();
             const auto buffers = proxy.buffers();
             REQUIRE_EQ(buffers.size(), 2);
-            const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 9);
+            const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 9, 0);
             CHECK(bitmap.test(0));
             CHECK(bitmap.test(1));
             CHECK_FALSE(bitmap.test(2));
