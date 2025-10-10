@@ -27,6 +27,8 @@ This software is licensed under the Apache License 2.0. See the LICENSE file for
 
 \subpage array
 
+\subpage record_batch
+
 \subpage builder
 
 \subpage dev_build
