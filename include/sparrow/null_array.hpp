@@ -257,7 +257,7 @@ namespace sparrow
         )
             : m_proxy(create_proxy(length, std::move(name), std::move(metadata)))
         {
-        }
+        } 
 
         /**
          * @brief Constructs null array from Arrow proxy.
@@ -508,6 +508,29 @@ namespace sparrow
          * @post All bitmap values are false (indicating null)
          */
         [[nodiscard]] SPARROW_API const_bitmap_range bitmap() const;
+
+        /**
+         * @brief Resizes the null array to the specified size.
+         *
+         * Changes the number of null elements in the array. Since all elements
+         * are conceptually null, this operation only updates the size metadata
+         * without requiring any data buffer reallocation.
+         *
+         * @param new_size The new number of null elements
+         *
+         * @pre new_size must be non-negative
+         * @post size() returns new_size
+         * @post All elements (old and new) remain null
+         * @post Memory usage remains O(1) regardless of new_size
+         * @post Iterator ranges are updated to reflect new size
+         *
+         * @code{.cpp}
+         * null_array arr(100);
+         * arr.resize(200);  // Array now has 200 null elements
+         * assert(arr.size() == 200);
+         * @endcode
+         */
+        SPARROW_API void resize(size_type new_size);
 
     private:
 

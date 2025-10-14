@@ -131,12 +131,18 @@ namespace sparrow
 
     auto null_array::values() const -> const_value_range
     {
-        return std::ranges::subrange(const_value_iterator(0), const_value_iterator(ssize()));
+        return {const_value_iterator(0), const_value_iterator(ssize())};
     }
 
     auto null_array::bitmap() const -> const_bitmap_range
     {
-        return std::ranges::subrange(const_bitmap_iterator(0), const_bitmap_iterator(ssize()));
+        return {const_bitmap_iterator(0), const_bitmap_iterator(ssize())};
+    }
+
+    void null_array::resize(size_type new_size)
+    {
+        m_proxy.set_length(new_size);
+        m_proxy.set_null_count(static_cast<int64_t>(new_size));
     }
 
     auto null_array::ssize() const -> difference_type
