@@ -858,7 +858,9 @@ namespace sparrow
     {
         const auto& data_buffer = get_data_buffer();
         const size_t data_buffer_size = data_buffer.size();
-        const size_type index_offset = (static_cast<size_type>(this->get_arrow_proxy().offset()) * m_element_size) + i;
+        const size_type index_offset = (static_cast<size_type>(this->get_arrow_proxy().offset())
+                                        * m_element_size)
+                                       + i;
         SPARROW_ASSERT_TRUE(data_buffer_size >= index_offset);
         return data_buffer.template data<const data_value_type>() + index_offset;
     }
