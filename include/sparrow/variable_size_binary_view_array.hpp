@@ -239,6 +239,46 @@ namespace sparrow
         };
 
         /**
+         * @brief Returns the Arrow format string for this array type.
+         *
+         * @return "vu" for string_view_array, "vz" for binary_view_array
+         */
+        [[nodiscard]] static constexpr std::string_view get_arrow_format()
+        {
+            return std::is_same_v<T, arrow_traits<std::string>::value_type> ? std::string_view("vu")
+                                                                            : std::string_view("vz");
+        }
+
+        /**
+         * @brief Helper function to create ArrowSchema with common parameters.
+         *
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @param flags Optional Arrow flags
+         * @return ArrowSchema configured for binary/string view array
+         */
+        template <input_metadata_container METADATA_RANGE>
+        [[nodiscard]] static ArrowSchema create_arrow_schema(
+            std::optional<std::string_view> name,
+            std::optional<METADATA_RANGE> metadata,
+            std::optional<std::unordered_set<sparrow::ArrowFlag>> flags
+        )
+        {
+            constexpr repeat_view<bool> children_ownership(true, 0);
+            return make_arrow_schema(
+                get_arrow_format(),
+                std::move(name),
+                std::move(metadata),
+                flags,
+                nullptr,  // children
+                children_ownership,
+                nullptr,  // dictionary
+                true
+            );
+        }
+
+        /**
          * @brief Creates optimized buffer layout from input range.
          *
          * Analyzes the input data and creates the appropriate buffer structure for
@@ -466,6 +506,12 @@ namespace sparrow
 #    pragma GCC diagnostic ignored "-Wcast-align"
 #endif
 
+        // Helper lambda to cast values to uint8_t
+        auto to_uint8 = [](const auto& v)
+        {
+            return static_cast<std::uint8_t>(v);
+        };
+
         const auto size = range_size(range);
         buffer<uint8_t> length_buffer(size * DATA_BUFFER_SIZE);
 
@@ -473,13 +519,7 @@ namespace sparrow
         std::size_t i = 0;
         for (auto&& val : range)
         {
-            auto val_casted = val
-                              | std::ranges::views::transform(
-                                  [](const auto& v)
-                                  {
-                                      return static_cast<std::uint8_t>(v);
-                                  }
-                              );
+            auto val_casted = val | std::ranges::views::transform(to_uint8);
 
             const auto length = val.size();
             auto length_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
@@ -525,13 +565,7 @@ namespace sparrow
             const auto length = val.size();
             if (length > SHORT_STRING_SIZE)
             {
-                auto val_casted = val
-                                  | std::ranges::views::transform(
-                                      [](const auto& v)
-                                      {
-                                          return static_cast<std::uint8_t>(v);
-                                      }
-                                  );
+                auto val_casted = val | std::ranges::views::transform(to_uint8);
 
                 sparrow::ranges::copy(val_casted, long_string_storage.data() + long_string_storage_offset);
                 long_string_storage_offset += length;
@@ -568,22 +602,10 @@ namespace sparrow
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
         const auto null_count = vbitmap.null_count();
 
-        const repeat_view<bool> children_ownership(true, 0);
-
         static const std::optional<std::unordered_set<sparrow::ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
 
-        // create arrow schema and array
-        ArrowSchema schema = make_arrow_schema(
-            std::is_same<T, arrow_traits<std::string>::value_type>::value ? std::string_view("vu")
-                                                                          : std::string_view("vz"),
-            std::move(name),      // name
-            std::move(metadata),  // metadata
-            flags,                // flags
-            nullptr,              // children
-            children_ownership,
-            nullptr,  // dictionary
-            true
-        );
+        // create arrow schema
+        ArrowSchema schema = create_arrow_schema(std::move(name), std::move(metadata), flags);
 
         // create buffers
         auto buffers_parts = create_buffers(std::forward<R>(range));
@@ -594,6 +616,8 @@ namespace sparrow
             std::move(buffers_parts.long_string_storage),
             std::move(buffers_parts.buffer_sizes).extract_storage()
         };
+
+        constexpr repeat_view<bool> children_ownership(true, 0);
 
         // create arrow array
         ArrowArray arr = make_arrow_array(
@@ -657,47 +681,36 @@ namespace sparrow
         {
             return create_proxy(std::forward<R>(range), validity_bitmap{}, std::move(name), std::move(metadata));
         }
-        else
-        {
-            // create arrow schema and array
-            const repeat_view<bool> children_ownership(true, 0);
-            ArrowSchema schema = make_arrow_schema(
-                std::is_same<T, arrow_traits<std::string>::value_type>::value ? std::string_view("vu")
-                                                                              : std::string_view("vz"),
-                std::move(name),      // name
-                std::move(metadata),  // metadata
-                std::nullopt,         // flags
-                nullptr,              // children
-                children_ownership,
-                nullptr,  // dictionary
-                true
-            );
 
-            // create buffers
-            auto buffers_parts = create_buffers(std::forward<R>(range));
+        // create arrow schema
+        ArrowSchema schema = create_arrow_schema(std::move(name), std::move(metadata), std::nullopt);
 
-            std::vector<buffer<uint8_t>> buffers{
-                buffer<uint8_t>{nullptr, 0},  // validity bitmap
-                std::move(buffers_parts.length_buffer),
-                std::move(buffers_parts.long_string_storage),
-                std::move(buffers_parts.buffer_sizes).extract_storage()
-            };
-            const auto size = range_size(range);
+        // create buffers
+        auto buffers_parts = create_buffers(std::forward<R>(range));
 
-            // create arrow array
-            ArrowArray arr = make_arrow_array(
-                static_cast<std::int64_t>(size),  // length
-                static_cast<int64_t>(0),
-                0,  // offset
-                std::move(buffers),
-                nullptr,  // children
-                children_ownership,
-                nullptr,  // dictionary
-                true
-            );
+        std::vector<buffer<uint8_t>> buffers{
+            buffer<uint8_t>{nullptr, 0},  // validity bitmap
+            std::move(buffers_parts.length_buffer),
+            std::move(buffers_parts.long_string_storage),
+            std::move(buffers_parts.buffer_sizes).extract_storage()
+        };
+        const auto size = range_size(range);
 
-            return arrow_proxy{std::move(arr), std::move(schema)};
-        }
+        constexpr repeat_view<bool> children_ownership(true, 0);
+
+        // create arrow array
+        ArrowArray arr = make_arrow_array(
+            static_cast<std::int64_t>(size),  // length
+            static_cast<int64_t>(0),
+            0,  // offset
+            std::move(buffers),
+            nullptr,  // children
+            children_ownership,
+            nullptr,  // dictionary
+            true
+        );
+
+        return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
     template <std::ranges::sized_range T, class CR>
@@ -715,21 +728,9 @@ namespace sparrow
         const auto size = buffer_view.size() / DATA_BUFFER_SIZE;
         SPARROW_ASSERT_TRUE(size == element_count);
 
-        constexpr repeat_view<bool> children_ownership(true, 0);
         static const std::optional<std::unordered_set<sparrow::ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
 
-
-        ArrowSchema schema = make_arrow_schema(
-            std::is_same<T, arrow_traits<std::string>::value_type>::value ? std::string_view("vu")
-                                                                          : std::string_view("vz"),
-            std::move(name),      // name
-            std::move(metadata),  // metadata
-            flags,                // flags
-            nullptr,              // children
-            children_ownership,
-            nullptr,  // dictionary
-            true
-        );
+        ArrowSchema schema = create_arrow_schema(std::move(name), std::move(metadata), flags);
 
         auto bitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
         std::vector<buffer<uint8_t>> buffers{std::move(bitmap).extract_storage(), std::move(buffer_view)};
@@ -745,6 +746,8 @@ namespace sparrow
             buffer_sizes[i] = static_cast<int64_t>(value_buffers[i].size());
         }
         buffers.push_back(std::move(buffer_sizes).extract_storage());
+
+        constexpr repeat_view<bool> children_ownership(true, 0);
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),                 // length
