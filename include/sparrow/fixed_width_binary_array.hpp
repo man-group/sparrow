@@ -419,6 +419,43 @@ namespace sparrow
         static constexpr size_t DATA_BUFFER_INDEX = 1;
 
         /**
+         * @brief Calculates byte offset for element at given index.
+         *
+         * @param index Element index
+         * @return Byte offset in the data buffer
+         *
+         * @post Returns byte offset accounting for proxy offset and element size
+         */
+        [[nodiscard]] constexpr size_type byte_offset(size_type index) const
+        {
+            return (index + static_cast<size_type>(this->get_arrow_proxy().offset())) * m_element_size;
+        }
+
+        /**
+         * @brief Gets mutable reference to the data buffer.
+         *
+         * @return Mutable reference to the data buffer
+         *
+         * @post Returns valid reference to the data buffer
+         */
+        [[nodiscard]] constexpr auto& get_data_buffer()
+        {
+            return this->get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+        }
+
+        /**
+         * @brief Gets const reference to the data buffer.
+         *
+         * @return Const reference to the data buffer
+         *
+         * @post Returns valid reference to the data buffer
+         */
+        [[nodiscard]] constexpr const auto& get_data_buffer() const
+        {
+            return this->get_arrow_proxy().buffers()[DATA_BUFFER_INDEX];
+        }
+
+        /**
          * @brief Gets mutable pointer to data at byte offset.
          *
          * @param i Byte offset into the data buffer
@@ -813,21 +850,17 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR>
     constexpr auto fixed_width_binary_array_impl<T, CR>::data(size_type i) -> data_iterator
     {
-        const arrow_proxy& proxy = this->get_arrow_proxy();
-        auto data_buffer = proxy.buffers()[DATA_BUFFER_INDEX];
-        const size_t data_buffer_size = data_buffer.size();
-        const size_type index_offset = (static_cast<size_type>(proxy.offset()) * m_element_size) + i;
-        SPARROW_ASSERT_TRUE(data_buffer_size >= index_offset);
-        return data_buffer.template data<data_value_type>() + index_offset;
+        return const_cast<data_iterator>(std::as_const(*this).data(i));
     }
 
     template <std::ranges::sized_range T, class CR>
     constexpr auto fixed_width_binary_array_impl<T, CR>::data(size_type i) const -> const_data_iterator
     {
-        const arrow_proxy& proxy = this->get_arrow_proxy();
-        const auto data_buffer = proxy.buffers()[DATA_BUFFER_INDEX];
+        const auto& data_buffer = get_data_buffer();
         const size_t data_buffer_size = data_buffer.size();
-        const size_type index_offset = (static_cast<size_type>(proxy.offset()) * m_element_size) + i;
+        const size_type index_offset = (static_cast<size_type>(this->get_arrow_proxy().offset())
+                                        * m_element_size)
+                                       + i;
         SPARROW_ASSERT_TRUE(data_buffer_size >= index_offset);
         return data_buffer.template data<const data_value_type>() + index_offset;
     }
@@ -892,10 +925,9 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(m_element_size == value.size());
         if (new_length < size())
         {
-            arrow_proxy& proxy = this->get_arrow_proxy();
-            const size_t new_size = new_length + static_cast<size_t>(proxy.offset());
+            const size_t new_size = new_length + static_cast<size_t>(this->get_arrow_proxy().offset());
             const auto offset = new_size * m_element_size;
-            auto& data_buffer = proxy.get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+            auto& data_buffer = get_data_buffer();
             data_buffer.resize(offset);
         }
         else if (new_length > size())
@@ -918,9 +950,8 @@ namespace sparrow
         const std::vector<uint8_t> casted_value(uint8_ptr, uint8_ptr + value.size());
         const repeat_view<std::vector<uint8_t>> my_repeat_view{casted_value, count};
         const auto joined_repeated_value_range = std::ranges::views::join(my_repeat_view);
-        arrow_proxy& proxy = this->get_arrow_proxy();
-        auto& data_buffer = proxy.get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
-        const auto offset_begin = (idx + proxy.offset()) * m_element_size;
+        auto& data_buffer = get_data_buffer();
+        const auto offset_begin = byte_offset(idx);
         const auto pos_to_insert = sparrow::next(data_buffer.cbegin(), offset_begin);
         data_buffer.insert(pos_to_insert, joined_repeated_value_range.begin(), joined_repeated_value_range.end());
         return sparrow::next(value_begin(), idx);
@@ -942,11 +973,11 @@ namespace sparrow
 
         auto values = std::ranges::subrange(first, last);
         const size_t cumulative_sizes = values.size() * m_element_size;
-        auto& data_buffer = get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+        auto& data_buffer = get_data_buffer();
         data_buffer.resize(data_buffer.size() + cumulative_sizes);
         const auto idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
         sequence_view<byte_t> casted_values{reinterpret_cast<byte_t*>(data_buffer.data()), data_buffer.size()};
-        const auto offset_begin = m_element_size * (idx + get_arrow_proxy().offset());
+        const auto offset_begin = byte_offset(idx);
         auto insert_pos = sparrow::next(casted_values.begin(), offset_begin);
 
         // Move elements to make space for the new value
@@ -975,9 +1006,9 @@ namespace sparrow
         {
             return sparrow::next(value_begin(), index);
         }
-        auto& data_buffer = get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+        auto& data_buffer = get_data_buffer();
         const size_type byte_count = m_element_size * count;
-        const auto offset_begin = m_element_size * (index + static_cast<size_type>(get_arrow_proxy().offset()));
+        const auto offset_begin = byte_offset(index);
         const auto offset_end = offset_begin + byte_count;
         // move the values after the erased ones
         std::move(
