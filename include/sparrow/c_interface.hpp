@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <cstdint>
 #include <concepts>
+#include <cstdint>
 
 #ifndef ARROW_C_DATA_INTERFACE
 #    define ARROW_C_DATA_INTERFACE
