@@ -16,9 +16,11 @@
 
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <numeric>
 #include <optional>
 #include <ranges>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -841,6 +843,17 @@ namespace sparrow
             requires mpl::convertible_ranges<U, T>
         constexpr void assign(U&& rhs, size_type index);
 
+        /**
+         * @brief Checks if adding size to current offset would cause overflow.
+         *
+         * @param current_offset Current offset value
+         * @param size_to_add Size that would be added to the offset
+         * @throws std::overflow_error if adding size would exceed maximum offset value
+         *
+         * @note This is a helper method to avoid code duplication in overflow checks
+         */
+        constexpr void check_offset_overflow(offset_type current_offset, offset_type size_to_add) const;
+
         friend class variable_size_binary_reference<self_type>;
         friend const_value_iterator;
         friend base_type;
@@ -1098,6 +1111,13 @@ namespace sparrow
         auto& data_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
         if (shift_byte_count != 0)
         {
+            // Check for offset overflow before adjusting
+            if (shift_byte_count > 0)
+            {
+                const offset_type last_offset = *offset(size());
+                check_offset_overflow(last_offset, shift_byte_count);
+            }
+            
             const auto shift_val_abs = static_cast<size_t>(std::abs(shift_byte_count));
             const auto new_data_buffer_size = shift_byte_count < 0 ? data_buffer.size() - shift_val_abs
                                                                    : data_buffer.size() + shift_val_abs;
@@ -1140,6 +1160,19 @@ namespace sparrow
         );
         // Copy the new value into the buffer
         std::copy(std::ranges::begin(tmp), std::ranges::end(tmp), sparrow::next(data_buffer.begin(), offset_beg));
+    }
+
+    template <std::ranges::sized_range T, class CR, layout_offset OT>
+    constexpr void variable_size_binary_array_impl<T, CR, OT>::check_offset_overflow(
+        offset_type current_offset,
+        offset_type size_to_add
+    ) const
+    {
+        constexpr offset_type max_offset = std::numeric_limits<offset_type>::max();
+        if (current_offset > max_offset - size_to_add)
+        {
+            throw std::overflow_error("Offset overflow: adding elements would exceed maximum offset value");
+        }
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT>
@@ -1279,6 +1312,14 @@ namespace sparrow
         const auto idx = static_cast<size_t>(std::distance(offsets_cbegin(), pos));
         auto offset_buffer_adaptor = make_buffer_adaptor<OT>(offset_buffer);
         const offset_type cumulative_size = value_size * static_cast<offset_type>(count);
+        
+        // Check for offset overflow before adjusting
+        if (!offset_buffer_adaptor.empty())
+        {
+            const offset_type last_offset = offset_buffer_adaptor.back();
+            check_offset_overflow(last_offset, cumulative_size);
+        }
+        
         // Adjust offsets for subsequent elements
         std::for_each(
             sparrow::next(offset_buffer_adaptor.begin(), idx + 1),
@@ -1359,6 +1400,14 @@ namespace sparrow
         auto offset_buffer_adaptor = make_buffer_adaptor<OT>(offset_buffer);
         const auto idx = std::distance(offsets_cbegin(), pos);
         const OT cumulative_sizes = std::reduce(first_sizes, last_sizes, OT(0));
+        
+        // Check for offset overflow before adjusting
+        if (!offset_buffer_adaptor.empty())
+        {
+            const offset_type last_offset = offset_buffer_adaptor.back();
+            check_offset_overflow(last_offset, cumulative_sizes);
+        }
+        
         const auto sizes_count = std::distance(first_sizes, last_sizes);
         offset_buffer_adaptor.resize(offset_buffer_adaptor.size() + static_cast<size_t>(sizes_count));
         // Move the offsets to make space for the new offsets
