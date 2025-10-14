@@ -164,7 +164,7 @@ namespace sparrow
 
         /**
          * @brief Helper to create arrow structures from flat values and buffers.
-         * 
+         *
          * Reduces duplication in list array create_proxy implementations.
          */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
@@ -181,8 +181,9 @@ namespace sparrow
             auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
             const repeat_view<bool> children_ownership{true, 1};
 
-            std::optional<std::unordered_set<ArrowFlag>> flags = 
-                null_count >= 0 ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::NULLABLE}} : std::nullopt;
+            std::optional<std::unordered_set<ArrowFlag>>
+                flags = null_count >= 0 ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::NULLABLE}}
+                                        : std::nullopt;
 
             ArrowSchema schema = make_arrow_schema(
                 std::move(format),                                             // format
@@ -1081,7 +1082,7 @@ namespace sparrow
                 metadata
             );
         }
-        
+
         const auto size = list_offsets.size() - 1;
         std::vector<buffer<std::uint8_t>> arr_buffs = {
             buffer<std::uint8_t>{nullptr, 0},  // no validity bitmap
@@ -1345,7 +1346,7 @@ namespace sparrow
         return detail::make_list_arrow_proxy(
             "+w:" + std::to_string(list_size),
             size,
-            0, 
+            0,
             std::move(flat_values),
             std::move(arr_buffs),
             std::move(name),
