@@ -165,13 +165,13 @@ namespace sparrow
                 constexpr std::size_t new_size = 20u;
                 ar.resize(new_size);
                 CHECK_EQ(ar.size(), new_size);
-                
+
                 // Verify all elements are still null
                 for (std::size_t i = 0; i < new_size; ++i)
                 {
                     CHECK_EQ(ar[i], nullval);
                 }
-                
+
                 // Verify iterators work with new size
                 auto iter = ar.begin();
                 std::size_t count = 0;
@@ -189,7 +189,7 @@ namespace sparrow
                 constexpr std::size_t new_size = 5u;
                 ar.resize(new_size);
                 CHECK_EQ(ar.size(), new_size);
-                
+
                 // Verify all elements are still null
                 for (std::size_t i = 0; i < new_size; ++i)
                 {

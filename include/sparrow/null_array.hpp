@@ -257,7 +257,7 @@ namespace sparrow
         )
             : m_proxy(create_proxy(length, std::move(name), std::move(metadata)))
         {
-        } 
+        }
 
         /**
          * @brief Constructs null array from Arrow proxy.
