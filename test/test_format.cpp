@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
 #include <version>
 
 #if defined(__cpp_lib_format)
 
 #    include "sparrow/utils/format.hpp"
+#    include "sparrow/utils/ranges.hpp"
 
 #    include "doctest/doctest.h"
 
@@ -25,6 +27,44 @@ using namespace sparrow;
 
 TEST_SUITE("format")
 {
+    TEST_CASE("size_of_utf8")
+    {
+        SUBCASE("empty")
+        {
+            CHECK_EQ(size_of_utf8(""), 0);
+        }
+
+        SUBCASE("ascii")
+        {
+            CHECK_EQ(size_of_utf8("hello"), 5);
+        }
+
+        SUBCASE("multibyte characters")
+        {
+            CHECK_EQ(size_of_utf8("こんにちは"), 5);
+        }
+
+        SUBCASE("mixed characters")
+        {
+            CHECK_EQ(size_of_utf8("hello こんにちは"), 11);
+        }
+
+        SUBCASE("emoji")
+        {
+            CHECK_EQ(size_of_utf8("😀😃😄😁"), 4);
+        }
+
+        SUBCASE("greek letters")
+        {
+            CHECK_EQ(size_of_utf8("αβγδε"), 5);
+        }
+
+        SUBCASE("p├┤r4┬Á3i")
+        {
+            CHECK_EQ(size_of_utf8("p├┤r4┬Á3i"), 9);
+        }
+    }
+
     TEST_CASE("max_width")
     {
         SUBCASE("empty")
@@ -43,6 +83,18 @@ TEST_SUITE("format")
         {
             const std::vector<std::string> data{"a", "bb", "ccc"};
             CHECK_EQ(max_width(data), 3);
+        }
+
+        SUBCASE("mixed")
+        {
+            const std::vector<std::string> data{"a", "bb", "こんにちは"};
+            CHECK_EQ(max_width(data), 5);
+        }
+
+        SUBCASE("mixed 2")
+        {
+            const std::vector<std::string> data{"a", "bb", "p├┤r4┬Á3i"};
+            CHECK_EQ(max_width(data), 9);
         }
 
         SUBCASE("floating points")
@@ -197,6 +249,21 @@ TEST_SUITE("format")
             to_table_with_columns(std::back_inserter(out), names, columns);
             CHECK_EQ(out, expected);
         }
+    }
+
+    TEST_CASE("std::byte")
+    {
+        std::vector<std::byte> data(10, std::byte{0x1});
+        std::string out = std::format("{}", data);
+        CHECK_EQ(out, "<0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01>");
+    }
+
+    TEST_CASE("sequence_view")
+    {
+        std::vector<std::byte> data(10, std::byte{0x1});
+        sequence_view<std::byte> view(data);
+        std::string out = std::format("{}", view);
+        CHECK_EQ(out, "<0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01>");
     }
 }
 

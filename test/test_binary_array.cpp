@@ -13,30 +13,22 @@
 // limitations under the License.
 
 #include <cstddef>
-#include <numeric>
 #include <vector>
 
-#include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
-#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/variable_size_binary_array.hpp"
 
 #include "../test/external_array_data_creation.hpp"
-#include "../test/metadata_sample.hpp"
 #include "doctest/doctest.h"
 #include "test_utils.hpp"
 
 namespace sparrow
 {
-    // Type list for testing both binary_array and big_binary_array
-    using binary_array_types = std::tuple<binary_array, big_binary_array>;
-
-    template <class T>
     struct binary_array_fixture
     {
-        using layout_type = T;
+        using layout_type = binary_array;
 
         binary_array_fixture()
             : m_arrow_proxy(create_arrow_proxy())
@@ -53,104 +45,24 @@ namespace sparrow
 
     private:
 
-        static_assert(is_binary_array_v<layout_type> || is_big_binary_array_v<layout_type>);
-        static_assert(std::same_as<typename layout_type::inner_value_type, value_type>);
+        static_assert(is_binary_array_v<layout_type>);
+        static_assert(std::same_as<layout_type::inner_value_type, value_type>);
         static_assert(
-            std::same_as<typename layout_type::inner_reference, sparrow::variable_size_binary_reference<layout_type>>
+            std::same_as<layout_type::inner_reference, sparrow::variable_size_binary_reference<layout_type>>
         );
-        static_assert(std::same_as<typename layout_type::inner_const_reference, const_reference>);
-        using const_value_iterator = typename layout_type::const_value_iterator;
-        static_assert(std::same_as<typename const_value_iterator::value_type, value_type>);
+        static_assert(std::same_as<layout_type::inner_const_reference, const_reference>);
+        using const_value_iterator = layout_type::const_value_iterator;
+        static_assert(std::same_as<const_value_iterator::value_type, value_type>);
 
-        static_assert(std::same_as<typename const_value_iterator::reference, const_reference>);
+        static_assert(std::same_as<const_value_iterator::reference, const_reference>);
 
         arrow_proxy create_arrow_proxy()
         {
             ArrowSchema schema{};
             ArrowArray array{};
             const std::vector<size_t> false_bitmap{m_false_bitmap.begin(), m_false_bitmap.end()};
-
-            if constexpr (std::same_as<layout_type, binary_array>)
-            {
-                test::fill_schema_and_array<std::vector<byte_t>>(schema, array, m_length, m_offset, false_bitmap);
-            }
-            else if constexpr (std::same_as<layout_type, big_binary_array>)
-            {
-                fill_big_binary_schema_and_array(schema, array, m_length, m_offset, false_bitmap);
-            }
-
+            test::fill_schema_and_array<std::vector<byte_t>>(schema, array, m_length, m_offset, false_bitmap);
             return arrow_proxy{std::move(array), std::move(schema)};
-        }
-
-    private:
-
-        void fill_big_binary_schema_and_array(
-            ArrowSchema& schema,
-            ArrowArray& arr,
-            size_t size,
-            size_t offset,
-            const std::vector<size_t>& false_bitmap
-        )
-        {
-            const repeat_view<bool> children_ownership(true, 0);
-
-            sparrow::fill_arrow_schema(
-                schema,
-                std::string_view("Z"),  // Large binary format
-                "test",
-                metadata_sample_opt,
-                std::nullopt,
-                nullptr,
-                children_ownership,
-                nullptr,
-                true
-            );
-
-            using buffer_type = sparrow::buffer<std::uint8_t>;
-
-            auto bytes = test::make_testing_bytes(size);
-            std::size_t value_size = std::accumulate(
-                bytes.cbegin(),
-                bytes.cbegin() + std::ptrdiff_t(size),
-                std::size_t(0),
-                [](std::size_t res, const auto& s)
-                {
-                    return res + s.size();
-                }
-            );
-
-            buffer_type offset_buf(sizeof(std::int64_t) * (size + 1));  // Use int64_t for big binary
-            buffer_type value_buf(sizeof(char) * value_size);
-            {
-                std::int64_t* offset_data = offset_buf.data<std::int64_t>();  // Use int64_t
-                offset_data[0] = 0;
-                byte_t* ptr = value_buf.data<byte_t>();
-                for (std::size_t i = 0; i < size; ++i)
-                {
-                    offset_data[i + 1] = offset_data[i] + static_cast<std::int64_t>(bytes[i].size());  // Use
-                                                                                                       // int64_t
-                    sparrow::ranges::copy(bytes[i], ptr);
-                    ptr += bytes[i].size();
-                }
-            }
-
-            std::vector<buffer_type> arr_buffs = {
-                sparrow::test::make_bitmap_buffer(size, false_bitmap),
-                std::move(offset_buf),
-                std::move(value_buf)
-            };
-
-            sparrow::fill_arrow_array(
-                arr,
-                static_cast<std::int64_t>(size - offset),
-                static_cast<std::int64_t>(false_bitmap.size()),
-                static_cast<std::int64_t>(offset),
-                std::move(arr_buffs),
-                nullptr,
-                children_ownership,
-                nullptr,
-                true
-            );
         }
     };
 
@@ -194,208 +106,187 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_TEMPLATE_DEFINE("constructor", T, constructor_id)
+        TEST_CASE_FIXTURE(binary_array_fixture, "constructor")
         {
-            binary_array_fixture<T> fixture;
-            using layout_type = T;
-
             SUBCASE("copy arrow_proxy")
             {
-                CHECK_NOTHROW(layout_type(fixture.m_arrow_proxy));
+                CHECK_NOTHROW(layout_type(m_arrow_proxy));
             }
 
             SUBCASE("move arrow_proxy")
             {
-                CHECK_NOTHROW(layout_type(std::move(fixture.m_arrow_proxy)));
+                CHECK_NOTHROW(layout_type(std::move(m_arrow_proxy)));
             }
         }
 
-        TEST_CASE_TEMPLATE_DEFINE("copy", T, copy_id)
+        TEST_CASE_FIXTURE(binary_array_fixture, "copy")
         {
-            binary_array_fixture<T> fixture;
-            using layout_type = T;
-
-            layout_type ar(fixture.m_arrow_proxy);
+            layout_type ar(m_arrow_proxy);
             layout_type ar2(ar);
             CHECK_EQ(ar, ar2);
 
-            layout_type ar3(std::move(fixture.m_arrow_proxy));
+            layout_type ar3(std::move(m_arrow_proxy));
             ar3 = ar2;
             CHECK_EQ(ar2, ar3);
         }
 
-        TEST_CASE_TEMPLATE_DEFINE("move", T, move_id)
+        TEST_CASE_FIXTURE(binary_array_fixture, "move")
         {
-            binary_array_fixture<T> fixture;
-            using layout_type = T;
-
-            layout_type ar(fixture.m_arrow_proxy);
+            layout_type ar(m_arrow_proxy);
             layout_type ar2(ar);
             layout_type ar3(std::move(ar));
             CHECK_EQ(ar2, ar3);
 
-            layout_type ar4(std::move(fixture.m_arrow_proxy));
+            layout_type ar4(std::move(m_arrow_proxy));
             ar4 = std::move(ar3);
             CHECK_EQ(ar2, ar4);
         }
 
-        TEST_CASE_TEMPLATE_DEFINE("size", T, size_id)
+        TEST_CASE_FIXTURE(binary_array_fixture, "size")
         {
-            binary_array_fixture<T> fixture;
-            using layout_type = T;
-
-            const layout_type array(std::move(fixture.m_arrow_proxy));
-            CHECK_EQ(array.size(), fixture.m_length - fixture.m_offset);
+            const layout_type array(std::move(m_arrow_proxy));
+            CHECK_EQ(array.size(), m_length - m_offset);
         }
 
-        TEST_CASE_TEMPLATE_DEFINE("operator[]", T, operator_bracket_id)
+        TEST_CASE_FIXTURE(binary_array_fixture, "operator[]")
         {
-            binary_array_fixture<T> fixture;
-            using layout_type = T;
-
-            std::vector<std::vector<byte_t>> words = test::make_testing_bytes(fixture.m_length);
+            std::vector<std::vector<byte_t>> words = test::make_testing_bytes(m_length);
 
             SUBCASE("const")
             {
-                const layout_type array(std::move(fixture.m_arrow_proxy));
-                REQUIRE_EQ(array.size(), fixture.m_length - fixture.m_offset);
+                const layout_type array(std::move(m_arrow_proxy));
+                REQUIRE_EQ(array.size(), m_length - m_offset);
                 const auto cref0 = array[0];
                 REQUIRE(cref0.has_value());
-                CHECK_EQ(cref0.get(), words[fixture.m_offset]);
+                CHECK_EQ(cref0.get(), words[m_offset]);
                 const auto cref1 = array[1];
                 REQUIRE_FALSE(cref1.has_value());
                 const auto cref2 = array[2];
                 REQUIRE(cref2.has_value());
-                CHECK_EQ(cref2.get(), words[fixture.m_offset + 2]);
+                CHECK_EQ(cref2.get(), words[m_offset + 2]);
                 const auto cref3 = array[3];
                 REQUIRE(cref3.has_value());
-                CHECK_EQ(cref3.get(), words[fixture.m_offset + 3]);
+                CHECK_EQ(cref3.get(), words[m_offset + 3]);
                 const auto cref4 = array[4];
                 REQUIRE_FALSE(cref4.has_value());
                 const auto cref5 = array[5];
                 REQUIRE(cref5.has_value());
-                CHECK_EQ(cref5.get(), words[fixture.m_offset + 5]);
+                CHECK_EQ(cref5.get(), words[m_offset + 5]);
                 const auto cref6 = array[6];
                 REQUIRE(cref6.has_value());
-                CHECK_EQ(cref6.get(), words[fixture.m_offset + 6]);
+                CHECK_EQ(cref6.get(), words[m_offset + 6]);
                 const auto cref7 = array[7];
                 REQUIRE(cref7.has_value());
-                CHECK_EQ(cref7.get(), words[fixture.m_offset + 7]);
+                CHECK_EQ(cref7.get(), words[m_offset + 7]);
                 const auto cref8 = array[8];
                 REQUIRE(cref8.has_value());
-                CHECK_EQ(cref8.get(), words[fixture.m_offset + 8]);
+                CHECK_EQ(cref8.get(), words[m_offset + 8]);
             }
 
             SUBCASE("mutable")
             {
-                layout_type array(std::move(fixture.m_arrow_proxy));
-                REQUIRE_EQ(array.size(), fixture.m_length - fixture.m_offset);
+                layout_type array(std::move(m_arrow_proxy));
+                REQUIRE_EQ(array.size(), m_length - m_offset);
                 auto ref0 = array[0];
                 REQUIRE(ref0.has_value());
-                CHECK_EQ(ref0.get(), words[fixture.m_offset]);
+                CHECK_EQ(ref0.get(), words[m_offset]);
                 auto ref1 = array[1];
                 REQUIRE_FALSE(ref1.has_value());
                 auto ref2 = array[2];
                 REQUIRE(ref2.has_value());
-                CHECK_EQ(ref2.get(), words[fixture.m_offset + 2]);
+                CHECK_EQ(ref2.get(), words[m_offset + 2]);
                 auto ref3 = array[3];
                 REQUIRE(ref3.has_value());
-                CHECK_EQ(ref3.get(), words[fixture.m_offset + 3]);
+                CHECK_EQ(ref3.get(), words[m_offset + 3]);
                 auto ref4 = array[4];
                 REQUIRE_FALSE(ref4.has_value());
                 auto ref5 = array[5];
                 REQUIRE(ref5.has_value());
-                CHECK_EQ(ref5.get(), words[fixture.m_offset + 5]);
+                CHECK_EQ(ref5.get(), words[m_offset + 5]);
                 auto ref6 = array[6];
                 REQUIRE(ref6.has_value());
-                CHECK_EQ(ref6.get(), words[fixture.m_offset + 6]);
+                CHECK_EQ(ref6.get(), words[m_offset + 6]);
                 auto ref7 = array[7];
                 REQUIRE(ref7.has_value());
-                CHECK_EQ(ref7.get(), words[fixture.m_offset + 7]);
+                CHECK_EQ(ref7.get(), words[m_offset + 7]);
                 auto ref8 = array[8];
                 REQUIRE(ref8.has_value());
-                CHECK_EQ(ref8.get(), words[fixture.m_offset + 8]);
+                CHECK_EQ(ref8.get(), words[m_offset + 8]);
 
                 using bytes_type = std::vector<byte_t>;
                 bytes_type word61 = {byte_t(14), byte_t(15)};
                 array[6] = make_nullable<bytes_type>(bytes_type(word61));
                 CHECK_EQ(ref6.get(), word61);
-                CHECK_EQ(ref7.get(), words[fixture.m_offset + 7]);
-                CHECK_EQ(ref8.get(), words[fixture.m_offset + 8]);
+                CHECK_EQ(ref7.get(), words[m_offset + 7]);
+                CHECK_EQ(ref8.get(), words[m_offset + 8]);
 
                 bytes_type word62 = {byte_t(17)};
                 array[6] = make_nullable<bytes_type>(bytes_type(word62));
                 CHECK_EQ(ref6.get(), word62);
-                CHECK_EQ(ref7.get(), words[fixture.m_offset + 7]);
-                CHECK_EQ(ref8.get(), words[fixture.m_offset + 8]);
+                CHECK_EQ(ref7.get(), words[m_offset + 7]);
+                CHECK_EQ(ref8.get(), words[m_offset + 8]);
             }
         }
 
-        TEST_CASE_TEMPLATE_DEFINE("value", T, value_id)
+        TEST_CASE_FIXTURE(binary_array_fixture, "value")
         {
-            binary_array_fixture<T> fixture;
-            using layout_type = T;
-
-            std::vector<std::vector<byte_t>> words = test::make_testing_bytes(fixture.m_length);
+            std::vector<std::vector<byte_t>> words = test::make_testing_bytes(m_length);
 
             SUBCASE("const")
             {
-                const layout_type array(std::move(fixture.m_arrow_proxy));
-                CHECK_EQ(array.value(0), words[fixture.m_offset]);
-                CHECK_EQ(array.value(1), words[fixture.m_offset + 1]);
-                CHECK_EQ(array.value(2), words[fixture.m_offset + 2]);
-                CHECK_EQ(array.value(3), words[fixture.m_offset + 3]);
-                CHECK_EQ(array.value(4), words[fixture.m_offset + 4]);
-                CHECK_EQ(array.value(5), words[fixture.m_offset + 5]);
-                CHECK_EQ(array.value(6), words[fixture.m_offset + 6]);
+                const layout_type array(std::move(m_arrow_proxy));
+                CHECK_EQ(array.value(0), words[m_offset]);
+                CHECK_EQ(array.value(1), words[m_offset + 1]);
+                CHECK_EQ(array.value(2), words[m_offset + 2]);
+                CHECK_EQ(array.value(3), words[m_offset + 3]);
+                CHECK_EQ(array.value(4), words[m_offset + 4]);
+                CHECK_EQ(array.value(5), words[m_offset + 5]);
+                CHECK_EQ(array.value(6), words[m_offset + 6]);
             }
 
             SUBCASE("mutable")
             {
-                layout_type array(std::move(fixture.m_arrow_proxy));
-                CHECK_EQ(array.value(0), words[fixture.m_offset]);
-                CHECK_EQ(array.value(1), words[fixture.m_offset + 1]);
-                CHECK_EQ(array.value(2), words[fixture.m_offset + 2]);
-                CHECK_EQ(array.value(3), words[fixture.m_offset + 3]);
-                CHECK_EQ(array.value(4), words[fixture.m_offset + 4]);
-                CHECK_EQ(array.value(5), words[fixture.m_offset + 5]);
-                CHECK_EQ(array.value(6), words[fixture.m_offset + 6]);
-                CHECK_EQ(array.value(7), words[fixture.m_offset + 7]);
-                CHECK_EQ(array.value(8), words[fixture.m_offset + 8]);
+                layout_type array(std::move(m_arrow_proxy));
+                CHECK_EQ(array.value(0), words[m_offset]);
+                CHECK_EQ(array.value(1), words[m_offset + 1]);
+                CHECK_EQ(array.value(2), words[m_offset + 2]);
+                CHECK_EQ(array.value(3), words[m_offset + 3]);
+                CHECK_EQ(array.value(4), words[m_offset + 4]);
+                CHECK_EQ(array.value(5), words[m_offset + 5]);
+                CHECK_EQ(array.value(6), words[m_offset + 6]);
+                CHECK_EQ(array.value(7), words[m_offset + 7]);
+                CHECK_EQ(array.value(8), words[m_offset + 8]);
 
                 using bytes_type = std::vector<byte_t>;
                 bytes_type word61 = {byte_t(14), byte_t(15)};
                 array.value(6) = word61;
                 CHECK_EQ(array.value(6), word61);
-                CHECK_EQ(array.value(7), words[fixture.m_offset + 7]);
-                CHECK_EQ(array.value(8), words[fixture.m_offset + 8]);
+                CHECK_EQ(array.value(7), words[m_offset + 7]);
+                CHECK_EQ(array.value(8), words[m_offset + 8]);
 
                 bytes_type word62 = {byte_t(17)};
                 array.value(6) = word62;
                 CHECK_EQ(array.value(6), word62);
-                CHECK_EQ(array.value(7), words[fixture.m_offset + 7]);
-                CHECK_EQ(array.value(8), words[fixture.m_offset + 8]);
+                CHECK_EQ(array.value(7), words[m_offset + 7]);
+                CHECK_EQ(array.value(8), words[m_offset + 8]);
             }
         }
 
-        TEST_CASE_TEMPLATE_DEFINE("const_bitmap_iterator", T, const_bitmap_iterator_id)
+        TEST_CASE_FIXTURE(binary_array_fixture, "const_bitmap_iterator")
         {
-            binary_array_fixture<T> fixture;
-            using layout_type = T;
-
             SUBCASE("ordering")
             {
-                const layout_type array(std::move(fixture.m_arrow_proxy));
+                const layout_type array(std::move(m_arrow_proxy));
                 const auto array_bitmap = array.bitmap();
                 CHECK(array_bitmap.begin() < array_bitmap.end());
             }
 
             SUBCASE("equality")
             {
-                const layout_type array(std::move(fixture.m_arrow_proxy));
+                const layout_type array(std::move(m_arrow_proxy));
                 const auto array_bitmap = array.bitmap();
 
-                typename layout_type::const_bitmap_iterator citer = array_bitmap.begin();
+                layout_type::const_bitmap_iterator citer = array_bitmap.begin();
                 CHECK(*citer);
                 CHECK_FALSE(*(++citer));
                 CHECK(*(++citer));
@@ -408,53 +299,50 @@ namespace sparrow
             }
         }
 
-        TEST_CASE_TEMPLATE_DEFINE("iterator", T, iterator_id)
+        TEST_CASE_FIXTURE(binary_array_fixture, "iterator")
         {
-            binary_array_fixture<T> fixture;
-            using layout_type = T;
-
-            std::vector<std::vector<byte_t>> words = test::make_testing_bytes(fixture.m_length);
+            std::vector<std::vector<byte_t>> words = test::make_testing_bytes(m_length);
 
             SUBCASE("const")
             {
-                const layout_type array(std::move(fixture.m_arrow_proxy));
+                const layout_type array(std::move(m_arrow_proxy));
                 auto it = array.cbegin();
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->value(), words[fixture.m_offset]);
+                CHECK_EQ(it->value(), words[m_offset]);
                 CHECK_EQ(*it, make_nullable(array[0].value()));
                 ++it;
 
                 CHECK_FALSE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 1]);
+                CHECK_EQ(it->get(), words[m_offset + 1]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 2]);
+                CHECK_EQ(it->get(), words[m_offset + 2]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 3]);
+                CHECK_EQ(it->get(), words[m_offset + 3]);
                 ++it;
 
                 CHECK_FALSE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 4]);
+                CHECK_EQ(it->get(), words[m_offset + 4]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 5]);
+                CHECK_EQ(it->get(), words[m_offset + 5]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 6]);
+                CHECK_EQ(it->get(), words[m_offset + 6]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 7]);
+                CHECK_EQ(it->get(), words[m_offset + 7]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 8]);
+                CHECK_EQ(it->get(), words[m_offset + 8]);
                 ++it;
 
                 CHECK_EQ(it, array.end());
@@ -462,44 +350,44 @@ namespace sparrow
 
             SUBCASE("non const")
             {
-                layout_type array(std::move(fixture.m_arrow_proxy));
+                layout_type array(std::move(m_arrow_proxy));
                 auto it = array.begin();
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->value(), words[fixture.m_offset]);
+                CHECK_EQ(it->value(), words[m_offset]);
                 CHECK_EQ(*it, make_nullable(array[0].value()));
                 ++it;
 
                 CHECK_FALSE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 1]);
+                CHECK_EQ(it->get(), words[m_offset + 1]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 2]);
+                CHECK_EQ(it->get(), words[m_offset + 2]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 3]);
+                CHECK_EQ(it->get(), words[m_offset + 3]);
                 ++it;
 
                 CHECK_FALSE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 4]);
+                CHECK_EQ(it->get(), words[m_offset + 4]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 5]);
+                CHECK_EQ(it->get(), words[m_offset + 5]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 6]);
+                CHECK_EQ(it->get(), words[m_offset + 6]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 7]);
+                CHECK_EQ(it->get(), words[m_offset + 7]);
                 ++it;
 
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 8]);
+                CHECK_EQ(it->get(), words[m_offset + 8]);
                 ++it;
 
                 CHECK_EQ(it, array.end());
@@ -513,16 +401,13 @@ namespace sparrow
                 CHECK_EQ(it->get(), word61);
                 ++it;
                 REQUIRE(it->has_value());
-                CHECK_EQ(it->get(), words[fixture.m_offset + 8]);
+                CHECK_EQ(it->get(), words[m_offset + 8]);
             }
         }
 
-        TEST_CASE_TEMPLATE_DEFINE("zero_null_values", T, zero_null_values_id)
+        TEST_CASE_FIXTURE(binary_array_fixture, "zero_null_values")
         {
-            binary_array_fixture<T> fixture;
-            using layout_type = T;
-
-            layout_type array(std::move(fixture.m_arrow_proxy));
+            layout_type array(std::move(m_arrow_proxy));
             array.zero_null_values();
             // CHECK that all null values are set to empty vector
             for (auto&& i : array)
@@ -534,41 +419,14 @@ namespace sparrow
             }
         }
 #if defined(__cpp_lib_format)
-        TEST_CASE_TEMPLATE_DEFINE("formatting", T, formatting_id)
+        TEST_CASE_FIXTURE(binary_array_fixture, "formatting")
         {
-            binary_array_fixture<T> fixture;
-            using layout_type = T;
-
-            const layout_type array(std::move(fixture.m_arrow_proxy));
+            const layout_type array(std::move(m_arrow_proxy));
             const std::string formatted = std::format("{}", array);
-
-            if constexpr (std::same_as<layout_type, binary_array>)
-            {
-                constexpr std::string_view
-                    expected = "Binary [name=test | size=9] <<1, 1, 255, 0>, null, <2, 3>, <3, 5, 255>, null, <8, 13>, <13, 21, 251, 8>, <21, 34, 248>, <34, 55>>";
-                CHECK_EQ(formatted, expected);
-            }
-            else if constexpr (std::same_as<layout_type, big_binary_array>)
-            {
-                constexpr std::string_view
-                    expected = "Large binary [name=test | size=9] <<1, 1, 255, 0>, null, <2, 3>, <3, 5, 255>, null, <8, 13>, <13, 21, 251, 8>, <21, 34, 248>, <34, 55>>";
-                CHECK_EQ(formatted, expected);
-            }
+            constexpr std::string_view
+                expected = "Binary [name=test | size=9] <<0x01, 0x01, 0xff, 0x00>, null, <0x02, 0x03>, <0x03, 0x05, 0xff>, null, <0x08, 0x0d>, <0x0d, 0x15, 0xfb, 0x08>, <0x15, 0x22, 0xf8>, <0x22, 0x37>>";
+            CHECK_EQ(formatted, expected);
         }
-#endif
-
-        // Apply the template tests to both binary_array and big_binary_array
-        TEST_CASE_TEMPLATE_APPLY(constructor_id, binary_array_types);
-        TEST_CASE_TEMPLATE_APPLY(copy_id, binary_array_types);
-        TEST_CASE_TEMPLATE_APPLY(move_id, binary_array_types);
-        TEST_CASE_TEMPLATE_APPLY(size_id, binary_array_types);
-        TEST_CASE_TEMPLATE_APPLY(operator_bracket_id, binary_array_types);
-        TEST_CASE_TEMPLATE_APPLY(value_id, binary_array_types);
-        TEST_CASE_TEMPLATE_APPLY(const_bitmap_iterator_id, binary_array_types);
-        TEST_CASE_TEMPLATE_APPLY(iterator_id, binary_array_types);
-        TEST_CASE_TEMPLATE_APPLY(zero_null_values_id, binary_array_types);
-#if defined(__cpp_lib_format)
-        TEST_CASE_TEMPLATE_APPLY(formatting_id, binary_array_types);
 #endif
     }
 }

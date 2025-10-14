@@ -798,7 +798,7 @@ namespace sparrow
             };
             const std::string formatted = std::format("{}", arr);
             constexpr std::string_view
-                expected = "Fixed width binary [name=nullptr | size=3] <<1, 2, 3>, null, <7, 8, 9>>";
+                expected = "Fixed width binary [name=nullptr | size=3] <<0x01, 0x02, 0x03>, null, <0x07, 0x08, 0x09>>";
             CHECK_EQ(formatted, expected);
         }
 #endif
