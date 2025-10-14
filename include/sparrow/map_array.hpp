@@ -338,6 +338,36 @@ namespace sparrow
         check_keys_sorted(const array& flat_keys, const offset_buffer_type& offsets);
 
         /**
+         * @brief Core implementation for creating Arrow proxy structures.
+         *
+         * Internal helper that creates the ArrowArray and ArrowSchema from the provided
+         * components. This function contains the common logic shared by the public
+         * create_proxy overloads.
+         *
+         * @tparam METADATA_RANGE Type of metadata container
+         * @param flat_keys Array containing all map keys
+         * @param flat_items Array containing all map values
+         * @param list_offsets Buffer of offsets indicating map boundaries
+         * @param validity_buffer Optional validity bitmap buffer
+         * @param null_count Number of null elements
+         * @param flags Optional ArrowFlag set
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         * @return Arrow proxy containing the map array data and schema
+         */
+        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+        [[nodiscard]] static arrow_proxy create_proxy_impl(
+            array&& flat_keys,
+            array&& flat_items,
+            offset_buffer_type&& list_offsets,
+            buffer<std::uint8_t>&& validity_buffer,
+            std::int64_t null_count,
+            std::optional<std::unordered_set<ArrowFlag>> flags,
+            std::optional<std::string_view> name,
+            std::optional<METADATA_RANGE> metadata
+        );
+
+        /**
          * @brief Creates Arrow proxy from keys, values, offsets, and validity bitmap.
          *
          * @tparam VB Type of validity bitmap input
@@ -518,6 +548,57 @@ namespace sparrow
         );
     }
 
+    template <input_metadata_container METADATA_RANGE>
+    arrow_proxy map_array::create_proxy_impl(
+        array&& flat_keys,
+        array&& flat_items,
+        offset_buffer_type&& list_offsets,
+        buffer<std::uint8_t>&& validity_buffer,
+        std::int64_t null_count,
+        std::optional<std::unordered_set<ArrowFlag>> flags,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
+    {
+        const auto size = list_offsets.size() - 1;
+
+        std::array<sparrow::array, 2> struct_children = {std::move(flat_keys), std::move(flat_items)};
+        struct_array entries(std::move(struct_children), false, std::string("entries"));
+
+        auto [entries_arr, entries_schema] = extract_arrow_structures(std::move(entries));
+
+        const repeat_view<bool> children_ownership{true, 1};
+
+        ArrowSchema schema = make_arrow_schema(
+            std::string("+m"),
+            name,      // name
+            metadata,  // metadata
+            flags,     // flags,
+            new ArrowSchema*[1]{new ArrowSchema(std::move(entries_schema))},
+            children_ownership,  // children ownership
+            nullptr,             // dictionary
+            true                 // dictionary ownership
+
+        );
+
+        std::vector<buffer<std::uint8_t>> arr_buffs = {
+            std::move(validity_buffer),
+            std::move(list_offsets).extract_storage()
+        };
+
+        ArrowArray arr = make_arrow_array(
+            static_cast<std::int64_t>(size),  // length
+            null_count,
+            0,  // offset
+            std::move(arr_buffs),
+            new ArrowArray*[1]{new ArrowArray(std::move(entries_arr))},
+            children_ownership,  // children ownership
+            nullptr,             // dictionary
+            true                 // dictionary ownership
+        );
+        return arrow_proxy{std::move(arr), std::move(schema)};
+    }
+
     template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
     arrow_proxy map_array::create_proxy(
         array&& flat_keys,
@@ -538,42 +619,19 @@ namespace sparrow
             flags.value().insert(ArrowFlag::MAP_KEYS_SORTED);
         }
 
-        std::array<sparrow::array, 2> struct_children = {std::move(flat_keys), std::move(flat_items)};
-        struct_array entries(std::move(struct_children), false, std::string("entries"));
-
-        auto [entries_arr, entries_schema] = extract_arrow_structures(std::move(entries));
-
         const auto null_count = vbitmap.null_count();
-        const repeat_view<bool> children_ownership{true, 1};
+        buffer<std::uint8_t> validity_buffer = std::move(vbitmap).extract_storage();
 
-        ArrowSchema schema = make_arrow_schema(
-            std::string("+m"),
-            name,      // name
-            metadata,  // metadata
-            flags,     // flags,
-            new ArrowSchema*[1]{new ArrowSchema(std::move(entries_schema))},
-            children_ownership,  // children ownership
-            nullptr,             // dictionary
-            true                 // dictionary ownership
-
-        );
-
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(vbitmap).extract_storage(),
-            std::move(list_offsets).extract_storage()
-        };
-
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // length
+        return create_proxy_impl(
+            std::move(flat_keys),
+            std::move(flat_items),
+            std::move(list_offsets),
+            std::move(validity_buffer),
             static_cast<std::int64_t>(null_count),
-            0,  // offset
-            std::move(arr_buffs),
-            new ArrowArray*[1]{new ArrowArray(std::move(entries_arr))},
-            children_ownership,  // children ownership
-            nullptr,             // dictionary
-            true                 // dictionary ownership
+            std::move(flags),
+            name,
+            std::forward<std::optional<METADATA_RANGE>>(metadata)
         );
-        return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
     template <validity_bitmap_input VB, input_metadata_container METADATA_RANGE>
@@ -604,42 +662,16 @@ namespace sparrow
                              ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::MAP_KEYS_SORTED}}
                              : std::nullopt;
 
-            const auto size = list_offsets.size() - 1;
-
-            std::array<sparrow::array, 2> struct_children = {std::move(flat_keys), std::move(flat_items)};
-            struct_array entries(std::move(struct_children), false, std::string("entries"));
-
-            auto [entries_arr, entries_schema] = extract_arrow_structures(std::move(entries));
-            const repeat_view<bool> children_ownership{true, 1};
-
-            ArrowSchema schema = make_arrow_schema(
-                std::string_view("+m"),
-                name,      // name
-                metadata,  // metadata
-                flags,     // flags,
-                new ArrowSchema*[1]{new ArrowSchema(std::move(entries_schema))},
-                children_ownership,  // children ownership
-                nullptr,             // dictionary
-                true                 // dictionary ownership
-
-            );
-
-            std::vector<buffer<std::uint8_t>> arr_buffs = {
+            return create_proxy_impl(
+                std::move(flat_keys),
+                std::move(flat_items),
+                std::move(list_offsets),
                 buffer<std::uint8_t>{nullptr, 0},  // no validity bitmap
-                std::move(list_offsets).extract_storage()
-            };
-
-            ArrowArray arr = make_arrow_array(
-                static_cast<std::int64_t>(size),  // length
-                0,
-                0,  // offset
-                std::move(arr_buffs),
-                new ArrowArray*[1]{new ArrowArray(std::move(entries_arr))},
-                children_ownership,  // children ownership
-                nullptr,             // dictionary
-                true                 // dictionary ownership
+                0,                                 // null_count
+                std::move(flags),
+                name,
+                std::forward<std::optional<METADATA_RANGE>>(metadata)
             );
-            return arrow_proxy{std::move(arr), std::move(schema)};
         }
     }
 }
