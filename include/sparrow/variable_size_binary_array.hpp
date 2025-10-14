@@ -1117,7 +1117,7 @@ namespace sparrow
                 const offset_type last_offset = *offset(size());
                 check_offset_overflow(last_offset, shift_byte_count);
             }
-            
+
             const auto shift_val_abs = static_cast<size_t>(std::abs(shift_byte_count));
             const auto new_data_buffer_size = shift_byte_count < 0 ? data_buffer.size() - shift_val_abs
                                                                    : data_buffer.size() + shift_val_abs;
@@ -1312,14 +1312,14 @@ namespace sparrow
         const auto idx = static_cast<size_t>(std::distance(offsets_cbegin(), pos));
         auto offset_buffer_adaptor = make_buffer_adaptor<OT>(offset_buffer);
         const offset_type cumulative_size = value_size * static_cast<offset_type>(count);
-        
+
         // Check for offset overflow before adjusting
         if (!offset_buffer_adaptor.empty())
         {
             const offset_type last_offset = offset_buffer_adaptor.back();
             check_offset_overflow(last_offset, cumulative_size);
         }
-        
+
         // Adjust offsets for subsequent elements
         std::for_each(
             sparrow::next(offset_buffer_adaptor.begin(), idx + 1),
@@ -1400,14 +1400,14 @@ namespace sparrow
         auto offset_buffer_adaptor = make_buffer_adaptor<OT>(offset_buffer);
         const auto idx = std::distance(offsets_cbegin(), pos);
         const OT cumulative_sizes = std::reduce(first_sizes, last_sizes, OT(0));
-        
+
         // Check for offset overflow before adjusting
         if (!offset_buffer_adaptor.empty())
         {
             const offset_type last_offset = offset_buffer_adaptor.back();
             check_offset_overflow(last_offset, cumulative_sizes);
         }
-        
+
         const auto sizes_count = std::distance(first_sizes, last_sizes);
         offset_buffer_adaptor.resize(offset_buffer_adaptor.size() + static_cast<size_t>(sizes_count));
         // Move the offsets to make space for the new offsets
