@@ -218,8 +218,4 @@ else()
     if(ENABLE_INTEGRATION_TEST)
         add_subdirectory(c_data_integration)
     endif()
-
-    if(CREATE_JSON_READER_TARGET)
-        add_subdirectory(json_reader)
-    endif()
 endif()

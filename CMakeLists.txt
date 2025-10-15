@@ -475,18 +475,6 @@ include(CMakePackageConfigHelpers)
 # Install target
 set(SPARROW_EXPORTED_TARGETS sparrow)
 
-if(CREATE_JSON_READER_TARGET)
-    list(APPEND SPARROW_EXPORTED_TARGETS json_reader)
-    if(TARGET nlohmann_json)
-        get_target_property(is_imported nlohmann_json IMPORTED)
-        if(NOT is_imported)
-            # This means `nlohmann_json` was fetched using FetchContent
-            # We need to export `nlohmann_json` target explicitly
-            list(APPEND SPARROW_EXPORTED_TARGETS nlohmann_json)
-        endif()
-    endif()
-endif()
-
 install(TARGETS ${SPARROW_EXPORTED_TARGETS}
     EXPORT ${PROJECT_NAME}-targets)
 
@@ -503,11 +491,6 @@ install(DIRECTORY ${SPARROW_INCLUDE_DIR}/sparrow
 
 install(FILES ${SPARROW_INCLUDE_DIR}/sparrow.hpp
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-if(CREATE_JSON_READER_TARGET)
-    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/json_reader/include/sparrow
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-endif()
 
 # Install CMake configuration files
 set(SPARROW_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE

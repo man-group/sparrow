@@ -7,7 +7,7 @@ target_link_libraries(test_json_reader
 
 target_compile_definitions(test_json_reader
     PRIVATE
-        JSON_FILES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../resources/jsons/")
+        JSON_FILES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/resources/jsons/")
 
 set_target_properties(test_json_reader PROPERTIES
     CXX_STANDARD 20
