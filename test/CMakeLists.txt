@@ -214,8 +214,4 @@ else()
     )
 
     set_target_properties(run_tests_with_junit_report PROPERTIES FOLDER "Tests utilities")
-
-    if(ENABLE_INTEGRATION_TEST)
-        add_subdirectory(c_data_integration)
-    endif()
 endif()

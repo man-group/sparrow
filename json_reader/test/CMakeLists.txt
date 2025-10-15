@@ -36,3 +36,7 @@ add_custom_target(run_test_json_reader_with_junit_report
 )
 
 set_target_properties(run_test_json_reader_with_junit_report PROPERTIES FOLDER "Tests utilities")
+
+if(ENABLE_INTEGRATION_TEST)
+    add_subdirectory(c_data_integration)
+endif()
