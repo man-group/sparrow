@@ -606,7 +606,14 @@ namespace sparrow
         {
             v.reserve(std::ranges::size(range));
         }
-        std::ranges::move(range, std::back_inserter(v));
+        if constexpr (std::is_lvalue_reference_v<R>)
+        {
+            std::ranges::copy(range, std::back_inserter(v));
+        }
+        else
+        {
+            std::ranges::move(range, std::back_inserter(v));
+        }
         return v;
     }
 }
