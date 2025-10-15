@@ -1,3 +1,5 @@
+project(sparrow-json-reader CXX)
+
 include(compile_options)
 
 add_library(json_reader ${SPARROW_LIBRARY_TYPE}
@@ -84,3 +86,58 @@ target_include_directories(json_reader
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
+
+if (BUILD_TESTS)
+    add_subdirectory(test)
+endif ()
+
+# Installation
+# ============
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+# Install target
+set(JSON_READER_EXPORTED_TARGETS json_reader)
+
+if(TARGET nlohmann_json)
+    get_target_property(is_imported nlohmann_json IMPORTED)
+    if(NOT is_imported)
+        # This means `nlohmann_json` was fetched using FetchContent
+        # We need to export `nlohmann_json` target explicitly
+        list(APPEND JSON_READER_EXPORTED_TARGETS nlohmann_json)
+    endif()
+endif()
+
+install(TARGETS ${JSON_READER_EXPORTED_TARGETS}
+    EXPORT ${PROJECT_NAME}-targets)
+
+# Makes the project importable from the build directory
+export(EXPORT ${PROJECT_NAME}-targets
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
+    NAMESPACE sparrow::)
+
+# Install headers
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/sparrow
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+# Install CMake configuration files
+set(JSON_READER_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}" CACHE
+    STRING "install path for sparrow-json-readerConfig.cmake")
+
+configure_package_config_file(${PROJECT_NAME}Config.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION ${JSON_READER_CMAKECONFIG_INSTALL_DIR})
+
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    VERSION ${CMAKE_PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion)
+
+install(FILES 
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    DESTINATION ${JSON_READER_CMAKECONFIG_INSTALL_DIR})
+
+install(EXPORT ${PROJECT_NAME}-targets
+    FILE ${PROJECT_NAME}Targets.cmake
+    NAMESPACE sparrow::
+    DESTINATION ${JSON_READER_CMAKECONFIG_INSTALL_DIR})
