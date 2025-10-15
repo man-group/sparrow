@@ -27,6 +27,6 @@ find_dependency(nlohmann_json)
 
 if(NOT TARGET sparrow::json_reader)
     include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
-    get_target_property(@PROJECT_NAME@_INCLUDE_DIRS sparrow::json-reader INTERFACE_INCLUDE_DIRECTORIES)
-    get_target_property(@PROJECT_NAME@_LIBRARY sparrow::json-reader LOCATION)
+    get_target_property(@PROJECT_NAME@_INCLUDE_DIRS sparrow::json_reader INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(@PROJECT_NAME@_LIBRARY sparrow::json_reader LOCATION)
 endif()
