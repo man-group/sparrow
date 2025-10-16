@@ -321,7 +321,9 @@ namespace sparrow
             {
                 const ArrowArray* ar_ptr = get_arrow_array(a);
                 const ArrowSchema* sc_ptr = get_arrow_schema(a);
-                auto pa = primitive_array<scalar_value_type>(arrow_proxy(const_cast<ArrowArray*>(ar_ptr), const_cast<ArrowSchema*>(sc_ptr)));
+                auto pa = primitive_array<scalar_value_type>(
+                    arrow_proxy(const_cast<ArrowArray*>(ar_ptr), const_cast<ArrowSchema*>(sc_ptr))
+                );
                 CHECK_EQ(pa, pa_ctrl);
                 ar_ptr = nullptr;
             }
