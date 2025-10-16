@@ -536,12 +536,6 @@ namespace sparrow
         {
             using array_type = dictionary_encoded_array<int32_t>;
 
-            // sample metadata
-            const std::vector<metadata_pair> metadata_sample{
-                {"key1", "value1"},
-                {"key2", "value2"},
-                {"key3", "value3"}
-            };
             const std::optional<std::vector<metadata_pair>> metadata_sample_opt{metadata_sample};
 
             // the words in the dictionary
