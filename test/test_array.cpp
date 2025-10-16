@@ -536,8 +536,6 @@ namespace sparrow
         {
             using array_type = dictionary_encoded_array<int32_t>;
 
-            const std::optional<std::vector<metadata_pair>> metadata_sample_opt{metadata_sample};
-
             // the words in the dictionary
             const std::vector<std::string> words{"zero", "one", "two", "three"};
 
