@@ -290,43 +290,7 @@ namespace sparrow
         }
         TEST_CASE_TEMPLATE_APPLY(extract_arrow_structure_id, testing_types);
 
-        TEST_CASE_TEMPLATE_DEFINE("get_arrow_schema", AR, get_arrow_schema_id)
-        {
-            constexpr size_t offset = 0;
-            constexpr size_t size = 10;
-            using scalar_value_type = typename AR::inner_value_type;
-
-            ArrowSchema sc_ctrl{};
-            ArrowArray ar_ctrl{};
-            test::fill_schema_and_array<scalar_value_type>(sc_ctrl, ar_ctrl, size, offset, {});
-            auto pa_ctrl = primitive_array<scalar_value_type>(
-                arrow_proxy(std::move(ar_ctrl), std::move(sc_ctrl))
-            );
-
-            ArrowSchema sc{};
-            ArrowArray ar{};
-            test::fill_schema_and_array<scalar_value_type>(sc, ar, size, offset, {});
-            array a(std::move(ar), std::move(sc));
-
-            SUBCASE("non const")
-            {
-                ArrowSchema* sc_ptr = get_arrow_schema(a);
-                auto pa = primitive_array<scalar_value_type>(arrow_proxy(nullptr, sc_ptr));
-                CHECK_EQ(pa, pa_ctrl);
-                sc_ptr = nullptr;
-            }
-
-            SUBCASE("const")
-            {
-                const ArrowSchema* sc_ptr = get_arrow_schema(a);
-                auto pa = primitive_array<scalar_value_type>(arrow_proxy(nullptr, sc_ptr));
-                CHECK_EQ(pa, pa_ctrl);
-                sc_ptr = nullptr;
-            }
-        }
-        TEST_CASE_TEMPLATE_APPLY(get_arrow_schema_id, testing_types);
-
-        TEST_CASE_TEMPLATE_DEFINE("get_arrow_array", AR, get_arrow_array_id)
+        TEST_CASE_TEMPLATE_DEFINE("get_arrow_array and get_arrow_schema", AR, get_arrow_array_id)
         {
             constexpr size_t offset = 0;
             constexpr size_t size = 10;
@@ -347,7 +311,8 @@ namespace sparrow
             SUBCASE("non const")
             {
                 ArrowArray* ar_ptr = get_arrow_array(a);
-                auto pa = primitive_array<scalar_value_type>(arrow_proxy(ar_ptr, nullptr));
+                ArrowSchema* sc_ptr = get_arrow_schema(a);
+                auto pa = primitive_array<scalar_value_type>(arrow_proxy(ar_ptr, sc_ptr));
                 CHECK_EQ(pa, pa_ctrl);
                 ar_ptr = nullptr;
             }
@@ -355,7 +320,8 @@ namespace sparrow
             SUBCASE("const")
             {
                 const ArrowArray* ar_ptr = get_arrow_array(a);
-                auto pa = primitive_array<scalar_value_type>(arrow_proxy(ar_ptr, nullptr));
+                const ArrowSchema* sc_ptr = get_arrow_schema(a);
+                auto pa = primitive_array<scalar_value_type>(arrow_proxy(const_cast<ArrowArray*>(ar_ptr), const_cast<ArrowSchema*>(sc_ptr)));
                 CHECK_EQ(pa, pa_ctrl);
                 ar_ptr = nullptr;
             }
