@@ -845,7 +845,7 @@ namespace sparrow
         TEST_CASE_TEMPLATE_DEFINE("offset_and_null_count", T, offset_null_count_id)
         {
             constexpr size_t size = 10;
-            
+
             SUBCASE("initial offset is 0")
             {
                 auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(size)};
@@ -861,7 +861,7 @@ namespace sparrow
                 constexpr size_t slice_end = 8;
                 auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(size)};
                 primitive_array<T> arr(iota);
-                
+
                 auto sliced = arr.slice(slice_start, slice_end);
                 CHECK_EQ(sliced.offset(), slice_start);
                 CHECK_EQ(sliced.size(), slice_end - slice_start);
@@ -872,7 +872,7 @@ namespace sparrow
                 auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(size)};
                 std::vector<std::size_t> null_indices = {1, 3, 5};
                 primitive_array<T> arr(iota, null_indices);
-                
+
                 CHECK_EQ(arr.offset(), 0);
                 CHECK_EQ(arr.null_count(), static_cast<std::int64_t>(null_indices.size()));
                 CHECK_EQ(arr.size(), size);
@@ -885,7 +885,7 @@ namespace sparrow
                 auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(size)};
                 std::vector<std::size_t> null_indices = {1, 3, 5};
                 primitive_array<T> arr(iota, null_indices);
-                
+
                 auto sliced = arr.slice(slice_start, slice_end);
                 CHECK_EQ(sliced.offset(), slice_start);
                 CHECK_EQ(sliced.size(), slice_end - slice_start);
