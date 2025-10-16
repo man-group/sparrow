@@ -351,6 +351,17 @@ namespace sparrow
     ArrowArray* get_arrow_array(A& a);
 
     /**
+     * Returns a const pointer to the internal ArrowArray of the given
+     * array or layout.
+     *
+     * @tparam A The layout or array type.
+     * @param a An \ref array or a typed layout.
+     * @return a const pointer to the internal ArrowArray.
+     */
+    template <layout_or_array A>
+    const ArrowArray* get_arrow_array(const A& a);
+
+    /**
      * Returns a pointer to the internal ArrowSchema of the given
      * array or layout.
      *
@@ -360,6 +371,17 @@ namespace sparrow
      */
     template <layout_or_array A>
     ArrowSchema* get_arrow_schema(A& a);
+
+    /**
+     * Returns a const pointer to the internal ArrowSchema of the given
+     * array or layout.
+     *
+     * @tparam A The layout or array type.
+     * @param a An \ref array or a typed layout.
+     * @return a const pointer to the internal ArrowSchema.
+     */
+    template <layout_or_array A>
+    const ArrowSchema* get_arrow_schema(const A& a);
 
     /**
      * Returns pointers to the internal ArrowArray and ArrowSchema of
