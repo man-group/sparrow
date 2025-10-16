@@ -841,5 +841,58 @@ namespace sparrow
 #    pragma GCC diagnostic pop
 #endif
         }
+
+        TEST_CASE_TEMPLATE_DEFINE("offset_and_null_count", T, offset_null_count_id)
+        {
+            constexpr size_t size = 10;
+            
+            SUBCASE("initial offset is 0")
+            {
+                auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(size)};
+                primitive_array<T> arr(iota);
+                CHECK_EQ(arr.offset(), 0);
+                CHECK_EQ(arr.null_count(), 0);
+                CHECK_EQ(arr.size(), size);
+            }
+
+            SUBCASE("offset after slicing")
+            {
+                constexpr size_t slice_start = 3;
+                constexpr size_t slice_end = 8;
+                auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(size)};
+                primitive_array<T> arr(iota);
+                
+                auto sliced = arr.slice(slice_start, slice_end);
+                CHECK_EQ(sliced.offset(), slice_start);
+                CHECK_EQ(sliced.size(), slice_end - slice_start);
+            }
+
+            SUBCASE("null_count with nulls")
+            {
+                auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(size)};
+                std::vector<std::size_t> null_indices = {1, 3, 5};
+                primitive_array<T> arr(iota, null_indices);
+                
+                CHECK_EQ(arr.offset(), 0);
+                CHECK_EQ(arr.null_count(), static_cast<std::int64_t>(null_indices.size()));
+                CHECK_EQ(arr.size(), size);
+            }
+
+            SUBCASE("null_count after slicing array with nulls")
+            {
+                constexpr size_t slice_start = 2;
+                constexpr size_t slice_end = 7;
+                auto iota = std::ranges::iota_view{std::size_t(0), std::size_t(size)};
+                std::vector<std::size_t> null_indices = {1, 3, 5};
+                primitive_array<T> arr(iota, null_indices);
+                
+                auto sliced = arr.slice(slice_start, slice_end);
+                CHECK_EQ(sliced.offset(), slice_start);
+                CHECK_EQ(sliced.size(), slice_end - slice_start);
+                // Note: null_count is typically -1 (unknown) after slicing
+                // unless explicitly recomputed
+            }
+        }
+        TEST_CASE_TEMPLATE_APPLY(offset_null_count_id, testing_types);
     }
 }

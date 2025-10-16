@@ -460,5 +460,35 @@ namespace sparrow
             test_metadata(metadata_sample, *(spar.metadata()));
         }
         TEST_CASE_TEMPLATE_APPLY(metadata_id, testing_types);
+
+        TEST_CASE_TEMPLATE_DEFINE("offset_and_null_count", AR, offset_null_count_id)
+        {
+            constexpr size_t size = 10;
+            constexpr size_t offset = 3;
+            using T = typename AR::inner_value_type;
+
+            SUBCASE("initial offset is 0")
+            {
+                array ar = test::make_array<T>(size);
+                CHECK_EQ(ar.offset(), 0);
+                CHECK_EQ(ar.null_count(), 0);
+            }
+
+            SUBCASE("offset after slicing")
+            {
+                array ar = test::make_array<T>(size);
+                auto sliced = ar.slice(offset, size);
+                CHECK_EQ(sliced.offset(), offset);
+                CHECK_EQ(sliced.size(), size - offset);
+            }
+
+            SUBCASE("offset with initial offset")
+            {
+                array ar = test::make_array<T>(size, offset);
+                CHECK_EQ(ar.offset(), offset);
+                CHECK_EQ(ar.size(), size - offset);
+            }
+        }
+        TEST_CASE_TEMPLATE_APPLY(offset_null_count_id, testing_types);
     }
 }

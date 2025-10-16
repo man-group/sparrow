@@ -185,6 +185,26 @@ namespace sparrow
         [[nodiscard]] constexpr size_type size() const;
 
         /**
+         * @brief Gets the starting offset within the buffers.
+         *
+         * @return Starting offset for array data
+         *
+         * @post Offset is non-negative
+         * @post Offset is used for array slicing operations
+         */
+        [[nodiscard]] constexpr size_type offset() const;
+
+        /**
+         * @brief Gets the count of null elements in the array.
+         *
+         * @return Number of null elements, or -1 if unknown
+         *
+         * @post Returns -1 if null count hasn't been computed
+         * @post If >= 0, returns the exact number of null elements
+         */
+        [[nodiscard]] constexpr std::int64_t null_count() const;
+
+        /**
          * @brief Gets element at specified position with bounds checking.
          *
          * @param i Index of the element to access
@@ -516,6 +536,18 @@ namespace sparrow
     constexpr auto array_crtp_base<D>::size() const -> size_type
     {
         return static_cast<size_type>(get_arrow_proxy().length());
+    }
+
+    template <class D>
+    constexpr auto array_crtp_base<D>::offset() const -> size_type
+    {
+        return static_cast<size_type>(get_arrow_proxy().offset());
+    }
+
+    template <class D>
+    constexpr std::int64_t array_crtp_base<D>::null_count() const
+    {
+        return get_arrow_proxy().null_count();
     }
 
     template <class D>
