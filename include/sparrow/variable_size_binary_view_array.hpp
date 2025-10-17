@@ -697,7 +697,8 @@ namespace sparrow
         std::size_t i = 0;
         for (auto&& val : range)
         {
-            auto val_casted = val | std::ranges::views::transform(transform_to<std::uint8_t, typename T::value_type>);
+            auto val_casted = val
+                              | std::ranges::views::transform(transform_to<std::uint8_t, typename T::value_type>);
 
             const auto length = val.size();
             auto length_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
@@ -745,7 +746,9 @@ namespace sparrow
             if (length > SHORT_STRING_SIZE)
             {
                 auto val_casted = val
-                                  | std::ranges::views::transform(transform_to<std::uint8_t, typename T::value_type>);
+                                  | std::ranges::views::transform(
+                                      transform_to<std::uint8_t, typename T::value_type>
+                                  );
                 sparrow::ranges::copy(val_casted, long_string_storage.data() + long_string_storage_offset);
                 long_string_storage_offset += length;
             }
@@ -1203,7 +1206,9 @@ namespace sparrow
             // Write prefix (first 4 bytes)
             auto prefix_range = rhs | std::ranges::views::take(PREFIX_SIZE);
             auto prefix_transformed = prefix_range
-                                      | std::ranges::views::transform(transform_to<std::uint8_t, typename T::value_type>);
+                                      | std::ranges::views::transform(
+                                          transform_to<std::uint8_t, typename T::value_type>
+                                      );
             std::ranges::copy(prefix_transformed, view_ptr + PREFIX_OFFSET);
 
             write_int32_unaligned(
