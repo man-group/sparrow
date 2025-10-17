@@ -653,35 +653,6 @@ namespace sparrow
             };
         }
 
-        // Helper function to manually copy and convert elements (for when ranges might not be contiguous)
-        template <typename InputRange, typename OutputIt>
-        inline void copy_and_convert_to_uint8(InputRange&& range, OutputIt dest)
-        {
-            auto src_it = std::ranges::begin(range);
-            auto src_end = std::ranges::end(range);
-            while (src_it != src_end)
-            {
-                *dest = static_cast<std::uint8_t>(*src_it);
-                ++src_it;
-                ++dest;
-            }
-        }
-
-        // Helper function to copy first N elements and convert to uint8
-        template <typename InputRange, typename OutputIt>
-        inline void copy_prefix_to_uint8(InputRange&& range, OutputIt dest, std::size_t count)
-        {
-            auto src_it = std::ranges::begin(range);
-            auto src_end = std::ranges::end(range);
-            std::size_t copied = 0;
-            while (src_it != src_end && copied < count)
-            {
-                *dest = static_cast<std::uint8_t>(*src_it);
-                ++src_it;
-                ++dest;
-                ++copied;
-            }
-        }
 
         // Helper function to update buffer offsets for long strings after a specific offset
         template <typename SizeType>
@@ -1407,7 +1378,7 @@ namespace sparrow
             if (value_length <= SHORT_STRING_SIZE)
             {
                 // Store inline - convert and copy elements manually
-                copy_and_convert_to_uint8(current_value, view_ptr + SHORT_STRING_OFFSET);
+                std::ranges::transform(current_value, view_ptr + SHORT_STRING_OFFSET, to_uint8_transform());
 
                 std::fill(
                     view_ptr + SHORT_STRING_OFFSET + value_length,
@@ -1418,7 +1389,7 @@ namespace sparrow
             else
             {
                 // Store prefix - copy first PREFIX_SIZE elements manually
-                copy_prefix_to_uint8(current_value, view_ptr + PREFIX_OFFSET, PREFIX_SIZE);
+                std::ranges::transform(current_value | std::views::take(PREFIX_SIZE), view_ptr + PREFIX_OFFSET, to_uint8_transform());
 
                 // Set buffer index
                 const std::int32_t buffer_index_zero = 0;
@@ -1429,7 +1400,7 @@ namespace sparrow
                 std::memcpy(view_ptr + BUFFER_OFFSET_OFFSET, &var_offset_int32, sizeof(std::int32_t));
 
                 // Copy data to variadic buffer - convert and copy manually
-                copy_and_convert_to_uint8(current_value, buffers[FIRST_VAR_DATA_BUFFER_INDEX].data() + var_offset);
+                std::ranges::transform(current_value, buffers[FIRST_VAR_DATA_BUFFER_INDEX].data() + var_offset, to_uint8_transform());
 
                 var_offset += value_length;
             }
