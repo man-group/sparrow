@@ -1034,10 +1034,7 @@ namespace sparrow
         if (new_length <= SHORT_STRING_SIZE)
         {
             auto data_ptr = view_ptr + SHORT_STRING_OFFSET;
-            auto transformed = rhs
-                               | std::ranges::views::transform(transform_to<typename T::value_type, typename T::value_type>);
-
-            std::ranges::copy(transformed, reinterpret_cast<typename T::value_type*>(data_ptr));
+            std::ranges::copy(rhs, reinterpret_cast<typename T::value_type*>(data_ptr));
 
             // Clear any remaining bytes in the inline storage
             if (new_length < SHORT_STRING_SIZE)
@@ -1463,6 +1460,7 @@ namespace sparrow
 
             // Create mapping of old offsets to new offsets
             std::unordered_map<std::size_t, std::size_t> offset_mapping;
+            offset_mapping.reserve(current_size - count);
 
             for (size_type i = 0; i < current_size; ++i)
             {
