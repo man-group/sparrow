@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <ranges>
+
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_access.hpp"
@@ -160,6 +162,21 @@ namespace sparrow
          *         array is dictionary-encoded, or std::nullopt if no dictionary exists.
          */
         [[nodiscard]] SPARROW_API std::optional<array> dictionary() const;
+
+        /**
+         * @returns a range view of the child arrays of the \ref array. If the array has no children,
+         * an empty range is returned.
+         */
+        [[nodiscard]] SPARROW_API auto children() const
+        {
+            return get_arrow_proxy().children()
+                   | std::views::transform(
+                       [](const arrow_proxy& child)
+                       {
+                           return array{child.view()};
+                       }
+                   );
+        }
 
         /**
          * @returns the name of the \ref array. If the name is not set, an empty optional is returned.

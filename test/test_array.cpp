@@ -16,6 +16,7 @@
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/primitive_array.hpp"
+#include "sparrow/struct_array.hpp"
 #include "sparrow/utils/nullable.hpp"
 
 #include "../test/external_array_data_creation.hpp"
@@ -585,6 +586,61 @@ namespace sparrow
 
             CHECK_EQ(arr.data_type(), data_type::INT32);
             CHECK_FALSE(arr.dictionary().has_value());
+        }
+
+        TEST_CASE("children")
+        {
+            SUBCASE("array with no children")
+            {
+                // Primitive arrays have no children
+                sparrow::primitive_array<int32_t> primitives{0, 1, 2, 3};
+                sparrow::array arr{std::move(primitives)};
+
+                auto children = arr.children();
+                CHECK_EQ(std::ranges::distance(children), 0);
+            }
+
+            SUBCASE("array with children - struct array")
+            {
+                // Create child arrays
+                primitive_array<std::int16_t> flat_arr1(
+                    {{std::int16_t(0), std::int16_t(1), std::int16_t(2)}, true, "child1"}
+                );
+                primitive_array<float32_t> flat_arr2({{3.0f, 4.0f, 5.0f}, true, "child2"});
+
+                // Convert to detyped arrays
+                array arr1(std::move(flat_arr1));
+                array arr2(std::move(flat_arr2));
+                std::vector<array> child_arrays{std::move(arr1), std::move(arr2)};
+
+                // Create struct array
+                struct_array struct_arr(
+                    child_arrays,
+                    false,
+                    "struct_name",
+                    std::optional<std::vector<metadata_pair>>{}
+                );
+                array arr(std::move(struct_arr));
+
+                // Get children
+                auto children = arr.children();
+
+                // Check number of children
+                CHECK_EQ(std::ranges::distance(children), 2);
+
+                // Verify children are accessible
+                std::vector<array> child_vec;
+                for (const auto& child : children)
+                {
+                    child_vec.push_back(child);
+                }
+
+                CHECK_EQ(child_vec.size(), 2);
+                CHECK_EQ(child_vec[0].size(), 3);
+                CHECK_EQ(child_vec[1].size(), 3);
+                CHECK_EQ(child_vec[0].name(), "child1");
+                CHECK_EQ(child_vec[1].name(), "child2");
+            }
         }
     }
 }
