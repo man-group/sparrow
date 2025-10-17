@@ -626,17 +626,11 @@ namespace sparrow
             std::memcpy(ptr, &value, sizeof(std::int32_t));
         }
 
-        template <typename T>
-        inline constexpr std::uint8_t to_uint8_transform(const T& v)
+        // Generic transformation function for type conversions
+        template <typename To, typename From>
+        inline constexpr To transform_to(const From& v)
         {
-            return static_cast<std::uint8_t>(v);
-        }
-
-        // Helper function to transform values to a specific char_or_byte type
-        template <typename T, typename CharOrByte>
-        inline constexpr CharOrByte to_char_or_byte_transform(const T& v)
-        {
-            return static_cast<CharOrByte>(v);
+            return static_cast<To>(v);
         }
 
         // Helper function to update buffer offsets for long strings after a specific offset
@@ -703,7 +697,7 @@ namespace sparrow
         std::size_t i = 0;
         for (auto&& val : range)
         {
-            auto val_casted = val | std::ranges::views::transform(to_uint8_transform<typename T::value_type>);
+            auto val_casted = val | std::ranges::views::transform(transform_to<std::uint8_t, typename T::value_type>);
 
             const auto length = val.size();
             auto length_ptr = length_buffer.data() + (i * DATA_BUFFER_SIZE);
@@ -751,7 +745,7 @@ namespace sparrow
             if (length > SHORT_STRING_SIZE)
             {
                 auto val_casted = val
-                                  | std::ranges::views::transform(to_uint8_transform<typename T::value_type>);
+                                  | std::ranges::views::transform(transform_to<std::uint8_t, typename T::value_type>);
                 sparrow::ranges::copy(val_casted, long_string_storage.data() + long_string_storage_offset);
                 long_string_storage_offset += length;
             }
@@ -1041,7 +1035,7 @@ namespace sparrow
         {
             auto data_ptr = view_ptr + SHORT_STRING_OFFSET;
             auto transformed = rhs
-                               | std::ranges::views::transform(to_char_or_byte_transform<typename T::value_type>);
+                               | std::ranges::views::transform(transform_to<typename T::value_type, typename T::value_type>);
 
             std::ranges::copy(transformed, reinterpret_cast<typename T::value_type*>(data_ptr));
 
@@ -1076,7 +1070,7 @@ namespace sparrow
 
             auto transformed_data = rhs
                                     | std::ranges::views::transform(
-                                        to_char_or_byte_transform<typename T::value_type>
+                                        transform_to<typename T::value_type, typename T::value_type>
                                     );
 
             // Check for memory reuse optimization: if the new value is identical to existing data
@@ -1099,7 +1093,7 @@ namespace sparrow
                 auto prefix_range = rhs | std::ranges::views::take(PREFIX_SIZE);
                 auto prefix_transformed = prefix_range
                                           | std::ranges::views::transform(
-                                              to_uint8_transform<typename T::value_type>
+                                              transform_to<std::uint8_t, typename T::value_type>
                                           );
                 std::ranges::copy(prefix_transformed, view_ptr + PREFIX_OFFSET);
                 return;  // Early exit - no buffer management needed
@@ -1212,16 +1206,15 @@ namespace sparrow
             // Write prefix (first 4 bytes)
             auto prefix_range = rhs | std::ranges::views::take(PREFIX_SIZE);
             auto prefix_transformed = prefix_range
-                                      | std::ranges::views::transform(to_uint8_transform<typename T::value_type>);
+                                      | std::ranges::views::transform(transform_to<std::uint8_t, typename T::value_type>);
             std::ranges::copy(prefix_transformed, view_ptr + PREFIX_OFFSET);
 
-            *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_INDEX_OFFSET) = static_cast<std::int32_t>(
-                FIRST_VAR_DATA_BUFFER_INDEX
+            write_int32_unaligned(
+                view_ptr + BUFFER_INDEX_OFFSET,
+                static_cast<std::int32_t>(FIRST_VAR_DATA_BUFFER_INDEX)
             );
 
-            *reinterpret_cast<std::int32_t*>(view_ptr + BUFFER_OFFSET_OFFSET) = static_cast<std::int32_t>(
-                final_offset
-            );
+            write_int32_unaligned(view_ptr + BUFFER_OFFSET_OFFSET, static_cast<std::int32_t>(final_offset));
         }
     }
 
@@ -1362,7 +1355,7 @@ namespace sparrow
                 std::ranges::transform(
                     current_value,
                     view_ptr + SHORT_STRING_OFFSET,
-                    to_uint8_transform<typename T::value_type>
+                    transform_to<std::uint8_t, typename T::value_type>
                 );
 
                 std::fill(
@@ -1377,7 +1370,7 @@ namespace sparrow
                 std::ranges::transform(
                     current_value | std::views::take(PREFIX_SIZE),
                     view_ptr + PREFIX_OFFSET,
-                    to_uint8_transform<typename T::value_type>
+                    transform_to<std::uint8_t, typename T::value_type>
                 );
 
                 // Set buffer index
@@ -1392,7 +1385,7 @@ namespace sparrow
                 std::ranges::transform(
                     current_value,
                     buffers[FIRST_VAR_DATA_BUFFER_INDEX].data() + var_offset,
-                    to_uint8_transform<typename T::value_type>
+                    transform_to<std::uint8_t, typename T::value_type>
                 );
 
                 var_offset += value_length;
@@ -1409,16 +1402,10 @@ namespace sparrow
     auto variable_size_binary_view_array_impl<T, CR>::erase_values(const_value_iterator pos, size_type count)
         -> value_iterator
     {
-        if (count == 0)
-        {
-            const auto erase_index = std::distance(value_cbegin(), pos);
-            return value_begin() + erase_index;
-        }
-
         const size_t erase_index = static_cast<size_t>(std::distance(value_cbegin(), pos));
         const size_t current_size = this->size();
 
-        // Validate bounds
+        // Validate bounds and handle zero count
         if (erase_index + count > current_size)
         {
             count = current_size - erase_index;
@@ -1426,8 +1413,7 @@ namespace sparrow
 
         if (count == 0)
         {
-            const auto erase_index_bis = std::distance(value_cbegin(), pos);
-            return value_begin() + erase_index_bis;
+            return value_begin() + static_cast<difference_type>(erase_index);
         }
 
         const auto new_size = current_size - count;
