@@ -151,6 +151,17 @@ namespace sparrow
         [[nodiscard]] SPARROW_API enum data_type data_type() const;
 
         /**
+         * @brief Retrieves the dictionary array associated with this array, if it exists.
+         *
+         * This method is used for dictionary-encoded arrays to access the dictionary
+         * that contains the actual values referenced by the indices in this array.
+         *
+         * @return std::optional<array> An optional containing the dictionary array if this
+         *         array is dictionary-encoded, or std::nullopt if no dictionary exists.
+         */
+        [[nodiscard]] SPARROW_API std::optional<array> dictionary() const;
+
+        /**
          * @returns the name of the \ref array. If the name is not set, an empty optional is returned.
          */
         [[nodiscard]] SPARROW_API std::optional<std::string_view> name() const;

@@ -47,6 +47,20 @@ namespace sparrow
         return p_array->data_type();
     }
 
+    std::optional<array> array::dictionary() const
+    {
+        const std::unique_ptr<arrow_proxy>& dict = get_arrow_proxy().dictionary();
+        if (dict)
+        {
+            arrow_proxy& ap = *dict;
+            return array{&(ap.array()), &(ap.schema())};
+        }
+        else
+        {
+            return std::nullopt;
+        }
+    }
+
     std::optional<std::string_view> array::name() const
     {
         return get_arrow_proxy().name();

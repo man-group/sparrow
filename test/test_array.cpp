@@ -530,5 +530,61 @@ namespace sparrow
             }
         }
         TEST_CASE_TEMPLATE_APPLY(offset_null_count_id, testing_types);
+
+
+        TEST_CASE("with a dictionary")
+        {
+            using array_type = dictionary_encoded_array<int32_t>;
+
+            // the words in the dictionary
+            const std::vector<std::string> words{"zero", "one", "two", "three"};
+
+            auto make_dictionary = [&]() -> array_type
+            {
+                using keys_buffer_type = typename array_type::keys_buffer_type;
+
+                // the value array
+                string_array values{words};
+
+                // detyped array
+                array values_arr(std::move(values));
+
+                // the keys **data**
+                keys_buffer_type keys{0, 1, 2, 3, 0, 1, 2, 3, 0, 1};
+
+                // where nulls are
+                std::vector<std::size_t> where_null{0};
+
+                // create the array
+                return array_type(
+                    std::move(keys),
+                    std::move(values_arr),
+                    std::move(where_null),
+                    "name",
+                    metadata_sample_opt
+                );
+            };
+
+            array_type dict = make_dictionary();
+            array dict_arr{std::move(dict)};
+            REQUIRE_EQ(dict_arr.size(), 10);
+
+            CHECK_EQ(dict_arr.name(), "name");
+            test_metadata(metadata_sample, *(dict_arr.metadata()));
+            CHECK_EQ(dict_arr.data_type(), data_type::INT32);
+            CHECK(dict_arr.dictionary().has_value());
+            std::optional<array> dict_array_from_array = dict_arr.dictionary();
+            CHECK_EQ(dict_array_from_array->data_type(), data_type::STRING);
+        }
+
+        TEST_CASE("without a dictionary")
+        {
+            sparrow::primitive_array<int32_t> primitives{0, 1, 2, 3, 0, 1, 2, 3, 0, 1};
+
+            sparrow::array arr{std::move(primitives)};
+
+            CHECK_EQ(arr.data_type(), data_type::INT32);
+            CHECK_FALSE(arr.dictionary().has_value());
+        }
     }
 }
