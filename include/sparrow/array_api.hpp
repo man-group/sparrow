@@ -189,6 +189,16 @@ namespace sparrow
         [[nodiscard]] SPARROW_API size_type size() const;
 
         /**
+         * @returns the starting offset within the buffers.
+         */
+        [[nodiscard]] SPARROW_API size_type offset() const;
+
+        /**
+         * @returns the count of null elements in the array, or -1 if unknown.
+         */
+        [[nodiscard]] SPARROW_API std::int64_t null_count() const;
+
+        /**
          * @returns a constant reference to the element at specified \c index,
          * with bounds checking.
          *

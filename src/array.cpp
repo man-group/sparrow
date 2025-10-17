@@ -72,6 +72,16 @@ namespace sparrow
         return array_size(*p_array);
     }
 
+    array::size_type array::offset() const
+    {
+        return static_cast<size_type>(get_arrow_proxy().offset());
+    }
+
+    std::int64_t array::null_count() const
+    {
+        return get_arrow_proxy().null_count();
+    }
+
     array::const_reference array::at(size_type index) const
     {
         if (index >= size())

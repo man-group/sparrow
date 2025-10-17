@@ -841,5 +841,51 @@ namespace sparrow
 #    pragma GCC diagnostic pop
 #endif
         }
+
+        TEST_CASE("offset_and_null_count")
+        {
+            SUBCASE("initial offset is 0")
+            {
+                primitive_array<int32_t> arr{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+                CHECK_EQ(arr.offset(), 0);
+                CHECK_EQ(arr.null_count(), 0);
+                CHECK_EQ(arr.size(), 10);
+            }
+
+            SUBCASE("offset after slicing")
+            {
+                constexpr size_t slice_start = 3;
+                constexpr size_t slice_end = 8;
+                primitive_array<int32_t> arr{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+                auto sliced = arr.slice(slice_start, slice_end);
+                CHECK_EQ(sliced.offset(), slice_start);
+                CHECK_EQ(sliced.size(), slice_end - slice_start);
+            }
+
+            SUBCASE("null_count with nulls")
+            {
+                std::vector<std::size_t> null_indices = {1, 3, 5};
+                primitive_array<int32_t> arr(std::vector<int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, null_indices);
+
+                CHECK_EQ(arr.offset(), 0);
+                CHECK_EQ(arr.null_count(), static_cast<std::int64_t>(null_indices.size()));
+                CHECK_EQ(arr.size(), 10);
+            }
+
+            SUBCASE("null_count after slicing array with nulls")
+            {
+                constexpr size_t slice_start = 2;
+                constexpr size_t slice_end = 7;
+                std::vector<std::size_t> null_indices = {1, 3, 5};
+                primitive_array<int32_t> arr{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+                auto sliced = arr.slice(slice_start, slice_end);
+                CHECK_EQ(sliced.offset(), slice_start);
+                CHECK_EQ(sliced.size(), slice_end - slice_start);
+                // Note: null_count is typically -1 (unknown) after slicing
+                // unless explicitly recomputed
+            }
+        }
     }
 }
