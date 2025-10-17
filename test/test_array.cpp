@@ -579,9 +579,7 @@ namespace sparrow
 
         TEST_CASE("without a dictionary")
         {
-            sparrow::primitive_array<int32_t> primitives{
-                0, 1, 2, 3, 0, 1, 2, 3, 0, 1
-            };
+            sparrow::primitive_array<int32_t> primitives{0, 1, 2, 3, 0, 1, 2, 3, 0, 1};
 
             sparrow::array arr{std::move(primitives)};
 
