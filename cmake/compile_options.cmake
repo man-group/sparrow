@@ -46,6 +46,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "C
         -Wshadow # warn the user if a variable declaration shadows one from a parent context
         -Wsign-conversion # warn on sign conversions
         -Wunused # warn on anything being unused
+        "$<$<CXX_COMPILER_ID:Clang>:-Wno-error=#warnings>" # don't error on #warning about deprecated ciso646 header in C++20
         $<$<CXX_COMPILER_ID:Clang>:-Wno-c++98-compat> # do not warn on use of non-C++98 standard
         $<$<CXX_COMPILER_ID:Clang>:-Wno-c++98-compat-pedantic>
         $<$<CXX_COMPILER_ID:Clang>:-Wno-documentation>

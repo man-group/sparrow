@@ -576,5 +576,17 @@ namespace sparrow
             std::optional<array> dict_array_from_array = dict_arr.dictionary();
             CHECK_EQ(dict_array_from_array->data_type(), data_type::STRING);
         }
+
+        TEST_CASE("without a dictionary")
+        {
+            sparrow::primitive_array<int32_t> primitives{
+                0, 1, 2, 3, 0, 1, 2, 3, 0, 1
+            };
+
+            sparrow::array arr{std::move(primitives)};
+
+            CHECK_EQ(arr.data_type(), data_type::INT32);
+            CHECK_FALSE(arr.dictionary().has_value());
+        }
     }
 }
