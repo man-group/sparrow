@@ -63,7 +63,19 @@ namespace sparrow
     }
 
     template <layout_or_array A>
+    const ArrowArray* get_arrow_array(const A& a)
+    {
+        return &(detail::array_access::get_arrow_proxy(a).array());
+    }
+
+    template <layout_or_array A>
     ArrowSchema* get_arrow_schema(A& a)
+    {
+        return &(detail::array_access::get_arrow_proxy(a).schema());
+    }
+
+    template <layout_or_array A>
+    const ArrowSchema* get_arrow_schema(const A& a)
     {
         return &(detail::array_access::get_arrow_proxy(a).schema());
     }
