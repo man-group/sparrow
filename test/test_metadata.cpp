@@ -48,4 +48,66 @@ TEST_SUITE("metadata")
         const auto metadata_result = sparrow::get_metadata_from_key_values(sparrow::metadata_sample);
         CHECK_EQ(sparrow::metadata_buffer, metadata_result);
     }
+
+    TEST_CASE("empty")
+    {
+        SUBCASE("non-empty view")
+        {
+            const sparrow::key_value_view key_values(sparrow::metadata_buffer.data());
+            CHECK_FALSE(key_values.empty());
+        }
+
+        SUBCASE("empty view")
+        {
+            // Create an empty metadata buffer
+            const std::vector<sparrow::metadata_pair> empty_metadata;
+            const auto empty_buffer = sparrow::get_metadata_from_key_values(empty_metadata);
+            const sparrow::key_value_view empty_key_values(empty_buffer.data());
+            CHECK(empty_key_values.empty());
+            CHECK_EQ(empty_key_values.size(), 0);
+        }
+    }
+
+    TEST_CASE("find")
+    {
+        const sparrow::key_value_view key_values(sparrow::metadata_buffer.data());
+
+        SUBCASE("find existing key - first element")
+        {
+            auto it = key_values.find("key1");
+            REQUIRE(it != key_values.end());
+            CHECK_EQ((*it).first, "key1");
+            CHECK_EQ((*it).second, "val1");
+        }
+
+        SUBCASE("find existing key - last element")
+        {
+            auto it = key_values.find("key2");
+            REQUIRE(it != key_values.end());
+            CHECK_EQ((*it).first, "key2");
+            CHECK_EQ((*it).second, "val2");
+        }
+
+        SUBCASE("find non-existing key")
+        {
+            auto it = key_values.find("key3");
+            CHECK_EQ(it, key_values.end());
+        }
+
+        SUBCASE("find with empty string")
+        {
+            auto it = key_values.find("");
+            CHECK_EQ(it, key_values.end());
+        }
+
+        SUBCASE("find in empty view")
+        {
+            const std::vector<sparrow::metadata_pair> empty_metadata;
+            const auto empty_buffer = sparrow::get_metadata_from_key_values(empty_metadata);
+            const sparrow::key_value_view empty_key_values(empty_buffer.data());
+            
+            auto it = empty_key_values.find("key1");
+            CHECK_EQ(it, empty_key_values.end());
+        }
+    }
 }
