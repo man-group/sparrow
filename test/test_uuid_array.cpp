@@ -414,10 +414,10 @@ namespace sparrow
                 const uuid_array ar(uuids);
 
                 const std::string formatted = std::format("{}", ar);
-                
+
                 // Check that it contains the size
                 CHECK(formatted.find("uuid_array[3]") != std::string::npos);
-                
+
                 // Check that it's not empty (has content)
                 CHECK(formatted.size() > 20);
             }
@@ -426,7 +426,7 @@ namespace sparrow
             {
                 const uuid_array ar(false);
                 const std::string formatted = std::format("{}", ar);
-                
+
                 CHECK_EQ(formatted, "uuid_array[0]()");
             }
 
@@ -440,10 +440,10 @@ namespace sparrow
                 const uuid_array ar(nullable_uuids);
 
                 const std::string formatted = std::format("{}", ar);
-                
+
                 // Check size
                 CHECK(formatted.find("uuid_array[3]") != std::string::npos);
-                
+
                 // Check that null is present
                 CHECK(formatted.find("null") != std::string::npos);
             }
@@ -474,7 +474,7 @@ namespace sparrow
                 const uuid_array ar(uuids);
 
                 const std::string formatted = std::format("{}", ar);
-                
+
                 // Check that it contains hex representation
                 CHECK(formatted.find("55 0e 84 00") != std::string::npos);
                 CHECK(formatted.find("uuid_array[1]") != std::string::npos);
@@ -487,7 +487,7 @@ namespace sparrow
                 const uuid_array ar(uuids);
 
                 const std::string formatted = std::format("{}", ar);
-                
+
                 // Should contain all zeros in hex
                 CHECK(formatted.find("00 00 00 00") != std::string::npos);
             }
@@ -498,7 +498,7 @@ namespace sparrow
                 const uuid_array ar(uuids);
 
                 const std::string formatted = std::format("{}", ar);
-                
+
                 CHECK(formatted.find("uuid_array[1]") != std::string::npos);
                 // Should have opening and closing angle brackets
                 CHECK(formatted.find('<') != std::string::npos);
@@ -507,14 +507,11 @@ namespace sparrow
 
             SUBCASE("multiple UUIDs with separator")
             {
-                std::vector<uuid_array::uuid_type> uuids = {
-                    make_test_uuid(0),
-                    make_test_uuid(1)
-                };
+                std::vector<uuid_array::uuid_type> uuids = {make_test_uuid(0), make_test_uuid(1)};
                 const uuid_array ar(uuids);
 
                 const std::string formatted = std::format("{}", ar);
-                
+
                 // Should contain comma separator between elements
                 CHECK(formatted.find(", ") != std::string::npos);
             }

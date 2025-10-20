@@ -261,8 +261,10 @@ namespace sparrow
               )
           ))
     {
-         SPARROW_ASSERT_TRUE(!values.empty());
-         SPARROW_ASSERT_TRUE(values.begin()->size() == UUID_SIZE); // only need to check the first element as the base type already ensures uniform size
+        SPARROW_ASSERT_TRUE(!values.empty());
+        SPARROW_ASSERT_TRUE(values.begin()->size() == UUID_SIZE);  // only need to check the first element as
+                                                                   // the base type already ensures uniform
+                                                                   // size
     }
 
     template <std::ranges::input_range VALUES, input_metadata_container METADATA_RANGE>
@@ -280,8 +282,10 @@ namespace sparrow
               base_type::create_proxy(std::forward<VALUES>(values), nullable, std::move(name), std::move(metadata))
           ))
     {
-       SPARROW_ASSERT_TRUE(!values.empty());
-       SPARROW_ASSERT_TRUE(values.begin()->size() == UUID_SIZE); // only need to check the first element as the base type already ensures uniform size
+        SPARROW_ASSERT_TRUE(!values.empty());
+        SPARROW_ASSERT_TRUE(values.begin()->size() == UUID_SIZE);  // only need to check the first element as
+                                                                   // the base type already ensures uniform
+                                                                   // size
     }
 
     template <std::ranges::input_range NULLABLE_VALUES, input_metadata_container METADATA_RANGE>
@@ -305,7 +309,8 @@ namespace sparrow
             if (nullable_uuid.has_value())
             {
                 SPARROW_ASSERT_TRUE(std::ranges::size(nullable_uuid.get()) == UUID_SIZE);
-                break; // only need to check the first non-null UUID as the base type already ensures uniform size
+                break;  // only need to check the first non-null UUID as the base type already ensures uniform
+                        // size
             }
         }
     }
@@ -357,7 +362,7 @@ struct std::formatter<sparrow::uuid_array>
     auto format(const sparrow::uuid_array& arr, std::format_context& ctx) const
     {
         std::format_to(ctx.out(), "uuid_array[{}](", arr.size());
-        
+
         if (arr.size() > 0)
         {
             bool first = true;
@@ -368,7 +373,7 @@ struct std::formatter<sparrow::uuid_array>
                     std::format_to(ctx.out(), ", ");
                 }
                 first = false;
-                
+
                 auto element = arr[i];
                 if (!element.has_value())
                 {
@@ -390,7 +395,7 @@ struct std::formatter<sparrow::uuid_array>
                 }
             }
         }
-        
+
         return std::format_to(ctx.out(), ")");
     }
 };

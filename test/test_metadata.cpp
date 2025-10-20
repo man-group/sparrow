@@ -105,7 +105,7 @@ TEST_SUITE("metadata")
             const std::vector<sparrow::metadata_pair> empty_metadata;
             const auto empty_buffer = sparrow::get_metadata_from_key_values(empty_metadata);
             const sparrow::key_value_view empty_key_values(empty_buffer.data());
-            
+
             auto it = empty_key_values.find("key1");
             CHECK_EQ(it, empty_key_values.end());
         }
