@@ -283,6 +283,10 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API size_t size() const;
 
+        [[nodiscard]] SPARROW_API bool empty() const;
+
+        [[nodiscard]] SPARROW_API key_value_view_iterator find(std::string_view key) const;
+
     private:
 
         const char* m_ptr;        ///< Pointer to the binary metadata buffer

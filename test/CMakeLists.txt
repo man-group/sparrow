@@ -93,6 +93,7 @@ set(SPARROW_TESTS_SOURCES
     test_utils_buffers.cpp
     test_utils_offsets.cpp
     test_utils.hpp
+    test_uuid_array.cpp
     test_variable_size_binary_view_array.cpp
 )
 

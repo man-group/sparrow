@@ -43,6 +43,8 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR>
     class fixed_width_binary_array_impl;
 
+    class uuid_array;  // Forward declaration for friend
+
     using fixed_width_binary_traits = arrow_traits<std::vector<byte_t>>;
 
     /**
@@ -119,7 +121,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR>
-    class fixed_width_binary_array_impl final
+    class fixed_width_binary_array_impl
         : public mutable_array_bitmap_base<fixed_width_binary_array_impl<T, CR>>
     {
     private:
@@ -229,7 +231,7 @@ namespace sparrow
          */
         [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
-    private:
+    protected:
 
         /**
          * @brief Creates Arrow proxy from data buffer with element specifications.
@@ -635,6 +637,7 @@ namespace sparrow
         size_t m_element_size = 0;
 
         friend class fixed_width_binary_reference<self_type>;
+        friend class uuid_array;
         friend const_value_iterator;
         friend base_type;
         friend base_type::base_type;

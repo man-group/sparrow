@@ -292,8 +292,8 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/variant_visitor.hpp
 
     # ./
-    ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array_api.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/builder.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/date_array.hpp
@@ -312,6 +312,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/timestamp_without_timezone_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/u8_buffer.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/union_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/uuid_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/variable_size_binary_view_array.hpp
 

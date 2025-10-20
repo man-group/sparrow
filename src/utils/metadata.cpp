@@ -55,6 +55,23 @@ namespace sparrow
         return static_cast<size_t>(m_num_pairs);
     }
 
+    [[nodiscard]] bool key_value_view::empty() const
+    {
+        return m_num_pairs == 0;
+    }
+
+    [[nodiscard]] key_value_view_iterator key_value_view::find(std::string_view key) const
+    {
+        for (auto it = begin(); it != end(); ++it)
+        {
+            if ((*it).first == key)
+            {
+                return it;
+            }
+        }
+        return end();
+    }
+
     key_value_view_iterator::key_value_view_iterator(const key_value_view& parent, int32_t index)
         : m_parent(&parent)
         , m_index(index)
