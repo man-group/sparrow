@@ -855,7 +855,7 @@ namespace sparrow
             nullptr,                     // dictionary
             true                         // dictionary ownership
         );
-        arrow_proxy proxy{ std::move(arr), std::move(schema)};
+        arrow_proxy proxy{std::move(arr), std::move(schema)};
         Ext::init(proxy);
         return proxy;
     }
@@ -1009,7 +1009,8 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, typename CR, typename Ext>
-    constexpr auto fixed_width_binary_array_impl<T, CR, Ext>::erase_values(const_value_iterator pos, size_type count)
+    constexpr auto
+    fixed_width_binary_array_impl<T, CR, Ext>::erase_values(const_value_iterator pos, size_type count)
         -> value_iterator
     {
         SPARROW_ASSERT_TRUE(pos >= value_cbegin());

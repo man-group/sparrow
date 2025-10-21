@@ -75,11 +75,14 @@ namespace sparrow
 
             // Check if extension metadata already exists
             const bool has_extension_name = std::ranges::find_if(
-                extension_metadata,
-                [](const auto& pair) {
-                    return pair.first == "ARROW:extension:name" && pair.second == EXTENSION_NAME;
-                }
-            ) != extension_metadata.end();
+                                                extension_metadata,
+                                                [](const auto& pair)
+                                                {
+                                                    return pair.first == "ARROW:extension:name"
+                                                           && pair.second == EXTENSION_NAME;
+                                                }
+                                            )
+                                            != extension_metadata.end();
             if (!has_extension_name)
             {
                 extension_metadata.emplace_back("ARROW:extension:name", EXTENSION_NAME);
