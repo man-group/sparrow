@@ -22,7 +22,6 @@
 #include "sparrow/duration_array.hpp"
 #include "sparrow/fixed_width_binary_array.hpp"
 #include "sparrow/interval_array.hpp"
-#include "sparrow/uuid_array.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/list_array.hpp"
@@ -38,6 +37,7 @@
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/union_array.hpp"
 #include "sparrow/utils/temporal.hpp"
+#include "sparrow/uuid_array.hpp"
 #include "sparrow/variable_size_binary_array.hpp"
 #include "sparrow/variable_size_binary_view_array.hpp"
 
@@ -145,7 +145,12 @@ namespace sparrow
                     return func(unwrap_array<decimal_256_array>(ar));
                 case data_type::FIXED_WIDTH_BINARY:
                 {
-                    const std::optional<key_value_view> metadata = ar.get_arrow_proxy().metadata(); // ensure uuid_array is handled in uuid_array.cpp
+                    const std::optional<key_value_view> metadata = ar.get_arrow_proxy().metadata();  // ensure
+                                                                                                     // uuid_array
+                                                                                                     // is
+                                                                                                     // handled
+                                                                                                     // in
+                                                                                                     // uuid_array.cpp
                     if (metadata.has_value())
                     {
                         const auto it = metadata->find("ARROW:extension:name");
