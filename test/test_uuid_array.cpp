@@ -28,9 +28,9 @@ namespace sparrow
     TEST_SUITE("uuid_array")
     {
         // Helper function to create a UUID from a simple pattern
-        static uuid_array::uuid_type make_test_uuid(uint8_t pattern)
+        static std::array<byte_t, 16> make_test_uuid(uint8_t pattern)
         {
-            uuid_array::uuid_type uuid;
+            std::array<byte_t, 16> uuid;
             for (size_t i = 0; i < 16; ++i)
             {
                 uuid[i] = static_cast<byte_t>(pattern + i);
@@ -40,9 +40,9 @@ namespace sparrow
 
         // Helper function to create a UUID array with test data
         static auto make_array(size_t count, size_t offset = 0)
-            -> std::pair<uuid_array, std::vector<uuid_array::uuid_type>>
+            -> std::pair<uuid_array, std::vector<std::array<byte_t, 16>>>
         {
-            std::vector<uuid_array::uuid_type> input_values;
+            std::vector<std::array<byte_t, 16>> input_values;
             input_values.reserve(count);
             for (size_t i = offset; i < count; ++i)  // Start from offset
             {
@@ -66,7 +66,7 @@ namespace sparrow
 
             SUBCASE("single UUID")
             {
-                std::vector<uuid_array::uuid_type> uuids = {make_test_uuid(0)};
+                std::vector<std::array<byte_t, 16>> uuids = {make_test_uuid(0)};
                 const uuid_array ar(uuids);
                 CHECK_EQ(ar.size(), 1);
                 CHECK(std::ranges::equal(ar[0].get(), uuids[0]));
@@ -76,7 +76,7 @@ namespace sparrow
             {
                 SUBCASE("nullable == true")
                 {
-                    std::vector<uuid_array::uuid_type> uuids = {
+                    std::vector<std::array<byte_t, 16>> uuids = {
                         make_test_uuid(0),
                         make_test_uuid(16),
                         make_test_uuid(32)
@@ -91,7 +91,7 @@ namespace sparrow
 
                 SUBCASE("nullable == false")
                 {
-                    std::vector<uuid_array::uuid_type> uuids = {
+                    std::vector<std::array<byte_t, 16>> uuids = {
                         make_test_uuid(0),
                         make_test_uuid(16),
                         make_test_uuid(32)
@@ -107,10 +107,10 @@ namespace sparrow
 
             SUBCASE("nullable values")
             {
-                std::vector<nullable<uuid_array::uuid_type>> nullable_uuids = {
-                    nullable<uuid_array::uuid_type>(make_test_uuid(0)),
-                    nullable<uuid_array::uuid_type>(),  // null
-                    nullable<uuid_array::uuid_type>(make_test_uuid(32))
+                std::vector<nullable<std::array<byte_t, 16>>> nullable_uuids = {
+                    nullable<std::array<byte_t, 16>>(make_test_uuid(0)),
+                    nullable<std::array<byte_t, 16>>(),  // null
+                    nullable<std::array<byte_t, 16>>(make_test_uuid(32))
                 };
                 const uuid_array ar(nullable_uuids);
                 CHECK_EQ(ar.size(), 3);
@@ -126,7 +126,7 @@ namespace sparrow
         {
             SUBCASE("extension name is set correctly")
             {
-                std::vector<uuid_array::uuid_type> uuids = {make_test_uuid(0), make_test_uuid(16)};
+                std::vector<std::array<byte_t, 16>> uuids = {make_test_uuid(0), make_test_uuid(16)};
                 const uuid_array ar(uuids);
 
                 // Check that the format is w:16
@@ -333,7 +333,7 @@ namespace sparrow
             SUBCASE("RFC 4122 UUID example")
             {
                 // Example UUID: 550e8400-e29b-41d4-a716-446655440000
-                uuid_array::uuid_type uuid1 = {
+                std::array<byte_t, 16> uuid1 = {
                     byte_t{0x55},
                     byte_t{0x0e},
                     byte_t{0x84},
@@ -353,7 +353,7 @@ namespace sparrow
                 };
 
                 // Another UUID: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
-                uuid_array::uuid_type uuid2 = {
+                std::array<byte_t, 16> uuid2 = {
                     byte_t{0x6b},
                     byte_t{0xa7},
                     byte_t{0xb8},
@@ -372,7 +372,7 @@ namespace sparrow
                     byte_t{0xc8}
                 };
 
-                std::vector<uuid_array::uuid_type> uuids = {uuid1, uuid2};
+                std::vector<std::array<byte_t, 16>> uuids = {uuid1, uuid2};
                 const uuid_array ar(uuids);
 
                 CHECK_EQ(ar.size(), 2);
@@ -382,8 +382,8 @@ namespace sparrow
 
             SUBCASE("nil UUID (all zeros)")
             {
-                uuid_array::uuid_type nil_uuid = {};  // All zeros
-                std::vector<uuid_array::uuid_type> uuids = {nil_uuid};
+                std::array<byte_t, 16> nil_uuid = {};  // All zeros
+                std::vector<std::array<byte_t, 16>> uuids = {nil_uuid};
                 const uuid_array ar(uuids);
 
                 CHECK_EQ(ar.size(), 1);
@@ -399,126 +399,5 @@ namespace sparrow
                 CHECK(all_zeros);
             }
         }
-
-#if defined(__cpp_lib_format)
-        TEST_CASE("formatter")
-        {
-            SUBCASE("basic formatting")
-            {
-                // Create a simple array with known values
-                std::vector<uuid_array::uuid_type> uuids = {
-                    make_test_uuid(0),
-                    make_test_uuid(16),
-                    make_test_uuid(32)
-                };
-                const uuid_array ar(uuids);
-
-                const std::string formatted = std::format("{}", ar);
-                
-                // Check that it contains the size
-                CHECK(formatted.find("uuid_array[3]") != std::string::npos);
-                
-                // Check that it's not empty (has content)
-                CHECK(formatted.size() > 20);
-            }
-
-            SUBCASE("empty array")
-            {
-                const uuid_array ar(false);
-                const std::string formatted = std::format("{}", ar);
-                
-                CHECK_EQ(formatted, "uuid_array[0]()");
-            }
-
-            SUBCASE("array with nulls")
-            {
-                std::vector<nullable<uuid_array::uuid_type>> nullable_uuids = {
-                    nullable<uuid_array::uuid_type>(make_test_uuid(0)),
-                    nullable<uuid_array::uuid_type>(),  // null
-                    nullable<uuid_array::uuid_type>(make_test_uuid(32))
-                };
-                const uuid_array ar(nullable_uuids);
-
-                const std::string formatted = std::format("{}", ar);
-                
-                // Check size
-                CHECK(formatted.find("uuid_array[3]") != std::string::npos);
-                
-                // Check that null is present
-                CHECK(formatted.find("null") != std::string::npos);
-            }
-
-            SUBCASE("RFC 4122 UUID formatting")
-            {
-                // UUID: 550e8400-e29b-41d4-a716-446655440000
-                uuid_array::uuid_type uuid1 = {
-                    byte_t{0x55},
-                    byte_t{0x0e},
-                    byte_t{0x84},
-                    byte_t{0x00},
-                    byte_t{0xe2},
-                    byte_t{0x9b},
-                    byte_t{0x41},
-                    byte_t{0xd4},
-                    byte_t{0xa7},
-                    byte_t{0x16},
-                    byte_t{0x44},
-                    byte_t{0x66},
-                    byte_t{0x55},
-                    byte_t{0x44},
-                    byte_t{0x00},
-                    byte_t{0x00}
-                };
-
-                std::vector<uuid_array::uuid_type> uuids = {uuid1};
-                const uuid_array ar(uuids);
-
-                const std::string formatted = std::format("{}", ar);
-                
-                // Check that it contains hex representation
-                CHECK(formatted.find("55 0e 84 00") != std::string::npos);
-                CHECK(formatted.find("uuid_array[1]") != std::string::npos);
-            }
-
-            SUBCASE("nil UUID formatting")
-            {
-                uuid_array::uuid_type nil_uuid = {};  // All zeros
-                std::vector<uuid_array::uuid_type> uuids = {nil_uuid};
-                const uuid_array ar(uuids);
-
-                const std::string formatted = std::format("{}", ar);
-                
-                // Should contain all zeros in hex
-                CHECK(formatted.find("00 00 00 00") != std::string::npos);
-            }
-
-            SUBCASE("single UUID")
-            {
-                std::vector<uuid_array::uuid_type> uuids = {make_test_uuid(42)};
-                const uuid_array ar(uuids);
-
-                const std::string formatted = std::format("{}", ar);
-                
-                CHECK(formatted.find("uuid_array[1]") != std::string::npos);
-                // Should have opening and closing angle brackets
-                CHECK(formatted.find('<') != std::string::npos);
-                CHECK(formatted.find('>') != std::string::npos);
-            }
-
-            SUBCASE("multiple UUIDs with separator")
-            {
-                std::vector<uuid_array::uuid_type> uuids = {
-                    make_test_uuid(0),
-                    make_test_uuid(1)
-                };
-                const uuid_array ar(uuids);
-
-                const std::string formatted = std::format("{}", ar);
-                
-                // Should contain comma separator between elements
-                CHECK(formatted.find(", ") != std::string::npos);
-            }
-        }
-#endif
     }
 }

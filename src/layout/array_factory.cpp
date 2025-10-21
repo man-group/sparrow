@@ -218,7 +218,7 @@ namespace sparrow
                     if (metadata.has_value())
                     {
                         const auto it = metadata->find("ARROW:extension:name");
-                        if (it != metadata->end())
+                        if (it != metadata->end() && (*it).second== "arrow.uuid")
                         {
                             return detail::make_wrapper_ptr<uuid_array>(std::move(proxy));
                         }
