@@ -86,73 +86,6 @@ namespace sparrow
         using name_range = std::ranges::ref_view<const std::vector<name_type>>;
 
         /**
-         * @brief View class for accessing columns that may be owned or referenced.
-         */
-        class column_view
-        {
-        public:
-            class iterator
-            {
-            public:
-                using iterator_category = std::random_access_iterator_tag;
-                using value_type = array;
-                using difference_type = std::ptrdiff_t;
-                using pointer = const array*;
-                using reference = const array&;
-                
-                iterator() : m_record_batch(nullptr), m_index(0) {}
-                iterator(const record_batch* rb, size_type index) 
-                    : m_record_batch(rb), m_index(index) {}
-                
-                reference operator*() const { return m_record_batch->get_column(m_index); }
-                pointer operator->() const { return &m_record_batch->get_column(m_index); }
-                
-                iterator& operator++() { ++m_index; return *this; }
-                iterator operator++(int) { iterator tmp = *this; ++m_index; return tmp; }
-                iterator& operator--() { --m_index; return *this; }
-                iterator operator--(int) { iterator tmp = *this; --m_index; return tmp; }
-                
-                iterator& operator+=(difference_type n) { m_index += static_cast<size_type>(n); return *this; }
-                iterator& operator-=(difference_type n) { m_index -= static_cast<size_type>(n); return *this; }
-                
-                iterator operator+(difference_type n) const { return iterator(m_record_batch, m_index + static_cast<size_type>(n)); }
-                iterator operator-(difference_type n) const { return iterator(m_record_batch, m_index - static_cast<size_type>(n)); }
-                
-                friend iterator operator+(difference_type n, const iterator& it) { return it + n; }
-                
-                difference_type operator-(const iterator& other) const { 
-                    return static_cast<difference_type>(m_index) - static_cast<difference_type>(other.m_index); 
-                }
-                
-                reference operator[](difference_type n) const { return m_record_batch->get_column(m_index + static_cast<size_type>(n)); }
-                
-                bool operator==(const iterator& other) const { return m_index == other.m_index; }
-                bool operator!=(const iterator& other) const { return m_index != other.m_index; }
-                bool operator<(const iterator& other) const { return m_index < other.m_index; }
-                bool operator<=(const iterator& other) const { return m_index <= other.m_index; }
-                bool operator>(const iterator& other) const { return m_index > other.m_index; }
-                bool operator>=(const iterator& other) const { return m_index >= other.m_index; }
-                
-            private:
-                const record_batch* m_record_batch;
-                size_type m_index;
-            };
-            
-            column_view() : m_record_batch(nullptr) {}
-            explicit column_view(const record_batch* rb) : m_record_batch(rb) {}
-            
-            iterator begin() const { return iterator(m_record_batch, 0); }
-            iterator end() const { return iterator(m_record_batch, m_record_batch ? m_record_batch->nb_columns() : 0); }
-            size_type size() const { return m_record_batch ? m_record_batch->nb_columns() : 0; }
-            bool empty() const { return size() == 0; }
-            
-        private:
-            const record_batch* m_record_batch;
-        };
-        
-        using column_range = column_view;
-
-        /**
          * @brief Default constructor creating an empty record batch.
          *
          * @post Record batch is empty (nb_columns() == 0, nb_rows() == 0)
@@ -471,7 +404,11 @@ namespace sparrow
          * @post Range elements correspond to names() in the same order
          * @post Range remains valid while record batch exists and is not modified
          */
-        SPARROW_API column_range columns() const;
+        auto columns() const
+        {
+            return std::views::iota(size_type{0}, nb_columns())
+                 | std::views::transform([this](size_type i) -> const array& { return get_column(i); });
+        }
 
         /**
          * @brief Moves the internal columns into a struct_array and empties the record batch.

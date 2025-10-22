@@ -197,11 +197,6 @@ namespace sparrow
         return std::ranges::ref_view(m_name_list);
     }
 
-    auto record_batch::columns() const -> column_range
-    {
-        return column_view(this);
-    }
-
     struct_array record_batch::extract_struct_array()
     {
         std::vector<array> owned_arrays;
