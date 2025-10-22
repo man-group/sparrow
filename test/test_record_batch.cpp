@@ -340,6 +340,150 @@ namespace sparrow
             CHECK_EQ(record2, record_check);
         }
 
+        TEST_CASE("add_column_reference")
+        {
+            SUBCASE("add single column by reference")
+            {
+                auto iota = std::ranges::iota_view{std::int32_t(0), std::int32_t(col_size)};
+                primitive_array<std::int32_t> pr(iota, true, "ref_column");
+                array ar(std::move(pr));
+                
+                record_batch record;
+                record.add_column_reference("ref_column", ar);
+                
+                CHECK_EQ(record.nb_columns(), 1u);
+                CHECK_EQ(record.nb_rows(), col_size);
+                CHECK(record.contains_column("ref_column"));
+                
+                const auto& col = record.get_column("ref_column");
+                CHECK_EQ(col, ar);
+            }
+
+            SUBCASE("add column by reference using array name")
+            {
+                auto iota = std::ranges::iota_view{std::int32_t(0), std::int32_t(col_size)};
+                primitive_array<std::int32_t> pr(iota, true, "named_ref");
+                array ar(std::move(pr));
+                
+                record_batch record;
+                record.add_column_reference(ar);
+                
+                CHECK_EQ(record.nb_columns(), 1u);
+                CHECK(record.contains_column("named_ref"));
+            }
+
+            SUBCASE("add multiple columns by reference")
+            {
+                auto iota1 = std::ranges::iota_view{std::int32_t(0), std::int32_t(col_size)};
+                primitive_array<std::int32_t> pr1(iota1, true, "ref_col1");
+                array ar1(std::move(pr1));
+                
+                auto iota2 = std::ranges::iota_view{std::int32_t(10), std::int32_t(10 + col_size)};
+                primitive_array<std::int32_t> pr2(iota2, true, "ref_col2");
+                array ar2(std::move(pr2));
+                
+                record_batch record;
+                record.add_column_reference("ref_col1", ar1);
+                record.add_column_reference("ref_col2", ar2);
+                
+                CHECK_EQ(record.nb_columns(), 2u);
+                CHECK_EQ(record.nb_rows(), col_size);
+                CHECK(record.contains_column("ref_col1"));
+                CHECK(record.contains_column("ref_col2"));
+            }
+        }
+
+        TEST_CASE("mixed_owned_and_referenced_columns")
+        {
+            SUBCASE("add owned then referenced")
+            {
+                auto iota1 = std::ranges::iota_view{std::int32_t(0), std::int32_t(col_size)};
+                primitive_array<std::int32_t> owned(iota1, true, "owned_col");
+                
+                auto iota2 = std::ranges::iota_view{std::int32_t(10), std::int32_t(10 + col_size)};
+                primitive_array<std::int32_t> pr_ref(iota2, true, "ref_col");
+                array referenced(std::move(pr_ref));
+                
+                record_batch record;
+                record.add_column(array(std::move(owned)));
+                record.add_column_reference("ref_col", referenced);
+                
+                CHECK_EQ(record.nb_columns(), 2u);
+                CHECK_EQ(record.nb_rows(), col_size);
+                CHECK(record.contains_column("owned_col"));
+                CHECK(record.contains_column("ref_col"));
+            }
+
+            SUBCASE("add referenced then owned")
+            {
+                auto iota1 = std::ranges::iota_view{std::int32_t(0), std::int32_t(col_size)};
+                primitive_array<std::int32_t> pr_ref(iota1, true, "ref_col");
+                array referenced(std::move(pr_ref));
+                
+                auto iota2 = std::ranges::iota_view{std::int32_t(10), std::int32_t(10 + col_size)};
+                primitive_array<std::int32_t> owned(iota2, true, "owned_col");
+                
+                record_batch record;
+                record.add_column_reference("ref_col", referenced);
+                record.add_column(array(std::move(owned)));
+                
+                CHECK_EQ(record.nb_columns(), 2u);
+                CHECK_EQ(record.nb_rows(), col_size);
+                CHECK(record.contains_column("ref_col"));
+                CHECK(record.contains_column("owned_col"));
+            }
+
+            SUBCASE("iterate over mixed columns")
+            {
+                auto iota1 = std::ranges::iota_view{std::int32_t(0), std::int32_t(col_size)};
+                primitive_array<std::int32_t> owned(iota1, true, "owned");
+                
+                auto iota2 = std::ranges::iota_view{std::int32_t(10), std::int32_t(10 + col_size)};
+                primitive_array<std::int32_t> pr_ref(iota2, true, "referenced");
+                array referenced(std::move(pr_ref));
+                
+                record_batch record;
+                record.add_column(array(std::move(owned)));
+                record.add_column_reference("referenced", referenced);
+                
+                auto columns = record.columns();
+                std::size_t count = 0;
+                for (const auto& col : columns)
+                {
+                    CHECK(col.name().has_value());
+                    ++count;
+                }
+                CHECK_EQ(count, 2u);
+            }
+        }
+
+        TEST_CASE("extract_struct_array_with_references")
+        {
+            SUBCASE("extract from record with referenced columns")
+            {
+                auto iota1 = std::ranges::iota_view{std::int32_t(0), std::int32_t(col_size)};
+                primitive_array<std::int32_t> pr1(iota1, true, "col1");
+                array ar1(std::move(pr1));
+                auto ar1_copy = ar1;
+                
+                auto iota2 = std::ranges::iota_view{std::int32_t(10), std::int32_t(10 + col_size)};
+                primitive_array<std::int32_t> pr2(iota2, true, "col2");
+                array ar2(std::move(pr2));
+                auto ar2_copy = ar2;
+                
+                record_batch record;
+                record.add_column_reference("col1", ar1);
+                record.add_column_reference("col2", ar2);
+                
+                auto extracted = record.extract_struct_array();
+                
+                CHECK_EQ(extracted.size(), col_size);
+                // Original arrays should still be valid
+                CHECK_EQ(ar1, ar1_copy);
+                CHECK_EQ(ar2, ar2_copy);
+            }
+        }
+
 #if defined(__cpp_lib_format)
         TEST_CASE("formatter")
         {

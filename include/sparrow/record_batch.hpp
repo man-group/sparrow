@@ -45,16 +45,18 @@ namespace sparrow
      * - Column names are unique within the batch
      * - Efficient name-based and index-based column access
      * - Consistent internal state through validation
+     * - Can store arrays by value (owned) or by reference
      *
      * @pre All arrays must have the same length
      * @pre Column names must be unique within the record batch
+     * @pre Referenced arrays must outlive the record batch
      * @post Maintains consistent mapping between names and arrays
      * @post Provides O(1) access to columns by index and O(1) average access by name
      * @post Thread-safe for read operations, requires external synchronization for writes
      *
      * @example
      * ```cpp
-     * // Create from separate names and arrays
+     * // Create from separate names and arrays (owned)
      * std::vector<std::string> names = {"id", "name", "age"};
      * std::vector<array> columns = {id_array, name_array, age_array};
      * record_batch batch(names, columns, "employee_data");
@@ -64,6 +66,13 @@ namespace sparrow
      * named_columns.emplace_back(id_array.with_name("id"));
      * named_columns.emplace_back(name_array.with_name("name"));
      * record_batch batch2(named_columns);
+     *
+     * // Store arrays by reference
+     * array id_array = ...;
+     * array name_array = ...;
+     * record_batch batch3;
+     * batch3.add_column_reference("id", id_array);
+     * batch3.add_column_reference("name", name_array);
      * ```
      */
     class record_batch
@@ -75,7 +84,81 @@ namespace sparrow
         using initializer_type = std::initializer_list<std::pair<name_type, array>>;
 
         using name_range = std::ranges::ref_view<const std::vector<name_type>>;
-        using column_range = std::ranges::ref_view<const std::vector<array>>;
+
+        /**
+         * @brief View class for accessing columns that may be owned or referenced.
+         */
+        class column_view
+        {
+        public:
+            class iterator
+            {
+            public:
+                using iterator_category = std::random_access_iterator_tag;
+                using value_type = array;
+                using difference_type = std::ptrdiff_t;
+                using pointer = const array*;
+                using reference = const array&;
+                
+                iterator() : m_record_batch(nullptr), m_index(0) {}
+                iterator(const record_batch* rb, size_type index) 
+                    : m_record_batch(rb), m_index(index) {}
+                
+                reference operator*() const { return m_record_batch->get_column(m_index); }
+                pointer operator->() const { return &m_record_batch->get_column(m_index); }
+                
+                iterator& operator++() { ++m_index; return *this; }
+                iterator operator++(int) { iterator tmp = *this; ++m_index; return tmp; }
+                iterator& operator--() { --m_index; return *this; }
+                iterator operator--(int) { iterator tmp = *this; --m_index; return tmp; }
+                
+                iterator& operator+=(difference_type n) { m_index += static_cast<size_type>(n); return *this; }
+                iterator& operator-=(difference_type n) { m_index -= static_cast<size_type>(n); return *this; }
+                
+                iterator operator+(difference_type n) const { return iterator(m_record_batch, m_index + static_cast<size_type>(n)); }
+                iterator operator-(difference_type n) const { return iterator(m_record_batch, m_index - static_cast<size_type>(n)); }
+                
+                friend iterator operator+(difference_type n, const iterator& it) { return it + n; }
+                
+                difference_type operator-(const iterator& other) const { 
+                    return static_cast<difference_type>(m_index) - static_cast<difference_type>(other.m_index); 
+                }
+                
+                reference operator[](difference_type n) const { return m_record_batch->get_column(m_index + static_cast<size_type>(n)); }
+                
+                bool operator==(const iterator& other) const { return m_index == other.m_index; }
+                bool operator!=(const iterator& other) const { return m_index != other.m_index; }
+                bool operator<(const iterator& other) const { return m_index < other.m_index; }
+                bool operator<=(const iterator& other) const { return m_index <= other.m_index; }
+                bool operator>(const iterator& other) const { return m_index > other.m_index; }
+                bool operator>=(const iterator& other) const { return m_index >= other.m_index; }
+                
+            private:
+                const record_batch* m_record_batch;
+                size_type m_index;
+            };
+            
+            column_view() : m_record_batch(nullptr) {}
+            explicit column_view(const record_batch* rb) : m_record_batch(rb) {}
+            
+            iterator begin() const { return iterator(m_record_batch, 0); }
+            iterator end() const { return iterator(m_record_batch, m_record_batch ? m_record_batch->nb_columns() : 0); }
+            size_type size() const { return m_record_batch ? m_record_batch->nb_columns() : 0; }
+            bool empty() const { return size() == 0; }
+            
+        private:
+            const record_batch* m_record_batch;
+        };
+        
+        using column_range = column_view;
+
+        /**
+         * @brief Default constructor creating an empty record batch.
+         *
+         * @post Record batch is empty (nb_columns() == 0, nb_rows() == 0)
+         * @post Can be populated using add_column() or add_column_reference()
+         */
+        record_batch() = default;
 
         /**
          * @brief Constructs a record_batch from separate name and array ranges.
@@ -442,6 +525,50 @@ namespace sparrow
          */
         SPARROW_API void add_column(array column);
 
+        /**
+         * @brief Adds a column by reference with the specified name.
+         *
+         * The record batch stores a reference to the array. The referenced array must
+         * outlive the record batch.
+         *
+         * @param name The name for the column (must be unique)
+         * @param column Reference to the array to add as a column
+         *
+         * @pre name must not already exist in the record batch
+         * @pre If record batch is not empty, column.size() must equal nb_rows()
+         * @pre name must not be empty
+         * @pre Referenced array must outlive the record batch
+         * @post Record batch contains a reference to the column mapped to name
+         * @post nb_columns() increases by 1
+         * @post If this was the first column, nb_rows() equals column.size()
+         * @post Internal consistency is maintained
+         * @post Array map cache is updated
+         *
+         * @throws std::invalid_argument if name already exists or column size is incompatible
+         */
+        SPARROW_API void add_column_reference(name_type name, array& column);
+
+        /**
+         * @brief Adds a column by reference using the array's internal name.
+         *
+         * The record batch stores a reference to the array. The referenced array must
+         * outlive the record batch.
+         *
+         * @param column Reference to the array to add (must have a non-empty name)
+         *
+         * @pre column must have a non-empty name (column.name().has_value() && !column.name()->empty())
+         * @pre column.name() must not already exist in the record batch
+         * @pre If record batch is not empty, column.size() must equal nb_rows()
+         * @pre Referenced array must outlive the record batch
+         * @post Record batch contains a reference to the column mapped to column.name()
+         * @post nb_columns() increases by 1
+         * @post If this was the first column, nb_rows() equals column.size()
+         * @post Internal consistency is maintained
+         *
+         * @throws std::invalid_argument if column lacks name, name exists, or size is incompatible
+         */
+        SPARROW_API void add_column_reference(array& column);
+
     private:
 
         template <class AS>
@@ -493,13 +620,21 @@ namespace sparrow
         SPARROW_API void check_consistency() const;
 
         using metadata_type = std::vector<metadata_pair>;
+        using array_storage_type = std::variant<array, std::reference_wrapper<array>>;
+        
         std::optional<name_type> m_name = std::nullopt;          ///< Optional name of the record batch
         std::optional<metadata_type> m_metadata = std::nullopt;  ///< Optional metadata for the record batch
         std::vector<name_type> m_name_list;                      ///< Ordered list of column names
-        std::vector<array> m_array_list;                         ///< Ordered list of column arrays
+        std::vector<array_storage_type> m_array_list;            ///< Ordered list of column arrays (owned or referenced)
         mutable std::unordered_map<name_type, array*> m_array_map;  ///< Cache for fast name-based
                                                                     ///< lookup
         mutable bool m_dirty_map = true;                            ///< Flag indicating cache needs update
+        
+        /**
+         * @brief Helper to get array pointer from storage variant.
+         */
+        SPARROW_API static array* get_array_ptr(array_storage_type& storage);
+        SPARROW_API static const array* get_array_ptr(const array_storage_type& storage);
     };
 
     /**
@@ -539,8 +674,19 @@ namespace sparrow
         : m_name(name)
         , m_metadata(std::move(metadata))
         , m_name_list(to_vector<name_type>(std::forward<NR>(names)))
-        , m_array_list(to_vector<array>(std::forward<CR>(columns)))
     {
+        m_array_list.reserve(std::ranges::size(columns));
+        for (auto& col : columns)
+        {
+            if constexpr (std::is_lvalue_reference_v<CR>)
+            {
+                m_array_list.emplace_back(col);
+            }
+            else
+            {
+                m_array_list.emplace_back(std::move(col));
+            }
+        }
         update_array_map_cache();
     }
 
@@ -565,8 +711,19 @@ namespace sparrow
         : m_name(name)
         , m_metadata(std::move(metadata))
         , m_name_list(detail::get_names(columns))
-        , m_array_list(to_vector<array>(std::move(columns)))
     {
+        m_array_list.reserve(std::ranges::size(columns));
+        for (auto& col : columns)
+        {
+            if constexpr (std::is_lvalue_reference_v<CR>)
+            {
+                m_array_list.emplace_back(col);
+            }
+            else
+            {
+                m_array_list.emplace_back(std::move(col));
+            }
+        }
         update_array_map_cache();
     }
 
@@ -578,7 +735,7 @@ namespace sparrow
         for (std::size_t i = 0; i < column_size; ++i)
         {
             m_name_list.emplace_back(sch->children[i]->name);
-            m_array_list.emplace_back(std::move(*(arr.children[i])), sch->children[i]);
+            m_array_list.emplace_back(array(std::move(*(arr.children[i])), sch->children[i]));
             *(arr.children[i]) = make_empty_arrow_array();
         }
         arr.release(&arr);
@@ -593,7 +750,7 @@ namespace sparrow
         for (std::size_t i = 0; i < column_size; ++i)
         {
             m_name_list.emplace_back(sch->children[i]->name);
-            m_array_list.emplace_back(arr->children[i], sch->children[i]);
+            m_array_list.emplace_back(array(arr->children[i], sch->children[i]));
         }
         update_array_map_cache();
     }
@@ -629,19 +786,20 @@ struct std::formatter<sparrow::record_batch>
 
     auto format(const sparrow::record_batch& rb, std::format_context& ctx) const
     {
-        const auto values_by_columns = rb.columns()
-                                       | std::views::transform(
-                                           [&rb](const auto& ar)
-                                           {
-                                               return std::views::iota(0u, rb.nb_rows())
-                                                      | std::views::transform(
-                                                          [&ar](const auto i)
-                                                          {
-                                                              return ar[i];
-                                                          }
-                                                      );
-                                           }
-                                       );
+        auto columns_view = rb.columns();
+        std::vector<std::vector<sparrow::array_traits::const_reference>> values_by_columns;
+        values_by_columns.reserve(rb.nb_columns());
+        
+        for (const auto& ar : columns_view)
+        {
+            std::vector<sparrow::array_traits::const_reference> column_values;
+            column_values.reserve(rb.nb_rows());
+            for (std::size_t i = 0; i < rb.nb_rows(); ++i)
+            {
+                column_values.push_back(ar[i]);
+            }
+            values_by_columns.push_back(std::move(column_values));
+        }
 
         sparrow::to_table_with_columns(ctx.out(), rb.names(), values_by_columns);
         return ctx.out();

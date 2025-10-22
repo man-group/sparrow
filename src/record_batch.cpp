@@ -20,6 +20,36 @@
 
 namespace sparrow
 {
+    array* record_batch::get_array_ptr(array_storage_type& storage)
+    {
+        return std::visit([](auto&& arg) -> array* {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, array>)
+            {
+                return &arg;
+            }
+            else if constexpr (std::is_same_v<T, std::reference_wrapper<array>>)
+            {
+                return &arg.get();
+            }
+        }, storage);
+    }
+
+    const array* record_batch::get_array_ptr(const array_storage_type& storage)
+    {
+        return std::visit([](auto&& arg) -> const array* {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, array>)
+            {
+                return &arg;
+            }
+            else if constexpr (std::is_same_v<T, std::reference_wrapper<array>>)
+            {
+                return &arg.get();
+            }
+        }, storage);
+    }
+
     record_batch::record_batch(initializer_type init)
     {
         m_name_list.reserve(init.size());
@@ -42,7 +72,7 @@ namespace sparrow
         for (std::size_t i = 0; i < column_size; ++i)
         {
             m_name_list.emplace_back(sch.children[i]->name);
-            m_array_list.emplace_back(std::move(*(arr.children[i])), std::move(*(sch.children[i])));
+            m_array_list.emplace_back(array(std::move(*(arr.children[i])), std::move(*(sch.children[i]))));
             *(arr.children[i]) = make_empty_arrow_array();
             *(sch.children[i]) = make_empty_arrow_schema();
         }
@@ -114,7 +144,7 @@ namespace sparrow
 
     auto record_batch::nb_rows() const -> size_type
     {
-        return m_array_list.empty() ? size_type(0) : m_array_list.front().size();
+        return m_array_list.empty() ? size_type(0) : get_array_ptr(m_array_list.front())->size();
     }
 
     bool record_batch::contains_column(const name_type& name) const
@@ -148,13 +178,13 @@ namespace sparrow
     array& record_batch::get_column(size_type index)
     {
         SPARROW_ASSERT_TRUE(index < nb_columns());
-        return m_array_list[index];
+        return *get_array_ptr(m_array_list[index]);
     }
 
     const array& record_batch::get_column(size_type index) const
     {
         SPARROW_ASSERT_TRUE(index < nb_columns());
-        return m_array_list[index];
+        return *get_array_ptr(m_array_list[index]);
     }
 
     auto record_batch::name() const -> const std::optional<name_type>&
@@ -169,17 +199,37 @@ namespace sparrow
 
     auto record_batch::columns() const -> column_range
     {
-        return std::ranges::ref_view(std::as_const(m_array_list));
+        return column_view(this);
     }
 
     struct_array record_batch::extract_struct_array()
     {
+        std::vector<array> owned_arrays;
+        owned_arrays.reserve(m_array_list.size());
+        
         for (std::size_t i = 0; i < m_name_list.size(); ++i)
         {
-            m_array_list[i].set_name(m_name_list[i]);
+            array* arr_ptr = get_array_ptr(m_array_list[i]);
+            
+            // Check if this is an owned array or a reference
+            if (std::holds_alternative<array>(m_array_list[i]))
+            {
+                // Move owned array
+                owned_arrays.push_back(std::move(std::get<array>(m_array_list[i])));
+            }
+            else
+            {
+                // Copy referenced array (cannot move from a reference)
+                owned_arrays.push_back(*arr_ptr);
+            }
+            owned_arrays.back().set_name(m_name_list[i]);
         }
+        
         m_array_map.clear();
-        return struct_array(std::move(m_array_list), false, m_name, std::move(m_metadata));
+        m_array_list.clear();
+        m_name_list.clear();
+        
+        return struct_array(std::move(owned_arrays), false, m_name, std::move(m_metadata));
     }
 
     void record_batch::add_column(name_type name, array column)
@@ -195,6 +245,21 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(opt_col_name.has_value());
         std::string name(opt_col_name.value());
         add_column(std::move(name), std::move(column));
+    }
+
+    void record_batch::add_column_reference(name_type name, array& column)
+    {
+        m_name_list.push_back(std::move(name));
+        m_array_list.emplace_back(std::ref(column));
+        m_dirty_map = true;
+    }
+
+    void record_batch::add_column_reference(array& column)
+    {
+        auto opt_col_name = column.name();
+        SPARROW_ASSERT_TRUE(opt_col_name.has_value());
+        std::string name(opt_col_name.value());
+        add_column_reference(std::move(name), column);
     }
 
     void record_batch::partial_init_from_schema(const ArrowSchema& sch)
@@ -228,7 +293,7 @@ namespace sparrow
         for (std::size_t i = m_name_list.size(); i != 0; --i)
         {
             const auto& name = m_name_list[i - 1];
-            array* ar = const_cast<array*>(&(m_array_list[i - 1]));
+            array* ar = const_cast<array*>(get_array_ptr(m_array_list[i - 1]));
             if (!m_array_map.try_emplace(name, ar).second)
             {
                 break;
@@ -250,15 +315,16 @@ namespace sparrow
 
         if (!m_array_list.empty())
         {
-            const size_type size = m_array_list[0].size();
+            const size_type size = get_array_ptr(m_array_list[0])->size();
             for (size_type i = 1u; i < m_array_list.size(); ++i)
             {
-                const bool same_size = m_array_list[i].size() == size;
+                const size_type current_size = get_array_ptr(m_array_list[i])->size();
+                const bool same_size = current_size == size;
 
                 if (!same_size)
                 {
                     const std::string error = "The size of the array at index " + std::to_string(i) + " is "
-                                              + std::to_string(m_array_list[i].size())
+                                              + std::to_string(current_size)
                                               + ", but the size of the first array is " + std::to_string(size);
                     SPARROW_ASSERT(same_size, error.c_str());
                 }
