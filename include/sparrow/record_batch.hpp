@@ -407,7 +407,12 @@ namespace sparrow
         auto columns() const
         {
             return std::views::iota(size_type{0}, nb_columns())
-                 | std::views::transform([this](size_type i) -> const array& { return get_column(i); });
+                   | std::views::transform(
+                       [this](size_type i) -> const array&
+                       {
+                           return get_column(i);
+                       }
+                   );
         }
 
         /**
@@ -558,15 +563,16 @@ namespace sparrow
 
         using metadata_type = std::vector<metadata_pair>;
         using array_storage_type = std::variant<array, std::reference_wrapper<array>>;
-        
+
         std::optional<name_type> m_name = std::nullopt;          ///< Optional name of the record batch
         std::optional<metadata_type> m_metadata = std::nullopt;  ///< Optional metadata for the record batch
         std::vector<name_type> m_name_list;                      ///< Ordered list of column names
-        std::vector<array_storage_type> m_array_list;            ///< Ordered list of column arrays (owned or referenced)
+        std::vector<array_storage_type> m_array_list;            ///< Ordered list of column arrays (owned or
+                                                                 ///< referenced)
         mutable std::unordered_map<name_type, array*> m_array_map;  ///< Cache for fast name-based
                                                                     ///< lookup
         mutable bool m_dirty_map = true;                            ///< Flag indicating cache needs update
-        
+
         /**
          * @brief Helper to get array pointer from storage variant.
          */
@@ -726,7 +732,7 @@ struct std::formatter<sparrow::record_batch>
         auto columns_view = rb.columns();
         std::vector<std::vector<sparrow::array_traits::const_reference>> values_by_columns;
         values_by_columns.reserve(rb.nb_columns());
-        
+
         for (const auto& ar : columns_view)
         {
             std::vector<sparrow::array_traits::const_reference> column_values;

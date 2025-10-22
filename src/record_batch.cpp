@@ -22,32 +22,40 @@ namespace sparrow
 {
     array* record_batch::get_array_ptr(array_storage_type& storage)
     {
-        return std::visit([](auto&& arg) -> array* {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, array>)
+        return std::visit(
+            [](auto&& arg) -> array*
             {
-                return &arg;
-            }
-            else if constexpr (std::is_same_v<T, std::reference_wrapper<array>>)
-            {
-                return &arg.get();
-            }
-        }, storage);
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<T, array>)
+                {
+                    return &arg;
+                }
+                else if constexpr (std::is_same_v<T, std::reference_wrapper<array>>)
+                {
+                    return &arg.get();
+                }
+            },
+            storage
+        );
     }
 
     const array* record_batch::get_array_ptr(const array_storage_type& storage)
     {
-        return std::visit([](auto&& arg) -> const array* {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, array>)
+        return std::visit(
+            [](auto&& arg) -> const array*
             {
-                return &arg;
-            }
-            else if constexpr (std::is_same_v<T, std::reference_wrapper<array>>)
-            {
-                return &arg.get();
-            }
-        }, storage);
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<T, array>)
+                {
+                    return &arg;
+                }
+                else if constexpr (std::is_same_v<T, std::reference_wrapper<array>>)
+                {
+                    return &arg.get();
+                }
+            },
+            storage
+        );
     }
 
     record_batch::record_batch(initializer_type init)
@@ -201,11 +209,11 @@ namespace sparrow
     {
         std::vector<array> owned_arrays;
         owned_arrays.reserve(m_array_list.size());
-        
+
         for (std::size_t i = 0; i < m_name_list.size(); ++i)
         {
             array* arr_ptr = get_array_ptr(m_array_list[i]);
-            
+
             // Check if this is an owned array or a reference
             if (std::holds_alternative<array>(m_array_list[i]))
             {
@@ -219,11 +227,11 @@ namespace sparrow
             }
             owned_arrays.back().set_name(m_name_list[i]);
         }
-        
+
         m_array_map.clear();
         m_array_list.clear();
         m_name_list.clear();
-        
+
         return struct_array(std::move(owned_arrays), false, m_name, std::move(m_metadata));
     }
 
