@@ -154,9 +154,9 @@ namespace sparrow
         )
         {
             const repeat_view<bool> children_ownership{true, 1};
-            std::optional<std::unordered_set<ArrowFlag>> flags = nullable
-                ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::NULLABLE}}
-                : std::nullopt;
+            std::optional<std::unordered_set<ArrowFlag>>
+                flags = nullable ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::NULLABLE}}
+                                 : std::nullopt;
 
             return make_arrow_schema(
                 std::move(format),
