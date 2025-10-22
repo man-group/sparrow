@@ -129,7 +129,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, class Ext>
-    class fixed_width_binary_array_impl
+    class fixed_width_binary_array_impl final
         : public mutable_array_bitmap_base<fixed_width_binary_array_impl<T, CR, Ext>>,
           public Ext
     {
@@ -240,7 +240,7 @@ namespace sparrow
          */
         [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
-    protected:
+    private:
 
         /**
          * @brief Creates Arrow proxy from data buffer with element specifications.
