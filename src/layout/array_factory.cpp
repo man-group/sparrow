@@ -31,6 +31,7 @@
 #include "sparrow/timestamp_without_timezone_array.hpp"
 #include "sparrow/union_array.hpp"
 #include "sparrow/utils/temporal.hpp"
+#include "sparrow/uuid_array.hpp"
 #include "sparrow/variable_size_binary_array.hpp"
 #include "sparrow/variable_size_binary_view_array.hpp"
 
@@ -212,7 +213,18 @@ namespace sparrow
                 case data_type::DECIMAL256:
                     return detail::make_wrapper_ptr<decimal_256_array>(std::move(proxy));
                 case data_type::FIXED_WIDTH_BINARY:
+                {
+                    const std::optional<key_value_view> metadata = proxy.metadata();
+                    if (metadata.has_value())
+                    {
+                        const auto it = metadata->find("ARROW:extension:name");
+                        if (it != metadata->end() && (*it).second == "arrow.uuid")
+                        {
+                            return detail::make_wrapper_ptr<uuid_array>(std::move(proxy));
+                        }
+                    }
                     return detail::make_wrapper_ptr<fixed_width_binary_array>(std::move(proxy));
+                }
                 case data_type::BINARY_VIEW:
                     return detail::make_wrapper_ptr<binary_view_array>(std::move(proxy));
                 default:
