@@ -8,7 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or mplied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -565,29 +565,27 @@ namespace sparrow
         /**
          * @brief Creates Arrow proxy from scalar timestamp value.
          *
-         * Creates a timestamp array proxy from a single timestamp value. This method
-         * wraps the value in an array structure and provides metadata for Arrow compatibility.
+         * Creates a timestamp array proxy with n copies of a single timestamp value.
+         * This is useful for initializing arrays with a repeated value.
          *
          * @tparam U Type of the scalar value
          * @tparam METADATA_RANGE Type of metadata container
          * @param timezone Timezone for interpreting the timestamp value
-         * @param n Number of elements in the array (must be 1 for scalar)
-         * @param value Scalar timestamp value
+         * @param n Number of elements in the array
+         * @param value Scalar timestamp value to repeat
          * @param name Optional name for the array column
          * @param metadata Optional metadata key-value pairs
-         * @return Arrow proxy containing timestamp array from scalar value
+         * @return Arrow proxy containing timestamp array with n copies of value
          *
          * @pre timezone must be a valid date::time_zone pointer
-         * @pre n must be 1 for scalar values
+         * @pre n must be >= 0
          * @pre value must be convertible to timestamp type T
-         * @post Returns proxy with timestamp from scalar value
-         * @post Duration values are extracted and stored efficiently
-         * @post If nullable=true, empty validity bitmap is created
-         * @post If nullable=false, no validity bitmap (all values valid)
+         * @post Returns proxy with n copies of the timestamp value
+         * @post No validity bitmap (all elements considered valid)
+         * @post All elements use the specified timezone for interpretation
          *
-         * @note Timezone compatibility is not enforced but recommended
-         * @note Duration extraction preserves precision of timestamp type
-         * @note This is optimal for dense timestamp data without nulls
+         * @note Efficient for creating arrays with repeated values
+         * @note All elements will have the same duration value
          */
         template <typename U, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
             requires std::convertible_to<U, T>
@@ -784,13 +782,7 @@ namespace sparrow
         constexpr auto insert_values(const_value_iterator pos, InputIt first, InputIt last) -> value_iterator
         {
             const auto input_range = std::ranges::subrange(first, last);
-            const auto values = input_range
-                                | std::views::transform(
-                                    [](const auto& v)
-                                    {
-                                        return v.get_sys_time().time_since_epoch();
-                                    }
-                                );
+            const auto values = input_range | std::views::transform(extract_duration);
             const size_t idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
             m_data_access.insert_values(idx, values.begin(), values.end());
             return sparrow::next(value_begin(), idx);
@@ -843,6 +835,17 @@ namespace sparrow
          */
         constexpr void assign(T&& rhs, size_type index);
 
+        /**
+         * @brief Helper to extract duration from a timestamp.
+         *
+         * @param timestamp Timestamp to extract duration from
+         * @return Duration since Unix epoch
+         */
+        [[nodiscard]] static constexpr auto extract_duration(const inner_value_type& timestamp)
+            -> inner_value_type_duration
+        {
+            return timestamp.get_sys_time().time_since_epoch();
+        }
 
         const date::time_zone* m_timezone;  ///< Timezone for interpreting stored durations
         details::primitive_data_access<inner_value_type_duration> m_data_access;  ///< Access to duration data
@@ -930,14 +933,12 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        const auto range = values
-                           | std::views::transform(
-                               [](const auto& v)
-                               {
-                                   return v.get_sys_time().time_since_epoch().count();
-                               }
-                           );
+        constexpr auto extract_duration_count = [](const auto& v)
+        {
+            return v.get_sys_time().time_since_epoch().count();
+        };
 
+        const auto range = values | std::views::transform(extract_duration_count);
 
         u8_buffer<buffer_inner_value_type> data_buffer(range);
         return create_proxy(
@@ -960,8 +961,9 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        // create data_buffer
-        u8_buffer<buffer_inner_value_type> data_buffer(n, to_days_since_the_UNIX_epoch(value));
+        // Extract duration count from the timestamp value
+        const auto duration_count = value.get_sys_time().time_since_epoch().count();
+        u8_buffer<buffer_inner_value_type> data_buffer(n, duration_count);
         return create_proxy(timezone, std::move(data_buffer), std::move(name), std::move(metadata));
     }
 
@@ -976,15 +978,14 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
+        constexpr auto extract_duration_count = [](const auto& v)
+        {
+            return v.get_sys_time().time_since_epoch().count();
+        };
+
         std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0)
                                                          : std::nullopt;
-        const auto values = range
-                            | std::views::transform(
-                                [](const auto& v)
-                                {
-                                    return v.get_sys_time().time_since_epoch().count();
-                                }
-                            );
+        const auto values = range | std::views::transform(extract_duration_count);
         u8_buffer<buffer_inner_value_type> data_buffer(values);
         return self_type::create_proxy_impl(
             timezone,
@@ -1081,14 +1082,14 @@ namespace sparrow
     constexpr void timestamp_array<T>::assign(const T& rhs, size_type index)
     {
         SPARROW_ASSERT_TRUE(index < this->size());
-        m_data_access.value(index) = rhs.get_sys_time().time_since_epoch();
+        m_data_access.value(index) = extract_duration(rhs);
     }
 
     template <timestamp_type T>
     constexpr void timestamp_array<T>::assign(T&& rhs, size_type index)
     {
         SPARROW_ASSERT_TRUE(index < this->size());
-        m_data_access.value(index) = rhs.get_sys_time().time_since_epoch();
+        m_data_access.value(index) = extract_duration(rhs);
     }
 
     template <timestamp_type T>
@@ -1135,7 +1136,7 @@ namespace sparrow
     template <timestamp_type T>
     constexpr void timestamp_array<T>::resize_values(size_type new_length, inner_value_type value)
     {
-        m_data_access.resize_values(new_length, value.get_sys_time().time_since_epoch());
+        m_data_access.resize_values(new_length, extract_duration(value));
     }
 
     template <timestamp_type T>
@@ -1145,7 +1146,7 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(pos <= value_cend());
         const size_t idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
-        m_data_access.insert_value(idx, value.get_sys_time().time_since_epoch(), count);
+        m_data_access.insert_value(idx, extract_duration(value), count);
         return value_iterator(functor_type(this), idx);
     }
 
