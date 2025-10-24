@@ -20,6 +20,7 @@
 #include "sparrow/duration_array.hpp"
 #include "sparrow/fixed_width_binary_array.hpp"
 #include "sparrow/interval_array.hpp"
+#include "sparrow/json_array.hpp"
 #include "sparrow/list_array.hpp"
 #include "sparrow/map_array.hpp"
 #include "sparrow/null_array.hpp"
@@ -44,11 +45,35 @@ namespace sparrow
         {
             return cloning_ptr<array_wrapper>{new array_wrapper_impl<T>(T(std::move(proxy)))};
         }
+
+        template <typename WithTZ, typename WithoutTZ>
+        cloning_ptr<array_wrapper> make_timestamp_wrapper(arrow_proxy proxy)
+        {
+            if (get_timezone(proxy) == nullptr)
+            {
+                return make_wrapper_ptr<WithoutTZ>(std::move(proxy));
+            }
+            else
+            {
+                return make_wrapper_ptr<WithTZ>(std::move(proxy));
+            }
+        }
     }
 
     cloning_ptr<array_wrapper> array_factory(arrow_proxy proxy)
     {
         const auto dt = proxy.data_type();
+
+        auto is_extension = [](const arrow_proxy& p, const std::string_view& extension_name) -> bool
+        {
+            const std::optional<key_value_view> metadata = p.metadata();
+            if (metadata.has_value())
+            {
+                const auto it = metadata->find("ARROW:extension:name");
+                return it != metadata->end() && (*it).second == extension_name;
+            }
+            return false;
+        };
 
         if (proxy.dictionary())
         {
@@ -71,7 +96,7 @@ namespace sparrow
                 case data_type::UINT64:
                     return detail::make_wrapper_ptr<dictionary_encoded_array<std::uint64_t>>(std::move(proxy));
                 default:
-                    throw std::runtime_error("data datype of dictionary encoded array must be an integer");
+                    throw std::runtime_error("data datatype of dictionary encoded array must be an integer");
             }
         }
         else
@@ -123,8 +148,16 @@ namespace sparrow
                 case data_type::LARGE_STRING:
                     return detail::make_wrapper_ptr<big_string_array>(std::move(proxy));
                 case data_type::BINARY:
+                    if (is_extension(proxy, json_extension::EXTENSION_NAME))
+                    {
+                        return detail::make_wrapper_ptr<json_array>(std::move(proxy));
+                    }
                     return detail::make_wrapper_ptr<binary_array>(std::move(proxy));
                 case data_type::LARGE_BINARY:
+                    if (is_extension(proxy, json_extension::EXTENSION_NAME))
+                    {
+                        return detail::make_wrapper_ptr<big_json_array>(std::move(proxy));
+                    }
                     return detail::make_wrapper_ptr<big_binary_array>(std::move(proxy));
                 case data_type::RUN_ENCODED:
                     return detail::make_wrapper_ptr<run_end_encoded_array>(std::move(proxy));
@@ -137,49 +170,21 @@ namespace sparrow
                 case data_type::DATE_MILLISECONDS:
                     return detail::make_wrapper_ptr<date_milliseconds_array>(std::move(proxy));
                 case data_type::TIMESTAMP_SECONDS:
-                    if (get_timezone(proxy) == nullptr)
-                    {
-                        return detail::make_wrapper_ptr<timestamp_without_timezone_seconds_array>(
-                            std::move(proxy)
-                        );
-                    }
-                    else
-                    {
-                        return detail::make_wrapper_ptr<timestamp_seconds_array>(std::move(proxy));
-                    }
+                    return detail::make_timestamp_wrapper<timestamp_seconds_array, timestamp_without_timezone_seconds_array>(
+                        std::move(proxy)
+                    );
                 case data_type::TIMESTAMP_MILLISECONDS:
-                    if (get_timezone(proxy) == nullptr)
-                    {
-                        return detail::make_wrapper_ptr<timestamp_without_timezone_milliseconds_array>(
-                            std::move(proxy)
-                        );
-                    }
-                    else
-                    {
-                        return detail::make_wrapper_ptr<timestamp_milliseconds_array>(std::move(proxy));
-                    }
+                    return detail::make_timestamp_wrapper<
+                        timestamp_milliseconds_array,
+                        timestamp_without_timezone_milliseconds_array>(std::move(proxy));
                 case data_type::TIMESTAMP_MICROSECONDS:
-                    if (get_timezone(proxy) == nullptr)
-                    {
-                        return detail::make_wrapper_ptr<timestamp_without_timezone_microseconds_array>(
-                            std::move(proxy)
-                        );
-                    }
-                    else
-                    {
-                        return detail::make_wrapper_ptr<timestamp_microseconds_array>(std::move(proxy));
-                    }
+                    return detail::make_timestamp_wrapper<
+                        timestamp_microseconds_array,
+                        timestamp_without_timezone_microseconds_array>(std::move(proxy));
                 case data_type::TIMESTAMP_NANOSECONDS:
-                    if (get_timezone(proxy) == nullptr)
-                    {
-                        return detail::make_wrapper_ptr<timestamp_without_timezone_nanoseconds_array>(
-                            std::move(proxy)
-                        );
-                    }
-                    else
-                    {
-                        return detail::make_wrapper_ptr<timestamp_nanoseconds_array>(std::move(proxy));
-                    }
+                    return detail::make_timestamp_wrapper<
+                        timestamp_nanoseconds_array,
+                        timestamp_without_timezone_nanoseconds_array>(std::move(proxy));
                 case data_type::DURATION_SECONDS:
                     return detail::make_wrapper_ptr<duration_seconds_array>(std::move(proxy));
                 case data_type::DURATION_MILLISECONDS:
@@ -213,19 +218,16 @@ namespace sparrow
                 case data_type::DECIMAL256:
                     return detail::make_wrapper_ptr<decimal_256_array>(std::move(proxy));
                 case data_type::FIXED_WIDTH_BINARY:
-                {
-                    const std::optional<key_value_view> metadata = proxy.metadata();
-                    if (metadata.has_value())
+                    if (is_extension(proxy, uuid_extension::EXTENSION_NAME))
                     {
-                        const auto it = metadata->find("ARROW:extension:name");
-                        if (it != metadata->end() && (*it).second == "arrow.uuid")
-                        {
-                            return detail::make_wrapper_ptr<uuid_array>(std::move(proxy));
-                        }
+                        return detail::make_wrapper_ptr<uuid_array>(std::move(proxy));
                     }
                     return detail::make_wrapper_ptr<fixed_width_binary_array>(std::move(proxy));
-                }
                 case data_type::BINARY_VIEW:
+                    if (is_extension(proxy, json_extension::EXTENSION_NAME))
+                    {
+                        return detail::make_wrapper_ptr<json_view_array>(std::move(proxy));
+                    }
                     return detail::make_wrapper_ptr<binary_view_array>(std::move(proxy));
                 default:
                     throw std::runtime_error("not supported data type");
