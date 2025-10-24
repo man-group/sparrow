@@ -34,10 +34,10 @@
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/extension.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
-#include "sparrow/utils/extension.hpp"
 
 namespace sparrow
 {

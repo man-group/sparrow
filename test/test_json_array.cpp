@@ -45,11 +45,7 @@ namespace sparrow
 
             SUBCASE("multiple elements")
             {
-                std::vector<std::string> json_values = {
-                    R"({"a": 1})",
-                    R"({"b": 2})",
-                    R"({"c": 3})"
-                };
+                std::vector<std::string> json_values = {R"({"a": 1})", R"({"b": 2})", R"({"c": 3})"};
                 json_array arr(json_values);
 
                 CHECK_EQ(arr.size(), 3);
@@ -63,11 +59,7 @@ namespace sparrow
         {
             SUBCASE("null JSON values")
             {
-                std::vector<std::string> json_values = {
-                    R"({"key": null})",
-                    R"(null)",
-                    R"({"valid": true})"
-                };
+                std::vector<std::string> json_values = {R"({"key": null})", R"(null)", R"({"valid": true})"};
                 json_array arr(json_values);
 
                 CHECK_EQ(arr.size(), 3);
@@ -131,11 +123,7 @@ namespace sparrow
 
         TEST_CASE("element access")
         {
-            std::vector<std::string> json_values = {
-                R"({"first": 1})",
-                R"({"second": 2})",
-                R"({"third": 3})"
-            };
+            std::vector<std::string> json_values = {R"({"first": 1})", R"({"second": 2})", R"({"third": 3})"};
             json_array arr(json_values);
 
             SUBCASE("bracket operator")
@@ -156,11 +144,7 @@ namespace sparrow
 
         TEST_CASE("iteration")
         {
-            std::vector<std::string> json_values = {
-                R"({"a": 1})",
-                R"({"b": 2})",
-                R"({"c": 3})"
-            };
+            std::vector<std::string> json_values = {R"({"a": 1})", R"({"b": 2})", R"({"c": 3})"};
             json_array arr(json_values);
 
             SUBCASE("forward iteration")
