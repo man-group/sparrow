@@ -28,6 +28,7 @@
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/u8_buffer.hpp"
+#include "sparrow/utils/extension.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
@@ -35,7 +36,6 @@
 #include "sparrow/utils/ranges.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 #include "sparrow/utils/sequence_view.hpp"
-#include "sparrow/utils/extension.hpp"
 
 namespace sparrow
 {
@@ -105,7 +105,8 @@ namespace sparrow
     };
 
     template <std::ranges::sized_range T, class CR, typename Ext>
-    struct is_variable_size_binary_view_array_impl<variable_size_binary_view_array_impl<T, CR, Ext>> : std::true_type
+    struct is_variable_size_binary_view_array_impl<variable_size_binary_view_array_impl<T, CR, Ext>>
+        : std::true_type
     {
     };
 
@@ -1013,7 +1014,8 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, typename Ext>
-    constexpr auto variable_size_binary_view_array_impl<T, CR, Ext>::value_cbegin() const -> const_value_iterator
+    constexpr auto variable_size_binary_view_array_impl<T, CR, Ext>::value_cbegin() const
+        -> const_value_iterator
     {
         return const_value_iterator(detail::layout_value_functor<const self_type, inner_const_reference>(this), 0);
     }
@@ -1263,9 +1265,11 @@ namespace sparrow
 
     template <std::ranges::sized_range T, class CR, typename Ext>
     template <mpl::iterator_of_type<T> InputIt>
-    auto
-    variable_size_binary_view_array_impl<T, CR, Ext>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
-        -> value_iterator
+    auto variable_size_binary_view_array_impl<T, CR, Ext>::insert_values(
+        const_value_iterator pos,
+        InputIt first,
+        InputIt last
+    ) -> value_iterator
     {
         SPARROW_ASSERT_TRUE(first <= last);
         const size_type count = static_cast<size_type>(std::distance(first, last));
@@ -1409,7 +1413,8 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, typename Ext>
-    auto variable_size_binary_view_array_impl<T, CR, Ext>::erase_values(const_value_iterator pos, size_type count)
+    auto
+    variable_size_binary_view_array_impl<T, CR, Ext>::erase_values(const_value_iterator pos, size_type count)
         -> value_iterator
     {
         const size_t erase_index = static_cast<size_t>(std::distance(value_cbegin(), pos));

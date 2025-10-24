@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <string_view>
+
 namespace sparrow
 {
     // Helper template to pass string literals as template parameters
