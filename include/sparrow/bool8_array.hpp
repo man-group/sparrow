@@ -177,6 +177,53 @@ namespace sparrow
     };
 
     /**
+     * @brief Extension metadata for Bool8 arrays.
+     */
+    struct bool8_extension
+    {
+    public:
+        static constexpr std::string_view EXTENSION_NAME = "arrow.bool8";
+
+    protected:
+        static void init(arrow_proxy& proxy)
+        {
+            // Check if extension metadata already exists
+            std::optional<key_value_view> metadata = proxy.metadata();
+            
+            if (metadata.has_value())
+            {
+                const bool has_extension = std::ranges::find_if(
+                                               *metadata,
+                                               [](const auto& pair)
+                                               {
+                                                   return pair.first == "ARROW:extension:name"
+                                                          && pair.second == EXTENSION_NAME;
+                                               }
+                                           )
+                                           != metadata->end();
+                if (has_extension)
+                {
+                    // Extension metadata already present, nothing to do
+                    return;
+                }
+            }
+
+            // Copy existing metadata and add extension metadata
+            std::vector<metadata_pair> extension_metadata = metadata.has_value()
+                                                                ? std::vector<metadata_pair>(
+                                                                      metadata->begin(),
+                                                                      metadata->end()
+                                                                  )
+                                                                : std::vector<metadata_pair>{};
+            extension_metadata.emplace_back("ARROW:extension:name", EXTENSION_NAME);
+            extension_metadata.emplace_back("ARROW:extension:metadata", "");
+            proxy.set_metadata(std::make_optional(extension_metadata));
+        }
+
+        friend class bool8_array;
+    };
+
+    /**
      * @brief Bool8 array class with boolean-based access.
      *
      * Bool8 represents a boolean value using 1 byte (8 bits) to store each value
@@ -228,6 +275,7 @@ namespace sparrow
         explicit bool8_array(arrow_proxy proxy)
             : m_storage(std::move(proxy))
         {
+            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
         }
 
         /**
@@ -250,6 +298,7 @@ namespace sparrow
         )
             : m_storage(std::forward<R>(range), nullable, name, metadata)
         {
+            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
         }
 
         /**
@@ -276,6 +325,7 @@ namespace sparrow
                 metadata
             )
         {
+            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
         }
 
         /**
@@ -303,6 +353,7 @@ namespace sparrow
                 metadata
             )
         {
+            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
         }
 
         /**
@@ -326,6 +377,7 @@ namespace sparrow
         )
             : m_storage(std::forward<R>(values), std::forward<R2>(validity_input), name, metadata)
         {
+            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
         }
 
         /**
@@ -349,6 +401,7 @@ namespace sparrow
                 metadata
             )
         {
+            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
         }
 
         /**

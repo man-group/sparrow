@@ -44,6 +44,30 @@
 
 namespace sparrow
 {
+    namespace detail
+    {
+        /**
+         * @brief Check if an array has a specific extension name in its metadata.
+         * 
+         * @param ar The array wrapper to check
+         * @param extension_name The extension name to look for
+         * @return true if the extension name matches, false otherwise
+         */
+        inline bool has_extension(const array_wrapper& ar, std::string_view extension_name)
+        {
+            const std::optional<key_value_view> metadata = ar.get_arrow_proxy().metadata();
+            if (metadata.has_value())
+            {
+                const auto it = metadata->find("ARROW:extension:name");
+                if (it != metadata->end())
+                {
+                    return (*it).second == extension_name;
+                }
+            }
+            return false;
+        }
+    }
+
     template <class F>
     using visit_result_t = std::invoke_result_t<F, null_array>;
 
@@ -85,23 +109,11 @@ namespace sparrow
                 case data_type::UINT8:
                     return func(unwrap_array<primitive_array<std::uint8_t>>(ar));
                 case data_type::INT8:
-                {
-                    // Check for bool8 extension
-                    const std::optional<key_value_view> metadata = ar.get_arrow_proxy().metadata();
-                    if (metadata.has_value())
+                    if (detail::has_extension(ar, bool8_extension::EXTENSION_NAME))
                     {
-                        const auto it = metadata->find("ARROW:extension:name");
-                        if (it != metadata->end())
-                        {
-                            const auto& [key, value] = *it;
-                            if (value == "arrow.bool8")
-                            {
-                                return func(unwrap_array<bool8_array>(ar));
-                            }
-                        }
+                        return func(unwrap_array<bool8_array>(ar));
                     }
                     return func(unwrap_array<primitive_array<std::int8_t>>(ar));
-                }
                 case data_type::UINT16:
                     return func(unwrap_array<primitive_array<std::uint16_t>>(ar));
                 case data_type::INT16:
@@ -161,23 +173,11 @@ namespace sparrow
                 case data_type::DECIMAL256:
                     return func(unwrap_array<decimal_256_array>(ar));
                 case data_type::FIXED_WIDTH_BINARY:
-                {
-                    const std::optional<key_value_view> metadata = ar.get_arrow_proxy().metadata();  // ensure
-                                                                                                     // uuid_array
-                                                                                                     // is
-                                                                                                     // handled
-                                                                                                     // in
-                                                                                                     // uuid_array.cpp
-                    if (metadata.has_value())
+                    if (detail::has_extension(ar, uuid_extension::EXTENSION_NAME))
                     {
-                        const auto it = metadata->find("ARROW:extension:name");
-                        if (it != metadata->end())
-                        {
-                            return func(unwrap_array<uuid_array>(ar));
-                        }
+                        return func(unwrap_array<uuid_array>(ar));
                     }
                     return func(unwrap_array<fixed_width_binary_array>(ar));
-                }
                 case sparrow::data_type::DATE_DAYS:
                     return func(unwrap_array<date_days_array>(ar));
                 case data_type::DATE_MILLISECONDS:
