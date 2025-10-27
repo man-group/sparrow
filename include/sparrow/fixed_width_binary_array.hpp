@@ -34,22 +34,13 @@
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/extension.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
-    struct empty_extension
-    {
-    protected:
-
-        static void init(arrow_proxy&)
-        {
-            // No-op for empty extension
-        }
-    };
-
     template <std::ranges::sized_range T, typename CR, typename Ext = empty_extension>
     class fixed_width_binary_array_impl;
 

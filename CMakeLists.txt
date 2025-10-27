@@ -274,6 +274,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/contracts.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/crtp_base.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/decimal.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/utils/extension.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/format.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/functor_index_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/utils/iterator.hpp
@@ -301,6 +302,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/dictionary_encoded_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/duration_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/fixed_width_binary_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/json_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/list_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/null_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/primitive_array.hpp

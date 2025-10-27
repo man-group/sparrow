@@ -61,6 +61,7 @@ set(SPARROW_TESTS_SOURCES
     test_duration_array.cpp
     test_dynamic_bitset_view.cpp
     test_dynamic_bitset.cpp
+    test_fixed_string.cpp
     test_fixed_width_binary_array.cpp
     test_fixed_width_binary_utils.cpp
     test_float16_t.cpp
@@ -93,6 +94,7 @@ set(SPARROW_TESTS_SOURCES
     test_utils_buffers.cpp
     test_utils_offsets.cpp
     test_utils.hpp
+    test_json_array.cpp
     test_uuid_array.cpp
     test_variable_size_binary_view_array.cpp
 )
