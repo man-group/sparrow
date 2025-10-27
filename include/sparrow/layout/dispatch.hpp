@@ -16,6 +16,7 @@
 
 #include <type_traits>
 
+#include "sparrow/bool8_array.hpp"
 #include "sparrow/date_array.hpp"
 #include "sparrow/decimal_array.hpp"
 #include "sparrow/dictionary_encoded_array.hpp"
@@ -84,7 +85,23 @@ namespace sparrow
                 case data_type::UINT8:
                     return func(unwrap_array<primitive_array<std::uint8_t>>(ar));
                 case data_type::INT8:
+                {
+                    // Check for bool8 extension
+                    const std::optional<key_value_view> metadata = ar.get_arrow_proxy().metadata();
+                    if (metadata.has_value())
+                    {
+                        const auto it = metadata->find("ARROW:extension:name");
+                        if (it != metadata->end())
+                        {
+                            const auto& [key, value] = *it;
+                            if (value == "arrow.bool8")
+                            {
+                                return func(unwrap_array<bool8_array>(ar));
+                            }
+                        }
+                    }
                     return func(unwrap_array<primitive_array<std::int8_t>>(ar));
+                }
                 case data_type::UINT16:
                     return func(unwrap_array<primitive_array<std::uint16_t>>(ar));
                 case data_type::INT16:
