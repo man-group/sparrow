@@ -87,8 +87,8 @@ namespace sparrow
         }
 
         target.private_data = new arrow_schema_private_data(
-            std::string(source.format),
-            std::string(source.name),
+            source.format,
+            source.name,
             std::move(metadata_str),
             repeat_view<bool>{true, static_cast<std::size_t>(target.n_children)},
             true
