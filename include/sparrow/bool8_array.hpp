@@ -137,6 +137,25 @@ namespace sparrow
         typename primitive_array<std::int8_t>::const_reference m_ref;
     };
 
+    // Comparison operators for bool8_const_reference
+    inline bool operator==(const bool8_const_reference& lhs, const bool8_const_reference& rhs)
+    {
+        if (lhs.has_value() != rhs.has_value())
+        {
+            return false;
+        }
+        if (!lhs.has_value())
+        {
+            return true;  // Both are null
+        }
+        return lhs.get() == rhs.get();
+    }
+
+    inline bool operator!=(const bool8_const_reference& lhs, const bool8_const_reference& rhs)
+    {
+        return !(lhs == rhs);
+    }
+
     /**
      * @brief Iterator wrapper that converts values to bool.
      */
@@ -696,6 +715,28 @@ namespace sparrow
 
 #if defined(__cpp_lib_format)
 #    include <format>
+
+// Formatter specialization for bool8_const_reference
+template <>
+struct std::formatter<sparrow::bool8_const_reference>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();
+    }
+
+    auto format(const sparrow::bool8_const_reference& ref, std::format_context& ctx) const
+    {
+        if (ref.has_value())
+        {
+            return std::format_to(ctx.out(), "{}", ref.get() ? "true" : "false");
+        }
+        else
+        {
+            return std::format_to(ctx.out(), "null");
+        }
+    }
+};
 
 // Formatter specialization for bool8_array
 template <>
