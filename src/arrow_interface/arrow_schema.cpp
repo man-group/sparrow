@@ -55,7 +55,9 @@ namespace sparrow
 
     void copy_schema(const ArrowSchema& source, ArrowSchema& target)
     {
+   
         SPARROW_ASSERT_TRUE(&source != &target);
+
         target.flags = source.flags;
         target.n_children = source.n_children;
         if (source.n_children > 0)
@@ -75,10 +77,19 @@ namespace sparrow
             copy_schema(*source.dictionary, *target.dictionary);
         }
 
+        std::optional<std::string> metadata_str;
+        if (source.metadata != nullptr)
+        {
+            key_value_view kv(source.metadata);
+            metadata_str = std::make_optional(
+                get_metadata_from_key_values(kv)
+            );
+        }
+
         target.private_data = new arrow_schema_private_data(
-            source.format,
-            source.name,
-            source.metadata,
+            std::string(source.format),
+            std::string(source.name),
+            std::move(metadata_str),
             repeat_view<bool>{true, static_cast<std::size_t>(target.n_children)},
             true
         );

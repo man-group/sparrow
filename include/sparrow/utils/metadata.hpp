@@ -305,8 +305,8 @@ namespace sparrow
      * @tparam T Type to check for metadata container compatibility
      */
     template <typename T>
-    concept input_metadata_container = std::ranges::input_range<T>
-                                       && std::same_as<std::ranges::range_value_t<T>, metadata_pair>;
+    concept input_metadata_container = (std::ranges::input_range<T>
+                                       && std::same_as<std::ranges::range_value_t<T>, metadata_pair>) || std::same_as<T, key_value_view>;
 
     /**
      * @brief Converts a container of key-value pairs to binary metadata format.

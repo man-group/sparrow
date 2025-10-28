@@ -189,11 +189,12 @@ namespace sparrow
         {
             // Check if extension metadata already exists
             std::optional<key_value_view> metadata = proxy.metadata();
-            
+
             if (metadata.has_value())
             {
-                const bool has_extension = std::ranges::find_if(
-                                               *metadata,
+                const bool has_extension = std::find_if(
+                                               metadata->begin(),
+                                               metadata->end(),
                                                [](const auto& pair)
                                                {
                                                    return pair.first == "ARROW:extension:name"

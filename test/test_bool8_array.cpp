@@ -75,9 +75,11 @@ namespace sparrow
                 using namespace std::literals;
                 std::vector<bool> values = {true, false};
                 bool8_array arr(values, true, "test"sv, metadata_sample_opt);
-
+                std::vector<metadata_pair> expected_metadata = metadata_sample;
+                expected_metadata.emplace_back("ARROW:extension:name", bool8_extension::EXTENSION_NAME);
+                expected_metadata.emplace_back("ARROW:extension:metadata", "");
                 CHECK_EQ(arr.name(), "test");
-                test_metadata(metadata_sample, *(arr.metadata()));
+                test_metadata(expected_metadata, *(arr.metadata()));
             }
         }
 
@@ -123,9 +125,11 @@ namespace sparrow
                 std::vector<bool> values = {true, false, true};
                 std::vector<bool> validity = {true, true, false};
                 bool8_array arr(values, validity, "test"sv, metadata_sample_opt);
-
+                std::vector<metadata_pair> expected_metadata = metadata_sample;
+                expected_metadata.emplace_back("ARROW:extension:name", bool8_extension::EXTENSION_NAME);
+                expected_metadata.emplace_back("ARROW:extension:metadata", "");
                 CHECK_EQ(arr.name(), "test");
-                test_metadata(metadata_sample, *(arr.metadata()));
+                test_metadata(expected_metadata, *(arr.metadata()));
             }
         }
 
@@ -181,9 +185,11 @@ namespace sparrow
                 using namespace std::literals;
                 std::vector<std::int8_t> values = {1, 0};
                 bool8_array arr(values, true, "test"sv, metadata_sample_opt);
-
+                std::vector<metadata_pair> expected_metadata = metadata_sample;
+                expected_metadata.emplace_back("ARROW:extension:name", bool8_extension::EXTENSION_NAME);
+                expected_metadata.emplace_back("ARROW:extension:metadata", "");
                 CHECK_EQ(arr.name(), "test");
-                test_metadata(metadata_sample, *(arr.metadata()));
+                test_metadata(expected_metadata, *(arr.metadata()));
             }
         }
 
