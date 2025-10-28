@@ -480,9 +480,9 @@ namespace sparrow
          * @return Raw int8_t value
          */
         [[nodiscard]] SPARROW_API inner_const_reference value(size_type index) const;
-        
-        using primitive_base::size;
+
         using primitive_base::empty;
+        using primitive_base::size;
 
         // Data type is always INT8 for bool8_array
         [[nodiscard]] SPARROW_API sparrow::data_type data_type() const;
