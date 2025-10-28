@@ -555,10 +555,10 @@ namespace sparrow
                 std::vector<bool> values = {true, false};
                 std::vector<bool> validity = {true, false};
                 const bool8_array arr(values, validity);
-                
+
                 const std::string formatted_true = std::format("{}", arr[0]);
                 CHECK_EQ(formatted_true, "true");
-                
+
                 const std::string formatted_null = std::format("{}", arr[1]);
                 CHECK_EQ(formatted_null, "null");
             }
