@@ -31,13 +31,14 @@ namespace sparrow
 
     /**
      * @brief Reference proxy for bool8_array elements.
-     * 
+     *
      * Provides automatic conversion between bool and int8_t storage.
      * Similar to std::vector<bool>::reference.
      */
     class bool8_reference
     {
     public:
+
         bool8_reference(typename primitive_array<std::int8_t>::reference ref)
             : m_ref(ref)
         {
@@ -87,6 +88,7 @@ namespace sparrow
         }
 
     private:
+
         typename primitive_array<std::int8_t>::reference m_ref;
     };
 
@@ -96,6 +98,7 @@ namespace sparrow
     class bool8_const_reference
     {
     public:
+
         bool8_const_reference(typename primitive_array<std::int8_t>::const_reference ref)
             : m_ref(ref)
         {
@@ -130,6 +133,7 @@ namespace sparrow
         }
 
     private:
+
         typename primitive_array<std::int8_t>::const_reference m_ref;
     };
 
@@ -140,6 +144,7 @@ namespace sparrow
     class bool8_iterator_impl
     {
     public:
+
         using iterator_category = typename std::iterator_traits<BaseIterator>::iterator_category;
         using difference_type = typename std::iterator_traits<BaseIterator>::difference_type;
         using value_type = bool;
@@ -147,32 +152,107 @@ namespace sparrow
         using reference = ReferenceType;
 
         bool8_iterator_impl() = default;
-        explicit bool8_iterator_impl(BaseIterator it) : m_it(it) {}
 
-        reference operator*() const { return reference(*m_it); }
-        
-        bool8_iterator_impl& operator++() { ++m_it; return *this; }
-        bool8_iterator_impl operator++(int) { auto tmp = *this; ++m_it; return tmp; }
-        bool8_iterator_impl& operator--() { --m_it; return *this; }
-        bool8_iterator_impl operator--(int) { auto tmp = *this; --m_it; return tmp; }
+        explicit bool8_iterator_impl(BaseIterator it)
+            : m_it(it)
+        {
+        }
 
-        bool8_iterator_impl& operator+=(difference_type n) { m_it += n; return *this; }
-        bool8_iterator_impl& operator-=(difference_type n) { m_it -= n; return *this; }
+        reference operator*() const
+        {
+            return reference(*m_it);
+        }
 
-        bool8_iterator_impl operator+(difference_type n) const { return bool8_iterator_impl(m_it + n); }
-        bool8_iterator_impl operator-(difference_type n) const { return bool8_iterator_impl(m_it - n); }
-        difference_type operator-(const bool8_iterator_impl& other) const { return m_it - other.m_it; }
+        bool8_iterator_impl& operator++()
+        {
+            ++m_it;
+            return *this;
+        }
 
-        reference operator[](difference_type n) const { return reference(m_it[n]); }
+        bool8_iterator_impl operator++(int)
+        {
+            auto tmp = *this;
+            ++m_it;
+            return tmp;
+        }
 
-        bool operator==(const bool8_iterator_impl& other) const { return m_it == other.m_it; }
-        bool operator!=(const bool8_iterator_impl& other) const { return m_it != other.m_it; }
-        bool operator<(const bool8_iterator_impl& other) const { return m_it < other.m_it; }
-        bool operator<=(const bool8_iterator_impl& other) const { return m_it <= other.m_it; }
-        bool operator>(const bool8_iterator_impl& other) const { return m_it > other.m_it; }
-        bool operator>=(const bool8_iterator_impl& other) const { return m_it >= other.m_it; }
+        bool8_iterator_impl& operator--()
+        {
+            --m_it;
+            return *this;
+        }
+
+        bool8_iterator_impl operator--(int)
+        {
+            auto tmp = *this;
+            --m_it;
+            return tmp;
+        }
+
+        bool8_iterator_impl& operator+=(difference_type n)
+        {
+            m_it += n;
+            return *this;
+        }
+
+        bool8_iterator_impl& operator-=(difference_type n)
+        {
+            m_it -= n;
+            return *this;
+        }
+
+        bool8_iterator_impl operator+(difference_type n) const
+        {
+            return bool8_iterator_impl(m_it + n);
+        }
+
+        bool8_iterator_impl operator-(difference_type n) const
+        {
+            return bool8_iterator_impl(m_it - n);
+        }
+
+        difference_type operator-(const bool8_iterator_impl& other) const
+        {
+            return m_it - other.m_it;
+        }
+
+        reference operator[](difference_type n) const
+        {
+            return reference(m_it[n]);
+        }
+
+        bool operator==(const bool8_iterator_impl& other) const
+        {
+            return m_it == other.m_it;
+        }
+
+        bool operator!=(const bool8_iterator_impl& other) const
+        {
+            return m_it != other.m_it;
+        }
+
+        bool operator<(const bool8_iterator_impl& other) const
+        {
+            return m_it < other.m_it;
+        }
+
+        bool operator<=(const bool8_iterator_impl& other) const
+        {
+            return m_it <= other.m_it;
+        }
+
+        bool operator>(const bool8_iterator_impl& other) const
+        {
+            return m_it > other.m_it;
+        }
+
+        bool operator>=(const bool8_iterator_impl& other) const
+        {
+            return m_it >= other.m_it;
+        }
 
     private:
+
         BaseIterator m_it;
     };
 
@@ -182,9 +262,11 @@ namespace sparrow
     struct bool8_extension
     {
     public:
+
         static constexpr std::string_view EXTENSION_NAME = "arrow.bool8";
 
     protected:
+
         static void init(arrow_proxy& proxy)
         {
             // Check if extension metadata already exists
@@ -250,7 +332,7 @@ namespace sparrow
      * // Create from boolean values
      * std::vector<bool> values = {true, false, true, true, false};
      * bool8_array arr(values);
-     * 
+     *
      * // Access as booleans
      * bool value = arr.get_bool(0); // returns true
      * arr.set_bool(1, true);        // sets second element to true
@@ -259,6 +341,7 @@ namespace sparrow
     class bool8_array
     {
     public:
+
         using storage_type = primitive_array<std::int8_t>;
         using size_type = typename storage_type::size_type;
         using reference = bool8_reference;
@@ -289,8 +372,8 @@ namespace sparrow
          * @param metadata Optional metadata for the array
          */
         template <std::ranges::input_range R>
-            requires (!std::same_as<std::ranges::range_value_t<R>, bool>)
-                     && std::convertible_to<std::ranges::range_value_t<R>, std::int8_t>
+            requires(!std::same_as<std::ranges::range_value_t<R>, bool>)
+                    && std::convertible_to<std::ranges::range_value_t<R>, std::int8_t>
         explicit bool8_array(
             R&& range,
             bool nullable = true,
@@ -320,11 +403,17 @@ namespace sparrow
             std::optional<std::vector<metadata_pair>> metadata = std::nullopt
         )
             : m_storage(
-                std::forward<R>(range) | std::views::transform([](bool b) { return static_cast<std::int8_t>(b ? 1 : 0); }),
-                nullable,
-                name,
-                metadata
-            )
+                  std::forward<R>(range)
+                      | std::views::transform(
+                          [](bool b)
+                          {
+                              return static_cast<std::int8_t>(b ? 1 : 0);
+                          }
+                      ),
+                  nullable,
+                  name,
+                  metadata
+              )
         {
             bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
         }
@@ -348,11 +437,17 @@ namespace sparrow
             std::optional<std::vector<metadata_pair>> metadata = std::nullopt
         )
             : m_storage(
-                std::forward<R>(values) | std::views::transform([](bool b) { return static_cast<std::int8_t>(b ? 1 : 0); }),
-                std::forward<R2>(validity_input),
-                name,
-                metadata
-            )
+                  std::forward<R>(values)
+                      | std::views::transform(
+                          [](bool b)
+                          {
+                              return static_cast<std::int8_t>(b ? 1 : 0);
+                          }
+                      ),
+                  std::forward<R2>(validity_input),
+                  name,
+                  metadata
+              )
         {
             bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
         }
@@ -368,8 +463,8 @@ namespace sparrow
          * @param metadata Optional metadata for the array
          */
         template <std::ranges::input_range R, validity_bitmap_input R2>
-            requires (!std::same_as<std::ranges::range_value_t<R>, bool>)
-                     && std::convertible_to<std::ranges::range_value_t<R>, std::int8_t>
+            requires(!std::same_as<std::ranges::range_value_t<R>, bool>)
+                    && std::convertible_to<std::ranges::range_value_t<R>, std::int8_t>
         bool8_array(
             R&& values,
             R2&& validity_input,
@@ -396,11 +491,17 @@ namespace sparrow
             std::optional<std::vector<metadata_pair>> metadata = std::nullopt
         )
             : m_storage(
-                std::views::transform(init, [](bool b) { return static_cast<std::int8_t>(b ? 1 : 0); }),
-                nullable,
-                name,
-                metadata
-            )
+                  std::views::transform(
+                      init,
+                      [](bool b)
+                      {
+                          return static_cast<std::int8_t>(b ? 1 : 0);
+                      }
+                  ),
+                  nullable,
+                  name,
+                  metadata
+              )
         {
             bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
         }
@@ -476,40 +577,84 @@ namespace sparrow
         }
 
         // Forward array metadata and type methods
-        [[nodiscard]] std::optional<std::string_view> name() const 
-        { 
-            return detail::array_access::get_arrow_proxy(m_storage).name(); 
+        [[nodiscard]] std::optional<std::string_view> name() const
+        {
+            return detail::array_access::get_arrow_proxy(m_storage).name();
         }
-        
-        [[nodiscard]] auto metadata() const 
-        { 
-            return detail::array_access::get_arrow_proxy(m_storage).metadata(); 
+
+        [[nodiscard]] auto metadata() const
+        {
+            return detail::array_access::get_arrow_proxy(m_storage).metadata();
         }
-        
+
         [[nodiscard]] sparrow::data_type data_type() const
         {
             return detail::array_access::get_arrow_proxy(m_storage).data_type();
         }
 
         // Forward common array operations
-        [[nodiscard]] size_type size() const { return m_storage.size(); }
-        [[nodiscard]] bool empty() const { return m_storage.empty(); }
-        
+        [[nodiscard]] size_type size() const
+        {
+            return m_storage.size();
+        }
+
+        [[nodiscard]] bool empty() const
+        {
+            return m_storage.empty();
+        }
+
         // Iterator access
-        [[nodiscard]] iterator begin() { return iterator(m_storage.begin()); }
-        [[nodiscard]] iterator end() { return iterator(m_storage.end()); }
-        [[nodiscard]] const_iterator begin() const { return const_iterator(m_storage.begin()); }
-        [[nodiscard]] const_iterator end() const { return const_iterator(m_storage.end()); }
-        [[nodiscard]] const_iterator cbegin() const { return const_iterator(m_storage.cbegin()); }
-        [[nodiscard]] const_iterator cend() const { return const_iterator(m_storage.cend()); }
+        [[nodiscard]] iterator begin()
+        {
+            return iterator(m_storage.begin());
+        }
+
+        [[nodiscard]] iterator end()
+        {
+            return iterator(m_storage.end());
+        }
+
+        [[nodiscard]] const_iterator begin() const
+        {
+            return const_iterator(m_storage.begin());
+        }
+
+        [[nodiscard]] const_iterator end() const
+        {
+            return const_iterator(m_storage.end());
+        }
+
+        [[nodiscard]] const_iterator cbegin() const
+        {
+            return const_iterator(m_storage.cbegin());
+        }
+
+        [[nodiscard]] const_iterator cend() const
+        {
+            return const_iterator(m_storage.cend());
+        }
 
         // Element access (returns boolean proxy references)
-        [[nodiscard]] reference operator[](size_type index) { return reference(m_storage[index]); }
-        [[nodiscard]] const_reference operator[](size_type index) const { return const_reference(m_storage[index]); }
+        [[nodiscard]] reference operator[](size_type index)
+        {
+            return reference(m_storage[index]);
+        }
+
+        [[nodiscard]] const_reference operator[](size_type index) const
+        {
+            return const_reference(m_storage[index]);
+        }
 
         // Get underlying storage
-        [[nodiscard]] const storage_type& storage() const { return m_storage; }
-        [[nodiscard]] storage_type& storage() { return m_storage; }
+        [[nodiscard]] const storage_type& storage() const
+        {
+            return m_storage;
+        }
+
+        [[nodiscard]] storage_type& storage()
+        {
+            return m_storage;
+        }
 
         // Comparison operator
         [[nodiscard]] friend bool operator==(const bool8_array& lhs, const bool8_array& rhs)
@@ -518,20 +663,21 @@ namespace sparrow
         }
 
     private:
+
         // Arrow proxy access (required for array_wrapper integration)
         // Made private with friend access for detail::array_access
-        [[nodiscard]] arrow_proxy& get_arrow_proxy() 
-        { 
-            return detail::array_access::get_arrow_proxy(m_storage); 
+        [[nodiscard]] arrow_proxy& get_arrow_proxy()
+        {
+            return detail::array_access::get_arrow_proxy(m_storage);
         }
-        
-        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const 
-        { 
-            return detail::array_access::get_arrow_proxy(m_storage); 
+
+        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const
+        {
+            return detail::array_access::get_arrow_proxy(m_storage);
         }
 
         storage_type m_storage;
-        
+
         friend class detail::array_access;
     };
 

@@ -48,7 +48,7 @@ namespace sparrow
     {
         /**
          * @brief Check if an array has a specific extension name in its metadata.
-         * 
+         *
          * @param ar The array wrapper to check
          * @param extension_name The extension name to look for
          * @return true if the extension name matches, false otherwise

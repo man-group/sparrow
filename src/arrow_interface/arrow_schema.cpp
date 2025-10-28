@@ -55,7 +55,6 @@ namespace sparrow
 
     void copy_schema(const ArrowSchema& source, ArrowSchema& target)
     {
-   
         SPARROW_ASSERT_TRUE(&source != &target);
 
         target.flags = source.flags;
@@ -81,9 +80,7 @@ namespace sparrow
         if (source.metadata != nullptr)
         {
             key_value_view kv(source.metadata);
-            metadata_str = std::make_optional(
-                get_metadata_from_key_values(kv)
-            );
+            metadata_str = std::make_optional(get_metadata_from_key_values(kv));
         }
 
         target.private_data = new arrow_schema_private_data(
