@@ -109,7 +109,7 @@ namespace sparrow
                 case data_type::UINT8:
                     return func(unwrap_array<primitive_array<std::uint8_t>>(ar));
                 case data_type::INT8:
-                    if (detail::has_extension(ar, bool8_extension::EXTENSION_NAME))
+                    if (detail::has_extension(ar, bool8_array::EXTENSION_NAME))
                     {
                         return func(unwrap_array<bool8_array>(ar));
                     }

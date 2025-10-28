@@ -76,7 +76,7 @@ namespace sparrow
                 std::vector<bool> values = {true, false};
                 bool8_array arr(values, true, "test"sv, metadata_sample_opt);
                 std::vector<metadata_pair> expected_metadata = metadata_sample;
-                expected_metadata.emplace_back("ARROW:extension:name", bool8_extension::EXTENSION_NAME);
+                expected_metadata.emplace_back("ARROW:extension:name", bool8_array::EXTENSION_NAME);
                 expected_metadata.emplace_back("ARROW:extension:metadata", "");
                 CHECK_EQ(arr.name(), "test");
                 test_metadata(expected_metadata, *(arr.metadata()));
@@ -126,7 +126,7 @@ namespace sparrow
                 std::vector<bool> validity = {true, true, false};
                 bool8_array arr(values, validity, "test"sv, metadata_sample_opt);
                 std::vector<metadata_pair> expected_metadata = metadata_sample;
-                expected_metadata.emplace_back("ARROW:extension:name", bool8_extension::EXTENSION_NAME);
+                expected_metadata.emplace_back("ARROW:extension:name", bool8_array::EXTENSION_NAME);
                 expected_metadata.emplace_back("ARROW:extension:metadata", "");
                 CHECK_EQ(arr.name(), "test");
                 test_metadata(expected_metadata, *(arr.metadata()));
@@ -186,7 +186,7 @@ namespace sparrow
                 std::vector<std::int8_t> values = {1, 0};
                 bool8_array arr(values, true, "test"sv, metadata_sample_opt);
                 std::vector<metadata_pair> expected_metadata = metadata_sample;
-                expected_metadata.emplace_back("ARROW:extension:name", bool8_extension::EXTENSION_NAME);
+                expected_metadata.emplace_back("ARROW:extension:name", bool8_array::EXTENSION_NAME);
                 expected_metadata.emplace_back("ARROW:extension:metadata", "");
                 CHECK_EQ(arr.name(), "test");
                 test_metadata(expected_metadata, *(arr.metadata()));
@@ -432,7 +432,7 @@ namespace sparrow
             REQUIRE_EQ(arr.size(), 1000);
             for (size_t i = 0; i < 1000; ++i)
             {
-                CHECK_EQ(arr.get_bool(i), (i % 2 == 0));
+                CHECK_EQ(arr[i], (i % 2 == 0));
             }
         }
 

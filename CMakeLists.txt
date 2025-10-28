@@ -295,6 +295,7 @@ set(SPARROW_HEADERS
     # ./
     ${SPARROW_INCLUDE_DIR}/sparrow/array_api.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/bool8_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/builder.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/c_interface.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/date_array.hpp
@@ -338,6 +339,7 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/utils/metadata.cpp
     ${SPARROW_SOURCE_DIR}/utils/temporal.cpp
     ${SPARROW_SOURCE_DIR}/array.cpp
+    ${SPARROW_SOURCE_DIR}/bool8_array.cpp
     ${SPARROW_SOURCE_DIR}/map_array.cpp
     ${SPARROW_SOURCE_DIR}/null_array.cpp
     ${SPARROW_SOURCE_DIR}/record_batch.cpp

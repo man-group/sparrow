@@ -276,17 +276,242 @@ namespace sparrow
     };
 
     /**
-     * @brief Extension metadata for Bool8 arrays.
+     * @brief Bool8 array class with boolean-based access.
+     *
+     * Bool8 represents a boolean value using 1 byte (8 bits) to store each value
+     * instead of only 1 bit as in the original Arrow Boolean type. Although less
+     * compact than the original representation, Bool8 may have better zero-copy
+     * compatibility with various systems that also store booleans using 1 byte.
+     *
+     * The Bool8 extension type is defined as:
+     * - Extension name: "arrow.bool8"
+     * - Storage type: Int8
+     * - false is denoted by the value 0
+     * - true can be specified using any non-zero value (preferably 1)
+     * - Extension metadata: empty string
+     *
+     * This class provides a convenient wrapper around primitive_array<int8_t>
+     * with boolean-specific constructors and access methods.
+     *
+     * Related Apache Arrow specification:
+     * https://arrow.apache.org/docs/format/CanonicalExtensions.html
+     *
+     * @example
+     * ```cpp
+     * // Create from boolean values
+     * std::vector<bool> values = {true, false, true, true, false};
+     * bool8_array arr(values);
+     *
+     * // Access as booleans
+     * bool value = arr.get_bool(0); // returns true
+     * arr.set_bool(1, true);        // sets second element to true
+     * ```
      */
-    struct bool8_extension
+    class bool8_array : public primitive_array<std::int8_t>
     {
     public:
 
         static constexpr std::string_view EXTENSION_NAME = "arrow.bool8";
 
-    protected:
+        using primitive_base = primitive_array<std::int8_t>;
+        using size_type = typename primitive_base::size_type;
+        using reference = bool8_reference;
+        using const_reference = bool8_const_reference;
+        using iterator = bool8_iterator_impl<typename primitive_base::iterator, reference>;
+        using const_iterator = bool8_iterator_impl<typename primitive_base::const_iterator, const_reference>;
+        using value_type = bool;
+        using inner_value_type = std::int8_t;
+        using inner_reference = std::int8_t&;
+        using inner_const_reference = const std::int8_t&;
 
-        static void init(arrow_proxy& proxy)
+        /**
+         * @brief Construct from an Arrow proxy.
+         */
+        SPARROW_API explicit bool8_array(arrow_proxy proxy);
+
+        /**
+         * @brief Construct from a range of int8_t values.
+         *
+         * @tparam R Range type with int8_t-convertible values (but not bool)
+         * @param range Input range of int8_t values
+         * @param nullable Whether the array should support null values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         */
+        template <std::ranges::input_range R>
+            requires(!std::same_as<std::ranges::range_value_t<R>, bool>)
+                    && std::convertible_to<std::ranges::range_value_t<R>, std::int8_t>
+        explicit bool8_array(
+            R&& range,
+            bool nullable = true,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::vector<metadata_pair>> metadata = std::nullopt
+        )
+            : primitive_base(std::forward<R>(range), nullable, name, metadata)
+        {
+            init_extension_metadata(detail::array_access::get_arrow_proxy(*this));
+        }
+
+        /**
+         * @brief Construct from a range of boolean values.
+         *
+         * @tparam R Range type with boolean values
+         * @param range Input range of boolean values
+         * @param nullable Whether the array should support null values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         */
+        template <std::ranges::input_range R>
+            requires std::same_as<std::ranges::range_value_t<R>, bool>
+        explicit bool8_array(
+            R&& range,
+            bool nullable = true,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::vector<metadata_pair>> metadata = std::nullopt
+        )
+            : primitive_base(
+                  std::forward<R>(range)
+                      | std::views::transform(
+                          [](bool b)
+                          {
+                              return static_cast<std::int8_t>(b ? 1 : 0);
+                          }
+                      ),
+                  nullable,
+                  name,
+                  metadata
+              )
+        {
+            init_extension_metadata(detail::array_access::get_arrow_proxy(*this));
+        }
+
+        /**
+         * @brief Construct from a range of boolean values with validity bitmap.
+         *
+         * @tparam R Range type with boolean values
+         * @tparam R2 Validity bitmap input type
+         * @param values Input range of boolean values
+         * @param validity_input Validity bitmap specification
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         */
+        template <std::ranges::input_range R, validity_bitmap_input R2>
+            requires std::same_as<std::ranges::range_value_t<R>, bool>
+        bool8_array(
+            R&& values,
+            R2&& validity_input,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::vector<metadata_pair>> metadata = std::nullopt
+        )
+            : primitive_base(
+                  std::forward<R>(values)
+                      | std::views::transform(
+                          [](bool b)
+                          {
+                              return static_cast<std::int8_t>(b ? 1 : 0);
+                          }
+                      ),
+                  std::forward<R2>(validity_input),
+                  name,
+                  metadata
+              )
+        {
+            init_extension_metadata(detail::array_access::get_arrow_proxy(*this));
+        }
+
+        /**
+         * @brief Construct from a range of int8_t values with validity bitmap.
+         *
+         * @tparam R Range type with int8_t values (but not bool)
+         * @tparam R2 Validity bitmap input type
+         * @param values Input range of int8_t values
+         * @param validity_input Validity bitmap specification
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         */
+        template <std::ranges::input_range R, validity_bitmap_input R2>
+            requires(!std::same_as<std::ranges::range_value_t<R>, bool>)
+                    && std::convertible_to<std::ranges::range_value_t<R>, std::int8_t>
+        bool8_array(
+            R&& values,
+            R2&& validity_input,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::vector<metadata_pair>> metadata = std::nullopt
+        )
+            : primitive_base(std::forward<R>(values), std::forward<R2>(validity_input), name, metadata)
+        {
+            init_extension_metadata(detail::array_access::get_arrow_proxy(*this));
+        }
+
+        /**
+         * @brief Construct from initializer list of boolean values.
+         *
+         * @param init Initializer list of boolean values
+         * @param nullable Whether the array should support null values
+         * @param name Optional name for the array
+         * @param metadata Optional metadata for the array
+         */
+        bool8_array(
+            std::initializer_list<bool> init,
+            bool nullable = true,
+            std::optional<std::string_view> name = std::nullopt,
+            std::optional<std::vector<metadata_pair>> metadata = std::nullopt
+        )
+            : primitive_base(
+                  std::views::transform(
+                      init,
+                      [](bool b)
+                      {
+                          return static_cast<std::int8_t>(b ? 1 : 0);
+                      }
+                  ),
+                  nullable,
+                  name,
+                  metadata
+              )
+        {
+            init_extension_metadata(detail::array_access::get_arrow_proxy(*this));
+        }
+
+        /**
+         * @brief Get the raw int8_t value at the specified index.
+         *
+         * @param index Index of the element
+         * @return Raw int8_t value
+         */
+        [[nodiscard]] SPARROW_API inner_const_reference value(size_type index) const;
+        
+        using primitive_base::size;
+        using primitive_base::empty;
+
+        // Data type is always INT8 for bool8_array
+        [[nodiscard]] SPARROW_API sparrow::data_type data_type() const;
+
+        // Element access (returns boolean proxy references)
+        [[nodiscard]] SPARROW_API reference operator[](size_type index);
+
+        [[nodiscard]] SPARROW_API const_reference operator[](size_type index) const;
+
+        // Iterator access with bool8 wrapper
+        [[nodiscard]] SPARROW_API iterator begin();
+
+        [[nodiscard]] SPARROW_API iterator end();
+
+        [[nodiscard]] SPARROW_API const_iterator begin() const;
+
+        [[nodiscard]] SPARROW_API const_iterator end() const;
+
+        [[nodiscard]] SPARROW_API const_iterator cbegin() const;
+
+        [[nodiscard]] SPARROW_API const_iterator cend() const;
+
+        // Comparison operator
+        SPARROW_API friend bool operator==(const bool8_array& lhs, const bool8_array& rhs);
+
+    private:
+
+        // Initialize extension metadata
+        static void init_extension_metadata(arrow_proxy& proxy)
         {
             // Check if extension metadata already exists
             std::optional<key_value_view> metadata = proxy.metadata();
@@ -322,380 +547,11 @@ namespace sparrow
             proxy.set_metadata(std::make_optional(extension_metadata));
         }
 
-        friend class bool8_array;
-    };
-
-    /**
-     * @brief Bool8 array class with boolean-based access.
-     *
-     * Bool8 represents a boolean value using 1 byte (8 bits) to store each value
-     * instead of only 1 bit as in the original Arrow Boolean type. Although less
-     * compact than the original representation, Bool8 may have better zero-copy
-     * compatibility with various systems that also store booleans using 1 byte.
-     *
-     * The Bool8 extension type is defined as:
-     * - Extension name: "arrow.bool8"
-     * - Storage type: Int8
-     * - false is denoted by the value 0
-     * - true can be specified using any non-zero value (preferably 1)
-     * - Extension metadata: empty string
-     *
-     * This class provides a convenient wrapper around primitive_array<int8_t>
-     * with boolean-specific constructors and access methods.
-     *
-     * Related Apache Arrow specification:
-     * https://arrow.apache.org/docs/format/CanonicalExtensions.html
-     *
-     * @example
-     * ```cpp
-     * // Create from boolean values
-     * std::vector<bool> values = {true, false, true, true, false};
-     * bool8_array arr(values);
-     *
-     * // Access as booleans
-     * bool value = arr.get_bool(0); // returns true
-     * arr.set_bool(1, true);        // sets second element to true
-     * ```
-     */
-    class bool8_array
-    {
-    public:
-
-        using storage_type = primitive_array<std::int8_t>;
-        using size_type = typename storage_type::size_type;
-        using reference = bool8_reference;
-        using const_reference = bool8_const_reference;
-        using iterator = bool8_iterator_impl<typename storage_type::iterator, reference>;
-        using const_iterator = bool8_iterator_impl<typename storage_type::const_iterator, const_reference>;
-        using value_type = bool;
-        using inner_value_type = std::int8_t;
-        using inner_reference = std::int8_t&;
-        using inner_const_reference = const std::int8_t&;
-
-        /**
-         * @brief Construct from an Arrow proxy.
-         */
-        explicit bool8_array(arrow_proxy proxy)
-            : m_storage(std::move(proxy))
-        {
-            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
-        }
-
-        /**
-         * @brief Construct from a range of int8_t values.
-         *
-         * @tparam R Range type with int8_t-convertible values (but not bool)
-         * @param range Input range of int8_t values
-         * @param nullable Whether the array should support null values
-         * @param name Optional name for the array
-         * @param metadata Optional metadata for the array
-         */
-        template <std::ranges::input_range R>
-            requires(!std::same_as<std::ranges::range_value_t<R>, bool>)
-                    && std::convertible_to<std::ranges::range_value_t<R>, std::int8_t>
-        explicit bool8_array(
-            R&& range,
-            bool nullable = true,
-            std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::vector<metadata_pair>> metadata = std::nullopt
-        )
-            : m_storage(std::forward<R>(range), nullable, name, metadata)
-        {
-            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
-        }
-
-        /**
-         * @brief Construct from a range of boolean values.
-         *
-         * @tparam R Range type with boolean values
-         * @param range Input range of boolean values
-         * @param nullable Whether the array should support null values
-         * @param name Optional name for the array
-         * @param metadata Optional metadata for the array
-         */
-        template <std::ranges::input_range R>
-            requires std::same_as<std::ranges::range_value_t<R>, bool>
-        explicit bool8_array(
-            R&& range,
-            bool nullable = true,
-            std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::vector<metadata_pair>> metadata = std::nullopt
-        )
-            : m_storage(
-                  std::forward<R>(range)
-                      | std::views::transform(
-                          [](bool b)
-                          {
-                              return static_cast<std::int8_t>(b ? 1 : 0);
-                          }
-                      ),
-                  nullable,
-                  name,
-                  metadata
-              )
-        {
-            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
-        }
-
-        /**
-         * @brief Construct from a range of boolean values with validity bitmap.
-         *
-         * @tparam R Range type with boolean values
-         * @tparam R2 Validity bitmap input type
-         * @param values Input range of boolean values
-         * @param validity_input Validity bitmap specification
-         * @param name Optional name for the array
-         * @param metadata Optional metadata for the array
-         */
-        template <std::ranges::input_range R, validity_bitmap_input R2>
-            requires std::same_as<std::ranges::range_value_t<R>, bool>
-        bool8_array(
-            R&& values,
-            R2&& validity_input,
-            std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::vector<metadata_pair>> metadata = std::nullopt
-        )
-            : m_storage(
-                  std::forward<R>(values)
-                      | std::views::transform(
-                          [](bool b)
-                          {
-                              return static_cast<std::int8_t>(b ? 1 : 0);
-                          }
-                      ),
-                  std::forward<R2>(validity_input),
-                  name,
-                  metadata
-              )
-        {
-            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
-        }
-
-        /**
-         * @brief Construct from a range of int8_t values with validity bitmap.
-         *
-         * @tparam R Range type with int8_t values (but not bool)
-         * @tparam R2 Validity bitmap input type
-         * @param values Input range of int8_t values
-         * @param validity_input Validity bitmap specification
-         * @param name Optional name for the array
-         * @param metadata Optional metadata for the array
-         */
-        template <std::ranges::input_range R, validity_bitmap_input R2>
-            requires(!std::same_as<std::ranges::range_value_t<R>, bool>)
-                    && std::convertible_to<std::ranges::range_value_t<R>, std::int8_t>
-        bool8_array(
-            R&& values,
-            R2&& validity_input,
-            std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::vector<metadata_pair>> metadata = std::nullopt
-        )
-            : m_storage(std::forward<R>(values), std::forward<R2>(validity_input), name, metadata)
-        {
-            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
-        }
-
-        /**
-         * @brief Construct from initializer list of boolean values.
-         *
-         * @param init Initializer list of boolean values
-         * @param nullable Whether the array should support null values
-         * @param name Optional name for the array
-         * @param metadata Optional metadata for the array
-         */
-        bool8_array(
-            std::initializer_list<bool> init,
-            bool nullable = true,
-            std::optional<std::string_view> name = std::nullopt,
-            std::optional<std::vector<metadata_pair>> metadata = std::nullopt
-        )
-            : m_storage(
-                  std::views::transform(
-                      init,
-                      [](bool b)
-                      {
-                          return static_cast<std::int8_t>(b ? 1 : 0);
-                      }
-                  ),
-                  nullable,
-                  name,
-                  metadata
-              )
-        {
-            bool8_extension::init(detail::array_access::get_arrow_proxy(m_storage));
-        }
-
-        /**
-         * @brief Get element as boolean value.
-         *
-         * @param index Index of the element
-         * @return Boolean value (false for 0, true for non-zero)
-         */
-        [[nodiscard]] bool get_bool(size_type index) const
-        {
-            return m_storage[index].value() != 0;
-        }
-
-        /**
-         * @brief Set element from boolean value.
-         *
-         * @param index Index of the element
-         * @param value Boolean value to set
-         */
-        void set_bool(size_type index, bool value)
-        {
-            m_storage[index] = static_cast<std::int8_t>(value ? 1 : 0);
-        }
-
-        /**
-         * @brief Check if element has a value (is not null).
-         *
-         * @param index Index of the element
-         * @return true if element is not null, false otherwise
-         */
-        [[nodiscard]] bool has_value_at(size_type index) const
-        {
-            return m_storage[index].has_value();
-        }
-
-        /**
-         * @brief Get element as optional boolean value.
-         *
-         * @param index Index of the element
-         * @return std::optional<bool> with value if not null, std::nullopt otherwise
-         */
-        [[nodiscard]] std::optional<bool> get_bool_opt(size_type index) const
-        {
-            if (has_value(index))
-            {
-                return get_bool(index);
-            }
-            return std::nullopt;
-        }
-
-        /**
-         * @brief Get the raw int8_t value at the specified index.
-         *
-         * @param index Index of the element
-         * @return Raw int8_t value
-         */
-        [[nodiscard]] inner_const_reference value(size_type index) const
-        {
-            return m_storage[index].value();
-        }
-
-        /**
-         * @brief Check if element at index has a value (is not null).
-         *
-         * @param index Index of the element
-         * @return true if element is not null, false otherwise
-         */
-        [[nodiscard]] bool has_value(size_type index) const
-        {
-            return m_storage[index].has_value();
-        }
-
-        // Forward array metadata and type methods
-        [[nodiscard]] std::optional<std::string_view> name() const
-        {
-            return detail::array_access::get_arrow_proxy(m_storage).name();
-        }
-
-        [[nodiscard]] auto metadata() const
-        {
-            return detail::array_access::get_arrow_proxy(m_storage).metadata();
-        }
-
-        [[nodiscard]] sparrow::data_type data_type() const
-        {
-            return detail::array_access::get_arrow_proxy(m_storage).data_type();
-        }
-
-        // Forward common array operations
-        [[nodiscard]] size_type size() const
-        {
-            return m_storage.size();
-        }
-
-        [[nodiscard]] bool empty() const
-        {
-            return m_storage.empty();
-        }
-
-        // Iterator access
-        [[nodiscard]] iterator begin()
-        {
-            return iterator(m_storage.begin());
-        }
-
-        [[nodiscard]] iterator end()
-        {
-            return iterator(m_storage.end());
-        }
-
-        [[nodiscard]] const_iterator begin() const
-        {
-            return const_iterator(m_storage.begin());
-        }
-
-        [[nodiscard]] const_iterator end() const
-        {
-            return const_iterator(m_storage.end());
-        }
-
-        [[nodiscard]] const_iterator cbegin() const
-        {
-            return const_iterator(m_storage.cbegin());
-        }
-
-        [[nodiscard]] const_iterator cend() const
-        {
-            return const_iterator(m_storage.cend());
-        }
-
-        // Element access (returns boolean proxy references)
-        [[nodiscard]] reference operator[](size_type index)
-        {
-            return reference(m_storage[index]);
-        }
-
-        [[nodiscard]] const_reference operator[](size_type index) const
-        {
-            return const_reference(m_storage[index]);
-        }
-
-        // Get underlying storage
-        [[nodiscard]] const storage_type& storage() const
-        {
-            return m_storage;
-        }
-
-        [[nodiscard]] storage_type& storage()
-        {
-            return m_storage;
-        }
-
-        // Comparison operator
-        [[nodiscard]] friend bool operator==(const bool8_array& lhs, const bool8_array& rhs)
-        {
-            return lhs.m_storage == rhs.m_storage;
-        }
-
-    private:
-
         // Arrow proxy access (required for array_wrapper integration)
         // Made private with friend access for detail::array_access
-        [[nodiscard]] arrow_proxy& get_arrow_proxy()
-        {
-            return detail::array_access::get_arrow_proxy(m_storage);
-        }
+        [[nodiscard]] SPARROW_API arrow_proxy& get_arrow_proxy();
 
-        [[nodiscard]] const arrow_proxy& get_arrow_proxy() const
-        {
-            return detail::array_access::get_arrow_proxy(m_storage);
-        }
-
-        storage_type m_storage;
+        [[nodiscard]] SPARROW_API const arrow_proxy& get_arrow_proxy() const;
 
         friend class detail::array_access;
     };

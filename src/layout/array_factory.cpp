@@ -109,7 +109,7 @@ namespace sparrow
                 case data_type::BOOL:
                     return detail::make_wrapper_ptr<primitive_array<bool>>(std::move(proxy));
                 case data_type::INT8:
-                    if (is_extension(proxy, bool8_extension::EXTENSION_NAME))
+                    if (is_extension(proxy, bool8_array::EXTENSION_NAME))
                     {
                         return detail::make_wrapper_ptr<bool8_array>(std::move(proxy));
                     }

@@ -94,8 +94,8 @@ namespace sparrow
      * ```
      */
     template <trivial_copyable_type T>
-    class primitive_array_impl final : public mutable_array_bitmap_base<primitive_array_impl<T>>,
-                                       private details::primitive_data_access<T>
+    class primitive_array_impl : public mutable_array_bitmap_base<primitive_array_impl<T>>,
+                                  private details::primitive_data_access<T>
     {
     public:
 
