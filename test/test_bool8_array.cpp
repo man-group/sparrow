@@ -480,5 +480,89 @@ namespace sparrow
             CHECK_EQ(static_cast<bool>(bool8_arr[1]), false);
             CHECK_EQ(static_cast<bool>(bool8_arr[2]), true);
         }
+
+#if defined(__cpp_lib_format)
+        TEST_CASE("formatter")
+        {
+            SUBCASE("basic formatting")
+            {
+                std::vector<bool> values = {true, false, true, false};
+                bool8_array arr(values);
+                const std::string formatted = std::format("{}", arr);
+                constexpr std::string_view expected = "Bool8 array [4]: [true, false, true, false]";
+                CHECK_EQ(formatted, expected);
+            }
+
+            SUBCASE("formatting with null values")
+            {
+                std::vector<bool> values = {true, false, true, false};
+                std::vector<bool> validity = {true, false, true, false};
+                bool8_array arr(values, validity);
+                const std::string formatted = std::format("{}", arr);
+                constexpr std::string_view expected = "Bool8 array [4]: [true, null, true, null]";
+                CHECK_EQ(formatted, expected);
+            }
+
+            SUBCASE("formatting with null indices")
+            {
+                std::vector<bool> values = {true, false, true, false, true};
+                std::vector<size_t> null_indices = {1, 3};
+                bool8_array arr(values, null_indices);
+                const std::string formatted = std::format("{}", arr);
+                constexpr std::string_view expected = "Bool8 array [5]: [true, null, true, null, true]";
+                CHECK_EQ(formatted, expected);
+            }
+
+            SUBCASE("formatting empty array")
+            {
+                std::vector<bool> values;
+                bool8_array arr(values);
+                const std::string formatted = std::format("{}", arr);
+                constexpr std::string_view expected = "Bool8 array [0]: []";
+                CHECK_EQ(formatted, expected);
+            }
+
+            SUBCASE("formatting single element")
+            {
+                std::vector<bool> values = {true};
+                bool8_array arr(values);
+                const std::string formatted = std::format("{}", arr);
+                constexpr std::string_view expected = "Bool8 array [1]: [true]";
+                CHECK_EQ(formatted, expected);
+            }
+
+            SUBCASE("formatting all nulls")
+            {
+                std::vector<bool> values = {true, false, true};
+                std::vector<bool> validity = {false, false, false};
+                bool8_array arr(values, validity);
+                const std::string formatted = std::format("{}", arr);
+                constexpr std::string_view expected = "Bool8 array [3]: [null, null, null]";
+                CHECK_EQ(formatted, expected);
+            }
+
+            SUBCASE("formatting from int8_t values")
+            {
+                std::vector<std::int8_t> values = {1, 0, 5, -3, 0};
+                bool8_array arr(values);
+                const std::string formatted = std::format("{}", arr);
+                constexpr std::string_view expected = "Bool8 array [5]: [true, false, true, true, false]";
+                CHECK_EQ(formatted, expected);
+            }
+
+            SUBCASE("formatting const_reference")
+            {
+                std::vector<bool> values = {true, false};
+                std::vector<bool> validity = {true, false};
+                const bool8_array arr(values, validity);
+                
+                const std::string formatted_true = std::format("{}", arr[0]);
+                CHECK_EQ(formatted_true, "true");
+                
+                const std::string formatted_null = std::format("{}", arr[1]);
+                CHECK_EQ(formatted_null, "null");
+            }
+        }
+#endif
     }
 }
