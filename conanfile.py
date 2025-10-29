@@ -27,6 +27,7 @@ class SparrowRecipe(ConanFile):
         "build_tests": [True, False],
         "build_benchmarks": [True, False],
         "generate_documentation": [True, False],
+        "with_json_reader": [True, False],
     }
     default_options = {
         "shared": False,
@@ -35,11 +36,14 @@ class SparrowRecipe(ConanFile):
         "build_tests": False,
         "build_benchmarks": False,
         "generate_documentation": False,
+        "with_json_reader": False,
     }
 
     def requirements(self):
         if self.options.get_safe("use_date_polyfill"):
             self.requires("date/3.0.3")
+        if self.options.get_safe("with_json_reader"):
+            self.requires("nlohmann_json/3.12.0")
         if self.options.get_safe("build_tests"):
             self.test_requires("doctest/2.4.11")
             self.test_requires("catch2/3.7.0")
@@ -98,6 +102,9 @@ class SparrowRecipe(ConanFile):
         tc.variables["BUILD_BENCHMARKS"] = self.options.get_safe(
             "build_benchmarks", False
         )
+        tc.variables["CREATE_JSON_READER_TARGET"] = self.options.get_safe(
+            "with_json_reader", False
+        )
         if is_msvc(self):
             tc.variables["USE_LARGE_INT_PLACEHOLDERS"] = True
         tc.generate()
@@ -115,6 +122,14 @@ class SparrowRecipe(ConanFile):
         cmake.install()
 
     def package_info(self):
+        # Main sparrow
         self.cpp_info.libs = ["sparrow"]
         self.cpp_info.set_property("cmake_file_name", "sparrow")
         self.cpp_info.set_property("cmake_target_name", "sparrow::sparrow")
+
+        if self.options.with_json_reader:
+            # sparrow-json-reader component
+            self.cpp_info.components["sparrow-json-reader"].libs = ["sparrow_json_reader"]
+            self.cpp_info.components["sparrow-json-reader"].set_property("cmake_file_name", "sparrow-json-reader")
+            self.cpp_info.components["sparrow-json-reader"].set_property("cmake_target_name", "sparrow::json_reader")
+            self.cpp_info.components["sparrow-json-reader"].requires = ["sparrow", "nlohmann_json"]
