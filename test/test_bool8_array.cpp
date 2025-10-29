@@ -122,12 +122,7 @@ namespace sparrow
 
             SUBCASE("from range of nullable<bool8_t>")
             {
-                std::vector<nullable<bool>> values{
-                    true,
-                    false,
-                    nullval,
-                    true
-                };
+                std::vector<nullable<bool>> values{true, false, nullval, true};
                 array_test_type ar(values);
                 CHECK_EQ(ar.size(), values.size());
                 CHECK(ar[0].has_value());
@@ -288,7 +283,7 @@ namespace sparrow
             const size_t new_size = values.size() + 3;
             const nullable<bool> fill_value = false;
             ar.resize(new_size, fill_value);
-            
+
             REQUIRE_EQ(ar.size(), new_size);
             for (size_t i = 0; i < values.size(); ++i)
             {
@@ -372,11 +367,7 @@ namespace sparrow
 
             SUBCASE("with pos and range")
             {
-                const std::vector<nullable<bool>> new_values{
-                    true,
-                    false,
-                    true
-                };
+                const std::vector<nullable<bool>> new_values{true, false, true};
 
                 SUBCASE("at the beginning")
                 {
@@ -497,7 +488,7 @@ namespace sparrow
                 constexpr size_t slice_start = 1;
                 constexpr size_t slice_end = 4;
                 auto sliced = ar.slice(slice_start, slice_end);
-                
+
                 CHECK_EQ(sliced.offset(), slice_start);
                 CHECK_EQ(sliced.size(), slice_end - slice_start);
                 for (size_t i = 0; i < sliced.size(); ++i)
@@ -532,13 +523,8 @@ namespace sparrow
 
             SUBCASE("null_count with nulls")
             {
-                std::vector<nullable<bool8_t>> values{
-                    bool8_t(true),
-                    nullval,
-                    bool8_t(false),
-                    nullval,
-                    bool8_t(true)
-                };
+                std::vector<nullable<bool8_t>>
+                    values{bool8_t(true), nullval, bool8_t(false), nullval, bool8_t(true)};
                 bool8_array ar(values);
 
                 CHECK_EQ(ar.offset(), 0);
@@ -549,13 +535,7 @@ namespace sparrow
 
         TEST_CASE("zero_null_values")
         {
-            std::vector<nullable<bool8_t>> values{
-                bool8_t(true),
-                nullval,
-                bool8_t(false),
-                nullval,
-                bool8_t(true)
-            };
+            std::vector<nullable<bool8_t>> values{bool8_t(true), nullval, bool8_t(false), nullval, bool8_t(true)};
             bool8_array ar(values);
 
             ar.zero_null_values();
@@ -576,13 +556,7 @@ namespace sparrow
 #if defined(__cpp_lib_format)
         TEST_CASE("formatting")
         {
-            std::vector<nullable<bool8_t>> values{
-                bool8_t(true),
-                nullval,
-                bool8_t(false),
-                nullval,
-                bool8_t(true)
-            };
+            std::vector<nullable<bool8_t>> values{bool8_t(true), nullval, bool8_t(false), nullval, bool8_t(true)};
             bool8_array ar(values);
             const std::string formatted = std::format("{}", ar);
             constexpr std::string_view expected = "Bool8 array [5]: [true, null, false, null, true]";
