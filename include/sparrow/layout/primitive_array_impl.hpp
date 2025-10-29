@@ -150,7 +150,7 @@ namespace sparrow
          * @post Validity bitmap is set according to the provided bitmap or defaults to all valid
          */
         template <class... Args>
-            requires(mpl::excludes_copy_and_move_ctor_v<primitive_array_impl<T>, Args...>)
+            requires(mpl::excludes_copy_and_move_ctor_v<primitive_array_impl<T, Ext, T2>, Args...>)
         explicit primitive_array_impl(Args&&... args)
             : base_type(create_proxy(std::forward<Args>(args)...))
             , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
@@ -330,7 +330,7 @@ namespace sparrow
          *
          * @pre n must be a valid size (typically n >= 0)
          * @pre value must be convertible to type T
-         * @post Returned proxy contains exactly n elements, all equal to static_cast<T>(value)
+         * @post Returned proxy contains exactly n elements, all equal to static_cast<T2>(value)
          * @post If nullable is true, array supports null values (though none are initially set)
          * @post All values in the array are marked as valid (non-null)
          */
@@ -380,22 +380,22 @@ namespace sparrow
         /**
          * @brief Creates an Arrow proxy from a range of nullable values.
          *
-         * @tparam NULLABLE_RANGE Type of input range containing nullable<T> values
+         * @tparam NULLABLE_RANGE Type of input range containing nullable<T2> values
          * @tparam METADATA_RANGE Type of metadata container
-         * @param nullable_range Input range of nullable<T> values
+         * @param nullable_range Input range of nullable<T2> values
          * @param name Optional name for the array
          * @param metadata Optional metadata for the array
          * @return Arrow proxy containing the array data and schema
          *
-         * @pre NULLABLE_RANGE must be an input range of exactly nullable<T> values
+         * @pre NULLABLE_RANGE must be an input range of exactly nullable<T2> values
          * @pre nullable_range must be valid and accessible
          * @post Returned proxy contains the unwrapped values from nullable_range
-         * @post Validity bitmap reflects the has_value() status of each nullable<T>
+         * @post Validity bitmap reflects the has_value() status of each nullable<T2>
          * @post Array supports null values (nullable = true)
-         * @post Elements where nullable<T>.has_value() == false are marked as null
+         * @post Elements where nullable<T2>.has_value() == false are marked as null
          */
         template <std::ranges::input_range NULLABLE_RANGE, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires std::is_same_v<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T>>
+            requires std::is_same_v<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T2>>
         [[nodiscard]] static arrow_proxy create_proxy(
             NULLABLE_RANGE&&,
             std::optional<std::string_view> name = std::nullopt,
@@ -521,7 +521,7 @@ namespace sparrow
     )
     {
         auto size = static_cast<size_t>(std::ranges::distance(values));
-        u8_buffer<T> data_buffer = details::primitive_data_access<T2>::make_data_buffer(
+        u8_buffer<T2> data_buffer = details::primitive_data_access<T, T2>::make_data_buffer(
             std::forward<VALUE_RANGE>(values)
         );
         return create_proxy(
@@ -545,7 +545,7 @@ namespace sparrow
     )
     {
         // create data_buffer
-        u8_buffer<T> data_buffer(n, value);
+        u8_buffer<T2> data_buffer(n, value);
         return create_proxy_impl(
             std::move(data_buffer),
             n,
@@ -586,7 +586,7 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        auto data_buffer = details::primitive_data_access<T2>::make_data_buffer(std::forward<R>(range));
+        auto data_buffer = details::primitive_data_access<T, T2>::make_data_buffer(std::forward<R>(range));
         auto distance = static_cast<size_t>(std::ranges::distance(range));
         std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0)
                                                          : std::nullopt;
@@ -602,7 +602,7 @@ namespace sparrow
     // range of nullable values
     template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
     template <std::ranges::input_range NULLABLE_RANGE, input_metadata_container METADATA_RANGE>
-        requires std::is_same_v<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T>>
+        requires std::is_same_v<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T2>>
     arrow_proxy primitive_array_impl<T, Ext, T2>::create_proxy(
         NULLABLE_RANGE&& nullable_range,
         std::optional<std::string_view> name,

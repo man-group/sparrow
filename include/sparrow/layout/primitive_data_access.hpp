@@ -21,20 +21,6 @@
 
 namespace sparrow
 {
-    /**
-     * @brief Type alias for 8-bit boolean representation.
-     * 
-     * This type uses std::int8_t to store boolean values, where:
-     * - 0 represents false
-     * - any non-zero value (preferably 1) represents true
-     * 
-     * This is distinct from the standard bool type which uses bitset storage
-     * in primitive_data_access specialization.
-     */
-    struct bool8_t
-    {
-    };
-
     template <typename T>
     concept trivial_copyable_type = std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>;
 
@@ -50,9 +36,9 @@ namespace sparrow
         {
         public:
 
-            using inner_value_type = T;
-            using inner_reference = T&;
-            using inner_const_reference = const T&;
+            using inner_value_type = T2;
+            using inner_reference = T2&;
+            using inner_const_reference = const T2&;
             using inner_pointer = inner_value_type*;
             using inner_const_pointer = const inner_value_type*;
 
@@ -90,16 +76,16 @@ namespace sparrow
             [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
             [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
-            constexpr void resize_values(size_t new_length, const T& value);
+            constexpr void resize_values(size_t new_length, const T2& value);
 
-            constexpr value_iterator insert_value(const_value_iterator pos, T value, size_t count);
-            constexpr value_iterator insert_value(size_t idx, T value, size_t count);
+            constexpr value_iterator insert_value(const_value_iterator pos, T2 value, size_t count);
+            constexpr value_iterator insert_value(size_t idx, T2 value, size_t count);
 
             // Template parameter InputIt must be an value_iterator type that iterates over elements of type T
-            template <mpl::iterator_of_type<T> InputIt>
+            template <mpl::iterator_of_type<T2> InputIt>
             constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
 
-            template <mpl::iterator_of_type<T> InputIt>
+            template <mpl::iterator_of_type<T2> InputIt>
             constexpr value_iterator insert_values(size_t idx, InputIt first, InputIt last);
 
             constexpr value_iterator erase_values(const_value_iterator pos, size_t count);
@@ -108,13 +94,13 @@ namespace sparrow
             constexpr void reset_proxy(arrow_proxy& proxy);
 
             template <std::ranges::input_range RANGE>
-            [[nodiscard]] static constexpr u8_buffer<T> make_data_buffer(RANGE&& r);
+            [[nodiscard]] static constexpr u8_buffer<T2> make_data_buffer(RANGE&& r);
 
-            [[nodiscard]] static constexpr u8_buffer<T> make_data_buffer(size_t n, const T& value);
+            [[nodiscard]] static constexpr u8_buffer<T2> make_data_buffer(size_t n, const T2& value);
 
         private:
 
-            [[nodiscard]] constexpr buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
+            [[nodiscard]] constexpr buffer_adaptor<T2, buffer<uint8_t>&> get_data_buffer();
 
             [[nodiscard]] arrow_proxy& get_proxy();
             [[nodiscard]] const arrow_proxy& get_proxy() const;
@@ -209,25 +195,25 @@ namespace sparrow
             bitset_adaptor m_adaptor;
         };
 
-        /**
-         * @brief Specialization for bool8_t using 8-bit storage.
-         * 
-         * This specialization uses std::int8_t as the underlying storage type,
-         * providing one byte per boolean value instead of bit-packing.
-         * This is useful for compatibility with systems that store booleans
-         * using one byte per value.
-         * 
-         * Since bool8_t is trivially copyable, this specialization is actually
-         * just an instantiation of the general primitive_data_access template
-         * and uses the same implementation.
-         */
-        template <>
-        class primitive_data_access<bool8_t, bool> : public primitive_data_access<std::int8_t>
-        {
-        public:
-            using base_type = primitive_data_access<std::int8_t>;
-            using base_type::base_type;
-        };
+        // /**
+        //  * @brief Specialization for bool8_t using 8-bit storage.
+        //  * 
+        //  * This specialization uses std::int8_t as the underlying storage type,
+        //  * providing one byte per boolean value instead of bit-packing.
+        //  * This is useful for compatibility with systems that store booleans
+        //  * using one byte per value.
+        //  * 
+        //  * Since bool8_t is trivially copyable, this specialization is actually
+        //  * just an instantiation of the general primitive_data_access template
+        //  * and uses the same implementation.
+        //  */
+        // template <>
+        // class primitive_data_access<int8_t, bool>
+        // {
+        // public:
+        //     using base_type = primitive_data_access<std::int8_t>;
+        //     using base_type::base_type;
+        // };
 
         /****************************************
          * primitiva_data_access implementation *
@@ -243,14 +229,14 @@ namespace sparrow
         template <trivial_copyable_type T, trivial_copyable_type T2>
         [[nodiscard]] constexpr auto primitive_data_access<T, T2>::data() -> inner_pointer
         {
-            return get_proxy().buffers()[m_data_buffer_index].template data<T>()
+            return get_proxy().buffers()[m_data_buffer_index].template data<T2>()
                    + static_cast<size_t>(get_proxy().offset());
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
         [[nodiscard]] constexpr auto primitive_data_access<T, T2>::data() const -> inner_const_pointer
         {
-            return get_proxy().buffers()[m_data_buffer_index].template data<T>()
+            return get_proxy().buffers()[m_data_buffer_index].template data<T2>()
                    + static_cast<size_t>(get_proxy().offset());
         }
 
@@ -293,14 +279,14 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        constexpr void primitive_data_access<T, T2>::resize_values(size_t new_length, const T& value)
+        constexpr void primitive_data_access<T, T2>::resize_values(size_t new_length, const T2& value)
         {
             const size_t new_size = new_length + static_cast<size_t>(get_proxy().offset());
             get_data_buffer().resize(new_size, value);
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        constexpr auto primitive_data_access<T, T2>::insert_value(const_value_iterator pos, T value, size_t count)
+        constexpr auto primitive_data_access<T, T2>::insert_value(const_value_iterator pos, T2 value, size_t count)
             -> value_iterator
         {
             const const_value_iterator value_cbegin{data()};
@@ -314,7 +300,7 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        constexpr auto primitive_data_access<T, T2>::insert_value(size_t idx, T value, size_t count)
+        constexpr auto primitive_data_access<T, T2>::insert_value(size_t idx, T2 value, size_t count)
             -> value_iterator
         {
             SPARROW_ASSERT_TRUE(idx <= get_proxy().length());
@@ -325,7 +311,7 @@ namespace sparrow
 
         // Template parameter InputIt must be an value_iterator type that iterates over elements of type T
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        template <mpl::iterator_of_type<T> InputIt>
+        template <mpl::iterator_of_type<T2> InputIt>
         constexpr auto
         primitive_data_access<T, T2>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
             -> value_iterator
@@ -341,7 +327,7 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        template <mpl::iterator_of_type<T> InputIt>
+        template <mpl::iterator_of_type<T2> InputIt>
         constexpr auto primitive_data_access<T, T2>::insert_values(size_t idx, InputIt first, InputIt last)
             -> value_iterator
         {
@@ -388,23 +374,23 @@ namespace sparrow
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
         template <std::ranges::input_range RANGE>
-        [[nodiscard]] constexpr u8_buffer<T> primitive_data_access<T, T2>::make_data_buffer(RANGE&& r)
+        [[nodiscard]] constexpr u8_buffer<T2> primitive_data_access<T, T2>::make_data_buffer(RANGE&& r)
         {
-            return u8_buffer<T>(std::forward<RANGE>(r));
+            return u8_buffer<T2>(std::forward<RANGE>(r));
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        [[nodiscard]] constexpr u8_buffer<T>
-        primitive_data_access<T, T2>::make_data_buffer(size_t size, const T& value)
+        [[nodiscard]] constexpr u8_buffer<T2>
+        primitive_data_access<T, T2>::make_data_buffer(size_t size, const T2& value)
         {
-            return u8_buffer<T>(size, value);
+            return u8_buffer<T2>(size, value);
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        [[nodiscard]] constexpr buffer_adaptor<T, buffer<uint8_t>&> primitive_data_access<T, T2>::get_data_buffer()
+        [[nodiscard]] constexpr buffer_adaptor<T2, buffer<uint8_t>&> primitive_data_access<T, T2>::get_data_buffer()
         {
             auto& buffers = get_proxy().get_array_private_data()->buffers();
-            return make_buffer_adaptor<T>(buffers[m_data_buffer_index]);
+            return make_buffer_adaptor<T2>(buffers[m_data_buffer_index]);
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>

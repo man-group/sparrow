@@ -26,8 +26,6 @@ namespace sparrow
     {
         TEST_CASE("constructors")
         {
-            using array_test_type = bool8_array;
-
             const auto make_nullable_values = [](size_t count)
             {
                 std::vector<nullable<bool>> values;
@@ -54,7 +52,7 @@ namespace sparrow
                 using namespace std::literals;
                 SUBCASE("nullable == true")
                 {
-                    array_test_type ar{values_count, true, true, "test"sv, metadata_sample_opt};
+                    bool8_array ar{values_count, true, true, "test"sv, metadata_sample_opt};
                     CHECK_EQ(ar.size(), values_count);
                     for (size_t i = 0; i < ar.size(); ++i)
                     {
@@ -62,12 +60,15 @@ namespace sparrow
                         CHECK_EQ(static_cast<bool>(ar[i].value()), true);
                     }
                     CHECK_EQ(ar.name(), "test");
-                    test_metadata(metadata_sample, *(ar.metadata()));
+                    std::vector<metadata_pair> expected_metadata = metadata_sample;
+                    expected_metadata.emplace_back("ARROW:extension:name", bool8_array::EXTENSION_NAME);
+                    expected_metadata.emplace_back("ARROW:extension:metadata", "");
+                    test_metadata(expected_metadata, *(ar.metadata()));
                 }
 
                 SUBCASE("nullable == false")
                 {
-                    array_test_type ar{values_count, false, false, "test"sv, metadata_sample_opt};
+                    bool8_array ar{values_count, false, false, "test"sv, metadata_sample_opt};
                     CHECK_EQ(ar.size(), values_count);
                     for (size_t i = 0; i < ar.size(); ++i)
                     {
@@ -75,7 +76,10 @@ namespace sparrow
                         CHECK_EQ(static_cast<bool>(ar[i].value()), false);
                     }
                     CHECK_EQ(ar.name(), "test");
-                    test_metadata(metadata_sample, *(ar.metadata()));
+                    std::vector<metadata_pair> expected_metadata = metadata_sample;
+                    expected_metadata.emplace_back("ARROW:extension:name", bool8_array::EXTENSION_NAME);
+                    expected_metadata.emplace_back("ARROW:extension:metadata", "");
+                    test_metadata(expected_metadata, *(ar.metadata()));
                 }
             }
 
@@ -90,7 +94,7 @@ namespace sparrow
                         }
                     )
                 };
-                array_test_type ar{
+                bool8_array ar{
                     std::move(buffer),
                     values_count,
                     nullable_values
@@ -108,57 +112,55 @@ namespace sparrow
                 }
             }
 
-            SUBCASE("from range of bool8_t")
+            SUBCASE("from range of bool")
             {
-                std::vector<bool> values = {true, false, true, false};
-                array_test_type ar(values);
-                CHECK_EQ(ar.size(), values.size());
+                const std::vector<bool> values = {true, false, true, false};
+                const bool8_array ar(values);
+                REQUIRE_EQ(ar.size(), values.size());
                 for (size_t i = 0; i < ar.size(); ++i)
                 {
-                    CHECK(ar[i].has_value());
+                    REQUIRE(ar[i].has_value());
                     CHECK_EQ(ar[i].value(), values[i]);
                 }
             }
 
             SUBCASE("from range of nullable<bool>")
             {
-                std::vector<nullable<bool>> values{
+                const std::vector<nullable<bool>> values{
                     true,
                     false,
                     nullval,
                     true
                 };
-                array_test_type ar(values);
-                CHECK_EQ(ar.size(), values.size());
-                CHECK(ar[0].has_value());
-                CHECK(ar[1].has_value());
-                CHECK(!ar[2].has_value());
-                CHECK(ar[3].has_value());
-                CHECK_EQ(static_cast<bool>(ar[0].value()), true);
-                CHECK_EQ(static_cast<bool>(ar[1].value()), false);
-                CHECK_EQ(static_cast<bool>(ar[3].value()), true);
+                const bool8_array ar(values);
+                REQUIRE_EQ(ar.size(), values.size());
+                REQUIRE(ar[0].has_value());
+                REQUIRE(ar[1].has_value());
+                REQUIRE(!ar[2].has_value());
+                REQUIRE(ar[3].has_value());
+                CHECK(ar[0].value());
+                CHECK_FALSE(ar[1].value());
+                CHECK(ar[3].value());
             }
 
             SUBCASE("initializer list")
             {
-                std::vector<bool> init_values = {true, false, true};
-                array_test_type ar(init_values);
-                CHECK_EQ(ar.size(), 3);
-                CHECK_EQ(static_cast<bool>(ar[0].value()), true);
-                CHECK_EQ(static_cast<bool>(ar[1].value()), false);
-                CHECK_EQ(static_cast<bool>(ar[2].value()), true);
+                const bool8_array ar{true, false, true};
+                REQUIRE_EQ(ar.size(), 3);
+                CHECK(ar[0].value());
+                CHECK_FALSE(ar[1].value());
+                CHECK(ar[2].value());
             }
         }
 
         TEST_CASE("operator[]")
         {
-            using array_test_type = bool8_array;
-            std::vector<bool> values{true, false, true, false, true};
-            array_test_type ar(values);
+            const std::vector<bool> values{true, false, true, false, true};
+            bool8_array ar(values);
 
             SUBCASE("const")
             {
-                const array_test_type const_ar(values);
+                const bool8_array const_ar(values);
                 REQUIRE_EQ(const_ar.size(), values.size());
                 for (size_t i = 0; i < const_ar.size(); ++i)
                 {
@@ -168,23 +170,20 @@ namespace sparrow
 
             SUBCASE("mutable")
             {
-                REQUIRE_EQ(ar.size(), values.size());
-                for (size_t i = 0; i < ar.size(); ++i)
-                {
-                    CHECK_EQ(ar[i].value(), values[i]);
-                }
-
-                // Test modifying an element
                 auto ref = ar[1];
                 ref = true;
-                CHECK(ar[1].has_value());
-                CHECK_EQ(static_cast<bool>(ar[1].value()), true);
+                REQUIRE(ar[1].has_value());
+                CHECK_EQ(ar[1].value(), true);
+
+                ar[2] = false;
+                REQUIRE(ar[2].has_value());
+                CHECK_EQ(ar[2].value(), false);
             }
         }
 
         TEST_CASE("front and back")
         {
-            std::vector<bool> values = {true, false, true};
+            const std::vector<bool> values = {true, false, true};
             const bool8_array ar(values);
 
             SUBCASE("front")
@@ -200,7 +199,7 @@ namespace sparrow
 
         TEST_CASE("copy")
         {
-            std::vector<bool> values = {true, false, true, false};
+            const std::vector<bool> values = {true, false, true, false};
             bool8_array ar(values);
 
             bool8_array ar2(ar);
@@ -215,7 +214,7 @@ namespace sparrow
 
         TEST_CASE("move")
         {
-            std::vector<bool> values = {true, false, true, false};
+            const std::vector<bool> values = {true, false, true, false};
             bool8_array ar(values);
             bool8_array ar2(ar);
 
@@ -231,7 +230,7 @@ namespace sparrow
 
         TEST_CASE("iterators")
         {
-            std::vector<bool> values = {true, false, true, false, true};
+            const std::vector<bool> values = {true, false, true, false, true};
             bool8_array ar(values);
 
             SUBCASE("iterator")
@@ -282,7 +281,7 @@ namespace sparrow
 
         TEST_CASE("resize")
         {
-            std::vector<bool> values = {true, false, true};
+            const std::vector<bool> values = {true, false, true};
             bool8_array ar(values);
 
             const size_t new_size = values.size() + 3;
@@ -298,7 +297,7 @@ namespace sparrow
 
         TEST_CASE("insert")
         {
-            std::vector<bool> values = {true, false, true, false};
+            const std::vector<bool> values = {true, false, true, false};
             bool8_array ar(values);
 
             SUBCASE("with pos and value")
@@ -564,7 +563,7 @@ namespace sparrow
                 if (!values[i].has_value())
                 {
                     // Null values should be zeroed
-                    CHECK_EQ(static_cast<int8_t>(ar[i].value()), 0);
+                    CHECK_EQ(static_cast<int8_t>(ar[i].get()), 0);
                 }
                 else
                 {
