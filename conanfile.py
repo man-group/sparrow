@@ -128,6 +128,8 @@ class SparrowRecipe(ConanFile):
         self.cpp_info.components["sparrow-lib"].libs = ["sparrow"]
         self.cpp_info.components["sparrow-lib"].set_property("cmake_file_name", "sparrow")
         self.cpp_info.components["sparrow-lib"].set_property("cmake_target_name", "sparrow::sparrow")
+        if self.options.get_safe("use_date_polyfill"):
+            self.cpp_info.components["sparrow-lib"].requires = ["date::date", "date::date-tz"]
 
         if self.options.with_json_reader:
             # sparrow-json-reader component
