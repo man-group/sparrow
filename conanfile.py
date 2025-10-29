@@ -44,10 +44,12 @@ class SparrowRecipe(ConanFile):
             self.requires("date/3.0.3")
         if self.options.get_safe("with_json_reader"):
             self.requires("nlohmann_json/3.12.0")
+        elif self.options.get_safe("build_tests"):
+            self.test_requires("nlohmann_json/3.12.0")
+
         if self.options.get_safe("build_tests"):
             self.test_requires("doctest/2.4.11")
             self.test_requires("catch2/3.7.0")
-            self.test_requires("nlohmann_json/3.12.0")
         if self.options.get_safe("build_benchmarks"):
             self.test_requires("benchmark/1.9.4")
 
