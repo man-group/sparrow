@@ -22,7 +22,7 @@
 namespace sparrow
 {
     template <typename T>
-    concept primitive_type = std::is_arithmetic_v<T> || std::is_same_v<T, float16_t> || std::is_same_v<T, bool>;
+    concept primitive_type = std::is_arithmetic_v<T> || std::is_same_v<T, float16_t> || std::is_same_v<T, bool> || std::is_same_v<T, bool8_t>;
 
     namespace detail
     {
@@ -59,16 +59,16 @@ namespace sparrow
      * @tparam T the type of the values in the array.
      * @see https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
      */
-    template <primitive_type T>
-    using primitive_array = primitive_array_impl<T>;
+    template <primitive_type T, typename Ext = empty_extension, trivial_copyable_type T2 = T>
+    using primitive_array = primitive_array_impl<T, Ext, T2>;
 
     template <class T>
     struct is_primitive_array : std::false_type
     {
     };
 
-    template <class T>
-    struct is_primitive_array<primitive_array<T>> : std::true_type
+    template <class T, typename Ext, trivial_copyable_type T2>
+    struct is_primitive_array<primitive_array<T, Ext, T2>> : std::true_type
     {
     };
 
