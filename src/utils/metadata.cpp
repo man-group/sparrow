@@ -16,6 +16,11 @@
 
 namespace sparrow
 {
+    bool operator==(const sparrow::key_value_view& lhs, const sparrow::key_value_view& rhs)
+    {
+        return std::ranges::equal(lhs, rhs);
+    }
+
     int32_t extract_int32(const char*& ptr)
     {
         int32_t value = 0;

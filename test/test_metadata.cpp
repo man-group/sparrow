@@ -41,6 +41,8 @@ TEST_SUITE("metadata")
         }
 
         CHECK_EQ(kv_it, kv_end);
+
+        CHECK_EQ(key_values, key_values);
     }
 
     TEST_CASE("get_metadata_from_key_values")

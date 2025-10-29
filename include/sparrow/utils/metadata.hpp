@@ -96,7 +96,17 @@ namespace sparrow
     {
     public:
 
-        // using iterator_category = std::input_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
+
+        key_value_view_iterator()
+            : m_parent(nullptr)
+            , m_index(0)
+            , m_current(nullptr)
+            , m_key()
+            , m_value()
+        {
+        }
+
         using value_type = metadata_pair_const_reference;
         using difference_type = std::ptrdiff_t;
         using pointer = value_type*;
@@ -296,6 +306,20 @@ namespace sparrow
     };
 
     /**
+     * @brief Equality comparison operator for key_value_view (free function).
+     *
+     * Compares two key_value_view objects for equality by checking if they contain
+     * the same key-value pairs in the same order.
+     *
+     * @param lhs First view to compare
+     * @param rhs Second view to compare
+     * @return true if both views contain identical key-value pairs in the same order
+     *
+     * @post Returns true iff both views have the same size and all pairs are equal
+     */
+    SPARROW_API bool operator==(const sparrow::key_value_view& lhs, const sparrow::key_value_view& rhs);
+
+    /**
      * @brief Concept for input containers that can provide metadata pairs.
      *
      * Defines the requirements for containers that can be used as input
@@ -305,8 +329,9 @@ namespace sparrow
      * @tparam T Type to check for metadata container compatibility
      */
     template <typename T>
-    concept input_metadata_container = std::ranges::input_range<T>
-                                       && std::same_as<std::ranges::range_value_t<T>, metadata_pair>;
+    concept input_metadata_container = (std::ranges::input_range<T>
+                                        && std::same_as<std::ranges::range_value_t<T>, metadata_pair>)
+                                       || std::same_as<T, key_value_view>;
 
     /**
      * @brief Converts a container of key-value pairs to binary metadata format.
