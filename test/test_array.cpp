@@ -402,6 +402,7 @@ namespace sparrow
                 CHECK_EQ(std::get<const_reference>(slice_1_5[i]).get(), scalar_value);
                 scalar_value = detail::next_test_value(scalar_value);
             }
+            CHECK_EQ(slice_1_5.metadata(), ar.metadata());
 
             const auto slice_2_8 = ar.slice(2, 8);
             REQUIRE_EQ(slice_2_8.size(), 6);

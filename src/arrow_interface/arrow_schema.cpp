@@ -75,10 +75,17 @@ namespace sparrow
             copy_schema(*source.dictionary, *target.dictionary);
         }
 
+        std::optional<std::string> metadata_str;
+        if (source.metadata != nullptr)
+        {
+            key_value_view kv(source.metadata);
+            metadata_str = std::make_optional(get_metadata_from_key_values(kv));
+        }
+
         target.private_data = new arrow_schema_private_data(
             source.format,
             source.name,
-            source.metadata,
+           std::move(metadata_str),
             repeat_view<bool>{true, static_cast<std::size_t>(target.n_children)},
             true
         );

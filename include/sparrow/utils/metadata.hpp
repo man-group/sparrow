@@ -287,6 +287,37 @@ namespace sparrow
 
         [[nodiscard]] SPARROW_API key_value_view_iterator find(std::string_view key) const;
 
+        /**
+         * @brief Equality comparison operator for key_value_view.
+         *
+         * Compares two key_value_view objects for equality by checking if they contain
+         * the same key-value pairs in the same order.
+         *
+         * @param lhs First view to compare
+         * @param rhs Second view to compare
+         * @return true if both views contain identical key-value pairs in the same order
+         *
+         * @post Returns true iff both views have the same size and all pairs are equal
+         */
+        friend bool operator==(const key_value_view& lhs, const key_value_view& rhs)
+        {
+            if (lhs.size() != rhs.size())
+            {
+                return false;
+            }
+            auto lhs_it = lhs.begin();
+            auto rhs_it = rhs.begin();
+            const auto lhs_end = lhs.end();
+            for (; lhs_it != lhs_end; ++lhs_it, ++rhs_it)
+            {
+                if (*lhs_it != *rhs_it)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
     private:
 
         const char* m_ptr;        ///< Pointer to the binary metadata buffer
@@ -294,6 +325,7 @@ namespace sparrow
 
         friend key_value_view_iterator;
     };
+    
 
     /**
      * @brief Concept for input containers that can provide metadata pairs.
@@ -305,8 +337,9 @@ namespace sparrow
      * @tparam T Type to check for metadata container compatibility
      */
     template <typename T>
-    concept input_metadata_container = std::ranges::input_range<T>
-                                       && std::same_as<std::ranges::range_value_t<T>, metadata_pair>;
+    concept input_metadata_container = (std::ranges::input_range<T>
+                                        && std::same_as<std::ranges::range_value_t<T>, metadata_pair>)
+                                       || std::same_as<T, key_value_view>;
 
     /**
      * @brief Converts a container of key-value pairs to binary metadata format.
