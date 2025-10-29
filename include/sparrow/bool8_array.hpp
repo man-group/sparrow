@@ -37,12 +37,11 @@ namespace sparrow
      */
     using bool8_array = primitive_array<int8_t, simple_extension<"arrow.bool8">, bool>;
 
-    
+
 }
 
 #if defined(__cpp_lib_format)
 #    include <format>
-
 
 // Formatter specialization for bool8_array
 template <>
@@ -86,4 +85,3 @@ namespace sparrow
 }
 
 #endif
-

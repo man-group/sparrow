@@ -308,7 +308,10 @@ namespace sparrow
          * @post All values in the array are marked as valid (non-null)
          */
         template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(std::convertible_to<std::ranges::range_value_t<R>, T2> && !mpl::is_type_instance_of_v<R, u8_buffer>)
+            requires(
+                std::convertible_to<std::ranges::range_value_t<R>, T2>
+                && !mpl::is_type_instance_of_v<R, u8_buffer>
+            )
         [[nodiscard]] static auto create_proxy(
             R&& range,
             bool nullable = true,
@@ -469,7 +472,8 @@ namespace sparrow
     }
 
     template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
-    constexpr primitive_array_impl<T, Ext, T2>& primitive_array_impl<T, Ext, T2>::operator=(const primitive_array_impl& rhs)
+    constexpr primitive_array_impl<T, Ext, T2>&
+    primitive_array_impl<T, Ext, T2>::operator=(const primitive_array_impl& rhs)
     {
         base_type::operator=(rhs);
         access_class_type::reset_proxy(this->get_arrow_proxy());
@@ -484,7 +488,8 @@ namespace sparrow
     }
 
     template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
-    constexpr primitive_array_impl<T, Ext, T2>& primitive_array_impl<T, Ext, T2>::operator=(primitive_array_impl&& rhs) noexcept
+    constexpr primitive_array_impl<T, Ext, T2>&
+    primitive_array_impl<T, Ext, T2>::operator=(primitive_array_impl&& rhs) noexcept
     {
         base_type::operator=(std::move(rhs));
         access_class_type::reset_proxy(this->get_arrow_proxy());

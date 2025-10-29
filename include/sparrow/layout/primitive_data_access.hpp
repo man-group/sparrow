@@ -31,7 +31,7 @@ namespace sparrow
          * FOR INTERNAL USE ONLY
          * @tparam T Type of the data.
          */
-        template <trivial_copyable_type T, trivial_copyable_type T2=T>
+        template <trivial_copyable_type T, trivial_copyable_type T2 = T>
         class primitive_data_access
         {
         public:
@@ -197,12 +197,12 @@ namespace sparrow
 
         // /**
         //  * @brief Specialization for bool8_t using 8-bit storage.
-        //  * 
+        //  *
         //  * This specialization uses std::int8_t as the underlying storage type,
         //  * providing one byte per boolean value instead of bit-packing.
         //  * This is useful for compatibility with systems that store booleans
         //  * using one byte per value.
-        //  * 
+        //  *
         //  * Since bool8_t is trivially copyable, this specialization is actually
         //  * just an instantiation of the general primitive_data_access template
         //  * and uses the same implementation.
@@ -248,7 +248,8 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::value(size_t i) const -> inner_const_reference
+        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::value(size_t i) const
+            -> inner_const_reference
         {
             SPARROW_ASSERT_TRUE(i < get_proxy().length());
             return data()[i];
@@ -286,7 +287,8 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        constexpr auto primitive_data_access<T, T2>::insert_value(const_value_iterator pos, T2 value, size_t count)
+        constexpr auto
+        primitive_data_access<T, T2>::insert_value(const_value_iterator pos, T2 value, size_t count)
             -> value_iterator
         {
             const const_value_iterator value_cbegin{data()};
@@ -387,7 +389,8 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        [[nodiscard]] constexpr buffer_adaptor<T2, buffer<uint8_t>&> primitive_data_access<T, T2>::get_data_buffer()
+        [[nodiscard]] constexpr buffer_adaptor<T2, buffer<uint8_t>&>
+        primitive_data_access<T, T2>::get_data_buffer()
         {
             auto& buffers = get_proxy().get_array_private_data()->buffers();
             return make_buffer_adaptor<T2>(buffers[m_data_buffer_index]);
@@ -622,12 +625,12 @@ namespace sparrow
         /*************************************************
          * primitive_data_access<bool8_t> implementation *
          *************************************************/
-        
+
         // bool8_t specialization uses the same implementation as std::int8_t
         // since bool8_t is a simple wrapper around std::int8_t.
         // All methods are inherited from the general primitive_data_access template
         // by instantiating it with std::int8_t as the underlying storage type.
-        
+
         // Note: This specialization exists to provide a distinct type for 8-bit booleans
         // that can be used with primitive_array and to distinguish it from the bitset-based
         // bool specialization above. The actual implementation delegates to the int8_t
