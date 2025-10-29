@@ -96,7 +96,10 @@ namespace sparrow
     {
     public:
 
-        // using iterator_category = std::input_iterator_tag;
+    using iterator_category = std::forward_iterator_tag;
+
+        key_value_view_iterator()
+            : m_parent(nullptr), m_index(0), m_current(nullptr), m_key(), m_value() {}
         using value_type = metadata_pair_const_reference;
         using difference_type = std::ptrdiff_t;
         using pointer = value_type*;
@@ -287,37 +290,6 @@ namespace sparrow
 
         [[nodiscard]] SPARROW_API key_value_view_iterator find(std::string_view key) const;
 
-        /**
-         * @brief Equality comparison operator for key_value_view.
-         *
-         * Compares two key_value_view objects for equality by checking if they contain
-         * the same key-value pairs in the same order.
-         *
-         * @param lhs First view to compare
-         * @param rhs Second view to compare
-         * @return true if both views contain identical key-value pairs in the same order
-         *
-         * @post Returns true iff both views have the same size and all pairs are equal
-         */
-        friend bool operator==(const key_value_view& lhs, const key_value_view& rhs)
-        {
-            if (lhs.size() != rhs.size())
-            {
-                return false;
-            }
-            auto lhs_it = lhs.begin();
-            auto rhs_it = rhs.begin();
-            const auto lhs_end = lhs.end();
-            for (; lhs_it != lhs_end; ++lhs_it, ++rhs_it)
-            {
-                if (*lhs_it != *rhs_it)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
     private:
 
         const char* m_ptr;        ///< Pointer to the binary metadata buffer
@@ -325,6 +297,20 @@ namespace sparrow
 
         friend key_value_view_iterator;
     };
+
+    /**
+     * @brief Equality comparison operator for key_value_view (free function).
+     *
+     * Compares two key_value_view objects for equality by checking if they contain
+     * the same key-value pairs in the same order.
+     *
+     * @param lhs First view to compare
+     * @param rhs Second view to compare
+     * @return true if both views contain identical key-value pairs in the same order
+     *
+     * @post Returns true iff both views have the same size and all pairs are equal
+     */
+    SPARROW_API bool operator==(const sparrow::key_value_view& lhs, const sparrow::key_value_view& rhs);
 
     /**
      * @brief Concept for input containers that can provide metadata pairs.
