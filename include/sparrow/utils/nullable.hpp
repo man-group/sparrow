@@ -575,9 +575,10 @@ namespace sparrow
          * @post null_flag() refers to the provided flag reference
          */
         template <class U, class V>
-            requires(std::same_as<std::remove_cvref_t<U>, T> && std::same_as<std::remove_cvref_t<V>, B> 
-                     && std::is_const_v<std::remove_reference_t<U>> && std::is_const_v<std::remove_reference_t<V>>
-                     && not std::is_reference_v<T> && not std::is_reference_v<B>)
+            requires(std::same_as<std::remove_cvref_t<U>, T> && std::same_as<std::remove_cvref_t<V>, B>
+                     && std::is_const_v<std::remove_reference_t<U>>
+                     && std::is_const_v<std::remove_reference_t<V>> && not std::is_reference_v<T>
+                     && not std::is_reference_v<B>)
         constexpr nullable(U& value, V& null_flag)
             : m_value(value)
             , m_null_flag(null_flag)
@@ -614,8 +615,9 @@ namespace sparrow
          */
         template <class U, class V>
             requires(std::same_as<std::remove_cvref_t<U>, T> && std::same_as<std::remove_cvref_t<V>, B>
-                     && std::is_const_v<std::remove_reference_t<U>> && not std::is_const_v<std::remove_reference_t<V>>
-                     && not std::is_reference_v<T> && not std::is_reference_v<B>)
+                     && std::is_const_v<std::remove_reference_t<U>>
+                     && not std::is_const_v<std::remove_reference_t<V>> && not std::is_reference_v<T>
+                     && not std::is_reference_v<B>)
         constexpr nullable(U& value, V& null_flag)
             : m_value(value)
             , m_null_flag(null_flag)
