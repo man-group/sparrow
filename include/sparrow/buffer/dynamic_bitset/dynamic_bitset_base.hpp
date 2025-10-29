@@ -860,7 +860,9 @@ namespace sparrow
         if (full_blocks != buffer().size())
         {
             const size_t bits_count = m_size % s_bits_per_block;
-            const block_type mask = ~block_type(~block_type(0) << bits_count);
+            const block_type mask = static_cast<block_type>(
+                ~static_cast<block_type>(~static_cast<block_type>(0) << bits_count)
+            );
             const block_type block = buffer().data()[full_blocks] & mask;
             res += std::popcount(block);
         }
