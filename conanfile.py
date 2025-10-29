@@ -124,14 +124,14 @@ class SparrowRecipe(ConanFile):
         cmake.install()
 
     def package_info(self):
-        # Main sparrow
-        self.cpp_info.libs = ["sparrow"]
-        self.cpp_info.set_property("cmake_file_name", "sparrow")
-        self.cpp_info.set_property("cmake_target_name", "sparrow::sparrow")
+        # Main sparrow component
+        self.cpp_info.components["sparrow-lib"].libs = ["sparrow"]
+        self.cpp_info.components["sparrow-lib"].set_property("cmake_file_name", "sparrow")
+        self.cpp_info.components["sparrow-lib"].set_property("cmake_target_name", "sparrow::sparrow")
 
         if self.options.with_json_reader:
             # sparrow-json-reader component
             self.cpp_info.components["sparrow-json-reader"].libs = ["sparrow_json_reader"]
             self.cpp_info.components["sparrow-json-reader"].set_property("cmake_file_name", "sparrow-json-reader")
             self.cpp_info.components["sparrow-json-reader"].set_property("cmake_target_name", "sparrow::json_reader")
-            self.cpp_info.components["sparrow-json-reader"].requires = ["sparrow", "nlohmann_json::nlohmann_json"]
+            self.cpp_info.components["sparrow-json-reader"].requires = ["sparrow-lib", "nlohmann_json::nlohmann_json"]
