@@ -19,7 +19,7 @@ class SparrowRecipe(ConanFile):
     topics = ("arrow", "apache arrow", "columnar format", "dataframe")
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
-    exports_sources = "include/*", "LICENSE", "src/*", "cmake/*", "docs/*", "CMakeLists.txt", "sparrowConfig.cmake.in"
+    exports_sources = "include/*", "LICENSE", "src/*", "cmake/*", "docs/*", "CMakeLists.txt", "sparrowConfig.cmake.in", "json_reader/*"
     options = {
         "shared": [True, False],
         "fPIC": [True, False],
