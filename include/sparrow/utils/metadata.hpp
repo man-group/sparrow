@@ -96,10 +96,17 @@ namespace sparrow
     {
     public:
 
-    using iterator_category = std::forward_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
 
         key_value_view_iterator()
-            : m_parent(nullptr), m_index(0), m_current(nullptr), m_key(), m_value() {}
+            : m_parent(nullptr)
+            , m_index(0)
+            , m_current(nullptr)
+            , m_key()
+            , m_value()
+        {
+        }
+
         using value_type = metadata_pair_const_reference;
         using difference_type = std::ptrdiff_t;
         using pointer = value_type*;
