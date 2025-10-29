@@ -195,28 +195,8 @@ namespace sparrow
             bitset_adaptor m_adaptor;
         };
 
-        // /**
-        //  * @brief Specialization for bool8_t using 8-bit storage.
-        //  * 
-        //  * This specialization uses std::int8_t as the underlying storage type,
-        //  * providing one byte per boolean value instead of bit-packing.
-        //  * This is useful for compatibility with systems that store booleans
-        //  * using one byte per value.
-        //  * 
-        //  * Since bool8_t is trivially copyable, this specialization is actually
-        //  * just an instantiation of the general primitive_data_access template
-        //  * and uses the same implementation.
-        //  */
-        // template <>
-        // class primitive_data_access<int8_t, bool>
-        // {
-        // public:
-        //     using base_type = primitive_data_access<std::int8_t>;
-        //     using base_type::base_type;
-        // };
-
         /****************************************
-         * primitiva_data_access implementation *
+         * primitive_data_access implementation *
          ****************************************/
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
@@ -618,19 +598,5 @@ namespace sparrow
         {
             m_view = bitset_view(get_proxy().buffers()[m_data_buffer_index].data(), m_adaptor.size());
         }
-
-        /*************************************************
-         * primitive_data_access<bool8_t> implementation *
-         *************************************************/
-        
-        // bool8_t specialization uses the same implementation as std::int8_t
-        // since bool8_t is a simple wrapper around std::int8_t.
-        // All methods are inherited from the general primitive_data_access template
-        // by instantiating it with std::int8_t as the underlying storage type.
-        
-        // Note: This specialization exists to provide a distinct type for 8-bit booleans
-        // that can be used with primitive_array and to distinguish it from the bitset-based
-        // bool specialization above. The actual implementation delegates to the int8_t
-        // instantiation.
     }
 }
