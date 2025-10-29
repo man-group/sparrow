@@ -566,6 +566,63 @@ namespace sparrow
         }
 
         /**
+         * @brief Constructor from const value and const flag (for non-reference types only).
+         *
+         * @param value Const reference to value to store
+         * @param null_flag Const reference to flag to store
+         *
+         * @post get() refers to the provided value reference
+         * @post null_flag() refers to the provided flag reference
+         */
+        template <class U, class V>
+            requires(std::same_as<std::remove_cvref_t<U>, T> && std::same_as<std::remove_cvref_t<V>, B> 
+                     && std::is_const_v<std::remove_reference_t<U>> && std::is_const_v<std::remove_reference_t<V>>
+                     && not std::is_reference_v<T> && not std::is_reference_v<B>)
+        constexpr nullable(U& value, V& null_flag)
+            : m_value(value)
+            , m_null_flag(null_flag)
+        {
+        }
+
+        /**
+         * @brief Constructor from const value and rvalue flag (for non-reference types only).
+         *
+         * @param value Const reference to value to store
+         * @param null_flag Flag to move and store
+         *
+         * @post get() refers to the provided value reference
+         * @post null_flag() returns the moved flag
+         */
+        template <class U, class V>
+            requires(std::same_as<std::remove_cvref_t<U>, T> && std::same_as<std::remove_cvref_t<V>, B>
+                     && std::is_const_v<std::remove_reference_t<U>> && not std::is_lvalue_reference_v<V>
+                     && not std::is_reference_v<T> && not std::is_reference_v<B>)
+        constexpr nullable(U& value, V&& null_flag)
+            : m_value(value)
+            , m_null_flag(std::forward<V>(null_flag))
+        {
+        }
+
+        /**
+         * @brief Constructor from const value and non-const flag reference (for non-reference types only).
+         *
+         * @param value Const reference to value to store
+         * @param null_flag Reference to flag to store
+         *
+         * @post get() refers to the provided value reference
+         * @post null_flag() refers to the provided flag reference
+         */
+        template <class U, class V>
+            requires(std::same_as<std::remove_cvref_t<U>, T> && std::same_as<std::remove_cvref_t<V>, B>
+                     && std::is_const_v<std::remove_reference_t<U>> && not std::is_const_v<std::remove_reference_t<V>>
+                     && not std::is_reference_v<T> && not std::is_reference_v<B>)
+        constexpr nullable(U& value, V& null_flag)
+            : m_value(value)
+            , m_null_flag(null_flag)
+        {
+        }
+
+        /**
          * @brief Assignment from nullval_t, setting nullable to null state.
          *
          * @param nullval_t nullval sentinel value
