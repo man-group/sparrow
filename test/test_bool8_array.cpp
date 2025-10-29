@@ -120,7 +120,7 @@ namespace sparrow
                 }
             }
 
-            SUBCASE("from range of nullable<bool8_t>")
+            SUBCASE("from range of nullable<bool>")
             {
                 std::vector<nullable<bool>> values{
                     true,
@@ -206,7 +206,7 @@ namespace sparrow
             bool8_array ar2(ar);
             CHECK_EQ(ar, ar2);
 
-            std::vector<bool8_t> other_values = {bool8_t(false), bool8_t(false)};
+            std::vector<bool> other_values = {false, false};
             bool8_array ar3(other_values);
             CHECK_NE(ar, ar3);
             ar3 = ar;
@@ -215,14 +215,14 @@ namespace sparrow
 
         TEST_CASE("move")
         {
-            std::vector<bool8_t> values = {bool8_t(true), bool8_t(false), bool8_t(true), bool8_t(false)};
+            std::vector<bool> values = {true, false, true, false};
             bool8_array ar(values);
             bool8_array ar2(ar);
 
             bool8_array ar3(std::move(ar));
             CHECK_EQ(ar2, ar3);
 
-            std::vector<bool8_t> other_values = {bool8_t(false), bool8_t(false)};
+            std::vector<bool> other_values = {false, false};
             bool8_array ar4(other_values);
             CHECK_NE(ar2, ar4);
             ar4 = std::move(ar2);
@@ -231,7 +231,7 @@ namespace sparrow
 
         TEST_CASE("iterators")
         {
-            std::vector<bool8_t> values = {bool8_t(true), bool8_t(false), bool8_t(true), bool8_t(false), bool8_t(true)};
+            std::vector<bool> values = {true, false, true, false, true};
             bool8_array ar(values);
 
             SUBCASE("iterator")
@@ -282,11 +282,11 @@ namespace sparrow
 
         TEST_CASE("resize")
         {
-            std::vector<bool8_t> values = {bool8_t(true), bool8_t(false), bool8_t(true)};
+            std::vector<bool> values = {true, false, true};
             bool8_array ar(values);
 
             const size_t new_size = values.size() + 3;
-            const nullable<bool8_t> fill_value = bool8_t(false);
+            const nullable<bool> fill_value = false;
             ar.resize(new_size, fill_value);
             
             REQUIRE_EQ(ar.size(), new_size);
@@ -298,14 +298,14 @@ namespace sparrow
 
         TEST_CASE("insert")
         {
-            std::vector<bool8_t> values = {bool8_t(true), bool8_t(false), bool8_t(true), bool8_t(false)};
+            std::vector<bool> values = {true, false, true, false};
             bool8_array ar(values);
 
             SUBCASE("with pos and value")
             {
                 SUBCASE("at the beginning")
                 {
-                    const nullable<bool8_t> new_value_nullable = bool8_t(true);
+                    const nullable<bool> new_value_nullable = true;
                     const auto pos = ar.cbegin();
                     const auto iter = ar.insert(pos, new_value_nullable);
                     CHECK_EQ(iter, ar.begin());
@@ -318,7 +318,7 @@ namespace sparrow
 
                 SUBCASE("in the middle")
                 {
-                    const nullable<bool8_t> new_value_nullable = bool8_t(true);
+                    const nullable<bool> new_value_nullable = true;
                     const size_t idx = ar.size() / 2;
                     const auto pos = sparrow::next(ar.cbegin(), idx);
                     const auto iter = ar.insert(pos, new_value_nullable);
@@ -336,7 +336,7 @@ namespace sparrow
 
                 SUBCASE("at the end")
                 {
-                    const nullable<bool8_t> new_value_nullable = bool8_t(true);
+                    const nullable<bool> new_value_nullable = true;
                     const auto pos = ar.cend();
                     const auto distance = std::distance(ar.cbegin(), ar.cend());
                     const auto iter = ar.insert(pos, new_value_nullable);
@@ -352,7 +352,7 @@ namespace sparrow
             SUBCASE("with pos, count and value")
             {
                 const size_t count = 3;
-                const nullable<bool8_t> new_value_nullable = bool8_t(true);
+                const nullable<bool> new_value_nullable = true;
 
                 SUBCASE("at the beginning")
                 {
@@ -372,10 +372,10 @@ namespace sparrow
 
             SUBCASE("with pos and range")
             {
-                const std::vector<nullable<bool8_t>> new_values{
-                    bool8_t(true),
-                    bool8_t(false),
-                    bool8_t(true)
+                const std::vector<nullable<bool>> new_values{
+                    true,
+                    false,
+                    true
                 };
 
                 SUBCASE("at the beginning")
@@ -397,7 +397,7 @@ namespace sparrow
 
         TEST_CASE("erase")
         {
-            std::vector<bool8_t> values = {bool8_t(true), bool8_t(false), bool8_t(true), bool8_t(false), bool8_t(true)};
+            std::vector<bool> values = {true, false, true, false, true};
             bool8_array ar(values);
 
             SUBCASE("with pos")
@@ -461,12 +461,12 @@ namespace sparrow
 
         TEST_CASE("push_back and pop_back")
         {
-            std::vector<bool8_t> values = {bool8_t(true), bool8_t(false), bool8_t(true)};
+            std::vector<bool> values = {true, false, true};
             bool8_array ar(values);
 
             SUBCASE("push_back")
             {
-                const nullable<bool8_t> new_value = bool8_t(false);
+                const nullable<bool> new_value = false;
                 ar.push_back(new_value);
                 REQUIRE_EQ(ar.size(), values.size() + 1);
                 for (size_t i = 0; i < values.size(); ++i)
@@ -489,7 +489,7 @@ namespace sparrow
 
         TEST_CASE("slice")
         {
-            std::vector<bool8_t> values = {bool8_t(true), bool8_t(false), bool8_t(true), bool8_t(false), bool8_t(true)};
+            std::vector<bool> values = {true, false, true, false, true};
             bool8_array ar(values);
 
             SUBCASE("slice in the middle")
@@ -511,7 +511,7 @@ namespace sparrow
         {
             SUBCASE("initial offset is 0")
             {
-                std::vector<bool8_t> values = {bool8_t(true), bool8_t(false), bool8_t(true)};
+                std::vector<bool> values = {true, false, true};
                 bool8_array ar(values);
                 CHECK_EQ(ar.offset(), 0);
                 CHECK_EQ(ar.null_count(), 0);
@@ -522,7 +522,7 @@ namespace sparrow
             {
                 constexpr size_t slice_start = 2;
                 constexpr size_t slice_end = 5;
-                std::vector<bool8_t> values = {bool8_t(true), bool8_t(false), bool8_t(true), bool8_t(false), bool8_t(true), bool8_t(false)};
+                std::vector<bool> values = {true, false, true, false, true, false};
                 bool8_array ar(values);
 
                 auto sliced = ar.slice(slice_start, slice_end);
@@ -532,12 +532,12 @@ namespace sparrow
 
             SUBCASE("null_count with nulls")
             {
-                std::vector<nullable<bool8_t>> values{
-                    bool8_t(true),
+                std::vector<nullable<bool>> values{
+                    true,
                     nullval,
-                    bool8_t(false),
+                    false,
                     nullval,
-                    bool8_t(true)
+                    true
                 };
                 bool8_array ar(values);
 
@@ -549,12 +549,12 @@ namespace sparrow
 
         TEST_CASE("zero_null_values")
         {
-            std::vector<nullable<bool8_t>> values{
-                bool8_t(true),
+            std::vector<nullable<bool>> values{
+                true,
                 nullval,
-                bool8_t(false),
+                false,
                 nullval,
-                bool8_t(true)
+                true
             };
             bool8_array ar(values);
 
@@ -576,12 +576,12 @@ namespace sparrow
 #if defined(__cpp_lib_format)
         TEST_CASE("formatting")
         {
-            std::vector<nullable<bool8_t>> values{
-                bool8_t(true),
+            std::vector<nullable<bool>> values{
+                true,
                 nullval,
-                bool8_t(false),
+                false,
                 nullval,
-                bool8_t(true)
+                true
             };
             bool8_array ar(values);
             const std::string formatted = std::format("{}", ar);
