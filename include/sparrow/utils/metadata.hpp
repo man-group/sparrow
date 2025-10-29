@@ -325,7 +325,6 @@ namespace sparrow
 
         friend key_value_view_iterator;
     };
-    
 
     /**
      * @brief Concept for input containers that can provide metadata pairs.
