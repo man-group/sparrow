@@ -134,4 +134,4 @@ class SparrowRecipe(ConanFile):
             self.cpp_info.components["sparrow-json-reader"].libs = ["sparrow_json_reader"]
             self.cpp_info.components["sparrow-json-reader"].set_property("cmake_file_name", "sparrow-json-reader")
             self.cpp_info.components["sparrow-json-reader"].set_property("cmake_target_name", "sparrow::json_reader")
-            self.cpp_info.components["sparrow-json-reader"].requires = ["sparrow", "nlohmann_json"]
+            self.cpp_info.components["sparrow-json-reader"].requires = ["sparrow", "nlohmann_json::nlohmann_json"]
