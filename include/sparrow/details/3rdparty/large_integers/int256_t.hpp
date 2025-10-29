@@ -412,16 +412,14 @@ public:
     explicit operator std::int8_t() const
     {
         return (*this < 0)
-            ? -static_cast<std::int8_t>(
-                  (low - 1) ^ prt::numeric_limits<uint128_t>::max())
+            ? static_cast<std::int8_t>(-(static_cast<int64_t>((low - 1) ^ prt::numeric_limits<uint128_t>::max())))
             : static_cast<std::int8_t>(low);
     }
 
     explicit operator std::int16_t() const
     {
         return (*this < 0)
-            ? -static_cast<std::int16_t>(
-                  (low - 1) ^ prt::numeric_limits<uint128_t>::max())
+            ? static_cast<std::int16_t>(-(static_cast<int64_t>((low - 1) ^ prt::numeric_limits<uint128_t>::max())))
             : static_cast<std::int16_t>(low);
     }
 
@@ -488,7 +486,7 @@ private:
 
     static int256_t min_value()
     {
-        return int256_t(0, prt::numeric_limits<int128_t>::min());
+    return int256_t(0, static_cast<uint128_t>(prt::numeric_limits<int128_t>::min()));
     }
   
     static int256_t max_value()
@@ -581,12 +579,12 @@ private:
             for (int i = find_most_significant_bit(); i >= 0 && i <= 256; i--)
             {
                 remainder <<= 1;
-                remainder.set_bit(0, get_bit(i));
+                remainder.set_bit(static_cast<std::size_t>(0), get_bit(static_cast<std::size_t>(i)));
 
                 if (remainder >= other)
                 {
                     remainder -= other;
-                    quotient.set_bit(i, true);
+                    quotient.set_bit(static_cast<std::size_t>(i), true);
                 }
             }
             return { quotient, remainder };
