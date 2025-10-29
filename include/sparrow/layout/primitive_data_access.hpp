@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
@@ -31,14 +33,14 @@ namespace sparrow
          * FOR INTERNAL USE ONLY
          * @tparam T Type of the data.
          */
-        template <trivial_copyable_type T, trivial_copyable_type T2=T>
+        template <trivial_copyable_type T, trivial_copyable_type T2 = T>
         class primitive_data_access
         {
         public:
 
             using inner_value_type = T2;
             using inner_reference = T2&;
-            using inner_const_reference = const T2&;
+            using inner_const_reference = std::conditional_t<std::is_same_v<T2, bool>, T2, const T2&>;
             using inner_pointer = inner_value_type*;
             using inner_const_pointer = const inner_value_type*;
 
@@ -228,7 +230,8 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::value(size_t i) const -> inner_const_reference
+        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::value(size_t i) const
+            -> inner_const_reference
         {
             SPARROW_ASSERT_TRUE(i < get_proxy().length());
             return data()[i];
@@ -266,7 +269,8 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        constexpr auto primitive_data_access<T, T2>::insert_value(const_value_iterator pos, T2 value, size_t count)
+        constexpr auto
+        primitive_data_access<T, T2>::insert_value(const_value_iterator pos, T2 value, size_t count)
             -> value_iterator
         {
             const const_value_iterator value_cbegin{data()};
@@ -367,7 +371,8 @@ namespace sparrow
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
-        [[nodiscard]] constexpr buffer_adaptor<T2, buffer<uint8_t>&> primitive_data_access<T, T2>::get_data_buffer()
+        [[nodiscard]] constexpr buffer_adaptor<T2, buffer<uint8_t>&>
+        primitive_data_access<T, T2>::get_data_buffer()
         {
             auto& buffers = get_proxy().get_array_private_data()->buffers();
             return make_buffer_adaptor<T2>(buffers[m_data_buffer_index]);
