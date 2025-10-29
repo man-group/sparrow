@@ -43,7 +43,7 @@ class SparrowRecipe(ConanFile):
         if self.options.get_safe("use_date_polyfill"):
             self.requires("date/3.0.3")
         if self.options.get_safe("with_json_reader"):
-            self.requires("nlohmann_json/3.12.0")
+            self.requires("nlohmann_json/3.12.0", transitive_headers=True)
         elif self.options.get_safe("build_tests"):
             self.test_requires("nlohmann_json/3.12.0")
 
