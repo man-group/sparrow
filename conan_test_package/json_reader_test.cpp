@@ -45,7 +45,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         nlohmann::json json_data = nlohmann::json::parse(json_str);
 
         // Build a record batch from the JSON
-        auto record_batch = sparrow::json_reader::build_record_batch_from_json(json_data, 1);
+        auto record_batch = sparrow::json_reader::build_record_batch_from_json(json_data, 0);
         std::cout << "Successfully parsed JSON to record batch with " << record_batch.nb_columns()
                   << " columns\n";
 
