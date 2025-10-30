@@ -31,30 +31,30 @@ namespace sparrow
         /**
          * @class primitive_data_access
          * @brief Provides access to primitive data stored in Arrow format buffers.
-         * 
+         *
          * This class template manages access to primitive data types stored in an Arrow proxy's
          * data buffer. It provides a type-safe interface for accessing, modifying, and iterating
          * over the underlying buffer data.
-         * 
+         *
          * The class is designed to be used as a private member of array classes and enforces
          * strict ownership semantics by deleting copy and move operations. This ensures that
          * array classes explicitly manage their Arrow proxy relationships through constructor
          * calls and reset_proxy() method.
-         * 
+         *
          * @tparam T The outer value type (trivial copyable type)
          * @tparam T2 The inner value type stored in the buffer (trivial copyable type, defaults to T)
-         * 
+         *
          * @note This class holds a pointer to an arrow_proxy and is not copyable or movable.
          *       Array classes using this must explicitly call the constructor with an arrow_proxy
          *       or use reset_proxy() for assignment operations.
-         * 
+         *
          * Key features:
          * - Direct access to underlying buffer data via data() methods
          * - Element access through value() methods with bounds checking capabilities
          * - Iterator support for range-based operations
          * - Buffer manipulation operations (resize, insert, erase)
          * - Static factory methods for buffer creation
-         * 
+         *
          * @see arrow_proxy
          * @see pointer_iterator
          * @see buffer_adaptor
