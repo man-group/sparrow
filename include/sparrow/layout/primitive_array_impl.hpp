@@ -68,20 +68,33 @@ namespace sparrow
     }
 
     /**
-     * @brief Array implementation for primitive (trivially copyable) types.
+     * @brief A primitive array implementation storing trivial copyable types with Arrow compatibility.
      *
-     * This class provides a concrete implementation of an Arrow-compatible array
-     * for primitive types such as integers, floating-point numbers, and other
-     * trivially copyable types. It manages both the data buffer and validity bitmap.
+     * This class provides a concrete implementation of an array for storing primitive (trivially copyable)
+     * types following the Arrow columnar format specification. It supports nullable values through an
+     * optional validity bitmap and integrates with the Arrow C data interface.
      *
      * Related Apache Arrow description and specification:
      * - https://arrow.apache.org/docs/dev/format/Intro.html#fixed-size-primitive-layout
      * - https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
      *
-     * @tparam T The primitive type to store. Must satisfy trivial_copyable_type concept.
      *
-     * @pre T must be trivially copyable
-     * @post Array maintains Arrow array format compatibility
+     * @tparam T The value type stored in the array (must be trivially copyable)
+     * @tparam Ext Extension type for additional functionality
+     * @tparam T2 Internal storage type for values (must be trivially copyable, defaults to T)
+     *
+     * The class inherits from:
+     * - mutable_array_bitmap_base: Provides bitmap operations for tracking null values
+     * - primitive_data_access: Provides direct access to the underlying data buffer
+     * - Ext: Extension point for additional customization
+     *
+     * @pre T and T2 must satisfy trivial_copyable_type concept
+     * @post Array maintains Arrow C data interface compatibility
+     * @post Array supports efficient value access and modification operations
+     *
+     * @note This is a final class and cannot be further inherited
+     * @note The array uses a bitmap to track null values when nullable
+     * @note Memory layout follows Apache Arrow primitive array specification
      *
      * @example
      * ```cpp
