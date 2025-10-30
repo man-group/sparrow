@@ -16,6 +16,7 @@
 
 #include <type_traits>
 
+#include "sparrow/bool8_array.hpp"
 #include "sparrow/date_array.hpp"
 #include "sparrow/decimal_array.hpp"
 #include "sparrow/dictionary_encoded_array.hpp"
@@ -45,6 +46,37 @@ namespace sparrow
 {
     template <class F>
     using visit_result_t = std::invoke_result_t<F, null_array>;
+
+    // Helper function to check for extension type in metadata
+    namespace detail
+    {
+        inline bool has_extension_name(const array_wrapper& ar, std::string_view extension_name)
+        {
+            const std::optional<key_value_view> metadata = ar.get_arrow_proxy().metadata();
+            if (metadata.has_value())
+            {
+                const auto it = metadata->find("ARROW:extension:name");
+                if (it != metadata->end())
+                {
+                    return (*it).second == extension_name;
+                }
+            }
+            return false;
+        }
+
+        template <class F, class WithTimezoneArray, class WithoutTimezoneArray>
+        visit_result_t<F> handle_timestamp_case(F&& func, const array_wrapper& ar)
+        {
+            if (get_timezone(ar.get_arrow_proxy()) == nullptr)
+            {
+                return std::forward<F>(func)(unwrap_array<WithoutTimezoneArray>(ar));
+            }
+            else
+            {
+                return std::forward<F>(func)(unwrap_array<WithTimezoneArray>(ar));
+            }
+        }
+    }
 
     template <class F>
     [[nodiscard]] visit_result_t<F> visit(F&& func, const array_wrapper& ar)
@@ -84,6 +116,10 @@ namespace sparrow
                 case data_type::UINT8:
                     return func(unwrap_array<primitive_array<std::uint8_t>>(ar));
                 case data_type::INT8:
+                    if (detail::has_extension_name(ar, bool8_array::EXTENSION_NAME))
+                    {
+                        return func(unwrap_array<bool8_array>(ar));
+                    }
                     return func(unwrap_array<primitive_array<std::int8_t>>(ar));
                 case data_type::UINT16:
                     return func(unwrap_array<primitive_array<std::uint16_t>>(ar));
@@ -145,19 +181,9 @@ namespace sparrow
                     return func(unwrap_array<decimal_256_array>(ar));
                 case data_type::FIXED_WIDTH_BINARY:
                 {
-                    const std::optional<key_value_view> metadata = ar.get_arrow_proxy().metadata();  // ensure
-                                                                                                     // uuid_array
-                                                                                                     // is
-                                                                                                     // handled
-                                                                                                     // in
-                                                                                                     // uuid_array.cpp
-                    if (metadata.has_value())
+                    if (detail::has_extension_name(ar, uuid_array::EXTENSION_NAME))
                     {
-                        const auto it = metadata->find("ARROW:extension:name");
-                        if (it != metadata->end())
-                        {
-                            return func(unwrap_array<uuid_array>(ar));
-                        }
+                        return func(unwrap_array<uuid_array>(ar));
                     }
                     return func(unwrap_array<fixed_width_binary_array>(ar));
                 }
@@ -166,41 +192,25 @@ namespace sparrow
                 case data_type::DATE_MILLISECONDS:
                     return func(unwrap_array<date_milliseconds_array>(ar));
                 case data_type::TIMESTAMP_SECONDS:
-                    if (get_timezone(ar.get_arrow_proxy()) == nullptr)
-                    {
-                        return func(unwrap_array<timestamp_without_timezone_seconds_array>(ar));
-                    }
-                    else
-                    {
-                        return func(unwrap_array<timestamp_seconds_array>(ar));
-                    }
+                    return detail::handle_timestamp_case<F, timestamp_seconds_array, timestamp_without_timezone_seconds_array>(
+                        std::forward<F>(func),
+                        ar
+                    );
                 case data_type::TIMESTAMP_MILLISECONDS:
-                    if (get_timezone(ar.get_arrow_proxy()) == nullptr)
-                    {
-                        return func(unwrap_array<timestamp_without_timezone_milliseconds_array>(ar));
-                    }
-                    else
-                    {
-                        return func(unwrap_array<timestamp_milliseconds_array>(ar));
-                    }
+                    return detail::handle_timestamp_case<
+                        F,
+                        timestamp_milliseconds_array,
+                        timestamp_without_timezone_milliseconds_array>(std::forward<F>(func), ar);
                 case data_type::TIMESTAMP_MICROSECONDS:
-                    if (get_timezone(ar.get_arrow_proxy()) == nullptr)
-                    {
-                        return func(unwrap_array<timestamp_without_timezone_microseconds_array>(ar));
-                    }
-                    else
-                    {
-                        return func(unwrap_array<timestamp_microseconds_array>(ar));
-                    }
+                    return detail::handle_timestamp_case<
+                        F,
+                        timestamp_microseconds_array,
+                        timestamp_without_timezone_microseconds_array>(std::forward<F>(func), ar);
                 case data_type::TIMESTAMP_NANOSECONDS:
-                    if (get_timezone(ar.get_arrow_proxy()) == nullptr)
-                    {
-                        return func(unwrap_array<timestamp_without_timezone_nanoseconds_array>(ar));
-                    }
-                    else
-                    {
-                        return func(unwrap_array<timestamp_nanoseconds_array>(ar));
-                    }
+                    return detail::handle_timestamp_case<F, timestamp_nanoseconds_array, timestamp_without_timezone_nanoseconds_array>(
+                        std::forward<F>(func),
+                        ar
+                    );
                 case data_type::TIME_SECONDS:
                     return func(unwrap_array<time_seconds_array>(ar));
                 case data_type::TIME_MILLISECONDS:

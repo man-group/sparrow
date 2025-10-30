@@ -22,20 +22,21 @@
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/primitive_data_access.hpp"
 #include "sparrow/u8_buffer.hpp"
+#include "sparrow/utils/extension.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
-    template <trivial_copyable_type T>
+    template <trivial_copyable_type T, typename Ext = empty_extension, trivial_copyable_type T2 = T>
     class primitive_array_impl;
 
-    template <trivial_copyable_type T>
-    struct array_inner_types<primitive_array_impl<T>> : array_inner_types_base
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
+    struct array_inner_types<primitive_array_impl<T, Ext, T2>> : array_inner_types_base
     {
-        using array_type = primitive_array_impl<T>;
+        using array_type = primitive_array_impl<T, Ext, T2>;
 
-        using data_access_type = details::primitive_data_access<T>;
+        using data_access_type = details::primitive_data_access<T, T2>;
         using inner_value_type = typename data_access_type::inner_value_type;
         using inner_reference = typename data_access_type::inner_reference;
         using inner_const_reference = typename data_access_type::inner_const_reference;
@@ -56,8 +57,8 @@ namespace sparrow
         template <class T>
         struct primitive_data_traits;
 
-        template <trivial_copyable_type T>
-        struct get_data_type_from_array<primitive_array_impl<T>>
+        template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
+        struct get_data_type_from_array<primitive_array_impl<T, Ext, T2>>
         {
             [[nodiscard]] static constexpr sparrow::data_type get()
             {
@@ -67,20 +68,33 @@ namespace sparrow
     }
 
     /**
-     * @brief Array implementation for primitive (trivially copyable) types.
+     * @brief A primitive array implementation storing trivial copyable types with Arrow compatibility.
      *
-     * This class provides a concrete implementation of an Arrow-compatible array
-     * for primitive types such as integers, floating-point numbers, and other
-     * trivially copyable types. It manages both the data buffer and validity bitmap.
+     * This class provides a concrete implementation of an array for storing primitive (trivially copyable)
+     * types following the Arrow columnar format specification. It supports nullable values through an
+     * optional validity bitmap and integrates with the Arrow C data interface.
      *
      * Related Apache Arrow description and specification:
      * - https://arrow.apache.org/docs/dev/format/Intro.html#fixed-size-primitive-layout
      * - https://arrow.apache.org/docs/dev/format/Columnar.html#fixed-size-primitive-layout
      *
-     * @tparam T The primitive type to store. Must satisfy trivial_copyable_type concept.
      *
-     * @pre T must be trivially copyable
-     * @post Array maintains Arrow array format compatibility
+     * @tparam T The value type stored in the array (must be trivially copyable)
+     * @tparam Ext Extension type for additional functionality
+     * @tparam T2 Internal storage type for values (must be trivially copyable, defaults to T)
+     *
+     * The class inherits from:
+     * - mutable_array_bitmap_base: Provides bitmap operations for tracking null values
+     * - primitive_data_access: Provides direct access to the underlying data buffer
+     * - Ext: Extension point for additional customization
+     *
+     * @pre T and T2 must satisfy trivial_copyable_type concept
+     * @post Array maintains Arrow C data interface compatibility
+     * @post Array supports efficient value access and modification operations
+     *
+     * @note This is a final class and cannot be further inherited
+     * @note The array uses a bitmap to track null values when nullable
+     * @note Memory layout follows Apache Arrow primitive array specification
      *
      * @example
      * ```cpp
@@ -93,15 +107,16 @@ namespace sparrow
      * primitive_array_impl<int> arr_with_nulls(values, validity);
      * ```
      */
-    template <trivial_copyable_type T>
-    class primitive_array_impl final : public mutable_array_bitmap_base<primitive_array_impl<T>>,
-                                       private details::primitive_data_access<T>
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
+    class primitive_array_impl final : public mutable_array_bitmap_base<primitive_array_impl<T, Ext, T2>>,
+                                       private details::primitive_data_access<T, T2>,
+                                       public Ext
     {
     public:
 
-        using self_type = primitive_array_impl<T>;
-        using base_type = mutable_array_bitmap_base<primitive_array_impl<T>>;
-        using access_class_type = details::primitive_data_access<T>;
+        using self_type = primitive_array_impl<T, Ext, T2>;
+        using base_type = mutable_array_bitmap_base<primitive_array_impl<T, Ext, T2>>;
+        using access_class_type = details::primitive_data_access<T, T2>;
         using size_type = std::size_t;
 
         using inner_types = array_inner_types<self_type>;
@@ -148,7 +163,7 @@ namespace sparrow
          * @post Validity bitmap is set according to the provided bitmap or defaults to all valid
          */
         template <class... Args>
-            requires(mpl::excludes_copy_and_move_ctor_v<primitive_array_impl<T>, Args...>)
+            requires(mpl::excludes_copy_and_move_ctor_v<primitive_array_impl<T, Ext, T2>, Args...>)
         explicit primitive_array_impl(Args&&... args)
             : base_type(create_proxy(std::forward<Args>(args)...))
             , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
@@ -251,7 +266,7 @@ namespace sparrow
             validity_bitmap_input VALIDITY_RANGE = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
-            u8_buffer<T>&& data_buffer,
+            u8_buffer<T2>&& data_buffer,
             size_t size,
             VALIDITY_RANGE&& bitmaps,
             std::optional<std::string_view> name = std::nullopt,
@@ -280,7 +295,7 @@ namespace sparrow
             validity_bitmap_input VALIDITY_RANGE = validity_bitmap,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static auto create_proxy(
-            u8_buffer<T>&& data_buffer,
+            u8_buffer<T2>&& data_buffer,
             size_t size,
             bool nullable = true,
             std::optional<std::string_view> name = std::nullopt,
@@ -306,7 +321,10 @@ namespace sparrow
          * @post All values in the array are marked as valid (non-null)
          */
         template <std::ranges::input_range R, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(std::convertible_to<std::ranges::range_value_t<R>, T> && !mpl::is_type_instance_of_v<R, u8_buffer>)
+            requires(
+                std::convertible_to<std::ranges::range_value_t<R>, T2>
+                && !mpl::is_type_instance_of_v<R, u8_buffer>
+            )
         [[nodiscard]] static auto create_proxy(
             R&& range,
             bool nullable = true,
@@ -328,12 +346,12 @@ namespace sparrow
          *
          * @pre n must be a valid size (typically n >= 0)
          * @pre value must be convertible to type T
-         * @post Returned proxy contains exactly n elements, all equal to static_cast<T>(value)
+         * @post Returned proxy contains exactly n elements, all equal to static_cast<T2>(value)
          * @post If nullable is true, array supports null values (though none are initially set)
          * @post All values in the array are marked as valid (non-null)
          */
         template <class U, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires std::convertible_to<U, T>
+            requires std::convertible_to<U, T2>
         [[nodiscard]] static arrow_proxy create_proxy(
             size_type n,
             const U& value = U{},
@@ -367,7 +385,7 @@ namespace sparrow
             std::ranges::input_range R,
             validity_bitmap_input R2,
             input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires(std::convertible_to<std::ranges::range_value_t<R>, T>)
+            requires(std::convertible_to<std::ranges::range_value_t<R>, T2>)
         [[nodiscard]] static arrow_proxy create_proxy(
             R&&,
             R2&&,
@@ -378,22 +396,22 @@ namespace sparrow
         /**
          * @brief Creates an Arrow proxy from a range of nullable values.
          *
-         * @tparam NULLABLE_RANGE Type of input range containing nullable<T> values
+         * @tparam NULLABLE_RANGE Type of input range containing nullable<T2> values
          * @tparam METADATA_RANGE Type of metadata container
-         * @param nullable_range Input range of nullable<T> values
+         * @param nullable_range Input range of nullable<T2> values
          * @param name Optional name for the array
          * @param metadata Optional metadata for the array
          * @return Arrow proxy containing the array data and schema
          *
-         * @pre NULLABLE_RANGE must be an input range of exactly nullable<T> values
+         * @pre NULLABLE_RANGE must be an input range of exactly nullable<T2> values
          * @pre nullable_range must be valid and accessible
          * @post Returned proxy contains the unwrapped values from nullable_range
-         * @post Validity bitmap reflects the has_value() status of each nullable<T>
+         * @post Validity bitmap reflects the has_value() status of each nullable<T2>
          * @post Array supports null values (nullable = true)
-         * @post Elements where nullable<T>.has_value() == false are marked as null
+         * @post Elements where nullable<T2>.has_value() == false are marked as null
          */
         template <std::ranges::input_range NULLABLE_RANGE, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-            requires std::is_same_v<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T>>
+            requires std::is_same_v<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T2>>
         [[nodiscard]] static arrow_proxy create_proxy(
             NULLABLE_RANGE&&,
             std::optional<std::string_view> name = std::nullopt,
@@ -420,7 +438,7 @@ namespace sparrow
          */
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         [[nodiscard]] static arrow_proxy create_proxy_impl(
-            u8_buffer<T>&& data_buffer,
+            u8_buffer<T2>&& data_buffer,
             size_t size,
             std::optional<validity_bitmap>&& bitmap,
             std::optional<std::string_view> name = std::nullopt,
@@ -452,47 +470,49 @@ namespace sparrow
      * primitive_array_impl implementation *
      ********************************************************/
 
-    template <trivial_copyable_type T>
-    primitive_array_impl<T>::primitive_array_impl(arrow_proxy proxy_param)
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
+    primitive_array_impl<T, Ext, T2>::primitive_array_impl(arrow_proxy proxy_param)
         : base_type(std::move(proxy_param))
         , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
     }
 
-    template <trivial_copyable_type T>
-    constexpr primitive_array_impl<T>::primitive_array_impl(const primitive_array_impl& rhs)
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
+    constexpr primitive_array_impl<T, Ext, T2>::primitive_array_impl(const primitive_array_impl& rhs)
         : base_type(rhs)
         , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
     }
 
-    template <trivial_copyable_type T>
-    constexpr primitive_array_impl<T>& primitive_array_impl<T>::operator=(const primitive_array_impl& rhs)
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
+    constexpr primitive_array_impl<T, Ext, T2>&
+    primitive_array_impl<T, Ext, T2>::operator=(const primitive_array_impl& rhs)
     {
         base_type::operator=(rhs);
         access_class_type::reset_proxy(this->get_arrow_proxy());
         return *this;
     }
 
-    template <trivial_copyable_type T>
-    constexpr primitive_array_impl<T>::primitive_array_impl(primitive_array_impl&& rhs) noexcept
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
+    constexpr primitive_array_impl<T, Ext, T2>::primitive_array_impl(primitive_array_impl&& rhs) noexcept
         : base_type(std::move(rhs))
         , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
     }
 
-    template <trivial_copyable_type T>
-    constexpr primitive_array_impl<T>& primitive_array_impl<T>::operator=(primitive_array_impl&& rhs) noexcept
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
+    constexpr primitive_array_impl<T, Ext, T2>&
+    primitive_array_impl<T, Ext, T2>::operator=(primitive_array_impl&& rhs) noexcept
     {
         base_type::operator=(std::move(rhs));
         access_class_type::reset_proxy(this->get_arrow_proxy());
         return *this;
     }
 
-    template <trivial_copyable_type T>
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
     template <validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
-    auto primitive_array_impl<T>::create_proxy(
-        u8_buffer<T>&& data_buffer,
+    auto primitive_array_impl<T, Ext, T2>::create_proxy(
+        u8_buffer<T2>&& data_buffer,
         size_t size,
         VALIDITY_RANGE&& bitmap_input,
         std::optional<std::string_view> name,
@@ -500,7 +520,7 @@ namespace sparrow
     ) -> arrow_proxy
     {
         return create_proxy_impl(
-            std::forward<u8_buffer<T>>(data_buffer),
+            std::forward<u8_buffer<T2>>(data_buffer),
             size,
             ensure_validity_bitmap(size, std::forward<VALIDITY_RANGE>(bitmap_input)),
             std::move(name),
@@ -508,10 +528,10 @@ namespace sparrow
         );
     }
 
-    template <trivial_copyable_type T>
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
     template <std::ranges::input_range VALUE_RANGE, validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
-        requires(std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, T>)
-    arrow_proxy primitive_array_impl<T>::create_proxy(
+        requires(std::convertible_to<std::ranges::range_value_t<VALUE_RANGE>, T2>)
+    arrow_proxy primitive_array_impl<T, Ext, T2>::create_proxy(
         VALUE_RANGE&& values,
         VALIDITY_RANGE&& validity_input,
         std::optional<std::string_view> name,
@@ -519,7 +539,7 @@ namespace sparrow
     )
     {
         auto size = static_cast<size_t>(std::ranges::distance(values));
-        u8_buffer<T> data_buffer = details::primitive_data_access<T>::make_data_buffer(
+        u8_buffer<T2> data_buffer = details::primitive_data_access<T, T2>::make_data_buffer(
             std::forward<VALUE_RANGE>(values)
         );
         return create_proxy(
@@ -531,10 +551,10 @@ namespace sparrow
         );
     }
 
-    template <trivial_copyable_type T>
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
     template <class U, input_metadata_container METADATA_RANGE>
-        requires std::convertible_to<U, T>
-    arrow_proxy primitive_array_impl<T>::create_proxy(
+        requires std::convertible_to<U, T2>
+    arrow_proxy primitive_array_impl<T, Ext, T2>::create_proxy(
         size_type n,
         const U& value,
         bool nullable,
@@ -543,7 +563,7 @@ namespace sparrow
     )
     {
         // create data_buffer
-        u8_buffer<T> data_buffer(n, value);
+        u8_buffer<T2> data_buffer(n, value);
         return create_proxy_impl(
             std::move(data_buffer),
             n,
@@ -553,10 +573,10 @@ namespace sparrow
         );
     }
 
-    template <trivial_copyable_type T>
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
     template <validity_bitmap_input VALIDITY_RANGE, input_metadata_container METADATA_RANGE>
-    arrow_proxy primitive_array_impl<T>::create_proxy(
-        u8_buffer<T>&& data_buffer,
+    arrow_proxy primitive_array_impl<T, Ext, T2>::create_proxy(
+        u8_buffer<T2>&& data_buffer,
         size_t size,
         bool nullable,
         std::optional<std::string_view> name,
@@ -574,17 +594,17 @@ namespace sparrow
         );
     }
 
-    template <trivial_copyable_type T>
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
     template <std::ranges::input_range R, input_metadata_container METADATA_RANGE>
-        requires(std::convertible_to<std::ranges::range_value_t<R>, T> && !mpl::is_type_instance_of_v<R, u8_buffer>)
-    arrow_proxy primitive_array_impl<T>::create_proxy(
+        requires(std::convertible_to<std::ranges::range_value_t<R>, T2> && !mpl::is_type_instance_of_v<R, u8_buffer>)
+    arrow_proxy primitive_array_impl<T, Ext, T2>::create_proxy(
         R&& range,
         bool nullable,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
     {
-        auto data_buffer = details::primitive_data_access<T>::make_data_buffer(std::forward<R>(range));
+        auto data_buffer = details::primitive_data_access<T, T2>::make_data_buffer(std::forward<R>(range));
         auto distance = static_cast<size_t>(std::ranges::distance(range));
         std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0)
                                                          : std::nullopt;
@@ -598,10 +618,10 @@ namespace sparrow
     }
 
     // range of nullable values
-    template <trivial_copyable_type T>
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
     template <std::ranges::input_range NULLABLE_RANGE, input_metadata_container METADATA_RANGE>
-        requires std::is_same_v<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T>>
-    arrow_proxy primitive_array_impl<T>::create_proxy(
+        requires std::is_same_v<std::ranges::range_value_t<NULLABLE_RANGE>, nullable<T2>>
+    arrow_proxy primitive_array_impl<T, Ext, T2>::create_proxy(
         NULLABLE_RANGE&& nullable_range,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
@@ -625,10 +645,10 @@ namespace sparrow
         return self_type::create_proxy(values, is_non_null, std::move(name), std::move(metadata));
     }
 
-    template <trivial_copyable_type T>
+    template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
     template <input_metadata_container METADATA_RANGE>
-    [[nodiscard]] arrow_proxy primitive_array_impl<T>::create_proxy_impl(
-        u8_buffer<T>&& data_buffer,
+    [[nodiscard]] arrow_proxy primitive_array_impl<T, Ext, T2>::create_proxy_impl(
+        u8_buffer<T2>&& data_buffer,
         size_t size,
         std::optional<validity_bitmap>&& bitmap,
         std::optional<std::string_view> name,
@@ -671,6 +691,8 @@ namespace sparrow
             nullptr,                     // dictionary,
             true                         // dictionary ownership
         );
-        return arrow_proxy(std::move(arr), std::move(schema));
+        arrow_proxy proxy(std::move(arr), std::move(schema));
+        Ext::init(proxy);
+        return proxy;
     }
 }
