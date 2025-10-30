@@ -3,6 +3,7 @@ from conan.tools.build import can_run
 from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
 from conan.tools.microsoft import is_msvc
 import os
+import sys
 
 
 class TestPackageConan(ConanFile):
@@ -42,4 +43,5 @@ class TestPackageConan(ConanFile):
                 self.output.info("Running json_reader test")
                 self.run(json_reader_test_path, env="conanrun")
             else:
-                self.output.info("json_reader test not found, skipping")
+                self.output.error("json_reader test not found")
+                sys.exit(1)
