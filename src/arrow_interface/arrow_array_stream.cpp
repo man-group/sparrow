@@ -47,7 +47,7 @@ namespace sparrow
         try
         {
             auto private_data = static_cast<arrow_array_stream_private_data*>(stream->private_data);
-            out = &(private_data->schema());
+            out = private_data->schema();
             return 0;
         }
         catch (const std::bad_alloc&)

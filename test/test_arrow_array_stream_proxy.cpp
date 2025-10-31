@@ -30,18 +30,20 @@ namespace sparrow
     /**
      * Helper function to create a simple ArrowSchema for testing
      */
-    inline ArrowSchema make_test_schema(std::string_view format, std::string_view name = "")
+    inline ArrowSchema make_test_schema(const char* format, const char* name = "")
     {
         using namespace std::literals;
+        using metadata_type = std::vector<metadata_pair>;
         ArrowSchema schema{};
+        const auto children_ownership = repeat_view<bool>{true, 0};
         fill_arrow_schema(
             schema,
-            format,
-            name,
-            std::nullopt,
+            std::string_view(format),
+            std::string_view(name),
+            std::optional<metadata_type>{},
             std::nullopt,
             nullptr,
-            repeat_view<bool>(true, 0),
+            children_ownership,
             nullptr,
             false
         );
@@ -115,7 +117,6 @@ namespace sparrow
                 
                 // Create a schema for the stream
                 ArrowSchema schema = make_test_schema("i");
-                proxy.get_private_data()->import_schema(&schema);
                 
                 // Push an array
                 proxy.push(std::move(test_array));
@@ -163,8 +164,7 @@ namespace sparrow
             arrow_array_stream_proxy proxy;
             
             // Create a schema for the stream
-            ArrowSchema schema;
-            fill_arrow_schema(schema, "i", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+            ArrowSchema schema = make_test_schema("i");
             proxy.get_private_data()->import_schema(&schema);
             
             // Don't push any arrays
@@ -182,8 +182,7 @@ namespace sparrow
             arrow_array_stream_proxy proxy;
             
             // Create and set a schema
-            ArrowSchema schema;
-            fill_arrow_schema(schema, "i", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+            ArrowSchema schema = make_test_schema("i");
             proxy.get_private_data()->import_schema(&schema);
             
             ArrowArrayStream* stream = proxy.export_stream();
@@ -205,8 +204,7 @@ namespace sparrow
             arrow_array_stream_proxy proxy;
             
             // Create a schema for the stream
-            ArrowSchema schema;
-            fill_arrow_schema(schema, "i", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+            ArrowSchema schema = make_test_schema("i");
             proxy.get_private_data()->import_schema(&schema);
             
             // Push an array
@@ -236,8 +234,7 @@ namespace sparrow
             arrow_array_stream_proxy proxy;
             
             // Create a schema for the stream
-            ArrowSchema schema;
-            fill_arrow_schema(schema, "i", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+            ArrowSchema schema = make_test_schema("i");
             proxy.get_private_data()->import_schema(&schema);
             
             ArrowArrayStream* stream = proxy.export_stream();
@@ -279,8 +276,7 @@ namespace sparrow
             arrow_array_stream_proxy proxy;
             
             // Create a schema for the stream
-            ArrowSchema schema;
-            fill_arrow_schema(schema, "i", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+            ArrowSchema schema = make_test_schema("i");
             proxy.get_private_data()->import_schema(&schema);
             
             ArrowArrayStream* stream = proxy.export_stream();
@@ -302,10 +298,8 @@ namespace sparrow
                 arrow_array_stream_proxy proxy;
                 
                 // Create a schema for the stream
-                ArrowSchema schema;
-                fill_arrow_schema(schema, "i", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
-                proxy.get_private_data()->import_schema(&schema);
-                
+                ArrowSchema schema = make_test_schema("i");
+
                 // Push some arrays
                 proxy.push(make_test_primitive_array<int32_t>(5));
                 proxy.push(make_test_primitive_array<int32_t>(7));
@@ -323,8 +317,7 @@ namespace sparrow
             {
                 arrow_array_stream_proxy proxy;
                 
-                ArrowSchema schema;
-                fill_arrow_schema(schema, "C", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+                ArrowSchema schema = make_test_schema("C");  // uint8
                 proxy.get_private_data()->import_schema(&schema);
                 
                 proxy.push(make_test_primitive_array<uint8_t>(10));
@@ -337,8 +330,7 @@ namespace sparrow
             {
                 arrow_array_stream_proxy proxy;
                 
-                ArrowSchema schema;
-                fill_arrow_schema(schema, "l", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+                ArrowSchema schema = make_test_schema("l");  // int64
                 proxy.get_private_data()->import_schema(&schema);
                 
                 proxy.push(make_test_primitive_array<int64_t>(15));
@@ -351,8 +343,7 @@ namespace sparrow
             {
                 arrow_array_stream_proxy proxy;
                 
-                ArrowSchema schema;
-                fill_arrow_schema(schema, "f", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+                ArrowSchema schema = make_test_schema("f");  // float32
                 proxy.get_private_data()->import_schema(&schema);
                 
                 proxy.push(make_test_primitive_array<float>(8));
@@ -365,8 +356,7 @@ namespace sparrow
             {
                 arrow_array_stream_proxy proxy;
                 
-                ArrowSchema schema;
-                fill_arrow_schema(schema, "b", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+                ArrowSchema schema = make_test_schema("b");  // boolean
                 proxy.get_private_data()->import_schema(&schema);
                 
                 proxy.push(make_test_primitive_array<bool>(12));
@@ -384,8 +374,7 @@ namespace sparrow
             arrow_array_stream_proxy proxy;
             
             // Set up stream with int32 schema
-            ArrowSchema schema;
-            fill_arrow_schema(schema, "i", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+            ArrowSchema schema = make_test_schema("i");
             proxy.get_private_data()->import_schema(&schema);
             
             // Create array with compatible schema
@@ -400,15 +389,14 @@ namespace sparrow
             arrow_array_stream_proxy proxy;
             
             // Create a schema for the stream
-            ArrowSchema schema;
-            fill_arrow_schema(schema, "i", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+            ArrowSchema schema = make_test_schema("i");
             proxy.get_private_data()->import_schema(&schema);
             
             // Push several arrays
             const size_t num_arrays = 5;
             for (size_t i = 0; i < num_arrays; ++i)
             {
-                proxy.push(make_test_primitive_array<int32_t>(static_cast<int>(i + 1) * 2));
+                proxy.push(make_test_primitive_array<int32_t>((i + 1) * 2));
             }
             
             // Pop all arrays and verify sizes
@@ -428,8 +416,7 @@ namespace sparrow
             arrow_array_stream_proxy proxy;
             
             // Create a schema for the stream
-            ArrowSchema schema;
-            fill_arrow_schema(schema, "i", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+            ArrowSchema schema = make_test_schema("i");
             proxy.get_private_data()->import_schema(&schema);
             
             // Push one, pop one, push two, pop two, etc.
@@ -463,12 +450,11 @@ namespace sparrow
         TEST_CASE("stream lifecycle - create, use, export")
         {
             // Create proxy, add data, export stream
-            ArrowArrayStream* stream;
+            ArrowArrayStream* stream = nullptr;
             {
                 arrow_array_stream_proxy proxy;
                 
-                ArrowSchema schema;
-                fill_arrow_schema(schema, "i", std::nullopt, std::nullopt, std::nullopt, nullptr, {}, nullptr, false);
+                ArrowSchema schema = make_test_schema("i");
                 proxy.get_private_data()->import_schema(&schema);
                 
                 proxy.push(make_test_primitive_array<int32_t>(20));

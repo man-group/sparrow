@@ -20,6 +20,7 @@
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array_stream.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+#include "sparrow/c_interface.hpp"
 #include "sparrow/layout/layout_concept.hpp"
 
 namespace sparrow
@@ -79,6 +80,11 @@ namespace sparrow
          */
         explicit arrow_array_stream_proxy(ArrowArrayStream* stream_ptr);
 
+        // explicit arrow_array_stream_proxy(ArrowSchema* schema_ptr);
+
+        arrow_array_stream_proxy(const arrow_array_stream_proxy&) = delete;
+        arrow_array_stream_proxy& operator=(const arrow_array_stream_proxy&) = delete;
+
         /**
          * @brief Destructor that releases all resources.
          *
@@ -86,20 +92,6 @@ namespace sparrow
          * released. This ensures proper cleanup of all Arrow C interface objects.
          */
         ~arrow_array_stream_proxy();
-
-        /**
-         * @brief Gets the private data (const version).
-         *
-         * @return Const pointer to the stream's private data.
-         */
-        [[nodiscard]] const arrow_array_stream_private_data* get_private_data() const;
-
-        /**
-         * @brief Gets the private data (mutable version).
-         *
-         * @return Mutable pointer to the stream's private data.
-         */
-        [[nodiscard]] arrow_array_stream_private_data* get_private_data();
 
         /**
          * @brief Export ownership of the stream pointer.
@@ -137,6 +129,13 @@ namespace sparrow
                 {
                     throw std::runtime_error("Incompatible schema when adding array to ArrowArrayStream");
                 }
+            }
+            if (private_data.schema() == nullptr)
+            {
+                ArrowSchema* schema = new ArrowSchema();
+                copy_schema(get_arrow_schema(*std::ranges::begin(arrays)), schema);
+                private_data.import_schema(schema);
+                
             }
             for (auto&& array : arrays)
             {
@@ -176,7 +175,7 @@ namespace sparrow
          *
          * @note If the queue is empty, returns a released (empty) array, indicating end of stream.
          */
-        array pop();
+        std::optional<array> pop();
 
     private:
 
@@ -192,5 +191,19 @@ namespace sparrow
          *                            or has uninitialized private data.
          */
         void throw_if_immutable() const;
+
+                /**
+         * @brief Gets the private data (const version).
+         *
+         * @return Const pointer to the stream's private data.
+         */
+        [[nodiscard]] const arrow_array_stream_private_data* get_private_data() const;
+
+        /**
+         * @brief Gets the private data (mutable version).
+         *
+         * @return Mutable pointer to the stream's private data.
+         */
+        [[nodiscard]] arrow_array_stream_private_data* get_private_data();
     };
 }

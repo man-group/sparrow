@@ -14,6 +14,7 @@
 
 
 #include "sparrow/arrow_interface/arrow_array_stream_proxy.hpp"
+#include <optional>
 
 namespace sparrow
 {
@@ -58,7 +59,7 @@ namespace sparrow
         return temp;
     }
 
-    array arrow_array_stream_proxy::pop()
+    std::optional<array> arrow_array_stream_proxy::pop()
     {
         ArrowSchema* schema_ptr = nullptr;
         if (int err = m_stream_ptr->get_schema(m_stream_ptr, schema_ptr); err != 0)
@@ -67,9 +68,14 @@ namespace sparrow
         }
         ArrowArray* array_ptr;
         m_stream_ptr->get_next(m_stream_ptr, array_ptr);
+        if(array_ptr == nullptr || array_ptr->release == nullptr)
+        {
+            // End of stream
+            return std::nullopt;
+        }
         ArrowArray moved_array = move_array(*array_ptr);
         delete array_ptr;
-        return {std::move(moved_array), schema_ptr};
+        return std::make_optional<array>(std::move(moved_array), schema_ptr);
     }
 
     void arrow_array_stream_proxy::throw_if_immutable() const

@@ -14,17 +14,19 @@
 
 #pragma once
 
-#include <sparrow/c_interface.hpp>
 #include <queue>
 #include <ranges>
 
 #include <errno.h>
+
+#include <sparrow/c_interface.hpp>
 
 namespace sparrow
 {
     class arrow_array_stream_private_data
     {
     public:
+
         arrow_array_stream_private_data() = default;
 
         void import_schema(ArrowSchema* out_schema)
@@ -42,18 +44,18 @@ namespace sparrow
             m_schema = out_schema;
         }
 
-        [[nodiscard]] const ArrowSchema& schema() const
+        [[nodiscard]] ArrowSchema* schema()
         {
-            return *m_schema;
+            return m_schema;
         }
 
-        [[nodiscard]]  ArrowSchema& schema()
+        [[nodiscard]] const ArrowSchema* schema() const
         {
-            return *m_schema;
+            return m_schema;
         }
 
-        template<std::ranges::input_range R>
-        requires std::same_as<std::ranges::range_value_t<R>, ArrowArray*>
+        template <std::ranges::input_range R>
+            requires std::same_as<std::ranges::range_value_t<R>, ArrowArray*>
         void import_arrays(R&& arrays)
         {
             for (auto&& array : arrays)
@@ -69,7 +71,7 @@ namespace sparrow
 
         ArrowArray* export_next_array()
         {
-            if(m_arrays.empty())
+            if (m_arrays.empty())
             {
                 return new ArrowArray{};
             }
@@ -90,6 +92,7 @@ namespace sparrow
         }
 
     private:
+
         ArrowSchema* m_schema = nullptr;
         std::queue<ArrowArray*> m_arrays{};
         std::string m_last_error_message{};
