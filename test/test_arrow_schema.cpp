@@ -294,6 +294,150 @@ TEST_SUITE("C Data Interface")
             control.release(&control);
         }
 
+        SUBCASE("check_compatible_schema")
+        {
+            // same object => compatible
+            auto s = test::make_arrow_schema(true);
+            CHECK(sparrow::check_compatible_schema(s, s));
+
+            // deep copy => compatible
+            auto s_copy = sparrow::copy_schema(s);
+            CHECK(sparrow::check_compatible_schema(s, s_copy));
+
+            // different schema (format/structure) => incompatible
+            auto t = test::make_arrow_schema(false);
+            CHECK_FALSE(sparrow::check_compatible_schema(s, t));
+
+            // name presence mismatch
+            auto a = sparrow::make_arrow_schema(
+                "fmt"s,
+                std::nullopt,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
+                std::unordered_set<sparrow::ArrowFlag>{},
+                nullptr,
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
+            );
+            auto b = sparrow::make_arrow_schema(
+                "fmt"s,
+                "name"s,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
+                std::unordered_set<sparrow::ArrowFlag>{},
+                nullptr,
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
+            );
+            CHECK_FALSE(sparrow::check_compatible_schema(a, b));
+            a.release(&a);
+            b.release(&b);
+
+            // metadata mismatch
+            auto m1 = sparrow::make_arrow_schema(
+                "fmt"s,
+                "n"s,
+                sparrow::metadata_sample_opt,
+                std::unordered_set<sparrow::ArrowFlag>{},
+                nullptr,
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
+            );
+            auto m2 = sparrow::make_arrow_schema(
+                "fmt"s,
+                "n"s,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
+                std::unordered_set<sparrow::ArrowFlag>{},
+                nullptr,
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
+            );
+            CHECK_FALSE(sparrow::check_compatible_schema(m1, m2));
+            m1.release(&m1);
+            m2.release(&m2);
+
+            // children mismatch (one schema has one child, the other has none)
+            auto child_arr = new ArrowSchema*[1];
+            child_arr[0] = new ArrowSchema();
+            *child_arr[0] = sparrow::make_arrow_schema(
+                "cfmt"s,
+                "c1"s,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
+                std::unordered_set<sparrow::ArrowFlag>{},
+                nullptr,
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
+            );
+            auto c_with = sparrow::make_arrow_schema(
+                "fmt"s,
+                "n"s,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
+                std::unordered_set<sparrow::ArrowFlag>{},
+                child_arr,
+                sparrow::repeat_view<bool>(true, 1),
+                nullptr,
+                true
+            );
+            auto c_without = sparrow::make_arrow_schema(
+                "fmt"s,
+                "n"s,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
+                std::unordered_set<sparrow::ArrowFlag>{},
+                nullptr,
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
+            );
+            CHECK_FALSE(sparrow::check_compatible_schema(c_with, c_without));
+            c_with.release(&c_with);
+            c_without.release(&c_without);
+            // note: child_arr and its child are allocated in test style used elsewhere (no explicit delete here)
+
+            // dictionary mismatch
+            auto dict = new ArrowSchema();
+            *dict = sparrow::make_arrow_schema(
+                "dfmt"s,
+                "d"s,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
+                std::unordered_set<sparrow::ArrowFlag>{},
+                nullptr,
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
+            );
+            auto with_dict = sparrow::make_arrow_schema(
+                "fmt"s,
+                "n"s,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
+                std::unordered_set<sparrow::ArrowFlag>{},
+                nullptr,
+                sparrow::repeat_view<bool>(true, 0),
+                dict,
+                true
+            );
+            auto without_dict = sparrow::make_arrow_schema(
+                "fmt"s,
+                "n"s,
+                std::optional<std::vector<sparrow::metadata_pair>>{},
+                std::unordered_set<sparrow::ArrowFlag>{},
+                nullptr,
+                sparrow::repeat_view<bool>(true, 0),
+                nullptr,
+                true
+            );
+            CHECK_FALSE(sparrow::check_compatible_schema(with_dict, without_dict));
+            with_dict.release(&with_dict);
+            without_dict.release(&without_dict);
+
+            // cleanup
+            s_copy.release(&s_copy);
+            s.release(&s);
+            t.release(&t);
+        }
+
 #if defined(__cpp_lib_format)
         SUBCASE("formatting")
         {

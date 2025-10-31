@@ -96,4 +96,98 @@ namespace sparrow
         target.release = release_arrow_schema;
     }
 
+    bool check_compatible_schema(const ArrowSchema& schema1, const ArrowSchema& schema2)
+    {
+        if(&schema1 == &schema2)
+        {
+            return true;
+        }
+
+        // format: both must be null or both non-null and equal
+        if ((schema1.format == nullptr) ^ (schema2.format == nullptr))
+        {
+            return false;
+        }
+        if (schema1.format != nullptr)
+        {
+            if (std::string_view(schema1.format) != std::string_view(schema2.format))
+            {
+                return false;
+            }
+        }
+
+        if(schema1.flags != schema2.flags)
+        {
+            return false;
+        }
+
+        // name: both must be null or both non-null and equal
+        if((schema1.name == nullptr) ^ (schema2.name == nullptr))
+        {
+            return false;
+        }
+        if(schema1.name != nullptr && schema2.name != nullptr)
+        {
+            if (std::string_view(schema1.name) != std::string_view(schema2.name))
+            {
+                return false;
+            }
+        }
+
+        // metadata: both must be null or both non-null and equal (by key/value string)
+        if ((schema1.metadata == nullptr) ^ (schema2.metadata == nullptr))
+        {
+            return false;
+        }
+        if (schema1.metadata != nullptr && schema2.metadata != nullptr)
+        {
+            key_value_view kv1(schema1.metadata);
+            key_value_view kv2(schema2.metadata);
+            if (get_metadata_from_key_values(kv1) != get_metadata_from_key_values(kv2))
+            {
+                return false;
+            }
+        }
+
+        // dictionary: both must be null or both non-null and recursively compatible
+        if((schema1.dictionary == nullptr) ^ (schema2.dictionary == nullptr))
+        {
+            return false;
+        }
+        if (schema1.dictionary != nullptr && schema2.dictionary != nullptr)
+        {
+            if (!check_compatible_schema(*schema1.dictionary, *schema2.dictionary))
+            {
+                return false;
+            }
+        }
+
+        if (schema1.n_children != schema2.n_children)
+        {
+            return false;
+        }
+
+        if (schema1.n_children > 0)
+        {
+            // children pointer must be present when n_children > 0
+            if (schema1.children == nullptr || schema2.children == nullptr)
+            {
+                return false;
+            }
+            for (int64_t i = 0; i < schema1.n_children; ++i)
+            {
+                if (schema1.children[i] == nullptr || schema2.children[i] == nullptr)
+                {
+                    return false;
+                }
+                if (!check_compatible_schema(*schema1.children[i], *schema2.children[i]))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
 }
