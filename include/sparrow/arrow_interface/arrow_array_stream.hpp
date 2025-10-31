@@ -12,106 +12,121 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/**
+ * @file arrow_array_stream.hpp
+ * @brief Implementation of the Arrow C Stream Interface for streaming data exchange.
+ *
+ * This file provides a complete implementation of the Arrow C Stream Interface as specified at:
+ * https://arrow.apache.org/docs/format/CStreamInterface.html
+ *
+ * The Arrow C Stream Interface defines a standard C API for streaming Arrow data between different
+ * libraries and components within a single process. It uses a pull-based iteration model where
+ * consumers request data chunks one at a time.
+ *
+ * Key components:
+ * - ArrowArrayStream: C structure with callbacks for stream operations (defined in c_stream_interface.hpp)
+ * - arrow_array_stream_proxy: C++ wrapper providing RAII and type-safe operations
+ *
+ * @see https://arrow.apache.org/docs/format/CStreamInterface.html
+ * @see https://arrow.apache.org/docs/format/CDataInterface.html
+ */
+
 #pragma once
 
-#include "sparrow/array_api.hpp"
+
 #include "sparrow/arrow_interface/arrow_array_stream/private_data.hpp"
+#include "sparrow/c_interface.hpp"
 #include "sparrow/c_stream_interface.hpp"
-#include "sparrow/layout/layout_concept.hpp"
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
+    /**
+     * @brief Release callback for ArrowArrayStream.
+     *
+     * This function implements the mandatory release callback as specified by the Arrow C Stream
+     * Interface. It is responsible for cleaning up all resources associated with the stream,
+     * including the private data.
+     *
+     * @param stream Pointer to the ArrowArrayStream to release. Must not be nullptr.
+     *
+     * @note After this function returns, all pointers in the stream structure are set to nullptr
+     *       or zero, marking the stream as released.
+     *
+     * @see https://arrow.apache.org/docs/format/CStreamInterface.html
+     */
     void release_arrow_array_stream(ArrowArrayStream* stream);
 
-    class arrow_array_stream_proxy
-    {
-    public:
+    /**
+     * @brief Get schema callback for ArrowArrayStream.
+     *
+     * This function implements the mandatory get_schema callback as specified by the Arrow C
+     * Stream Interface. It allows the consumer to query the schema of the chunks of data in the
+     * stream. The schema is the same for all data chunks.
+     *
+     * According to the specification:
+     * - This callback is mandatory
+     * - Must NOT be called on a released ArrowArrayStream
+     * - Returns 0 on success, a non-zero error code otherwise
+     * - The returned schema must be released independently by the consumer
+     *
+     * @param stream Pointer to the ArrowArrayStream.
+     * @param out Pointer to an ArrowSchema structure to populate with the stream's schema.
+     *
+     * @return 0 on success, errno-compatible error code on failure (e.g., EINVAL, ENOMEM, EIO).
+     *
+     * @see https://arrow.apache.org/docs/format/CStreamInterface.html
+     */
+    int get_schema_from_arrow_array_stream(ArrowArrayStream* stream, ArrowSchema* out);
 
-        arrow_array_stream_proxy()
-            : m_stream_ptr(new ArrowArrayStream)
-        {
-        }
+    /**
+     * @brief Get next array callback for ArrowArrayStream.
+     *
+     * This function implements the mandatory get_next callback as specified by the Arrow C Stream
+     * Interface. It allows the consumer to get the next chunk of data in the stream.
+     *
+     * According to the specification:
+     * - This callback is mandatory
+     * - Must NOT be called on a released ArrowArrayStream
+     * - Returns 0 on success, a non-zero error code otherwise
+     * - On success, the consumer must check if the ArrowArray is released
+     * - If the ArrowArray is released, the end of stream has been reached
+     * - Otherwise, the ArrowArray contains a valid data chunk
+     * - The returned array must be released independently by the consumer
+     *
+     * @param stream Pointer to the ArrowArrayStream.
+     * @param out Pointer to an ArrowArray structure to populate with the next data chunk.
+     *            Will be a released array (release == nullptr) when the end of stream is reached.
+     *
+     * @return 0 on success, errno-compatible error code on failure (e.g., EINVAL, ENOMEM, EIO).
+     *
+     * @see https://arrow.apache.org/docs/format/CStreamInterface.html
+     */
+    int get_next_from_arrow_array_stream(ArrowArrayStream* stream, ArrowArray* out);
 
-        explicit arrow_array_stream_proxy(ArrowArrayStream* stream_ptr)
-            : m_stream_ptr(stream_ptr)
-        {
-            SPARROW_ASSERT_FALSE(stream_ptr == nullptr);
-            SPARROW_ASSERT_TRUE(
-                stream_ptr->release == nullptr
-                || stream_ptr->release == std::addressof(release_arrow_array_stream)
-            );
-        }
+    /**
+     * @brief Get last error callback for ArrowArrayStream.
+     *
+     * This function implements the mandatory get_last_error callback as specified by the Arrow C
+     * Stream Interface. It allows the consumer to get a textual description of the last error.
+     *
+     * According to the specification:
+     * - This callback is mandatory
+     * - Must ONLY be called if the last operation returned an error
+     * - Must NOT be called on a released ArrowArrayStream
+     * - Returns a pointer to a NULL-terminated UTF8-encoded string, or NULL if no detailed
+     *   description is available
+     * - The returned pointer is only guaranteed to be valid until the next callback call
+     *
+     * @param stream Pointer to the ArrowArrayStream.
+     *
+     * @return Pointer to a NULL-terminated error message string, or NULL if unavailable.
+     *
+     * @see https://arrow.apache.org/docs/format/CStreamInterface.html
+     */
+    const char* get_last_error_from_arrow_array_stream(ArrowArrayStream* stream);
 
-        ~arrow_array_stream_proxy()
-        {
-            if (m_stream_ptr != nullptr && m_stream_ptr->release != nullptr)
-            {
-                m_stream_ptr->release(m_stream_ptr);
-                m_stream_ptr = nullptr;
-                delete m_stream_ptr;
-            }
-        }
+    void fill_arrow_array_stream(ArrowArrayStream& stream);
 
-        [[nodiscard]] const arrow_array_stream_private_data* get_private_data() const
-        {
-            SPARROW_ASSERT_FALSE(m_stream_ptr == nullptr);
-            return static_cast<const arrow_array_stream_private_data*>(m_stream_ptr->private_data);
-        }
-
-        [[nodiscard]] arrow_array_stream_private_data* get_private_data()
-        {
-            SPARROW_ASSERT_FALSE(m_stream_ptr == nullptr);
-            return static_cast<arrow_array_stream_private_data*>(m_stream_ptr->private_data);
-        }
-
-        [[nodiscard]] const ArrowArrayStream& stream() const
-        {
-            return *m_stream_ptr;
-        }
-
-        [[nodiscard]] ArrowArrayStream& stream()
-        {
-            return *m_stream_ptr;
-        }
-
-        template <layout A>
-        void add_array(A&& array)
-        {
-            
-
-                get_private_data()->import_array(ArrowArray *array)
-        
-        }
-
-    private:
-
-        [[nodiscard]] bool check_compatible_schema(const ArrowSchema& schema) const
-        {
-            throw_if_immutable();
-            const auto* existing_schema = &get_private_data()->schema();
-            return compare_arrow_schemas(*existing_schema, schema);
-
-        }
-        
-
-        void throw_if_immutable() const
-        {
-             SPARROW_ASSERT_TRUE(m_stream_ptr != nullptr);
-            if (m_stream_ptr->release == nullptr)
-            {
-                throw std::runtime_error("Cannot add array to released ArrowArrayStream");
-            }
-            if (m_stream_ptr->release != std::addressof(release_arrow_array_stream))
-            {
-                throw std::runtime_error("ArrowArrayStream release function is not valid");
-            }
-            if (m_stream_ptr->private_data == nullptr)
-            {
-                throw std::runtime_error("ArrowArrayStream private data is not initialized");
-            }
-        }
-
-        ArrowArrayStream* m_stream_ptr;
-    };
+    ArrowArrayStream make_empty_arrow_array_stream();
 }

@@ -18,6 +18,7 @@
 #include <queue>
 #include <ranges>
 
+#include <errno.h>
 
 namespace sparrow
 {
@@ -42,6 +43,11 @@ namespace sparrow
         }
 
         [[nodiscard]] const ArrowSchema& schema() const
+        {
+            return *m_schema;
+        }
+
+        [[nodiscard]]  ArrowSchema& schema()
         {
             return *m_schema;
         }
@@ -76,6 +82,11 @@ namespace sparrow
         [[nodiscard]] const std::string& get_last_error_message() const
         {
             return m_last_error_message;
+        }
+
+        void set_last_error_message(std::string_view message)
+        {
+            m_last_error_message = message;
         }
 
     private:
