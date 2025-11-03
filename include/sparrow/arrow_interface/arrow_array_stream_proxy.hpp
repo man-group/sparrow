@@ -86,6 +86,9 @@ namespace sparrow
         arrow_array_stream_proxy(const arrow_array_stream_proxy&) = delete;
         arrow_array_stream_proxy& operator=(const arrow_array_stream_proxy&) = delete;
 
+        arrow_array_stream_proxy(arrow_array_stream_proxy&& other) noexcept;
+        arrow_array_stream_proxy& operator=(arrow_array_stream_proxy&& other) noexcept;
+
         /**
          * @brief Destructor that releases all resources.
          *
@@ -141,15 +144,9 @@ namespace sparrow
                     throw std::runtime_error("Incompatible schema when adding array to ArrowArrayStream");
                 }
             }
-            if (private_data.schema() == nullptr)
-            {
-                ArrowSchema* schema = new ArrowSchema();
-                swap(*schema, *get_arrow_schema(*std::ranges::begin(arrays)));
-                private_data.import_schema(schema);
-            }
 
             // Import all arrays
-            for (auto&& array : arrays)
+            for (auto&& array : std::forward<R>(arrays))
             {
                 ArrowArray extracted_array = extract_arrow_array(std::move(array));
                 ArrowArray* arrow_array_ptr = new ArrowArray();
@@ -173,8 +170,7 @@ namespace sparrow
         template <layout A>
         void push(A&& array)
         {
-            std::ranges::single_view<std::decay_t<A>> view(std::forward<A>(array));
-            push(view);
+            push(std::ranges::single_view(std::forward<A>(array)));
         }
 
         /**

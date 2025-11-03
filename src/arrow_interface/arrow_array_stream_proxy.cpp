@@ -31,13 +31,32 @@ namespace sparrow
         SPARROW_ASSERT_FALSE(stream_ptr == nullptr);
     }
 
+    arrow_array_stream_proxy::arrow_array_stream_proxy(arrow_array_stream_proxy&& other) noexcept
+        : m_stream_ptr(other.m_stream_ptr)
+    {
+        other.m_stream_ptr = nullptr;
+    }
+
+    arrow_array_stream_proxy& arrow_array_stream_proxy::operator=(arrow_array_stream_proxy&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (m_stream_ptr != nullptr && m_stream_ptr->release != nullptr)
+            {
+                m_stream_ptr->release(m_stream_ptr);
+            }
+            m_stream_ptr = other.m_stream_ptr;
+            other.m_stream_ptr = nullptr;
+        }
+        return *this;
+    }
+
     arrow_array_stream_proxy::~arrow_array_stream_proxy()
     {
         if (m_stream_ptr != nullptr && m_stream_ptr->release != nullptr)
         {
             m_stream_ptr->release(m_stream_ptr);
             m_stream_ptr = nullptr;
-            delete m_stream_ptr;
         }
     }
 
