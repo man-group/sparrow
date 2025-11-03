@@ -56,6 +56,7 @@ namespace sparrow
         if (m_stream_ptr != nullptr && m_stream_ptr->release != nullptr)
         {
             m_stream_ptr->release(m_stream_ptr);
+            delete m_stream_ptr;
             m_stream_ptr = nullptr;
         }
     }
