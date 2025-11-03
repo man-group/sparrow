@@ -19,7 +19,6 @@
 #include "sparrow/array.hpp"
 #include "sparrow/array_api.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
-#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/arrow_interface/arrow_array_stream.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/c_interface.hpp"
@@ -125,7 +124,7 @@ namespace sparrow
         void push(R&& arrays)
         {
             arrow_array_stream_private_data& private_data = *get_private_data();
-            
+
             // Check if we need to create schema from first array
             if (private_data.schema() == nullptr)
             {
@@ -133,7 +132,7 @@ namespace sparrow
                 copy_schema(*get_arrow_schema(*std::ranges::begin(arrays)), *schema);
                 private_data.import_schema(schema);
             }
-            
+
             // Validate schema compatibility for all arrays
             for (const auto& array : arrays)
             {
@@ -208,7 +207,7 @@ namespace sparrow
          */
         void throw_if_immutable() const;
 
-                /**
+        /**
          * @brief Gets the private data (const version).
          *
          * @return Const pointer to the stream's private data.

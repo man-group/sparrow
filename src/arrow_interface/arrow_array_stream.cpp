@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/arrow_interface/arrow_array_stream.hpp"
+
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 
