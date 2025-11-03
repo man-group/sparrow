@@ -16,8 +16,7 @@
 
 #include <queue>
 #include <ranges>
-
-#include <errno.h>
+#include <string>
 
 #include <sparrow/c_interface.hpp>
 
