@@ -19,7 +19,7 @@ class SparrowRecipe(ConanFile):
     topics = ("arrow", "apache arrow", "columnar format", "dataframe")
     package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
-    exports_sources = "include/*", "LICENSE", "src/*", "cmake/*", "docs/*", "CMakeLists.txt", "sparrowConfig.cmake.in"
+    exports_sources = "include/*", "LICENSE", "src/*", "cmake/*", "docs/*", "CMakeLists.txt", "sparrowConfig.cmake.in", "json_reader/*"
     options = {
         "shared": [True, False],
         "fPIC": [True, False],
@@ -27,6 +27,7 @@ class SparrowRecipe(ConanFile):
         "build_tests": [True, False],
         "build_benchmarks": [True, False],
         "generate_documentation": [True, False],
+        "export_json_reader": [True, False],
     }
     default_options = {
         "shared": False,
@@ -35,15 +36,20 @@ class SparrowRecipe(ConanFile):
         "build_tests": False,
         "build_benchmarks": False,
         "generate_documentation": False,
+        "export_json_reader": False,
     }
 
     def requirements(self):
         if self.options.get_safe("use_date_polyfill"):
             self.requires("date/3.0.3")
+        if self.options.get_safe("export_json_reader"):
+            self.requires("nlohmann_json/3.12.0", transitive_headers=True)
+        elif self.options.get_safe("build_tests"):
+            self.test_requires("nlohmann_json/3.12.0")
+
         if self.options.get_safe("build_tests"):
             self.test_requires("doctest/2.4.11")
             self.test_requires("catch2/3.7.0")
-            self.test_requires("nlohmann_json/3.12.0")
         if self.options.get_safe("build_benchmarks"):
             self.test_requires("benchmark/1.9.4")
 
@@ -98,6 +104,9 @@ class SparrowRecipe(ConanFile):
         tc.variables["BUILD_BENCHMARKS"] = self.options.get_safe(
             "build_benchmarks", False
         )
+        tc.variables["CREATE_JSON_READER_TARGET"] = self.options.get_safe(
+            "export_json_reader", False
+        )
         if is_msvc(self):
             tc.variables["USE_LARGE_INT_PLACEHOLDERS"] = True
         tc.generate()
@@ -115,6 +124,18 @@ class SparrowRecipe(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["sparrow"]
-        self.cpp_info.set_property("cmake_file_name", "sparrow")
-        self.cpp_info.set_property("cmake_target_name", "sparrow::sparrow")
+        postfix = "d" if (self.settings.build_type == "Debug" and self.version and Version(self.version) >= "1.3.0") else ""
+
+        # Main sparrow component
+        self.cpp_info.components["sparrow"].libs = [f"sparrow{postfix}"]
+        self.cpp_info.components["sparrow"].set_property("cmake_file_name", "sparrow")
+        self.cpp_info.components["sparrow"].set_property("cmake_target_name", "sparrow::sparrow")
+        if self.options.get_safe("use_date_polyfill"):
+            self.cpp_info.components["sparrow"].requires = ["date::date", "date::date-tz"]
+
+        if self.options.export_json_reader:
+            # json_reader component
+            self.cpp_info.components["json_reader"].libs = [f"sparrow_json_reader{postfix}"]
+            self.cpp_info.components["json_reader"].set_property("cmake_file_name", "sparrow-json-reader")
+            self.cpp_info.components["json_reader"].set_property("cmake_target_name", "sparrow::json_reader")
+            self.cpp_info.components["json_reader"].requires = ["sparrow", "nlohmann_json::nlohmann_json"]
