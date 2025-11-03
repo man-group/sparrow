@@ -78,8 +78,9 @@ namespace sparrow
         {
             arrow_array_stream_proxy proxy;
             
-            // Verify that the stream callbacks are properly initialized
-            REQUIRE(proxy.get_private_data() != nullptr);
+            // Verify that the proxy was created successfully
+            // Note: get_private_data() is now private, so we test indirectly
+            CHECK_NOTHROW(proxy.export_stream());
         }
 
         TEST_CASE("constructor - from existing stream")
@@ -88,7 +89,8 @@ namespace sparrow
             
             arrow_array_stream_proxy proxy(&stream);
             
-            REQUIRE(proxy.get_private_data() != nullptr);
+            // Verify proxy was created successfully
+            CHECK_NOTHROW(proxy.export_stream());
         }
 
         TEST_CASE("export_stream")
@@ -115,17 +117,15 @@ namespace sparrow
                 arrow_array_stream_proxy proxy;
                 auto test_array = make_test_primitive_array<int32_t>(10);
                 
-                // Create a schema for the stream
-                ArrowSchema schema = make_test_schema("i");
-                
-                // Push an array
+                // Push an array (schema will be created automatically)
                 proxy.push(std::move(test_array));
                 
                 // Pop the array back
-                array result = proxy.pop();
+                auto result = proxy.pop();
                 
                 // Verify the array is not empty (has valid data)
-                CHECK(result.size() == 10);
+                REQUIRE(result.has_value());
+                CHECK(result->size() == 10);
             }
         }
 
@@ -133,11 +133,7 @@ namespace sparrow
         {
             arrow_array_stream_proxy proxy;
             
-            // Create a schema for the stream
-            ArrowSchema schema = make_test_schema("i");
-            proxy.get_private_data()->import_schema(&schema);
-            
-            // Create and push multiple arrays
+            // Create and push multiple arrays (schema created from first array)
             std::vector<primitive_array<int32_t>> arrays;
             arrays.push_back(make_test_primitive_array<int32_t>(5, 0));
             arrays.push_back(make_test_primitive_array<int32_t>(7, 10));
@@ -149,41 +145,38 @@ namespace sparrow
             }
             
             // Pop all arrays
-            array result1 = proxy.pop();
-            CHECK(result1.size() == 5);
+            auto result1 = proxy.pop();
+            REQUIRE(result1.has_value());
+            CHECK(result1->size() == 5);
             
-            array result2 = proxy.pop();
-            CHECK(result2.size() == 7);
+            auto result2 = proxy.pop();
+            REQUIRE(result2.has_value());
+            CHECK(result2->size() == 7);
             
-            array result3 = proxy.pop();
-            CHECK(result3.size() == 3);
+            auto result3 = proxy.pop();
+            REQUIRE(result3.has_value());
+            CHECK(result3->size() == 3);
         }
 
         TEST_CASE("end of stream")
         {
             arrow_array_stream_proxy proxy;
             
-            // Create a schema for the stream
-            ArrowSchema schema = make_test_schema("i");
-            proxy.get_private_data()->import_schema(&schema);
-            
             // Don't push any arrays
             
-            // Pop from empty stream should return a released array (end of stream)
-            array result = proxy.pop();
+            // Pop from empty stream should return nullopt (end of stream)
+            auto result = proxy.pop();
             
-            // A released array indicates end of stream
-            // The array should be empty or marked as released
-            CHECK(result.size() == 0);
+            // nullopt indicates end of stream
+            CHECK_FALSE(result.has_value());
         }
 
         TEST_CASE("stream callbacks - get_schema")
         {
             arrow_array_stream_proxy proxy;
             
-            // Create and set a schema
-            ArrowSchema schema = make_test_schema("i");
-            proxy.get_private_data()->import_schema(&schema);
+            // Push an array so schema is created
+            proxy.push(make_test_primitive_array<int32_t>(5));
             
             ArrowArrayStream* stream = proxy.export_stream();
             
@@ -202,10 +195,6 @@ namespace sparrow
         TEST_CASE("stream callbacks - get_next")
         {
             arrow_array_stream_proxy proxy;
-            
-            // Create a schema for the stream
-            ArrowSchema schema = make_test_schema("i");
-            proxy.get_private_data()->import_schema(&schema);
             
             // Push an array
             auto test_array = make_test_primitive_array<int32_t>(5);
@@ -233,9 +222,9 @@ namespace sparrow
         {
             arrow_array_stream_proxy proxy;
             
-            // Create a schema for the stream
-            ArrowSchema schema = make_test_schema("i");
-            proxy.get_private_data()->import_schema(&schema);
+            // Push an array first to create schema, then export before pushing more
+            proxy.push(make_test_primitive_array<int32_t>(5));
+            auto result1 = proxy.pop(); // Remove the one array
             
             ArrowArrayStream* stream = proxy.export_stream();
             
@@ -275,9 +264,8 @@ namespace sparrow
         {
             arrow_array_stream_proxy proxy;
             
-            // Create a schema for the stream
-            ArrowSchema schema = make_test_schema("i");
-            proxy.get_private_data()->import_schema(&schema);
+            // Push an array to create schema
+            proxy.push(make_test_primitive_array<int32_t>(5));
             
             ArrowArrayStream* stream = proxy.export_stream();
             
@@ -297,10 +285,7 @@ namespace sparrow
             {
                 arrow_array_stream_proxy proxy;
                 
-                // Create a schema for the stream
-                ArrowSchema schema = make_test_schema("i");
-
-                // Push some arrays
+                // Push some arrays (schema created automatically)
                 proxy.push(make_test_primitive_array<int32_t>(5));
                 proxy.push(make_test_primitive_array<int32_t>(7));
                 
@@ -317,52 +302,44 @@ namespace sparrow
             {
                 arrow_array_stream_proxy proxy;
                 
-                ArrowSchema schema = make_test_schema("C");  // uint8
-                proxy.get_private_data()->import_schema(&schema);
-                
                 proxy.push(make_test_primitive_array<uint8_t>(10));
                 
-                array result = proxy.pop();
-                CHECK(result.size() == 10);
+                auto result = proxy.pop();
+                REQUIRE(result.has_value());
+                CHECK(result->size() == 10);
             }
             
             SUBCASE("int64_t")
             {
                 arrow_array_stream_proxy proxy;
                 
-                ArrowSchema schema = make_test_schema("l");  // int64
-                proxy.get_private_data()->import_schema(&schema);
-                
                 proxy.push(make_test_primitive_array<int64_t>(15));
                 
-                array result = proxy.pop();
-                CHECK(result.size() == 15);
+                auto result = proxy.pop();
+                REQUIRE(result.has_value());
+                CHECK(result->size() == 15);
             }
             
             SUBCASE("float")
             {
                 arrow_array_stream_proxy proxy;
                 
-                ArrowSchema schema = make_test_schema("f");  // float32
-                proxy.get_private_data()->import_schema(&schema);
-                
                 proxy.push(make_test_primitive_array<float>(8));
                 
-                array result = proxy.pop();
-                CHECK(result.size() == 8);
+                auto result = proxy.pop();
+                REQUIRE(result.has_value());
+                CHECK(result->size() == 8);
             }
             
             SUBCASE("bool")
             {
                 arrow_array_stream_proxy proxy;
                 
-                ArrowSchema schema = make_test_schema("b");  // boolean
-                proxy.get_private_data()->import_schema(&schema);
-                
                 proxy.push(make_test_primitive_array<bool>(12));
                 
-                array result = proxy.pop();
-                CHECK(result.size() == 12);
+                auto result = proxy.pop();
+                REQUIRE(result.has_value());
+                CHECK(result->size() == 12);
             }
         }
 
@@ -373,11 +350,7 @@ namespace sparrow
             
             arrow_array_stream_proxy proxy;
             
-            // Set up stream with int32 schema
-            ArrowSchema schema = make_test_schema("i");
-            proxy.get_private_data()->import_schema(&schema);
-            
-            // Create array with compatible schema
+            // Push first array (creates schema automatically)
             auto compatible_array = make_test_primitive_array<int32_t>(5);
             
             // This should work
@@ -388,11 +361,7 @@ namespace sparrow
         {
             arrow_array_stream_proxy proxy;
             
-            // Create a schema for the stream
-            ArrowSchema schema = make_test_schema("i");
-            proxy.get_private_data()->import_schema(&schema);
-            
-            // Push several arrays
+            // Push several arrays (schema created from first)
             const size_t num_arrays = 5;
             for (size_t i = 0; i < num_arrays; ++i)
             {
@@ -402,49 +371,36 @@ namespace sparrow
             // Pop all arrays and verify sizes
             for (size_t i = 0; i < num_arrays; ++i)
             {
-                array result = proxy.pop();
-                CHECK(result.size() == (i + 1) * 2);
+                auto result = proxy.pop();
+                REQUIRE(result.has_value());
+                CHECK(result->size() == (i + 1) * 2);
             }
             
             // One more pop should give end-of-stream
-            array final = proxy.pop();
-            CHECK(final.size() == 0);
+            auto final = proxy.pop();
+            CHECK_FALSE(final.has_value());
         }
 
         TEST_CASE("interleaved push and pop")
         {
             arrow_array_stream_proxy proxy;
             
-            // Create a schema for the stream
-            ArrowSchema schema = make_test_schema("i");
-            proxy.get_private_data()->import_schema(&schema);
-            
             // Push one, pop one, push two, pop two, etc.
             proxy.push(make_test_primitive_array<int32_t>(5));
-            array result1 = proxy.pop();
-            CHECK(result1.size() == 5);
+            auto result1 = proxy.pop();
+            REQUIRE(result1.has_value());
+            CHECK(result1->size() == 5);
             
             proxy.push(make_test_primitive_array<int32_t>(10));
             proxy.push(make_test_primitive_array<int32_t>(15));
             
-            array result2 = proxy.pop();
-            CHECK(result2.size() == 10);
+            auto result2 = proxy.pop();
+            REQUIRE(result2.has_value());
+            CHECK(result2->size() == 10);
             
-            array result3 = proxy.pop();
-            CHECK(result3.size() == 15);
-        }
-
-        TEST_CASE("private_data access")
-        {
-            arrow_array_stream_proxy proxy;
-            
-            // Test const and non-const access
-            const auto* const_data = const_cast<const arrow_array_stream_proxy&>(proxy).get_private_data();
-            auto* mut_data = proxy.get_private_data();
-            
-            REQUIRE(const_data != nullptr);
-            REQUIRE(mut_data != nullptr);
-            CHECK(const_data == mut_data);
+            auto result3 = proxy.pop();
+            REQUIRE(result3.has_value());
+            CHECK(result3->size() == 15);
         }
 
         TEST_CASE("stream lifecycle - create, use, export")
@@ -453,9 +409,6 @@ namespace sparrow
             ArrowArrayStream* stream = nullptr;
             {
                 arrow_array_stream_proxy proxy;
-                
-                ArrowSchema schema = make_test_schema("i");
-                proxy.get_private_data()->import_schema(&schema);
                 
                 proxy.push(make_test_primitive_array<int32_t>(20));
                 proxy.push(make_test_primitive_array<int32_t>(30));

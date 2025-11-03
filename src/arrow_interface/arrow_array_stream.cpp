@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include "sparrow/arrow_interface/arrow_array_stream.hpp"
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 
 namespace sparrow
 {
@@ -47,7 +49,12 @@ namespace sparrow
         try
         {
             auto private_data = static_cast<arrow_array_stream_private_data*>(stream->private_data);
-            out = private_data->schema();
+            ArrowSchema* schema = private_data->schema();
+            if (schema == nullptr)
+            {
+                return EINVAL;
+            }
+            copy_schema(*schema, *out);
             return 0;
         }
         catch (const std::bad_alloc&)
@@ -79,7 +86,19 @@ namespace sparrow
 
         try
         {
-            out = private_data->export_next_array();
+            ArrowArray* array_ptr = private_data->export_next_array();
+            if (array_ptr->release == nullptr)
+            {
+                // End of stream - return empty ArrowArray
+                *out = *array_ptr;
+                delete array_ptr;
+            }
+            else
+            {
+                // Move array content to out
+                *out = move_array(*array_ptr);
+                delete array_ptr;
+            }
             return 0;
         }
         catch (const std::bad_alloc&)

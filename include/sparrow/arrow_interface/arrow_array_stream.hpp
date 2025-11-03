@@ -37,6 +37,7 @@
 #include "sparrow/arrow_interface/arrow_array_stream/private_data.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/c_stream_interface.hpp"
+#include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
@@ -128,5 +129,5 @@ namespace sparrow
 
     void fill_arrow_array_stream(ArrowArrayStream& stream);
 
-    ArrowArrayStream make_empty_arrow_array_stream();
+    SPARROW_API ArrowArrayStream make_empty_arrow_array_stream();
 }

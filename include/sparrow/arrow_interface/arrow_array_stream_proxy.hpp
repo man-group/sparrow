@@ -16,8 +16,10 @@
 
 #include <ranges>
 
+#include "sparrow/array.hpp"
 #include "sparrow/array_api.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/arrow_interface/arrow_array_stream.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/c_interface.hpp"
@@ -52,7 +54,7 @@ namespace sparrow
      *
      * @see https://arrow.apache.org/docs/format/CStreamInterface.html
      */
-    class arrow_array_stream_proxy
+    class SPARROW_API arrow_array_stream_proxy
     {
     public:
 
@@ -123,23 +125,33 @@ namespace sparrow
         void push(R&& arrays)
         {
             arrow_array_stream_private_data& private_data = *get_private_data();
+            
+            // Check if we need to create schema from first array
+            if (private_data.schema() == nullptr)
+            {
+                ArrowSchema* schema = new ArrowSchema();
+                copy_schema(*get_arrow_schema(*std::ranges::begin(arrays)), *schema);
+                private_data.import_schema(schema);
+            }
+            
+            // Validate schema compatibility for all arrays
             for (const auto& array : arrays)
             {
-                if (!check_compatible_schema(private_data.schema(), get_arrow_schema(array)))
+                if (!check_compatible_schema(*private_data.schema(), *get_arrow_schema(array)))
                 {
                     throw std::runtime_error("Incompatible schema when adding array to ArrowArrayStream");
                 }
             }
             if (private_data.schema() == nullptr)
-            {
-                ArrowSchema* schema = new ArrowSchema();
                 copy_schema(get_arrow_schema(*std::ranges::begin(arrays)), schema);
-                private_data.import_schema(schema);
-                
-            }
+            
+            // Import all arrays
             for (auto&& array : arrays)
             {
-                private_data.import_array(extract_arrow_array(std::forward<decltype(array)>(array)));
+                ArrowArray extracted_array = extract_arrow_array(std::move(array));
+                ArrowArray* arrow_array_ptr = new ArrowArray();
+                swap(*arrow_array_ptr, extracted_array);
+                private_data.import_array(arrow_array_ptr);
             }
         }
 

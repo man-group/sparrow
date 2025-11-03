@@ -61,21 +61,27 @@ namespace sparrow
 
     std::optional<array> arrow_array_stream_proxy::pop()
     {
-        ArrowSchema* schema_ptr = nullptr;
-        if (int err = m_stream_ptr->get_schema(m_stream_ptr, schema_ptr); err != 0)
+        ArrowSchema schema;
+        if (int err = m_stream_ptr->get_schema(m_stream_ptr, &schema); err != 0)
         {
             throw std::system_error(err, std::generic_category(), "Failed to get schema from ArrowArrayStream");
         }
-        ArrowArray* array_ptr;
-        m_stream_ptr->get_next(m_stream_ptr, array_ptr);
-        if(array_ptr == nullptr || array_ptr->release == nullptr)
+        
+        ArrowArray array;
+        if (int err = m_stream_ptr->get_next(m_stream_ptr, &array); err != 0)
+        {
+            schema.release(&schema);
+            throw std::system_error(err, std::generic_category(), "Failed to get next array from ArrowArrayStream");
+        }
+        
+        if(array.release == nullptr)
         {
             // End of stream
+            schema.release(&schema);
             return std::nullopt;
         }
-        ArrowArray moved_array = move_array(*array_ptr);
-        delete array_ptr;
-        return std::make_optional<array>(std::move(moved_array), schema_ptr);
+        
+        return std::make_optional<sparrow::array>(std::move(array), std::move(schema));
     }
 
     void arrow_array_stream_proxy::throw_if_immutable() const
