@@ -28,6 +28,33 @@ namespace sparrow
 
         arrow_array_stream_private_data() = default;
 
+        ~arrow_array_stream_private_data()
+        {
+            if (m_schema != nullptr)
+            {
+                if (m_schema->release != nullptr)
+                {
+                    m_schema->release(m_schema);
+                }
+                delete m_schema;
+                m_schema = nullptr;
+            }
+
+            while (!m_arrays.empty())
+            {
+                ArrowArray* array = m_arrays.front();
+                m_arrays.pop();
+                if (array != nullptr)
+                {
+                    if (array->release != nullptr)
+                    {
+                        array->release(array);
+                    }
+                    delete array;
+                }
+            }
+        }
+
         void import_schema(ArrowSchema* out_schema)
         {
             if (m_schema != nullptr)
