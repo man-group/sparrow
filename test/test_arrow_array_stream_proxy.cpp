@@ -362,24 +362,22 @@ namespace sparrow
             ArrowArrayStream* stream = nullptr;
             {
                 arrow_array_stream_proxy proxy;
-
                 proxy.push(make_test_primitive_array<int32_t>(20));
                 proxy.push(make_test_primitive_array<int32_t>(30));
-
                 stream = proxy.export_stream();
             }
             // Proxy destroyed, but stream should still be valid
 
-            REQUIRE(stream != nullptr);
+            REQUIRE_NE(stream, nullptr);
 
             // Consume from the exported stream
-            ArrowArray* out_array = nullptr;
-            int result = stream->get_next(stream, out_array);
+            ArrowArray out_array;
+            int result = stream->get_next(stream, &out_array);
             CHECK(result == 0);
 
-            if (out_array && out_array->release)
+            if (out_array.release)
             {
-                out_array->release(out_array);
+                out_array.release(&out_array);
             }
 
             // Clean up stream
