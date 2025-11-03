@@ -49,12 +49,7 @@ namespace sparrow
         try
         {
             auto private_data = static_cast<arrow_array_stream_private_data*>(stream->private_data);
-            ArrowSchema* schema = private_data->schema();
-            if (schema == nullptr)
-            {
-                return EINVAL;
-            }
-            copy_schema(*schema, *out);
+            copy_schema(*private_data->schema(), *out);
             return 0;
         }
         catch (const std::bad_alloc&)

@@ -14,6 +14,7 @@
 
 
 #include "sparrow/arrow_interface/arrow_array_stream_proxy.hpp"
+
 #include <optional>
 
 namespace sparrow
@@ -61,26 +62,24 @@ namespace sparrow
 
     std::optional<array> arrow_array_stream_proxy::pop()
     {
+        ArrowArray array;
+        if (int err = m_stream_ptr->get_next(m_stream_ptr, &array); err != 0)
+        {
+            throw std::system_error(err, std::generic_category(), "Failed to get next array from ArrowArrayStream");
+        }
+
+        if (array.release == nullptr)
+        {
+            // End of stream
+            return std::nullopt;
+        }
+
         ArrowSchema schema;
         if (int err = m_stream_ptr->get_schema(m_stream_ptr, &schema); err != 0)
         {
             throw std::system_error(err, std::generic_category(), "Failed to get schema from ArrowArrayStream");
         }
-        
-        ArrowArray array;
-        if (int err = m_stream_ptr->get_next(m_stream_ptr, &array); err != 0)
-        {
-            schema.release(&schema);
-            throw std::system_error(err, std::generic_category(), "Failed to get next array from ArrowArrayStream");
-        }
-        
-        if(array.release == nullptr)
-        {
-            // End of stream
-            schema.release(&schema);
-            return std::nullopt;
-        }
-        
+
         return std::make_optional<sparrow::array>(std::move(array), std::move(schema));
     }
 

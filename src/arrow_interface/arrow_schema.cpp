@@ -68,11 +68,19 @@ namespace sparrow
                 copy_schema(*source.children[i], *target.children[i]);
             }
         }
+        else
+        {
+            target.children = nullptr;
+        }
 
         if (source.dictionary != nullptr)
         {
             target.dictionary = new ArrowSchema{};
             copy_schema(*source.dictionary, *target.dictionary);
+        }
+        else
+        {
+            target.dictionary = nullptr;
         }
 
         std::optional<std::string> metadata_str;
@@ -98,7 +106,7 @@ namespace sparrow
 
     bool check_compatible_schema(const ArrowSchema& schema1, const ArrowSchema& schema2)
     {
-        if(&schema1 == &schema2)
+        if (&schema1 == &schema2)
         {
             return true;
         }
@@ -116,17 +124,17 @@ namespace sparrow
             }
         }
 
-        if(schema1.flags != schema2.flags)
+        if (schema1.flags != schema2.flags)
         {
             return false;
         }
 
         // name: both must be null or both non-null and equal
-        if((schema1.name == nullptr) ^ (schema2.name == nullptr))
+        if ((schema1.name == nullptr) ^ (schema2.name == nullptr))
         {
             return false;
         }
-        if(schema1.name != nullptr && schema2.name != nullptr)
+        if (schema1.name != nullptr && schema2.name != nullptr)
         {
             if (std::string_view(schema1.name) != std::string_view(schema2.name))
             {
@@ -150,7 +158,7 @@ namespace sparrow
         }
 
         // dictionary: both must be null or both non-null and recursively compatible
-        if((schema1.dictionary == nullptr) ^ (schema2.dictionary == nullptr))
+        if ((schema1.dictionary == nullptr) ^ (schema2.dictionary == nullptr))
         {
             return false;
         }
@@ -189,5 +197,4 @@ namespace sparrow
 
         return true;
     }
-
 }

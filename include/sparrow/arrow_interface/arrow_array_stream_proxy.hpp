@@ -143,8 +143,12 @@ namespace sparrow
                 }
             }
             if (private_data.schema() == nullptr)
-                copy_schema(get_arrow_schema(*std::ranges::begin(arrays)), schema);
-            
+            {
+                ArrowSchema* schema = new ArrowSchema();
+                swap(*schema, *get_arrow_schema(*std::ranges::begin(arrays)));
+                private_data.import_schema(schema);
+            }
+
             // Import all arrays
             for (auto&& array : arrays)
             {
