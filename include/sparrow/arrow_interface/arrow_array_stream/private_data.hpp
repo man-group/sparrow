@@ -43,7 +43,6 @@ namespace sparrow
             while (!m_arrays.empty())
             {
                 ArrowArray* array = m_arrays.front();
-                m_arrays.pop();
                 if (array != nullptr)
                 {
                     if (array->release != nullptr)
@@ -52,6 +51,7 @@ namespace sparrow
                     }
                     delete array;
                 }
+                m_arrays.pop();
             }
         }
 

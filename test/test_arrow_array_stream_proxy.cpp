@@ -79,6 +79,7 @@ namespace sparrow
             arrow_array_stream_proxy proxy;
             ArrowArrayStream* aas = proxy.export_stream();
             REQUIRE_NE(aas, nullptr);
+            aas->release(aas);
             delete aas;
         }
 
@@ -89,21 +90,22 @@ namespace sparrow
             arrow_array_stream_proxy proxy(stream);
             ArrowArrayStream* aas = proxy.export_stream();
             REQUIRE_NE(aas, nullptr);
+            aas->release(aas);
             delete aas;
         }
 
         TEST_CASE("export_stream")
         {
             arrow_array_stream_proxy proxy;
-            ArrowArrayStream* exported = proxy.export_stream();
-            REQUIRE_NE(exported, nullptr);
-            REQUIRE_NE(exported->get_schema, nullptr);
-            REQUIRE_NE(exported->get_next, nullptr);
-            REQUIRE_NE(exported->get_last_error, nullptr);
-            REQUIRE_NE(exported->release, nullptr);
+            ArrowArrayStream* aas = proxy.export_stream();
+            REQUIRE_NE(aas, nullptr);
+            REQUIRE_NE(aas->get_schema, nullptr);
+            REQUIRE_NE(aas->get_next, nullptr);
+            REQUIRE_NE(aas->get_last_error, nullptr);
+            REQUIRE_NE(aas->release, nullptr);
 
-            exported->release(exported);
-            delete exported;
+            aas->release(aas);
+            delete aas;
         }
 
         TEST_CASE("push and pop - single int32 array")
