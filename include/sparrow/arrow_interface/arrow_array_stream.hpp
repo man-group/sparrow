@@ -56,7 +56,7 @@ namespace sparrow
      *
      * @see https://arrow.apache.org/docs/format/CStreamInterface.html
      */
-    void release_arrow_array_stream(ArrowArrayStream* stream);
+    SPARROW_API void release_arrow_array_stream(ArrowArrayStream* stream);
 
     /**
      * @brief Get schema callback for ArrowArrayStream.
@@ -78,7 +78,7 @@ namespace sparrow
      *
      * @see https://arrow.apache.org/docs/format/CStreamInterface.html
      */
-    int get_schema_from_arrow_array_stream(ArrowArrayStream* stream, ArrowSchema* out);
+    SPARROW_API int get_schema_from_arrow_array_stream(ArrowArrayStream* stream, ArrowSchema* out);
 
     /**
      * @brief Get next array callback for ArrowArrayStream.
@@ -103,7 +103,7 @@ namespace sparrow
      *
      * @see https://arrow.apache.org/docs/format/CStreamInterface.html
      */
-    int get_next_from_arrow_array_stream(ArrowArrayStream* stream, ArrowArray* out);
+    SPARROW_API int get_next_from_arrow_array_stream(ArrowArrayStream* stream, ArrowArray* out);
 
     /**
      * @brief Get last error callback for ArrowArrayStream.
@@ -125,9 +125,9 @@ namespace sparrow
      *
      * @see https://arrow.apache.org/docs/format/CStreamInterface.html
      */
-    const char* get_last_error_from_arrow_array_stream(ArrowArrayStream* stream);
+    SPARROW_API const char* get_last_error_from_arrow_array_stream(ArrowArrayStream* stream);
 
-    void fill_arrow_array_stream(ArrowArrayStream& stream);
+    SPARROW_API void fill_arrow_array_stream(ArrowArrayStream& stream);
 
     SPARROW_API ArrowArrayStream make_empty_arrow_array_stream();
 }

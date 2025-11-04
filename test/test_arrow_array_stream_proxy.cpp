@@ -77,19 +77,19 @@ namespace sparrow
         TEST_CASE("constructor - default")
         {
             arrow_array_stream_proxy proxy;
-
-            // Verify that the proxy was created successfully
-            // Note: get_private_data() is now private, so we test indirectly
-            CHECK_NOTHROW(proxy.export_stream());
+            ArrowArrayStream * aas = proxy.export_stream();
+            REQUIRE_NE(aas, nullptr);
+            delete aas;
         }
 
         TEST_CASE("constructor - from existing stream")
         {
-            ArrowArrayStream stream = make_empty_arrow_array_stream();
-            arrow_array_stream_proxy proxy(&stream);
-
-            // Verify proxy was created successfully
-            CHECK_NOTHROW(proxy.export_stream());
+            ArrowArrayStream* stream = new ArrowArrayStream;
+            fill_arrow_array_stream(*stream);
+            arrow_array_stream_proxy proxy(stream);
+            ArrowArrayStream * aas = proxy.export_stream();
+            REQUIRE_NE(aas, nullptr);
+            delete aas;
         }
 
         TEST_CASE("export_stream")
