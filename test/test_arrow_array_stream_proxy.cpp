@@ -177,6 +177,7 @@ namespace sparrow
             CHECK_EQ(out_schema.dictionary, nullptr);
             stream->release(stream);
             delete stream;
+            out_schema.release(&out_schema);
         }
 
         TEST_CASE("stream callbacks - get_next")

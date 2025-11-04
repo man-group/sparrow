@@ -119,6 +119,4 @@ namespace sparrow
             throw std::runtime_error("ArrowArrayStream private data is not initialized");
         }
     }
-
-
 }
