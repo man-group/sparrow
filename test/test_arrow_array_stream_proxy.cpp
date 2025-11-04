@@ -77,7 +77,7 @@ namespace sparrow
         TEST_CASE("constructor - default")
         {
             arrow_array_stream_proxy proxy;
-            ArrowArrayStream * aas = proxy.export_stream();
+            ArrowArrayStream* aas = proxy.export_stream();
             REQUIRE_NE(aas, nullptr);
             delete aas;
         }
@@ -87,7 +87,7 @@ namespace sparrow
             ArrowArrayStream* stream = new ArrowArrayStream;
             fill_arrow_array_stream(*stream);
             arrow_array_stream_proxy proxy(stream);
-            ArrowArrayStream * aas = proxy.export_stream();
+            ArrowArrayStream* aas = proxy.export_stream();
             REQUIRE_NE(aas, nullptr);
             delete aas;
         }
