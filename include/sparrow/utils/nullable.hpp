@@ -566,45 +566,6 @@ namespace sparrow
         }
 
         /**
-         * @brief Constructor from const value and const flag (for non-reference types only).
-         *
-         * @param value Const reference to value to store
-         * @param null_flag Const reference to flag to store
-         *
-         * @post get() refers to the provided value reference
-         * @post null_flag() refers to the provided flag reference
-         */
-        template <class U, class V>
-            requires(std::same_as<std::remove_cvref_t<U>, T> && std::same_as<std::remove_cvref_t<V>, B>
-                     && std::is_const_v<std::remove_reference_t<U>>
-                     && std::is_const_v<std::remove_reference_t<V>> && not std::is_reference_v<T>
-                     && not std::is_reference_v<B>)
-        constexpr nullable(U& value, V& null_flag)
-            : m_value(value)
-            , m_null_flag(null_flag)
-        {
-        }
-
-        /**
-         * @brief Constructor from const value and rvalue flag (for non-reference types only).
-         *
-         * @param value Const reference to value to store
-         * @param null_flag Flag to move and store
-         *
-         * @post get() refers to the provided value reference
-         * @post null_flag() returns the moved flag
-         */
-        template <class U, class V>
-            requires(std::same_as<std::remove_cvref_t<U>, T> && std::same_as<std::remove_cvref_t<V>, B>
-                     && std::is_const_v<std::remove_reference_t<U>> && not std::is_lvalue_reference_v<V>
-                     && not std::is_reference_v<T> && not std::is_reference_v<B>)
-        constexpr nullable(U& value, V&& null_flag)
-            : m_value(value)
-            , m_null_flag(std::forward<V>(null_flag))
-        {
-        }
-
-        /**
          * @brief Constructor from const value and non-const flag reference (for non-reference types only).
          *
          * @param value Const reference to value to store
@@ -617,10 +578,32 @@ namespace sparrow
             requires(std::same_as<std::remove_cvref_t<U>, T> && std::same_as<std::remove_cvref_t<V>, B>
                      && std::is_const_v<std::remove_reference_t<U>>
                      && not std::is_const_v<std::remove_reference_t<V>> && not std::is_reference_v<T>
-                     && not std::is_reference_v<B>)
+                     && not std::is_reference_v<B> && std::is_lvalue_reference_v<U&&> && std::is_lvalue_reference_v<V&&>)
         constexpr nullable(U& value, V& null_flag)
             : m_value(value)
             , m_null_flag(null_flag)
+        {
+        }
+
+        /**
+         * @brief Constructor from two forwarding references (for value types with const qualifiers).
+         *
+         * This handles the special case where values are passed with const qualifiers that don't match T and B exactly.
+         * Occurs with arrays like bool8_array where inner_const_reference is bool but dereferencing returns const-qualified values.
+         *
+         * @param value Value to forward and store
+         * @param null_flag Flag to forward and store
+         *
+         * @post get() returns the stored value
+         * @post null_flag() returns the stored flag
+         */
+        template <class U, class V>
+            requires(std::same_as<std::remove_cvref_t<U>, T> && std::same_as<std::remove_cvref_t<V>, B>
+                     && not std::is_reference_v<T> && not std::is_reference_v<B>
+                     && (std::is_const_v<std::remove_reference_t<U>> || std::is_const_v<std::remove_reference_t<V>>))
+        constexpr nullable(U&& value, V&& null_flag)
+            : m_value(std::forward<U>(value))
+            , m_null_flag(std::forward<V>(null_flag))
         {
         }
 
