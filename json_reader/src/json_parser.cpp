@@ -119,7 +119,7 @@ namespace sparrow::json_reader
                     {
                         altered_schema.erase("metadata");
                     }
-                    return build_array_from_json(dictionary_element.at("data").at("columns")[0], schema, root, false);
+                    return build_array_from_json(dictionary_element.at("data").at("columns")[0], altered_schema, root, false);
                 }
             }
             throw std::runtime_error("Dictionary not found");
