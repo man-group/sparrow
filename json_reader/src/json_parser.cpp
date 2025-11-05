@@ -115,7 +115,7 @@ namespace sparrow::json_reader
                 if (dictionary_element.at("id").get<size_t>() == dictionary_id)
                 {
                     nlohmann::json altered_schema = schema;
-                    if (altered_schema.contains("dictionary"))
+                    if (altered_schema.contains("metadata"))
                     {
                         altered_schema.erase("metadata");
                     }
