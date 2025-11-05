@@ -114,7 +114,17 @@ namespace sparrow::json_reader
             {
                 if (dictionary_element.at("id").get<size_t>() == dictionary_id)
                 {
-                    return build_array_from_json(dictionary_element.at("data").at("columns")[0], schema, root, false);
+                    nlohmann::json altered_schema = schema;
+                    if (altered_schema.contains("metadata"))
+                    {
+                        altered_schema.erase("metadata");
+                    }
+                    return build_array_from_json(
+                        dictionary_element.at("data").at("columns")[0],
+                        altered_schema,
+                        root,
+                        false
+                    );
                 }
             }
             throw std::runtime_error("Dictionary not found");

@@ -1,0 +1,180 @@
+{
+  "schema": {
+    "fields": [
+      {
+        "name": "uuids",
+        "type": {
+          "name": "fixedsizebinary",
+          "byteWidth": 16
+        },
+        "nullable": true,
+        "children": [],
+        "metadata": [
+          {
+            "key": "ARROW:extension:name",
+            "value": "arrow.uuid"
+          },
+          {
+            "key": "ARROW:extension:metadata",
+            "value": ""
+          }
+        ]
+      },
+      {
+        "name": "dict_exts",
+        "type": {
+          "name": "utf8"
+        },
+        "nullable": true,
+        "children": [],
+        "dictionary": {
+          "id": 0,
+          "indexType": {
+            "name": "int",
+            "isSigned": true,
+            "bitWidth": 8
+          },
+          "isOrdered": false
+        },
+        "metadata": [
+          {
+            "key": "ARROW:extension:name",
+            "value": "dict-extension"
+          },
+          {
+            "key": "ARROW:extension:metadata",
+            "value": "dict-extension-serialized"
+          }
+        ]
+      }
+    ]
+  },
+  "dictionaries": [
+    {
+      "id": 0,
+      "data": {
+        "count": 5,
+        "columns": [
+          {
+            "name": "DICT0",
+            "count": 5,
+            "VALIDITY": [
+              1,
+              0,
+              0,
+              1,
+              1
+            ],
+            "OFFSET": [
+              0,
+              7,
+              7,
+              7,
+              18,
+              25
+            ],
+            "DATA": [
+              "oe52cpl",
+              "",
+              "",
+              "1\u77e2h\u77e2jo4",
+              "l441emj"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "batches": [
+    {
+      "count": 0,
+      "columns": [
+        {
+          "name": "uuids",
+          "count": 0,
+          "VALIDITY": [],
+          "DATA": []
+        },
+        {
+          "name": "dict_exts",
+          "count": 0,
+          "VALIDITY": [],
+          "DATA": []
+        }
+      ]
+    },
+    {
+      "count": 13,
+      "columns": [
+        {
+          "name": "uuids",
+          "count": 13,
+          "VALIDITY": [
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "DATA": [
+            "16F75BB98E26F40069D8E4EEA676391A",
+            "2E8EAC7DCA4C7B7411DF8476CE95B15A",
+            "721198EA61E4F2F0E0E0C6C2145AF730",
+            "2C7343CE131E8C152EBB99C03C381CDB",
+            "24D43BB35F705EBF5E8D2BC57D20386C",
+            "E5967C1943BCDA2413138AC9786CACB8",
+            "6C101F66E455F5271423ED112A0A05FA",
+            "FD343B496E65421418B4908EAAD9213D",
+            "17F56A81EACE8B89911E90AB45EB329A",
+            "651B0CFD1231D4F8EED1DE04A3252EAA",
+            "1D07F33965AD2A0314F4D43B951F0DC5",
+            "052FD9C034A51F3FC4F6AFC12EDE3497",
+            "69B8F0C1510410B28F452249E61722EE"
+          ]
+        },
+        {
+          "name": "dict_exts",
+          "count": 13,
+          "VALIDITY": [
+            1,
+            0,
+            1,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1
+          ],
+          "DATA": [
+            0,
+            3,
+            1,
+            2,
+            1,
+            3,
+            2,
+            0,
+            1,
+            4,
+            4,
+            0,
+            0
+          ]
+        }
+      ]
+    }
+  ]
+}
