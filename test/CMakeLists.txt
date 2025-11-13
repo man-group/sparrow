@@ -45,6 +45,7 @@ set(SPARROW_TESTS_SOURCES
     test_array.cpp
     test_arrow_array_schema_proxy.cpp
     test_arrow_array_schema_utils.cpp
+    test_arrow_array_stream_proxy.cpp
     test_arrow_array.cpp
     test_arrow_schema.cpp
     test_bit.cpp
