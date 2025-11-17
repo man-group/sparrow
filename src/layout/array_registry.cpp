@@ -16,7 +16,10 @@
 
 #include <stdexcept>
 
+#include "sparrow/json_array.hpp"
 #include "sparrow/layout/array_type_mapping.hpp"
+#include "sparrow/uuid_array.hpp"
+#include "sparrow/utils/temporal.hpp"
 
 namespace sparrow
 {
