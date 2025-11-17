@@ -21,48 +21,133 @@
 #include <vector>
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
+#include "sparrow/layout/array_type_mapping.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/memory.hpp"
 
 // Array type includes for dispatch support
+#include "sparrow/date_array.hpp"
+#include "sparrow/decimal_array.hpp"
+#include "sparrow/dictionary_encoded_array.hpp"
+#include "sparrow/duration_array.hpp"
+#include "sparrow/fixed_width_binary_array.hpp"
+#include "sparrow/interval_array.hpp"
+#include "sparrow/list_array.hpp"
+#include "sparrow/map_array.hpp"
 #include "sparrow/null_array.hpp"
 #include "sparrow/primitive_array.hpp"
-#include "sparrow/dictionary_encoded_array.hpp"
-#include "sparrow/variable_size_binary_array.hpp"
-#include "sparrow/variable_size_binary_view_array.hpp"
 #include "sparrow/run_end_encoded_array.hpp"
-#include "sparrow/list_array.hpp"
 #include "sparrow/struct_array.hpp"
-#include "sparrow/map_array.hpp"
-#include "sparrow/union_array.hpp"
-#include "sparrow/decimal_array.hpp"
-#include "sparrow/fixed_width_binary_array.hpp"
-#include "sparrow/date_array.hpp"
+#include "sparrow/time_array.hpp"
 #include "sparrow/timestamp_array.hpp"
 #include "sparrow/timestamp_without_timezone_array.hpp"
-#include "sparrow/time_array.hpp"
-#include "sparrow/duration_array.hpp"
-#include "sparrow/interval_array.hpp"
+#include "sparrow/union_array.hpp"
+#include "sparrow/variable_size_binary_array.hpp"
+#include "sparrow/variable_size_binary_view_array.hpp"
 
 namespace sparrow
 {
+    // clang-format off
+    // Template specializations for array_type_map - defined here after all array includes
+    template <> struct array_type_map<data_type::NA> { using type = null_array; };
+    template <> struct array_type_map<data_type::BOOL> { using type = primitive_array<bool>; };
+    template <> struct array_type_map<data_type::UINT8> { using type = primitive_array<std::uint8_t>; };
+    template <> struct array_type_map<data_type::INT8> { using type = primitive_array<std::int8_t>; };
+    template <> struct array_type_map<data_type::UINT16> { using type = primitive_array<std::uint16_t>; };
+    template <> struct array_type_map<data_type::INT16> { using type = primitive_array<std::int16_t>; };
+    template <> struct array_type_map<data_type::UINT32> { using type = primitive_array<std::uint32_t>; };
+    template <> struct array_type_map<data_type::INT32> { using type = primitive_array<std::int32_t>; };
+    template <> struct array_type_map<data_type::UINT64> { using type = primitive_array<std::uint64_t>; };
+    template <> struct array_type_map<data_type::INT64> { using type = primitive_array<std::int64_t>; };
+    template <> struct array_type_map<data_type::HALF_FLOAT> { using type = primitive_array<float16_t>; };
+    template <> struct array_type_map<data_type::FLOAT> { using type = primitive_array<float32_t>; };
+    template <> struct array_type_map<data_type::DOUBLE> { using type = primitive_array<float64_t>; };
+    template <> struct array_type_map<data_type::STRING> { using type = string_array; };
+    template <> struct array_type_map<data_type::STRING_VIEW> { using type = string_view_array; };
+    template <> struct array_type_map<data_type::LARGE_STRING> { using type = big_string_array; };
+    template <> struct array_type_map<data_type::BINARY> { using type = binary_array; };
+    template <> struct array_type_map<data_type::BINARY_VIEW> { using type = binary_view_array; };
+    template <> struct array_type_map<data_type::LARGE_BINARY> { using type = big_binary_array; };
+    template <> struct array_type_map<data_type::LIST> { using type = list_array; };
+    template <> struct array_type_map<data_type::LARGE_LIST> { using type = big_list_array; };
+    template <> struct array_type_map<data_type::LIST_VIEW> { using type = list_view_array; };
+    template <> struct array_type_map<data_type::LARGE_LIST_VIEW> { using type = big_list_view_array; };
+    template <> struct array_type_map<data_type::FIXED_SIZED_LIST> { using type = fixed_sized_list_array; };
+    template <> struct array_type_map<data_type::STRUCT> { using type = struct_array; };
+    template <> struct array_type_map<data_type::MAP> { using type = map_array; };
+    template <> struct array_type_map<data_type::RUN_ENCODED> { using type = run_end_encoded_array; };
+    template <> struct array_type_map<data_type::DENSE_UNION> { using type = dense_union_array; };
+    template <> struct array_type_map<data_type::SPARSE_UNION> { using type = sparse_union_array; };
+    template <> struct array_type_map<data_type::DECIMAL32> { using type = decimal_32_array; };
+    template <> struct array_type_map<data_type::DECIMAL64> { using type = decimal_64_array; };
+    template <> struct array_type_map<data_type::DECIMAL128> { using type = decimal_128_array; };
+    template <> struct array_type_map<data_type::DECIMAL256> { using type = decimal_256_array; };
+    template <> struct array_type_map<data_type::FIXED_WIDTH_BINARY> { using type = fixed_width_binary_array; };
+    template <> struct array_type_map<data_type::DATE_DAYS> { using type = date_days_array; };
+    template <> struct array_type_map<data_type::DATE_MILLISECONDS> { using type = date_milliseconds_array; };
+    template <> struct array_type_map<data_type::TIMESTAMP_SECONDS> { using type = timestamp_seconds_array; };
+    template <> struct array_type_map<data_type::TIMESTAMP_MILLISECONDS> { using type = timestamp_milliseconds_array; };
+    template <> struct array_type_map<data_type::TIMESTAMP_MICROSECONDS> { using type = timestamp_microseconds_array; };
+    template <> struct array_type_map<data_type::TIMESTAMP_NANOSECONDS> { using type = timestamp_nanoseconds_array; };
+    template <> struct array_type_map<data_type::DURATION_SECONDS> { using type = duration_seconds_array; };
+    template <> struct array_type_map<data_type::DURATION_MILLISECONDS> { using type = duration_milliseconds_array; };
+    template <> struct array_type_map<data_type::DURATION_MICROSECONDS> { using type = duration_microseconds_array; };
+    template <> struct array_type_map<data_type::DURATION_NANOSECONDS> { using type = duration_nanoseconds_array; };
+    template <> struct array_type_map<data_type::INTERVAL_MONTHS> { using type = months_interval_array; };
+    template <> struct array_type_map<data_type::INTERVAL_DAYS_TIME> { using type = days_time_interval_array; };
+    template <> struct array_type_map<data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS> { using type = month_day_nanoseconds_interval_array; };
+    template <> struct array_type_map<data_type::TIME_SECONDS> { using type = time_seconds_array; };
+    template <> struct array_type_map<data_type::TIME_MILLISECONDS> { using type = time_milliseconds_array; };
+    template <> struct array_type_map<data_type::TIME_MICROSECONDS> { using type = time_microseconds_array; };
+    template <> struct array_type_map<data_type::TIME_NANOSECONDS> { using type = time_nanoseconds_array; };
+
+    // Dictionary key type specializations
+    template <> struct dictionary_key_type<data_type::UINT8> { using type = std::uint8_t; };
+    template <> struct dictionary_key_type<data_type::INT8> { using type = std::int8_t; };
+    template <> struct dictionary_key_type<data_type::UINT16> { using type = std::uint16_t; };
+    template <> struct dictionary_key_type<data_type::INT16> { using type = std::int16_t; };
+    template <> struct dictionary_key_type<data_type::UINT32> { using type = std::uint32_t; };
+    template <> struct dictionary_key_type<data_type::INT32> { using type = std::int32_t; };
+    template <> struct dictionary_key_type<data_type::UINT64> { using type = std::uint64_t; };
+    template <> struct dictionary_key_type<data_type::INT64> { using type = std::int64_t; };
+
+    // Timestamp type specializations (with/without timezone)
+    template <> struct timestamp_type_map<data_type::TIMESTAMP_SECONDS> {
+        using with_tz = timestamp_seconds_array;
+        using without_tz = timestamp_without_timezone_seconds_array;
+    };
+    template <> struct timestamp_type_map<data_type::TIMESTAMP_MILLISECONDS> {
+        using with_tz = timestamp_milliseconds_array;
+        using without_tz = timestamp_without_timezone_milliseconds_array;
+    };
+    template <> struct timestamp_type_map<data_type::TIMESTAMP_MICROSECONDS> {
+        using with_tz = timestamp_microseconds_array;
+        using without_tz = timestamp_without_timezone_microseconds_array;
+    };
+    template <> struct timestamp_type_map<data_type::TIMESTAMP_NANOSECONDS> {
+        using with_tz = timestamp_nanoseconds_array;
+        using without_tz = timestamp_without_timezone_nanoseconds_array;
+    };
+
+    // clang-format on
+
     /**
      * @brief Registry for array factories supporting base types and extensions.
-     * 
+     *
      * This registry provides a centralized mechanism for creating array instances
      * from arrow_proxy objects. It supports:
-     * 
+     *
      * 1. Base types: All fundamental Arrow data types (primitives, lists, structs, etc.)
      * 2. Extensions: Arrow extension types that override base type behavior based on metadata
      * 3. Dispatch: Type-safe visitor pattern for polymorphic array operations
-     * 
+     *
      * The registry follows a two-tier lookup strategy:
      * - First, checks if there's a registered extension matching the metadata
      * - Falls back to the base type factory if no extension matches
-     * 
+     *
      * Extension types are identified by the "ARROW:extension:name" metadata key.
-     * 
+     *
      * @example
      * // Register a custom extension
      * auto& registry = array_registry::instance();
@@ -75,10 +160,10 @@ namespace sparrow
      *         };
      *     }
      * );
-     * 
+     *
      * // Use the factory
      * auto arr_wrapper = array_factory(some_proxy); // Automatically dispatches to right type
-     * 
+     *
      * // Use dispatch to visit the array with type safety
      * auto result = registry.dispatch([](auto&& array) {
      *     return array.size();
@@ -94,10 +179,6 @@ namespace sparrow
         /// Extension predicate that checks if a proxy matches an extension type
         using extension_predicate = std::function<bool(const arrow_proxy&)>;
 
-        /// Visitor function type for dispatch - takes a visitor and array_wrapper, returns visitor result
-        template <class F>
-        using dispatch_func = std::function<std::invoke_result_t<F, null_array>(F&&, const array_wrapper&)>;
-
         /// Visitor result type alias
         template <class F>
         using visit_result_t = std::invoke_result_t<F, null_array>;
@@ -109,10 +190,18 @@ namespace sparrow
 
         /**
          * @brief Register a base type factory.
-         * 
+         *
          * Base type factories are used when no extension matches. They handle
          * the standard Arrow data types.
-         * 
+         *
+         * NOTE: This registers the factory for array creation. The dispatch
+         * mechanism (visit/dispatch_base_type) uses a compile-time switch statement
+         * because C++ requires knowing the concrete type at compile time to unwrap
+         * the array_wrapper. While we could theoretically store type-erased dispatch
+         * functions, this would add significant runtime overhead and complexity for
+         * no practical benefit, since the set of base types is fixed and known at
+         * compile time.
+         *
          * @param dt The data_type enum value
          * @param factory Factory function to create the array
          */
@@ -120,44 +209,38 @@ namespace sparrow
 
         /**
          * @brief Register an extension type factory.
-         * 
+         *
          * Extension types are checked before base types. An extension is selected
          * when its base_type matches and its predicate returns true for the proxy.
-         * 
+         *
          * @param base_type The underlying base data_type
          * @param extension_name The value of "ARROW:extension:name" metadata
          * @param factory Factory function to create the array
          */
-        SPARROW_API void register_extension(
-            data_type base_type,
-            std::string_view extension_name,
-            factory_func factory
-        );
+        SPARROW_API void
+        register_extension(data_type base_type, std::string_view extension_name, factory_func factory);
 
         /**
          * @brief Register an extension type with custom predicate.
-         * 
+         *
          * This overload allows for more complex extension detection logic beyond
          * simple metadata name matching.
-         * 
+         *
          * @param base_type The underlying base data_type
          * @param predicate Custom function to check if proxy is this extension
          * @param factory Factory function to create the array
          */
-        SPARROW_API void register_extension_with_predicate(
-            data_type base_type,
-            extension_predicate predicate,
-            factory_func factory
-        );
+        SPARROW_API void
+        register_extension_with_predicate(data_type base_type, extension_predicate predicate, factory_func factory);
 
         /**
          * @brief Create an array wrapper from an arrow_proxy.
-         * 
+         *
          * This is the main entry point for array creation. It:
          * 1. Checks for dictionary encoding
          * 2. Checks registered extensions for the data type
          * 3. Falls back to base type factory
-         * 
+         *
          * @param proxy The arrow_proxy to wrap
          * @return A cloning_ptr to the created array_wrapper
          * @throws std::runtime_error if no factory is found
@@ -166,35 +249,35 @@ namespace sparrow
 
         /**
          * @brief Dispatch a visitor function to the concrete array type.
-         * 
+         *
          * This provides type-safe visitation of array_wrapper objects, automatically
          * unwrapping them to their concrete types and invoking the visitor function.
          * This method properly handles both base types and registered extensions by
          * checking extension predicates before dispatching.
-         * 
+         *
          * The dispatch process:
          * 1. Checks if the array matches any registered extension for its data_type
          * 2. Falls back to standard visit() for base types
          * 3. Both paths correctly unwrap the array to its concrete type
-         * 
+         *
          * Extensions are automatically detected using their registered predicates
          * (typically based on "ARROW:extension:name" metadata), ensuring that
          * custom extension types are dispatched correctly.
-         * 
+         *
          * @tparam F Visitor function type (must be callable with all array types)
          * @param func The visitor function to apply
          * @param ar The array wrapper to visit
          * @return The result of invoking func with the concrete array type
          * @throws std::invalid_argument if array type is not supported
          * @throws std::runtime_error if dictionary data type is not an integer
-         * 
+         *
          * @example
          * // Works with both base types and extensions
          * auto& registry = array_registry::instance();
-         * 
+         *
          * // Register a custom extension
          * registry.register_extension(data_type::BINARY, "my.extension", my_factory);
-         * 
+         *
          * // Create and dispatch - extensions are automatically detected
          * auto wrapper = registry.create(some_proxy);
          * auto size = registry.dispatch([](auto&& arr) { return arr.size(); }, *wrapper);
@@ -206,19 +289,68 @@ namespace sparrow
 
         array_registry() = default;
 
+        // Helper for dispatching with compile-time type knowledge
+        template <class F, data_type DT>
+        static auto dispatch_for_type(F&& func, const array_wrapper& ar) -> visit_result_t<F>
+        {
+            if constexpr (DT == data_type::TIMESTAMP_SECONDS || DT == data_type::TIMESTAMP_MILLISECONDS
+                          || DT == data_type::TIMESTAMP_MICROSECONDS || DT == data_type::TIMESTAMP_NANOSECONDS)
+            {
+                // Special handling for timestamp types with timezone check
+                using types = timestamp_type_map<DT>;
+                if (get_timezone(ar.get_arrow_proxy()) == nullptr)
+                {
+                    return func(unwrap_array<typename types::without_tz>(ar));
+                }
+                else
+                {
+                    return func(unwrap_array<typename types::with_tz>(ar));
+                }
+            }
+            else
+            {
+                return func(unwrap_array<array_type_t<DT>>(ar));
+            }
+        }
+
+        // Recursive helper for dispatching to the correct type
+        template <class F, std::size_t I = 0>
+        static auto try_dispatch_recursive(F&& func, const array_wrapper& ar, data_type dt)
+            -> visit_result_t<F>
+        {
+            if constexpr (I < all_data_types.size())
+            {
+                if (all_data_types[I] == dt)
+                {
+                    return dispatch_for_type<F, all_data_types[I]>(std::forward<F>(func), ar);
+                }
+                else
+                {
+                    return try_dispatch_recursive<F, I + 1>(std::forward<F>(func), ar, dt);
+                }
+            }
+            else
+            {
+                throw std::invalid_argument("array type not supported");
+            }
+        }
+
         // Helper method for dispatching base types
         template <class F>
-        [[nodiscard]] visit_result_t<F> dispatch_base_type(F&& func, const array_wrapper& ar, data_type dt) const;
+        [[nodiscard]] visit_result_t<F>
+        dispatch_base_type(F&& func, const array_wrapper& ar, data_type dt) const;
 
         struct extension_entry
         {
             extension_entry(extension_predicate pred, factory_func fact)
-                : predicate(std::move(pred)), factory(std::move(fact))
+                : predicate(std::move(pred))
+                , factory(std::move(fact))
             {
             }
+
             extension_predicate predicate;
             factory_func factory;
-            
+
             // Helper to check if this extension matches a wrapper
             [[nodiscard]] bool matches(const array_wrapper& wrapper) const;
         };
@@ -232,15 +364,12 @@ namespace sparrow
         /**
          * @brief Helper to check if proxy has a specific extension name.
          */
-        [[nodiscard]] static bool has_extension_name(
-            const arrow_proxy& proxy,
-            std::string_view extension_name
-        );
+        [[nodiscard]] static bool has_extension_name(const arrow_proxy& proxy, std::string_view extension_name);
     };
 
     /**
      * @brief Initialize the registry with all built-in base types and extensions.
-     * 
+     *
      * This function is called automatically on first access to ensure the registry
      * is populated with all standard Arrow types. Users can call this explicitly
      * to ensure initialization happens at a specific time.
@@ -284,7 +413,7 @@ namespace sparrow
 
         const auto dt = ar.data_type();
         const auto& proxy = ar.get_arrow_proxy();
-        
+
         // Check for registered extensions first
         auto ext_it = m_extensions.find(dt);
         if (ext_it != m_extensions.end())
@@ -299,149 +428,16 @@ namespace sparrow
                 }
             }
         }
-        
+
         // Fall back to base type dispatch
         return dispatch_base_type(std::forward<F>(func), ar, dt);
     }
 
     template <class F>
-    inline auto array_registry::dispatch_base_type(F&& func, const array_wrapper& ar, data_type dt) const -> visit_result_t<F>
+    inline auto array_registry::dispatch_base_type(F&& func, const array_wrapper& ar, data_type dt) const
+        -> visit_result_t<F>
     {
-        switch (dt)
-        {
-            case data_type::NA:
-                return func(unwrap_array<null_array>(ar));
-            case data_type::BOOL:
-                return func(unwrap_array<primitive_array<bool>>(ar));
-            case data_type::UINT8:
-                return func(unwrap_array<primitive_array<std::uint8_t>>(ar));
-            case data_type::INT8:
-                return func(unwrap_array<primitive_array<std::int8_t>>(ar));
-            case data_type::UINT16:
-                return func(unwrap_array<primitive_array<std::uint16_t>>(ar));
-            case data_type::INT16:
-                return func(unwrap_array<primitive_array<std::int16_t>>(ar));
-            case data_type::UINT32:
-                return func(unwrap_array<primitive_array<std::uint32_t>>(ar));
-            case data_type::INT32:
-                return func(unwrap_array<primitive_array<std::int32_t>>(ar));
-            case data_type::UINT64:
-                return func(unwrap_array<primitive_array<std::uint64_t>>(ar));
-            case data_type::INT64:
-                return func(unwrap_array<primitive_array<std::int64_t>>(ar));
-            case data_type::HALF_FLOAT:
-                return func(unwrap_array<primitive_array<float16_t>>(ar));
-            case data_type::FLOAT:
-                return func(unwrap_array<primitive_array<float32_t>>(ar));
-            case data_type::DOUBLE:
-                return func(unwrap_array<primitive_array<float64_t>>(ar));
-            case data_type::STRING:
-                return func(unwrap_array<string_array>(ar));
-            case data_type::STRING_VIEW:
-                return func(unwrap_array<string_view_array>(ar));
-            case data_type::LARGE_STRING:
-                return func(unwrap_array<big_string_array>(ar));
-            case data_type::BINARY:
-                return func(unwrap_array<binary_array>(ar));
-            case data_type::BINARY_VIEW:
-                return func(unwrap_array<binary_view_array>(ar));
-            case data_type::LARGE_BINARY:
-                return func(unwrap_array<big_binary_array>(ar));
-            case data_type::RUN_ENCODED:
-                return func(unwrap_array<run_end_encoded_array>(ar));
-            case data_type::LIST:
-                return func(unwrap_array<list_array>(ar));
-            case data_type::LARGE_LIST:
-                return func(unwrap_array<big_list_array>(ar));
-            case data_type::LIST_VIEW:
-                return func(unwrap_array<list_view_array>(ar));
-            case data_type::LARGE_LIST_VIEW:
-                return func(unwrap_array<big_list_view_array>(ar));
-            case data_type::FIXED_SIZED_LIST:
-                return func(unwrap_array<fixed_sized_list_array>(ar));
-            case data_type::STRUCT:
-                return func(unwrap_array<struct_array>(ar));
-            case data_type::MAP:
-                return func(unwrap_array<map_array>(ar));
-            case data_type::DENSE_UNION:
-                return func(unwrap_array<dense_union_array>(ar));
-            case data_type::SPARSE_UNION:
-                return func(unwrap_array<sparse_union_array>(ar));
-            case data_type::DECIMAL32:
-                return func(unwrap_array<decimal_32_array>(ar));
-            case data_type::DECIMAL64:
-                return func(unwrap_array<decimal_64_array>(ar));
-            case data_type::DECIMAL128:
-                return func(unwrap_array<decimal_128_array>(ar));
-            case data_type::DECIMAL256:
-                return func(unwrap_array<decimal_256_array>(ar));
-            case data_type::FIXED_WIDTH_BINARY:
-                return func(unwrap_array<fixed_width_binary_array>(ar));
-            case data_type::DATE_DAYS:
-                return func(unwrap_array<date_days_array>(ar));
-            case data_type::DATE_MILLISECONDS:
-                return func(unwrap_array<date_milliseconds_array>(ar));
-            case data_type::TIMESTAMP_SECONDS:
-                if (get_timezone(ar.get_arrow_proxy()) == nullptr)
-                {
-                    return func(unwrap_array<timestamp_without_timezone_seconds_array>(ar));
-                }
-                else
-                {
-                    return func(unwrap_array<timestamp_seconds_array>(ar));
-                }
-            case data_type::TIMESTAMP_MILLISECONDS:
-                if (get_timezone(ar.get_arrow_proxy()) == nullptr)
-                {
-                    return func(unwrap_array<timestamp_without_timezone_milliseconds_array>(ar));
-                }
-                else
-                {
-                    return func(unwrap_array<timestamp_milliseconds_array>(ar));
-                }
-            case data_type::TIMESTAMP_MICROSECONDS:
-                if (get_timezone(ar.get_arrow_proxy()) == nullptr)
-                {
-                    return func(unwrap_array<timestamp_without_timezone_microseconds_array>(ar));
-                }
-                else
-                {
-                    return func(unwrap_array<timestamp_microseconds_array>(ar));
-                }
-            case data_type::TIMESTAMP_NANOSECONDS:
-                if (get_timezone(ar.get_arrow_proxy()) == nullptr)
-                {
-                    return func(unwrap_array<timestamp_without_timezone_nanoseconds_array>(ar));
-                }
-                else
-                {
-                    return func(unwrap_array<timestamp_nanoseconds_array>(ar));
-                }
-            case data_type::TIME_SECONDS:
-                return func(unwrap_array<time_seconds_array>(ar));
-            case data_type::TIME_MILLISECONDS:
-                return func(unwrap_array<time_milliseconds_array>(ar));
-            case data_type::TIME_MICROSECONDS:
-                return func(unwrap_array<time_microseconds_array>(ar));
-            case data_type::TIME_NANOSECONDS:
-                return func(unwrap_array<time_nanoseconds_array>(ar));
-            case data_type::DURATION_SECONDS:
-                return func(unwrap_array<duration_seconds_array>(ar));
-            case data_type::DURATION_MILLISECONDS:
-                return func(unwrap_array<duration_milliseconds_array>(ar));
-            case data_type::DURATION_MICROSECONDS:
-                return func(unwrap_array<duration_microseconds_array>(ar));
-            case data_type::DURATION_NANOSECONDS:
-                return func(unwrap_array<duration_nanoseconds_array>(ar));
-            case data_type::INTERVAL_MONTHS:
-                return func(unwrap_array<months_interval_array>(ar));
-            case data_type::INTERVAL_DAYS_TIME:
-                return func(unwrap_array<days_time_interval_array>(ar));
-            case data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS:
-                return func(unwrap_array<month_day_nanoseconds_interval_array>(ar));
-            default:
-                throw std::invalid_argument("array type not supported");
-        }
+        return try_dispatch_recursive<F>(std::forward<F>(func), ar, dt);
     }
 
     // Standalone visit function for backward compatibility

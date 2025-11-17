@@ -16,27 +16,7 @@
 
 #include <stdexcept>
 
-#include "sparrow/date_array.hpp"
-#include "sparrow/decimal_array.hpp"
-#include "sparrow/dictionary_encoded_array.hpp"
-#include "sparrow/duration_array.hpp"
-#include "sparrow/fixed_width_binary_array.hpp"
-#include "sparrow/interval_array.hpp"
-#include "sparrow/json_array.hpp"
-#include "sparrow/list_array.hpp"
-#include "sparrow/map_array.hpp"
-#include "sparrow/null_array.hpp"
-#include "sparrow/primitive_array.hpp"
-#include "sparrow/run_end_encoded_array.hpp"
-#include "sparrow/struct_array.hpp"
-#include "sparrow/time_array.hpp"
-#include "sparrow/timestamp_array.hpp"
-#include "sparrow/timestamp_without_timezone_array.hpp"
-#include "sparrow/union_array.hpp"
-#include "sparrow/utils/temporal.hpp"
-#include "sparrow/uuid_array.hpp"
-#include "sparrow/variable_size_binary_array.hpp"
-#include "sparrow/variable_size_binary_view_array.hpp"
+#include "sparrow/layout/array_type_mapping.hpp"
 
 namespace sparrow
 {
@@ -176,213 +156,47 @@ namespace sparrow
         return false;
     }
 
+    // Helper to register a single type using compile-time type information
+    template <data_type DT>
+    void register_type(array_registry& registry)
+    {
+        if constexpr (DT == data_type::TIMESTAMP_SECONDS ||
+                     DT == data_type::TIMESTAMP_MILLISECONDS ||
+                     DT == data_type::TIMESTAMP_MICROSECONDS ||
+                     DT == data_type::TIMESTAMP_NANOSECONDS)
+        {
+            // Special handling for timestamp types with timezone check
+            using types = timestamp_type_map<DT>;
+            registry.register_base_type(DT, [](arrow_proxy proxy) {
+                return detail::make_timestamp_wrapper<typename types::with_tz, typename types::without_tz>(std::move(proxy));
+            });
+        }
+        else
+        {
+            // Standard type registration
+            using array_t = array_type_t<DT>;
+            registry.register_base_type(DT, [](arrow_proxy proxy) {
+                return detail::make_wrapper_ptr<array_t>(std::move(proxy));
+            });
+        }
+    }
+
+    // Recursive helper to register all types from all_data_types array
+    template <std::size_t I = 0>
+    void register_all_types(array_registry& registry)
+    {
+        if constexpr (I < all_data_types.size())
+        {
+            register_type<all_data_types[I]>(registry);
+            register_all_types<I + 1>(registry);
+        }
+    }
+
     void initialize_array_registry(array_registry& registry)
     {
-        // ===== Register all base types =====
-        
-        registry.register_base_type(data_type::NA, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<null_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::BOOL, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<bool>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::INT8, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<std::int8_t>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::UINT8, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<std::uint8_t>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::INT16, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<std::int16_t>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::UINT16, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<std::uint16_t>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::INT32, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<std::int32_t>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::UINT32, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<std::uint32_t>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::INT64, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<std::int64_t>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::UINT64, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<std::uint64_t>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::HALF_FLOAT, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<float16_t>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::FLOAT, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<float32_t>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DOUBLE, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<primitive_array<float64_t>>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::STRING, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<string_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::STRING_VIEW, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<string_view_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::LARGE_STRING, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<big_string_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::BINARY, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<binary_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::BINARY_VIEW, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<binary_view_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::LARGE_BINARY, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<big_binary_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::LIST, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<list_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::LARGE_LIST, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<big_list_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::LIST_VIEW, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<list_view_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::LARGE_LIST_VIEW, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<big_list_view_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::FIXED_SIZED_LIST, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<fixed_sized_list_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::STRUCT, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<struct_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::MAP, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<map_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::RUN_ENCODED, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<run_end_encoded_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DENSE_UNION, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<dense_union_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::SPARSE_UNION, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<sparse_union_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DATE_DAYS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<date_days_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DATE_MILLISECONDS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<date_milliseconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::TIMESTAMP_SECONDS, [](arrow_proxy proxy) {
-            return detail::make_timestamp_wrapper<timestamp_seconds_array, timestamp_without_timezone_seconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::TIMESTAMP_MILLISECONDS, [](arrow_proxy proxy) {
-            return detail::make_timestamp_wrapper<timestamp_milliseconds_array, timestamp_without_timezone_milliseconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::TIMESTAMP_MICROSECONDS, [](arrow_proxy proxy) {
-            return detail::make_timestamp_wrapper<timestamp_microseconds_array, timestamp_without_timezone_microseconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::TIMESTAMP_NANOSECONDS, [](arrow_proxy proxy) {
-            return detail::make_timestamp_wrapper<timestamp_nanoseconds_array, timestamp_without_timezone_nanoseconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DURATION_SECONDS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<duration_seconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DURATION_MILLISECONDS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<duration_milliseconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DURATION_MICROSECONDS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<duration_microseconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DURATION_NANOSECONDS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<duration_nanoseconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::INTERVAL_MONTHS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<months_interval_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::INTERVAL_DAYS_TIME, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<days_time_interval_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<month_day_nanoseconds_interval_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::TIME_SECONDS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<time_seconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::TIME_MILLISECONDS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<time_milliseconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::TIME_MICROSECONDS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<time_microseconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::TIME_NANOSECONDS, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<time_nanoseconds_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DECIMAL32, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<decimal_32_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DECIMAL64, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<decimal_64_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DECIMAL128, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<decimal_128_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::DECIMAL256, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<decimal_256_array>(std::move(proxy));
-        });
-
-        registry.register_base_type(data_type::FIXED_WIDTH_BINARY, [](arrow_proxy proxy) {
-            return detail::make_wrapper_ptr<fixed_width_binary_array>(std::move(proxy));
-        });
+        // ===== Register all base types using template metaprogramming =====
+        // This iterates over all_data_types array and registers each type automatically
+        register_all_types(registry);
 
         // ===== Register all extension types =====
 
