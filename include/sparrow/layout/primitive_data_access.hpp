@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
@@ -27,18 +29,44 @@ namespace sparrow
     namespace details
     {
         /**
-         * @brief Data access class for trivial copyable types.
-         * FOR INTERNAL USE ONLY
-         * @tparam T Type of the data.
+         * @class primitive_data_access
+         * @brief Provides access to primitive data stored in Arrow format buffers.
+         *
+         * This class template manages access to primitive data types stored in an Arrow proxy's
+         * data buffer. It provides a type-safe interface for accessing, modifying, and iterating
+         * over the underlying buffer data.
+         *
+         * The class is designed to be used as a private member of array classes and enforces
+         * strict ownership semantics by deleting copy and move operations. This ensures that
+         * array classes explicitly manage their Arrow proxy relationships through constructor
+         * calls and reset_proxy() method.
+         *
+         * @tparam T The outer value type (trivial copyable type)
+         * @tparam T2 The inner value type stored in the buffer (trivial copyable type, defaults to T)
+         *
+         * @note This class holds a pointer to an arrow_proxy and is not copyable or movable.
+         *       Array classes using this must explicitly call the constructor with an arrow_proxy
+         *       or use reset_proxy() for assignment operations.
+         *
+         * Key features:
+         * - Direct access to underlying buffer data via data() methods
+         * - Element access through value() methods with bounds checking capabilities
+         * - Iterator support for range-based operations
+         * - Buffer manipulation operations (resize, insert, erase)
+         * - Static factory methods for buffer creation
+         *
+         * @see arrow_proxy
+         * @see pointer_iterator
+         * @see buffer_adaptor
          */
-        template <trivial_copyable_type T>
+        template <trivial_copyable_type T, trivial_copyable_type T2 = T>
         class primitive_data_access
         {
         public:
 
-            using inner_value_type = T;
-            using inner_reference = T&;
-            using inner_const_reference = const T&;
+            using inner_value_type = T2;
+            using inner_reference = T2&;
+            using inner_const_reference = std::conditional_t<std::is_same_v<T2, bool>, T2, const T2&>;
             using inner_pointer = inner_value_type*;
             using inner_const_pointer = const inner_value_type*;
 
@@ -76,16 +104,16 @@ namespace sparrow
             [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
             [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
-            constexpr void resize_values(size_t new_length, const T& value);
+            constexpr void resize_values(size_t new_length, const T2& value);
 
-            constexpr value_iterator insert_value(const_value_iterator pos, T value, size_t count);
-            constexpr value_iterator insert_value(size_t idx, T value, size_t count);
+            constexpr value_iterator insert_value(const_value_iterator pos, T2 value, size_t count);
+            constexpr value_iterator insert_value(size_t idx, T2 value, size_t count);
 
             // Template parameter InputIt must be an value_iterator type that iterates over elements of type T
-            template <mpl::iterator_of_type<T> InputIt>
+            template <mpl::iterator_of_type<T2> InputIt>
             constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
 
-            template <mpl::iterator_of_type<T> InputIt>
+            template <mpl::iterator_of_type<T2> InputIt>
             constexpr value_iterator insert_values(size_t idx, InputIt first, InputIt last);
 
             constexpr value_iterator erase_values(const_value_iterator pos, size_t count);
@@ -94,13 +122,13 @@ namespace sparrow
             constexpr void reset_proxy(arrow_proxy& proxy);
 
             template <std::ranges::input_range RANGE>
-            [[nodiscard]] static constexpr u8_buffer<T> make_data_buffer(RANGE&& r);
+            [[nodiscard]] static constexpr u8_buffer<T2> make_data_buffer(RANGE&& r);
 
-            [[nodiscard]] static constexpr u8_buffer<T> make_data_buffer(size_t n, const T& value);
+            [[nodiscard]] static constexpr u8_buffer<T2> make_data_buffer(size_t n, const T2& value);
 
         private:
 
-            [[nodiscard]] constexpr buffer_adaptor<T, buffer<uint8_t>&> get_data_buffer();
+            [[nodiscard]] constexpr buffer_adaptor<T2, buffer<uint8_t>&> get_data_buffer();
 
             [[nodiscard]] arrow_proxy& get_proxy();
             [[nodiscard]] const arrow_proxy& get_proxy() const;
@@ -196,77 +224,79 @@ namespace sparrow
         };
 
         /****************************************
-         * primitiva_data_access implementation *
+         * primitive_data_access implementation *
          ****************************************/
 
-        template <trivial_copyable_type T>
-        primitive_data_access<T>::primitive_data_access(arrow_proxy& proxy, size_t data_buffer_index)
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        primitive_data_access<T, T2>::primitive_data_access(arrow_proxy& proxy, size_t data_buffer_index)
             : p_proxy(&proxy)
             , m_data_buffer_index(data_buffer_index)
         {
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] constexpr auto primitive_data_access<T>::data() -> inner_pointer
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::data() -> inner_pointer
         {
-            return get_proxy().buffers()[m_data_buffer_index].template data<T>()
+            return get_proxy().buffers()[m_data_buffer_index].template data<T2>()
                    + static_cast<size_t>(get_proxy().offset());
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] constexpr auto primitive_data_access<T>::data() const -> inner_const_pointer
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::data() const -> inner_const_pointer
         {
-            return get_proxy().buffers()[m_data_buffer_index].template data<T>()
+            return get_proxy().buffers()[m_data_buffer_index].template data<T2>()
                    + static_cast<size_t>(get_proxy().offset());
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] constexpr auto primitive_data_access<T>::value(size_t i) -> inner_reference
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::value(size_t i) -> inner_reference
         {
             SPARROW_ASSERT_TRUE(i < get_proxy().length());
             return data()[i];
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] constexpr auto primitive_data_access<T>::value(size_t i) const -> inner_const_reference
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::value(size_t i) const
+            -> inner_const_reference
         {
             SPARROW_ASSERT_TRUE(i < get_proxy().length());
             return data()[i];
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] constexpr auto primitive_data_access<T>::value_begin() -> value_iterator
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::value_begin() -> value_iterator
         {
             return value_iterator{data()};
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] constexpr auto primitive_data_access<T>::value_end() -> value_iterator
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::value_end() -> value_iterator
         {
             return sparrow::next(value_begin(), get_proxy().length());
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] constexpr auto primitive_data_access<T>::value_cbegin() const -> const_value_iterator
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::value_cbegin() const -> const_value_iterator
         {
             return const_value_iterator{data()};
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] constexpr auto primitive_data_access<T>::value_cend() const -> const_value_iterator
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] constexpr auto primitive_data_access<T, T2>::value_cend() const -> const_value_iterator
         {
             return sparrow::next(value_cbegin(), get_proxy().length());
         }
 
-        template <trivial_copyable_type T>
-        constexpr void primitive_data_access<T>::resize_values(size_t new_length, const T& value)
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        constexpr void primitive_data_access<T, T2>::resize_values(size_t new_length, const T2& value)
         {
             const size_t new_size = new_length + static_cast<size_t>(get_proxy().offset());
             get_data_buffer().resize(new_size, value);
         }
 
-        template <trivial_copyable_type T>
-        constexpr auto primitive_data_access<T>::insert_value(const_value_iterator pos, T value, size_t count)
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        constexpr auto
+        primitive_data_access<T, T2>::insert_value(const_value_iterator pos, T2 value, size_t count)
             -> value_iterator
         {
             const const_value_iterator value_cbegin{data()};
@@ -279,8 +309,8 @@ namespace sparrow
             return sparrow::next(value_begin, distance);
         }
 
-        template <trivial_copyable_type T>
-        constexpr auto primitive_data_access<T>::insert_value(size_t idx, T value, size_t count)
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        constexpr auto primitive_data_access<T, T2>::insert_value(size_t idx, T2 value, size_t count)
             -> value_iterator
         {
             SPARROW_ASSERT_TRUE(idx <= get_proxy().length());
@@ -290,10 +320,10 @@ namespace sparrow
         }
 
         // Template parameter InputIt must be an value_iterator type that iterates over elements of type T
-        template <trivial_copyable_type T>
-        template <mpl::iterator_of_type<T> InputIt>
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        template <mpl::iterator_of_type<T2> InputIt>
         constexpr auto
-        primitive_data_access<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        primitive_data_access<T, T2>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
             -> value_iterator
         {
             const const_value_iterator value_cbegin{data()};
@@ -306,9 +336,9 @@ namespace sparrow
             return sparrow::next(value_begin, distance);
         }
 
-        template <trivial_copyable_type T>
-        template <mpl::iterator_of_type<T> InputIt>
-        constexpr auto primitive_data_access<T>::insert_values(size_t idx, InputIt first, InputIt last)
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        template <mpl::iterator_of_type<T2> InputIt>
+        constexpr auto primitive_data_access<T, T2>::insert_values(size_t idx, InputIt first, InputIt last)
             -> value_iterator
         {
             SPARROW_ASSERT_TRUE(idx <= get_proxy().length());
@@ -317,8 +347,8 @@ namespace sparrow
             return insert_values(it, first, last);
         }
 
-        template <trivial_copyable_type T>
-        constexpr auto primitive_data_access<T>::erase_values(const_value_iterator pos, size_t count)
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        constexpr auto primitive_data_access<T, T2>::erase_values(const_value_iterator pos, size_t count)
             -> value_iterator
         {
             const const_value_iterator value_cbegin{data()};
@@ -336,8 +366,8 @@ namespace sparrow
             return sparrow::next(value_begin, distance);
         }
 
-        template <trivial_copyable_type T>
-        constexpr auto primitive_data_access<T>::erase_values(size_t idx, size_t count) -> value_iterator
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        constexpr auto primitive_data_access<T, T2>::erase_values(size_t idx, size_t count) -> value_iterator
         {
             SPARROW_ASSERT_TRUE(idx <= get_proxy().length());
             const const_value_iterator cbegin{data()};
@@ -346,41 +376,42 @@ namespace sparrow
             return sparrow::next(value_iterator{data()}, idx);
         }
 
-        template <trivial_copyable_type T>
-        constexpr void primitive_data_access<T>::reset_proxy(arrow_proxy& proxy)
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        constexpr void primitive_data_access<T, T2>::reset_proxy(arrow_proxy& proxy)
         {
             p_proxy = &proxy;
         }
 
-        template <trivial_copyable_type T>
+        template <trivial_copyable_type T, trivial_copyable_type T2>
         template <std::ranges::input_range RANGE>
-        [[nodiscard]] constexpr u8_buffer<T> primitive_data_access<T>::make_data_buffer(RANGE&& r)
+        [[nodiscard]] constexpr u8_buffer<T2> primitive_data_access<T, T2>::make_data_buffer(RANGE&& r)
         {
-            return u8_buffer<T>(std::forward<RANGE>(r));
+            return u8_buffer<T2>(std::forward<RANGE>(r));
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] constexpr u8_buffer<T>
-        primitive_data_access<T>::make_data_buffer(size_t size, const T& value)
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] constexpr u8_buffer<T2>
+        primitive_data_access<T, T2>::make_data_buffer(size_t size, const T2& value)
         {
-            return u8_buffer<T>(size, value);
+            return u8_buffer<T2>(size, value);
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] constexpr buffer_adaptor<T, buffer<uint8_t>&> primitive_data_access<T>::get_data_buffer()
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] constexpr buffer_adaptor<T2, buffer<uint8_t>&>
+        primitive_data_access<T, T2>::get_data_buffer()
         {
             auto& buffers = get_proxy().get_array_private_data()->buffers();
-            return make_buffer_adaptor<T>(buffers[m_data_buffer_index]);
+            return make_buffer_adaptor<T2>(buffers[m_data_buffer_index]);
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] arrow_proxy& primitive_data_access<T>::get_proxy()
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] arrow_proxy& primitive_data_access<T, T2>::get_proxy()
         {
             return *p_proxy;
         }
 
-        template <trivial_copyable_type T>
-        [[nodiscard]] const arrow_proxy& primitive_data_access<T>::get_proxy() const
+        template <trivial_copyable_type T, trivial_copyable_type T2>
+        [[nodiscard]] const arrow_proxy& primitive_data_access<T, T2>::get_proxy() const
         {
             return *p_proxy;
         }
