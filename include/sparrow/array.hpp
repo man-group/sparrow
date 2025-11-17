@@ -15,7 +15,7 @@
 #pragma once
 
 #include "sparrow/array_api.hpp"
-#include "sparrow/layout/dispatch.hpp"
+#include "sparrow/layout/array_registry.hpp"
 
 namespace sparrow
 {

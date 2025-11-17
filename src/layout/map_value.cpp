@@ -16,7 +16,7 @@
 
 #include <variant>
 
-#include "sparrow/layout/dispatch.hpp"
+#include "sparrow/layout/array_registry.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 
 namespace sparrow

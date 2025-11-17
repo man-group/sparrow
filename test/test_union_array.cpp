@@ -15,7 +15,7 @@
 #include <optional>
 
 #include "sparrow/array.hpp"
-#include "sparrow/layout/dispatch.hpp"
+#include "sparrow/layout/array_registry.hpp"
 #include "sparrow/primitive_array.hpp"
 #include "sparrow/union_array.hpp"
 #include "sparrow/utils/nullable.hpp"

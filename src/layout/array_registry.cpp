@@ -107,6 +107,11 @@ namespace sparrow
         m_extensions[base_type].emplace_back(std::move(predicate), std::move(factory));
     }
 
+    bool array_registry::extension_entry::matches(const array_wrapper& wrapper) const
+    {
+        return predicate(wrapper.get_arrow_proxy());
+    }
+
     cloning_ptr<array_wrapper> array_registry::create(arrow_proxy proxy) const
     {
         const auto dt = proxy.data_type();
