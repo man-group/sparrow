@@ -238,6 +238,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_bitmap_base.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_helper.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_registry.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_wrapper.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/date_types.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/decimal_reference.hpp
@@ -330,6 +331,7 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/arrow_interface/private_data_ownership.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_factory.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_helper.cpp
+    ${SPARROW_SOURCE_DIR}/layout/array_registry.cpp
     ${SPARROW_SOURCE_DIR}/layout/fixed_width_binary_array_utils.cpp
     ${SPARROW_SOURCE_DIR}/layout/list_value.cpp
     ${SPARROW_SOURCE_DIR}/layout/map_value.cpp
