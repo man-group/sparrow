@@ -20,7 +20,6 @@
 #include "sparrow/decimal_array.hpp"
 #include "sparrow/dictionary_encoded_array.hpp"
 #include "sparrow/duration_array.hpp"
-#include "sparrow/fixed_shape_tensor_array.hpp"
 #include "sparrow/fixed_width_binary_array.hpp"
 #include "sparrow/interval_array.hpp"
 #include "sparrow/json_array.hpp"
@@ -105,7 +104,7 @@ namespace sparrow
         factory_func factory
     )
     {
-        m_extensions[base_type].push_back({std::move(predicate), std::move(factory)});
+        m_extensions[base_type].emplace_back(std::move(predicate), std::move(factory));
     }
 
     cloning_ptr<array_wrapper> array_registry::create(arrow_proxy proxy) const
@@ -413,30 +412,6 @@ namespace sparrow
             uuid_extension::EXTENSION_NAME,
             [](arrow_proxy proxy) {
                 return detail::make_wrapper_ptr<uuid_array>(std::move(proxy));
-            }
-        );
-
-        // Fixed shape tensor extension on FIXED_SIZED_LIST
-        registry.register_extension_with_predicate(
-            data_type::FIXED_SIZED_LIST,
-            [](const arrow_proxy& proxy) {
-                const std::optional<key_value_view> metadata = proxy.metadata();
-                if (metadata.has_value())
-                {
-                    const auto it = metadata->find("ARROW:extension:name");
-                    if (it != metadata->end())
-                    {
-                        const auto [key, value] = *it;
-                        if (value == "arrow.fixed_shape_tensor")
-                        {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            },
-            [](arrow_proxy proxy) {
-                return detail::make_wrapper_ptr<fixed_shape_tensor_array>(std::move(proxy));
             }
         );
     }

@@ -135,6 +135,10 @@ namespace sparrow
 
         struct extension_entry
         {
+            extension_entry(extension_predicate pred, factory_func fact)
+                : predicate(std::move(pred)), factory(std::move(fact))
+            {
+            }
             extension_predicate predicate;
             factory_func factory;
         };
