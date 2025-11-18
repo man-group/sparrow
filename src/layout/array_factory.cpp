@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/layout/array_factory.hpp"
+
 #include "sparrow/layout/array_registry.hpp"
 
 namespace sparrow

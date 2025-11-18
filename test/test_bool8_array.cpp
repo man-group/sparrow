@@ -573,12 +573,15 @@ namespace sparrow
                 std::vector<bool> values = {true, false, true, false, true};
                 bool8_array bool8_arr(values);
                 array arr(std::move(bool8_arr));
-                
+
                 // Test size dispatch
-                auto size = arr.visit([](auto&& typed_array) {
-                    return typed_array.size();
-                });
-                
+                auto size = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array.size();
+                    }
+                );
+
                 CHECK_EQ(size, 5);
             }
 
@@ -587,12 +590,15 @@ namespace sparrow
                 std::vector<bool> values = {true, false, true};
                 bool8_array bool8_arr(values);
                 array arr(std::move(bool8_arr));
-                
+
                 // Access element via visit - just check it has a value
-                auto has_value = arr.visit([](auto&& typed_array) {
-                    return typed_array[0].has_value();
-                });
-                
+                auto has_value = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array[0].has_value();
+                    }
+                );
+
                 CHECK(has_value);
             }
 
@@ -601,16 +607,20 @@ namespace sparrow
                 std::vector<bool> values = {true, false, true, true, false};
                 bool8_array bool8_arr(values);
                 array arr(std::move(bool8_arr));
-                
+
                 // Count all elements via dispatch
-                size_t count = arr.visit([](auto&& typed_array) {
-                    size_t c = 0;
-                    for ([[maybe_unused]] const auto& elem : typed_array) {
-                        c++;
+                size_t count = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        size_t c = 0;
+                        for ([[maybe_unused]] const auto& elem : typed_array)
+                        {
+                            c++;
+                        }
+                        return c;
                     }
-                    return c;
-                });
-                
+                );
+
                 CHECK_EQ(count, 5);
             }
 
@@ -619,17 +629,20 @@ namespace sparrow
                 std::vector<bool> values = {true, false};
                 bool8_array bool8_arr(values);
                 array arr(std::move(bool8_arr));
-                
+
                 // bool8_array is stored as INT8 (with bool8 extension metadata)
                 CHECK_EQ(arr.data_type(), data_type::INT8);
-                
+
                 // The array class dispatches to the underlying storage type (primitive_array<int8_t>),
                 // not the extension type (bool8_array), which is correct behavior
-                auto result = arr.visit([](auto&& typed_array) {
-                    using array_type = std::decay_t<decltype(typed_array)>;
-                    return std::is_same_v<array_type, primitive_array<std::int8_t>>;
-                });
-                
+                auto result = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        using array_type = std::decay_t<decltype(typed_array)>;
+                        return std::is_same_v<array_type, primitive_array<std::int8_t>>;
+                    }
+                );
+
                 CHECK(result);
             }
 
@@ -644,17 +657,22 @@ namespace sparrow
                 };
                 bool8_array bool8_arr(values);
                 array arr(std::move(bool8_arr));
-                
-                auto non_null_count = arr.visit([](auto&& typed_array) {
-                    size_t count = 0;
-                    for (size_t i = 0; i < typed_array.size(); ++i) {
-                        if (typed_array[i].has_value()) {
-                            count++;
+
+                auto non_null_count = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        size_t count = 0;
+                        for (size_t i = 0; i < typed_array.size(); ++i)
+                        {
+                            if (typed_array[i].has_value())
+                            {
+                                count++;
+                            }
                         }
+                        return count;
                     }
-                    return count;
-                });
-                
+                );
+
                 CHECK_EQ(non_null_count, 3);
             }
 
@@ -662,15 +680,19 @@ namespace sparrow
             {
                 std::vector<bool> values = {true, false};
                 bool8_array bool8_arr(values);
-                
+
                 // Create wrapper manually for registry dispatch test
                 auto wrapper_ptr = std::make_unique<array_wrapper_impl<bool8_array>>(std::move(bool8_arr));
-                
-                // Dispatch via registry  
-                auto size = registry.dispatch([](auto&& typed_array) {
-                    return typed_array.size();
-                }, *wrapper_ptr);
-                
+
+                // Dispatch via registry
+                auto size = registry.dispatch(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array.size();
+                    },
+                    *wrapper_ptr
+                );
+
                 CHECK_EQ(size, 2);
             }
 
@@ -679,12 +701,15 @@ namespace sparrow
                 std::vector<bool> values = {true, true, false, true, false, false};
                 bool8_array bool8_arr(values);
                 array arr(std::move(bool8_arr));
-                
+
                 // Just verify we can count all elements
-                auto total_count = arr.visit([](auto&& typed_array) {
-                    return typed_array.size();
-                });
-                
+                auto total_count = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array.size();
+                    }
+                );
+
                 CHECK_EQ(total_count, 6);
             }
 
@@ -693,17 +718,22 @@ namespace sparrow
                 std::vector<bool> values = {true, true, true, true};
                 bool8_array bool8_arr(values);
                 array arr(std::move(bool8_arr));
-                
+
                 // Check all elements have values
-                auto all_have_values = arr.visit([](auto&& typed_array) {
-                    for (size_t i = 0; i < typed_array.size(); ++i) {
-                        if (!typed_array[i].has_value()) {
-                            return false;
+                auto all_have_values = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        for (size_t i = 0; i < typed_array.size(); ++i)
+                        {
+                            if (!typed_array[i].has_value())
+                            {
+                                return false;
+                            }
                         }
+                        return true;
                     }
-                    return true;
-                });
-                
+                );
+
                 CHECK(all_have_values);
             }
 
@@ -712,12 +742,15 @@ namespace sparrow
                 std::vector<bool> values = {false, false, false};
                 bool8_array bool8_arr(values);
                 array arr(std::move(bool8_arr));
-                
+
                 // Verify array is not empty
-                auto not_empty = arr.visit([](auto&& typed_array) {
-                    return typed_array.size() > 0;
-                });
-                
+                auto not_empty = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array.size() > 0;
+                    }
+                );
+
                 CHECK(not_empty);
             }
         }
