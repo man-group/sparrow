@@ -16,10 +16,11 @@
 
 #include <stdexcept>
 
+#include "sparrow/bool8_array.hpp"
 #include "sparrow/json_array.hpp"
 #include "sparrow/layout/array_type_mapping.hpp"
-#include "sparrow/uuid_array.hpp"
 #include "sparrow/utils/temporal.hpp"
+#include "sparrow/uuid_array.hpp"
 
 namespace sparrow
 {
@@ -65,11 +66,8 @@ namespace sparrow
         m_base_factories[dt] = std::move(factory);
     }
 
-    void array_registry::register_extension(
-        data_type base_type,
-        std::string_view extension_name,
-        factory_func factory
-    )
+    void
+    array_registry::register_extension(data_type base_type, std::string_view extension_name, factory_func factory)
     {
         register_extension_with_predicate(
             base_type,
@@ -163,24 +161,32 @@ namespace sparrow
     template <data_type DT>
     void register_type(array_registry& registry)
     {
-        if constexpr (DT == data_type::TIMESTAMP_SECONDS ||
-                     DT == data_type::TIMESTAMP_MILLISECONDS ||
-                     DT == data_type::TIMESTAMP_MICROSECONDS ||
-                     DT == data_type::TIMESTAMP_NANOSECONDS)
+        if constexpr (DT == data_type::TIMESTAMP_SECONDS || DT == data_type::TIMESTAMP_MILLISECONDS
+                      || DT == data_type::TIMESTAMP_MICROSECONDS || DT == data_type::TIMESTAMP_NANOSECONDS)
         {
             // Special handling for timestamp types with timezone check
             using types = timestamp_type_map<DT>;
-            registry.register_base_type(DT, [](arrow_proxy proxy) {
-                return detail::make_timestamp_wrapper<typename types::with_tz, typename types::without_tz>(std::move(proxy));
-            });
+            registry.register_base_type(
+                DT,
+                [](arrow_proxy proxy)
+                {
+                    return detail::make_timestamp_wrapper<typename types::with_tz, typename types::without_tz>(
+                        std::move(proxy)
+                    );
+                }
+            );
         }
         else
         {
             // Standard type registration
             using array_t = array_type_t<DT>;
-            registry.register_base_type(DT, [](arrow_proxy proxy) {
-                return detail::make_wrapper_ptr<array_t>(std::move(proxy));
-            });
+            registry.register_base_type(
+                DT,
+                [](arrow_proxy proxy)
+                {
+                    return detail::make_wrapper_ptr<array_t>(std::move(proxy));
+                }
+            );
         }
     }
 
@@ -207,7 +213,8 @@ namespace sparrow
         registry.register_extension(
             data_type::BINARY,
             json_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy) {
+            [](arrow_proxy proxy)
+            {
                 return detail::make_wrapper_ptr<json_array>(std::move(proxy));
             }
         );
@@ -215,7 +222,8 @@ namespace sparrow
         registry.register_extension(
             data_type::LARGE_BINARY,
             json_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy) {
+            [](arrow_proxy proxy)
+            {
                 return detail::make_wrapper_ptr<big_json_array>(std::move(proxy));
             }
         );
@@ -223,7 +231,8 @@ namespace sparrow
         registry.register_extension(
             data_type::BINARY_VIEW,
             json_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy) {
+            [](arrow_proxy proxy)
+            {
                 return detail::make_wrapper_ptr<json_view_array>(std::move(proxy));
             }
         );
@@ -232,8 +241,19 @@ namespace sparrow
         registry.register_extension(
             data_type::FIXED_WIDTH_BINARY,
             uuid_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy) {
+            [](arrow_proxy proxy)
+            {
                 return detail::make_wrapper_ptr<uuid_array>(std::move(proxy));
+            }
+        );
+
+        // Bool8 extension on UINT8
+        registry.register_extension(
+            data_type::UINT8,
+            bool8_array::EXTENSION_NAME,
+            [](arrow_proxy proxy)
+            {
+                return detail::make_wrapper_ptr<bool8_array>(std::move(proxy));
             }
         );
     }

@@ -242,7 +242,6 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/array_wrapper.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/date_types.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/decimal_reference.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/layout/dispatch.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_array_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_reference.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/interval_types.hpp
