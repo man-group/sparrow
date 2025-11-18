@@ -24,7 +24,13 @@
 
 namespace sparrow
 {
-    // Forward declaration
+    /**
+     * @brief Initialize the registry with all built-in base types and extensions.
+     *
+     * This function is called automatically on first access to ensure the registry
+     * is populated with all standard Arrow types. Users can call this explicitly
+     * to ensure initialization happens at a specific time.
+     */
     void initialize_array_registry(array_registry& registry);
 
     namespace detail

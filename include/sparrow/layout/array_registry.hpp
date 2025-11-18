@@ -367,14 +367,6 @@ namespace sparrow
         [[nodiscard]] static bool has_extension_name(const arrow_proxy& proxy, std::string_view extension_name);
     };
 
-    /**
-     * @brief Initialize the registry with all built-in base types and extensions.
-     *
-     * This function is called automatically on first access to ensure the registry
-     * is populated with all standard Arrow types. Users can call this explicitly
-     * to ensure initialization happens at a specific time.
-     */
-    void initialize_array_registry();
 
 }  // namespace sparrow
 
