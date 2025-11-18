@@ -415,12 +415,15 @@ namespace sparrow
                 };
                 uuid_array uuid_arr(uuids);
                 array arr(std::move(uuid_arr));
-                
+
                 // Test size dispatch
-                auto size = arr.visit([](auto&& typed_array) {
-                    return typed_array.size();
-                });
-                
+                auto size = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array.size();
+                    }
+                );
+
                 CHECK_EQ(size, 3);
             }
 
@@ -429,12 +432,15 @@ namespace sparrow
                 std::vector<std::array<byte_t, 16>> uuids = {make_test_uuid(42)};
                 uuid_array uuid_arr(uuids);
                 array arr(std::move(uuid_arr));
-                
+
                 // Access element via visit
-                auto has_value = arr.visit([](auto&& typed_array) {
-                    return typed_array[0].has_value();
-                });
-                
+                auto has_value = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array[0].has_value();
+                    }
+                );
+
                 CHECK(has_value);
             }
 
@@ -447,44 +453,49 @@ namespace sparrow
                 };
                 uuid_array uuid_arr(uuids);
                 array arr(std::move(uuid_arr));
-                
+
                 // Dispatch with iteration
-                size_t count = arr.visit([](auto&& typed_array) {
-                    size_t c = 0;
-                    for (const auto& elem : typed_array) {
-                        if (elem.has_value()) {
-                            c++;
+                size_t count = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        size_t c = 0;
+                        for (const auto& elem : typed_array)
+                        {
+                            if (elem.has_value())
+                            {
+                                c++;
+                            }
                         }
+                        return c;
                     }
-                    return c;
-                });
-                
+                );
+
                 CHECK_EQ(count, 3);
             }
 
             SUBCASE("uuid_array type detection")
             {
-                std::vector<std::array<byte_t, 16>> uuids = {
-                    make_test_uuid(1),
-                    make_test_uuid(2)
-                };
+                std::vector<std::array<byte_t, 16>> uuids = {make_test_uuid(1), make_test_uuid(2)};
                 uuid_array uuid_arr(uuids);
                 array arr(std::move(uuid_arr));
-                
+
                 // UUID arrays are stored as FIXED_WIDTH_BINARY (with UUID extension metadata)
                 CHECK_EQ(arr.data_type(), data_type::FIXED_WIDTH_BINARY);
-                
+
                 // The array class dispatches based on data_type (FIXED_WIDTH_BINARY),
                 // which maps to fixed_width_binary_array (the base storage type without extension)
-                auto result = arr.visit([](auto&& typed_array) {
-                    using array_type = std::decay_t<decltype(typed_array)>;
-                    // Should be the base fixed_width_binary_array, not uuid_array
-                    using expected_type = fixed_width_binary_array_impl<
-                        fixed_width_binary_traits::value_type,
-                        fixed_width_binary_traits::const_reference>;
-                    return std::is_same_v<array_type, expected_type>;
-                });
-                
+                auto result = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        using array_type = std::decay_t<decltype(typed_array)>;
+                        // Should be the base fixed_width_binary_array, not uuid_array
+                        using expected_type = fixed_width_binary_array_impl<
+                            fixed_width_binary_traits::value_type,
+                            fixed_width_binary_traits::const_reference>;
+                        return std::is_same_v<array_type, expected_type>;
+                    }
+                );
+
                 CHECK(result);
             }
 
@@ -497,17 +508,22 @@ namespace sparrow
                 };
                 uuid_array uuid_arr(uuids);
                 array arr(std::move(uuid_arr));
-                
-                auto non_null_count = arr.visit([](auto&& typed_array) {
-                    size_t count = 0;
-                    for (size_t i = 0; i < typed_array.size(); ++i) {
-                        if (typed_array[i].has_value()) {
-                            count++;
+
+                auto non_null_count = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        size_t count = 0;
+                        for (size_t i = 0; i < typed_array.size(); ++i)
+                        {
+                            if (typed_array[i].has_value())
+                            {
+                                count++;
+                            }
                         }
+                        return count;
                     }
-                    return count;
-                });
-                
+                );
+
                 CHECK_EQ(non_null_count, 2);
             }
 
@@ -515,15 +531,19 @@ namespace sparrow
             {
                 std::vector<std::array<byte_t, 16>> uuids = {make_test_uuid(99)};
                 uuid_array uuid_arr(uuids);
-                
+
                 // Create wrapper manually for registry dispatch test
                 auto wrapper_ptr = std::make_unique<array_wrapper_impl<uuid_array>>(std::move(uuid_arr));
-                
-                // Dispatch via registry  
-                auto size = registry.dispatch([](auto&& typed_array) {
-                    return typed_array.size();
-                }, *wrapper_ptr);
-                
+
+                // Dispatch via registry
+                auto size = registry.dispatch(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array.size();
+                    },
+                    *wrapper_ptr
+                );
+
                 CHECK_EQ(size, 1);
             }
 
@@ -533,18 +553,23 @@ namespace sparrow
                 std::vector<std::array<byte_t, 16>> uuids = {test_uuid, test_uuid, test_uuid};
                 uuid_array uuid_arr(uuids);
                 array arr(std::move(uuid_arr));
-                
+
                 // Count non-null values via visit
-                auto count = arr.visit([](auto&& typed_array) {
-                    size_t c = 0;
-                    for (size_t i = 0; i < typed_array.size(); ++i) {
-                        if (typed_array[i].has_value()) {
-                            c++;
+                auto count = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        size_t c = 0;
+                        for (size_t i = 0; i < typed_array.size(); ++i)
+                        {
+                            if (typed_array[i].has_value())
+                            {
+                                c++;
+                            }
                         }
+                        return c;
                     }
-                    return c;
-                });
-                
+                );
+
                 CHECK_EQ(count, 3);
             }
 
@@ -552,21 +577,36 @@ namespace sparrow
             {
                 // Example UUID: 550e8400-e29b-41d4-a716-446655440000
                 std::array<byte_t, 16> rfc_uuid = {
-                    byte_t{0x55}, byte_t{0x0e}, byte_t{0x84}, byte_t{0x00},
-                    byte_t{0xe2}, byte_t{0x9b}, byte_t{0x41}, byte_t{0xd4},
-                    byte_t{0xa7}, byte_t{0x16}, byte_t{0x44}, byte_t{0x66},
-                    byte_t{0x55}, byte_t{0x44}, byte_t{0x00}, byte_t{0x00}
+                    byte_t{0x55},
+                    byte_t{0x0e},
+                    byte_t{0x84},
+                    byte_t{0x00},
+                    byte_t{0xe2},
+                    byte_t{0x9b},
+                    byte_t{0x41},
+                    byte_t{0xd4},
+                    byte_t{0xa7},
+                    byte_t{0x16},
+                    byte_t{0x44},
+                    byte_t{0x66},
+                    byte_t{0x55},
+                    byte_t{0x44},
+                    byte_t{0x00},
+                    byte_t{0x00}
                 };
-                
+
                 std::vector<std::array<byte_t, 16>> uuids = {rfc_uuid};
                 uuid_array uuid_arr(uuids);
                 array arr(std::move(uuid_arr));
-                
+
                 // Access via dispatch and verify we can read the value
-                auto has_value = arr.visit([](auto&& typed_array) {
-                    return typed_array.size() == 1 && typed_array[0].has_value();
-                });
-                
+                auto has_value = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array.size() == 1 && typed_array[0].has_value();
+                    }
+                );
+
                 CHECK(has_value);
             }
         }

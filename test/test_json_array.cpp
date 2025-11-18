@@ -335,12 +335,15 @@ namespace sparrow
                 };
                 json_array json_arr(json_values);
                 array arr(std::move(json_arr));
-                
+
                 // Test size dispatch
-                auto size = arr.visit([](auto&& typed_array) {
-                    return typed_array.size();
-                });
-                
+                auto size = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array.size();
+                    }
+                );
+
                 CHECK_EQ(size, 3);
             }
 
@@ -349,12 +352,15 @@ namespace sparrow
                 std::vector<std::string> json_values = {R"({"value": 42})"};
                 json_array json_arr(json_values);
                 array arr(std::move(json_arr));
-                
+
                 // Access element via visit
-                auto has_value = arr.visit([](auto&& typed_array) {
-                    return typed_array[0].has_value();
-                });
-                
+                auto has_value = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array[0].has_value();
+                    }
+                );
+
                 CHECK(has_value);
             }
 
@@ -363,18 +369,23 @@ namespace sparrow
                 std::vector<std::string> json_values = {R"({"test": true})", R"({"test": false})"};
                 json_array json_arr(json_values);
                 array arr(std::move(json_arr));
-                
+
                 // Dispatch with iteration
-                size_t count = arr.visit([](auto&& typed_array) {
-                    size_t c = 0;
-                    for (const auto& elem : typed_array) {
-                        if (elem.has_value()) {
-                            c++;
+                size_t count = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        size_t c = 0;
+                        for (const auto& elem : typed_array)
+                        {
+                            if (elem.has_value())
+                            {
+                                c++;
+                            }
                         }
+                        return c;
                     }
-                    return c;
-                });
-                
+                );
+
                 CHECK_EQ(count, 2);
             }
 
@@ -384,11 +395,14 @@ namespace sparrow
                 std::vector<std::string> json_values = {large_json, large_json};
                 big_json_array big_json_arr(json_values);
                 array arr(std::move(big_json_arr));
-                
-                auto size = arr.visit([](auto&& typed_array) {
-                    return typed_array.size();
-                });
-                
+
+                auto size = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array.size();
+                    }
+                );
+
                 CHECK_EQ(size, 2);
             }
 
@@ -397,11 +411,14 @@ namespace sparrow
                 std::vector<std::string> json_values = {R"({"view": "test"})", R"({"another": "value"})"};
                 json_array json_arr(json_values);  // Use json_array instead of json_view_array
                 array arr(std::move(json_arr));
-                
-                auto size = arr.visit([](auto&& typed_array) {
-                    return typed_array.size();
-                });
-                
+
+                auto size = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array.size();
+                    }
+                );
+
                 CHECK_EQ(size, 2);
             }
 
@@ -410,18 +427,21 @@ namespace sparrow
                 std::vector<std::string> json_values = {R"({"a": 1})", R"({"b": 2})", R"({"c": 3})"};
                 json_array json_arr(json_values);
                 array arr(std::move(json_arr));
-                
+
                 // JSON arrays are stored as STRING (with JSON extension metadata)
                 CHECK_EQ(arr.data_type(), data_type::STRING);
-                
+
                 // The array class dispatches to the underlying storage type (string_array),
                 // not the extension type (json_array), which is correct behavior
-                auto result = arr.visit([](auto&& typed_array) {
-                    // Should be string_array (the storage type), not json_array
-                    using array_type = std::decay_t<decltype(typed_array)>;
-                    return std::is_same_v<array_type, string_array>;
-                });
-                
+                auto result = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        // Should be string_array (the storage type), not json_array
+                        using array_type = std::decay_t<decltype(typed_array)>;
+                        return std::is_same_v<array_type, string_array>;
+                    }
+                );
+
                 CHECK(result);
             }
 
@@ -434,17 +454,22 @@ namespace sparrow
                 };
                 json_array json_arr(json_values);
                 array arr(std::move(json_arr));
-                
-                auto non_null_count = arr.visit([](auto&& typed_array) {
-                    size_t count = 0;
-                    for (size_t i = 0; i < typed_array.size(); ++i) {
-                        if (typed_array[i].has_value()) {
-                            count++;
+
+                auto non_null_count = arr.visit(
+                    [](auto&& typed_array)
+                    {
+                        size_t count = 0;
+                        for (size_t i = 0; i < typed_array.size(); ++i)
+                        {
+                            if (typed_array[i].has_value())
+                            {
+                                count++;
+                            }
                         }
+                        return count;
                     }
-                    return count;
-                });
-                
+                );
+
                 CHECK_EQ(non_null_count, 2);
             }
 
@@ -452,15 +477,19 @@ namespace sparrow
             {
                 std::vector<std::string> json_values = {R"({"dispatch": "test"})"};
                 json_array json_arr(json_values);
-                
+
                 // Create wrapper manually for registry dispatch test
                 auto wrapper_ptr = std::make_unique<array_wrapper_impl<json_array>>(std::move(json_arr));
-                
-                // Dispatch via registry  
-                auto size = registry.dispatch([](auto&& typed_array) {
-                    return typed_array.size();
-                }, *wrapper_ptr);
-                
+
+                // Dispatch via registry
+                auto size = registry.dispatch(
+                    [](auto&& typed_array)
+                    {
+                        return typed_array.size();
+                    },
+                    *wrapper_ptr
+                );
+
                 CHECK_EQ(size, 1);
             }
         }

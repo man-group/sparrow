@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/layout/array_registry.hpp"
 #include "sparrow/layout/array_factory.hpp"
-#include "sparrow/variable_size_binary_array.hpp"
+#include "sparrow/layout/array_registry.hpp"
 #include "sparrow/utils/extension.hpp"
+#include "sparrow/variable_size_binary_array.hpp"
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
@@ -170,28 +170,26 @@ namespace sparrow
         {
             // Test that we can register a custom extension
             // This tests the registration mechanism itself
-            
+
             auto& registry = array_registry::instance();
-            
+
             // Define a simple test extension that wraps string_array
             using test_custom_array = variable_size_binary_array_impl<
                 arrow_traits<std::string>::value_type,
                 arrow_traits<std::string>::const_reference,
                 std::int32_t,
-                empty_extension
-            >;
+                empty_extension>;
 
             // Register custom extension
             bool factory_was_called = false;
             registry.register_extension(
                 data_type::STRING,
                 "test.custom.type",
-                [&factory_was_called](arrow_proxy proxy) {
+                [&factory_was_called](arrow_proxy proxy)
+                {
                     factory_was_called = true;
                     return cloning_ptr<array_wrapper>{
-                        new array_wrapper_impl<test_custom_array>(
-                            test_custom_array(std::move(proxy))
-                        )
+                        new array_wrapper_impl<test_custom_array>(test_custom_array(std::move(proxy)))
                     };
                 }
             );
@@ -201,11 +199,10 @@ namespace sparrow
             CHECK_NOTHROW(registry.register_extension(
                 data_type::BINARY,
                 "another.test.type",
-                [](arrow_proxy proxy) {
+                [](arrow_proxy proxy)
+                {
                     return cloning_ptr<array_wrapper>{
-                        new array_wrapper_impl<binary_array>(
-                            binary_array(std::move(proxy))
-                        )
+                        new array_wrapper_impl<binary_array>(binary_array(std::move(proxy)))
                     };
                 }
             ));
@@ -215,42 +212,49 @@ namespace sparrow
         {
             // Test that dispatch works correctly with custom extensions
             auto& registry = array_registry::instance();
-            
+
             // Register a test extension on BINARY type
             registry.register_extension(
                 data_type::BINARY,
                 "test.dispatch.extension",
-                [](arrow_proxy proxy) {
+                [](arrow_proxy proxy)
+                {
                     return cloning_ptr<array_wrapper>{
-                        new array_wrapper_impl<binary_array>(
-                            binary_array(std::move(proxy))
-                        )
+                        new array_wrapper_impl<binary_array>(binary_array(std::move(proxy)))
                     };
                 }
             );
-            
+
             // Create a regular binary array (without extension metadata)
             auto regular_proxy = make_arrow_proxy<std::vector<byte_t>>();
             auto regular_wrapper = array_factory(std::move(regular_proxy));
-            
+
             // Dispatch should work with the regular array
-            auto size = registry.dispatch([](auto&& arr) {
-                return arr.size();
-            }, *regular_wrapper);
+            auto size = registry.dispatch(
+                [](auto&& arr)
+                {
+                    return arr.size();
+                },
+                *regular_wrapper
+            );
             CHECK_EQ(size, 10);
-            
+
             // Verify dispatch can access array-specific functionality
-            bool is_binary = registry.dispatch([](auto&& arr) {
-                using array_type = std::decay_t<decltype(arr)>;
-                return std::is_same_v<array_type, binary_array>;
-            }, *regular_wrapper);
+            bool is_binary = registry.dispatch(
+                [](auto&& arr)
+                {
+                    using array_type = std::decay_t<decltype(arr)>;
+                    return std::is_same_v<array_type, binary_array>;
+                },
+                *regular_wrapper
+            );
             CHECK(is_binary);
         }
 
         TEST_CASE("array_factory_integration")
         {
             // Test that array_factory correctly delegates to registry
-            
+
             SUBCASE("creates_primitive_arrays")
             {
                 auto int_proxy = make_arrow_proxy<std::int32_t>();
@@ -280,14 +284,14 @@ namespace sparrow
         {
             // Verify that multiple calls to instance() return the same registry
             // and initialization only happens once
-            
+
             auto& reg1 = array_registry::instance();
             auto& reg2 = array_registry::instance();
             auto& reg3 = array_registry::instance();
-            
+
             CHECK_EQ(&reg1, &reg2);
             CHECK_EQ(&reg2, &reg3);
-            
+
             // Verify registry is functional after multiple accesses
             auto proxy = make_arrow_proxy<bool>();
             auto wrapper = array_factory(std::move(proxy));
@@ -297,7 +301,7 @@ namespace sparrow
         TEST_CASE("all_primitive_types_registered")
         {
             // Comprehensive test that all primitive types work
-            
+
             CHECK_NOTHROW(array_factory(make_arrow_proxy<bool>()));
             CHECK_NOTHROW(array_factory(make_arrow_proxy<std::int8_t>()));
             CHECK_NOTHROW(array_factory(make_arrow_proxy<std::uint8_t>()));
@@ -315,16 +319,16 @@ namespace sparrow
         TEST_CASE("registry_returns_correct_types")
         {
             // Verify that the registry creates the correct wrapper types
-            
+
             auto bool_wrapper = array_factory(make_arrow_proxy<bool>());
             CHECK_EQ(bool_wrapper->data_type(), data_type::BOOL);
-            
+
             auto int32_wrapper = array_factory(make_arrow_proxy<std::int32_t>());
             CHECK_EQ(int32_wrapper->data_type(), data_type::INT32);
-            
+
             auto float_wrapper = array_factory(make_arrow_proxy<float32_t>());
             CHECK_EQ(float_wrapper->data_type(), data_type::FLOAT);
-            
+
             auto string_wrapper = array_factory(make_arrow_proxy<std::string>());
             CHECK_EQ(string_wrapper->data_type(), data_type::STRING);
         }
@@ -337,7 +341,13 @@ namespace sparrow
             {
                 // Create arrays of different types and check dispatch works
                 auto int_wrapper = array_factory(make_arrow_proxy<std::int32_t>());
-                auto size = registry.dispatch([](auto&& arr) { return arr.size(); }, *int_wrapper);
+                auto size = registry.dispatch(
+                    [](auto&& arr)
+                    {
+                        return arr.size();
+                    },
+                    *int_wrapper
+                );
                 CHECK_EQ(size, 10);  // Default size from make_arrow_proxy
             }
 
@@ -345,7 +355,13 @@ namespace sparrow
             {
                 auto bool_wrapper = array_factory(make_arrow_proxy<bool>());
                 // Use size() which all arrays have
-                auto size = registry.dispatch([](auto&& arr) { return arr.size(); }, *bool_wrapper);
+                auto size = registry.dispatch(
+                    [](auto&& arr)
+                    {
+                        return arr.size();
+                    },
+                    *bool_wrapper
+                );
                 CHECK_EQ(size, 10);  // Default size from make_arrow_proxy
             }
 
@@ -353,9 +369,16 @@ namespace sparrow
             {
                 // Test that dispatch works with any array type
                 auto string_wrapper = array_factory(make_arrow_proxy<std::string>());
-                
+
                 bool visited = false;
-                auto result = registry.dispatch([&visited](auto&&) { visited = true; return 0; }, *string_wrapper);
+                auto result = registry.dispatch(
+                    [&visited](auto&&)
+                    {
+                        visited = true;
+                        return 0;
+                    },
+                    *string_wrapper
+                );
                 CHECK(visited);
                 CHECK_EQ(result, 0);
             }
@@ -363,13 +386,17 @@ namespace sparrow
             SUBCASE("dispatch_preserves_type_information")
             {
                 auto float_wrapper = array_factory(make_arrow_proxy<float32_t>());
-                
+
                 // Verify we can access type-specific members through dispatch
-                auto result = registry.dispatch([](auto&& arr) {
-                    using array_type = std::decay_t<decltype(arr)>;
-                    return std::is_same_v<array_type, primitive_array<float32_t>>;
-                }, *float_wrapper);
-                
+                auto result = registry.dispatch(
+                    [](auto&& arr)
+                    {
+                        using array_type = std::decay_t<decltype(arr)>;
+                        return std::is_same_v<array_type, primitive_array<float32_t>>;
+                    },
+                    *float_wrapper
+                );
+
                 CHECK(result);
             }
 
@@ -377,20 +404,24 @@ namespace sparrow
             {
                 // Test that dispatch correctly handles registered extensions
                 // We'll use UUID as a built-in extension that should already be registered
-                
+
                 // Create a UUID array (FIXED_WIDTH_BINARY with UUID extension metadata)
                 auto proxy = make_arrow_proxy<std::vector<byte_t>>();
-                
+
                 // Modify the proxy to have UUID extension metadata
                 // Note: This is testing the mechanism - in practice, UUID arrays
                 // would be created with proper metadata
                 auto wrapper = array_factory(std::move(proxy));
-                
+
                 // Dispatch should work with any array type, including extensions
-                auto size = registry.dispatch([](auto&& arr) {
-                    return arr.size();
-                }, *wrapper);
-                
+                auto size = registry.dispatch(
+                    [](auto&& arr)
+                    {
+                        return arr.size();
+                    },
+                    *wrapper
+                );
+
                 CHECK_EQ(size, 10);
             }
         }
