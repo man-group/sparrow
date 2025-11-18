@@ -509,7 +509,7 @@ namespace sparrow
                 CHECK_EQ(formatted, expected);
             }
 
-            #if !defined(__GNUC__) || (__GNUC__ != 13)
+#    if !defined(__GNUC__) || (__GNUC__ != 13)
             // TODO: https://github.com/man-group/sparrow/issues/612
 
             SUBCASE("complex")
@@ -578,7 +578,7 @@ namespace sparrow
                 CHECK_EQ(formatted, expected);
             }
 
-            #endif
+#    endif
         }
 #endif
     }
