@@ -18,21 +18,11 @@
 
 #include "sparrow/bool8_array.hpp"
 #include "sparrow/json_array.hpp"
-#include "sparrow/layout/array_type_mapping.hpp"
 #include "sparrow/utils/temporal.hpp"
 #include "sparrow/uuid_array.hpp"
 
 namespace sparrow
 {
-    /**
-     * @brief Initialize the registry with all built-in base types and extensions.
-     *
-     * This function is called automatically on first access to ensure the registry
-     * is populated with all standard Arrow types. Users can call this explicitly
-     * to ensure initialization happens at a specific time.
-     */
-    void initialize_array_registry(array_registry& registry);
-
     namespace detail
     {
         template <class T>
@@ -53,17 +43,79 @@ namespace sparrow
                 return make_wrapper_ptr<WithTZ>(std::move(proxy));
             }
         }
+
+        // Recursive helper to register all types from all_data_types array
+        template <std::size_t I = 0>
+        void register_all_types(array_registry& registry)
+        {
+            if constexpr (I < all_data_types.size())
+            {
+                register_type<all_data_types[I]>(registry);
+                register_all_types<I + 1>(registry);
+            }
+        }
+    }
+
+    array_registry::array_registry()
+    {
+        // ===== Register all base types using template metaprogramming =====
+        // This iterates over all_data_types array and registers each type automatically
+        detail::register_all_types(*this);
+
+        // ===== Register all extension types =====
+
+        // JSON extensions on BINARY, LARGE_BINARY, BINARY_VIEW
+        register_extension(
+            data_type::BINARY,
+            json_extension::EXTENSION_NAME,
+            [](arrow_proxy proxy)
+            {
+                return detail::make_wrapper_ptr<json_array>(std::move(proxy));
+            }
+        );
+
+        register_extension(
+            data_type::LARGE_BINARY,
+            json_extension::EXTENSION_NAME,
+            [](arrow_proxy proxy)
+            {
+                return detail::make_wrapper_ptr<big_json_array>(std::move(proxy));
+            }
+        );
+
+        register_extension(
+            data_type::BINARY_VIEW,
+            json_extension::EXTENSION_NAME,
+            [](arrow_proxy proxy)
+            {
+                return detail::make_wrapper_ptr<json_view_array>(std::move(proxy));
+            }
+        );
+
+        // UUID extension on FIXED_WIDTH_BINARY
+        register_extension(
+            data_type::FIXED_WIDTH_BINARY,
+            uuid_extension::EXTENSION_NAME,
+            [](arrow_proxy proxy)
+            {
+                return detail::make_wrapper_ptr<uuid_array>(std::move(proxy));
+            }
+        );
+
+        // Bool8 extension on UINT8
+        register_extension(
+            data_type::UINT8,
+            bool8_array::EXTENSION_NAME,
+            [](arrow_proxy proxy)
+            {
+                return detail::make_wrapper_ptr<bool8_array>(std::move(proxy));
+            }
+        );
     }
 
     array_registry& array_registry::instance()
     {
         static array_registry reg;
-        static bool initialized = false;
-        if (!initialized)
-        {
-            initialized = true;  // Set first to avoid recursion
-            initialize_array_registry(reg);
-        }
         return reg;
     }
 
@@ -75,7 +127,7 @@ namespace sparrow
     void
     array_registry::register_extension(data_type base_type, std::string_view extension_name, factory_func factory)
     {
-        register_extension_with_predicate(
+        register_extension(
             base_type,
             [extension_name](const arrow_proxy& proxy)
             {
@@ -85,11 +137,8 @@ namespace sparrow
         );
     }
 
-    void array_registry::register_extension_with_predicate(
-        data_type base_type,
-        extension_predicate predicate,
-        factory_func factory
-    )
+    void
+    array_registry::register_extension(data_type base_type, extension_predicate predicate, factory_func factory)
     {
         m_extensions[base_type].emplace_back(std::move(predicate), std::move(factory));
     }
@@ -194,73 +243,5 @@ namespace sparrow
                 }
             );
         }
-    }
-
-    // Recursive helper to register all types from all_data_types array
-    template <std::size_t I = 0>
-    void register_all_types(array_registry& registry)
-    {
-        if constexpr (I < all_data_types.size())
-        {
-            register_type<all_data_types[I]>(registry);
-            register_all_types<I + 1>(registry);
-        }
-    }
-
-    void initialize_array_registry(array_registry& registry)
-    {
-        // ===== Register all base types using template metaprogramming =====
-        // This iterates over all_data_types array and registers each type automatically
-        register_all_types(registry);
-
-        // ===== Register all extension types =====
-
-        // JSON extensions on BINARY, LARGE_BINARY, BINARY_VIEW
-        registry.register_extension(
-            data_type::BINARY,
-            json_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy)
-            {
-                return detail::make_wrapper_ptr<json_array>(std::move(proxy));
-            }
-        );
-
-        registry.register_extension(
-            data_type::LARGE_BINARY,
-            json_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy)
-            {
-                return detail::make_wrapper_ptr<big_json_array>(std::move(proxy));
-            }
-        );
-
-        registry.register_extension(
-            data_type::BINARY_VIEW,
-            json_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy)
-            {
-                return detail::make_wrapper_ptr<json_view_array>(std::move(proxy));
-            }
-        );
-
-        // UUID extension on FIXED_WIDTH_BINARY
-        registry.register_extension(
-            data_type::FIXED_WIDTH_BINARY,
-            uuid_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy)
-            {
-                return detail::make_wrapper_ptr<uuid_array>(std::move(proxy));
-            }
-        );
-
-        // Bool8 extension on UINT8
-        registry.register_extension(
-            data_type::UINT8,
-            bool8_array::EXTENSION_NAME,
-            [](arrow_proxy proxy)
-            {
-                return detail::make_wrapper_ptr<bool8_array>(std::move(proxy));
-            }
-        );
     }
 }

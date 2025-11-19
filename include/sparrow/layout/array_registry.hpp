@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
-#include "sparrow/layout/array_type_mapping.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/types/data_type.hpp"
 #include "sparrow/utils/memory.hpp"
@@ -48,6 +47,82 @@
 
 namespace sparrow
 {
+
+    // Primary template - undefined for unsupported types
+    // Specializations are defined in array_registry.hpp after all array types are included
+    template <data_type DT>
+    struct array_type_map;
+
+    // Helper alias
+    template <data_type DT>
+    using array_type_t = typename array_type_map<DT>::type;
+
+    // Dictionary encoding type map (for integer types)
+    template <data_type DT>
+    struct dictionary_key_type;
+
+    template <data_type DT>
+    using dictionary_key_t = typename dictionary_key_type<DT>::type;
+
+    // Timestamp types with/without timezone
+    template <data_type DT>
+    struct timestamp_type_map;
+
+    // List of all supported data types - single source of truth
+    inline constexpr std::array all_data_types = {
+        data_type::NA,
+        data_type::BOOL,
+        data_type::UINT8,
+        data_type::INT8,
+        data_type::UINT16,
+        data_type::INT16,
+        data_type::UINT32,
+        data_type::INT32,
+        data_type::UINT64,
+        data_type::INT64,
+        data_type::HALF_FLOAT,
+        data_type::FLOAT,
+        data_type::DOUBLE,
+        data_type::STRING,
+        data_type::STRING_VIEW,
+        data_type::LARGE_STRING,
+        data_type::BINARY,
+        data_type::BINARY_VIEW,
+        data_type::LARGE_BINARY,
+        data_type::LIST,
+        data_type::LARGE_LIST,
+        data_type::LIST_VIEW,
+        data_type::LARGE_LIST_VIEW,
+        data_type::FIXED_SIZED_LIST,
+        data_type::STRUCT,
+        data_type::MAP,
+        data_type::RUN_ENCODED,
+        data_type::DENSE_UNION,
+        data_type::SPARSE_UNION,
+        data_type::DECIMAL32,
+        data_type::DECIMAL64,
+        data_type::DECIMAL128,
+        data_type::DECIMAL256,
+        data_type::FIXED_WIDTH_BINARY,
+        data_type::DATE_DAYS,
+        data_type::DATE_MILLISECONDS,
+        data_type::TIMESTAMP_SECONDS,
+        data_type::TIMESTAMP_MILLISECONDS,
+        data_type::TIMESTAMP_MICROSECONDS,
+        data_type::TIMESTAMP_NANOSECONDS,
+        data_type::DURATION_SECONDS,
+        data_type::DURATION_MILLISECONDS,
+        data_type::DURATION_MICROSECONDS,
+        data_type::DURATION_NANOSECONDS,
+        data_type::INTERVAL_MONTHS,
+        data_type::INTERVAL_DAYS_TIME,
+        data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS,
+        data_type::TIME_SECONDS,
+        data_type::TIME_MILLISECONDS,
+        data_type::TIME_MICROSECONDS,
+        data_type::TIME_NANOSECONDS
+    };
+
     // clang-format off
     // Template specializations for array_type_map - defined here after all array includes
     template <> struct array_type_map<data_type::NA> { using type = null_array; };
@@ -187,6 +262,10 @@ namespace sparrow
          * @brief Get the singleton registry instance.
          */
         [[nodiscard]] SPARROW_API static array_registry& instance();
+        array_registry(const array_registry&) = delete;
+        array_registry& operator=(const array_registry&) = delete;
+        array_registry(array_registry&&) = delete;
+        array_registry& operator=(array_registry&&) = delete;
 
         /**
          * @brief Register a base type factory.
@@ -231,7 +310,7 @@ namespace sparrow
          * @param factory Factory function to create the array
          */
         SPARROW_API void
-        register_extension_with_predicate(data_type base_type, extension_predicate predicate, factory_func factory);
+        register_extension(data_type base_type, extension_predicate predicate, factory_func factory);
 
         /**
          * @brief Create an array wrapper from an arrow_proxy.
@@ -287,7 +366,7 @@ namespace sparrow
 
     private:
 
-        array_registry() = default;
+        array_registry();
 
         // Helper for dispatching with compile-time type knowledge
         template <class F, data_type DT>
@@ -404,24 +483,6 @@ namespace sparrow
         }
 
         const auto dt = ar.data_type();
-        const auto& proxy = ar.get_arrow_proxy();
-
-        // Check for registered extensions first
-        auto ext_it = m_extensions.find(dt);
-        if (ext_it != m_extensions.end())
-        {
-            for (const auto& entry : ext_it->second)
-            {
-                if (entry.predicate(proxy))
-                {
-                    // This is a registered extension type - dispatch based on the base type
-                    // The factory has already created the correct concrete type
-                    return dispatch_base_type(std::forward<F>(func), ar, dt);
-                }
-            }
-        }
-
-        // Fall back to base type dispatch
         return dispatch_base_type(std::forward<F>(func), ar, dt);
     }
 
