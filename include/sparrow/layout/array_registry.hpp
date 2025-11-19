@@ -414,7 +414,9 @@ namespace sparrow
 
             return []<std::size_t... I>(std::index_sequence<I...>)
             {
-                return std::array<invoker_t, all_data_types.size()>{&invoker<F>::template run<all_data_types[I]>...};
+                return std::array<invoker_t, all_data_types.size()>{
+                    &invoker<F>::template run<all_data_types[I]>...
+                };
             }(std::make_index_sequence<all_data_types.size()>{});
         }
 
