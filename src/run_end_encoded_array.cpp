@@ -16,7 +16,7 @@
 
 #include "sparrow/array.hpp"
 #include "sparrow/layout/array_helper.hpp"
-#include "sparrow/layout/dispatch.hpp"
+#include "sparrow/layout/array_registry.hpp"
 #include "sparrow/primitive_array.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 

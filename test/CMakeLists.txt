@@ -41,6 +41,7 @@ set(SPARROW_TESTS_SOURCES
     main.cpp
     test_all_layouts_mandatory_methods.cpp
     test_allocator.cpp
+    test_array_registry.cpp
     test_array_wrapper.cpp
     test_array.cpp
     test_arrow_array_schema_proxy.cpp

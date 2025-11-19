@@ -14,7 +14,7 @@
 
 #include "sparrow/layout/list_value.hpp"
 
-#include "sparrow/layout/dispatch.hpp"
+#include "sparrow/layout/array_registry.hpp"
 
 namespace sparrow
 {

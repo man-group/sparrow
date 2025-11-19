@@ -14,12 +14,6 @@
 
 #pragma once
 
-#include <optional>
-#include <string_view>
-#include <vector>
-
-#include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
-#include "sparrow/c_interface.hpp"
 #include "sparrow/utils/extension.hpp"
 #include "sparrow/variable_size_binary_array.hpp"
 #include "sparrow/variable_size_binary_view_array.hpp"
