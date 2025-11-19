@@ -14,10 +14,14 @@
 
 #pragma once
 
+#include <array>
 #include <functional>
+#include <limits>
+#include <stdexcept>
 #include <string_view>
 #include <type_traits>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
@@ -379,39 +383,46 @@ namespace sparrow
                 using types = timestamp_type_map<DT>;
                 if (get_timezone(ar.get_arrow_proxy()) == nullptr)
                 {
-                    return func(unwrap_array<typename types::without_tz>(ar));
+                    return std::invoke(std::forward<F>(func), unwrap_array<typename types::without_tz>(ar));
                 }
                 else
                 {
-                    return func(unwrap_array<typename types::with_tz>(ar));
+                    return std::invoke(std::forward<F>(func), unwrap_array<typename types::with_tz>(ar));
                 }
             }
             else
             {
-                return func(unwrap_array<array_type_t<DT>>(ar));
+                return std::invoke(std::forward<F>(func), unwrap_array<array_type_t<DT>>(ar));
             }
         }
 
-        // Recursive helper for dispatching to the correct type
-        template <class F, std::size_t I = 0>
-        static auto try_dispatch_recursive(F&& func, const array_wrapper& ar, data_type dt)
-            -> visit_result_t<F>
+        template <class F>
+        struct invoker
         {
-            if constexpr (I < all_data_types.size())
+            template <data_type DT>
+            static auto run(F&& func, const array_wrapper& ar) -> visit_result_t<F>
             {
-                if (all_data_types[I] == dt)
-                {
-                    return dispatch_for_type<F, all_data_types[I]>(std::forward<F>(func), ar);
-                }
-                else
-                {
-                    return try_dispatch_recursive<F, I + 1>(std::forward<F>(func), ar, dt);
-                }
+                return dispatch_for_type<F, DT>(std::forward<F>(func), ar);
             }
-            else
+        };
+
+        template <class F>
+        static consteval auto make_dispatch_table()
+        {
+            using result_t = visit_result_t<F>;
+            using invoker_t = result_t (*)(F&&, const array_wrapper&);
+            constexpr std::size_t table_size = std::numeric_limits<std::underlying_type_t<data_type>>::max() + 1;
+
+            std::array<invoker_t, table_size> table{};
+            table.fill([](F&&, const array_wrapper&) -> result_t
+                       { throw std::invalid_argument("array type not supported"); });
+
+            auto populate = [&]<std::size_t... I>(std::index_sequence<I...>)
             {
-                throw std::invalid_argument("array type not supported");
-            }
+                ((table[static_cast<std::size_t>(all_data_types[I])] = &invoker<F>::template run<all_data_types[I]>), ...);
+            };
+            populate(std::make_index_sequence<all_data_types.size()>{});
+            return table;
         }
 
         // Helper method for dispatching base types
@@ -490,7 +501,8 @@ namespace sparrow
     inline auto array_registry::dispatch_base_type(F&& func, const array_wrapper& ar, data_type dt) const
         -> visit_result_t<F>
     {
-        return try_dispatch_recursive<F>(std::forward<F>(func), ar, dt);
+        static constexpr auto table = make_dispatch_table<F>();
+        return table[static_cast<std::size_t>(dt)](std::forward<F>(func), ar);
     }
 
     // Standalone visit function for backward compatibility
