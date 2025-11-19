@@ -411,22 +411,11 @@ namespace sparrow
         {
             using result_t = visit_result_t<F>;
             using invoker_t = result_t (*)(F&&, const array_wrapper&);
-            // constexpr std::size_t table_size = all_data_types.size();
-            std::array<invoker_t, all_data_types.size()> table{};
-            table.fill(
-                [](F&&, const array_wrapper&) -> result_t
-                {
-                    throw std::invalid_argument("array type not supported");
-                }
-            );
 
-            auto populate = [&]<std::size_t... I>(std::index_sequence<I...>)
+            return []<std::size_t... I>(std::index_sequence<I...>)
             {
-                ((table[static_cast<std::size_t>(all_data_types[I])] = &invoker<F>::template run<all_data_types[I]>),
-                 ...);
-            };
-            populate(std::make_index_sequence<all_data_types.size()>{});
-            return table;
+                return std::array<invoker_t, all_data_types.size()>{&invoker<F>::template run<all_data_types[I]>...};
+            }(std::make_index_sequence<all_data_types.size()>{});
         }
 
         // Helper method for dispatching base types
