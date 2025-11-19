@@ -88,10 +88,8 @@ namespace sparrow
         data_type::FLOAT,
         data_type::DOUBLE,
         data_type::STRING,
-        data_type::STRING_VIEW,
         data_type::LARGE_STRING,
         data_type::BINARY,
-        data_type::BINARY_VIEW,
         data_type::LARGE_BINARY,
         data_type::LIST,
         data_type::LARGE_LIST,
@@ -100,9 +98,11 @@ namespace sparrow
         data_type::FIXED_SIZED_LIST,
         data_type::STRUCT,
         data_type::MAP,
-        data_type::RUN_ENCODED,
+        data_type::STRING_VIEW,
+        data_type::BINARY_VIEW,
         data_type::DENSE_UNION,
         data_type::SPARSE_UNION,
+        data_type::RUN_ENCODED,
         data_type::DECIMAL32,
         data_type::DECIMAL64,
         data_type::DECIMAL128,
@@ -114,17 +114,17 @@ namespace sparrow
         data_type::TIMESTAMP_MILLISECONDS,
         data_type::TIMESTAMP_MICROSECONDS,
         data_type::TIMESTAMP_NANOSECONDS,
+        data_type::TIME_SECONDS,
+        data_type::TIME_MILLISECONDS,
+        data_type::TIME_MICROSECONDS,
+        data_type::TIME_NANOSECONDS,
         data_type::DURATION_SECONDS,
         data_type::DURATION_MILLISECONDS,
         data_type::DURATION_MICROSECONDS,
         data_type::DURATION_NANOSECONDS,
         data_type::INTERVAL_MONTHS,
         data_type::INTERVAL_DAYS_TIME,
-        data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS,
-        data_type::TIME_SECONDS,
-        data_type::TIME_MILLISECONDS,
-        data_type::TIME_MICROSECONDS,
-        data_type::TIME_NANOSECONDS
+        data_type::INTERVAL_MONTHS_DAYS_NANOSECONDS
     };
 
     // clang-format off
@@ -411,10 +411,8 @@ namespace sparrow
         {
             using result_t = visit_result_t<F>;
             using invoker_t = result_t (*)(F&&, const array_wrapper&);
-            constexpr std::size_t table_size = std::numeric_limits<std::underlying_type_t<data_type>>::max()
-                                               + 1;
-
-            std::array<invoker_t, table_size> table{};
+            // constexpr std::size_t table_size = all_data_types.size();
+            std::array<invoker_t, all_data_types.size()> table{};
             table.fill(
                 [](F&&, const array_wrapper&) -> result_t
                 {
