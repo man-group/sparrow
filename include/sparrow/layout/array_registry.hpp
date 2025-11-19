@@ -411,15 +411,21 @@ namespace sparrow
         {
             using result_t = visit_result_t<F>;
             using invoker_t = result_t (*)(F&&, const array_wrapper&);
-            constexpr std::size_t table_size = std::numeric_limits<std::underlying_type_t<data_type>>::max() + 1;
+            constexpr std::size_t table_size = std::numeric_limits<std::underlying_type_t<data_type>>::max()
+                                               + 1;
 
             std::array<invoker_t, table_size> table{};
-            table.fill([](F&&, const array_wrapper&) -> result_t
-                       { throw std::invalid_argument("array type not supported"); });
+            table.fill(
+                [](F&&, const array_wrapper&) -> result_t
+                {
+                    throw std::invalid_argument("array type not supported");
+                }
+            );
 
             auto populate = [&]<std::size_t... I>(std::index_sequence<I...>)
             {
-                ((table[static_cast<std::size_t>(all_data_types[I])] = &invoker<F>::template run<all_data_types[I]>), ...);
+                ((table[static_cast<std::size_t>(all_data_types[I])] = &invoker<F>::template run<all_data_types[I]>),
+                 ...);
             };
             populate(std::make_index_sequence<all_data_types.size()>{});
             return table;
