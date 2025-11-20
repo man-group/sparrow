@@ -17,14 +17,121 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <numeric>
 #include <ranges>
 #include <string>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
 #include "sparrow/utils/contracts.hpp"
+
+namespace sparrow::detail
+{
+    struct sequence_format_spec
+    {
+        char fill = ' ';
+        char align = '>';  // '<', '>', '^'
+        std::size_t width = 0;
+
+        // Parse:  [[fill]align] [width]
+        // Grammar subset:  (fill? align?) width?
+        template <class It>
+        constexpr It parse(It it, It end)
+        {
+            if (it == end || *it == '}')
+            {
+                return it;
+            }
+
+            // Detect [fill][align] or [align]
+            auto next = it;
+            if (next != end)
+            {
+                ++next;
+                if (next != end && (*next == '<' || *next == '>' || *next == '^') && *it != '<' && *it != '>'
+                    && *it != '^')
+                {
+                    fill = *it;
+                    align = *next;
+                    it = ++next;
+                }
+                else if (*it == '<' || *it == '>' || *it == '^')
+                {
+                    align = *it;
+                    ++it;
+                }
+            }
+
+            // Parse width
+            std::size_t w = 0;
+            bool has_w = false;
+            while (it != end && *it >= '0' && *it <= '9')
+            {
+                has_w = true;
+                w = w * 10 + static_cast<unsigned>(*it - '0');
+                ++it;
+            }
+            if (has_w)
+            {
+                width = w;
+            }
+
+            // Ignore (silently) everything until '}' (keeps constexpr friendliness)
+            while (it != end && *it != '}')
+            {
+                ++it;
+            }
+
+            return it;
+        }
+
+        std::string apply_alignment(std::string inner) const
+        {
+            if (width <= inner.size())
+            {
+                return inner;
+            }
+
+            const std::size_t pad = width - inner.size();
+            switch (align)
+            {
+                case '<':
+                    return inner + std::string(pad, fill);
+                case '^':
+                {
+                    std::size_t left = pad / 2;
+                    std::size_t right = pad - left;
+                    return std::string(left, fill) + inner + std::string(right, fill);
+                }
+                case '>':
+                default:
+                    return std::string(pad, fill) + inner;
+            }
+        }
+
+        template <class Seq>
+        std::string build_core(const Seq& seq) const
+        {
+            std::string core;
+            core.push_back('<');
+            bool first = true;
+            for (auto&& elem : seq)
+            {
+                if (!first)
+                {
+                    core.append(", ");
+                }
+                std::format_to(std::back_inserter(core), "{}", elem);
+                first = false;
+            }
+            core.push_back('>');
+            return core;
+        }
+    };
+}  // namespace sparrow::detail
 
 namespace std
 {
@@ -56,6 +163,25 @@ namespace std
 
         std::string m_format_string = "{:";
     };
+
+    template <>
+    struct formatter<std::byte>
+    {
+        constexpr auto parse(format_parse_context& ctx)
+        {
+            return m_underlying_formatter.parse(ctx);
+        }
+
+        auto format(std::byte b, std::format_context& ctx) const
+        {
+            return std::format_to(ctx.out(), "{:#04x}", std::to_integer<unsigned>(b));
+        }
+
+    private:
+
+        // Store the parsed format specification
+        std::formatter<unsigned> m_underlying_formatter;
+    };
 }
 
 namespace sparrow
@@ -69,12 +195,35 @@ namespace sparrow
     template <typename T>
     concept RangeOfFormats = std::ranges::range<T> && Format<std::ranges::range_value_t<T>>;
 
+    constexpr size_t size_of_utf8(const std::string_view str)
+    {
+        size_t size = 0;
+        for (const char c : str)
+        {
+            if ((c & 0xC0) != 0x80)
+            {
+                ++size;
+            }
+        }
+        return size;
+    }
+
     constexpr size_t max_width(const std::ranges::input_range auto& data)
     {
         size_t max_width = 0;
         for (const auto& value : data)
         {
-            max_width = std::max(max_width, std::format("{}", value).size());
+            if constexpr (std::is_same_v<std::remove_cvref_t<std::decay_t<decltype(value)>>, std::string>
+                          || std::is_same_v<std::remove_cvref_t<std::decay_t<decltype(value)>>, std::string_view>
+                          || std::is_same_v<std::remove_cvref_t<std::decay_t<decltype(value)>>, const char*>
+                          || std::is_same_v<std::remove_cvref_t<std::decay_t<decltype(value)>>, char*>)
+            {
+                max_width = std::max(max_width, size_of_utf8(value));
+            }
+            else
+            {
+                max_width = std::max(max_width, std::format("{}", value).size());
+            }
         }
         return max_width;
     }

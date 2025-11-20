@@ -1537,7 +1537,7 @@ struct std::formatter<sparrow::nullable_variant<T...>>
         }
         else
         {
-            return std::format_to(ctx.out(), "{}", "null");
+            return std::vformat_to(ctx.out(), m_format_string, std::make_format_args("null"));
         }
     }
 
