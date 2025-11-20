@@ -110,18 +110,14 @@ namespace sparrow
         {
             return true;
         }
-
-        // format: both must be null or both non-null and equal
-        if ((schema1.format == nullptr) ^ (schema2.format == nullptr))
+        if (schema1.release == nullptr || schema2.release == nullptr)
         {
             return false;
         }
-        if (schema1.format != nullptr)
+
+        if (std::string_view(schema1.format) != std::string_view(schema2.format))
         {
-            if (std::string_view(schema1.format) != std::string_view(schema2.format))
-            {
-                return false;
-            }
+            return false;
         }
 
         if (schema1.flags != schema2.flags)

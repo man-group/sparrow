@@ -20,72 +20,135 @@
 namespace sparrow
 {
     arrow_array_stream_proxy::arrow_array_stream_proxy()
-        : m_stream_ptr(new ArrowArrayStream)
+        : m_stream(ArrowArrayStream{})
     {
-        fill_arrow_array_stream(*m_stream_ptr);
+        fill_arrow_array_stream(std::get<ArrowArrayStream>(m_stream));
     }
 
-    arrow_array_stream_proxy::arrow_array_stream_proxy(ArrowArrayStream* stream_ptr)
-        : m_stream_ptr(stream_ptr)
+    arrow_array_stream_proxy::arrow_array_stream_proxy(ArrowArrayStream&& stream)
+        : m_stream(stream)
     {
-        SPARROW_ASSERT_FALSE(stream_ptr == nullptr);
+    }
+
+    arrow_array_stream_proxy::arrow_array_stream_proxy(ArrowArrayStream* stream)
+        : m_stream(stream)
+    {
+        SPARROW_ASSERT_FALSE(stream == nullptr);
     }
 
     arrow_array_stream_proxy::arrow_array_stream_proxy(arrow_array_stream_proxy&& other) noexcept
-        : m_stream_ptr(other.m_stream_ptr)
+        : m_stream(other.m_stream)
     {
-        other.m_stream_ptr = nullptr;
+        if (std::holds_alternative<ArrowArrayStream>(other.m_stream))
+        {
+            other.m_stream = ArrowArrayStream{};
+        }
+        else
+        {
+            other.m_stream = static_cast<ArrowArrayStream*>(nullptr);
+        }
     }
 
     arrow_array_stream_proxy& arrow_array_stream_proxy::operator=(arrow_array_stream_proxy&& other) noexcept
     {
         if (this != &other)
         {
-            if (m_stream_ptr != nullptr && m_stream_ptr->release != nullptr)
+            // Release current stream if owned
+            if (std::holds_alternative<ArrowArrayStream>(m_stream))
             {
-                m_stream_ptr->release(m_stream_ptr);
+                auto& stream = std::get<ArrowArrayStream>(m_stream);
+                if (stream.release != nullptr)
+                {
+                    stream.release(&stream);
+                }
             }
-            m_stream_ptr = other.m_stream_ptr;
-            other.m_stream_ptr = nullptr;
+            
+            m_stream = other.m_stream;
+            
+            if (std::holds_alternative<ArrowArrayStream>(other.m_stream))
+            {
+                other.m_stream = ArrowArrayStream{};
+            }
+            else
+            {
+                other.m_stream = static_cast<ArrowArrayStream*>(nullptr);
+            }
         }
         return *this;
     }
 
     arrow_array_stream_proxy::~arrow_array_stream_proxy()
     {
-        if (m_stream_ptr != nullptr && m_stream_ptr->release != nullptr)
+        if (std::holds_alternative<ArrowArrayStream>(m_stream))
         {
-            m_stream_ptr->release(m_stream_ptr);
-            delete m_stream_ptr;
-            m_stream_ptr = nullptr;
+            auto& stream = std::get<ArrowArrayStream>(m_stream);
+            if (stream.release != nullptr)
+            {
+                stream.release(&stream);
+            }
+        }
+    }
+
+    ArrowArrayStream* arrow_array_stream_proxy::get_stream_ptr()
+    {
+        if (std::holds_alternative<ArrowArrayStream*>(m_stream))
+        {
+            return std::get<ArrowArrayStream*>(m_stream);
+        }
+        else
+        {
+            return &std::get<ArrowArrayStream>(m_stream);
+        }
+    }
+
+    const ArrowArrayStream* arrow_array_stream_proxy::get_stream_ptr() const
+    {
+        if (std::holds_alternative<ArrowArrayStream*>(m_stream))
+        {
+            return std::get<ArrowArrayStream*>(m_stream);
+        }
+        else
+        {
+            return &std::get<ArrowArrayStream>(m_stream);
         }
     }
 
     const arrow_array_stream_private_data* arrow_array_stream_proxy::get_private_data() const
     {
         throw_if_immutable();
-        return static_cast<const arrow_array_stream_private_data*>(m_stream_ptr->private_data);
+        return static_cast<const arrow_array_stream_private_data*>(get_stream_ptr()->private_data);
     }
 
     arrow_array_stream_private_data* arrow_array_stream_proxy::get_private_data()
     {
         throw_if_immutable();
-        return static_cast<arrow_array_stream_private_data*>(m_stream_ptr->private_data);
+        return static_cast<arrow_array_stream_private_data*>(get_stream_ptr()->private_data);
     }
 
     ArrowArrayStream* arrow_array_stream_proxy::export_stream()
     {
-        ArrowArrayStream* temp = m_stream_ptr;
-        m_stream_ptr = nullptr;
-        return temp;
+        if (std::holds_alternative<ArrowArrayStream*>(m_stream))
+        {
+            // Return pointer to external stream (no ownership transfer)
+            return std::get<ArrowArrayStream*>(m_stream);
+        }
+        else
+        {
+            // Transfer ownership by returning pointer to our owned stream
+            // We need to keep the stream alive, so we allocate and move it
+            ArrowArrayStream* exported = new ArrowArrayStream(std::get<ArrowArrayStream>(m_stream));
+            m_stream = ArrowArrayStream{};
+            return exported;
+        }
     }
 
     std::optional<array> arrow_array_stream_proxy::pop()
     {
-        ArrowArray array;
-        if (int err = m_stream_ptr->get_next(m_stream_ptr, &array); err != 0)
+        ArrowArrayStream* stream = get_stream_ptr();
+        ArrowArray array{};
+        if (int err = stream->get_next(stream, &array); err != 0)
         {
-            throw std::system_error(err, std::generic_category(), "Failed to get next array from ArrowArrayStream");
+            throw std::system_error(err, std::generic_category(), "Failed to get next array from ArrowArrayStream: " + std::string(stream->get_last_error(stream)));
         }
 
         if (array.release == nullptr)
@@ -94,27 +157,31 @@ namespace sparrow
             return std::nullopt;
         }
 
-        ArrowSchema schema;
-        if (int err = m_stream_ptr->get_schema(m_stream_ptr, &schema); err != 0)
+        ArrowSchema schema{};
+        if (int err = stream->get_schema(stream, &schema); err != 0)
         {
             throw std::system_error(err, std::generic_category(), "Failed to get schema from ArrowArrayStream");
         }
 
-        return std::make_optional<sparrow::array>(std::move(array), std::move(schema));
+        return sparrow::array(std::move(array), std::move(schema));
     }
 
     void arrow_array_stream_proxy::throw_if_immutable() const
     {
-        SPARROW_ASSERT_TRUE(m_stream_ptr != nullptr);
-        if (m_stream_ptr->release == nullptr)
+        const ArrowArrayStream* stream = get_stream_ptr();
+        if (stream == nullptr)
+        {
+            throw std::runtime_error("ArrowArrayStream pointer is null");
+        }
+        if (stream->release == nullptr)
         {
             throw std::runtime_error("Cannot add array to released ArrowArrayStream");
         }
-        if (m_stream_ptr->release != std::addressof(release_arrow_array_stream))
+        if (stream->release != std::addressof(release_arrow_array_stream))
         {
             throw std::runtime_error("ArrowArrayStream release function is not valid");
         }
-        if (m_stream_ptr->private_data == nullptr)
+        if (stream->private_data == nullptr)
         {
             throw std::runtime_error("ArrowArrayStream private data is not initialized");
         }

@@ -69,17 +69,32 @@ namespace sparrow
         arrow_array_stream_proxy();
 
         /**
-         * @brief Wraps an existing ArrowArrayStream pointer.
+         * @brief Constructs from an existing ArrowArrayStream by taking ownership.
          *
-         * Takes ownership of an externally created ArrowArrayStream. The stream must either be
-         * unreleased (release == nullptr) or have been created by this library
-         * (release == release_arrow_array_stream).
+         * Moves an externally created ArrowArrayStream into this proxy. This allows
+         * stack-allocated or otherwise-owned ArrowArrayStream objects to be transferred
+         * into the proxy without additional heap allocation.
          *
-         * @param stream_ptr Pointer to the ArrowArrayStream to wrap. Must not be nullptr.
+         * @param stream The ArrowArrayStream to move and take ownership of.
          *
-         * @throws Assertion failure if stream_ptr is nullptr or has an incompatible release callback.
+         * @post This proxy owns the stream and will release it on destruction
          */
-        explicit arrow_array_stream_proxy(ArrowArrayStream* stream_ptr);
+        explicit arrow_array_stream_proxy(ArrowArrayStream&& stream);
+
+        /**
+         * @brief Constructs from an existing ArrowArrayStream pointer by referencing it.
+         *
+         * References an externally created ArrowArrayStream without taking ownership.
+         * The stream must remain valid for the lifetime of this proxy.
+         *
+         * @param stream Pointer to the ArrowArrayStream to reference (not owned).
+         *
+         * @pre stream must be a valid pointer to ArrowArrayStream
+         * @pre External stream must remain valid for the lifetime of this proxy
+         * @post This proxy does not own the stream
+         * @post External stream must be managed by the caller
+         */
+        explicit arrow_array_stream_proxy(ArrowArrayStream* stream);
 
         // explicit arrow_array_stream_proxy(ArrowSchema* schema_ptr);
 
@@ -98,15 +113,18 @@ namespace sparrow
         ~arrow_array_stream_proxy();
 
         /**
-         * @brief Export ownership of the stream pointer.
+         * @brief Export the stream pointer.
          *
-         * Transfers ownership of the stream to the caller. After this call, the proxy no longer
-         * manages the stream's lifetime, and the caller is responsible for calling the release
-         * callback when done.
+         * Returns a pointer to the stream. If this proxy owns the stream, ownership is
+         * transferred. If this proxy references an external stream, a pointer to that
+         * stream is returned.
          *
          * This is useful for passing the stream to external C APIs that will take ownership.
          *
-         * @return Pointer to the ArrowArrayStream. The caller must eventually call release.
+         * @return Pointer to the ArrowArrayStream.
+         *
+         * @post If stream was owned, this proxy is left in a released state
+         * @post If stream was referenced, pointer to external stream is returned
          */
         ArrowArrayStream* export_stream();
 
@@ -190,7 +208,21 @@ namespace sparrow
 
     private:
 
-        ArrowArrayStream* m_stream_ptr;
+        std::variant<ArrowArrayStream*, ArrowArrayStream> m_stream;
+
+        /**
+         * @brief Gets the stream pointer from variant.
+         *
+         * @return Mutable pointer to the stream.
+         */
+        [[nodiscard]] ArrowArrayStream* get_stream_ptr();
+
+        /**
+         * @brief Gets the stream pointer from variant (const version).
+         *
+         * @return Const pointer to the stream.
+         */
+        [[nodiscard]] const ArrowArrayStream* get_stream_ptr() const;
 
         /**
          * @brief Validates that the stream is mutable.

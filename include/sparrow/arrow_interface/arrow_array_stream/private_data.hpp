@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <memory>
 #include <queue>
 #include <ranges>
 #include <string>
@@ -28,56 +29,19 @@ namespace sparrow
 
         arrow_array_stream_private_data() = default;
 
-        ~arrow_array_stream_private_data()
-        {
-            if (m_schema != nullptr)
-            {
-                if (m_schema->release != nullptr)
-                {
-                    m_schema->release(m_schema);
-                }
-                delete m_schema;
-                m_schema = nullptr;
-            }
-
-            while (!m_arrays.empty())
-            {
-                ArrowArray* array = m_arrays.front();
-                if (array != nullptr)
-                {
-                    if (array->release != nullptr)
-                    {
-                        array->release(array);
-                    }
-                    delete array;
-                }
-                m_arrays.pop();
-            }
-        }
-
         void import_schema(ArrowSchema* out_schema)
         {
-            if (m_schema != nullptr)
-            {
-                if (m_schema->release != nullptr)
-                {
-                    m_schema->release(m_schema);
-                }
-                delete m_schema;
-                m_schema = nullptr;
-            }
-
-            m_schema = out_schema;
+            m_schema.reset(out_schema);
         }
 
         [[nodiscard]] ArrowSchema* schema()
         {
-            return m_schema;
+            return m_schema.get();
         }
 
         [[nodiscard]] const ArrowSchema* schema() const
         {
-            return m_schema;
+            return m_schema.get();
         }
 
         template <std::ranges::input_range R>
@@ -86,23 +50,23 @@ namespace sparrow
         {
             for (auto&& array : arrays)
             {
-                m_arrays.push(array);
+                m_arrays.push(array_ptr(array));
             }
         }
 
         void import_array(ArrowArray* array)
         {
-            m_arrays.push(array);
+            m_arrays.push(array_ptr(array));
         }
 
-        ArrowArray* export_next_array()
+        [[nodiscard]] ArrowArray* export_next_array()
         {
             if (m_arrays.empty())
             {
                 return new ArrowArray{};
             }
 
-            ArrowArray* array = m_arrays.front();
+            ArrowArray* array = m_arrays.front().release();
             m_arrays.pop();
             return array;
         }
@@ -119,8 +83,41 @@ namespace sparrow
 
     private:
 
-        ArrowSchema* m_schema = nullptr;
-        std::queue<ArrowArray*> m_arrays{};
+        struct arrow_schema_deleter
+        {
+            void operator()(ArrowSchema* schema) const
+            {
+                if (schema != nullptr)
+                {
+                    if (schema->release != nullptr)
+                    {
+                        schema->release(schema);
+                    }
+                    delete schema;
+                }
+            }
+        };
+
+        struct arrow_array_deleter
+        {
+            void operator()(ArrowArray* array) const
+            {
+                if (array != nullptr)
+                {
+                    if (array->release != nullptr)
+                    {
+                        array->release(array);
+                    }
+                    delete array;
+                }
+            }
+        };
+
+        using schema_ptr = std::unique_ptr<ArrowSchema, arrow_schema_deleter>;
+        using array_ptr = std::unique_ptr<ArrowArray, arrow_array_deleter>;
+
+        schema_ptr m_schema;
+        std::queue<array_ptr> m_arrays{};
         std::string m_last_error_message{};
     };
 }

@@ -47,18 +47,20 @@ namespace sparrow
             return EINVAL;
         }
 
+        auto private_data = static_cast<arrow_array_stream_private_data*>(stream->private_data);
         try
         {
-            auto private_data = static_cast<arrow_array_stream_private_data*>(stream->private_data);
             copy_schema(*private_data->schema(), *out);
             return 0;
         }
-        catch (const std::bad_alloc&)
+        catch (const std::bad_alloc& e)
         {
+            private_data->set_last_error_message(e.what());
             return ENOMEM;
         }
-        catch (...)
+        catch (const std::exception& e)
         {
+            private_data->set_last_error_message(e.what());
             return EIO;
         }
     }
@@ -97,14 +99,14 @@ namespace sparrow
             }
             return 0;
         }
-        catch (const std::bad_alloc&)
+        catch (const std::bad_alloc& e)
         {
-            private_data->set_last_error_message("Memory allocation failed");
+            private_data->set_last_error_message(e.what());
             return ENOMEM;
         }
-        catch (...)
+        catch (const std::exception& e)
         {
-            private_data->set_last_error_message("Unknown error occurred");
+            private_data->set_last_error_message(e.what());
             return EIO;
         }
     }
