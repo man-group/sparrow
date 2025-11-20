@@ -49,7 +49,6 @@ set(SPARROW_TESTS_SOURCES
     test_arrow_array.cpp
     test_arrow_schema.cpp
     test_bit.cpp
-    test_bool8_array.cpp
     test_buffer_adaptor.cpp
     test_buffer.cpp
     test_builder_dict_encoded.cpp
@@ -96,8 +95,6 @@ set(SPARROW_TESTS_SOURCES
     test_utils_buffers.cpp
     test_utils_offsets.cpp
     test_utils.hpp
-    test_json_array.cpp
-    test_uuid_array.cpp
     test_variable_size_binary_view_array.cpp
 )
 

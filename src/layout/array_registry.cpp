@@ -16,11 +16,6 @@
 
 #include <stdexcept>
 
-#include "sparrow/bool8_array.hpp"
-#include "sparrow/json_array.hpp"
-#include "sparrow/utils/temporal.hpp"
-#include "sparrow/uuid_array.hpp"
-
 namespace sparrow
 {
     namespace detail
@@ -61,56 +56,6 @@ namespace sparrow
         // ===== Register all base types using template metaprogramming =====
         // This iterates over all_data_types array and registers each type automatically
         detail::register_all_types(*this);
-
-        // ===== Register all extension types =====
-
-        // JSON extensions on BINARY, LARGE_BINARY, BINARY_VIEW
-        register_extension(
-            data_type::BINARY,
-            json_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy)
-            {
-                return detail::make_wrapper_ptr<json_array>(std::move(proxy));
-            }
-        );
-
-        register_extension(
-            data_type::LARGE_BINARY,
-            json_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy)
-            {
-                return detail::make_wrapper_ptr<big_json_array>(std::move(proxy));
-            }
-        );
-
-        register_extension(
-            data_type::BINARY_VIEW,
-            json_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy)
-            {
-                return detail::make_wrapper_ptr<json_view_array>(std::move(proxy));
-            }
-        );
-
-        // UUID extension on FIXED_WIDTH_BINARY
-        register_extension(
-            data_type::FIXED_WIDTH_BINARY,
-            uuid_extension::EXTENSION_NAME,
-            [](arrow_proxy proxy)
-            {
-                return detail::make_wrapper_ptr<uuid_array>(std::move(proxy));
-            }
-        );
-
-        // Bool8 extension on UINT8
-        register_extension(
-            data_type::UINT8,
-            bool8_array::EXTENSION_NAME,
-            [](arrow_proxy proxy)
-            {
-                return detail::make_wrapper_ptr<bool8_array>(std::move(proxy));
-            }
-        );
     }
 
     array_registry& array_registry::instance()
