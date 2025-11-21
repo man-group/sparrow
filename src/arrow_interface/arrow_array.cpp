@@ -245,4 +245,16 @@ namespace sparrow
         target.buffers = private_data->buffers_ptrs<void>();
         target.release = release_arrow_array;
     }
+
+    void arrow_array_deleter::operator()(ArrowArray* array) const
+    {
+        if (array != nullptr)
+        {
+            if (array->release != nullptr)
+            {
+                array->release(array);
+            }
+            delete array;
+        }
+    }
 }

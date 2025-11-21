@@ -222,6 +222,13 @@ namespace sparrow
     {
         return move_array(std::move(source));
     }
+
+    struct arrow_array_deleter
+    {
+        SPARROW_API void operator()(ArrowArray* array) const;
+    };
+
+    using array_unique_ptr = std::unique_ptr<ArrowArray, arrow_array_deleter>;
 };
 
 #if defined(__cpp_lib_format)

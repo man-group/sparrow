@@ -20,6 +20,8 @@
 #include <string>
 
 #include <sparrow/c_interface.hpp>
+#include <sparrow/arrow_interface/arrow_schema.hpp>
+#include <sparrow/arrow_interface/arrow_array.hpp>
 
 namespace sparrow
 {
@@ -29,9 +31,9 @@ namespace sparrow
 
         arrow_array_stream_private_data() = default;
 
-        void import_schema(ArrowSchema* out_schema)
+        void import_schema(schema_unique_ptr&& out_schema)
         {
-            m_schema.reset(out_schema);
+            m_schema = std::move(out_schema);
         }
 
         [[nodiscard]] ArrowSchema* schema()
@@ -54,9 +56,9 @@ namespace sparrow
             }
         }
 
-        void import_array(ArrowArray* array)
+        void import_array(array_unique_ptr&& array)
         {
-            m_arrays.push(array_ptr(array));
+            m_arrays.push(std::move(array));
         }
 
         [[nodiscard]] ArrowArray* export_next_array()
@@ -83,41 +85,8 @@ namespace sparrow
 
     private:
 
-        struct arrow_schema_deleter
-        {
-            void operator()(ArrowSchema* schema) const
-            {
-                if (schema != nullptr)
-                {
-                    if (schema->release != nullptr)
-                    {
-                        schema->release(schema);
-                    }
-                    delete schema;
-                }
-            }
-        };
-
-        struct arrow_array_deleter
-        {
-            void operator()(ArrowArray* array) const
-            {
-                if (array != nullptr)
-                {
-                    if (array->release != nullptr)
-                    {
-                        array->release(array);
-                    }
-                    delete array;
-                }
-            }
-        };
-
-        using schema_ptr = std::unique_ptr<ArrowSchema, arrow_schema_deleter>;
-        using array_ptr = std::unique_ptr<ArrowArray, arrow_array_deleter>;
-
-        schema_ptr m_schema;
-        std::queue<array_ptr> m_arrays{};
+        schema_unique_ptr m_schema;
+        std::queue<array_unique_ptr> m_arrays{};
         std::string m_last_error_message{};
     };
 }

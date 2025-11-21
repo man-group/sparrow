@@ -245,6 +245,13 @@ namespace sparrow
     }
 
     bool SPARROW_API check_compatible_schema(const ArrowSchema& schema1, const ArrowSchema& schema2);
+
+    struct arrow_schema_deleter
+    {
+        SPARROW_API void operator()(ArrowSchema* schema) const;
+    };
+
+    using schema_unique_ptr = std::unique_ptr<ArrowSchema, arrow_schema_deleter>;
 }
 
 #if defined(__cpp_lib_format)

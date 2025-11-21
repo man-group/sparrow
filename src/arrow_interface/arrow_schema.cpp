@@ -193,4 +193,16 @@ namespace sparrow
 
         return true;
     }
+
+    void arrow_schema_deleter::operator()(ArrowSchema* schema) const
+    {
+        if (schema != nullptr)
+        {
+            if (schema->release != nullptr)
+            {
+                schema->release(schema);
+            }
+            delete schema;
+        }
+    }
 }
