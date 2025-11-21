@@ -22,9 +22,6 @@
 #include <ranges>
 #include <unordered_set>
 
-#include "sparrow/utils/repeat_container.hpp"
-
-
 #if defined(__cpp_lib_format)
 #    include <format>
 #    include <ostream>
@@ -246,6 +243,15 @@ namespace sparrow
     {
         return move_schema(std::move(source));
     }
+
+    bool SPARROW_API check_compatible_schema(const ArrowSchema& schema1, const ArrowSchema& schema2);
+
+    struct arrow_schema_deleter
+    {
+        SPARROW_API void operator()(ArrowSchema* schema) const;
+    };
+
+    using schema_unique_ptr = std::unique_ptr<ArrowSchema, arrow_schema_deleter>;
 }
 
 #if defined(__cpp_lib_format)

@@ -197,15 +197,17 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${BINARY_BUILD_DIR}")
 set(SPARROW_HEADERS
 
     # arrow_interface
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/private_data.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_common_release.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_info_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_proxy.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_schema_utils.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_stream_proxy.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array_stream.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_array/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_flag_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/arrow_schema/private_data.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/private_data_ownership.hpp
 
     # buffer
@@ -322,8 +324,11 @@ set(SPARROW_HEADERS
 
 
 set(SPARROW_SRC
-    ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
+    ${SPARROW_SOURCE_DIR}/array.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array_schema_proxy.cpp
+    ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array_stream_proxy.cpp
+    ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array_stream.cpp
+    ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/private_data_ownership.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_factory.cpp
@@ -333,16 +338,15 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/layout/list_value.cpp
     ${SPARROW_SOURCE_DIR}/layout/map_value.cpp
     ${SPARROW_SOURCE_DIR}/layout/struct_value.cpp
-    ${SPARROW_SOURCE_DIR}/types/data_type.cpp
-    ${SPARROW_SOURCE_DIR}/utils/metadata.cpp
-    ${SPARROW_SOURCE_DIR}/utils/temporal.cpp
-    ${SPARROW_SOURCE_DIR}/array.cpp
     ${SPARROW_SOURCE_DIR}/map_array.cpp
     ${SPARROW_SOURCE_DIR}/null_array.cpp
     ${SPARROW_SOURCE_DIR}/record_batch.cpp
     ${SPARROW_SOURCE_DIR}/run_end_encoded_array.cpp
     ${SPARROW_SOURCE_DIR}/struct_array.cpp
+    ${SPARROW_SOURCE_DIR}/types/data_type.cpp
     ${SPARROW_SOURCE_DIR}/union_array.cpp
+    ${SPARROW_SOURCE_DIR}/utils/metadata.cpp
+    ${SPARROW_SOURCE_DIR}/utils/temporal.cpp
 )
 
 OPTION(SPARROW_BUILD_SHARED "Build sparrow as a shared library" ON)

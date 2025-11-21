@@ -60,9 +60,7 @@ namespace sparrow
         }
         else
         {
-            ArrowArray* array_ptr = const_cast<ArrowArray*>(&array());
-            ArrowSchema* schema_ptr = const_cast<ArrowSchema*>(&schema());
-            return arrow_proxy(array_ptr, schema_ptr);
+            return arrow_proxy(const_cast<ArrowArray*>(&array()), const_cast<ArrowSchema*>(&schema()));
         }
     }
 
