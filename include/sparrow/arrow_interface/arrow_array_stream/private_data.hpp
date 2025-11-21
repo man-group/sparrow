@@ -19,9 +19,9 @@
 #include <ranges>
 #include <string>
 
-#include <sparrow/c_interface.hpp>
-#include <sparrow/arrow_interface/arrow_schema.hpp>
 #include <sparrow/arrow_interface/arrow_array.hpp>
+#include <sparrow/arrow_interface/arrow_schema.hpp>
+#include <sparrow/c_interface.hpp>
 
 namespace sparrow
 {
