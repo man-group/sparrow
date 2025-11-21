@@ -66,7 +66,7 @@ namespace sparrow
          * @note The created stream has all callbacks properly initialized according to the
          *       Arrow C Stream Interface specification.
          */
-        arrow_array_stream_proxy();
+        SPARROW_API arrow_array_stream_proxy();
 
         /**
          * @brief Constructs from an existing ArrowArrayStream by taking ownership.
@@ -79,7 +79,7 @@ namespace sparrow
          *
          * @post This proxy owns the stream and will release it on destruction
          */
-        explicit arrow_array_stream_proxy(ArrowArrayStream&& stream);
+        SPARROW_API explicit arrow_array_stream_proxy(ArrowArrayStream&& stream);
 
         /**
          * @brief Constructs from an existing ArrowArrayStream pointer by referencing it.
@@ -94,7 +94,7 @@ namespace sparrow
          * @post This proxy does not own the stream
          * @post External stream must be managed by the caller
          */
-        explicit arrow_array_stream_proxy(ArrowArrayStream* stream);
+        SPARROW_API explicit arrow_array_stream_proxy(ArrowArrayStream* stream);
 
         // explicit arrow_array_stream_proxy(ArrowSchema* schema_ptr);
 
@@ -110,8 +110,7 @@ namespace sparrow
          * Calls the release callback on both the schema and stream if they are not already
          * released. This ensures proper cleanup of all Arrow C interface objects.
          */
-        ~arrow_array_stream_proxy();
-
+        SPARROW_API ~arrow_array_stream_proxy();
         /**
          * @brief Export the stream pointer.
          *
@@ -126,7 +125,7 @@ namespace sparrow
          * @post If stream was owned, this proxy is left in a released state
          * @post If stream was referenced, pointer to external stream is returned
          */
-        ArrowArrayStream* export_stream();
+        SPARROW_API ArrowArrayStream* export_stream();
 
         /**
          * @brief Adds a range of arrays to the stream.
@@ -220,7 +219,7 @@ namespace sparrow
          *
          * @note If the queue is empty, returns a released (empty) array, indicating end of stream.
          */
-        std::optional<array> pop();
+        SPARROW_API std::optional<array> pop();
 
     private:
 
@@ -256,13 +255,13 @@ namespace sparrow
          *
          * @return Const pointer to the stream's private data.
          */
-        [[nodiscard]] const arrow_array_stream_private_data* get_private_data() const;
+        [[nodiscard]] SPARROW_API const arrow_array_stream_private_data* get_private_data() const;
 
         /**
          * @brief Gets the private data (mutable version).
          *
          * @return Mutable pointer to the stream's private data.
          */
-        [[nodiscard]] arrow_array_stream_private_data* get_private_data();
+        [[nodiscard]] SPARROW_API arrow_array_stream_private_data* get_private_data();
     };
 }
