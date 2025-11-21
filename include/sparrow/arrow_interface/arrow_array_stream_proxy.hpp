@@ -53,7 +53,7 @@ namespace sparrow
      *
      * @see https://arrow.apache.org/docs/format/CStreamInterface.html
      */
-    class SPARROW_API arrow_array_stream_proxy
+    class arrow_array_stream_proxy
     {
     public:
 
