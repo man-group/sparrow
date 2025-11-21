@@ -212,7 +212,8 @@ namespace sparrow
 
         TEST_CASE("stream callbacks - release")
         {
-            ArrowArrayStream stream = make_empty_arrow_array_stream();
+            ArrowArrayStream stream;
+            fill_arrow_array_stream(stream);
             REQUIRE_NE(stream.release, nullptr);
             REQUIRE_NE(stream.private_data, nullptr);
             stream.release(&stream);

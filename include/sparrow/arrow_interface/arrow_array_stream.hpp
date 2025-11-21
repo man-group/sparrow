@@ -128,6 +128,4 @@ namespace sparrow
     SPARROW_API const char* get_last_error_from_arrow_array_stream(ArrowArrayStream* stream);
 
     SPARROW_API void fill_arrow_array_stream(ArrowArrayStream& stream);
-
-    SPARROW_API ArrowArrayStream make_empty_arrow_array_stream();
 }

@@ -149,11 +149,4 @@ namespace sparrow
         stream.release = &release_arrow_array_stream;
         stream.private_data = new arrow_array_stream_private_data();
     }
-
-    ArrowArrayStream make_empty_arrow_array_stream()
-    {
-        ArrowArrayStream stream{};
-        fill_arrow_array_stream(stream);
-        return stream;
-    }
 }
