@@ -150,8 +150,16 @@ namespace sparrow
             if (private_data.schema() == nullptr)
             {
                 ArrowSchema* schema = new ArrowSchema();
-                copy_schema(*get_arrow_schema(*std::ranges::begin(arrays)), *schema);
-                private_data.import_schema(schema);
+                try
+                {
+                    copy_schema(*get_arrow_schema(*std::ranges::begin(arrays)), *schema);
+                    private_data.import_schema(schema);
+                }
+                catch (...)
+                {
+                    delete schema;
+                    throw;
+                }
             }
 
             // Validate schema compatibility for all arrays
@@ -169,7 +177,15 @@ namespace sparrow
                 ArrowArray extracted_array = extract_arrow_array(std::move(array));
                 ArrowArray* arrow_array_ptr = new ArrowArray();
                 swap(*arrow_array_ptr, extracted_array);
-                private_data.import_array(arrow_array_ptr);
+                try
+                {
+                    private_data.import_array(arrow_array_ptr);
+                }
+                catch (...)
+                {
+                    delete arrow_array_ptr;
+                    throw;
+                }
             }
         }
 

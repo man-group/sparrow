@@ -182,7 +182,7 @@ namespace sparrow
         return {};
     }
 
-    void swap(ArrowArray& lhs, ArrowArray& rhs)
+    void swap(ArrowArray& lhs, ArrowArray& rhs) noexcept
     {
         std::swap(lhs.length, rhs.length);
         std::swap(lhs.null_count, rhs.null_count);

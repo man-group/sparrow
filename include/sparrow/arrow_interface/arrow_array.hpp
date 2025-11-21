@@ -181,7 +181,7 @@ namespace sparrow
     /**
      * Swaps the contents of the two ArrowArray objects.
      */
-    SPARROW_API void swap(ArrowArray& lhs, ArrowArray& rhs);
+    SPARROW_API void swap(ArrowArray& lhs, ArrowArray& rhs) noexcept;
 
     /**
      * Fill the target ArrowArray with a deep copy of the data from the source ArrowArray.
