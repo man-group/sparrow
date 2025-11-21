@@ -62,9 +62,9 @@ namespace sparrow
                     stream.release(&stream);
                 }
             }
-            
+
             m_stream = other.m_stream;
-            
+
             if (std::holds_alternative<ArrowArrayStream>(other.m_stream))
             {
                 other.m_stream = ArrowArrayStream{};
@@ -148,7 +148,11 @@ namespace sparrow
         ArrowArray array{};
         if (int err = stream->get_next(stream, &array); err != 0)
         {
-            throw std::system_error(err, std::generic_category(), "Failed to get next array from ArrowArrayStream: " + std::string(stream->get_last_error(stream)));
+            throw std::system_error(
+                err,
+                std::generic_category(),
+                "Failed to get next array from ArrowArrayStream: " + std::string(stream->get_last_error(stream))
+            );
         }
 
         if (array.release == nullptr)
