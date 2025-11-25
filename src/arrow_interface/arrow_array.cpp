@@ -182,7 +182,7 @@ namespace sparrow
         return {};
     }
 
-    void swap(ArrowArray& lhs, ArrowArray& rhs)
+    void swap(ArrowArray& lhs, ArrowArray& rhs) noexcept
     {
         std::swap(lhs.length, rhs.length);
         std::swap(lhs.null_count, rhs.null_count);
@@ -244,5 +244,17 @@ namespace sparrow
         const auto private_data = static_cast<arrow_array_private_data*>(target.private_data);
         target.buffers = private_data->buffers_ptrs<void>();
         target.release = release_arrow_array;
+    }
+
+    void arrow_array_deleter::operator()(ArrowArray* array) const
+    {
+        if (array != nullptr)
+        {
+            if (array->release != nullptr)
+            {
+                array->release(array);
+            }
+            delete array;
+        }
     }
 }

@@ -181,7 +181,7 @@ namespace sparrow
     /**
      * Swaps the contents of the two ArrowArray objects.
      */
-    SPARROW_API void swap(ArrowArray& lhs, ArrowArray& rhs);
+    SPARROW_API void swap(ArrowArray& lhs, ArrowArray& rhs) noexcept;
 
     /**
      * Fill the target ArrowArray with a deep copy of the data from the source ArrowArray.
@@ -222,6 +222,13 @@ namespace sparrow
     {
         return move_array(std::move(source));
     }
+
+    struct arrow_array_deleter
+    {
+        SPARROW_API void operator()(ArrowArray* array) const;
+    };
+
+    using array_unique_ptr = std::unique_ptr<ArrowArray, arrow_array_deleter>;
 };
 
 #if defined(__cpp_lib_format)
