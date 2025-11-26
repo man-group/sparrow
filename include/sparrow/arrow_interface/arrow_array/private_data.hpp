@@ -33,7 +33,7 @@ namespace sparrow
      * It is used in the Sparrow library.
      */
 
-    class arrow_array_private_data : public children_ownership,
+    class SPARROW_API arrow_array_private_data : public children_ownership,
                                      public dictionary_ownership
     {
     public:

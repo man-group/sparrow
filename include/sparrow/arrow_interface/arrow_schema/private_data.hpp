@@ -19,6 +19,7 @@
 #include <type_traits>
 
 #include "sparrow/arrow_interface/private_data_ownership.hpp"
+#include "sparrow/config/config.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/mp_utils.hpp"
@@ -32,7 +33,7 @@ namespace sparrow
      * name and metadata strings, children, and dictionary. It is used in the
      * Sparrow library.
      */
-    class arrow_schema_private_data : public children_ownership,
+    class SPARROW_API arrow_schema_private_data : public children_ownership,
                                       public dictionary_ownership
     {
     public:
