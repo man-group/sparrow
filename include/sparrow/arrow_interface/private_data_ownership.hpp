@@ -17,13 +17,15 @@
 #include <ranges>
 #include <vector>
 
+#include "sparrow/config/config.hpp"
+
 namespace sparrow
 {
     /*
      * Class for tracking ownership of the dictionary of an `ArrowArray` or
      * an `ArrowSchema` allocated by sparrow.
      */
-    class dictionary_ownership
+    class SPARROW_API dictionary_ownership
     {
     public:
 
@@ -46,7 +48,7 @@ namespace sparrow
      * Class for tracking ownership of children of an `ArrowArray` or
      * an `ArrowSchema` allocated by sparrow.
      */
-    class children_ownership
+    class SPARROW_API children_ownership
     {
     public:
 
