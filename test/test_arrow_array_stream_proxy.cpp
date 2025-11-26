@@ -74,24 +74,40 @@ namespace sparrow
 
     TEST_SUITE("arrow_array_stream_proxy")
     {
-        TEST_CASE("constructor - default")
+        TEST_CASE("constructor")
         {
-            arrow_array_stream_proxy proxy;
-            ArrowArrayStream* aas = proxy.export_stream();
-            REQUIRE_NE(aas, nullptr);
-            aas->release(aas);
-            delete aas;
-        }
+            SUBCASE("default")
+            {
+                arrow_array_stream_proxy proxy;
+                ArrowArrayStream* aas = proxy.export_stream();
+                REQUIRE_NE(aas, nullptr);
+                aas->release(aas);
+                delete aas;
+            }
 
-        TEST_CASE("constructor - from existing stream")
-        {
-            ArrowArrayStream* stream = new ArrowArrayStream;
-            fill_arrow_array_stream(*stream);
-            arrow_array_stream_proxy proxy(stream);
-            ArrowArrayStream* aas = proxy.export_stream();
-            REQUIRE_NE(aas, nullptr);
-            aas->release(aas);
-            delete aas;
+            SUBCASE("pointer")
+            {
+                ArrowArrayStream* stream = new ArrowArrayStream;
+                fill_arrow_array_stream(*stream);
+                arrow_array_stream_proxy proxy(stream);
+                ArrowArrayStream* aas = proxy.export_stream();
+                REQUIRE_NE(aas, nullptr);
+                aas->release(aas);
+                delete aas;
+            }
+
+            SUBCASE("move")
+            {
+                ArrowArrayStream stream{};
+                fill_arrow_array_stream(stream);
+                arrow_array_stream_proxy proxy(std::move(stream));
+                REQUIRE_EQ(stream.private_data, nullptr);
+                REQUIRE_EQ(stream.release, nullptr);
+                ArrowArrayStream* aas = proxy.export_stream();
+                REQUIRE_NE(aas, nullptr);
+                aas->release(aas);
+                delete aas;
+            }
         }
 
         TEST_CASE("export_stream")

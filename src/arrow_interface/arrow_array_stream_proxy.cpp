@@ -26,7 +26,7 @@ namespace sparrow
     }
 
     arrow_array_stream_proxy::arrow_array_stream_proxy(ArrowArrayStream&& stream)
-        : m_stream(stream)
+        : m_stream(move_array_stream(stream))
     {
     }
 

@@ -33,7 +33,6 @@
 
 #pragma once
 
-
 #include "sparrow/arrow_interface/arrow_array_stream/private_data.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/c_stream_interface.hpp"
@@ -128,4 +127,7 @@ namespace sparrow
     SPARROW_API const char* get_last_error_from_arrow_array_stream(ArrowArrayStream* stream);
 
     SPARROW_API void fill_arrow_array_stream(ArrowArrayStream& stream);
+
+    SPARROW_API ArrowArrayStream move_array_stream(ArrowArrayStream&& source);
+    SPARROW_API ArrowArrayStream move_array_stream(ArrowArrayStream& source);
 }
