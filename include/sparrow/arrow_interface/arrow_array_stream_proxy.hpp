@@ -111,6 +111,12 @@ namespace sparrow
          * released. This ensures proper cleanup of all Arrow C interface objects.
          */
         SPARROW_API ~arrow_array_stream_proxy();
+
+        /**
+         * Check whether the proxy has ownership of its internal `ArrowArrayStream`.
+         */
+        SPARROW_API bool owns_stream() const;
+
         /**
          * @brief Export the stream pointer.
          *

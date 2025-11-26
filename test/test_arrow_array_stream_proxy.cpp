@@ -110,6 +110,21 @@ namespace sparrow
             }
         }
 
+        TEST_CASE("owns_stream")
+        {
+            {
+                arrow_array_stream_proxy proxy{};
+                REQUIRE(proxy.owns_stream());
+            }
+
+            {
+                ArrowArrayStream stream{};
+                fill_arrow_array_stream(stream);
+                arrow_array_stream_proxy proxy(&stream);
+                REQUIRE(!proxy.owns_stream());
+            }
+        }
+
         TEST_CASE("export_stream")
         {
             arrow_array_stream_proxy proxy;

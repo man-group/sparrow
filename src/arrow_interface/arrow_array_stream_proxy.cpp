@@ -89,6 +89,11 @@ namespace sparrow
         }
     }
 
+    bool arrow_array_stream_proxy::owns_stream() const
+    {
+        return std::holds_alternative<ArrowArrayStream>(m_stream);
+    }
+
     ArrowArrayStream* arrow_array_stream_proxy::get_stream_ptr()
     {
         if (std::holds_alternative<ArrowArrayStream*>(m_stream))
