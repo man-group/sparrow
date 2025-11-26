@@ -113,16 +113,10 @@ namespace sparrow
         }
     }
 
-    const arrow_array_stream_private_data* arrow_array_stream_proxy::get_private_data() const
+    arrow_array_stream_private_data& arrow_array_stream_proxy::get_private_data()
     {
         throw_if_immutable();
-        return static_cast<const arrow_array_stream_private_data*>(get_stream_ptr()->private_data);
-    }
-
-    arrow_array_stream_private_data* arrow_array_stream_proxy::get_private_data()
-    {
-        throw_if_immutable();
-        return static_cast<arrow_array_stream_private_data*>(get_stream_ptr()->private_data);
+        return *static_cast<arrow_array_stream_private_data*>(get_stream_ptr()->private_data);
     }
 
     ArrowArrayStream* arrow_array_stream_proxy::export_stream()

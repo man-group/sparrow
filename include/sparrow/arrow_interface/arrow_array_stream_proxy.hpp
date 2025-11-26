@@ -143,7 +143,7 @@ namespace sparrow
             requires layout<std::ranges::range_value_t<R>>
         void push(R&& arrays)
         {
-            arrow_array_stream_private_data& private_data = *get_private_data();
+            arrow_array_stream_private_data& private_data = get_private_data();
 
             // Check if we need to create schema from first array
             if (private_data.schema() == nullptr)
@@ -235,17 +235,10 @@ namespace sparrow
         void throw_if_immutable() const;
 
         /**
-         * @brief Gets the private data (const version).
-         *
-         * @return Const pointer to the stream's private data.
-         */
-        [[nodiscard]] SPARROW_API const arrow_array_stream_private_data* get_private_data() const;
-
-        /**
          * @brief Gets the private data (mutable version).
          *
          * @return Mutable pointer to the stream's private data.
          */
-        [[nodiscard]] SPARROW_API arrow_array_stream_private_data* get_private_data();
+        [[nodiscard]] SPARROW_API arrow_array_stream_private_data& get_private_data();
     };
 }
