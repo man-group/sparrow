@@ -101,7 +101,9 @@ namespace sparrow
         arrow_array_stream_proxy(const arrow_array_stream_proxy&) = delete;
         arrow_array_stream_proxy& operator=(const arrow_array_stream_proxy&) = delete;
 
+        SPARROW_API
         arrow_array_stream_proxy(arrow_array_stream_proxy&& other) noexcept;
+        SPARROW_API
         arrow_array_stream_proxy& operator=(arrow_array_stream_proxy&& other) noexcept;
 
         /**

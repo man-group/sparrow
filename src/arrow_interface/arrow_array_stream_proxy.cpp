@@ -144,6 +144,11 @@ namespace sparrow
     std::optional<array> arrow_array_stream_proxy::pop()
     {
         ArrowArrayStream* stream = get_stream_ptr();
+        if (!stream)
+        {
+            throw std::runtime_error("ArrowArrayStream pointer is null");
+        }
+
         ArrowArray array{};
         if (int err = stream->get_next(stream, &array); err != 0)
         {

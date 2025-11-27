@@ -110,6 +110,79 @@ namespace sparrow
             }
         }
 
+        TEST_CASE("move semantics")
+        {
+            SUBCASE("move constructor")
+            {
+                {
+                    ArrowArrayStream stream{};
+                    fill_arrow_array_stream(stream);
+                    arrow_array_stream_proxy src(std::move(stream));
+                    arrow_array_stream_proxy dst(std::move(src));
+
+                    auto* src_str = src.export_stream();
+                    auto* dst_str = dst.export_stream();
+                    REQUIRE_EQ(src_str->release, nullptr);
+                    REQUIRE_NE(dst_str->release, nullptr);
+                    delete src_str;
+                    delete dst_str;
+                }
+
+                {
+                    ArrowArrayStream stream{};
+                    fill_arrow_array_stream(stream);
+                    arrow_array_stream_proxy src(&stream);
+                    arrow_array_stream_proxy dst(std::move(src));
+
+                    auto* src_str = src.export_stream();
+                    auto* dst_str = dst.export_stream();
+                    REQUIRE_EQ(src_str, nullptr);
+                    REQUIRE_NE(dst_str, nullptr);
+                }
+
+            }
+
+            SUBCASE("move assignment")
+            {
+                {
+                    auto test_array = make_test_primitive_array<int32_t>(10);
+                    ArrowArrayStream stream;
+                    fill_arrow_array_stream(stream);
+                    arrow_array_stream_proxy src(std::move(stream));
+                    src.push(std::move(test_array));
+
+                    ArrowArrayStream stream2;
+                    fill_arrow_array_stream(stream2);
+                    arrow_array_stream_proxy dst(std::move(stream2));
+                    dst = std::move(src);
+
+                    auto* src_str = src.export_stream();
+                    REQUIRE_EQ(src_str->release, nullptr);
+                    auto dst_arr = dst.pop();
+                    REQUIRE(dst_arr.has_value());
+                    delete src_str;
+                }
+
+                {
+                    auto test_array = make_test_primitive_array<int32_t>(10);
+                    ArrowArrayStream stream;
+                    fill_arrow_array_stream(stream);
+                    arrow_array_stream_proxy src(&stream);
+                    src.push(std::move(test_array));
+
+                    ArrowArrayStream stream2;
+                    fill_arrow_array_stream(stream2);
+                    arrow_array_stream_proxy dst(&stream2);
+                    dst = std::move(src);
+
+                    auto* src_str = src.export_stream();
+                    REQUIRE_EQ(src_str, nullptr);
+                    auto dst_arr = dst.pop();
+                    REQUIRE(dst_arr.has_value());
+                }
+            }
+        }
+
         TEST_CASE("owns_stream")
         {
             {
