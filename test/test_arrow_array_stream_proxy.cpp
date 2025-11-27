@@ -214,7 +214,16 @@ namespace sparrow
 
         TEST_CASE("push and pop - single int32 array")
         {
-            SUBCASE("single array")
+            SUBCASE("empty stream")
+            {
+                ArrowArrayStream stream{};
+                fill_arrow_array_stream(stream);
+                arrow_array_stream_proxy src(&stream);
+                arrow_array_stream_proxy dst(std::move(src));
+                CHECK_THROWS_AS(src.pop(), std::runtime_error);
+            }
+
+            SUBCASE("single int32 array")
             {
                 arrow_array_stream_proxy proxy;
                 auto test_array = make_test_primitive_array<int32_t>(10);
@@ -223,35 +232,35 @@ namespace sparrow
                 REQUIRE(result.has_value());
                 CHECK_EQ(result->size(), 10);
             }
-        }
 
-        TEST_CASE("push and pop - multiple arrays")
-        {
-            arrow_array_stream_proxy proxy;
-
-            // Create and push multiple arrays (schema created from first array)
-            std::vector<primitive_array<int32_t>> arrays;
-            arrays.push_back(make_test_primitive_array<int32_t>(5, 0));
-            arrays.push_back(make_test_primitive_array<int32_t>(7, 10));
-            arrays.push_back(make_test_primitive_array<int32_t>(3, 20));
-
-            for (auto& arr : arrays)
+            SUBCASE("multiple arrays")
             {
-                proxy.push(std::move(arr));
+                arrow_array_stream_proxy proxy;
+
+                // Create and push multiple arrays (schema created from first array)
+                std::vector<primitive_array<int32_t>> arrays;
+                arrays.push_back(make_test_primitive_array<int32_t>(5, 0));
+                arrays.push_back(make_test_primitive_array<int32_t>(7, 10));
+                arrays.push_back(make_test_primitive_array<int32_t>(3, 20));
+
+                for (auto& arr : arrays)
+                {
+                    proxy.push(std::move(arr));
+                }
+
+                // Pop all arrays
+                const auto result1 = proxy.pop();
+                REQUIRE(result1.has_value());
+                CHECK_EQ(result1->size(), 5);
+
+                auto result2 = proxy.pop();
+                REQUIRE(result2.has_value());
+                CHECK_EQ(result2->size(), 7);
+
+                const auto result3 = proxy.pop();
+                REQUIRE(result3.has_value());
+                CHECK_EQ(result3->size(), 3);
             }
-
-            // Pop all arrays
-            const auto result1 = proxy.pop();
-            REQUIRE(result1.has_value());
-            CHECK_EQ(result1->size(), 5);
-
-            auto result2 = proxy.pop();
-            REQUIRE(result2.has_value());
-            CHECK_EQ(result2->size(), 7);
-
-            const auto result3 = proxy.pop();
-            REQUIRE(result3.has_value());
-            CHECK_EQ(result3->size(), 3);
         }
 
         TEST_CASE("end of stream")
