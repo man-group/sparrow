@@ -139,7 +139,6 @@ namespace sparrow
                     REQUIRE_NE(dst_str, nullptr);
                     stream.release(&stream);
                 }
-
             }
 
             SUBCASE("move assignment")
