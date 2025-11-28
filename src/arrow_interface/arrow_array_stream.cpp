@@ -149,4 +149,16 @@ namespace sparrow
         stream.release = &release_arrow_array_stream;
         stream.private_data = new arrow_array_stream_private_data();
     }
+
+    ArrowArrayStream move_array_stream(ArrowArrayStream&& source)
+    {
+        ArrowArrayStream target = source;
+        source = {};
+        return target;
+    }
+
+    ArrowArrayStream move_array_stream(ArrowArrayStream& source)
+    {
+        return move_array_stream(std::move(source));
+    }
 }

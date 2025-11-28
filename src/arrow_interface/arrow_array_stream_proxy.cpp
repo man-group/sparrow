@@ -26,7 +26,7 @@ namespace sparrow
     }
 
     arrow_array_stream_proxy::arrow_array_stream_proxy(ArrowArrayStream&& stream)
-        : m_stream(stream)
+        : m_stream(move_array_stream(stream))
     {
     }
 
@@ -89,6 +89,11 @@ namespace sparrow
         }
     }
 
+    bool arrow_array_stream_proxy::owns_stream() const
+    {
+        return std::holds_alternative<ArrowArrayStream>(m_stream);
+    }
+
     ArrowArrayStream* arrow_array_stream_proxy::get_stream_ptr()
     {
         if (std::holds_alternative<ArrowArrayStream*>(m_stream))
@@ -113,16 +118,10 @@ namespace sparrow
         }
     }
 
-    const arrow_array_stream_private_data* arrow_array_stream_proxy::get_private_data() const
+    arrow_array_stream_private_data& arrow_array_stream_proxy::get_private_data()
     {
         throw_if_immutable();
-        return static_cast<const arrow_array_stream_private_data*>(get_stream_ptr()->private_data);
-    }
-
-    arrow_array_stream_private_data* arrow_array_stream_proxy::get_private_data()
-    {
-        throw_if_immutable();
-        return static_cast<arrow_array_stream_private_data*>(get_stream_ptr()->private_data);
+        return *static_cast<arrow_array_stream_private_data*>(get_stream_ptr()->private_data);
     }
 
     ArrowArrayStream* arrow_array_stream_proxy::export_stream()
@@ -145,6 +144,11 @@ namespace sparrow
     std::optional<array> arrow_array_stream_proxy::pop()
     {
         ArrowArrayStream* stream = get_stream_ptr();
+        if (!stream)
+        {
+            throw std::runtime_error("ArrowArrayStream pointer is null");
+        }
+
         ArrowArray array{};
         if (int err = stream->get_next(stream, &array); err != 0)
         {

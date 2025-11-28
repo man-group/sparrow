@@ -74,24 +74,129 @@ namespace sparrow
 
     TEST_SUITE("arrow_array_stream_proxy")
     {
-        TEST_CASE("constructor - default")
+        TEST_CASE("constructor")
         {
-            arrow_array_stream_proxy proxy;
-            ArrowArrayStream* aas = proxy.export_stream();
-            REQUIRE_NE(aas, nullptr);
-            aas->release(aas);
-            delete aas;
+            SUBCASE("default")
+            {
+                arrow_array_stream_proxy proxy;
+                ArrowArrayStream* aas = proxy.export_stream();
+                REQUIRE_NE(aas, nullptr);
+                aas->release(aas);
+                delete aas;
+            }
+
+            SUBCASE("pointer")
+            {
+                ArrowArrayStream* stream = new ArrowArrayStream;
+                fill_arrow_array_stream(*stream);
+                arrow_array_stream_proxy proxy(stream);
+                ArrowArrayStream* aas = proxy.export_stream();
+                REQUIRE_NE(aas, nullptr);
+                aas->release(aas);
+                delete aas;
+            }
+
+            SUBCASE("move")
+            {
+                ArrowArrayStream stream{};
+                fill_arrow_array_stream(stream);
+                arrow_array_stream_proxy proxy(std::move(stream));
+                REQUIRE_EQ(stream.private_data, nullptr);
+                REQUIRE_EQ(stream.release, nullptr);
+                ArrowArrayStream* aas = proxy.export_stream();
+                REQUIRE_NE(aas, nullptr);
+                aas->release(aas);
+                delete aas;
+            }
         }
 
-        TEST_CASE("constructor - from existing stream")
+        TEST_CASE("move semantics")
         {
-            ArrowArrayStream* stream = new ArrowArrayStream;
-            fill_arrow_array_stream(*stream);
-            arrow_array_stream_proxy proxy(stream);
-            ArrowArrayStream* aas = proxy.export_stream();
-            REQUIRE_NE(aas, nullptr);
-            aas->release(aas);
-            delete aas;
+            SUBCASE("move constructor")
+            {
+                {
+                    ArrowArrayStream stream{};
+                    fill_arrow_array_stream(stream);
+                    arrow_array_stream_proxy src(std::move(stream));
+                    arrow_array_stream_proxy dst(std::move(src));
+
+                    std::unique_ptr<ArrowArrayStream> src_str(src.export_stream());
+                    std::unique_ptr<ArrowArrayStream> dst_str(dst.export_stream());
+                    REQUIRE_EQ(src_str->release, nullptr);
+                    REQUIRE_NE(dst_str->release, nullptr);
+                    dst_str->release(dst_str.get());
+                }
+
+                {
+                    ArrowArrayStream stream{};
+                    fill_arrow_array_stream(stream);
+                    arrow_array_stream_proxy src(&stream);
+                    arrow_array_stream_proxy dst(std::move(src));
+
+                    auto* src_str = src.export_stream();
+                    auto* dst_str = dst.export_stream();
+                    REQUIRE_EQ(src_str, nullptr);
+                    REQUIRE_NE(dst_str, nullptr);
+                    stream.release(&stream);
+                }
+            }
+
+            SUBCASE("move assignment")
+            {
+                {
+                    auto test_array = make_test_primitive_array<int32_t>(10);
+                    ArrowArrayStream stream;
+                    fill_arrow_array_stream(stream);
+                    arrow_array_stream_proxy src(std::move(stream));
+                    src.push(std::move(test_array));
+
+                    ArrowArrayStream stream2;
+                    fill_arrow_array_stream(stream2);
+                    arrow_array_stream_proxy dst(std::move(stream2));
+                    dst = std::move(src);
+
+                    std::unique_ptr<ArrowArrayStream> src_str(src.export_stream());
+                    REQUIRE_EQ(src_str->release, nullptr);
+                    auto dst_arr = dst.pop();
+                    REQUIRE(dst_arr.has_value());
+                }
+
+                {
+                    auto test_array = make_test_primitive_array<int32_t>(10);
+                    ArrowArrayStream stream;
+                    fill_arrow_array_stream(stream);
+                    arrow_array_stream_proxy src(&stream);
+                    src.push(std::move(test_array));
+
+                    ArrowArrayStream stream2;
+                    fill_arrow_array_stream(stream2);
+                    arrow_array_stream_proxy dst(&stream2);
+                    dst = std::move(src);
+
+                    auto* src_str = src.export_stream();
+                    REQUIRE_EQ(src_str, nullptr);
+                    auto dst_arr = dst.pop();
+                    REQUIRE(dst_arr.has_value());
+                    stream.release(&stream);
+                    stream2.release(&stream2);
+                }
+            }
+        }
+
+        TEST_CASE("owns_stream")
+        {
+            {
+                arrow_array_stream_proxy proxy{};
+                REQUIRE(proxy.owns_stream());
+            }
+
+            {
+                ArrowArrayStream stream{};
+                fill_arrow_array_stream(stream);
+                arrow_array_stream_proxy proxy(&stream);
+                REQUIRE(!proxy.owns_stream());
+                stream.release(&stream);
+            }
         }
 
         TEST_CASE("export_stream")
@@ -110,7 +215,17 @@ namespace sparrow
 
         TEST_CASE("push and pop - single int32 array")
         {
-            SUBCASE("single array")
+            SUBCASE("empty stream")
+            {
+                ArrowArrayStream stream{};
+                fill_arrow_array_stream(stream);
+                arrow_array_stream_proxy src(&stream);
+                arrow_array_stream_proxy dst(std::move(src));
+                CHECK_THROWS_AS(src.pop(), std::runtime_error);
+                stream.release(&stream);
+            }
+
+            SUBCASE("single int32 array")
             {
                 arrow_array_stream_proxy proxy;
                 auto test_array = make_test_primitive_array<int32_t>(10);
@@ -119,35 +234,35 @@ namespace sparrow
                 REQUIRE(result.has_value());
                 CHECK_EQ(result->size(), 10);
             }
-        }
 
-        TEST_CASE("push and pop - multiple arrays")
-        {
-            arrow_array_stream_proxy proxy;
-
-            // Create and push multiple arrays (schema created from first array)
-            std::vector<primitive_array<int32_t>> arrays;
-            arrays.push_back(make_test_primitive_array<int32_t>(5, 0));
-            arrays.push_back(make_test_primitive_array<int32_t>(7, 10));
-            arrays.push_back(make_test_primitive_array<int32_t>(3, 20));
-
-            for (auto& arr : arrays)
+            SUBCASE("multiple arrays")
             {
-                proxy.push(std::move(arr));
+                arrow_array_stream_proxy proxy;
+
+                // Create and push multiple arrays (schema created from first array)
+                std::vector<primitive_array<int32_t>> arrays;
+                arrays.push_back(make_test_primitive_array<int32_t>(5, 0));
+                arrays.push_back(make_test_primitive_array<int32_t>(7, 10));
+                arrays.push_back(make_test_primitive_array<int32_t>(3, 20));
+
+                for (auto& arr : arrays)
+                {
+                    proxy.push(std::move(arr));
+                }
+
+                // Pop all arrays
+                const auto result1 = proxy.pop();
+                REQUIRE(result1.has_value());
+                CHECK_EQ(result1->size(), 5);
+
+                auto result2 = proxy.pop();
+                REQUIRE(result2.has_value());
+                CHECK_EQ(result2->size(), 7);
+
+                const auto result3 = proxy.pop();
+                REQUIRE(result3.has_value());
+                CHECK_EQ(result3->size(), 3);
             }
-
-            // Pop all arrays
-            const auto result1 = proxy.pop();
-            REQUIRE(result1.has_value());
-            CHECK_EQ(result1->size(), 5);
-
-            auto result2 = proxy.pop();
-            REQUIRE(result2.has_value());
-            CHECK_EQ(result2->size(), 7);
-
-            const auto result3 = proxy.pop();
-            REQUIRE(result3.has_value());
-            CHECK_EQ(result3->size(), 3);
         }
 
         TEST_CASE("end of stream")

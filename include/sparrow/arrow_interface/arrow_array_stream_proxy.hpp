@@ -101,7 +101,9 @@ namespace sparrow
         arrow_array_stream_proxy(const arrow_array_stream_proxy&) = delete;
         arrow_array_stream_proxy& operator=(const arrow_array_stream_proxy&) = delete;
 
+        SPARROW_API
         arrow_array_stream_proxy(arrow_array_stream_proxy&& other) noexcept;
+        SPARROW_API
         arrow_array_stream_proxy& operator=(arrow_array_stream_proxy&& other) noexcept;
 
         /**
@@ -111,6 +113,12 @@ namespace sparrow
          * released. This ensures proper cleanup of all Arrow C interface objects.
          */
         SPARROW_API ~arrow_array_stream_proxy();
+
+        /**
+         * Check whether the proxy has ownership of its internal `ArrowArrayStream`.
+         */
+        SPARROW_API bool owns_stream() const;
+
         /**
          * @brief Export the stream pointer.
          *
@@ -143,7 +151,7 @@ namespace sparrow
             requires layout<std::ranges::range_value_t<R>>
         void push(R&& arrays)
         {
-            arrow_array_stream_private_data& private_data = *get_private_data();
+            arrow_array_stream_private_data& private_data = get_private_data();
 
             // Check if we need to create schema from first array
             if (private_data.schema() == nullptr)
@@ -235,17 +243,10 @@ namespace sparrow
         void throw_if_immutable() const;
 
         /**
-         * @brief Gets the private data (const version).
-         *
-         * @return Const pointer to the stream's private data.
-         */
-        [[nodiscard]] SPARROW_API const arrow_array_stream_private_data* get_private_data() const;
-
-        /**
          * @brief Gets the private data (mutable version).
          *
-         * @return Mutable pointer to the stream's private data.
+         * @return Reference to the stream's private data.
          */
-        [[nodiscard]] SPARROW_API arrow_array_stream_private_data* get_private_data();
+        [[nodiscard]] SPARROW_API arrow_array_stream_private_data& get_private_data();
     };
 }
