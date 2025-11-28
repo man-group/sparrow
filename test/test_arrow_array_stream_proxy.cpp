@@ -120,12 +120,11 @@ namespace sparrow
                     arrow_array_stream_proxy src(std::move(stream));
                     arrow_array_stream_proxy dst(std::move(src));
 
-                    auto* src_str = src.export_stream();
-                    auto* dst_str = dst.export_stream();
+                    std::unique_ptr<ArrowArrayStream> src_str(src.export_stream());
+                    std::unique_ptr<ArrowArrayStream> dst_str(dst.export_stream());
                     REQUIRE_EQ(src_str->release, nullptr);
                     REQUIRE_NE(dst_str->release, nullptr);
-                    delete src_str;
-                    delete dst_str;
+                    dst_str->release(dst_str.get());
                 }
 
                 {
@@ -138,6 +137,7 @@ namespace sparrow
                     auto* dst_str = dst.export_stream();
                     REQUIRE_EQ(src_str, nullptr);
                     REQUIRE_NE(dst_str, nullptr);
+                    stream.release(&stream);
                 }
 
             }
@@ -156,11 +156,10 @@ namespace sparrow
                     arrow_array_stream_proxy dst(std::move(stream2));
                     dst = std::move(src);
 
-                    auto* src_str = src.export_stream();
+                    std::unique_ptr<ArrowArrayStream> src_str(src.export_stream());
                     REQUIRE_EQ(src_str->release, nullptr);
                     auto dst_arr = dst.pop();
                     REQUIRE(dst_arr.has_value());
-                    delete src_str;
                 }
 
                 {
@@ -179,6 +178,8 @@ namespace sparrow
                     REQUIRE_EQ(src_str, nullptr);
                     auto dst_arr = dst.pop();
                     REQUIRE(dst_arr.has_value());
+                    stream.release(&stream);
+                    stream2.release(&stream2);
                 }
             }
         }

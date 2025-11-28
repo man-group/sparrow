@@ -128,6 +128,45 @@ namespace sparrow
 
     SPARROW_API void fill_arrow_array_stream(ArrowArrayStream& stream);
 
+    /**
+     * @brief Move an ArrowArrayStream by transferring ownership of its resources.
+     *
+     * Performs a shallow copy of the stream structure and zeros out the source.
+     * After this operation, the source stream is left in a released-like state
+     * with all function pointers and data pointers set to nullptr or zero.
+     *
+     * This should be used when you need to transfer ownership of the stream's resources,
+     * rather than copying. Regular assignment does not transfer ownership and may lead to
+     * double-free or resource leaks.
+     *
+     * @param source The source stream to move from (rvalue reference).
+     *               Must not be released or nullptr.
+     * @return A new ArrowArrayStream with ownership of the source's resources.
+     *
+     * @post source will have all pointers set to nullptr/null/zero.
+     *
+     * @see https://arrow.apache.org/docs/format/CStreamInterface.html
+     */
     SPARROW_API ArrowArrayStream move_array_stream(ArrowArrayStream&& source);
+
+    /**
+     * @brief Move an ArrowArrayStream by transferring ownership of its resources.
+     *
+     * Performs a shallow copy of the stream structure and zeros out the source.
+     * After this operation, the source stream is left in a released-like state
+     * with all function pointers and data pointers set to nullptr or zero.
+     *
+     * This should be used when you need to transfer ownership of the stream's resources,
+     * rather than copying. Regular assignment does not transfer ownership and may lead to
+     * double-free or resource leaks.
+     *
+     * @param source The source stream to move from (lvalue reference).
+     *               Must not be released or nullptr.
+     * @return A new ArrowArrayStream with ownership of the source's resources.
+     *
+     * @post source will have all pointers set to nullptr/null/zero.
+     *
+     * @see https://arrow.apache.org/docs/format/CStreamInterface.html
+     */
     SPARROW_API ArrowArrayStream move_array_stream(ArrowArrayStream& source);
 }

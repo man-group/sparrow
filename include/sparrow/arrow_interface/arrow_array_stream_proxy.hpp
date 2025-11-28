@@ -245,7 +245,7 @@ namespace sparrow
         /**
          * @brief Gets the private data (mutable version).
          *
-         * @return Mutable pointer to the stream's private data.
+         * @return Reference to the stream's private data.
          */
         [[nodiscard]] SPARROW_API arrow_array_stream_private_data& get_private_data();
     };
