@@ -196,6 +196,7 @@ namespace sparrow
                 fill_arrow_array_stream(stream);
                 arrow_array_stream_proxy proxy(&stream);
                 REQUIRE(!proxy.owns_stream());
+                stream.release(&stream);
             }
         }
 
@@ -222,6 +223,7 @@ namespace sparrow
                 arrow_array_stream_proxy src(&stream);
                 arrow_array_stream_proxy dst(std::move(src));
                 CHECK_THROWS_AS(src.pop(), std::runtime_error);
+                stream.release(&stream);
             }
 
             SUBCASE("single int32 array")
