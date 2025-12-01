@@ -229,9 +229,8 @@ namespace sparrow
      */
     inline ArrowSchema move_schema(ArrowSchema&& source)
     {
-        ArrowSchema target = make_empty_arrow_schema();
-        swap(source, target);
-        source.release(&source);
+        ArrowSchema target = source;
+        source = ArrowSchema{};
         return target;
     }
 
