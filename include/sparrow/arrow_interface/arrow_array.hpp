@@ -208,9 +208,8 @@ namespace sparrow
      */
     [[nodiscard]] inline ArrowArray move_array(ArrowArray&& source)
     {
-        ArrowArray target = make_empty_arrow_array();
-        swap(source, target);
-        source.release(&source);
+        ArrowArray target = source;
+        source = ArrowArray{};
         return target;
     }
 
