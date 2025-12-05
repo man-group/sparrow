@@ -1,5 +1,19 @@
 find_package(Doxygen REQUIRED)
 
+# Fetch doxygen-awesome-css theme
+include(FetchContent)
+message(STATUS "Fetching doxygen-awesome-css theme...")
+FetchContent_Declare(
+    doxygen-awesome-css
+    GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css.git
+    GIT_TAG v2.4.1
+)
+FetchContent_MakeAvailable(doxygen-awesome-css)
+message(STATUS "Fetched doxygen-awesome-css theme.")
+
+# Get the source directory where doxygen-awesome-css was downloaded
+set(DOXYGEN_AWESOME_CSS_DIR "${doxygen-awesome-css_SOURCE_DIR}")
+
 # configure the doxygen.in file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
 
