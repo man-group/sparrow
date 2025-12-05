@@ -48,6 +48,7 @@ PROJECT_NAME           = "sparrow"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
+PROJECT_NAME           = "sparrow-extensions"
 PROJECT_NUMBER         = @CMAKE_PROJECT_VERSION@
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
@@ -61,6 +62,7 @@ PROJECT_BRIEF          =
 # pixels and the maximum width should not exceed 200 pixels. Doxygen will copy
 # the logo to the output directory.
 
+PROJECT_BRIEF          = "Extension types for the sparrow library"
 PROJECT_LOGO           =
 
 # With the PROJECT_ICON tag one can specify an icon that is included in the tabs
@@ -199,6 +201,7 @@ STRIP_FROM_PATH        = @CMAKE_CURRENT_SOURCE_DIR@/include
 # specify the list of include paths that are normally passed to the compiler
 # using the -I flag.
 
+STRIP_FROM_PATH        = @CMAKE_SOURCE_DIR@/include
 STRIP_FROM_INC_PATH    =
 
 # If the SHORT_NAMES tag is set to YES, doxygen will generate much shorter (but
@@ -959,6 +962,7 @@ INPUT                  =  @CMAKE_SOURCE_DIR@/include @CMAKE_SOURCE_DIR@/examples
 # See also: INPUT_FILE_ENCODING
 # The default value is: UTF-8.
 
+INPUT                  = @CMAKE_SOURCE_DIR@/include @CMAKE_SOURCE_DIR@/examples @CMAKE_SOURCE_DIR@/docs/source
 INPUT_ENCODING         = UTF-8
 
 # This tag can be used to specify the character encoding of the source files
@@ -1078,6 +1082,7 @@ EXCLUDE_PATTERNS       = */include/sparrow/details/3rdparty/*
 # wildcard * is used, a substring. Examples: ANamespace, AClass,
 # ANamespace::AClass, ANamespace::*Test
 
+EXCLUDE_PATTERNS       =
 EXCLUDE_SYMBOLS        =
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
@@ -1375,6 +1380,7 @@ HTML_EXTRA_STYLESHEET  = @CMAKE_SOURCE_DIR@/docs/doxygen-awesome-css/doxygen-awe
 # files will be copied as-is; there are no commands or markers available.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
+HTML_EXTRA_STYLESHEET  = "@DOXYGEN_AWESOME_CSS_DIR@/doxygen-awesome.css"
 HTML_EXTRA_FILES       =
 
 # The HTML_COLORSTYLE tag can be used to specify if the generated HTML output
