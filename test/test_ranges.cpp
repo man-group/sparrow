@@ -91,5 +91,24 @@ namespace sparrow
                 CHECK(all_same_size(v));
             }
         }
+
+        TEST_CASE("accumulate")
+        {
+            SUBCASE("default operator")
+            {
+                std::vector<int> v{1, 2, 3, 4};
+                auto exp = std::accumulate(v.cbegin(), v.cend(), 0);
+                auto res = sparrow::ranges::accumulate(v, 0);
+                CHECK_EQ(res, exp);
+            }
+
+            SUBCASE("custom operator")
+            {
+                std::vector<int> v{1, 2, 3, 4};
+                auto exp = std::accumulate(v.cbegin(), v.cend(), 0, std::multiplies{});
+                auto res = sparrow::ranges::accumulate(v, 0, std::multiplies{});
+                CHECK_EQ(res, exp);
+            }
+        }
     }
 }
