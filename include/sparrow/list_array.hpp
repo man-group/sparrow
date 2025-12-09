@@ -174,7 +174,7 @@ namespace sparrow
         inline ArrowArray make_list_arrow_array(
             std::int64_t size,
             std::int64_t null_count,
-            std::vector<buffer<std::uint8_t>>&& arr_buffs,
+            arrow_array_private_data::BufferType&& arr_buffs,
             ArrowArray&& flat_arr
         )
         {
@@ -1038,10 +1038,10 @@ namespace sparrow
             true  // nullable
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(vbitmap).extract_storage(),
-            std::move(list_offsets).extract_storage()
-        };
+        arrow_array_private_data::BufferType arr_buffs;
+        arr_buffs.reserve(2);
+        arr_buffs.emplace_back(std::move(vbitmap).extract_storage());
+        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
 
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
@@ -1085,10 +1085,10 @@ namespace sparrow
             false  // not nullable
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            buffer<std::uint8_t>{nullptr, 0},  // no validity bitmap
-            std::move(list_offsets).extract_storage()
-        };
+        arrow_array_private_data::BufferType arr_buffs;
+        arr_buffs.reserve(2);
+        arr_buffs.emplace_back(buffer<std::uint8_t>{nullptr, 0});  // no validity bitmap
+        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
 
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
@@ -1170,11 +1170,11 @@ namespace sparrow
             true  // nullable
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(vbitmap).extract_storage(),
-            std::move(list_offsets).extract_storage(),
-            std::move(list_sizes).extract_storage()
-        };
+        arrow_array_private_data::BufferType arr_buffs;
+        arr_buffs.reserve(3);
+        arr_buffs.emplace_back(std::move(vbitmap).extract_storage());
+        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
+        arr_buffs.emplace_back(std::move(list_sizes).extract_storage());
 
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
@@ -1221,11 +1221,11 @@ namespace sparrow
             false  // not nullable
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            buffer<std::uint8_t>{nullptr, 0},  // no validity bitmap
-            std::move(list_offsets).extract_storage(),
-            std::move(list_sizes).extract_storage()
-        };
+        arrow_array_private_data::BufferType arr_buffs;
+        arr_buffs.reserve(3);
+        arr_buffs.emplace_back(buffer<std::uint8_t>{nullptr, 0});  // no validity bitmap
+        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
+        arr_buffs.emplace_back(std::move(list_sizes).extract_storage());
 
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
@@ -1334,7 +1334,9 @@ namespace sparrow
             true  // nullable
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {vbitmap.extract_storage()};
+        arrow_array_private_data::BufferType arr_buffs;
+        arr_buffs.reserve(1);
+        arr_buffs.emplace_back(vbitmap.extract_storage());
 
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
@@ -1378,9 +1380,9 @@ namespace sparrow
             false  // not nullable
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            buffer<std::uint8_t>{nullptr, 0}  // no validity bitmap
-        };
+        arrow_array_private_data::BufferType arr_buffs;
+        arr_buffs.reserve(1);
+        arr_buffs.emplace_back(buffer<std::uint8_t>{nullptr, 0});  // no validity bitmap
 
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),

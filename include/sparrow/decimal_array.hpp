@@ -615,7 +615,7 @@ namespace sparrow
             true      // dictionary ownership
         );
 
-        std::vector<buffer<uint8_t>> buffers(2);
+        arrow_array_private_data::BufferType buffers;
         buffers[0] = bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<uint8_t>{nullptr, 0};
         buffers[1] = std::move(data_buffer).extract_storage();
 

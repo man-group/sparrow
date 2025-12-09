@@ -77,7 +77,12 @@ namespace sparrow
             sch_children[i] = new ArrowSchema(std::move(sch));
         }
 
-        std::vector<buffer<std::uint8_t>> arr_buffs(1, buffer<std::uint8_t>(nullptr, 0));
+        arrow_array_private_data::BufferType arr_buffs;
+        std::vector<buffer<std::uint8_t>> temp_arr_buffs(1, buffer<std::uint8_t>(nullptr, 0));
+        for (auto& buf : temp_arr_buffs)
+        {
+            arr_buffs.emplace_back(std::move(buf));
+        }
 
         auto rb_array = make_arrow_array(
             static_cast<int64_t>(data_size),

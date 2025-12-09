@@ -400,8 +400,12 @@ namespace sparrow
         [[nodiscard]] constexpr buffer_adaptor<T2, buffer<uint8_t>&>
         primitive_data_access<T, T2>::get_data_buffer()
         {
-            auto& buffers = get_proxy().get_array_private_data()->buffers();
-            return make_buffer_adaptor<T2>(buffers[m_data_buffer_index]);
+            auto& buffers_variant = get_proxy().get_array_private_data()->buffers()[m_data_buffer_index];
+            if (std::holds_alternative<buffer_view<const uint8_t>>(buffers_variant))
+            {
+                SPARROW_ASSERT_TRUE(false && "Attempted to get mutable buffer from a const buffer_view.");
+            }
+            return make_buffer_adaptor<T2>(std::get<buffer<uint8_t>>(buffers_variant));
         }
 
         template <trivial_copyable_type T, trivial_copyable_type T2>
@@ -617,7 +621,10 @@ namespace sparrow
             if (proxy.is_created_with_sparrow())
             {
                 size_t size = proxy.length() + proxy.offset();
-                return bitset_adaptor(&(proxy.get_array_private_data()->buffers()[m_data_buffer_index]), size);
+                auto& buffer_variant = proxy.get_array_private_data()->buffers()[m_data_buffer_index];
+                auto* buffer_ptr = std::get_if<buffer<uint8_t>>(&buffer_variant);
+                SPARROW_ASSERT_TRUE(buffer_ptr != nullptr);
+                return bitset_adaptor(buffer_ptr, size);
             }
             else
             {

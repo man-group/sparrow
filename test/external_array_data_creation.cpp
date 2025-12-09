@@ -137,8 +137,7 @@ namespace sparrow::test
             true
         );
 
-        using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = {
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> arr_buffs = {
             sparrow::test::make_bitmap_buffer(list_lengths.size(), false_positions),
             make_offset_buffer_from_sizes(list_lengths, big_list)
         };
@@ -186,8 +185,7 @@ namespace sparrow::test
         );
 
         std::size_t arr_size = static_cast<std::size_t>(flat_value_arr.length) / list_size;
-        using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = {sparrow::test::make_bitmap_buffer(arr_size, false_positions)};
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> arr_buffs = {sparrow::test::make_bitmap_buffer(arr_size, false_positions)};
 
         ArrowArray** array_children = new ArrowArray*[1];
         array_children[0] = new ArrowArray(std::move(flat_value_arr));
@@ -228,8 +226,7 @@ namespace sparrow::test
             true
         );
 
-        using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = {
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> arr_buffs = {
             sparrow::test::make_bitmap_buffer(list_lengths.size(), false_positions),
             make_offset_buffer_from_sizes(list_lengths, big_list),
             make_size_buffer(list_lengths, big_list)
@@ -282,8 +279,7 @@ namespace sparrow::test
 
 
         int64_t length = children_arrays.front().length;
-        using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = {
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> arr_buffs = {
             sparrow::test::make_bitmap_buffer(static_cast<std::size_t>(length), false_positions),
         };
 
@@ -344,7 +340,7 @@ namespace sparrow::test
         using buffer_type = sparrow::buffer<std::uint8_t>;
         buffer_type buf(type_ids.size());
         std::copy(type_ids.begin(), type_ids.end(), buf.begin());
-        std::vector<buffer_type> arr_buffs = {std::move(buf)};
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> arr_buffs = {std::move(buf)};
 
         ArrowArray** array_children = new ArrowArray*[children_arrays.size()];
         std::transform(
@@ -410,7 +406,7 @@ namespace sparrow::test
         buffer_type buf1(offsets.size() * sizeof(std::int32_t));
         std::copy(offsets.begin(), offsets.end(), buf1.data<std::int32_t>());
 
-        std::vector<buffer_type> arr_buffs = {std::move(buf0), std::move(buf1)};
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> arr_buffs = {std::move(buf0), std::move(buf1)};
 
         ArrowArray** array_children = new ArrowArray*[children_arrays.size()];
         std::transform(

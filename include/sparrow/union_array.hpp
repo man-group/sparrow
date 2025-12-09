@@ -1180,7 +1180,7 @@ namespace sparrow
         template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         arrow_proxy create_union_proxy_impl(
             std::vector<array>&& children,
-            std::vector<buffer<std::uint8_t>>&& buffers,
+            arrow_array_private_data::BufferType&& buffers,
             std::size_t size,
             std::string&& format,
             std::optional<std::string_view> name,
@@ -1282,10 +1282,9 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(element_type.size() == offsets.size());
         const auto size = element_type.size();
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(element_type).extract_storage(),
-            std::move(offsets).extract_storage()
-        };
+        sparrow::arrow_array_private_data::BufferType arr_buffs;
+        arr_buffs.emplace_back(std::move(element_type).extract_storage());
+        arr_buffs.emplace_back(std::move(offsets).extract_storage());
 
         return detail::create_union_proxy_impl(
             std::move(children),
@@ -1343,7 +1342,8 @@ namespace sparrow
         }
         const auto size = element_type.size();
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {std::move(element_type).extract_storage()};
+        sparrow::arrow_array_private_data::BufferType arr_buffs;
+        arr_buffs.emplace_back(std::move(element_type).extract_storage());
 
         return detail::create_union_proxy_impl(
             std::move(children),

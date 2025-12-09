@@ -383,7 +383,7 @@ namespace sparrow
             true                  // dictionary ownership
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {};
+        arrow_array_private_data::BufferType arr_buffs = {};
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(length),  // length

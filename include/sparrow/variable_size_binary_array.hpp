@@ -563,6 +563,26 @@ namespace sparrow
         static constexpr size_t OFFSET_BUFFER_INDEX = 1;
         static constexpr size_t DATA_BUFFER_INDEX = 2;
 
+        [[nodiscard]] constexpr buffer<uint8_t>& get_mutable_data_buffer()
+        {
+            auto& buffers_variant = this->get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+            if (std::holds_alternative<buffer_view<const uint8_t>>(buffers_variant))
+            {
+                SPARROW_ASSERT_TRUE(false && "Attempted to get mutable data buffer from a const buffer_view.");
+            }
+            return std::get<buffer<uint8_t>>(buffers_variant);
+        }
+
+        [[nodiscard]] constexpr buffer<uint8_t>& get_mutable_offset_buffer()
+        {
+            auto& buffers_variant = this->get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+            if (std::holds_alternative<buffer_view<const uint8_t>>(buffers_variant))
+            {
+                SPARROW_ASSERT_TRUE(false && "Attempted to get mutable offset buffer from a const buffer_view.");
+            }
+            return std::get<buffer<uint8_t>>(buffers_variant);
+        }
+
         /**
          * @brief Gets mutable pointer to offset at specified index.
          *
@@ -921,11 +941,11 @@ namespace sparrow
             true
 
         );
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(vbitmap).extract_storage(),
-            std::move(offsets).extract_storage(),
-            std::move(data_buffer).extract_storage()
-        };
+        arrow_array_private_data::BufferType arr_buffs;
+        arr_buffs.reserve(3);
+        arr_buffs.emplace_back(std::move(vbitmap).extract_storage());
+        arr_buffs.emplace_back(std::move(offsets).extract_storage());
+        arr_buffs.emplace_back(std::move(data_buffer).extract_storage());
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),  // length
@@ -1067,11 +1087,13 @@ namespace sparrow
             true
 
         );
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<std::uint8_t>{nullptr, 0},
-            std::move(list_offsets).extract_storage(),
-            std::move(data_buffer).extract_storage()
-        };
+        arrow_array_private_data::BufferType arr_buffs;
+        arr_buffs.reserve(3);
+        arr_buffs.emplace_back(
+            bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<std::uint8_t>{nullptr, 0}
+        );
+        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
+        arr_buffs.emplace_back(std::move(data_buffer).extract_storage());
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),  // length
@@ -1116,7 +1138,7 @@ namespace sparrow
         const auto initial_value_length = offset_end - offset_beg;
         const auto new_value_length = static_cast<OT>(std::ranges::size(rhs));
         const OT shift_byte_count = new_value_length - initial_value_length;
-        auto& data_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+        auto& data_buffer = get_mutable_data_buffer();
         if (shift_byte_count != 0)
         {
             // Check for offset overflow before adjusting
@@ -1277,13 +1299,12 @@ namespace sparrow
     constexpr void variable_size_binary_array_impl<T, CR, OT, Ext>::resize_values(size_type new_length, U value)
     {
         const size_t new_size = new_length + static_cast<size_t>(this->get_arrow_proxy().offset());
-        auto& buffers = this->get_arrow_proxy().get_array_private_data()->buffers();
         if (new_length < size())
         {
             const auto offset_begin = static_cast<size_t>(*offset(new_length));
-            auto& data_buffer = buffers[DATA_BUFFER_INDEX];
+            auto& data_buffer = get_mutable_data_buffer();
             data_buffer.resize(offset_begin);
-            auto& offset_buffer = buffers[OFFSET_BUFFER_INDEX];
+            auto& offset_buffer = get_mutable_offset_buffer();
             auto offset_buffer_adaptor = make_buffer_adaptor<OT>(offset_buffer);
             offset_buffer_adaptor.resize(new_size + 1);
         }
@@ -1305,7 +1326,7 @@ namespace sparrow
         const std::vector<uint8_t> casted_value{value.cbegin(), value.cend()};
         const repeat_view<std::vector<uint8_t>> my_repeat_view{casted_value, count};
         const auto joined_repeated_value_range = std::ranges::views::join(my_repeat_view);
-        auto& data_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+        auto& data_buffer = get_mutable_data_buffer();
         const auto pos_to_insert = sparrow::next(data_buffer.cbegin(), offset_begin);
         data_buffer.insert(pos_to_insert, joined_repeated_value_range.begin(), joined_repeated_value_range.end());
         insert_offset(offsets_cbegin() + idx + 1, static_cast<offset_type>(value.size()), count);
@@ -1319,7 +1340,7 @@ namespace sparrow
         size_type count
     ) -> offset_iterator
     {
-        auto& offset_buffer = get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto& offset_buffer = get_mutable_offset_buffer();
         const auto idx = static_cast<size_t>(std::distance(offsets_cbegin(), pos));
         auto offset_buffer_adaptor = make_buffer_adaptor<OT>(offset_buffer);
         const offset_type cumulative_size = value_size * static_cast<offset_type>(count);
@@ -1357,7 +1378,7 @@ namespace sparrow
         InputIt last
     ) -> value_iterator
     {
-        auto& data_buffer = get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+        auto& data_buffer = get_mutable_data_buffer();
         auto data_buffer_adaptor = make_buffer_adaptor<data_value_type>(data_buffer);
         auto values = std::ranges::subrange(first, last);
         const size_t cumulative_sizes = std::accumulate(
@@ -1409,7 +1430,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(pos >= offsets_cbegin());
         SPARROW_ASSERT_TRUE(pos <= offsets_cend());
         SPARROW_ASSERT_TRUE(first_sizes <= last_sizes);
-        auto& offset_buffer = get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto& offset_buffer = get_mutable_offset_buffer();
         auto offset_buffer_adaptor = make_buffer_adaptor<OT>(offset_buffer);
         const auto idx = std::distance(offsets_cbegin(), pos);
         const OT cumulative_sizes = std::reduce(first_sizes, last_sizes, OT(0));
@@ -1460,7 +1481,7 @@ namespace sparrow
         {
             return sparrow::next(value_begin(), index);
         }
-        auto& data_buffer = get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+        auto& data_buffer = get_mutable_data_buffer();
         const auto offset_begin = *offset(index);
         const auto offset_end = *offset(index + count);
         const size_t difference = static_cast<size_t>(offset_end - offset_begin);
@@ -1484,7 +1505,7 @@ namespace sparrow
         {
             return offset(index);
         }
-        auto& offset_buffer = get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto& offset_buffer = get_mutable_offset_buffer();
         auto offset_buffer_adaptor = make_buffer_adaptor<OT>(offset_buffer);
         const OT offset_start_value = *offset(index);
         const OT offset_end_value = *offset(index + count);

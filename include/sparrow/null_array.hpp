@@ -669,8 +669,7 @@ namespace sparrow
             false
         );
 
-        using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = {};
+        arrow_array_private_data::BufferType arr_buffs = {};
 
         ArrowArray arr = make_arrow_array(
             static_cast<int64_t>(length),

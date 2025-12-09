@@ -137,7 +137,7 @@ namespace sparrow::test
         buffer_type data_buf(size * sizeof(T));
         detail::fill_primitive_data_buffer(data_buf.data<T>(), size);
 
-        std::vector<buffer_type> arr_buffs = {
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> arr_buffs = {
             sparrow::test::make_bitmap_buffer(size, false_bitmap),
             std::move(data_buf)
         };
@@ -189,7 +189,7 @@ namespace sparrow::test
             view[i] = i % 2 != 0;
         }
 
-        std::vector<buffer_type> arr_buffs = {
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> arr_buffs = {
             sparrow::test::make_bitmap_buffer(size, false_bitmap),
             std::move(data_buf)
         };
@@ -288,7 +288,7 @@ namespace sparrow::test
             }
         }
 
-        std::vector<buffer_type> arr_buffs = {
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> arr_buffs = {
             sparrow::test::make_bitmap_buffer(size, false_bitmap),
             std::move(offset_buf),
             std::move(value_buf)
@@ -386,8 +386,7 @@ namespace sparrow::test
             }
         }
 
-        std::vector<buffer_type> arr_buffs = {
-            sparrow::test::make_bitmap_buffer(size, false_bitmap),
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> arr_buffs = {
             std::move(offset_buf),
             std::move(value_buf)
         };
@@ -427,8 +426,7 @@ namespace sparrow::test
             true
         );
 
-        using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = {};
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> arr_buffs = {};
 
         sparrow::fill_arrow_array(
             arr,

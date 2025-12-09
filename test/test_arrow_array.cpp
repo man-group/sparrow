@@ -151,7 +151,12 @@ TEST_SUITE("arrow_array_private_data")
     TEST_CASE("buffers")
     {
         const auto buffers = test::detail::get_test_buffer_list0();
-        sparrow::arrow_array_private_data private_data(buffers, sparrow::repeat_view<bool>(true, 0), true);
+        std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> variant_buffers;
+        for (const auto& buf : buffers)
+        {
+            variant_buffers.emplace_back(buf);
+        }
+        sparrow::arrow_array_private_data private_data(variant_buffers, sparrow::repeat_view<bool>(true, 0), true);
 
         auto buffers_ptrs = private_data.buffers_ptrs<uint8_t>();
         for (size_t i = 0; i < buffers.size(); ++i)

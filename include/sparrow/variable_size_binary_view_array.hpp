@@ -601,6 +601,16 @@ namespace sparrow
         static constexpr std::ptrdiff_t BUFFER_OFFSET_OFFSET = 12;     ///< Offset to buffer offset
         static constexpr std::size_t FIRST_VAR_DATA_BUFFER_INDEX = 2;  ///< Index of first variadic buffer
 
+        [[nodiscard]] constexpr buffer<uint8_t>& get_mutable_buffer_at_index(size_t index)
+        {
+            auto& buffers_variant = this->get_arrow_proxy().get_array_private_data()->buffers()[index];
+            if (std::holds_alternative<buffer_view<const uint8_t>>(buffers_variant))
+            {
+                SPARROW_ASSERT_TRUE(false && "Attempted to get mutable buffer from a const buffer_view.");
+            }
+            return std::get<buffer<uint8_t>>(buffers_variant);
+        }
+
         friend base_type;
         friend base_type::base_type;
         friend base_type::base_type::base_type;
@@ -795,12 +805,12 @@ namespace sparrow
         // create buffers
         auto buffers_parts = create_buffers(std::forward<R>(range));
 
-        std::vector<buffer<uint8_t>> buffers{
-            std::move(vbitmap).extract_storage(),
-            std::move(buffers_parts.length_buffer),
-            std::move(buffers_parts.long_string_storage),
-            std::move(buffers_parts.buffer_sizes).extract_storage()
-        };
+        arrow_array_private_data::BufferType buffers;
+        buffers.reserve(4);
+        buffers.emplace_back(std::move(vbitmap).extract_storage());
+        buffers.emplace_back(std::move(buffers_parts.length_buffer));
+        buffers.emplace_back(std::move(buffers_parts.long_string_storage));
+        buffers.emplace_back(std::move(buffers_parts.buffer_sizes).extract_storage());
 
         constexpr repeat_view<bool> children_ownership(true, 0);
 
@@ -875,12 +885,12 @@ namespace sparrow
         // create buffers
         auto buffers_parts = create_buffers(std::forward<R>(range));
 
-        std::vector<buffer<uint8_t>> buffers{
-            buffer<uint8_t>{nullptr, 0},  // validity bitmap
-            std::move(buffers_parts.length_buffer),
-            std::move(buffers_parts.long_string_storage),
-            std::move(buffers_parts.buffer_sizes).extract_storage()
-        };
+        arrow_array_private_data::BufferType buffers;
+        buffers.reserve(4);
+        buffers.emplace_back(buffer<uint8_t>{nullptr, 0});  // validity bitmap
+        buffers.emplace_back(std::move(buffers_parts.length_buffer));
+        buffers.emplace_back(std::move(buffers_parts.long_string_storage));
+        buffers.emplace_back(std::move(buffers_parts.buffer_sizes).extract_storage());
         const auto size = range_size(range);
 
         constexpr repeat_view<bool> children_ownership(true, 0);
@@ -922,10 +932,13 @@ namespace sparrow
         ArrowSchema schema = create_arrow_schema(std::move(name), std::move(metadata), flags);
 
         auto bitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
-        std::vector<buffer<uint8_t>> buffers{std::move(bitmap).extract_storage(), std::move(buffer_view)};
+        arrow_array_private_data::BufferType buffers;
+        buffers.reserve(2 + value_buffers.size() + 1);
+        buffers.emplace_back(std::move(bitmap).extract_storage());
+        buffers.emplace_back(std::move(buffer_view));
         for (auto&& buf : value_buffers)
         {
-            buffers.push_back(std::forward<decltype(buf)>(buf));
+            buffers.emplace_back(std::forward<decltype(buf)>(buf));
         }
 
         // Create buffer sizes for the variadic buffers
@@ -934,7 +947,7 @@ namespace sparrow
         {
             buffer_sizes[i] = static_cast<int64_t>(value_buffers[i].size());
         }
-        buffers.push_back(std::move(buffer_sizes).extract_storage());
+        buffers.emplace_back(std::move(buffer_sizes).extract_storage());
 
         constexpr repeat_view<bool> children_ownership(true, 0);
 
@@ -1037,7 +1050,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(index < this->size());
         const auto new_length = static_cast<std::size_t>(std::ranges::size(rhs));
 
-        auto& length_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[LENGTH_BUFFER_INDEX];
+        auto& length_buffer = get_mutable_buffer_at_index(LENGTH_BUFFER_INDEX);
         auto view_ptr = length_buffer.data() + (index * DATA_BUFFER_SIZE);
         const auto current_length = static_cast<std::size_t>(read_int32_unaligned(view_ptr));
 
@@ -1065,8 +1078,8 @@ namespace sparrow
             // This requires managing the variadic buffers and potentially reorganizing the layout
 
             auto& buffers = this->get_arrow_proxy().get_array_private_data()->buffers();
-            auto& var_data_buffer = buffers[FIRST_VAR_DATA_BUFFER_INDEX];
-            auto& buffer_sizes_buffer = buffers[buffers.size() - 1];  // Last buffer contains sizes
+            auto& var_data_buffer = get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX);
+            auto& buffer_sizes_buffer = get_mutable_buffer_at_index(buffers.size() - 1);  // Last buffer contains sizes
 
             const bool was_long_string = current_length > SHORT_STRING_SIZE;
             std::size_t current_buffer_offset = 0;
@@ -1303,22 +1316,22 @@ namespace sparrow
         auto& buffers = private_data->buffers();
 
         const auto new_view_buffer_size = new_size * DATA_BUFFER_SIZE;
-        buffers[LENGTH_BUFFER_INDEX].resize(new_view_buffer_size);
+        get_mutable_buffer_at_index(LENGTH_BUFFER_INDEX).resize(new_view_buffer_size);
 
         if (additional_var_storage > 0)
         {
-            const auto current_var_size = buffers[FIRST_VAR_DATA_BUFFER_INDEX].size();
-            buffers[FIRST_VAR_DATA_BUFFER_INDEX].resize(current_var_size + additional_var_storage);
+            const auto current_var_size = get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX).size();
+            get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX).resize(current_var_size + additional_var_storage);
         }
-
-        auto& buffer_sizes = buffers[buffers.size() - 1];
+        
+        auto& buffer_sizes = get_mutable_buffer_at_index(buffers.size() - 1);
         update_buffer_sizes_metadata(
             buffer_sizes,
-            static_cast<std::int64_t>(buffers[FIRST_VAR_DATA_BUFFER_INDEX].size())
+            static_cast<std::int64_t>(get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX).size())
         );
 
         // Shift existing view structures after insertion point
-        auto* view_data = buffers[LENGTH_BUFFER_INDEX].data();
+        auto* view_data = get_mutable_buffer_at_index(LENGTH_BUFFER_INDEX).data();
         if (insert_index < current_size)
         {
             const auto bytes_to_move = (current_size - insert_index) * DATA_BUFFER_SIZE;
@@ -1348,7 +1361,7 @@ namespace sparrow
         }
 
         // Insert new view structures
-        std::size_t var_offset = buffers[FIRST_VAR_DATA_BUFFER_INDEX].size() - additional_var_storage;
+        std::size_t var_offset = get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX).size() - additional_var_storage;
         size_type value_idx = 0;
 
         for (auto it = first; it != last; ++it, ++value_idx)
@@ -1398,7 +1411,7 @@ namespace sparrow
                 // Copy data to variadic buffer - convert and copy manually
                 std::ranges::transform(
                     current_value,
-                    buffers[FIRST_VAR_DATA_BUFFER_INDEX].data() + var_offset,
+                    get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX).data() + var_offset,
                     transform_to<std::uint8_t, typename T::value_type>
                 );
 
@@ -1438,7 +1451,7 @@ namespace sparrow
         auto& proxy = this->get_arrow_proxy();
         auto* private_data = proxy.get_array_private_data();
         auto& buffers = private_data->buffers();
-        auto* view_data = buffers[LENGTH_BUFFER_INDEX].data();
+        auto* view_data = get_mutable_buffer_at_index(LENGTH_BUFFER_INDEX).data();
 
         // Calculate freed storage from elements being erased
         for (size_type i = erase_index; i < erase_index + count; ++i)
@@ -1456,14 +1469,14 @@ namespace sparrow
         if (new_size == 0)
         {
             // Resize all buffers to empty
-            if (buffers[0].size() > 0)
+            if (get_mutable_buffer_at_index(0).size() > 0)
             {
-                buffers[0].clear();
+                get_mutable_buffer_at_index(0).clear();
             }
-            buffers[LENGTH_BUFFER_INDEX].clear();
-            buffers[FIRST_VAR_DATA_BUFFER_INDEX].clear();
+            get_mutable_buffer_at_index(LENGTH_BUFFER_INDEX).clear();
+            get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX).clear();
 
-            auto& buffer_sizes = buffers[buffers.size() - 1];
+            auto& buffer_sizes = get_mutable_buffer_at_index(buffers.size() - 1);
             update_buffer_sizes_metadata(buffer_sizes, 0);
 
             proxy.update_buffers();
@@ -1473,7 +1486,7 @@ namespace sparrow
         // Compact variadic buffer if needed
         if (freed_var_storage > 0)
         {
-            auto& var_buffer = buffers[FIRST_VAR_DATA_BUFFER_INDEX];
+
             std::size_t write_offset = 0;
 
             // Create mapping of old offsets to new offsets
@@ -1504,8 +1517,8 @@ namespace sparrow
                     if (write_offset != old_offset)
                     {
                         std::memmove(
-                            var_buffer.data() + write_offset,
-                            var_buffer.data() + old_offset,
+                            get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX).data() + write_offset,
+                            get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX).data() + old_offset,
                             static_cast<std::size_t>(length)
                         );
                     }
@@ -1515,11 +1528,11 @@ namespace sparrow
             }
 
             // Resize variadic buffer
-            var_buffer.resize(var_buffer.size() - freed_var_storage);
+            get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX).resize(get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX).size() - freed_var_storage);
 
             // Update buffer sizes metadata
-            auto& buffer_sizes = buffers[buffers.size() - 1];
-            update_buffer_sizes_metadata(buffer_sizes, static_cast<std::int64_t>(var_buffer.size()));
+            auto& buffer_sizes = get_mutable_buffer_at_index(buffers.size() - 1);
+            update_buffer_sizes_metadata(buffer_sizes, static_cast<std::int64_t>(get_mutable_buffer_at_index(FIRST_VAR_DATA_BUFFER_INDEX).size()));
 
             // Update view structure offsets
             for (size_type i = 0; i < current_size; ++i)
@@ -1558,7 +1571,7 @@ namespace sparrow
         }
 
         // Resize view buffer
-        buffers[LENGTH_BUFFER_INDEX].resize(new_size * DATA_BUFFER_SIZE);
+        get_mutable_buffer_at_index(LENGTH_BUFFER_INDEX).resize(new_size * DATA_BUFFER_SIZE);
 
         // Update buffers
         proxy.update_buffers();

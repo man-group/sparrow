@@ -58,12 +58,18 @@ namespace test
                 children[i] = new ArrowArray(make_arrow_array(false));
             }
             auto dict = new ArrowArray(make_arrow_array(false));
+            auto buffers_raw = detail::get_test_buffer_list1();
+            std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> buffers_variant;
+            for (const auto& buf : buffers_raw)
+            {
+                buffers_variant.emplace_back(buf);
+            }
             sparrow::fill_arrow_array(
                 res,
                 5,
                 2,
                 0,
-                detail::get_test_buffer_list1(),
+                std::move(buffers_variant),
                 children,
                 sparrow::repeat_view<bool>(true, nb_children),
                 dict,
@@ -72,12 +78,18 @@ namespace test
         }
         else
         {
+            auto buffers_raw = detail::get_test_buffer_list0();
+            std::vector<std::variant<sparrow::buffer<uint8_t>, sparrow::buffer_view<const uint8_t>>> buffers_variant;
+            for (const auto& buf : buffers_raw)
+            {
+                buffers_variant.emplace_back(buf);
+            }
             sparrow::fill_arrow_array(
                 res,
                 10,
                 2,
                 0,
-                detail::get_test_buffer_list0(),
+                std::move(buffers_variant),
                 nullptr,
                 sparrow::repeat_view<bool>(true, 0),
                 nullptr,

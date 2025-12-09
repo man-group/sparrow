@@ -1059,15 +1059,17 @@ namespace sparrow
             true                  // dictionary ownership
         );
 
-        std::vector<buffer<uint8_t>> buffers{
-            bitmap.has_value() ? std::move(bitmap.value()).extract_storage() : buffer<uint8_t>{nullptr, 0},
-            std::move(data_buffer).extract_storage()
-        };
+        arrow_array_private_data::BufferType buffers;
+        buffers.reserve(2);
+        buffers.emplace_back(
+            bitmap.has_value() ? std::move(bitmap.value()).extract_storage() : buffer<uint8_t>{nullptr, 0}
+        );
+        buffers.emplace_back(std::move(data_buffer).extract_storage());
 
         // create arrow array
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),  // length
-            static_cast<int64_t>(null_count),
+            static_cast<std::int64_t>(null_count),
             0,  // offset
             std::move(buffers),
             nullptr,             // children

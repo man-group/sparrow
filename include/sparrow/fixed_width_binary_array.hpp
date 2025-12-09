@@ -440,9 +440,14 @@ namespace sparrow
          *
          * @post Returns valid reference to the data buffer
          */
-        [[nodiscard]] constexpr auto& get_data_buffer()
+        [[nodiscard]] constexpr buffer<uint8_t>& get_data_buffer()
         {
-            return this->get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+            auto& buffers_variant = this->get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
+            if (std::holds_alternative<buffer_view<const uint8_t>>(buffers_variant))
+            {
+                SPARROW_ASSERT_TRUE(false && "Attempted to get mutable buffer from a const buffer_view.");
+            }
+            return std::get<buffer<uint8_t>>(buffers_variant);
         }
 
         /**
@@ -831,10 +836,12 @@ namespace sparrow
             true                         // dictionary ownership
 
         );
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<std::uint8_t>{nullptr, 0},
-            std::move(data_buffer).extract_storage()
-        };
+        arrow_array_private_data::BufferType arr_buffs;
+        arr_buffs.reserve(2);
+        arr_buffs.emplace_back(
+            bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<uint8_t>{nullptr, 0}
+        );
+        arr_buffs.emplace_back(std::move(data_buffer).extract_storage());
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(element_count),  // length

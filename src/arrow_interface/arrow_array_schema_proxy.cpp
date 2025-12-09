@@ -892,8 +892,10 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         auto private_data = static_cast<arrow_array_private_data*>(array_without_sanitize().private_data);
         auto& bitmap_buffer = private_data->buffers()[bitmap_buffer_index];
+        auto* buffer_ptr = std::get_if<sparrow::buffer<uint8_t>>(&bitmap_buffer);
+        SPARROW_ASSERT_TRUE(buffer_ptr != nullptr);
         const size_t current_size = length() + offset();
-        non_owning_dynamic_bitset<uint8_t> bitmap{&bitmap_buffer, current_size};
+        non_owning_dynamic_bitset<uint8_t> bitmap{buffer_ptr, current_size};
         return bitmap;
     }
 

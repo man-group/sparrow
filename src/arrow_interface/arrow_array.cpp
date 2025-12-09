@@ -236,8 +236,16 @@ namespace sparrow
         {
             buffers_copy.emplace_back(buffer);
         }
+
+        arrow_array_private_data::BufferType new_buffers;
+        new_buffers.reserve(buffers_copy.size());
+        for (auto& buffer : buffers_copy)
+        {
+            new_buffers.emplace_back(std::move(buffer));
+        }
+
         target.private_data = new arrow_array_private_data(
-            std::move(buffers_copy),
+            std::move(new_buffers),
             repeat_view<bool>{true, static_cast<std::size_t>(target.n_children)},
             true
         );
