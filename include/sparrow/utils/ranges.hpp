@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <bitset>
+#include <numeric>
 #include <ranges>
 #include <vector>
 
@@ -126,6 +127,18 @@ namespace sparrow
             {
                 return copy_fn{}(std::forward<R>(r), std::move(result));
             }
+        }
+
+        template <std::ranges::input_range R, class T>
+        constexpr T accumulate(R&& r, T init)
+        {
+            return std::accumulate(r.begin(), r.end(), init);
+        }
+
+        template <std::ranges::input_range R, class T, std::copy_constructible Op>
+        constexpr T accumulate(R&& r, T init, Op op)
+        {
+            return std::accumulate(r.begin(), r.end(), init, op);
         }
     }
 };
