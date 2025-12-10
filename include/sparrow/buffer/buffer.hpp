@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <concepts>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <ranges>
 #include <stdexcept>
@@ -122,7 +123,7 @@ namespace sparrow
     public:
 
         using allocator_type = typename base_type::allocator_type;
-        using default_allocator = std::allocator<T>;
+        using default_allocator = xsimd::aligned_allocator<T>;
         using value_type = T;
         using reference = value_type&;
         using const_reference = const value_type&;
@@ -217,7 +218,7 @@ namespace sparrow
 
         [[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept;
         [[nodiscard]] constexpr const_reverse_iterator crend() const noexcept;
-        [[nodiscard]]
+
         // Capacity
 
         [[nodiscard]] constexpr bool empty() const noexcept;
@@ -958,7 +959,7 @@ namespace sparrow
     constexpr void buffer<T>::pop_back()
     {
         SPARROW_ASSERT_FALSE(empty());
-        destroy(get_allocator(), get_data().p_end - 1);
+        alloc_traits::destroy(get_allocator(), get_data().p_end - 1);
         --get_data().p_end;
     }
 
