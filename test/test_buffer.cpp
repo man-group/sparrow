@@ -30,11 +30,12 @@ namespace sparrow
 
     using non_trivial_buffer_test_type = buffer<std::string>;
 
+    using allocator_type = buffer_test_type::default_allocator;
+
     namespace
     {
         auto make_test_buffer(std::size_t size, int32_t start_value = 0) -> int32_t*
         {
-            using allocator_type = buffer_test_type::default_allocator;
             allocator_type alloc;
             int32_t* res = alloc.allocate(size);
             std::iota(res, res + size, start_value);
@@ -1170,7 +1171,8 @@ namespace sparrow
                 CHECK_EQ(v.data(), mem);
                 CHECK_EQ(v.size(), size);
                 CHECK_EQ(v.data()[2], 2);
-                delete[] mem;
+                allocator_type alloc;
+                alloc.deallocate(mem, size);
             }
 
             SUBCASE("with buffer")
