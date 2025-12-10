@@ -34,7 +34,9 @@ namespace sparrow
     {
         auto make_test_buffer(std::size_t size, int32_t start_value = 0) -> int32_t*
         {
-            int32_t* res = new int32_t[size];
+            using allocator_type = buffer_test_type::default_allocator;
+            allocator_type alloc;
+            int32_t* res = alloc.allocate(size);
             std::iota(res, res + size, start_value);
             return res;
         }
