@@ -661,7 +661,8 @@ namespace sparrow
         return create_proxy_impl(
             std::forward<keys_buffer_type>(keys),
             std::forward<array>(values),
-            nullable ? std::make_optional<validity_bitmap>(nullptr, size, validity_bitmap::default_allocator()) : std::nullopt,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size, validity_bitmap::default_allocator())
+                     : std::nullopt,
             std::move(name),
             std::move(metadata)
         );
