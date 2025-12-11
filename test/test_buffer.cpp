@@ -60,6 +60,8 @@ namespace sparrow
 
     TEST_SUITE("buffer")
     {
+        allocator_type alloc;
+
         TEST_CASE("constructors")
         {
             constexpr std::size_t expected_size = 8u;
@@ -73,7 +75,7 @@ namespace sparrow
 
             SUBCASE("with size")
             {
-                const buffer_test_type b(expected_size);
+                const buffer_test_type b(expected_size, alloc);
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), expected_size);
                 CHECK_EQ(b.capacity(), expected_size);
@@ -86,7 +88,7 @@ namespace sparrow
             SUBCASE("with size and value")
             {
                 constexpr int value = 3;
-                const buffer_test_type b(expected_size, value);
+                const buffer_test_type b(expected_size, value, alloc);
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), expected_size);
                 CHECK_EQ(b.capacity(), expected_size);
@@ -106,7 +108,7 @@ namespace sparrow
 
             SUBCASE("with pointer and size")
             {
-                const buffer_test_type b(make_test_buffer(expected_size), expected_size);
+                const buffer_test_type b(make_test_buffer(expected_size), expected_size, alloc);
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), expected_size);
                 CHECK_EQ(b.capacity(), expected_size);
@@ -114,7 +116,7 @@ namespace sparrow
 
             SUBCASE("with nullptr")
             {
-                buffer_test_type b(nullptr, 0);
+                buffer_test_type b(nullptr, 0, alloc);
                 CHECK_EQ(b.data(), nullptr);
                 CHECK_EQ(b.size(), 0u);
                 CHECK_EQ(b.capacity(), 0u);
@@ -122,7 +124,7 @@ namespace sparrow
 
             SUBCASE("with initilizer list")
             {
-                const buffer_test_type b{1u, 3u, 5u};
+                const buffer_test_type b({1u, 3u, 5u}, alloc);
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), 3u);
                 CHECK_EQ(b.capacity(), 3u);
@@ -131,7 +133,7 @@ namespace sparrow
             SUBCASE("with range")
             {
                 const std::vector<int32_t> vec = {1u, 3u, 5u};
-                const buffer_test_type b(vec.cbegin(), vec.cend());
+                const buffer_test_type b(vec.cbegin(), vec.cend(), alloc);
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), 3u);
                 CHECK_EQ(b.capacity(), 3u);
@@ -144,7 +146,7 @@ namespace sparrow
             SUBCASE("with iterators")
             {
                 const std::vector<int32_t> vec = {1u, 3u, 5u};
-                const buffer_test_type b(vec.begin(), vec.end());
+                const buffer_test_type b(vec.begin(), vec.end(), alloc);
                 CHECK_NE(b.data(), nullptr);
                 CHECK_EQ(b.size(), 3u);
                 CHECK_EQ(b.capacity(), 3u);
@@ -158,19 +160,19 @@ namespace sparrow
         TEST_CASE("copy semantic")
         {
             const std::size_t size = 4u;
-            buffer_test_type b1(make_test_buffer(size), size);
+            buffer_test_type b1(make_test_buffer(size), size, alloc);
             buffer_test_type b2(b1);
             CHECK_EQ(b1, b2);
             CHECK_EQ(b1.capacity(), b2.capacity());
 
             const std::size_t size2 = 8u;
-            buffer_test_type b3(make_test_buffer(size2, 4), size2);
+            buffer_test_type b3(make_test_buffer(size2, 4), size2, alloc);
             b2 = b3;
             CHECK_EQ(b2, b3);
             CHECK_EQ(b2.capacity(), b2.size());
             CHECK_NE(b1, b2);
 
-            buffer_test_type bnullptr(nullptr, 0);
+            buffer_test_type bnullptr(nullptr, 0, alloc);
             buffer_test_type b4(bnullptr);
             CHECK_EQ(b4.data(), nullptr);
             CHECK_EQ(b4.size(), 0u);
@@ -186,7 +188,7 @@ namespace sparrow
         TEST_CASE("move semantic")
         {
             const std::size_t size = 4u;
-            buffer_test_type b1(make_test_buffer(size), size);
+            buffer_test_type b1(make_test_buffer(size), size, alloc);
             buffer_test_type control(b1);
             buffer_test_type b2(std::move(b1));
             CHECK_EQ(b2, control);
@@ -195,14 +197,14 @@ namespace sparrow
             CHECK_EQ(b1.data(), nullptr);
 
             const std::size_t size2 = 8u;
-            buffer_test_type b4(make_test_buffer(size2, 4), size2);
+            buffer_test_type b4(make_test_buffer(size2, 4), size2, alloc);
             buffer_test_type control2(b4);
             b2 = std::move(b4);
             CHECK_EQ(b2, control2);
             CHECK_EQ(b2.capacity(), b2.size());
             CHECK_EQ(b4, control);
 
-            buffer_test_type bnullptr(nullptr, 0);
+            buffer_test_type bnullptr(nullptr, 0, alloc);
             buffer_test_type b5(std::move(bnullptr));
             CHECK_EQ(b5.data(), nullptr);
             CHECK_EQ(b5.size(), 0u);
@@ -218,7 +220,7 @@ namespace sparrow
         TEST_CASE("operator[]")
         {
             const std::size_t size = 4u;
-            buffer_test_type b1(make_test_buffer(size), size);
+            buffer_test_type b1(make_test_buffer(size), size, alloc);
             const buffer_test_type b2(b1);
             for (std::size_t i = 0; i < size; ++i)
             {
@@ -231,7 +233,7 @@ namespace sparrow
         {
             const std::size_t size = 4u;
             const std::int32_t expected_value = 3;
-            buffer_test_type b1(make_test_buffer(size, expected_value), size);
+            buffer_test_type b1(make_test_buffer(size, expected_value), size, alloc);
             const buffer_test_type b2(b1);
             CHECK_EQ(b1.front(), expected_value);
             CHECK_EQ(b2.front(), expected_value);
@@ -241,7 +243,7 @@ namespace sparrow
         {
             const std::size_t size = 4u;
             const std::int32_t expected_value = 6;
-            buffer_test_type b1(make_test_buffer(size, expected_value), size);
+            buffer_test_type b1(make_test_buffer(size, expected_value), size, alloc);
             const buffer_test_type b2(b1);
             CHECK_EQ(b1.back(), expected_value + 3u);
             CHECK_EQ(b2.back(), expected_value + 3u);
@@ -251,14 +253,14 @@ namespace sparrow
         {
             SUBCASE("from nullptr")
             {
-                buffer_test_type b1(nullptr, 0);
+                buffer_test_type b1(nullptr, 0, alloc);
                 CHECK_EQ(b1.data(), nullptr);
             }
 
             SUBCASE("from non-nullptr")
             {
                 const std::size_t size = 4u;
-                buffer_test_type b1(make_test_buffer(size), size);
+                buffer_test_type b1(make_test_buffer(size), size, alloc);
 
                 const int32_t expected_value = 101;
                 const std::size_t idx = 3u;
@@ -281,7 +283,7 @@ namespace sparrow
         {
             SUBCASE("from nullptr")
             {
-                buffer_test_type b1(nullptr, 0);
+                buffer_test_type b1(nullptr, 0, alloc);
                 CHECK_EQ(b1.begin(), b1.end());
                 CHECK_EQ(b1.cbegin(), b1.cend());
             }
@@ -289,7 +291,7 @@ namespace sparrow
             SUBCASE("from non-nullptr")
             {
                 const std::size_t size = 8u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 auto iter = b.begin();
                 auto citer = b.cbegin();
                 for (std::size_t i = 0; i < b.size(); ++i)
@@ -306,7 +308,7 @@ namespace sparrow
         {
             SUBCASE("from nullptr")
             {
-                buffer_test_type b1(nullptr, 0);
+                buffer_test_type b1(nullptr, 0, alloc);
                 CHECK_EQ(b1.rbegin(), b1.rend());
                 CHECK_EQ(b1.crbegin(), b1.crend());
             }
@@ -314,7 +316,7 @@ namespace sparrow
             SUBCASE("from non-nullptr")
             {
                 const std::size_t size = 8u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 auto iter = b.rbegin();
                 auto citer = b.crbegin();
                 for (std::size_t i = b.size(); i != 0u; --i)
@@ -330,7 +332,7 @@ namespace sparrow
         TEST_CASE("iterator_consistency")
         {
             const std::size_t size = 8u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             {
                 auto iter = --b.end();
                 auto riter = b.rbegin();
@@ -372,7 +374,7 @@ namespace sparrow
         {
             SUBCASE("from nullptr")
             {
-                buffer_test_type b1(nullptr, 0);
+                buffer_test_type b1(nullptr, 0, alloc);
                 CHECK(b1.empty());
             }
 
@@ -382,7 +384,7 @@ namespace sparrow
                 CHECK(b1.empty());
 
                 const std::size_t size = 4u;
-                buffer_test_type b2(make_test_buffer(size), size);
+                buffer_test_type b2(make_test_buffer(size), size, alloc);
                 CHECK(!b2.empty());
             }
         }
@@ -391,14 +393,14 @@ namespace sparrow
         {
             SUBCASE("from nullptr")
             {
-                buffer_test_type b1(nullptr, 0);
+                buffer_test_type b1(nullptr, 0, alloc);
                 CHECK_EQ(b1.capacity(), 0u);
             }
 
             SUBCASE("from non-nullptr")
             {
                 const std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 CHECK_EQ(b.capacity(), size);
             }
         }
@@ -407,14 +409,14 @@ namespace sparrow
         {
             SUBCASE("from nullptr")
             {
-                buffer_test_type b1(nullptr, 0);
+                buffer_test_type b1(nullptr, 0, alloc);
                 CHECK_EQ(b1.size(), 0u);
             }
 
             SUBCASE("from non-nullptr")
             {
                 const std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 CHECK_EQ(b.size(), size);
             }
         }
@@ -425,7 +427,7 @@ namespace sparrow
         {
             SUBCASE("from nullptr")
             {
-                buffer_test_type b1(nullptr, 0);
+                buffer_test_type b1(nullptr, 0, alloc);
                 b1.clear();
                 CHECK_EQ(b1.size(), 0u);
                 CHECK_EQ(b1.capacity(), 0u);
@@ -435,7 +437,7 @@ namespace sparrow
             SUBCASE("from non-nullptr")
             {
                 const std::size_t size = 4u;
-                buffer_test_type b1(make_test_buffer(size), size);
+                buffer_test_type b1(make_test_buffer(size), size, alloc);
                 b1.clear();
                 CHECK_EQ(b1.size(), 0u);
                 CHECK_EQ(b1.capacity(), size);
@@ -446,7 +448,7 @@ namespace sparrow
         {
             SUBCASE("from nullptr")
             {
-                buffer_test_type b1(nullptr, 0);
+                buffer_test_type b1(nullptr, 0, alloc);
                 const std::size_t new_cap = 8u;
                 b1.reserve(new_cap);
                 CHECK_EQ(b1.capacity(), new_cap);
@@ -461,7 +463,7 @@ namespace sparrow
             SUBCASE("from non-empty buffer")
             {
                 const std::size_t size1 = 4u;
-                buffer_test_type b1(make_test_buffer(size1), size1);
+                buffer_test_type b1(make_test_buffer(size1), size1, alloc);
                 buffer_test_type b2(b1);
                 const std::size_t new_cap = 8u;
                 b1.reserve(new_cap);
@@ -477,7 +479,7 @@ namespace sparrow
         {
             SUBCASE("from nullptr")
             {
-                buffer_test_type b1(nullptr, 0);
+                buffer_test_type b1(nullptr, 0, alloc);
                 const std::size_t size = 4u;
                 b1.resize(size);
                 CHECK_EQ(b1.size(), size);
@@ -505,7 +507,7 @@ namespace sparrow
             {
                 const std::size_t size1 = 4u;
                 const std::size_t size2 = 8u;
-                buffer_test_type b(make_test_buffer(size1), size1);
+                buffer_test_type b(make_test_buffer(size1), size1, alloc);
                 b.resize(size2);
                 CHECK_EQ(b.size(), size2);
                 CHECK_EQ(b.capacity(), size2);
@@ -532,7 +534,7 @@ namespace sparrow
             SUBCASE("from non-empty buffer")
             {
                 const std::size_t size1 = 4u;
-                buffer_test_type b1(make_test_buffer(size1), size1);
+                buffer_test_type b1(make_test_buffer(size1), size1, alloc);
                 const std::size_t new_cap = 8u;
                 b1.reserve(new_cap);
                 CHECK_EQ(b1.capacity(), new_cap);
@@ -542,7 +544,7 @@ namespace sparrow
 
             SUBCASE("from null buffer")
             {
-                buffer_test_type b1(nullptr, 0);
+                buffer_test_type b1(nullptr, 0, alloc);
                 b1.shrink_to_fit();
                 CHECK_EQ(b1.capacity(), 0u);
             }
@@ -555,8 +557,8 @@ namespace sparrow
                 const std::size_t size1 = 4u;
                 const std::size_t size2 = 8u;
 
-                buffer_test_type b1(make_test_buffer(size1), size1);
-                buffer_test_type b2(make_test_buffer(size2), size2);
+                buffer_test_type b1(make_test_buffer(size1), size1, alloc);
+                buffer_test_type b2(make_test_buffer(size2), size2, alloc);
                 auto* data1 = b1.data();
                 auto* data2 = b2.data();
                 b1.swap(b2);
@@ -568,8 +570,8 @@ namespace sparrow
 
             SUBCASE("from null buffer")
             {
-                buffer_test_type b1(nullptr, 0);
-                buffer_test_type b2(make_test_buffer(4u), 4u);
+                buffer_test_type b1(nullptr, 0, alloc);
+                buffer_test_type b2(make_test_buffer(4u), 4u, alloc);
                 auto* data1 = b1.data();
                 auto* data2 = b2.data();
                 b1.swap(b2);
@@ -583,12 +585,12 @@ namespace sparrow
         TEST_CASE("equality comparison")
         {
             const std::size_t size = 4u;
-            buffer_test_type b1(make_test_buffer(size), size);
-            buffer_test_type b2(make_test_buffer(size), size);
+            buffer_test_type b1(make_test_buffer(size), size, alloc);
+            buffer_test_type b2(make_test_buffer(size), size, alloc);
             CHECK(b1 == b2);
 
             const std::size_t size2 = 8u;
-            buffer_test_type b3(make_test_buffer(size2), size2);
+            buffer_test_type b3(make_test_buffer(size2), size2, alloc);
             CHECK(b1 != b3);
         }
 
@@ -607,7 +609,7 @@ namespace sparrow
             SUBCASE("at begin")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 constexpr int32_t expected_value = 101;
                 b.emplace(b.cbegin(), expected_value);
@@ -623,7 +625,7 @@ namespace sparrow
             SUBCASE("in the middle")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 constexpr int32_t expected_value = 101;
                 b.emplace(b.cbegin() + 2, expected_value);
@@ -639,7 +641,7 @@ namespace sparrow
             SUBCASE("at the end")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 constexpr int32_t expected_value = 101;
                 b.emplace(b.cend(), expected_value);
@@ -654,7 +656,7 @@ namespace sparrow
 
             SUBCASE("with null buffer")
             {
-                buffer_test_type b(nullptr, 0);
+                buffer_test_type b(nullptr, 0, alloc);
                 constexpr int32_t expected_value = 101;
                 b.emplace(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), 1);
@@ -681,7 +683,7 @@ namespace sparrow
             SUBCASE("value at the beginning of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 constexpr int32_t expected_value = 101;
                 b.insert(b.cbegin(), expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
@@ -697,7 +699,7 @@ namespace sparrow
             {
                 CHECK(true);
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, non_trivial_buffer_test_type::default_allocator());
                 const std::string expected_value = "9999";
                 std::string movable_expected_value = expected_value;
                 b.insert(b.cbegin(), std::move(movable_expected_value));
@@ -711,7 +713,7 @@ namespace sparrow
             SUBCASE("value in the middle of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 constexpr int32_t expected_value = 101;
                 b.insert(b.cbegin() + 2, expected_value);
                 REQUIRE_EQ(b.size(), size + 1);
@@ -726,7 +728,7 @@ namespace sparrow
             SUBCASE("move value in the middle of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, non_trivial_buffer_test_type::default_allocator());
                 const std::string expected_value = "9999";
                 std::string movable_expected_value = expected_value;
                 b.insert(b.cbegin() + 2, std::move(movable_expected_value));
@@ -742,7 +744,7 @@ namespace sparrow
             SUBCASE("value at the end of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 constexpr int32_t expected_value = 101;
                 b.insert(b.cend(), expected_value);
@@ -758,7 +760,7 @@ namespace sparrow
             SUBCASE("move value at the end of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, non_trivial_buffer_test_type::default_allocator());
                 const std::string expected_value = "9999";
                 std::string movable_expected_value = expected_value;
                 b.insert(b.cend(), std::move(movable_expected_value));
@@ -774,7 +776,7 @@ namespace sparrow
             SUBCASE("count copies at the beginning")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 constexpr int32_t expected_value = 101;
                 constexpr std::size_t count = 3u;
@@ -795,7 +797,7 @@ namespace sparrow
             SUBCASE("count copies in the middle")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 constexpr int32_t expected_value = 101;
                 constexpr std::size_t count = 3u;
@@ -815,7 +817,7 @@ namespace sparrow
             SUBCASE("count copies at the end")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 constexpr int32_t expected_value = 101;
                 constexpr std::size_t count = 3u;
@@ -836,7 +838,7 @@ namespace sparrow
             SUBCASE("elements from range [first, last) at the beginning of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 const std::vector<int32_t> values = {101, 102, 103};
                 const std::size_t expected_new_size = size + values.size();
@@ -856,7 +858,7 @@ namespace sparrow
             SUBCASE("move elements from range [first, last) at the beginning of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, typename non_trivial_buffer_test_type::default_allocator());
                 std::vector<std::string> values = {"101", "102", "103"};
                 const std::size_t expected_new_size = size + values.size();
                 b.insert(
@@ -878,7 +880,7 @@ namespace sparrow
             SUBCASE("elements from range [first, last) in the middle of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 const std::vector<int32_t> values = {101, 102, 103};
                 const std::size_t expected_new_size = size + values.size();
@@ -898,7 +900,7 @@ namespace sparrow
             SUBCASE("move elements from range [first, last) in the middle of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, typename non_trivial_buffer_test_type::default_allocator());
 
                 std::vector<std::string> values = {"101", "102", "103"};
                 const std::size_t expected_new_size = size + values.size();
@@ -921,7 +923,7 @@ namespace sparrow
             SUBCASE("elements from range [first, last) at the end of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 const std::vector<int32_t> values = {101, 102, 103};
                 const std::size_t expected_new_size = size + values.size();
@@ -941,7 +943,7 @@ namespace sparrow
             SUBCASE("move elements from range [first, last) at the end of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, typename non_trivial_buffer_test_type::default_allocator());
 
                 std::vector<std::string> values = {"101", "102", "103"};
                 const std::size_t expected_new_size = size + values.size();
@@ -960,7 +962,7 @@ namespace sparrow
             SUBCASE("elements from initializer list at the beginning o the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 b.insert(b.cbegin(), {101, 102, 103});
                 REQUIRE_EQ(b.size(), size + 3);
@@ -977,7 +979,7 @@ namespace sparrow
             SUBCASE("elements from initializer list in the middle of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 b.insert(b.cbegin() + 2, {101, 102, 103});
                 REQUIRE_EQ(b.size(), size + 3);
@@ -994,7 +996,7 @@ namespace sparrow
             SUBCASE("elements from initializer list at the end of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 b.insert(b.cend(), {101, 102, 103});
                 REQUIRE_EQ(b.size(), size + 3);
@@ -1013,7 +1015,7 @@ namespace sparrow
                 SUBCASE("range of T")
                 {
                     constexpr std::size_t size = 4u;
-                    buffer_test_type b(make_test_buffer(size), size);
+                    buffer_test_type b(make_test_buffer(size), size, alloc);
 
                     const std::vector<int32_t> values = {101, 102, 103};
                     const std::size_t expected_new_size = size + values.size();
@@ -1036,7 +1038,7 @@ namespace sparrow
             SUBCASE("the element at the beginning of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 b.erase(b.cbegin());
                 REQUIRE_EQ(b.size(), size - 1);
@@ -1049,7 +1051,7 @@ namespace sparrow
             SUBCASE("the element in the middle of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 b.erase(b.cbegin() + 2);
                 REQUIRE_EQ(b.size(), size - 1);
@@ -1062,7 +1064,7 @@ namespace sparrow
             SUBCASE("the element at the end of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 b.erase(b.cend() - 1);
                 REQUIRE_EQ(b.size(), size - 1);
@@ -1075,7 +1077,7 @@ namespace sparrow
             SUBCASE("the elements in the range [first, last) at the beginning of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 b.erase(b.cbegin(), b.cbegin() + 2);
                 REQUIRE_EQ(b.size(), size - 2);
@@ -1087,7 +1089,7 @@ namespace sparrow
             SUBCASE("the elements in the range [first, last) in the middle of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 b.erase(b.cbegin() + 1, b.cbegin() + 3);
                 REQUIRE_EQ(b.size(), size - 2);
@@ -1099,7 +1101,7 @@ namespace sparrow
             SUBCASE("the elements in the range [first, last) at the end of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 b.erase(b.cend() - 2, b.cend());
                 REQUIRE_EQ(b.size(), size - 2);
@@ -1114,7 +1116,7 @@ namespace sparrow
             SUBCASE("The new element is initialized as a copy of value")
             {
                 constexpr std::size_t size = 4u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
 
                 constexpr int32_t expected_value = 101;
                 b.push_back(expected_value);
@@ -1133,7 +1135,7 @@ namespace sparrow
             SUBCASE("Value is moved into the new element.")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size);
+                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, typename non_trivial_buffer_test_type::default_allocator());
                 const std::string expected_value = "9999";
                 std::string movable_expected_value = expected_value;
                 b.push_back(std::move(movable_expected_value));
@@ -1153,6 +1155,8 @@ namespace sparrow
 
     TEST_SUITE("buffer_view")
     {
+        allocator_type alloc;
+
         TEST_CASE("constructors")
         {
             SUBCASE("default")
@@ -1171,14 +1175,13 @@ namespace sparrow
                 CHECK_EQ(v.data(), mem);
                 CHECK_EQ(v.size(), size);
                 CHECK_EQ(v.data()[2], 2);
-                allocator_type alloc;
                 alloc.deallocate(mem, size);
             }
 
             SUBCASE("with buffer")
             {
                 constexpr std::size_t size = 8u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 const view_test_type v(b);
 
                 CHECK_EQ(v.data(), b.data());
@@ -1200,7 +1203,7 @@ namespace sparrow
             SUBCASE("const view from const buffer")
             {
                 constexpr std::size_t size = 8u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 const buffer_test_type& cb = b;
                 const_view_test_type v(cb);
 
@@ -1213,13 +1216,13 @@ namespace sparrow
         TEST_CASE("copy semantic")
         {
             const std::size_t size = 4u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             view_test_type v1(b);
             view_test_type v2(v1);
             CHECK_EQ(v1, v2);
 
             const std::size_t size2 = 8u;
-            buffer_test_type b2(make_test_buffer(size2, 4), size2);
+            buffer_test_type b2(make_test_buffer(size2, 4), size2, alloc);
             view_test_type v3(b2);
             v2 = v3;
             CHECK_EQ(v2, v3);
@@ -1229,13 +1232,13 @@ namespace sparrow
         TEST_CASE("move semantic")
         {
             const std::size_t size = 4u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             view_test_type v1(b);
             view_test_type v2(std::move(v1));
             CHECK_EQ(v1, v2);
 
             const std::size_t size2 = 8u;
-            buffer_test_type b2(make_test_buffer(size2, 4), size2);
+            buffer_test_type b2(make_test_buffer(size2, 4), size2, alloc);
             view_test_type v3(b2);
             v2 = std::move(v3);
             CHECK_EQ(v2, v3);
@@ -1247,7 +1250,7 @@ namespace sparrow
             CHECK(v1.empty());
 
             const std::size_t size = 4u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             view_test_type v2(b);
             CHECK(!v2.empty());
         }
@@ -1255,7 +1258,7 @@ namespace sparrow
         TEST_CASE("size")
         {
             constexpr std::size_t size = 4u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             view_test_type v(b);
             CHECK_EQ(v.size(), size);
         }
@@ -1264,7 +1267,7 @@ namespace sparrow
         {
             const std::size_t size = 4u;
             const int32_t expected_value = 3;
-            buffer_test_type b(make_test_buffer(size, expected_value), size);
+            buffer_test_type b(make_test_buffer(size, expected_value), size, alloc);
             view_test_type v(b);
             CHECK_EQ(v.front(), expected_value);
         }
@@ -1273,7 +1276,7 @@ namespace sparrow
         {
             const std::size_t size = 4u;
             const int32_t expected_value = 3;
-            buffer_test_type b(make_test_buffer(size, expected_value), size);
+            buffer_test_type b(make_test_buffer(size, expected_value), size, alloc);
             const view_test_type v(b);
             CHECK_EQ(v.front(), expected_value);
         }
@@ -1282,7 +1285,7 @@ namespace sparrow
         {
             const std::size_t size = 4u;
             const int32_t expected_value = 6;
-            buffer_test_type b(make_test_buffer(size, expected_value), size);
+            buffer_test_type b(make_test_buffer(size, expected_value), size, alloc);
             view_test_type v(b);
             CHECK_EQ(v.back(), expected_value + 3u);
         }
@@ -1291,7 +1294,7 @@ namespace sparrow
         {
             const std::size_t size = 4u;
             const int32_t expected_value = 6;
-            buffer_test_type b(make_test_buffer(size, expected_value), size);
+            buffer_test_type b(make_test_buffer(size, expected_value), size, alloc);
             const view_test_type v(b);
             CHECK_EQ(v.back(), expected_value + 3u);
         }
@@ -1299,7 +1302,7 @@ namespace sparrow
         TEST_CASE("data")
         {
             const std::size_t size = 4u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             view_test_type v1(b);
 
             const int32_t expected_value = 101;
@@ -1317,7 +1320,7 @@ namespace sparrow
         TEST_CASE("operator[]")
         {
             const std::size_t size = 4u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             view_test_type v(b);
             for (std::size_t i = 0; i < size; ++i)
             {
@@ -1328,7 +1331,7 @@ namespace sparrow
         TEST_CASE("operator[] const")
         {
             const std::size_t size = 4u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             const view_test_type v(b);
             for (std::size_t i = 0; i < size; ++i)
             {
@@ -1339,7 +1342,7 @@ namespace sparrow
         TEST_CASE("begin")
         {
             const std::size_t size = 8u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             view_test_type v(b);
             auto iter = v.begin();
             for (std::size_t i = 0; i < v.size(); ++i)
@@ -1351,7 +1354,7 @@ namespace sparrow
         TEST_CASE("begin const")
         {
             const std::size_t size = 8u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             const view_test_type v(b);
             auto iter = v.begin();
             for (std::size_t i = 0; i < v.size(); ++i)
@@ -1363,7 +1366,7 @@ namespace sparrow
         TEST_CASE("end")
         {
             const std::size_t size = 8u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             view_test_type v(b);
             auto iter = v.end();
             for (std::size_t i = 0; i < v.size(); ++i)
@@ -1375,7 +1378,7 @@ namespace sparrow
         TEST_CASE("end const")
         {
             const std::size_t size = 8u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             const view_test_type v(b);
             auto iter = v.end();
             for (std::size_t i = 0; i < v.size(); ++i)
@@ -1387,7 +1390,7 @@ namespace sparrow
         TEST_CASE("rbegin")
         {
             const std::size_t size = 8u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             view_test_type v(b);
             auto iter = v.rbegin();
             for (std::size_t i = 0; i < v.size(); ++i)
@@ -1399,7 +1402,7 @@ namespace sparrow
         TEST_CASE("rbegin const")
         {
             const std::size_t size = 8u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             const view_test_type v(b);
             auto iter = v.rbegin();
             for (std::size_t i = 0; i < v.size(); ++i)
@@ -1411,7 +1414,7 @@ namespace sparrow
         TEST_CASE("rend")
         {
             const std::size_t size = 8u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             view_test_type v(b);
             auto iter = v.rend();
             for (std::size_t i = 0; i < v.size(); ++i)
@@ -1423,7 +1426,7 @@ namespace sparrow
         TEST_CASE("rend const")
         {
             const std::size_t size = 8u;
-            buffer_test_type b(make_test_buffer(size), size);
+            buffer_test_type b(make_test_buffer(size), size, alloc);
             const view_test_type v(b);
             auto iter = v.rend();
             for (std::size_t i = 0; i < v.size(); ++i)
@@ -1435,13 +1438,13 @@ namespace sparrow
         TEST_CASE("equality comparison")
         {
             const std::size_t size = 4u;
-            buffer_test_type b1(make_test_buffer(size), size);
-            buffer_test_type b2(make_test_buffer(size), size);
+            buffer_test_type b1(make_test_buffer(size), size, alloc);
+            buffer_test_type b2(make_test_buffer(size), size, alloc);
             view_test_type v1(b1), v2(b2);
             CHECK(v1 == v2);
 
             const std::size_t size2 = 8u;
-            buffer_test_type b3(make_test_buffer(size2), size2);
+            buffer_test_type b3(make_test_buffer(size2), size2, alloc);
             view_test_type v3(b3);
             CHECK(v1 != v3);
         }
@@ -1451,8 +1454,8 @@ namespace sparrow
             const std::size_t size1 = 4u;
             const std::size_t size2 = 8u;
 
-            buffer_test_type b1(make_test_buffer(size1), size1);
-            buffer_test_type b2(make_test_buffer(size2), size2);
+            buffer_test_type b1(make_test_buffer(size1), size1, alloc);
+            buffer_test_type b2(make_test_buffer(size2), size2, alloc);
             view_test_type v1(b1), v2(b2);
             auto* data1 = b1.data();
             auto* data2 = b2.data();
@@ -1468,7 +1471,7 @@ namespace sparrow
             SUBCASE("pos and count")
             {
                 const std::size_t size = 8u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 view_test_type v(b);
                 const std::size_t pos = 2u;
                 const std::size_t count = 3u;
@@ -1483,7 +1486,7 @@ namespace sparrow
             SUBCASE("pos")
             {
                 const std::size_t size = 8u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 view_test_type v(b);
                 const std::size_t pos = 2u;
                 const view_test_type sv = v.subrange(pos);
@@ -1497,7 +1500,7 @@ namespace sparrow
             SUBCASE("iterators")
             {
                 const std::size_t size = 8u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 view_test_type v(b);
                 const std::size_t pos = 2u;
                 const std::size_t count = 3u;
@@ -1512,7 +1515,7 @@ namespace sparrow
             SUBCASE("const iterators")
             {
                 const std::size_t size = 8u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 const view_test_type v(b);
                 const std::size_t pos = 2u;
                 const std::size_t count = 3u;
@@ -1530,7 +1533,7 @@ namespace sparrow
             SUBCASE("from view")
             {
                 const std::size_t size = 8u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 view_test_type v(b);
 
                 buffer_test_type b2 = v;
@@ -1542,7 +1545,7 @@ namespace sparrow
             SUBCASE("from const_view")
             {
                 const std::size_t size = 8u;
-                buffer_test_type b(make_test_buffer(size), size);
+                buffer_test_type b(make_test_buffer(size), size, alloc);
                 const buffer_test_type& cb(b);
                 const_view_test_type v(cb);
 

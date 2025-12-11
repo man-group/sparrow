@@ -87,7 +87,7 @@ namespace sparrow::test
                 ptr[i + 1] = ptr[i] + static_cast<std::uint32_t>(sizes[i]);
             }
         }
-        return {buf, buf_size};
+        return {buf, buf_size, buffer<std::uint8_t>::default_allocator()};
     }
 
     sparrow::buffer<std::uint8_t> make_size_buffer(const std::vector<size_t>& sizes, bool big)
@@ -110,7 +110,7 @@ namespace sparrow::test
                 size_buf[i] = static_cast<std::uint32_t>(sizes[i]);
             }
         }
-        return {buf, buf_size};
+        return {buf, buf_size, buffer<std::uint8_t>::default_allocator()};
     }
 
     void fill_schema_and_array_for_list_layout(
@@ -342,7 +342,7 @@ namespace sparrow::test
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
-        buffer_type buf(type_ids.size());
+        buffer_type buf(type_ids.size(), buffer_type::default_allocator());
         std::copy(type_ids.begin(), type_ids.end(), buf.begin());
         std::vector<buffer_type> arr_buffs = {std::move(buf)};
 
@@ -404,10 +404,10 @@ namespace sparrow::test
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
 
-        buffer_type buf0(type_ids.size());
+        buffer_type buf0(type_ids.size(), buffer_type::default_allocator());
         std::copy(type_ids.begin(), type_ids.end(), buf0.begin());
 
-        buffer_type buf1(offsets.size() * sizeof(std::int32_t));
+        buffer_type buf1(offsets.size() * sizeof(std::int32_t), buffer_type::default_allocator());
         std::copy(offsets.begin(), offsets.end(), buf1.data<std::int32_t>());
 
         std::vector<buffer_type> arr_buffs = {std::move(buf0), std::move(buf1)};

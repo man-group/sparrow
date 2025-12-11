@@ -48,7 +48,7 @@ namespace sparrow
         using range_value_type = std::ranges::range_value_t<R>;
         using atomic_element_type = std::ranges::range_value_t<range_value_type>;
         const size_t values_byte_count = number_of_bytes(strings);
-        buffer<uint8_t> values_buffer(values_byte_count);
+        buffer<uint8_t> values_buffer(values_byte_count, buffer<uint8_t>::default_allocator());
         if (!strings.empty())
         {
             auto buffer_adaptor = make_buffer_adaptor<atomic_element_type>(values_buffer);
@@ -74,7 +74,7 @@ namespace sparrow
     [[nodiscard]] buffer<uint8_t> range_to_buffer(R&& range)
     {
         const size_t values_byte_count = std::ranges::size(range) * sizeof(std::ranges::range_value_t<R>);
-        buffer<uint8_t> values_buffer(values_byte_count);
+        buffer<uint8_t> values_buffer(values_byte_count, buffer<uint8_t>::default_allocator());
         auto buffer_adaptor = make_buffer_adaptor<std::ranges::range_value_t<R>>(values_buffer);
         if constexpr (std::is_rvalue_reference_v<R>)
         {

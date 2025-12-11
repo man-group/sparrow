@@ -72,7 +72,7 @@ TEST_SUITE("u8_buffer")
             {
                 raw_buf[i] = static_cast<int32_t>(i);
             }
-            sparrow::u8_buffer<int32_t> b(raw_buf, size);
+            sparrow::u8_buffer<int32_t> b(raw_buf, size, sparrow::u8_buffer<int32_t>::default_allocator());
 
             CHECK_EQ(b.size(), size);
             CHECK_EQ(b.data(), raw_buf);

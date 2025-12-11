@@ -27,7 +27,7 @@ namespace sparrow
     [[nodiscard]] constexpr buffer<OT> make_offset_buffer(const R& range)
     {
         const size_t range_size = std::ranges::size(range);
-        buffer<OT> offsets(range_size + 1, 0);
+        buffer<OT> offsets(range_size + 1, 0, typename buffer<OT>::default_allocator());
         std::transform(
             range.cbegin(),
             range.cend(),

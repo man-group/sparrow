@@ -1068,7 +1068,7 @@ namespace sparrow
             return list_array_impl<BIG>::create_proxy(
                 std::move(flat_values),
                 std::move(list_offsets),
-                validity_bitmap{},
+                validity_bitmap{validity_bitmap::default_allocator()},
                 name,
                 metadata
             );
@@ -1086,7 +1086,7 @@ namespace sparrow
         );
 
         std::vector<buffer<std::uint8_t>> arr_buffs = {
-            buffer<std::uint8_t>{nullptr, 0},  // no validity bitmap
+            buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},  // no validity bitmap
             std::move(list_offsets).extract_storage()
         };
 
@@ -1203,7 +1203,7 @@ namespace sparrow
                 std::move(flat_values),
                 std::move(list_offsets),
                 std::move(list_sizes),
-                validity_bitmap{},
+                validity_bitmap{validity_bitmap::default_allocator()},
                 name,
                 metadata
             );
@@ -1222,7 +1222,7 @@ namespace sparrow
         );
 
         std::vector<buffer<std::uint8_t>> arr_buffs = {
-            buffer<std::uint8_t>{nullptr, 0},  // no validity bitmap
+            buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},  // no validity bitmap
             std::move(list_offsets).extract_storage(),
             std::move(list_sizes).extract_storage()
         };
@@ -1360,7 +1360,7 @@ namespace sparrow
             return fixed_sized_list_array::create_proxy(
                 list_size,
                 std::move(flat_values),
-                validity_bitmap{},
+                validity_bitmap{validity_bitmap::default_allocator()},
                 name,
                 metadata
             );
@@ -1379,7 +1379,7 @@ namespace sparrow
         );
 
         std::vector<buffer<std::uint8_t>> arr_buffs = {
-            buffer<std::uint8_t>{nullptr, 0}  // no validity bitmap
+            buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()}  // no validity bitmap
         };
 
         ArrowArray arr = detail::make_list_arrow_array(

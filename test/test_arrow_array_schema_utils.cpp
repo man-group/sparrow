@@ -98,7 +98,7 @@ TEST_SUITE("C Data Interface")
 
             SUBCASE("std::unique_ptr<sparrow::buffer<int>>")
             {
-                std::unique_ptr<sparrow::buffer<int>> ptr = std::make_unique<sparrow::buffer<int>>(5);
+                std::unique_ptr<sparrow::buffer<int>> ptr = std::make_unique<sparrow::buffer<int>>(5, sparrow::buffer<int>::default_allocator{});
                 for (size_t i = 0; i < ptr->size(); ++i)
                 {
                     ptr->data()[i] = 0;

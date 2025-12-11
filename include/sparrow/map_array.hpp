@@ -650,7 +650,7 @@ namespace sparrow
                 std::move(flat_keys),
                 std::move(flat_items),
                 std::move(list_offsets),
-                validity_bitmap{},
+                validity_bitmap{validity_bitmap::default_allocator()},
                 name,
                 metadata
             );
@@ -666,7 +666,7 @@ namespace sparrow
                 std::move(flat_keys),
                 std::move(flat_items),
                 std::move(list_offsets),
-                buffer<std::uint8_t>{nullptr, 0},  // no validity bitmap
+                buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},  // no validity bitmap
                 0,                                 // null_count
                 std::move(flags),
                 name,

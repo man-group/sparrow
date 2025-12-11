@@ -518,7 +518,7 @@ namespace sparrow
         [[nodiscard]] static auto create_proxy(
             const date::time_zone* timezone,
             u8_buffer<buffer_inner_value_type>&& data_buffer,
-            R&& bitmaps = validity_bitmap{},
+            R&& bitmaps = validity_bitmap{validity_bitmap::default_allocator()},
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         ) -> arrow_proxy;
@@ -983,7 +983,7 @@ namespace sparrow
             return v.get_sys_time().time_since_epoch().count();
         };
 
-        std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0)
+        std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0, validity_bitmap::default_allocator())
                                                          : std::nullopt;
         const auto values = range | std::views::transform(extract_duration_count);
         u8_buffer<buffer_inner_value_type> data_buffer(values);
@@ -1060,7 +1060,7 @@ namespace sparrow
         );
 
         std::vector<buffer<uint8_t>> buffers{
-            bitmap.has_value() ? std::move(bitmap.value()).extract_storage() : buffer<uint8_t>{nullptr, 0},
+            bitmap.has_value() ? std::move(bitmap.value()).extract_storage() : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()},
             std::move(data_buffer).extract_storage()
         };
 

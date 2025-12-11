@@ -35,13 +35,19 @@ namespace test
 
         inline buffer_list get_test_buffer_list0()
         {
-            buffer_list res = {buffer_type({0xF3, 0xFF}), buffer_type({0, 1, 2, 3, 4, 5, 6, 7, 8, 9})};
+            buffer_list res = {
+                buffer_type({0xF3, 0xFF}, buffer_type::default_allocator()),
+                buffer_type({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, buffer_type::default_allocator())
+            };
             return res;
         }
 
         inline buffer_list get_test_buffer_list1()
         {
-            buffer_list res = {buffer_type({0xF3}), buffer_type({9, 8, 7, 6, 5})};
+            buffer_list res = {
+                buffer_type({0xF3}, buffer_type::default_allocator()),
+                buffer_type({9, 8, 7, 6, 5}, buffer_type::default_allocator())
+            };
             return res;
         }
     }

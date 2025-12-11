@@ -524,7 +524,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [array, schema] = test::make_arrow_schema_and_array(false);
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            auto buffer = sparrow::buffer<uint8_t>(10);
+            auto buffer = sparrow::buffer<uint8_t>(10, sparrow::buffer<uint8_t>::default_allocator());
             for (auto& element : buffer)
             {
                 element = 9;
@@ -545,7 +545,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [array, schema] = make_external_arrow_schema_and_array();
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            auto buffer = sparrow::buffer<uint8_t>({1, 2, 3});
+            auto buffer = sparrow::buffer<uint8_t>({1, 2, 3}, sparrow::buffer<uint8_t>::default_allocator());
             CHECK_THROWS_AS(proxy.set_buffer(1, std::move(buffer)), std::runtime_error);
         }
 
@@ -553,7 +553,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             const auto [array, schema] = test::make_arrow_schema_and_array(false);
             sparrow::arrow_proxy proxy(&array, &schema);
-            auto buffer = sparrow::buffer<uint8_t>({1, 2, 3});
+            auto buffer = sparrow::buffer<uint8_t>({1, 2, 3}, sparrow::buffer<uint8_t>::default_allocator());
             CHECK_THROWS_AS(proxy.set_buffer(1, std::move(buffer)), std::runtime_error);
             array.release(const_cast<ArrowArray*>(&array));
             schema.release(const_cast<ArrowSchema*>(&schema));
