@@ -445,7 +445,7 @@ namespace sparrow
         [[nodiscard]] static arrow_proxy create_proxy(
             u8_buffer<C>&& data_buffer,
             offset_buffer_type&& list_offsets,
-            VB&& validity_input = validity_bitmap{},
+            VB&& validity_input = validity_bitmap{validity_bitmap::default_allocator()},
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -478,7 +478,7 @@ namespace sparrow
             )
         [[nodiscard]] static arrow_proxy create_proxy(
             R&& values,
-            VB&& validity_input = validity_bitmap{},
+            VB&& validity_input = validity_bitmap{validity_bitmap::default_allocator()},
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -1032,7 +1032,7 @@ namespace sparrow
         return create_proxy_impl(
             std::move(data_buffer),
             std::move(offset_buffer),
-            nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size, validity_bitmap::default_allocator()) : std::nullopt,
             std::move(name),
             std::move(metadata)
         );
@@ -1068,7 +1068,7 @@ namespace sparrow
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
-            bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<std::uint8_t>{nullptr, 0},
+            bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},
             std::move(list_offsets).extract_storage(),
             std::move(data_buffer).extract_storage()
         };

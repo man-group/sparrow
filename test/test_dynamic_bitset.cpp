@@ -96,6 +96,13 @@ namespace sparrow
             return res;
         }
 
+        // Helper to create dynamic_bitset with correct constructor
+        template <typename BitmapType>
+        BitmapType make_bitmap(buffer_type buffer, std::size_t size) const
+        {
+            return BitmapType(buffer, size, typename BitmapType::default_allocator());
+        }
+
         dynamic_bitmap_fixture(const dynamic_bitmap_fixture&) = delete;
         dynamic_bitmap_fixture(dynamic_bitmap_fixture&&) = delete;
 
@@ -115,13 +122,13 @@ namespace sparrow
 
         template <std::ranges::input_range R>
         non_owning_dynamic_bitset_fixture(const R& blocks)
-            : m_bitmap_buffer{blocks}
+            : m_bitmap_buffer{blocks, buffer<uint8_t>::default_allocator()}
             , p_expected_buffer{m_bitmap_buffer.data()}
         {
         }
 
         non_owning_dynamic_bitset_fixture(std::nullptr_t)
-            : m_bitmap_buffer{nullptr, 0}
+            : m_bitmap_buffer{nullptr, 0, buffer<uint8_t>::default_allocator()}
             , p_expected_buffer{nullptr}
         {
         }
@@ -129,6 +136,13 @@ namespace sparrow
         buffer<uint8_t>* get_buffer()
         {
             return &m_bitmap_buffer;
+        }
+
+        // Helper to create non_owning_dynamic_bitset with correct constructor (no allocator)
+        template <typename BitmapType>
+        BitmapType make_bitmap(buffer<uint8_t>* buffer, std::size_t size) const
+        {
+            return BitmapType(buffer, size);
         }
 
         buffer<uint8_t> m_bitmap_buffer;
@@ -149,13 +163,40 @@ namespace sparrow
             fixture f;
             fixture null_f(nullptr);
 
+            // Helper lambda to create bitmap with correct constructor signature
+            // For dynamic_bitset: needs allocator parameter
+            // For non_owning_dynamic_bitset: no allocator parameter
+            auto make_bitmap = [](auto buffer, std::size_t size) {
+                if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
+                {
+                    return bitmap(buffer, size, typename bitmap::default_allocator());
+                }
+                else
+                {
+                    return bitmap(buffer, size);
+                }
+            };
+
+            // Helper for dynamic_bitset with null_count (only for dynamic_bitset)
+            auto make_bitmap_with_null_count = [](auto buffer, std::size_t size, std::size_t null_count) {
+                if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
+                {
+                    return bitmap(buffer, size, null_count, typename bitmap::default_allocator());
+                }
+                else
+                {
+                    // non_owning_dynamic_bitset doesn't support this constructor
+                    return bitmap(buffer, size);
+                }
+            };
+
             SUBCASE("constructor")
             {
                 if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
                 {
                     SUBCASE("default")
                     {
-                        const bitmap b;
+                        const bitmap b{typename bitmap::default_allocator()};
                         CHECK_EQ(b.size(), 0u);
                         CHECK_EQ(b.null_count(), 0u);
                     }
@@ -163,7 +204,7 @@ namespace sparrow
                     SUBCASE("with size")
                     {
                         const std::size_t expected_size = 13;
-                        const bitmap b(expected_size);
+                        const bitmap b(expected_size, typename bitmap::default_allocator());
                         CHECK_EQ(b.size(), expected_size);
                         CHECK_EQ(b.null_count(), expected_size);
                     }
@@ -171,7 +212,7 @@ namespace sparrow
                     SUBCASE("with size and value")
                     {
                         const std::size_t expected_size = 13;
-                        const bitmap b(expected_size, true);
+                        const bitmap b(expected_size, true,typename bitmap::default_allocator());
                         CHECK_EQ(b.size(), expected_size);
                         CHECK_EQ(b.null_count(), 0u);
                     }
@@ -179,7 +220,7 @@ namespace sparrow
                     SUBCASE("with buffer and size")
                     {
                         dynamic_bitmap_fixture bf;
-                        const bitmap b(bf.get_buffer(), s_bitmap_size);
+                        const bitmap b = make_bitmap(bf.get_buffer(), s_bitmap_size);
                         CHECK_EQ(b.size(), s_bitmap_size);
                         CHECK_EQ(b.null_count(), s_bitmap_null_count);
                     }
@@ -187,7 +228,7 @@ namespace sparrow
                     SUBCASE("with buffer, size and null count")
                     {
                         dynamic_bitmap_fixture bf2;
-                        const bitmap b5(bf2.get_buffer(), s_bitmap_size, s_bitmap_null_count);
+                        const bitmap b5 = make_bitmap_with_null_count(bf2.get_buffer(), s_bitmap_size, s_bitmap_null_count);
                         CHECK_EQ(b5.size(), s_bitmap_size);
                         CHECK_EQ(b5.null_count(), s_bitmap_null_count);
                     }
@@ -195,7 +236,7 @@ namespace sparrow
                 else if constexpr (std::is_same_v<bitmap, non_owning_dynamic_bitset<std::uint8_t>>)
                 {
                     non_owning_dynamic_bitset_fixture bf;
-                    bitmap b(bf.get_buffer(), s_bitmap_size);
+                    bitmap b = make_bitmap(bf.get_buffer(), s_bitmap_size);
                     CHECK_EQ(b.size(), s_bitmap_size);
                     CHECK_EQ(b.null_count(), s_bitmap_null_count);
                 }
@@ -205,7 +246,7 @@ namespace sparrow
             {
                 SUBCASE("from non-null buffer")
                 {
-                    bitmap bm(f.get_buffer(), s_bitmap_size);
+                    bitmap bm = make_bitmap(f.get_buffer(), s_bitmap_size);
                     CHECK_EQ(bm.size(), s_bitmap_size);
                     CHECK_EQ(bm.null_count(), s_bitmap_null_count);
                     CHECK_EQ(bm.data(), f.p_expected_buffer);
@@ -213,7 +254,7 @@ namespace sparrow
 
                 SUBCASE("from null buffer")
                 {
-                    bitmap bm(null_f.get_buffer(), s_bitmap_size);
+                    bitmap bm = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                     CHECK_EQ(bm.size(), s_bitmap_size);
                     CHECK_EQ(bm.null_count(), 0);
                     CHECK_EQ(bm.data(), nullptr);
@@ -221,7 +262,7 @@ namespace sparrow
 
                 SUBCASE("from copy")
                 {
-                    bitmap bm(f.get_buffer(), s_bitmap_size);
+                    bitmap bm = make_bitmap(f.get_buffer(), s_bitmap_size);
                     const bitmap& b2 = bm;
                     CHECK_EQ(b2.data(), f.p_expected_buffer);
                 }
@@ -229,7 +270,7 @@ namespace sparrow
 
             SUBCASE("copy semantic")
             {
-                const bitmap b(f.get_buffer(), s_bitmap_size);
+                const bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                 bitmap b2(b);
 
                 REQUIRE_EQ(b.size(), b2.size());
@@ -251,7 +292,7 @@ namespace sparrow
 
                 const std::array<std::uint8_t, 2> blocks{37, 2};
                 fixture f3{blocks};
-                bitmap b3(f3.get_buffer(), blocks.size() * 8);
+                bitmap b3 = make_bitmap(f3.get_buffer(), blocks.size() * 8);
 
                 b2 = b3;
                 REQUIRE_EQ(b2.size(), b3.size());
@@ -274,7 +315,7 @@ namespace sparrow
 
             SUBCASE("move semantic")
             {
-                bitmap bref(f.get_buffer(), s_bitmap_size);
+                bitmap bref = make_bitmap(f.get_buffer(), s_bitmap_size);
                 bitmap b(bref);
 
                 bitmap b2(std::move(b));
@@ -287,7 +328,7 @@ namespace sparrow
 
                 const std::array<std::uint8_t, 2> blocks{37, 2};
                 fixture f4{blocks};
-                bitmap b4(f4.get_buffer(), blocks.size() * 8);
+                bitmap b4 = make_bitmap(f4.get_buffer(), blocks.size() * 8);
                 bitmap b5(b4);
 
                 b2 = std::move(b4);
@@ -303,7 +344,7 @@ namespace sparrow
             {
                 SUBCASE("from null buffer")
                 {
-                    bitmap bm(null_f.get_buffer(), s_bitmap_size);
+                    bitmap bm = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                     CHECK_EQ(bm.size(), s_bitmap_size);
                     CHECK_EQ(bm.null_count(), 0);
                     for (size_t i = 0; i < s_bitmap_size; ++i)
@@ -328,7 +369,7 @@ namespace sparrow
 
                 SUBCASE("from non-null buffer")
                 {
-                    bitmap bm(f.get_buffer(), s_bitmap_size);
+                    bitmap bm = make_bitmap(f.get_buffer(), s_bitmap_size);
 
                     CHECK(bm.test(2));
                     CHECK_FALSE(bm.test(3));
@@ -357,7 +398,7 @@ namespace sparrow
             {
                 SUBCASE("from null buffer")
                 {
-                    bitmap bm(null_f.get_buffer(), s_bitmap_size);
+                    bitmap bm = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                     REQUIRE_EQ(bm.size(), s_bitmap_size);
                     for (size_t i = 0; i < s_bitmap_size; ++i)
                     {
@@ -376,7 +417,7 @@ namespace sparrow
 
                 SUBCASE("from non-null buffer")
                 {
-                    bitmap bm(f.get_buffer(), s_bitmap_size);
+                    bitmap bm = make_bitmap(f.get_buffer(), s_bitmap_size);
                     CHECK(bm[2]);
                     CHECK_FALSE(bm[3]);
                     CHECK(bm[24]);
@@ -404,7 +445,7 @@ namespace sparrow
             {
                 SUBCASE("from null buffer")
                 {
-                    bitmap bm(null_f.get_buffer(), s_bitmap_size);
+                    bitmap bm = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                     CHECK_EQ(bm.size(), s_bitmap_size);
                     CHECK_EQ(bm.null_count(), 0);
                     bm.resize(40, false);
@@ -414,7 +455,7 @@ namespace sparrow
 
                 SUBCASE("from non null buffer")
                 {
-                    bitmap bm(f.get_buffer(), s_bitmap_size);
+                    bitmap bm = make_bitmap(f.get_buffer(), s_bitmap_size);
                     CHECK_EQ(bm.size(), s_bitmap_size);
                     CHECK_EQ(bm.null_count(), s_bitmap_null_count);
 
@@ -441,7 +482,7 @@ namespace sparrow
                 {
                     SUBCASE("from non null buffer")
                     {
-                        bitmap b(f.get_buffer(), s_bitmap_size);
+                        bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                         auto iter = b.begin();
                         for (size_t i = 0; i < s_bitmap_size; ++i)
                         {
@@ -452,7 +493,7 @@ namespace sparrow
 
                     SUBCASE("from null buffer")
                     {
-                        bitmap b(null_f.get_buffer(), s_bitmap_size);
+                        bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                         auto iter = b.begin();
                         for (size_t i = 0; i < s_bitmap_size; ++i)
                         {
@@ -466,7 +507,7 @@ namespace sparrow
                 {
                     SUBCASE("from non null buffer")
                     {
-                        bitmap b(f.get_buffer(), s_bitmap_size);
+                        bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                         auto iter = b.end();
                         for (size_t i = s_bitmap_size; i > 0; --i)
                         {
@@ -476,7 +517,7 @@ namespace sparrow
                     }
                     SUBCASE("from null buffer")
                     {
-                        bitmap b(null_f.get_buffer(), s_bitmap_size);
+                        bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                         auto iter = b.end();
                         for (size_t i = s_bitmap_size; i > 0; --i)
                         {
@@ -492,7 +533,7 @@ namespace sparrow
                     // static_assert(std::random_access_iterator<typename bitmap::iterator>);
                     static_assert(std::random_access_iterator<typename bitmap::const_iterator>);
 
-                    bitmap b(f.get_buffer(), s_bitmap_size);
+                    bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                     auto iter = b.begin();
                     auto citer = b.cbegin();
 
@@ -552,7 +593,7 @@ namespace sparrow
                     {
                         SUBCASE("from non null buffer")
                         {
-                            bitmap b(f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                             const auto pos = b.cbegin();
                             auto iter = b.insert(pos, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 1);
@@ -566,7 +607,7 @@ namespace sparrow
                         }
                         SUBCASE("from null buffer")
                         {
-                            bitmap b(null_f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                             const auto pos = b.cbegin();
                             auto iter = b.insert(pos, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 1);
@@ -584,7 +625,7 @@ namespace sparrow
                     {
                         SUBCASE("from non null buffer")
                         {
-                            bitmap b(f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                             const auto pos = std::next(b.cbegin(), 14);
                             auto iter = b.insert(pos, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 1);
@@ -598,7 +639,7 @@ namespace sparrow
                         }
                         SUBCASE("from null buffer")
                         {
-                            bitmap b(null_f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                             const auto pos = std::next(b.cbegin(), 14);
                             auto iter = b.insert(pos, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 1);
@@ -616,7 +657,7 @@ namespace sparrow
                     {
                         SUBCASE("from non null buffer")
                         {
-                            bitmap b(f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                             const auto pos = b.cend();
                             auto iter = b.insert(pos, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 1);
@@ -630,7 +671,7 @@ namespace sparrow
                         }
                         SUBCASE("from null buffer")
                         {
-                            bitmap b(null_f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                             const auto pos = b.cend();
                             auto iter = b.insert(pos, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 1);
@@ -651,7 +692,7 @@ namespace sparrow
                     {
                         SUBCASE("from non null buffer")
                         {
-                            bitmap b(f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                             const auto pos = b.cbegin();
                             auto iter = b.insert(pos, 3, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 3);
@@ -669,7 +710,7 @@ namespace sparrow
                         }
                         SUBCASE("from null buffer")
                         {
-                            bitmap b(null_f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                             const auto pos = b.cbegin();
                             auto iter = b.insert(pos, 3, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 3);
@@ -691,7 +732,7 @@ namespace sparrow
                     {
                         SUBCASE("from non null buffer")
                         {
-                            bitmap b(f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                             const auto pos = std::next(b.cbegin(), 14);
                             auto iter = b.insert(pos, 3, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 3);
@@ -709,7 +750,7 @@ namespace sparrow
                         }
                         SUBCASE("from null buffer")
                         {
-                            bitmap b(null_f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                             const auto pos = std::next(b.cbegin(), 14);
                             auto iter = b.insert(pos, 3, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 3);
@@ -731,7 +772,7 @@ namespace sparrow
                     {
                         SUBCASE("from non null buffer")
                         {
-                            bitmap b(f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                             auto iter = b.insert(b.cend(), 3, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 3);
                             CHECK_EQ(b.null_count(), s_bitmap_null_count + 3);
@@ -748,7 +789,7 @@ namespace sparrow
                         }
                         SUBCASE("from null buffer")
                         {
-                            bitmap b(null_f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                             auto iter = b.insert(b.cend(), 3, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 3);
                             CHECK_EQ(b.null_count(), 3);
@@ -773,7 +814,7 @@ namespace sparrow
                 {
                     SUBCASE("from non null buffer")
                     {
-                        bitmap b(f.get_buffer(), s_bitmap_size);
+                        bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                         auto iter = b.emplace(b.cbegin(), true);
                         CHECK_EQ(b.size(), s_bitmap_size + 1);
                         CHECK_EQ(b.null_count(), s_bitmap_null_count);
@@ -781,7 +822,7 @@ namespace sparrow
                     }
                     SUBCASE("from null buffer")
                     {
-                        bitmap b(null_f.get_buffer(), s_bitmap_size);
+                        bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                         auto iter = b.emplace(b.cbegin(), true);
                         CHECK_EQ(b.size(), s_bitmap_size + 1);
                         CHECK_EQ(b.null_count(), 0);
@@ -793,7 +834,7 @@ namespace sparrow
                 {
                     SUBCASE("from non null buffer")
                     {
-                        bitmap b(f.get_buffer(), s_bitmap_size);
+                        bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                         auto iter = b.emplace(std::next(b.cbegin()), true);
                         CHECK_EQ(b.size(), s_bitmap_size + 1);
                         CHECK_EQ(b.null_count(), s_bitmap_null_count);
@@ -801,7 +842,7 @@ namespace sparrow
                     }
                     SUBCASE("from null buffer")
                     {
-                        bitmap b(null_f.get_buffer(), s_bitmap_size);
+                        bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                         auto iter = b.emplace(std::next(b.cbegin()), true);
                         CHECK_EQ(b.size(), s_bitmap_size + 1);
                         CHECK_EQ(b.null_count(), 0);
@@ -813,7 +854,7 @@ namespace sparrow
                 {
                     SUBCASE("from non null buffer")
                     {
-                        bitmap b(f.get_buffer(), s_bitmap_size);
+                        bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                         auto iter = b.emplace(b.cend(), true);
                         CHECK_EQ(b.size(), s_bitmap_size + 1);
                         CHECK_EQ(b.null_count(), s_bitmap_null_count);
@@ -821,7 +862,7 @@ namespace sparrow
                     }
                     SUBCASE("from null buffer")
                     {
-                        bitmap b(null_f.get_buffer(), s_bitmap_size);
+                        bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                         auto iter = b.emplace(b.cend(), true);
                         CHECK_EQ(b.size(), s_bitmap_size + 1);
                         CHECK_EQ(b.null_count(), 0);
@@ -845,7 +886,7 @@ namespace sparrow
                     {
                         SUBCASE("from non null buffer")
                         {
-                            bitmap b(f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                             auto iter = b.erase(b.cbegin());
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
                             CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
@@ -854,7 +895,7 @@ namespace sparrow
                         }
                         SUBCASE("from null buffer")
                         {
-                            bitmap b(null_f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                             auto iter = b.erase(b.cbegin());
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
                             CHECK_EQ(b.null_count(), 0);
@@ -868,7 +909,7 @@ namespace sparrow
                     {
                         SUBCASE("from non null buffer")
                         {
-                            bitmap b(f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                             const auto pos = std::next(b.cbegin(), 2);
                             auto iter = b.erase(pos);
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
@@ -878,7 +919,7 @@ namespace sparrow
                         }
                         SUBCASE("from null buffer")
                         {
-                            bitmap b(null_f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                             const auto pos = std::next(b.cbegin(), 2);
                             auto iter = b.erase(pos);
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
@@ -896,7 +937,7 @@ namespace sparrow
                     {
                         SUBCASE("from non null buffer")
                         {
-                            bitmap b(f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                             auto iter = b.erase(b.cbegin(), std::next(b.cbegin()));
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
                             CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
@@ -904,7 +945,7 @@ namespace sparrow
                         }
                         SUBCASE("from null buffer")
                         {
-                            bitmap b(null_f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                             auto iter = b.erase(b.cbegin(), std::next(b.cbegin()));
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
                             CHECK_EQ(b.null_count(), 0);
@@ -917,7 +958,7 @@ namespace sparrow
                     {
                         SUBCASE("from non null buffer")
                         {
-                            bitmap b(f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                             const auto pos = std::next(b.cbegin());
                             auto iter = b.erase(pos, std::next(pos, 1));
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
@@ -926,7 +967,7 @@ namespace sparrow
                         }
                         SUBCASE("from null buffer")
                         {
-                            bitmap b(null_f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                             const auto pos = std::next(b.cbegin());
                             auto iter = b.erase(pos, std::next(pos, 1));
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
@@ -940,7 +981,7 @@ namespace sparrow
                     {
                         SUBCASE("from non null buffer")
                         {
-                            bitmap b(f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                             auto iter = b.erase(b.cbegin(), b.cend());
                             CHECK_EQ(b.size(), 0);
                             CHECK_EQ(b.null_count(), 0);
@@ -948,7 +989,7 @@ namespace sparrow
                         }
                         SUBCASE("from null buffer")
                         {
-                            bitmap b(null_f.get_buffer(), s_bitmap_size);
+                            bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                             auto iter = b.erase(b.cbegin(), b.cend());
                             CHECK_EQ(b.size(), 0);
                             CHECK_EQ(b.null_count(), 0);
@@ -963,7 +1004,7 @@ namespace sparrow
             {
                 SUBCASE("from non null buffer")
                 {
-                    const bitmap b(f.get_buffer(), s_bitmap_size);
+                    const bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                     CHECK_EQ(b.at(0), false);
                     CHECK_EQ(b.at(1), true);
                     CHECK_EQ(b.at(2), true);
@@ -971,7 +1012,7 @@ namespace sparrow
                 }
                 SUBCASE("from null buffer")
                 {
-                    const bitmap b(null_f.get_buffer(), s_bitmap_size);
+                    const bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                     CHECK_EQ(b.at(0), true);
                     CHECK_EQ(b.at(1), true);
                     CHECK_EQ(b.at(2), true);
@@ -983,12 +1024,12 @@ namespace sparrow
             {
                 SUBCASE("from non null buffer")
                 {
-                    const bitmap b(f.get_buffer(), s_bitmap_size);
+                    const bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                     CHECK_EQ(b.front(), false);
                 }
                 SUBCASE("from null buffer")
                 {
-                    const bitmap b(null_f.get_buffer(), s_bitmap_size);
+                    const bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                     CHECK_EQ(b.front(), true);
                 }
             }
@@ -997,12 +1038,12 @@ namespace sparrow
             {
                 SUBCASE("from non null buffer")
                 {
-                    const bitmap b(f.get_buffer(), s_bitmap_size);
+                    const bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                     CHECK_EQ(b.back(), false);
                 }
                 SUBCASE("from null buffer")
                 {
-                    const bitmap b(null_f.get_buffer(), s_bitmap_size);
+                    const bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                     CHECK_EQ(b.back(), true);
                 }
             }
@@ -1011,7 +1052,7 @@ namespace sparrow
             {
                 SUBCASE("from non null buffer")
                 {
-                    bitmap b(f.get_buffer(), s_bitmap_size);
+                    bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                     b.push_back(false);
                     CHECK_EQ(b.size(), s_bitmap_size + 1);
                     CHECK_EQ(b.null_count(), s_bitmap_null_count + 1);
@@ -1019,7 +1060,7 @@ namespace sparrow
                 }
                 SUBCASE("from null buffer")
                 {
-                    bitmap b(null_f.get_buffer(), s_bitmap_size);
+                    bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                     b.push_back(false);
                     CHECK_EQ(b.size(), s_bitmap_size + 1);
                     CHECK_EQ(b.null_count(), 1);
@@ -1031,7 +1072,7 @@ namespace sparrow
             {
                 SUBCASE("on non empty bitmap")
                 {
-                    bitmap b(f.get_buffer(), s_bitmap_size);
+                    bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                     b.pop_back();
                     CHECK_EQ(b.size(), s_bitmap_size - 1);
                     CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
@@ -1040,7 +1081,7 @@ namespace sparrow
                 {
                     SUBCASE("on empty bitmap")
                     {
-                        bitmap b;
+                        bitmap b{typename bitmap::default_allocator()};
                         CHECK_NOTHROW(b.pop_back());
                     }
                 }
@@ -1051,7 +1092,7 @@ namespace sparrow
                 SUBCASE("from non null buffer")
                 {
                     // as a reminder: p_buffer[0] = 38; // 00100110
-                    bitmap b(f.get_buffer(), s_bitmap_size);
+                    bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size);
                     auto iter = b.begin();
                     *iter = true;
                     CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
@@ -1079,7 +1120,7 @@ namespace sparrow
                 }
                 SUBCASE("from null buffer")
                 {
-                    bitmap b(null_f.get_buffer(), s_bitmap_size);
+                    bitmap b = make_bitmap(null_f.get_buffer(), s_bitmap_size);
                     auto iter = b.begin();
                     *iter = true;
                     CHECK_EQ(b.null_count(), 0);

@@ -85,7 +85,7 @@ namespace sparrow
         buffer<int> make_test_buffer()
         {
             constexpr std::size_t size = 16u;
-            buffer<int> res(size);
+            buffer<int> res(size, buffer<int>::default_allocator());
             std::iota(res.data(), res.data() + size, 0);
             return res;
         }

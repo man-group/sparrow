@@ -531,7 +531,7 @@ namespace sparrow
             std::move(data_buffer),
             precision,
             scale,
-            nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size, validity_bitmap::default_allocator()) : std::nullopt,
             name,
             metadata
         );
@@ -555,7 +555,7 @@ namespace sparrow
             std::move(u8_data_buffer),
             precision,
             scale,
-            nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size, validity_bitmap::default_allocator()) : std::nullopt,
             name,
             metadata
         );
@@ -616,7 +616,7 @@ namespace sparrow
         );
 
         std::vector<buffer<uint8_t>> buffers(2);
-        buffers[0] = bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<uint8_t>{nullptr, 0};
+        buffers[0] = bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()};
         buffers[1] = std::move(data_buffer).extract_storage();
 
         // create arrow array

@@ -145,24 +145,24 @@ namespace sparrow
         {
         }
 
-        template <allocator A = default_allocator>
-        constexpr explicit buffer(size_type n, const A& a = A());
+        template <allocator A>
+        constexpr explicit buffer(size_type n, const A& a);
 
-        template <allocator A = default_allocator>
-        constexpr buffer(size_type n, const value_type& v, const A& a = A());
+        template <allocator A>
+        constexpr buffer(size_type n, const value_type& v, const A& a);
 
-        template <allocator A = default_allocator>
-        constexpr buffer(pointer p, size_type n, const A& a = A());
+        template <allocator A>
+        constexpr buffer(pointer p, size_type n, const A& a);
 
-        template <allocator A = default_allocator>
-        constexpr buffer(std::initializer_list<value_type> init, const A& a = A());
+        template <allocator A>
+        constexpr buffer(std::initializer_list<value_type> init, const A& a);
 
-        template <class It, allocator A = default_allocator>
-        constexpr buffer(It first, It last, const A& a = A());
+        template <class It, allocator A>
+        constexpr buffer(It first, It last, const A& a);
 
-        template <std::ranges::input_range Range, allocator A = default_allocator>
+        template <std::ranges::input_range Range, allocator A>
             requires(std::same_as<std::ranges::range_value_t<Range>, T> && !is_buffer_view<Range>)
-        constexpr buffer(const Range& range, const A& a = A());
+        constexpr buffer(const Range& range, const A& a);
 
         ~buffer();
 
@@ -257,9 +257,10 @@ namespace sparrow
         constexpr void resize(size_type new_size, const value_type& value);
         constexpr void swap(buffer& rhs) noexcept;
 
+        using base_type::get_allocator;
+
     private:
 
-        using base_type::get_allocator;
         using base_type::get_data;
 
         template <class F>

@@ -350,7 +350,7 @@ namespace sparrow
         }
         else
         {
-            return buffer<std::remove_const_t<T>>(cbegin(), cend());
+            return buffer<std::remove_const_t<T>>(cbegin(), cend(), typename buffer<std::remove_const_t<T>>::default_allocator{});
         }
     }
 

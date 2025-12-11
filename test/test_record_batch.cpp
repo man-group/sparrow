@@ -77,7 +77,10 @@ namespace sparrow
             sch_children[i] = new ArrowSchema(std::move(sch));
         }
 
-        std::vector<buffer<std::uint8_t>> arr_buffs(1, buffer<std::uint8_t>(nullptr, 0));
+        std::vector<buffer<std::uint8_t>> arr_buffs(
+            1,
+            buffer<std::uint8_t>(nullptr, 0, typename buffer<std::uint8_t>::default_allocator())
+        );
 
         auto rb_array = make_arrow_array(
             static_cast<int64_t>(data_size),
@@ -515,7 +518,8 @@ namespace sparrow
             SUBCASE("complex")
             {
                 sparrow::validity_bitmap vb(
-                    std::vector<bool>{true, false, true, true, true, false, true, true, true, true}
+                    std::vector<bool>{true, false, true, true, true, false, true, true, true, true},
+                    sparrow::validity_bitmap::default_allocator()
                 );
                 sparrow::fixed_width_binary_array col(
                     std::vector<std::array<std::byte, 3>>{
@@ -535,7 +539,8 @@ namespace sparrow
                 );
 
                 sparrow::validity_bitmap vb2(
-                    std::vector<bool>{true, true, true, false, true, false, true, true, true, true}
+                    std::vector<bool>{true, true, true, false, true, false, true, true, true, true},
+                    sparrow::validity_bitmap::default_allocator()
                 );
                 sparrow::string_array col2(
                     std::vector<std::string>{

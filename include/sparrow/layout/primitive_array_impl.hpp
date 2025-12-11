@@ -567,7 +567,7 @@ namespace sparrow
         return create_proxy_impl(
             std::move(data_buffer),
             n,
-            nullable ? std::make_optional<validity_bitmap>(nullptr, 0) : std::nullopt,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, 0, validity_bitmap::default_allocator()) : std::nullopt,
             std::move(name),
             std::move(metadata)
         );
@@ -583,7 +583,7 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0)
+        std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0, validity_bitmap::default_allocator())
                                                          : std::nullopt;
         return create_proxy_impl(
             std::move(data_buffer),
@@ -606,7 +606,7 @@ namespace sparrow
     {
         auto data_buffer = details::primitive_data_access<T, T2>::make_data_buffer(std::forward<R>(range));
         auto distance = static_cast<size_t>(std::ranges::distance(range));
-        std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0)
+        std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(nullptr, 0, validity_bitmap::default_allocator())
                                                          : std::nullopt;
         return create_proxy_impl(
             std::move(data_buffer),
@@ -674,7 +674,7 @@ namespace sparrow
         );
 
         buffer<uint8_t> bitmap_buffer = bitmap_has_value ? std::move(*bitmap).extract_storage()
-                                                         : buffer<uint8_t>{nullptr, 0};
+                                                         : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()};
 
         std::vector<buffer<uint8_t>> buffers(2);
         buffers[0] = std::move(bitmap_buffer);

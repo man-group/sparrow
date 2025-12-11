@@ -50,17 +50,19 @@ namespace sparrow
         static_assert(not BufferReference<std::vector<uint16_t>, uint32_t>);
         static_assert(not BufferReference<std::list<uint16_t>&, uint32_t>);
 
+        auto allocator = typename buffer<uint8_t>::default_allocator{};
+
         TEST_CASE("constructor")
         {
             SUBCASE("from mutable non empty buffer")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             }
 
             SUBCASE("from mutable empty buffer")
             {
-                buffer<uint8_t> buf_empty(input);
+                buffer<uint8_t> buf_empty(input, allocator);
                 buffer_adaptor<uint32_t, decltype(buf_empty)&> buffer_adapt_empty(buf_empty);
             }
 
@@ -83,7 +85,7 @@ namespace sparrow
         {
             SUBCASE("from mutable data")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 auto data = buffer_adapt.data();
                 CHECK_EQ(data[0], to_native_endian<std::endian::little>(0x04030201u));
@@ -92,7 +94,7 @@ namespace sparrow
 
             SUBCASE("from const data")
             {
-                const buffer<uint8_t> buf(input);
+                const buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto data = const_buffer_adapt.data();
                 CHECK_EQ(data[0], to_native_endian<std::endian::little>(0x04030201u));
@@ -104,7 +106,7 @@ namespace sparrow
         {
             SUBCASE("from mutable data")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto data = const_buffer_adapt.data();
                 CHECK_EQ(data[0], to_native_endian<std::endian::little>(0x04030201u));
@@ -113,7 +115,7 @@ namespace sparrow
 
             SUBCASE("from const data")
             {
-                const buffer<uint8_t> buf(input);
+                const buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 auto data = const_buffer_adapt.data();
                 CHECK_EQ(data[0], to_native_endian<std::endian::little>(0x04030201u));
@@ -125,7 +127,7 @@ namespace sparrow
         {
             SUBCASE("from mutable data")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 CHECK_EQ(buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
                 CHECK_EQ(buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
@@ -136,7 +138,7 @@ namespace sparrow
 
             SUBCASE("from const data")
             {
-                const buffer<uint8_t> buf(input);
+                const buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 CHECK_EQ(const_buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
                 CHECK_EQ(const_buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
@@ -147,7 +149,7 @@ namespace sparrow
         {
             SUBCASE("from mutable data")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 CHECK_EQ(const_buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
                 CHECK_EQ(const_buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
@@ -155,7 +157,7 @@ namespace sparrow
 
             SUBCASE("from const data")
             {
-                const buffer<uint8_t> buf(input);
+                const buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 CHECK_EQ(const_buffer_adapt[0], to_native_endian<std::endian::little>(0x04030201u));
                 CHECK_EQ(const_buffer_adapt[1], to_native_endian<std::endian::little>(0x08070605u));
@@ -166,14 +168,14 @@ namespace sparrow
         {
             SUBCASE("from mutable data")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 CHECK_EQ(buffer_adapt.front(), to_native_endian<std::endian::little>(0x04030201u));
             }
 
             SUBCASE("from const data")
             {
-                const buffer<uint8_t> buf(input);
+                const buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 CHECK_EQ(const_buffer_adapt.front(), to_native_endian<std::endian::little>(0x04030201u));
             }
@@ -183,14 +185,14 @@ namespace sparrow
         {
             SUBCASE("from mutable data")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 CHECK_EQ(const_buffer_adapt.front(), to_native_endian<std::endian::little>(0x04030201u));
             }
 
             SUBCASE("from const data")
             {
-                const buffer<uint8_t> buf(input);
+                const buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 CHECK_EQ(const_buffer_adapt.front(), to_native_endian<std::endian::little>(0x04030201u));
             }
@@ -200,14 +202,14 @@ namespace sparrow
         {
             SUBCASE("from mutable data")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 CHECK_EQ(buffer_adapt.back(), to_native_endian<std::endian::little>(0x08070605u));
             }
 
             SUBCASE("from const data")
             {
-                const buffer<uint8_t> buf(input);
+                const buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 CHECK_EQ(const_buffer_adapt.back(), to_native_endian<std::endian::little>(0x08070605u));
             }
@@ -217,14 +219,14 @@ namespace sparrow
         {
             SUBCASE("from mutable data")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 CHECK_EQ(const_buffer_adapt.back(), to_native_endian<std::endian::little>(0x08070605u));
             }
 
             SUBCASE("from const data")
             {
-                const buffer<uint8_t> buf(input);
+                const buffer<uint8_t> buf(input, allocator);
                 const buffer_adaptor<const uint32_t, decltype(buf)&> const_buffer_adapt(buf);
                 CHECK_EQ(const_buffer_adapt.back(), to_native_endian<std::endian::little>(0x08070605u));
             }
@@ -233,7 +235,7 @@ namespace sparrow
         // Iterators
         TEST_CASE("Iterators")
         {
-            buffer<uint8_t> buf(input);
+            buffer<uint8_t> buf(input, allocator);
 
             SUBCASE("begin")
             {
@@ -348,7 +350,7 @@ namespace sparrow
 
         TEST_CASE("size")
         {
-            buffer<uint8_t> buf(input);
+            buffer<uint8_t> buf(input, allocator);
             const buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             CHECK_EQ(buffer_adapt.size(), 2);
             CHECK_EQ(buf.size(), 8);
@@ -361,7 +363,7 @@ namespace sparrow
             CHECK(buffer_adapt.empty());
             CHECK(empty_buf.empty());
 
-            buffer<uint8_t> buf2(input);
+            buffer<uint8_t> buf2(input, allocator);
             const buffer_adaptor<uint32_t, decltype(buf2)&> buffer_adapt2(buf2);
             CHECK_FALSE(buffer_adapt2.empty());
             CHECK_FALSE(buf2.empty());
@@ -369,7 +371,7 @@ namespace sparrow
 
         TEST_CASE("capacity")
         {
-            buffer<uint8_t> buf(input);
+            buffer<uint8_t> buf(input, allocator);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             CHECK_EQ(buffer_adapt.capacity(), 2);
             CHECK_EQ(buf.capacity(), 8);
@@ -377,7 +379,7 @@ namespace sparrow
 
         TEST_CASE("reserve")
         {
-            buffer<uint8_t> buf(input);
+            buffer<uint8_t> buf(input, allocator);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             buffer_adapt.reserve(10);
             CHECK_EQ(buffer_adapt.capacity(), 10);
@@ -386,7 +388,7 @@ namespace sparrow
 
         TEST_CASE("shrink_to_fit")
         {
-            buffer<uint8_t> buf(input);
+            buffer<uint8_t> buf(input, allocator);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             CHECK_EQ(buffer_adapt.capacity(), 2);
             CHECK_EQ(buf.capacity(), 8);
@@ -402,7 +404,7 @@ namespace sparrow
 
         TEST_CASE("clear")
         {
-            buffer<uint8_t> buf(input);
+            buffer<uint8_t> buf(input, allocator);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             buffer_adapt.clear();
             CHECK(buffer_adapt.empty());
@@ -415,7 +417,7 @@ namespace sparrow
             {
                 SUBCASE("at the beginning")
                 {
-                    buffer<uint8_t> buf(input);
+                    buffer<uint8_t> buf(input, allocator);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     const auto it = buffer_adapt.cbegin();
                     constexpr uint32_t to_insert = 0x09999999;
@@ -434,7 +436,7 @@ namespace sparrow
 
                 SUBCASE("in the middle")
                 {
-                    buffer<uint8_t> buf(input);
+                    buffer<uint8_t> buf(input, allocator);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     const auto it = std::next(buffer_adapt.cbegin());
                     constexpr uint32_t to_insert = to_native_endian<std::endian::little>(0x09999999u);
@@ -453,7 +455,7 @@ namespace sparrow
 
                 SUBCASE("at the end")
                 {
-                    buffer<uint8_t> buf(input);
+                    buffer<uint8_t> buf(input, allocator);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     const auto it = buffer_adapt.cend();
                     constexpr uint32_t to_insert = 0x09999999;
@@ -475,7 +477,7 @@ namespace sparrow
             {
                 SUBCASE("at the beginning")
                 {
-                    buffer<uint8_t> buf(input);
+                    buffer<uint8_t> buf(input, allocator);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     auto it = buffer_adapt.cbegin();
                     constexpr uint32_t to_insert = 0x09999999;
@@ -496,7 +498,7 @@ namespace sparrow
 
                 SUBCASE("in the middle")
                 {
-                    buffer<uint8_t> buf(input);
+                    buffer<uint8_t> buf(input, allocator);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     auto it = std::next(buffer_adapt.cbegin());
                     constexpr uint32_t to_insert = 0x09999999;
@@ -517,7 +519,7 @@ namespace sparrow
 
                 SUBCASE("at the end")
                 {
-                    buffer<uint8_t> buf(input);
+                    buffer<uint8_t> buf(input, allocator);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     auto it = buffer_adapt.cend();
                     constexpr uint32_t to_insert = 0x09999999;
@@ -541,7 +543,7 @@ namespace sparrow
             {
                 SUBCASE("at the beginning")
                 {
-                    buffer<uint8_t> buf(input);
+                    buffer<uint8_t> buf(input, allocator);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     auto it = buffer_adapt.cbegin();
                     std::vector<uint32_t> to_insert = {0x09999999, 0x08888888};
@@ -562,7 +564,7 @@ namespace sparrow
 
                 SUBCASE("in the middle")
                 {
-                    buffer<uint8_t> buf(input);
+                    buffer<uint8_t> buf(input, allocator);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     auto it = std::next(buffer_adapt.cbegin());
                     const std::vector<uint32_t> to_insert = {0x09999999, 0x08888888};
@@ -583,7 +585,7 @@ namespace sparrow
 
                 SUBCASE("at the end")
                 {
-                    buffer<uint8_t> buf(input);
+                    buffer<uint8_t> buf(input, allocator);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     auto it = buffer_adapt.cend();
                     std::vector<uint32_t> to_insert = {0x09999999, 0x08888888};
@@ -608,7 +610,7 @@ namespace sparrow
         {
             SUBCASE("at the beginning")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 auto it = buffer_adapt.cbegin();
                 constexpr uint32_t to_insert = 0x09999999;
@@ -627,7 +629,7 @@ namespace sparrow
 
             SUBCASE("in the middle")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 auto it = std::next(buffer_adapt.cbegin());
                 constexpr uint32_t to_insert = 0x09999999u;
@@ -646,7 +648,7 @@ namespace sparrow
 
             SUBCASE("at the end")
             {
-                buffer<uint8_t> buf(input);
+                buffer<uint8_t> buf(input, allocator);
                 buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                 auto it = buffer_adapt.cend();
                 constexpr uint32_t to_insert = 0x09999999u;
@@ -672,7 +674,7 @@ namespace sparrow
                 {
                     SUBCASE("at the beginning")
                     {
-                        buffer<uint8_t> buf(input);
+                        buffer<uint8_t> buf(input, allocator);
                         buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                         const auto it = buffer_adapt.cbegin();
                         const buffer_adaptor<uint32_t, decltype(buf)&>::iterator result = buffer_adapt.erase(it);
@@ -688,7 +690,7 @@ namespace sparrow
 
                     SUBCASE("in the middle")
                     {
-                        buffer<uint8_t> buf(input);
+                        buffer<uint8_t> buf(input, allocator);
                         buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                         const auto it = std::next(buffer_adapt.cbegin());
                         const buffer_adaptor<uint32_t, decltype(buf)&>::iterator result = buffer_adapt.erase(it);
@@ -704,7 +706,7 @@ namespace sparrow
 
                     SUBCASE("at the end")
                     {
-                        buffer<uint8_t> buf(input);
+                        buffer<uint8_t> buf(input, allocator);
                         buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                         const auto it = std::prev(buffer_adapt.cend());
                         const buffer_adaptor<uint32_t, decltype(buf)&>::iterator result = buffer_adapt.erase(it);
@@ -721,7 +723,7 @@ namespace sparrow
 
                 SUBCASE("with empty buffer")
                 {
-                    buffer<uint8_t> buf(input_empty);
+                    buffer<uint8_t> buf(input_empty, allocator);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     const auto it = buffer_adapt.cbegin();
                     const buffer_adaptor<uint32_t, decltype(buf)&>::iterator result = buffer_adapt.erase(it);
@@ -737,7 +739,7 @@ namespace sparrow
                 {
                     SUBCASE("at the beginning")
                     {
-                        buffer<uint8_t> buf(long_input);
+                        buffer<uint8_t> buf(long_input, allocator);
                         buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                         const auto first = buffer_adapt.cbegin();
                         const auto last = buffer_adapt.cend();
@@ -752,7 +754,7 @@ namespace sparrow
 
                     SUBCASE("in the middle")
                     {
-                        buffer<uint8_t> buf(long_input);
+                        buffer<uint8_t> buf(long_input, allocator);
                         buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                         const auto first = std::next(buffer_adapt.cbegin());
                         const auto last = std::next(buffer_adapt.cend(), -1);
@@ -769,7 +771,7 @@ namespace sparrow
 
                     SUBCASE("at the end")
                     {
-                        buffer<uint8_t> buf(long_input);
+                        buffer<uint8_t> buf(long_input, allocator);
                         buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                         const auto first = std::prev(buffer_adapt.cend());
                         const auto last = buffer_adapt.cend();
@@ -787,7 +789,7 @@ namespace sparrow
 
                 SUBCASE("with empty buffer")
                 {
-                    buffer<uint8_t> buf(input_empty);
+                    buffer<uint8_t> buf(input_empty, allocator);
                     buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
                     const auto first = buffer_adapt.cbegin();
                     const auto last = buffer_adapt.cend();
@@ -803,7 +805,7 @@ namespace sparrow
 
         TEST_CASE("push_back")
         {
-            buffer<uint8_t> buf(input);
+            buffer<uint8_t> buf(input, allocator);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             constexpr uint32_t to_push = to_native_endian<std::endian::little>(0x05040302u);
             buffer_adapt.push_back(to_push);
@@ -820,7 +822,7 @@ namespace sparrow
 
         TEST_CASE("pop_back")
         {
-            buffer<uint8_t> buf(input);
+            buffer<uint8_t> buf(input, allocator);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             buffer_adapt.pop_back();
             REQUIRE_EQ(buffer_adapt.size(), 1);
@@ -830,7 +832,7 @@ namespace sparrow
 
         TEST_CASE("resize")
         {
-            buffer<uint8_t> buf(input);
+            buffer<uint8_t> buf(input, allocator);
             buffer_adaptor<uint32_t, decltype(buf)&> buffer_adapt(buf);
             SUBCASE("new_size")
             {

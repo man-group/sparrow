@@ -41,7 +41,7 @@ namespace sparrow::test
         {
             SPARROW_ASSERT_TRUE(*std::ranges::max_element(nulls) < count);
         }
-        dynamic_bitset<uint8_t> bitmap(count, true);
+        dynamic_bitset<uint8_t> bitmap(count, true, validity_bitmap::default_allocator());
         for (const auto i : nulls)
         {
             bitmap.set(i, false);
@@ -134,7 +134,7 @@ namespace sparrow::test
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
-        buffer_type data_buf(size * sizeof(T));
+        buffer_type data_buf(size * sizeof(T), buffer_type::default_allocator());
         detail::fill_primitive_data_buffer(data_buf.data<T>(), size);
 
         std::vector<buffer_type> arr_buffs = {
@@ -182,7 +182,7 @@ namespace sparrow::test
         {
             ++nb_blocks;
         }
-        buffer_type data_buf(nb_blocks);
+        buffer_type data_buf(nb_blocks, buffer_type::default_allocator());
         dynamic_bitset_view<std::uint8_t> view(data_buf.data(), size);
         for (std::size_t i = 0; i < size; ++i)
         {
@@ -274,8 +274,8 @@ namespace sparrow::test
             }
         );
 
-        buffer_type offset_buf(sizeof(std::int32_t) * (size + 1));
-        buffer_type value_buf(sizeof(char) * value_size);
+        buffer_type offset_buf(sizeof(std::int32_t) * (size + 1), buffer_type::default_allocator());
+        buffer_type value_buf(sizeof(char) * value_size, buffer_type::default_allocator());
         {
             std::int32_t* offset_data = offset_buf.data<std::int32_t>();
             offset_data[0] = 0;
@@ -372,8 +372,8 @@ namespace sparrow::test
             }
         );
 
-        buffer_type offset_buf(sizeof(std::int32_t) * (size + 1));
-        buffer_type value_buf(sizeof(char) * value_size);
+        buffer_type offset_buf(sizeof(std::int32_t) * (size + 1), buffer_type::default_allocator());
+        buffer_type value_buf(sizeof(char) * value_size, buffer_type::default_allocator());
         {
             std::int32_t* offset_data = offset_buf.data<std::int32_t>();
             offset_data[0] = 0;
