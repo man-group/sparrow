@@ -699,7 +699,11 @@ namespace sparrow
             {
                 CHECK(true);
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, non_trivial_buffer_test_type::default_allocator());
+                non_trivial_buffer_test_type b(
+                    make_test_buffer_non_trivial(size),
+                    size,
+                    non_trivial_buffer_test_type::default_allocator()
+                );
                 const std::string expected_value = "9999";
                 std::string movable_expected_value = expected_value;
                 b.insert(b.cbegin(), std::move(movable_expected_value));
@@ -728,7 +732,11 @@ namespace sparrow
             SUBCASE("move value in the middle of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, non_trivial_buffer_test_type::default_allocator());
+                non_trivial_buffer_test_type b(
+                    make_test_buffer_non_trivial(size),
+                    size,
+                    non_trivial_buffer_test_type::default_allocator()
+                );
                 const std::string expected_value = "9999";
                 std::string movable_expected_value = expected_value;
                 b.insert(b.cbegin() + 2, std::move(movable_expected_value));
@@ -760,7 +768,11 @@ namespace sparrow
             SUBCASE("move value at the end of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, non_trivial_buffer_test_type::default_allocator());
+                non_trivial_buffer_test_type b(
+                    make_test_buffer_non_trivial(size),
+                    size,
+                    non_trivial_buffer_test_type::default_allocator()
+                );
                 const std::string expected_value = "9999";
                 std::string movable_expected_value = expected_value;
                 b.insert(b.cend(), std::move(movable_expected_value));
@@ -858,7 +870,11 @@ namespace sparrow
             SUBCASE("move elements from range [first, last) at the beginning of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, typename non_trivial_buffer_test_type::default_allocator());
+                non_trivial_buffer_test_type b(
+                    make_test_buffer_non_trivial(size),
+                    size,
+                    typename non_trivial_buffer_test_type::default_allocator()
+                );
                 std::vector<std::string> values = {"101", "102", "103"};
                 const std::size_t expected_new_size = size + values.size();
                 b.insert(
@@ -900,7 +916,11 @@ namespace sparrow
             SUBCASE("move elements from range [first, last) in the middle of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, typename non_trivial_buffer_test_type::default_allocator());
+                non_trivial_buffer_test_type b(
+                    make_test_buffer_non_trivial(size),
+                    size,
+                    typename non_trivial_buffer_test_type::default_allocator()
+                );
 
                 std::vector<std::string> values = {"101", "102", "103"};
                 const std::size_t expected_new_size = size + values.size();
@@ -943,7 +963,11 @@ namespace sparrow
             SUBCASE("move elements from range [first, last) at the end of the buffer")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, typename non_trivial_buffer_test_type::default_allocator());
+                non_trivial_buffer_test_type b(
+                    make_test_buffer_non_trivial(size),
+                    size,
+                    typename non_trivial_buffer_test_type::default_allocator()
+                );
 
                 std::vector<std::string> values = {"101", "102", "103"};
                 const std::size_t expected_new_size = size + values.size();
@@ -1135,7 +1159,11 @@ namespace sparrow
             SUBCASE("Value is moved into the new element.")
             {
                 constexpr std::size_t size = 4u;
-                non_trivial_buffer_test_type b(make_test_buffer_non_trivial(size), size, typename non_trivial_buffer_test_type::default_allocator());
+                non_trivial_buffer_test_type b(
+                    make_test_buffer_non_trivial(size),
+                    size,
+                    typename non_trivial_buffer_test_type::default_allocator()
+                );
                 const std::string expected_value = "9999";
                 std::string movable_expected_value = expected_value;
                 b.push_back(std::move(movable_expected_value));

@@ -1086,7 +1086,8 @@ namespace sparrow
         );
 
         std::vector<buffer<std::uint8_t>> arr_buffs = {
-            buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},  // no validity bitmap
+            buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},  // no validity
+                                                                                          // bitmap
             std::move(list_offsets).extract_storage()
         };
 
@@ -1222,7 +1223,8 @@ namespace sparrow
         );
 
         std::vector<buffer<std::uint8_t>> arr_buffs = {
-            buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},  // no validity bitmap
+            buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},  // no validity
+                                                                                          // bitmap
             std::move(list_offsets).extract_storage(),
             std::move(list_sizes).extract_storage()
         };

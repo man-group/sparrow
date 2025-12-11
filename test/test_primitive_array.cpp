@@ -825,7 +825,11 @@ namespace sparrow
             {
                 cast_ptr[idx] = idx;
             }
-            sparrow::u8_buffer<uint64_t> u8_buffer(reinterpret_cast<uint64_t*>(data_ptr), num_rows, sparrow::u8_buffer<uint64_t>::default_allocator());
+            sparrow::u8_buffer<uint64_t> u8_buffer(
+                reinterpret_cast<uint64_t*>(data_ptr),
+                num_rows,
+                sparrow::u8_buffer<uint64_t>::default_allocator()
+            );
             for (size_t idx = 0; idx < num_rows; ++idx)
             {
                 CHECK_EQ(cast_ptr[idx], idx);

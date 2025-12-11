@@ -750,7 +750,12 @@ namespace sparrow
     {
         if (nullable)
         {
-            return create_proxy(std::forward<R>(values), validity_bitmap{validity_bitmap::default_allocator()}, std::move(name), std::move(metadata));
+            return create_proxy(
+                std::forward<R>(values),
+                validity_bitmap{validity_bitmap::default_allocator()},
+                std::move(name),
+                std::move(metadata)
+            );
         }
         else
         {
@@ -836,7 +841,8 @@ namespace sparrow
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
-            bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<std::uint8_t>{nullptr, 0, validity_bitmap::default_allocator()},
+            bitmap.has_value() ? std::move(*bitmap).extract_storage()
+                               : buffer<std::uint8_t>{nullptr, 0, validity_bitmap::default_allocator()},
             std::move(data_buffer).extract_storage()
         };
 

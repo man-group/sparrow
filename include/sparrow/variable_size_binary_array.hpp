@@ -1032,7 +1032,8 @@ namespace sparrow
         return create_proxy_impl(
             std::move(data_buffer),
             std::move(offset_buffer),
-            nullable ? std::make_optional<validity_bitmap>(nullptr, size, validity_bitmap::default_allocator()) : std::nullopt,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size, validity_bitmap::default_allocator())
+                     : std::nullopt,
             std::move(name),
             std::move(metadata)
         );
@@ -1068,7 +1069,8 @@ namespace sparrow
 
         );
         std::vector<buffer<std::uint8_t>> arr_buffs = {
-            bitmap.has_value() ? std::move(*bitmap).extract_storage() : buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},
+            bitmap.has_value() ? std::move(*bitmap).extract_storage()
+                               : buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},
             std::move(list_offsets).extract_storage(),
             std::move(data_buffer).extract_storage()
         };

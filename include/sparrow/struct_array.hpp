@@ -513,7 +513,9 @@ namespace sparrow
         const size_t size = children.empty() ? 0 : children[0].size();
         return create_proxy_impl(
             std::forward<CHILDREN_RANGE>(children),
-            nullable ? std::make_optional<validity_bitmap>(nullptr, size, validity_bitmap::storage_type::allocator_type{}) : std::nullopt,
+            nullable
+                ? std::make_optional<validity_bitmap>(nullptr, size, validity_bitmap::storage_type::allocator_type{})
+                : std::nullopt,
             std::move(name),
             std::move(metadata)
         );
@@ -560,8 +562,9 @@ namespace sparrow
             true                                  // dictionary ownership
         );
 
-        buffer<uint8_t> bitmap_buffer = bitmap_has_value ? std::move(*bitmap).extract_storage()
-                                                         : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator{}};
+        buffer<uint8_t> bitmap_buffer = bitmap_has_value
+                                            ? std::move(*bitmap).extract_storage()
+                                            : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator{}};
 
         std::vector<buffer<std::uint8_t>> arr_buffs(1);
         arr_buffs[0] = std::move(bitmap_buffer);

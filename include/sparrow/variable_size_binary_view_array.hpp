@@ -866,7 +866,12 @@ namespace sparrow
     {
         if (nullable)
         {
-            return create_proxy(std::forward<R>(range), validity_bitmap{validity_bitmap::default_allocator()}, std::move(name), std::move(metadata));
+            return create_proxy(
+                std::forward<R>(range),
+                validity_bitmap{validity_bitmap::default_allocator()},
+                std::move(name),
+                std::move(metadata)
+            );
         }
 
         // create arrow schema
@@ -922,7 +927,10 @@ namespace sparrow
         ArrowSchema schema = create_arrow_schema(std::move(name), std::move(metadata), flags);
 
         auto bitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
-        std::vector<buffer<uint8_t>> buffers{std::move(bitmap).extract_storage(), std::move(buffer_view).extract_storage()};
+        std::vector<buffer<uint8_t>> buffers{
+            std::move(bitmap).extract_storage(),
+            std::move(buffer_view).extract_storage()
+        };
         for (auto&& buf : value_buffers)
         {
             buffers.emplace_back(std::forward<decltype(buf)>(buf), typename buffer<uint8_t>::default_allocator());

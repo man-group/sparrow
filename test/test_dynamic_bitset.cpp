@@ -166,7 +166,8 @@ namespace sparrow
             // Helper lambda to create bitmap with correct constructor signature
             // For dynamic_bitset: needs allocator parameter
             // For non_owning_dynamic_bitset: no allocator parameter
-            auto make_bitmap = [](auto buffer, std::size_t size) {
+            auto make_bitmap = [](auto buffer, std::size_t size)
+            {
                 if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
                 {
                     return bitmap(buffer, size, typename bitmap::default_allocator());
@@ -178,7 +179,8 @@ namespace sparrow
             };
 
             // Helper for dynamic_bitset with null_count (only for dynamic_bitset)
-            auto make_bitmap_with_null_count = [](auto buffer, std::size_t size, std::size_t null_count) {
+            auto make_bitmap_with_null_count = [](auto buffer, std::size_t size, std::size_t null_count)
+            {
                 if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
                 {
                     return bitmap(buffer, size, null_count, typename bitmap::default_allocator());
@@ -212,7 +214,7 @@ namespace sparrow
                     SUBCASE("with size and value")
                     {
                         const std::size_t expected_size = 13;
-                        const bitmap b(expected_size, true,typename bitmap::default_allocator());
+                        const bitmap b(expected_size, true, typename bitmap::default_allocator());
                         CHECK_EQ(b.size(), expected_size);
                         CHECK_EQ(b.null_count(), 0u);
                     }
@@ -228,7 +230,11 @@ namespace sparrow
                     SUBCASE("with buffer, size and null count")
                     {
                         dynamic_bitmap_fixture bf2;
-                        const bitmap b5 = make_bitmap_with_null_count(bf2.get_buffer(), s_bitmap_size, s_bitmap_null_count);
+                        const bitmap b5 = make_bitmap_with_null_count(
+                            bf2.get_buffer(),
+                            s_bitmap_size,
+                            s_bitmap_null_count
+                        );
                         CHECK_EQ(b5.size(), s_bitmap_size);
                         CHECK_EQ(b5.null_count(), s_bitmap_null_count);
                     }
