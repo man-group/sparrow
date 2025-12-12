@@ -26,6 +26,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         /we4906 # string literal cast to 'LPWSTR'
         /we4928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /we5038 # data member 'member1' will be initialized after data member 'member2'
+        /FS # serialize PDB writes across multiple processes
         /Zc:__cplusplus
         PARENT_SCOPE)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
