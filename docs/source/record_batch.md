@@ -1,4 +1,4 @@
-# Record Batch
+# Record Batch      {#record_batch}
 
 ## Overview
 
