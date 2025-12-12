@@ -166,7 +166,7 @@ namespace sparrow
             // Helper lambda to create bitmap with correct constructor signature
             // For dynamic_bitset: needs allocator parameter
             // For non_owning_dynamic_bitset: no allocator parameter
-            auto make_bitmap = [](auto buffer, std::size_t size, auto allocator)
+            auto make_bitmap = [](auto buffer, std::size_t size, [[maybe_unused]] auto allocator)
             {
                 if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
                 {
@@ -180,7 +180,7 @@ namespace sparrow
 
             // Helper for dynamic_bitset with null_count (only for dynamic_bitset)
             auto make_bitmap_with_null_count =
-                [](auto buffer, std::size_t size, std::size_t null_count, auto allocator)
+                [](auto buffer, std::size_t size, std::size_t null_count, [[maybe_unused]] auto allocator)
             {
                 if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
                 {
