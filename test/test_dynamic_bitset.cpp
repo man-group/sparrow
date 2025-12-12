@@ -304,11 +304,7 @@ namespace sparrow
 
                 const std::array<std::uint8_t, 2> blocks{37, 2};
                 fixture f3{blocks};
-                bitmap b3 = make_bitmap(
-                    f3.get_buffer(),
-                    blocks.size() * 8,
-                    std::allocator<uint8_t>()
-                );
+                bitmap b3 = make_bitmap(f3.get_buffer(), blocks.size() * 8, std::allocator<uint8_t>());
 
                 b2 = b3;
                 REQUIRE_EQ(b2.size(), b3.size());

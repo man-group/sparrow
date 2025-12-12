@@ -110,7 +110,7 @@ namespace sparrow::test
                 size_buf[i] = static_cast<std::uint32_t>(sizes[i]);
             }
         }
-        return {buf, buf_size,std::allocator<std::uint8_t>()};
+        return {buf, buf_size, std::allocator<std::uint8_t>()};
     }
 
     void fill_schema_and_array_for_list_layout(
