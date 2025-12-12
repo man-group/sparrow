@@ -21,6 +21,7 @@ jobs:
       matrix:
         sys:
         - {image: ubuntu-24.04, compiler: clang, version: '20', config-flags: '', stdlib: 'libstdc++-12', date-polyfill: 'ON', shared : 'ON'}
+        - {image: windows-2022, compiler: msvc, version: 'latest', config-flags: '', date-polyfill: 'ON', shared: 'ON'}
 
         config:
         - {name: Debug}
@@ -65,7 +66,8 @@ jobs:
 
     - name: Configure using CMake
       run: |
-        if [[ "${{matrix.compiler}}" = "gcc" ]]; then export CC=gcc-${{matrix.sys.version}}; export CXX=g++-${{matrix.sys.version}}; else export CC=clang; export CXX=clang++; fi
+        if [[ "${{matrix.sys.compiler}}" = "gcc" ]]; then export CC=gcc-${{matrix.sys.version}}; export CXX=g++-${{matrix.sys.version}}; fi
+        if [[ "${{matrix.sys.compiler}}" = "clang" ]]; then export CC=clang; export CXX=clang++; fi
         cmake -G Ninja \
           -Bbuild ${{matrix.sys.config-flags}} \
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
@@ -97,28 +99,43 @@ jobs:
 
     - name: Run tests
       working-directory: build
-      run: | 
-        export ASAN_OPTIONS=log_path=asan_log_:alloc_dealloc_mismatch=0:halt_on_error=0:handle_abort=0
+      run: |
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          export ASAN_OPTIONS=log_path=asan_log_:alloc_dealloc_mismatch=0:halt_on_error=0:windows_hook_rtl_allocators=true
+        else
+          export ASAN_OPTIONS=log_path=asan_log_:alloc_dealloc_mismatch=0:halt_on_error=0:handle_abort=0
+        fi
+        export ASAN_SAVE_DUMPS=AsanDump.dmp
         cmake --build . --config ${{matrix.config.name}} --target run_tests
       # env:
       #   # log_path is set to the path where ASAN will write the error report (seems ineffective)
       #   # alloc_dealloc_mismatch is set to 0 to deactivate unwanted ASAN warnings.
       #   # halt_on_error is set to 0 to avoid crashing the program after printing the first error report.
       #   # handle_abort is set to 0 to deactivate calls are handled as crashes by ASAN.
+      #   # windows_hook_rtl_allocators is set to true for Windows to hook system allocators.
+      #   # ASAN_SAVE_DUMPS is set to save crash dumps for offline debugging.
       #   # exitcode is set to 0 to avoid reporting the build as failed if ASAN detects an error.
       
     - name: Upload ASAN log
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: asan-log-${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.config.name }}-${{ matrix.sys.date-polyfill }}
+        name: asan-log-${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.config.name }}-${{ matrix.sys.date-polyfill }}-${{ runner.os }}
         path: '**/asan_log_*'
+        if-no-files-found: ignore
+
+    - name: Upload ASAN dump
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: asan-dump-${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.config.name }}-${{ matrix.sys.date-polyfill }}-${{ runner.os }}
+        path: '**/AsanDump.dmp'
         if-no-files-found: ignore
         
     - name: Return errors if ASAN log content is not empty
       if: always()
       run: |
-        if [ -s build/test/asan_log_* ]; then
+        if [ -n "$(find build/test -name 'asan_log_*' -type f -size +0 2>/dev/null)" ]; then
           echo "ASAN detected errors. See the log for details."
           exit 1
         fi
