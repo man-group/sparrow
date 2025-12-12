@@ -87,7 +87,7 @@ namespace sparrow::test
                 ptr[i + 1] = ptr[i] + static_cast<std::uint32_t>(sizes[i]);
             }
         }
-        return {buf, buf_size, buffer<std::uint8_t>::default_allocator()};
+        return {buf, buf_size, std::allocator<std::uint8_t>()};
     }
 
     sparrow::buffer<std::uint8_t> make_size_buffer(const std::vector<size_t>& sizes, bool big)
@@ -110,7 +110,7 @@ namespace sparrow::test
                 size_buf[i] = static_cast<std::uint32_t>(sizes[i]);
             }
         }
-        return {buf, buf_size, buffer<std::uint8_t>::default_allocator()};
+        return {buf, buf_size,std::allocator<std::uint8_t>()};
     }
 
     void fill_schema_and_array_for_list_layout(
@@ -138,10 +138,9 @@ namespace sparrow::test
         );
 
         using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = {
-            sparrow::test::make_bitmap_buffer(list_lengths.size(), false_positions),
-            make_offset_buffer_from_sizes(list_lengths, big_list)
-        };
+        std::vector<buffer_type> arr_buffs;
+        arr_buffs.push_back(sparrow::test::make_bitmap_buffer(list_lengths.size(), false_positions));
+        arr_buffs.push_back(make_offset_buffer_from_sizes(list_lengths, big_list));
 
         ArrowArray** array_children = new ArrowArray*[1];
         array_children[0] = new ArrowArray(std::move(flat_value_arr));
