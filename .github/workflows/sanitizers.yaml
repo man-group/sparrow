@@ -64,6 +64,11 @@ jobs:
         init-shell: bash
         cache-downloads: true
 
+    - name: Set CMake generator environment variable
+      if: matrix.sys.compiler == 'msvc'
+      run: |
+        echo "CMAKE_GENERATOR=Visual Studio 17 2022" >> $GITHUB_ENV
+
     - name: Configure using CMake
       run: |
         if [[ "${{matrix.sys.compiler}}" = "gcc" ]]; then export CC=gcc-${{matrix.sys.version}}; export CXX=g++-${{matrix.sys.version}}; fi
