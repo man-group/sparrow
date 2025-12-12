@@ -158,7 +158,7 @@ namespace sparrow::benchmark
 
         for (auto _ : state)
         {
-            dynamic_bitset<T> bitset(size);
+            dynamic_bitset<T> bitset(size, typename dynamic_bitset<T>::default_allocator());
             ::benchmark::DoNotOptimize(bitset);
             ::benchmark::ClobberMemory();
         }
@@ -175,7 +175,7 @@ namespace sparrow::benchmark
 
         for (auto _ : state)
         {
-            dynamic_bitset<T> bitset(size, value);
+            dynamic_bitset<T> bitset(size, value, typename dynamic_bitset<T>::default_allocator());
             ::benchmark::DoNotOptimize(bitset);
             ::benchmark::ClobberMemory();
         }
@@ -192,7 +192,7 @@ namespace sparrow::benchmark
 
         for (auto _ : state)
         {
-            dynamic_bitset<T> bitset(data);
+            dynamic_bitset<T> bitset(data, typename dynamic_bitset<T>::default_allocator());
             ::benchmark::DoNotOptimize(bitset);
             ::benchmark::ClobberMemory();
         }
@@ -209,7 +209,7 @@ namespace sparrow::benchmark
 
         for (auto _ : state)
         {
-            dynamic_bitset<T> bitset(data);
+            dynamic_bitset<T> bitset(data, typename dynamic_bitset<T>::default_allocator());
             ::benchmark::DoNotOptimize(bitset);
             ::benchmark::ClobberMemory();
         }
@@ -223,7 +223,7 @@ namespace sparrow::benchmark
     {
         const size_t size = static_cast<size_t>(state.range(0));
         const auto& data = get_bool_data(size);
-        dynamic_bitset<T> bitset(data);
+        dynamic_bitset<T> bitset(data, typename dynamic_bitset<T>::default_allocator());
 
         size_t index = 0;
         size_t true_count = 0;
@@ -248,7 +248,7 @@ namespace sparrow::benchmark
     {
         const size_t size = static_cast<size_t>(state.range(0));
         const auto& data = get_bool_data(size);
-        dynamic_bitset<T> bitset(data);
+        dynamic_bitset<T> bitset(data, typename dynamic_bitset<T>::default_allocator());
 
         size_t index = 0;
         size_t true_count = 0;
@@ -277,7 +277,7 @@ namespace sparrow::benchmark
 
         for (auto _ : state)
         {
-            dynamic_bitset<T> bitset(size, false);
+            dynamic_bitset<T> bitset(size, false, typename dynamic_bitset<T>::default_allocator());
             bitset.set(index % size, true);
             index++;
             ::benchmark::DoNotOptimize(bitset);
@@ -297,7 +297,7 @@ namespace sparrow::benchmark
 
         for (auto _ : state)
         {
-            dynamic_bitset<T> bitset(size, false);
+            dynamic_bitset<T> bitset(size, false, typename dynamic_bitset<T>::default_allocator());
             bitset[index % size] = true;
             index++;
             ::benchmark::DoNotOptimize(bitset);
@@ -313,7 +313,7 @@ namespace sparrow::benchmark
     {
         const size_t size = static_cast<size_t>(state.range(0));
         const auto& data = get_bool_data(size);
-        dynamic_bitset<T> bitset(data);
+        dynamic_bitset<T> bitset(data, typename dynamic_bitset<T>::default_allocator());
 
         for (auto _ : state)
         {
@@ -337,7 +337,7 @@ namespace sparrow::benchmark
     {
         const size_t size = static_cast<size_t>(state.range(0));
         const auto& data = get_bool_data(size);
-        dynamic_bitset<T> bitset(data);
+        dynamic_bitset<T> bitset(data, typename dynamic_bitset<T>::default_allocator());
 
         for (auto _ : state)
         {
@@ -365,7 +365,7 @@ namespace sparrow::benchmark
         for (auto _ : state)
         {
             state.PauseTiming();
-            dynamic_bitset<T> bitset;
+            dynamic_bitset<T> bitset{typename dynamic_bitset<T>::default_allocator()};
             state.ResumeTiming();
 
             auto start = std::chrono::high_resolution_clock::now();
@@ -397,7 +397,7 @@ namespace sparrow::benchmark
         for (auto _ : state)
         {
             state.PauseTiming();
-            dynamic_bitset<T> bitset(data);
+            dynamic_bitset<T> bitset(data, typename dynamic_bitset<T>::default_allocator());
             state.ResumeTiming();
 
             auto start = std::chrono::high_resolution_clock::now();
@@ -431,7 +431,7 @@ namespace sparrow::benchmark
         for (auto _ : state)
         {
             state.PauseTiming();
-            dynamic_bitset<T> bitset(data);
+            dynamic_bitset<T> bitset(data, typename dynamic_bitset<T>::default_allocator());
             state.ResumeTiming();
 
             auto start = std::chrono::high_resolution_clock::now();
@@ -469,7 +469,7 @@ namespace sparrow::benchmark
 
         for (auto _ : state)
         {
-            dynamic_bitset<T> bitset(data);
+            dynamic_bitset<T> bitset(data, typename dynamic_bitset<T>::default_allocator());
 
             // Resize to different sizes
             bitset.resize(initial_size * 2, true);
@@ -489,7 +489,7 @@ namespace sparrow::benchmark
     {
         const size_t size = static_cast<size_t>(state.range(0));
         const auto& data = get_bool_data(size);
-        dynamic_bitset<T> original_bitset(data);
+        dynamic_bitset<T> original_bitset(data, typename dynamic_bitset<T>::default_allocator());
 
         for (auto _ : state)
         {
@@ -507,7 +507,7 @@ namespace sparrow::benchmark
     {
         const size_t size = static_cast<size_t>(state.range(0));
         const auto& data = get_bool_data(size, LOW_TRUE_PROBABILITY);  // 30% true, 70% false
-        dynamic_bitset<T> bitset(data);
+        dynamic_bitset<T> bitset(data, typename dynamic_bitset<T>::default_allocator());
 
         for (auto _ : state)
         {
@@ -524,7 +524,7 @@ namespace sparrow::benchmark
     {
         const size_t size = static_cast<size_t>(state.range(0));
         const auto& data = get_bool_data(size, LOW_TRUE_PROBABILITY);  // 30% true, 70% false
-        dynamic_bitset<T> bitset(data);
+        dynamic_bitset<T> bitset(data, typename dynamic_bitset<T>::default_allocator());
 
         for (auto _ : state)
         {

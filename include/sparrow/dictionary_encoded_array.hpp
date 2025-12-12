@@ -468,7 +468,7 @@ namespace sparrow
         [[nodiscard]] static arrow_proxy create_proxy(
             KEY_RANGE&& keys,
             array&& values,
-            R&& bitmaps = validity_bitmap{},
+            R&& bitmaps = validity_bitmap{validity_bitmap::default_allocator()},
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         )
@@ -661,7 +661,8 @@ namespace sparrow
         return create_proxy_impl(
             std::forward<keys_buffer_type>(keys),
             std::forward<array>(values),
-            nullable ? std::make_optional<validity_bitmap>(nullptr, size) : std::nullopt,
+            nullable ? std::make_optional<validity_bitmap>(nullptr, size, validity_bitmap::default_allocator())
+                     : std::nullopt,
             std::move(name),
             std::move(metadata)
         );
@@ -702,7 +703,7 @@ namespace sparrow
 
         std::vector<buffer<uint8_t>> buffers(2);
         buffers[0] = validity.has_value() ? std::move(*validity).extract_storage()
-                                          : buffer<uint8_t>{nullptr, 0};
+                                          : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()};
         buffers[1] = std::move(keys).extract_storage();
         // create arrow array
         ArrowArray arr = make_arrow_array(

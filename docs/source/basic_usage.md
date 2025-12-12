@@ -144,9 +144,7 @@ ar.visit([]<class T>(const T& typed_ar)
 Zero Copy Operations
 --------------------
 
-For performance-critical applications, Sparrow provides zero copy constructors that avoid unnecessary data copying. When constructing dictionary encoded arrays and other specialized array types, you can achieve zero copy operations by using constructors that accept `sparrow::u8_buffer` as input parameters. The `u8_buffer` type is specifically designed to wrap existing memory buffers without performing any data copying, allowing you to directly use pre-allocated memory regions.
+For performance-critical applications, Sparrow provides zero copy constructors that avoid unnecessary data copying. When constructing arrays, you can achieve zero copy operations by using constructors that accept `sparrow::u8_buffer` as input parameters. The `u8_buffer` type is specifically designed to wrap existing memory buffers without performing any data copying, allowing you to directly use pre-allocated memory regions.
 
 When using constructors that take ranges or standard containers as input, Sparrow typically needs to copy the data into its internal buffer structures. However, constructors accepting `sparrow::u8_buffer` parameters can take ownership of existing memory buffers or create views over them, eliminating the need for data copying. This is particularly beneficial when working with large datasets or when integrating with external libraries that already have data in the appropriate memory layout.
-
-To utilize zero copy operations, construct your arrays using the overloads that accept `sparrow::u8_buffer` objects for buffer parameters such as keys, values, or validity bitmaps. This approach provides optimal performance by reusing existing memory allocations while maintaining Sparrow's type safety and API consistency.
 

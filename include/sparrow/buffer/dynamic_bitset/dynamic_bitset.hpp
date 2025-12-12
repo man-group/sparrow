@@ -85,9 +85,9 @@ namespace sparrow
          * dynamic_bitset<std::uint8_t> bits(values);  // Results in: 10101
          * @endcode
          */
-        template <std::ranges::input_range R, allocator A = default_allocator>
+        template <std::ranges::input_range R, allocator A>
             requires std::convertible_to<std::ranges::range_value_t<R>, value_type>
-        constexpr explicit dynamic_bitset(const R& r, const A& a = A())
+        constexpr explicit dynamic_bitset(const R& r, const A& a)
             : dynamic_bitset(std::ranges::size(r), true, a)
         {
             std::size_t i = 0;
@@ -107,9 +107,9 @@ namespace sparrow
          * Constructs a bitset with zero bits. The bitset can later be resized
          * or bits can be added using the provided methods.
          */
-        template <class A = default_allocator>
+        template <typename A>
             requires(not std::same_as<A, dynamic_bitset<T>> and allocator<A>)
-        constexpr dynamic_bitset(const A& a = A());
+        constexpr dynamic_bitset(const A& a);
 
         /**
          * @brief Constructs a bitset with n bits, all initialized to false.
@@ -119,8 +119,8 @@ namespace sparrow
          * @post size() == n
          * @post All bits are set to false
          */
-        template <allocator A = default_allocator>
-        constexpr explicit dynamic_bitset(size_type n, const A& a = A());
+        template <allocator A>
+        constexpr explicit dynamic_bitset(size_type n, const A& a);
 
         /**
          * @brief Constructs a bitset with n bits, all initialized to the specified value.
@@ -131,8 +131,8 @@ namespace sparrow
          * @post size() == n
          * @post All bits are set to v
          */
-        template <allocator A = default_allocator>
-        constexpr dynamic_bitset(size_type n, value_type v, const A& a = A());
+        template <allocator A>
+        constexpr dynamic_bitset(size_type n, value_type v, const A& a);
 
         /**
          * @brief Constructs a bitset using existing memory.
@@ -149,8 +149,8 @@ namespace sparrow
          * @warning The caller must ensure the memory pointed to by p remains valid
          *          and contains properly formatted bit data.
          */
-        template <allocator A = default_allocator>
-        constexpr dynamic_bitset(block_type* p, size_type n, const A& a = A());
+        template <allocator A>
+        constexpr dynamic_bitset(block_type* p, size_type n, const A& a);
 
         /**
          * @brief Constructs a bitset using existing memory with null count tracking.
@@ -167,8 +167,8 @@ namespace sparrow
          * @post size() == n
          * @post null_count() == null_count
          */
-        template <allocator A = default_allocator>
-        constexpr dynamic_bitset(block_type* p, size_type n, size_type null_count, const A& a = A());
+        template <allocator A>
+        constexpr dynamic_bitset(block_type* p, size_type n, size_type null_count, const A& a);
 
         constexpr ~dynamic_bitset() = default;
         constexpr dynamic_bitset(const dynamic_bitset&) = default;
@@ -276,7 +276,7 @@ namespace sparrow
         {
             if (bitmap.size() == 0)
             {
-                return {size, true};
+                return {size, true, bitmap.buffer().get_allocator()};
             }
             return bitmap;  // copy
         }
@@ -296,7 +296,7 @@ namespace sparrow
         validity_bitmap ensure_validity_bitmap_impl(std::size_t size, R&& range)
         {
             SPARROW_ASSERT_TRUE(size == range_size(range) || range_size(range) == 0);
-            validity_bitmap bitmap(size, true);
+            validity_bitmap bitmap(size, true, validity_bitmap::default_allocator{});
             std::size_t i = 0;
             for (auto value : range)
             {
@@ -318,7 +318,7 @@ namespace sparrow
             )
         validity_bitmap ensure_validity_bitmap_impl(std::size_t size, R&& range_of_indices)
         {
-            validity_bitmap bitmap(size, true);
+            validity_bitmap bitmap(size, true, validity_bitmap::default_allocator{});
             for (auto index : range_of_indices)
             {
                 bitmap.set(index, false);
