@@ -56,6 +56,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Setup MSVC
+      if: matrix.sys.compiler == 'msvc'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
     - name: Set conda environment
       uses: mamba-org/setup-micromamba@main
       with:
@@ -63,11 +69,6 @@ jobs:
         environment-file: environment-dev.yml
         init-shell: bash
         cache-downloads: true
-
-    - name: Set CMake generator environment variable
-      if: matrix.sys.compiler == 'msvc'
-      run: |
-        echo "CMAKE_GENERATOR=Visual Studio 17 2022" >> $GITHUB_ENV
 
     - name: Configure using CMake
       run: |
