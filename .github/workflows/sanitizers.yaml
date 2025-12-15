@@ -49,7 +49,7 @@ jobs:
       run: sudo apt-get install tzdata=2024a-2ubuntu1 -y --allow-downgrades
 
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup MSVC
       if: matrix.sys.compiler == 'msvc'
@@ -73,7 +73,7 @@ jobs:
           -Bbuild ${{matrix.sys.config-flags}} \
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.config.name}} \
           -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
-          -DUSE_DATE_POLYFILL=${{matrix.sys.date-polyfill}} \
+          -DUSE_DATE_POLYFILL=OFF \
           -DBUILD_TESTS=ON \
           -DBUILD_EXAMPLES=ON \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
@@ -113,7 +113,7 @@ jobs:
       
     - name: Upload ASAN log
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: asan-log-${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.config.name }}-${{ matrix.sys.date-polyfill }}-${{ runner.os }}
         path: '**/asan_log_*'
@@ -121,7 +121,7 @@ jobs:
 
     - name: Upload ASAN dump
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: asan-dump-${{ matrix.sys.compiler }}-${{ matrix.sys.version }}-${{ matrix.config.name }}-${{ matrix.sys.date-polyfill }}-${{ runner.os }}
         path: '**/AsanDump.dmp'
