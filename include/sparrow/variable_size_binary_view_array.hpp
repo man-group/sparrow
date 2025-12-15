@@ -331,7 +331,7 @@ namespace sparrow
             requires std::convertible_to<std::ranges::range_value_t<R>, T>
         [[nodiscard]] static arrow_proxy create_proxy(
             R&& range,
-            VB&& bitmap_input = validity_bitmap{},
+            VB&& bitmap_input = validity_bitmap{validity_bitmap::default_allocator()},
             std::optional<std::string_view> name = std::nullopt,
             std::optional<METADATA_RANGE> metadata = std::nullopt
         );
@@ -694,7 +694,7 @@ namespace sparrow
 #endif
 
         const auto size = range_size(range);
-        buffer<uint8_t> length_buffer(size * DATA_BUFFER_SIZE);
+        buffer<uint8_t> length_buffer(size * DATA_BUFFER_SIZE, typename buffer<uint8_t>::default_allocator());
 
         std::size_t long_string_storage_size = 0;
         std::size_t i = 0;
@@ -741,7 +741,7 @@ namespace sparrow
         }
 
         // write the long string storage
-        buffer<uint8_t> long_string_storage(long_string_storage_size);
+        buffer<uint8_t> long_string_storage(long_string_storage_size, buffer<uint8_t>::default_allocator());
         std::size_t long_string_storage_offset = 0;
         for (auto&& val : range)
         {
@@ -866,7 +866,12 @@ namespace sparrow
     {
         if (nullable)
         {
-            return create_proxy(std::forward<R>(range), validity_bitmap{}, std::move(name), std::move(metadata));
+            return create_proxy(
+                std::forward<R>(range),
+                validity_bitmap{validity_bitmap::default_allocator()},
+                std::move(name),
+                std::move(metadata)
+            );
         }
 
         // create arrow schema
@@ -876,7 +881,7 @@ namespace sparrow
         auto buffers_parts = create_buffers(std::forward<R>(range));
 
         std::vector<buffer<uint8_t>> buffers{
-            buffer<uint8_t>{nullptr, 0},  // validity bitmap
+            buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()},  // validity bitmap
             std::move(buffers_parts.length_buffer),
             std::move(buffers_parts.long_string_storage),
             std::move(buffers_parts.buffer_sizes).extract_storage()
@@ -922,10 +927,13 @@ namespace sparrow
         ArrowSchema schema = create_arrow_schema(std::move(name), std::move(metadata), flags);
 
         auto bitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
-        std::vector<buffer<uint8_t>> buffers{std::move(bitmap).extract_storage(), std::move(buffer_view)};
+        std::vector<buffer<uint8_t>> buffers{
+            std::move(bitmap).extract_storage(),
+            std::move(buffer_view).extract_storage()
+        };
         for (auto&& buf : value_buffers)
         {
-            buffers.push_back(std::forward<decltype(buf)>(buf));
+            buffers.emplace_back(std::forward<decltype(buf)>(buf), typename buffer<uint8_t>::default_allocator());
         }
 
         // Create buffer sizes for the variadic buffers

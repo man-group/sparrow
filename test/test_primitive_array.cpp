@@ -790,12 +790,12 @@ namespace sparrow
         TEST_CASE("convenience_constructor_from_u8_buffer")
         {
             size_t size = 10;
-            auto* data = new int32_t[size];
+            auto* data = std::allocator<int32_t>().allocate(size);
             for (auto i = 0u; i < size; ++i)
             {
                 data[i] = static_cast<int32_t>(i);
             }
-            sparrow::u8_buffer<int32_t> buffer(data, size);
+            sparrow::u8_buffer<int32_t> buffer(data, size, std::allocator<uint8_t>{});
             sparrow::primitive_array<int32_t> primitive_array(std::move(buffer), size);
             CHECK_EQ(primitive_array.size(), size);
         }
@@ -825,7 +825,11 @@ namespace sparrow
             {
                 cast_ptr[idx] = idx;
             }
-            sparrow::u8_buffer<uint64_t> u8_buffer(reinterpret_cast<uint64_t*>(data_ptr), num_rows);
+            sparrow::u8_buffer<uint64_t> u8_buffer(
+                reinterpret_cast<uint64_t*>(data_ptr),
+                num_rows,
+                sparrow::u8_buffer<uint64_t>::default_allocator()
+            );
             for (size_t idx = 0; idx < num_rows; ++idx)
             {
                 CHECK_EQ(cast_ptr[idx], idx);

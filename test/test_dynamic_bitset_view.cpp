@@ -27,7 +27,7 @@ namespace sparrow
 
         bitmap_fixture()
         {
-            p_buffer = new std::uint8_t[m_block_count];
+            p_buffer = std::allocator<uint8_t>().allocate(m_block_count);
             p_buffer[0] = 38;   // 00100110
             p_buffer[1] = 85;   // 01010101
             p_buffer[2] = 53;   // 00110101
@@ -38,7 +38,7 @@ namespace sparrow
 
         ~bitmap_fixture()
         {
-            delete[] p_buffer;
+            std::allocator<uint8_t>().deallocate(p_buffer, m_block_count);
             p_expected_buffer = nullptr;
         }
 

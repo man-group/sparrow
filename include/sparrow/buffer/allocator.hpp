@@ -20,6 +20,7 @@
 #include <typeindex>
 #include <variant>
 
+#include "sparrow/details/3rdparty/xsimd_aligned_allocator.hpp"
 #include "sparrow/utils/variant_visitor.hpp"
 
 namespace sparrow
@@ -52,7 +53,8 @@ namespace sparrow
     template <class A, class T>
     concept can_any_allocator_sbo = allocator<A>
                                     && (std::same_as<std::remove_cvref_t<A>, std::allocator<T>>
-                                        || std::same_as<std::remove_cvref_t<A>, std::pmr::polymorphic_allocator<T>>);
+                                        || std::same_as<std::remove_cvref_t<A>, std::pmr::polymorphic_allocator<T>>
+                                        || std::same_as<std::remove_cvref_t<A>, xsimd::aligned_allocator<T>>);
 
     /*
      * Type erasure class for allocators. This allows to use any kind of allocator
@@ -140,8 +142,11 @@ namespace sparrow
             }
         };
 
-        using storage_type = std::
-            variant<std::allocator<T>, std::pmr::polymorphic_allocator<T>, std::unique_ptr<interface>>;
+        using storage_type = std::variant<
+            std::allocator<T>,
+            std::pmr::polymorphic_allocator<T>,
+            xsimd::aligned_allocator<T>,
+            std::unique_ptr<interface>>;
 
         template <class A>
         [[nodiscard]] std::unique_ptr<interface> make_storage(A&& alloc) const
@@ -202,7 +207,7 @@ namespace sparrow
 
     template <class T>
     constexpr any_allocator<T>::any_allocator()
-        : m_storage(make_storage(std::allocator<T>()))
+        : m_storage(make_storage(xsimd::aligned_allocator<T>()))
     {
     }
 
@@ -224,7 +229,7 @@ namespace sparrow
         // memory zone (the memory of the moved container), wich is
         // a noop, but the object must exist so that alloc.deallocate
         // is valid.
-        rhs.m_storage = std::allocator<T>();
+        rhs.m_storage = xsimd::aligned_allocator<T>();
     }
 
     template <class T>

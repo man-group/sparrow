@@ -203,8 +203,8 @@ namespace sparrow
          * @param count Number of elements in the storage.
          * @param a The allocator to use.
          */
-        template <allocator A = default_allocator>
-        constexpr u8_buffer(T* data_ptr, std::size_t count, const A& a = A());
+        template <allocator A>
+        constexpr u8_buffer(T* data_ptr, std::size_t count, const A& a);
     };
 
     template <class T>
@@ -223,7 +223,7 @@ namespace sparrow
 
     template <class T>
     constexpr u8_buffer<T>::u8_buffer(std::size_t n)
-        : holder_type{n * sizeof(T)}
+        : holder_type{n * sizeof(T), typename buffer_type::default_allocator{}}
         , buffer_adaptor_type(holder_type::value)
     {
     }
