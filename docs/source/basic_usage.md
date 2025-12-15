@@ -148,3 +148,75 @@ For performance-critical applications, Sparrow provides zero copy constructors t
 
 When using constructors that take ranges or standard containers as input, Sparrow typically needs to copy the data into its internal buffer structures. However, constructors accepting `sparrow::u8_buffer` parameters can take ownership of existing memory buffers or create views over them, eliminating the need for data copying. This is particularly beneficial when working with large datasets or when integrating with external libraries that already have data in the appropriate memory layout.
 
+### Transferring Ownership of Existing Memory
+
+Sparrow uses `xsimd::aligned_allocator` by default for optimal performance with SIMD operations. When transferring ownership of an existing memory buffer to Sparrow, you must provide an allocator that matches how the memory was originally allocated. This ensures proper deallocation when the buffer is destroyed.
+
+```cpp
+#include "sparrow.hpp"
+#include "sparrow/details/3rdparty/xsimd_aligned_allocator.hpp"
+namespace sp = sparrow;
+
+// Allocate memory using aligned allocator
+using allocator_type = xsimd::aligned_allocator<int>;
+allocator_type alloc;
+int* ptr = alloc.allocate(100);
+
+// Initialize the data
+for (size_t i = 0; i < 100; ++i)
+{
+    ptr[i] = static_cast<int>(i);
+}
+
+// Transfer ownership to sparrow buffer with the matching allocator
+// The buffer will deallocate the memory using the same allocator
+sp::buffer<int> buf(ptr, 100, alloc);
+
+// Use the buffer as needed
+// ...
+// Memory is automatically released when buf goes out of scope
+```
+
+If you have memory allocated with the `new` operator or other custom allocation methods, you must provide a compatible custom allocator that will properly deallocate the memory. Here's an example of a custom allocator for `new[]` allocated memory:
+
+```cpp
+#include "sparrow.hpp"
+namespace sp = sparrow;
+
+// Custom allocator for memory allocated with new[]
+template <typename T>
+struct new_delete_allocator
+{
+    using value_type = T;
+    
+    T* allocate(std::size_t n)
+    {
+        return new T[n];
+    }
+    
+    void deallocate(T* p, std::size_t)
+    {
+        delete[] p;
+    }
+};
+
+// Allocate memory using new operator
+int* ptr = new int[100];
+
+// Initialize the data
+for (size_t i = 0; i < 100; ++i)
+{
+    ptr[i] = static_cast<int>(i);
+}
+
+// Transfer ownership to sparrow buffer with custom allocator
+new_delete_allocator<int> alloc;
+sp::buffer<int> buf(ptr, 100, alloc);
+
+// Use the buffer as needed
+// ...
+// Memory is automatically released with delete[] when buf goes out of scope
+```
+
+**Important:** The allocator passed to the buffer constructor must be compatible with the allocation method used for the pointer. The allocator's `deallocate()` method will be called to free the memory, so you must ensure it matches how the memory was allocated. Using an incompatible allocator will result in undefined behavior during deallocation.
+
