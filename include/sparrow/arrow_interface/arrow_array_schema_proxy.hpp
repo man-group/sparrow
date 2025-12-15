@@ -969,11 +969,11 @@ namespace sparrow
         std::vector<sparrow::buffer_view<uint8_t>> m_buffers;
         std::vector<arrow_proxy> m_children;
         std::unique_ptr<arrow_proxy> m_dictionary;
-        bool m_schema_is_immutable = false;
         bool m_array_is_immutable = false;
+        bool m_schema_is_immutable = false;
+        bool m_is_dictionary_immutable = false;
         std::vector<bool> m_children_array_immutable;
         std::vector<bool> m_children_schema_immutable;
-        bool m_is_dictionary_immutable = false;
 
         struct impl_tag
         {
