@@ -790,7 +790,7 @@ namespace sparrow
         TEST_CASE("convenience_constructor_from_u8_buffer")
         {
             size_t size = 10;
-            auto* data = new int32_t[size];
+            auto* data = std::allocator<int32_t>().allocate(size);
             for (auto i = 0u; i < size; ++i)
             {
                 data[i] = static_cast<int32_t>(i);

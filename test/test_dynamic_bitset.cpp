@@ -66,7 +66,7 @@ namespace sparrow
 
         template <std::ranges::input_range R>
         dynamic_bitmap_fixture(const R& blocks)
-            : p_buffer(new std::uint8_t[blocks.size()])
+            : p_buffer(std::allocator<uint8_t>().allocate(blocks.size()))
             , p_expected_buffer(p_buffer)
         {
             std::copy(blocks.begin(), blocks.end(), p_buffer);

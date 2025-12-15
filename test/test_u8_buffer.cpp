@@ -67,7 +67,7 @@ TEST_SUITE("u8_buffer")
         SUBCASE("taking ownership from raw pointer and size")
         {
             constexpr std::size_t size = 8u;
-            int32_t* raw_buf = new int32_t[size];
+            int32_t* raw_buf = std::allocator<int32_t>().allocate(size);
             for (std::size_t i = 0; i < size; ++i)
             {
                 raw_buf[i] = static_cast<int32_t>(i);
