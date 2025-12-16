@@ -20,7 +20,6 @@ jobs:
         os:
           - 14
           - 15
-          # - "15-large"
         config:
           - { name: Debug }
           - { name: Release }
@@ -33,7 +32,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -67,6 +66,7 @@ jobs:
           -DBUILD_TESTS=ON \
           -DENABLE_INTEGRATION_TEST=ON \
           -DBUILD_EXAMPLES=ON \
+          -DUSE_DATE_POLYFILL=ON \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
