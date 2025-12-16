@@ -96,7 +96,7 @@ jobs:
         run: cmake --build . --config ${{matrix.config.name}} --target run_c_data_integration_with_junit_report
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: success() || failure()
         with:
           name: test_sparrow_lib_report_OSX_${{ matrix.os }}_${{ matrix.config.name }}_${{ matrix.compiler }}

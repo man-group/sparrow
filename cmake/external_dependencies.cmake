@@ -18,9 +18,11 @@ if(${USE_DATE_POLYFILL})
         if(NOT date_FOUND)
             set(DATE_VERSION "v3.0.3")
             message(STATUS "📦 Fetching HowardHinnant date ${DATE_VERSION}")
-            set(USE_SYSTEM_TZ_DB ON)
+            if(NOT DEFINED USE_SYSTEM_TZ_DB)
+                set(USE_SYSTEM_TZ_DB ON)
+            endif()
             set(BUILD_TZ_LIB ON)
-            set(BUILD_SHARED_LIBS OFF)
+            set(BUILD_SHARED_LIBS ${SPARROW_BUILD_SHARED})
             FetchContent_Declare(
                 date
                 GIT_SHALLOW TRUE
