@@ -12,29 +12,33 @@ endif()
 if(NOT FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
     find_package(date CONFIG ${FIND_PACKAGE_OPTIONS})
 endif()
-    
-if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "MISSING") 
-    if(NOT date_FOUND)
-        set(DATE_VERSION "v3.0.3")
-        message(STATUS "📦 Fetching HowardHinnant date ${DATE_VERSION}")
-        set(USE_SYSTEM_TZ_DB ON)
-        set(BUILD_TZ_LIB ON)
-        set(BUILD_SHARED_LIBS OFF)
-        FetchContent_Declare(
-            date
-            GIT_SHALLOW TRUE
-            GIT_REPOSITORY https://github.com/HowardHinnant/date.git
-            GIT_TAG ${DATE_VERSION}
-            GIT_PROGRESS TRUE
-            SYSTEM
-            EXCLUDE_FROM_ALL)
-        FetchContent_MakeAvailable(date)
-        unset(USE_SYSTEM_TZ_DB CACHE)
-        unset(BUILD_TZ_LIB CACHE)
-        unset(BUILD_SHARED_LIBS CACHE)
-        message(STATUS "\t✅ Fetched HowardHinnant date ${DATE_VERSION}")
-    else()
-        message(STATUS "📦 date polyfill found here: ${date_DIR}")
+
+if(${USE_DATE_POLYFILL})
+    if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "MISSING") 
+        if(NOT date_FOUND)
+            set(DATE_VERSION "v3.0.3")
+            message(STATUS "📦 Fetching HowardHinnant date ${DATE_VERSION}")
+            if(NOT DEFINED USE_SYSTEM_TZ_DB)
+                set(USE_SYSTEM_TZ_DB ON)
+            endif()
+            set(BUILD_TZ_LIB ON)
+            set(BUILD_SHARED_LIBS ${SPARROW_BUILD_SHARED})
+            FetchContent_Declare(
+                date
+                GIT_SHALLOW TRUE
+                GIT_REPOSITORY https://github.com/HowardHinnant/date.git
+                GIT_TAG ${DATE_VERSION}
+                GIT_PROGRESS TRUE
+                SYSTEM
+                EXCLUDE_FROM_ALL)
+            FetchContent_MakeAvailable(date)
+            unset(USE_SYSTEM_TZ_DB CACHE)
+            unset(BUILD_TZ_LIB CACHE)
+            unset(BUILD_SHARED_LIBS CACHE)
+            message(STATUS "\t✅ Fetched HowardHinnant date ${DATE_VERSION}")
+        else()
+            message(STATUS "📦 date polyfill found here: ${date_DIR}")
+        endif()
     endif()
 endif()
 

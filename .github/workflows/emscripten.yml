@@ -24,7 +24,7 @@ jobs:
     steps:
 
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: install mamba
       uses: mamba-org/setup-micromamba@main
@@ -55,6 +55,7 @@ jobs:
           -DCMAKE_FIND_ROOT_PATH=$PREFIX \
           -DCMAKE_INSTALL_PREFIX=$PREFIX \
           -DBUILD_EXAMPLES=OFF \
+          -DUSE_DATE_POLYFILL=ON \
           -DBUILD_TESTS=ON \
           -DBUILD_DOCS=OFF \
           -DSYSROOT_PATH=$SYSROOT_PATH \
@@ -63,7 +64,7 @@ jobs:
         emmake make -j ${{ env.ncpus }} install
 
     - name: Setup Node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '23.x'
 
