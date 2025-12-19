@@ -212,7 +212,7 @@ namespace sparrow
             {
                 decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
                 CHECK_EQ(array.size(), 4);
-                
+
                 // Resize larger
                 SUBCASE("larger")
                 {
@@ -221,7 +221,7 @@ namespace sparrow
                     CHECK_EQ(array[4].value().storage(), 42);
                     CHECK_EQ(array[5].value().storage(), 42);
                 }
-                
+
                 SUBCASE("smaller")
                 {
                     // Resize smaller
@@ -234,7 +234,7 @@ namespace sparrow
             {
                 decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
                 CHECK_EQ(array.size(), 4);
-                
+
                 array.push_back(make_nullable(decimal<INTEGER_TYPE>(99, scale)));
                 CHECK_EQ(array.size(), 5);
                 CHECK_EQ(array[4].value().storage(), 99);
@@ -244,7 +244,7 @@ namespace sparrow
             {
                 decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
                 CHECK_EQ(array.size(), 4);
-                
+
                 auto it = array.insert(array.cbegin() + 2, make_nullable(decimal<INTEGER_TYPE>(77, scale)));
                 CHECK_EQ(array.size(), 5);
                 CHECK_EQ((*it).value().storage(), 77);
@@ -255,7 +255,7 @@ namespace sparrow
             {
                 decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
                 CHECK_EQ(array.size(), 4);
-                
+
                 auto it = array.erase(array.cbegin() + 1);
                 CHECK_EQ(array.size(), 3);
                 // After erasing index 1, iterator points to what was index 2 (which is null)
