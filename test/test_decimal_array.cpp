@@ -207,6 +207,63 @@ namespace sparrow
                     }
                 }
             }
+
+            SUBCASE("resize")
+            {
+                decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
+                CHECK_EQ(array.size(), 4);
+                
+                // Resize larger
+                SUBCASE("larger")
+                {
+                    array.resize(6, make_nullable(decimal<INTEGER_TYPE>(42, scale)));
+                    CHECK_EQ(array.size(), 6);
+                    CHECK_EQ(array[4].value().storage(), 42);
+                    CHECK_EQ(array[5].value().storage(), 42);
+                }
+                
+                SUBCASE("smaller")
+                {
+                    // Resize smaller
+                    array.resize(3, make_nullable(decimal<INTEGER_TYPE>(0, scale)));
+                    CHECK_EQ(array.size(), 3);
+                }
+            }
+
+            SUBCASE("push_back")
+            {
+                decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
+                CHECK_EQ(array.size(), 4);
+                
+                array.push_back(make_nullable(decimal<INTEGER_TYPE>(99, scale)));
+                CHECK_EQ(array.size(), 5);
+                CHECK_EQ(array[4].value().storage(), 99);
+            }
+
+            SUBCASE("insert")
+            {
+                decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
+                CHECK_EQ(array.size(), 4);
+                
+                auto it = array.insert(array.cbegin() + 2, make_nullable(decimal<INTEGER_TYPE>(77, scale)));
+                CHECK_EQ(array.size(), 5);
+                CHECK_EQ((*it).value().storage(), 77);
+                CHECK_EQ(array[2].value().storage(), 77);
+            }
+
+            SUBCASE("erase")
+            {
+                decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
+                CHECK_EQ(array.size(), 4);
+                
+                auto it = array.erase(array.cbegin() + 1);
+                CHECK_EQ(array.size(), 3);
+                // After erasing index 1, iterator points to what was index 2 (which is null)
+                CHECK_FALSE((*it).has_value());
+                // Check that the last element (originally index 3) is now at index 2
+                CHECK(array[2].has_value());
+                CHECK_EQ(array[2].value().storage(), values[3]);
+            }
         }
 
         TEST_CASE_TEMPLATE_APPLY(decimal_array_test_generic_id, integer_types);
