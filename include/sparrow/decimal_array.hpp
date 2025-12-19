@@ -766,7 +766,8 @@ namespace sparrow
     }
 
     template <decimal_type T>
-    constexpr auto decimal_array<T>::insert_value(const_value_iterator pos, inner_value_type value, size_t count)
+    constexpr auto
+    decimal_array<T>::insert_value(const_value_iterator pos, inner_value_type value, size_t count)
         -> value_iterator
     {
         const auto distance = std::distance(value_cbegin(), pos);
@@ -783,25 +784,26 @@ namespace sparrow
     constexpr auto decimal_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
         -> value_iterator
     {
+        SPARROW_ASSERT_TRUE(value_cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= value_cend());
         const auto distance = std::distance(value_cbegin(), pos);
         const auto offset = static_cast<difference_type>(this->get_arrow_proxy().offset());
         auto data_buffer = get_data_buffer();
         
-        // Convert iterator range to storage values
-        std::vector<storage_type> storage_values;
-        for (auto it = first; it != last; ++it)
-        {
-            storage_values.push_back((*it).storage());
-        }
-        
+        // Lazily convert iterator range to storage values without an intermediate container
+        auto value_range = std::ranges::subrange(first, last);
+        auto storage_view = std::ranges::transform_view(
+            value_range,
+            [](const auto& v) { return v.storage(); }
+        );
+
         const auto insertion_pos = data_buffer.cbegin() + distance + offset;
-        data_buffer.insert(insertion_pos, storage_values.begin(), storage_values.end());
+        data_buffer.insert(insertion_pos, storage_view.begin(), storage_view.end());
         return value_iterator(detail::layout_value_functor<self_type, inner_reference>(this), static_cast<size_type>(distance));
     }
 
     template <decimal_type T>
-    constexpr auto decimal_array<T>::erase_values(const_value_iterator pos, size_t count)
-        -> value_iterator
+    constexpr auto decimal_array<T>::erase_values(const_value_iterator pos, size_t count) -> value_iterator
     {
         const auto distance = std::distance(value_cbegin(), pos);
         const auto offset = static_cast<difference_type>(this->get_arrow_proxy().offset());
