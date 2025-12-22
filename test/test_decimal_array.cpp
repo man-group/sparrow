@@ -212,8 +212,6 @@ namespace sparrow
             {
                 decimal_array<decimal<INTEGER_TYPE>> array{values, bitmaps, precision, scale};
                 CHECK_EQ(array.size(), 4);
-
-                // Resize larger
                 SUBCASE("larger")
                 {
                     array.resize(6, make_nullable(decimal<INTEGER_TYPE>(42, scale)));
@@ -224,7 +222,6 @@ namespace sparrow
 
                 SUBCASE("smaller")
                 {
-                    // Resize smaller
                     array.resize(3, make_nullable(decimal<INTEGER_TYPE>(0, scale)));
                     CHECK_EQ(array.size(), 3);
                 }
