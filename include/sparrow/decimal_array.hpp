@@ -413,6 +413,80 @@ namespace sparrow
 
         // Modifiers
 
+        /**
+         * Resizes the value buffer to the specified length.
+         *
+         * @param new_length The new length of the value buffer.
+         * @param value The value to use for new elements.
+         */
+        constexpr void resize_values(size_t new_length, const inner_value_type& value);
+
+        /**
+         * Inserts a single value multiple times at the specified position.
+         *
+         * @param pos The position where to insert.
+         * @param value The value to insert.
+         * @param count The number of times to insert the value.
+         * @return Iterator to the first inserted element.
+         */
+        constexpr value_iterator insert_value(const_value_iterator pos, inner_value_type value, size_t count);
+
+        /**
+         * Inserts a range of values at the specified position.
+         *
+         * @tparam InputIt Input iterator type.
+         * @param pos The position where to insert.
+         * @param first Iterator to the beginning of the range.
+         * @param last Iterator to the end of the range.
+         * @return Iterator to the first inserted element.
+         */
+        template <std::input_iterator InputIt>
+            requires std::convertible_to<
+                typename std::iterator_traits<InputIt>::value_type,
+                typename decimal_array<T>::inner_value_type>
+        constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        {
+            SPARROW_ASSERT_TRUE(value_cbegin() <= pos);
+            SPARROW_ASSERT_TRUE(pos <= value_cend());
+            const auto distance = std::distance(value_cbegin(), pos);
+            const auto offset = static_cast<difference_type>(this->get_arrow_proxy().offset());
+            auto data_buffer = get_data_buffer();
+            auto value_range = std::ranges::subrange(first, last);
+            auto storage_view = std::ranges::transform_view(
+                value_range,
+                [](const auto& v)
+                {
+                    return v.storage();
+                }
+            );
+            const auto insertion_pos = data_buffer.cbegin() + distance + offset;
+            data_buffer.insert(insertion_pos, storage_view.begin(), storage_view.end());
+            return value_iterator(
+                detail::layout_value_functor<self_type, inner_reference>(this),
+                static_cast<size_type>(distance)
+            );
+        }
+
+        /**
+         * Erases values starting at the specified position.
+         *
+         * @param pos The position where to start erasing.
+         * @param count The number of values to erase.
+         * @return Iterator to the element following the erased range.
+         */
+        constexpr value_iterator erase_values(const_value_iterator pos, size_t count);
+
+        /**
+         * Gets a buffer adaptor for the data buffer.
+         *
+         * @return A buffer adaptor that provides access to the data buffer.
+         */
+        [[nodiscard]] constexpr auto get_data_buffer()
+        {
+            auto& buffers = this->get_arrow_proxy().get_array_private_data()->buffers();
+            return make_buffer_adaptor<storage_type>(buffers[DATA_BUFFER_INDEX]);
+        }
+
         /** Index of the data buffer in the Arrow array buffers. */
         static constexpr size_type DATA_BUFFER_INDEX = 1;
         friend base_type;
@@ -703,5 +777,49 @@ namespace sparrow
             format_str += "," + std::to_string(sizeof_decimal * 8);
         }
         return format_str;
+    }
+
+    template <decimal_type T>
+    constexpr void decimal_array<T>::resize_values(size_t new_length, const inner_value_type& value)
+    {
+        const size_t offset = static_cast<size_t>(this->get_arrow_proxy().offset());
+        const size_t new_size = new_length + offset;
+        auto data_buffer = get_data_buffer();
+        data_buffer.resize(new_size, value.storage());
+    }
+
+    template <decimal_type T>
+    constexpr auto
+    decimal_array<T>::insert_value(const_value_iterator pos, inner_value_type value, size_t count)
+        -> value_iterator
+    {
+        SPARROW_ASSERT_TRUE(value_cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= value_cend());
+        const auto distance = std::distance(value_cbegin(), pos);
+        const auto offset = static_cast<difference_type>(this->get_arrow_proxy().offset());
+        auto data_buffer = get_data_buffer();
+        const auto insertion_pos = data_buffer.cbegin() + distance + offset;
+        data_buffer.insert(insertion_pos, count, value.storage());
+        return value_iterator(
+            detail::layout_value_functor<self_type, inner_reference>(this),
+            static_cast<size_type>(distance)
+        );
+    }
+
+    template <decimal_type T>
+    constexpr auto decimal_array<T>::erase_values(const_value_iterator pos, size_t count) -> value_iterator
+    {
+        SPARROW_ASSERT_TRUE(value_cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos < value_cend());
+        const auto distance = std::distance(value_cbegin(), pos);
+        const auto offset = static_cast<difference_type>(this->get_arrow_proxy().offset());
+        auto data_buffer = get_data_buffer();
+        const auto erase_begin = data_buffer.cbegin() + distance + offset;
+        const auto erase_end = erase_begin + static_cast<difference_type>(count);
+        data_buffer.erase(erase_begin, erase_end);
+        return value_iterator(
+            detail::layout_value_functor<self_type, inner_reference>(this),
+            static_cast<size_type>(distance)
+        );
     }
 }
