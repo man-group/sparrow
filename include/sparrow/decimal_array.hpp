@@ -441,7 +441,9 @@ namespace sparrow
          * @return Iterator to the first inserted element.
          */
         template <std::input_iterator InputIt>
-            requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, typename decimal_array<T>::inner_value_type>
+            requires std::convertible_to<
+                typename std::iterator_traits<InputIt>::value_type,
+                typename decimal_array<T>::inner_value_type>
         constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
 
         /**
