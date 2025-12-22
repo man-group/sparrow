@@ -441,7 +441,9 @@ namespace sparrow
          * @return Iterator to the first inserted element.
          */
         template <std::input_iterator InputIt>
-            requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, typename decimal_array<T>::inner_value_type>
+            requires std::convertible_to<
+                typename std::iterator_traits<InputIt>::value_type,
+                typename decimal_array<T>::inner_value_type>
         constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
 
         /**
@@ -771,6 +773,8 @@ namespace sparrow
     decimal_array<T>::insert_value(const_value_iterator pos, inner_value_type value, size_t count)
         -> value_iterator
     {
+        SPARROW_ASSERT_TRUE(value_cbegin() <= pos);
+        SPARROW_ASSERT_TRUE(pos <= value_cend());
         const auto distance = std::distance(value_cbegin(), pos);
         const auto offset = static_cast<difference_type>(this->get_arrow_proxy().offset());
         auto data_buffer = get_data_buffer();
@@ -792,8 +796,6 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(pos <= value_cend());
         const auto distance = std::distance(value_cbegin(), pos);
         const auto offset = static_cast<difference_type>(this->get_arrow_proxy().offset());
-        SPARROW_ASSERT_TRUE(value_cbegin() <= pos);
-        SPARROW_ASSERT_TRUE(pos < value_cend());
         auto data_buffer = get_data_buffer();
         auto value_range = std::ranges::subrange(first, last);
         auto storage_view = std::ranges::transform_view(
