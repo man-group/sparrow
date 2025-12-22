@@ -785,7 +785,8 @@ namespace sparrow
     template <decimal_type T>
     template <std::input_iterator InputIt>
         requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, typename decimal_array<T>::inner_value_type>
-    constexpr typename decimal_array<T>::value_iterator decimal_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+    constexpr typename decimal_array<T>::value_iterator
+    decimal_array<T>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
     {
         SPARROW_ASSERT_TRUE(value_cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= value_cend());
