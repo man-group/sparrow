@@ -767,6 +767,7 @@ namespace sparrow
 
     template <decimal_type T>
     constexpr auto
+   
     decimal_array<T>::insert_value(const_value_iterator pos, inner_value_type value, size_t count)
         -> value_iterator
     {
@@ -775,7 +776,10 @@ namespace sparrow
         auto data_buffer = get_data_buffer();
         const auto insertion_pos = data_buffer.cbegin() + distance + offset;
         data_buffer.insert(insertion_pos, count, value.storage());
-        return value_iterator(detail::layout_value_functor<self_type, inner_reference>(this), static_cast<size_type>(distance));
+        return value_iterator(
+            detail::layout_value_functor<self_type, inner_reference>(this),
+            static_cast<size_type>(distance)
+        );
     }
 
     template <decimal_type T>
@@ -790,15 +794,15 @@ namespace sparrow
         const auto offset = static_cast<difference_type>(this->get_arrow_proxy().offset());
         auto data_buffer = get_data_buffer();
         
-        // Lazily convert iterator range to storage values without an intermediate container
-        auto value_range = std::ranges::subrange(first, last);
-        auto storage_view = std::ranges::transform_view(
-            value_range,
-            [](const auto& v) { return v.storage(); }
-        );
-
+        // Convert iterator range to storage values
+        std::vector<storage_type> storage_values;
+        for (auto it = first; it != last; ++it)
+        {
+            storage_values.push_back((*it).storage());
+        }
+        
         const auto insertion_pos = data_buffer.cbegin() + distance + offset;
-        data_buffer.insert(insertion_pos, storage_view.begin(), storage_view.end());
+        data_buffer.insert(insertion_pos, storage_values.begin(), storage_values.end());
         return value_iterator(detail::layout_value_functor<self_type, inner_reference>(this), static_cast<size_type>(distance));
     }
 
@@ -811,6 +815,9 @@ namespace sparrow
         const auto erase_begin = data_buffer.cbegin() + distance + offset;
         const auto erase_end = erase_begin + static_cast<difference_type>(count);
         data_buffer.erase(erase_begin, erase_end);
-        return value_iterator(detail::layout_value_functor<self_type, inner_reference>(this), static_cast<size_type>(distance));
+        return value_iterator(
+            detail::layout_value_functor<self_type, inner_reference>(this),
+            static_cast<size_type>(distance)
+        );
     }
 }
