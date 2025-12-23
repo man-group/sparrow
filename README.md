@@ -97,7 +97,7 @@ auto [arrow_array, arrow_schema] = sp::get_arrow_structures(ar);
 
 ```cpp
 #include "sparrow/sparrow.hpp"
-#include "thrid-party-lib.hpp"
+#include "third-party-lib.hpp"
 namespace sp = sparrow;
 namespace tpl = third_party_library;
 
@@ -117,7 +117,7 @@ schema.release(&schema);
 
 ```cpp
 #include "sparrow/sparrow.hpp"
-#include "thrid-party-lib.hpp"
+#include "third-party-lib.hpp"
 namespace sp = sparrow;
 namespace tpl = third_party_library;
 
