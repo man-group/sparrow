@@ -526,6 +526,10 @@ namespace sparrow
                 return "z";
             case data_type::LARGE_BINARY:
                 return "Z";
+            case data_type::STRING_VIEW:
+                return "vu";
+            case data_type::BINARY_VIEW:
+                return "vz";
             case data_type::DATE_DAYS:
                 return "tdD";
             case data_type::DATE_MILLISECONDS:
@@ -564,6 +568,10 @@ namespace sparrow
                 return "+l";
             case data_type::LARGE_LIST:
                 return "+L";
+            case data_type::LIST_VIEW:
+                return "+vl";
+            case data_type::LARGE_LIST_VIEW:
+                return "+vL";
             case data_type::STRUCT:
                 return "+s";
             case data_type::MAP:
