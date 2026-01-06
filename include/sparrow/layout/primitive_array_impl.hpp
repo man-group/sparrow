@@ -108,8 +108,8 @@ namespace sparrow
      */
     template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
     class primitive_array_impl : public mutable_array_bitmap_base<primitive_array_impl<T, Ext, T2>>,
-                                       private details::primitive_data_access<T, T2>,
-                                       public Ext
+                                 private details::primitive_data_access<T, T2>,
+                                 public Ext
     {
     public:
 
