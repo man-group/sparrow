@@ -92,7 +92,6 @@ namespace sparrow
      * @post Array maintains Arrow C data interface compatibility
      * @post Array supports efficient value access and modification operations
      *
-     * @note This is a final class and cannot be further inherited
      * @note The array uses a bitmap to track null values when nullable
      * @note Memory layout follows Apache Arrow primitive array specification
      *
@@ -108,7 +107,7 @@ namespace sparrow
      * ```
      */
     template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
-    class primitive_array_impl final : public mutable_array_bitmap_base<primitive_array_impl<T, Ext, T2>>,
+    class primitive_array_impl : public mutable_array_bitmap_base<primitive_array_impl<T, Ext, T2>>,
                                        private details::primitive_data_access<T, T2>,
                                        public Ext
     {

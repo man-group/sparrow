@@ -156,7 +156,7 @@ namespace sparrow
      * ```
      */
     template <std::ranges::sized_range T, class CR, typename Ext>
-    class variable_size_binary_view_array_impl final
+    class variable_size_binary_view_array_impl
         : public mutable_array_bitmap_base<variable_size_binary_view_array_impl<T, CR, Ext>>,
           public Ext
     {

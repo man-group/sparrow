@@ -120,7 +120,7 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, class Ext>
-    class fixed_width_binary_array_impl final
+    class fixed_width_binary_array_impl
         : public mutable_array_bitmap_base<fixed_width_binary_array_impl<T, CR, Ext>>,
           public Ext
     {

@@ -356,7 +356,7 @@ namespace sparrow
     };
 
     template <bool BIG>
-    class list_array_impl final : public list_array_crtp_base<list_array_impl<BIG>>
+    class list_array_impl : public list_array_crtp_base<list_array_impl<BIG>>
     {
     public:
 
@@ -566,7 +566,7 @@ namespace sparrow
     };
 
     template <bool BIG>
-    class list_view_array_impl final : public list_array_crtp_base<list_view_array_impl<BIG>>
+    class list_view_array_impl : public list_array_crtp_base<list_view_array_impl<BIG>>
     {
     public:
 
@@ -755,7 +755,7 @@ namespace sparrow
         friend class list_array_crtp_base<self_type>;
     };
 
-    class fixed_sized_list_array final : public list_array_crtp_base<fixed_sized_list_array>
+    class fixed_sized_list_array : public list_array_crtp_base<fixed_sized_list_array>
     {
     public:
 

@@ -84,7 +84,7 @@ namespace sparrow
      * map_array arr(std::move(keys), std::move(values), std::move(offsets));
      * ```
      */
-    class map_array final : public array_bitmap_base<map_array>
+    class map_array : public array_bitmap_base<map_array>
     {
     public:
 

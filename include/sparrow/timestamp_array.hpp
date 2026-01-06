@@ -194,7 +194,7 @@ namespace sparrow
      * @endcode
      */
     template <timestamp_type T>
-    class timestamp_array final : public mutable_array_bitmap_base<timestamp_array<T>>
+    class timestamp_array : public mutable_array_bitmap_base<timestamp_array<T>>
     {
     public:
 

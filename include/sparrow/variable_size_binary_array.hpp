@@ -275,7 +275,7 @@ namespace sparrow
      * - https://arrow.apache.org/docs/dev/format/Columnar.html#variable-size-binary-layout
      */
     template <std::ranges::sized_range T, class CR, layout_offset OT, typename Ext>
-    class variable_size_binary_array_impl final
+    class variable_size_binary_array_impl
         : public mutable_array_bitmap_base<variable_size_binary_array_impl<T, CR, OT, Ext>>,
           public Ext
     {

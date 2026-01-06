@@ -150,7 +150,7 @@ namespace sparrow
      * @tparam T The decimal type, must satisfy the decimal_type concept.
      */
     template <decimal_type T>
-    class decimal_array final : public mutable_array_bitmap_base<decimal_array<T>>
+    class decimal_array : public mutable_array_bitmap_base<decimal_array<T>>
     {
     public:
 
