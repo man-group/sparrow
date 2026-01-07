@@ -50,8 +50,10 @@ set(SPARROW_TESTS_SOURCES
     test_arrow_array.cpp
     test_arrow_schema.cpp
     test_bit.cpp
+    test_binary_array.cpp
     test_buffer_adaptor.cpp
     test_buffer.cpp
+    test_builder.cpp
     test_builder_dict_encoded.cpp
     test_builder_run_end_encoded.cpp
     test_builder_utils.cpp
@@ -87,6 +89,7 @@ set(SPARROW_TESTS_SOURCES
     test_record_batch.cpp
     test_repeat_container.cpp
     test_run_end_encoded_array.cpp
+    test_string_array.cpp
     test_struct_array.cpp
     test_time_array.cpp
     test_timestamp_without_timezone_array.cpp
@@ -101,9 +104,6 @@ set(SPARROW_TESTS_SOURCES
 
 if(NOT EMSCRIPTEN)
   list(APPEND SPARROW_TESTS_SOURCES
-    test_binary_array.cpp
-    test_builder.cpp
-    test_string_array.cpp
     test_timestamp_array.cpp
   )
 endif()
