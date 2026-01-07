@@ -114,7 +114,7 @@ add_executable(${test_target} ${SPARROW_TESTS_SOURCES})
 if(EMSCRIPTEN)
 
     target_compile_options(${test_target}
-        PUBLIC "SHELL: -fexceptions"
+        PUBLIC "SHELL: -fwasm-exceptions"
         PUBLIC "SHELL: -fPIC"
     )
 
@@ -125,7 +125,7 @@ if(EMSCRIPTEN)
             better_junit_reporter)
 
     target_link_options(${test_target}
-        PUBLIC "SHELL: -fexceptions"
+        PUBLIC "SHELL: -fwasm-exceptions"
         PUBLIC "SHELL: -fPIC"
         PUBLIC "SHELL: -s MAIN_MODULE=1"
         PUBLIC "SHELL: -s WASM_BIGINT"
