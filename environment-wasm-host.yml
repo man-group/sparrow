@@ -4,3 +4,4 @@ channels:
 dependencies:
   - howardhinnant_date
   - doctest
+  - emscripten-abi==4.0.9
