@@ -102,12 +102,12 @@ namespace sparrow
         {
             SUBCASE("copy arrow_proxy")
             {
-                CHECK_NOTHROW(layout_type(m_arrow_proxy));
+                CHECK_NOTHROW(layout_type{m_arrow_proxy});
             }
 
             SUBCASE("move arrow_proxy")
             {
-                CHECK_NOTHROW(layout_type(std::move(m_arrow_proxy)));
+                CHECK_NOTHROW(layout_type{std::move(m_arrow_proxy)});
             }
 
             SUBCASE("from u8_buffer, offset_buffer_type, validity_bitmap_input, name and metadata")
