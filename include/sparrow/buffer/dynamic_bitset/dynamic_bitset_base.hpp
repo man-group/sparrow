@@ -50,7 +50,6 @@ namespace sparrow
      *       in data processing scenarios where null/invalid values are common.
      *
      * @note The class uses bit-level operations and assumes little-endian bit ordering within blocks.
-     * @tparam B The underlying storage type, which must be a random access range.
      *
      * Example usage through derived classes:
      * @code
@@ -856,7 +855,8 @@ namespace sparrow
         // Resize with the value being inserted to maintain null buffer optimization
         resize(new_size, value);
 
-        for (size_type i = old_size + count - 1; i >= index + count; --i)
+        // Shift existing bits [index, old_size) up by 'count' positions without unsigned underflow
+        for (size_type i = new_size; i-- > index + count; )
         {
             set(i, test(i - count));
         }
