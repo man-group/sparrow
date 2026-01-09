@@ -496,13 +496,14 @@ namespace sparrow
             res += std::popcount(block_data[i]);
         }
 
-        // Handle tail block
-        const size_type has_tail = full_blocks != buffer().size();
+        // Handle tail block (any remaining bits in a partial block)
         const size_type bits_count = m_size % s_bits_per_block;
-        const block_type mask = static_cast<block_type>((block_type(1) << bits_count) - 1);
-        const block_type tail_block = block_data[full_blocks] & mask;
-        const int tail_count = std::popcount(tail_block);
-        res += tail_count & -static_cast<int>(has_tail);
+        if (full_blocks < buffer().size() && bits_count > 0)
+        {
+            const block_type mask = static_cast<block_type>((block_type(1) << bits_count) - 1);
+            const block_type tail_block = block_data[full_blocks] & mask;
+            res += std::popcount(tail_block);
+        }
 
         return static_cast<size_type>(res);
     }
