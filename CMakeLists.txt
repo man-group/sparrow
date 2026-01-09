@@ -211,16 +211,18 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/arrow_interface/private_data_ownership.hpp
 
     # buffer
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/bitset_iterator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/bitset_reference.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset_base.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/allocator.hpp
-    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/bit_vector/bit_vector_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/bit_vector/bit_vector.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_adaptor.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer_view.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/buffer.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/bitset_iterator.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/bitset_reference.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset_base.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp
 
     # builder
     ${SPARROW_INCLUDE_DIR}/sparrow/builder/builder_utils.hpp
