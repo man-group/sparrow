@@ -18,7 +18,8 @@
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
-#include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
+#include "sparrow/buffer/bit_vector/bit_vector_view.hpp"
+#include "sparrow/buffer/bit_vector/non_owning_bit_vector.hpp"
 #include "sparrow/u8_buffer.hpp"
 
 namespace sparrow
@@ -142,7 +143,7 @@ namespace sparrow
         {
         public:
 
-            using bitset_view = dynamic_bitset_view<std::uint8_t>;
+            using bitset_view = bit_vector_view<std::uint8_t>;
             using inner_value_type = typename bitset_view::value_type;
             using inner_reference = typename bitset_view::reference;
             using inner_const_reference = typename bitset_view::const_reference;
@@ -192,7 +193,7 @@ namespace sparrow
 
         private:
 
-            using bitset_adaptor = non_owning_dynamic_bitset<std::uint8_t>;
+            using bitset_adaptor = non_owning_bit_vector<std::uint8_t>;
             using difference_type = typename bitset_adaptor::difference_type;
             using adaptor_iterator = typename bitset_adaptor::iterator;
             using const_adaptor_iterator = typename bitset_adaptor::const_iterator;

@@ -14,10 +14,17 @@
 
 #pragma once
 
+#include <ranges>
+#include <type_traits>
+
 namespace sparrow
 {
     template <class B, bool is_const>
     class bitset_iterator;
+
+    template <typename B>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    class bit_vector_base;
 
     /**
      * @class bitset_reference
@@ -177,6 +184,9 @@ namespace sparrow
         template <typename RAR>
             requires std::ranges::random_access_range<std::remove_pointer_t<RAR>>
         friend class dynamic_bitset_base;  ///< Bitset base class needs access to create references
+        template <typename RAR>
+            requires std::ranges::random_access_range<std::remove_pointer_t<RAR>>
+        friend class bit_vector_base;  ///< Bit vector base class needs access to create references
     };
 
     /**
