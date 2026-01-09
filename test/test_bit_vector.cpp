@@ -51,7 +51,7 @@ namespace sparrow
         {
             if (p_buffer != nullptr)
             {
-                delete[] p_buffer;
+                std::allocator<uint8_t>().deallocate(p_buffer, s_bit_vector_blocks.size());
             }
         }
 
