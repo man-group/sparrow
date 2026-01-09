@@ -158,6 +158,11 @@ namespace sparrow
         constexpr void resize(size_type n, value_type b = false);
         constexpr void clear() noexcept;
         constexpr iterator insert(const_iterator pos, value_type value);
+
+        // Friend declarations for composition
+        template <typename U>
+            requires std::ranges::random_access_range<std::remove_pointer_t<U>>
+        friend class dynamic_bitset_base;
         constexpr iterator insert(const_iterator pos, size_type count, value_type value);
 
         template <std::input_iterator InputIt>

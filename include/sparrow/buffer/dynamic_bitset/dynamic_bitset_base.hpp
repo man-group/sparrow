@@ -21,6 +21,7 @@
 #include <string>
 #include <type_traits>
 
+#include "sparrow/buffer/bit_vector/bit_vector_base.hpp"
 #include "sparrow/buffer/dynamic_bitset/bitset_iterator.hpp"
 #include "sparrow/buffer/dynamic_bitset/bitset_reference.hpp"
 #include "sparrow/utils/contracts.hpp"
@@ -49,6 +50,7 @@ namespace sparrow
      *       in data processing scenarios where null/invalid values are common.
      *
      * @note The class uses bit-level operations and assumes little-endian bit ordering within blocks.
+     * @tparam B The underlying storage type, which must be a random access range.
      *
      * Example usage through derived classes:
      * @code
@@ -62,6 +64,7 @@ namespace sparrow
      * dynamic_bitset_view<std::uint8_t> view(buffer.data(), 128);
      * view.set(64, true);
      * @endcode
+     * @see bit_vector_base For pure bit manipulation without null tracking
      */
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
@@ -73,6 +76,7 @@ namespace sparrow
         using storage_type = B;                    ///< Underlying storage container type
         using storage_type_without_cvrefpointer = std::remove_pointer_t<
             std::remove_cvref_t<storage_type>>;  ///< Storage type without CV/ref/pointer qualifiers
+        using bit_vector_type = bit_vector_base<B>;  ///< Underlying bit vector type
         using block_type = typename storage_type_without_cvrefpointer::value_type;  ///< Type of each storage
                                                                                     ///< block (integral type)
         using value_type = bool;                        ///< Type of individual bit values
@@ -285,14 +289,7 @@ namespace sparrow
          */
         [[nodiscard]] constexpr const storage_type_without_cvrefpointer& buffer() const noexcept
         {
-            if constexpr (std::is_pointer_v<storage_type>)
-            {
-                return *m_buffer;
-            }
-            else
-            {
-                return m_buffer;
-            }
+            return m_bit_vector.buffer();
         }
 
         /**
@@ -302,14 +299,7 @@ namespace sparrow
          */
         [[nodiscard]] constexpr storage_type_without_cvrefpointer& buffer() noexcept
         {
-            if constexpr (std::is_pointer_v<storage_type>)
-            {
-                return *m_buffer;
-            }
-            else
-            {
-                return m_buffer;
-            }
+            return m_bit_vector.buffer();
         }
 
         /**
@@ -319,7 +309,10 @@ namespace sparrow
          * @post Return value >= (bits_count + bits_per_block - 1) / bits_per_block
          * @post Return value is 0 if bits_count is 0
          */
-        [[nodiscard]] static constexpr size_type compute_block_count(size_type bits_count) noexcept;
+        [[nodiscard]] static constexpr size_type compute_block_count(size_type bits_count) noexcept
+        {
+            return bit_vector_type::compute_block_count(bits_count);
+        }
 
         /**
          * @brief Extracts the underlying storage (move operation).
@@ -331,7 +324,7 @@ namespace sparrow
         [[nodiscard]] storage_type extract_storage() noexcept
             requires std::same_as<storage_type, storage_type_without_cvrefpointer>
         {
-            return std::move(m_buffer);
+            return m_bit_vector.extract_storage();
         }
 
     protected:
@@ -486,7 +479,10 @@ namespace sparrow
          * @post Unused bits in the last block are set to 0
          * @note This ensures consistent behavior and correct bit counting
          */
-        constexpr void zero_unused_bits();
+        constexpr void zero_unused_bits()
+        {
+            m_bit_vector.zero_unused_bits();
+        }
 
         /**
          * @brief Counts the number of bits set to true.
@@ -499,36 +495,6 @@ namespace sparrow
 
     private:
 
-        static constexpr std::size_t s_bits_per_block = sizeof(block_type) * CHAR_BIT;  ///< Number of bits
-                                                                                        ///< per storage block
-
-        /**
-         * @brief Computes the block index for a given bit position.
-         * @param pos The bit position
-         * @return The index of the block containing the bit
-         */
-        [[nodiscard]] static constexpr size_type block_index(size_type pos) noexcept;
-
-        /**
-         * @brief Computes the bit index within a block for a given bit position.
-         * @param pos The bit position
-         * @return The index of the bit within its block
-         */
-        [[nodiscard]] static constexpr size_type bit_index(size_type pos) noexcept;
-
-        /**
-         * @brief Creates a bit mask for a given bit position.
-         * @param pos The bit position
-         * @return A mask with only the corresponding bit set
-         */
-        [[nodiscard]] static constexpr block_type bit_mask(size_type pos) noexcept;
-
-        /**
-         * @brief Counts the number of extra bits in the last block.
-         * @return The number of bits used in the last block
-         */
-        [[nodiscard]] constexpr size_type count_extra_bits() const noexcept;
-
         /**
          * @brief Updates the null count when a bit value changes.
          * @param old_value The previous bit value
@@ -537,9 +503,8 @@ namespace sparrow
          */
         constexpr void update_null_count(bool old_value, bool new_value);
 
-        storage_type m_buffer;   ///< The underlying storage for bit data
-        size_type m_size;        ///< The number of bits in the bitset
-        size_type m_null_count;  ///< The number of bits set to false
+        bit_vector_type m_bit_vector;  ///< The underlying bit vector for data storage and manipulation
+        size_type m_null_count;        ///< The number of bits set to false
 
         friend class bitset_iterator<self_type, true>;   ///< Const iterator needs access to internals
         friend class bitset_iterator<self_type, false>;  ///< Mutable iterator needs access to internals
@@ -550,14 +515,14 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr auto dynamic_bitset_base<B>::size() const noexcept -> size_type
     {
-        return m_size;
+        return m_bit_vector.size();
     }
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr bool dynamic_bitset_base<B>::empty() const noexcept
     {
-        return m_size == 0;
+        return m_bit_vector.empty();
     }
 
     template <typename B>
@@ -586,19 +551,13 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr bool dynamic_bitset_base<B>::test(size_type pos) const
     {
-        SPARROW_ASSERT_TRUE(pos < size());
-        if constexpr (std::is_pointer_v<storage_type>)
+        // Validity semantics: null buffer means all bits are valid (true)
+        if (m_bit_vector.data() == nullptr)
         {
-            if (m_buffer == nullptr)
-            {
-                return true;
-            }
-        }
-        if (data() == nullptr)
-        {
+            SPARROW_ASSERT_TRUE(pos < size());
             return true;
         }
-        return !m_null_count || buffer().data()[block_index(pos)] & bit_mask(pos);
+        return m_bit_vector.test(pos);
     }
 
     template <typename B>
@@ -606,37 +565,41 @@ namespace sparrow
     constexpr void dynamic_bitset_base<B>::set(size_type pos, value_type value)
     {
         SPARROW_ASSERT_TRUE(pos < size());
-        if (data() == nullptr)
+        
+        // Handle null buffer transition for validity semantics
+        if (m_bit_vector.data() == nullptr)
         {
-            if (value == true)  // In this case,  we don't need to set the bit
+            // Null buffer means all bits are valid (true)
+            // If setting to true, nothing changes
+            if (value == true)
             {
                 return;
             }
+            
+            // If setting to false, we need to materialize the buffer
+            // Initialize to all 1s (all valid) for validity semantics
+            if constexpr (requires { m_bit_vector.buffer().resize(0); })
+            {
+                const auto block_count = m_bit_vector.compute_block_count(size());
+                m_bit_vector.buffer().resize(block_count, block_type(~block_type(0)));  // All 1s
+                m_bit_vector.zero_unused_bits();
+                
+                // Now all bits are materialized as 1 (valid)
+                // Set the specific bit and update null count
+                m_bit_vector.set(pos, value);
+                // Changed from true to false, so increment null count
+                ++m_null_count;
+            }
             else
             {
-                if constexpr (requires(storage_type_without_cvrefpointer s) { s.resize(0); })
-                {
-                    constexpr block_type true_value = block_type(~block_type(0));
-                    const auto block_count = compute_block_count(size());
-                    buffer().resize(block_count, true_value);
-                    zero_unused_bits();
-                }
-                else
-                {
-                    throw std::runtime_error("Cannot set a bit in a null buffer.");
-                }
+                throw std::runtime_error("Cannot set a bit in a null buffer.");
             }
+            return;
         }
-        block_type& block = buffer().data()[block_index(pos)];
-        const bool old_value = block & bit_mask(pos);
-        if (value)
-        {
-            block |= bit_mask(pos);
-        }
-        else
-        {
-            block &= block_type(~bit_mask(pos));
-        }
+        
+        // Normal case: buffer exists
+        const bool old_value = m_bit_vector.test(pos);
+        m_bit_vector.set(pos, value);
         update_null_count(old_value, value);
     }
 
@@ -644,28 +607,21 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr auto dynamic_bitset_base<B>::data() noexcept -> block_type*
     {
-        if constexpr (std::is_pointer_v<storage_type>)
-        {
-            if (m_buffer == nullptr)
-            {
-                return nullptr;
-            }
-        }
-        return buffer().data();
+        return m_bit_vector.data();
     }
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr auto dynamic_bitset_base<B>::data() const noexcept -> const block_type*
     {
-        return buffer().data();
+        return m_bit_vector.data();
     }
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr auto dynamic_bitset_base<B>::block_count() const noexcept -> size_type
     {
-        return buffer().size();
+        return m_bit_vector.block_count();
     }
 
     template <typename B>
@@ -673,8 +629,7 @@ namespace sparrow
     constexpr void dynamic_bitset_base<B>::swap(self_type& rhs) noexcept
     {
         using std::swap;
-        swap(m_buffer, rhs.m_buffer);
-        swap(m_size, rhs.m_size);
+        swap(m_bit_vector, rhs.m_bit_vector);
         swap(m_null_count, rhs.m_null_count);
     }
 
@@ -791,105 +746,29 @@ namespace sparrow
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr dynamic_bitset_base<B>::dynamic_bitset_base(storage_type buf, size_type size)
-        : m_buffer(std::move(buf))
-        , m_size(size)
-        , m_null_count(m_size - count_non_null())
+        : m_bit_vector(std::move(buf), size)
+        , m_null_count(this->size() - count_non_null())
     {
     }
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr dynamic_bitset_base<B>::dynamic_bitset_base(storage_type buf, size_type size, size_type null_count)
-        : m_buffer(std::move(buf))
-        , m_size(size)
+        : m_bit_vector(std::move(buf), size)
         , m_null_count(null_count)
     {
     }
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::compute_block_count(size_type bits_count) noexcept -> size_type
-    {
-        return bits_count / s_bits_per_block + static_cast<size_type>(bits_count % s_bits_per_block != 0);
-    }
-
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::block_index(size_type pos) noexcept -> size_type
-    {
-        return pos / s_bits_per_block;
-    }
-
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::bit_index(size_type pos) noexcept -> size_type
-    {
-        return pos % s_bits_per_block;
-    }
-
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::bit_mask(size_type pos) noexcept -> block_type
-    {
-        const size_type bit = bit_index(pos);
-        return static_cast<block_type>(block_type(1) << bit);
-    }
-
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     auto dynamic_bitset_base<B>::count_non_null() const noexcept -> size_type
     {
-        if constexpr (std::is_pointer_v<storage_type>)
+        // Validity semantics: null buffer means all bits are valid (counted as set)
+        if (m_bit_vector.data() == nullptr)
         {
-            if (m_buffer == nullptr)
-            {
-                return m_size;
-            }
+            return size();
         }
-        if (data() == nullptr || buffer().empty())
-        {
-            return m_size;
-        }
-
-        int res = 0;
-        size_t full_blocks = m_size / s_bits_per_block;
-        for (size_t i = 0; i < full_blocks; ++i)
-        {
-            res += std::popcount(buffer().data()[i]);
-        }
-        if (full_blocks != buffer().size())
-        {
-            const size_t bits_count = m_size % s_bits_per_block;
-            const block_type mask = static_cast<block_type>(
-                ~static_cast<block_type>(~static_cast<block_type>(0) << bits_count)
-            );
-            const block_type block = buffer().data()[full_blocks] & mask;
-            res += std::popcount(block);
-        }
-
-        return static_cast<size_t>(res);
-    }
-
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::count_extra_bits() const noexcept -> size_type
-    {
-        return bit_index(size());
-    }
-
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr void dynamic_bitset_base<B>::zero_unused_bits()
-    {
-        if (data() == nullptr)
-        {
-            return;
-        }
-        const size_type extra_bits = count_extra_bits();
-        if (extra_bits != 0)
-        {
-            buffer().back() &= block_type(~(~block_type(0) << extra_bits));
-        }
+        return m_bit_vector.count();
     }
 
     template <typename B>
@@ -910,47 +789,45 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr void dynamic_bitset_base<B>::resize(size_type n, value_type b)
     {
-        if ((data() == nullptr) && b)
+        const bool was_null = (m_bit_vector.data() == nullptr);
+        const size_type old_size = size();
+        
+        // Validity semantics: null buffer means all bits are true (valid)
+        // If resizing from null and only adding true bits, stay null
+        if (was_null && b == true)
         {
-            m_size = n;
+            // Just update size directly, DON'T call m_bit_vector.resize which would allocate
+            m_bit_vector.m_size = n;
+            // null_count stays 0 since all bits (old and new) are valid
+            m_null_count = 0;
             return;
         }
-        size_type old_block_count = buffer().size();
-        const size_type new_block_count = compute_block_count(n);
-        const block_type value = b ? block_type(~block_type(0)) : block_type(0);
-
-        if (new_block_count != old_block_count)
+        
+        // If transitioning from null buffer and adding false bits,
+        // we need to materialize the buffer with all 1s (all valid) for existing bits
+        if (was_null && b == false && n > old_size)
         {
-            if (data() == nullptr)
+            if constexpr (requires { m_bit_vector.buffer().resize(0); })
             {
-                constexpr block_type true_value = block_type(~block_type(0));
-                old_block_count = compute_block_count(size());
-                buffer().resize(old_block_count, true_value);
-                zero_unused_bits();
-            }
-            buffer().resize(new_block_count, value);
-        }
-
-        if (b && (n > m_size))
-        {
-            const size_type extra_bits = count_extra_bits();
-            if (extra_bits > 0)
-            {
-                buffer().data()[old_block_count - 1] |= static_cast<block_type>(value << extra_bits);
+                // Allocate buffer and initialize old bits to 1 (all valid for validity semantics)
+                const auto old_block_count = m_bit_vector.compute_block_count(old_size);
+                if (old_block_count > 0)
+                {
+                    m_bit_vector.buffer().resize(old_block_count, block_type(~block_type(0)));  // All 1s
+                    m_bit_vector.zero_unused_bits();
+                }
             }
         }
-
-        m_size = n;
-        m_null_count = m_size - count_non_null();
-        zero_unused_bits();
+        
+        m_bit_vector.resize(n, b);
+        m_null_count = size() - count_non_null();
     }
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr void dynamic_bitset_base<B>::clear() noexcept
     {
-        buffer().clear();
-        m_size = 0;
+        m_bit_vector.clear();
         m_null_count = 0;
     }
 
@@ -970,28 +847,23 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
-        if (data() == nullptr && value)
+        
+        const size_type old_size = size();
+        const size_type new_size = old_size + count;
+
+        // TODO: The current implementation is not efficient. It can be improved.
+
+        // Resize with the value being inserted to maintain null buffer optimization
+        resize(new_size, value);
+
+        for (size_type i = old_size + count - 1; i >= index + count; --i)
         {
-            m_size += count;
+            set(i, test(i - count));
         }
-        else
+
+        for (size_type i = 0; i < count; ++i)
         {
-            const size_type old_size = size();
-            const size_type new_size = old_size + count;
-
-            // TODO: The current implementation is not efficient. It can be improved.
-
-            resize(new_size);
-
-            for (size_type i = old_size + count - 1; i >= index + count; --i)
-            {
-                set(i, test(i - count));
-            }
-
-            for (size_type i = 0; i < count; ++i)
-            {
-                set(index + i, value);
-            }
+            set(index + i, value);
         }
 
         return iterator(this, index);
@@ -1003,25 +875,11 @@ namespace sparrow
     constexpr dynamic_bitset_base<B>::iterator
     dynamic_bitset_base<B>::insert(const_iterator pos, InputIt first, InputIt last)
     {
-        const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
-        const auto count = static_cast<size_type>(std::distance(first, last));
-        if (data() == nullptr)
-        {
-            if (std::all_of(
-                    first,
-                    last,
-                    [](auto v)
-                    {
-                        return bool(v);
-                    }
-                ))
-            {
-                m_size += count;
-            }
-            return iterator(this, index);
-        }
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
+        
+        const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
+        const auto count = static_cast<size_type>(std::distance(first, last));
 
         const size_type old_size = size();
         const size_type new_size = old_size + count;
@@ -1074,28 +932,21 @@ namespace sparrow
         const auto last_index = static_cast<size_type>(std::distance(cbegin(), last));
         const size_type count = last_index - first_index;
 
-        if (data() == nullptr)
+        if (last == cend())
         {
-            m_size -= count;
+            resize(first_index);
+            return end();
         }
-        else
+
+        // TODO: The current implementation is not efficient. It can be improved.
+
+        const size_type bit_to_move = size() - last_index;
+        for (size_type i = 0; i < bit_to_move; ++i)
         {
-            if (last == cend())
-            {
-                resize(first_index);
-                return end();
-            }
-
-            // TODO: The current implementation is not efficient. It can be improved.
-
-            const size_type bit_to_move = size() - last_index;
-            for (size_type i = 0; i < bit_to_move; ++i)
-            {
-                set(first_index + i, test(last_index + i));
-            }
-
-            resize(size() - count);
+            set(first_index + i, test(last_index + i));
         }
+
+        resize(size() - count);
         return iterator(this, first_index);
     }
 

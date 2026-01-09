@@ -50,6 +50,7 @@ set(SPARROW_TESTS_SOURCES
     test_arrow_array.cpp
     test_arrow_schema.cpp
     test_bit.cpp
+    test_bit_vector.cpp
     test_binary_array.cpp
     test_buffer_adaptor.cpp
     test_buffer.cpp
