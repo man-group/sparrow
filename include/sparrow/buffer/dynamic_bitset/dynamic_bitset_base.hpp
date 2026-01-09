@@ -856,7 +856,7 @@ namespace sparrow
         resize(new_size, value);
 
         // Shift existing bits [index, old_size) up by 'count' positions without unsigned underflow
-        for (size_type i = new_size; i-- > index + count; )
+        for (size_type i = new_size; i-- > index + count;)
         {
             set(i, test(i - count));
         }
