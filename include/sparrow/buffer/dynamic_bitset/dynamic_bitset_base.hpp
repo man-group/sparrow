@@ -75,7 +75,7 @@ namespace sparrow
         using self_type = dynamic_bitset_base<B>;  ///< This class type
         using storage_type = B;                    ///< Underlying storage container type
         using storage_type_without_cvrefpointer = std::remove_pointer_t<
-            std::remove_cvref_t<storage_type>>;  ///< Storage type without CV/ref/pointer qualifiers
+            std::remove_cvref_t<storage_type>>;      ///< Storage type without CV/ref/pointer qualifiers
         using bit_vector_type = bit_vector_base<B>;  ///< Underlying bit vector type
         using block_type = typename storage_type_without_cvrefpointer::value_type;  ///< Type of each storage
                                                                                     ///< block (integral type)
@@ -565,7 +565,7 @@ namespace sparrow
     constexpr void dynamic_bitset_base<B>::set(size_type pos, value_type value)
     {
         SPARROW_ASSERT_TRUE(pos < size());
-        
+
         // Handle null buffer transition for validity semantics
         if (m_bit_vector.data() == nullptr)
         {
@@ -575,7 +575,7 @@ namespace sparrow
             {
                 return;
             }
-            
+
             // If setting to false, we need to materialize the buffer
             // Initialize to all 1s (all valid) for validity semantics
             if constexpr (requires { m_bit_vector.buffer().resize(0); })
@@ -583,7 +583,7 @@ namespace sparrow
                 const auto block_count = m_bit_vector.compute_block_count(size());
                 m_bit_vector.buffer().resize(block_count, block_type(~block_type(0)));  // All 1s
                 m_bit_vector.zero_unused_bits();
-                
+
                 // Now all bits are materialized as 1 (valid)
                 // Set the specific bit and update null count
                 m_bit_vector.set(pos, value);
@@ -596,7 +596,7 @@ namespace sparrow
             }
             return;
         }
-        
+
         // Normal case: buffer exists
         const bool old_value = m_bit_vector.test(pos);
         m_bit_vector.set(pos, value);
@@ -791,7 +791,7 @@ namespace sparrow
     {
         const bool was_null = (m_bit_vector.data() == nullptr);
         const size_type old_size = size();
-        
+
         // Validity semantics: null buffer means all bits are true (valid)
         // If resizing from null and only adding true bits, stay null
         if (was_null && b == true)
@@ -802,7 +802,7 @@ namespace sparrow
             m_null_count = 0;
             return;
         }
-        
+
         // If transitioning from null buffer and adding false bits,
         // we need to materialize the buffer with all 1s (all valid) for existing bits
         if (was_null && b == false && n > old_size)
@@ -818,7 +818,7 @@ namespace sparrow
                 }
             }
         }
-        
+
         m_bit_vector.resize(n, b);
         m_null_count = size() - count_non_null();
     }
@@ -847,7 +847,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
         const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
-        
+
         const size_type old_size = size();
         const size_type new_size = old_size + count;
 
@@ -877,7 +877,7 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
-        
+
         const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
         const auto count = static_cast<size_type>(std::distance(first, last));
 

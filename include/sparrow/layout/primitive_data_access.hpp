@@ -17,9 +17,9 @@
 #include <type_traits>
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
-#include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/buffer/bit_vector/bit_vector_view.hpp"
 #include "sparrow/buffer/bit_vector/non_owning_bit_vector.hpp"
+#include "sparrow/buffer/buffer_adaptor.hpp"
 #include "sparrow/u8_buffer.hpp"
 
 namespace sparrow

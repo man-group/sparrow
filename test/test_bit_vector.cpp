@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <ranges>
-#include <algorithm>
 
 #include "sparrow/buffer/bit_vector/bit_vector.hpp"
 #include "sparrow/buffer/bit_vector/bit_vector_view.hpp"
@@ -27,9 +27,7 @@
 namespace sparrow
 {
     static constexpr std::size_t s_bit_vector_size = 29;
-    static constexpr std::array<uint8_t, 4> s_bit_vector_blocks{
-        {0b00100110, 0b01010101, 0b00110101, 0b00000111}
-    };
+    static constexpr std::array<uint8_t, 4> s_bit_vector_blocks{{0b00100110, 0b01010101, 0b00110101, 0b00000111}};
 
     using testing_types = std::tuple<bit_vector<std::uint8_t>>;
 
@@ -110,7 +108,7 @@ namespace sparrow
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
                     CHECK_EQ(bm.size(), s_bit_vector_size);
                     CHECK_FALSE(bm.empty());
-                    
+
                     // Verify data semantics: null buffer returns false
                     if (bm.data() == nullptr)
                     {
@@ -144,7 +142,7 @@ namespace sparrow
                 SUBCASE("from non-null buffer")
                 {
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     // Test first byte: 0b00100110
                     CHECK_EQ(bm.test(0), false);  // bit 0
                     CHECK_EQ(bm.test(1), true);   // bit 1
@@ -164,7 +162,7 @@ namespace sparrow
                 SUBCASE("from null buffer")
                 {
                     bitmap bm(null_f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     // Data semantics: null buffer means all bits are false
                     CHECK_EQ(bm.test(0), false);
                     CHECK_EQ(bm.test(10), false);
@@ -177,7 +175,7 @@ namespace sparrow
                 SUBCASE("const access")
                 {
                     const bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     CHECK_EQ(bm[0], false);
                     CHECK_EQ(bm[1], true);
                     CHECK_EQ(bm[2], true);
@@ -186,7 +184,7 @@ namespace sparrow
                 SUBCASE("from null buffer")
                 {
                     const bitmap bm(null_f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     CHECK_EQ(bm[0], false);
                     CHECK_EQ(bm[10], false);
                 }
@@ -197,7 +195,7 @@ namespace sparrow
                 SUBCASE("from non-null buffer")
                 {
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     // Change bit from false to true
                     CHECK_EQ(bm.test(0), false);
                     bm.set(0, true);
@@ -216,7 +214,7 @@ namespace sparrow
                 SUBCASE("from null buffer")
                 {
                     bitmap bm(null_f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     // Setting false on null buffer does nothing (stays null)
                     CHECK_EQ(bm.data(), nullptr);
                     bm.set(0, false);
@@ -238,7 +236,7 @@ namespace sparrow
                 SUBCASE("from non-null buffer")
                 {
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     // Count set bits in: 0b00100110, 0b01010101, 0b00110101, 0b00000111 (29 bits total)
                     // First byte: 3 bits set
                     // Second byte: 4 bits set
@@ -251,7 +249,7 @@ namespace sparrow
                 SUBCASE("from null buffer")
                 {
                     bitmap bm(null_f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     // Data semantics: null buffer has no set bits
                     CHECK_EQ(bm.count(), 0);
                 }
@@ -260,7 +258,7 @@ namespace sparrow
                 {
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
                     auto initial_count = bm.count();
-                    
+
                     // Set a false bit to true
                     bm.set(0, true);  // was false
                     CHECK_EQ(bm.count(), initial_count + 1);
@@ -276,7 +274,7 @@ namespace sparrow
                 SUBCASE("valid access")
                 {
                     const bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     CHECK_EQ(bm.at(0), false);
                     CHECK_EQ(bm.at(1), true);
                     CHECK_EQ(bm.at(s_bit_vector_size - 1), false);  // bit 28 = bit 4 of byte 3
@@ -285,7 +283,7 @@ namespace sparrow
                 SUBCASE("out of range")
                 {
                     const bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     CHECK_THROWS_AS(bm.at(s_bit_vector_size), std::out_of_range);
                     CHECK_THROWS_AS(bm.at(s_bit_vector_size + 10), std::out_of_range);
                 }
@@ -296,10 +294,10 @@ namespace sparrow
                 SUBCASE("from non-null buffer")
                 {
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     // First bit of 0b00100110 is false
                     CHECK_EQ(bm.front(), false);
-                    
+
                     // Last bit (bit 28, which is bit 4 of fourth byte 0b00000111)
                     // Bit 4 in 0b00000111 is 0, so back() should be false
                     CHECK_EQ(bm.back(), false);
@@ -308,7 +306,7 @@ namespace sparrow
                 SUBCASE("from null buffer")
                 {
                     const bitmap bm(null_f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     // Data semantics: null buffer returns false
                     CHECK_EQ(bm.front(), false);
                     CHECK_EQ(bm.back(), false);
@@ -320,7 +318,7 @@ namespace sparrow
                 SUBCASE("non-null buffer")
                 {
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     CHECK_NE(bm.data(), nullptr);
                     CHECK_FALSE(bm.buffer().empty());
                 }
@@ -328,7 +326,7 @@ namespace sparrow
                 SUBCASE("null buffer")
                 {
                     bitmap bm(null_f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     CHECK_EQ(bm.data(), nullptr);
                 }
             }
@@ -336,7 +334,7 @@ namespace sparrow
             SUBCASE("block_count")
             {
                 bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                
+
                 // 29 bits / 8 bits per byte = 3.625, so we need 4 blocks
                 CHECK_EQ(bm.block_count(), 4);
 
@@ -349,10 +347,10 @@ namespace sparrow
                 SUBCASE("begin and end")
                 {
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     auto it = bm.begin();
                     auto end_it = bm.end();
-                    
+
                     CHECK_NE(it, end_it);
                     CHECK_EQ(std::distance(it, end_it), s_bit_vector_size);
                 }
@@ -360,7 +358,7 @@ namespace sparrow
                 SUBCASE("iteration")
                 {
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     std::size_t count = 0;
                     for (auto it = bm.begin(); it != bm.end(); ++it)
                     {
@@ -372,10 +370,10 @@ namespace sparrow
                 SUBCASE("const iterators")
                 {
                     const bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     auto it = bm.cbegin();
                     auto end_it = bm.cend();
-                    
+
                     CHECK_EQ(std::distance(it, end_it), s_bit_vector_size);
                 }
             }
@@ -385,10 +383,10 @@ namespace sparrow
                 SUBCASE("grow with false")
                 {
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     bm.resize(40, false);
                     CHECK_EQ(bm.size(), 40);
-                    
+
                     // New bits should be false
                     for (std::size_t i = s_bit_vector_size; i < 40; ++i)
                     {
@@ -399,10 +397,10 @@ namespace sparrow
                 SUBCASE("grow with true")
                 {
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     bm.resize(40, true);
                     CHECK_EQ(bm.size(), 40);
-                    
+
                     // New bits should be true
                     for (std::size_t i = s_bit_vector_size; i < 40; ++i)
                     {
@@ -413,7 +411,7 @@ namespace sparrow
                 SUBCASE("shrink")
                 {
                     bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     bm.resize(10);
                     CHECK_EQ(bm.size(), 10);
                 }
@@ -421,7 +419,7 @@ namespace sparrow
                 SUBCASE("from null buffer with false")
                 {
                     bitmap bm(null_f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     bm.resize(40, false);
                     CHECK_EQ(bm.size(), 40);
                     CHECK_EQ(bm.data(), nullptr);  // Should stay null for false
@@ -430,7 +428,7 @@ namespace sparrow
                 SUBCASE("from null buffer with true")
                 {
                     bitmap bm(null_f.get_buffer(), s_bit_vector_size, alloc_type{});
-                    
+
                     bm.resize(40, true);
                     CHECK_EQ(bm.size(), 40);
                     // Buffer may be allocated for true values
@@ -441,7 +439,7 @@ namespace sparrow
             {
                 bitmap bm(f.get_buffer(), s_bit_vector_size, alloc_type{});
                 CHECK_FALSE(bm.empty());
-                
+
                 bm.clear();
                 CHECK(bm.empty());
                 CHECK_EQ(bm.size(), 0);
@@ -451,12 +449,12 @@ namespace sparrow
             {
                 bitmap bm1(f.get_buffer(), s_bit_vector_size, alloc_type{});
                 bitmap bm2(alloc_type{});
-                
+
                 auto bm1_size = bm1.size();
                 auto bm2_size = bm2.size();
-                
+
                 bm1.swap(bm2);
-                
+
                 CHECK_EQ(bm1.size(), bm2_size);
                 CHECK_EQ(bm2.size(), bm1_size);
             }
@@ -494,7 +492,7 @@ namespace sparrow
                 SUBCASE("from non-null buffer")
                 {
                     bitmap_view bm(f.p_buffer, s_bit_vector_size);
-                    
+
                     // Test first byte: 0b00100110
                     CHECK_EQ(bm.test(0), false);
                     CHECK_EQ(bm.test(1), true);
@@ -504,7 +502,7 @@ namespace sparrow
                 SUBCASE("from null buffer")
                 {
                     bitmap_view bm(null_f.p_buffer, s_bit_vector_size);
-                    
+
                     // Data semantics: null buffer means all bits are false
                     CHECK_EQ(bm.test(0), false);
                     CHECK_EQ(bm.test(10), false);
@@ -523,7 +521,7 @@ namespace sparrow
             SUBCASE("const access")
             {
                 const bitmap_view bm(f.p_buffer, s_bit_vector_size);
-                
+
                 CHECK_EQ(bm[0], false);
                 CHECK_EQ(bm[1], true);
                 CHECK_EQ(bm.test(2), true);
@@ -544,16 +542,16 @@ namespace sparrow
             SUBCASE("iterators")
             {
                 bitmap_view bm(f.p_buffer, s_bit_vector_size);
-                
+
                 auto it = bm.begin();
                 auto end_it = bm.end();
-                
+
                 CHECK_EQ(std::distance(it, end_it), s_bit_vector_size);
-                
+
                 std::size_t count = 0;
                 for (auto bit : bm)
                 {
-                    (void)bit;
+                    (void) bit;
                     ++count;
                 }
                 CHECK_EQ(count, s_bit_vector_size);
@@ -568,7 +566,7 @@ namespace sparrow
             {
                 // Data semantics: null buffer = all bits false
                 bit_vector_view<std::uint8_t> bv(null_f.p_buffer, 10);
-                
+
                 CHECK_EQ(bv.test(0), false);
                 CHECK_EQ(bv.test(5), false);
                 CHECK_EQ(bv.test(9), false);

@@ -490,12 +490,12 @@ namespace sparrow
         int res = 0;
         const auto* block_data = buffer().data();
         const size_type full_blocks = m_size / s_bits_per_block;
-        
+
         for (size_type i = 0; i < full_blocks; ++i)
         {
             res += std::popcount(block_data[i]);
         }
-        
+
         // Handle tail block
         const size_type has_tail = full_blocks != buffer().size();
         const size_type bits_count = m_size % s_bits_per_block;
@@ -576,8 +576,7 @@ namespace sparrow
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr bit_vector_base<B>::iterator
-    bit_vector_base<B>::insert(const_iterator pos, value_type value)
+    constexpr bit_vector_base<B>::iterator bit_vector_base<B>::insert(const_iterator pos, value_type value)
     {
         return insert(pos, 1, value);
     }
@@ -669,8 +668,7 @@ namespace sparrow
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr bit_vector_base<B>::iterator
-    bit_vector_base<B>::emplace(const_iterator pos, value_type value)
+    constexpr bit_vector_base<B>::iterator bit_vector_base<B>::emplace(const_iterator pos, value_type value)
     {
         return insert(pos, value);
     }
@@ -687,8 +685,7 @@ namespace sparrow
 
     template <typename B>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr bit_vector_base<B>::iterator
-    bit_vector_base<B>::erase(const_iterator first, const_iterator last)
+    constexpr bit_vector_base<B>::iterator bit_vector_base<B>::erase(const_iterator first, const_iterator last)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= first);
         SPARROW_ASSERT_TRUE(first <= last);

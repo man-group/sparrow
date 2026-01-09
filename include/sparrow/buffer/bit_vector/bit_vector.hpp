@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/bit_vector/bit_vector_base.hpp"
+#include "sparrow/buffer/buffer.hpp"
 
 namespace sparrow
 {
