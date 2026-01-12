@@ -167,7 +167,7 @@ namespace sparrow
          * @returns a range view of the child arrays of the \ref array. If the array has no children,
          * an empty range is returned.
          */
-        [[nodiscard]] SPARROW_API auto children() const
+        [[nodiscard]] auto children() const
         {
             return get_arrow_proxy().children()
                    | std::views::transform(
