@@ -16,7 +16,6 @@
 
 
 #include <algorithm>
-#include <bit>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -66,7 +65,7 @@ namespace sparrow
      */
     template <typename B, null_count_policy NCP = tracking_null_count<>>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    class dynamic_bitset_base
+    class dynamic_bitset_base : public NCP
     {
     public:
 
@@ -528,7 +527,6 @@ namespace sparrow
 
         storage_type m_buffer;  ///< The underlying storage for bit data
         size_type m_size;       ///< The number of bits in the bitset
-        [[no_unique_address]] NCP m_null_count_policy{};  ///< Policy handling null count tracking
 
         friend class bitset_iterator<self_type, true>;   ///< Const iterator needs access to internals
         friend class bitset_iterator<self_type, false>;  ///< Mutable iterator needs access to internals
@@ -554,7 +552,7 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B, NCP>::null_count() const noexcept -> size_type
         requires(NCP::track_null_count)
     {
-        return m_null_count_policy.null_count();
+        return NCP::null_count();
     }
 
     template <typename B, null_count_policy NCP>
@@ -627,7 +625,7 @@ namespace sparrow
         {
             block &= block_type(~bit_mask(pos));
         }
-        m_null_count_policy.update_null_count(old_value, value);
+        this->update_null_count(old_value, value);
     }
 
     template <typename B, null_count_policy NCP>
@@ -665,7 +663,7 @@ namespace sparrow
         using std::swap;
         swap(m_buffer, rhs.m_buffer);
         swap(m_size, rhs.m_size);
-        m_null_count_policy.swap(rhs.m_null_count_policy);
+        swap_null_count(rhs);
     }
 
     template <typename B, null_count_policy NCP>
@@ -783,9 +781,8 @@ namespace sparrow
     constexpr dynamic_bitset_base<B, NCP>::dynamic_bitset_base(storage_type buf, size_type size)
         : m_buffer(std::move(buf))
         , m_size(size)
-        , m_null_count_policy()
     {
-        m_null_count_policy.initialize(data(), m_size, buffer().size());
+        this->initialize_null_count(data(), m_size, buffer().size());
     }
 
     template <typename B, null_count_policy NCP>
@@ -794,8 +791,8 @@ namespace sparrow
         requires(NCP::track_null_count)
         : m_buffer(std::move(buf))
         , m_size(size)
-        , m_null_count_policy(null_count)
     {
+        this->set_null_count(null_count);
     }
 
     template <typename B, null_count_policy NCP>
@@ -886,7 +883,7 @@ namespace sparrow
         }
 
         m_size = n;
-        m_null_count_policy.recompute(data(), m_size, buffer().size());
+        this->recompute_null_count(data(), m_size, buffer().size());
         zero_unused_bits();
     }
 
@@ -896,7 +893,7 @@ namespace sparrow
     {
         buffer().clear();
         m_size = 0;
-        m_null_count_policy.clear();
+        this->clear_null_count();
     }
 
     template <typename B, null_count_policy NCP>

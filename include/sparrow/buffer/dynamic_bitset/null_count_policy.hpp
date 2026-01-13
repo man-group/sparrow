@@ -97,7 +97,7 @@ namespace sparrow
          * @param block_count The number of blocks in the buffer
          */
         template <std::integral BlockType>
-        constexpr void initialize(const BlockType* data, size_type bit_size, size_type block_count) noexcept
+        constexpr void initialize_null_count(const BlockType* data, size_type bit_size, size_type block_count) noexcept
         {
             m_null_count = bit_size - count_non_null(data, bit_size, block_count);
         }
@@ -120,7 +120,7 @@ namespace sparrow
          * @param block_count The number of blocks in the buffer
          */
         template <std::integral BlockType>
-        constexpr void recompute(const BlockType* data, size_type bit_size, size_type block_count) noexcept
+        constexpr void recompute_null_count(const BlockType* data, size_type bit_size, size_type block_count) noexcept
         {
             m_null_count = bit_size - count_non_null(data, bit_size, block_count);
         }
@@ -137,12 +137,12 @@ namespace sparrow
             }
         }
 
-        constexpr void swap(tracking_null_count& other) noexcept
+        constexpr void swap_null_count(tracking_null_count& other) noexcept
         {
             std::swap(m_null_count, other.m_null_count);
         }
 
-        constexpr void clear() noexcept
+        constexpr void clear_null_count() noexcept
         {
             m_null_count = 0;
         }
@@ -185,7 +185,7 @@ namespace sparrow
 
         // No-op: non-tracking policy doesn't need to count bits
         template <std::integral BlockType>
-        constexpr void initialize(const BlockType* /*data*/, size_type /*bit_size*/, size_type /*block_count*/) noexcept
+        constexpr void initialize_null_count(const BlockType* /*data*/, size_type /*bit_size*/, size_type /*block_count*/) noexcept
         {
         }
 
@@ -196,7 +196,7 @@ namespace sparrow
 
         // No-op: non-tracking policy doesn't need to recompute
         template <std::integral BlockType>
-        constexpr void recompute(const BlockType* /*data*/, size_type /*bit_size*/, size_type /*block_count*/) noexcept
+        constexpr void recompute_null_count(const BlockType* /*data*/, size_type /*bit_size*/, size_type /*block_count*/) noexcept
         {
         }
 
@@ -205,12 +205,12 @@ namespace sparrow
             // No-op
         }
 
-        constexpr void swap(non_tracking_null_count& /*other*/) noexcept
+        constexpr void swap_null_count(non_tracking_null_count& /*other*/) noexcept
         {
             // No-op
         }
 
-        constexpr void clear() noexcept
+        constexpr void clear_null_count() noexcept
         {
             // No-op
         }
@@ -229,11 +229,11 @@ namespace sparrow
     concept null_count_policy = requires(P p, P other, bool b, typename P::size_type s, const std::uint8_t* data) {
         { P::track_null_count } -> std::convertible_to<bool>;
         { p.update_null_count(b, b) } -> std::same_as<void>;
-        { p.swap(other) } -> std::same_as<void>;
-        { p.clear() } -> std::same_as<void>;
+        { p.swap_null_count(other) } -> std::same_as<void>;
+        { p.clear_null_count() } -> std::same_as<void>;
         { p.set_null_count(s) } -> std::same_as<void>;
-        { p.initialize(data, s, s) } -> std::same_as<void>;
-        { p.recompute(data, s, s) } -> std::same_as<void>;
+        { p.initialize_null_count(data, s, s) } -> std::same_as<void>;
+        { p.recompute_null_count(data, s, s) } -> std::same_as<void>;
     };
 
 }  // namespace sparrow

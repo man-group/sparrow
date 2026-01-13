@@ -1198,7 +1198,7 @@ namespace sparrow
             {
                 std::array<std::uint8_t, 2> buffer = {0b10101010, 0b01010101};
                 tracking_null_count<> policy;
-                policy.initialize(buffer.data(), 16, 2);
+                policy.initialize_null_count(buffer.data(), 16, 2);
                 CHECK_EQ(policy.null_count(), 8);  // 8 bits are unset
             }
 
@@ -1206,12 +1206,12 @@ namespace sparrow
             {
                 std::array<std::uint8_t, 2> buffer = {0b11111111, 0b00000000};
                 tracking_null_count<> policy;
-                policy.initialize(buffer.data(), 16, 2);
+                policy.initialize_null_count(buffer.data(), 16, 2);
                 CHECK_EQ(policy.null_count(), 8);
 
                 // Modify buffer and recompute
                 buffer[1] = 0b11111111;
-                policy.recompute(buffer.data(), 16, 2);
+                policy.recompute_null_count(buffer.data(), 16, 2);
                 CHECK_EQ(policy.null_count(), 0);
             }
 
@@ -1242,7 +1242,7 @@ namespace sparrow
                 tracking_null_count<> policy1(10);
                 tracking_null_count<> policy2(20);
 
-                policy1.swap(policy2);
+                policy1.swap_null_count(policy2);
                 CHECK_EQ(policy1.null_count(), 20);
                 CHECK_EQ(policy2.null_count(), 10);
             }
@@ -1250,7 +1250,7 @@ namespace sparrow
             SUBCASE("clear")
             {
                 tracking_null_count<> policy(42);
-                policy.clear();
+                policy.clear_null_count();
                 CHECK_EQ(policy.null_count(), 0);
             }
 
@@ -1270,14 +1270,13 @@ namespace sparrow
 
                 // All operations should compile and do nothing
                 std::array<std::uint8_t, 2> buffer = {0xFF, 0xFF};
-                policy.initialize(buffer.data(), 16, 2);
-                policy.recompute(buffer.data(), 16, 2);
+                policy.initialize_null_count(buffer.data(), 16, 2);
+                policy.recompute_null_count(buffer.data(), 16, 2);
                 policy.update_null_count(false, true);
                 policy.set_null_count(42);
-                policy.clear();
-
+                policy.clear_null_count();
                 non_tracking_null_count<> other;
-                policy.swap(other);
+                policy.swap_null_count(other);
 
                 // Should compile - constructor with count is available but ignores value
                 non_tracking_null_count<> policy_with_count(100);
