@@ -19,12 +19,12 @@
 
 namespace sparrow
 {
-    template <std::integral T>
-    class non_owning_dynamic_bitset : public dynamic_bitset_base<buffer<T>*>
+    template <std::integral T, null_count_policy NCP = tracking_null_count<>>
+    class non_owning_dynamic_bitset : public dynamic_bitset_base<buffer<T>*, NCP>
     {
     public:
 
-        using base_type = dynamic_bitset_base<buffer<T>*>;
+        using base_type = dynamic_bitset_base<buffer<T>*, NCP>;
         using storage_type = typename base_type::storage_type;
         using block_type = typename base_type::block_type;
         using value_type = typename base_type::value_type;
@@ -48,8 +48,8 @@ namespace sparrow
         using base_type::resize;
     };
 
-    template <std::integral T>
-    constexpr non_owning_dynamic_bitset<T>::non_owning_dynamic_bitset(buffer<T>* buffer, size_type n)
+    template <std::integral T, null_count_policy NCP>
+    constexpr non_owning_dynamic_bitset<T, NCP>::non_owning_dynamic_bitset(buffer<T>* buffer, size_type n)
         : base_type(buffer, n)
     {
         SPARROW_ASSERT_TRUE(buffer != nullptr);

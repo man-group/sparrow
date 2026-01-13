@@ -19,6 +19,7 @@
 
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/buffer/dynamic_bitset/non_owning_dynamic_bitset.hpp"
+#include "sparrow/buffer/dynamic_bitset/null_count_policy.hpp"
 
 #include "doctest/doctest.h"
 
@@ -1164,5 +1165,298 @@ namespace sparrow
             }
         }
         TEST_CASE_TEMPLATE_APPLY(dynamic_bitset_id, testing_types);
+    }
+
+    TEST_SUITE("null_count_policy")
+    {
+        TEST_CASE("tracking_null_count")
+        {
+            SUBCASE("static count_non_null")
+            {
+                // Test with simple buffer
+                std::array<std::uint8_t, 2> buffer = {0b11110000, 0b00001111};
+                const auto count = tracking_null_count<>().count_non_null(buffer.data(), 16, 2);
+                CHECK_EQ(count, 8);  // 4 bits set in each byte = 8 total
+            }
+
+            SUBCASE("static count_non_null with partial last block")
+            {
+                std::array<std::uint8_t, 2> buffer = {0b11111111, 0b11111111};
+                // Only count first 12 bits (8 from first byte + 4 from second)
+                const auto count = tracking_null_count<>().count_non_null(buffer.data(), 12, 2);
+                CHECK_EQ(count, 12);  // All 12 bits are set
+            }
+
+            SUBCASE("static count_non_null with nullptr")
+            {
+                const std::uint8_t* null_ptr = nullptr;
+                const auto count = tracking_null_count<>().count_non_null(null_ptr, 100, 0);
+                CHECK_EQ(count, 100);  // All bits assumed set for null buffer
+            }
+
+            SUBCASE("initialize")
+            {
+                std::array<std::uint8_t, 2> buffer = {0b10101010, 0b01010101};
+                tracking_null_count<> policy;
+                policy.initialize_null_count(buffer.data(), 16, 2);
+                CHECK_EQ(policy.null_count(), 8);  // 8 bits are unset
+            }
+
+            SUBCASE("recompute")
+            {
+                std::array<std::uint8_t, 2> buffer = {0b11111111, 0b00000000};
+                tracking_null_count<> policy;
+                policy.initialize_null_count(buffer.data(), 16, 2);
+                CHECK_EQ(policy.null_count(), 8);
+
+                // Modify buffer and recompute
+                buffer[1] = 0b11111111;
+                policy.recompute_null_count(buffer.data(), 16, 2);
+                CHECK_EQ(policy.null_count(), 0);
+            }
+
+            SUBCASE("update_null_count")
+            {
+                tracking_null_count<> policy(5);
+                CHECK_EQ(policy.null_count(), 5);
+
+                // false -> true: decrement null count
+                policy.update_null_count(false, true);
+                CHECK_EQ(policy.null_count(), 4);
+
+                // true -> false: increment null count
+                policy.update_null_count(true, false);
+                CHECK_EQ(policy.null_count(), 5);
+
+                // false -> false: no change
+                policy.update_null_count(false, false);
+                CHECK_EQ(policy.null_count(), 5);
+
+                // true -> true: no change
+                policy.update_null_count(true, true);
+                CHECK_EQ(policy.null_count(), 5);
+            }
+
+            SUBCASE("swap")
+            {
+                tracking_null_count<> policy1(10);
+                tracking_null_count<> policy2(20);
+
+                policy1.swap_null_count(policy2);
+                CHECK_EQ(policy1.null_count(), 20);
+                CHECK_EQ(policy2.null_count(), 10);
+            }
+
+            SUBCASE("clear")
+            {
+                tracking_null_count<> policy(42);
+                policy.clear_null_count();
+                CHECK_EQ(policy.null_count(), 0);
+            }
+
+            SUBCASE("set_null_count")
+            {
+                tracking_null_count<> policy;
+                policy.set_null_count(100);
+                CHECK_EQ(policy.null_count(), 100);
+            }
+        }
+
+        TEST_CASE("non_tracking_null_count")
+        {
+            SUBCASE("operations are no-ops")
+            {
+                non_tracking_null_count<> policy;
+
+                // All operations should compile and do nothing
+                std::array<std::uint8_t, 2> buffer = {0xFF, 0xFF};
+                policy.initialize_null_count(buffer.data(), 16, 2);
+                policy.recompute_null_count(buffer.data(), 16, 2);
+                policy.update_null_count(false, true);
+                policy.set_null_count(42);
+                policy.clear_null_count();
+                non_tracking_null_count<> other;
+                policy.swap_null_count(other);
+
+                // Should compile - constructor with count is available but ignores value
+                non_tracking_null_count<> policy_with_count(100);
+                static_cast<void>(policy_with_count);  // Suppress unused warning
+            }
+
+            SUBCASE("zero overhead")
+            {
+                // non_tracking_null_count should have no data members
+                static_assert(sizeof(non_tracking_null_count<>) == 1);  // Empty class has size 1
+            }
+        }
+
+        TEST_CASE("null_count_policy concept")
+        {
+            // Verify both policies satisfy the concept
+            static_assert(null_count_policy<tracking_null_count<>>);
+            static_assert(null_count_policy<non_tracking_null_count<>>);
+
+            // Verify with different size types
+            static_assert(null_count_policy<tracking_null_count<std::uint32_t>>);
+            static_assert(null_count_policy<non_tracking_null_count<std::uint32_t>>);
+        }
+
+        TEST_CASE("non_owning_dynamic_bitset with non_tracking_null_count")
+        {
+            std::array<std::uint8_t, 4> buffer_data = {0b00100110, 0b01010101, 0b00110101, 0b00000111};
+            buffer<std::uint8_t> buf(buffer_data, buffer<std::uint8_t>::default_allocator{});
+
+            using non_tracking_bitset = non_owning_dynamic_bitset<std::uint8_t, non_tracking_null_count<>>;
+            non_tracking_bitset bm(&buf, s_bitmap_size);
+
+            SUBCASE("size")
+            {
+                CHECK_EQ(bm.size(), s_bitmap_size);
+            }
+
+            SUBCASE("null_count is not available")
+            {
+                // This should not compile - the null_count() method is constrained away:
+                // bm.null_count();
+                // We verify through the policy that track_null_count is false
+                static_assert(!non_tracking_null_count<>::track_null_count);
+            }
+
+            SUBCASE("test")
+            {
+                CHECK(bm.test(1));
+                CHECK(bm.test(2));
+                CHECK_FALSE(bm.test(0));
+                CHECK_FALSE(bm.test(3));
+            }
+
+            SUBCASE("set")
+            {
+                bm.set(0, true);
+                CHECK(bm.test(0));
+
+                bm.set(0, false);
+                CHECK_FALSE(bm.test(0));
+            }
+
+            SUBCASE("operator[]")
+            {
+                CHECK(bm[1]);
+                CHECK_FALSE(bm[0]);
+
+                bm[0] = true;
+                CHECK(bm[0]);
+
+                bm[0] = false;
+                CHECK_FALSE(bm[0]);
+            }
+
+            SUBCASE("iterator")
+            {
+                auto iter = bm.begin();
+                CHECK_FALSE(*iter);  // bit 0 is false
+                ++iter;
+                CHECK(*iter);  // bit 1 is true
+                ++iter;
+                CHECK(*iter);  // bit 2 is true
+                ++iter;
+                CHECK_FALSE(*iter);  // bit 3 is false
+            }
+
+            SUBCASE("const_iterator")
+            {
+                const auto& const_bm = bm;
+                auto iter = const_bm.cbegin();
+                CHECK_FALSE(*iter);
+                ++iter;
+                CHECK(*iter);
+            }
+
+            SUBCASE("resize")
+            {
+                bm.resize(40, true);
+                CHECK_EQ(bm.size(), 40);
+                // Verify new bits are set to true
+                for (std::size_t i = s_bitmap_size; i < 40; ++i)
+                {
+                    CHECK(bm.test(i));
+                }
+            }
+
+            SUBCASE("insert")
+            {
+                const auto pos = bm.cbegin();
+                auto iter = bm.insert(pos, true);
+                CHECK_EQ(bm.size(), s_bitmap_size + 1);
+                CHECK(*iter);
+            }
+
+            SUBCASE("erase")
+            {
+                const auto pos = bm.cbegin();
+                bm.erase(pos);
+                CHECK_EQ(bm.size(), s_bitmap_size - 1);
+            }
+
+            SUBCASE("push_back")
+            {
+                bm.push_back(true);
+                CHECK_EQ(bm.size(), s_bitmap_size + 1);
+                CHECK(bm.test(s_bitmap_size));
+            }
+
+            SUBCASE("pop_back")
+            {
+                bm.pop_back();
+                CHECK_EQ(bm.size(), s_bitmap_size - 1);
+            }
+        }
+
+        TEST_CASE("comparing tracking vs non_tracking behavior")
+        {
+            std::array<std::uint8_t, 4> buffer_data = {0b00100110, 0b01010101, 0b00110101, 0b00000111};
+
+            buffer<std::uint8_t> buf1(buffer_data, buffer<std::uint8_t>::default_allocator{});
+            buffer<std::uint8_t> buf2(buffer_data, buffer<std::uint8_t>::default_allocator{});
+
+            using tracking_bitset = non_owning_dynamic_bitset<std::uint8_t, tracking_null_count<>>;
+            using non_tracking_bitset = non_owning_dynamic_bitset<std::uint8_t, non_tracking_null_count<>>;
+
+            tracking_bitset tracking_bm(&buf1, s_bitmap_size);
+            non_tracking_bitset non_tracking_bm(&buf2, s_bitmap_size);
+
+            SUBCASE("same test results")
+            {
+                for (std::size_t i = 0; i < s_bitmap_size; ++i)
+                {
+                    CHECK_EQ(tracking_bm.test(i), non_tracking_bm.test(i));
+                }
+            }
+
+            SUBCASE("same iteration results")
+            {
+                auto t_iter = tracking_bm.cbegin();
+                auto nt_iter = non_tracking_bm.cbegin();
+                for (std::size_t i = 0; i < s_bitmap_size; ++i)
+                {
+                    CHECK_EQ(*t_iter, *nt_iter);
+                    ++t_iter;
+                    ++nt_iter;
+                }
+            }
+
+            SUBCASE("same set behavior")
+            {
+                tracking_bm.set(0, true);
+                non_tracking_bm.set(0, true);
+                CHECK_EQ(tracking_bm.test(0), non_tracking_bm.test(0));
+                CHECK(tracking_bm.test(0));
+
+                tracking_bm.set(0, false);
+                non_tracking_bm.set(0, false);
+                CHECK_EQ(tracking_bm.test(0), non_tracking_bm.test(0));
+                CHECK_FALSE(tracking_bm.test(0));
+            }
+        }
     }
 }

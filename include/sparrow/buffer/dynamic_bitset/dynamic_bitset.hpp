@@ -236,7 +236,6 @@ namespace sparrow
         : base_type(storage_type(p, this->compute_block_count(n), a), n, null_count)
     {
         base_type::zero_unused_bits();
-        SPARROW_ASSERT_TRUE(base_type::null_count() == base_type::size() - base_type::count_non_null());
     }
 
     template <std::integral T>
