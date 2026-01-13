@@ -245,42 +245,42 @@ namespace sparrow::benchmark
     constexpr size_t range_multiplier = 10;
 
 // Macro to register count_non_null benchmarks for a specific block type
-#define REGISTER_COUNT_NON_NULL_BENCHMARKS(TYPE)                       \
-    BENCHMARK_TEMPLATE(BM_CountNonNull_50Percent, TYPE)                \
-        ->RangeMultiplier(range_multiplier)                            \
-        ->Range(range_min, range_max)                                  \
-        ->Unit(::benchmark::kMicrosecond);                             \
-    BENCHMARK_TEMPLATE(BM_CountNonNull_10Percent, TYPE)                \
-        ->RangeMultiplier(range_multiplier)                            \
-        ->Range(range_min, range_max)                                  \
-        ->Unit(::benchmark::kMicrosecond);                             \
-    BENCHMARK_TEMPLATE(BM_CountNonNull_90Percent, TYPE)                \
-        ->RangeMultiplier(range_multiplier)                            \
-        ->Range(range_min, range_max)                                  \
-        ->Unit(::benchmark::kMicrosecond);                             \
-    BENCHMARK_TEMPLATE(BM_CountNonNull_AllZeros, TYPE)                 \
-        ->RangeMultiplier(range_multiplier)                            \
-        ->Range(range_min, range_max)                                  \
-        ->Unit(::benchmark::kMicrosecond);                             \
-    BENCHMARK_TEMPLATE(BM_CountNonNull_AllOnes, TYPE)                  \
-        ->RangeMultiplier(range_multiplier)                            \
-        ->Range(range_min, range_max)                                  \
-        ->Unit(::benchmark::kMicrosecond);                             \
-    BENCHMARK_TEMPLATE(BM_CountNonNull_PartialLastBlock, TYPE)         \
-        ->RangeMultiplier(range_multiplier)                            \
-        ->Range(range_min, range_max)                                  \
-        ->Unit(::benchmark::kMicrosecond);                             \
-    BENCHMARK_TEMPLATE(BM_CountNonNull_Nullptr, TYPE)                  \
-        ->RangeMultiplier(range_multiplier)                            \
-        ->Range(range_min, range_max)                                  \
-        ->Unit(::benchmark::kNanosecond);                              \
-    BENCHMARK_TEMPLATE(BM_InitializeNullCount, TYPE)                   \
-        ->RangeMultiplier(range_multiplier)                            \
-        ->Range(range_min, range_max)                                  \
-        ->Unit(::benchmark::kMicrosecond);                             \
-    BENCHMARK_TEMPLATE(BM_RecomputeNullCount, TYPE)                    \
-        ->RangeMultiplier(range_multiplier)                            \
-        ->Range(range_min, range_max)                                  \
+#define REGISTER_COUNT_NON_NULL_BENCHMARKS(TYPE)               \
+    BENCHMARK_TEMPLATE(BM_CountNonNull_50Percent, TYPE)        \
+        ->RangeMultiplier(range_multiplier)                    \
+        ->Range(range_min, range_max)                          \
+        ->Unit(::benchmark::kMicrosecond);                     \
+    BENCHMARK_TEMPLATE(BM_CountNonNull_10Percent, TYPE)        \
+        ->RangeMultiplier(range_multiplier)                    \
+        ->Range(range_min, range_max)                          \
+        ->Unit(::benchmark::kMicrosecond);                     \
+    BENCHMARK_TEMPLATE(BM_CountNonNull_90Percent, TYPE)        \
+        ->RangeMultiplier(range_multiplier)                    \
+        ->Range(range_min, range_max)                          \
+        ->Unit(::benchmark::kMicrosecond);                     \
+    BENCHMARK_TEMPLATE(BM_CountNonNull_AllZeros, TYPE)         \
+        ->RangeMultiplier(range_multiplier)                    \
+        ->Range(range_min, range_max)                          \
+        ->Unit(::benchmark::kMicrosecond);                     \
+    BENCHMARK_TEMPLATE(BM_CountNonNull_AllOnes, TYPE)          \
+        ->RangeMultiplier(range_multiplier)                    \
+        ->Range(range_min, range_max)                          \
+        ->Unit(::benchmark::kMicrosecond);                     \
+    BENCHMARK_TEMPLATE(BM_CountNonNull_PartialLastBlock, TYPE) \
+        ->RangeMultiplier(range_multiplier)                    \
+        ->Range(range_min, range_max)                          \
+        ->Unit(::benchmark::kMicrosecond);                     \
+    BENCHMARK_TEMPLATE(BM_CountNonNull_Nullptr, TYPE)          \
+        ->RangeMultiplier(range_multiplier)                    \
+        ->Range(range_min, range_max)                          \
+        ->Unit(::benchmark::kNanosecond);                      \
+    BENCHMARK_TEMPLATE(BM_InitializeNullCount, TYPE)           \
+        ->RangeMultiplier(range_multiplier)                    \
+        ->Range(range_min, range_max)                          \
+        ->Unit(::benchmark::kMicrosecond);                     \
+    BENCHMARK_TEMPLATE(BM_RecomputeNullCount, TYPE)            \
+        ->RangeMultiplier(range_multiplier)                    \
+        ->Range(range_min, range_max)                          \
         ->Unit(::benchmark::kMicrosecond);
 
     // Register benchmarks for different block types
