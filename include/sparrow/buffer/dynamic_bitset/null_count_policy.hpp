@@ -60,7 +60,7 @@ namespace sparrow
          * @return The number of bits set to true
          */
         template <std::integral BlockType>
-        [[nodiscard]] static size_type
+        [[nodiscard]] size_type
         count_non_null(const BlockType* data, size_type bit_size, size_type block_count) noexcept
         {
             if (data == nullptr || block_count == 0)
