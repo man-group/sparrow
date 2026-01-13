@@ -730,19 +730,30 @@ namespace sparrow
     template <class T>
     constexpr bool buffer<T>::empty() const noexcept
     {
-        return get_data().p_begin == get_data().p_end;
+        const auto& data = get_data();
+        return data.p_begin == data.p_end;
     }
 
     template <class T>
     constexpr auto buffer<T>::capacity() const noexcept -> size_type
     {
-        return static_cast<size_type>(get_data().p_storage_end - get_data().p_begin);
+        const auto& data = get_data();
+        if(data.p_begin == nullptr || data.p_storage_end == nullptr)
+        {
+            return 0;
+        }
+        return static_cast<size_type>(data.p_storage_end - data.p_begin);
     }
 
     template <class T>
     constexpr auto buffer<T>::size() const noexcept -> size_type
     {
-        return static_cast<size_type>(get_data().p_end - get_data().p_begin);
+        const auto& data = get_data();
+        if(data.p_begin == nullptr || data.p_end == nullptr)
+        {
+            return 0;
+        }
+        return static_cast<size_type>(data.p_end - data.p_begin);
     }
 
     template <class T>
