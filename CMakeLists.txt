@@ -398,9 +398,6 @@ target_include_directories(sparrow PUBLIC
 # We do not use non-standard C++
 set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(sparrow PUBLIC cxx_std_20)
-target_link_libraries(sparrow
-    PUBLIC ${SPARROW_INTERFACE_DEPENDENCIES} libpopcnt::libpopcnt )
-
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32)
     cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CLANG_BIN_PATH)
     cmake_path(GET CLANG_BIN_PATH PARENT_PATH CLANG_ROOT_PATH)
@@ -482,12 +479,6 @@ include(CMakePackageConfigHelpers)
 
 # Install target
 set(SPARROW_EXPORTED_TARGETS sparrow)
-
-if(SPARROW_FETCHED_LIBPOPCNT)
-    list(APPEND SPARROW_EXPORTED_TARGETS libpopcnt)
-    install(FILES "${CMAKE_BINARY_DIR}/_deps/libpopcnt/libpopcnt.h"
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-endif()
 
 install(TARGETS ${SPARROW_EXPORTED_TARGETS}
     EXPORT ${PROJECT_NAME}-targets)

@@ -18,7 +18,7 @@
 #include <bit>
 #include <cstdint>
 
-#include <libpopcnt.h>
+#include "sparrow/details/3rdparty/libpopcnt/libpopcnt.h"
 
 namespace sparrow
 {

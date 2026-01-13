@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <climits>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
