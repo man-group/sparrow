@@ -852,24 +852,26 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
     constexpr void dynamic_bitset_base<B, NCP>::resize(size_type n, value_type b)
     {
-        if ((data() == nullptr) && b)
+        if (data() == nullptr)
         {
-            m_size = n;
-            return;
+            if (b)
+            {
+                // data() == nullptr means all bits are true (valid), just update size
+                m_size = n;
+                return;
+            }
+            // We need to materialize the buffer to add false bits
+            constexpr block_type true_value = block_type(~block_type(0));
+            const size_type old_block_count = compute_block_count(size());
+            buffer().resize(old_block_count, true_value);
+            zero_unused_bits();
         }
-        size_type old_block_count = buffer().size();
+        const size_type old_block_count = buffer().size();
         const size_type new_block_count = compute_block_count(n);
         const block_type value = b ? block_type(~block_type(0)) : block_type(0);
 
         if (new_block_count != old_block_count)
         {
-            if (data() == nullptr)
-            {
-                constexpr block_type true_value = block_type(~block_type(0));
-                old_block_count = compute_block_count(size());
-                buffer().resize(old_block_count, true_value);
-                zero_unused_bits();
-            }
             buffer().resize(new_block_count, value);
         }
 
