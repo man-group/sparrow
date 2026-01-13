@@ -97,7 +97,8 @@ namespace sparrow
          * @param block_count The number of blocks in the buffer
          */
         template <std::integral BlockType>
-        constexpr void initialize_null_count(const BlockType* data, size_type bit_size, size_type block_count) noexcept
+        constexpr void
+        initialize_null_count(const BlockType* data, size_type bit_size, size_type block_count) noexcept
         {
             m_null_count = bit_size - count_non_null(data, bit_size, block_count);
         }
@@ -120,7 +121,8 @@ namespace sparrow
          * @param block_count The number of blocks in the buffer
          */
         template <std::integral BlockType>
-        constexpr void recompute_null_count(const BlockType* data, size_type bit_size, size_type block_count) noexcept
+        constexpr void
+        recompute_null_count(const BlockType* data, size_type bit_size, size_type block_count) noexcept
         {
             m_null_count = bit_size - count_non_null(data, bit_size, block_count);
         }
@@ -185,7 +187,8 @@ namespace sparrow
 
         // No-op: non-tracking policy doesn't need to count bits
         template <std::integral BlockType>
-        constexpr void initialize_null_count(const BlockType* /*data*/, size_type /*bit_size*/, size_type /*block_count*/) noexcept
+        constexpr void
+        initialize_null_count(const BlockType* /*data*/, size_type /*bit_size*/, size_type /*block_count*/) noexcept
         {
         }
 
@@ -196,7 +199,8 @@ namespace sparrow
 
         // No-op: non-tracking policy doesn't need to recompute
         template <std::integral BlockType>
-        constexpr void recompute_null_count(const BlockType* /*data*/, size_type /*bit_size*/, size_type /*block_count*/) noexcept
+        constexpr void
+        recompute_null_count(const BlockType* /*data*/, size_type /*bit_size*/, size_type /*block_count*/) noexcept
         {
         }
 
@@ -222,7 +226,7 @@ namespace sparrow
      * Concept that checks if a type is a valid null count policy.
      * A valid policy must:
      * - Have a static constexpr bool member 'track_null_count'
-     * - Provide update_null_count(bool, bool), swap(), clear(), set_null_count(), 
+     * - Provide update_null_count(bool, bool), swap(), clear(), set_null_count(),
      *   initialize(), and recompute() methods
      */
     template <typename P>
