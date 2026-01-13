@@ -65,7 +65,7 @@ namespace sparrow
      */
     template <typename B, null_count_policy NCP = tracking_null_count<>>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    class dynamic_bitset_base : public NCP
+    class dynamic_bitset_base : private NCP
     {
     public:
 
