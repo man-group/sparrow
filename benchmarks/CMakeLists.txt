@@ -33,6 +33,7 @@ set(SPARROW_BENCHMARK_SOURCES
     bench_fixed_width_binary_array.cpp
     bench_primitive_array.cpp
     bench_std_vector.cpp
+    bench_null_count_policy.cpp
 )
 
 add_executable(sparrow_benchmarks ${SPARROW_BENCHMARK_SOURCES})

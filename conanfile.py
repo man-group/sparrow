@@ -40,6 +40,7 @@ class SparrowRecipe(ConanFile):
     }
 
     def requirements(self):
+        self.requires("libpopcnt/3.1")
         if self.options.get_safe("use_date_polyfill"):
             self.requires("date/3.0.3")
         if self.options.get_safe("export_json_reader"):

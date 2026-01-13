@@ -20,6 +20,8 @@
 #include <cstddef>
 #include <utility>
 
+#include <libpopcnt.h>
+
 namespace sparrow
 {
     /**

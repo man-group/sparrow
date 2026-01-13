@@ -9,6 +9,45 @@ else()
     set(FIND_PACKAGE_OPTIONS QUIET)
 endif()
 
+ if(NOT FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
+    find_package(libpopcnt CONFIG ${FIND_PACKAGE_OPTIONS})
+endif()
+
+if(FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON" OR FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "MISSING") 
+    if(NOT libpopcnt_FOUND)
+        set(LIBPOPCNT_VERSION "v3.1")
+        set(LIBPOPCNT_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/_deps/libpopcnt")
+        set(LIBPOPCNT_HEADER "${LIBPOPCNT_DOWNLOAD_DIR}/libpopcnt.h")
+        
+        if(NOT EXISTS "${LIBPOPCNT_HEADER}")
+            message(STATUS "📦 Downloading libpopcnt ${LIBPOPCNT_VERSION}")
+            file(MAKE_DIRECTORY "${LIBPOPCNT_DOWNLOAD_DIR}")
+            file(DOWNLOAD
+                "https://raw.githubusercontent.com/kimwalisch/libpopcnt/refs/tags/${LIBPOPCNT_VERSION}/libpopcnt.h"
+                "${LIBPOPCNT_HEADER}"
+                STATUS DOWNLOAD_STATUS
+            )
+            list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+            if(NOT STATUS_CODE EQUAL 0)
+                list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
+                message(FATAL_ERROR "Failed to download libpopcnt.h: ${ERROR_MESSAGE}")
+            endif()
+            message(STATUS "\t✅ Downloaded libpopcnt ${LIBPOPCNT_VERSION}")
+        else()
+            message(STATUS "📦 libpopcnt ${LIBPOPCNT_VERSION} already downloaded")
+        endif()
+        
+        add_library(libpopcnt INTERFACE)
+        add_library(libpopcnt::libpopcnt ALIAS libpopcnt)
+        target_include_directories(libpopcnt SYSTEM INTERFACE 
+            $<BUILD_INTERFACE:${LIBPOPCNT_DOWNLOAD_DIR}>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+        set(SPARROW_FETCHED_LIBPOPCNT TRUE CACHE INTERNAL "libpopcnt was fetched by sparrow")
+    else()
+        message(STATUS "📦 libpopcnt found here: ${libpopcnt_DIR}")
+    endif()
+endif()
+
 if(${USE_DATE_POLYFILL})
     if(NOT FETCH_DEPENDENCIES_WITH_CMAKE STREQUAL "ON")
         find_package(date CONFIG ${FIND_PACKAGE_OPTIONS})
