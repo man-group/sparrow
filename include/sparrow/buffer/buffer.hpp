@@ -738,7 +738,7 @@ namespace sparrow
     constexpr auto buffer<T>::capacity() const noexcept -> size_type
     {
         const auto& data = get_data();
-        if(data.p_begin == nullptr || data.p_storage_end == nullptr)
+        if (data.p_begin == nullptr || data.p_storage_end == nullptr)
         {
             return 0;
         }
@@ -749,7 +749,7 @@ namespace sparrow
     constexpr auto buffer<T>::size() const noexcept -> size_type
     {
         const auto& data = get_data();
-        if(data.p_begin == nullptr || data.p_end == nullptr)
+        if (data.p_begin == nullptr || data.p_end == nullptr)
         {
             return 0;
         }
