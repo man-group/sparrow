@@ -331,6 +331,7 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/private_data_ownership.cpp
+    ${SPARROW_SOURCE_DIR}/buffer/dynamic_bitset/null_count_policy.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_factory.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_helper.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_registry.cpp
