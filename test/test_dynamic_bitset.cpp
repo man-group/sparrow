@@ -1175,7 +1175,7 @@ namespace sparrow
             {
                 // Test with simple buffer
                 std::array<std::uint8_t, 2> buffer = {0b11110000, 0b00001111};
-                const auto count = tracking_null_count<>().count_non_null(buffer.data(), 16, 2);
+                const auto count = count_non_null(buffer.data(), 16, 2);
                 CHECK_EQ(count, 8);  // 4 bits set in each byte = 8 total
             }
 
@@ -1183,14 +1183,14 @@ namespace sparrow
             {
                 std::array<std::uint8_t, 2> buffer = {0b11111111, 0b11111111};
                 // Only count first 12 bits (8 from first byte + 4 from second)
-                const auto count = tracking_null_count<>().count_non_null(buffer.data(), 12, 2);
+                const auto count = count_non_null(buffer.data(), 12, 2);
                 CHECK_EQ(count, 12);  // All 12 bits are set
             }
 
             SUBCASE("static count_non_null with nullptr")
             {
                 const std::uint8_t* null_ptr = nullptr;
-                const auto count = tracking_null_count<>().count_non_null(null_ptr, 100, 0);
+                const auto count = count_non_null(null_ptr, 100, 0);
                 CHECK_EQ(count, 100);  // All bits assumed set for null buffer
             }
 
