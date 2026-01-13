@@ -22,11 +22,7 @@
 
 namespace sparrow
 {
-    std::size_t count_non_null(
-        const std::uint8_t* data,
-        std::size_t bit_size,
-        std::size_t byte_size
-    ) noexcept
+    std::size_t count_non_null(const std::uint8_t* data, std::size_t bit_size, std::size_t byte_size) noexcept
     {
         if (data == nullptr || byte_size == 0)
         {
@@ -35,7 +31,7 @@ namespace sparrow
 
         constexpr std::size_t bits_per_byte = 8;
         const std::size_t full_bytes = bit_size / bits_per_byte;
-        
+
         const std::size_t bytes_to_count = std::min(full_bytes, byte_size);
         uint64_t res = popcnt(data, bytes_to_count);
 

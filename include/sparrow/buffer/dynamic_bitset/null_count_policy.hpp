@@ -99,7 +99,9 @@ namespace sparrow
             const auto* byte_data = reinterpret_cast<const std::uint8_t*>(data);
             const std::size_t byte_size = block_count * sizeof(BlockType);
             m_null_count = static_cast<size_type>(bit_size)
-                         - static_cast<size_type>(count_non_null(byte_data, static_cast<std::size_t>(bit_size), byte_size));
+                           - static_cast<size_type>(
+                               count_non_null(byte_data, static_cast<std::size_t>(bit_size), byte_size)
+                           );
         }
 
         constexpr void update_null_count(bool old_value, bool new_value) noexcept
