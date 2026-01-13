@@ -23,6 +23,7 @@
 
 #include "sparrow/buffer/dynamic_bitset/bitset_iterator.hpp"
 #include "sparrow/buffer/dynamic_bitset/bitset_reference.hpp"
+#include "sparrow/buffer/dynamic_bitset/null_count_policy.hpp"
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
@@ -63,13 +64,14 @@ namespace sparrow
      * view.set(64, true);
      * @endcode
      */
-    template <typename B>
+    template <typename B, null_count_policy NCP = tracking_null_count<>>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     class dynamic_bitset_base
     {
     public:
 
-        using self_type = dynamic_bitset_base<B>;  ///< This class type
+        using self_type = dynamic_bitset_base<B, NCP>;  ///< This class type
+        using null_count_policy_type = NCP;  ///< Null count tracking policy type
         using storage_type = B;                    ///< Underlying storage container type
         using storage_type_without_cvrefpointer = std::remove_pointer_t<
             std::remove_cvref_t<storage_type>>;  ///< Storage type without CV/ref/pointer qualifiers
@@ -104,8 +106,10 @@ namespace sparrow
          * @brief Returns the number of bits set to false (null/invalid).
          * @return The count of unset bits
          * @post Return value <= size()
+         * @note Only available when using tracking_null_count policy
          */
-        [[nodiscard]] constexpr size_type null_count() const noexcept;
+        [[nodiscard]] constexpr size_type null_count() const noexcept
+            requires(NCP::track_null_count);
 
         /**
          * @brief Tests the value of a bit at the specified position.
@@ -353,8 +357,10 @@ namespace sparrow
          * @pre null_count <= size
          * @post size() == size
          * @post null_count() == null_count
+         * @note Only available when using tracking_null_count policy
          */
-        constexpr dynamic_bitset_base(storage_type buffer, size_type size, size_type null_count);
+        constexpr dynamic_bitset_base(storage_type buffer, size_type size, size_type null_count)
+            requires(NCP::track_null_count);
 
         constexpr ~dynamic_bitset_base() = default;
 
@@ -488,15 +494,6 @@ namespace sparrow
          */
         constexpr void zero_unused_bits();
 
-        /**
-         * @brief Counts the number of bits set to true.
-         * @return The number of set bits
-         * @post Return value <= size()
-         * @post Return value == size() - null_count()
-         * @note Returns size() for null buffers (all bits assumed set)
-         */
-        [[nodiscard]] size_type count_non_null() const noexcept;
-
     private:
 
         static constexpr std::size_t s_bits_per_block = sizeof(block_type) * CHAR_BIT;  ///< Number of bits
@@ -529,62 +526,55 @@ namespace sparrow
          */
         [[nodiscard]] constexpr size_type count_extra_bits() const noexcept;
 
-        /**
-         * @brief Updates the null count when a bit value changes.
-         * @param old_value The previous bit value
-         * @param new_value The new bit value
-         * @post null_count() is adjusted based on the value change
-         */
-        constexpr void update_null_count(bool old_value, bool new_value);
-
-        storage_type m_buffer;   ///< The underlying storage for bit data
-        size_type m_size;        ///< The number of bits in the bitset
-        size_type m_null_count;  ///< The number of bits set to false
+        storage_type m_buffer;  ///< The underlying storage for bit data
+        size_type m_size;       ///< The number of bits in the bitset
+        [[no_unique_address]] NCP m_null_count_policy{};  ///< Policy handling null count tracking
 
         friend class bitset_iterator<self_type, true>;   ///< Const iterator needs access to internals
         friend class bitset_iterator<self_type, false>;  ///< Mutable iterator needs access to internals
         friend class bitset_reference<self_type>;        ///< Bit reference needs access to internals
     };
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::size() const noexcept -> size_type
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::size() const noexcept -> size_type
     {
         return m_size;
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr bool dynamic_bitset_base<B>::empty() const noexcept
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr bool dynamic_bitset_base<B, NCP>::empty() const noexcept
     {
         return m_size == 0;
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::null_count() const noexcept -> size_type
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::null_count() const noexcept -> size_type
+        requires(NCP::track_null_count)
     {
-        return m_null_count;
+        return m_null_count_policy.null_count();
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::operator[](size_type pos) -> reference
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::operator[](size_type pos) -> reference
     {
         SPARROW_ASSERT_TRUE(pos < size());
         return reference(*this, pos);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr bool dynamic_bitset_base<B>::operator[](size_type pos) const
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr bool dynamic_bitset_base<B, NCP>::operator[](size_type pos) const
     {
         return test(pos);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr bool dynamic_bitset_base<B>::test(size_type pos) const
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr bool dynamic_bitset_base<B, NCP>::test(size_type pos) const
     {
         SPARROW_ASSERT_TRUE(pos < size());
         if constexpr (std::is_pointer_v<storage_type>)
@@ -598,12 +588,12 @@ namespace sparrow
         {
             return true;
         }
-        return !m_null_count || buffer().data()[block_index(pos)] & bit_mask(pos);
+        return buffer().data()[block_index(pos)] & bit_mask(pos);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr void dynamic_bitset_base<B>::set(size_type pos, value_type value)
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr void dynamic_bitset_base<B, NCP>::set(size_type pos, value_type value)
     {
         SPARROW_ASSERT_TRUE(pos < size());
         if (data() == nullptr)
@@ -637,12 +627,12 @@ namespace sparrow
         {
             block &= block_type(~bit_mask(pos));
         }
-        update_null_count(old_value, value);
+        m_null_count_policy.update_null_count(old_value, value);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::data() noexcept -> block_type*
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::data() noexcept -> block_type*
     {
         if constexpr (std::is_pointer_v<storage_type>)
         {
@@ -654,75 +644,75 @@ namespace sparrow
         return buffer().data();
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::data() const noexcept -> const block_type*
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::data() const noexcept -> const block_type*
     {
         return buffer().data();
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::block_count() const noexcept -> size_type
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::block_count() const noexcept -> size_type
     {
         return buffer().size();
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr void dynamic_bitset_base<B>::swap(self_type& rhs) noexcept
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr void dynamic_bitset_base<B, NCP>::swap(self_type& rhs) noexcept
     {
         using std::swap;
         swap(m_buffer, rhs.m_buffer);
         swap(m_size, rhs.m_size);
-        swap(m_null_count, rhs.m_null_count);
+        m_null_count_policy.swap(rhs.m_null_count_policy);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::begin() -> iterator
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::begin() -> iterator
     {
         return iterator(this, 0u);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::end() -> iterator
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::end() -> iterator
     {
         return iterator(this, size());
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::begin() const -> const_iterator
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::begin() const -> const_iterator
     {
         return cbegin();
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::end() const -> const_iterator
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::end() const -> const_iterator
     {
         return cend();
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::cbegin() const -> const_iterator
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::cbegin() const -> const_iterator
     {
         return const_iterator(this, 0);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::cend() const -> const_iterator
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::cend() const -> const_iterator
     {
         return const_iterator(this, size());
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::at(size_type pos) -> reference
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::at(size_type pos) -> reference
     {
         if (pos >= size())
         {
@@ -734,9 +724,9 @@ namespace sparrow
         return (*this)[pos];
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::at(size_type pos) const -> const_reference
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::at(size_type pos) const -> const_reference
     {
         if (pos >= size())
         {
@@ -748,17 +738,17 @@ namespace sparrow
         return test(pos);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::front() -> reference
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::front() -> reference
     {
         SPARROW_ASSERT_TRUE(size() >= 1);
         return (*this)[0];
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::front() const -> const_reference
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::front() const -> const_reference
     {
         SPARROW_ASSERT_TRUE(size() >= 1);
         if (data() == nullptr)
@@ -768,17 +758,17 @@ namespace sparrow
         return (*this)[0];
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::back() -> reference
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::back() -> reference
     {
         SPARROW_ASSERT_TRUE(size() >= 1);
         return (*this)[size() - 1];
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::back() const -> const_reference
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::back() const -> const_reference
     {
         SPARROW_ASSERT_TRUE(size() >= 1);
         if (data() == nullptr)
@@ -788,98 +778,65 @@ namespace sparrow
         return (*this)[size() - 1];
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr dynamic_bitset_base<B>::dynamic_bitset_base(storage_type buf, size_type size)
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr dynamic_bitset_base<B, NCP>::dynamic_bitset_base(storage_type buf, size_type size)
         : m_buffer(std::move(buf))
         , m_size(size)
-        , m_null_count(m_size - count_non_null())
+        , m_null_count_policy()
+    {
+        m_null_count_policy.initialize(data(), m_size, buffer().size());
+    }
+
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr dynamic_bitset_base<B, NCP>::dynamic_bitset_base(storage_type buf, size_type size, size_type null_count)
+        requires(NCP::track_null_count)
+        : m_buffer(std::move(buf))
+        , m_size(size)
+        , m_null_count_policy(null_count)
     {
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr dynamic_bitset_base<B>::dynamic_bitset_base(storage_type buf, size_type size, size_type null_count)
-        : m_buffer(std::move(buf))
-        , m_size(size)
-        , m_null_count(null_count)
-    {
-    }
-
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::compute_block_count(size_type bits_count) noexcept -> size_type
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::compute_block_count(size_type bits_count) noexcept -> size_type
     {
         return bits_count / s_bits_per_block + static_cast<size_type>(bits_count % s_bits_per_block != 0);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::block_index(size_type pos) noexcept -> size_type
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::block_index(size_type pos) noexcept -> size_type
     {
         return pos / s_bits_per_block;
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::bit_index(size_type pos) noexcept -> size_type
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::bit_index(size_type pos) noexcept -> size_type
     {
         return pos % s_bits_per_block;
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::bit_mask(size_type pos) noexcept -> block_type
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::bit_mask(size_type pos) noexcept -> block_type
     {
         const size_type bit = bit_index(pos);
         return static_cast<block_type>(block_type(1) << bit);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    auto dynamic_bitset_base<B>::count_non_null() const noexcept -> size_type
-    {
-        if constexpr (std::is_pointer_v<storage_type>)
-        {
-            if (m_buffer == nullptr)
-            {
-                return m_size;
-            }
-        }
-        if (data() == nullptr || buffer().empty())
-        {
-            return m_size;
-        }
-
-        int res = 0;
-        size_t full_blocks = m_size / s_bits_per_block;
-        for (size_t i = 0; i < full_blocks; ++i)
-        {
-            res += std::popcount(buffer().data()[i]);
-        }
-        if (full_blocks != buffer().size())
-        {
-            const size_t bits_count = m_size % s_bits_per_block;
-            const block_type mask = static_cast<block_type>(
-                ~static_cast<block_type>(~static_cast<block_type>(0) << bits_count)
-            );
-            const block_type block = buffer().data()[full_blocks] & mask;
-            res += std::popcount(block);
-        }
-
-        return static_cast<size_t>(res);
-    }
-
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr auto dynamic_bitset_base<B>::count_extra_bits() const noexcept -> size_type
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr auto dynamic_bitset_base<B, NCP>::count_extra_bits() const noexcept -> size_type
     {
         return bit_index(size());
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr void dynamic_bitset_base<B>::zero_unused_bits()
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr void dynamic_bitset_base<B, NCP>::zero_unused_bits()
     {
         if (data() == nullptr)
         {
@@ -892,23 +849,11 @@ namespace sparrow
         }
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr void dynamic_bitset_base<B>::update_null_count(bool old_value, bool new_value)
-    {
-        if (new_value && !old_value)
-        {
-            --m_null_count;
-        }
-        else if (!new_value && old_value)
-        {
-            ++m_null_count;
-        }
-    }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr void dynamic_bitset_base<B>::resize(size_type n, value_type b)
+
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr void dynamic_bitset_base<B, NCP>::resize(size_type n, value_type b)
     {
         if ((data() == nullptr) && b)
         {
@@ -941,31 +886,31 @@ namespace sparrow
         }
 
         m_size = n;
-        m_null_count = m_size - count_non_null();
+        m_null_count_policy.recompute(data(), m_size, buffer().size());
         zero_unused_bits();
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr void dynamic_bitset_base<B>::clear() noexcept
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr void dynamic_bitset_base<B, NCP>::clear() noexcept
     {
         buffer().clear();
         m_size = 0;
-        m_null_count = 0;
+        m_null_count_policy.clear();
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr dynamic_bitset_base<B>::iterator
-    dynamic_bitset_base<B>::insert(const_iterator pos, value_type value)
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr dynamic_bitset_base<B, NCP>::iterator
+    dynamic_bitset_base<B, NCP>::insert(const_iterator pos, value_type value)
     {
         return insert(pos, 1, value);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr dynamic_bitset_base<B>::iterator
-    dynamic_bitset_base<B>::insert(const_iterator pos, size_type count, value_type value)
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr dynamic_bitset_base<B, NCP>::iterator
+    dynamic_bitset_base<B, NCP>::insert(const_iterator pos, size_type count, value_type value)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos <= cend());
@@ -997,11 +942,11 @@ namespace sparrow
         return iterator(this, index);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
     template <std::input_iterator InputIt>
-    constexpr dynamic_bitset_base<B>::iterator
-    dynamic_bitset_base<B>::insert(const_iterator pos, InputIt first, InputIt last)
+    constexpr dynamic_bitset_base<B, NCP>::iterator
+    dynamic_bitset_base<B, NCP>::insert(const_iterator pos, InputIt first, InputIt last)
     {
         const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
         const auto count = static_cast<size_type>(std::distance(first, last));
@@ -1043,17 +988,17 @@ namespace sparrow
         return iterator(this, index);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr dynamic_bitset_base<B>::iterator
-    dynamic_bitset_base<B>::emplace(const_iterator pos, value_type value)
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr dynamic_bitset_base<B, NCP>::iterator
+    dynamic_bitset_base<B, NCP>::emplace(const_iterator pos, value_type value)
     {
         return insert(pos, value);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr dynamic_bitset_base<B>::iterator dynamic_bitset_base<B>::erase(const_iterator pos)
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr dynamic_bitset_base<B, NCP>::iterator dynamic_bitset_base<B, NCP>::erase(const_iterator pos)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= pos);
         SPARROW_ASSERT_TRUE(pos < cend());
@@ -1061,10 +1006,10 @@ namespace sparrow
         return erase(pos, pos + 1);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr dynamic_bitset_base<B>::iterator
-    dynamic_bitset_base<B>::erase(const_iterator first, const_iterator last)
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr dynamic_bitset_base<B, NCP>::iterator
+    dynamic_bitset_base<B, NCP>::erase(const_iterator first, const_iterator last)
     {
         SPARROW_ASSERT_TRUE(cbegin() <= first);
         SPARROW_ASSERT_TRUE(first <= last);
@@ -1099,16 +1044,16 @@ namespace sparrow
         return iterator(this, first_index);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr void dynamic_bitset_base<B>::push_back(value_type value)
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr void dynamic_bitset_base<B, NCP>::push_back(value_type value)
     {
         resize(size() + 1, value);
     }
 
-    template <typename B>
-        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr void dynamic_bitset_base<B>::pop_back()
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>> 
+    constexpr void dynamic_bitset_base<B, NCP>::pop_back()
     {
         if (empty())
         {

@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "sparrow/buffer/dynamic_bitset/null_count_policy.hpp"
+
 namespace sparrow
 {
     template <class B, bool is_const>
@@ -174,7 +176,7 @@ namespace sparrow
         size_type m_index;      ///< Index of the referenced bit within the bitset
 
         friend class bitset_iterator<B, false>;  ///< Mutable iterator needs access to create references
-        template <typename RAR>
+        template <typename RAR, null_count_policy NCP>
             requires std::ranges::random_access_range<std::remove_pointer_t<RAR>>
         friend class dynamic_bitset_base;  ///< Bitset base class needs access to create references
     };
