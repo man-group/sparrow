@@ -331,6 +331,7 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_schema.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/private_data_ownership.cpp
+    ${SPARROW_SOURCE_DIR}/buffer/dynamic_bitset/null_count_policy.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_factory.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_helper.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_registry.cpp
@@ -397,7 +398,8 @@ target_include_directories(sparrow PUBLIC
 # We do not use non-standard C++
 set_target_properties(sparrow PROPERTIES CMAKE_CXX_EXTENSIONS OFF)
 target_compile_features(sparrow PUBLIC cxx_std_20)
-target_link_libraries(sparrow PUBLIC ${SPARROW_INTERFACE_DEPENDENCIES})
+target_link_libraries(sparrow
+    PUBLIC ${SPARROW_INTERFACE_DEPENDENCIES})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32)
     cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH CLANG_BIN_PATH)

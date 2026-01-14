@@ -14,14 +14,25 @@
 
 #pragma once
 
-#include <bit>
-#include <climits>
 #include <concepts>
 #include <cstddef>
+#include <cstdint>
 #include <utility>
+
+#include "sparrow/config/config.hpp"
 
 namespace sparrow
 {
+    /**
+     * @brief Counts the number of bits set to true in a buffer.
+     * @param data Pointer to the byte data (may be nullptr)
+     * @param bit_size The total number of bits
+     * @param byte_size The number of bytes in the buffer
+     * @return The number of bits set to true
+     */
+    [[nodiscard]] SPARROW_API std::size_t
+    count_non_null(const std::uint8_t* data, std::size_t bit_size, std::size_t byte_size) noexcept;
+
     /**
      * @class tracking_null_count
      *
@@ -52,44 +63,6 @@ namespace sparrow
         }
 
         /**
-         * @brief Counts the number of bits set to true in a buffer.
-         * @tparam BlockType The integral type used for storage blocks
-         * @param data Pointer to the block data (may be nullptr)
-         * @param bit_size The total number of bits
-         * @param block_count The number of blocks in the buffer
-         * @return The number of bits set to true
-         */
-        template <std::integral BlockType>
-        [[nodiscard]] size_type
-        count_non_null(const BlockType* data, size_type bit_size, size_type block_count) noexcept
-        {
-            if (data == nullptr || block_count == 0)
-            {
-                return bit_size;
-            }
-
-            static constexpr std::size_t bits_per_block = sizeof(BlockType) * CHAR_BIT;
-
-            int res = 0;
-            const size_type full_blocks = bit_size / bits_per_block;
-            for (size_type i = 0; i < full_blocks; ++i)
-            {
-                res += std::popcount(data[i]);
-            }
-            if (full_blocks != block_count)
-            {
-                const size_type bits_count = bit_size % bits_per_block;
-                const BlockType mask = static_cast<BlockType>(
-                    ~static_cast<BlockType>(~static_cast<BlockType>(0) << bits_count)
-                );
-                const BlockType block = data[full_blocks] & mask;
-                res += std::popcount(block);
-            }
-
-            return static_cast<size_type>(res);
-        }
-
-        /**
          * @brief Initializes the null count by counting bits in the buffer.
          * @tparam BlockType The integral type used for storage blocks
          * @param data Pointer to the block data
@@ -97,10 +70,9 @@ namespace sparrow
          * @param block_count The number of blocks in the buffer
          */
         template <std::integral BlockType>
-        constexpr void
-        initialize_null_count(const BlockType* data, size_type bit_size, size_type block_count) noexcept
+        void initialize_null_count(const BlockType* data, size_type bit_size, size_type block_count) noexcept
         {
-            m_null_count = bit_size - count_non_null(data, bit_size, block_count);
+            recompute_null_count(data, bit_size, block_count);
         }
 
         [[nodiscard]] constexpr size_type null_count() const noexcept
@@ -121,10 +93,14 @@ namespace sparrow
          * @param block_count The number of blocks in the buffer
          */
         template <std::integral BlockType>
-        constexpr void
-        recompute_null_count(const BlockType* data, size_type bit_size, size_type block_count) noexcept
+        void recompute_null_count(const BlockType* data, size_type bit_size, size_type block_count) noexcept
         {
-            m_null_count = bit_size - count_non_null(data, bit_size, block_count);
+            const auto* byte_data = reinterpret_cast<const std::uint8_t*>(data);
+            const std::size_t byte_size = block_count * sizeof(BlockType);
+            m_null_count = static_cast<size_type>(bit_size)
+                           - static_cast<size_type>(
+                               count_non_null(byte_data, static_cast<std::size_t>(bit_size), byte_size)
+                           );
         }
 
         constexpr void update_null_count(bool old_value, bool new_value) noexcept
