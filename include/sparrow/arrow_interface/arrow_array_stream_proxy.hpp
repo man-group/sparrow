@@ -117,7 +117,7 @@ namespace sparrow
         /**
          * Check whether the proxy has ownership of its internal `ArrowArrayStream`.
          */
-        SPARROW_API bool owns_stream() const;
+        [[nodiscard]] SPARROW_API bool owns_stream() const;
 
         /**
          * @brief Export the stream pointer.
@@ -133,7 +133,7 @@ namespace sparrow
          * @post If stream was owned, this proxy is left in a released state
          * @post If stream was referenced, pointer to external stream is returned
          */
-        SPARROW_API ArrowArrayStream* export_stream();
+        [[nodiscard]] SPARROW_API ArrowArrayStream* export_stream();
 
         /**
          * @brief Adds a range of arrays to the stream.
@@ -141,14 +141,14 @@ namespace sparrow
          * Pushes multiple arrays into the stream's queue. All arrays must have schemas compatible
          * with the stream's schema. Arrays are validated before being added.
          *
-         * @tparam R A range type whose value type satisfies the layout concept.
+         * @tparam R A range type whose value type satisfies the layout_or_array concept.
          * @param arrays The range of arrays to add to the stream.
          *
          * @throws std::runtime_error If any array has an incompatible schema.
          * @throws std::runtime_error If the stream is immutable (released or not initialized).
          */
         template <std::ranges::input_range R>
-            requires layout<std::ranges::range_value_t<R>>
+            requires layout_or_array<std::ranges::range_value_t<R>>
         void push(R&& arrays)
         {
             arrow_array_stream_private_data& private_data = get_private_data();
@@ -186,13 +186,13 @@ namespace sparrow
          * Pushes a single array into the stream's queue. The array must have a schema compatible
          * with the stream's schema.
          *
-         * @tparam A A type satisfying the layout concept.
+         * @tparam A A type satisfying the layout_or_array concept.
          * @param array The array to add to the stream.
          *
          * @throws std::runtime_error If the array has an incompatible schema.
          * @throws std::runtime_error If the stream is immutable (released or not initialized).
          */
-        template <layout A>
+        template <layout_or_array A>
         void push(A&& array)
         {
             push(std::ranges::single_view(std::forward<A>(array)));
