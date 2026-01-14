@@ -962,6 +962,15 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API bool is_schema_const() const;
 
+        [[nodiscard]] SPARROW_API std::optional<non_owning_dynamic_bitset<uint8_t>>& bitmap()
+        {
+            return m_null_bitmap;
+        }
+        [[nodiscard]] SPARROW_API const std::optional<non_owning_dynamic_bitset<uint8_t>>& bitmap() const
+        {
+            return m_null_bitmap;
+        }
+
     private:
 
         std::variant<ArrowArray*, ArrowArray> m_array;
@@ -974,6 +983,7 @@ namespace sparrow
         bool m_is_dictionary_immutable = false;
         std::vector<bool> m_children_array_immutable;
         std::vector<bool> m_children_schema_immutable;
+        std::optional<non_owning_dynamic_bitset<uint8_t>> m_null_bitmap;
 
         struct impl_tag
         {
@@ -990,14 +1000,13 @@ namespace sparrow
         [[nodiscard]] bool empty() const;
         SPARROW_API void resize_children(size_t children_count);
 
-        [[nodiscard]] SPARROW_API non_owning_dynamic_bitset<uint8_t> get_non_owning_dynamic_bitset();
-
         void update_children();
         void update_dictionary();
         void update_null_count();
         void reset();
         void remove_dictionary();
         void remove_child(size_t index);
+        void create_bitmap_view();
 
         [[nodiscard]] bool array_created_with_sparrow() const;
         [[nodiscard]] SPARROW_API bool schema_created_with_sparrow() const;
@@ -1076,14 +1085,16 @@ namespace sparrow
     template <std::ranges::input_range R>
     inline size_t arrow_proxy::insert_bitmap(size_t index, const R& range)
     {
-        if (!is_created_with_sparrow())
-        {
-            throw arrow_proxy_exception("Cannot modify the bitmap on non-sparrow created ArrowArray");
-        }
-        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
-        auto bitmap = get_non_owning_dynamic_bitset();
-        const auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), range.begin(), range.end());
-        return static_cast<size_t>(std::distance(bitmap.begin(), it));
+        static constexpr const char function_name[] = "insert_bitmap";
+        throw_if_immutable<function_name, true, false>();
+        SPARROW_ASSERT_TRUE(m_null_bitmap.has_value())
+        const auto it = m_null_bitmap->insert(
+            sparrow::next(m_null_bitmap->cbegin(), index),
+            range.begin(),
+            range.end()
+        );
+        set_null_count(static_cast<int64_t>(m_null_bitmap->null_count()));
+        return static_cast<size_t>(std::distance(m_null_bitmap->begin(), it));
     }
 
     template <typename AA, typename AS>
@@ -1135,6 +1146,7 @@ namespace sparrow
         update_buffers();
         update_children();
         update_dictionary();
+        create_bitmap_view();
     }
 
     template <const char* function_name, bool check_array_is_mutable, bool check_schema_is_mutable>

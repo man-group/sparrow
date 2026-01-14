@@ -121,6 +121,7 @@ namespace sparrow
                         }
                         CHECK_EQ(ar.name(), "test");
                         test_metadata(metadata_sample, *(ar.metadata()));
+                        CHECK_EQ(ar.null_count(), 0);
                     }
 
                     SUBCASE("nullable == false")
@@ -133,6 +134,7 @@ namespace sparrow
                         }
                         CHECK_EQ(ar.name(), "test");
                         test_metadata(metadata_sample, *(ar.metadata()));
+                        CHECK_EQ(ar.null_count(), 0);
                     }
                 }
 
@@ -163,6 +165,7 @@ namespace sparrow
                     {
                         CHECK_EQ(nullable_values[i].has_value(), ar[i].has_value());
                     }
+                    CHECK_EQ(ar.null_count(), 50);
                 }
             }
 
@@ -193,6 +196,7 @@ namespace sparrow
                     ar[1] = new_value;
                     CHECK(ar[1].has_value());
                     CHECK_EQ(ar[1].get(), new_value.get());
+                    CHECK_EQ(ar.null_count(), 50);
                 }
             }
 
@@ -224,6 +228,7 @@ namespace sparrow
                 CHECK_NE(ar, ar3);
                 ar3 = ar;
                 CHECK_EQ(ar, ar3);
+                CHECK_EQ(ar.null_count(), 50);
             }
 
             SUBCASE("move")
@@ -237,6 +242,7 @@ namespace sparrow
                 CHECK_NE(ar2, ar4);
                 ar4 = std::move(ar2);
                 CHECK_EQ(ar3, ar4);
+                CHECK_EQ(ar4.null_count(), 50);
             }
 
             SUBCASE("value_iterator_ordering")
@@ -331,6 +337,7 @@ namespace sparrow
                 CHECK_EQ(ar[ar.size() - 3], new_value_nullable);
                 CHECK_EQ(ar[ar.size() - 2], new_value_nullable);
                 CHECK_EQ(ar[ar.size() - 1], new_value_nullable);
+                CHECK_EQ(ar.null_count(), 50);
             }
 
             SUBCASE("insert")
@@ -349,6 +356,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 1]);
                         }
+                        CHECK_EQ(ar.null_count(),51);
                     }
 
                     SUBCASE("in the middle")
@@ -366,6 +374,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 1]);
                         }
+                        CHECK_EQ(ar.null_count(), 51);
                     }
 
                     SUBCASE("at the end")
@@ -379,6 +388,7 @@ namespace sparrow
                             CHECK_EQ(ar[i], nullable_values[i + offset]);
                         }
                         CHECK_EQ(ar[ar.size() - 1], new_value_nullable);
+                        CHECK_EQ(ar.null_count(), 51);
                     }
                 }
 
@@ -399,6 +409,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - count]);
                         }
+                        CHECK_EQ(ar.null_count(), 53);
                     }
 
                     SUBCASE("in the middle")
@@ -419,6 +430,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - count]);
                         }
+                        CHECK_EQ(ar.null_count(), 53);
                     }
 
                     SUBCASE("at the end")
@@ -435,6 +447,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], new_value_nullable);
                         }
+                        CHECK_EQ(ar.null_count(), 53);
                     }
                 }
 
@@ -458,6 +471,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 51);
                     }
 
                     SUBCASE("in the middle")
@@ -478,6 +492,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 51);
                     }
 
                     SUBCASE("at the end")
@@ -494,6 +509,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], new_values[i - ar.size() + 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 51);
                     }
                 }
 
@@ -511,6 +527,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 51);
                     }
 
                     SUBCASE("in the middle")
@@ -530,6 +547,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 51);
                     }
 
                     SUBCASE("at the end")
@@ -546,6 +564,7 @@ namespace sparrow
                         CHECK_EQ(ar[ar.size() - 2], new_val_100);
                         CHECK_EQ(ar[ar.size() - 1], new_val_101);
                     }
+                    CHECK_EQ(ar.null_count(), 51);
                 }
 
                 SUBCASE("with pos and range")
@@ -563,6 +582,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 51);
                     }
 
                     SUBCASE("in the middle")
@@ -583,6 +603,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 51);
                     }
 
                     SUBCASE("at the end")
@@ -599,6 +620,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], new_values[i - ar.size() + 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 51);
                     }
                 }
             }
@@ -617,6 +639,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset + 1]);
                         }
+                        CHECK_EQ(ar.null_count(), 50);
                     }
 
                     SUBCASE("in the middle")
@@ -634,6 +657,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset + 1]);
                         }
+                        CHECK_EQ(ar.null_count(), 49);
                     }
 
                     SUBCASE("at the end")
@@ -646,6 +670,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset]);
                         }
+                        CHECK_EQ(ar.null_count(), 50);
                     }
                 }
 
@@ -664,6 +689,7 @@ namespace sparrow
                     {
                         CHECK_EQ(ar[i], nullable_values[i + offset + count]);
                     }
+                    CHECK_EQ(ar.null_count(), 49);
                 }
             }
 
@@ -676,6 +702,7 @@ namespace sparrow
                 {
                     CHECK_EQ(ar[i], nullable_values[i + offset]);
                 }
+                CHECK_EQ(ar.null_count(), 50);
             }
 
             SUBCASE("pop_back")
@@ -686,6 +713,7 @@ namespace sparrow
                 {
                     CHECK_EQ(ar[i], nullable_values[i + offset]);
                 }
+                CHECK_EQ(ar.null_count(), 50);
             }
 
             SUBCASE("zero_null_values")
@@ -698,6 +726,7 @@ namespace sparrow
                         CHECK_EQ(ar[i].get(), T(0));
                     }
                 }
+                CHECK_EQ(ar.null_count(), 50);
             }
         }
         TEST_CASE_TEMPLATE_APPLY(primitive_array_id, testing_types);
