@@ -133,7 +133,7 @@ namespace sparrow
          * @post If stream was owned, this proxy is left in a released state
          * @post If stream was referenced, pointer to external stream is returned
          */
-        [[nodiscard]]SPARROW_API ArrowArrayStream* export_stream();
+        [[nodiscard]] SPARROW_API ArrowArrayStream* export_stream();
 
         /**
          * @brief Adds a range of arrays to the stream.
