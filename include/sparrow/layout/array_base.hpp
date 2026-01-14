@@ -22,6 +22,7 @@
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
+#include "sparrow/buffer/dynamic_bitset/non_owning_dynamic_bitset.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/crtp_base.hpp"
@@ -41,7 +42,7 @@ namespace sparrow
      */
     struct array_inner_types_base
     {
-        using bitmap_type = dynamic_bitset_view<std::uint8_t>;
+        using bitmap_type = non_owning_dynamic_bitset<std::uint8_t>;
     };
 
     /**

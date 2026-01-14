@@ -142,8 +142,6 @@ namespace sparrow
             const difference_type count = std::distance(first, last);
             // The following must be done after modifying the bitmap and values
             this->get_arrow_proxy().set_length(this->size() + static_cast<size_t>(count));
-
-            derived.update();
             return sparrow::next(this->begin(), distance);
         }
 
@@ -269,7 +267,6 @@ namespace sparrow
         derived.resize_bitmap(new_length, value.has_value());
         derived.resize_values(new_length, value.get());
         this->get_arrow_proxy().set_length(new_length);  // Must be done after resizing the bitmap and values
-        derived.update();
     }
 
     /**
@@ -307,7 +304,6 @@ namespace sparrow
         derived.insert_value(sparrow::next(derived.value_cbegin(), distance), value.get(), count);
         this->get_arrow_proxy().set_length(this->size() + count);  // Must be done after resizing the bitmap
                                                                    // and values
-        derived.update();
         return sparrow::next(this->begin(), distance);
     }
 
@@ -364,7 +360,6 @@ namespace sparrow
         derived.erase_values(sparrow::next(derived.value_cbegin(), first_index), count);
         this->get_arrow_proxy().set_length(this->size() - count);  // Must be done after modifying the bitmap
                                                                    // and values
-        derived.update();
         return sparrow::next(begin(), first_index);
     }
 

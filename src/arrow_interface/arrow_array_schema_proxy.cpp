@@ -1034,7 +1034,7 @@ namespace sparrow
 
     void arrow_proxy::create_bitmap_view()
     {
-        if (has_bitmap(data_type()) && array_created_with_sparrow() && !m_array_is_immutable)
+        if (has_bitmap(data_type()))
         {
             static constexpr size_t bitmap_buffer_index = 0;
             auto private_data = static_cast<arrow_array_private_data*>(array_without_sanitize().private_data);

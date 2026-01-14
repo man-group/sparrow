@@ -233,50 +233,7 @@ namespace sparrow
         constexpr bitmap_iterator erase_bitmap(const_bitmap_iterator pos, size_type count)
             requires is_mutable;
 
-        /**
-         * @brief Updates internal bitmap after external modifications to Arrow data.
-         *
-         * This method should be called after any direct modifications to the underlying
-         * Arrow buffers to ensure the bitmap wrapper reflects the current state.
-         *
-         * @pre Array must be constructed with is_mutable = true
-         * @pre Underlying Arrow validity buffer must be in a valid state
-         * @post Internal bitmap is reconstructed from current Arrow data
-         * @post Bitmap accurately reflects the current validity buffer state
-         *
-         * @note Only available when is_mutable is true
-         */
-        constexpr void update()
-            requires is_mutable;
-
-        /**
-         * @brief Gets non-owning view of the bitmap as dynamic bitset.
-         *
-         * @return Non-owning dynamic bitset wrapper around the validity buffer
-         *
-         * @post Returns valid non-owning view of the bitmap data
-         * @post View reflects current state of validity buffer
-         * @post View remains valid while the array exists
-         */
-        [[nodiscard]] constexpr non_owning_dynamic_bitset<uint8_t> get_non_owning_dynamic_bitset();
-
-        /**
-         * @brief Creates bitmap wrapper from current Arrow validity buffer.
-         *
-         * @return Bitmap object wrapping the current validity buffer
-         *
-         * @pre Arrow proxy must have validity buffer at index 0
-         * @pre Validity buffer size must be consistent with array length + offset
-         * @post Returns bitmap wrapper for the validity buffer
-         * @post Bitmap size is array length + offset for proper indexing
-         *
-         * @note Internal assertion: SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index)
-         */
-        [[nodiscard]] constexpr bitmap_type make_bitmap();
-
     private:
-
-        bitmap_type m_bitmap;  ///< Validity bitmap wrapper
 
         friend array_crtp_base<D>;
         friend mutable_array_base<D>;
@@ -312,14 +269,12 @@ namespace sparrow
     template <class D, bool is_mutable>
     array_bitmap_base_impl<D, is_mutable>::array_bitmap_base_impl(arrow_proxy proxy_param)
         : base_type(std::move(proxy_param))
-        , m_bitmap(make_bitmap())
     {
     }
 
     template <class D, bool is_mutable>
     constexpr array_bitmap_base_impl<D, is_mutable>::array_bitmap_base_impl(const array_bitmap_base_impl& rhs)
         : base_type(rhs)
-        , m_bitmap(make_bitmap())
     {
     }
 
@@ -328,7 +283,6 @@ namespace sparrow
     array_bitmap_base_impl<D, is_mutable>::operator=(const array_bitmap_base_impl& rhs)
     {
         base_type::operator=(rhs);
-        m_bitmap = make_bitmap();
         return *this;
     }
 
@@ -336,23 +290,15 @@ namespace sparrow
     constexpr auto array_bitmap_base_impl<D, is_mutable>::get_bitmap() -> bitmap_type&
         requires is_mutable
     {
-        return m_bitmap;
+        arrow_proxy& arrow_proxy = this->get_arrow_proxy();
+        return *(arrow_proxy.bitmap());
     }
 
     template <class D, bool is_mutable>
     constexpr auto array_bitmap_base_impl<D, is_mutable>::get_bitmap() const -> const bitmap_type&
     {
-        return m_bitmap;
-    }
-
-    template <class D, bool is_mutable>
-    constexpr auto array_bitmap_base_impl<D, is_mutable>::make_bitmap() -> bitmap_type
-    {
-        constexpr size_t bitmap_buffer_index = 0;
-        arrow_proxy& arrow_proxy = this->get_arrow_proxy();
-        SPARROW_ASSERT_TRUE(arrow_proxy.buffers().size() > bitmap_buffer_index);
-        const auto bitmap_size = arrow_proxy.length() + arrow_proxy.offset();
-        return bitmap_type(arrow_proxy.buffers()[bitmap_buffer_index].data(), bitmap_size);
+        const arrow_proxy& arrow_proxy = this->get_arrow_proxy();
+        return *(arrow_proxy.bitmap());
     }
 
     template <class D, bool is_mutable>
@@ -409,12 +355,5 @@ namespace sparrow
         const auto pos_idx = static_cast<size_t>(std::distance(this->bitmap_cbegin(), pos));
         const auto idx = arrow_proxy.erase_bitmap(pos_idx, count);
         return sparrow::next(this->bitmap_begin(), idx);
-    }
-
-    template <class D, bool is_mutable>
-    constexpr void array_bitmap_base_impl<D, is_mutable>::update()
-        requires is_mutable
-    {
-        m_bitmap = make_bitmap();
     }
 }
