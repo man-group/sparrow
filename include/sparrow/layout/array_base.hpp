@@ -42,7 +42,10 @@ namespace sparrow
      */
     struct array_inner_types_base
     {
-        using bitmap_type = non_owning_dynamic_bitset<std::uint8_t>;
+        using mutable_bitmap_type = non_owning_dynamic_bitset<std::uint8_t>;
+        using const_bitmap_type = dynamic_bitset_view<const std::uint8_t>;
+        // bitmap_type is kept for compatibility - used for mutable operations
+        using bitmap_type = mutable_bitmap_type;
     };
 
     /**
@@ -117,9 +120,10 @@ namespace sparrow
         using difference_type = std::ptrdiff_t;
 
         using bitmap_type = typename inner_types::bitmap_type;
+        using const_bitmap_type = typename inner_types::const_bitmap_type;
         using bitmap_const_reference = bitmap_type::const_reference;
         using bitmap_iterator = bitmap_type::iterator;
-        using const_bitmap_iterator = bitmap_type::const_iterator;
+        using const_bitmap_iterator = const_bitmap_type::const_iterator;
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
         using inner_value_type = typename inner_types::inner_value_type;

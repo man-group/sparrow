@@ -70,8 +70,8 @@ namespace sparrow
             case data_type::FIXED_SIZED_LIST:
             case data_type::STRING_VIEW:
             case data_type::BINARY_VIEW:
-                return true;
             case data_type::MAP:
+                return true;
             case data_type::NA:
             case data_type::SPARSE_UNION:
             case data_type::DENSE_UNION:

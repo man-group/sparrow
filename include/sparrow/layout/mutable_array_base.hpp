@@ -45,9 +45,11 @@ namespace sparrow
         using difference_type = base_type::difference_type;
 
         using bitmap_type = typename inner_types::bitmap_type;
+        using const_bitmap_type = typename inner_types::const_bitmap_type;
         using bitmap_reference = bitmap_type::reference;
         using bitmap_const_reference = bitmap_type::const_reference;
         using bitmap_iterator = bitmap_type::iterator;
+        using const_bitmap_iterator = const_bitmap_type::const_iterator;
         using bitmap_range = std::ranges::subrange<bitmap_iterator>;
         using const_bitmap_range = base_type::const_bitmap_range;
 

@@ -26,6 +26,7 @@
 #include "sparrow/arrow_interface/arrow_array_schema_info_utils.hpp"
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/buffer/buffer_view.hpp"
+#include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
 #include "sparrow/buffer/dynamic_bitset/non_owning_dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
@@ -962,13 +963,26 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API bool is_schema_const() const;
 
-        [[nodiscard]] SPARROW_API std::optional<non_owning_dynamic_bitset<uint8_t>>& bitmap()
+        using mutable_bitmap_type = non_owning_dynamic_bitset<uint8_t>;
+        using const_bitmap_type = dynamic_bitset_view<const uint8_t>;
+        using bitmap_variant = std::variant<mutable_bitmap_type, const_bitmap_type>;
+
+        [[nodiscard]] SPARROW_API std::optional<bitmap_variant>& bitmap()
         {
             return m_null_bitmap;
         }
-        [[nodiscard]] SPARROW_API const std::optional<non_owning_dynamic_bitset<uint8_t>>& bitmap() const
+        [[nodiscard]] SPARROW_API const std::optional<bitmap_variant>& bitmap() const
         {
             return m_null_bitmap;
+        }
+        
+        [[nodiscard]] SPARROW_API std::optional<const_bitmap_type>& const_bitmap()
+        {
+            return m_const_bitmap;
+        }
+        [[nodiscard]] SPARROW_API const std::optional<const_bitmap_type>& const_bitmap() const
+        {
+            return m_const_bitmap;
         }
 
     private:
@@ -983,7 +997,8 @@ namespace sparrow
         bool m_is_dictionary_immutable = false;
         std::vector<bool> m_children_array_immutable;
         std::vector<bool> m_children_schema_immutable;
-        std::optional<non_owning_dynamic_bitset<uint8_t>> m_null_bitmap;
+        std::optional<bitmap_variant> m_null_bitmap;
+        std::optional<const_bitmap_type> m_const_bitmap;
 
         struct impl_tag
         {
@@ -1088,13 +1103,14 @@ namespace sparrow
         static constexpr const char function_name[] = "insert_bitmap";
         throw_if_immutable<function_name, true, false>();
         SPARROW_ASSERT_TRUE(m_null_bitmap.has_value())
-        const auto it = m_null_bitmap->insert(
-            sparrow::next(m_null_bitmap->cbegin(), index),
+        auto& bitmap = std::get<mutable_bitmap_type>(*m_null_bitmap);
+        const auto it = bitmap.insert(
+            sparrow::next(bitmap.cbegin(), index),
             range.begin(),
             range.end()
         );
-        set_null_count(static_cast<int64_t>(m_null_bitmap->null_count()));
-        return static_cast<size_t>(std::distance(m_null_bitmap->begin(), it));
+        set_null_count(static_cast<int64_t>(bitmap.null_count()));
+        return static_cast<size_t>(std::distance(bitmap.begin(), it));
     }
 
     template <typename AA, typename AS>

@@ -613,7 +613,7 @@ namespace sparrow
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
 
         std::optional<std::unordered_set<ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
-        bool keys_sorted = check_keys_sorted(flat_keys, list_offsets);
+        const bool keys_sorted = check_keys_sorted(flat_keys, list_offsets);
         if (keys_sorted)
         {
             flags.value().insert(ArrowFlag::MAP_KEYS_SORTED);

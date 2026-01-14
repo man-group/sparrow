@@ -59,6 +59,7 @@ namespace sparrow
         using size_type = std::size_t;
 
         using bitmap_type = typename base_type::bitmap_type;
+        using const_bitmap_type = typename base_type::const_bitmap_type;
         using bitmap_iterator = typename base_type::bitmap_iterator;
         using const_bitmap_iterator = typename base_type::const_bitmap_iterator;
 
@@ -137,7 +138,7 @@ namespace sparrow
          * @post Returns valid const reference to the bitmap
          * @post Bitmap can be read but not modified through this reference
          */
-        [[nodiscard]] constexpr const bitmap_type& get_bitmap() const;
+        [[nodiscard]] constexpr const const_bitmap_type& get_bitmap() const;
 
         /**
          * @brief Resizes the validity bitmap to accommodate new array length.
@@ -291,14 +292,16 @@ namespace sparrow
         requires is_mutable
     {
         arrow_proxy& arrow_proxy = this->get_arrow_proxy();
-        return *(arrow_proxy.bitmap());
+        SPARROW_ASSERT_TRUE(arrow_proxy.bitmap().has_value());
+        return std::get<bitmap_type>(*arrow_proxy.bitmap());
     }
 
     template <class D, bool is_mutable>
-    constexpr auto array_bitmap_base_impl<D, is_mutable>::get_bitmap() const -> const bitmap_type&
+    constexpr auto array_bitmap_base_impl<D, is_mutable>::get_bitmap() const -> const const_bitmap_type&
     {
-        const arrow_proxy& arrow_proxy = this->get_arrow_proxy();
-        return *(arrow_proxy.bitmap());
+        const arrow_proxy& proxy = this->get_arrow_proxy();
+        SPARROW_ASSERT_TRUE(proxy.const_bitmap().has_value());
+        return *proxy.const_bitmap();
     }
 
     template <class D, bool is_mutable>
