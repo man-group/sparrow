@@ -57,7 +57,11 @@ namespace sparrow
     }
 
     template <std::integral T, null_count_policy NCP>
-    constexpr non_owning_dynamic_bitset<T, NCP>::non_owning_dynamic_bitset(buffer<T>* buffer, size_type n, size_type null_count)
+    constexpr non_owning_dynamic_bitset<T, NCP>::non_owning_dynamic_bitset(
+        buffer<T>* buffer,
+        size_type n,
+        size_type null_count
+    )
         : base_type(buffer, n, null_count)
     {
         SPARROW_ASSERT_TRUE(buffer != nullptr);

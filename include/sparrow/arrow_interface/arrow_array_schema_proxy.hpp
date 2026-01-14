@@ -971,15 +971,17 @@ namespace sparrow
         {
             return m_null_bitmap;
         }
+
         [[nodiscard]] SPARROW_API const std::optional<bitmap_variant>& bitmap() const
         {
             return m_null_bitmap;
         }
-        
+
         [[nodiscard]] SPARROW_API std::optional<const_bitmap_type>& const_bitmap()
         {
             return m_const_bitmap;
         }
+
         [[nodiscard]] SPARROW_API const std::optional<const_bitmap_type>& const_bitmap() const
         {
             return m_const_bitmap;
@@ -1104,11 +1106,7 @@ namespace sparrow
         throw_if_immutable<function_name, true, false>();
         SPARROW_ASSERT_TRUE(m_null_bitmap.has_value())
         auto& bitmap = std::get<mutable_bitmap_type>(*m_null_bitmap);
-        const auto it = bitmap.insert(
-            sparrow::next(bitmap.cbegin(), index),
-            range.begin(),
-            range.end()
-        );
+        const auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), range.begin(), range.end());
         set_null_count(static_cast<int64_t>(bitmap.null_count()));
         return static_cast<size_t>(std::distance(bitmap.begin(), it));
     }

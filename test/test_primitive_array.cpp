@@ -356,7 +356,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 1]);
                         }
-                        CHECK_EQ(ar.null_count(),51);
+                        CHECK_EQ(ar.null_count(), 51);
                     }
 
                     SUBCASE("in the middle")
