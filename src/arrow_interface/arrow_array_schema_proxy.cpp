@@ -1044,7 +1044,7 @@ namespace sparrow
         if (has_bitmap(data_type()))
         {
             const size_t current_size = length() + offset();
-            const auto nc = null_count() >= 0 ? static_cast<size_t>(null_count()) : 0;
+            const auto nc = static_cast<size_t>(null_count());
             // Use const accessor to get array - works for both mutable and immutable proxies
             const ArrowArray& arr = std::as_const(*this).array_without_sanitize();
 
