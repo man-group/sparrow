@@ -1191,7 +1191,128 @@ namespace sparrow
             {
                 const std::uint8_t* null_ptr = nullptr;
                 const auto count = count_non_null(null_ptr, 100, 0);
-                CHECK_EQ(count, 100);  // All bits assumed set for null buffer
+                CHECK_EQ(count, 100);  // All bits assumed set for null buffer with no offset
+                
+                // With offset, only count from offset onwards
+                const auto count_with_offset = count_non_null(null_ptr, 100, 0, 20);
+                CHECK_EQ(count_with_offset, 80);  // 100 - 20 = 80 bits from offset
+            }
+
+            SUBCASE("static count_non_null with offset - no offset")
+            {
+                // Test that offset=0 works the same as no offset
+                std::array<std::uint8_t, 2> buffer = {0b11110000, 0b00001111};
+                const auto count = count_non_null(buffer.data(), 16, 2, 0);
+                CHECK_EQ(count, 8);  // 4 bits set in each byte = 8 total
+            }
+
+            SUBCASE("static count_non_null with offset - byte aligned")
+            {
+                // Skip the first byte (8 bits), count only the second byte
+                std::array<std::uint8_t, 2> buffer = {0b11110000, 0b00001111};
+                const auto count = count_non_null(buffer.data(), 8, 2, 8);
+                CHECK_EQ(count, 4);  // Only count second byte: 4 bits set
+            }
+
+            SUBCASE("static count_non_null with offset - bit aligned")
+            {
+                // Offset by 3 bits
+                // Buffer: 0b11110000 0b00001111
+                // LSB representation: 0 0 0 0 1 1 1 1 | 1 1 1 1 0 0 0 0
+                // Starting from bit 3, count 13 bits: bits 3-15
+                // Bits 3-7 of first byte: 01111 = 4 bits
+                // All 8 bits of second byte: 11110000 = 4 bits
+                std::array<std::uint8_t, 2> buffer = {0b11110000, 0b00001111};
+                const auto count = count_non_null(buffer.data(), 13, 2, 3);
+                CHECK_EQ(count, 8);  // 4 bits from first byte + 4 bits from second byte
+            }
+
+            SUBCASE("static count_non_null with offset - partial first byte")
+            {
+                // Test partial first byte when offset is not byte-aligned
+                // Buffer: 0b11111111
+                // Offset by 2, count 4 bits: bits 2-5 (0-indexed)
+                std::array<std::uint8_t, 1> buffer = {0b11111111};
+                const auto count = count_non_null(buffer.data(), 4, 1, 2);
+                CHECK_EQ(count, 4);  // All 4 bits are set
+            }
+
+            SUBCASE("static count_non_null with offset - partial first byte mixed")
+            {
+                // Buffer: 0b10101010
+                // Offset by 1, count 6 bits: bits 1-6 (0-indexed) = 010101
+                std::array<std::uint8_t, 1> buffer = {0b10101010};
+                const auto count = count_non_null(buffer.data(), 6, 1, 1);
+                CHECK_EQ(count, 3);  // 3 bits are set in positions 1,3,5
+            }
+
+            SUBCASE("static count_non_null with offset - spanning multiple bytes")
+            {
+                // Buffer: 0b11110000 0b00001111 0b10101010
+                // Offset by 4, count 16 bits
+                std::array<std::uint8_t, 3> buffer = {0b11110000, 0b00001111, 0b10101010};
+                const auto count = count_non_null(buffer.data(), 16, 3, 4);
+                // Bits 4-7 of first byte: 1111 = 4 bits
+                // All of second byte: 00001111 = 4 bits
+                // Bits 0-3 of third byte: 1010 = 2 bits
+                // Total: 10 bits
+                CHECK_EQ(count, 10);
+            }
+
+            SUBCASE("static count_non_null with offset - offset beyond buffer")
+            {
+                std::array<std::uint8_t, 2> buffer = {0b11111111, 0b11111111};
+                const auto count = count_non_null(buffer.data(), 8, 2, 16);
+                CHECK_EQ(count, 0);  // Offset beyond buffer returns 0
+            }
+
+            SUBCASE("static count_non_null with offset - offset at buffer boundary")
+            {
+                std::array<std::uint8_t, 2> buffer = {0b11111111, 0b11111111};
+                const auto count = count_non_null(buffer.data(), 8, 2, 15);
+                CHECK_EQ(count, 1);  // Only 1 bit available
+            }
+
+            SUBCASE("static count_non_null with offset - zero bit_size")
+            {
+                std::array<std::uint8_t, 2> buffer = {0b11111111, 0b11111111};
+                const auto count = count_non_null(buffer.data(), 0, 2, 0);
+                CHECK_EQ(count, 0);  // Zero bit_size returns 0
+            }
+
+            SUBCASE("static count_non_null with offset - complex pattern")
+            {
+                // Test with realistic pattern
+                // Buffer: 0b00100110 0b01010101 0b00110101
+                std::array<std::uint8_t, 3> buffer = {0b00100110, 0b01010101, 0b00110101};
+                
+                // No offset, count all 24 bits
+                const auto count1 = count_non_null(buffer.data(), 24, 3, 0);
+                CHECK_EQ(count1, 11);  // 3 + 4 + 4 = 11 bits set
+                
+                // Offset by 8, count 16 bits (skip first byte)
+                const auto count2 = count_non_null(buffer.data(), 16, 3, 8);
+                CHECK_EQ(count2, 8);  // 4 + 4 = 8 bits set
+                
+                // Offset by 5, count 10 bits
+                // First byte LSB: 0 1 1 0 0 1 0 0
+                // Bits 5-7 of first byte: 100 = 1 bit
+                // Second byte LSB: 1 0 1 0 1 0 1 0  
+                // Bits 0-6 of second byte: 1010101 = 4 bits
+                const auto count3 = count_non_null(buffer.data(), 10, 3, 5);
+                CHECK_EQ(count3, 5);
+            }
+
+            SUBCASE("static count_non_null with offset - single bit")
+            {
+                // Test counting a single bit at various positions
+                std::array<std::uint8_t, 1> buffer = {0b10101010};
+                
+                CHECK_EQ(count_non_null(buffer.data(), 1, 1, 0), 0);  // Bit 0: 0
+                CHECK_EQ(count_non_null(buffer.data(), 1, 1, 1), 1);  // Bit 1: 1
+                CHECK_EQ(count_non_null(buffer.data(), 1, 1, 2), 0);  // Bit 2: 0
+                CHECK_EQ(count_non_null(buffer.data(), 1, 1, 3), 1);  // Bit 3: 1
+                CHECK_EQ(count_non_null(buffer.data(), 1, 1, 7), 1);  // Bit 7: 1
             }
 
             SUBCASE("initialize")

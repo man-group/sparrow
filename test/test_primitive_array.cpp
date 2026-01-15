@@ -916,8 +916,7 @@ namespace sparrow
                 auto sliced = arr.slice(slice_start, slice_end);
                 CHECK_EQ(sliced.offset(), slice_start);
                 CHECK_EQ(sliced.size(), slice_end - slice_start);
-                // Note: null_count is typically -1 (unknown) after slicing
-                // unless explicitly recomputed
+                CHECK_EQ(sliced.null_count(), 2);
             }
         }
     }
