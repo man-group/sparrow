@@ -1729,8 +1729,8 @@ namespace sparrow
             {
                 std::array<std::uint8_t, 1> blocks{0b10101010};
                 
-                // Create view with offset - parameters are: (pointer, size, null_count, offset)
-                dynamic_bitset_view<std::uint8_t> view(blocks.data(), 8, 4, 2);
+                // Create view with offset - parameters are: (pointer, size, offset, null_count)
+                dynamic_bitset_view<std::uint8_t> view(blocks.data(), 8, 2, 4);
                 
                 CHECK_EQ(view.offset(), 2);
                 CHECK_EQ(view.null_count(), 4); // specified in constructor
@@ -1743,8 +1743,7 @@ namespace sparrow
                 buffer<std::uint8_t> buf(1, std::allocator<std::uint8_t>());
                 buf[0] = 0b10101010;
                 
-                // Parameters are: (pointer, size, null_count, offset)
-                non_owning_dynamic_bitset<std::uint8_t> bm(&buf, 8, 4, 3);
+                non_owning_dynamic_bitset<std::uint8_t> bm(&buf, 8, 3, 4);
                 
                 CHECK_EQ(bm.offset(), 3);
                 CHECK_EQ(bm.null_count(), 4); // specified in constructor

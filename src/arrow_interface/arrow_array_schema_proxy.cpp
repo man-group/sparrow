@@ -897,7 +897,7 @@ namespace sparrow
         bitmap.resize(new_size, value);
         const auto null_count = bitmap.null_count();
         set_null_count(static_cast<int64_t>(null_count));
-        m_const_bitmap = const_bitmap_type(bitmap.data(), length() + offset(), static_cast<size_t>(null_count));
+        m_const_bitmap = const_bitmap_type(bitmap.data(), length(), static_cast<size_t>(null_count), offset());
         update_buffers();
     }
 
@@ -906,7 +906,7 @@ namespace sparrow
         static constexpr const char function_name[] = "insert_bitmap";
         throw_if_immutable<function_name, true, false>();
         SPARROW_ASSERT_TRUE(m_null_bitmap.has_value())
-        SPARROW_ASSERT_TRUE(std::cmp_less_equal(index, length() + offset()))
+        SPARROW_ASSERT_TRUE(std::cmp_less_equal(index, length()))
         if (count == 0)
         {
             return index;
@@ -916,7 +916,7 @@ namespace sparrow
         update_buffers();
         const auto null_count = bitmap.null_count();
         set_null_count(static_cast<int64_t>(null_count));
-        m_const_bitmap = const_bitmap_type(bitmap.data(), length() + offset(), static_cast<size_t>(null_count));
+        m_const_bitmap = const_bitmap_type(bitmap.data(), length(), static_cast<size_t>(null_count), +offset());
         return std::distance(bitmap.begin(), it);
     }
 
@@ -932,7 +932,7 @@ namespace sparrow
         const auto it = bitmap.erase(it_first, it_last);
         update_buffers();
         set_null_count(static_cast<int64_t>(bitmap.null_count()));
-        m_const_bitmap = const_bitmap_type(bitmap.data(), length() + offset(), static_cast<size_t>(null_count()));
+        m_const_bitmap = const_bitmap_type(bitmap.data(), length(), static_cast<size_t>(null_count()), offset());
         return std::distance(bitmap.begin(), it);
     }
 
@@ -954,12 +954,17 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(start <= end);
         arrow_proxy copy = *this;
+
         copy.set_offset(start);
         copy.set_length(end - start);
-        // Note: We don't set offset on the bitmap itself because bitmap_begin() 
-        // in array_base.hpp already accounts for the arrow_proxy offset.
-        // Setting it here would create a double offset.
         
+        if (has_bitmap(data_type()))
+        {
+            // TODO: optimize to avoid null counting
+            copy.create_bitmap_view();
+            copy.update_null_count();
+        }
+
         return copy;
     }
 
@@ -972,13 +977,6 @@ namespace sparrow
         ar.offset = static_cast<int64_t>(start);
         ar.length = static_cast<int64_t>(end - start);
         ar.release = empty_release_arrow_array;
-        // Smart calculation of the new null_count
-        // if (has_bitmap(data_type()))
-        // {
-        //     const auto& bitmap = *m_const_bitmap;
-           
-        //     bitmap.
-        // }
 
         return arrow_proxy{std::move(ar), std::move(as)};
     }
@@ -1054,7 +1052,8 @@ namespace sparrow
     {
         if (has_bitmap(data_type()))
         {
-            const size_t current_size = length() + offset();
+            const auto current_offset = offset();
+            const size_t current_size = length() + current_offset;
             const auto nc = static_cast<size_t>(null_count());
             // Use const accessor to get array - works for both mutable and immutable proxies
             const ArrowArray& arr = std::as_const(*this).array_without_sanitize();
@@ -1063,9 +1062,15 @@ namespace sparrow
             {
                 auto private_data = static_cast<arrow_array_private_data*>(arr.private_data);
                 auto& bitmap_buffer = private_data->buffers()[bitmap_buffer_index];
-                m_null_bitmap.emplace(std::in_place_type<mutable_bitmap_type>, &bitmap_buffer, current_size, nc);
+                m_null_bitmap.emplace(
+                    std::in_place_type<mutable_bitmap_type>,
+                    &bitmap_buffer,
+                    current_size,
+                    current_offset,
+                    nc
+                );
                 // Also create const view for const access
-                m_const_bitmap.emplace(bitmap_buffer.data(), current_size, nc);
+                m_const_bitmap.emplace(bitmap_buffer.data(), current_size, current_offset, nc);
             }
             else
             {
@@ -1074,10 +1079,11 @@ namespace sparrow
                     std::in_place_type<const_bitmap_type>,
                     const_cast<uint8_t*>(bitmap_ptr),
                     current_size,
+                    current_offset,
                     nc
                 );
                 // Also create const view for const access
-                m_const_bitmap.emplace(const_cast<uint8_t*>(bitmap_ptr), current_size, nc);
+                m_const_bitmap.emplace(const_cast<uint8_t*>(bitmap_ptr), current_size, current_offset, nc);
             }
         }
     }

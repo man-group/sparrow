@@ -161,7 +161,7 @@ namespace sparrow
          *
          * @param p Pointer to the memory buffer containing bit data
          * @param n The number of bits represented in the buffer
-         * @param null_count The number of bits that are set to false/null
+         * @param offset The offset in bits from the start of the buffer
          *
          * @pre If p is not nullptr, it must point to valid memory of sufficient size
          * @pre null_count must accurately reflect the number of unset bits
@@ -170,7 +170,7 @@ namespace sparrow
          * @post null_count() == null_count
          */
         template <allocator A>
-        constexpr dynamic_bitset(block_type* p, size_type n, size_type null_count, const A& a);
+        constexpr dynamic_bitset(block_type* p, size_type n, size_type offset, const A& a);
 
         /**
          * @brief Constructs a bitset using existing memory with offset and null count tracking.
@@ -180,8 +180,8 @@ namespace sparrow
          *
          * @param p Pointer to the memory buffer containing bit data
          * @param n The number of bits represented in the buffer
-         * @param null_count The number of bits that are set to false/null
          * @param offset The offset in bits from the start of the buffer
+         * @param null_count The number of bits that are set to false/null
          *
          * @pre If p is not nullptr, it must point to valid memory of sufficient size
          * @pre null_count must accurately reflect the number of unset bits
@@ -190,7 +190,7 @@ namespace sparrow
          * @post null_count() == null_count
          */
         template <allocator A>
-        constexpr dynamic_bitset(block_type* p, size_type n, size_type null_count, size_type offset, const A& a);
+        constexpr dynamic_bitset(block_type* p, size_type n, size_type offset, size_type null_count, const A& a);
 
         constexpr ~dynamic_bitset() = default;
         constexpr dynamic_bitset(const dynamic_bitset&) = default;
@@ -279,15 +279,16 @@ namespace sparrow
 
     template <std::integral T>
     template <allocator A>
-    constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type null_count, const A& a)
-        : base_type(storage_type(p, this->compute_block_count(n), a), n, null_count)
+    constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type offset, const A& a)
+        : base_type(storage_type(p, this->compute_block_count(n), a), n, offset)
     {
         base_type::zero_unused_bits();
     }
 
     template <std::integral T>
     template <allocator A>
-    constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type null_count, size_type offset, const A& a)
+    constexpr dynamic_bitset<
+        T>::dynamic_bitset(block_type* p, size_type n, size_type offset, size_type null_count, const A& a)
         : base_type(storage_type(p, this->compute_block_count(n + offset), a), n, offset, null_count)
     {
         base_type::zero_unused_bits();
@@ -317,13 +318,13 @@ namespace sparrow
 
         // Create a new bitset with the specified length
         dynamic_bitset result(length, default_allocator{});
-        
+
         // Copy the bits
         for (size_type i = 0; i < length; ++i)
         {
             result.set(i, this->test(start + i));
         }
-        
+
         return result;
     }
 

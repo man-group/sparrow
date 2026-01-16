@@ -114,12 +114,12 @@ namespace sparrow
          *
          * @param p Pointer to the external memory buffer containing bit data
          * @param n The number of bits represented in the buffer
-         * @param null_count The number of bits that are set to false/null in the buffer
+         * @param offset The offset in bits from the start of the buffer
          *
          * @pre p must point to a valid memory buffer of at least
          *      `compute_block_count(n) * sizeof(block_type)` bytes, or be nullptr if n is 0
          * @pre n must accurately represent the number of bits available in the buffer
-         * @pre null_count <= n (cannot have more null bits than total bits)
+         * @pre offset <= n
          * @pre null_count must accurately reflect the actual number of unset bits in the buffer
          * @pre The memory pointed to by p must remain valid for the lifetime of this view
          *
@@ -142,7 +142,7 @@ namespace sparrow
          * assert(view.null_count() == 6);
          * @endcode
          */
-        constexpr dynamic_bitset_view(block_type* p, size_type n, size_type null_count);
+        constexpr dynamic_bitset_view(block_type* p, size_type n, size_type offset);
 
         /**
          * @brief Constructs a bitset view from external memory with null count and offset.
@@ -163,7 +163,7 @@ namespace sparrow
          * @post offset() == offset
          * @post null_count() == null_count
          */
-        constexpr dynamic_bitset_view(block_type* p, size_type n, size_type null_count, size_type offset);
+        constexpr dynamic_bitset_view(block_type* p, size_type n, size_type offset, size_type null_count);
 
         constexpr ~dynamic_bitset_view() = default;
 
@@ -206,19 +206,25 @@ namespace sparrow
     }
 
     template <std::integral T, null_count_policy NCP>
-    constexpr dynamic_bitset_view<T, NCP>::dynamic_bitset_view(block_type* p, size_type n, size_type null_count)
-        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n) : 0), n, null_count)
+    constexpr dynamic_bitset_view<T, NCP>::dynamic_bitset_view(block_type* p, size_type n, size_type offset)
+        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n) : 0), n, offset)
     {
     }
 
     template <std::integral T, null_count_policy NCP>
-    constexpr dynamic_bitset_view<T, NCP>::dynamic_bitset_view(block_type* p, size_type n, size_type null_count, size_type offset)
+    constexpr dynamic_bitset_view<T, NCP>::dynamic_bitset_view(
+        block_type* p,
+        size_type n,
+        size_type offset,
+        size_type null_count
+    )
         : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n + offset) : 0), n, offset, null_count)
     {
     }
 
     template <std::integral T, null_count_policy NCP>
-    constexpr auto dynamic_bitset_view<T, NCP>::slice_view(size_type start, size_type length) const -> dynamic_bitset_view
+    constexpr auto dynamic_bitset_view<T, NCP>::slice_view(size_type start, size_type length) const
+        -> dynamic_bitset_view
     {
         if (start + length > this->size())
         {
@@ -226,7 +232,7 @@ namespace sparrow
         }
 
         const size_type new_offset = this->offset() + start;
-        
+
         // Calculate the null count for the slice if tracking is enabled
         if constexpr (NCP::track_null_count)
         {
@@ -238,11 +244,11 @@ namespace sparrow
                     ++slice_null_count;
                 }
             }
-            return dynamic_bitset_view(const_cast<block_type*>(this->data()), length, slice_null_count, new_offset);
+            return dynamic_bitset_view(const_cast<block_type*>(this->data()), length, new_offset, slice_null_count);
         }
         else
         {
-            return dynamic_bitset_view(const_cast<block_type*>(this->data()), length);
+            return dynamic_bitset_view(const_cast<block_type*>(this->data()), length, new_offset);
         }
     }
 

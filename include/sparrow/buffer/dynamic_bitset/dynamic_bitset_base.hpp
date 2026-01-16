@@ -832,7 +832,7 @@ namespace sparrow
         , m_size(size)
         , m_offset(0)
     {
-        this->initialize_null_count(data(), m_size, buffer().size());
+        this->initialize_null_count(data(), m_size, buffer().size(), m_offset);
     }
 
     template <typename B, null_count_policy NCP>
@@ -890,7 +890,7 @@ namespace sparrow
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr auto dynamic_bitset_base<B, NCP>::count_extra_bits() const noexcept -> size_type
     {
-        return bit_index(size());
+        return bit_index(size() + m_offset);
     }
 
     template <typename B, null_count_policy NCP>
@@ -918,7 +918,7 @@ namespace sparrow
             return;
         }
         size_type old_block_count = buffer().size();
-        const size_type new_block_count = compute_block_count(n);
+        const size_type new_block_count = compute_block_count(n + m_offset);
         const block_type value = b ? block_type(~block_type(0)) : block_type(0);
 
         if (new_block_count != old_block_count)
@@ -926,7 +926,7 @@ namespace sparrow
             if (data() == nullptr)
             {
                 constexpr block_type true_value = block_type(~block_type(0));
-                old_block_count = compute_block_count(size());
+                old_block_count = compute_block_count(size() + m_offset);
                 buffer().resize(old_block_count, true_value);
                 zero_unused_bits();
             }
@@ -943,7 +943,7 @@ namespace sparrow
         }
 
         m_size = n;
-        this->recompute_null_count(data(), m_size, buffer().size());
+        this->recompute_null_count(data(), m_size, buffer().size(), m_offset);
         zero_unused_bits();
     }
 
