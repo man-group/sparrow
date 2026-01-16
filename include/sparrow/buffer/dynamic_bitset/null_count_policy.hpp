@@ -26,12 +26,13 @@ namespace sparrow
     /**
      * @brief Counts the number of bits set to true in a buffer.
      * @param data Pointer to the byte data (may be nullptr)
-     * @param bit_size The total number of bits
+     * @param bit_size The total number of bits to count
      * @param byte_size The number of bytes in the buffer
+     * @param offset The bit offset from which to start counting (default: 0)
      * @return The number of bits set to true
      */
     [[nodiscard]] SPARROW_API std::size_t
-    count_non_null(const std::uint8_t* data, std::size_t bit_size, std::size_t byte_size) noexcept;
+    count_non_null(const std::uint8_t* data, std::size_t bit_size, std::size_t byte_size, std::size_t offset = 0) noexcept;
 
     /**
      * @class tracking_null_count

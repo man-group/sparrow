@@ -608,8 +608,8 @@ namespace sparrow
         [[nodiscard]] inline auto primitive_data_access<bool>::get_data_view() -> bitset_view
         {
             auto& proxy = get_proxy();
-            size_t size = proxy.length() + proxy.offset();
-            return bitset_view(proxy.buffers()[m_data_buffer_index].data(), size);
+            const size_t size = proxy.length() + proxy.offset();
+            return {proxy.buffers()[m_data_buffer_index].data(), size};
         }
 
         [[nodiscard]] inline auto primitive_data_access<bool>::get_data_adaptor() -> bitset_adaptor

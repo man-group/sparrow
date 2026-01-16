@@ -95,6 +95,20 @@ namespace sparrow
         [[nodiscard]] constexpr size_type size() const noexcept;
 
         /**
+         * @brief Returns the bit offset within the buffer.
+         * @return The offset in bits from the start of the buffer
+         * @post Return value is non-negative
+         */
+        [[nodiscard]] constexpr size_type offset() const noexcept;
+
+        /**
+         * @brief Sets the bit offset within the buffer.
+         * @param offset The new offset in bits from the start of the buffer
+         * @post offset() == offset
+         */
+        constexpr void set_offset(size_type offset) noexcept;
+
+        /**
          * @brief Checks if the bitset contains no bits.
          * @return true if size() == 0, false otherwise
          * @post Return value is equivalent to (size() == 0)
@@ -344,6 +358,7 @@ namespace sparrow
          * @param buffer The storage buffer to use
          * @param size The number of bits in the bitset
          * @post size() == size
+         * @post offset() == 0
          * @post null_count() is computed by counting unset bits
          */
         constexpr dynamic_bitset_base(storage_type buffer, size_type size);
@@ -355,10 +370,26 @@ namespace sparrow
          * @param null_count The number of unset bits
          * @pre null_count <= size
          * @post size() == size
+         * @post offset() == 0
          * @post null_count() == null_count
          * @note Only available when using tracking_null_count policy
          */
         constexpr dynamic_bitset_base(storage_type buffer, size_type size, size_type null_count)
+            requires(NCP::track_null_count);
+
+        /**
+         * @brief Constructs a bitset with the given storage, size, offset, and null count.
+         * @param buffer The storage buffer to use
+         * @param size The number of bits in the bitset
+         * @param offset The offset in bits from the start of the buffer
+         * @param null_count The number of unset bits
+         * @pre null_count <= size
+         * @post size() == size
+         * @post offset() == offset
+         * @post null_count() == null_count
+         * @note Only available when using tracking_null_count policy
+         */
+        constexpr dynamic_bitset_base(storage_type buffer, size_type size, size_type offset, size_type null_count)
             requires(NCP::track_null_count);
 
         constexpr ~dynamic_bitset_base() = default;
@@ -527,6 +558,7 @@ namespace sparrow
 
         storage_type m_buffer;  ///< The underlying storage for bit data
         size_type m_size;       ///< The number of bits in the bitset
+        size_type m_offset;     ///< The offset in bits from the start of the buffer
 
         friend class bitset_iterator<self_type, true>;   ///< Const iterator needs access to internals
         friend class bitset_iterator<self_type, false>;  ///< Mutable iterator needs access to internals
@@ -545,6 +577,20 @@ namespace sparrow
     constexpr bool dynamic_bitset_base<B, NCP>::empty() const noexcept
     {
         return m_size == 0;
+    }
+
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    constexpr auto dynamic_bitset_base<B, NCP>::offset() const noexcept -> size_type
+    {
+        return m_offset;
+    }
+
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    constexpr void dynamic_bitset_base<B, NCP>::set_offset(size_type offset) noexcept
+    {
+        m_offset = offset;
     }
 
     template <typename B, null_count_policy NCP>
@@ -586,7 +632,8 @@ namespace sparrow
         {
             return true;
         }
-        return buffer().data()[block_index(pos)] & bit_mask(pos);
+        const size_type actual_pos = m_offset + pos;
+        return buffer().data()[block_index(actual_pos)] & bit_mask(actual_pos);
     }
 
     template <typename B, null_count_policy NCP>
@@ -605,7 +652,7 @@ namespace sparrow
                 if constexpr (requires(storage_type_without_cvrefpointer s) { s.resize(0); })
                 {
                     constexpr block_type true_value = block_type(~block_type(0));
-                    const auto block_count = compute_block_count(size());
+                    const auto block_count = compute_block_count(size() + m_offset);
                     buffer().resize(block_count, true_value);
                     zero_unused_bits();
                 }
@@ -615,15 +662,16 @@ namespace sparrow
                 }
             }
         }
-        block_type& block = buffer().data()[block_index(pos)];
-        const bool old_value = block & bit_mask(pos);
+        const size_type actual_pos = m_offset + pos;
+        block_type& block = buffer().data()[block_index(actual_pos)];
+        const bool old_value = block & bit_mask(actual_pos);
         if (value)
         {
-            block |= bit_mask(pos);
+            block |= bit_mask(actual_pos);
         }
         else
         {
-            block &= block_type(~bit_mask(pos));
+            block &= block_type(~bit_mask(actual_pos));
         }
         this->update_null_count(old_value, value);
     }
@@ -663,7 +711,8 @@ namespace sparrow
         using std::swap;
         swap(m_buffer, rhs.m_buffer);
         swap(m_size, rhs.m_size);
-        swap_null_count(rhs);
+        swap(m_offset, rhs.m_offset);
+        this->swap_null_count(rhs);
     }
 
     template <typename B, null_count_policy NCP>
@@ -781,6 +830,7 @@ namespace sparrow
     constexpr dynamic_bitset_base<B, NCP>::dynamic_bitset_base(storage_type buf, size_type size)
         : m_buffer(std::move(buf))
         , m_size(size)
+        , m_offset(0)
     {
         this->initialize_null_count(data(), m_size, buffer().size());
     }
@@ -791,6 +841,18 @@ namespace sparrow
         requires(NCP::track_null_count)
         : m_buffer(std::move(buf))
         , m_size(size)
+        , m_offset(0)
+    {
+        this->set_null_count(null_count);
+    }
+
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    constexpr dynamic_bitset_base<B, NCP>::dynamic_bitset_base(storage_type buf, size_type size, size_type offset, size_type null_count)
+        requires(NCP::track_null_count)
+        : m_buffer(std::move(buf))
+        , m_size(size)
+        , m_offset(offset)
     {
         this->set_null_count(null_count);
     }

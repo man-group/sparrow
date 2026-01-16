@@ -244,7 +244,7 @@ namespace sparrow
     template <class D>
     constexpr auto mutable_array_base<D>::bitmap_begin() -> bitmap_iterator
     {
-        return sparrow::next(this->derived_cast().get_bitmap().begin(), this->get_arrow_proxy().offset());
+        return this->derived_cast().get_bitmap().begin();
     }
 
     template <class D>

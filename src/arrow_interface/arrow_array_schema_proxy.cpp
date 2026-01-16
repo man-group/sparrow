@@ -413,7 +413,6 @@ namespace sparrow
         throw_if_immutable<function_name, false, true>();
         array_without_sanitize().length = static_cast<int64_t>(length);
         update_buffers();
-        update_null_count();
     }
 
     [[nodiscard]] int64_t arrow_proxy::null_count() const
@@ -853,12 +852,9 @@ namespace sparrow
 
     void arrow_proxy::update_null_count()
     {
-        if (has_bitmap(data_type()))
+        if (m_const_bitmap.has_value())
         {
-            const auto& validity_buffer = buffers().front();
-            const dynamic_bitset_view<const std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
-            const auto null_count = bitmap.null_count();
-            set_null_count(static_cast<int64_t>(null_count));
+            set_null_count(static_cast<int64_t>(m_const_bitmap->null_count()));
         }
     }
 
@@ -899,7 +895,9 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(m_null_bitmap.has_value())
         auto& bitmap = std::get<mutable_bitmap_type>(*m_null_bitmap);
         bitmap.resize(new_size, value);
-        set_null_count(static_cast<int64_t>(bitmap.null_count()));
+        const auto null_count = bitmap.null_count();
+        set_null_count(static_cast<int64_t>(null_count));
+        m_const_bitmap = const_bitmap_type(bitmap.data(), length() + offset(), static_cast<size_t>(null_count));
         update_buffers();
     }
 
@@ -916,7 +914,9 @@ namespace sparrow
         auto& bitmap = std::get<mutable_bitmap_type>(*m_null_bitmap);
         auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), count, value);
         update_buffers();
-        set_null_count(static_cast<int64_t>(bitmap.null_count()));
+        const auto null_count = bitmap.null_count();
+        set_null_count(static_cast<int64_t>(null_count));
+        m_const_bitmap = const_bitmap_type(bitmap.data(), length() + offset(), static_cast<size_t>(null_count));
         return std::distance(bitmap.begin(), it);
     }
 
@@ -927,11 +927,12 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(m_null_bitmap.has_value())
         SPARROW_ASSERT_TRUE(std::cmp_less(index, length()))
         auto& bitmap = std::get<mutable_bitmap_type>(*m_null_bitmap);
-        const auto it_first = sparrow::next(bitmap.cbegin(), index + offset());
+        const auto it_first = sparrow::next(bitmap.cbegin(), index);
         const auto it_last = sparrow::next(it_first, count);
         const auto it = bitmap.erase(it_first, it_last);
         update_buffers();
         set_null_count(static_cast<int64_t>(bitmap.null_count()));
+        m_const_bitmap = const_bitmap_type(bitmap.data(), length() + offset(), static_cast<size_t>(null_count()));
         return std::distance(bitmap.begin(), it);
     }
 
@@ -940,7 +941,6 @@ namespace sparrow
         static constexpr const char function_name[] = "push_back_bitmap";
         throw_if_immutable<function_name, true, false>();
         insert_bitmap(length(), value);
-        update_buffers();
     }
 
     void arrow_proxy::pop_back_bitmap()
@@ -948,7 +948,6 @@ namespace sparrow
         static constexpr const char function_name[] = "pop_back_bitmap";
         throw_if_immutable<function_name, true, false>();
         erase_bitmap(length() - 1);
-        update_buffers();
     }
 
     arrow_proxy arrow_proxy::slice(size_t start, size_t end) const
@@ -957,6 +956,10 @@ namespace sparrow
         arrow_proxy copy = *this;
         copy.set_offset(start);
         copy.set_length(end - start);
+        // Note: We don't set offset on the bitmap itself because bitmap_begin() 
+        // in array_base.hpp already accounts for the arrow_proxy offset.
+        // Setting it here would create a double offset.
+        
         return copy;
     }
 
@@ -969,6 +972,14 @@ namespace sparrow
         ar.offset = static_cast<int64_t>(start);
         ar.length = static_cast<int64_t>(end - start);
         ar.release = empty_release_arrow_array;
+        // Smart calculation of the new null_count
+        // if (has_bitmap(data_type()))
+        // {
+        //     const auto& bitmap = *m_const_bitmap;
+           
+        //     bitmap.
+        // }
+
         return arrow_proxy{std::move(ar), std::move(as)};
     }
 

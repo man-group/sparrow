@@ -145,6 +145,7 @@ namespace sparrow
          *
          * @pre If p is not nullptr, it must point to valid memory of sufficient size
          * @post size() == n
+         * @post offset() == 0
          *
          * @warning The caller must ensure the memory pointed to by p remains valid
          *          and contains properly formatted bit data.
@@ -165,10 +166,31 @@ namespace sparrow
          * @pre If p is not nullptr, it must point to valid memory of sufficient size
          * @pre null_count must accurately reflect the number of unset bits
          * @post size() == n
+         * @post offset() == 0
          * @post null_count() == null_count
          */
         template <allocator A>
         constexpr dynamic_bitset(block_type* p, size_type n, size_type null_count, const A& a);
+
+        /**
+         * @brief Constructs a bitset using existing memory with offset and null count tracking.
+         *
+         * Creates a bitset that uses the provided memory buffer starting at the specified
+         * bit offset and tracks the number of null (unset) bits for optimization purposes.
+         *
+         * @param p Pointer to the memory buffer containing bit data
+         * @param n The number of bits represented in the buffer
+         * @param null_count The number of bits that are set to false/null
+         * @param offset The offset in bits from the start of the buffer
+         *
+         * @pre If p is not nullptr, it must point to valid memory of sufficient size
+         * @pre null_count must accurately reflect the number of unset bits
+         * @post size() == n
+         * @post offset() == offset
+         * @post null_count() == null_count
+         */
+        template <allocator A>
+        constexpr dynamic_bitset(block_type* p, size_type n, size_type null_count, size_type offset, const A& a);
 
         constexpr ~dynamic_bitset() = default;
         constexpr dynamic_bitset(const dynamic_bitset&) = default;
@@ -182,6 +204,31 @@ namespace sparrow
 
         constexpr dynamic_bitset& operator=(const dynamic_bitset&) = default;
         constexpr dynamic_bitset& operator=(dynamic_bitset&&) noexcept = default;
+
+        /**
+         * @brief Creates a copy of a subset of bits.
+         * @param start The starting position of the slice
+         * @param length The number of bits in the slice
+         * @return A new bitset containing a copy of the specified range
+         * @pre start + length <= size()
+         * @post The returned bitset has size() == length
+         * @post The returned bitset contains copies of bits [start, start+length)
+         * @throws std::out_of_range if start + length > size()
+         * @note The returned bitset owns its own storage (copy operation)
+         */
+        [[nodiscard]] constexpr dynamic_bitset slice(size_type start, size_type length) const;
+
+        /**
+         * @brief Creates a copy of a subset of bits from start to end.
+         * @param start The starting position of the slice
+         * @return A new bitset containing a copy from start to the end
+         * @pre start <= size()
+         * @post The returned bitset has size() == size() - start
+         * @post The returned bitset contains copies of bits [start, size())
+         * @throws std::out_of_range if start > size()
+         * @note The returned bitset owns its own storage (copy operation)
+         */
+        [[nodiscard]] constexpr dynamic_bitset slice(size_type start) const;
 
         // Inherit container-like operations from base class
         using base_type::clear;      ///< Remove all bits from the bitset
@@ -240,6 +287,14 @@ namespace sparrow
 
     template <std::integral T>
     template <allocator A>
+    constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type null_count, size_type offset, const A& a)
+        : base_type(storage_type(p, this->compute_block_count(n + offset), a), n, offset, null_count)
+    {
+        base_type::zero_unused_bits();
+    }
+
+    template <std::integral T>
+    template <allocator A>
     constexpr dynamic_bitset<T>::dynamic_bitset(const dynamic_bitset& rhs, const A& a)
         : base_type(storage_type(rhs, a))
     {
@@ -250,6 +305,37 @@ namespace sparrow
     constexpr dynamic_bitset<T>::dynamic_bitset(dynamic_bitset&& rhs, const A& a)
         : base_type(storage_type(std::move(rhs), a))
     {
+    }
+
+    template <std::integral T>
+    constexpr auto dynamic_bitset<T>::slice(size_type start, size_type length) const -> dynamic_bitset
+    {
+        if (start + length > this->size())
+        {
+            throw std::out_of_range("slice: start + length exceeds bitset size");
+        }
+
+        // Create a new bitset with the specified length
+        dynamic_bitset result(length, default_allocator{});
+        
+        // Copy the bits
+        for (size_type i = 0; i < length; ++i)
+        {
+            result.set(i, this->test(start + i));
+        }
+        
+        return result;
+    }
+
+    template <std::integral T>
+    constexpr auto dynamic_bitset<T>::slice(size_type start) const -> dynamic_bitset
+    {
+        if (start > this->size())
+        {
+            throw std::out_of_range("slice: start exceeds bitset size");
+        }
+
+        return slice(start, this->size() - start);
     }
 
     /**
