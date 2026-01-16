@@ -1193,7 +1193,7 @@ namespace sparrow
                 const std::uint8_t* null_ptr = nullptr;
                 const auto count = count_non_null(null_ptr, 100, 0);
                 CHECK_EQ(count, 100);  // All bits assumed set for null buffer with no offset
-                
+
                 // With offset, only count from offset onwards
                 const auto count_with_offset = count_non_null(null_ptr, 100, 0, 20);
                 CHECK_EQ(count_with_offset, 80);  // 100 - 20 = 80 bits from offset
@@ -1286,19 +1286,19 @@ namespace sparrow
                 // Test with realistic pattern
                 // Buffer: 0b00100110 0b01010101 0b00110101
                 std::array<std::uint8_t, 3> buffer = {0b00100110, 0b01010101, 0b00110101};
-                
+
                 // No offset, count all 24 bits
                 const auto count1 = count_non_null(buffer.data(), 24, 3, 0);
                 CHECK_EQ(count1, 11);  // 3 + 4 + 4 = 11 bits set
-                
+
                 // Offset by 8, count 16 bits (skip first byte)
                 const auto count2 = count_non_null(buffer.data(), 16, 3, 8);
                 CHECK_EQ(count2, 8);  // 4 + 4 = 8 bits set
-                
+
                 // Offset by 5, count 10 bits
                 // First byte LSB: 0 1 1 0 0 1 0 0
                 // Bits 5-7 of first byte: 100 = 1 bit
-                // Second byte LSB: 1 0 1 0 1 0 1 0  
+                // Second byte LSB: 1 0 1 0 1 0 1 0
                 // Bits 0-6 of second byte: 1010101 = 4 bits
                 const auto count3 = count_non_null(buffer.data(), 10, 3, 5);
                 CHECK_EQ(count3, 5);
@@ -1308,7 +1308,7 @@ namespace sparrow
             {
                 // Test counting a single bit at various positions
                 std::array<std::uint8_t, 1> buffer = {0b10101010};
-                
+
                 CHECK_EQ(count_non_null(buffer.data(), 1, 1, 0), 0);  // Bit 0: 0
                 CHECK_EQ(count_non_null(buffer.data(), 1, 1, 1), 1);  // Bit 1: 1
                 CHECK_EQ(count_non_null(buffer.data(), 1, 1, 2), 0);  // Bit 2: 0
