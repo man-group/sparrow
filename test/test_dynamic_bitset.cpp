@@ -186,7 +186,7 @@ namespace sparrow
             {
                 if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
                 {
-                    return bitmap(buffer, size, null_count, allocator);
+                    return bitmap(buffer, size, 0, null_count, allocator);
                 }
                 else
                 {

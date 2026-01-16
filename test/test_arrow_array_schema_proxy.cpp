@@ -788,6 +788,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [array, schema] = test::make_arrow_schema_and_array(false);
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+            CHECK_EQ(proxy.null_count(), 2);
             proxy.resize_bitmap(5);
             const auto buffers = proxy.buffers();
             REQUIRE_EQ(buffers.size(), 2);
@@ -797,6 +798,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             CHECK_FALSE(bitmap.test(2));
             CHECK_FALSE(bitmap.test(3));
             CHECK(bitmap.test(4));
+            CHECK_EQ(proxy.null_count(), 2);
+            proxy.resize_bitmap(20, false);
+            CHECK_EQ(proxy.null_count(), 17);
         }
 
         SUBCASE("on external c structure")
@@ -824,7 +828,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             {
                 auto [array, schema] = test::make_arrow_schema_and_array(false);
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+                CHECK_EQ(proxy.null_count(), 2);
                 proxy.insert_bitmap(1, false);
+                CHECK_EQ(proxy.null_count(), 3);
                 const auto buffers = proxy.buffers();
                 REQUIRE_EQ(buffers.size(), 2);
                 const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 7);
@@ -860,7 +866,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             {
                 auto [array, schema] = test::make_arrow_schema_and_array(false);
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+                CHECK_EQ(proxy.null_count(), 2);
                 proxy.insert_bitmap(1, false, 2);
+                CHECK_EQ(proxy.null_count(), 4);
                 const auto buffers = proxy.buffers();
                 REQUIRE_EQ(buffers.size(), 2);
                 const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 12);
@@ -901,8 +909,10 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             {
                 auto [array, schema] = test::make_arrow_schema_and_array(false);
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+                CHECK_EQ(proxy.null_count(), 2);
                 std::vector<bool> values{false, true, false, true};
                 proxy.insert_bitmap(1, values);
+                CHECK_EQ(proxy.null_count(), 4);
                 const auto buffers = proxy.buffers();
                 REQUIRE_EQ(buffers.size(), 2);
                 const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 14);
@@ -950,7 +960,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             {
                 auto [array, schema] = test::make_arrow_schema_and_array(false);
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+                CHECK_EQ(proxy.null_count(), 2);
                 proxy.erase_bitmap(1);
+                CHECK_EQ(proxy.null_count(), 2);
                 const auto buffers = proxy.buffers();
                 REQUIRE_EQ(buffers.size(), 2);
             }
@@ -978,7 +990,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             {
                 auto [array, schema] = test::make_arrow_schema_and_array(false);
                 sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+                CHECK_EQ(proxy.null_count(), 2);
                 proxy.erase_bitmap(1, 2);
+                CHECK_EQ(proxy.null_count(), 1);
                 const auto buffers = proxy.buffers();
                 REQUIRE_EQ(buffers.size(), 2);
             }
@@ -1007,7 +1021,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [array, schema] = test::make_arrow_schema_and_array(false);
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
-            proxy.push_back_bitmap(1);
+            CHECK_EQ(proxy.null_count(), 2);
+            proxy.push_back_bitmap(false);
+            CHECK_EQ(proxy.null_count(), 3);
             const auto buffers = proxy.buffers();
             REQUIRE_EQ(buffers.size(), 2);
             const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 11);
@@ -1021,7 +1037,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             CHECK(bitmap.test(7));
             CHECK(bitmap.test(8));
             CHECK(bitmap.test(9));
-            CHECK(bitmap.test(10));
+            CHECK_FALSE(bitmap.test(10));
         }
 
         SUBCASE("on external c structure")
@@ -1047,7 +1063,9 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         {
             auto [array, schema] = test::make_arrow_schema_and_array(false);
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+            CHECK_EQ(proxy.null_count(), 2);
             proxy.pop_back_bitmap();
+            CHECK_EQ(proxy.null_count(), 2);
             const auto buffers = proxy.buffers();
             REQUIRE_EQ(buffers.size(), 2);
             const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 9);

@@ -367,15 +367,13 @@ namespace sparrow
          * @brief Constructs a bitset with the given storage, size, and null count.
          * @param buffer The storage buffer to use
          * @param size The number of bits in the bitset
-         * @param null_count The number of unset bits
+         * @param offset The offset in bits from the start of the buffer
          * @pre null_count <= size
          * @post size() == size
-         * @post offset() == 0
          * @post null_count() == null_count
          * @note Only available when using tracking_null_count policy
          */
-        constexpr dynamic_bitset_base(storage_type buffer, size_type size, size_type null_count)
-            requires(NCP::track_null_count);
+        constexpr dynamic_bitset_base(storage_type buffer, size_type size, size_type offset);
 
         /**
          * @brief Constructs a bitset with the given storage, size, offset, and null count.
@@ -835,15 +833,15 @@ namespace sparrow
         this->initialize_null_count(data(), m_size, buffer().size(), m_offset);
     }
 
+
     template <typename B, null_count_policy NCP>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr dynamic_bitset_base<B, NCP>::dynamic_bitset_base(storage_type buf, size_type size, size_type null_count)
-        requires(NCP::track_null_count)
+    constexpr dynamic_bitset_base<B, NCP>::dynamic_bitset_base(storage_type buf, size_type size, size_type offset)
         : m_buffer(std::move(buf))
         , m_size(size)
-        , m_offset(0)
+        , m_offset(offset)
     {
-        this->set_null_count(null_count);
+        this->initialize_null_count(data(), m_size, buffer().size(), m_offset);
     }
 
     template <typename B, null_count_policy NCP>

@@ -207,7 +207,7 @@ namespace sparrow
 
     template <std::integral T, null_count_policy NCP>
     constexpr dynamic_bitset_view<T, NCP>::dynamic_bitset_view(block_type* p, size_type n, size_type offset)
-        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n) : 0), n, offset)
+        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n + offset) : 0), n, offset)
     {
     }
 

@@ -911,7 +911,7 @@ namespace sparrow
                 constexpr size_t slice_start = 2;
                 constexpr size_t slice_end = 7;
                 std::vector<std::size_t> null_indices = {1, 3, 5};
-                primitive_array<int32_t> arr{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+                primitive_array<int32_t> arr(std::vector<int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, null_indices);
 
                 auto sliced = arr.slice(slice_start, slice_end);
                 CHECK_EQ(sliced.offset(), slice_start);

@@ -1054,7 +1054,6 @@ namespace sparrow
         {
             const auto current_offset = offset();
             const size_t current_size = length() + current_offset;
-            const auto nc = static_cast<size_t>(null_count());
             // Use const accessor to get array - works for both mutable and immutable proxies
             const ArrowArray& arr = std::as_const(*this).array_without_sanitize();
 
@@ -1066,11 +1065,10 @@ namespace sparrow
                     std::in_place_type<mutable_bitmap_type>,
                     &bitmap_buffer,
                     current_size,
-                    current_offset,
-                    nc
+                    current_offset
                 );
                 // Also create const view for const access
-                m_const_bitmap.emplace(bitmap_buffer.data(), current_size, current_offset, nc);
+                m_const_bitmap.emplace(bitmap_buffer.data(), current_size, current_offset);
             }
             else
             {
@@ -1079,11 +1077,10 @@ namespace sparrow
                     std::in_place_type<const_bitmap_type>,
                     const_cast<uint8_t*>(bitmap_ptr),
                     current_size,
-                    current_offset,
-                    nc
+                    current_offset
                 );
                 // Also create const view for const access
-                m_const_bitmap.emplace(const_cast<uint8_t*>(bitmap_ptr), current_size, current_offset, nc);
+                m_const_bitmap.emplace(const_cast<uint8_t*>(bitmap_ptr), current_size, current_offset);
             }
         }
     }

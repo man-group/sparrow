@@ -263,6 +263,7 @@ namespace sparrow
         : base_type(
               storage_type(this->compute_block_count(n), value ? block_type(~block_type(0)) : block_type(0), a),
               n,
+              0,
               value ? 0u : n
           )
     {
