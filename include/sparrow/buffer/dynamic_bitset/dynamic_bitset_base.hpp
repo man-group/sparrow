@@ -833,7 +833,6 @@ namespace sparrow
         this->initialize_null_count(data(), m_size, buffer().size(), m_offset);
     }
 
-
     template <typename B, null_count_policy NCP>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
     constexpr dynamic_bitset_base<B, NCP>::dynamic_bitset_base(storage_type buf, size_type size, size_type offset)
@@ -846,7 +845,12 @@ namespace sparrow
 
     template <typename B, null_count_policy NCP>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr dynamic_bitset_base<B, NCP>::dynamic_bitset_base(storage_type buf, size_type size, size_type offset, size_type null_count)
+    constexpr dynamic_bitset_base<B, NCP>::dynamic_bitset_base(
+        storage_type buf,
+        size_type size,
+        size_type offset,
+        size_type null_count
+    )
         requires(NCP::track_null_count)
         : m_buffer(std::move(buf))
         , m_size(size)

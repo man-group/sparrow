@@ -957,7 +957,7 @@ namespace sparrow
 
         copy.set_offset(start);
         copy.set_length(end - start);
-        
+
         if (has_bitmap(data_type()))
         {
             // TODO: optimize to avoid null counting

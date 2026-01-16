@@ -31,8 +31,12 @@ namespace sparrow
      * @param offset The bit offset from which to start counting (default: 0)
      * @return The number of bits set to true
      */
-    [[nodiscard]] SPARROW_API std::size_t
-    count_non_null(const std::uint8_t* data, std::size_t bit_size, std::size_t byte_size, std::size_t offset = 0) noexcept;
+    [[nodiscard]] SPARROW_API std::size_t count_non_null(
+        const std::uint8_t* data,
+        std::size_t bit_size,
+        std::size_t byte_size,
+        std::size_t offset = 0
+    ) noexcept;
 
     /**
      * @class tracking_null_count
@@ -72,7 +76,12 @@ namespace sparrow
          * @param offset The bit offset from which to start counting (default: 0)
          */
         template <std::integral BlockType>
-        void initialize_null_count(const BlockType* data, size_type bit_size, size_type block_count, size_type offset = 0) noexcept
+        void initialize_null_count(
+            const BlockType* data,
+            size_type bit_size,
+            size_type block_count,
+            size_type offset = 0
+        ) noexcept
         {
             recompute_null_count(data, bit_size, block_count, offset);
         }
@@ -96,14 +105,18 @@ namespace sparrow
          * @param offset The bit offset from which to start counting (default: 0)
          */
         template <std::integral BlockType>
-        void recompute_null_count(const BlockType* data, size_type bit_size, size_type block_count, size_type offset = 0) noexcept
+        void
+        recompute_null_count(const BlockType* data, size_type bit_size, size_type block_count, size_type offset = 0) noexcept
         {
             const auto* byte_data = reinterpret_cast<const std::uint8_t*>(data);
             const std::size_t byte_size = block_count * sizeof(BlockType);
             m_null_count = static_cast<size_type>(bit_size)
-                           - static_cast<size_type>(
-                               count_non_null(byte_data, static_cast<std::size_t>(bit_size), byte_size, static_cast<std::size_t>(offset))
-                           );
+                           - static_cast<size_type>(count_non_null(
+                               byte_data,
+                               static_cast<std::size_t>(bit_size),
+                               byte_size,
+                               static_cast<std::size_t>(offset)
+                           ));
         }
 
         constexpr void update_null_count(bool old_value, bool new_value) noexcept
@@ -166,8 +179,12 @@ namespace sparrow
 
         // No-op: non-tracking policy doesn't need to count bits
         template <std::integral BlockType>
-        constexpr void
-        initialize_null_count(const BlockType* /*data*/, size_type /*bit_size*/, size_type /*block_count*/, size_type /*offset*/ = 0) noexcept
+        constexpr void initialize_null_count(
+            const BlockType* /*data*/,
+            size_type /*bit_size*/,
+            size_type /*block_count*/,
+            size_type /*offset*/ = 0
+        ) noexcept
         {
         }
 
@@ -178,8 +195,12 @@ namespace sparrow
 
         // No-op: non-tracking policy doesn't need to recompute
         template <std::integral BlockType>
-        constexpr void
-        recompute_null_count(const BlockType* /*data*/, size_type /*bit_size*/, size_type /*block_count*/, size_type /*offset*/ = 0) noexcept
+        constexpr void recompute_null_count(
+            const BlockType* /*data*/,
+            size_type /*bit_size*/,
+            size_type /*block_count*/,
+            size_type /*offset*/ = 0
+        ) noexcept
         {
         }
 

@@ -106,35 +106,35 @@ namespace sparrow
         TEST_CASE_FIXTURE(bitmap_fixture, "slice_view")
         {
             bitmap_view b(p_buffer, m_size);
-            
+
             SUBCASE("slice with both arguments")
             {
                 // Slice bits [5, 15) - should get 10 bits starting at position 5
                 auto slice = b.slice_view(5, 10);
                 CHECK_EQ(slice.size(), 10);
                 CHECK_EQ(slice.data(), b.data());  // Same underlying storage
-                
+
                 // Verify the values
                 for (size_t i = 0; i < 10; ++i)
                 {
                     CHECK_EQ(slice.test(i), b.test(5 + i));
                 }
             }
-            
+
             SUBCASE("slice with start only")
             {
                 // Slice from position 10 to end
                 auto slice = b.slice_view(10);
                 CHECK_EQ(slice.size(), m_size - 10);
                 CHECK_EQ(slice.data(), b.data());  // Same underlying storage
-                
+
                 // Verify the values
                 for (size_t i = 0; i < slice.size(); ++i)
                 {
                     CHECK_EQ(slice.test(i), b.test(10 + i));
                 }
             }
-            
+
             SUBCASE("slice at start")
             {
                 auto slice = b.slice_view(0, 10);
@@ -144,7 +144,7 @@ namespace sparrow
                     CHECK_EQ(slice.test(i), b.test(i));
                 }
             }
-            
+
             SUBCASE("slice of full range")
             {
                 auto slice = b.slice_view(0, m_size);
@@ -154,7 +154,7 @@ namespace sparrow
                     CHECK_EQ(slice.test(i), b.test(i));
                 }
             }
-            
+
             SUBCASE("out of range throws")
             {
                 CHECK_THROWS_AS(b.slice_view(m_size + 1, 1), std::out_of_range);

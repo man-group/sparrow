@@ -22,35 +22,36 @@
 
 namespace sparrow
 {
-    std::size_t count_non_null(const std::uint8_t* data, std::size_t bit_size, std::size_t byte_size, std::size_t offset) noexcept
+    std::size_t
+    count_non_null(const std::uint8_t* data, std::size_t bit_size, std::size_t byte_size, std::size_t offset) noexcept
     {
         if (data == nullptr || byte_size == 0)
         {
             // When data is null, treat all bits as set (valid), but only count from offset
             return offset < bit_size ? bit_size - offset : 0;
         }
-        
+
         if (bit_size == 0)
         {
             return 0;
         }
 
         constexpr std::size_t bits_per_byte = 8;
-        
+
         // Calculate the starting byte and bit position
         const std::size_t start_byte = offset / bits_per_byte;
         const std::size_t start_bit = offset % bits_per_byte;
-        
+
         // Check if offset is beyond the buffer
         if (start_byte >= byte_size)
         {
             return 0;
         }
-        
+
         uint64_t res = 0;
         std::size_t bits_counted = 0;
         std::size_t current_byte = start_byte;
-        
+
         // Handle the first partial byte (if offset is not byte-aligned)
         if (start_bit != 0)
         {
@@ -63,14 +64,14 @@ namespace sparrow
             bits_counted += bits_in_first_byte;
             ++current_byte;
         }
-        
+
         // Count full bytes in the middle
         if (bits_counted < bit_size && current_byte < byte_size)
         {
             const std::size_t remaining_bits = bit_size - bits_counted;
             const std::size_t full_bytes = remaining_bits / bits_per_byte;
             const std::size_t bytes_to_count = std::min(full_bytes, byte_size - current_byte);
-            
+
             if (bytes_to_count > 0)
             {
                 res += popcnt(data + current_byte, bytes_to_count);
@@ -78,7 +79,7 @@ namespace sparrow
                 current_byte += bytes_to_count;
             }
         }
-        
+
         // Handle the last partial byte
         if (bits_counted < bit_size && current_byte < byte_size)
         {
@@ -87,7 +88,7 @@ namespace sparrow
             const std::uint8_t masked_byte = data[current_byte] & last_byte_mask;
             res += static_cast<uint64_t>(std::popcount(masked_byte));
         }
-        
+
         return static_cast<std::size_t>(res);
     }
 
