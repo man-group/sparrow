@@ -790,6 +790,7 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
             CHECK_EQ(proxy.null_count(), 2);
             proxy.resize_bitmap(5);
+            CHECK_EQ(proxy.null_count(), 2);
             const auto buffers = proxy.buffers();
             REQUIRE_EQ(buffers.size(), 2);
             const sparrow::dynamic_bitset_view<const uint8_t> bitmap(buffers[0].data(), 5);
@@ -798,7 +799,6 @@ TEST_SUITE("ArrowArrowSchemaProxy")
             CHECK_FALSE(bitmap.test(2));
             CHECK_FALSE(bitmap.test(3));
             CHECK(bitmap.test(4));
-            CHECK_EQ(proxy.null_count(), 2);
             proxy.resize_bitmap(20, false);
             CHECK_EQ(proxy.null_count(), 17);
         }

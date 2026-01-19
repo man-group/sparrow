@@ -23,6 +23,7 @@
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/arrow_interface/private_data_ownership.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
+#include "sparrow/buffer/dynamic_bitset/null_count_policy.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/utils/contracts.hpp"
 
@@ -955,13 +956,17 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(start <= end);
         arrow_proxy copy = *this;
 
+        const auto new_length = end - start;
+
         copy.set_offset(start);
-        copy.set_length(end - start);
-        
+        copy.set_length(new_length);
+
         if (has_bitmap(data_type()))
         {
-            // TODO: optimize to avoid null counting
-            copy.create_bitmap_view();
+            const auto& bitmap_buffer = copy.buffers()[bitmap_buffer_index];
+            const auto new_non_null = count_non_null(bitmap_buffer.data(), new_length, bitmap_buffer.size(), start);
+            const auto null_count = new_length - new_non_null;
+            copy.create_bitmap_view(null_count);
             copy.update_null_count();
         }
 
@@ -975,10 +980,19 @@ namespace sparrow
         as.release = empty_release_arrow_schema;
         ArrowArray ar = array();
         ar.offset = static_cast<int64_t>(start);
-        ar.length = static_cast<int64_t>(end - start);
+        const auto new_length = end - start;
+        ar.length = static_cast<int64_t>(new_length);
         ar.release = empty_release_arrow_array;
 
-        return arrow_proxy{std::move(ar), std::move(as)};
+        arrow_proxy ap{std::move(ar), std::move(as)};
+        if (has_bitmap(data_type()))
+        {
+            const auto& bitmap_buffer = ap.buffers()[bitmap_buffer_index];
+            const auto new_non_null = count_non_null(bitmap_buffer.data(), new_length, bitmap_buffer.size(), start);
+            ap.create_bitmap_view(new_non_null);
+            ap.array().null_count = static_cast<int64_t>(new_non_null);
+        }
+        return ap;
     }
 
     void arrow_proxy::sanitize_schema()
@@ -1048,14 +1062,16 @@ namespace sparrow
         return m_schema_is_immutable;
     }
 
-    void arrow_proxy::create_bitmap_view()
+    void arrow_proxy::create_bitmap_view(std::optional<size_t> null_count)
     {
         if (has_bitmap(data_type()))
         {
             const auto current_offset = offset();
-            const size_t current_size = length() + current_offset;
+            const size_t current_size = length();
             // Use const accessor to get array - works for both mutable and immutable proxies
             const ArrowArray& arr = std::as_const(*this).array_without_sanitize();
+
+            const auto new_null_count = null_count.value_or(static_cast<size_t>(arr.null_count));
 
             if (array_created_with_sparrow())
             {
@@ -1065,10 +1081,11 @@ namespace sparrow
                     std::in_place_type<mutable_bitmap_type>,
                     &bitmap_buffer,
                     current_size,
-                    current_offset
+                    current_offset,
+                    new_null_count
                 );
                 // Also create const view for const access
-                m_const_bitmap.emplace(bitmap_buffer.data(), current_size, current_offset);
+                m_const_bitmap.emplace(bitmap_buffer.data(), current_size, current_offset, new_null_count);
             }
             else
             {
@@ -1077,10 +1094,12 @@ namespace sparrow
                     std::in_place_type<const_bitmap_type>,
                     const_cast<uint8_t*>(bitmap_ptr),
                     current_size,
-                    current_offset
+                    current_offset,
+                    new_null_count
                 );
                 // Also create const view for const access
-                m_const_bitmap.emplace(const_cast<uint8_t*>(bitmap_ptr), current_size, current_offset);
+                m_const_bitmap
+                    .emplace(const_cast<uint8_t*>(bitmap_ptr), current_size, current_offset, new_null_count);
             }
         }
     }

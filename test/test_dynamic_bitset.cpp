@@ -55,10 +55,11 @@ namespace sparrow
     static_assert(validity_bitmap_input<char*&&> == false);
 
     static constexpr std::size_t s_bitmap_size = 29;
-    static constexpr std::size_t s_bitmap_null_count = 15;
+
     static constexpr std::array<uint8_t, 4> s_bitmap_blocks_values{
         {0b00100110, 0b01010101, 0b00110101, 0b00000111}
     };
+    const std::size_t m_bitmap_null_count = s_bitmap_size - count_non_null(s_bitmap_blocks_values.data(), s_bitmap_size,s_bitmap_blocks_values.size());
 
     using testing_types = std::tuple<dynamic_bitset<std::uint8_t>, non_owning_dynamic_bitset<std::uint8_t>>;
 
@@ -231,7 +232,7 @@ namespace sparrow
                         dynamic_bitmap_fixture bf;
                         const bitmap b = make_bitmap(bf.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                         CHECK_EQ(b.size(), s_bitmap_size);
-                        CHECK_EQ(b.null_count(), s_bitmap_null_count);
+                        CHECK_EQ(b.null_count(), m_bitmap_null_count);
                     }
 
                     SUBCASE("with buffer, size and null count")
@@ -240,11 +241,11 @@ namespace sparrow
                         const bitmap b5 = make_bitmap_with_null_count(
                             bf2.get_buffer(),
                             s_bitmap_size,
-                            s_bitmap_null_count,
+                            m_bitmap_null_count,
                             std::allocator<uint8_t>()
                         );
                         CHECK_EQ(b5.size(), s_bitmap_size);
-                        CHECK_EQ(b5.null_count(), s_bitmap_null_count);
+                        CHECK_EQ(b5.null_count(), m_bitmap_null_count);
                     }
                 }
                 else if constexpr (std::is_same_v<bitmap, non_owning_dynamic_bitset<std::uint8_t>>)
@@ -252,7 +253,7 @@ namespace sparrow
                     non_owning_dynamic_bitset_fixture bf;
                     bitmap b = make_bitmap(bf.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                     CHECK_EQ(b.size(), s_bitmap_size);
-                    CHECK_EQ(b.null_count(), s_bitmap_null_count);
+                    CHECK_EQ(b.null_count(), m_bitmap_null_count);
                 }
             }
 
@@ -262,7 +263,7 @@ namespace sparrow
                 {
                     bitmap bm = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                     CHECK_EQ(bm.size(), s_bitmap_size);
-                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    CHECK_EQ(bm.null_count(), m_bitmap_null_count);
                     CHECK_EQ(bm.data(), f.p_expected_buffer);
                 }
 
@@ -391,20 +392,20 @@ namespace sparrow
 
                     bm.set(3, true);
                     CHECK_EQ(bm.data()[0], 46);
-                    CHECK_EQ(bm.null_count(), s_bitmap_null_count - 1);
+                    CHECK_EQ(bm.null_count(), m_bitmap_null_count - 1);
 
                     bm.set(24, 0);
                     CHECK_EQ(bm.data()[3], 6);
-                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    CHECK_EQ(bm.null_count(), m_bitmap_null_count);
 
                     // Ensures that setting false again does not alter the null count
                     bm.set(24, 0);
                     CHECK_EQ(bm.data()[3], 6);
-                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    CHECK_EQ(bm.null_count(), m_bitmap_null_count);
 
                     bm.set(2, true);
                     CHECK(bm.test(2));
-                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    CHECK_EQ(bm.null_count(), m_bitmap_null_count);
                 }
             }
 
@@ -438,20 +439,20 @@ namespace sparrow
 
                     bm[3] = true;
                     CHECK_EQ(bm.data()[0], 46);
-                    CHECK_EQ(bm.null_count(), s_bitmap_null_count - 1);
+                    CHECK_EQ(bm.null_count(), m_bitmap_null_count - 1);
 
                     bm[24] = false;
                     CHECK_EQ(bm.data()[3], 6);
-                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    CHECK_EQ(bm.null_count(), m_bitmap_null_count);
 
                     // Ensures that setting false again does not alter the null count
                     bm[24] = false;
                     CHECK_EQ(bm.data()[3], 6);
-                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    CHECK_EQ(bm.null_count(), m_bitmap_null_count);
 
                     bm[2] = true;
                     CHECK(bm.test(2));
-                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    CHECK_EQ(bm.null_count(), m_bitmap_null_count);
                 }
             }
 
@@ -462,21 +463,49 @@ namespace sparrow
                     bitmap bm = make_bitmap(null_f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                     CHECK_EQ(bm.size(), s_bitmap_size);
                     CHECK_EQ(bm.null_count(), 0);
+                    CHECK(bm[5]);
                     bm.resize(40, false);
                     CHECK_EQ(bm.size(), 40);
                     CHECK_EQ(bm.null_count(), 11);
+                    CHECK(bm[25]);
+                    CHECK_FALSE(bm[29]);
+                    CHECK_FALSE(bm[30]);
+                    CHECK_FALSE(bm[31]);
+                    CHECK_FALSE(bm[32]);
+                    CHECK_FALSE(bm[33]);
+                    CHECK_FALSE(bm[34]);
+                    CHECK_FALSE(bm[35]);
+                    CHECK_FALSE(bm[36]);
+                    CHECK_FALSE(bm[37]);
+                    CHECK_FALSE(bm[38]);
+                    CHECK_FALSE(bm[39]);
+
+                    bm.resize(10, true);
+                    CHECK_EQ(bm.size(), 10);
+                    CHECK_EQ(bm.null_count(), 0);
+                    CHECK(bm[5]);
+
+                    bm.resize(30, true);
+                    CHECK_EQ(bm.size(), 30);
+                    CHECK_EQ(bm.null_count(), 0);
+                    CHECK(bm[25]);
+
+                    bm.resize(40, false);
+                    CHECK_EQ(bm.size(), 40);
+                    CHECK_EQ(bm.null_count(), 10);
+                    CHECK_FALSE(bm[35]);
                 }
 
                 SUBCASE("from non null buffer")
                 {
                     bitmap bm = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                     CHECK_EQ(bm.size(), s_bitmap_size);
-                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    CHECK_EQ(bm.null_count(), m_bitmap_null_count);
 
                     // Test expansion
                     bm.resize(40, true);
                     CHECK_EQ(bm.size(), 40);
-                    CHECK_EQ(bm.null_count(), s_bitmap_null_count);
+                    CHECK_EQ(bm.null_count(), m_bitmap_null_count);
 
                     // Test shrinkage
                     bm.resize(10, true);
@@ -487,6 +516,25 @@ namespace sparrow
                     bm.resize(30, false);
                     CHECK_EQ(bm.size(), 30);
                     CHECK_EQ(bm.null_count(), 26);
+                }
+
+                SUBCASE("with offset")
+                {
+                    bitmap bm = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
+                    bm.set_offset(5);
+                    bm.set_size(s_bitmap_size - 5);
+                    CHECK_EQ(bm.size(), 24);
+                    CHECK_EQ(bm.null_count(), 15);
+
+                    // Test expansion
+                    bm.resize(30, true);
+                    CHECK_EQ(bm.size(), 30);
+                    CHECK_EQ(bm.null_count(), 12);
+
+                    // Test shrinkage
+                    bm.resize(10, true);
+                    CHECK_EQ(bm.size(), 10);
+                    CHECK_EQ(bm.null_count(), 5);
                 }
             }
 
@@ -611,12 +659,12 @@ namespace sparrow
                             const auto pos = b.cbegin();
                             auto iter = b.insert(pos, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 1);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 1);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 1);
                             CHECK_EQ(*iter, false);
 
                             iter = b.insert(pos, true);
                             CHECK_EQ(b.size(), s_bitmap_size + 2);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 1);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 1);
                             CHECK_EQ(*iter, true);
                         }
                         SUBCASE("from null buffer")
@@ -643,12 +691,12 @@ namespace sparrow
                             const auto pos = std::next(b.cbegin(), 14);
                             auto iter = b.insert(pos, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 1);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 1);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 1);
                             CHECK_EQ(*iter, false);
 
                             iter = b.insert(pos, true);
                             CHECK_EQ(b.size(), s_bitmap_size + 2);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 1);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 1);
                             CHECK_EQ(*iter, true);
                         }
                         SUBCASE("from null buffer")
@@ -675,12 +723,12 @@ namespace sparrow
                             const auto pos = b.cend();
                             auto iter = b.insert(pos, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 1);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 1);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 1);
                             CHECK_EQ(*iter, false);
 
                             iter = b.insert(pos, true);
                             CHECK_EQ(b.size(), s_bitmap_size + 2);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 1);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 1);
                             CHECK_EQ(*iter, true);
                         }
                         SUBCASE("from null buffer")
@@ -710,14 +758,14 @@ namespace sparrow
                             const auto pos = b.cbegin();
                             auto iter = b.insert(pos, 3, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 3);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 3);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 3);
                             CHECK_EQ(*iter, false);
                             CHECK_EQ(*(++iter), false);
                             CHECK_EQ(*(++iter), false);
 
                             iter = b.insert(pos, 3, true);
                             CHECK_EQ(b.size(), s_bitmap_size + 6);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 3);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 3);
                             CHECK_EQ(*iter, true);
                             CHECK_EQ(*(++iter), true);
                             CHECK_EQ(*(++iter), true);
@@ -750,14 +798,14 @@ namespace sparrow
                             const auto pos = std::next(b.cbegin(), 14);
                             auto iter = b.insert(pos, 3, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 3);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 3);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 3);
                             CHECK_EQ(*iter, false);
                             CHECK_EQ(*(++iter), false);
                             CHECK_EQ(*(++iter), false);
 
                             iter = b.insert(pos, 3, true);
                             CHECK_EQ(b.size(), s_bitmap_size + 6);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 3);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 3);
                             CHECK_EQ(*iter, true);
                             CHECK_EQ(*(++iter), true);
                             CHECK_EQ(*(++iter), true);
@@ -789,14 +837,14 @@ namespace sparrow
                             bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                             auto iter = b.insert(b.cend(), 3, false);
                             CHECK_EQ(b.size(), s_bitmap_size + 3);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 3);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 3);
                             CHECK_EQ(*iter, false);
                             CHECK_EQ(*(++iter), false);
                             CHECK_EQ(*(++iter), false);
 
                             iter = b.insert(b.cend(), 3, true);
                             CHECK_EQ(b.size(), s_bitmap_size + 6);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count + 3);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count + 3);
                             CHECK_EQ(*iter, true);
                             CHECK_EQ(*(++iter), true);
                             CHECK_EQ(*(++iter), true);
@@ -831,7 +879,7 @@ namespace sparrow
                         bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                         auto iter = b.emplace(b.cbegin(), true);
                         CHECK_EQ(b.size(), s_bitmap_size + 1);
-                        CHECK_EQ(b.null_count(), s_bitmap_null_count);
+                        CHECK_EQ(b.null_count(), m_bitmap_null_count);
                         CHECK_EQ(*iter, true);
                     }
                     SUBCASE("from null buffer")
@@ -851,7 +899,7 @@ namespace sparrow
                         bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                         auto iter = b.emplace(std::next(b.cbegin()), true);
                         CHECK_EQ(b.size(), s_bitmap_size + 1);
-                        CHECK_EQ(b.null_count(), s_bitmap_null_count);
+                        CHECK_EQ(b.null_count(), m_bitmap_null_count);
                         CHECK_EQ(*iter, true);
                     }
                     SUBCASE("from null buffer")
@@ -871,7 +919,7 @@ namespace sparrow
                         bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                         auto iter = b.emplace(b.cend(), true);
                         CHECK_EQ(b.size(), s_bitmap_size + 1);
-                        CHECK_EQ(b.null_count(), s_bitmap_null_count);
+                        CHECK_EQ(b.null_count(), m_bitmap_null_count);
                         CHECK_EQ(*iter, true);
                     }
                     SUBCASE("from null buffer")
@@ -903,7 +951,7 @@ namespace sparrow
                             bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                             auto iter = b.erase(b.cbegin());
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count - 1);
                             CHECK_EQ(iter, b.begin());
                             CHECK_EQ(*iter, true);
                         }
@@ -927,7 +975,7 @@ namespace sparrow
                             const auto pos = std::next(b.cbegin(), 2);
                             auto iter = b.erase(pos);
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count);
                             CHECK_EQ(iter, std::next(b.begin(), 2));
                             CHECK_EQ(*iter, false);
                         }
@@ -954,7 +1002,7 @@ namespace sparrow
                             bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                             auto iter = b.erase(b.cbegin(), std::next(b.cbegin()));
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count - 1);
                             CHECK_EQ(*iter, true);
                         }
                         SUBCASE("from null buffer")
@@ -976,7 +1024,7 @@ namespace sparrow
                             const auto pos = std::next(b.cbegin());
                             auto iter = b.erase(pos, std::next(pos, 1));
                             CHECK_EQ(b.size(), s_bitmap_size - 1);
-                            CHECK_EQ(b.null_count(), s_bitmap_null_count);
+                            CHECK_EQ(b.null_count(), m_bitmap_null_count);
                             CHECK_EQ(*iter, true);
                         }
                         SUBCASE("from null buffer")
@@ -1073,7 +1121,7 @@ namespace sparrow
                     bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                     b.push_back(false);
                     CHECK_EQ(b.size(), s_bitmap_size + 1);
-                    CHECK_EQ(b.null_count(), s_bitmap_null_count + 1);
+                    CHECK_EQ(b.null_count(), m_bitmap_null_count + 1);
                     CHECK_EQ(b.back(), false);
                 }
                 SUBCASE("from null buffer")
@@ -1093,7 +1141,7 @@ namespace sparrow
                     bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                     b.pop_back();
                     CHECK_EQ(b.size(), s_bitmap_size - 1);
-                    CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
+                    CHECK_EQ(b.null_count(), m_bitmap_null_count - 1);
                 }
                 if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
                 {
@@ -1113,19 +1161,19 @@ namespace sparrow
                     bitmap b = make_bitmap(f.get_buffer(), s_bitmap_size, std::allocator<uint8_t>());
                     auto iter = b.begin();
                     *iter = true;
-                    CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
+                    CHECK_EQ(b.null_count(), m_bitmap_null_count - 1);
 
                     ++iter;
                     *iter &= false;
-                    CHECK_EQ(b.null_count(), s_bitmap_null_count);
+                    CHECK_EQ(b.null_count(), m_bitmap_null_count);
 
                     iter += 2;
                     *iter |= true;
-                    CHECK_EQ(b.null_count(), s_bitmap_null_count - 1);
+                    CHECK_EQ(b.null_count(), m_bitmap_null_count - 1);
 
                     ++iter;
                     *iter ^= true;
-                    CHECK_EQ(b.null_count(), s_bitmap_null_count - 2);
+                    CHECK_EQ(b.null_count(), m_bitmap_null_count - 2);
 
                     CHECK_EQ(*iter, *iter);
                     CHECK_NE(*iter, *++b.begin());

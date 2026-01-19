@@ -94,6 +94,11 @@ namespace sparrow
          */
         [[nodiscard]] constexpr size_type size() const noexcept;
 
+        constexpr void set_size(size_type new_size) noexcept
+        {
+            m_size = new_size;
+        }
+
         /**
          * @brief Returns the bit offset within the buffer.
          * @return The offset in bits from the start of the buffer
@@ -915,7 +920,9 @@ namespace sparrow
             m_size = n;
             return;
         }
-        size_type old_block_count = buffer().size();
+        auto& buffer = this->buffer();
+        const size_type old_size = m_size;
+        size_type old_block_count = buffer.size();
         const size_type new_block_count = compute_block_count(n + m_offset);
         const block_type value = b ? block_type(~block_type(0)) : block_type(0);
 
@@ -924,25 +931,45 @@ namespace sparrow
             if (data() == nullptr)
             {
                 constexpr block_type true_value = block_type(~block_type(0));
-                old_block_count = compute_block_count(size() + m_offset);
-                buffer().resize(old_block_count, true_value);
-                zero_unused_bits();
+                old_block_count = compute_block_count(old_size + m_offset);
+                buffer.resize(old_block_count, true_value);
+                // Zero out bits beyond old_size in the last block
+                const size_type old_extra_bits = bit_index(old_size + m_offset);
+                if (old_extra_bits != 0)
+                {
+                    buffer.back() &= block_type(~(~block_type(0) << old_extra_bits));
+                }
             }
-            buffer().resize(new_block_count, value);
+            buffer.resize(new_block_count, value);
         }
 
-        if (b && (n > m_size))
+        if (n > old_size)
         {
-            const size_type extra_bits = count_extra_bits();
-            if (extra_bits > 0)
+            // Calculate extra bits based on OLD size
+            const size_type old_extra_bits = bit_index(old_size + m_offset);
+            if (old_extra_bits > 0)
             {
-                buffer().data()[old_block_count - 1] |= static_cast<block_type>(value << extra_bits);
+                const size_type old_last_block_idx = compute_block_count(old_size + m_offset) - 1;
+                auto& last_block = buffer.data()[old_last_block_idx];
+                if (b)
+                {
+                    // Set bits from old_extra_bits to end of block to true
+                    const auto mask = static_cast<block_type>(value << old_extra_bits);
+                    last_block |= mask;
+                }
+                else
+                {
+                    // Clear bits from old_extra_bits to end of block
+                    const auto mask = static_cast<block_type>(~(~block_type(0) << old_extra_bits));
+                    last_block &= mask;
+                }
             }
+
         }
 
         m_size = n;
-        this->recompute_null_count(data(), m_size, buffer().size(), m_offset);
         zero_unused_bits();
+        this->recompute_null_count(data(), m_size, buffer.size(), m_offset);
     }
 
     template <typename B, null_count_policy NCP>
@@ -1116,4 +1143,5 @@ namespace sparrow
         }
         resize(size() - 1);
     }
+
 }

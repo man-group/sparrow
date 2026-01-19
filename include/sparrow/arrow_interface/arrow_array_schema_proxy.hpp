@@ -1023,7 +1023,7 @@ namespace sparrow
         void reset();
         void remove_dictionary();
         void remove_child(size_t index);
-        void create_bitmap_view();
+        void create_bitmap_view(std::optional<size_t> null_count = std::nullopt);
 
         [[nodiscard]] bool array_created_with_sparrow() const;
         [[nodiscard]] SPARROW_API bool schema_created_with_sparrow() const;
