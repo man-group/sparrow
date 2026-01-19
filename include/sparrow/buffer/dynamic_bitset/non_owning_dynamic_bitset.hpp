@@ -32,12 +32,9 @@ namespace sparrow
 
         constexpr explicit non_owning_dynamic_bitset(buffer<T>* buffer, size_type n);
         constexpr explicit non_owning_dynamic_bitset(buffer<T>* buffer, size_type n, size_type offset);
-        constexpr explicit non_owning_dynamic_bitset(
-            buffer<T>* buffer,
-            size_type n,
-            size_type offset,
-            size_type null_count
-        );
+        constexpr explicit non_owning_dynamic_bitset(buffer<T>* buffer, size_type n, size_type offset, size_type null_count)
+            requires(NCP::track_null_count);
+
 
         constexpr ~non_owning_dynamic_bitset() = default;
         constexpr non_owning_dynamic_bitset(const non_owning_dynamic_bitset&) = default;
@@ -80,6 +77,7 @@ namespace sparrow
         size_type offset,
         size_type null_count
     )
+        requires(NCP::track_null_count)
         : base_type(buffer, n, offset, null_count)
     {
         SPARROW_ASSERT_TRUE(buffer != nullptr);
