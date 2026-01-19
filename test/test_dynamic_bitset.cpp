@@ -59,7 +59,12 @@ namespace sparrow
     static constexpr std::array<uint8_t, 4> s_bitmap_blocks_values{
         {0b00100110, 0b01010101, 0b00110101, 0b00000111}
     };
-    const std::size_t m_bitmap_null_count = s_bitmap_size - count_non_null(s_bitmap_blocks_values.data(), s_bitmap_size,s_bitmap_blocks_values.size());
+    const std::size_t m_bitmap_null_count = s_bitmap_size
+                                            - count_non_null(
+                                                s_bitmap_blocks_values.data(),
+                                                s_bitmap_size,
+                                                s_bitmap_blocks_values.size()
+                                            );
 
     using testing_types = std::tuple<dynamic_bitset<std::uint8_t>, non_owning_dynamic_bitset<std::uint8_t>>;
 
