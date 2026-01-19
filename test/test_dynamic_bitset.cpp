@@ -1640,13 +1640,13 @@ namespace sparrow
             SUBCASE("set and get offset")
             {
                 dynamic_bitset<std::uint8_t> bm(10, std::allocator<std::uint8_t>());
-                
+
                 bm.set_offset(3);
                 CHECK_EQ(bm.offset(), 3);
-                
+
                 bm.set_offset(7);
                 CHECK_EQ(bm.offset(), 7);
-                
+
                 bm.set_offset(0);
                 CHECK_EQ(bm.offset(), 0);
             }
@@ -1657,7 +1657,8 @@ namespace sparrow
                 // Pattern: bits 0-7: 0,1,0,1,0,1,0,1 then bits 8-15: 0,0,1,1,0,0,1,1
                 dynamic_bitset<std::uint8_t> bm(16, false, std::allocator<std::uint8_t>());
                 // Set pattern: 0b10101010 for first byte (bits 0-7)
-                for (size_t i = 1; i < 8; i += 2) {
+                for (size_t i = 1; i < 8; i += 2)
+                {
                     bm.set(i, true);
                 }
                 // Set pattern: 0b11001100 for second byte (bits 8-15)
@@ -1665,47 +1666,47 @@ namespace sparrow
                 bm.set(11, true);
                 bm.set(14, true);
                 bm.set(15, true);
-                
+
                 // Without offset - first 8 bits are: 0,1,0,1,0,1,0,1
                 CHECK_EQ(bm.offset(), 0);
-                CHECK_EQ(bm.null_count(), 8); // 8 bits are false (0,2,4,6,8,9,12,13)
-                CHECK_FALSE(bm.test(0)); // bit 0 is 0
-                CHECK(bm.test(1));       // bit 1 is 1
-                CHECK_FALSE(bm.test(2)); // bit 2 is 0
-                CHECK(bm.test(3));       // bit 3 is 1
-                
+                CHECK_EQ(bm.null_count(), 8);  // 8 bits are false (0,2,4,6,8,9,12,13)
+                CHECK_FALSE(bm.test(0));       // bit 0 is 0
+                CHECK(bm.test(1));             // bit 1 is 1
+                CHECK_FALSE(bm.test(2));       // bit 2 is 0
+                CHECK(bm.test(3));             // bit 3 is 1
+
                 // With offset of 1 - index 0 refers to bit 1 in buffer
                 bm.set_offset(1);
-                CHECK_EQ(bm.null_count(), 8); // null_count should remain the same
+                CHECK_EQ(bm.null_count(), 8);  // null_count should remain the same
                 CHECK_EQ(bm.offset(), 1);
-                CHECK(bm.test(0));       // index 0 -> bit 1 which is 1
-                CHECK_FALSE(bm.test(1)); // index 1 -> bit 2 which is 0
-                CHECK(bm.test(2));       // index 2 -> bit 3 which is 1
-                CHECK_FALSE(bm.test(3)); // index 3 -> bit 4 which is 0
-                
+                CHECK(bm.test(0));        // index 0 -> bit 1 which is 1
+                CHECK_FALSE(bm.test(1));  // index 1 -> bit 2 which is 0
+                CHECK(bm.test(2));        // index 2 -> bit 3 which is 1
+                CHECK_FALSE(bm.test(3));  // index 3 -> bit 4 which is 0
+
                 // With offset of 2
                 bm.set_offset(2);
                 CHECK_EQ(bm.offset(), 2);
-                CHECK_FALSE(bm.test(0)); // index 0 -> bit 2 which is 0
-                CHECK(bm.test(1));       // index 1 -> bit 3 which is 1
-                CHECK_FALSE(bm.test(2)); // index 2 -> bit 4 which is 0
-                CHECK(bm.test(3));       // index 3 -> bit 5 which is 1
+                CHECK_FALSE(bm.test(0));  // index 0 -> bit 2 which is 0
+                CHECK(bm.test(1));        // index 1 -> bit 3 which is 1
+                CHECK_FALSE(bm.test(2));  // index 2 -> bit 4 which is 0
+                CHECK(bm.test(3));        // index 3 -> bit 5 which is 1
             }
 
             SUBCASE("offset affects setting bits")
             {
                 dynamic_bitset<std::uint8_t> bm(8, false, std::allocator<std::uint8_t>());
-                CHECK_EQ(bm.null_count(), 8); // all bits are false initially
-                
+                CHECK_EQ(bm.null_count(), 8);  // all bits are false initially
+
                 bm.set_offset(3);
-                CHECK_EQ(bm.null_count(), 8); // null_count unchanged by offset change
-                
-                bm.set(0, true); // Should set bit 3 in the buffer
-                CHECK_EQ(bm.null_count(), 7); // one less null
-                
+                CHECK_EQ(bm.null_count(), 8);  // null_count unchanged by offset change
+
+                bm.set(0, true);               // Should set bit 3 in the buffer
+                CHECK_EQ(bm.null_count(), 7);  // one less null
+
                 // Check that the underlying buffer has bit 3 set
                 CHECK_EQ(bm.data()[0] & (1 << 3), 1 << 3);
-                
+
                 // Verify reading it back works
                 CHECK(bm.test(0));
             }
@@ -1714,20 +1715,21 @@ namespace sparrow
             {
                 dynamic_bitset<std::uint8_t> bm(16, false, std::allocator<std::uint8_t>());
                 // Set pattern: 0b10101010 (bits 1,3,5,7 set)
-                for (size_t i = 1; i < 8; i += 2) {
+                for (size_t i = 1; i < 8; i += 2)
+                {
                     bm.set(i, true);
                 }
-                
+
                 bm.set_offset(2);
-                
+
                 auto it = bm.begin();
-                CHECK_FALSE(*it);     // bit 2 is 0
+                CHECK_FALSE(*it);  // bit 2 is 0
                 ++it;
-                CHECK(*it);           // bit 3 is 1
+                CHECK(*it);  // bit 3 is 1
                 ++it;
-                CHECK_FALSE(*it);     // bit 4 is 0
+                CHECK_FALSE(*it);  // bit 4 is 0
                 ++it;
-                CHECK(*it);           // bit 5 is 1
+                CHECK(*it);  // bit 5 is 1
             }
 
             SUBCASE("offset with operator[]")
@@ -1738,33 +1740,34 @@ namespace sparrow
                 bm.set(5, true);
                 bm.set(6, true);
                 bm.set(7, true);
-                CHECK_EQ(bm.null_count(), 12); // 12 bits are false
-                
+                CHECK_EQ(bm.null_count(), 12);  // 12 bits are false
+
                 // Without offset: first 4 bits are 0, bits 4-7 are 1
                 CHECK_FALSE(bm[0]);
                 CHECK_FALSE(bm[3]);
                 CHECK(bm[4]);
                 CHECK(bm[7]);
-                
+
                 // With offset of 4: now we start from bit 4
                 bm.set_offset(4);
-                CHECK(bm[0]); // reads bit 4 which is 1
-                CHECK(bm[1]); // reads bit 5 which is 1
-                CHECK(bm[2]); // reads bit 6 which is 1
-                CHECK(bm[3]); // reads bit 7 which is 1
+                CHECK(bm[0]);  // reads bit 4 which is 1
+                CHECK(bm[1]);  // reads bit 5 which is 1
+                CHECK(bm[2]);  // reads bit 6 which is 1
+                CHECK(bm[3]);  // reads bit 7 which is 1
             }
 
             SUBCASE("offset with front and back")
             {
                 dynamic_bitset<std::uint8_t> bm(16, false, std::allocator<std::uint8_t>());
                 // Set pattern: 0b10101010 (bits 1,3,5,7 set)
-                for (size_t i = 1; i < 8; i += 2) {
+                for (size_t i = 1; i < 8; i += 2)
+                {
                     bm.set(i, true);
                 }
-                
+
                 bm.set_offset(1);
                 CHECK(bm.front());  // bit 1 is 1
-                
+
                 // back() should return the last bit considering offset
                 // With size 8 and offset 1, we read bits 1-8, so back is bit 8
                 // But wait, the size might need adjustment based on offset
@@ -1776,27 +1779,27 @@ namespace sparrow
             SUBCASE("constructor with offset - dynamic_bitset_view")
             {
                 std::array<std::uint8_t, 1> blocks{0b10101010};
-                
+
                 // Create view with offset - parameters are: (pointer, size, offset, null_count)
                 dynamic_bitset_view<std::uint8_t> view(blocks.data(), 8, 2, 4);
-                
+
                 CHECK_EQ(view.offset(), 2);
-                CHECK_EQ(view.null_count(), 4); // specified in constructor
-                CHECK_FALSE(view.test(0)); // reads bit 2 which is 0
-                CHECK(view.test(1));       // reads bit 3 which is 1
+                CHECK_EQ(view.null_count(), 4);  // specified in constructor
+                CHECK_FALSE(view.test(0));       // reads bit 2 which is 0
+                CHECK(view.test(1));             // reads bit 3 which is 1
             }
 
             SUBCASE("constructor with offset - non_owning_dynamic_bitset")
             {
                 buffer<std::uint8_t> buf(1, std::allocator<std::uint8_t>());
                 buf[0] = 0b10101010;
-                
+
                 non_owning_dynamic_bitset<std::uint8_t> bm(&buf, 8, 3, 4);
-                
+
                 CHECK_EQ(bm.offset(), 3);
-                CHECK_EQ(bm.null_count(), 4); // specified in constructor
-                CHECK(bm.test(0));         // reads bit 3 which is 1
-                CHECK_FALSE(bm.test(1));   // reads bit 4 which is 0
+                CHECK_EQ(bm.null_count(), 4);  // specified in constructor
+                CHECK(bm.test(0));             // reads bit 3 which is 1
+                CHECK_FALSE(bm.test(1));       // reads bit 4 which is 0
             }
 
             SUBCASE("offset across block boundaries")
@@ -1804,30 +1807,31 @@ namespace sparrow
                 // Test offset that spans multiple blocks
                 dynamic_bitset<std::uint8_t> bm(16, false, std::allocator<std::uint8_t>());
                 // Set all bits in first byte (0-7)
-                for (size_t i = 0; i < 8; ++i) {
+                for (size_t i = 0; i < 8; ++i)
+                {
                     bm.set(i, true);
                 }
                 // Second byte remains all false
-                CHECK_EQ(bm.null_count(), 8); // 8 bits are false
-                
+                CHECK_EQ(bm.null_count(), 8);  // 8 bits are false
+
                 // Set offset to cross into the second block
                 bm.set_offset(6);
-                CHECK_EQ(bm.null_count(), 8); // null_count unchanged by offset
-                CHECK(bm.test(0));       // bit 6 of first block is 1
-                CHECK(bm.test(1));       // bit 7 of first block is 1
-                CHECK_FALSE(bm.test(2)); // bit 0 of second block is 0
-                CHECK_FALSE(bm.test(3)); // bit 1 of second block is 0
+                CHECK_EQ(bm.null_count(), 8);  // null_count unchanged by offset
+                CHECK(bm.test(0));             // bit 6 of first block is 1
+                CHECK(bm.test(1));             // bit 7 of first block is 1
+                CHECK_FALSE(bm.test(2));       // bit 0 of second block is 0
+                CHECK_FALSE(bm.test(3));       // bit 1 of second block is 0
             }
 
             SUBCASE("offset with null buffer")
             {
                 dynamic_bitset<std::uint8_t> bm(nullptr, 10, std::allocator<std::uint8_t>());
-                CHECK_EQ(bm.null_count(), 0); // null buffer has no null bits
-                
+                CHECK_EQ(bm.null_count(), 0);  // null buffer has no null bits
+
                 bm.set_offset(3);
                 CHECK_EQ(bm.offset(), 3);
-                CHECK_EQ(bm.null_count(), 0); // null_count still 0
-                
+                CHECK_EQ(bm.null_count(), 0);  // null_count still 0
+
                 // All bits should still be true (null buffer behavior)
                 for (size_t i = 0; i < 7; ++i)
                 {
@@ -1838,23 +1842,23 @@ namespace sparrow
             SUBCASE("offset persists across operations")
             {
                 dynamic_bitset<std::uint8_t> bm(16, false, std::allocator<std::uint8_t>());
-                CHECK_EQ(bm.null_count(), 16); // all false initially
-                
+                CHECK_EQ(bm.null_count(), 16);  // all false initially
+
                 bm.set_offset(5);
-                CHECK_EQ(bm.null_count(), 16); // offset doesn't change null_count
-                
+                CHECK_EQ(bm.null_count(), 16);  // offset doesn't change null_count
+
                 // Perform various operations
                 bm.set(0, true);
                 CHECK_EQ(bm.offset(), 5);
-                CHECK_EQ(bm.null_count(), 15); // one bit set
-                
+                CHECK_EQ(bm.null_count(), 15);  // one bit set
+
                 bm.resize(20);
                 CHECK_EQ(bm.offset(), 5);
-                CHECK_EQ(bm.null_count(), 19); // 4 new false bits added
-                
+                CHECK_EQ(bm.null_count(), 19);  // 4 new false bits added
+
                 bm.push_back(true);
                 CHECK_EQ(bm.offset(), 5);
-                CHECK_EQ(bm.null_count(), 19); // added a true bit
+                CHECK_EQ(bm.null_count(), 19);  // added a true bit
             }
 
             SUBCASE("copy preserves offset")
@@ -1862,26 +1866,26 @@ namespace sparrow
                 dynamic_bitset<std::uint8_t> bm1(10, false, std::allocator<std::uint8_t>());
                 CHECK_EQ(bm1.null_count(), 10);
                 bm1.set_offset(4);
-                CHECK_EQ(bm1.null_count(), 10); // null_count unchanged
-                
+                CHECK_EQ(bm1.null_count(), 10);  // null_count unchanged
+
                 dynamic_bitset<std::uint8_t> bm2(bm1);
                 CHECK_EQ(bm2.offset(), 4);
-                CHECK_EQ(bm2.null_count(), 10); // null_count copied
-                
+                CHECK_EQ(bm2.null_count(), 10);  // null_count copied
+
                 dynamic_bitset<std::uint8_t> bm3(8, false, std::allocator<std::uint8_t>());
                 bm3 = bm1;
                 CHECK_EQ(bm3.offset(), 4);
-                CHECK_EQ(bm3.null_count(), 10); // null_count assigned
+                CHECK_EQ(bm3.null_count(), 10);  // null_count assigned
             }
 
             SUBCASE("move preserves offset")
             {
                 dynamic_bitset<std::uint8_t> bm1(10, false, std::allocator<std::uint8_t>());
                 bm1.set_offset(7);
-                
+
                 dynamic_bitset<std::uint8_t> bm2(std::move(bm1));
                 CHECK_EQ(bm2.offset(), 7);
-                
+
                 dynamic_bitset<std::uint8_t> bm3(10, false, std::allocator<std::uint8_t>());
                 bm3.set_offset(2);
                 dynamic_bitset<std::uint8_t> bm4(8, false, std::allocator<std::uint8_t>());
@@ -1893,19 +1897,19 @@ namespace sparrow
             {
                 dynamic_bitset<std::uint8_t> bm1(10, false, std::allocator<std::uint8_t>());
                 dynamic_bitset<std::uint8_t> bm2(10, false, std::allocator<std::uint8_t>());
-                
-                bm1.set(0, true); // set one bit in bm1
+
+                bm1.set(0, true);  // set one bit in bm1
                 CHECK_EQ(bm1.null_count(), 9);
                 CHECK_EQ(bm2.null_count(), 10);
-                
+
                 bm1.set_offset(3);
                 bm2.set_offset(5);
-                
+
                 bm1.swap(bm2);
-                
+
                 CHECK_EQ(bm1.offset(), 5);
                 CHECK_EQ(bm2.offset(), 3);
-                CHECK_EQ(bm1.null_count(), 10); // swapped null_counts
+                CHECK_EQ(bm1.null_count(), 10);  // swapped null_counts
                 CHECK_EQ(bm2.null_count(), 9);
             }
         }
@@ -1918,40 +1922,40 @@ namespace sparrow
             {
                 bm.set(i, i % 3 == 0);  // Pattern: true, false, false, true, false, false, ...
             }
-            
+
             SUBCASE("slice with both arguments")
             {
                 // Slice bits [5, 15) - should get 10 bits starting at position 5
                 auto slice = bm.slice(5, 10);
                 REQUIRE_EQ(slice.size(), 10);
-                
+
                 // Verify the values
                 for (size_t i = 0; i < 10; ++i)
                 {
                     CHECK_EQ(slice.test(i), bm.test(5 + i));
                 }
-                
+
                 // Verify it's a copy (different storage)
                 CHECK_NE(slice.data(), bm.data());
-                
+
                 // Modifying the slice should not affect the original
                 slice.set(0, !slice.test(0));
                 CHECK_NE(slice.test(0), bm.test(5));
             }
-            
+
             SUBCASE("slice with start only")
             {
                 // Slice from position 10 to end
                 auto slice = bm.slice(10);
                 REQUIRE_EQ(slice.size(), 10);
-                
+
                 // Verify the values
                 for (size_t i = 0; i < slice.size(); ++i)
                 {
                     CHECK_EQ(slice.test(i), bm.test(10 + i));
                 }
             }
-            
+
             SUBCASE("slice at start")
             {
                 auto slice = bm.slice(0, 10);
@@ -1961,7 +1965,7 @@ namespace sparrow
                     CHECK_EQ(slice.test(i), bm.test(i));
                 }
             }
-            
+
             SUBCASE("slice of full range")
             {
                 auto slice = bm.slice(0, 20);
@@ -1971,7 +1975,7 @@ namespace sparrow
                     CHECK_EQ(slice.test(i), bm.test(i));
                 }
             }
-            
+
             SUBCASE("out of range throws")
             {
                 CHECK_THROWS_AS(bm.slice(21, 1), std::out_of_range);

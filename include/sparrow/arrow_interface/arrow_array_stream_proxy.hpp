@@ -151,11 +151,11 @@ namespace sparrow
             requires layout_or_array<std::ranges::range_value_t<R>>
         void push(R&& arrays)
         {
-            if(std::ranges::empty(arrays))
+            if (std::ranges::empty(arrays))
             {
                 return;
             }
-            
+
             arrow_array_stream_private_data& private_data = get_private_data();
 
             // Check if we need to create schema from first array
