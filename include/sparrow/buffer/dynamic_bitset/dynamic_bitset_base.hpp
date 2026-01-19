@@ -968,7 +968,6 @@ namespace sparrow
                     last_block &= mask;
                 }
             }
-
         }
 
         m_size = n;
