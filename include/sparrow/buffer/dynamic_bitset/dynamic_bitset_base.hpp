@@ -112,7 +112,7 @@ namespace sparrow
          * @post offset() == offset
          * @note For resizable buffers, subsequent bit access operations will automatically
          *       resize the buffer if needed to accommodate size() + offset bits.
-         * @note For non-resizable buffers, ensure the buffer has capacity >= 
+         * @note For non-resizable buffers, ensure the buffer has capacity >=
          *       compute_block_count(size() + offset) before accessing bits.
          */
         constexpr void set_offset(size_type offset) noexcept;
