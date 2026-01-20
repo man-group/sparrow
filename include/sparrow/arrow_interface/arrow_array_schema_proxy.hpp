@@ -965,7 +965,6 @@ namespace sparrow
 
         using bitmap_type = non_owning_dynamic_bitset<uint8_t>;
         using const_bitmap_type = dynamic_bitset_view<const uint8_t>;
-        using bitmap_variant = std::variant<bitmap_type, const_bitmap_type>;
 
         [[nodiscard]] SPARROW_API std::optional<bitmap_type>& bitmap()
         {
