@@ -33,7 +33,7 @@ jobs:
         git checkout ${{ github.head_ref }}
 
     - name: Checkout sparrow
-      if: (github.event_name == 'push' && github.repository == 'man-group/sparrow' && github.ref_name == 'main') || github.event.workflow_dispatch
+      if: (github.repository == 'man-group/sparrow' && github.ref_name == 'main') || github.event.workflow_dispatch
       run: |
         git clone https://github.com/man-group/sparrow.git
 
