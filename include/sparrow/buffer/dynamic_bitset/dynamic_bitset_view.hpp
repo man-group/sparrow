@@ -147,13 +147,13 @@ namespace sparrow
         /**
          * @brief Constructs a bitset view from external memory with null count and offset.
          *
-         * Creates a non-owning view over the provided memory buffer starting at the specified
+         * Creates a non-ownning view over the provided memory buffer starting at the specified
          * bit offset with explicit null count tracking.
          *
          * @param p Pointer to the external memory buffer containing bit data
          * @param n The number of bits represented in the buffer
-         * @param null_count The number of bits that are set to false/null in the buffer
          * @param offset The offset in bits from the start of the buffer
+         * @param null_count The number of bits that are set to false/null in the buffer
          *
          * @pre p must point to a valid memory buffer
          * @pre null_count <= n
