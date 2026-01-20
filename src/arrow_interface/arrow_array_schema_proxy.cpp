@@ -1089,12 +1089,7 @@ namespace sparrow
             {
                 auto private_data = static_cast<arrow_array_private_data*>(arr.private_data);
                 auto& bitmap_buffer = private_data->buffers()[bitmap_buffer_index];
-                m_null_bitmap.emplace(
-                    &bitmap_buffer,
-                    current_size,
-                    current_offset,
-                    new_null_count
-                );
+                m_null_bitmap.emplace(&bitmap_buffer, current_size, current_offset, new_null_count);
                 m_const_bitmap.emplace(bitmap_buffer.data(), current_size, current_offset, new_null_count);
             }
             else
