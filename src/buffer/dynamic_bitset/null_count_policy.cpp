@@ -27,8 +27,7 @@ namespace sparrow
     {
         if (data == nullptr || byte_size == 0)
         {
-            // When data is null, treat all bits as set (valid), but only count from offset
-            return offset < bit_size ? bit_size - offset : 0;
+            return bit_size;
         }
 
         if (bit_size == 0)

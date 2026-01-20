@@ -963,11 +963,11 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API bool is_schema_const() const;
 
-        using mutable_bitmap_type = non_owning_dynamic_bitset<uint8_t>;
+        using bitmap_type = non_owning_dynamic_bitset<uint8_t>;
         using const_bitmap_type = dynamic_bitset_view<const uint8_t>;
-        using bitmap_variant = std::variant<mutable_bitmap_type, const_bitmap_type>;
+        using bitmap_variant = std::variant<bitmap_type, const_bitmap_type>;
 
-        [[nodiscard]] SPARROW_API std::optional<mutable_bitmap_type>& bitmap()
+        [[nodiscard]] SPARROW_API std::optional<bitmap_type>& bitmap()
         {
             return m_null_bitmap;
         }
@@ -989,7 +989,7 @@ namespace sparrow
         bool m_is_dictionary_immutable = false;
         std::vector<bool> m_children_array_immutable;
         std::vector<bool> m_children_schema_immutable;
-        std::optional<mutable_bitmap_type> m_null_bitmap;
+        std::optional<bitmap_type> m_null_bitmap;
         std::optional<const_bitmap_type> m_const_bitmap;
 
         struct impl_tag

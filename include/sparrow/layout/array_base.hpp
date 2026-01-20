@@ -42,10 +42,9 @@ namespace sparrow
      */
     struct array_inner_types_base
     {
-        using mutable_bitmap_type = non_owning_dynamic_bitset<std::uint8_t>;
+        using bitmap_type = non_owning_dynamic_bitset<std::uint8_t>;
         using const_bitmap_type = dynamic_bitset_view<const std::uint8_t>;
-        // bitmap_type is kept for compatibility - used for mutable operations
-        using bitmap_type = mutable_bitmap_type;
+        
     };
 
     /**

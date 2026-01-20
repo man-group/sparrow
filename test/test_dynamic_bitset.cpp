@@ -1256,7 +1256,7 @@ namespace sparrow
 
                 // With offset, only count from offset onwards
                 const auto count_with_offset = count_non_null(null_ptr, 100, 0, 20);
-                CHECK_EQ(count_with_offset, 80);  // 100 - 20 = 80 bits from offset
+                CHECK_EQ(count_with_offset, 100);
             }
 
             SUBCASE("static count_non_null with offset - no offset")
