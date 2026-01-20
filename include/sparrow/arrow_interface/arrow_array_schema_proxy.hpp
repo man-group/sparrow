@@ -967,19 +967,9 @@ namespace sparrow
         using const_bitmap_type = dynamic_bitset_view<const uint8_t>;
         using bitmap_variant = std::variant<mutable_bitmap_type, const_bitmap_type>;
 
-        [[nodiscard]] SPARROW_API std::optional<bitmap_variant>& bitmap()
+        [[nodiscard]] SPARROW_API std::optional<mutable_bitmap_type>& bitmap()
         {
             return m_null_bitmap;
-        }
-
-        [[nodiscard]] SPARROW_API const std::optional<bitmap_variant>& bitmap() const
-        {
-            return m_null_bitmap;
-        }
-
-        [[nodiscard]] SPARROW_API std::optional<const_bitmap_type>& const_bitmap()
-        {
-            return m_const_bitmap;
         }
 
         [[nodiscard]] SPARROW_API const std::optional<const_bitmap_type>& const_bitmap() const
@@ -999,7 +989,7 @@ namespace sparrow
         bool m_is_dictionary_immutable = false;
         std::vector<bool> m_children_array_immutable;
         std::vector<bool> m_children_schema_immutable;
-        std::optional<bitmap_variant> m_null_bitmap;
+        std::optional<mutable_bitmap_type> m_null_bitmap;
         std::optional<const_bitmap_type> m_const_bitmap;
 
         struct impl_tag
@@ -1105,10 +1095,20 @@ namespace sparrow
         static constexpr const char function_name[] = "insert_bitmap";
         throw_if_immutable<function_name, true, false>();
         SPARROW_ASSERT_TRUE(m_null_bitmap.has_value())
-        auto& bitmap = std::get<mutable_bitmap_type>(*m_null_bitmap);
-        const auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), range.begin(), range.end());
-        set_null_count(static_cast<int64_t>(bitmap.null_count()));
-        return static_cast<size_t>(std::distance(bitmap.begin(), it));
+        const auto it = m_null_bitmap->insert(
+            sparrow::next(m_null_bitmap->cbegin(), index),
+            range.begin(),
+            range.end()
+        );
+        set_null_count(static_cast<int64_t>(m_null_bitmap->null_count()));
+        m_const_bitmap = const_bitmap_type(
+            m_null_bitmap->data(),
+            length(),
+            static_cast<size_t>(m_null_bitmap->offset()),
+            static_cast<size_t>(m_null_bitmap->null_count())
+        );
+        update_buffers();
+        return static_cast<size_t>(std::distance(m_null_bitmap->begin(), it));
     }
 
     template <typename AA, typename AS>

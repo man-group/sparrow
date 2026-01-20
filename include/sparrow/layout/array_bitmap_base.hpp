@@ -293,7 +293,7 @@ namespace sparrow
     {
         arrow_proxy& arrow_proxy = this->get_arrow_proxy();
         SPARROW_ASSERT_TRUE(arrow_proxy.bitmap().has_value());
-        return std::get<bitmap_type>(*arrow_proxy.bitmap());
+        return *arrow_proxy.bitmap();
     }
 
     template <class D, bool is_mutable>

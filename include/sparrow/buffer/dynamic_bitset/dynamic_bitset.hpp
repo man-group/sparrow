@@ -281,7 +281,7 @@ namespace sparrow
     template <std::integral T>
     template <allocator A>
     constexpr dynamic_bitset<T>::dynamic_bitset(block_type* p, size_type n, size_type offset, const A& a)
-        : base_type(storage_type(p, this->compute_block_count(n), a), n, offset)
+        : base_type(storage_type(p, this->compute_block_count(n + offset), a), n, offset)
     {
         base_type::zero_unused_bits();
     }
