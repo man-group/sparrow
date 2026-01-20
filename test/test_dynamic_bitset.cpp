@@ -71,10 +71,12 @@ namespace sparrow
     struct dynamic_bitmap_fixture
     {
         using buffer_type = std::uint8_t*;
+        using allocator_type = std::allocator<std::uint8_t>;
 
         template <std::ranges::input_range R>
         dynamic_bitmap_fixture(const R& blocks)
-            : p_buffer(std::allocator<uint8_t>().allocate(blocks.size()))
+            : p_buffer(allocator_type().allocate(blocks.size()))
+            , m_size(blocks.size())
             , p_expected_buffer(p_buffer)
         {
             std::copy(blocks.begin(), blocks.end(), p_buffer);
@@ -87,13 +89,17 @@ namespace sparrow
 
         dynamic_bitmap_fixture(std::nullptr_t)
             : p_buffer(nullptr)
+            , m_size(0)
             , p_expected_buffer(p_buffer)
         {
         }
 
         ~dynamic_bitmap_fixture()
         {
-            delete[] p_buffer;
+            if (p_buffer != nullptr)
+            {
+                allocator_type().deallocate(p_buffer, m_size);
+            }
             p_expected_buffer = nullptr;
         }
 
@@ -118,6 +124,7 @@ namespace sparrow
         dynamic_bitmap_fixture& operator=(dynamic_bitmap_fixture&&) = delete;
 
         buffer_type p_buffer;
+        std::size_t m_size;
         buffer_type p_expected_buffer;
     };
 

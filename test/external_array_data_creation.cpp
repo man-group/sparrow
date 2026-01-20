@@ -68,7 +68,8 @@ namespace sparrow::test
     {
         const auto n = sizes.size() + 1;
         const auto buf_size = n * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t));
-        auto buf = new std::uint8_t[buf_size];
+        std::allocator<std::uint8_t> alloc;
+        auto buf = alloc.allocate(buf_size);
         if (big)
         {
             auto* ptr = reinterpret_cast<std::uint64_t*>(buf);
@@ -87,13 +88,14 @@ namespace sparrow::test
                 ptr[i + 1] = ptr[i] + static_cast<std::uint32_t>(sizes[i]);
             }
         }
-        return {buf, buf_size, std::allocator<std::uint8_t>()};
+        return {buf, buf_size, alloc};
     }
 
     sparrow::buffer<std::uint8_t> make_size_buffer(const std::vector<size_t>& sizes, bool big)
     {
         const auto buf_size = sizes.size() * (big ? sizeof(std::uint64_t) : sizeof(std::uint32_t));
-        std::uint8_t* buf = new std::uint8_t[buf_size];
+        std::allocator<std::uint8_t> alloc;
+        std::uint8_t* buf = alloc.allocate(buf_size);
         if (big)
         {
             std::uint64_t* size_buf = reinterpret_cast<std::uint64_t*>(buf);
@@ -110,7 +112,7 @@ namespace sparrow::test
                 size_buf[i] = static_cast<std::uint32_t>(sizes[i]);
             }
         }
-        return {buf, buf_size, std::allocator<std::uint8_t>()};
+        return {buf, buf_size, alloc};
     }
 
     void fill_schema_and_array_for_list_layout(

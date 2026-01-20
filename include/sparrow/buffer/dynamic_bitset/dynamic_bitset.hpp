@@ -166,8 +166,7 @@ namespace sparrow
          * @pre If p is not nullptr, it must point to valid memory of sufficient size
          * @pre null_count must accurately reflect the number of unset bits
          * @post size() == n
-         * @post offset() == 0
-         * @post null_count() == null_count
+         * @post offset() == offset
          */
         template <allocator A>
         constexpr dynamic_bitset(block_type* p, size_type n, size_type offset, const A& a);

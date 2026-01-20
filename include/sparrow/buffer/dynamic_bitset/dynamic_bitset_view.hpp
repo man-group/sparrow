@@ -124,7 +124,7 @@ namespace sparrow
          * @pre The memory pointed to by p must remain valid for the lifetime of this view
          *
          * @post size() == n
-         * @post offset() == 0
+         * @post offset() == offset
          * @post null_count() == null_count
          * @post The view provides access to n bits starting from memory location p
          *

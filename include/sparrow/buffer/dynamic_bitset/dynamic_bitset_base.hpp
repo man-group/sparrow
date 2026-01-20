@@ -110,6 +110,10 @@ namespace sparrow
          * @brief Sets the bit offset within the buffer.
          * @param offset The new offset in bits from the start of the buffer
          * @post offset() == offset
+         * @note For resizable buffers, subsequent bit access operations will automatically
+         *       resize the buffer if needed to accommodate size() + offset bits.
+         * @note For non-resizable buffers, ensure the buffer has capacity >= 
+         *       compute_block_count(size() + offset) before accessing bits.
          */
         constexpr void set_offset(size_type offset) noexcept;
 
@@ -636,6 +640,8 @@ namespace sparrow
             return true;
         }
         const size_type actual_pos = m_offset + pos;
+        // Ensure the specific bit we're accessing is within the buffer
+        SPARROW_ASSERT_TRUE(block_index(actual_pos) < buffer().size());
         return buffer().data()[block_index(actual_pos)] & bit_mask(actual_pos);
     }
 
@@ -644,6 +650,9 @@ namespace sparrow
     constexpr void dynamic_bitset_base<B, NCP>::set(size_type pos, value_type value)
     {
         SPARROW_ASSERT_TRUE(pos < size());
+        const size_type actual_pos = m_offset + pos;
+        const size_type target_block = block_index(actual_pos);
+
         if (data() == nullptr)
         {
             if (value == true)  // In this case,  we don't need to set the bit
@@ -665,8 +674,22 @@ namespace sparrow
                 }
             }
         }
-        const size_type actual_pos = m_offset + pos;
-        block_type& block = buffer().data()[block_index(actual_pos)];
+        else if (target_block >= buffer().size())
+        {
+            // Buffer exists but is too small for the bit we're accessing
+            if constexpr (requires(storage_type_without_cvrefpointer s) { s.resize(0); })
+            {
+                constexpr block_type true_value = block_type(~block_type(0));
+                buffer().resize(target_block + 1, true_value);
+                zero_unused_bits();
+            }
+            else
+            {
+                SPARROW_ASSERT_TRUE(target_block < buffer().size());
+            }
+        }
+
+        block_type& block = buffer().data()[target_block];
         const bool old_value = block & bit_mask(actual_pos);
         if (value)
         {
