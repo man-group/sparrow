@@ -14,8 +14,8 @@
 
 #include <string_view>
 
-#include "sparrow/fixed_width_binary_array.hpp"
 #include "sparrow/debug/copy_tracker.hpp"
+#include "sparrow/fixed_width_binary_array.hpp"
 #include "sparrow/primitive_array.hpp"
 #include "sparrow/record_batch.hpp"
 #include "sparrow/variable_size_binary_array.hpp"
@@ -206,7 +206,7 @@ namespace sparrow
         TEST_CASE("copy semantic")
         {
 #ifdef SPARROW_TRACK_COPIES
-            auto key = std::string("record_batch");//copy_tracker::key<record_batch>();
+            auto key = std::string("record_batch");  // copy_tracker::key<record_batch>();
             copy_tracker::reset(key);
 #endif
             auto record1 = make_record_batch(col_size);
@@ -348,7 +348,7 @@ namespace sparrow
         {
             std::vector<record_batch> vec(3, make_record_batch(col_size));
             std::cout << "capacity: " << vec.capacity() << std::endl;
-            auto key = std::string("record_batch");//copy_tracker::key<record_batch>();
+            auto key = std::string("record_batch");  // copy_tracker::key<record_batch>();
             copy_tracker::reset(key);
             vec.emplace_back(make_record_batch(col_size));
             CHECK_EQ(copy_tracker::count(key), 0);
