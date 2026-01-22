@@ -94,10 +94,7 @@ namespace sparrow
          */
         [[nodiscard]] constexpr size_type size() const noexcept;
 
-        constexpr void set_size(size_type new_size) noexcept
-        {
-            m_size = new_size;
-        }
+        constexpr void set_size(size_type new_size) noexcept;
 
         /**
          * @brief Returns the bit offset within the buffer.
@@ -577,6 +574,13 @@ namespace sparrow
     constexpr auto dynamic_bitset_base<B, NCP>::size() const noexcept -> size_type
     {
         return m_size;
+    }
+
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    constexpr void dynamic_bitset_base<B, NCP>::set_size(size_type new_size) noexcept
+    {
+        m_size = new_size;
     }
 
     template <typename B, null_count_policy NCP>

@@ -111,6 +111,9 @@ namespace sparrow
     {
     public:
 
+        using bitmap_type = non_owning_dynamic_bitset<uint8_t>;
+        using const_bitmap_type = dynamic_bitset_view<const uint8_t>;
+
         /**
          * @brief Constructs an arrow_proxy taking ownership of both ArrowArray and ArrowSchema.
          *
@@ -963,18 +966,9 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API bool is_schema_const() const;
 
-        using bitmap_type = non_owning_dynamic_bitset<uint8_t>;
-        using const_bitmap_type = dynamic_bitset_view<const uint8_t>;
+        [[nodiscard]] SPARROW_API std::optional<bitmap_type>& bitmap();
 
-        [[nodiscard]] SPARROW_API std::optional<bitmap_type>& bitmap()
-        {
-            return m_null_bitmap;
-        }
-
-        [[nodiscard]] SPARROW_API const std::optional<const_bitmap_type>& const_bitmap() const
-        {
-            return m_const_bitmap;
-        }
+        [[nodiscard]] SPARROW_API const std::optional<const_bitmap_type>& const_bitmap() const;
 
     private:
 

@@ -1074,6 +1074,16 @@ namespace sparrow
         return m_schema_is_immutable;
     }
 
+    [[nodiscard]] std::optional<arrow_proxy::bitmap_type>& arrow_proxy::bitmap()
+    {
+        return m_null_bitmap;
+    }
+
+    [[nodiscard]] const std::optional<arrow_proxy::const_bitmap_type>& arrow_proxy::const_bitmap() const
+    {
+        return m_const_bitmap;
+    }
+
     void arrow_proxy::create_bitmap_view(std::optional<size_t> null_count)
     {
         if (has_bitmap(data_type()))
