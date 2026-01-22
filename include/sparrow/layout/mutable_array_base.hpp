@@ -45,9 +45,11 @@ namespace sparrow
         using difference_type = base_type::difference_type;
 
         using bitmap_type = typename inner_types::bitmap_type;
+        using const_bitmap_type = typename inner_types::const_bitmap_type;
         using bitmap_reference = bitmap_type::reference;
         using bitmap_const_reference = bitmap_type::const_reference;
         using bitmap_iterator = bitmap_type::iterator;
+        using const_bitmap_iterator = const_bitmap_type::const_iterator;
         using bitmap_range = std::ranges::subrange<bitmap_iterator>;
         using const_bitmap_range = base_type::const_bitmap_range;
 
@@ -142,8 +144,6 @@ namespace sparrow
             const difference_type count = std::distance(first, last);
             // The following must be done after modifying the bitmap and values
             this->get_arrow_proxy().set_length(this->size() + static_cast<size_t>(count));
-
-            derived.update();
             return sparrow::next(this->begin(), distance);
         }
 
@@ -244,7 +244,7 @@ namespace sparrow
     template <class D>
     constexpr auto mutable_array_base<D>::bitmap_begin() -> bitmap_iterator
     {
-        return sparrow::next(this->derived_cast().get_bitmap().begin(), this->get_arrow_proxy().offset());
+        return this->derived_cast().get_bitmap().begin();
     }
 
     template <class D>
@@ -269,7 +269,6 @@ namespace sparrow
         derived.resize_bitmap(new_length, value.has_value());
         derived.resize_values(new_length, value.get());
         this->get_arrow_proxy().set_length(new_length);  // Must be done after resizing the bitmap and values
-        derived.update();
     }
 
     /**
@@ -307,7 +306,6 @@ namespace sparrow
         derived.insert_value(sparrow::next(derived.value_cbegin(), distance), value.get(), count);
         this->get_arrow_proxy().set_length(this->size() + count);  // Must be done after resizing the bitmap
                                                                    // and values
-        derived.update();
         return sparrow::next(this->begin(), distance);
     }
 
@@ -364,7 +362,6 @@ namespace sparrow
         derived.erase_values(sparrow::next(derived.value_cbegin(), first_index), count);
         this->get_arrow_proxy().set_length(this->size() - count);  // Must be done after modifying the bitmap
                                                                    // and values
-        derived.update();
         return sparrow::next(begin(), first_index);
     }
 

@@ -22,6 +22,7 @@
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
+#include "sparrow/buffer/dynamic_bitset/non_owning_dynamic_bitset.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/layout_iterator.hpp"
 #include "sparrow/utils/crtp_base.hpp"
@@ -41,7 +42,8 @@ namespace sparrow
      */
     struct array_inner_types_base
     {
-        using bitmap_type = dynamic_bitset_view<std::uint8_t>;
+        using bitmap_type = non_owning_dynamic_bitset<std::uint8_t>;
+        using const_bitmap_type = dynamic_bitset_view<const std::uint8_t>;
     };
 
     /**
@@ -116,9 +118,10 @@ namespace sparrow
         using difference_type = std::ptrdiff_t;
 
         using bitmap_type = typename inner_types::bitmap_type;
+        using const_bitmap_type = typename inner_types::const_bitmap_type;
         using bitmap_const_reference = bitmap_type::const_reference;
         using bitmap_iterator = bitmap_type::iterator;
-        using const_bitmap_iterator = bitmap_type::const_iterator;
+        using const_bitmap_iterator = const_bitmap_type::const_iterator;
         using const_bitmap_range = std::ranges::subrange<const_bitmap_iterator>;
 
         using inner_value_type = typename inner_types::inner_value_type;
@@ -673,7 +676,7 @@ namespace sparrow
     template <class D>
     constexpr auto array_crtp_base<D>::bitmap_begin() const -> const_bitmap_iterator
     {
-        return sparrow::next(this->derived_cast().get_bitmap().cbegin(), get_arrow_proxy().offset());
+        return this->derived_cast().get_bitmap().cbegin();
     }
 
     template <class D>

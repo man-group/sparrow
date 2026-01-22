@@ -45,7 +45,7 @@ namespace sparrow
             );
             if (offset != 0)
             {
-                return {std::move(arr).slice(offset, arr.size()), input_values};
+                return {std::move(arr).slice(offset, count), input_values};
             }
             else
             {
@@ -313,7 +313,10 @@ namespace sparrow
         TEST_CASE("resize")
         {
             auto [ar, input_values] = make_array(5, 1);
+            CHECK_EQ(ar.null_count(), 1);
+            CHECK_EQ(ar.size(), 4);
             ar.resize(7, new_nullable_value_1);
+            CHECK_EQ(ar.null_count(), 1);
             REQUIRE_EQ(ar.size(), 7);
             CHECK(ar[0].has_value());
             CHECK(std::ranges::equal(ar[0].get(), input_values[1]));

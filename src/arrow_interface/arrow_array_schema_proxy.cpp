@@ -23,6 +23,7 @@
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/arrow_interface/private_data_ownership.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset_view.hpp"
+#include "sparrow/buffer/dynamic_bitset/null_count_policy.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/utils/contracts.hpp"
 
@@ -219,6 +220,7 @@ namespace sparrow
             update_buffers();
             update_children();
             update_dictionary();
+            create_bitmap_view();
         }
         else
         {
@@ -229,6 +231,8 @@ namespace sparrow
             m_is_dictionary_immutable = false;
             m_children_array_immutable.clear();
             m_children_schema_immutable.clear();
+            m_null_bitmap.reset();
+            m_const_bitmap.reset();
         }
     }
 
@@ -254,6 +258,8 @@ namespace sparrow
         , m_is_dictionary_immutable(other.m_is_dictionary_immutable)
         , m_children_array_immutable(std::move(other.m_children_array_immutable))
         , m_children_schema_immutable(std::move(other.m_children_schema_immutable))
+        , m_null_bitmap(std::move(other.m_null_bitmap))
+        , m_const_bitmap(std::move(other.m_const_bitmap))
     {
         other.m_array = {};
         other.m_schema = {};
@@ -408,7 +414,6 @@ namespace sparrow
         throw_if_immutable<function_name, false, true>();
         array_without_sanitize().length = static_cast<int64_t>(length);
         update_buffers();
-        update_null_count();
     }
 
     [[nodiscard]] int64_t arrow_proxy::null_count() const
@@ -632,8 +637,11 @@ namespace sparrow
         static constexpr const char function_name[] = "set_buffer";
         throw_if_immutable<function_name, true, false>();
         get_array_private_data()->set_buffer(index, buffer);
-        update_null_count();
         update_buffers();
+        if (index == bitmap_buffer_index)
+        {
+            update_null_count();
+        }
     }
 
     void arrow_proxy::set_buffer(size_t index, buffer<uint8_t>&& buffer)
@@ -642,8 +650,11 @@ namespace sparrow
         static constexpr const char function_name[] = "set_buffer";
         throw_if_immutable<function_name, true, false>();
         get_array_private_data()->set_buffer(index, std::move(buffer));
-        update_null_count();
         update_buffers();
+        if (index == bitmap_buffer_index)
+        {
+            update_null_count();
+        }
     }
 
     [[nodiscard]] const std::vector<arrow_proxy>& arrow_proxy::children() const
@@ -842,12 +853,9 @@ namespace sparrow
 
     void arrow_proxy::update_null_count()
     {
-        if (has_bitmap(data_type()))
+        if (m_const_bitmap.has_value())
         {
-            const auto& validity_buffer = buffers().front();
-            const dynamic_bitset_view<const std::uint8_t> bitmap(validity_buffer.data(), length() + offset());
-            const auto null_count = bitmap.null_count();
-            set_null_count(static_cast<int64_t>(null_count));
+            set_null_count(static_cast<int64_t>(m_const_bitmap->null_count()));
         }
     }
 
@@ -877,33 +885,24 @@ namespace sparrow
         std::swap(m_buffers, other.m_buffers);
         std::swap(m_children, other.m_children);
         std::swap(m_dictionary, other.m_dictionary);
-    }
-
-    [[nodiscard]] non_owning_dynamic_bitset<uint8_t> arrow_proxy::get_non_owning_dynamic_bitset()
-    {
-        if (!array_created_with_sparrow())
-        {
-            throw arrow_proxy_exception(
-                "Cannot get non owning dynamic bitset from a non-sparrow created ArrowArray or ArrowSchema"
-            );
-        }
-
-        SPARROW_ASSERT_TRUE(is_created_with_sparrow())
-        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
-        auto private_data = static_cast<arrow_array_private_data*>(array_without_sanitize().private_data);
-        auto& bitmap_buffer = private_data->buffers()[bitmap_buffer_index];
-        const size_t current_size = length() + offset();
-        non_owning_dynamic_bitset<uint8_t> bitmap{&bitmap_buffer, current_size};
-        return bitmap;
+        std::swap(m_null_bitmap, other.m_null_bitmap);
+        std::swap(m_const_bitmap, other.m_const_bitmap);
     }
 
     void arrow_proxy::resize_bitmap(size_t new_size, bool value)
     {
         static constexpr const char function_name[] = "resize_bitmap";
         throw_if_immutable<function_name, true, false>();
-        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
-        auto bitmap = get_non_owning_dynamic_bitset();
-        bitmap.resize(new_size, value);
+        SPARROW_ASSERT_TRUE(m_null_bitmap.has_value())
+        m_null_bitmap->resize(new_size, value);
+        const auto null_count = m_null_bitmap->null_count();
+        set_null_count(static_cast<int64_t>(null_count));
+        m_const_bitmap = const_bitmap_type(
+            m_null_bitmap->data(),
+            length(),
+            static_cast<size_t>(m_null_bitmap->offset()),
+            static_cast<size_t>(null_count)
+        );
         update_buffers();
     }
 
@@ -911,56 +910,78 @@ namespace sparrow
     {
         static constexpr const char function_name[] = "insert_bitmap";
         throw_if_immutable<function_name, true, false>();
-        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
-        SPARROW_ASSERT_TRUE(std::cmp_less_equal(index, length() + offset()))
+        SPARROW_ASSERT_TRUE(m_null_bitmap.has_value())
+        SPARROW_ASSERT_TRUE(std::cmp_less_equal(index, length()))
         if (count == 0)
         {
             return index;
         }
-        auto bitmap = get_non_owning_dynamic_bitset();
-        auto it = bitmap.insert(sparrow::next(bitmap.cbegin(), index), count, value);
+        auto it = m_null_bitmap->insert(sparrow::next(m_null_bitmap->cbegin(), index), count, value);
         update_buffers();
-        return std::distance(bitmap.begin(), it);
+        const auto null_count = m_null_bitmap->null_count();
+        set_null_count(static_cast<int64_t>(null_count));
+        m_const_bitmap = const_bitmap_type(
+            m_null_bitmap->data(),
+            length(),
+            static_cast<size_t>(m_null_bitmap->offset()),
+            static_cast<size_t>(null_count)
+        );
+        return std::distance(m_null_bitmap->begin(), it);
     }
 
     size_t arrow_proxy::erase_bitmap(size_t index, size_t count)
     {
         static constexpr const char function_name[] = "erase_bitmap";
         throw_if_immutable<function_name, true, false>();
-        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
+        SPARROW_ASSERT_TRUE(m_null_bitmap.has_value())
         SPARROW_ASSERT_TRUE(std::cmp_less(index, length()))
-        auto bitmap = get_non_owning_dynamic_bitset();
-        const auto it_first = sparrow::next(bitmap.cbegin(), index + offset());
+        const auto it_first = sparrow::next(m_null_bitmap->cbegin(), index);
         const auto it_last = sparrow::next(it_first, count);
-        const auto it = bitmap.erase(it_first, it_last);
+        const auto it = m_null_bitmap->erase(it_first, it_last);
         update_buffers();
-        return std::distance(bitmap.begin(), it);
+        set_null_count(static_cast<int64_t>(m_null_bitmap->null_count()));
+        m_const_bitmap = const_bitmap_type(
+            m_null_bitmap->data(),
+            length(),
+            static_cast<size_t>(m_null_bitmap->offset()),
+            static_cast<size_t>(null_count())
+        );
+        return std::distance(m_null_bitmap->begin(), it);
     }
 
     void arrow_proxy::push_back_bitmap(bool value)
     {
         static constexpr const char function_name[] = "push_back_bitmap";
         throw_if_immutable<function_name, true, false>();
-        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         insert_bitmap(length(), value);
-        update_buffers();
     }
 
     void arrow_proxy::pop_back_bitmap()
     {
         static constexpr const char function_name[] = "pop_back_bitmap";
         throw_if_immutable<function_name, true, false>();
-        SPARROW_ASSERT_TRUE(has_bitmap(data_type()))
         erase_bitmap(length() - 1);
-        update_buffers();
     }
 
     arrow_proxy arrow_proxy::slice(size_t start, size_t end) const
     {
         SPARROW_ASSERT_TRUE(start <= end);
         arrow_proxy copy = *this;
+
+        const auto new_length = end - start;
+
         copy.set_offset(start);
-        copy.set_length(end - start);
+        copy.set_length(new_length);
+
+        if (has_bitmap(data_type()))
+        {
+            const auto& bitmap_buffer = copy.buffers()[bitmap_buffer_index];
+            const auto new_non_null = count_non_null(bitmap_buffer.data(), new_length, bitmap_buffer.size(), start);
+            const auto null_count = new_length - new_non_null;
+            copy.create_bitmap_view(null_count);
+            copy.update_null_count();
+        }
+
         return copy;
     }
 
@@ -971,9 +992,19 @@ namespace sparrow
         as.release = empty_release_arrow_schema;
         ArrowArray ar = array();
         ar.offset = static_cast<int64_t>(start);
-        ar.length = static_cast<int64_t>(end - start);
+        const auto new_length = end - start;
+        ar.length = static_cast<int64_t>(new_length);
         ar.release = empty_release_arrow_array;
-        return arrow_proxy{std::move(ar), std::move(as)};
+
+        arrow_proxy ap{std::move(ar), std::move(as)};
+        if (has_bitmap(data_type()))
+        {
+            const auto& bitmap_buffer = ap.buffers()[bitmap_buffer_index];
+            const auto new_non_null = count_non_null(bitmap_buffer.data(), new_length, bitmap_buffer.size(), start);
+            ap.create_bitmap_view(new_non_null);
+            ap.array().null_count = static_cast<int64_t>(new_non_null);
+        }
+        return ap;
     }
 
     void arrow_proxy::sanitize_schema()
@@ -1041,5 +1072,42 @@ namespace sparrow
     bool arrow_proxy::is_schema_const() const
     {
         return m_schema_is_immutable;
+    }
+
+    [[nodiscard]] std::optional<arrow_proxy::bitmap_type>& arrow_proxy::bitmap()
+    {
+        return m_null_bitmap;
+    }
+
+    [[nodiscard]] const std::optional<arrow_proxy::const_bitmap_type>& arrow_proxy::const_bitmap() const
+    {
+        return m_const_bitmap;
+    }
+
+    void arrow_proxy::create_bitmap_view(std::optional<size_t> null_count)
+    {
+        if (has_bitmap(data_type()))
+        {
+            const auto current_offset = offset();
+            const size_t current_size = length();
+            // Use const accessor to get array - works for both mutable and immutable proxies
+            const ArrowArray& arr = std::as_const(*this).array_without_sanitize();
+
+            const auto new_null_count = null_count.value_or(static_cast<size_t>(arr.null_count));
+
+            if (array_created_with_sparrow())
+            {
+                auto private_data = static_cast<arrow_array_private_data*>(arr.private_data);
+                auto& bitmap_buffer = private_data->buffers()[bitmap_buffer_index];
+                m_null_bitmap.emplace(&bitmap_buffer, current_size, current_offset, new_null_count);
+                m_const_bitmap.emplace(bitmap_buffer.data(), current_size, current_offset, new_null_count);
+            }
+            else
+            {
+                auto* bitmap_ptr = static_cast<const uint8_t*>(arr.buffers[bitmap_buffer_index]);
+                m_const_bitmap
+                    .emplace(const_cast<uint8_t*>(bitmap_ptr), current_size, current_offset, new_null_count);
+            }
+        }
     }
 }

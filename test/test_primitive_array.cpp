@@ -121,6 +121,7 @@ namespace sparrow
                         }
                         CHECK_EQ(ar.name(), "test");
                         test_metadata(metadata_sample, *(ar.metadata()));
+                        CHECK_EQ(ar.null_count(), 0);
                     }
 
                     SUBCASE("nullable == false")
@@ -133,6 +134,7 @@ namespace sparrow
                         }
                         CHECK_EQ(ar.name(), "test");
                         test_metadata(metadata_sample, *(ar.metadata()));
+                        CHECK_EQ(ar.null_count(), 0);
                     }
                 }
 
@@ -163,10 +165,12 @@ namespace sparrow
                     {
                         CHECK_EQ(nullable_values[i].has_value(), ar[i].has_value());
                     }
+                    CHECK_EQ(ar.null_count(), 50);
                 }
             }
 
             array_test_type ar = make_array(nullable_values, offset);
+            CHECK_EQ(ar.null_count(), 45);
             CHECK_EQ(ar.size(), nullable_values.size() - offset);
 
             SUBCASE("operator[]")
@@ -183,16 +187,18 @@ namespace sparrow
 
                 SUBCASE("mutable")
                 {
+                    CHECK_EQ(ar.null_count(), 45);
                     REQUIRE_EQ(ar.size(), nullable_values.size() - offset);
                     for (size_t i = 0; i < ar.size(); ++i)
                     {
                         CHECK_EQ(ar[i], nullable_values[i + offset]);
                     }
 
-                    auto new_value = make_test_nullable(99);
+                    auto new_value = make_test_nullable(99, false);
                     ar[1] = new_value;
-                    CHECK(ar[1].has_value());
+                    CHECK_FALSE(ar[1].has_value());
                     CHECK_EQ(ar[1].get(), new_value.get());
+                    CHECK_EQ(ar.null_count(), 45);
                 }
             }
 
@@ -224,6 +230,7 @@ namespace sparrow
                 CHECK_NE(ar, ar3);
                 ar3 = ar;
                 CHECK_EQ(ar, ar3);
+                CHECK_EQ(ar.null_count(), 45);
             }
 
             SUBCASE("move")
@@ -237,6 +244,7 @@ namespace sparrow
                 CHECK_NE(ar2, ar4);
                 ar4 = std::move(ar2);
                 CHECK_EQ(ar3, ar4);
+                CHECK_EQ(ar4.null_count(), 45);
             }
 
             SUBCASE("value_iterator_ordering")
@@ -321,7 +329,7 @@ namespace sparrow
             SUBCASE("resize")
             {
                 const size_t new_size = nullable_values.size() - offset + 3;
-                const nullable<T> new_value_nullable = make_test_nullable(99);
+                const nullable<T> new_value_nullable = make_test_nullable(99, false);
                 ar.resize(new_size, new_value_nullable);
                 REQUIRE_EQ(ar.size(), new_size);
                 for (size_t i = 0; i < ar.size() - 3; ++i)
@@ -331,6 +339,7 @@ namespace sparrow
                 CHECK_EQ(ar[ar.size() - 3], new_value_nullable);
                 CHECK_EQ(ar[ar.size() - 2], new_value_nullable);
                 CHECK_EQ(ar[ar.size() - 1], new_value_nullable);
+                CHECK_EQ(ar.null_count(), 48);
             }
 
             SUBCASE("insert")
@@ -349,6 +358,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 1]);
                         }
+                        CHECK_EQ(ar.null_count(), 46);
                     }
 
                     SUBCASE("in the middle")
@@ -366,6 +376,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 1]);
                         }
+                        CHECK_EQ(ar.null_count(), 46);
                     }
 
                     SUBCASE("at the end")
@@ -379,6 +390,7 @@ namespace sparrow
                             CHECK_EQ(ar[i], nullable_values[i + offset]);
                         }
                         CHECK_EQ(ar[ar.size() - 1], new_value_nullable);
+                        CHECK_EQ(ar.null_count(), 46);
                     }
                 }
 
@@ -399,6 +411,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - count]);
                         }
+                        CHECK_EQ(ar.null_count(), 48);
                     }
 
                     SUBCASE("in the middle")
@@ -419,6 +432,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - count]);
                         }
+                        CHECK_EQ(ar.null_count(), 48);
                     }
 
                     SUBCASE("at the end")
@@ -435,6 +449,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], new_value_nullable);
                         }
+                        CHECK_EQ(ar.null_count(), 48);
                     }
                 }
 
@@ -458,6 +473,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 46);
                     }
 
                     SUBCASE("in the middle")
@@ -478,6 +494,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 46);
                     }
 
                     SUBCASE("at the end")
@@ -494,6 +511,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], new_values[i - ar.size() + 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 46);
                     }
                 }
 
@@ -511,6 +529,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 46);
                     }
 
                     SUBCASE("in the middle")
@@ -530,6 +549,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 46);
                     }
 
                     SUBCASE("at the end")
@@ -546,6 +566,7 @@ namespace sparrow
                         CHECK_EQ(ar[ar.size() - 2], new_val_100);
                         CHECK_EQ(ar[ar.size() - 1], new_val_101);
                     }
+                    CHECK_EQ(ar.null_count(), 46);
                 }
 
                 SUBCASE("with pos and range")
@@ -563,6 +584,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 46);
                     }
 
                     SUBCASE("in the middle")
@@ -583,6 +605,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset - 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 46);
                     }
 
                     SUBCASE("at the end")
@@ -599,6 +622,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], new_values[i - ar.size() + 3]);
                         }
+                        CHECK_EQ(ar.null_count(), 46);
                     }
                 }
             }
@@ -617,6 +641,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset + 1]);
                         }
+                        CHECK_EQ(ar.null_count(), 45);
                     }
 
                     SUBCASE("in the middle")
@@ -634,6 +659,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset + 1]);
                         }
+                        CHECK_EQ(ar.null_count(), 44);
                     }
 
                     SUBCASE("at the end")
@@ -646,6 +672,7 @@ namespace sparrow
                         {
                             CHECK_EQ(ar[i], nullable_values[i + offset]);
                         }
+                        CHECK_EQ(ar.null_count(), 45);
                     }
                 }
 
@@ -664,6 +691,7 @@ namespace sparrow
                     {
                         CHECK_EQ(ar[i], nullable_values[i + offset + count]);
                     }
+                    CHECK_EQ(ar.null_count(), 44);
                 }
             }
 
@@ -676,6 +704,7 @@ namespace sparrow
                 {
                     CHECK_EQ(ar[i], nullable_values[i + offset]);
                 }
+                CHECK_EQ(ar.null_count(), 45);
             }
 
             SUBCASE("pop_back")
@@ -686,6 +715,7 @@ namespace sparrow
                 {
                     CHECK_EQ(ar[i], nullable_values[i + offset]);
                 }
+                CHECK_EQ(ar.null_count(), 45);
             }
 
             SUBCASE("zero_null_values")
@@ -698,6 +728,7 @@ namespace sparrow
                         CHECK_EQ(ar[i].get(), T(0));
                     }
                 }
+                CHECK_EQ(ar.null_count(), 45);
             }
         }
         TEST_CASE_TEMPLATE_APPLY(primitive_array_id, testing_types);
@@ -882,13 +913,12 @@ namespace sparrow
                 constexpr size_t slice_start = 2;
                 constexpr size_t slice_end = 7;
                 std::vector<std::size_t> null_indices = {1, 3, 5};
-                primitive_array<int32_t> arr{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+                primitive_array<int32_t> arr(std::vector<int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, null_indices);
 
                 auto sliced = arr.slice(slice_start, slice_end);
                 CHECK_EQ(sliced.offset(), slice_start);
                 CHECK_EQ(sliced.size(), slice_end - slice_start);
-                // Note: null_count is typically -1 (unknown) after slicing
-                // unless explicitly recomputed
+                CHECK_EQ(sliced.null_count(), 2);
             }
         }
     }

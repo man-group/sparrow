@@ -88,6 +88,7 @@ namespace sparrow
          * @pre The memory pointed to by p must remain valid for the lifetime of this view
          *
          * @post size() == n
+         * @post offset() == 0
          * @post null_count() == 0 (all bits assumed valid initially)
          * @post The view provides access to n bits starting from memory location p
          *
@@ -113,16 +114,17 @@ namespace sparrow
          *
          * @param p Pointer to the external memory buffer containing bit data
          * @param n The number of bits represented in the buffer
-         * @param null_count The number of bits that are set to false/null in the buffer
+         * @param offset The offset in bits from the start of the buffer
          *
          * @pre p must point to a valid memory buffer of at least
          *      `compute_block_count(n) * sizeof(block_type)` bytes, or be nullptr if n is 0
          * @pre n must accurately represent the number of bits available in the buffer
-         * @pre null_count <= n (cannot have more null bits than total bits)
+         * @pre offset <= n
          * @pre null_count must accurately reflect the actual number of unset bits in the buffer
          * @pre The memory pointed to by p must remain valid for the lifetime of this view
          *
          * @post size() == n
+         * @post offset() == offset
          * @post null_count() == null_count
          * @post The view provides access to n bits starting from memory location p
          *
@@ -140,7 +142,28 @@ namespace sparrow
          * assert(view.null_count() == 6);
          * @endcode
          */
-        constexpr dynamic_bitset_view(block_type* p, size_type n, size_type null_count);
+        constexpr dynamic_bitset_view(block_type* p, size_type n, size_type offset);
+
+        /**
+         * @brief Constructs a bitset view from external memory with null count and offset.
+         *
+         * Creates a non-ownning view over the provided memory buffer starting at the specified
+         * bit offset with explicit null count tracking.
+         *
+         * @param p Pointer to the external memory buffer containing bit data
+         * @param n The number of bits represented in the buffer
+         * @param offset The offset in bits from the start of the buffer
+         * @param null_count The number of bits that are set to false/null in the buffer
+         *
+         * @pre p must point to a valid memory buffer
+         * @pre null_count <= n
+         * @pre The memory pointed to by p must remain valid for the lifetime of this view
+         *
+         * @post size() == n
+         * @post offset() == offset
+         * @post null_count() == null_count
+         */
+        constexpr dynamic_bitset_view(block_type* p, size_type n, size_type offset, size_type null_count);
 
         constexpr ~dynamic_bitset_view() = default;
 
@@ -149,6 +172,31 @@ namespace sparrow
 
         constexpr dynamic_bitset_view& operator=(const dynamic_bitset_view&) = default;
         constexpr dynamic_bitset_view& operator=(dynamic_bitset_view&&) noexcept = default;
+
+        /**
+         * @brief Creates a view over a subset of bits.
+         * @param start The starting position of the slice
+         * @param length The number of bits in the slice
+         * @return A new bitset view providing a view over the specified range
+         * @pre start + length <= size()
+         * @post The returned view has size() == length
+         * @post The returned view provides a view over bits [start, start+length)
+         * @throws std::out_of_range if start + length > size()
+         * @note The returned view shares the same underlying storage
+         */
+        [[nodiscard]] constexpr dynamic_bitset_view slice_view(size_type start, size_type length) const;
+
+        /**
+         * @brief Creates a view over a subset of bits from start to end of bitset.
+         * @param start The starting position of the slice
+         * @return A new bitset view providing a view over bits from start to the end
+         * @pre start <= size()
+         * @post The returned view has size() == size() - start
+         * @post The returned view provides a view over bits [start, size())
+         * @throws std::out_of_range if start > size()
+         * @note The returned view shares the same underlying storage
+         */
+        [[nodiscard]] constexpr dynamic_bitset_view slice_view(size_type start) const;
     };
 
     template <std::integral T, null_count_policy NCP>
@@ -158,8 +206,60 @@ namespace sparrow
     }
 
     template <std::integral T, null_count_policy NCP>
-    constexpr dynamic_bitset_view<T, NCP>::dynamic_bitset_view(block_type* p, size_type n, size_type null_count)
-        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n) : 0), n, null_count)
+    constexpr dynamic_bitset_view<T, NCP>::dynamic_bitset_view(block_type* p, size_type n, size_type offset)
+        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n + offset) : 0), n, offset)
     {
+    }
+
+    template <std::integral T, null_count_policy NCP>
+    constexpr dynamic_bitset_view<T, NCP>::dynamic_bitset_view(
+        block_type* p,
+        size_type n,
+        size_type offset,
+        size_type null_count
+    )
+        : base_type(storage_type(p, p != nullptr ? this->compute_block_count(n + offset) : 0), n, offset, null_count)
+    {
+    }
+
+    template <std::integral T, null_count_policy NCP>
+    constexpr auto dynamic_bitset_view<T, NCP>::slice_view(size_type start, size_type length) const
+        -> dynamic_bitset_view
+    {
+        if (start + length > this->size())
+        {
+            throw std::out_of_range("slice_view: start + length exceeds bitset size");
+        }
+
+        const size_type new_offset = this->offset() + start;
+
+        // Calculate the null count for the slice if tracking is enabled
+        if constexpr (NCP::track_null_count)
+        {
+            size_type slice_null_count = 0;
+            for (size_type i = 0; i < length; ++i)
+            {
+                if (!this->test(start + i))
+                {
+                    ++slice_null_count;
+                }
+            }
+            return dynamic_bitset_view(const_cast<block_type*>(this->data()), length, new_offset, slice_null_count);
+        }
+        else
+        {
+            return dynamic_bitset_view(const_cast<block_type*>(this->data()), length, new_offset);
+        }
+    }
+
+    template <std::integral T, null_count_policy NCP>
+    constexpr auto dynamic_bitset_view<T, NCP>::slice_view(size_type start) const -> dynamic_bitset_view
+    {
+        if (start > this->size())
+        {
+            throw std::out_of_range("slice_view: start exceeds bitset size");
+        }
+
+        return slice_view(start, this->size() - start);
     }
 }
