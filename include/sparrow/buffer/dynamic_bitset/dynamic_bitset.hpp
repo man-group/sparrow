@@ -191,6 +191,32 @@ namespace sparrow
         template <allocator A>
         constexpr dynamic_bitset(block_type* p, size_type n, size_type offset, size_type null_count, const A& a);
 
+        /**
+         * @brief Constructs a bitset by taking ownership of a storage buffer.
+         *
+         * @param buf The storage buffer to use
+         * @param size The number of bits in the bitset
+         * @param offset The offset in bits from the start of the buffer
+         *
+         * @post size() == size
+         * @post offset() == offset
+         */
+        constexpr dynamic_bitset(storage_type&& buf, size_type size, size_type offset);
+
+        /**
+         * @brief Constructs a bitset by taking ownership of a storage buffer with null count.
+         *
+         * @param buf The storage buffer to use
+         * @param size The number of bits in the bitset
+         * @param offset The offset in bits from the start of the buffer
+         * @param null_count The number of bits that are set to false/null
+         *
+         * @post size() == size
+         * @post offset() == offset
+         * @post null_count() == null_count
+         */
+        constexpr dynamic_bitset(storage_type&& buf, size_type size, size_type offset, size_type null_count);
+
         constexpr ~dynamic_bitset() = default;
         constexpr dynamic_bitset(const dynamic_bitset&) = default;
         constexpr dynamic_bitset(dynamic_bitset&&) noexcept = default;
@@ -295,6 +321,20 @@ namespace sparrow
     }
 
     template <std::integral T>
+    constexpr dynamic_bitset<T>::dynamic_bitset(storage_type&& buf, size_type size, size_type offset)
+        : base_type(std::move(buf), size, offset)
+    {
+        base_type::zero_unused_bits();
+    }
+
+    template <std::integral T>
+    constexpr dynamic_bitset<T>::dynamic_bitset(storage_type&& buf, size_type size, size_type offset, size_type null_count)
+        : base_type(std::move(buf), size, offset, null_count)
+    {
+        base_type::zero_unused_bits();
+    }
+
+    template <std::integral T>
     template <allocator A>
     constexpr dynamic_bitset<T>::dynamic_bitset(const dynamic_bitset& rhs, const A& a)
         : base_type(storage_type(rhs, a))
@@ -316,16 +356,9 @@ namespace sparrow
             throw std::out_of_range("slice: start + length exceeds bitset size");
         }
 
-        // Create a new bitset with the specified length
-        dynamic_bitset result(length, default_allocator{});
+        sparrow::buffer<T> buffer_copy = this->buffer();
 
-        // Copy the bits
-        for (size_type i = 0; i < length; ++i)
-        {
-            result.set(i, this->test(start + i));
-        }
-
-        return result;
+        return dynamic_bitset<T>(std::move(buffer_copy), length, this->offset() + start);
     }
 
     template <std::integral T>

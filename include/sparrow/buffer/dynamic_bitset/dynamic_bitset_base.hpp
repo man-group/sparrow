@@ -560,6 +560,22 @@ namespace sparrow
          */
         [[nodiscard]] constexpr size_type count_extra_bits() const noexcept;
 
+        /**
+         * @brief Shifts a range of bits to the right by the specified offset.
+         * @param start The starting bit position (absolute, including offset)
+         * @param length The number of bits to shift
+         * @param shift_amount The number of positions to shift right
+         */
+        constexpr void shift_bits_right(size_type start, size_type length, size_type shift_amount);
+
+        /**
+         * @brief Fills a range of bits with the specified value.
+         * @param start The starting bit position (absolute, including offset)
+         * @param count The number of bits to fill
+         * @param value The value to fill (true or false)
+         */
+        constexpr void fill_bits(size_type start, size_type count, value_type value);
+
         storage_type m_buffer;  ///< The underlying storage for bit data
         size_type m_size;       ///< The number of bits in the bitset
         size_type m_offset;     ///< The offset in bits from the start of the buffer
@@ -1036,19 +1052,20 @@ namespace sparrow
             const size_type old_size = size();
             const size_type new_size = old_size + count;
 
-            // TODO: The current implementation is not efficient. It can be improved.
-
             resize(new_size);
 
-            for (size_type i = old_size + count - 1; i >= index + count; --i)
+            // Shift existing bits to make room for new ones
+            const size_type bits_to_shift = old_size - index;
+            if (bits_to_shift > 0)
             {
-                set(i, test(i - count));
+                shift_bits_right(index + m_offset, bits_to_shift, count);
             }
 
-            for (size_type i = 0; i < count; ++i)
-            {
-                set(index + i, value);
-            }
+            // Fill the inserted region with the specified value
+            fill_bits(index + m_offset, count, value);
+
+            // Recompute null count after all bit manipulations are complete
+            this->recompute_null_count(data(), m_size, buffer().size(), m_offset);
         }
 
         return iterator(this, index);
@@ -1085,17 +1102,21 @@ namespace sparrow
 
         resize(new_size);
 
-        // TODO: The current implementation is not efficient. It can be improved.
-
-        for (size_type i = old_size + count - 1; i >= index + count; --i)
+        // Shift existing bits to make room for new ones
+        const size_type bits_to_shift = old_size - index;
+        if (bits_to_shift > 0)
         {
-            set(i, test(i - count));
+            shift_bits_right(index + m_offset, bits_to_shift, count);
         }
 
+        // Insert bits from the iterator range
         for (size_type i = 0; i < count; ++i)
         {
             set(index + i, *first++);
         }
+
+        // Recompute null count after all bit manipulations are complete
+        this->recompute_null_count(data(), m_size, buffer().size(), m_offset);
 
         return iterator(this, index);
     }
@@ -1143,12 +1164,16 @@ namespace sparrow
                 return end();
             }
 
-            // TODO: The current implementation is not efficient. It can be improved.
-
-            const size_type bit_to_move = size() - last_index;
-            for (size_type i = 0; i < bit_to_move; ++i)
+            // Shift bits left using block-level operations
+            const size_type bits_to_move = size() - last_index;
+            if (bits_to_move > 0)
             {
-                set(first_index + i, test(last_index + i));
+                // Copy bits from [last_index, end) to [first_index, ...)
+                for (size_type i = 0; i < bits_to_move; ++i)
+                {
+                    const bool bit_value = test(last_index + i);
+                    set(first_index + i, bit_value);
+                }
             }
 
             resize(size() - count);
@@ -1172,6 +1197,128 @@ namespace sparrow
             return;
         }
         resize(size() - 1);
+    }
+
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    constexpr void
+    dynamic_bitset_base<B, NCP>::shift_bits_right(size_type start, size_type length, size_type shift_amount)
+    {
+        if (length == 0 || shift_amount == 0)
+        {
+            return;
+        }
+
+        auto* blocks = data();
+        const size_type src_start_bit = start;
+        const size_type dst_start_bit = start + shift_amount;
+
+        // Work backwards to avoid overwriting source data
+        // Process bit-by-bit in reverse order, but in block-sized chunks where possible
+        size_type remaining = length;
+
+        while (remaining > 0)
+        {
+            // Calculate position for this iteration (working backwards)
+            const size_type current_offset = remaining - 1;
+            const size_type src_bit = src_start_bit + current_offset;
+            const size_type dst_bit = dst_start_bit + current_offset;
+
+            const size_type src_block_idx = block_index(src_bit);
+            const size_type dst_block_idx = block_index(dst_bit);
+            const size_type src_bit_offset = bit_index(src_bit);
+            const size_type dst_bit_offset = bit_index(dst_bit);
+
+            // Determine how many bits we can process in this iteration
+            // We can process up to the start of the current block, or all remaining bits
+            const size_type bits_available_in_src_block = src_bit_offset + 1;
+            const size_type bits_available_in_dst_block = dst_bit_offset + 1;
+            const size_type bits_this_iter = std::min(
+                {remaining, bits_available_in_src_block, bits_available_in_dst_block}
+            );
+
+            // Extract bits from source
+            const size_type extract_start_offset = src_bit_offset - (bits_this_iter - 1);
+            const block_type mask = static_cast<block_type>(
+                ((block_type(1) << bits_this_iter) - 1) << extract_start_offset
+            );
+            const block_type src_bits = static_cast<block_type>(
+                (blocks[src_block_idx] & mask) >> extract_start_offset
+            );
+
+            // Write bits to destination
+            const size_type write_start_offset = dst_bit_offset - (bits_this_iter - 1);
+            const block_type dst_mask = static_cast<block_type>(
+                ((block_type(1) << bits_this_iter) - 1) << write_start_offset
+            );
+            blocks[dst_block_idx] = static_cast<block_type>(
+                (blocks[dst_block_idx] & ~dst_mask) | ((src_bits << write_start_offset) & dst_mask)
+            );
+
+            remaining -= bits_this_iter;
+        }
+    }
+
+    template <typename B, null_count_policy NCP>
+        requires std::ranges::random_access_range<std::remove_pointer_t<B>>
+    constexpr void dynamic_bitset_base<B, NCP>::fill_bits(size_type start, size_type count, value_type value)
+    {
+        if (count == 0)
+        {
+            return;
+        }
+
+        auto* blocks = data();
+        const block_type fill_pattern = value ? static_cast<block_type>(~block_type(0)) : block_type(0);
+
+        size_type current_bit = start;
+        size_type remaining = count;
+
+        // Handle first partial block if not aligned
+        const size_type first_bit_offset = bit_index(current_bit);
+        if (first_bit_offset != 0)
+        {
+            const size_type bits_in_first = std::min(remaining, s_bits_per_block - first_bit_offset);
+            const block_type mask = static_cast<block_type>(
+                ((block_type(1) << bits_in_first) - 1) << first_bit_offset
+            );
+
+            const size_type block_idx = block_index(current_bit);
+            if (value)
+            {
+                blocks[block_idx] |= mask;
+            }
+            else
+            {
+                blocks[block_idx] &= ~mask;
+            }
+
+            current_bit += bits_in_first;
+            remaining -= bits_in_first;
+        }
+
+        // Fill complete blocks
+        while (remaining >= s_bits_per_block)
+        {
+            blocks[block_index(current_bit)] = fill_pattern;
+            current_bit += s_bits_per_block;
+            remaining -= s_bits_per_block;
+        }
+
+        // Handle last partial block
+        if (remaining > 0)
+        {
+            const block_type mask = static_cast<block_type>((block_type(1) << remaining) - 1);
+            const size_type block_idx = block_index(current_bit);
+            if (value)
+            {
+                blocks[block_idx] |= mask;
+            }
+            else
+            {
+                blocks[block_idx] &= ~mask;
+            }
+        }
     }
 
 }
