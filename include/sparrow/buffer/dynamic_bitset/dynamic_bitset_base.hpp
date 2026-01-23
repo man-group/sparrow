@@ -1063,7 +1063,7 @@ namespace sparrow
 
             // Fill the inserted region with the specified value
             fill_bits(index + m_offset, count, value);
-            
+
             // Recompute null count after all bit manipulations are complete
             this->recompute_null_count(data(), m_size, buffer().size(), m_offset);
         }
@@ -1201,7 +1201,8 @@ namespace sparrow
 
     template <typename B, null_count_policy NCP>
         requires std::ranges::random_access_range<std::remove_pointer_t<B>>
-    constexpr void dynamic_bitset_base<B, NCP>::shift_bits_right(size_type start, size_type length, size_type shift_amount)
+    constexpr void
+    dynamic_bitset_base<B, NCP>::shift_bits_right(size_type start, size_type length, size_type shift_amount)
     {
         if (length == 0 || shift_amount == 0)
         {
@@ -1215,39 +1216,45 @@ namespace sparrow
         // Work backwards to avoid overwriting source data
         // Process bit-by-bit in reverse order, but in block-sized chunks where possible
         size_type remaining = length;
-        
+
         while (remaining > 0)
         {
             // Calculate position for this iteration (working backwards)
             const size_type current_offset = remaining - 1;
             const size_type src_bit = src_start_bit + current_offset;
             const size_type dst_bit = dst_start_bit + current_offset;
-            
+
             const size_type src_block_idx = block_index(src_bit);
             const size_type dst_block_idx = block_index(dst_bit);
             const size_type src_bit_offset = bit_index(src_bit);
             const size_type dst_bit_offset = bit_index(dst_bit);
-            
+
             // Determine how many bits we can process in this iteration
             // We can process up to the start of the current block, or all remaining bits
             const size_type bits_available_in_src_block = src_bit_offset + 1;
             const size_type bits_available_in_dst_block = dst_bit_offset + 1;
-            const size_type bits_this_iter = std::min({
-                remaining,
-                bits_available_in_src_block,
-                bits_available_in_dst_block
-            });
-            
+            const size_type bits_this_iter = std::min(
+                {remaining, bits_available_in_src_block, bits_available_in_dst_block}
+            );
+
             // Extract bits from source
             const size_type extract_start_offset = src_bit_offset - (bits_this_iter - 1);
-            const block_type mask = static_cast<block_type>(((block_type(1) << bits_this_iter) - 1) << extract_start_offset);
-            const block_type src_bits = static_cast<block_type>((blocks[src_block_idx] & mask) >> extract_start_offset);
-            
+            const block_type mask = static_cast<block_type>(
+                ((block_type(1) << bits_this_iter) - 1) << extract_start_offset
+            );
+            const block_type src_bits = static_cast<block_type>(
+                (blocks[src_block_idx] & mask) >> extract_start_offset
+            );
+
             // Write bits to destination
             const size_type write_start_offset = dst_bit_offset - (bits_this_iter - 1);
-            const block_type dst_mask = static_cast<block_type>(((block_type(1) << bits_this_iter) - 1) << write_start_offset);
-            blocks[dst_block_idx] = static_cast<block_type>((blocks[dst_block_idx] & ~dst_mask) | ((src_bits << write_start_offset) & dst_mask));
-            
+            const block_type dst_mask = static_cast<block_type>(
+                ((block_type(1) << bits_this_iter) - 1) << write_start_offset
+            );
+            blocks[dst_block_idx] = static_cast<block_type>(
+                (blocks[dst_block_idx] & ~dst_mask) | ((src_bits << write_start_offset) & dst_mask)
+            );
+
             remaining -= bits_this_iter;
         }
     }
@@ -1272,7 +1279,9 @@ namespace sparrow
         if (first_bit_offset != 0)
         {
             const size_type bits_in_first = std::min(remaining, s_bits_per_block - first_bit_offset);
-            const block_type mask = static_cast<block_type>(((block_type(1) << bits_in_first) - 1) << first_bit_offset);
+            const block_type mask = static_cast<block_type>(
+                ((block_type(1) << bits_in_first) - 1) << first_bit_offset
+            );
 
             const size_type block_idx = block_index(current_bit);
             if (value)
