@@ -125,8 +125,6 @@ namespace sparrow
     }
 
     /// Runtime identifier of arrow data types, usually associated with raw bytes with the associated value.
-    // TODO: does not support all types specified by the Arrow specification
-    // yet
     enum class data_type : uint8_t
     {
         NA,
@@ -206,8 +204,6 @@ namespace sparrow
     // TODO: consider returning an optional instead
     [[nodiscard]] constexpr data_type format_to_data_type(std::string_view format)
     {
-        // TODO: add missing conversions from
-        // https://arrow.apache.org/docs/dev/format/CDataInterface.html#data-type-description-format-strings
         if (format.size() == 1)
         {
             switch (format[0])
@@ -258,7 +254,6 @@ namespace sparrow
         {
             return data_type::BINARY_VIEW;
         }
-        // TODO: add propper timestamp support below
         else if (format.starts_with("t"))
         {
             if (format == "tdD")
@@ -402,7 +397,6 @@ namespace sparrow
         requires(sizeof(T) >= 2 && sizeof(T) <= 8)
     [[nodiscard]] constexpr data_type data_type_from_size(T = {}) noexcept
     {
-        // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
         switch (sizeof(T))
         {
             case 2:
@@ -429,7 +423,6 @@ namespace sparrow
         }
         else if constexpr (std::signed_integral<T>)
         {
-            // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
             switch (sizeof(T))
             {
                 case 1:
@@ -445,8 +438,6 @@ namespace sparrow
         else
         {
             static_assert(std::unsigned_integral<T>);
-
-            // TODO: consider rewriting this to benefit from if constexpr? might not be necessary
             switch (sizeof(T))
             {
                 case 1:
@@ -577,7 +568,6 @@ namespace sparrow
             case data_type::MAP:
                 return "+m";
             default:
-                // TODO: add missing types
                 throw std::runtime_error("Unsupported data type");
         }
     }
@@ -667,7 +657,6 @@ namespace sparrow
         chrono::time_milliseconds,
         chrono::time_microseconds,
         chrono::time_nanoseconds,
-        // TODO: add missing fundamental types here
         list_value,
         struct_value,
         map_value,
