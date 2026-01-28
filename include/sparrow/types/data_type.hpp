@@ -567,6 +567,8 @@ namespace sparrow
                 return "+s";
             case data_type::MAP:
                 return "+m";
+            case data_type::RUN_ENCODED:
+                return "+r";
             default:
                 throw std::runtime_error("Unsupported data type");
         }
