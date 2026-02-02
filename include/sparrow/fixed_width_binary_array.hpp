@@ -840,11 +840,11 @@ namespace sparrow
             true                         // dictionary ownership
 
         );
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            bitmap.has_value() ? std::move(*bitmap).extract_storage()
-                               : buffer<std::uint8_t>{nullptr, 0, validity_bitmap::default_allocator()},
-            std::move(data_buffer).extract_storage()
-        };
+        std::vector<buffer<std::uint8_t>> arr_buffs;
+        arr_buffs.reserve(2);
+        arr_buffs.emplace_back(bitmap.has_value() ? std::move(*bitmap).extract_storage()
+                                                  : buffer<std::uint8_t>{nullptr, 0, validity_bitmap::default_allocator()});
+        arr_buffs.emplace_back(std::move(data_buffer).extract_storage());
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(element_count),  // length

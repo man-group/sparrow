@@ -566,8 +566,9 @@ namespace sparrow
                                             ? std::move(*bitmap).extract_storage()
                                             : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator{}};
 
-        std::vector<buffer<std::uint8_t>> arr_buffs(1);
-        arr_buffs[0] = std::move(bitmap_buffer);
+        std::vector<buffer<std::uint8_t>> arr_buffs;
+        arr_buffs.reserve(1);
+        arr_buffs.emplace_back(std::move(bitmap_buffer));
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),        // length

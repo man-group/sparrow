@@ -921,11 +921,11 @@ namespace sparrow
             true
 
         );
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(vbitmap).extract_storage(),
-            std::move(offsets).extract_storage(),
-            std::move(data_buffer).extract_storage()
-        };
+        std::vector<buffer<std::uint8_t>> arr_buffs;
+        arr_buffs.reserve(3);
+        arr_buffs.emplace_back(std::move(vbitmap).extract_storage());
+        arr_buffs.emplace_back(std::move(offsets).extract_storage());
+        arr_buffs.emplace_back(std::move(data_buffer).extract_storage());
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),  // length
@@ -1068,12 +1068,12 @@ namespace sparrow
             true
 
         );
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            bitmap.has_value() ? std::move(*bitmap).extract_storage()
-                               : buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},
-            std::move(list_offsets).extract_storage(),
-            std::move(data_buffer).extract_storage()
-        };
+        std::vector<buffer<std::uint8_t>> arr_buffs;
+        arr_buffs.reserve(3);
+        arr_buffs.emplace_back(bitmap.has_value() ? std::move(*bitmap).extract_storage()
+                                                  : buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()});
+        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
+        arr_buffs.emplace_back(std::move(data_buffer).extract_storage());
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),  // length

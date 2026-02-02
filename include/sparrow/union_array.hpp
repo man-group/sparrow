@@ -1282,10 +1282,10 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(element_type.size() == offsets.size());
         const auto size = element_type.size();
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(element_type).extract_storage(),
-            std::move(offsets).extract_storage()
-        };
+        std::vector<buffer<std::uint8_t>> arr_buffs;
+        arr_buffs.reserve(2);
+        arr_buffs.emplace_back(std::move(element_type).extract_storage());
+        arr_buffs.emplace_back(std::move(offsets).extract_storage());
 
         return detail::create_union_proxy_impl(
             std::move(children),
@@ -1343,7 +1343,9 @@ namespace sparrow
         }
         const auto size = element_type.size();
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {std::move(element_type).extract_storage()};
+        std::vector<buffer<std::uint8_t>> arr_buffs;
+        arr_buffs.reserve(1);
+        arr_buffs.emplace_back(std::move(element_type).extract_storage());
 
         return detail::create_union_proxy_impl(
             std::move(children),

@@ -581,10 +581,10 @@ namespace sparrow
 
         );
 
-        std::vector<buffer<std::uint8_t>> arr_buffs = {
-            std::move(validity_buffer),
-            std::move(list_offsets).extract_storage()
-        };
+        std::vector<buffer<std::uint8_t>> arr_buffs;
+        arr_buffs.reserve(2);
+        arr_buffs.emplace_back(std::move(validity_buffer));
+        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),  // length

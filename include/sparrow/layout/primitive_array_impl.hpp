@@ -564,6 +564,7 @@ namespace sparrow
     {
         // create data_buffer
         u8_buffer<T2> data_buffer(n, value);
+        
         return create_proxy_impl(
             std::move(data_buffer),
             n,
@@ -611,6 +612,7 @@ namespace sparrow
     {
         auto data_buffer = details::primitive_data_access<T, T2>::make_data_buffer(std::forward<R>(range));
         auto distance = static_cast<size_t>(std::ranges::distance(range));
+        
         std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(
                                                                nullptr,
                                                                0,
@@ -682,14 +684,16 @@ namespace sparrow
             true                                                                      // dictionary ownership
         );
 
-        // Extract storage first to preserve allocators for zero-copy semantics
+        // Extract storage from data_buffer and bitmap (if present)
         buffer<uint8_t> extracted_data_buffer = std::move(data_buffer).extract_storage();
         buffer<uint8_t> bitmap_buffer = bitmap_has_value
                                             ? std::move(*bitmap).extract_storage()
                                             : buffer<uint8_t>{nullptr, 0, extracted_data_buffer.get_allocator()};
 
-        // Create buffers with matching allocators to avoid unnecessary data copies
-        std::vector<buffer<uint8_t>> buffers{std::move(bitmap_buffer), std::move(extracted_data_buffer)};
+        std::vector<buffer<uint8_t>> buffers;
+        buffers.reserve(2);
+        buffers.emplace_back(std::move(bitmap_buffer));
+        buffers.emplace_back(std::move(extracted_data_buffer));
 
 
         // create arrow array

@@ -141,6 +141,7 @@ namespace sparrow
          * Destructor.
          */
         ~u8_buffer() = default;
+
         /**
          * Constructs a buffer with \c n uninitialized elements.
          *

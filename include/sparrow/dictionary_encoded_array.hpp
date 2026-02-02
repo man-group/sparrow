@@ -701,10 +701,11 @@ namespace sparrow
 
         const size_t null_count = validity.has_value() ? validity->null_count() : 0;
 
-        std::vector<buffer<uint8_t>> buffers(2);
-        buffers[0] = validity.has_value() ? std::move(*validity).extract_storage()
-                                          : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()};
-        buffers[1] = std::move(keys).extract_storage();
+        std::vector<buffer<uint8_t>> buffers;
+        buffers.reserve(2);
+        buffers.emplace_back(validity.has_value() ? std::move(*validity).extract_storage()
+                                                  : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()});
+        buffers.emplace_back(std::move(keys).extract_storage());
         // create arrow array
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),        // length
