@@ -14,6 +14,9 @@
 
 #include <doctest/doctest.h>
 
+#include "sparrow/array.hpp"
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/primitive_array.hpp"
 #include "sparrow/u8_buffer.hpp"
 
 TEST_SUITE("u8_buffer")
