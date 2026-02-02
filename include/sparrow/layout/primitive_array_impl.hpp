@@ -682,13 +682,15 @@ namespace sparrow
             true                                                                      // dictionary ownership
         );
 
+        // Extract storage first to preserve allocators for zero-copy semantics
+        buffer<uint8_t> extracted_data_buffer = std::move(data_buffer).extract_storage();
         buffer<uint8_t> bitmap_buffer = bitmap_has_value
                                             ? std::move(*bitmap).extract_storage()
-                                            : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()};
+                                            : buffer<uint8_t>{nullptr, 0, extracted_data_buffer.get_allocator()};
 
-        std::vector<buffer<uint8_t>> buffers(2);
-        buffers[0] = std::move(bitmap_buffer);
-        buffers[1] = std::move(data_buffer).extract_storage();
+        // Create buffers with matching allocators to avoid unnecessary data copies
+        std::vector<buffer<uint8_t>> buffers{std::move(bitmap_buffer), std::move(extracted_data_buffer)};
+
 
         // create arrow array
         ArrowArray arr = make_arrow_array(

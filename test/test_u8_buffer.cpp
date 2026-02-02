@@ -14,6 +14,9 @@
 
 #include <doctest/doctest.h>
 
+#include "sparrow/array.hpp"
+#include "sparrow/arrow_interface/arrow_array.hpp"
+#include "sparrow/primitive_array.hpp"
 #include "sparrow/u8_buffer.hpp"
 
 TEST_SUITE("u8_buffer")
@@ -435,5 +438,44 @@ TEST_SUITE("u8_buffer")
             CHECK_EQ(b[10], value);
             CHECK_EQ(b[11], value);
         }
+    }
+
+    TEST_CASE("ZeroCopyWithStdAllocator")
+    {
+        size_t num_rows{10};
+        auto allocator = std::allocator<uint8_t>{};
+        uint8_t* data_ptr = allocator.allocate(sizeof(uint64_t) * num_rows);
+        auto typed_ptr = reinterpret_cast<uint64_t*>(data_ptr);
+        for (size_t idx = 0; idx < num_rows; ++idx) {
+            typed_ptr[idx] = idx;
+        }
+        sparrow::u8_buffer<uint64_t> u8_buffer(typed_ptr, num_rows, allocator);
+        sparrow::primitive_array<uint64_t> primitive_array(std::move(u8_buffer), num_rows);
+        sparrow::array array{std::move(primitive_array)};
+        auto arrow_structures = sparrow::get_arrow_structures(array);
+        auto arrow_array_buffers = sparrow::get_arrow_array_buffers(*arrow_structures.first, *arrow_structures.second);
+        const auto* roundtripped_ptr = reinterpret_cast<uint64_t*>(arrow_array_buffers.at(1).data<uint8_t>());
+        CHECK_EQ(roundtripped_ptr, typed_ptr);
+    }
+
+    TEST_CASE("ZeroCopyWithDefaultAllocator")
+    {
+        size_t num_rows{10};
+        using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
+        auto allocator = SparrowAllocator{};
+        auto* data_ptr = allocator.allocate(sizeof(uint64_t) * num_rows);
+        auto* typed_ptr = reinterpret_cast<uint64_t*>(data_ptr);
+        for (size_t idx = 0; idx < num_rows; ++idx) {
+            typed_ptr[idx] = idx;
+        }
+        sparrow::u8_buffer<uint64_t> u8_buffer(typed_ptr, num_rows, allocator);
+        sparrow::primitive_array<uint64_t> primitive_array(std::move(u8_buffer), num_rows);
+        sparrow::array array{std::move(primitive_array)};
+        auto arrow_structures = sparrow::get_arrow_structures(array);
+        auto arrow_array_buffers = sparrow::get_arrow_array_buffers(*arrow_structures.first, *arrow_structures.second);
+        const auto* roundtripped_ptr = reinterpret_cast<uint64_t*>(arrow_array_buffers.at(1).data<uint8_t>());
+
+        // This should pass - using matching allocators enables zero-copy
+        CHECK_EQ(roundtripped_ptr, typed_ptr);
     }
 }
