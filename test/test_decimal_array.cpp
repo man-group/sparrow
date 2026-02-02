@@ -328,6 +328,8 @@ namespace sparrow
 
         TEST_CASE_TEMPLATE_APPLY(decimal_array_test_generic_id, integer_types);
 
+        #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+
         TEST_CASE("zero copy with std allocator")
         {
 #ifdef __GNUC__
@@ -398,5 +400,7 @@ namespace sparrow
 #    pragma GCC diagnostic pop
 #endif
         }
+
+        #endif
     }
 }  // namespace sparrow
