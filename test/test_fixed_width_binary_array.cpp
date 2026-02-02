@@ -805,5 +805,82 @@ namespace sparrow
             CHECK_EQ(formatted, expected);
         }
 #endif
+
+        TEST_CASE("zero copy with std allocator")
+        {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+            constexpr size_t element_size = 3;
+            size_t num_rows = 10;
+            auto allocator = std::allocator<uint8_t>{};
+            uint8_t* data_ptr = allocator.allocate(element_size * num_rows);
+            for (size_t idx = 0; idx < num_rows * element_size; ++idx)
+            {
+                data_ptr[idx] = static_cast<uint8_t>(idx);
+            }
+            sparrow::u8_buffer<char> u8_buffer(
+                reinterpret_cast<char*>(data_ptr),
+                num_rows * element_size,
+                allocator
+            );
+            fixed_width_binary_array arr(
+                std::move(u8_buffer),
+                num_rows,
+                element_size,
+                sparrow::validity_bitmap(nullptr, num_rows, allocator)
+            );
+            sparrow::array array{std::move(arr)};
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+            const auto* roundtripped_ptr = arrow_array_buffers.at(1).data<uint8_t>();
+            CHECK_EQ(roundtripped_ptr, data_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
+        }
+
+        TEST_CASE("zero copy with default allocator")
+        {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+            constexpr size_t element_size = 3;
+            size_t num_rows = 10;
+            using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
+            auto allocator = SparrowAllocator{};
+            auto* data_ptr = allocator.allocate(element_size * num_rows);
+            for (size_t idx = 0; idx < num_rows * element_size; ++idx)
+            {
+                data_ptr[idx] = static_cast<uint8_t>(idx);
+            }
+            sparrow::u8_buffer<char> u8_buffer(
+                reinterpret_cast<char*>(data_ptr),
+                num_rows * element_size,
+                allocator
+            );
+            fixed_width_binary_array arr(
+                std::move(u8_buffer),
+                num_rows,
+                element_size,
+                sparrow::validity_bitmap(nullptr, num_rows, allocator)
+            );
+            sparrow::array array{std::move(arr)};
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+            const auto* roundtripped_ptr = arrow_array_buffers.at(1).data<uint8_t>();
+            CHECK_EQ(roundtripped_ptr, data_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
+        }
     }
 }

@@ -14,6 +14,7 @@
 
 #include <cstdio>
 
+#include "sparrow/array.hpp"
 #include "sparrow/timestamp_array.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -613,5 +614,68 @@ namespace sparrow
         //         }
         // #    endif
         // #endif
+
+        TEST_CASE("zero copy with std allocator")
+        {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+            size_t num_rows = 10;
+            auto allocator = std::allocator<uint8_t>{};
+            uint8_t* data_ptr = allocator.allocate(sizeof(int64_t) * num_rows);
+            auto typed_ptr = reinterpret_cast<int64_t*>(data_ptr);
+            for (size_t idx = 0; idx < num_rows; ++idx)
+            {
+                typed_ptr[idx] = static_cast<int64_t>(idx * 1000000000);
+            }
+            sparrow::u8_buffer<int64_t> u8_buffer(typed_ptr, num_rows, allocator);
+            timestamp_seconds_array arr(new_york, std::move(u8_buffer), sparrow::validity_bitmap(nullptr, num_rows, allocator));
+            sparrow::array array{std::move(arr)};
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+            const auto* roundtripped_ptr = reinterpret_cast<const int64_t*>(
+                arrow_array_buffers.at(1).data<uint8_t>()
+            );
+            CHECK_EQ(roundtripped_ptr, typed_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
+        }
+
+        TEST_CASE("zero copy with default allocator")
+        {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+            size_t num_rows = 10;
+            using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
+            auto allocator = SparrowAllocator{};
+            auto* data_ptr = allocator.allocate(sizeof(int64_t) * num_rows);
+            auto* typed_ptr = reinterpret_cast<int64_t*>(data_ptr);
+            for (size_t idx = 0; idx < num_rows; ++idx)
+            {
+                typed_ptr[idx] = static_cast<int64_t>(idx * 1000000000);
+            }
+            sparrow::u8_buffer<int64_t> u8_buffer(typed_ptr, num_rows, allocator);
+            timestamp_seconds_array arr(new_york, std::move(u8_buffer), sparrow::validity_bitmap(nullptr, num_rows, allocator));
+            sparrow::array array{std::move(arr)};
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+            const auto* roundtripped_ptr = reinterpret_cast<const int64_t*>(
+                arrow_array_buffers.at(1).data<uint8_t>()
+            );
+            CHECK_EQ(roundtripped_ptr, typed_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
+        }
     }
 }  // namespace sparrow
