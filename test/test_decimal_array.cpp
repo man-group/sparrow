@@ -347,7 +347,12 @@ namespace sparrow
                 typed_ptr[idx] = static_cast<storage_type>(idx * 100);
             }
             sparrow::u8_buffer<storage_type> u8_buffer(typed_ptr, num_rows, allocator);
-            decimal_array<decimal_type> arr(std::move(u8_buffer), sparrow::validity_bitmap(nullptr, num_rows, allocator), precision, scale);
+            decimal_array<decimal_type> arr(
+                std::move(u8_buffer),
+                sparrow::validity_bitmap(nullptr, num_rows, allocator),
+                precision,
+                scale
+            );
             sparrow::array array{std::move(arr)};
             auto arrow_structures = sparrow::get_arrow_structures(array);
             auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
@@ -383,7 +388,12 @@ namespace sparrow
                 typed_ptr[idx] = static_cast<storage_type>(idx * 100);
             }
             sparrow::u8_buffer<storage_type> u8_buffer(typed_ptr, num_rows, allocator);
-            decimal_array<decimal_type> arr(std::move(u8_buffer), sparrow::validity_bitmap(nullptr, num_rows, allocator), precision, scale);
+            decimal_array<decimal_type> arr(
+                std::move(u8_buffer),
+                sparrow::validity_bitmap(nullptr, num_rows, allocator),
+                precision,
+                scale
+            );
             sparrow::array array{std::move(arr)};
             auto arrow_structures = sparrow::get_arrow_structures(array);
             auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
