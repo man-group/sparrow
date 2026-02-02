@@ -440,8 +440,12 @@ TEST_SUITE("u8_buffer")
         }
     }
 
-    TEST_CASE("ZeroCopyWithStdAllocator")
+    TEST_CASE("zero copy to arrow with custom allocator")
     {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
         size_t num_rows{10};
         auto allocator = std::allocator<uint8_t>{};
         uint8_t* data_ptr = allocator.allocate(sizeof(uint64_t) * num_rows);
@@ -460,10 +464,17 @@ TEST_SUITE("u8_buffer")
         );
         const auto* roundtripped_ptr = reinterpret_cast<uint64_t*>(arrow_array_buffers.at(1).data<uint8_t>());
         CHECK_EQ(roundtripped_ptr, typed_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
     }
 
-    TEST_CASE("ZeroCopyWithDefaultAllocator")
+    TEST_CASE("zero copy to arrow with sparrow allocator")
     {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
         size_t num_rows{10};
         using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
         auto allocator = SparrowAllocator{};
@@ -485,5 +496,9 @@ TEST_SUITE("u8_buffer")
 
         // This should pass - using matching allocators enables zero-copy
         CHECK_EQ(roundtripped_ptr, typed_ptr);
+
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
     }
 }
