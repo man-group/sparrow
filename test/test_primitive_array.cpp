@@ -944,9 +944,7 @@ namespace sparrow
                 *arrow_structures.first,
                 *arrow_structures.second
             );
-            const auto* roundtripped_ptr = reinterpret_cast<uint64_t*>(
-                arrow_array_buffers.at(1).data<uint8_t>()
-            );
+            const auto* roundtripped_ptr = reinterpret_cast<uint64_t*>(arrow_array_buffers.at(1).data<uint8_t>());
             CHECK_EQ(roundtripped_ptr, typed_ptr);
 #ifdef __GNUC__
 #    pragma GCC diagnostic pop
@@ -976,9 +974,7 @@ namespace sparrow
                 *arrow_structures.first,
                 *arrow_structures.second
             );
-            const auto* roundtripped_ptr = reinterpret_cast<uint64_t*>(
-                arrow_array_buffers.at(1).data<uint8_t>()
-            );
+            const auto* roundtripped_ptr = reinterpret_cast<uint64_t*>(arrow_array_buffers.at(1).data<uint8_t>());
 
             // This should pass - using matching allocators enables zero-copy
             CHECK_EQ(roundtripped_ptr, typed_ptr);
