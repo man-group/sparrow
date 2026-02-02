@@ -328,14 +328,14 @@ namespace sparrow
 
         TEST_CASE_TEMPLATE_APPLY(decimal_array_test_generic_id, integer_types);
 
-        #ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
+#ifndef SPARROW_USE_LARGE_INT_PLACEHOLDERS
 
         TEST_CASE("zero copy with std allocator")
         {
-#ifdef __GNUC__
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wcast-align"
-#endif
+#    ifdef __GNUC__
+#        pragma GCC diagnostic push
+#        pragma GCC diagnostic ignored "-Wcast-align"
+#    endif
             using decimal_type = decimal<int128_t>;
             using storage_type = int128_t;
             constexpr std::size_t precision = 10;
@@ -365,17 +365,17 @@ namespace sparrow
                 arrow_array_buffers.at(1).data<uint8_t>()
             );
             CHECK_EQ(roundtripped_ptr, typed_ptr);
-#ifdef __GNUC__
-#    pragma GCC diagnostic pop
-#endif
+#    ifdef __GNUC__
+#        pragma GCC diagnostic pop
+#    endif
         }
 
         TEST_CASE("zero copy with default allocator")
         {
-#ifdef __GNUC__
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wcast-align"
-#endif
+#    ifdef __GNUC__
+#        pragma GCC diagnostic push
+#        pragma GCC diagnostic ignored "-Wcast-align"
+#    endif
             using decimal_type = decimal<int128_t>;
             using storage_type = int128_t;
             constexpr std::size_t precision = 10;
@@ -406,11 +406,11 @@ namespace sparrow
                 arrow_array_buffers.at(1).data<uint8_t>()
             );
             CHECK_EQ(roundtripped_ptr, typed_ptr);
-#ifdef __GNUC__
-#    pragma GCC diagnostic pop
-#endif
+#    ifdef __GNUC__
+#        pragma GCC diagnostic pop
+#    endif
         }
 
-        #endif
+#endif
     }
 }  // namespace sparrow
