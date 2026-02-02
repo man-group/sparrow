@@ -564,7 +564,7 @@ namespace sparrow
     {
         // create data_buffer
         u8_buffer<T2> data_buffer(n, value);
-        
+
         return create_proxy_impl(
             std::move(data_buffer),
             n,
@@ -612,7 +612,7 @@ namespace sparrow
     {
         auto data_buffer = details::primitive_data_access<T, T2>::make_data_buffer(std::forward<R>(range));
         auto distance = static_cast<size_t>(std::ranges::distance(range));
-        
+
         std::optional<validity_bitmap> bitmap = nullable ? std::make_optional<validity_bitmap>(
                                                                nullptr,
                                                                0,

@@ -703,8 +703,10 @@ namespace sparrow
 
         std::vector<buffer<uint8_t>> buffers;
         buffers.reserve(2);
-        buffers.emplace_back(validity.has_value() ? std::move(*validity).extract_storage()
-                                                  : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()});
+        buffers.emplace_back(
+            validity.has_value() ? std::move(*validity).extract_storage()
+                                 : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()}
+        );
         buffers.emplace_back(std::move(keys).extract_storage());
         // create arrow array
         ArrowArray arr = make_arrow_array(

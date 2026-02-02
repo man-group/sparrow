@@ -693,8 +693,10 @@ namespace sparrow
 
         std::vector<buffer<uint8_t>> buffers;
         buffers.reserve(2);
-        buffers.emplace_back(bitmap.has_value() ? std::move(*bitmap).extract_storage()
-                                                : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()});
+        buffers.emplace_back(
+            bitmap.has_value() ? std::move(*bitmap).extract_storage()
+                               : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()}
+        );
         buffers.emplace_back(std::move(data_buffer).extract_storage());
 
         // create arrow array
