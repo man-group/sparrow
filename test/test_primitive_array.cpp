@@ -932,10 +932,10 @@ namespace sparrow
             size_t num_rows{10};
             auto allocator = std::allocator<uint8_t>{};
             auto [typed_ptr, u8_buffer] = sparrow::test::make_zero_copy_data_buffer<uint64_t>(num_rows, allocator);
-            
+
             sparrow::primitive_array<uint64_t> primitive_array(std::move(u8_buffer), num_rows);
             sparrow::array array{std::move(primitive_array)};
-            
+
             auto arrow_structures = sparrow::get_arrow_structures(array);
             auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
                 *arrow_structures.first,
@@ -959,10 +959,10 @@ namespace sparrow
             using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
             auto allocator = SparrowAllocator{};
             auto [typed_ptr, u8_buffer] = sparrow::test::make_zero_copy_data_buffer<uint64_t>(num_rows, allocator);
-            
+
             sparrow::primitive_array<uint64_t> primitive_array(std::move(u8_buffer), num_rows);
             sparrow::array array{std::move(primitive_array)};
-            
+
             auto arrow_structures = sparrow::get_arrow_structures(array);
             auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
                 *arrow_structures.first,
@@ -986,9 +986,15 @@ namespace sparrow
             size_t num_rows{10};
             auto data_allocator = std::allocator<uint8_t>{};
             auto bitmap_allocator = std::allocator<uint8_t>{};
-            
-            auto [typed_ptr, data_buffer] = sparrow::test::make_zero_copy_data_buffer<uint64_t>(num_rows, data_allocator);
-            auto [original_bitmap_ptr, validity_bitmap] = sparrow::test::make_zero_copy_validity_bitmap(num_rows, bitmap_allocator);
+
+            auto [typed_ptr, data_buffer] = sparrow::test::make_zero_copy_data_buffer<uint64_t>(
+                num_rows,
+                data_allocator
+            );
+            auto [original_bitmap_ptr, validity_bitmap] = sparrow::test::make_zero_copy_validity_bitmap(
+                num_rows,
+                bitmap_allocator
+            );
 
             sparrow::primitive_array<uint64_t> primitive_array(
                 std::move(data_buffer),
@@ -1015,9 +1021,15 @@ namespace sparrow
             size_t num_rows{10};
             using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
             auto allocator = SparrowAllocator{};
-            
-            auto [typed_ptr, data_buffer] = sparrow::test::make_zero_copy_data_buffer<uint64_t>(num_rows, allocator);
-            auto [original_bitmap_ptr, validity_bitmap] = sparrow::test::make_zero_copy_validity_bitmap(num_rows, allocator);
+
+            auto [typed_ptr, data_buffer] = sparrow::test::make_zero_copy_data_buffer<uint64_t>(
+                num_rows,
+                allocator
+            );
+            auto [original_bitmap_ptr, validity_bitmap] = sparrow::test::make_zero_copy_validity_bitmap(
+                num_rows,
+                allocator
+            );
 
             sparrow::primitive_array<uint64_t> primitive_array(
                 std::move(data_buffer),
