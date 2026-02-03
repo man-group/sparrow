@@ -15,8 +15,10 @@
 #include <cstddef>
 #include <vector>
 
+#include "sparrow/array.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/u8_buffer.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/variable_size_binary_array.hpp"
 
@@ -428,5 +430,175 @@ namespace sparrow
             CHECK_EQ(formatted, expected);
         }
 #endif
+
+        TEST_CASE("zero copy with std allocator")
+        {
+            // Create data buffer with binary data: {0x01, 0x02}, {0x03, 0x04, 0x05}
+            size_t data_size = 5;
+            size_t num_elements = 2;
+
+            auto allocator = std::allocator<uint8_t>{};
+            uint8_t* data_ptr = allocator.allocate(data_size);
+            data_ptr[0] = 0x01;
+            data_ptr[1] = 0x02;
+            data_ptr[2] = 0x03;
+            data_ptr[3] = 0x04;
+            data_ptr[4] = 0x05;
+
+            // Create offset buffer: [0, 2, 5]
+            using offset_type = binary_array::offset_type;
+            uint8_t* offset_ptr = allocator.allocate(sizeof(offset_type) * (num_elements + 1));
+            auto* typed_offset_ptr = reinterpret_cast<offset_type*>(offset_ptr);
+            typed_offset_ptr[0] = 0;
+            typed_offset_ptr[1] = 2;
+            typed_offset_ptr[2] = 5;
+
+            sparrow::u8_buffer<uint8_t> data_buffer(data_ptr, data_size, allocator);
+            sparrow::u8_buffer<offset_type> offset_buffer(typed_offset_ptr, num_elements + 1, allocator);
+
+            binary_array arr(std::move(data_buffer), std::move(offset_buffer));
+            sparrow::array array{std::move(arr)};
+
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+
+            // Buffer 1 is offsets, buffer 2 is data
+            const auto* roundtripped_offset_ptr = arrow_array_buffers.at(1).data<uint8_t>();
+            const auto* roundtripped_data_ptr = arrow_array_buffers.at(2).data<uint8_t>();
+
+            CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
+            CHECK_EQ(roundtripped_data_ptr, data_ptr);
+        }
+
+        TEST_CASE("zero copy with default allocator")
+        {
+            // Create data buffer with binary data: {0x01, 0x02}, {0x03, 0x04, 0x05}
+            size_t data_size = 5;
+            size_t num_elements = 2;
+
+            using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
+            auto allocator = SparrowAllocator{};
+            auto* data_ptr = allocator.allocate(data_size);
+            data_ptr[0] = 0x01;
+            data_ptr[1] = 0x02;
+            data_ptr[2] = 0x03;
+            data_ptr[3] = 0x04;
+            data_ptr[4] = 0x05;
+
+            // Create offset buffer: [0, 2, 5]
+            using offset_type = binary_array::offset_type;
+            auto* offset_ptr = allocator.allocate(sizeof(offset_type) * (num_elements + 1));
+            auto* typed_offset_ptr = reinterpret_cast<offset_type*>(offset_ptr);
+            typed_offset_ptr[0] = 0;
+            typed_offset_ptr[1] = 2;
+            typed_offset_ptr[2] = 5;
+
+            sparrow::u8_buffer<uint8_t> data_buffer(data_ptr, data_size, allocator);
+            sparrow::u8_buffer<offset_type> offset_buffer(typed_offset_ptr, num_elements + 1, allocator);
+
+            binary_array arr(std::move(data_buffer), std::move(offset_buffer));
+            sparrow::array array{std::move(arr)};
+
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+
+            // Buffer 1 is offsets, buffer 2 is data
+            const auto* roundtripped_offset_ptr = arrow_array_buffers.at(1).data<uint8_t>();
+            const auto* roundtripped_data_ptr = arrow_array_buffers.at(2).data<uint8_t>();
+
+            CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
+            CHECK_EQ(roundtripped_data_ptr, data_ptr);
+        }
+
+        TEST_CASE("big_binary_array zero copy with std allocator")
+        {
+            // Create data buffer with binary data: {0x01, 0x02}, {0x03, 0x04, 0x05}
+            size_t data_size = 5;
+            size_t num_elements = 2;
+
+            auto allocator = std::allocator<uint8_t>{};
+            uint8_t* data_ptr = allocator.allocate(data_size);
+            data_ptr[0] = 0x01;
+            data_ptr[1] = 0x02;
+            data_ptr[2] = 0x03;
+            data_ptr[3] = 0x04;
+            data_ptr[4] = 0x05;
+
+            // Create offset buffer: [0, 2, 5] - using int64_t for big_binary_array
+            using offset_type = big_binary_array::offset_type;
+            uint8_t* offset_ptr = allocator.allocate(sizeof(offset_type) * (num_elements + 1));
+            auto* typed_offset_ptr = reinterpret_cast<offset_type*>(offset_ptr);
+            typed_offset_ptr[0] = 0;
+            typed_offset_ptr[1] = 2;
+            typed_offset_ptr[2] = 5;
+
+            sparrow::u8_buffer<uint8_t> data_buffer(data_ptr, data_size, allocator);
+            sparrow::u8_buffer<offset_type> offset_buffer(typed_offset_ptr, num_elements + 1, allocator);
+
+            big_binary_array arr(std::move(data_buffer), std::move(offset_buffer));
+            sparrow::array array{std::move(arr)};
+
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+
+            // Buffer 1 is offsets, buffer 2 is data
+            const auto* roundtripped_offset_ptr = arrow_array_buffers.at(1).data<uint8_t>();
+            const auto* roundtripped_data_ptr = arrow_array_buffers.at(2).data<uint8_t>();
+
+            CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
+            CHECK_EQ(roundtripped_data_ptr, data_ptr);
+        }
+
+        TEST_CASE("big_binary_array zero copy with default allocator")
+        {
+            // Create data buffer with binary data: {0x01, 0x02}, {0x03, 0x04, 0x05}
+            size_t data_size = 5;
+            size_t num_elements = 2;
+
+            using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
+            auto allocator = SparrowAllocator{};
+            auto* data_ptr = allocator.allocate(data_size);
+            data_ptr[0] = 0x01;
+            data_ptr[1] = 0x02;
+            data_ptr[2] = 0x03;
+            data_ptr[3] = 0x04;
+            data_ptr[4] = 0x05;
+
+            // Create offset buffer: [0, 2, 5] - using int64_t for big_binary_array
+            using offset_type = big_binary_array::offset_type;
+            auto* offset_ptr = allocator.allocate(sizeof(offset_type) * (num_elements + 1));
+            auto* typed_offset_ptr = reinterpret_cast<offset_type*>(offset_ptr);
+            typed_offset_ptr[0] = 0;
+            typed_offset_ptr[1] = 2;
+            typed_offset_ptr[2] = 5;
+
+            sparrow::u8_buffer<uint8_t> data_buffer(data_ptr, data_size, allocator);
+            sparrow::u8_buffer<offset_type> offset_buffer(typed_offset_ptr, num_elements + 1, allocator);
+
+            big_binary_array arr(std::move(data_buffer), std::move(offset_buffer));
+            sparrow::array array{std::move(arr)};
+
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+
+            // Buffer 1 is offsets, buffer 2 is data
+            const auto* roundtripped_offset_ptr = arrow_array_buffers.at(1).data<uint8_t>();
+            const auto* roundtripped_data_ptr = arrow_array_buffers.at(2).data<uint8_t>();
+
+            CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
+            CHECK_EQ(roundtripped_data_ptr, data_ptr);
+        }
     }
 }
