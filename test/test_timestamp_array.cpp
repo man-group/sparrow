@@ -685,5 +685,92 @@ namespace sparrow
 #    pragma GCC diagnostic pop
 #endif
         }
+
+        TEST_CASE("zero copy bitmap with std allocator")
+        {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+            size_t num_rows{10};
+            
+            // Create data buffer
+            auto data_allocator = std::allocator<uint8_t>{};
+            uint8_t* data_ptr = data_allocator.allocate(sizeof(int64_t) * num_rows);
+            auto typed_ptr = reinterpret_cast<int64_t*>(data_ptr);
+            for (size_t idx = 0; idx < num_rows; ++idx)
+            {
+                typed_ptr[idx] = static_cast<int64_t>(idx * 1000);
+            }
+            sparrow::u8_buffer<int64_t> data_buffer(typed_ptr, num_rows, data_allocator);
+            
+            // Create validity bitmap with std::allocator
+            auto bitmap_allocator = std::allocator<uint8_t>{};
+            size_t bitmap_size_bytes = (num_rows + 7) / 8;
+            uint8_t* bitmap_ptr = bitmap_allocator.allocate(bitmap_size_bytes);
+            std::memset(bitmap_ptr, 0xFF, bitmap_size_bytes);
+            sparrow::buffer<uint8_t> bitmap_buffer(bitmap_ptr, bitmap_size_bytes, bitmap_allocator);
+            const uint8_t* original_bitmap_ptr = bitmap_buffer.data();
+            sparrow::validity_bitmap validity_bitmap(std::move(bitmap_buffer), num_rows, 0);
+            
+            sparrow::timestamp_array<timestamp<std::chrono::milliseconds>> array(
+                num_rows,
+                std::move(data_buffer),
+                std::move(validity_bitmap)
+            );
+            
+            const auto& proxy = sparrow::detail::array_access::get_arrow_proxy(array);
+            const ArrowArray& c_array = proxy.array();
+            
+            // Check zero-copy for bitmap (buffer[0])
+            CHECK_EQ(static_cast<const uint8_t*>(c_array.buffers[0]), original_bitmap_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
+        }
+
+        TEST_CASE("zero copy bitmap with default allocator")
+        {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+            size_t num_rows{10};
+            
+            using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
+            auto allocator = SparrowAllocator{};
+            
+            // Create data buffer
+            auto* data_ptr = allocator.allocate(sizeof(int64_t) * num_rows);
+            auto* typed_ptr = reinterpret_cast<int64_t*>(data_ptr);
+            for (size_t idx = 0; idx < num_rows; ++idx)
+            {
+                typed_ptr[idx] = static_cast<int64_t>(idx * 1000);
+            }
+            sparrow::u8_buffer<int64_t> data_buffer(typed_ptr, num_rows, allocator);
+            
+            // Create validity bitmap with default allocator
+            size_t bitmap_size_bytes = (num_rows + 7) / 8;
+            uint8_t* bitmap_ptr = allocator.allocate(bitmap_size_bytes);
+            std::memset(bitmap_ptr, 0xFF, bitmap_size_bytes);
+            sparrow::buffer<uint8_t> bitmap_buffer(bitmap_ptr, bitmap_size_bytes, allocator);
+            const uint8_t* original_bitmap_ptr = bitmap_buffer.data();
+            sparrow::validity_bitmap validity_bitmap(std::move(bitmap_buffer), num_rows, 0);
+            
+            sparrow::timestamp_array<timestamp<std::chrono::milliseconds>> array(
+                num_rows,
+                std::move(data_buffer),
+                std::move(validity_bitmap)
+            );
+            
+            const auto& proxy = sparrow::detail::array_access::get_arrow_proxy(array);
+            const ArrowArray& c_array = proxy.array();
+            
+            // Check zero-copy for bitmap (buffer[0])
+            CHECK_EQ(static_cast<const uint8_t*>(c_array.buffers[0]), original_bitmap_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
+        }
     }
 }  // namespace sparrow

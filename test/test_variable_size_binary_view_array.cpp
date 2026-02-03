@@ -990,5 +990,213 @@ namespace sparrow
             // Check that value buffer is also zero-copy
             CHECK_EQ(static_cast<const uint8_t*>(c_array.buffers[2]), long_data_buffer_ptr);
         }
+
+        TEST_CASE("string_view_array zero copy bitmap with std allocator")
+        {
+            const std::size_t element_count = 3;
+            const std::size_t view_structure_size = 16;
+
+            // Create buffer view with std::allocator
+            auto* buffer_view_data = std::allocator<uint8_t>().allocate(element_count * view_structure_size);
+            sparrow::u8_buffer<uint8_t> buffer_view(
+                buffer_view_data,
+                element_count * view_structure_size,
+                std::allocator<uint8_t>{}
+            );
+            std::memset(buffer_view.data(), 0, buffer_view.size());
+
+            const std::vector<std::string> test_words = {"hi", "short", "long_string_exceeds_twelve"};
+            std::vector<sparrow::u8_buffer<uint8_t>> value_buffers;
+
+            // Build view structures
+            for (std::size_t i = 0; i < element_count; ++i)
+            {
+                uint8_t* view_ptr = buffer_view.data() + (i * view_structure_size);
+                const std::string& word = test_words[i];
+                std::uint32_t length = static_cast<std::uint32_t>(word.size());
+                std::memcpy(view_ptr, &length, sizeof(std::uint32_t));
+                if (word.size() <= 12)
+                {
+                    std::memcpy(view_ptr + 4, word.data(), word.size());
+                }
+            }
+
+            // Create validity bitmap with std::allocator
+            auto bitmap_allocator = std::allocator<uint8_t>{};
+            size_t bitmap_size_bytes = (element_count + 7) / 8;
+            uint8_t* bitmap_ptr = bitmap_allocator.allocate(bitmap_size_bytes);
+            std::memset(bitmap_ptr, 0xFF, bitmap_size_bytes);
+            sparrow::buffer<uint8_t> bitmap_buffer(bitmap_ptr, bitmap_size_bytes, bitmap_allocator);
+            const uint8_t* original_bitmap_ptr = bitmap_buffer.data();
+            sparrow::validity_bitmap validity_bitmap(std::move(bitmap_buffer), element_count, 0);
+
+            string_view_array array(
+                element_count,
+                std::move(buffer_view),
+                std::move(value_buffers),
+                std::move(validity_bitmap)
+            );
+
+            const auto& proxy = detail::array_access::get_arrow_proxy(array);
+            const ArrowArray& c_array = proxy.array();
+
+            // Check zero-copy for bitmap (buffer[0])
+            CHECK_EQ(static_cast<const uint8_t*>(c_array.buffers[0]), original_bitmap_ptr);
+        }
+
+        TEST_CASE("string_view_array zero copy bitmap with default allocator")
+        {
+            const std::size_t element_count = 3;
+            const std::size_t view_structure_size = 16;
+
+            using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
+            auto allocator = SparrowAllocator{};
+
+            // Create buffer view
+            auto* buffer_view_data = allocator.allocate(element_count * view_structure_size);
+            sparrow::u8_buffer<uint8_t> buffer_view(buffer_view_data, element_count * view_structure_size, allocator);
+            std::memset(buffer_view.data(), 0, buffer_view.size());
+
+            const std::vector<std::string> test_words = {"hi", "short", "long_string_exceeds_twelve"};
+            std::vector<sparrow::u8_buffer<uint8_t>> value_buffers;
+
+            // Build view structures
+            for (std::size_t i = 0; i < element_count; ++i)
+            {
+                uint8_t* view_ptr = buffer_view.data() + (i * view_structure_size);
+                const std::string& word = test_words[i];
+                std::uint32_t length = static_cast<std::uint32_t>(word.size());
+                std::memcpy(view_ptr, &length, sizeof(std::uint32_t));
+                if (word.size() <= 12)
+                {
+                    std::memcpy(view_ptr + 4, word.data(), word.size());
+                }
+            }
+
+            // Create validity bitmap with default allocator
+            size_t bitmap_size_bytes = (element_count + 7) / 8;
+            uint8_t* bitmap_ptr = allocator.allocate(bitmap_size_bytes);
+            std::memset(bitmap_ptr, 0xFF, bitmap_size_bytes);
+            sparrow::buffer<uint8_t> bitmap_buffer(bitmap_ptr, bitmap_size_bytes, allocator);
+            const uint8_t* original_bitmap_ptr = bitmap_buffer.data();
+            sparrow::validity_bitmap validity_bitmap(std::move(bitmap_buffer), element_count, 0);
+
+            string_view_array array(
+                element_count,
+                std::move(buffer_view),
+                std::move(value_buffers),
+                std::move(validity_bitmap)
+            );
+
+            const auto& proxy = detail::array_access::get_arrow_proxy(array);
+            const ArrowArray& c_array = proxy.array();
+
+            // Check zero-copy for bitmap (buffer[0])
+            CHECK_EQ(static_cast<const uint8_t*>(c_array.buffers[0]), original_bitmap_ptr);
+        }
+
+        TEST_CASE("binary_view_array zero copy bitmap with std allocator")
+        {
+            const std::size_t element_count = 3;
+            const std::size_t view_structure_size = 16;
+
+            // Create buffer view with std::allocator
+            auto* buffer_view_data = std::allocator<uint8_t>().allocate(element_count * view_structure_size);
+            sparrow::u8_buffer<uint8_t> buffer_view(
+                buffer_view_data,
+                element_count * view_structure_size,
+                std::allocator<uint8_t>{}
+            );
+            std::memset(buffer_view.data(), 0, buffer_view.size());
+
+            const std::vector<std::vector<uint8_t>> test_data = {{0x01, 0x02}, {0x03, 0x04}, {0x05, 0x06}};
+            std::vector<sparrow::u8_buffer<uint8_t>> value_buffers;
+
+            // Build view structures
+            for (std::size_t i = 0; i < element_count; ++i)
+            {
+                uint8_t* view_ptr = buffer_view.data() + (i * view_structure_size);
+                const auto& data = test_data[i];
+                std::uint32_t length = static_cast<std::uint32_t>(data.size());
+                std::memcpy(view_ptr, &length, sizeof(std::uint32_t));
+                if (data.size() <= 12)
+                {
+                    std::memcpy(view_ptr + 4, data.data(), data.size());
+                }
+            }
+
+            // Create validity bitmap with std::allocator
+            auto bitmap_allocator = std::allocator<uint8_t>{};
+            size_t bitmap_size_bytes = (element_count + 7) / 8;
+            uint8_t* bitmap_ptr = bitmap_allocator.allocate(bitmap_size_bytes);
+            std::memset(bitmap_ptr, 0xFF, bitmap_size_bytes);
+            sparrow::buffer<uint8_t> bitmap_buffer(bitmap_ptr, bitmap_size_bytes, bitmap_allocator);
+            const uint8_t* original_bitmap_ptr = bitmap_buffer.data();
+            sparrow::validity_bitmap validity_bitmap(std::move(bitmap_buffer), element_count, 0);
+
+            binary_view_array array(
+                element_count,
+                std::move(buffer_view),
+                std::move(value_buffers),
+                std::move(validity_bitmap)
+            );
+
+            const auto& proxy = detail::array_access::get_arrow_proxy(array);
+            const ArrowArray& c_array = proxy.array();
+
+            // Check zero-copy for bitmap (buffer[0])
+            CHECK_EQ(static_cast<const uint8_t*>(c_array.buffers[0]), original_bitmap_ptr);
+        }
+
+        TEST_CASE("binary_view_array zero copy bitmap with default allocator")
+        {
+            const std::size_t element_count = 3;
+            const std::size_t view_structure_size = 16;
+
+            using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
+            auto allocator = SparrowAllocator{};
+
+            // Create buffer view
+            auto* buffer_view_data = allocator.allocate(element_count * view_structure_size);
+            sparrow::u8_buffer<uint8_t> buffer_view(buffer_view_data, element_count * view_structure_size, allocator);
+            std::memset(buffer_view.data(), 0, buffer_view.size());
+
+            const std::vector<std::vector<uint8_t>> test_data = {{0x01, 0x02}, {0x03, 0x04}, {0x05, 0x06}};
+            std::vector<sparrow::u8_buffer<uint8_t>> value_buffers;
+
+            // Build view structures
+            for (std::size_t i = 0; i < element_count; ++i)
+            {
+                uint8_t* view_ptr = buffer_view.data() + (i * view_structure_size);
+                const auto& data = test_data[i];
+                std::uint32_t length = static_cast<std::uint32_t>(data.size());
+                std::memcpy(view_ptr, &length, sizeof(std::uint32_t));
+                if (data.size() <= 12)
+                {
+                    std::memcpy(view_ptr + 4, data.data(), data.size());
+                }
+            }
+
+            // Create validity bitmap with default allocator
+            size_t bitmap_size_bytes = (element_count + 7) / 8;
+            uint8_t* bitmap_ptr = allocator.allocate(bitmap_size_bytes);
+            std::memset(bitmap_ptr, 0xFF, bitmap_size_bytes);
+            sparrow::buffer<uint8_t> bitmap_buffer(bitmap_ptr, bitmap_size_bytes, allocator);
+            const uint8_t* original_bitmap_ptr = bitmap_buffer.data();
+            sparrow::validity_bitmap validity_bitmap(std::move(bitmap_buffer), element_count, 0);
+
+            binary_view_array array(
+                element_count,
+                std::move(buffer_view),
+                std::move(value_buffers),
+                std::move(validity_bitmap)
+            );
+
+            const auto& proxy = detail::array_access::get_arrow_proxy(array);
+            const ArrowArray& c_array = proxy.array();
+
+            // Check zero-copy for bitmap (buffer[0])
+            CHECK_EQ(static_cast<const uint8_t*>(c_array.buffers[0]), original_bitmap_ptr);
+        }
     }
 }
