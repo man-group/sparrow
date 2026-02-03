@@ -931,7 +931,7 @@ namespace sparrow
         buffers.reserve(2 + std::ranges::size(value_buffers));
         buffers.emplace_back(std::move(bitmap).extract_storage());
         buffers.emplace_back(std::move(buffer_view).extract_storage());
-        
+
         // Extract sizes before moving buffers
         std::vector<int64_t> buffer_size_values;
         buffer_size_values.reserve(std::ranges::size(value_buffers));
@@ -939,7 +939,7 @@ namespace sparrow
         {
             buffer_size_values.push_back(static_cast<int64_t>(buf.size()));
         }
-        
+
         for (auto&& buf : value_buffers)
         {
             buffers.emplace_back(std::move(buf).extract_storage());
