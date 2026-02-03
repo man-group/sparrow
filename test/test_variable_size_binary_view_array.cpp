@@ -740,7 +740,11 @@ namespace sparrow
             std::memset(buffer_view.data(), 0, buffer_view.size());
 
             // Test strings
-            const std::vector<std::string> test_words = {"hi", "short_string", "long_string_that_exceeds_twelve_bytes"};
+            const std::vector<std::string> test_words = {
+                "hi",
+                "short_string",
+                "long_string_that_exceeds_twelve_bytes"
+            };
 
             // Create value buffers
             std::vector<sparrow::u8_buffer<uint8_t>> value_buffers;
@@ -779,12 +783,7 @@ namespace sparrow
 
             // Create array
             std::vector<std::size_t> no_nulls{};
-            string_view_array array(
-                element_count,
-                std::move(buffer_view),
-                std::move(value_buffers),
-                no_nulls
-            );
+            string_view_array array(element_count, std::move(buffer_view), std::move(value_buffers), no_nulls);
 
             // Round-trip through Arrow C interface
             const auto& proxy = detail::array_access::get_arrow_proxy(array);
@@ -808,7 +807,11 @@ namespace sparrow
             std::memset(buffer_view.data(), 0, buffer_view.size());
 
             // Test strings
-            const std::vector<std::string> test_words = {"hi", "short_string", "long_string_that_exceeds_twelve_bytes"};
+            const std::vector<std::string> test_words = {
+                "hi",
+                "short_string",
+                "long_string_that_exceeds_twelve_bytes"
+            };
 
             // Create value buffers
             std::vector<sparrow::u8_buffer<uint8_t>> value_buffers;
@@ -842,12 +845,7 @@ namespace sparrow
 
             // Create array
             std::vector<std::size_t> no_nulls{};
-            string_view_array array(
-                element_count,
-                std::move(buffer_view),
-                std::move(value_buffers),
-                no_nulls
-            );
+            string_view_array array(element_count, std::move(buffer_view), std::move(value_buffers), no_nulls);
 
             // Round-trip through Arrow C interface
             const auto& proxy = detail::array_access::get_arrow_proxy(array);
@@ -919,12 +917,7 @@ namespace sparrow
 
             // Create array
             std::vector<std::size_t> no_nulls{};
-            binary_view_array array(
-                element_count,
-                std::move(buffer_view),
-                std::move(value_buffers),
-                no_nulls
-            );
+            binary_view_array array(element_count, std::move(buffer_view), std::move(value_buffers), no_nulls);
 
             // Round-trip through Arrow C interface
             const auto& proxy = detail::array_access::get_arrow_proxy(array);
@@ -986,12 +979,7 @@ namespace sparrow
 
             // Create array
             std::vector<std::size_t> no_nulls{};
-            binary_view_array array(
-                element_count,
-                std::move(buffer_view),
-                std::move(value_buffers),
-                no_nulls
-            );
+            binary_view_array array(element_count, std::move(buffer_view), std::move(value_buffers), no_nulls);
 
             // Round-trip through Arrow C interface
             const auto& proxy = detail::array_access::get_arrow_proxy(array);
