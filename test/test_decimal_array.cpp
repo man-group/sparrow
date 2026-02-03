@@ -419,7 +419,7 @@ namespace sparrow
 #    endif
             using storage_type = sparrow::int128_t;
             size_t num_rows{10};
-            
+
             // Create data buffer
             auto data_allocator = std::allocator<uint8_t>{};
             uint8_t* data_ptr = data_allocator.allocate(sizeof(storage_type) * num_rows);
@@ -429,7 +429,7 @@ namespace sparrow
                 typed_ptr[idx] = storage_type(idx);
             }
             sparrow::u8_buffer<storage_type> data_buffer(typed_ptr, num_rows, data_allocator);
-            
+
             // Create validity bitmap with std::allocator
             auto bitmap_allocator = std::allocator<uint8_t>{};
             size_t bitmap_size_bytes = (num_rows + 7) / 8;
@@ -438,17 +438,13 @@ namespace sparrow
             sparrow::buffer<uint8_t> bitmap_buffer(bitmap_ptr, bitmap_size_bytes, bitmap_allocator);
             const uint8_t* original_bitmap_ptr = bitmap_buffer.data();
             sparrow::validity_bitmap validity_bitmap(std::move(bitmap_buffer), num_rows, 0);
-            
-            sparrow::decimal_array<sparrow::decimal<storage_type>> arr(
-                std::move(data_buffer),
-                std::move(validity_bitmap),
-                std::size_t{38},
-                int{0}
-            );
-            
+
+            sparrow::decimal_array<sparrow::decimal<storage_type>>
+            arr(std::move(data_buffer), std::move(validity_bitmap), std::size_t{38}, int{0});
+
             const auto& proxy = sparrow::detail::array_access::get_arrow_proxy(arr);
             const ArrowArray& c_array = proxy.array();
-            
+
             // Check zero-copy for bitmap (buffer[0])
             CHECK_EQ(static_cast<const uint8_t*>(c_array.buffers[0]), original_bitmap_ptr);
 #    ifdef __GNUC__
@@ -464,10 +460,10 @@ namespace sparrow
 #    endif
             using storage_type = sparrow::int128_t;
             size_t num_rows{10};
-            
+
             using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
             auto allocator = SparrowAllocator{};
-            
+
             // Create data buffer
             auto* data_ptr = allocator.allocate(sizeof(storage_type) * num_rows);
             auto* typed_ptr = reinterpret_cast<storage_type*>(data_ptr);
@@ -476,7 +472,7 @@ namespace sparrow
                 typed_ptr[idx] = storage_type(idx);
             }
             sparrow::u8_buffer<storage_type> data_buffer(typed_ptr, num_rows, allocator);
-            
+
             // Create validity bitmap with default allocator
             size_t bitmap_size_bytes = (num_rows + 7) / 8;
             uint8_t* bitmap_ptr = allocator.allocate(bitmap_size_bytes);
@@ -484,17 +480,13 @@ namespace sparrow
             sparrow::buffer<uint8_t> bitmap_buffer(bitmap_ptr, bitmap_size_bytes, allocator);
             const uint8_t* original_bitmap_ptr = bitmap_buffer.data();
             sparrow::validity_bitmap validity_bitmap(std::move(bitmap_buffer), num_rows, 0);
-            
-            sparrow::decimal_array<sparrow::decimal<storage_type>> arr(
-                std::move(data_buffer),
-                std::move(validity_bitmap),
-                std::size_t{38},
-                int{0}
-            );
-            
+
+            sparrow::decimal_array<sparrow::decimal<storage_type>>
+            arr(std::move(data_buffer), std::move(validity_bitmap), std::size_t{38}, int{0});
+
             const auto& proxy = sparrow::detail::array_access::get_arrow_proxy(arr);
             const ArrowArray& c_array = proxy.array();
-            
+
             // Check zero-copy for bitmap (buffer[0])
             CHECK_EQ(static_cast<const uint8_t*>(c_array.buffers[0]), original_bitmap_ptr);
 #    ifdef __GNUC__

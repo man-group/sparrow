@@ -1054,7 +1054,11 @@ namespace sparrow
 
             // Create buffer view
             auto* buffer_view_data = allocator.allocate(element_count * view_structure_size);
-            sparrow::u8_buffer<uint8_t> buffer_view(buffer_view_data, element_count * view_structure_size, allocator);
+            sparrow::u8_buffer<uint8_t> buffer_view(
+                buffer_view_data,
+                element_count * view_structure_size,
+                allocator
+            );
             std::memset(buffer_view.data(), 0, buffer_view.size());
 
             const std::vector<std::string> test_words = {"hi", "short", "long_string_exceeds_twelve"};
@@ -1158,7 +1162,11 @@ namespace sparrow
 
             // Create buffer view
             auto* buffer_view_data = allocator.allocate(element_count * view_structure_size);
-            sparrow::u8_buffer<uint8_t> buffer_view(buffer_view_data, element_count * view_structure_size, allocator);
+            sparrow::u8_buffer<uint8_t> buffer_view(
+                buffer_view_data,
+                element_count * view_structure_size,
+                allocator
+            );
             std::memset(buffer_view.data(), 0, buffer_view.size());
 
             const std::vector<std::vector<uint8_t>> test_data = {{0x01, 0x02}, {0x03, 0x04}, {0x05, 0x06}};
