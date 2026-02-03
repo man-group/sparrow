@@ -714,7 +714,7 @@ namespace sparrow
             sparrow::validity_bitmap validity_bitmap(std::move(bitmap_buffer), num_rows, 0);
 
             sparrow::timestamp_array<timestamp<std::chrono::milliseconds>> array(
-                num_rows,
+                new_york,
                 std::move(data_buffer),
                 std::move(validity_bitmap)
             );
@@ -758,7 +758,7 @@ namespace sparrow
             sparrow::validity_bitmap validity_bitmap(std::move(bitmap_buffer), num_rows, 0);
 
             sparrow::timestamp_array<timestamp<std::chrono::milliseconds>> array(
-                num_rows,
+                new_york,
                 std::move(data_buffer),
                 std::move(validity_bitmap)
             );
