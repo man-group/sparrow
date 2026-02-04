@@ -126,7 +126,13 @@ namespace sparrow
                                   );
                 auto offset_buffer = layout_type::offset_from_sizes(size_range);
                 u8_buffer<char> data_buffer(joined_words);
-                layout_type arr{std::move(data_buffer), std::move(offset_buffer), where_nulls, "name", metadata_sample_opt};
+                layout_type arr{
+                    std::move(data_buffer),
+                    std::move(offset_buffer),
+                    where_nulls,
+                    "name",
+                    metadata_sample_opt
+                };
 #ifdef SPARROW_TRACK_COPIES
                 CHECK_EQ(copy_tracker::count("variable_size_binary_array"), 0);
 #endif

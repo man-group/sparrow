@@ -345,7 +345,7 @@ namespace sparrow
         {
             using integer_type = std::int64_t;
             using decimal_type = decimal<integer_type>;
-            
+
             const std::vector<integer_type> values{
                 integer_type(10),
                 integer_type(20),
@@ -371,11 +371,7 @@ namespace sparrow
                 CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
 #endif
 
-                decimal_array<decimal_type> arr3{
-                    std::vector<integer_type>{5, 10},
-                    precision,
-                    scale
-                };
+                decimal_array<decimal_type> arr3{std::vector<integer_type>{5, 10}, precision, scale};
                 CHECK_NE(arr, arr3);
                 arr3 = arr;
                 CHECK_EQ(arr, arr3);
@@ -395,11 +391,7 @@ namespace sparrow
                 CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
 #endif
 
-                decimal_array<decimal_type> arr4{
-                    std::vector<integer_type>{5, 10},
-                    precision,
-                    scale
-                };
+                decimal_array<decimal_type> arr4{std::vector<integer_type>{5, 10}, precision, scale};
                 CHECK_NE(arr2, arr4);
                 arr4 = std::move(arr2);
                 CHECK_EQ(arr3, arr4);
