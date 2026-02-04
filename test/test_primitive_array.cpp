@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
+
 #include "sparrow/types/data_type.hpp"
 
 #if defined(__GNUC__)
@@ -25,6 +27,7 @@
 #include <vector>
 
 #include "sparrow/array.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/primitive_array.hpp"
 
 #include "doctest/doctest.h"
@@ -140,6 +143,10 @@ namespace sparrow
 
                 SUBCASE("u8_buffer, size, bitmap, name, metadata")
                 {
+#ifdef SPARROW_TRACK_COPIES
+                    copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                    copy_tracker::reset(copy_tracker::key<ArrowArray>());
+#endif
                     u8_buffer<T> buffer{
                         nullable_values
                         | std::views::transform(
@@ -160,6 +167,10 @@ namespace sparrow
                                 }
                             )
                     };
+#ifdef SPARROW_TRACK_COPIES
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 0);
+#endif
                     CHECK_EQ(ar.size(), values_count);
                     for (size_t i = 0; i < ar.size(); ++i)
                     {
@@ -222,10 +233,17 @@ namespace sparrow
 
             SUBCASE("copy")
             {
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<ArrowArray>());
+#endif
                 array_test_type ar2(ar);
 
                 CHECK_EQ(ar, ar2);
-
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 1);
+#endif
                 array_test_type ar3(make_array(make_nullable_values(7)));
                 CHECK_NE(ar, ar3);
                 ar3 = ar;
@@ -236,9 +254,17 @@ namespace sparrow
             SUBCASE("move")
             {
                 array_test_type ar2(ar);
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<ArrowArray>());
+#endif
 
                 array_test_type ar3(std::move(ar));
                 CHECK_EQ(ar2, ar3);
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 0);
+#endif
 
                 array_test_type ar4(make_array(make_nullable_values(7)));
                 CHECK_NE(ar2, ar4);
@@ -848,6 +874,10 @@ namespace sparrow
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wcast-align"
 #endif
+#ifdef SPARROW_TRACK_COPIES
+            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+            copy_tracker::reset(copy_tracker::key<ArrowArray>());
+#endif
             size_t num_rows = 100000;
             using allocator_type = sparrow::u8_buffer<uint64_t>::default_allocator;
             uint8_t* data_ptr = allocator_type().allocate(sizeof(uint64_t) * num_rows);
@@ -872,6 +902,10 @@ namespace sparrow
             {
                 CHECK_EQ(cast_ptr[idx], idx);
             }
+#ifdef SPARROW_TRACK_COPIES
+            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 0);
+#endif
 #if defined(__GNUC__) && !defined(__clang__)
 #    pragma GCC diagnostic pop
 #endif
