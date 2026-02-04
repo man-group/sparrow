@@ -433,6 +433,10 @@ namespace sparrow
 
         TEST_CASE("zero copy with std allocator")
         {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
             // Create data buffer with binary data: {0x01, 0x02}, {0x03, 0x04, 0x05}
             size_t data_size = 5;
             size_t num_elements = 2;
@@ -471,10 +475,17 @@ namespace sparrow
 
             CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
             CHECK_EQ(roundtripped_data_ptr, data_ptr);
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
         }
 
         TEST_CASE("zero copy with default allocator")
         {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
             // Create data buffer with binary data: {0x01, 0x02}, {0x03, 0x04, 0x05}
             size_t data_size = 5;
             size_t num_elements = 2;
@@ -514,10 +525,18 @@ namespace sparrow
 
             CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
             CHECK_EQ(roundtripped_data_ptr, data_ptr);
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
         }
 
         TEST_CASE("big_binary_array zero copy with std allocator")
         {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+
             // Create data buffer with binary data: {0x01, 0x02}, {0x03, 0x04, 0x05}
             size_t data_size = 5;
             size_t num_elements = 2;
@@ -556,10 +575,18 @@ namespace sparrow
 
             CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
             CHECK_EQ(roundtripped_data_ptr, data_ptr);
+
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
         }
 
         TEST_CASE("big_binary_array zero copy with default allocator")
         {
+#if defined(__GNUC__)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
             // Create data buffer with binary data: {0x01, 0x02}, {0x03, 0x04, 0x05}
             size_t data_size = 5;
             size_t num_elements = 2;
@@ -599,6 +626,9 @@ namespace sparrow
 
             CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
             CHECK_EQ(roundtripped_data_ptr, data_ptr);
+#if defined(__GNUC__)
+#    pragma GCC diagnostic pop
+#endif
         }
     }
 }
