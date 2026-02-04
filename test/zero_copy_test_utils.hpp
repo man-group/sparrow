@@ -31,7 +31,7 @@ namespace sparrow::test
     template <typename T, typename Allocator>
     auto make_zero_copy_data_buffer(size_t num_elements, Allocator& allocator)
     {
-        #if defined(__GNUC__)
+#if defined(__GNUC__)
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wcast-align"
 #endif
@@ -42,7 +42,7 @@ namespace sparrow::test
             typed_ptr[idx] = static_cast<T>(idx);
         }
         return std::pair{typed_ptr, sparrow::u8_buffer<T>(typed_ptr, num_elements, allocator)};
-        #if defined(__GNUC__)
+#if defined(__GNUC__)
 #    pragma GCC diagnostic pop
 #endif
     }
