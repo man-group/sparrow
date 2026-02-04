@@ -933,25 +933,17 @@ namespace sparrow
         buffers.emplace_back(std::move(buffer_view).extract_storage());
 
         // Extract sizes before moving buffers
-        std::vector<int64_t> buffer_size_values;
-        buffer_size_values.reserve(std::ranges::size(value_buffers));
-        for (const auto& buf : value_buffers)
         {
-            buffer_size_values.push_back(static_cast<int64_t>(buf.size()));
+            u8_buffer<int64_t> buffer_sizes(std::ranges::size(value_buffers));
+            size_t i = 0;
+            for (auto&& buf : value_buffers)
+            {
+                buffer_sizes[i] = static_cast<int64_t>(buf.size());
+                buffers.emplace_back(std::move(buf).extract_storage());
+                ++i;
+            }
+            buffers.push_back(std::move(buffer_sizes).extract_storage());
         }
-
-        for (auto&& buf : value_buffers)
-        {
-            buffers.emplace_back(std::move(buf).extract_storage());
-        }
-
-        // Create buffer sizes for the variadic buffers
-        u8_buffer<int64_t> buffer_sizes(buffer_size_values.size());
-        for (std::size_t i = 0; i < buffer_size_values.size(); ++i)
-        {
-            buffer_sizes[i] = buffer_size_values[i];
-        }
-        buffers.push_back(std::move(buffer_sizes).extract_storage());
 
         constexpr repeat_view<bool> children_ownership(true, 0);
 
