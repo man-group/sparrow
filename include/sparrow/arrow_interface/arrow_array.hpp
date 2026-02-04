@@ -25,8 +25,8 @@
 #include "sparrow/arrow_interface/arrow_array/private_data.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
-#include "sparrow/utils/repeat_container.hpp"
 #include "sparrow/debug/copy_tracker.hpp"
+#include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {

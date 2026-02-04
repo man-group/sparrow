@@ -184,7 +184,7 @@ namespace sparrow
 
         /** Move constructor */
         fixed_width_binary_array_impl(self_type&&) noexcept = default;
-        
+
         self_type& operator=(const self_type&) = default;
         self_type& operator=(self_type&&) noexcept = default;
 

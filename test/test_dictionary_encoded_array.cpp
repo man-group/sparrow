@@ -177,7 +177,10 @@ namespace sparrow
             layout_type ar2(ar);
             CHECK_EQ(ar, ar2);
 #ifdef SPARROW_TRACK_COPIES
-            CHECK_EQ(copy_tracker::count("dictionary_encoded_array<" + std::string(typeid(keys_type).name()) + ">"), 1);
+            CHECK_EQ(
+                copy_tracker::count("dictionary_encoded_array<" + std::string(typeid(keys_type).name()) + ">"),
+                1
+            );
 #endif
 
             layout_type ar3 = make_dictionary();
