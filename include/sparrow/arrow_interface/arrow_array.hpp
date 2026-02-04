@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 #include <ranges>
 #include <type_traits>
@@ -27,9 +26,19 @@
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/utils/repeat_container.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 
 namespace sparrow
 {
+    namespace copy_tracker
+    {
+        template <>
+        inline std::string key<ArrowArray>()
+        {
+            return "ArrowArray";
+        }
+    }
+
     /**
      * Creates an `ArrowArray`.
      *

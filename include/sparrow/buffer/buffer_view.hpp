@@ -15,10 +15,20 @@
 #pragma once
 
 #include "sparrow/buffer/buffer.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
+    namespace copy_tracker
+    {
+        template <class T>
+        std::string key_buffer_view()
+        {
+            return "buffer_view<" + std::string(typeid(T).name()) + ">";
+        }
+    }
+
     /*
      * Non-owning view of a contiguous sequence of objects of type T.
      *
@@ -48,6 +58,10 @@ namespace sparrow
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
         constexpr buffer_view() = default;
+        constexpr buffer_view(const buffer_view&);
+        constexpr buffer_view(buffer_view&&) noexcept = default;
+        constexpr buffer_view& operator=(const buffer_view&) = default;
+        constexpr buffer_view& operator=(buffer_view&&) noexcept = default;
         constexpr explicit buffer_view(buffer<T>& buffer)
             requires(!std::is_const_v<T>);
         template <class U>
@@ -115,6 +129,14 @@ namespace sparrow
     /******************************
      * buffer_view implementation *
      ******************************/
+
+    template <class T>
+    constexpr buffer_view<T>::buffer_view(const buffer_view& other)
+        : p_data(other.p_data)
+        , m_size(other.m_size)
+    {
+        copy_tracker::increase(copy_tracker::key_buffer_view<T>());
+    }
 
     template <class T>
     constexpr buffer_view<T>::buffer_view(buffer<T>& buffer)

@@ -271,6 +271,9 @@ namespace sparrow
          */
         SPARROW_API explicit null_array(arrow_proxy);
 
+        /** Copy constructor */
+        SPARROW_API null_array(const null_array&);
+
         /**
          * @brief Gets the optional name of the array.
          *

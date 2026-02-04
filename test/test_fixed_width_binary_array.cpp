@@ -172,10 +172,16 @@ namespace sparrow
 
         TEST_CASE("copy")
         {
+#ifdef SPARROW_TRACK_COPIES
+            copy_tracker::reset("fixed_width_binary_array");
+#endif
             const auto [ar, input_values] = make_array(5, 1);
             fixed_width_binary_array ar2(ar);
 
             CHECK_EQ(ar, ar2);
+#ifdef SPARROW_TRACK_COPIES
+            CHECK_EQ(copy_tracker::count("fixed_width_binary_array"), 1);
+#endif
 
             fixed_width_binary_array ar3(make_array(7, 1).first);
             CHECK_NE(ar, ar3);

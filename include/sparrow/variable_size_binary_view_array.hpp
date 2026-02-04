@@ -23,6 +23,7 @@
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/layout_utils.hpp"
@@ -204,6 +205,9 @@ namespace sparrow
          * @post View structures are accessible for efficient element retrieval
          */
         explicit variable_size_binary_view_array_impl(arrow_proxy);
+
+        variable_size_binary_view_array_impl(const self_type&);
+        self_type& operator=(const self_type&) = default;
 
         /**
          * @brief Generic constructor for creating variable-size binary view array.
@@ -612,6 +616,13 @@ namespace sparrow
     variable_size_binary_view_array_impl<T, CR, Ext>::variable_size_binary_view_array_impl(arrow_proxy proxy)
         : base_type(std::move(proxy))
     {
+    }
+
+    template <std::ranges::sized_range T, class CR, typename Ext>
+    variable_size_binary_view_array_impl<T, CR, Ext>::variable_size_binary_view_array_impl(const self_type& rhs)
+        : base_type(rhs)
+    {
+        copy_tracker::increase("variable_size_binary_view_array");
     }
 
     namespace

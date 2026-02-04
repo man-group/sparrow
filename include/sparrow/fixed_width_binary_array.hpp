@@ -28,6 +28,7 @@
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/fixed_width_binary_array_utils.hpp"
 #include "sparrow/layout/fixed_width_binary_reference.hpp"
@@ -178,6 +179,9 @@ namespace sparrow
          * @note Internal assertion: SPARROW_ASSERT_TRUE(proxy.data_type() == data_type::FIXED_WIDTH_BINARY)
          */
         explicit fixed_width_binary_array_impl(arrow_proxy);
+
+        fixed_width_binary_array_impl(const self_type&);
+        self_type& operator=(const self_type&) = default;
 
         /**
          * @brief Generic constructor for creating fixed-width binary array.
@@ -653,6 +657,14 @@ namespace sparrow
         , m_element_size(num_bytes_for_fixed_sized_binary(this->get_arrow_proxy().format()))
     {
         SPARROW_ASSERT_TRUE(this->get_arrow_proxy().data_type() == data_type::FIXED_WIDTH_BINARY);
+    }
+
+    template <std::ranges::sized_range T, typename CR, typename Ext>
+    fixed_width_binary_array_impl<T, CR, Ext>::fixed_width_binary_array_impl(const self_type& rhs)
+        : base_type(rhs)
+        , m_element_size(rhs.m_element_size)
+    {
+        copy_tracker::increase("fixed_width_binary_array");
     }
 
     template <std::ranges::sized_range T, typename CR, typename Ext>

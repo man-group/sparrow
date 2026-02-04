@@ -102,6 +102,7 @@ namespace sparrow
         target.name = private_data->name_ptr();
         target.metadata = private_data->metadata_ptr();
         target.release = release_arrow_schema;
+        copy_tracker::increase(copy_tracker::key<ArrowSchema>());
     }
 
     bool check_compatible_schema(const ArrowSchema& schema1, const ArrowSchema& schema2)

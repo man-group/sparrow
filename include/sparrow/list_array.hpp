@@ -22,6 +22,7 @@
 #include "sparrow/array_api.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
@@ -779,7 +780,7 @@ namespace sparrow
          */
         explicit fixed_sized_list_array(arrow_proxy proxy);
 
-        constexpr fixed_sized_list_array(const self_type&) = default;
+        fixed_sized_list_array(const self_type&);
         fixed_sized_list_array& operator=(const self_type&) = default;
 
         fixed_sized_list_array(self_type&&) = default;
@@ -1105,6 +1106,14 @@ namespace sparrow
         : base_type(rhs)
         , p_list_offsets(make_list_offsets())
     {
+        if constexpr (BIG)
+        {
+            copy_tracker::increase("big_list_array");
+        }
+        else
+        {
+            copy_tracker::increase("list_array");
+        }
     }
 
     template <bool BIG>
@@ -1243,6 +1252,14 @@ namespace sparrow
         , p_list_offsets(make_list_offsets())
         , p_list_sizes(make_list_sizes())
     {
+        if constexpr (BIG)
+        {
+            copy_tracker::increase("big_list_view_array");
+        }
+        else
+        {
+            copy_tracker::increase("list_view_array");
+        }
     }
 
     template <bool BIG>
@@ -1301,6 +1318,13 @@ namespace sparrow
         : base_type(std::move(proxy))
         , m_list_size(fixed_sized_list_array::list_size_from_format(this->get_arrow_proxy().format()))
     {
+    }
+
+    inline fixed_sized_list_array::fixed_sized_list_array(const self_type& rhs)
+        : base_type(rhs)
+        , m_list_size(rhs.m_list_size)
+    {
+        copy_tracker::increase("fixed_sized_list_array");
     }
 
     constexpr auto fixed_sized_list_array::offset_range(size_type i) const

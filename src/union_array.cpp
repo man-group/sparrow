@@ -15,11 +15,27 @@
 #include "sparrow/union_array.hpp"
 
 #include "sparrow/array.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
 {
+    namespace copy_tracker
+    {
+        template <>
+        SPARROW_API std::string key<dense_union_array>()
+        {
+            return "dense_union_array";
+        }
+
+        template <>
+        SPARROW_API std::string key<sparse_union_array>()
+        {
+            return "sparse_union_array";
+        }
+    }
+
     /************************************
      * dense_union_array implementation *
      ************************************/
@@ -38,6 +54,7 @@ namespace sparrow
     dense_union_array::dense_union_array(const dense_union_array& rhs)
         : dense_union_array(rhs.m_proxy)
     {
+        copy_tracker::increase(copy_tracker::key<dense_union_array>());
     }
 
     dense_union_array& dense_union_array::operator=(const dense_union_array& rhs)
@@ -66,6 +83,12 @@ namespace sparrow
     sparse_union_array::sparse_union_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
     {
+    }
+
+    sparse_union_array::sparse_union_array(const sparse_union_array& rhs)
+        : base_type(rhs)
+    {
+        copy_tracker::increase(copy_tracker::key<sparse_union_array>());
     }
 
     std::size_t sparse_union_array::element_offset(std::size_t i) const

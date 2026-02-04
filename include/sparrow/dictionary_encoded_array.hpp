@@ -20,6 +20,7 @@
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_helper.hpp"
@@ -591,6 +592,7 @@ namespace sparrow
         , m_keys_layout(create_keys_layout(m_proxy))
         , p_values_layout(create_values_layout(m_proxy))
     {
+        copy_tracker::increase("dictionary_encoded_array<" + std::string(typeid(IT).name()) + ">");
     }
 
     template <std::integral IT>

@@ -15,6 +15,7 @@
 #include "sparrow/run_end_encoded_array.hpp"
 
 #include "sparrow/array.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/array_registry.hpp"
 #include "sparrow/primitive_array.hpp"
@@ -22,6 +23,15 @@
 
 namespace sparrow
 {
+    namespace copy_tracker
+    {
+        template <>
+        SPARROW_API std::string key<run_end_encoded_array>()
+        {
+            return "run_end_encoded_array";
+        }
+    }
+
     run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
         , m_encoded_length(m_proxy.children()[0].length())
@@ -34,6 +44,7 @@ namespace sparrow
     run_end_encoded_array::run_end_encoded_array(const self_type& rhs)
         : run_end_encoded_array(rhs.m_proxy)
     {
+        copy_tracker::increase(copy_tracker::key<run_end_encoded_array>());
     }
 
     auto run_end_encoded_array::operator=(const self_type& rhs) -> self_type&
