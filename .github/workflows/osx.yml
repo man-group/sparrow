@@ -70,7 +70,8 @@ jobs:
           -DUSE_DATE_POLYFILL=ON \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING
+          -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
+          -DTRACK_COPIES=ON
 
       - name: Build
         working-directory: build
