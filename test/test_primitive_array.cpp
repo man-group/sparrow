@@ -234,6 +234,7 @@ namespace sparrow
             SUBCASE("copy")
             {
 #ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset("primitive_array");
                 copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
                 copy_tracker::reset(copy_tracker::key<ArrowArray>());
 #endif
@@ -241,6 +242,7 @@ namespace sparrow
 
                 CHECK_EQ(ar, ar2);
 #ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count("primitive_array"), 1);
                 CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 1);
 #endif
@@ -255,6 +257,7 @@ namespace sparrow
             {
                 array_test_type ar2(ar);
 #ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset("primitive_array");
                 copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
                 copy_tracker::reset(copy_tracker::key<ArrowArray>());
 #endif
@@ -262,6 +265,7 @@ namespace sparrow
                 array_test_type ar3(std::move(ar));
                 CHECK_EQ(ar2, ar3);
 #ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count("primitive_array"), 0);
                 CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 0);
 #endif

@@ -29,6 +29,7 @@
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/variable_size_binary_iterator.hpp"
@@ -342,6 +343,39 @@ namespace sparrow
          *   - SPARROW_ASSERT_TRUE(offset_type_matches_data_type)
          */
         explicit variable_size_binary_array_impl(arrow_proxy);
+
+        /**
+         * @brief Copy constructor.
+         *
+         * @param rhs Source array to copy from
+         *
+         * @pre rhs must be in a valid state
+         * @post This array contains a deep copy of rhs data
+         */
+        variable_size_binary_array_impl(const variable_size_binary_array_impl& rhs);
+
+        /**
+         * @brief Copy assignment operator.
+         *
+         * @param rhs Source array to assign from
+         * @return Reference to this array
+         */
+        variable_size_binary_array_impl& operator=(const variable_size_binary_array_impl& rhs) = default;
+
+        /**
+         * @brief Move constructor.
+         *
+         * @param rhs Source array to move from
+         */
+        variable_size_binary_array_impl(variable_size_binary_array_impl&& rhs) noexcept = default;
+
+        /**
+         * @brief Move assignment operator.
+         *
+         * @param rhs Source array to move assign from
+         * @return Reference to this array
+         */
+        variable_size_binary_array_impl& operator=(variable_size_binary_array_impl&& rhs) noexcept = default;
 
         /**
          * @brief Generic constructor for creating array from various inputs.
@@ -884,6 +918,15 @@ namespace sparrow
              || ((type == data_type::LARGE_STRING || type == data_type::LARGE_BINARY)
                  && std::same_as<OT, int64_t>) )
         );
+    }
+
+    template <std::ranges::sized_range T, class CR, layout_offset OT, typename Ext>
+    variable_size_binary_array_impl<T, CR, OT, Ext>::variable_size_binary_array_impl(
+        const variable_size_binary_array_impl& rhs
+    )
+        : base_type(rhs)
+    {
+        copy_tracker::increase("variable_size_binary_array");
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT, typename Ext>

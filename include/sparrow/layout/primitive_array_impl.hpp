@@ -18,6 +18,7 @@
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/primitive_data_access.hpp"
@@ -482,6 +483,7 @@ namespace sparrow
         : base_type(rhs)
         , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
+        copy_tracker::increase("primitive_array");
     }
 
     template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>

@@ -181,7 +181,12 @@ namespace sparrow
         explicit fixed_width_binary_array_impl(arrow_proxy);
 
         fixed_width_binary_array_impl(const self_type&);
+
+        /** Move constructor */
+        fixed_width_binary_array_impl(self_type&&) noexcept = default;
+        
         self_type& operator=(const self_type&) = default;
+        self_type& operator=(self_type&&) noexcept = default;
 
         /**
          * @brief Generic constructor for creating fixed-width binary array.
@@ -666,6 +671,8 @@ namespace sparrow
     {
         copy_tracker::increase("fixed_width_binary_array");
     }
+
+    // Move constructor and assignment are defaulted in the class definition
 
     template <std::ranges::sized_range T, typename CR, typename Ext>
     template <mpl::char_like C, validity_bitmap_input VB, input_metadata_container METADATA_RANGE>

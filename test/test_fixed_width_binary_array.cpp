@@ -172,12 +172,11 @@ namespace sparrow
 
         TEST_CASE("copy")
         {
+            const auto [ar, input_values] = make_array(5, 1);
 #ifdef SPARROW_TRACK_COPIES
             copy_tracker::reset("fixed_width_binary_array");
 #endif
-            const auto [ar, input_values] = make_array(5, 1);
             fixed_width_binary_array ar2(ar);
-
             CHECK_EQ(ar, ar2);
 #ifdef SPARROW_TRACK_COPIES
             CHECK_EQ(copy_tracker::count("fixed_width_binary_array"), 1);
@@ -193,8 +192,15 @@ namespace sparrow
         {
             auto [ar, input_values] = make_array(5, 1);
             fixed_width_binary_array ar2(ar);
-
+#ifdef SPARROW_TRACK_COPIES
+            copy_tracker::reset("fixed_width_binary_array");
+            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+#endif
             fixed_width_binary_array ar3(std::move(ar));
+#ifdef SPARROW_TRACK_COPIES
+            CHECK_EQ(copy_tracker::count("fixed_width_binary_array"), 0);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+#endif
             CHECK_EQ(ar2, ar3);
 
             fixed_width_binary_array ar4(make_array(7, 1).first);
@@ -715,6 +721,9 @@ namespace sparrow
         {
             SUBCASE("from u8_buffer and validity bitmap")
             {
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset("fixed_width_binary_array");
+#endif
                 u8_buffer buffer{
                     byte_t{1},
                     byte_t{2},
@@ -732,6 +741,9 @@ namespace sparrow
                     size_t(3),
                     std::vector<std::size_t>{1}
                 };
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count("fixed_width_binary_array"), 0);
+#endif
                 REQUIRE_EQ(arr.size(), 3);
                 CHECK(arr[0].has_value());
                 CHECK(std::ranges::equal(arr[0].get(), std::array{byte_t{1}, byte_t{2}, byte_t{3}}));

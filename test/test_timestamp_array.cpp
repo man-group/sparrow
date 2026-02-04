@@ -15,6 +15,7 @@
 #include <cstdio>
 
 #include "sparrow/array.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/timestamp_array.hpp"
 #include "sparrow/utils/mp_utils.hpp"
 
@@ -107,15 +108,33 @@ namespace sparrow
                 SUBCASE("copy")
                 {
                     const timestamp_array<T> ar(new_york, input_values);
+#ifdef SPARROW_TRACK_COPIES
+                    copy_tracker::reset("timestamp_array");
+                    copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+#endif
                     const timestamp_array<T> ar2(ar);
                     CHECK_EQ(ar, ar2);
+#ifdef SPARROW_TRACK_COPIES
+                    CHECK_EQ(copy_tracker::count("timestamp_array"), 1);
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+#endif
                 }
 
                 SUBCASE("move")
                 {
                     timestamp_array<T> ar(new_york, input_values);
-                    const timestamp_array<T> ar2(std::move(ar));
-                    CHECK_EQ(ar2.size(), input_values.size());
+                    const timestamp_array<T> ar2(ar);
+#ifdef SPARROW_TRACK_COPIES
+                    copy_tracker::reset("timestamp_array");
+                    copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+#endif
+                    const timestamp_array<T> ar3(std::move(ar));
+                    CHECK_EQ(ar3.size(), input_values.size());
+                    CHECK_EQ(ar2, ar3);
+#ifdef SPARROW_TRACK_COPIES
+                    CHECK_EQ(copy_tracker::count("timestamp_array"), 0);
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+#endif
                 }
             }
 

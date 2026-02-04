@@ -20,6 +20,7 @@
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/decimal_reference.hpp"
 #include "sparrow/layout/layout_utils.hpp"
@@ -191,6 +192,36 @@ namespace sparrow
          * @param proxy The arrow proxy containing the array data and schema.
          */
         explicit decimal_array(arrow_proxy proxy);
+
+        /**
+         * Copy constructor.
+         *
+         * @param rhs The decimal array to copy from.
+         */
+        decimal_array(const decimal_array& rhs);
+
+        /**
+         * Copy assignment operator.
+         *
+         * @param rhs The decimal array to assign from.
+         * @return Reference to this array.
+         */
+        decimal_array& operator=(const decimal_array& rhs) = default;
+
+        /**
+         * Move constructor.
+         *
+         * @param rhs The decimal array to move from.
+         */
+        decimal_array(decimal_array&& rhs) noexcept = default;
+
+        /**
+         * Move assignment operator.
+         *
+         * @param rhs The decimal array to move assign from.
+         * @return Reference to this array.
+         */
+        decimal_array& operator=(decimal_array&& rhs) noexcept = default;
 
         /**
          * Constructs a decimal array with the given arguments.
@@ -534,6 +565,15 @@ namespace sparrow
         {
             throw std::runtime_error("Invalid format string for decimal array");
         }
+    }
+
+    template <decimal_type T>
+    decimal_array<T>::decimal_array(const decimal_array& rhs)
+        : base_type(rhs)
+        , m_precision(rhs.m_precision)
+        , m_scale(rhs.m_scale)
+    {
+        copy_tracker::increase("decimal_array");
     }
 
     template <decimal_type T>

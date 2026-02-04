@@ -18,6 +18,7 @@
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/u8_buffer.hpp"
 #include "sparrow/utils/nullable.hpp"
 #include "sparrow/variable_size_binary_array.hpp"
@@ -112,6 +113,9 @@ namespace sparrow
 
             SUBCASE("from u8_buffer, offset_buffer_type, validity_bitmap_input, name and metadata")
             {
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset("variable_size_binary_array");
+#endif
                 auto joined_words = std::ranges::views::join(words);
                 auto size_range = words
                                   | std::views::transform(
@@ -122,9 +126,10 @@ namespace sparrow
                                   );
                 auto offset_buffer = layout_type::offset_from_sizes(size_range);
                 u8_buffer<char> data_buffer(joined_words);
-                CHECK_NOTHROW(
-                    layout_type{std::move(data_buffer), std::move(offset_buffer), where_nulls, "name", metadata_sample_opt}
-                );
+                layout_type arr{std::move(data_buffer), std::move(offset_buffer), where_nulls, "name", metadata_sample_opt};
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count("variable_size_binary_array"), 0);
+#endif
             }
 
             SUBCASE("from values range, validity input, name and metadata")
@@ -159,8 +164,16 @@ namespace sparrow
         TEST_CASE_FIXTURE(string_array_fixture, "copy")
         {
             const layout_type ar(m_arrow_proxy);
+#ifdef SPARROW_TRACK_COPIES
+            copy_tracker::reset("variable_size_binary_array");
+            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+#endif
             layout_type ar2(ar);
             CHECK_EQ(ar, ar2);
+#ifdef SPARROW_TRACK_COPIES
+            CHECK_EQ(copy_tracker::count("variable_size_binary_array"), 1);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+#endif
 
             layout_type ar3(std::move(m_arrow_proxy));
             ar3 = ar2;
@@ -171,8 +184,16 @@ namespace sparrow
         {
             layout_type ar(m_arrow_proxy);
             layout_type ar2(ar);
+#ifdef SPARROW_TRACK_COPIES
+            copy_tracker::reset("variable_size_binary_array");
+            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+#endif
             layout_type ar3(std::move(ar));
             CHECK_EQ(ar2, ar3);
+#ifdef SPARROW_TRACK_COPIES
+            CHECK_EQ(copy_tracker::count("variable_size_binary_array"), 0);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+#endif
 
             layout_type ar4(std::move(m_arrow_proxy));
             ar4 = std::move(ar3);

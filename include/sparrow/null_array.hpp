@@ -273,6 +273,9 @@ namespace sparrow
 
         /** Copy constructor */
         SPARROW_API null_array(const null_array&);
+        
+        /** Copy assignment operator */
+        null_array& operator=(const null_array&) = default;
 
         /**
          * @brief Gets the optional name of the array.
