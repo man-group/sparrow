@@ -997,6 +997,10 @@ namespace sparrow
 #endif
         TEST_CASE("zero copy with std allocator")
         {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
             // Create data buffer with concatenated strings: "hello", "world"
             const char* str_data = "helloworld";
             size_t data_size = 10;
@@ -1032,10 +1036,18 @@ namespace sparrow
 
             CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
             CHECK_EQ(roundtripped_data_ptr, data_ptr);
+
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
         }
 
         TEST_CASE("zero copy with default allocator")
         {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
             // Create data buffer with concatenated strings: "hello", "world"
             const char* str_data = "helloworld";
             size_t data_size = 10;
@@ -1072,10 +1084,17 @@ namespace sparrow
 
             CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
             CHECK_EQ(roundtripped_data_ptr, data_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
         }
 
         TEST_CASE("big_string_array zero copy with std allocator")
         {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
             // Create data buffer with concatenated strings: "hello", "world"
             const char* str_data = "helloworld";
             size_t data_size = 10;
@@ -1111,10 +1130,17 @@ namespace sparrow
 
             CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
             CHECK_EQ(roundtripped_data_ptr, data_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
         }
 
         TEST_CASE("big_string_array zero copy with default allocator")
         {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
             // Create data buffer with concatenated strings: "hello", "world"
             const char* str_data = "helloworld";
             size_t data_size = 10;
@@ -1151,6 +1177,9 @@ namespace sparrow
 
             CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
             CHECK_EQ(roundtripped_data_ptr, data_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
         }
     }
 }
