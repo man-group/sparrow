@@ -45,6 +45,23 @@ namespace sparrow
     template <bool BIG>
     class list_view_array_impl;
 
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires std::same_as<T, list_array_impl<false>> || std::same_as<T, list_array_impl<true>>
+        std::string key()
+        {
+            return "list_array";
+        }
+
+        template <typename T>
+            requires std::same_as<T, list_view_array_impl<false>> || std::same_as<T, list_view_array_impl<true>>
+        std::string key()
+        {
+            return "list_view_array";
+        }
+    }
+
     /**
      * A list array implementation.
      * Stores variable-length lists of values, where each list can have a different length.
@@ -84,6 +101,16 @@ namespace sparrow
     using big_list_view_array = list_view_array_impl<true>;
 
     class fixed_sized_list_array;
+
+    namespace copy_tracker
+    {
+        template<>
+        inline std::string key<fixed_sized_list_array>()
+        {
+            return "fixed_sized_list_array";
+        }
+    }
+
 
     /**
      * Checks whether T is a list_array type.
@@ -1106,14 +1133,7 @@ namespace sparrow
         : base_type(rhs)
         , p_list_offsets(make_list_offsets())
     {
-        if constexpr (BIG)
-        {
-            copy_tracker::increase("big_list_array");
-        }
-        else
-        {
-            copy_tracker::increase("list_array");
-        }
+        copy_tracker::increase(copy_tracker::key<list_array_impl<BIG>>());
     }
 
     template <bool BIG>
@@ -1252,14 +1272,7 @@ namespace sparrow
         , p_list_offsets(make_list_offsets())
         , p_list_sizes(make_list_sizes())
     {
-        if constexpr (BIG)
-        {
-            copy_tracker::increase("big_list_view_array");
-        }
-        else
-        {
-            copy_tracker::increase("list_view_array");
-        }
+        copy_tracker::increase(copy_tracker::key<list_view_array_impl<BIG>>());
     }
 
     template <bool BIG>
@@ -1324,7 +1337,7 @@ namespace sparrow
         : base_type(rhs)
         , m_list_size(rhs.m_list_size)
     {
-        copy_tracker::increase("fixed_sized_list_array");
+        copy_tracker::increase(copy_tracker::key<self_type>());
     }
 
     constexpr auto fixed_sized_list_array::offset_range(size_type i) const

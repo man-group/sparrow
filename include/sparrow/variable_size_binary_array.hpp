@@ -36,6 +36,7 @@
 #include "sparrow/layout/variable_size_binary_reference.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/extension.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 #include "sparrow/utils/repeat_container.hpp"
 
 namespace sparrow
@@ -85,6 +86,16 @@ namespace sparrow
 
     template <std::ranges::sized_range T, class CR, layout_offset OT, typename Ext = empty_extension>
     class variable_size_binary_array_impl;
+
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, variable_size_binary_array_impl>
+        std::string key()
+        {
+            return "variable_size_binary_array";
+        }
+    }
 
     template <layout_offset OT, typename Ext = empty_extension>
     using string_array_impl = variable_size_binary_array_impl<
@@ -926,7 +937,7 @@ namespace sparrow
     )
         : base_type(rhs)
     {
-        copy_tracker::increase("variable_size_binary_array");
+        copy_tracker::increase(copy_tracker::key<self_type>());
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT, typename Ext>

@@ -42,6 +42,16 @@ namespace sparrow
     template <decimal_type T>
     class decimal_array;
 
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, decimal_array>
+        std::string key()
+        {
+            return "decimal_array";
+        }
+    }
+
     /** Type alias for 32-bit decimal array. */
     using decimal_32_array = decimal_array<decimal<int32_t>>;
     /** Type alias for 64-bit decimal array. */

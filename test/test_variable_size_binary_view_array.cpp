@@ -91,13 +91,13 @@ namespace sparrow
                 SUBCASE("copy")
                 {
 #ifdef SPARROW_TRACK_COPIES
-                    copy_tracker::reset("variable_size_binary_view_array");
+                    copy_tracker::reset(copy_tracker::key<string_view_array>());
 #endif
                     const string_view_array array(words, where_nulls, "name", metadata_sample_opt);
                     const string_view_array array_copy(array);
                     CHECK_EQ(array, array_copy);
 #ifdef SPARROW_TRACK_COPIES
-                    CHECK_EQ(copy_tracker::count("variable_size_binary_view_array"), 1);
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key<string_view_array>()), 1);
 #endif
                 }
 

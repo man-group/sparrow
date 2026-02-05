@@ -43,6 +43,16 @@ namespace sparrow
     template <std::ranges::sized_range T, class CR, typename Ext = empty_extension>
     class variable_size_binary_view_array_impl;
 
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, variable_size_binary_view_array_impl>
+        std::string key()
+        {
+            return "variable_size_binary_view_array";
+        }
+    }
+
     /**
      * A variable-size string view layout implementation.
      * Related Apache Arrow specification:
@@ -622,7 +632,7 @@ namespace sparrow
     variable_size_binary_view_array_impl<T, CR, Ext>::variable_size_binary_view_array_impl(const self_type& rhs)
         : base_type(rhs)
     {
-        copy_tracker::increase("variable_size_binary_view_array");
+        copy_tracker::increase(copy_tracker::key<self_type>());
     }
 
     namespace

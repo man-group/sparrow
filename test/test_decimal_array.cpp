@@ -75,12 +75,12 @@ namespace sparrow
                 SUBCASE("data_buffer, bitmaps, precision, scale")
                 {
 #ifdef SPARROW_TRACK_COPIES
-                    copy_tracker::reset("decimal_array");
+                    copy_tracker::reset(copy_tracker::key<decimal_array<decimal<INTEGER_TYPE>>>());
 #endif
                     u8_buffer<INTEGER_TYPE> buffer{values};
                     decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), bitmaps, precision, scale};
 #ifdef SPARROW_TRACK_COPIES
-                    CHECK_EQ(copy_tracker::count("decimal_array"), 0);
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key<decimal_array<decimal<INTEGER_TYPE>>>()), 0);
 #endif
                     CHECK_EQ(array.size(), 4);
                     for (std::size_t i = 0; i < array.size(); ++i)
@@ -92,12 +92,12 @@ namespace sparrow
                 SUBCASE("data_buffer, precision, scale")
                 {
 #ifdef SPARROW_TRACK_COPIES
-                    copy_tracker::reset("decimal_array");
+                    copy_tracker::reset(copy_tracker::key<decimal_array<decimal<INTEGER_TYPE>>>());
 #endif
                     u8_buffer<INTEGER_TYPE> buffer{values};
                     decimal_array<decimal<INTEGER_TYPE>> array{std::move(buffer), precision, scale};
 #ifdef SPARROW_TRACK_COPIES
-                    CHECK_EQ(copy_tracker::count("decimal_array"), 0);
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key<decimal_array<decimal<INTEGER_TYPE>>>()), 0);
 #endif
                     CHECK_EQ(array.size(), 4);
                     for (std::size_t i = 0; i < array.size(); ++i)
@@ -361,13 +361,13 @@ namespace sparrow
             SUBCASE("copy")
             {
 #ifdef SPARROW_TRACK_COPIES
-                copy_tracker::reset("decimal_array");
+                copy_tracker::reset(copy_tracker::key<decimal_array<decimal_type>>());
                 copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
 #endif
                 decimal_array<decimal_type> arr2(arr);
                 CHECK_EQ(arr, arr2);
 #ifdef SPARROW_TRACK_COPIES
-                CHECK_EQ(copy_tracker::count("decimal_array"), 1);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<decimal_array<decimal_type>>()), 1);
                 CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
 #endif
 
@@ -381,13 +381,14 @@ namespace sparrow
             {
                 decimal_array<decimal_type> arr2(arr);
 #ifdef SPARROW_TRACK_COPIES
-                copy_tracker::reset("decimal_array");
+                copy_tracker::reset(copy_tracker::key<decimal_array<decimal_type>>());
+                 copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
                 copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
 #endif
                 decimal_array<decimal_type> arr3(std::move(arr));
                 CHECK_EQ(arr2, arr3);
 #ifdef SPARROW_TRACK_COPIES
-                CHECK_EQ(copy_tracker::count("decimal_array"), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<decimal_array<decimal_type>>()), 0);
                 CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
 #endif
 

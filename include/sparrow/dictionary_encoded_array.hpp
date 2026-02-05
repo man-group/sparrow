@@ -92,6 +92,16 @@ namespace sparrow
     template <std::integral IT>
     class dictionary_encoded_array;
 
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, dictionary_encoded_array>
+        std::string key()
+        {
+            return "dictionary_encoded_array";
+        }
+    }
+
     namespace detail
     {
         template <std::integral IT>
@@ -592,7 +602,7 @@ namespace sparrow
         , m_keys_layout(create_keys_layout(m_proxy))
         , p_values_layout(create_values_layout(m_proxy))
     {
-        copy_tracker::increase("dictionary_encoded_array<" + std::string(typeid(IT).name()) + ">");
+        copy_tracker::increase(copy_tracker::key<self_type>());
     }
 
     template <std::integral IT>

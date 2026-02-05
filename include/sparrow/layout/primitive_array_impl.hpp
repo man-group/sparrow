@@ -32,6 +32,16 @@ namespace sparrow
     template <trivial_copyable_type T, typename Ext = empty_extension, trivial_copyable_type T2 = T>
     class primitive_array_impl;
 
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, primitive_array_impl>
+        std::string key()
+        {
+            return "primitive_array";
+        }
+    }
+
     template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>
     struct array_inner_types<primitive_array_impl<T, Ext, T2>> : array_inner_types_base
     {
@@ -483,7 +493,7 @@ namespace sparrow
         : base_type(rhs)
         , access_class_type(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
-        copy_tracker::increase("primitive_array");
+        copy_tracker::increase(copy_tracker::key<self_type>());
     }
 
     template <trivial_copyable_type T, typename Ext, trivial_copyable_type T2>

@@ -80,6 +80,15 @@ namespace sparrow
         fixed_width_binary_traits::value_type,
         fixed_width_binary_traits::const_reference>;
 
+    namespace copy_tracker
+    {
+        template <>
+        inline std::string key<fixed_width_binary_array>()
+        {
+            return "fixed_width_binary_array";
+        }
+    }
+
     template <std::ranges::sized_range T, typename CR, typename Ext>
     struct array_inner_types<fixed_width_binary_array_impl<T, CR, Ext>> : array_inner_types_base
     {
@@ -669,7 +678,7 @@ namespace sparrow
         : base_type(rhs)
         , m_element_size(rhs.m_element_size)
     {
-        copy_tracker::increase("fixed_width_binary_array");
+        copy_tracker::increase(copy_tracker::key<self_type>());
     }
 
     // Move constructor and assignment are defaulted in the class definition
