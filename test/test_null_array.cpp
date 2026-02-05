@@ -53,10 +53,16 @@ namespace sparrow
 
         TEST_CASE("copy")
         {
+#ifdef SPARROW_TRACK_COPIES
+            copy_tracker::reset(copy_tracker::key<null_array>());
+#endif
             constexpr std::size_t size = 10u;
             const null_array ar{size};
             const null_array ar2(ar);
             CHECK_EQ(ar, ar2);
+#ifdef SPARROW_TRACK_COPIES
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<null_array>()), 1);
+#endif
 
             null_array ar3{size + 2u};
             CHECK_NE(ar, ar3);

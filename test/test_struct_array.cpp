@@ -174,8 +174,14 @@ namespace sparrow
 
         SUBCASE("copy")
         {
+#ifdef SPARROW_TRACK_COPIES
+            copy_tracker::reset(copy_tracker::key<struct_array>());
+#endif
             struct_array struct_arr2(struct_arr);
             CHECK_EQ(struct_arr, struct_arr2);
+#ifdef SPARROW_TRACK_COPIES
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<struct_array>()), 1);
+#endif
 
             struct_array struct_arr3(test::make_struct_proxy<inner_scalar_type, uint8_t>(n2));
             CHECK_NE(struct_arr3, struct_arr);

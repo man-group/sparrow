@@ -30,11 +30,21 @@
 #include "sparrow/arrow_interface/arrow_schema/private_data.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/metadata.hpp"
 
 namespace sparrow
 {
+    namespace copy_tracker
+    {
+        template <>
+        inline std::string key<ArrowSchema>()
+        {
+            return "ArrowSchema";
+        }
+    }
+
     /**
      * Creates an `ArrowSchema` owned by a `unique_ptr` and holding the provided data.
      *

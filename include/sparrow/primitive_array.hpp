@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include "sparrow/layout/primitive_array_impl.hpp"
 #include "sparrow/types/data_type.hpp"
 

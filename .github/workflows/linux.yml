@@ -153,7 +153,8 @@ jobs:
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
           -DSPARROW_BUILD_SHARED=${{matrix.shared}} \
           -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" \
-          -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
+          -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold" \
+          -DTRACK_COPIES=ON
 
     - name: Build library
       working-directory: build

@@ -170,9 +170,15 @@ namespace sparrow
 
         TEST_CASE("copy")
         {
+#ifdef SPARROW_TRACK_COPIES
+            copy_tracker::reset(copy_tracker::key<layout_type>());
+#endif
             layout_type ar = make_dictionary();
             layout_type ar2(ar);
             CHECK_EQ(ar, ar2);
+#ifdef SPARROW_TRACK_COPIES
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<layout_type>()), 1);
+#endif
 
             layout_type ar3 = make_dictionary();
             ar3 = ar;

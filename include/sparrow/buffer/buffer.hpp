@@ -24,6 +24,7 @@
 #include <type_traits>
 
 #include "sparrow/buffer/allocator.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/details/3rdparty/xsimd_aligned_allocator.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
@@ -35,6 +36,15 @@
 
 namespace sparrow
 {
+    namespace copy_tracker
+    {
+        template <typename T>
+        std::string key_buffer()
+        {
+            return "buffer<" + std::string(typeid(T).name()) + ">";
+        }
+    }
+
     template <typename T>
     concept is_buffer_view = requires(T t) { typename T::is_buffer_view; };
 
@@ -490,6 +500,7 @@ namespace sparrow
             this->create_storage(rhs.size());
             get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
         }
+        copy_tracker::increase(copy_tracker::key_buffer<T>());
     }
 
     template <class T>
@@ -502,6 +513,7 @@ namespace sparrow
             this->create_storage(rhs.size());
             get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
         }
+        copy_tracker::increase(copy_tracker::key_buffer<T>());
     }
 
     template <class T>

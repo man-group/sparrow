@@ -244,6 +244,7 @@ namespace sparrow
         const auto private_data = static_cast<arrow_array_private_data*>(target.private_data);
         target.buffers = private_data->buffers_ptrs<void>();
         target.release = release_arrow_array;
+        copy_tracker::increase(copy_tracker::key<ArrowArray>());
     }
 
     void arrow_array_deleter::operator()(ArrowArray* array) const

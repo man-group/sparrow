@@ -78,7 +78,8 @@ jobs:
           -DBUILD_EXAMPLES=ON \
           -DFETCH_DEPENDENCIES_WITH_CMAKE=MISSING \
           -DSPARROW_BUILD_SHARED=ON \
-          -DCREATE_JSON_READER_TARGET=ON
+          -DCREATE_JSON_READER_TARGET=ON \
+          -DTRACK_COPIES=ON
 
     - name: Build library
       working-directory: sparrow/build

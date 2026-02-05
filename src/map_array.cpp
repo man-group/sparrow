@@ -15,9 +15,19 @@
 #include "sparrow/map_array.hpp"
 
 #include "sparrow/array.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 
 namespace sparrow
 {
+    namespace copy_tracker
+    {
+        template <>
+        SPARROW_API std::string key<map_array>()
+        {
+            return "map_array";
+        }
+    }
+
     map_array::map_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
         , p_list_offsets(make_list_offsets())
@@ -43,6 +53,7 @@ namespace sparrow
         , p_entries_array(make_entries_array())
         , m_keys_sorted(rhs.m_keys_sorted)
     {
+        copy_tracker::increase(copy_tracker::key<map_array>());
     }
 
     map_array& map_array::operator=(const self_type& rhs)

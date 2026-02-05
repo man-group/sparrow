@@ -17,6 +17,7 @@
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/layout_utils.hpp"
@@ -40,6 +41,16 @@ namespace sparrow
 {
     template <timestamp_type T>
     class timestamp_array;
+
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, timestamp_array>
+        std::string key()
+        {
+            return "timestamp_array";
+        }
+    }
 
     template <timestamp_type T>
     struct array_inner_types<timestamp_array<T>> : array_inner_types_base
@@ -865,6 +876,7 @@ namespace sparrow
         , m_timezone(rhs.m_timezone)
         , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
+        copy_tracker::increase(copy_tracker::key<self_type>());
     }
 
     template <timestamp_type T>

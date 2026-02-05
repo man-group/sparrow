@@ -188,8 +188,14 @@ namespace sparrow
 
             SUBCASE("copy")
             {
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset(copy_tracker::key<sparse_union_array>());
+#endif
                 sparse_union_array uarr2(uarr);
                 CHECK_EQ(uarr2, uarr);
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<sparse_union_array>()), 1);
+#endif
 
                 sparse_union_array uarr3(test::make_sparse_union_proxy(format_string, n, true));
                 CHECK_NE(uarr3, uarr);
@@ -411,8 +417,14 @@ namespace sparrow
 
             SUBCASE("copy")
             {
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset(copy_tracker::key<dense_union_array>());
+#endif
                 dense_union_array uarr2(uarr);
                 CHECK_EQ(uarr2, uarr);
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<dense_union_array>()), 1);
+#endif
 
                 dense_union_array uarr3(test::make_dense_union_proxy(format_string, n_c, true));
                 CHECK_NE(uarr3, uarr);
