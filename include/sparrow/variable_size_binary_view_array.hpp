@@ -928,21 +928,22 @@ namespace sparrow
 
         auto bitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
         std::vector<buffer<uint8_t>> buffers;
-        buffers.reserve(2 + value_buffers.size());
+        buffers.reserve(2 + std::ranges::size(value_buffers));
         buffers.emplace_back(std::move(bitmap).extract_storage());
         buffers.emplace_back(std::move(buffer_view).extract_storage());
-        for (auto&& buf : value_buffers)
-        {
-            buffers.emplace_back(std::forward<decltype(buf)>(buf), typename buffer<uint8_t>::default_allocator());
-        }
 
-        // Create buffer sizes for the variadic buffers
-        u8_buffer<int64_t> buffer_sizes(value_buffers.size());
-        for (std::size_t i = 0; i < value_buffers.size(); ++i)
+        // Extract sizes before moving buffers
         {
-            buffer_sizes[i] = static_cast<int64_t>(value_buffers[i].size());
+            u8_buffer<int64_t> buffer_sizes(std::ranges::size(value_buffers));
+            size_t i = 0;
+            for (auto&& buf : value_buffers)
+            {
+                buffer_sizes[i] = static_cast<int64_t>(buf.size());
+                buffers.emplace_back(std::move(buf).extract_storage());
+                ++i;
+            }
+            buffers.push_back(std::move(buffer_sizes).extract_storage());
         }
-        buffers.push_back(std::move(buffer_sizes).extract_storage());
 
         constexpr repeat_view<bool> children_ownership(true, 0);
 

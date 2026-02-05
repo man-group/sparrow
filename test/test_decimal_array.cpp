@@ -18,6 +18,7 @@
 #include "sparrow/decimal_array.hpp"
 
 #include "test_utils.hpp"
+#include "zero_copy_test_utils.hpp"
 
 namespace sparrow
 {
@@ -342,20 +343,19 @@ namespace sparrow
             constexpr int scale = 2;
             size_t num_rows = 10;
             auto allocator = std::allocator<uint8_t>{};
-            uint8_t* data_ptr = allocator.allocate(sizeof(storage_type) * num_rows);
-            auto typed_ptr = reinterpret_cast<storage_type*>(data_ptr);
-            for (size_t idx = 0; idx < num_rows; ++idx)
-            {
-                typed_ptr[idx] = static_cast<storage_type>(idx * 100);
-            }
-            sparrow::u8_buffer<storage_type> u8_buffer(typed_ptr, num_rows, allocator);
+            auto [typed_ptr, data_buffer] = sparrow::test::make_zero_copy_data_buffer<storage_type>(
+                num_rows,
+                allocator
+            );
+
             decimal_array<decimal_type> arr(
-                std::move(u8_buffer),
+                std::move(data_buffer),
                 sparrow::validity_bitmap(nullptr, num_rows, allocator),
                 precision,
                 scale
             );
             sparrow::array array{std::move(arr)};
+
             auto arrow_structures = sparrow::get_arrow_structures(array);
             auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
                 *arrow_structures.first,
@@ -364,6 +364,7 @@ namespace sparrow
             const auto* roundtripped_ptr = reinterpret_cast<const storage_type*>(
                 arrow_array_buffers.at(1).data<uint8_t>()
             );
+
             CHECK_EQ(roundtripped_ptr, typed_ptr);
 #    ifdef __GNUC__
 #        pragma GCC diagnostic pop
@@ -383,20 +384,19 @@ namespace sparrow
             size_t num_rows = 10;
             using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
             auto allocator = SparrowAllocator{};
-            auto* data_ptr = allocator.allocate(sizeof(storage_type) * num_rows);
-            auto* typed_ptr = reinterpret_cast<storage_type*>(data_ptr);
-            for (size_t idx = 0; idx < num_rows; ++idx)
-            {
-                typed_ptr[idx] = static_cast<storage_type>(idx * 100);
-            }
-            sparrow::u8_buffer<storage_type> u8_buffer(typed_ptr, num_rows, allocator);
+            auto [typed_ptr, data_buffer] = sparrow::test::make_zero_copy_data_buffer<storage_type>(
+                num_rows,
+                allocator
+            );
+
             decimal_array<decimal_type> arr(
-                std::move(u8_buffer),
+                std::move(data_buffer),
                 sparrow::validity_bitmap(nullptr, num_rows, allocator),
                 precision,
                 scale
             );
             sparrow::array array{std::move(arr)};
+
             auto arrow_structures = sparrow::get_arrow_structures(array);
             auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
                 *arrow_structures.first,
@@ -405,7 +405,72 @@ namespace sparrow
             const auto* roundtripped_ptr = reinterpret_cast<const storage_type*>(
                 arrow_array_buffers.at(1).data<uint8_t>()
             );
+
             CHECK_EQ(roundtripped_ptr, typed_ptr);
+#    ifdef __GNUC__
+#        pragma GCC diagnostic pop
+#    endif
+        }
+
+        TEST_CASE("zero copy bitmap with std allocator")
+        {
+#    ifdef __GNUC__
+#        pragma GCC diagnostic push
+#        pragma GCC diagnostic ignored "-Wcast-align"
+#    endif
+            using storage_type = sparrow::int128_t;
+            size_t num_rows{10};
+            auto data_allocator = std::allocator<uint8_t>{};
+            auto bitmap_allocator = std::allocator<uint8_t>{};
+
+            auto [typed_ptr, data_buffer] = sparrow::test::make_zero_copy_data_buffer<storage_type>(
+                num_rows,
+                data_allocator
+            );
+            auto [original_bitmap_ptr, validity_bitmap] = sparrow::test::make_zero_copy_validity_bitmap(
+                num_rows,
+                bitmap_allocator
+            );
+
+            sparrow::decimal_array<sparrow::decimal<storage_type>>
+            arr(std::move(data_buffer), std::move(validity_bitmap), std::size_t{38}, int{0});
+
+            const auto& proxy = sparrow::detail::array_access::get_arrow_proxy(arr);
+            const ArrowArray& c_array = proxy.array();
+
+            CHECK_EQ(static_cast<const uint8_t*>(c_array.buffers[0]), original_bitmap_ptr);
+#    ifdef __GNUC__
+#        pragma GCC diagnostic pop
+#    endif
+        }
+
+        TEST_CASE("zero copy bitmap with default allocator")
+        {
+#    ifdef __GNUC__
+#        pragma GCC diagnostic push
+#        pragma GCC diagnostic ignored "-Wcast-align"
+#    endif
+            using storage_type = sparrow::int128_t;
+            size_t num_rows{10};
+            using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
+            auto allocator = SparrowAllocator{};
+
+            auto [typed_ptr, data_buffer] = sparrow::test::make_zero_copy_data_buffer<storage_type>(
+                num_rows,
+                allocator
+            );
+            auto [original_bitmap_ptr, validity_bitmap] = sparrow::test::make_zero_copy_validity_bitmap(
+                num_rows,
+                allocator
+            );
+
+            sparrow::decimal_array<sparrow::decimal<storage_type>>
+            arr(std::move(data_buffer), std::move(validity_bitmap), std::size_t{38}, int{0});
+
+            const auto& proxy = sparrow::detail::array_access::get_arrow_proxy(arr);
+            const ArrowArray& c_array = proxy.array();
+
+            CHECK_EQ(static_cast<const uint8_t*>(c_array.buffers[0]), original_bitmap_ptr);
 #    ifdef __GNUC__
 #        pragma GCC diagnostic pop
 #    endif

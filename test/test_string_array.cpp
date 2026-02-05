@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "sparrow/array.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/u8_buffer.hpp"
@@ -994,5 +995,191 @@ namespace sparrow
             CHECK_EQ(formatted, expected);
         }
 #endif
+        TEST_CASE("zero copy with std allocator")
+        {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+            // Create data buffer with concatenated strings: "hello", "world"
+            const char* str_data = "helloworld";
+            size_t data_size = 10;
+            size_t num_strings = 2;
+
+            auto allocator = std::allocator<uint8_t>{};
+            uint8_t* data_ptr = allocator.allocate(data_size);
+            std::memcpy(data_ptr, str_data, data_size);
+
+            // Create offset buffer: [0, 5, 10]
+            using offset_type = string_array::offset_type;
+            uint8_t* offset_ptr = allocator.allocate(sizeof(offset_type) * (num_strings + 1));
+            auto* typed_offset_ptr = reinterpret_cast<offset_type*>(offset_ptr);
+            typed_offset_ptr[0] = 0;
+            typed_offset_ptr[1] = 5;
+            typed_offset_ptr[2] = 10;
+
+            sparrow::u8_buffer<char> data_buffer(reinterpret_cast<char*>(data_ptr), data_size, allocator);
+            sparrow::u8_buffer<offset_type> offset_buffer(typed_offset_ptr, num_strings + 1, allocator);
+
+            string_array arr(std::move(data_buffer), std::move(offset_buffer));
+            sparrow::array array{std::move(arr)};
+
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+
+            // Buffer 1 is offsets, buffer 2 is data
+            const auto* roundtripped_offset_ptr = arrow_array_buffers.at(1).data<uint8_t>();
+            const auto* roundtripped_data_ptr = arrow_array_buffers.at(2).data<uint8_t>();
+
+            CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
+            CHECK_EQ(roundtripped_data_ptr, data_ptr);
+
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
+        }
+
+        TEST_CASE("zero copy with default allocator")
+        {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+            // Create data buffer with concatenated strings: "hello", "world"
+            const char* str_data = "helloworld";
+            size_t data_size = 10;
+            size_t num_strings = 2;
+
+            using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
+            auto allocator = SparrowAllocator{};
+            auto* data_ptr = allocator.allocate(data_size);
+            std::memcpy(data_ptr, str_data, data_size);
+
+            // Create offset buffer: [0, 5, 10]
+            using offset_type = string_array::offset_type;
+            auto* offset_ptr = allocator.allocate(sizeof(offset_type) * (num_strings + 1));
+            auto* typed_offset_ptr = reinterpret_cast<offset_type*>(offset_ptr);
+            typed_offset_ptr[0] = 0;
+            typed_offset_ptr[1] = 5;
+            typed_offset_ptr[2] = 10;
+
+            sparrow::u8_buffer<char> data_buffer(reinterpret_cast<char*>(data_ptr), data_size, allocator);
+            sparrow::u8_buffer<offset_type> offset_buffer(typed_offset_ptr, num_strings + 1, allocator);
+
+            string_array arr(std::move(data_buffer), std::move(offset_buffer));
+            sparrow::array array{std::move(arr)};
+
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+
+            // Buffer 1 is offsets, buffer 2 is data
+            const auto* roundtripped_offset_ptr = arrow_array_buffers.at(1).data<uint8_t>();
+            const auto* roundtripped_data_ptr = arrow_array_buffers.at(2).data<uint8_t>();
+
+            CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
+            CHECK_EQ(roundtripped_data_ptr, data_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
+        }
+
+        TEST_CASE("big_string_array zero copy with std allocator")
+        {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+            // Create data buffer with concatenated strings: "hello", "world"
+            const char* str_data = "helloworld";
+            size_t data_size = 10;
+            size_t num_strings = 2;
+
+            auto allocator = std::allocator<uint8_t>{};
+            uint8_t* data_ptr = allocator.allocate(data_size);
+            std::memcpy(data_ptr, str_data, data_size);
+
+            // Create offset buffer: [0, 5, 10]
+            using offset_type = big_string_array::offset_type;
+            uint8_t* offset_ptr = allocator.allocate(sizeof(offset_type) * (num_strings + 1));
+            auto* typed_offset_ptr = reinterpret_cast<offset_type*>(offset_ptr);
+            typed_offset_ptr[0] = 0;
+            typed_offset_ptr[1] = 5;
+            typed_offset_ptr[2] = 10;
+
+            sparrow::u8_buffer<char> data_buffer(reinterpret_cast<char*>(data_ptr), data_size, allocator);
+            sparrow::u8_buffer<offset_type> offset_buffer(typed_offset_ptr, num_strings + 1, allocator);
+
+            big_string_array arr(std::move(data_buffer), std::move(offset_buffer));
+            sparrow::array array{std::move(arr)};
+
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+
+            // Buffer 1 is offsets, buffer 2 is data
+            const auto* roundtripped_offset_ptr = arrow_array_buffers.at(1).data<uint8_t>();
+            const auto* roundtripped_data_ptr = arrow_array_buffers.at(2).data<uint8_t>();
+
+            CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
+            CHECK_EQ(roundtripped_data_ptr, data_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
+        }
+
+        TEST_CASE("big_string_array zero copy with default allocator")
+        {
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+            // Create data buffer with concatenated strings: "hello", "world"
+            const char* str_data = "helloworld";
+            size_t data_size = 10;
+            size_t num_strings = 2;
+
+            using SparrowAllocator = sparrow::buffer<std::uint8_t>::default_allocator;
+            auto allocator = SparrowAllocator{};
+            auto* data_ptr = allocator.allocate(data_size);
+            std::memcpy(data_ptr, str_data, data_size);
+
+            // Create offset buffer: [0, 5, 10]
+            using offset_type = big_string_array::offset_type;
+            auto* offset_ptr = allocator.allocate(sizeof(offset_type) * (num_strings + 1));
+            auto* typed_offset_ptr = reinterpret_cast<offset_type*>(offset_ptr);
+            typed_offset_ptr[0] = 0;
+            typed_offset_ptr[1] = 5;
+            typed_offset_ptr[2] = 10;
+
+            sparrow::u8_buffer<char> data_buffer(reinterpret_cast<char*>(data_ptr), data_size, allocator);
+            sparrow::u8_buffer<offset_type> offset_buffer(typed_offset_ptr, num_strings + 1, allocator);
+
+            big_string_array arr(std::move(data_buffer), std::move(offset_buffer));
+            sparrow::array array{std::move(arr)};
+
+            auto arrow_structures = sparrow::get_arrow_structures(array);
+            auto arrow_array_buffers = sparrow::get_arrow_array_buffers(
+                *arrow_structures.first,
+                *arrow_structures.second
+            );
+
+            // Buffer 1 is offsets, buffer 2 is data
+            const auto* roundtripped_offset_ptr = arrow_array_buffers.at(1).data<uint8_t>();
+            const auto* roundtripped_data_ptr = arrow_array_buffers.at(2).data<uint8_t>();
+
+            CHECK_EQ(roundtripped_offset_ptr, offset_ptr);
+            CHECK_EQ(roundtripped_data_ptr, data_ptr);
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
+        }
     }
 }
