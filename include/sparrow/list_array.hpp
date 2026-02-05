@@ -104,7 +104,7 @@ namespace sparrow
 
     namespace copy_tracker
     {
-        template<>
+        template <>
         inline std::string key<fixed_sized_list_array>()
         {
             return "fixed_sized_list_array";

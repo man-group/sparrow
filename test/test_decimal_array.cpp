@@ -382,7 +382,7 @@ namespace sparrow
                 decimal_array<decimal_type> arr2(arr);
 #ifdef SPARROW_TRACK_COPIES
                 copy_tracker::reset(copy_tracker::key<decimal_array<decimal_type>>());
-                 copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
                 copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
 #endif
                 decimal_array<decimal_type> arr3(std::move(arr));
