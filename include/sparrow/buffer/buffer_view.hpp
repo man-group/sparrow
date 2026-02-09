@@ -17,15 +17,20 @@
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
+    template <class T>
+    class buffer_view;
+
     namespace copy_tracker
     {
-        template <class T>
-        std::string key_buffer_view()
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, buffer_view>
+        std::string key()
         {
-            return "buffer_view<" + std::string(typeid(T).name()) + ">";
+            return "buffer_view<" + std::string(typeid(typename T::value_type).name()) + ">";
         }
     }
 
@@ -60,7 +65,7 @@ namespace sparrow
         constexpr buffer_view() = default;
         constexpr buffer_view(const buffer_view&);
         constexpr buffer_view(buffer_view&&) noexcept = default;
-        constexpr buffer_view& operator=(const buffer_view&) = default;
+        constexpr buffer_view& operator=(const buffer_view&);
         constexpr buffer_view& operator=(buffer_view&&) noexcept = default;
         constexpr explicit buffer_view(buffer<T>& buffer)
             requires(!std::is_const_v<T>);
@@ -135,7 +140,19 @@ namespace sparrow
         : p_data(other.p_data)
         , m_size(other.m_size)
     {
-        copy_tracker::increase(copy_tracker::key_buffer_view<T>());
+        copy_tracker::increase(copy_tracker::key<self_type>());
+    }
+
+    template <class T>
+    constexpr buffer_view<T>& buffer_view<T>::operator=(const buffer_view& other)
+    {
+        if (this != &other)
+        {
+            p_data = other.p_data;
+            m_size = other.m_size;
+            copy_tracker::increase(copy_tracker::key<self_type>());
+        }
+        return *this;
     }
 
     template <class T>
