@@ -547,7 +547,6 @@ namespace sparrow
     template <class T>
     constexpr buffer<T>& buffer<T>::operator=(const buffer& rhs)
     {
-        
         if (std::addressof(rhs) != this)
         {
             if (rhs.get_data().p_begin != nullptr)
