@@ -583,7 +583,7 @@ namespace sparrow
         , m_precision(rhs.m_precision)
         , m_scale(rhs.m_scale)
     {
-        copy_tracker::increase("decimal_array");
+        copy_tracker::increase(copy_tracker::key<decimal_array<T>>());
     }
 
     template <decimal_type T>
