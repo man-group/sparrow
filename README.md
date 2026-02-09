@@ -47,7 +47,7 @@ cmake .. \
     -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
     -DBUILD_EXAMPLES=ON \
     -DBUILD_TESTS=ON \
-    -BUILD_DOCS=ON \
+    -DBUILD_DOCS=ON \
     ..
 make install
 ```
