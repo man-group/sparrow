@@ -15,10 +15,25 @@
 #pragma once
 
 #include "sparrow/buffer/buffer.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
+    template <class T>
+    class buffer_view;
+
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, buffer_view>
+        std::string key()
+        {
+            return "buffer_view<" + std::string(typeid(typename T::value_type).name()) + ">";
+        }
+    }
+
     /*
      * Non-owning view of a contiguous sequence of objects of type T.
      *
@@ -48,6 +63,10 @@ namespace sparrow
         using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
         constexpr buffer_view() = default;
+        constexpr buffer_view(const buffer_view&);
+        constexpr buffer_view(buffer_view&&) noexcept = default;
+        constexpr buffer_view& operator=(const buffer_view&);
+        constexpr buffer_view& operator=(buffer_view&&) noexcept = default;
         constexpr explicit buffer_view(buffer<T>& buffer)
             requires(!std::is_const_v<T>);
         template <class U>
@@ -115,6 +134,26 @@ namespace sparrow
     /******************************
      * buffer_view implementation *
      ******************************/
+
+    template <class T>
+    constexpr buffer_view<T>::buffer_view(const buffer_view& other)
+        : p_data(other.p_data)
+        , m_size(other.m_size)
+    {
+        copy_tracker::increase(copy_tracker::key<self_type>());
+    }
+
+    template <class T>
+    constexpr buffer_view<T>& buffer_view<T>::operator=(const buffer_view& other)
+    {
+        if (this != &other)
+        {
+            p_data = other.p_data;
+            m_size = other.m_size;
+            copy_tracker::increase(copy_tracker::key<self_type>());
+        }
+        return *this;
+    }
 
     template <class T>
     constexpr buffer_view<T>::buffer_view(buffer<T>& buffer)

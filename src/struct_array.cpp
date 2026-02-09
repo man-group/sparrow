@@ -14,10 +14,20 @@
 
 #include "sparrow/struct_array.hpp"
 
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_factory.hpp"
 
 namespace sparrow
 {
+    namespace copy_tracker
+    {
+        template <>
+        SPARROW_API std::string key<struct_array>()
+        {
+            return "struct_array";
+        }
+    }
+
     struct_array::struct_array(arrow_proxy proxy)
         : base_type(std::move(proxy))
         , m_children(make_children())
@@ -28,10 +38,12 @@ namespace sparrow
         : base_type(rhs)
         , m_children(make_children())
     {
+        copy_tracker::increase(copy_tracker::key<struct_array>());
     }
 
     struct_array& struct_array::operator=(const struct_array& rhs)
     {
+        copy_tracker::increase(copy_tracker::key<struct_array>());
         if (this != &rhs)
         {
             base_type::operator=(rhs);

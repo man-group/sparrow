@@ -20,6 +20,7 @@
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_helper.hpp"
@@ -90,6 +91,16 @@ namespace sparrow
      */
     template <std::integral IT>
     class dictionary_encoded_array;
+
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, dictionary_encoded_array>
+        std::string key()
+        {
+            return "dictionary_encoded_array";
+        }
+    }
 
     namespace detail
     {
@@ -591,11 +602,13 @@ namespace sparrow
         , m_keys_layout(create_keys_layout(m_proxy))
         , p_values_layout(create_values_layout(m_proxy))
     {
+        copy_tracker::increase(copy_tracker::key<self_type>());
     }
 
     template <std::integral IT>
     constexpr auto dictionary_encoded_array<IT>::operator=(const self_type& rhs) -> self_type&
     {
+        copy_tracker::increase(copy_tracker::key<self_type>());
         if (this != &rhs)
         {
             m_proxy = rhs.m_proxy;

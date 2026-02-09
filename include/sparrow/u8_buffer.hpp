@@ -20,10 +20,19 @@
 #include "sparrow/buffer/allocator.hpp"
 #include "sparrow/buffer/buffer.hpp"
 #include "sparrow/buffer/buffer_adaptor.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/utils/ranges.hpp"
 
 namespace sparrow
 {
+    namespace copy_tracker
+    {
+        template <typename T>
+        std::string key_u8_buffer()
+        {
+            return "u8_buffer<" + std::string(typeid(T).name()) + ">";
+        }
+    }
 
     namespace detail
     {
@@ -220,6 +229,7 @@ namespace sparrow
         : holder_type(other.storage())
         , buffer_adaptor_type(holder_type::value)
     {
+        copy_tracker::increase(copy_tracker::key_u8_buffer<T>());
     }
 
     template <class T>

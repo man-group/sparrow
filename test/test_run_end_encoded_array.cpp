@@ -87,8 +87,14 @@ namespace sparrow
 
             SUBCASE("copy")
             {
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset(copy_tracker::key<run_end_encoded_array>());
+#endif
                 run_end_encoded_array rle_array2(rle_array);
                 CHECK_EQ(rle_array2, rle_array);
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<run_end_encoded_array>()), 1);
+#endif
 
                 run_end_encoded_array rle_array3 = test::make_test_run_encoded_array(/*alterate=*/true);
                 CHECK_NE(rle_array3, rle_array);

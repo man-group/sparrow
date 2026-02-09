@@ -206,14 +206,13 @@ namespace sparrow
         TEST_CASE("copy semantic")
         {
 #ifdef SPARROW_TRACK_COPIES
-            auto key = std::string("record_batch");  // copy_tracker::key<record_batch>();
-            copy_tracker::reset(key);
+            copy_tracker::reset(copy_tracker::key<record_batch>());
 #endif
             auto record1 = make_record_batch(col_size);
             auto record2(record1);
             CHECK_EQ(record1, record2);
 #ifdef SPARROW_TRACK_COPIES
-            CHECK_EQ(copy_tracker::count(key), 1);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<record_batch>()), 1);
 #endif
 
             auto record3 = make_record_batch(col_size + 2u);

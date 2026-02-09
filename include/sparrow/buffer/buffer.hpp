@@ -24,6 +24,7 @@
 #include <type_traits>
 
 #include "sparrow/buffer/allocator.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/details/3rdparty/xsimd_aligned_allocator.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
@@ -35,6 +36,22 @@
 
 namespace sparrow
 {
+    template <class T>
+    class buffer_base;
+
+    template <class T>
+    class buffer;
+
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, sparrow::buffer>
+        std::string key()
+        {
+            return "buffer<" + std::string(typeid(T).name()) + ">";
+        }
+    }
+
     template <typename T>
     concept is_buffer_view = requires(T t) { typename T::is_buffer_view; };
 
@@ -112,6 +129,7 @@ namespace sparrow
     template <class T>
     class buffer : private buffer_base<T>
     {
+        using self_type = buffer<T>;
         using base_type = buffer_base<T>;
         using alloc_traits = typename base_type::alloc_traits;
 
@@ -490,6 +508,7 @@ namespace sparrow
             this->create_storage(rhs.size());
             get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
         }
+        copy_tracker::increase(copy_tracker::key<self_type>());
     }
 
     template <class T>
@@ -502,6 +521,7 @@ namespace sparrow
             this->create_storage(rhs.size());
             get_data().p_end = copy_initialize(rhs.begin(), rhs.end(), get_data().p_begin, get_allocator());
         }
+        copy_tracker::increase(copy_tracker::key<self_type>());
     }
 
     template <class T>
@@ -544,6 +564,7 @@ namespace sparrow
                 this->assign_storage(nullptr, 0, 0);
             }
         }
+        copy_tracker::increase(copy_tracker::key<self_type>());
         return *this;
     }
 

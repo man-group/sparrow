@@ -841,6 +841,9 @@ namespace sparrow
          */
         SPARROW_API explicit sparse_union_array(arrow_proxy proxy);
 
+        SPARROW_API sparse_union_array(const sparse_union_array&);
+        SPARROW_API sparse_union_array& operator=(const sparse_union_array&);
+
     private:
 
         using type_id_map = typename base_type::type_id_map;

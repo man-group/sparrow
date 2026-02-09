@@ -20,6 +20,7 @@
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/decimal_reference.hpp"
 #include "sparrow/layout/layout_utils.hpp"
@@ -40,6 +41,16 @@ namespace sparrow
      */
     template <decimal_type T>
     class decimal_array;
+
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, decimal_array>
+        std::string key()
+        {
+            return "decimal_array";
+        }
+    }
 
     /** Type alias for 32-bit decimal array. */
     using decimal_32_array = decimal_array<decimal<int32_t>>;
@@ -191,6 +202,36 @@ namespace sparrow
          * @param proxy The arrow proxy containing the array data and schema.
          */
         explicit decimal_array(arrow_proxy proxy);
+
+        /**
+         * Copy constructor.
+         *
+         * @param rhs The decimal array to copy from.
+         */
+        decimal_array(const decimal_array& rhs);
+
+        /**
+         * Copy assignment operator.
+         *
+         * @param rhs The decimal array to assign from.
+         * @return Reference to this array.
+         */
+        decimal_array& operator=(const decimal_array& rhs);
+
+        /**
+         * Move constructor.
+         *
+         * @param rhs The decimal array to move from.
+         */
+        decimal_array(decimal_array&& rhs) noexcept = default;
+
+        /**
+         * Move assignment operator.
+         *
+         * @param rhs The decimal array to move assign from.
+         * @return Reference to this array.
+         */
+        decimal_array& operator=(decimal_array&& rhs) noexcept = default;
 
         /**
          * Constructs a decimal array with the given arguments.
@@ -534,6 +575,25 @@ namespace sparrow
         {
             throw std::runtime_error("Invalid format string for decimal array");
         }
+    }
+
+    template <decimal_type T>
+    decimal_array<T>::decimal_array(const decimal_array& rhs)
+        : base_type(rhs)
+        , m_precision(rhs.m_precision)
+        , m_scale(rhs.m_scale)
+    {
+        copy_tracker::increase(copy_tracker::key<decimal_array<T>>());
+    }
+
+    template <decimal_type T>
+    decimal_array<T>& decimal_array<T>::operator=(const decimal_array& rhs)
+    {
+        copy_tracker::increase("decimal_array");
+        base_type::operator=(rhs);
+        m_precision = rhs.m_precision;
+        m_scale = rhs.m_scale;
+        return *this;
     }
 
     template <decimal_type T>

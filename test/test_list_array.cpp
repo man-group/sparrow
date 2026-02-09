@@ -145,8 +145,14 @@ namespace sparrow
 
             SUBCASE("copy")
             {
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset(copy_tracker::key<list_array>());
+#endif
                 list_array list_arr2(list_arr);
                 CHECK_EQ(list_arr, list_arr2);
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<list_array>()), 1);
+#endif
 
                 list_array list_arr3(test::make_list_proxy<T>(n_flat2, sizes2));
                 CHECK_NE(list_arr3, list_arr);
@@ -363,8 +369,14 @@ namespace sparrow
 
             SUBCASE("copy")
             {
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset(copy_tracker::key<list_view_array>());
+#endif
                 list_view_array list_arr2(list_arr);
                 CHECK_EQ(list_arr, list_arr2);
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<list_view_array>()), 1);
+#endif
 
                 list_view_array list_arr3(test::make_list_view_proxy<T>(n_flat2, sizes2));
                 CHECK_NE(list_arr3, list_arr);
@@ -501,8 +513,14 @@ namespace sparrow
 
             SUBCASE("copy")
             {
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset(copy_tracker::key<fixed_sized_list_array>());
+#endif
                 fixed_sized_list_array list_arr2(list_arr);
                 CHECK_EQ(list_arr, list_arr2);
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<fixed_sized_list_array>()), 1);
+#endif
 
                 fixed_sized_list_array list_arr3(test::make_fixed_sized_list_proxy<T>(n_flat2, list_size2));
                 CHECK_NE(list_arr3, list_arr);

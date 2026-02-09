@@ -17,6 +17,7 @@
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_base.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/layout_utils.hpp"
@@ -40,6 +41,16 @@ namespace sparrow
 {
     template <timestamp_type T>
     class timestamp_array;
+
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires mpl::is_type_instance_of_v<T, timestamp_array>
+        std::string key()
+        {
+            return "timestamp_array";
+        }
+    }
 
     template <timestamp_type T>
     struct array_inner_types<timestamp_array<T>> : array_inner_types_base
@@ -359,7 +370,7 @@ namespace sparrow
          * @post rhs is left in a valid but unspecified state
          * @post Timezone and data access are properly transferred
          */
-        constexpr timestamp_array(timestamp_array&& rhs);
+        constexpr timestamp_array(timestamp_array&& rhs) noexcept;
 
         /**
          * @brief Move assignment operator.
@@ -371,7 +382,7 @@ namespace sparrow
          * @post Previous data is properly released
          * @post rhs is left in a valid but unspecified state
          */
-        constexpr timestamp_array& operator=(timestamp_array&& rhs);
+        constexpr timestamp_array& operator=(timestamp_array&& rhs) noexcept;
 
     private:
 
@@ -865,11 +876,13 @@ namespace sparrow
         , m_timezone(rhs.m_timezone)
         , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
     {
+        copy_tracker::increase(copy_tracker::key<self_type>());
     }
 
     template <timestamp_type T>
     constexpr timestamp_array<T>& timestamp_array<T>::operator=(const timestamp_array& rhs)
     {
+        copy_tracker::increase(copy_tracker::key<self_type>());
         base_type::operator=(rhs);
         m_timezone = rhs.m_timezone;
         m_data_access.reset_proxy(this->get_arrow_proxy());
@@ -877,7 +890,7 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    constexpr timestamp_array<T>::timestamp_array(timestamp_array&& rhs)
+    constexpr timestamp_array<T>::timestamp_array(timestamp_array&& rhs) noexcept
         : base_type(std::move(rhs))
         , m_timezone(rhs.m_timezone)
         , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
@@ -885,7 +898,7 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    constexpr timestamp_array<T>& timestamp_array<T>::operator=(timestamp_array&& rhs)
+    constexpr timestamp_array<T>& timestamp_array<T>::operator=(timestamp_array&& rhs) noexcept
     {
         base_type::operator=(std::move(rhs));
         m_timezone = rhs.m_timezone;

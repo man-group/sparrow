@@ -14,12 +14,39 @@
 
 #include "sparrow/null_array.hpp"
 
+#include "sparrow/debug/copy_tracker.hpp"
+
 namespace sparrow
 {
+    namespace copy_tracker
+    {
+        template <>
+        SPARROW_API std::string key<null_array>()
+        {
+            return "null_array";
+        }
+    }
+
     null_array::null_array(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
     {
         SPARROW_ASSERT_TRUE(m_proxy.data_type() == data_type::NA);
+    }
+
+    null_array::null_array(const null_array& rhs)
+        : null_array(rhs.m_proxy)
+    {
+        copy_tracker::increase(copy_tracker::key<null_array>());
+    }
+
+    null_array& null_array::operator=(const null_array& rhs)
+    {
+        copy_tracker::increase(copy_tracker::key<null_array>());
+        if (this != &rhs)
+        {
+            m_proxy = rhs.m_proxy;
+        }
+        return *this;
     }
 
     std::optional<std::string_view> null_array::name() const

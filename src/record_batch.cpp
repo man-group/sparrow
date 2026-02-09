@@ -14,8 +14,6 @@
 
 #include "sparrow/record_batch.hpp"
 
-#include <unordered_set>
-
 #include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/utils/contracts.hpp"
 

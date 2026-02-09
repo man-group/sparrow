@@ -28,6 +28,7 @@
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/fixed_width_binary_array_utils.hpp"
 #include "sparrow/layout/fixed_width_binary_reference.hpp"
@@ -78,6 +79,15 @@ namespace sparrow
     using fixed_width_binary_array = fixed_width_binary_array_impl<
         fixed_width_binary_traits::value_type,
         fixed_width_binary_traits::const_reference>;
+
+    namespace copy_tracker
+    {
+        template <>
+        inline std::string key<fixed_width_binary_array>()
+        {
+            return "fixed_width_binary_array";
+        }
+    }
 
     template <std::ranges::sized_range T, typename CR, typename Ext>
     struct array_inner_types<fixed_width_binary_array_impl<T, CR, Ext>> : array_inner_types_base
@@ -178,6 +188,14 @@ namespace sparrow
          * @note Internal assertion: SPARROW_ASSERT_TRUE(proxy.data_type() == data_type::FIXED_WIDTH_BINARY)
          */
         explicit fixed_width_binary_array_impl(arrow_proxy);
+
+        fixed_width_binary_array_impl(const self_type&);
+
+        /** Move constructor */
+        fixed_width_binary_array_impl(self_type&&) noexcept = default;
+
+        self_type& operator=(const self_type&);
+        self_type& operator=(self_type&&) noexcept = default;
 
         /**
          * @brief Generic constructor for creating fixed-width binary array.
@@ -654,6 +672,26 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(this->get_arrow_proxy().data_type() == data_type::FIXED_WIDTH_BINARY);
     }
+
+    template <std::ranges::sized_range T, typename CR, typename Ext>
+    fixed_width_binary_array_impl<T, CR, Ext>::fixed_width_binary_array_impl(const self_type& rhs)
+        : base_type(rhs)
+        , m_element_size(rhs.m_element_size)
+    {
+        copy_tracker::increase(copy_tracker::key<self_type>());
+    }
+
+    template <std::ranges::sized_range T, typename CR, typename Ext>
+    fixed_width_binary_array_impl<T, CR, Ext>&
+    fixed_width_binary_array_impl<T, CR, Ext>::operator=(const self_type& rhs)
+    {
+        copy_tracker::increase(copy_tracker::key<self_type>());
+        base_type::operator=(rhs);
+        m_element_size = rhs.m_element_size;
+        return *this;
+    }
+
+    // Move constructor and assignment are defaulted in the class definition
 
     template <std::ranges::sized_range T, typename CR, typename Ext>
     template <mpl::char_like C, validity_bitmap_input VB, input_metadata_container METADATA_RANGE>

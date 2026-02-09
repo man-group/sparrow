@@ -22,6 +22,7 @@
 #include "sparrow/array_api.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+#include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
@@ -43,6 +44,23 @@ namespace sparrow
 
     template <bool BIG>
     class list_view_array_impl;
+
+    namespace copy_tracker
+    {
+        template <typename T>
+            requires std::same_as<T, list_array_impl<false>> || std::same_as<T, list_array_impl<true>>
+        std::string key()
+        {
+            return "list_array";
+        }
+
+        template <typename T>
+            requires std::same_as<T, list_view_array_impl<false>> || std::same_as<T, list_view_array_impl<true>>
+        std::string key()
+        {
+            return "list_view_array";
+        }
+    }
 
     /**
      * A list array implementation.
@@ -83,6 +101,16 @@ namespace sparrow
     using big_list_view_array = list_view_array_impl<true>;
 
     class fixed_sized_list_array;
+
+    namespace copy_tracker
+    {
+        template <>
+        inline std::string key<fixed_sized_list_array>()
+        {
+            return "fixed_sized_list_array";
+        }
+    }
+
 
     /**
      * Checks whether T is a list_array type.
@@ -779,8 +807,8 @@ namespace sparrow
          */
         explicit fixed_sized_list_array(arrow_proxy proxy);
 
-        constexpr fixed_sized_list_array(const self_type&) = default;
-        fixed_sized_list_array& operator=(const self_type&) = default;
+        fixed_sized_list_array(const self_type&);
+        fixed_sized_list_array& operator=(const self_type&);
 
         fixed_sized_list_array(self_type&&) = default;
         fixed_sized_list_array& operator=(self_type&&) = default;
@@ -1105,11 +1133,13 @@ namespace sparrow
         : base_type(rhs)
         , p_list_offsets(make_list_offsets())
     {
+        copy_tracker::increase(copy_tracker::key<list_array_impl<BIG>>());
     }
 
     template <bool BIG>
     constexpr auto list_array_impl<BIG>::operator=(const self_type& rhs) -> self_type&
     {
+        copy_tracker::increase(copy_tracker::key<self_type>());
         if (this != &rhs)
         {
             base_type::operator=(rhs);
@@ -1243,11 +1273,13 @@ namespace sparrow
         , p_list_offsets(make_list_offsets())
         , p_list_sizes(make_list_sizes())
     {
+        copy_tracker::increase(copy_tracker::key<list_view_array_impl<BIG>>());
     }
 
     template <bool BIG>
     constexpr auto list_view_array_impl<BIG>::operator=(const self_type& rhs) -> self_type&
     {
+        copy_tracker::increase(copy_tracker::key<self_type>());
         if (this != &rhs)
         {
             base_type::operator=(rhs);
@@ -1301,6 +1333,24 @@ namespace sparrow
         : base_type(std::move(proxy))
         , m_list_size(fixed_sized_list_array::list_size_from_format(this->get_arrow_proxy().format()))
     {
+    }
+
+    inline fixed_sized_list_array::fixed_sized_list_array(const self_type& rhs)
+        : base_type(rhs)
+        , m_list_size(rhs.m_list_size)
+    {
+        copy_tracker::increase(copy_tracker::key<self_type>());
+    }
+
+    inline fixed_sized_list_array& fixed_sized_list_array::operator=(const self_type& rhs)
+    {
+        copy_tracker::increase(copy_tracker::key<self_type>());
+        if (this != &rhs)
+        {
+            base_type::operator=(rhs);
+            m_list_size = rhs.m_list_size;
+        }
+        return *this;
     }
 
     constexpr auto fixed_sized_list_array::offset_range(size_type i) const
