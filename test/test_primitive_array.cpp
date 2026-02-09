@@ -144,7 +144,7 @@ namespace sparrow
                 SUBCASE("u8_buffer, size, bitmap, name, metadata")
                 {
 #ifdef SPARROW_TRACK_COPIES
-                    copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                    copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
                     copy_tracker::reset(copy_tracker::key<ArrowArray>());
 #endif
                     u8_buffer<T> buffer{
@@ -168,7 +168,7 @@ namespace sparrow
                             )
                     };
 #ifdef SPARROW_TRACK_COPIES
-                    CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key<::sparrow::buffer<uint8_t>>()), 0);
                     CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 0);
 #endif
                     CHECK_EQ(ar.size(), values_count);
@@ -235,7 +235,7 @@ namespace sparrow
             {
 #ifdef SPARROW_TRACK_COPIES
                 copy_tracker::reset(copy_tracker::key<array_test_type>());
-                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
                 copy_tracker::reset(copy_tracker::key<ArrowArray>());
 #endif
                 array_test_type ar2(ar);
@@ -243,14 +243,14 @@ namespace sparrow
                 CHECK_EQ(ar, ar2);
 #ifdef SPARROW_TRACK_COPIES
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<array_test_type>()), 1);
-                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 1);
 #endif
                 array_test_type ar3(make_array(make_nullable_values(7)));
                 CHECK_NE(ar, ar3);
 #ifdef SPARROW_TRACK_COPIES
                 copy_tracker::reset(copy_tracker::key<array_test_type>());
-                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
                 copy_tracker::reset(copy_tracker::key<ArrowArray>());
 #endif
                 ar3 = ar;
@@ -258,7 +258,7 @@ namespace sparrow
                 CHECK_EQ(ar.null_count(), 45);
 #ifdef SPARROW_TRACK_COPIES
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<array_test_type>()), 1);
-                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 1);
 #endif
             }
@@ -268,7 +268,7 @@ namespace sparrow
                 array_test_type ar2(ar);
 #ifdef SPARROW_TRACK_COPIES
                 copy_tracker::reset(copy_tracker::key<array_test_type>());
-                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
                 copy_tracker::reset(copy_tracker::key<ArrowArray>());
 #endif
 
@@ -276,7 +276,7 @@ namespace sparrow
                 CHECK_EQ(ar2, ar3);
 #ifdef SPARROW_TRACK_COPIES
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<array_test_type>()), 0);
-                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 0);
 #endif
 
@@ -284,7 +284,7 @@ namespace sparrow
                 CHECK_NE(ar2, ar4);
 #ifdef SPARROW_TRACK_COPIES
                 copy_tracker::reset(copy_tracker::key<array_test_type>());
-                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
                 copy_tracker::reset(copy_tracker::key<ArrowArray>());
 #endif
                 ar4 = std::move(ar2);
@@ -292,7 +292,7 @@ namespace sparrow
                 CHECK_EQ(ar4.null_count(), 45);
 #ifdef SPARROW_TRACK_COPIES
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<array_test_type>()), 0);
-                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 0);
 #endif
             }
@@ -899,7 +899,7 @@ namespace sparrow
 #    pragma GCC diagnostic ignored "-Wcast-align"
 #endif
 #ifdef SPARROW_TRACK_COPIES
-            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+            copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
             copy_tracker::reset(copy_tracker::key<ArrowArray>());
 #endif
             size_t num_rows = 100000;
@@ -927,7 +927,7 @@ namespace sparrow
                 CHECK_EQ(cast_ptr[idx], idx);
             }
 #ifdef SPARROW_TRACK_COPIES
-            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
             CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 0);
 #endif
 #if defined(__GNUC__) && !defined(__clang__)

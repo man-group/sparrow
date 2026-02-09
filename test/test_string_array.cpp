@@ -172,25 +172,25 @@ namespace sparrow
             const layout_type ar(m_arrow_proxy);
 #ifdef SPARROW_TRACK_COPIES
             copy_tracker::reset(copy_tracker::key<layout_type>());
-            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+            copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
             layout_type ar2(ar);
             CHECK_EQ(ar, ar2);
 #ifdef SPARROW_TRACK_COPIES
             CHECK_EQ(copy_tracker::count(copy_tracker::key<layout_type>()), 1);
-            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
 
             layout_type ar3(std::move(m_arrow_proxy));
 #ifdef SPARROW_TRACK_COPIES
             copy_tracker::reset(copy_tracker::key<layout_type>());
-            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+            copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
             ar3 = ar2;
             CHECK_EQ(ar2, ar3);
 #ifdef SPARROW_TRACK_COPIES
             CHECK_EQ(copy_tracker::count(copy_tracker::key<layout_type>()), 1);
-            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
         }
 
@@ -200,25 +200,25 @@ namespace sparrow
             layout_type ar2(ar);
 #ifdef SPARROW_TRACK_COPIES
             copy_tracker::reset(copy_tracker::key<layout_type>());
-            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+            copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
             layout_type ar3(std::move(ar));
             CHECK_EQ(ar2, ar3);
 #ifdef SPARROW_TRACK_COPIES
             CHECK_EQ(copy_tracker::count(copy_tracker::key<layout_type>()), 0);
-            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
 
             layout_type ar4(std::move(m_arrow_proxy));
 #ifdef SPARROW_TRACK_COPIES
             copy_tracker::reset(copy_tracker::key<layout_type>());
-            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+            copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
             ar4 = std::move(ar3);
             CHECK_EQ(ar2, ar4);
 #ifdef SPARROW_TRACK_COPIES
             CHECK_EQ(copy_tracker::count(copy_tracker::key<layout_type>()), 0);
-            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
         }
 

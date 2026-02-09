@@ -110,26 +110,26 @@ namespace sparrow
                     const timestamp_array<T> ar(new_york, input_values);
 #ifdef SPARROW_TRACK_COPIES
                     copy_tracker::reset(copy_tracker::key<timestamp_array<T>>());
-                    copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                    copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
                     timestamp_array<T> ar2(ar);
                     CHECK_EQ(ar, ar2);
 #ifdef SPARROW_TRACK_COPIES
                     CHECK_EQ(copy_tracker::count(copy_tracker::key<timestamp_array<T>>()), 1);
-                    CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
                     const auto other_values = make_nullable_values<T>(5);
                     timestamp_array<T> ar3(new_york, other_values);
                     CHECK_NE(ar, ar3);
 #ifdef SPARROW_TRACK_COPIES
                     copy_tracker::reset(copy_tracker::key<timestamp_array<T>>());
-                    copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                    copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
                     ar3 = ar;
                     CHECK_EQ(ar, ar3);
 #ifdef SPARROW_TRACK_COPIES
                     CHECK_EQ(copy_tracker::count(copy_tracker::key<timestamp_array<T>>()), 1);
-                    CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
                 }
 
@@ -139,27 +139,27 @@ namespace sparrow
                     timestamp_array<T> ar2(ar);
 #ifdef SPARROW_TRACK_COPIES
                     copy_tracker::reset(copy_tracker::key<timestamp_array<T>>());
-                    copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                    copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
                     const timestamp_array<T> ar3(std::move(ar));
                     CHECK_EQ(ar3.size(), input_values.size());
                     CHECK_EQ(ar2, ar3);
 #ifdef SPARROW_TRACK_COPIES
                     CHECK_EQ(copy_tracker::count(copy_tracker::key<timestamp_array<T>>()), 0);
-                    CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
                     const auto other_values = make_nullable_values<T>(5);
                     timestamp_array<T> ar4(new_york, other_values);
                     CHECK_NE(ar2, ar4);
 #ifdef SPARROW_TRACK_COPIES
                     copy_tracker::reset(copy_tracker::key<timestamp_array<T>>());
-                    copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                    copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
                     ar4 = std::move(ar2);
                     CHECK_EQ(ar3, ar4);
 #ifdef SPARROW_TRACK_COPIES
                     CHECK_EQ(copy_tracker::count(copy_tracker::key<timestamp_array<T>>()), 0);
-                    CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                    CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
                 }
             }

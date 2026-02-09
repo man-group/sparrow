@@ -362,26 +362,26 @@ namespace sparrow
             {
 #ifdef SPARROW_TRACK_COPIES
                 copy_tracker::reset(copy_tracker::key<decimal_array<decimal_type>>());
-                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
                 decimal_array<decimal_type> arr2(arr);
                 CHECK_EQ(arr, arr2);
 #ifdef SPARROW_TRACK_COPIES
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<decimal_array<decimal_type>>()), 1);
-                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
 
                 decimal_array<decimal_type> arr3{std::vector<integer_type>{5, 10}, precision, scale};
                 CHECK_NE(arr, arr3);
 #ifdef SPARROW_TRACK_COPIES
                 copy_tracker::reset(copy_tracker::key<decimal_array<decimal_type>>());
-                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
                 arr3 = arr;
                 CHECK_EQ(arr, arr3);
 #ifdef SPARROW_TRACK_COPIES
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<decimal_array<decimal_type>>()), 1);
-                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
             }
 
@@ -390,26 +390,26 @@ namespace sparrow
                 decimal_array<decimal_type> arr2(arr);
 #ifdef SPARROW_TRACK_COPIES
                 copy_tracker::reset(copy_tracker::key<decimal_array<decimal_type>>());
-                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
                 decimal_array<decimal_type> arr3(std::move(arr));
                 CHECK_EQ(arr2, arr3);
 #ifdef SPARROW_TRACK_COPIES
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<decimal_array<decimal_type>>()), 0);
-                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
 
                 decimal_array<decimal_type> arr4{std::vector<integer_type>{5, 10}, precision, scale};
                 CHECK_NE(arr2, arr4);
 #ifdef SPARROW_TRACK_COPIES
                 copy_tracker::reset(copy_tracker::key<decimal_array<decimal_type>>());
-                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
                 arr4 = std::move(arr2);
                 CHECK_EQ(arr3, arr4);
 #ifdef SPARROW_TRACK_COPIES
                 CHECK_EQ(copy_tracker::count(copy_tracker::key<decimal_array<decimal_type>>()), 0);
-                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
             }
         }

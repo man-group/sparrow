@@ -200,12 +200,12 @@ namespace sparrow
             fixed_width_binary_array ar2(ar);
 #ifdef SPARROW_TRACK_COPIES
             copy_tracker::reset(copy_tracker::key<fixed_width_binary_array>());
-            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+            copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
             fixed_width_binary_array ar3(std::move(ar));
 #ifdef SPARROW_TRACK_COPIES
             CHECK_EQ(copy_tracker::count(copy_tracker::key<fixed_width_binary_array>()), 0);
-            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
             CHECK_EQ(ar2, ar3);
 
@@ -213,13 +213,13 @@ namespace sparrow
             CHECK_NE(ar2, ar4);
 #ifdef SPARROW_TRACK_COPIES
             copy_tracker::reset(copy_tracker::key<fixed_width_binary_array>());
-            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+            copy_tracker::reset(copy_tracker::key<buffer<uint8_t>>());
 #endif
             ar4 = std::move(ar2);
             CHECK_EQ(ar3, ar4);
 #ifdef SPARROW_TRACK_COPIES
             CHECK_EQ(copy_tracker::count(copy_tracker::key<fixed_width_binary_array>()), 0);
-            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<buffer<uint8_t>>()), 0);
 #endif
         }
 
