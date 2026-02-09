@@ -58,6 +58,7 @@ namespace sparrow
 
     map_array& map_array::operator=(const self_type& rhs)
     {
+        copy_tracker::increase(copy_tracker::key<map_array>());
         if (this != &rhs)
         {
             base_type::operator=(rhs);

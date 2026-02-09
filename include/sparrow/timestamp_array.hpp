@@ -370,7 +370,7 @@ namespace sparrow
          * @post rhs is left in a valid but unspecified state
          * @post Timezone and data access are properly transferred
          */
-        constexpr timestamp_array(timestamp_array&& rhs);
+        constexpr timestamp_array(timestamp_array&& rhs) noexcept;
 
         /**
          * @brief Move assignment operator.
@@ -382,7 +382,7 @@ namespace sparrow
          * @post Previous data is properly released
          * @post rhs is left in a valid but unspecified state
          */
-        constexpr timestamp_array& operator=(timestamp_array&& rhs);
+        constexpr timestamp_array& operator=(timestamp_array&& rhs) noexcept;
 
     private:
 
@@ -882,6 +882,7 @@ namespace sparrow
     template <timestamp_type T>
     constexpr timestamp_array<T>& timestamp_array<T>::operator=(const timestamp_array& rhs)
     {
+        copy_tracker::increase(copy_tracker::key<self_type>());
         base_type::operator=(rhs);
         m_timezone = rhs.m_timezone;
         m_data_access.reset_proxy(this->get_arrow_proxy());
@@ -889,7 +890,7 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    constexpr timestamp_array<T>::timestamp_array(timestamp_array&& rhs)
+    constexpr timestamp_array<T>::timestamp_array(timestamp_array&& rhs) noexcept
         : base_type(std::move(rhs))
         , m_timezone(rhs.m_timezone)
         , m_data_access(this->get_arrow_proxy(), DATA_BUFFER_INDEX)
@@ -897,7 +898,7 @@ namespace sparrow
     }
 
     template <timestamp_type T>
-    constexpr timestamp_array<T>& timestamp_array<T>::operator=(timestamp_array&& rhs)
+    constexpr timestamp_array<T>& timestamp_array<T>::operator=(timestamp_array&& rhs) noexcept
     {
         base_type::operator=(std::move(rhs));
         m_timezone = rhs.m_timezone;

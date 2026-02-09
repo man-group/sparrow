@@ -43,6 +43,7 @@ namespace sparrow
 
     struct_array& struct_array::operator=(const struct_array& rhs)
     {
+        copy_tracker::increase(copy_tracker::key<struct_array>());
         if (this != &rhs)
         {
             base_type::operator=(rhs);

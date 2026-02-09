@@ -182,8 +182,16 @@ namespace sparrow
 #endif
 
             layout_type ar3(std::move(m_arrow_proxy));
+#ifdef SPARROW_TRACK_COPIES
+            copy_tracker::reset(copy_tracker::key<layout_type>());
+            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+#endif
             ar3 = ar2;
             CHECK_EQ(ar2, ar3);
+#ifdef SPARROW_TRACK_COPIES
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<layout_type>()), 1);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+#endif
         }
 
         TEST_CASE_FIXTURE(string_array_fixture, "move")
@@ -202,8 +210,16 @@ namespace sparrow
 #endif
 
             layout_type ar4(std::move(m_arrow_proxy));
+#ifdef SPARROW_TRACK_COPIES
+            copy_tracker::reset(copy_tracker::key<layout_type>());
+            copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+#endif
             ar4 = std::move(ar3);
             CHECK_EQ(ar2, ar4);
+#ifdef SPARROW_TRACK_COPIES
+            CHECK_EQ(copy_tracker::count(copy_tracker::key<layout_type>()), 0);
+            CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+#endif
         }
 
         TEST_CASE_FIXTURE(string_array_fixture, "size")

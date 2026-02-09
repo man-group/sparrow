@@ -59,6 +59,7 @@ namespace sparrow
 
     dense_union_array& dense_union_array::operator=(const dense_union_array& rhs)
     {
+        copy_tracker::increase(copy_tracker::key<dense_union_array>());
         if (this != &rhs)
         {
             base_type::operator=(rhs);
@@ -89,6 +90,16 @@ namespace sparrow
         : base_type(rhs)
     {
         copy_tracker::increase(copy_tracker::key<sparse_union_array>());
+    }
+
+    sparse_union_array& sparse_union_array::operator=(const sparse_union_array& rhs)
+    {
+        copy_tracker::increase(copy_tracker::key<sparse_union_array>());
+        if (this != &rhs)
+        {
+            base_type::operator=(rhs);
+        }
+        return *this;
     }
 
     std::size_t sparse_union_array::element_offset(std::size_t i) const

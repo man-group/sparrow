@@ -248,9 +248,19 @@ namespace sparrow
 #endif
                 array_test_type ar3(make_array(make_nullable_values(7)));
                 CHECK_NE(ar, ar3);
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset(copy_tracker::key<array_test_type>());
+                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<ArrowArray>());
+#endif
                 ar3 = ar;
                 CHECK_EQ(ar, ar3);
                 CHECK_EQ(ar.null_count(), 45);
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<array_test_type>()), 1);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 1);
+#endif
             }
 
             SUBCASE("move")
@@ -272,9 +282,19 @@ namespace sparrow
 
                 array_test_type ar4(make_array(make_nullable_values(7)));
                 CHECK_NE(ar2, ar4);
+#ifdef SPARROW_TRACK_COPIES
+                copy_tracker::reset(copy_tracker::key<array_test_type>());
+                copy_tracker::reset(copy_tracker::key_buffer<uint8_t>());
+                copy_tracker::reset(copy_tracker::key<ArrowArray>());
+#endif
                 ar4 = std::move(ar2);
                 CHECK_EQ(ar3, ar4);
                 CHECK_EQ(ar4.null_count(), 45);
+#ifdef SPARROW_TRACK_COPIES
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<array_test_type>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key_buffer<uint8_t>()), 0);
+                CHECK_EQ(copy_tracker::count(copy_tracker::key<ArrowArray>()), 0);
+#endif
             }
 
             SUBCASE("value_iterator_ordering")

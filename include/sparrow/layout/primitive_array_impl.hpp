@@ -500,6 +500,7 @@ namespace sparrow
     constexpr primitive_array_impl<T, Ext, T2>&
     primitive_array_impl<T, Ext, T2>::operator=(const primitive_array_impl& rhs)
     {
+        copy_tracker::increase(copy_tracker::key<self_type>());
         base_type::operator=(rhs);
         access_class_type::reset_proxy(this->get_arrow_proxy());
         return *this;

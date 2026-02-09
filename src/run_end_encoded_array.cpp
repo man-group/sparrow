@@ -49,6 +49,7 @@ namespace sparrow
 
     auto run_end_encoded_array::operator=(const self_type& rhs) -> self_type&
     {
+        copy_tracker::increase(copy_tracker::key<run_end_encoded_array>());
         if (this != &rhs)
         {
             m_proxy = rhs.m_proxy;

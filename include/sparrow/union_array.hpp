@@ -842,7 +842,7 @@ namespace sparrow
         SPARROW_API explicit sparse_union_array(arrow_proxy proxy);
 
         SPARROW_API sparse_union_array(const sparse_union_array&);
-        SPARROW_API sparse_union_array& operator=(const sparse_union_array&) = default;
+        SPARROW_API sparse_union_array& operator=(const sparse_union_array&);
 
     private:
 

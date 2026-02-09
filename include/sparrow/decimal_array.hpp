@@ -216,7 +216,7 @@ namespace sparrow
          * @param rhs The decimal array to assign from.
          * @return Reference to this array.
          */
-        decimal_array& operator=(const decimal_array& rhs) = default;
+        decimal_array& operator=(const decimal_array& rhs);
 
         /**
          * Move constructor.
@@ -584,6 +584,16 @@ namespace sparrow
         , m_scale(rhs.m_scale)
     {
         copy_tracker::increase(copy_tracker::key<decimal_array<T>>());
+    }
+
+    template <decimal_type T>
+    decimal_array<T>& decimal_array<T>::operator=(const decimal_array& rhs)
+    {
+        copy_tracker::increase("decimal_array");
+        base_type::operator=(rhs);
+        m_precision = rhs.m_precision;
+        m_scale = rhs.m_scale;
+        return *this;
     }
 
     template <decimal_type T>

@@ -371,7 +371,7 @@ namespace sparrow
          * @param rhs Source array to assign from
          * @return Reference to this array
          */
-        variable_size_binary_array_impl& operator=(const variable_size_binary_array_impl& rhs) = default;
+        variable_size_binary_array_impl& operator=(const variable_size_binary_array_impl& rhs);
 
         /**
          * @brief Move constructor.
@@ -938,6 +938,15 @@ namespace sparrow
         : base_type(rhs)
     {
         copy_tracker::increase(copy_tracker::key<self_type>());
+    }
+
+    template <std::ranges::sized_range T, class CR, layout_offset OT, typename Ext>
+    variable_size_binary_array_impl<T, CR, OT, Ext>&
+    variable_size_binary_array_impl<T, CR, OT, Ext>::operator=(const variable_size_binary_array_impl& rhs)
+    {
+        copy_tracker::increase(copy_tracker::key<self_type>());
+        base_type::operator=(rhs);
+        return *this;
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT, typename Ext>

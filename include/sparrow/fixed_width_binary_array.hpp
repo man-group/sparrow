@@ -194,7 +194,7 @@ namespace sparrow
         /** Move constructor */
         fixed_width_binary_array_impl(self_type&&) noexcept = default;
 
-        self_type& operator=(const self_type&) = default;
+        self_type& operator=(const self_type&);
         self_type& operator=(self_type&&) noexcept = default;
 
         /**
@@ -679,6 +679,16 @@ namespace sparrow
         , m_element_size(rhs.m_element_size)
     {
         copy_tracker::increase(copy_tracker::key<self_type>());
+    }
+
+    template <std::ranges::sized_range T, typename CR, typename Ext>
+    fixed_width_binary_array_impl<T, CR, Ext>&
+    fixed_width_binary_array_impl<T, CR, Ext>::operator=(const self_type& rhs)
+    {
+        copy_tracker::increase(copy_tracker::key<self_type>());
+        base_type::operator=(rhs);
+        m_element_size = rhs.m_element_size;
+        return *this;
     }
 
     // Move constructor and assignment are defaulted in the class definition

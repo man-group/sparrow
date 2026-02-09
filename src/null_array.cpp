@@ -39,6 +39,16 @@ namespace sparrow
         copy_tracker::increase(copy_tracker::key<null_array>());
     }
 
+    null_array& null_array::operator=(const null_array& rhs)
+    {
+        copy_tracker::increase(copy_tracker::key<null_array>());
+        if (this != &rhs)
+        {
+            m_proxy = rhs.m_proxy;
+        }
+        return *this;
+    }
+
     std::optional<std::string_view> null_array::name() const
     {
         return m_proxy.name();

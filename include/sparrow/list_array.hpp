@@ -808,7 +808,7 @@ namespace sparrow
         explicit fixed_sized_list_array(arrow_proxy proxy);
 
         fixed_sized_list_array(const self_type&);
-        fixed_sized_list_array& operator=(const self_type&) = default;
+        fixed_sized_list_array& operator=(const self_type&);
 
         fixed_sized_list_array(self_type&&) = default;
         fixed_sized_list_array& operator=(self_type&&) = default;
@@ -1139,6 +1139,7 @@ namespace sparrow
     template <bool BIG>
     constexpr auto list_array_impl<BIG>::operator=(const self_type& rhs) -> self_type&
     {
+        copy_tracker::increase(copy_tracker::key<self_type>());
         if (this != &rhs)
         {
             base_type::operator=(rhs);
@@ -1278,6 +1279,7 @@ namespace sparrow
     template <bool BIG>
     constexpr auto list_view_array_impl<BIG>::operator=(const self_type& rhs) -> self_type&
     {
+        copy_tracker::increase(copy_tracker::key<self_type>());
         if (this != &rhs)
         {
             base_type::operator=(rhs);
@@ -1338,6 +1340,17 @@ namespace sparrow
         , m_list_size(rhs.m_list_size)
     {
         copy_tracker::increase(copy_tracker::key<self_type>());
+    }
+
+    inline fixed_sized_list_array& fixed_sized_list_array::operator=(const self_type& rhs)
+    {
+        copy_tracker::increase(copy_tracker::key<self_type>());
+        if (this != &rhs)
+        {
+            base_type::operator=(rhs);
+            m_list_size = rhs.m_list_size;
+        }
+        return *this;
     }
 
     constexpr auto fixed_sized_list_array::offset_range(size_type i) const
