@@ -614,7 +614,6 @@ namespace sparrow
             m_proxy = rhs.m_proxy;
             m_keys_layout = create_keys_layout(m_proxy);
             p_values_layout = create_values_layout(m_proxy);
-            
         }
         return *this;
     }
