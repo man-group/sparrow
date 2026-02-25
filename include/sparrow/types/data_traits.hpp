@@ -52,7 +52,7 @@ namespace sparrow
     };
 
     template <>
-    struct arrow_traits<half_float::half> : common_native_types_traits<half_float::half>
+    struct arrow_traits<float16_t> : common_native_types_traits<float16_t>
     {
     };
 

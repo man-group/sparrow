@@ -149,9 +149,15 @@ namespace sparrow
     static_assert(sizeof(float16_t) == 2);
     static_assert(sizeof(float32_t) == 4);
     static_assert(sizeof(float64_t) == 8);
+#if defined(SPARROW_STD_FIXED_FLOAT_SUPPORT)
+    static_assert(std::floating_point<float16_t>);
+    static_assert(std::floating_point<float32_t>);
+    static_assert(std::floating_point<float64_t>);
+#else
     static_assert(sparrow::is_floating_point_v<float16_t>);
     static_assert(sparrow::is_floating_point_v<float32_t>);
     static_assert(sparrow::is_floating_point_v<float64_t>);
+#endif
     static_assert(CHAR_BIT == 8);
 
     using byte_t = std::byte;  // For now we will use this to represent raw data TODO: evaluate later if it's
@@ -452,13 +458,15 @@ namespace sparrow
         mpl::unreachable();
     }
 
-    /// Template specialization for half_float::half
+#if !defined(SPARROW_STD_FIXED_FLOAT_SUPPORT)
+    /// Overload for custom float16_t (half_float::half in C++20 path)
     template <typename T>
-        requires std::is_same_v<T, half_float::half>
+        requires std::same_as<T, float16_t>
     [[nodiscard]] constexpr data_type data_type_from_size(T = {}) noexcept
     {
         return data_type::HALF_FLOAT;
     }
+#endif
 
     /// @returns The default integral `data_type`  that should be associated with the provided type.
     ///          The deduction will be based on the size of the type. Calling this function with unsupported
