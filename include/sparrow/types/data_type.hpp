@@ -77,6 +77,48 @@ namespace date = std::chrono;
 #    include <stdfloat>
 #else
 #    include "sparrow/details/3rdparty/float16_t.hpp"
+
+namespace sparrow
+{
+    template <class T>
+    struct is_floating_point : std::is_floating_point<T>
+    {
+    };
+
+    template <>
+    struct is_floating_point<half_float::half> : std::true_type
+    {
+    };
+
+    template <class T>
+    struct is_scalar : std::is_scalar<T>
+    {
+    };
+
+    template <>
+    struct is_scalar<half_float::half> : std::true_type
+    {
+    };
+
+    template <class T>
+    struct is_signed : std::is_signed<T>
+    {
+    };
+
+    template <>
+    struct is_signed<half_float::half> : std::true_type
+    {
+    };
+
+    template <class T>
+    inline constexpr bool is_floating_point_v = is_floating_point<T>::value;
+
+    template <class T>
+    inline constexpr bool is_scalar_v = is_scalar<T>::value;
+
+    template <class T>
+    inline constexpr bool is_signed_v = is_signed<T>::value;
+}
 #endif
 
 
@@ -107,9 +149,9 @@ namespace sparrow
     static_assert(sizeof(float16_t) == 2);
     static_assert(sizeof(float32_t) == 4);
     static_assert(sizeof(float64_t) == 8);
-    static_assert(std::is_floating_point_v<float16_t>);
-    static_assert(std::is_floating_point_v<float32_t>);
-    static_assert(std::is_floating_point_v<float64_t>);
+    static_assert(sparrow::is_floating_point_v<float16_t>);
+    static_assert(sparrow::is_floating_point_v<float32_t>);
+    static_assert(sparrow::is_floating_point_v<float64_t>);
     static_assert(CHAR_BIT == 8);
 
     using byte_t = std::byte;  // For now we will use this to represent raw data TODO: evaluate later if it's
@@ -408,6 +450,14 @@ namespace sparrow
         }
 
         mpl::unreachable();
+    }
+
+    /// Template specialization for half_float::half
+    template <typename T>
+        requires std::is_same_v<T, half_float::half>
+    [[nodiscard]] constexpr data_type data_type_from_size(T = {}) noexcept
+    {
+        return data_type::HALF_FLOAT;
     }
 
     /// @returns The default integral `data_type`  that should be associated with the provided type.

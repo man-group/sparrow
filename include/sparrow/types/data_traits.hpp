@@ -52,6 +52,11 @@ namespace sparrow
     };
 
     template <>
+    struct arrow_traits<half_float::half> : common_native_types_traits<half_float::half>
+    {
+    };
+
+    template <>
     struct arrow_traits<bool>
     {
         using value_type = bool;

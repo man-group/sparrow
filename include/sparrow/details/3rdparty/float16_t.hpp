@@ -232,40 +232,6 @@ namespace half_float {
 
 }
 
-namespace std
-{
-    template <>
-    struct is_floating_point<half_float::half> : std::true_type
-    {};
-
-	// Modification from the original library
-
-    template <>
-    struct is_scalar<half_float::half> : std::true_type
-    {};
-
-    template <>
-    struct is_signed<half_float::half> : std::true_type
-    {};
-
-    // Older compilers define the _v variable templates independently from the
-    // corresponding struct, so we need explicit specializations for them.
-    // Newer libc++ (LLVM 19+) marks these variable templates with
-    // [[no_specializations]], making user specializations ill-formed, so we
-    // guard against that here. The struct specializations above are sufficient
-    // for any conforming implementation.
-#if !defined(_LIBCPP_VERSION) || _LIBCPP_VERSION < 190000
-    template <>
-    inline constexpr bool is_floating_point_v<half_float::half> = true;
-
-    template <>
-    inline constexpr bool is_scalar_v<half_float::half> = true;
-
-    template <>
-    inline constexpr bool is_signed_v<half_float::half> = true;
-#endif
-}
-
 namespace half_float {
 	/// Library-defined half-precision literals.
 	/// Import this namespace to enable half-precision floating-point literals:
