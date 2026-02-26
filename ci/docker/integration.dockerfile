@@ -36,6 +36,10 @@ RUN apt update
 
 RUN apt install build-essential git gcc -y
 
+# The Arrow integration scripts can export CC to this Conda-prefixed path.
+# Ensure it exists even if the base image does not ship the wrapper binary.
+RUN ln -sf "$(command -v gcc)" /opt/conda/bin/x86_64-conda-linux-gnu-cc
+
 # Clone the arrow monorepo // TODO: change to the official repo
 RUN git clone --depth 1 --branch archery_supports_external_libraries https://github.com/Alex-PLACET/arrow.git /arrow-integration --recurse-submodules
 
