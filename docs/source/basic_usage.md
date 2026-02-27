@@ -220,3 +220,95 @@ sp::buffer<int> buf(ptr, 100, alloc);
 
 **Important:** The allocator passed to the buffer constructor must be compatible with the allocation method used for the pointer. The allocator's `deallocate()` method will be called to free the memory, so you must ensure it matches how the memory was allocated. Using an incompatible allocator will result in undefined behavior during deallocation.
 
+Floating-Point Type Traits
+--------------------------
+
+When writing generic code that operates on Sparrow's floating-point types, you must use Sparrow's own type traits rather than the standard library ones. This section explains why, and how to use them correctly.
+
+### Background
+
+Sparrow supports three fixed-width floating-point types:
+
+| Sparrow alias        | C++23 standard type | Fallback (pre-C++23) |
+|----------------------|---------------------|----------------------|
+| `sparrow::float16_t` | `std::float16_t`    | `half_float::half`   |
+| `sparrow::float32_t` | `std::float32_t`    | `float`              |
+| `sparrow::float64_t` | `std::float64_t`    | `double`             |
+
+When the compiler and standard library support C++23 fixed-width floating-point types (detected via `__STDCPP_FLOAT16_T__`, `__STDCPP_FLOAT32_T__`, and `__STDCPP_FLOAT64_T__`), Sparrow defines the macro `SPARROW_STD_FIXED_FLOAT_SUPPORT` and maps these aliases directly to the standard types. In that case, the standard type traits work correctly for all three types.
+
+When `SPARROW_STD_FIXED_FLOAT_SUPPORT` is **not** defined, `sparrow::float16_t` maps to `half_float::half` — a third-party 16-bit floating-point type that the standard library does not recognise. As a result, `std::is_floating_point<half_float::half>::value` returns `false`, `std::is_scalar<half_float::half>::value` returns `false`, and `std::is_signed<half_float::half>::value` also returns `false`.
+
+### Sparrow Trait Replacements
+
+To handle this portably, Sparrow defines its own traits (only when `SPARROW_STD_FIXED_FLOAT_SUPPORT` is **not** defined):
+
+```cpp
+// In namespace sparrow:
+template <class T> struct is_floating_point;  // forwards to std::is_floating_point<T>,
+                                               // specialised to true for half_float::half
+template <class T> struct is_scalar;           // forwards to std::is_scalar<T>,
+                                               // specialised to true for half_float::half
+template <class T> struct is_signed;           // forwards to std::is_signed<T>,
+                                               // specialised to true for half_float::half
+
+template <class T> inline constexpr bool is_floating_point_v = is_floating_point<T>::value;
+template <class T> inline constexpr bool is_scalar_v         = is_scalar<T>::value;
+template <class T> inline constexpr bool is_signed_v         = is_signed<T>::value;
+```
+
+For all types other than `half_float::half`, these traits delegate directly to the corresponding `std::` traits, so using them incurs no behavioural difference for standard types.
+
+### Usage
+
+Always prefer `sparrow::is_floating_point_v` (and the other `sparrow::` traits) over their `std::` counterparts in any template code that may be instantiated with a Sparrow floating-point type:
+
+```cpp
+#include "sparrow.hpp"
+namespace sp = sparrow;
+
+template <typename T>
+void process(T value)
+{
+    // Correct: works for float, double, and sparrow::float16_t on all compilers
+    if constexpr (sp::is_floating_point_v<T>)
+    {
+        // floating-point specific logic
+    }
+
+    // Wrong: may silently fail for sparrow::float16_t when SPARROW_STD_FIXED_FLOAT_SUPPORT
+    // is not defined (half_float::half is not recognised by std::is_floating_point)
+    // if constexpr (std::is_floating_point_v<T>) { ... }
+}
+```
+
+The check needed to guard code that uses these traits in a conditional compilation context:
+
+```cpp
+#include "sparrow/types/data_type.hpp"
+
+template <typename T>
+void example(T value)
+{
+#if defined(SPARROW_STD_FIXED_FLOAT_SUPPORT)
+    // std traits work correctly; use either std:: or sp:: variants
+    static_assert(std::floating_point<sp::float16_t>);
+#else
+    // Must use sparrow traits so that half_float::half is handled correctly
+    static_assert(sp::is_floating_point_v<sp::float16_t>);
+#endif
+}
+```
+
+### Rationale
+
+These Sparrow traits are intentionally defined **only** when `SPARROW_STD_FIXED_FLOAT_SUPPORT` is absent — that is, only when the compiler does not yet provide C++23 fixed-width floating-point support. Once a codebase moves to C++23, `sparrow::float16_t` becomes `std::float16_t`, and the standard traits work correctly for it, so the Sparrow overrides are no longer needed.
+
+Making the Sparrow traits available unconditionally might seem convenient (it would mean client code never has to think about the macro), but it would also mask the eventual migration path: if the Sparrow traits were always present, there would be no compile-time signal encouraging users to switch back to the standard `std::` traits once C++23 support is available. The current design therefore keeps the Sparrow traits scoped to exactly those platforms where they are necessary, acting as a temporary shim rather than a permanent parallel API.
+
+**Summary of rules for client code:**
+
+- When writing template code involving `sparrow::float16_t`, `sparrow::float32_t`, or `sparrow::float64_t`, use `sparrow::is_floating_point_v`, `sparrow::is_scalar_v`, and `sparrow::is_signed_v` instead of their `std::` counterparts.
+- Sparrow cannot enforce that you use these traits at compile time, so discipline on the client side is required.
+- Once your toolchain fully supports C++23 fixed-width floating-point types (i.e. `SPARROW_STD_FIXED_FLOAT_SUPPORT` is defined), you can migrate back to the standard `std::` traits.
+
