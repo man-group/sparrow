@@ -245,12 +245,9 @@ To handle this portably, Sparrow defines its own traits (only when `SPARROW_STD_
 
 ```cpp
 // In namespace sparrow:
-template <class T> struct is_floating_point;  // forwards to std::is_floating_point<T>,
-                                               // specialised to true for half_float::half
-template <class T> struct is_scalar;           // forwards to std::is_scalar<T>,
-                                               // specialised to true for half_float::half
-template <class T> struct is_signed;           // forwards to std::is_signed<T>,
-                                               // specialised to true for half_float::half
+template <class T> struct is_floating_point;   // forwards to std::is_floating_point<T>, specialised to true for half_float::half
+template <class T> struct is_scalar;           // forwards to std::is_scalar<T>, specialised to true for half_float::half
+template <class T> struct is_signed;           // forwards to std::is_signed<T>, specialised to true for half_float::half
 
 template <class T> inline constexpr bool is_floating_point_v = is_floating_point<T>::value;
 template <class T> inline constexpr bool is_scalar_v         = is_scalar<T>::value;
