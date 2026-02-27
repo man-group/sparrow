@@ -36,8 +36,6 @@ RUN apt update
 
 RUN apt install build-essential git gcc -y
 
-# The Arrow integration scripts can export CC to this Conda-prefixed path.
-# Ensure it exists even if the base image does not ship the wrapper binary.
 RUN ln -sf "$(command -v gcc)" /opt/conda/bin/x86_64-conda-linux-gnu-cc
 RUN ln -sf "$(command -v g++)" /opt/conda/bin/x86_64-conda-linux-gnu-c++
 
