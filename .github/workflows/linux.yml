@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         compiler: [clang, gcc]
-        version: [11, 12, 13, 14, 17, 18, 19, 20]
+        version: [11, 12, 13, 14, 17, 18, 19, 20, 21]
         os: [ubuntu-24.04, ubuntu-24.04-arm]
         arch: [64]
         config: [Debug, RelWithDebInfo]
@@ -40,6 +40,8 @@ jobs:
             version: 19
           - compiler: gcc
             version: 20
+          - compiler: gcc
+            version: 21
           - compiler: gcc
             version: 11
             date-polyfill: OFF
@@ -71,9 +73,29 @@ jobs:
             date-polyfill: OFF
             shared: OFF
             cpp_standard: 23
+          # libc++ builds — catch issues like the is_signed_v specialization
+          # restriction introduced in libc++ 19+ (_LIBCPP_NO_SPECIALIZATIONS)
+          - compiler: clang
+            version: 21
+            os: ubuntu-24.04
+            arch: 64
+            config: Debug
+            date-polyfill: ON
+            shared: OFF
+            cpp_standard: 20
+            stdlib: libc++
+          - compiler: clang
+            version: 21
+            os: ubuntu-24.04
+            arch: 64
+            config: Release
+            date-polyfill: OFF
+            shared: OFF
+            cpp_standard: 23
+            stdlib: libc++
            
     runs-on: ${{ matrix.os }}
-    name: ${{matrix.os}} / ${{ matrix.compiler }} / ${{ matrix.version }} / ${{ matrix.arch }} / ${{ matrix.config }} / date-polyfill ${{ matrix.date-polyfill}} / shared ${{ matrix.shared }} / cpp${{ matrix.cpp_standard }}
+    name: ${{matrix.os}} / ${{ matrix.compiler }} / ${{ matrix.version }} / ${{ matrix.arch }} / ${{ matrix.config }} / date-polyfill ${{ matrix.date-polyfill}} / shared ${{ matrix.shared }} / cpp${{ matrix.cpp_standard }}${{ matrix.stdlib && format(' / {0}', matrix.stdlib) || '' }}
     env:
       SCCACHE_GHA_ENABLED: "true"
  
@@ -105,7 +127,10 @@ jobs:
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh ${{matrix.version}}
-        sudo apt-get install -y clang-tools-${{matrix.version}} 
+        sudo apt-get install -y clang-tools-${{matrix.version}}
+        if [[ "${{matrix.stdlib}}" == "libc++" ]]; then
+          sudo apt-get install -y libc++-${{matrix.version}}-dev libc++abi-${{matrix.version}}-dev
+        fi
         sudo update-alternatives --install /usr/bin/clang++				    clang++					    /usr/bin/clang++-${{matrix.version}} 200
         sudo update-alternatives --install /usr/bin/clang					    clang					      /usr/bin/clang-${{matrix.version}} 200
         sudo update-alternatives --install /usr/bin/clang-scan-deps   clang-scan-deps     /usr/bin/clang-scan-deps-${{matrix.version}} 200 
@@ -136,6 +161,12 @@ jobs:
       run: |
         if [[ "${{matrix.arch}}" = 32 ]]; then export CXXFLAGS=-m32 ; export CFLAGS=-m32; fi
         if [[ "${{matrix.compiler}}" = "gcc" ]]; then export CC=gcc-${{matrix.version}}; export CXX=g++-${{matrix.version}}; else export CC=clang; export CXX=clang++; fi
+        EXTRA_CXX_FLAGS=""
+        EXTRA_LINKER_FLAGS="-fuse-ld=mold"
+        if [[ "${{matrix.stdlib}}" == "libc++" ]]; then
+          EXTRA_CXX_FLAGS="-stdlib=libc++"
+          EXTRA_LINKER_FLAGS="-fuse-ld=mold -stdlib=libc++"
+        fi
         cmake -G Ninja \
           -Bbuild \
           -DCMAKE_BUILD_TYPE:STRING=${{matrix.config}} \
@@ -188,7 +219,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: success() || failure()
       with:
-        name: test_sparrow_lib_report_Linux_${{matrix.os}}_${{ matrix.compiler }}_${{ matrix.version }}_${{ matrix.config }}_m${{ matrix.arch }}_date-polyfill_${{ matrix.date-polyfill }}_shared_${{ matrix.shared }}_cpp${{ matrix.cpp_standard }}
+        name: test_sparrow_lib_report_Linux_${{matrix.os}}_${{ matrix.compiler }}_${{ matrix.version }}_${{ matrix.config }}_m${{ matrix.arch }}_date-polyfill_${{ matrix.date-polyfill }}_shared_${{ matrix.shared }}_cpp${{ matrix.cpp_standard }}${{ matrix.stdlib && format('_{0}', matrix.stdlib) || '' }}
         path: ./**/test*.xml
         if-no-files-found: error
 

@@ -52,6 +52,11 @@ namespace sparrow
     };
 
     template <>
+    struct arrow_traits<float16_t> : common_native_types_traits<float16_t>
+    {
+    };
+
+    template <>
     struct arrow_traits<bool>
     {
         using value_type = bool;

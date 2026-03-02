@@ -232,32 +232,6 @@ namespace half_float {
 
 }
 
-namespace std
-{
-    template <>
-    struct is_floating_point<half_float::half> : std::true_type
-    {};
-
-    // Looks like some compiler have a definition of
-    // is_floating_point_v independent from is_floating_point ...
-    template <>
-    inline constexpr bool is_floating_point_v<half_float::half> = true;
-
-    template <>
-    struct is_scalar<half_float::half> : std::true_type
-    {};
-
-    template <>
-    inline constexpr bool is_scalar_v<half_float::half> = true;
-
-    template <>
-    struct is_signed<half_float::half> : std::true_type
-    {};
-
-    template <>
-    inline constexpr bool is_signed_v<half_float::half> = true;
-}
-
 namespace half_float {
 	/// Library-defined half-precision literals.
 	/// Import this namespace to enable half-precision floating-point literals:
