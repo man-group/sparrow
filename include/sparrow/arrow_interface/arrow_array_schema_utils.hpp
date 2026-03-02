@@ -150,8 +150,10 @@ namespace sparrow
         }
         else if constexpr (requires { typename U::element_type; })
         {
-            if constexpr (mpl::smart_ptr<U> || std::is_base_of_v<std::shared_ptr<typename U::element_type>, U>
-                          || mpl::is_type_instance_of_v<U, value_ptr>)
+            if constexpr (
+                mpl::smart_ptr<U> || std::is_base_of_v<std::shared_ptr<typename U::element_type>, U>
+                || mpl::is_type_instance_of_v<U, value_ptr>
+            )
             {
                 if constexpr (std::ranges::contiguous_range<typename U::element_type>)
                 {

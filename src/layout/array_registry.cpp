@@ -161,8 +161,10 @@ namespace sparrow
     template <data_type DT>
     void register_type(array_registry& registry)
     {
-        if constexpr (DT == data_type::TIMESTAMP_SECONDS || DT == data_type::TIMESTAMP_MILLISECONDS
-                      || DT == data_type::TIMESTAMP_MICROSECONDS || DT == data_type::TIMESTAMP_NANOSECONDS)
+        if constexpr (
+            DT == data_type::TIMESTAMP_SECONDS || DT == data_type::TIMESTAMP_MILLISECONDS
+            || DT == data_type::TIMESTAMP_MICROSECONDS || DT == data_type::TIMESTAMP_NANOSECONDS
+        )
         {
             // Special handling for timestamp types with timezone check
             using types = timestamp_type_map<DT>;
