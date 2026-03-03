@@ -59,8 +59,10 @@ namespace sparrow
                 CHECK_EQ(lhs.has_value(), rhs.has_value());
                 return;
             }
-            if constexpr (mpl::is_type_instance_of_v<typename T1::value_type, timestamp_reference>
-                          && !mpl::is_type_instance_of_v<typename T2::value_type, timestamp_reference>)
+            if constexpr (
+                mpl::is_type_instance_of_v<typename T1::value_type, timestamp_reference>
+                && !mpl::is_type_instance_of_v<typename T2::value_type, timestamp_reference>
+            )
             {
                 CHECK_EQ(
                     lhs.get().value().get_sys_time().time_since_epoch(),
@@ -68,8 +70,10 @@ namespace sparrow
                 );
                 return;
             }
-            if constexpr (!mpl::is_type_instance_of_v<typename T1::value_type, timestamp_reference>
-                          && mpl::is_type_instance_of_v<typename T2::value_type, timestamp_reference>)
+            if constexpr (
+                !mpl::is_type_instance_of_v<typename T1::value_type, timestamp_reference>
+                && mpl::is_type_instance_of_v<typename T2::value_type, timestamp_reference>
+            )
             {
                 CHECK_EQ(
                     lhs.get().get_sys_time().time_since_epoch(),
@@ -77,8 +81,10 @@ namespace sparrow
                 );
                 return;
             }
-            if constexpr (mpl::is_type_instance_of_v<typename T1::value_type, timestamp_reference>
-                          && mpl::is_type_instance_of_v<typename T2::value_type, timestamp_reference>)
+            if constexpr (
+                mpl::is_type_instance_of_v<typename T1::value_type, timestamp_reference>
+                && mpl::is_type_instance_of_v<typename T2::value_type, timestamp_reference>
+            )
             {
                 CHECK_EQ(
                     lhs.get().value().get_sys_time().time_since_epoch(),

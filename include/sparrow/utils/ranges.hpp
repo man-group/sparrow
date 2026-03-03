@@ -49,8 +49,10 @@ namespace sparrow
     [[nodiscard]] constexpr bool all_same_size(const Range& range)
     {
         // Optimization for std::array and fixed-size sequence_view
-        if constexpr (mpl::std_array<std::ranges::range_value_t<Range>>
-                      || fixed_size_sequence_view<std::ranges::range_value_t<Range>>)
+        if constexpr (
+            mpl::std_array<std::ranges::range_value_t<Range>>
+            || fixed_size_sequence_view<std::ranges::range_value_t<Range>>
+        )
         {
             return true;
         }

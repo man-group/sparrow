@@ -376,8 +376,10 @@ namespace sparrow
         template <class F, data_type DT>
         static auto dispatch_for_type(F&& func, const array_wrapper& ar) -> visit_result_t<F>
         {
-            if constexpr (DT == data_type::TIMESTAMP_SECONDS || DT == data_type::TIMESTAMP_MILLISECONDS
-                          || DT == data_type::TIMESTAMP_MICROSECONDS || DT == data_type::TIMESTAMP_NANOSECONDS)
+            if constexpr (
+                DT == data_type::TIMESTAMP_SECONDS || DT == data_type::TIMESTAMP_MILLISECONDS
+                || DT == data_type::TIMESTAMP_MICROSECONDS || DT == data_type::TIMESTAMP_NANOSECONDS
+            )
             {
                 // Special handling for timestamp types with timezone check
                 using types = timestamp_type_map<DT>;
