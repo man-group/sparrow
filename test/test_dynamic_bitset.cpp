@@ -384,14 +384,12 @@ namespace sparrow
 
                     bm.set(2, true);
                     CHECK_EQ(bm.data(), nullptr);
-                    if constexpr (std::is_same_v<bitmap, dynamic_bitset<std::uint8_t>>)
-                    {
-                        bm.set(3, false);
-                        CHECK_NE(bm.data(), nullptr);
-                        CHECK_EQ(bm.null_count(), 1);
-                        CHECK_EQ(bm.size(), s_bitmap_size);
-                        CHECK_FALSE(bm.test(3));
-                    }
+                    // Setting a bit to false (null) when the buffer is nullptr must allocate the buffer
+                    bm.set(3, false);
+                    CHECK_NE(bm.data(), nullptr);
+                    CHECK_EQ(bm.null_count(), 1);
+                    CHECK_EQ(bm.size(), s_bitmap_size);
+                    CHECK_FALSE(bm.test(3));
                 }
 
                 SUBCASE("from non-null buffer")
@@ -1924,6 +1922,22 @@ namespace sparrow
                 CHECK_EQ(bm1.null_count(), 10);  // swapped null_counts
                 CHECK_EQ(bm2.null_count(), 9);
             }
+        }
+
+        TEST_CASE("dynamic_bitset_view - set to false with null buffer throws")
+        {
+            // A dynamic_bitset_view cannot allocate: setting a bit to false (null) when
+            // the underlying buffer pointer is null must throw std::runtime_error.
+            dynamic_bitset_view<std::uint8_t> view(nullptr, s_bitmap_size);
+            CHECK_EQ(view.data(), nullptr);
+            CHECK_EQ(view.size(), s_bitmap_size);
+
+            // Setting to true is a no-op and must not throw
+            CHECK_NOTHROW(view.set(2, true));
+            CHECK_EQ(view.data(), nullptr);
+
+            // Setting to false cannot be satisfied without allocation -> must throw
+            CHECK_THROWS_AS(view.set(3, false), std::runtime_error);
         }
 
         TEST_CASE("slice")
