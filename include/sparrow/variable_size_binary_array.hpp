@@ -1479,7 +1479,15 @@ namespace sparrow
         auto& offset_buffer = get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
         auto offset_buffer_adaptor = make_buffer_adaptor<OT>(offset_buffer);
         const auto idx = std::distance(offsets_cbegin(), pos);
+        // GCC 13 false-positive: transform_view iterators yield scalar OT values, never null
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wnull-dereference"
+#endif
         const OT cumulative_sizes = std::reduce(first_sizes, last_sizes, OT(0));
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
 
         // Check for offset overflow before adjusting
         if (!offset_buffer_adaptor.empty())
@@ -1509,7 +1517,15 @@ namespace sparrow
         InputIt it = first_sizes;
         for (size_t i = static_cast<size_t>(idx + 1); i < static_cast<size_t>(idx + sizes_count + 1); ++i)
         {
+            // GCC 13 false-positive: iterator is bounded and valid within the loop
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wnull-dereference"
+#endif
             offset_buffer_adaptor[i] = offset_buffer_adaptor[i - 1] + *it;
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
             ++it;
         }
         return offset(static_cast<size_t>(idx));
