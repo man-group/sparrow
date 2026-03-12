@@ -1205,16 +1205,15 @@ namespace sparrow
         // Use the live owning buffer data directly to avoid stale buffer_view pointers
         // after buffer reallocation (e.g. during insert/erase operations).
         return reinterpret_cast<offset_type*>(
-            this->get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX].data()
-        ) + this->get_arrow_proxy().offset();
+                   this->get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX].data()
+               )
+               + this->get_arrow_proxy().offset();
     }
 
     template <bool BIG>
-    constexpr auto list_array_impl<BIG>::insert_value(
-        const_value_iterator pos,
-        list_value value,
-        size_type count
-    ) -> value_iterator
+    constexpr auto
+    list_array_impl<BIG>::insert_value(const_value_iterator pos, list_value value, size_type count)
+        -> value_iterator
     {
         using mutable_offset_type = std::remove_const_t<offset_type>;
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
@@ -1264,11 +1263,8 @@ namespace sparrow
     template <bool BIG>
     template <std::input_iterator InputIt>
         requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, list_value>
-    constexpr auto list_array_impl<BIG>::insert_values(
-        const_value_iterator pos,
-        InputIt first,
-        InputIt last
-    ) -> value_iterator
+    constexpr auto list_array_impl<BIG>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        -> value_iterator
     {
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
         size_type counter = 0;
@@ -1281,7 +1277,8 @@ namespace sparrow
     }
 
     template <bool BIG>
-    constexpr auto list_array_impl<BIG>::erase_values(const_value_iterator pos, size_type count) -> value_iterator
+    constexpr auto list_array_impl<BIG>::erase_values(const_value_iterator pos, size_type count)
+        -> value_iterator
     {
         using mutable_offset_type = std::remove_const_t<offset_type>;
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
@@ -1325,7 +1322,10 @@ namespace sparrow
         const size_type n = this->size();
         if (new_length < n)
         {
-            erase_values(sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(new_length)), n - new_length);
+            erase_values(
+                sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(new_length)),
+                n - new_length
+            );
         }
         else if (new_length > n)
         {
@@ -1474,8 +1474,9 @@ namespace sparrow
         // Use the live owning buffer data directly to avoid stale buffer_view pointers
         // after buffer reallocation (e.g. during insert/erase operations).
         return reinterpret_cast<offset_type*>(
-            this->get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX].data()
-        ) + this->get_arrow_proxy().offset();
+                   this->get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX].data()
+               )
+               + this->get_arrow_proxy().offset();
     }
 
     template <bool BIG>
@@ -1484,16 +1485,15 @@ namespace sparrow
         // Use the live owning buffer data directly to avoid stale buffer_view pointers
         // after buffer reallocation (e.g. during insert/erase operations).
         return reinterpret_cast<offset_type*>(
-            this->get_arrow_proxy().get_array_private_data()->buffers()[SIZES_BUFFER_INDEX].data()
-        ) + this->get_arrow_proxy().offset();
+                   this->get_arrow_proxy().get_array_private_data()->buffers()[SIZES_BUFFER_INDEX].data()
+               )
+               + this->get_arrow_proxy().offset();
     }
 
     template <bool BIG>
-    constexpr auto list_view_array_impl<BIG>::insert_value(
-        const_value_iterator pos,
-        list_value value,
-        size_type count
-    ) -> value_iterator
+    constexpr auto
+    list_view_array_impl<BIG>::insert_value(const_value_iterator pos, list_value value, size_type count)
+        -> value_iterator
     {
         using mutable_offset_type = std::remove_const_t<offset_type>;
         using mutable_size_type = std::remove_const_t<list_size_type>;
@@ -1549,11 +1549,9 @@ namespace sparrow
     template <bool BIG>
     template <std::input_iterator InputIt>
         requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, list_value>
-    constexpr auto list_view_array_impl<BIG>::insert_values(
-        const_value_iterator pos,
-        InputIt first,
-        InputIt last
-    ) -> value_iterator
+    constexpr auto
+    list_view_array_impl<BIG>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        -> value_iterator
     {
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
         size_type counter = 0;
@@ -1606,7 +1604,10 @@ namespace sparrow
         const size_type n = this->size();
         if (new_length < n)
         {
-            erase_values(sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(new_length)), n - new_length);
+            erase_values(
+                sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(new_length)),
+                n - new_length
+            );
         }
         else if (new_length > n)
         {
@@ -1661,11 +1662,9 @@ namespace sparrow
         return std::make_pair(offset, offset + m_list_size);
     }
 
-    inline auto fixed_sized_list_array::insert_value(
-        const_value_iterator pos,
-        list_value value,
-        size_type count
-    ) -> value_iterator
+    inline auto
+    fixed_sized_list_array::insert_value(const_value_iterator pos, list_value value, size_type count)
+        -> value_iterator
     {
         SPARROW_ASSERT_TRUE(value.size() == m_list_size);
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
@@ -1688,11 +1687,8 @@ namespace sparrow
 
     template <std::input_iterator InputIt>
         requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, list_value>
-    auto fixed_sized_list_array::insert_values(
-        const_value_iterator pos,
-        InputIt first,
-        InputIt last
-    ) -> value_iterator
+    auto fixed_sized_list_array::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        -> value_iterator
     {
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
         size_type counter = 0;
@@ -1722,7 +1718,10 @@ namespace sparrow
         const size_type n = this->size();
         if (new_length < n)
         {
-            erase_values(sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(new_length)), n - new_length);
+            erase_values(
+                sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(new_length)),
+                n - new_length
+            );
         }
         else if (new_length > n)
         {

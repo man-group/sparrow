@@ -289,13 +289,7 @@ namespace sparrow
         size_type count
     )
     {
-        if constexpr (requires {
-                          p_array->insert(
-                              p_array->cbegin(),
-                              p_array->cbegin(),
-                              p_array->cbegin()
-                          );
-                      })
+        if constexpr (requires { p_array->insert(p_array->cbegin(), p_array->cbegin(), p_array->cbegin()); })
         {
             SPARROW_ASSERT_TRUE(source.data_type() == this->data_type());
             const T& src = static_cast<const array_wrapper_impl<T>&>(source).get_wrapped();
@@ -318,16 +312,16 @@ namespace sparrow
         }
         else
         {
-            throw std::runtime_error("array_wrapper_impl::insert_elements_from: array type does not support mutation");
+            throw std::runtime_error(
+                "array_wrapper_impl::insert_elements_from: array type does not support mutation"
+            );
         }
     }
 
     template <class T>
     void array_wrapper_impl<T>::erase_array_elements(size_type pos, size_type count)
     {
-        if constexpr (requires {
-                          p_array->erase(p_array->cbegin(), p_array->cbegin());
-                      })
+        if constexpr (requires { p_array->erase(p_array->cbegin(), p_array->cbegin()); })
         {
             auto first = std::next(p_array->cbegin(), static_cast<std::ptrdiff_t>(pos));
             auto last = std::next(first, static_cast<std::ptrdiff_t>(count));
@@ -335,7 +329,9 @@ namespace sparrow
         }
         else
         {
-            throw std::runtime_error("array_wrapper_impl::erase_array_elements: array type does not support mutation");
+            throw std::runtime_error(
+                "array_wrapper_impl::erase_array_elements: array type does not support mutation"
+            );
         }
     }
 

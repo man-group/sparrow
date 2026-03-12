@@ -801,7 +801,7 @@ namespace sparrow
         TEST_CASE("insert at beginning")
         {
             list_view_array arr = test::make_test_list_view_array();  // [[0,1],[2,3,4]]
-            const auto val = arr[0].value();  // [0,1]
+            const auto val = arr[0].value();                          // [0,1]
 
             arr.insert(arr.cbegin(), make_nullable(val));
 
@@ -852,7 +852,7 @@ namespace sparrow
         TEST_CASE("insert at end")
         {
             list_view_array arr = test::make_test_list_view_array();  // [[0,1],[2,3,4]]
-            const auto val = arr[0].value();  // [0,1]
+            const auto val = arr[0].value();                          // [0,1]
 
             arr.insert(arr.cend(), make_nullable(val));
 
@@ -964,8 +964,8 @@ namespace sparrow
             arr.insert(sparrow::next(arr.cbegin(), 2), make_nullable(val));
 
             REQUIRE_EQ(arr.size(), 5u);
-            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));   // was arr[0]
-            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(5));   // was arr[1]
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));  // was arr[0]
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(5));  // was arr[1]
             CHECK(arr[2].has_value());
             CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(0));   // newly inserted
             CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], std::int16_t(10));  // was arr[2]
