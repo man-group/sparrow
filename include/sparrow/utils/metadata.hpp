@@ -401,7 +401,12 @@ namespace sparrow
             std::memcpy(&(*metadata_iter), &key_size, sizeof(int32_t));
             std::cout << "before 2nd advance" << std::endl;
             std::advance(metadata_iter, sizeof(int32_t));
-            sparrow::ranges::copy(key, &(*metadata_iter));
+            // sparrow::ranges::copy(key, key.size() > 0 ? &(*metadata_iter) : nullptr);
+            // sparrow::ranges::copy(key, &(*metadata_iter));
+            if (key.size() > 0)
+            {
+                sparrow::ranges::copy(key, &(*metadata_iter));
+            }
             std::cout << "before 3rd advance" << std::endl;
             std::advance(metadata_iter, key.size());
 
@@ -409,8 +414,13 @@ namespace sparrow
             std::memcpy(&(*metadata_iter), &value_size, sizeof(int32_t));
             std::cout << "before 4th advance" << std::endl;
             std::advance(metadata_iter, sizeof(int32_t));
-
-            sparrow::ranges::copy(value, &(*metadata_iter));
+            // => here when dereferencing metadata_iter
+            // sparrow::ranges::copy(value, &(*metadata_iter));
+            if (value.size() > 0)
+            {
+                sparrow::ranges::copy(value, &(*metadata_iter));
+            }
+            // sparrow::ranges::copy(value, value.size() > 0 ? &(*metadata_iter) : nullptr);
             std::cout << "before 5th advance" << std::endl;
             std::advance(metadata_iter, value.size());
             std::cout << "AFTER 5th advance" << std::endl;
