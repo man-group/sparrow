@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
@@ -241,7 +242,7 @@ namespace sparrow
          * @post View is ready for iteration over the metadata pairs
          * @post size() returns the number of pairs in the buffer
          */
-        SPARROW_API key_value_view(const char* ptr);
+        SPARROW_API /*explicit*/ key_value_view(const char* ptr);
 
         /**
          * @brief Gets const iterator to the beginning of the metadata pairs.
@@ -388,6 +389,7 @@ namespace sparrow
         // Use iterators instead of pointer arithmetic to avoid warnings
         auto metadata_iter = metadata_buf.begin();
         std::memcpy(&(*metadata_iter), &number_of_key_values, sizeof(int32_t));
+        std::cout << "before 1st advance" << std::endl;
         std::advance(metadata_iter, sizeof(int32_t));
 
         for (const auto& [key, value] : metadata)
@@ -397,18 +399,23 @@ namespace sparrow
 
             const auto key_size = static_cast<int32_t>(key.size());
             std::memcpy(&(*metadata_iter), &key_size, sizeof(int32_t));
+            std::cout << "before 2nd advance" << std::endl;
             std::advance(metadata_iter, sizeof(int32_t));
-
             sparrow::ranges::copy(key, &(*metadata_iter));
+            std::cout << "before 3rd advance" << std::endl;
             std::advance(metadata_iter, key.size());
 
             const auto value_size = static_cast<int32_t>(value.size());
             std::memcpy(&(*metadata_iter), &value_size, sizeof(int32_t));
+            std::cout << "before 4th advance" << std::endl;
             std::advance(metadata_iter, sizeof(int32_t));
 
             sparrow::ranges::copy(value, &(*metadata_iter));
+            std::cout << "before 5th advance" << std::endl;
             std::advance(metadata_iter, value.size());
+            std::cout << "AFTER 5th advance" << std::endl;
         }
+        std::cout << "before return" << std::endl;
         return metadata_buf;
     }
 }
